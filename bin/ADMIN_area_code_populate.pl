@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 #
-# ADMIN_area_code_populate.pl    version 2.6
+# ADMIN_area_code_populate.pl    version 2.10
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Description:
 # server application that allows load areacodes into to asterisk list database
@@ -20,6 +20,7 @@
 # 100902-1536 - Move old data files if wgetting new ones
 # 110424-0735 - Added timezone abbreviation column
 # 130419-1237 - Added lata_type field to NANPA file format
+# 150203-1751 - code cleanup
 #
 
 
@@ -159,11 +160,10 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
  or die "Couldn't connect to database: " . DBI->errstr;
 
 
-
 if ($nanpa_load > 0)
 	{
 	#### load special North American phone code prefix table ####
-	# LONG  # NPA,NXX,,,,LTYPE,,STATE,COUNTRY,,,,,RC,TZ,DST,ZIP,,,,,,,,,,,LATITUDE,LONGITUDE,,,,,
+	# LONG  # NPA,NXX,,,,LTYPE,,STATE,COUNTRY,,,,,RC,TZ,DST,ZIP,,,,,,,,,,,LATITUDE,LONGITUDE,,,,,,,
 	# SHORT # NPA,NXX,TZ,DST,LATITUDE,LONGITUDE,CITY,STATE,POSTAL_CODE,COUNTRY,LTYPE
 
 	#### BEGIN vicidial_nanpa_prefix_codes population from NANPA_prefix-latest.txt file ####
@@ -229,7 +229,7 @@ if ($nanpa_load > 0)
 				if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;
-				$dup_check	= "$aryA[0]";
+				$dup_check = $aryA[0];
 				}
 			$sthA->finish();
 
@@ -267,7 +267,6 @@ if ($nanpa_load > 0)
 	$ins_stmt="insert into vicidial_nanpa_prefix_codes VALUES ";
 	print STDERR "$pc Lines     $ins_count Inserted     $dup_count Duplicates\n";
 	#### END vicidial_nanpa_prefix_codes population ####
-
 	}
 else
 	{

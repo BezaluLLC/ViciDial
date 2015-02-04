@@ -36,6 +36,7 @@
 # 150111-1542 - Added lists-local_call_time and manual_dial_search_filter
 # 150117-1439 - Added NAME option to campaigns-status_display_fields
 # 150120-0636 - Hide non-functional agent_extended_alt_dial campaign feature
+# 150204-1246 - Small fixes, issue #826
 #
 
 require("dbconnect_mysqli.php");
@@ -454,7 +455,7 @@ if ($SScustom_fields_enabled > 0)
 	<B><?php echo _QXZ("Custom Fields Modify"); ?> -</B><?php echo _QXZ("This option if set to 1 allows the user to modify custom list fields."); ?>
 	<?php
 	}
-?>"); ?>
+?>
 
 <BR>
 <A NAME="users-campaign_detail">
@@ -504,7 +505,7 @@ if ($SSoutbound_autodial_active > 0)
 	<BR>
 	<A NAME="users-delete_filters">
 	<BR>
-	<B>Delete Filters"); ?> -</B><?php echo _QXZ("This option allows the user to be able to delete lead filters from the system.");
+	<B><?php echo _QXZ("Delete Filters"); ?> -</B><?php echo _QXZ("This option allows the user to be able to delete lead filters from the system.");
 	}
 ?>
 
@@ -552,17 +553,17 @@ if ($SSqc_features_active > 0)
 	<BR>
 	<A NAME="users-qc_pass">
 	<BR>
-	<B>QC Record Pass"); ?> -</B><?php echo _QXZ("This option allows the agent to specify that a record has passed the first round of QC after reviewing the record."); ?>
+	<B><?php echo _QXZ("QC Record Pass"); ?> -</B><?php echo _QXZ("This option allows the agent to specify that a record has passed the first round of QC after reviewing the record."); ?>
 
 	<BR>
 	<A NAME="users-qc_finish">
 	<BR>
-	<B>QC Record Finish"); ?> -</B><?php echo _QXZ("This option allows the agent to specify that a record has finished the second round of QC after reviewing the passed record."); ?>
+	<B><?php echo _QXZ("QC Record Finish"); ?> -</B><?php echo _QXZ("This option allows the agent to specify that a record has finished the second round of QC after reviewing the passed record."); ?>
 
 	<BR>
 	<A NAME="users-qc_commit">
 	<BR>
-	<B>QC Record Commit"); ?> -</B><?php echo _QXZ("This option allows the agent to specify that a record has been committed in QC. It can no longer be modified by anyone."); 
+	<B><?php echo _QXZ("QC Record Commit"); ?> -</B><?php echo _QXZ("This option allows the agent to specify that a record has been committed in QC. It can no longer be modified by anyone."); 
 	}
 ?>
 
@@ -913,7 +914,7 @@ if ($SSoutbound_autodial_active > 0)
 	<BR>
 	<A NAME="campaigns-auto_alt_dial">
 	<BR>
-	<B><?php echo _QXZ("Auto Alt-Number Dialing"); ?> -</B><?php echo _QXZ("This setting is used to automatically dial alternate number fields while dialing in the RATIO and ADAPT dial methods when there is no contact at the main phone number for a lead, the NA, B, DC and N statuses. This setting is not used by the MANUAL dial method. EXTENDED alternate numbers are numbers loaded into the system outside of the standard lead information screen. Using EXTENDED you can have hundreds of phone numbers for a single customer record. Using MULTI_LEAD allows you to use a separate lead for each number on a customer account that all share a common vendor_lead_code, and the type of phone number for each is defined with a label in the Owner field. This option will disable some options on the Modify Campaign screen and show a link to the Multi-Alt Settings page which allows you to set which phone number types, defined by the label of each lead, will be dialed and in what order. This will create a special lead filter and will alter the Rank field of all of the leads inside the lists set to this campaign in order to call them in the order you have specified."); ?>
+	<B><?php echo _QXZ("Auto Alt-Number Dialing"); ?> -</B><?php echo _QXZ("This setting is used to automatically dial alternate number fields while dialing in the RATIO and ADAPT dial methods when there is no contact at the main phone number for a lead, the statuses to trigger alt dial can be set in the Auto Alt Dial page. This setting is not used by the MANUAL dial method. EXTENDED alternate numbers are numbers loaded into the system outside of the standard lead information screen. Using EXTENDED you can have hundreds of phone numbers for a single customer record. Using MULTI_LEAD allows you to use a separate lead for each number on a customer account that all share a common vendor_lead_code, and the type of phone number for each is defined with a label in the Owner field. This option will disable some options on the Modify Campaign screen and show a link to the Multi-Alt Settings page which allows you to set which phone number types, defined by the label of each lead, will be dialed and in what order. This will create a special lead filter and will alter the Rank field of all of the leads inside the lists set to this campaign in order to call them in the order you have specified."); ?>
 
 	<BR>
 	<A NAME="campaigns-dial_timeout">
@@ -2875,7 +2876,7 @@ if ($SSqc_features_active > 0)
 
 
 
-<BR><BR><BR><BR>"); ?>
+<BR><BR><BR><BR>
 
 <BR>
 <A NAME="filter_phone_groups-filter_phone_group_id">
