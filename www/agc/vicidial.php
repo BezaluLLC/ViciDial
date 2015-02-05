@@ -475,10 +475,11 @@
 # 150129-0828 - Added confirmation if agent tries to leave the page without logging out, issue #821
 # 150202-0829 - Reconfigured hotkeys and auto-manual-dial for less delay
 # 150203-1331 - Small changes to improve manual dial hotkey use
+# 150204-1911 - Changed Manual hotkey auto-manual-dial to a variable delay depending on dispo processing time
 #
 
-$version = '2.10-446c';
-$build = '150203-1331';
+$version = '2.10-447c';
+$build = '150204-1911';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -3818,6 +3819,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var volumecontrol_active = '<?php echo $volumecontrol_active ?>';
 	var PauseCode_HTML = '';
 	var manual_auto_hotkey = 0;
+	var manual_auto_hotkey_wait = 0;
 	var dialed_number = '';
 	var dialed_label = '';
 	var source_id = '';
@@ -7688,7 +7690,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		UpdatESettingS();
 		if (waiting_on_dispo > 0)
 			{
-			alert_box("<?php echo _QXZ("System Delay, Please try again"); ?><BR><font size=1><?php echo _QXZ("code:"); ?>" + agent_log_id + " - " + waiting_on_dispo + "</font>");
+			alert_box("<?php echo _QXZ("System Delay, Please try again"); ?><BR><font size=1><?php echo _QXZ("code:"); ?>" + agent_log_id + " - " + waiting_on_dispo + " - " + manual_auto_hotkey_wait + "</font>");
 
 			dial_next_failed=1;
 			var alert_displayed=0;
@@ -10234,7 +10236,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								alt_dial_active = 0;
 								alt_dial_status_display = 0;
 								reselect_alt_dial = 0;
-								manual_auto_hotkey = 2;
+								manual_auto_hotkey = 1;
 								}
 							}
 						}
@@ -10245,7 +10247,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						{
 						alt_dial_active = 0;
 						alt_dial_status_display = 0;
-						manual_auto_hotkey = 2;
+						manual_auto_hotkey = 1;
 						}
 					else
 						{
@@ -10273,7 +10275,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 							if (hotkeysused == 'YES')
 								{
-								manual_auto_hotkey = 2;
+								manual_auto_hotkey = 1;
 								alt_dial_active=0;
 								alt_dial_status_display = 0;
 
@@ -14664,6 +14666,7 @@ function phone_number_format(formatphone) {
 					if ( (HKdispo_display <= 2) && (HKfinish==1) )
 						{
 						HKfinish=0;
+						manual_auto_hotkey_wait=0;
 						DispoSelect_submit();
 					//	AutoDialWaiting = 1;
 					//	AutoDial_ReSume_PauSe("VDADready");
@@ -14802,8 +14805,16 @@ function phone_number_format(formatphone) {
 				{
 				if (manual_auto_hotkey == "1")
 					{
-					manual_auto_hotkey = 0;
-					ManualDialNext('','','','','','0');
+					if ( (waiting_on_dispo > 0) && (manual_auto_hotkey_wait < 10) )
+						{
+						manual_auto_hotkey_wait++;
+					//	document.getElementById("debugbottomspan").innerHTML = "trigger next manual dial delay: " + manual_auto_hotkey_wait + "|" + waiting_on_dispo;
+						}
+					else
+						{
+						manual_auto_hotkey = 0;
+						ManualDialNext('','','','','','0');
+						}
 					}
 				if (manual_auto_hotkey > 1) {manual_auto_hotkey = (manual_auto_hotkey - 1);}
 				}
