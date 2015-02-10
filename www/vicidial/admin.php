@@ -3432,12 +3432,13 @@ else
 # 150117-1454 - Added NAME as status dialplay option
 # 150119-0920 - Added more list local calltime safety, issue #812
 # 150120-0749 - Prevent modification of user_group ID, Hide non-functional agent_extended_alt_dial campaign feature, Export Calls Report Carrier added
+# 150210-0657 - Added LOCK options for manual_dial_search_checkbox campaign setting
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.10-472a';
-$build = '150120-0749';
+$admin_version = '2.10-473a';
+$build = '150210-0657';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -19474,7 +19475,7 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("Manual Preview Dial").": </td><td align=left><select size=1 name=manual_preview_dial><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='PREVIEW_AND_SKIP'>"._QXZ("PREVIEW_AND_SKIP")."</option><option value='PREVIEW_ONLY'>"._QXZ("PREVIEW_ONLY")."</option><option value='$manual_preview_dial' SELECTED>"._QXZ("$manual_preview_dial")."</option></select>$NWB#campaigns-manual_preview_dial$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("Manual Dial Search Checkbox").": </td><td align=left><select size=1 name=manual_dial_search_checkbox><option value='SELECTED'>"._QXZ("SELECTED")."</option><option value='SELECTED_RESET'>"._QXZ("SELECTED_RESET")."</option><option value='UNSELECTED'>"._QXZ("UNSELECTED")."</option><option value='UNSELECTED_RESET'>"._QXZ("UNSELECTED_RESET")."</option><option value='$manual_dial_search_checkbox' SELECTED>"._QXZ("$manual_dial_search_checkbox")."</option></select>$NWB#campaigns-manual_dial_search_checkbox$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("Manual Dial Search Checkbox").": </td><td align=left><select size=1 name=manual_dial_search_checkbox><option value='SELECTED'>"._QXZ("SELECTED")."</option><option value='SELECTED_RESET'>"._QXZ("SELECTED_RESET")."</option><option value='SELECTED_LOCK'>"._QXZ("SELECTED_LOCK")."</option><option value='UNSELECTED'>"._QXZ("UNSELECTED")."</option><option value='UNSELECTED_RESET'>"._QXZ("UNSELECTED_RESET")."</option><option value='UNSELECTED_LOCK'>"._QXZ("UNSELECTED_LOCK")."</option><option value='$manual_dial_search_checkbox' SELECTED>"._QXZ("$manual_dial_search_checkbox")."</option></select>$NWB#campaigns-manual_dial_search_checkbox$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("Manual Dial Search Filter").": </td><td align=left><select size=1 name=manual_dial_search_filter><option value='NONE'>"._QXZ("NONE")."</option><option value='CAMPLISTS_ONLY'>"._QXZ("CAMPLISTS_ONLY")."</option><option value='CAMPLISTS_ALL'>"._QXZ("CAMPLISTS_ALL")."</option><option value='$manual_dial_search_filter' SELECTED>"._QXZ("$manual_dial_search_filter")."</option></select>$NWB#campaigns-manual_dial_search_filter$NWE</td></tr>\n";
 

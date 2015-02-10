@@ -126,6 +126,9 @@ OTHER CHANGES:
 	single button named "You are paused" or "You are active" depending on
 	your status. Issue #814
 
+25. Added new LOCK options to Manual Dial Search Checkbox to prevent the agent
+	from checking or unchecking the search checkbox.
+
 
 
 

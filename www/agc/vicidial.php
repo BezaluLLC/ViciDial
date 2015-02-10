@@ -476,10 +476,11 @@
 # 150202-0829 - Reconfigured hotkeys and auto-manual-dial for less delay
 # 150203-1331 - Small changes to improve manual dial hotkey use
 # 150204-1911 - Changed Manual hotkey auto-manual-dial to a variable delay depending on dispo processing time
+# 150210-1225 - Added LOCK options for manual_dial_search_checkbox, fixed missing QXZ tags(issue #827)
 #
 
-$version = '2.10-447c';
-$build = '150204-1911';
+$version = '2.10-448c';
+$build = '150210-1225';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -6323,7 +6324,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					var CBcounT = CBcounTtotal_array[0];
 					if (scheduled_callbacks_count=='LIVE')
 						{CBcounT = CBcounTtotal_array[1];}
-					if (CBcounT == 0) {var CBprint = "NO";}
+					if (CBcounT == 0) {var CBprint = "<?php echo _QXZ("NO"); ?>";}
 					else 
 						{
 						var CBprint = CBcounT;
@@ -7068,7 +7069,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			var MDDiaLOverridEform = document.vicidial_form.MDDiaLOverridE.value;
 			var MDVendorLeadCode = document.vicidial_form.vendor_lead_code.value;
 			var MDLookuPLeaD = 'new';
-			if (document.vicidial_form.LeadLookuP.checked==true)
+			if ( (document.vicidial_form.LeadLookuP.checked==true) || (manual_dial_search_checkbox == 'SELECTED_LOCK') )
 				{MDLookuPLeaD = 'lookup';}
 
 			if (MDPhonENumbeRform == 'XXXXXXXXXX')
@@ -7155,7 +7156,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			else
 				{
 				var MDLookuPLeaD = 'new';
-				if (document.vicidial_form.LeadLookuP.checked==true)
+				if ( (document.vicidial_form.LeadLookuP.checked==true) || (manual_dial_search_checkbox == 'SELECTED_LOCK') )
 					{MDLookuPLeaD = 'lookup';}
 			
 				agent_dialed_number=1;
@@ -11191,9 +11192,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					dial_next_failed=0;
 					xfer_agent_selected=0;
 
-					if (manual_dial_search_checkbox == 'SELECTED_RESET')
+					if ( (manual_dial_search_checkbox == 'SELECTED_RESET') || (manual_dial_search_checkbox == 'SELECTED_LOCK') )
 						{document.vicidial_form.LeadLookuP.checked=true;}
-					if (manual_dial_search_checkbox == 'UNSELECTED_RESET')
+					if ( (manual_dial_search_checkbox == 'UNSELECTED_RESET') || (manual_dial_search_checkbox == 'UNSELECTED_LOCK') )
 						{document.vicidial_form.LeadLookuP.checked=false;}
 
 					if (post_phone_time_diff_alert_message.length > 10)
@@ -14324,7 +14325,7 @@ function phone_number_format(formatphone) {
 			if (qc_enabled < 1)
 				{document.getElementById("viewcommentsdisplay").innerHTML = "";}
 
-			if ( (manual_dial_search_checkbox == 'SELECTED') || (manual_dial_search_checkbox == 'SELECTED_RESET') )
+			if ( (manual_dial_search_checkbox == 'SELECTED') || (manual_dial_search_checkbox == 'SELECTED_RESET') || (manual_dial_search_checkbox == 'SELECTED_LOCK') )
 				{document.vicidial_form.LeadLookuP.checked=true;}
 			else
 				{document.vicidial_form.LeadLookuP.checked=false;}
@@ -16334,7 +16335,7 @@ if ($agent_display_dialable_leads > 0)
 	&nbsp;<br />
 	<?php
 	if ($agentonly_callbacks)
-        {echo "<input type=\"checkbox\" name=\"CallBackOnlyMe\" id=\"CallBackOnlyMe\" size=\"1\" value=\"0\" /> MY CALLBACK ONLY <br />";}
+        {echo "<input type=\"checkbox\" name=\"CallBackOnlyMe\" id=\"CallBackOnlyMe\" size=\"1\" value=\"0\" /> "._QXZ("MY CALLBACK ONLY")." <br />";}
 
 	if ($comments_callback_screen != 'REPLACE_CB_NOTES')
 		{echo _QXZ("CB Comments:")." <input type=\"text\" name=\"CallBackCommenTsField\" id=\"CallBackCommenTsField\" size=\"50\" maxlength=\"255\" /><br /><br />\n";}
@@ -16429,11 +16430,17 @@ if ($agent_display_dialable_leads > 0)
 		{
 		echo "<input type=\"hidden\" name=\"MDLeadIDEntry\" id=\"MDLeadIDEntry\" value=\"\" />\n";
 		}
+
+	$LeadLookuPXtra='';
+	if ($manual_dial_search_checkbox == 'SELECTED_LOCK')
+		{$LeadLookuPXtra = 'CHECKED DISABLED ';}
+	if ($manual_dial_search_checkbox == 'UNSELECTED_LOCK')
+		{$LeadLookuPXtra = 'DISABLED ';}
 	?>
 	</td>
 	</tr><tr>
     <td align="right"><font class="body_text"> <?php echo _QXZ("Search Existing Leads:"); ?> </font></td>
-    <td align="left"><font class="body_text"><input type="checkbox" name="LeadLookuP" id="LeadLookuP" size="1" value="0" />&nbsp; <?php echo _QXZ("(This option if checked will attempt to find the phone number in the system before inserting it as a new lead)"); ?></font></td>
+    <td align="left"><font class="body_text"><input type="checkbox" name="LeadLookuP" id="LeadLookuP" size="1" value="0" <?php echo $LeadLookuPXtra ?>/>&nbsp; <?php echo _QXZ("(This option if checked will attempt to find the phone number in the system before inserting it as a new lead)"); ?></font></td>
 	</tr><tr>
 
     <td align="left" colspan="2">

@@ -37,6 +37,7 @@
 # 150117-1439 - Added NAME option to campaigns-status_display_fields
 # 150120-0636 - Hide non-functional agent_extended_alt_dial campaign feature
 # 150204-1246 - Small fixes, issue #826
+# 150210-0659 - Added LOCK options for manual_dial_search_checkbox
 #
 
 require("dbconnect_mysqli.php");
@@ -1555,7 +1556,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-manual_dial_search_checkbox">
 <BR>
-<B><?php echo _QXZ("Manual Dial Search Checkbox"); ?> -</B><?php echo _QXZ("This allows you to define if you want the manual dial search checkbox to be selected by default or not. If an option with RESET is chosen, then the checkbox will be reset after every call. Default is SELECTED."); ?>
+<B><?php echo _QXZ("Manual Dial Search Checkbox"); ?> -</B><?php echo _QXZ("This allows you to define if you want the manual dial search checkbox to be selected by default or not. If an option with RESET is chosen, then the checkbox will be reset after every call. If an option with LOCK is chosen, then the agent will not be able to click on the checkbox. Default is SELECTED."); ?>
 
 <BR>
 <A NAME="campaigns-manual_dial_search_filter">

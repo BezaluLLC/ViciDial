@@ -170,3 +170,7 @@ ALTER TABLE vicidial_lists ADD local_call_time VARCHAR(10) NOT NULL DEFAULT 'cam
 ALTER TABLE vicidial_campaigns ADD manual_dial_search_filter VARCHAR(50) default 'NONE';
 
 UPDATE system_settings SET db_schema_version='1400',db_schema_update_date=NOW() where db_schema_version < 1400;
+
+ALTER TABLE vicidial_campaigns MODIFY manual_dial_search_checkbox ENUM('SELECTED','SELECTED_RESET','UNSELECTED','UNSELECTED_RESET','SELECTED_LOCK','UNSELECTED_LOCK') default 'SELECTED';
+
+UPDATE system_settings SET db_schema_version='1401',db_schema_update_date=NOW() where db_schema_version < 1401;

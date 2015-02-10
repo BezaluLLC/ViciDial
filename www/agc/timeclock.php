@@ -1,7 +1,7 @@
 <?php
 # timeclock.php - VICIDIAL system user timeclock
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 80523-0134 - First Build 
@@ -18,6 +18,7 @@
 # 140810-2138 - Changed to use QXZ function for echoing text
 # 141118-1239 - Formatting changes for QXZ output
 # 141216-2122 - Added language settings lookups and user/pass variable standardization
+# 150210-1307 - Fixed QXZ tags and formatting(issue #827)
 #
 
 $version = '2.10-14';
@@ -281,7 +282,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 MAXLENGTH=20 VALUE=\"$VD_login\"></TD></TR>\n";
 			echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Password:")."  </TD>";
 			echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 MAXLENGTH=20 VALUE=''></TD></TR>\n";
-			echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE="._QXZ("SUBMIT")."> &nbsp; </TD></TR>\n";
+			echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=\""._QXZ("SUBMIT")."\"> &nbsp; </TD></TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</TD></TR>\n";
 			echo "</TABLE>\n";
 			echo "</FORM>\n\n";
@@ -401,14 +402,14 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			{
 			$VDdisplayMESSAGE = _QXZ("Time since you were last logged-in:")." $totTIME_HMS";
 			$log_action = 'login';
-			$button_name = 'LOGIN';
+			$button_name = _QXZ("LOGIN");;
 			$LOGtimeMESSAGE = _QXZ("You last logged-out at:")." $last_action_date<BR><BR>"._QXZ("Click LOGIN below to log-in");
 			}
 		if ($status=='LOGIN')
 			{
 			$VDdisplayMESSAGE = _QXZ("Amount of time you have been logged-in:")." $totTIME_HMS";
 			$log_action = 'logout';
-			$button_name = 'LOGOUT';
+			$button_name = _QXZ("LOGOUT");
 			$LOGtimeMESSAGE = _QXZ("You logged-in at:")." $last_action_date<BR>"._QXZ("Amount of time you have been logged-in:")." $totTIME_HMS<BR><BR>"._QXZ("Click LOGOUT below to log-out");
 			}
 
@@ -435,7 +436,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 		echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=3><B> $LOGtimeMESSAGE<BR>&nbsp; </B></TD></TR>\n";
-		echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=$button_name VALUE=$button_name> &nbsp; </TD></TR>\n";
+		echo "<TR><TD ALIGN=CENTER COLSPAN=2><INPUT TYPE=SUBMIT NAME=\"$button_name\" VALUE=\"$button_name\"> &nbsp; </TD></TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1><BR>"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</TD></TR>\n";
 		echo "</TABLE>\n";
 		echo "</FORM>\n\n";
