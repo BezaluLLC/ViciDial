@@ -4,7 +4,7 @@
 # Pulls time stats per agent selectable by campaign or user group
 # should be most accurate agent stats of all of the reports
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 90522-0723 - First build
@@ -39,6 +39,7 @@
 # 141125-0950 - Changed AGENT TIME to LOGIN TIME for uniform headers with other reports, issue #427
 # 141204-0548 - Fix for download headers, issue #805
 # 141230-0929 - Added code for on-the-fly language translations display
+# 150210-1356 - Added option to show time in seconds
 #
 
 $startMS = microtime();
@@ -77,8 +78,10 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
-if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
+if (isset($_GET["time_in_sec"]))			{$time_in_sec=$_GET["time_in_sec"];}
+	elseif (isset($_POST["time_in_sec"]))	{$time_in_sec=$_POST["time_in_sec"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($stage)<2) {$stage='NAME';}
@@ -102,6 +105,10 @@ if (strlen($userSQL)<2)
 	{$userSQL = 'user';}
 if (strlen($TIME_agenttimedetail)<1)
 	{$TIME_agenttimedetail = 'H';}
+if ($time_in_sec)
+	{
+	$TIME_agenttimedetail = 'S';
+	}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -406,7 +413,7 @@ while ($i < $statha_to_print)
 	$i++;
 	}
 
-$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&DB=$DB";
+$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&time_in_sec=$time_in_sec&DB=$DB";
 
 if ($file_download < 1)
 	{
@@ -858,6 +865,8 @@ else
 			$StimeTC[$m] =		"0:00"; 
 			if ($TIME_agenttimedetail == 'HF')
 				{$StimeTC[$m] =		"0:00:00";}
+			if ($TIME_agenttimedetail == 'S')
+				{$StimeTC[$m] =		"0";}
 			$RAWtimeTC =		$StimeTC[$m];
 			$StimeTC[$m] =		sprintf("%10s", $StimeTC[$m]);
 			}
@@ -916,8 +925,16 @@ else
 					}
 				else
 					{
-					$SstatusesHTML .= "       0:00 |";
-					$SstatusesFILE .= ",0:00";
+					if ($TIME_agenttimedetail == 'S')
+						{
+						$SstatusesHTML .= "          0 |";
+						$SstatusesFILE .= ",0";
+						}
+					else
+						{
+						$SstatusesHTML .= "       0:00 |";
+						$SstatusesFILE .= ",0:00";
+						}
 					}
 				}
 			### END loop through each stat line ###
@@ -1468,6 +1485,7 @@ echo "<option value=\"PM\">"._QXZ("PM")."</option>\n";
 echo "<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
 echo "</SELECT><BR>\n";
 echo "<input type='checkbox' name='show_parks' value='checked' $show_parks>"._QXZ("Show parks-holds")."<BR>";
+echo "<input type='checkbox' name='time_in_sec' value='checked' $time_in_sec>"._QXZ("Time in seconds")."<BR>";
 echo _QXZ("Display as").":<BR>";
 echo "<select name='report_display_type'>";
 if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}

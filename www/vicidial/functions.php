@@ -4,7 +4,7 @@
 #
 # functions for administrative scripts and reports
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES:
@@ -21,6 +21,7 @@
 # 140918-1609 - Added admin QXZ print/echo function with length padding
 # 141118-0109 - Added options for up to 9 ordered variables within QXZ function output
 # 141229-1535 - Added code to QXZ allowing for on-the-fly mysql phrase lookups
+# 150210-1358 - Added precision S default to 0 in sec_convert
 #
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
@@ -142,7 +143,13 @@ function sec_convert($sec,$precision)
 		if ($precision == 'HF')
 			{return "0:00:00";}
 		else
-			{return "0:00";}
+			{
+			if ($precision == 'S')
+				{return "0";}
+			else
+				{return "0:00";}
+
+			}
 		}
 	else
 		{
