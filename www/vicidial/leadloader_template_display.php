@@ -1,7 +1,7 @@
 <?php
 # leadloader_template_display.php - version 2.10
 # 
-# Copyright (C) 2014  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 120402-2238 - First Build
@@ -14,6 +14,7 @@
 # 130824-2320 - Changed to mysqli PHP functions
 # 141007-2203 - Finalized adding QXZ translation to all admin files
 # 141229-2021 - Added code for on-the-fly language translations display
+# 150210-0619 - Fixed small display issue
 #
 
 require("dbconnect_mysqli.php");
@@ -73,6 +74,7 @@ else
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
+$list_id = preg_replace('/in_file/', '0', $list_id);
 $list_id = preg_replace('/[^0-9]/', '', $list_id);
 
 $stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
@@ -200,7 +202,7 @@ if ($form_action=="prime_file" && $sample_template_file_name)
 	$field_check=explode($delimiter, $buffer);
 	flush();
 	}
-else if ($list_id && $form_action=="no_template") 
+else if ($list_id>=0 && $form_action=="no_template") 
 	{
 	$campaign_stmt="select campaign_id from vicidial_lists where list_id='$list_id'";
 	$campaign_rslt=mysql_to_mysqli($campaign_stmt, $link);

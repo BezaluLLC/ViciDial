@@ -2,7 +2,7 @@
 # admin_listloader_fourth_gen.php - version 2.10
 #  (based upon - new_listloader_superL.php script)
 # 
-# Copyright (C) 2014  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # ViciDial web-based lead loader from formatted file
 # 
@@ -58,10 +58,11 @@
 # 141001-2200 - Finalized adding QXZ translation to all admin files
 # 141118-1955 - Added more debug output
 # 141229-1814 - Added code for on-the-fly language translations display
+# 150209-2113 - Added master_list_override option to override template setting
 #
 
-$version = '2.10-56';
-$build = '141229-1814';
+$version = '2.10-57';
+$build = '150209-2113';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -140,6 +141,8 @@ if (isset($_GET["owner_field"]))				{$owner_field=$_GET["owner_field"];}
 if (isset($_GET["list_id_override"]))			{$list_id_override=$_GET["list_id_override"];}
 	elseif (isset($_POST["list_id_override"]))	{$list_id_override=$_POST["list_id_override"];}
 	$list_id_override = (preg_replace("/\D/","",$list_id_override));
+if (isset($_GET["master_list_override"]))			{$master_list_override=$_GET["master_list_override"];}
+	elseif (isset($_POST["master_list_override"]))	{$master_list_override=$_POST["master_list_override"];}
 if (isset($_GET["lead_file"]))					{$lead_file=$_GET["lead_file"];}
 	elseif (isset($_POST["lead_file"]))			{$lead_file=$_POST["lead_file"];}
 if (isset($_GET["dupcheck"]))				{$dupcheck=$_GET["dupcheck"];}
@@ -541,7 +544,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 				$count++;
 				}
 			?>
-			</select>
+			</select><input type='checkbox' name='master_list_override' value='1'>(override template setting)
 			</font></td>
 		  </tr>
 		  <tr>
@@ -1195,7 +1198,10 @@ if (($leadfile) && ($LF_path))
 			$template_id=$template_row["template_id"];
 			$template_name=$template_row["template_name"];
 			$template_description=$template_row["template_description"];
-			$list_id_override=$template_row["list_id"];
+			# JCJ - Added 2/9/2015 to allow dropdown to override template
+			if (!$master_list_override) {
+				$list_id_override=$template_row["list_id"];
+			}
 			$standard_variables=$template_row["standard_variables"];
 			$custom_table=$template_row["custom_table"];
 			$custom_variables=$template_row["custom_variables"];
