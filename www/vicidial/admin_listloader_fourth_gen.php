@@ -1198,7 +1198,7 @@ if (($leadfile) && ($LF_path))
 			$template_id=$template_row["template_id"];
 			$template_name=$template_row["template_name"];
 			$template_description=$template_row["template_description"];
-			# JCJ - Added 2/9/2015 to allow dropdown to override template
+			# Added 2/9/2015 to allow dropdown to override template
 			if (!$master_list_override) {
 				$list_id_override=$template_row["list_id"];
 			}
@@ -1324,6 +1324,10 @@ if (($leadfile) && ($LF_path))
 					$source_code =			$row[$source_id_field];
 					$source_id=$source_code;
 					$list_id =				$row[$list_id_field];
+					# Added 2/9/2015 to allow dropdown to override template
+					if ($master_list_override) {
+						$list_id=$list_id_override;
+					}
 					$gmt_offset =			'0';
 					$called_since_last_reset='N';
 					$phone_code =			preg_replace('/[^0-9]/i', '', $row[$phone_code_field]);
