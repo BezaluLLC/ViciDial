@@ -1,7 +1,7 @@
 <?php 
 # AST_timeonVDADall.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -90,10 +90,11 @@
 # 140918-1614 - Added QXZ function formatting of output
 # 141128-0857 - Code cleanup for QXZ functions
 # 141230-0030 - Added code for on-the-fly language translations display
+# 150211-2342 - Added hopper link, issue #825
 #
 
-$version = '2.10-79';
-$build = '141230-0030';
+$version = '2.10-80';
+$build = '150211-2342';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -1811,7 +1812,14 @@ else
 	echo "</TR>";
 
 	echo "<TR>";
-	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("LEADS IN HOPPER").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $VDhop &nbsp; &nbsp; </TD>";
+	if( 1 == count(explode(',' , $group_SQL)))
+		{ 
+		echo "<TD ALIGN=RIGHT><font size=2><B><a href=\"./AST_VICIDIAL_hopperlist.php?group=".str_replace("'","",$group_SQL)."\">"._QXZ("LEADS IN HOPPER")."</a>:</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $VDhop &nbsp; &nbsp; </TD>";
+		}
+	else 
+		{
+		echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("LEADS IN HOPPER").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; $VDhop &nbsp; &nbsp; </TD>";
+		}
 	echo "<TD ALIGN=RIGHT><font size=2><B>"._QXZ("DROPPED PERCENT").":</B></TD><TD ALIGN=LEFT><font size=2>&nbsp; ";
 	if ($drpctTODAY >= $DROPmax)
 		{echo "<font color=red><B>$drpctTODAY%</B></font>";}
