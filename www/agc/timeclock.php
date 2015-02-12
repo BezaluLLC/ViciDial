@@ -19,10 +19,11 @@
 # 141118-1239 - Formatting changes for QXZ output
 # 141216-2122 - Added language settings lookups and user/pass variable standardization
 # 150210-1307 - Fixed QXZ tags and formatting(issue #827)
+# 150212-0033 - Added case-sensitive user validation(issue #682)
 #
 
-$version = '2.10-14';
-$build = '141216-2122';
+$version = '2.10-15';
+$build = '150212-0033';
 
 $StarTtimE = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -99,7 +100,7 @@ require_once("functions.php");
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
 $VUselected_language = '';
-$stmt="SELECT selected_language from vicidial_users where user='$VD_login';";
+$stmt="SELECT user,selected_language from vicidial_users where user='$VD_login';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -107,7 +108,8 @@ $sl_ct = mysqli_num_rows($rslt);
 if ($sl_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$VUselected_language =		$row[0];
+	$VUuser =				$row[0];
+	$VUselected_language =	$row[1];
 	}
 
 $stmt = "SELECT use_non_latin,admin_home_url,admin_web_directory,enable_languages,language_method FROM system_settings;";
@@ -146,6 +148,15 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 	$auth_message = user_authorization($user,$pass,'',1,0,0);
 	if ($auth_message == 'GOOD')
 		{$valid_user=1;}
+
+	# case-sensitive check for user
+	if($valid_user>0)
+		{
+		if ($user != "$VUuser") 
+			{
+			$valid_user=0;
+			}
+		}
 
 	print "<!-- vicidial_users active count for $user:   |$valid_user| -->\n";
 

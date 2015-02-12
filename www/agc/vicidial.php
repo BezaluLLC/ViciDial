@@ -477,10 +477,11 @@
 # 150203-1331 - Small changes to improve manual dial hotkey use
 # 150204-1911 - Changed Manual hotkey auto-manual-dial to a variable delay depending on dispo processing time
 # 150210-1225 - Added LOCK options for manual_dial_search_checkbox, fixed missing QXZ tags(issue #827)
+# 150212-0034 - Added case-sensitive user validation(issue #682)
 #
 
-$version = '2.10-448c';
-$build = '150210-1225';
+$version = '2.10-449c';
+$build = '150212-0034';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -563,7 +564,7 @@ $VUselected_language = '';
 $random = (rand(1000000, 9999999) + 10000000);
 
 
-$stmt="SELECT selected_language from vicidial_users where user='$VD_login';";
+$stmt="SELECT user,selected_language from vicidial_users where user='$VD_login';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01081',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -571,7 +572,8 @@ $sl_ct = mysqli_num_rows($rslt);
 if ($sl_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$VUselected_language =		$row[0];
+	$VUuser =				$row[0];
+	$VUselected_language =	$row[1];
 	}
 
 #############################################
@@ -1121,6 +1123,15 @@ else
 			{
 			$auth=1;
 			$pass_hash = preg_replace("/GOOD\|/",'',$auth_message);
+			}
+		# case-sensitive check for user
+		if($auth>0)
+			{
+			if ($VD_login != "$VUuser") 
+				{
+				$auth=0;
+				$auth_message='ERRCASE';
+				}
 			}
 
 		if($auth>0)
@@ -2202,6 +2213,8 @@ else
 				{$VDdisplayMESSAGE = _QXZ("You are already logged in, please log out of your other session first")."<br />";}
 			if ($auth_message == 'ERRAGENTS')
 				{$VDdisplayMESSAGE = _QXZ("Too many agents logged in, please contact your administrator")."<br />";}
+			if ($auth_message == 'ERRCASE')
+				{$VDdisplayMESSAGE = _QXZ("Login incorrect, user names are case sensitive")."<br />";}
 			}
 		}
 	if ($VDloginDISPLAY)
