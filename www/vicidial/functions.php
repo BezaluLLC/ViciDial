@@ -22,11 +22,13 @@
 # 141118-0109 - Added options for up to 9 ordered variables within QXZ function output
 # 141229-1535 - Added code to QXZ allowing for on-the-fly mysql phrase lookups
 # 150210-1358 - Added precision S default to 0 in sec_convert
+# 150216-1528 - Fixed non-latin problem, issue #828
 #
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
 function user_authorization($user,$pass,$user_option,$user_update)
 	{
+	global $link;
 	require("dbconnect_mysqli.php");
 
 	#############################################
@@ -410,22 +412,32 @@ function download_max_system_stats($campaign_id,$days_graph,$title,$metric,$metr
 		$CSV_text.="\n\n";
 		}
 	}
-##### BEGIN download max stats data #####
+##### END download max stats data #####
 
-function mysql_to_mysqli($stmt, $link) {
+
+function mysql_to_mysqli($stmt, $link) 
+	{
 	$rslt=mysqli_query($link, $stmt);
 	return $rslt;
-}
-
-function MathZDC($dividend, $divisor, $quotient=0) {
-	if ($divisor==0) {
-		return $quotient;
-	} else if ($dividend==0) {
-		return 0;
-	} else {
-		return ($dividend/$divisor);
 	}
-}
+
+
+function MathZDC($dividend, $divisor, $quotient=0) 
+	{
+	if ($divisor==0) 
+		{
+		return $quotient;
+		}
+	else if ($dividend==0) 
+		{
+		return 0;
+		}
+	else 
+		{
+		return ($dividend/$divisor);
+		}
+	}
+
 
 # function to print/echo content, options for length, alignment and ordered internal variables are included
 function _QXZ($English_text, $sprintf=0, $align="l", $v_one='', $v_two='', $v_three='', $v_four='', $v_five='', $v_six='', $v_seven='', $v_eight='', $v_nine='')

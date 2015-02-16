@@ -1,16 +1,17 @@
 <?php
 # 
-# dbconnect_mysqli.php    version 2.8
+# dbconnect_mysqli.php    version 2.10
 #
 # database connection settings and some global web settings
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES:
 # 130328-0022 - Converted ereg to preg functions
 # 130802-0957 - Changed to PHP mysqli functions, added 
 # 131101-0713 - Fixed slave server setting
 # 131210-1746 - Added ability to define slave server with port number, issue #687
+# 150216-1529 - Removed non-latin set to 0
 #
 
 if ( file_exists("/etc/astguiclient.conf") )
@@ -83,7 +84,7 @@ $local_AMP = '@';
 $ext_context = 'default';
 $recording_exten = '8309';
 $WeBRooTWritablE = '1';
-$non_latin = '0';	# set to 1 for UTF rules, overridden by system_settings
+# $non_latin = '0';	# set to 1 for UTF rules, overridden by system_settings
 $flag_channels=0;
 $flag_string = 'VICIast20';
 
