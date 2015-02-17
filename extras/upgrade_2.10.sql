@@ -174,3 +174,9 @@ UPDATE system_settings SET db_schema_version='1400',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns MODIFY manual_dial_search_checkbox ENUM('SELECTED','SELECTED_RESET','UNSELECTED','UNSELECTED_RESET','SELECTED_LOCK','UNSELECTED_LOCK') default 'SELECTED';
 
 UPDATE system_settings SET db_schema_version='1401',db_schema_update_date=NOW() where db_schema_version < 1401;
+
+ALTER TABLE vicidial_voicemail ADD on_login_report enum('Y','N') NOT NULL default 'N';
+
+ALTER TABLE phones ADD on_login_report enum('Y','N') NOT NULL default 'N';
+
+UPDATE system_settings SET db_schema_version='1402',db_schema_update_date=NOW() where db_schema_version < 1402;

@@ -38,6 +38,7 @@
 # 150120-0636 - Hide non-functional agent_extended_alt_dial campaign feature
 # 150204-1246 - Small fixes, issue #826
 # 150210-0659 - Added LOCK options for manual_dial_search_checkbox
+# 150217-0657 - Added vmail show on login option
 #
 
 require("dbconnect_mysqli.php");
@@ -3451,18 +3452,22 @@ if ($SSoutbound_autodial_active > 0)
 
 <BR>
 <A NAME="voicemail-fullname">
+<BR>
 <B><?php echo _QXZ("Name"); ?> -</B><?php echo _QXZ("This is name associated with this voicemail box. max 100 characters, minimum of 2 characters."); ?>
 
 <BR>
 <A NAME="voicemail-pass">
+<BR>
 <B><?php echo _QXZ("Password"); ?> -</B><?php echo _QXZ("This is the password that is used to gain access to the voicemail box when dialing in to check messages max 10 characters, minimum of 2 characters."); ?>
 
 <BR>
 <A NAME="voicemail-active">
+<BR>
 <B><?php echo _QXZ("Active"); ?> -</B><?php echo _QXZ("This option allows you to set the voicemail box to active or inactive. If the box is inactive you cannot leave messages on it and you cannot check messages in it."); ?>
 
 <BR>
 <A NAME="voicemail-email">
+<BR>
 <B><?php echo _QXZ("Email"); ?> -</B><?php echo _QXZ("This optional setting allows you to have the voicemail messages sent to an email account, if your system is set up to send out email. If this field is empty then no emails will be sent out."); ?>
 
 <BR>
@@ -3472,18 +3477,27 @@ if ($SSoutbound_autodial_active > 0)
 
 <BR>
 <A NAME="voicemail-delete_vm_after_email">
+<BR>
 <B><?php echo _QXZ("Delete Voicemail After Email"); ?> -</B><?php echo _QXZ("This optional setting allows you to have the voicemail messages deleted from the system after they have been emailed out. Default is N."); ?>
 
 <BR>
+<A NAME="voicemail-show_vm_on_summary">
+<BR>
+<B><?php echo _QXZ("Show VM on Summary Screen"); ?> -</B><?php echo _QXZ("This option will display this Voicemail Box information on the summary page seen when logging into the administration page. It will show the box name, new message count, old count, and total messages in the box. Note the table will not be shown unless you have set at least one mailbox to Y. Default is N for off."); ?>
+
+<BR>
 <A NAME="voicemail-voicemail_greeting">
+<BR>
 <B><?php echo _QXZ("Voicemail Greeting"); ?> -</B><?php echo _QXZ("This optional setting allows you to define a voicemail greeting audio file from the audio store. Default is blank."); ?>
 
 <BR>
 <A NAME="voicemail-voicemail_timezone">
+<BR>
 <B><?php echo _QXZ("Voicemail Zone"); ?> -</B><?php echo _QXZ("This setting allows you to set the zone that this voicemail box will be set to when the time is logged for a message. Default is set in the System Settings."); ?>
 
 <BR>
 <A NAME="voicemail-voicemail_options">
+<BR>
 <B><?php echo _QXZ("Voicemail Options"); ?> -</B><?php echo _QXZ("This optional setting allows you to define additional voicemail settings. It is recommended that you leave this blank unless you know what you are doing."); ?>
 
 <?php
@@ -3677,6 +3691,10 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="phones-voicemail_instructions">
 <B><?php echo _QXZ("Voicemail Instructions"); ?> -</B><?php echo _QXZ("This setting allows you to define if the voicemail instructions will play after the voicemail greeting when a call rings on the agent extension and times out to voicemail. Default is Y."); ?>
+
+<BR>
+<A NAME="phones-show_vm_on_summary">
+<B><?php echo _QXZ("Show VM on Summary Screen"); ?> -</B><?php echo _QXZ("This option will display this Voicemail Box information on the summary page seen when logging into the administration page. It will show the box name, new message count, old count, and total messages in the box. Note the table will not be shown unless you have set at least one mailbox to Y. Default is N for off."); ?>
 
 <BR>
 <A NAME="phones-picture">

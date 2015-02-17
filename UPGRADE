@@ -131,6 +131,9 @@ OTHER CHANGES:
 
 26. Added case-sensitive user ID validation on agent login.
 
+27. Added option in phones and voicemail to display message counts on the 
+	Admin Summary screen.
+
 
 
 

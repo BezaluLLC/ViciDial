@@ -86,6 +86,7 @@ user_group VARCHAR(20) default '---ALL---',
 voicemail_greeting VARCHAR(100) default '',
 voicemail_dump_exten_no_inst VARCHAR(20) default '85026666666667',
 voicemail_instructions ENUM('Y','N') default 'Y',
+on_login_report enum('Y','N') NOT NULL default 'N',
 index (server_ip),
 index (voicemail_id),
 index (dialplan_number),
@@ -2319,7 +2320,8 @@ delete_vm_after_email ENUM('N','Y') default 'N',
 voicemail_timezone VARCHAR(30) default 'eastern',
 voicemail_options VARCHAR(255) default '',
 user_group VARCHAR(20) default '---ALL---',
-voicemail_greeting VARCHAR(100) default ''
+voicemail_greeting VARCHAR(100) default '',
+on_login_report enum('Y','N') NOT NULL default 'N'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_user_territory_log (
@@ -3365,4 +3367,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1401',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1402',db_schema_update_date=NOW(),reload_timestamp=NOW();
