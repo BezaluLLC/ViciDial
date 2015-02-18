@@ -478,11 +478,11 @@
 # 150204-1911 - Changed Manual hotkey auto-manual-dial to a variable delay depending on dispo processing time
 # 150210-1225 - Added LOCK options for manual_dial_search_checkbox, fixed missing QXZ tags(issue #827)
 # 150212-0034 - Added case-sensitive user validation(issue #682)
-# 150218-1111 - Fixes for QXZ enclosed in single-quotes
+# 150218-1356 - Fixes for QXZ enclosed in single-quotes
 #
 
 $version = '2.10-450c';
-$build = '150218-1111';
+$build = '150218-1356';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -12195,11 +12195,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					refresh_interval = 7300000;
 					var logout_content='';
 					if (tempreason=='SHIFT')
-                        {logout_content='<?php echo _QXZ("Your Shift is over or has changed, you have been logged out of your session"); ?><br /><br />';}
+                        {logout_content="<?php echo _QXZ("Your Shift is over or has changed, you have been logged out of your session"); ?><br /><br />";}
 					if (tempreason=='API')
-                        {logout_content='<?php echo _QXZ("The system has received a command to log you out, you have been logged out of your session"); ?><br /><br />';}
+                        {logout_content="<?php echo _QXZ("The system has received a command to log you out, you have been logged out of your session"); ?><br /><br />";}
 					if (tempreason=='TIMEOUT')
-                        {logout_content='<?php echo _QXZ("You have been paused for too long, you have been logged out of your session"); ?><br /><br />';}
+                        {logout_content="<?php echo _QXZ("You have been paused for too long, you have been logged out of your session"); ?><br /><br />";}
 
 					document.getElementById("LogouTBoxLink").innerHTML = logout_content + "<a href=\"" + agcPAGE + "?relogin=YES&session_epoch=" + epoch_sec + "&session_id=" + session_id + "&session_name=" + session_name + "&VD_login=" + user + "&VD_campaign=" + campaign + "&phone_login=" + original_phone_login + "&phone_pass=" + phone_pass + "&VD_pass=" + orig_pass + "\" onclick=\"needToConfirmExit = false;\"><?php echo _QXZ("CLICK HERE TO LOG IN AGAIN"); ?></a>\n";
 
@@ -14658,7 +14658,7 @@ function phone_number_format(formatphone) {
 
 						if (customer_3way_hangup_action=='DISPO')
 							{
-							customer_3way_hangup_dispo_message='<?php echo _QXZ("Customer Hung-up, 3-way Call Ended Automatically"); ?>';
+							customer_3way_hangup_dispo_message="<?php echo _QXZ("Customer Hung-up, 3-way Call Ended Automatically"); ?>";
 							bothcall_send_hangup();
 							}
 						}
@@ -15122,13 +15122,13 @@ function phone_number_format(formatphone) {
 				document.getElementById("ViewCommentsShowHide").innerHTML = "<a href=\"#\" onclick=\"ViewComments('OFF');return false;\"><?php echo _QXZ("hide comment history"); ?></a> - <a href=\"#\" onclick=\"ViewComments('OFF','OFF');return false;\"><?php echo _QXZ("close"); ?></a>";
 				}
 			//view_comments_active = 1;
-			document.getElementById("viewcommentsdisplay").innerHTML = "<input type=\"button\" id='ViewCommentButton' onClick=\"ViewComments('OFF')\" value='<?php echo _QXZ("HIDE"); ?>' />";
+			document.getElementById("viewcommentsdisplay").innerHTML = "<input type=\"button\" id='ViewCommentButton' onClick=\"ViewComments('OFF')\" value=\"<?php echo _QXZ("HIDE"); ?>\" />";
 			if (comments_all_tabs == 'ENABLED')
-				{document.getElementById("otherviewcommentsdisplay").innerHTML = "<input type=\"button\" id='OtherViewCommentButton' onClick=\"ViewComments('OFF')\" value='<?php echo _QXZ("HIDE"); ?>' />";}
+				{document.getElementById("otherviewcommentsdisplay").innerHTML = "<input type=\"button\" id='OtherViewCommentButton' onClick=\"ViewComments('OFF')\" value=\"<?php echo _QXZ("HIDE"); ?>\" />";}
 			if (VCspanname == 'dispo') 
-				{document.getElementById("dispoviewcommentsdisplay").innerHTML = "<input type=\"button\" id='DispoViewCommentButton' onClick=\"ViewComments('OFF','','dispo')\" value='<?php echo _QXZ("HIDE"); ?>' />";}
+				{document.getElementById("dispoviewcommentsdisplay").innerHTML = "<input type=\"button\" id='DispoViewCommentButton' onClick=\"ViewComments('OFF','','dispo')\" value=\"<?php echo _QXZ("HIDE"); ?>\" />";}
 			if (VCspanname == 'cb') 
-				{document.getElementById("cbviewcommentsdisplay").innerHTML = "<input type=\"button\" id='CBViewCommentButton' onClick=\"ViewComments('OFF','','cb')\" value='<?php echo _QXZ("HIDE"); ?>' />";}
+				{document.getElementById("cbviewcommentsdisplay").innerHTML = "<input type=\"button\" id='CBViewCommentButton' onClick=\"ViewComments('OFF','','cb')\" value=\"<?php echo _QXZ("HIDE"); ?>\" />";}
 			}
 		else
 			{

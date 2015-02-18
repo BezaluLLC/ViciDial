@@ -330,12 +330,12 @@ $NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 ### PRELOAD ###
+$preload_campaigns=array();
+$preload_lists=array();
+$preload_user_groups=array();
+$preload_users=array();
 if ($campaign_id) 
 	{
-	$preload_campaigns=array();
-	$preload_lists=array();
-	$preload_user_groups=array();
-	$preload_users=array();
 	# Trying a three-level UNION statement to see if that's faster
 	$stmt="SELECT distinct campaign_id, 'CAMPAIGN' as dtype FROM vicidial_callbacks where campaign_id='$campaign_id' UNION SELECT distinct user_group, 'USER_GROUP' as dtype FROM vicidial_callbacks where campaign_id='$campaign_id' UNION SELECT distinct list_id, 'LIST_ID' as dtype from vicidial_callbacks where campaign_id='$campaign_id' UNION SELECT distinct user, 'USER' as dtype from vicidial_callbacks where campaign_id='$campaign_id' order by dtype asc;";
 	$rslt=mysql_to_mysqli($stmt, $link);
