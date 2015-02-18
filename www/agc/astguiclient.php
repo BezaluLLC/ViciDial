@@ -66,10 +66,11 @@
 # 141118-1230 - Formatting changes for QXZ output
 # 141125-0947 - Using pass hashes in AJAX
 # 141216-2115 - Added language settings lookups and user/pass variable standardization
+# 150218-1110 - Fixes for QXZ enclosed in single-quotes
 #
 
 $version = '2.2.6-1';
-$build = '141216-2110';
+$build = '150218-1110';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -1804,7 +1805,7 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 		var reglink='';
 		if (taskreg.length<1) 
 			{
-			head_reg = '<?php echo _QXZ("NO ONE"); ?>';
+			head_reg = "<?php echo _QXZ("NO ONE"); ?>";
 			show_reglink=1;
 			reglink = "<a href=\"#\" onclick=\"conf_register_room('" + head_conf + "');return false;\">Register</a>";
 			}
@@ -2533,13 +2534,13 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 	function activeext_order_asc()	// changes order of activeext list to ascending
 		{
 		activeext_order="asc";   getactiveext();
-		desc_order_HTML ='<a href="#" onclick="activeext_order_desc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
+		desc_order_HTML ="<a href=\"#\" onclick=\"activeext_order_desc();return false;\"><?php echo _QXZ("ORDER"); ?></a>";
 		document.getElementById("activeext_order").innerHTML = desc_order_HTML;
 		}
 	function activeext_order_desc()	// changes order of activeext list to descending
 		{
 		activeext_order="desc";   getactiveext();
-		asc_order_HTML ='<a href="#" onclick="activeext_order_asc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
+		asc_order_HTML ="<a href=\"#\" onclick=\"activeext_order_asc();return false;\"><?php echo _QXZ("ORDER"); ?></a>";
 		document.getElementById("activeext_order").innerHTML = asc_order_HTML;
 		}
 
@@ -2549,13 +2550,13 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 	function busytrunk_order_asc()	// changes order of busytrunk list to ascending
 		{
 		busytrunk_order="asc";   getbusytrunk();
-		desc_order_HTML ='<a href="#" onclick="busytrunk_order_desc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
+		desc_order_HTML ="<a href=\"#\" onclick=\"busytrunk_order_desc();return false;\"><?php echo _QXZ("ORDER"); ?></a>";
 		document.getElementById("busytrunk_order").innerHTML = desc_order_HTML;
 		}
 	function busytrunk_order_desc()	// changes order of busytrunk list to descending
 		{
 		busytrunk_order="desc";   getbusytrunk();
-		asc_order_HTML ='<a href="#" onclick="busytrunk_order_asc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
+		asc_order_HTML ="<a href=\"#\" onclick=\"busytrunk_order_asc();return false;\"><?php echo _QXZ("ORDER"); ?></a>";
 		document.getElementById("busytrunk_order").innerHTML = asc_order_HTML;
 		}
 	function busytrunkhangup_force_refresh()	// forces immediate refresh of list content
@@ -2567,13 +2568,13 @@ if ($enable_fast_refresh < 1) {echo "var refresh_interval = 1000;\n";}
 	function busyext_order_asc()	// changes order of busyext list to ascending
 		{
 		busyext_order="asc";   getbusyext();
-		desc_order_HTML ='<a href="#" onclick="busyext_order_desc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
+		desc_order_HTML ="<a href=\"#\" onclick=\"busyext_order_desc();return false;\"><?php echo _QXZ("ORDER"); ?></a>";
 		document.getElementById("busyext_order").innerHTML = desc_order_HTML;
 		}
 	function busyext_order_desc()	// changes order of busyext list to descending
 		{
 		busyext_order="desc";   getbusyext();
-		asc_order_HTML ='<a href="#" onclick="busyext_order_asc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
+		asc_order_HTML ="<a href=\"#\" onclick=\"busyext_order_asc();return false;\"><?php echo _QXZ("ORDER"); ?></a>";
 		document.getElementById("busyext_order").innerHTML = asc_order_HTML;
 		}
 	function busylocalhangup_force_refresh()	// forces immediate refresh of list content

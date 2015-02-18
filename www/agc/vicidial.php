@@ -478,10 +478,11 @@
 # 150204-1911 - Changed Manual hotkey auto-manual-dial to a variable delay depending on dispo processing time
 # 150210-1225 - Added LOCK options for manual_dial_search_checkbox, fixed missing QXZ tags(issue #827)
 # 150212-0034 - Added case-sensitive user validation(issue #682)
+# 150218-1111 - Fixes for QXZ enclosed in single-quotes
 #
 
-$version = '2.10-449c';
-$build = '150212-0034';
+$version = '2.10-450c';
+$build = '150218-1111';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -4933,7 +4934,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 							if (PausENotifYCounTer > 10)
 								{
-								alert_box('<?php echo _QXZ("Your session has been paused"); ?>');
+								alert_box("<?php echo _QXZ("Your session has been paused"); ?>");
 								AutoDial_ReSume_PauSe('VDADpause');
 								PausENotifYCounTer=0;
 								}
@@ -6115,7 +6116,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		alt_dial_active = 0;
 		alt_dial_status_display = 0;
 		open_dispo_screen=1;
-		document.getElementById("MainStatuSSpan").innerHTML = '<?php echo _QXZ("Dial Next Number"); ?>';
+		document.getElementById("MainStatuSSpan").innerHTML = "<?php echo _QXZ("Dial Next Number"); ?>";
 		}
 // ################################################################################
 // Insert or update the vicidial_log entry for a customer call
@@ -8184,7 +8185,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		{
 		if (manual_dial_in_progress==1)
 			{
-			alert_box('<?php echo _QXZ("YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD"); ?>');
+			alert_box("<?php echo _QXZ("YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD"); ?>");
 			}
 		else
 			{
@@ -11224,7 +11225,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					if (hide_gender < 1)
 						{
 						document.getElementById("GENDERhideFORieALT").innerHTML = '';
-						document.getElementById("GENDERhideFORie").innerHTML = '<select size="1" name="gender_list" class="cust_form" id="gender_list"><option value="U"><?php echo _QXZ("U - Undefined"); ?></option><option value="M"><?php echo _QXZ("M - Male"); ?></option><option value="F"><?php echo _QXZ("F - Female"); ?></option></select>';
+						document.getElementById("GENDERhideFORie").innerHTML = "<select size=\"1\" name=\"gender_list\" class=\"cust_form\" id=\"gender_list\"><option value=\"U\"><?php echo _QXZ("U - Undefined"); ?></option><option value=\"M\"><?php echo _QXZ("M - Male"); ?></option><option value=\"F\"><?php echo _QXZ("F - Female"); ?></option></select>";
 						}
 					hideDiv('DispoSelectBox');
 					hideDiv('DispoButtonHideA');
@@ -12150,7 +12151,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					}
 				else
 					{
-					document.getElementById("LogouTProcess").innerHTML = '<?php echo _QXZ("LOGOUT PROCESSING..."); ?>';
+					document.getElementById("LogouTProcess").innerHTML = "<?php echo _QXZ("LOGOUT PROCESSING..."); ?>";
 					var xmlhttp=false;
 					/*@cc_on @*/
 					/*@if (@_jscript_version >= 5)
@@ -12183,7 +12184,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							//	alert(VDlogout_query);
 							//	alert(xmlhttp.responseText);
 							
-								document.getElementById("LogouTProcess").innerHTML = '<?php echo _QXZ("LOGOUT PROCESS COMPLETE, YOU MAY NOW CLOSE YOUR BROWSER OR LOG BACK IN"); ?>';
+								document.getElementById("LogouTProcess").innerHTML = "<?php echo _QXZ("LOGOUT PROCESS COMPLETE, YOU MAY NOW CLOSE YOUR BROWSER OR LOG BACK IN"); ?>";
 								}
 							}
 						delete xmlhttp;
@@ -13012,7 +13013,7 @@ else
 	//					decoded += unescape( encoded.substr(i,3) );
 	//					i += 3;
 	//				} else {
-	//					alert( 'Bad escape combo near ...' + encoded.substr(i) );
+	//					alert("Bad escape combo near ..." + encoded.substr(i) );
 	//					decoded += "%[ERR]";
 	//					i++;
 	//				}
@@ -14460,7 +14461,7 @@ function phone_number_format(formatphone) {
 				if (hide_gender < 1)
 					{
 					document.getElementById("GENDERhideFORie").innerHTML = '';
-					document.getElementById("GENDERhideFORieALT").innerHTML = '<select size="1" name="gender_list" class="cust_form" id="gender_list"><option value="U"><?php echo _QXZ("U - Undefined"); ?></option><option value="M"><?php echo _QXZ("M - Male"); ?></option><option value="F"><?php echo _QXZ("F - Female"); ?></option></select>';
+					document.getElementById("GENDERhideFORieALT").innerHTML = "<select size=\"1\" name=\"gender_list\" class=\"cust_form\" id=\"gender_list\"><option value=\"U\"><?php echo _QXZ("U - Undefined"); ?></option><option value=\"M\"><?php echo _QXZ("M - Male"); ?></option><option value=\"F\"><?php echo _QXZ("F - Female"); ?></option></select>";
 					}
 				ViewComments('OFF','OFF');
 				showDiv('DispoSelectBox');
@@ -15013,59 +15014,6 @@ function phone_number_format(formatphone) {
 		refresh_interval=(refresh_interval + 1000);
 		}
 
-	// activeext-specific functions
-	function activeext_force_refresh()	// forces immediate refresh of list content
-		{getactiveext();}
-	function activeext_order_asc()	// changes order of activeext list to ascending
-		{
-		activeext_order="asc";   getactiveext();
-		desc_order_HTML ='<a href="#" onclick="activeext_order_desc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
-		document.getElementById("activeext_order").innerHTML = desc_order_HTML;
-		}
-	function activeext_order_desc()	// changes order of activeext list to descending
-		{
-		activeext_order="desc";   getactiveext();
-		asc_order_HTML ='<a href="#" onclick="activeext_order_asc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
-		document.getElementById("activeext_order").innerHTML = asc_order_HTML;
-		}
-
-	// busytrunk-specific functions
-	function busytrunk_force_refresh()	// forces immediate refresh of list content
-		{getbusytrunk();}
-	function busytrunk_order_asc()	// changes order of busytrunk list to ascending
-		{
-		busytrunk_order="asc";   getbusytrunk();
-		desc_order_HTML ='<a href="#" onclick="busytrunk_order_desc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
-		document.getElementById("busytrunk_order").innerHTML = desc_order_HTML;
-		}
-	function busytrunk_order_desc()	// changes order of busytrunk list to descending
-		{
-		busytrunk_order="desc";   getbusytrunk();
-		asc_order_HTML ='<a href="#" onclick="busytrunk_order_asc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
-		document.getElementById("busytrunk_order").innerHTML = asc_order_HTML;
-		}
-	function busytrunkhangup_force_refresh()	// forces immediate refresh of list content
-		{busytrunkhangup();}
-
-	// busyext-specific functions
-	function busyext_force_refresh()	// forces immediate refresh of list content
-		{getbusyext();}
-	function busyext_order_asc()	// changes order of busyext list to ascending
-		{
-		busyext_order="asc";   getbusyext();
-		desc_order_HTML ='<a href="#" onclick="busyext_order_desc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
-		document.getElementById("busyext_order").innerHTML = desc_order_HTML;
-		}
-	function busyext_order_desc()	// changes order of busyext list to descending
-		{
-		busyext_order="desc";   getbusyext();
-		asc_order_HTML ='<a href="#" onclick="busyext_order_asc();return false;"><?php echo _QXZ("ORDER"); ?></a>';
-		document.getElementById("busyext_order").innerHTML = asc_order_HTML;
-		}
-	function busylocalhangup_force_refresh()	// forces immediate refresh of list content
-		{busylocalhangup();}
-
-
 	// functions to hide and show different DIVs
 	function showDiv(divvar) 
 		{
@@ -15273,7 +15221,7 @@ function phone_number_format(formatphone) {
 			{
 			if (showxfervar != 'OFF')
 				{
-				alert_box('<?php echo _QXZ("YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS"); ?>');
+				alert_box("<?php echo _QXZ("YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS"); ?>");
 				}
 			}
 		}
@@ -15433,7 +15381,7 @@ function phone_number_format(formatphone) {
 			var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
 			if (genderValue == 'M') {var gIndex = 1;}
 			if (genderValue == 'F') {var gIndex = 2;}
-			document.getElementById("GENDERhideFORieALT").innerHTML = '<select size="1" name="gender_list" class="cust_form" id="gender_list"><option value="U"><?php echo _QXZ("U - Undefined"); ?></option><option value="M"><?php echo _QXZ("M - Male"); ?></option><option value="F"><?php echo _QXZ("F - Female"); ?></option></select>';
+			document.getElementById("GENDERhideFORieALT").innerHTML = "<select size=\"1\" name=\"gender_list\" class=\"cust_form\" id=\"gender_list\"><option value=\"U\"><?php echo _QXZ("U - Undefined"); ?></option><option value=\"M\"><?php echo _QXZ("M - Male"); ?></option><option value=\"F\"><?php echo _QXZ("F - Female"); ?></option></select>";
 			document.getElementById("GENDERhideFORie").innerHTML = '';
 			document.getElementById("gender_list").selectedIndex = gIndex;
 			}
@@ -15448,7 +15396,7 @@ function phone_number_format(formatphone) {
 			var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
 			if (genderValue == 'M') {var gIndex = 1;}
 			if (genderValue == 'F') {var gIndex = 2;}
-			document.getElementById("GENDERhideFORie").innerHTML = '<select size="1" name="gender_list" class="cust_form" id="gender_list"><option value="U"><?php echo _QXZ("U - Undefined"); ?></option><option value="M"><?php echo _QXZ("M - Male"); ?></option><option value="F"><?php echo _QXZ("F - Female"); ?></option></select>';
+			document.getElementById("GENDERhideFORie").innerHTML = "<select size=\"1\" name=\"gender_list\" class=\"cust_form\" id=\"gender_list\"><option value=\"U\"><?php echo _QXZ("U - Undefined"); ?></option><option value=\"M\"><?php echo _QXZ("M - Male"); ?></option><option value=\"F\"><?php echo _QXZ("F - Female"); ?></option></select>";
 			document.getElementById("GENDERhideFORieALT").innerHTML = '';
 			document.getElementById("gender_list").selectedIndex = gIndex;
 			}
