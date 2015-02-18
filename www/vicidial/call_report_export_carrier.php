@@ -12,6 +12,7 @@
 #
 # 150120-0639 - First build based upon call_report_export.php
 # 150126-1208 - Fixed issue with Extended and Alt formats
+# 150218-1701 - Added cust_sec and cust_queue_sec to EXTENDED output
 #
 
 $startMS = microtime();
@@ -468,8 +469,9 @@ if ($run_export > 0)
 				$export_uniqueid[$k] =		$row[35];
 				$export_vicidial_id[$k] =	$row[35];
 				$export_entry_list_id[$k] =	$row[36];
-				$export_wrapup_time[$k] =		$row[37];
-				$export_queue_time[$k] =		0;
+				$export_wrapup_time[$k] =	$row[37];
+				$export_queue_time[$k] =	0;
+				$export_user[$k] =			$row[3];
 				$export_fieldsDATA='';
 				if ($export_fields == 'ALTERNATE_1')
 					{
@@ -535,8 +537,9 @@ if ($run_export > 0)
 				$export_vicidial_id[$k] =	$row[35];
 				$export_entry_list_id[$k] =	$row[36];
 				$export_uniqueid[$k] =		$row[37];
-				$export_wrapup_time[$k] =		$row[38];
-				$export_queue_time[$k] =		$row[31];
+				$export_wrapup_time[$k] =	$row[38];
+				$export_queue_time[$k] =	$row[31];
+				$export_user[$k] =			$row[3];
 				$export_fieldsDATA='';
 				if ($export_fields == 'ALTERNATE_1')
 					{
@@ -591,7 +594,7 @@ if ($run_export > 0)
 			if ($rec_fields=='ALL')
 				{$RFheader = "\trecording_id\trecording_filename\trecording_location";}
 			if ($export_fields=='EXTENDED')
-				{$EXheader = "\twrapup_time\tqueue_time\tuniqueid\tcaller_code\tserver_ip\thangup_cause\tdialstatus\tchannel\tdial_time\tanswered_time\tcpd_result\tdid_pattern\tdid_id\tdid_description";}
+				{$EXheader = "\twrapup_time\tqueue_time\tuniqueid\tcaller_code\tserver_ip\thangup_cause\tdialstatus\tchannel\tdial_time\tanswered_time\tcpd_result\tdid_pattern\tdid_id\tdid_description\tcust_sec\tcust_queue_sec";}
 			if ($export_fields == 'ALTERNATE_1')
 				{$EXheader = "|caller_code";}
 			if ($call_notes=='YES')
@@ -692,6 +695,8 @@ if ($run_export > 0)
 			$extended_data_a='';
 			$extended_data_b='';
 			$extended_data_c='';
+			$extended_data_d='';
+			$extended_data_e='';
 			if ($export_fields=='ALTERNATE_1')
 				{
 				$extended_data = '';
@@ -774,6 +779,21 @@ if ($run_export > 0)
 							{$extended_data_d .= "\t";}
 						}
 
+					$stmt = "SELECT talk_sec,dead_sec from vicidial_agent_log where uniqueid='$export_uniqueid[$i]' and user='$export_user[$i]' order by agent_log_id desc LIMIT 1;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$vcval_ct = mysqli_num_rows($rslt);
+					if ($vcval_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$cust_sec = ($row[0] - $row[1]);
+						if ($cust_sec < 1) {$cust_sec=0;}
+						$total_sec = ($cust_sec + $export_queue_time[$i]);
+						$extended_data_e =	"\t$cust_sec\t$total_sec";
+						}
+					else
+						{$extended_data_e .= "\t\t";}
+
 					}
 				if (strlen($extended_data_a)<1)
 					{$extended_data_a =	"\t\t";}
@@ -783,7 +803,9 @@ if ($run_export > 0)
 					{$extended_data_c =	"\t";}
 				if (strlen($extended_data_d)<1)
 					{$extended_data_d =	"\t\t\t";}
-				$extended_data .= "$extended_data_a$extended_data_b$extended_data_c$extended_data_d";
+				if (strlen($extended_data_e)<1)
+					{$extended_data_d =	"\t\t";}
+				$extended_data .= "$extended_data_a$extended_data_b$extended_data_c$extended_data_d$extended_data_e";
 				}
 
 			$notes_data='';
