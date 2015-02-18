@@ -180,3 +180,8 @@ ALTER TABLE vicidial_voicemail ADD on_login_report enum('Y','N') NOT NULL defaul
 ALTER TABLE phones ADD on_login_report enum('Y','N') NOT NULL default 'N';
 
 UPDATE system_settings SET db_schema_version='1402',db_schema_update_date=NOW() where db_schema_version < 1402;
+
+CREATE TABLE vicidial_callbacks_archive LIKE vicidial_callbacks;
+ALTER TABLE vicidial_callbacks_archive MODIFY callback_id INT(9) UNSIGNED NOT NULL;
+
+UPDATE system_settings SET db_schema_version='1403',db_schema_update_date=NOW() where db_schema_version < 1403;

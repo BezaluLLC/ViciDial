@@ -92,10 +92,11 @@
 # 140617-2029 - Added vicidial_users wrapup_seconds_override option
 # 140812-0939 - Added phone_number and vendor_lead_code to agent_status function output
 # 150123-1611 - Fixed issue with list local call times and add_lead
+# 150217-1404 - archive deleted callbacks to vicidial_callbacks_archive table
 #
 
-$version = '2.10-68';
-$build = '150123-1611';
+$version = '2.10-69';
+$build = '150217-1404';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -6518,13 +6519,18 @@ if ($function == 'update_lead')
 								{
 								if ($delete_lead=='Y')
 									{
+									$stmt = "INSERT INTO vicidial_callbacks_archive SELECT * from vicidial_callbacks where lead_id='$search_lead_id[$n]';";
+									if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
+									$rslt=mysql_to_mysqli($stmt, $link);
+									$VCBAaffected_rows = mysqli_affected_rows($link);
+
 									$stmt = "DELETE from vicidial_callbacks where lead_id='$search_lead_id[$n]';";
 									if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
 									$rslt=mysql_to_mysqli($stmt, $link);
 									$VCBaffected_rows = mysqli_affected_rows($link);
 
 									$stmt = "DELETE from vicidial_list where lead_id='$search_lead_id[$n]';";
-									$result_reason = "update_lead LEAD HAS BEEN DELETED $VCBaffected_rows";
+									$result_reason = "update_lead LEAD HAS BEEN DELETED $VCBaffected_rows|$VCBAaffected_rows";
 									}
 								else
 									{
@@ -6670,6 +6676,11 @@ if ($function == 'update_lead')
 								}
 							if ($callback == 'REMOVE')
 								{
+								$stmt = "INSERT INTO vicidial_callbacks_archive SELECT * from vicidial_callbacks where lead_id='$search_lead_id[$n]';";
+								if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
+								$rslt=mysql_to_mysqli($stmt, $link);
+								$VCBAaffected_rows = mysqli_affected_rows($link);
+
 								$stmt = "DELETE from vicidial_callbacks where lead_id='$search_lead_id[$n]';";
 								if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
 								$rslt=mysql_to_mysqli($stmt, $link);
@@ -6677,7 +6688,7 @@ if ($function == 'update_lead')
 
 								$result = 'NOTICE';
 								$result_reason = "update_lead SCHEDULED CALLBACK DELETED";
-								$data = "$user|$search_lead_id[$n]|$VCBaffected_rows";
+								$data = "$user|$search_lead_id[$n]|$VCBaffected_rows|$VCBAaffected_rows";
 								echo "$result: $result_reason - $data\n";
 								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 								}

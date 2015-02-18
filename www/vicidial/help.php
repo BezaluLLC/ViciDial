@@ -39,6 +39,7 @@
 # 150204-1246 - Small fixes, issue #826
 # 150210-0659 - Added LOCK options for manual_dial_search_checkbox
 # 150217-0657 - Added vmail show on login option
+# 150218-0800 - Added Callbacks Bulk Move help
 #
 
 require("dbconnect_mysqli.php");
@@ -5234,7 +5235,41 @@ if ($SSqc_features_active > 0)
 
 
 
+<BR><BR><BR><BR>
+<A NAME="cb-bulk">
+<B><FONT SIZE=3><?php echo _QXZ("Callbacks Bulk Move"); ?></FONT></B><BR><BR>
 
+<?php echo _QXZ("This page is used to move callbacks meeting a set of selected criteria to a new list and or a new lead status.  It can also purge called records from the callbacks table."); ?>
+
+<BR>
+<A NAME="cb-bulk-campaigns">
+<BR>
+<B><?php echo _QXZ("Campaigns with callbacks"); ?> -</B><?php echo _QXZ("The current list of all campaigns having at least one callback - select one or more to move callbacks from these campaigns in bulk to new lists and or assign new statuses.  This will combine with other selected criteria to make a final list of callbacks to move."); ?>
+
+<BR>
+<A NAME="cb-bulk-lists">
+<BR>
+<B><?php echo _QXZ("Lists with callbacks"); ?> -</B><?php echo _QXZ("All list IDs having at least one callback - select one or more to move callbacks from these lists in bulk to new lists and or assign new statuses.  This will combine with other selected criteria to make a final list of callbacks to move."); ?>
+
+<BR>
+<A NAME="cb-bulk-usergroups">
+<BR>
+<B><?php echo _QXZ("User groups with callbacks"); ?> -</B><?php echo _QXZ("The current list of all user groups having at least one callback - select one or more to move callbacks from these user groups to new lists and or assign new statuses.  This will combine with other selected criteria to make a final list of callbacks to move."); ?>
+
+<BR>
+<A NAME="cb-bulk-agents">
+<BR>
+<B><?php echo _QXZ("Agents with callbacks"); ?> -</B><?php echo _QXZ("The current list of all agents having at least one callback - select one or more to move callbacks from these agents to new lists and or assign new statuses.  This will combine with other selected criteria to make a final list of callbacks to move."); ?>
+
+<BR>
+<A NAME="cb-bulk-purge">
+<BR>
+<B><?php echo _QXZ("Purge called records"); ?> -</B><?php echo _QXZ("If this box is checked, before the leads meeting the selected criteria are moved, the callbacks table will purge itself of all inactive records in the table.  This includes records that have a status of INACTIVE, OR any record still in the callback table that is LIVE but whose status in the vicidial_list table is NOT listed as a callback, i.e. it has been called, lead has called in, lead dispo has been modified.  The page will notify you how many leads will be purged before you confirm that you would like to proceed."); ?>
+
+<BR>
+<A NAME="cb-bulk-liveanduncalled">
+<BR>
+<B><?php echo _QXZ("Live and uncalled for over XX days"); ?> -</B><?php echo _QXZ("Selecting a date range from this drop down menu will filter out any callback where the scheduled callback time is past the selected number of days from the current date and time.  This will combine with other selected criteria to make a final list of callbacks to move."); ?>
 
 <BR><BR><BR><BR><BR><BR><BR><BR>
 </TD></TR></TABLE></BODY></HTML>

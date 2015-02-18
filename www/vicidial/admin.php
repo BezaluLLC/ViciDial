@@ -3436,12 +3436,13 @@ else
 # 150120-0749 - Prevent modification of user_group ID, Hide non-functional agent_extended_alt_dial campaign feature, Export Calls Report Carrier added
 # 150210-0657 - Added LOCK options for manual_dial_search_checkbox campaign setting
 # 150217-0702 - Added Show VM on Summary Screen option for phones and voicemail boxes
+# 150218-0924 - Added link to callbacks bulk move, also now we will archive deleted callbacks
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.10-474a';
-$build = '150217-0702';
+$admin_version = '2.10-475a';
+$build = '150218-0924';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -15896,6 +15897,9 @@ if ($ADD==61)
 		$rslt=mysql_to_mysqli($stmt, $link);
 
 		$stmt="DELETE from vicidial_campaign_hotkeys where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+
+		$stmt="INSERT INTO vicidial_callbacks_archive SELECT * from vicidial_callbacks where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 
 		$stmt="DELETE from vicidial_callbacks where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
@@ -30766,7 +30770,7 @@ if ($ADD==8)
 			echo "<br>"._QXZ("User")."($user) "._QXZ("callback listings LIVE for more than one week have been made INACTIVE")."\n";
 			}
 		}
-	$CBinactiveLINK = "<BR><a href=\"$PHP_SELF?ADD=8&SUB=89&user=$user\">"._QXZ("Remove LIVE Callbacks older than one month for this user")."</a><BR><a href=\"$PHP_SELF?ADD=8&SUB=899&user=$user\">"._QXZ("Remove LIVE Callbacks older than one week for this user")."</a><BR>";
+	$CBinactiveLINK = "<BR><a href=\"./callbacks_bulk_move.php?days_uncalled=31&user=$user\">"._QXZ("Remove LIVE Callbacks older than one month for this user")."</a><BR><a href=\"./callbacks_bulk_move.php?days_uncalled=7&user=$user\">"._QXZ("Remove LIVE Callbacks older than one week for this user")."</a><BR>";
 
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -30797,7 +30801,7 @@ if ($ADD==81)
 			echo "<br>"._QXZ("campaign")."($campaign_id) "._QXZ("callback listings LIVE for more than one week have been made INACTIVE")."\n";
 			}
 		}
-	$CBinactiveLINK = "<BR><a href=\"$PHP_SELF?ADD=81&SUB=89&campaign_id=$campaign_id\">"._QXZ("Remove LIVE Callbacks older than one month for this campaign")."</a><BR><a href=\"$PHP_SELF?ADD=81&SUB=899&campaign_id=$campaign_id\">"._QXZ("Remove LIVE Callbacks older than one week for this campaign")."</a><BR>";
+	$CBinactiveLINK = "<BR><a href=\"./callbacks_bulk_move.php?days_uncalled=31&campaign_id=$campaign_id\">"._QXZ("Remove LIVE Callbacks older than one month for this campaign")."</a><BR><a href=\"./callbacks_bulk_move.php?days_uncalled=7&campaign_id=$campaign_id\">"._QXZ("Remove LIVE Callbacks older than one week for this campaign")."</a><BR>";
 
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -30828,7 +30832,7 @@ if ($ADD==811)
 			echo "<br>"._QXZ("list")."($list_id) "._QXZ("callback listings LIVE for more than one week have been made INACTIVE")."\n";
 			}
 		}
-	$CBinactiveLINK = "<BR><a href=\"$PHP_SELF?ADD=811&SUB=89&list_id=$list_id\">"._QXZ("Remove LIVE Callbacks older than one month for this list")."</a><BR><a href=\"$PHP_SELF?ADD=811&SUB=899&list_id=$list_id\">"._QXZ("Remove LIVE Callbacks older than one week for this list")."</a><BR>";
+	$CBinactiveLINK = "<BR><a href=\"./callbacks_bulk_move.php?days_uncalled=31&list_id=$list_id\">"._QXZ("Remove LIVE Callbacks older than one month for this list")."</a><BR><a href=\"./callbacks_bulk_move.php?days_uncalled=7&list_id=$list_id\">"._QXZ("Remove LIVE Callbacks older than one week for this list")."</a><BR>";
 
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -30859,7 +30863,7 @@ if ($ADD==8111)
 			echo "<br>"._QXZ("user group")."($user_group) "._QXZ("callback listings LIVE for more than one week have been made INACTIVE")."\n";
 			}
 		}
-	$CBinactiveLINK = "<BR><a href=\"$PHP_SELF?ADD=8111&SUB=89&user_group=$user_group\">"._QXZ("Remove LIVE Callbacks older than one month for this user group")."</a><BR><a href=\"$PHP_SELF?ADD=8111&SUB=899&user_group=$user_group\">"._QXZ("Remove LIVE Callbacks older than one week for this user group")."</a><BR>";
+	$CBinactiveLINK = "<BR><a href=\"./callbacks_bulk_move.php?days_uncalled=31&user_group=$user_group\">"._QXZ("Remove LIVE Callbacks older than one month for this user group")."</a><BR><a href=\"./callbacks_bulk_move.php?days_uncalled=7&user_group=$user_group\">"._QXZ("Remove LIVE Callbacks older than one week for this user group")."</a><BR>";
 
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -33908,7 +33912,7 @@ if ($ADD==999994)
 		echo "<LI><a href=\"admin_phones_bulk_insert.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Bulk Phone Insert Page")."</a></FONT>\n";
 		echo "<LI><a href=\"lead_tools.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Basic Lead Management Tools")."</FONT></a> | <a href=\"lead_tools_advanced.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Advanced Lead Management Tools")."</FONT></a> | <a href=\"list_split.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("List Split")."</FONT></a>\n";
 		echo "<LI><a href=\"reset_campaign_lists.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Reset Campaign Lists")."</a></FONT>\n";
-		echo "<LI><a href=\"callbacks_bulk_change.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Callbacks Transferral Page")."</a></FONT>\n";
+		echo "<LI><a href=\"callbacks_bulk_change.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Callbacks Transferral Page")."</a></FONT> | <a href=\"callbacks_bulk_move.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Callbacks Bulk Move")."</FONT></a>\n";
 		echo "<LI><a href=\"send_CID_call.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Send a Call With Custom CID Page")."</a></FONT>\n";
 		echo "<LI><a href=\"voice_lab.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Speech Voice Lab Page")."</a></FONT>\n";
 		echo "<LI><a href=\"../agc/phone_only.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Webphone Only Page")."</a></FONT>\n";

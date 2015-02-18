@@ -3293,6 +3293,9 @@ CREATE UNIQUE INDEX vddla on vicidial_dial_log_archive (caller_code,call_date);
 CREATE TABLE vicidial_api_log_archive LIKE vicidial_api_log;
 ALTER TABLE vicidial_api_log_archive MODIFY api_id INT(9) UNSIGNED NOT NULL;
 
+CREATE TABLE vicidial_callbacks_archive LIKE vicidial_callbacks;
+ALTER TABLE vicidial_callbacks_archive MODIFY callback_id INT(9) UNSIGNED NOT NULL;
+
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
 
@@ -3367,4 +3370,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1402',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1403',db_schema_update_date=NOW(),reload_timestamp=NOW();

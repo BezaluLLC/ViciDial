@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_DB_dead_cb_purge.pl version 2.8
+# AST_DB_dead_cb_purge.pl version 2.10
 #
 # DESCRIPTION:
 # OPTIONAL!!!
@@ -9,13 +9,14 @@
 #
 # It is recommended that you run this program on the local Asterisk machine
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 101128-0149 - first build
 # 110212-2343 - added scheduled callback custom statuses capacity
 # 130414-2145 - added option to remove duplicate callback entries, keeping the newest
 # 140512-2036 - Fixed typos, issue #760
+# 150217-1403 - archive deleted callbacks to vicidial_callbacks_archive table
 #
 
 ### begin parsing run-time options ###
@@ -210,9 +211,12 @@ while ($sthArowsCT > $rec_count)
 
 	if ($delete_lead > 0)
 		{
+		$stmtA = "INSERT INTO vicidial_callbacks_archive SELECT * from vicidial_callbacks where callback_id='$callback_ids[$rec_count]';";
+		if (!$T) {$affected_rowsA = $dbhA->do($stmtA);}
+
 		$stmtA = "DELETE from vicidial_callbacks where callback_id='$callback_ids[$rec_count]';";
 		if (!$T) {$affected_rows = $dbhA->do($stmtA);}
-		if($DB){print STDERR "\n|$stmtA|  |$affected_rows deleted|  |$lead_ids[$rec_count]|$lead_statuses[$rec_count]|$callback_statuses[$rec_count]|$callback_ids[$rec_count]|\n";}
+		if($DB){print STDERR "\n|$stmtA|  |$affected_rows deleted|  |$affected_rowsA|$lead_ids[$rec_count]|$lead_statuses[$rec_count]|$callback_statuses[$rec_count]|$callback_ids[$rec_count]|\n";}
 		$deleted++;
 		}
 	$rec_count++;
@@ -273,9 +277,12 @@ if ($remove_dup_cb > 0)
 
 			if ($delete_lead > 0)
 				{
+				$stmtA = "INSERT INTO vicidial_callbacks_archive SELECT * from vicidial_callbacks where callback_id='$callback_ids[$rec_count]';";
+				if (!$T) {$affected_rowsA = $dbhA->do($stmtA);}
+
 				$stmtA = "DELETE from vicidial_callbacks where callback_id='$callback_ids[$rec_count]';";
 				if (!$T) {$affected_rows = $dbhA->do($stmtA);}
-				if($DB){print STDERR "\n|$stmtA|  |$affected_rows deleted|  |$lead_ids[$rec_count]|$lead_statuses[$rec_count]|$callback_statuses[$rec_count]|$callback_ids[$rec_count]|\n";}
+				if($DB){print STDERR "\n|$stmtA|  |$affected_rows deleted|  |$affected_rowsA|$lead_ids[$rec_count]|$lead_statuses[$rec_count]|$callback_statuses[$rec_count]|$callback_ids[$rec_count]|\n";}
 				$dup_deleted++;
 				}
 			}

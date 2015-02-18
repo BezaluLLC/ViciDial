@@ -257,6 +257,18 @@ if (!$T)
 	$sthA->finish();
 	}
 
+$stmtA = "optimize table vicidial_callbacks_archive;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) 
+	{
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if (!$q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+	}
+
 $stmtA = "optimize table vicidial_agent_log;";
 if($DB){print STDERR "\n|$stmtA|\n";}
 if (!$T) 

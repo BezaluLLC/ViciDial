@@ -134,6 +134,10 @@ OTHER CHANGES:
 27. Added option in phones and voicemail to display message counts on the 
 	Admin Summary screen.
 
+28. Added Callbacks Bulk Move admin utility. Also changed behavior of the 
+	removal links for callbacks from the callback hold displays for Users,
+	User Groups, Lists and Campaigns.
+
 
 
 

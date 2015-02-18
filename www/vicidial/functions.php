@@ -29,7 +29,7 @@
 function user_authorization($user,$pass,$user_option,$user_update)
 	{
 	global $link;
-	require("dbconnect_mysqli.php");
+#	require("dbconnect_mysqli.php");
 
 	#############################################
 	##### START SYSTEM_SETTINGS LOOKUP #####
