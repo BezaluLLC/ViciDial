@@ -1,7 +1,7 @@
 <?php 
 # AST_inbound_daily_report.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -22,6 +22,7 @@
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141113-2055 - Finalized adding QXZ translation to all admin files
 # 141230-0921 - Added code for on-the-fly language translations display
+# 150218-1142 - Fix for download issue
 #
 
 $startMS = microtime();
@@ -401,7 +402,7 @@ while ($groups_to_print > $o)
 	$selected="";
 	for ($i=0; $i<$groups_selected; $i++) 
 		{
-		if ($file_download < 1) {echo "<!-- $groups[$o] == $group[$i] //-->\n";}
+		if ( ($file_download < 1) and ($DB) ) {echo "<!-- $groups[$o] == $group[$i] //-->\n";}
 		if ($groups[$o] == $group[$i]) {$selected="selected";}
 		}
 	$MAIN.="<option $selected value=\"$groups[$o]\">$groups[$o] - $group_names[$o]</option>\n";
@@ -930,16 +931,17 @@ else
 					$FtotABANDONS++;
 					$FtotABANDONSsec+=$ls[$i];
 					}
-					else 
+				else 
 					{
 					$totANSWERSdate[$j]++;
-					if (($ls[$i]-$qs[$i]-15)>0) {  ## Patch by Joe J - can cause negative time values if removed.
+					if (($ls[$i]-$qs[$i]-15)>0) 
+						{  ## Patch by Joe J - can cause negative time values if removed.
 						$totANSWERSsecdate[$j]+=($ls[$i]-$qs[$i]-15);
 						$FtotANSWERSsec+=($ls[$i]-$qs[$i]-15);
-					}
+						}
 					$totANSWERSspeeddate[$j]+=$qs[$i];
 					$FtotANSWERS++;
-					print "<!-- $FtotANSWERSspeed+=$qs[$i] //-->\n";
+					if ($DB) {print "<!-- $FtotANSWERSspeed+=$qs[$i] //-->\n";}
 					$FtotANSWERSspeed+=$qs[$i];
 					}
 				if (preg_match('/DROP/',$st[$i])) 
