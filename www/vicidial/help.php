@@ -5271,7 +5271,17 @@ if ($SSqc_features_active > 0)
 <BR>
 <B><?php echo _QXZ("Live and uncalled for over XX days"); ?> -</B><?php echo _QXZ("Selecting a date range from this drop down menu will filter out any callback where the scheduled callback time is past the selected number of days from the current date and time.  This will combine with other selected criteria to make a final list of callbacks to move."); ?>
 
-<BR><BR><BR><BR><BR><BR><BR><BR>
+<BR>
+<A NAME="cb-bulk-newlist">
+<BR>
+<B><?php echo _QXZ("Transfer to List ID"); ?> -</B><?php echo _QXZ("The list ID to which all callbacks will be moved. The move will occur on the records in vicidial_list table - the matching records in vicidial_callbacks will be removed."); ?>
+
+<BR>
+<A NAME="cb-bulk-newstatus">
+<BR>
+<B><?php echo _QXZ("New Status"); ?> -</B><?php echo _QXZ("The new vicidial_list status the selected callbacks will be updated to. This affects the vicidial_list table ONLY."); ?>
+
+<BR><BR><BR><BR><BR><BR><BR><BR><BR>
 </TD></TR></TABLE></BODY></HTML>
 <?php
 exit;

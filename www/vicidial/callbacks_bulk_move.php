@@ -843,9 +843,9 @@ else
 		{
 		echo "\t<option value='$row[list_id]'>$row[list_id] - $row[list_name]</option>\n";
 		}
-	echo "</select> &nbsp; \n";
+	echo "</select>$NWB#cb-bulk-newlist$NWE &nbsp; \n";
 
-	echo _QXZ("New Status").": <input type=text name='new_status' size=7 maxlength=6 value='$new_status'>\n";
+	echo _QXZ("New Status").": <input type=text name='new_status' size=7 maxlength=6 value='$new_status'>$NWB#cb-bulk-newstatus$NWE\n";
 	}
 echo "</form>\n";
 
