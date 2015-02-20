@@ -479,10 +479,11 @@
 # 150210-1225 - Added LOCK options for manual_dial_search_checkbox, fixed missing QXZ tags(issue #827)
 # 150212-0034 - Added case-sensitive user validation(issue #682)
 # 150218-1356 - Fixes for QXZ enclosed in single-quotes
+# 150220-1533 - Fix for leave page confirmation after logout and QXZ fixes
 #
 
-$version = '2.10-450c';
-$build = '150218-1356';
+$version = '2.10-451c';
+$build = '150220-1533';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -4177,9 +4178,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	function confirmExit()
 		{
 		if (needToConfirmExit)
-		return "You are attempting to leave the agent screen without logging out. This may result in lost information. Are you sure you want to exit this page?";
+			{
+			return "You are attempting to leave the agent screen without logging out. This may result in lost information. Are you sure you want to exit this page?";
+			}
 		}
-	
+
 
 // ################################################################################
 // Send Hangup command for Live call connected to phone now to Manager
@@ -4329,12 +4332,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		if (taskalert=='ON')
 			{
 			alert_enabled = 'ON';
-			document.getElementById("AgentAlertSpan").innerHTML = "<a href=\"#\" onclick=\"alert_control('OFF');return false;\">Alert is ON</a>";
+			document.getElementById("AgentAlertSpan").innerHTML = "<a href=\"#\" onclick=\"alert_control('OFF');return false;\"><?php echo _QXZ("Alert is ON") ?></a>";
 			}
 		else
 			{
 			alert_enabled = 'OFF';
-			document.getElementById("AgentAlertSpan").innerHTML = "<a href=\"#\" onclick=\"alert_control('ON');return false;\">Alert is OFF</a>";
+			document.getElementById("AgentAlertSpan").innerHTML = "<a href=\"#\" onclick=\"alert_control('ON');return false;\"><?php echo _QXZ("Alert is OFF") ?></a>";
 			}
 
 		}
@@ -12183,6 +12186,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								{
 							//	alert(VDlogout_query);
 							//	alert(xmlhttp.responseText);
+								needToConfirmExit = false;
 							
 								document.getElementById("LogouTProcess").innerHTML = "<?php echo _QXZ("LOGOUT PROCESS COMPLETE, YOU MAY NOW CLOSE YOUR BROWSER OR LOG BACK IN"); ?>";
 								}

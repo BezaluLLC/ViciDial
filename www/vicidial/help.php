@@ -1824,7 +1824,7 @@ if ($SSqc_features_active > 0)
 <B><FONT SIZE=3>LISTS TABLE</FONT></B><BR><BR>
 <A NAME="lists-list_id">
 <BR>
-<B><?php echo _QXZ("List ID"); ?> -</B><?php echo _QXZ("This is the numerical name of the list, it is not editable after initial submission, must contain only numbers and must be between 2 and 8 characters in length. Must be a number greater than 100."); ?>
+<B><?php echo _QXZ("List ID"); ?> -</B><?php echo _QXZ("This is the numerical name of the list, it is not editable after initial submission, must contain only numbers and must be between 2 and 8 characters in length. Must be a number greater than 99."); ?>
 
 <BR>
 <A NAME="lists-list_name">
