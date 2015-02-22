@@ -69,6 +69,7 @@ if (isset($_GET["user"]))						{$user=$_GET["user"];}
         elseif (isset($_POST["user"]))			{$user=$_POST["user"];}
 if (isset($_GET["pass"]))						{$pass=$_GET["pass"];}
         elseif (isset($_POST["pass"]))			{$pass=$_POST["pass"];}
+if (strlen($VD_login)<1) {$VD_login = $user;}
 
 if (!isset($phone_login)) 
 	{
@@ -152,9 +153,10 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 	# case-sensitive check for user
 	if($valid_user>0)
 		{
-		if ($user != "$VUuser") 
+		if ($user != "$VUuser")
 			{
 			$valid_user=0;
+			print "<!-- case check $user|$VD_login|$VUuser:   |$valid_user| -->\n";
 			}
 		}
 
