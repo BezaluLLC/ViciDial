@@ -138,6 +138,10 @@ OTHER CHANGES:
 	removal links for callbacks from the callback hold displays for Users,
 	User Groups, Lists and Campaigns.
 
+29. Added DYN filename prefix for non-TTS dynamic files to be used for answering
+	machine message. For instance using DYN--A--user--B-- for agent 1234 
+	would look for a file named 1234.wav in your audio store to play.
+
 
 
 

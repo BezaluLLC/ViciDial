@@ -21,7 +21,7 @@
 # exten => _8320*.,1,AGI(VD_amd.agi,${EXTEN}-----YES)
 # exten => _8320*.,2,Hangup
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 60206-1434 - first build
@@ -47,6 +47,7 @@
 # 130210-1113 - Added options for CALLMENU|INGROUP cpd_amd_actions
 # 140312-2110 - Added CALLID as recording filename variable
 # 141211-1634 - Added cpd_unknown_action campaign option
+# 150223-1443 - Added DYN filename prefix for non-TTS dynamic files to be used for am message
 #
 
 $script = 'VD_amd.agi';
@@ -380,6 +381,7 @@ else
 		if ($AGILOG) {$agi_string = "--    VDAD vicidial_log update: |$affected_rows|$uniqueid|";   &agi_output;}
 		}
 
+	$IN_campaign_id='';
 	### Grab vmail forward message values from the database
 	$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu,cpd_unknown_action FROM vicidial_campaigns where campaign_id = '$VD_campaign_id' limit 1;";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
@@ -404,7 +406,7 @@ else
 		{
 		$sthA->finish();
 		### Grab vmail forward message values from the database
-		$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu,cpd_unknown_action FROM vicidial_campaigns where closer_campaigns LIKE \"% $VD_campaign_id %\" order by campaign_id limit 1;";
+		$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu,cpd_unknown_action,campaign_id FROM vicidial_campaigns where closer_campaigns LIKE \"% $VD_campaign_id %\" order by campaign_id limit 1;";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -421,7 +423,9 @@ else
 			$amd_inbound_group =		$aryA[6];
 			$amd_callmenu =				$aryA[7];
 			$cpd_unknown_action =		$aryA[8];
+			$IN_campaign_id =			$aryA[9];
 			$sthA->finish();
+			if ($AGILOG) {$agi_string = "--    Inbound call, settings gathered from: |$IN_campaign_id|$DB_am_message_exten|$DB_amd_send_to_vmx|$waitforsilence_options";   &agi_output;}
 			}
 		else
 			{$sthA->finish();}
@@ -570,14 +574,17 @@ else
 		if ($AGILOG) {$agi_string = "--    VDAD vicidial_list AM update: |$affected_rows|$uniqueid|";   &agi_output;}
 
 
-		##### BEGIN Check if prompt uses TTS, if so, create TTS and set the filename to the generated prompt #####
-		if ($DB_am_message_exten =~ /^TTS/) 
+		##### BEGIN Check if prompt uses TTS or DYN, if so, create TTS and set the filename to the generated prompt #####
+		if ( ($DB_am_message_exten =~ /^TTS/) || ($DB_am_message_exten =~ /^DYN/) )
 			{
+			$useTTS=0;
+			if ($DB_am_message_exten =~ /^TTS/) 
+				{$useTTS++;}
 			$TTS_filename = $DB_am_message_exten;
-			$TTS_filename =~s/^TTS//gi;
+			$TTS_filename =~s/^TTS|^DYN//gi;
 			$TTS_filename =~s/\|.*//gi;
 
-			if ($AGILOG) {$agi_string = "--    TTS : |$TTS_filename|";   &agi_output;}
+			if ($AGILOG) {$agi_string = "--    TTS : |$useTTS|$TTS_filename|";   &agi_output;}
 
 			$stmtA = "SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner FROM vicidial_list where lead_id='$VD_lead_id';";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -620,6 +627,8 @@ else
 				}
 			$sthA->finish();
 
+			$TTS_voice = 'Allison-8kHz';
+			$TTS_text = $TTS_filename;
 			$stmtA = "SELECT tts_text,tts_voice FROM vicidial_tts_prompts where tts_id='$TTS_filename';";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -629,40 +638,48 @@ else
 				@aryA = $sthA->fetchrow_array;
 				$TTS_voice =	$aryA[1];
 				$TTS_text =		$aryA[0];
-				### BEGIN replace variables with record values ###
-				$TTS_text =~ s/--A--lead_id--B--/$TTS_lead_id/gi;
-				$TTS_text =~ s/--A--entry_date--B--/$TTS_entry_date/gi;
-				$TTS_text =~ s/--A--modify_date--B--/$TTS_modify_date/gi;
-				$TTS_text =~ s/--A--status--B--/$TTS_status/gi;
-				$TTS_text =~ s/--A--user--B--/$TTS_user/gi;
-				$TTS_text =~ s/--A--vendor_lead_code--B--/$TTS_vendor_lead_code/gi;
-				$TTS_text =~ s/--A--source_id--B--/$TTS_source_id/gi;
-				$TTS_text =~ s/--A--list_id--B--/$TTS_list_id/gi;
-				$TTS_text =~ s/--A--phone_number--B--/$TTS_phone_number/gi;
-				$TTS_text =~ s/--A--title--B--/$TTS_title/gi;
-				$TTS_text =~ s/--A--first_name--B--/$TTS_first_name/gi;
-				$TTS_text =~ s/--A--middle_initial--B--/$TTS_middle_initial/gi;
-				$TTS_text =~ s/--A--last_name--B--/$TTS_last_name/gi;
-				$TTS_text =~ s/--A--address1--B--/$TTS_address1/gi;
-				$TTS_text =~ s/--A--address2--B--/$TTS_address2/gi;
-				$TTS_text =~ s/--A--address3--B--/$TTS_address3/gi;
-				$TTS_text =~ s/--A--city--B--/$TTS_city/gi;
-				$TTS_text =~ s/--A--state--B--/$TTS_state/gi;
-				$TTS_text =~ s/--A--province--B--/$TTS_province/gi;
-				$TTS_text =~ s/--A--postal_code--B--/$TTS_postal_code/gi;
-				$TTS_text =~ s/--A--country_code--B--/$TTS_country_code/gi;
-				$TTS_text =~ s/--A--gender--B--/$TTS_gender/gi;
-				$TTS_text =~ s/--A--date_of_birth--B--/$TTS_date_of_birth/gi;
-				$TTS_text =~ s/--A--alt_phone--B--/$TTS_alt_phone/gi;
-				$TTS_text =~ s/--A--email--B--/$TTS_email/gi;
-				$TTS_text =~ s/--A--security_phrase--B--/$TTS_security_phrase/gi;
-				$TTS_text =~ s/--A--comments--B--/$TTS_comments/gi;
-				$TTS_text =~ s/--A--called_count--B--/$TTS_called_count/gi;
-				$TTS_text =~ s/--A--last_local_call_time--B--/$TTS_last_local_call_time/gi;
-				$TTS_text =~ s/--A--rank--B--/$TTS_rank/gi;
-				$TTS_text =~ s/--A--owner--B--/$TTS_owner/gi;
-				### END replace variables with record values ###
+				}
+			$sthA->finish();
 
+			### BEGIN replace variables with record values ###
+			$TTS_text =~ s/--A--lead_id--B--/$TTS_lead_id/gi;
+			$TTS_text =~ s/--A--entry_date--B--/$TTS_entry_date/gi;
+			$TTS_text =~ s/--A--modify_date--B--/$TTS_modify_date/gi;
+			$TTS_text =~ s/--A--status--B--/$TTS_status/gi;
+			$TTS_text =~ s/--A--user--B--/$TTS_user/gi;
+			$TTS_text =~ s/--A--vendor_lead_code--B--/$TTS_vendor_lead_code/gi;
+			$TTS_text =~ s/--A--source_id--B--/$TTS_source_id/gi;
+			$TTS_text =~ s/--A--list_id--B--/$TTS_list_id/gi;
+			$TTS_text =~ s/--A--phone_number--B--/$TTS_phone_number/gi;
+			$TTS_text =~ s/--A--title--B--/$TTS_title/gi;
+			$TTS_text =~ s/--A--first_name--B--/$TTS_first_name/gi;
+			$TTS_text =~ s/--A--middle_initial--B--/$TTS_middle_initial/gi;
+			$TTS_text =~ s/--A--last_name--B--/$TTS_last_name/gi;
+			$TTS_text =~ s/--A--address1--B--/$TTS_address1/gi;
+			$TTS_text =~ s/--A--address2--B--/$TTS_address2/gi;
+			$TTS_text =~ s/--A--address3--B--/$TTS_address3/gi;
+			$TTS_text =~ s/--A--city--B--/$TTS_city/gi;
+			$TTS_text =~ s/--A--state--B--/$TTS_state/gi;
+			$TTS_text =~ s/--A--province--B--/$TTS_province/gi;
+			$TTS_text =~ s/--A--postal_code--B--/$TTS_postal_code/gi;
+			$TTS_text =~ s/--A--country_code--B--/$TTS_country_code/gi;
+			$TTS_text =~ s/--A--gender--B--/$TTS_gender/gi;
+			$TTS_text =~ s/--A--date_of_birth--B--/$TTS_date_of_birth/gi;
+			$TTS_text =~ s/--A--alt_phone--B--/$TTS_alt_phone/gi;
+			$TTS_text =~ s/--A--email--B--/$TTS_email/gi;
+			$TTS_text =~ s/--A--security_phrase--B--/$TTS_security_phrase/gi;
+			$TTS_text =~ s/--A--comments--B--/$TTS_comments/gi;
+			$TTS_text =~ s/--A--called_count--B--/$TTS_called_count/gi;
+			$TTS_text =~ s/--A--last_local_call_time--B--/$TTS_last_local_call_time/gi;
+			$TTS_text =~ s/--A--rank--B--/$TTS_rank/gi;
+			$TTS_text =~ s/--A--owner--B--/$TTS_owner/gi;
+			$TTS_text =~ s/--A--campaign_id--B--/$VD_campaign_id/gi;
+			$TTS_text =~ s/--A--ingroup--B--/$VD_campaign_id/gi;
+			$TTS_text =~ s/--A--group--B--/$VD_campaign_id/gi;
+			### END replace variables with record values ###
+
+			if ($useTTS > 0) 
+				{
 				### BEGIN check for --C-- and --D-- tags for static file replacement
 				if ( ($TTS_text =~ /--C--/) || ($TTS_text =~ /--D--/) )
 					{
@@ -737,11 +754,12 @@ else
 				$enc = md5_hex("$TTS_textRAW-$TTS_voice");	# the hash
 				$enc_ftl = substr($enc, 0, 2);	# first letter of hash
 				$TTS_filename_path = $PATHsounds . "/tts/" . $enc_ftl . "/tts-" . $enc;
-				print STDERR "\nfilename: $TTS_filename_path\n";
-
-				$DB_am_message_exten = $TTS_filename_path;
 				}
-			$sthA->finish();
+			else
+				{$TTS_filename_path = $TTS_text;}
+			print STDERR "\nfilename: $TTS_filename_path\n";
+
+			$DB_am_message_exten = $TTS_filename_path;
 			}
 		##### END Check if prompt uses TTS, if so, create TTS and set the filename to the generated prompt #####
 

@@ -40,6 +40,7 @@
 # 150210-0659 - Added LOCK options for manual_dial_search_checkbox
 # 150217-0657 - Added vmail show on login option
 # 150218-0800 - Added Callbacks Bulk Move help
+# 150223-1548 - Added DYN option to am_message_exten
 #
 
 require("dbconnect_mysqli.php");
@@ -941,7 +942,7 @@ if ($SSoutbound_autodial_active > 0)
 	<BR>
 	<A NAME="campaigns-am_message_exten">
 	<BR>
-	<B><?php echo _QXZ("Answering Machine Message"); ?> -</B><?php echo _QXZ("This field is for entering the prompt to play when the agent gets an answering machine and clicks on the Answering Machine Message button in the transfer conference frame. You must set this to either an audio file in the audio store or a TTS prompt if TTS is enabled on your system."); ?>
+	<B><?php echo _QXZ("Answering Machine Message"); ?> -</B><?php echo _QXZ("This field is for entering the prompt to play when the agent gets an answering machine and clicks on the Answering Machine Message button in the transfer conference frame. You must set this to either an audio file in the audio store or a TTS prompt if TTS is enabled on your system. You can also use lead fields to generate audio filenames using the DYN flag, for instance using DYN--A--user--B-- for agent 1234 would look for a file named 1234.wav in your audio store to play."); ?>
 
 	<BR>
 	<A NAME="campaigns-waitforsilence_options">
