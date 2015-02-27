@@ -1,7 +1,7 @@
 <?php
 # admin_header.php - VICIDIAL administration header
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 # CHANGES
@@ -49,6 +49,7 @@
 # 141001-2200 - Finalized adding QXZ translation to all admin files
 # 141128-1009 - Added code for languages section
 # 141230-0927 - Changed single-quote QXZ arguments to double-quotes
+# 150227-1614 - Formatting issue #831
 #
 
 
@@ -1123,7 +1124,7 @@ $SSenable_languages =		$row[7];
 		{
 	?>
 	<!-- USERS NAVIGATION -->
-	<TR WIDTH=160><TD <?php echo $users_hh ?> WIDTH=160>
+	<TR WIDTH=160><TD ALIGN=LEFT <?php echo $users_hh ?> WIDTH=160>
 	<a href="<?php echo $ADMIN ?>?ADD=0A"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $users_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $users_bold ?><?php echo _QXZ("Users"); ?></a>
 	</TD></TR>
 	<?php if (strlen($users_hh) > 1) { 
@@ -1155,7 +1156,7 @@ $SSenable_languages =		$row[7];
 	  } 
 	?>
 	<!-- CAMPAIGNS NAVIGATION -->
-	<TR><TD <?php echo $campaigns_hh ?>>
+	<TR><TD ALIGN=LEFT <?php echo $campaigns_hh ?>>
 	<a href="<?php echo $ADMIN ?>?ADD=10"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $campaigns_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $campaigns_bold ?><?php echo _QXZ("Campaigns"); ?></a>
 	</TD></TR>
 	<?php
@@ -1264,7 +1265,7 @@ $SSenable_languages =		$row[7];
 		{ ?>
 
 	<TR>
-		<TD <?php echo $qc_hh ?>>
+		<TD ALIGN=LEFT <?php echo $qc_hh ?>>
 			<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $qc_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $qc_bold ?> <?php echo _QXZ("Quality Control"); ?> </FONT></a>
 		</TD>
 	</TR>
@@ -1291,7 +1292,7 @@ $SSenable_languages =		$row[7];
 		}
 	?>
 	<!-- SCRIPTS NAVIGATION -->
-	<TR><TD <?php echo $scripts_hh ?>>
+	<TR><TD ALIGN=LEFT <?php echo $scripts_hh ?>>
 	<a href="<?php echo $ADMIN ?>?ADD=1000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $scripts_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $scripts_bold ?> <?php echo _QXZ("Scripts"); ?> </a>
 	</TD></TR>
 	<?php
@@ -1328,7 +1329,7 @@ $SSenable_languages =		$row[7];
 		}
 	?>
 	<!-- INGROUPS NAVIGATION -->
-	<TR><TD <?php echo $ingroups_hh ?>>
+	<TR><TD ALIGN=LEFT <?php echo $ingroups_hh ?>>
 	<a href="<?php echo $ADMIN ?>?ADD=1000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $ingroups_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $ingroups_bold ?> <?php echo _QXZ("Inbound"); ?> </a>
 	</TD></TR>
 	<?php
@@ -1417,7 +1418,7 @@ $SSenable_languages =		$row[7];
 		<?php } 
 		?>
 	<!-- USERGROUPS NAVIGATION -->
-	<TR><TD <?php echo $usergroups_hh ?>>
+	<TR><TD ALIGN=LEFT <?php echo $usergroups_hh ?>>
 	<a href="<?php echo $ADMIN ?>?ADD=100000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $usergroups_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $usergroups_bold ?> <?php echo _QXZ("User Groups"); ?> </a>
 	</TD></TR>
 	<?php
@@ -1438,7 +1439,7 @@ $SSenable_languages =		$row[7];
 		<?php } 
 	?>
 	<!-- REMOTEAGENTS NAVIGATION -->
-	<TR><TD <?php echo $remoteagent_hh ?>>
+	<TR><TD ALIGN=LEFT <?php echo $remoteagent_hh ?>>
 	<a href="<?php echo $ADMIN ?>?ADD=10000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $remoteagent_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $remoteagent_bold ?> <?php echo _QXZ("Remote Agents"); ?> </a>
 	</TD></TR>
 	<?php
@@ -1461,7 +1462,7 @@ $SSenable_languages =		$row[7];
 	<?php } 
 	?>
 	<!-- ADMIN NAVIGATION -->
-	<TR><TD <?php echo $admin_hh ?>>
+	<TR><TD ALIGN=LEFT <?php echo $admin_hh ?>>
 	<a href="<?php echo $ADMIN ?>?ADD=999998"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $admin_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $admin_bold ?> <?php echo _QXZ("Admin"); ?> </a>
 	</TD></TR>
 	<?php
@@ -1592,7 +1593,7 @@ $SSenable_languages =		$row[7];
 			}
 		?>
 		<!-- REPORTS NAVIGATION -->
-		<TR><TD <?php echo $reports_hh ?>>
+		<TR><TD ALIGN=LEFT <?php echo $reports_hh ?>>
 		<a href="<?php echo $ADMIN ?>?ADD=999999"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $reports_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $reports_bold ?> <?php echo _QXZ("Reports"); ?> </a>
 		</TD></TR>
 		<?php
@@ -1603,7 +1604,7 @@ $SSenable_languages =		$row[7];
 			{
 			?>
 			<!-- REPORTS NAVIGATION -->
-			<TR><TD <?php echo $reports_hh ?>>
+			<TR><TD ALIGN=LEFT <?php echo $reports_hh ?>>
 			<a href="<?php echo $ADMIN ?>?ADD=999999"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $reports_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $reports_bold ?> <?php echo _QXZ("Reports"); ?> </a>
 			</TD></TR>
 			<?php
@@ -1614,7 +1615,7 @@ $SSenable_languages =		$row[7];
 				{ ?>
 
 			<TR>
-				<TD <?php echo $qc_hh ?>>
+				<TD ALIGN=LEFT <?php echo $qc_hh ?>>
 					<a href="<?php echo $ADMIN ?>?ADD=100000000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $qc_fc ?> SIZE=<?php echo $header_font_size ?>><?php echo $qc_bold ?> <?php echo _QXZ("Quality Control"); ?> </FONT></a>
 				</TD>
 			</TR>
