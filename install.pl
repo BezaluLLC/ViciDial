@@ -36,6 +36,7 @@
 # 131121-1643 - Added robots.txt file to all web directories
 # 140619-0958 - Added instructions for new ASTplay IAX loop trunk
 # 150115-0657 - Changes to save custom.css customizations, issue #816
+# 150302-0706 - Removed path changes for non-English languages
 #
 
 ############################################
@@ -2658,48 +2659,6 @@ if ($PATHconf !~ /\/etc\/astguiclient.conf/)
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/listloader_super.pl `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/listloader_rowdisplay.pl `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/spreadsheet_sales_viewer.pl `;
-
-	if ( ($PROMPTcopy_web_lang =~ /y/i) || ($CLIcopy_web_lang =~ /y/i) )
-		{
-		print "Adjusting hard-coded paths in web language translation files...\n";
-
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_br/dbconnect.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_de/dbconnect.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_dk/dbconnect.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_el/dbconnect.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_es/dbconnect.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_fr/dbconnect.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_it/dbconnect.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_jp/dbconnect.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_nl/dbconnect.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_pl/dbconnect.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_pt/dbconnect.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_ru/dbconnect.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_se/dbconnect.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_sk/dbconnect.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_tw/dbconnect.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_br/dbconnect_mysqli.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_de/dbconnect_mysqli.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_dk/dbconnect_mysqli.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_el/dbconnect_mysqli.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_es/dbconnect_mysqli.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_fr/dbconnect_mysqli.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_it/dbconnect_mysqli.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_jp/dbconnect_mysqli.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_nl/dbconnect_mysqli.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_pl/dbconnect_mysqli.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_pt/dbconnect_mysqli.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_ru/dbconnect_mysqli.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_se/dbconnect_mysqli.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_sk/dbconnect_mysqli.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/agc_tw/dbconnect_mysqli.php `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial_br/* `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial_de/* `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial_el/* `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial_es/* `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial_fr/* `;
-		`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial_it/* `;
-		}
 	}
 
 if ( ($PROMPTcopy_conf_files =~ /y/i) || ($CLIcopy_conf_files =~ /y/i) )
