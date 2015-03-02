@@ -480,10 +480,11 @@
 # 150212-0034 - Added case-sensitive user validation(issue #682)
 # 150218-1356 - Fixes for QXZ enclosed in single-quotes
 # 150220-1533 - Fix for leave page confirmation after logout and QXZ fixes
+# 150302-0950 - Release of 2.11 stable branch and raising trunk to 2.12
 #
 
-$version = '2.10-451c';
-$build = '150220-1533';
+$version = '2.12-453c';
+$build = '150302-0950';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;

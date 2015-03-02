@@ -3437,12 +3437,13 @@ else
 # 150210-0657 - Added LOCK options for manual_dial_search_checkbox campaign setting
 # 150217-0702 - Added Show VM on Summary Screen option for phones and voicemail boxes
 # 150218-0924 - Added link to callbacks bulk move, also now we will archive deleted callbacks
+# 150302-0951 - Release of 2.11 stable branch and raising trunk to 2.12
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.10-475a';
-$build = '150218-0924';
+$admin_version = '2.12-477a';
+$build = '150302-0951';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
