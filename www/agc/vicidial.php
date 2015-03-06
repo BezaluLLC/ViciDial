@@ -10696,7 +10696,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				if (agent_pause_codes_active=='FORCE')
 					{var Go_BacK_LinK = '';}
 				else
-                    {var Go_BacK_LinK = "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"PauseCodeSelect_submit('');return false;\">Go Back</a>";}
+                    {var Go_BacK_LinK = "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"PauseCodeSelect_submit('');return false;\"><?php echo _QXZ("Go Back"); ?></a>";}
 
                 PauseCode_HTML = PauseCode_HTML + "</span></font></td></tr></table><br /><br />" + Go_BacK_LinK;
 				document.getElementById("PauseCodeSelectContent").innerHTML = PauseCode_HTML;
@@ -10875,7 +10875,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
                 {GroupAlias_HTML = GroupAlias_HTML + "</span></font></td><td bgcolor=\"#99FF99\" height=\"300px\" width=\"240px\" valign=\"top\"><font class=\"log_text\"><span id=GroupAliasSelectB>";}
 			}
 
-        var Go_BacK_LinK = "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"GroupAliasSelect_submit('');return false;\">Go Back</a>";
+        var Go_BacK_LinK = "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"GroupAliasSelect_submit('');return false;\"><?php echo _QXZ("Go Back"); ?></a>";
 
         GroupAlias_HTML = GroupAlias_HTML + "</span></font></td></tr></table><br /><br />" + Go_BacK_LinK;
 		document.getElementById("GroupAliasSelectContent").innerHTML = GroupAlias_HTML;
