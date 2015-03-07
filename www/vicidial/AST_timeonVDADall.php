@@ -91,10 +91,11 @@
 # 141128-0857 - Code cleanup for QXZ functions
 # 141230-0030 - Added code for on-the-fly language translations display
 # 150211-2342 - Added hopper link, issue #825
+# 150307-0825 - small cosmetic fix
 #
 
-$version = '2.10-80';
-$build = '150211-2342';
+$version = '2.10-81';
+$build = '150307-0825';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -774,7 +775,7 @@ $select_list .= "<TD NOWRAP align=right>";
 $select_list .= "<font size=1>"._QXZ("VERSION").": $version &nbsp; "._QXZ("BUILD").": $build</font>";
 $select_list .= "</TD></TR></TABLE>";
 
-$open_list = "<TABLE WIDTH=250 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\"#D9E6FE\"><TR><TD ALIGN=CENTER><a href=\"#\" onclick=\"openDiv(\'campaign_select_list\');\"><font size=2>"._QXZ("Choose Report Display Options")."</a></TD></TR></TABLE>";
+$open_list = '<TABLE WIDTH=250 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\'#D9E6FE\'><TR><TD ALIGN=CENTER><a href=\'#\' onclick=\\"openDiv(\'campaign_select_list\');\\"><font size=2>'._QXZ("Choose Report Display Options").'</a></TD></TR></TABLE>';
 
 ?>
 
@@ -811,8 +812,8 @@ else
 		document.getElementById('cursorY').value = (window.Event) ? e.pageY : event.clientY + (document.documentElement.scrollTop ? document.documentElement.scrollTop : document.body.scrollTop);
 		}
 
-	var select_list = '<?php echo $select_list ?>';
-	var open_list = '<?php echo $open_list ?>';
+	var select_list = "<?php echo $select_list ?>";
+	var open_list = "<?php echo $open_list ?>";
 	var monitor_phone = '<?php echo $monitor_phone ?>';
 	var user = '<?php echo $PHP_AUTH_USER ?>';
 	var pass = '<?php echo $PHP_AUTH_PW ?>';
@@ -1887,7 +1888,7 @@ if ($RTajax < 1)
 		}
 	else
 		{
-		echo "<a href=\"$PHP_SELF?$usergroupQS$groupQS&RR=$RR&DB=$DB&adastats=1&SIPmonitorLINK=$SIPmonitorLINK&IAXmonitorLINK=$IAXmonitorLINK&usergroup=$usergroup&UGdisplay=$UGdisplay&UidORname=$UidORname&orderby=$orderby&SERVdisplay=$SERVdisplay&CALLSdisplay=$CALLSdisplay&PHONEdisplay=$PHONEdisplay&CUSTPHONEdisplay=$CUSTPHONEdisplay&with_inbound=$with_inbound&monitor_active=$monitor_active&monitor_phone=$monitor_phone&ALLINGROUPstats=$ALLINGROUPstats&DROPINGROUPstats=$DROPINGROUPstats&NOLEADSalert=$NOLEADSalert&CARRIERstats=$CARRIERstats&PRESETstats=$PRESETstats&AGENTtimeSTATS=$AGENTtimeSTATS&droppedOFtotal=$droppedOFtotal\"><font size=1>+ "._QXZ("VIEW LESS")."</font></a>";
+		echo "<a href=\"$PHP_SELF?$usergroupQS$groupQS&RR=$RR&DB=$DB&adastats=1&SIPmonitorLINK=$SIPmonitorLINK&IAXmonitorLINK=$IAXmonitorLINK&usergroup=$usergroup&UGdisplay=$UGdisplay&UidORname=$UidORname&orderby=$orderby&SERVdisplay=$SERVdisplay&CALLSdisplay=$CALLSdisplay&PHONEdisplay=$PHONEdisplay&CUSTPHONEdisplay=$CUSTPHONEdisplay&with_inbound=$with_inbound&monitor_active=$monitor_active&monitor_phone=$monitor_phone&ALLINGROUPstats=$ALLINGROUPstats&DROPINGROUPstats=$DROPINGROUPstats&NOLEADSalert=$NOLEADSalert&CARRIERstats=$CARRIERstats&PRESETstats=$PRESETstats&AGENTtimeSTATS=$AGENTtimeSTATS&droppedOFtotal=$droppedOFtotal\"><font size=1>- "._QXZ("VIEW LESS")."</font></a>";
 		}
 	if ($UGdisplay>0)
 		{
