@@ -481,10 +481,11 @@
 # 150218-1356 - Fixes for QXZ enclosed in single-quotes
 # 150220-1533 - Fix for leave page confirmation after logout and QXZ fixes
 # 150302-0950 - Release of 2.11 stable branch and raising trunk to 2.12
+# 150309-0315 - Added custom agent login prompt option
 #
 
-$version = '2.12-453c';
-$build = '150302-0950';
+$version = '2.12-454c';
+$build = '150309-0315';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -581,7 +582,7 @@ if ($sl_ct > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -589,25 +590,27 @@ $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$non_latin =					$row[0];
-	$vdc_header_date_format =		$row[1];
-	$vdc_customer_date_format =		$row[2];
-	$vdc_header_phone_format =		$row[3];
-	$WeBRooTWritablE =				$row[4];
-	$timeclock_end_of_day =			$row[5];
-	$vtiger_url =					$row[6];
-	$enable_vtiger_integration =	$row[7];
-	$outbound_autodial_active =		$row[8];
-	$enable_second_webform =		$row[9];
-	$user_territories_active =		$row[10];
-	$static_agent_url =				$row[11];
-	$custom_fields_enabled =		$row[12];
-	$SSpllb_grouping_limit =		$row[13];
-	$qc_enabled =					$row[14];
-	$email_enabled =				$row[15];
-	$callback_time_24hour =			$row[16];
-	$SSenable_languages =			$row[17];
-	$SSlanguage_method =			$row[18];
+	$non_latin =						$row[0];
+	$vdc_header_date_format =			$row[1];
+	$vdc_customer_date_format =			$row[2];
+	$vdc_header_phone_format =			$row[3];
+	$WeBRooTWritablE =					$row[4];
+	$timeclock_end_of_day =				$row[5];
+	$vtiger_url =						$row[6];
+	$enable_vtiger_integration =		$row[7];
+	$outbound_autodial_active =			$row[8];
+	$enable_second_webform =			$row[9];
+	$user_territories_active =			$row[10];
+	$static_agent_url =					$row[11];
+	$custom_fields_enabled =			$row[12];
+	$SSpllb_grouping_limit =			$row[13];
+	$qc_enabled =						$row[14];
+	$email_enabled =					$row[15];
+	$callback_time_24hour =				$row[16];
+	$SSenable_languages =				$row[17];
+	$SSlanguage_method =				$row[18];
+	$meetme_enter_login_filename =		$row[19];
+	$meetme_enter_leave3way_filename =	$row[20];
 	}
 else
 	{
@@ -2578,6 +2581,10 @@ else
 		$on_hook_agent=$row[78];
 		$webphone_auto_answer=$row[79];
 
+		$login_context = $ext_context;
+		if (strlen($meetme_enter_login_filename) > 0)
+			{$login_context = 'meetme-enter-login';}
+
 		$no_empty_session_warnings=0;
 		if ( ($phone_login == 'nophone') or ($on_hook_agent == 'Y') )
 			{
@@ -2881,8 +2888,8 @@ else
 			if ($on_hook_agent == 'Y')
 				{$TEMP_SIP_user_DiaL = 'Local/8300@default';}
 			### insert a NEW record to the vicidial_manager table to be processed
-			$agent_login_data="||$NOW_TIME|NEW|N|$server_ip||Originate|$SIqueryCID|Channel: $TEMP_SIP_user_DiaL|Context: $ext_context|Exten: $session_id|Priority: 1|Callerid: \"$SIqueryCID\" <$campaign_cid>|||||";
-			$agent_login_stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$SIqueryCID','Channel: $TEMP_SIP_user_DiaL','Context: $ext_context','Exten: $session_id','Priority: 1','Callerid: \"$SIqueryCID\" <$campaign_cid>','','','','','');";
+			$agent_login_data="||$NOW_TIME|NEW|N|$server_ip||Originate|$SIqueryCID|Channel: $TEMP_SIP_user_DiaL|Context: $login_context|Exten: $session_id|Priority: 1|Callerid: \"$SIqueryCID\" <$campaign_cid>|||||";
+			$agent_login_stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$SIqueryCID','Channel: $TEMP_SIP_user_DiaL','Context: $login_context','Exten: $session_id','Priority: 1','Callerid: \"$SIqueryCID\" <$campaign_cid>','','','','','');";
 			if ( ($is_webphone != 'Y') and ($is_webphone != 'Y_API_LAUNCH') )
 				{
 				if ($DB) {echo "$agent_login_stmt\n";}
@@ -3639,6 +3646,7 @@ $CCAL_OUT .= "</table>";
 	var extension_xfer = '<?php echo $extension ?>';
 	var dialplan_number = '<?php echo $dialplan_number ?>';
 	var ext_context = '<?php echo $ext_context ?>';
+	var login_context = '<?php echo $login_context ?>';
 	var protocol = '<?php echo $protocol ?>';
 	var agentchannel = '';
 	var local_gmt ='<?php echo $local_gmt ?>';
@@ -11694,7 +11702,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			}
 		if (xmlhttp) 
 			{ 
-			VMCoriginate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass  + "&ACTION=OriginateVDRelogin&format=text&channel=" + originatevalue + "&queryCID=" + queryCID + "&exten=" + session_id + "&ext_context=" + ext_context + "&ext_priority=1" + "&extension=" + extension + "&protocol=" + protocol + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&allow_sipsak_messages=" + allow_sipsak_messages + "&campaign=" + campaign + "&outbound_cid=" + campaign_cid;
+			VMCoriginate_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass  + "&ACTION=OriginateVDRelogin&format=text&channel=" + originatevalue + "&queryCID=" + queryCID + "&exten=" + session_id + "&ext_context=" + login_context + "&ext_priority=1" + "&extension=" + extension + "&protocol=" + protocol + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&allow_sipsak_messages=" + allow_sipsak_messages + "&campaign=" + campaign + "&outbound_cid=" + campaign_cid;
 			xmlhttp.open('POST', 'manager_send.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(VMCoriginate_query); 

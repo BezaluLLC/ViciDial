@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2015-01-23
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2015-03-09
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -98,6 +98,8 @@ Changes:
 140617-2029 - Added vicidial_users wrapup_seconds_override option
 140812-0939 - Added phone_number and vendor_lead_code to agent_status function output
 150123-1611 - Fixed issue with list local call times and add_lead
+150217-1404 - archive deleted callbacks to vicidial_callbacks_archive table
+150309-0250 - Added ability to use urlencoded web form addresses
 
 
 API Functions use the 'function' variable
@@ -1109,6 +1111,8 @@ web_form_address -	6-100 characters
 web_form_address_two -	6-100 characters
 reset_time -		4-100 characters, must be in valid 4-digit groups of 24-hour time (i.e. 0900-1700-2359)
 expiration_date -	10 characters, must be in valid date format YYYY-MM-DD (i.e. 2012-11-25)
+NOTES: 
+ - for the web form addresses, you can URL encode them to include standard URL special characters
 
 
 Example URL strings for API calls:
@@ -1161,6 +1165,7 @@ expiration_date -	10 characters, must be in valid date format YYYY-MM-DD (i.e. 2
 NOTES: 
  - in order to set a field to empty('') set it equal to --BLANK--, i.e. "&drop_inbound_group=--BLANK--"
  - please use no special characters like apostrophes, quotes or amphersands
+ - for the web form addresses, you can URL encode them to include standard URL special characters
 
 
 Example URL strings for API calls:

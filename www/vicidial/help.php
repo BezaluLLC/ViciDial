@@ -41,6 +41,7 @@
 # 150217-0657 - Added vmail show on login option
 # 150218-0800 - Added Callbacks Bulk Move help
 # 150223-1548 - Added DYN option to am_message_exten
+# 150307-2317 - Added custom meetme enter options
 #
 
 require("dbconnect_mysqli.php");
@@ -4561,6 +4562,16 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-sounds_web_directory">
 <BR>
 <B><?php echo _QXZ("Sounds Web Directory"); ?> -</B><?php echo _QXZ("This auto-generated directory name is created at random by the system as the place that the audio store will be kept. All audio files will reside in this directory."); ?>
+
+<BR>
+<A NAME="settings-meetme_enter_login_filename">
+<BR>
+<B><?php echo _QXZ("Custom Agent Login Sound"); ?> -</B><?php echo _QXZ("This is a systemwide feature that only works on Asterisk 1.8 servers or higher. This allows you to set an audio file for your agents to hear after their phone has connected to the server after they have logged in to the agent screen. If you want to have this audio prompt be the only prompt that the agent hears, then you will need to copy the sip-silence audio files over the only-person audio files. If you want the agent to hear no prompt when they login then also set this field to sip-silence.  Default is EMPTY."); ?>
+
+<BR>
+<A NAME="settings-meetme_enter_leave3way_filename">
+<BR>
+<B><?php echo _QXZ("Custom Agent Leave 3way Sound"); ?> -</B><?php echo _QXZ("This is a systemwide feature that only works on Asterisk 1.8 servers or higher. This allows you to set an audio file for your agents to hear after they have left a 3way conferencce in the agent screen. If you want to have this audio prompt be the only prompt that the agent hears, then you will need to copy the sip-silence audio files over the only-person audio files. If you want the agent to hear no prompt after they leave a 3way call then also set this field to sip-silence. Default is EMPTY."); ?>
 
 <BR>
 <A NAME="settings-admin_web_directory">

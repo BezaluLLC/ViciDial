@@ -1,7 +1,7 @@
 <?php
-# manager_send.php    version 2.10
+# manager_send.php    version 2.12
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to insert records into the vicidial_manager table to signal Actions to an asterisk server
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -123,10 +123,11 @@
 # 141118-1101 - Formatting changes for QXZ output
 # 141128-0851 - Code cleanup for QXZ functions
 # 141216-2107 - Added language settings lookups and user/pass variable standardization
+# 150307-1837 - Added leave 3way custom sound context
 #
 
-$version = '2.10-70';
-$build = '141216-2107';
+$version = '2.12-71';
+$build = '150307-1837';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=129;
 $one_mysql_log=0;
@@ -262,7 +263,7 @@ if ($sl_ct > 0)
 	$VUselected_language =		$row[0];
 	}
 
-$stmt = "SELECT use_non_latin,allow_sipsak_messages,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,allow_sipsak_messages,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02001',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -270,10 +271,12 @@ $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$non_latin =				$row[0];
-	$allow_sipsak_messages =	$row[1];
-	$SSenable_languages =		$row[2];
-	$SSlanguage_method =		$row[3];
+	$non_latin =						$row[0];
+	$allow_sipsak_messages =			$row[1];
+	$SSenable_languages =				$row[2];
+	$SSlanguage_method =				$row[3];
+	$meetme_enter_login_filename =		$row[4];
+	$meetme_enter_leave3way_filename =	$row[5];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -283,6 +286,10 @@ if ($non_latin < 1)
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
 	$secondS = preg_replace("/[^0-9]/","",$secondS);
 	}
+
+$threeway_context = $ext_context;
+if (strlen($meetme_enter_leave3way_filename) > 0)
+	{$threeway_context = 'meetme-enter-leave3way';}
 
 $auth=0;
 $auth_message = user_authorization($user,$pass,'',0,1,0);
@@ -1540,7 +1547,7 @@ if ($ACTION=="RedirectXtraCXNeW")
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtE,'02033',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				$queryCID = "CXAR24$NOWnum";
-				$stmtF="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Redirect','$queryCID','Channel: $agentchannel','Context: $ext_context','Exten: $exten','Priority: 1','CallerID: $queryCID','','','','','');";
+				$stmtF="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Redirect','$queryCID','Channel: $agentchannel','Context: $threeway_context','Exten: $exten','Priority: 1','CallerID: $queryCID','','','','','');";
 					if ($format=='debug') {echo "\n<!-- $stmtF -->";}
 				$rslt=mysql_to_mysqli($stmtF, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtF,'02034',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -1758,7 +1765,7 @@ if ($ACTION=="RedirectXtraNeW")
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02049',$user,$server_ip,$session_name,$one_mysql_log);}
 
 					$queryCID = "CXAR23$NOWnum";
-					$stmtB="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Redirect','$queryCID','Channel: $agentchannel','Context: $ext_context','Exten: $exten','Priority: 1','CallerID: $queryCID','','','','','');";
+					$stmtB="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Redirect','$queryCID','Channel: $agentchannel','Context: $threeway_context','Exten: $exten','Priority: 1','CallerID: $queryCID','','','','','');";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					$rslt=mysql_to_mysqli($stmtB, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02050',$user,$server_ip,$session_name,$one_mysql_log);}

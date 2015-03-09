@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_update.pl version 2.10
+# AST_update.pl version 2.12
 #
 # DESCRIPTION:
 # uses the Asterisk Manager interface and DBD::MySQL to update the live_channels
@@ -27,7 +27,7 @@
 # 
 # It is recommended that you run this program on each local Asterisk machine
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # version changes:
 # 41228-1659 - modified to compensate for manager output response hiccups
@@ -63,9 +63,10 @@
 # 140510-0119 - Small formatting and asterisk version changes
 # 141113-1601 - Added concurrency check
 # 141124-2309 - Fixed Fhour variable bug
+# 150308-0911 - Added filter for agent sessions in new meetme-enter contexts
 #
 
-$build = '141124-2309';
+$build = '150308-0911';
 
 # constants
 $SYSPERF=0;	# system performance logging to MySQL server_performance table every 5 seconds
@@ -868,6 +869,7 @@ while($one_day_interval > 0)
 						}
 					if ($DBX) {print "EXcount: $EXcount\n";}
 					if (length($list_chan_12[6])<2) {$list_chan_12[6] = 'SIP/ring';}
+					if ($list_chan_12[1] =~ /^meetme-enter/) {$list_chan_12[6] =~ s/\(.*//gi;}
 					$list_channels[$c] = "$list_chan_12[0]     $list_chan_12[6]";
 					}
 				$list_SIP[$c] = $list_channels[$c];

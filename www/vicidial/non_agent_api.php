@@ -93,10 +93,11 @@
 # 140812-0939 - Added phone_number and vendor_lead_code to agent_status function output
 # 150123-1611 - Fixed issue with list local call times and add_lead
 # 150217-1404 - archive deleted callbacks to vicidial_callbacks_archive table
+# 150309-0250 - Added ability to use urlencoded web form addresses
 #
 
-$version = '2.10-69';
-$build = '150217-1404';
+$version = '2.12-70';
+$build = '150309-0250';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -483,8 +484,8 @@ if ($non_latin < 1)
 	$script=preg_replace('/[^-_0-9a-zA-Z]/','',$script);
 	$am_message=preg_replace('/[^-_0-9a-zA-Z]/','',$am_message);
 	$drop_inbound_group=preg_replace('/[^-_0-9a-zA-Z]/','',$drop_inbound_group);
-	$web_form_address=preg_replace('/[^- \+\.\:\/\@\?\&\_0-9a-zA-Z]/','',$web_form_address);
-	$web_form_address_two=preg_replace('/[^- \+\.\:\/\@\?\&\_0-9a-zA-Z]/','',$web_form_address_two);
+	$web_form_address=preg_replace('/[^- %=\+\.\:\/\@\?\&\_0-9a-zA-Z]/','',$web_form_address);
+	$web_form_address_two=preg_replace('/[^- %=\+\.\:\/\@\?\&\_0-9a-zA-Z]/','',$web_form_address_two);
 	$reset_list=preg_replace('/[^A-Z]/','',$reset_list);
 	$delete_list=preg_replace('/[^A-Z]/','',$delete_list);
 	$delete_leads=preg_replace('/[^A-Z]/','',$delete_leads);
@@ -3644,6 +3645,11 @@ if ($function == 'update_list')
 						}
 					if (strlen($web_form_address) > 0)
 						{
+						if (preg_match("/%3A%2F%2F/",$web_form_address)) 
+							{
+							$web_form_address = urldecode($web_form_address);
+							$web_form_address = preg_replace("/ /",'+',$web_form_address);
+							}
 						if ($web_form_address == '--BLANK--')
 							{$webformSQL = " ,web_form_address=''";}
 						else
@@ -3651,6 +3657,11 @@ if ($function == 'update_list')
 						}
 					if (strlen($web_form_address_two) > 0)
 						{
+						if (preg_match("/%3A%2F%2F/",$web_form_address_two)) 
+							{
+							$web_form_address_two = urldecode($web_form_address_two);
+							$web_form_address_two = preg_replace("/ /",'+',$web_form_address_two);
+							}
 						if ($web_form_address_two == '--BLANK--')
 							{$webformtwoSQL = " ,web_form_address_two=''";}
 						else
@@ -3969,10 +3980,36 @@ if ($function == 'add_list')
 								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 								exit;
 								}
+							$webformSQL='';
+							$webformtwoSQL='';
+							if (strlen($web_form_address) > 0)
+								{
+								if (preg_match("/%3A%2F%2F/",$web_form_address)) 
+									{
+									$web_form_address = urldecode($web_form_address);
+									$web_form_address = preg_replace("/ /",'+',$web_form_address);
+									}
+								if ($web_form_address == '--BLANK--')
+									{$webformSQL = " ,web_form_address=''";}
+								else
+									{$webformSQL = " ,web_form_address='$web_form_address'";}
+								}
+							if (strlen($web_form_address_two) > 0)
+								{
+								if (preg_match("/%3A%2F%2F/",$web_form_address_two)) 
+									{
+									$web_form_address_two = urldecode($web_form_address_two);
+									$web_form_address_two = preg_replace("/ /",'+',$web_form_address_two);
+									}
+								if ($web_form_address_two == '--BLANK--')
+									{$webformtwoSQL = " ,web_form_address_two=''";}
+								else
+									{$webformtwoSQL = " ,web_form_address_two='$web_form_address_two'";}
+								}
 							if (strlen($active)<1) {$active='N';}
 							if (strlen($expiration_date)<10) {$expiration_date='2099-12-31';}
 
-							$stmt="INSERT INTO vicidial_lists SET list_id='$list_id', list_name='$list_name', campaign_id='$campaign_id', active='$active', campaign_cid_override='$outbound_cid', agent_script_override='$script', am_message_exten_override='$am_message', drop_inbound_group_override='$drop_inbound_group', web_form_address='$web_form_address', web_form_address_two='$web_form_address_two', reset_time='$reset_time', expiration_date='$expiration_date';";
+							$stmt="INSERT INTO vicidial_lists SET list_id='$list_id', list_name='$list_name', campaign_id='$campaign_id', active='$active', campaign_cid_override='$outbound_cid', agent_script_override='$script', am_message_exten_override='$am_message', drop_inbound_group_override='$drop_inbound_group', reset_time='$reset_time', expiration_date='$expiration_date' $webformSQL $webformtwoSQL;";
 							$rslt=mysql_to_mysqli($stmt, $link);
 							if ($DB) {echo "|$stmt|\n";}
 

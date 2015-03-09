@@ -1582,7 +1582,9 @@ callback_time_24hour ENUM('0','1') default '0',
 active_modules TEXT,
 allow_chats ENUM('0','1') default '0',
 enable_languages ENUM('0','1') default '0',
-language_method VARCHAR(20) default 'DISABLED'
+language_method VARCHAR(20) default 'DISABLED',
+meetme_enter_login_filename VARCHAR(255) default '',
+meetme_enter_leave3way_filename VARCHAR(255) default ''
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3370,4 +3372,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1405',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1406',db_schema_update_date=NOW(),reload_timestamp=NOW();

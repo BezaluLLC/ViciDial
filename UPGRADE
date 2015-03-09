@@ -55,8 +55,9 @@ REQUIRED STEPS!!!
 
 OTHER CHANGES:
 
-1. No new changes yet
-
+1. Added System Settings to allow custom prompts on agent login and when an
+	agent leaves a 3way call in the agent screen. Must Have Asterisk 1.8+
+	for it to work.
 
 
 
