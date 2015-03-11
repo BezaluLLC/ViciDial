@@ -693,6 +693,7 @@ if ($run_export > 0)
 			$extended_data_a='';
 			$extended_data_b='';
 			$extended_data_c='';
+			$extended_data_d='';
 			if ($export_fields=='ALTERNATE_1')
 				{
 				$extended_data = '';
