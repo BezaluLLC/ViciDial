@@ -6,7 +6,7 @@
 # astguiclient.conf file to reflect a change in IP address. The script will 
 # automatically default to the first eth address in the ifconfig output.
 #
-# Copyright (C) 2010  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 71205-2144 - Added display of extensions.conf example for call routing
@@ -14,7 +14,9 @@
 # 90211-1247 - Added asterisk version
 # 90630-2256 - vicidial_process_triggers
 # 100428-0943 - Added DB custom user/pass fields
+# 150312-1000 - Added ExpectedDBSchema
 #
+
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
 
@@ -202,6 +204,8 @@ if (-e "$PATHconf")
 			{$VARfastagi_log_checkfordead = $line;   $VARfastagi_log_checkfordead =~ s/.*=//gi;}
 		if ( ($line =~ /^VARfastagi_log_checkforwait/) && ($CLIVARfastagi_log_checkforwait < 1) )
 			{$VARfastagi_log_checkforwait = $line;   $VARfastagi_log_checkforwait =~ s/.*=//gi;}
+		if ($line =~ /^ExpectedDBSchema/)
+			{$ExpectedDBSchema = $line;   $ExpectedDBSchema =~ s/.*=//gi;}
 		$i++;
 		}
 	}
@@ -378,6 +382,9 @@ print conf "VARfastagi_log_max_spare_servers => $VARfastagi_log_max_spare_server
 print conf "VARfastagi_log_max_requests => $VARfastagi_log_max_requests\n";
 print conf "VARfastagi_log_checkfordead => $VARfastagi_log_checkfordead\n";
 print conf "VARfastagi_log_checkforwait => $VARfastagi_log_checkforwait\n";
+print conf "\n";
+print conf "# Expected DB Schema version for this install\n";
+print conf "ExpectedDBSchema => $ExpectedDBSchema\n";
 close(conf);
 
 
@@ -476,11 +483,6 @@ if( $VARserver_ip =~ m/(\S+)\.(\S+)\.(\S+)\.(\S+)/ )
 print "\n";
 print "SERVER IP ADDRESS CHANGE FOR VICIDIAL FINISHED!\n";
 print "\n";
-#print "If you are not having VICIDIAL auto-generate your conf files, please\n";
-#print "remember to change your extensions.conf entries for the new IP address:\n";
-#print "exten => _$VARremDIALstr*.,1,Goto(default,\${EXTEN:16},1)\n";
-#print "exten => _8600XXX*.,1,AGI(agi-VDADfixCXFER.agi)\n";
-#print "exten => _78600XXX*.,1,AGI(agi-VDADfixCXFER.agi)\n";
 
 
 $secy = time();		$secz = ($secy - $secX);		$minz = ($secz/60);		# calculate script runtime so far
@@ -497,4 +499,3 @@ sub leading_zero($)
     s/^(\d\d)$/0$1/;
     return $_;
 	} # End of the leading_zero() routine.
-

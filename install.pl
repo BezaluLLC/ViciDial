@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# install.pl version 2.10
+# install.pl version 2.12
 #
 # Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -37,6 +37,7 @@
 # 140619-0958 - Added instructions for new ASTplay IAX loop trunk
 # 150115-0657 - Changes to save custom.css customizations, issue #816
 # 150302-0706 - Removed path changes for non-English languages
+# 150312-0942 - Added ExpectedDBSchema value in astguiclient.conf
 #
 
 ############################################
@@ -2353,6 +2354,29 @@ else
 		}
 	}
 
+$ExpectedDBSchema='?';
+if (-e "./extras/MySQL_AST_CREATE_tables.sql") 
+	{
+	print "Gathering expected DB Schema version...\n";
+	open(DBcreate, "./extras/MySQL_AST_CREATE_tables.sql") || die "can't open ./extras/MySQL_AST_CREATE_tables.sql: $!\n";
+	@DBcreate = <DBcreate>;
+	close(DBcreate);
+	$i=0;
+	foreach(@DBcreate)
+		{
+		$line = $DBcreate[$i];
+		$line =~ s/>|\n|\r|\t|\#.*|;.*//gi;
+		if ($line =~ /^UPDATE system_settings SET db_schema_version/)
+			{
+			$ExpectedDBSchema = $line;
+			$ExpectedDBSchema =~ s/UPDATE system_settings SET db_schema_version\=\'//gi;
+			$ExpectedDBSchema =~ s/\'.*//gi;
+			print "     Gathering expected DB Schema version found: |$ExpectedDBSchema|\n";
+			}
+		$i++;
+		}
+	}
+
 print "Writing to configuration file: $PATHconf\n";
 
 open(conf, ">$PATHconf") || die "can't open $PATHconf: $!\n";
@@ -2422,6 +2446,9 @@ print conf "VARfastagi_log_max_spare_servers => $VARfastagi_log_max_spare_server
 print conf "VARfastagi_log_max_requests => $VARfastagi_log_max_requests\n";
 print conf "VARfastagi_log_checkfordead => $VARfastagi_log_checkfordead\n";
 print conf "VARfastagi_log_checkforwait => $VARfastagi_log_checkforwait\n";
+print conf "\n";
+print conf "# Expected DB Schema version for this install\n";
+print conf "ExpectedDBSchema => $ExpectedDBSchema\n";
 close(conf);
 
 
