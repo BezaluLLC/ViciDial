@@ -59,6 +59,9 @@ OTHER CHANGES:
 	agent leaves a 3way call in the agent screen. Must Have Asterisk 1.8+
 	for it to work.
 
+2. Added ability to use single-quotes in vicidial_list fields. Through the 
+	agent screen and all lead import methods
+
 
 
 

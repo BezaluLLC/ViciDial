@@ -3447,12 +3447,13 @@ else
 # 150218-0924 - Added link to callbacks bulk move, also now we will archive deleted callbacks
 # 150302-0951 - Release of 2.11 stable branch and raising trunk to 2.12
 # 150307-1914 - Added login and leave3way custom sounds system settings options
+# 150313-0912 - Added DB Schema Version warning if mismatched with astguiclient.conf value
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-478a';
-$build = '150307-1914';
+$admin_version = '2.12-479a';
+$build = '150313-0912';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -29951,7 +29952,14 @@ if ($ADD==311111111111111)
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Version").": </td><td align=left> $version</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("SVN Version").": </td><td align=left> <a href=\"$PHP_SELF?ADD=999991\">$svn_revision</a></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("DB Schema Version").": </td><td align=left> $db_schema_version</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("DB Schema Version").": </td><td align=left> $db_schema_version";
+		if ($db_schema_version != "$ExpectedDBSchema")
+			{
+			echo "<font color=red><b> &nbsp; "._QXZ("WARNING: Code expects different schema").": $ExpectedDBSchema</b></font>\n";
+			}
+		echo "</td></tr>\n";
+
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("DB Schema Update Date").": </td><td align=left> $db_schema_update_date</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Password Encryption").": </td><td align=left> $pass_hash_enabled - $pass_key - $pass_cost</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Auto User-add Value").": </td><td align=left> $auto_user_add_value</td></tr>\n";

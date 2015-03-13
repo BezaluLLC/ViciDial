@@ -79,10 +79,11 @@
 # 141128-0847 - Code cleanup for QXZ functions
 # 141216-2118 - Added language settings lookups and user/pass variable standardization
 # 150108-1039 - Added transfer_conf-ID of epoch to help prevent double-execution of transfer commands
+# 150313-0825 - Allow for single quotes in vicidial_list and custom data fields
 #
 
-$version = '2.10-45';
-$build = '150108-1039';
+$version = '2.12-46';
+$build = '150313-0825';
 
 $startMS = microtime();
 
@@ -256,12 +257,10 @@ if ($non_latin < 1)
 	$agent_user=preg_replace("/[^0-9a-zA-Z]/","",$agent_user);
 	$function = preg_replace("/[^-\_0-9a-zA-Z]/","",$function);
 	$value = preg_replace("/[^-\_0-9a-zA-Z]/","",$value);
-	$vendor_id = preg_replace("/[^-\.\_0-9a-zA-Z]/","",$vendor_id);
 	$focus = preg_replace("/[^-\_0-9a-zA-Z]/","",$focus);
 	$preview = preg_replace("/[^-\_0-9a-zA-Z]/","",$preview);
 		$notes = preg_replace("/\+/"," ",$notes);
 	$notes = preg_replace("/[^- \.\_0-9a-zA-Z]/","",$notes);
-	$phone_code = preg_replace("/[^0-9X]/","",$phone_code);
 	$search = preg_replace("/[^-\_0-9a-zA-Z]/","",$search);
 	$group_alias = preg_replace("/[^0-9a-zA-Z]/","",$group_alias);
 	$dial_prefix = preg_replace("/[^0-9a-zA-Z]/","",$dial_prefix);
@@ -272,30 +271,49 @@ if ($non_latin < 1)
 	$blended = preg_replace("/[^A-Z]/","",$blended);
 	$ingroup_choices = preg_replace("/[^- \_0-9a-zA-Z]/","",$ingroup_choices);
 	$set_as_default = preg_replace("/[^A-Z]/","",$set_as_default);
+	$phone_code = preg_replace("/[^0-9X]/","",$phone_code);
 	$phone_number = preg_replace("/[^0-9]/","",$phone_number);
-	$address1 = preg_replace("/[^- \_0-9a-zA-Z]/","",$address1);
-	$address2 = preg_replace("/[^- \_0-9a-zA-Z]/","",$address2);
-	$address3 = preg_replace("/[^- \_0-9a-zA-Z]/","",$address3);
-	$alt_phone = preg_replace("/[^- \_0-9a-zA-Z]/","",$alt_phone);
-	$city = preg_replace("/[^- \_0-9a-zA-Z]/","",$city);
-	$comments = preg_replace("/[^- \_0-9a-zA-Z]/","",$comments);
-	$country_code = preg_replace("/[^A-Z]/","",$country_code);
-	$date_of_birth = preg_replace("/[^- \_0-9]/","",$date_of_birth);
-	$email = preg_replace("/[^-\.\:\/\@\_0-9a-zA-Z]/","",$email);
-	$first_name = preg_replace("/[^- \_0-9a-zA-Z]/","",$first_name);
-	$gender = preg_replace("/[^A-Z]/","",$gender);
-	$gmt_offset_now = preg_replace("/[^- \.\_0-9]/","",$gmt_offset_now);
-	$last_name = preg_replace("/[^- \_0-9a-zA-Z]/","",$last_name);
 	$lead_id = preg_replace("/[^0-9]/","",$lead_id);
-	$middle_initial = preg_replace("/[^- \_0-9a-zA-Z]/","",$middle_initial);
-	$province = preg_replace("/[^- \.\_0-9a-zA-Z]/","",$province);
-	$security_phrase = preg_replace("/[^- \.\_0-9a-zA-Z]/","",$security_phrase);
-	$source_id = preg_replace("/[^- \.\_0-9a-zA-Z]/","",$source_id);
-	$state = preg_replace("/[^- \_0-9a-zA-Z]/","",$state);
-	$title = preg_replace("/[^- \_0-9a-zA-Z]/","",$title);
-	$vendor_lead_code = preg_replace("/[^- \.\_0-9a-zA-Z]/","",$vendor_lead_code);
-	$rank = preg_replace("/[^-0-9]/","",$rank);
-	$owner = preg_replace("/[^-\.\:\/\@\_0-9a-zA-Z]/","",$owner);
+	$vendor_id = preg_replace('/;/','',$vendor_id);
+		$vendor_id = preg_replace('/\+/',' ',$vendor_id);
+	$vendor_lead_code = preg_replace('/;/','',$vendor_lead_code);
+		$vendor_lead_code = preg_replace('/\+/',' ',$vendor_lead_code);
+	$source_id = preg_replace('/;/','',$source_id);
+		$source_id = preg_replace('/\+/',' ',$source_id);
+	$gmt_offset_now = preg_replace('/-\_\.0-9/','',$gmt_offset_now);
+	$title = preg_replace('/[^- \'\_\.0-9a-zA-Z]/','',$title);
+	$first_name = preg_replace('/[^- \'\+\_\.0-9a-zA-Z]/','',$first_name);
+		$first_name = preg_replace('/\+/',' ',$first_name);
+	$middle_initial = preg_replace('/[^0-9a-zA-Z]/','',$middle_initial);
+	$last_name = preg_replace('/[^- \'\+\_\.0-9a-zA-Z]/','',$last_name);
+		$last_name = preg_replace('/\+/',' ',$last_name);
+	$address1 = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$address1);
+	$address2 = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$address2);
+	$address3 = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$address3);
+		$address1 = preg_replace('/\+/',' ',$address1);
+		$address2 = preg_replace('/\+/',' ',$address2);
+		$address3 = preg_replace('/\+/',' ',$address3);
+	$city = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$city);
+		$city = preg_replace('/\+/',' ',$city);
+	$state = preg_replace('/[^- 0-9a-zA-Z]/','',$state);
+	$province = preg_replace('/[^- \'\+\.\_0-9a-zA-Z]/','',$province);
+		$province = preg_replace('/\+/',' ',$province);
+	$postal_code = preg_replace('/[^- \'\+0-9a-zA-Z]/','',$postal_code);
+		$postal_code = preg_replace('/\+/',' ',$postal_code);
+	$country_code = preg_replace('/[^A-Z]/','',$country_code);
+	$gender = preg_replace('/[^A-Z]/','',$gender);
+	$date_of_birth = preg_replace('/[^-0-9]/','',$date_of_birth);
+	$alt_phone = preg_replace('/[^- \'\+\_\.0-9a-zA-Z]/','',$alt_phone);
+		$alt_phone = preg_replace('/\+/',' ',$alt_phone);
+	$email = preg_replace('/[^- \'\+\.\:\/\@\%\_0-9a-zA-Z]/','',$email);
+		$email = preg_replace('/\+/',' ',$email);
+	$security_phrase = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$security_phrase);
+		$security_phrase = preg_replace('/\+/',' ',$security_phrase);
+	$comments = preg_replace('/;/','',$comments);
+		$comments = preg_replace('/\+/',' ',$comments);
+	$rank = preg_replace('/[^0-9]/','',$rank);
+	$owner = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$owner);
+		$owner = preg_replace('/\+/',' ',$owner);
 	$dial_override = preg_replace("/[^A-Z]/","",$dial_override);
 	$consultative = preg_replace("/[^A-Z]/","",$consultative);
 		$callback_datetime = preg_replace("/\+/"," ",$callback_datetime);
@@ -1916,7 +1934,7 @@ if ($function == 'external_add_lead')
 				if ($dnc_found==0 and $camp_dnc_found==0)
 					{
 					### insert a new lead in the system with this phone number
-					$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$value',list_id='$list_id',status='NEW',user='$user',vendor_lead_code='$vendor_lead_code',source_id='$source_id',title='$title',first_name='$first_name',middle_initial='$middle_initial',last_name='$last_name',address1='$address1',address2='$address2',address3='$address3',city='$city',state='$state',province='$province',postal_code='$postal_code',country_code='$country_code',gender='$gender',date_of_birth='$date_of_birth',alt_phone='$alt_phone',email='$email',security_phrase='$security_phrase',comments='$comments',called_since_last_reset='N',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME',rank='$rank',owner='$owner';";
+					$stmt = "INSERT INTO vicidial_list SET phone_code=\"$phone_code\",phone_number=\"$value\",list_id=\"$list_id\",status=\"NEW\",user=\"$user\",vendor_lead_code=\"$vendor_lead_code\",source_id=\"$source_id\",title=\"$title\",first_name=\"$first_name\",middle_initial=\"$middle_initial\",last_name=\"$last_name\",address1=\"$address1\",address2=\"$address2\",address3=\"$address3\",city=\"$city\",state=\"$state\",province=\"$province\",postal_code=\"$postal_code\",country_code=\"$country_code\",gender=\"$gender\",date_of_birth=\"$date_of_birth\",alt_phone=\"$alt_phone\",email=\"$email\",security_phrase=\"$security_phrase\",comments=\"$comments\",called_since_last_reset=\"N\",entry_date=\"$ENTRYdate\",last_local_call_time=\"$NOW_TIME\",rank=\"$rank\",owner=\"$owner\";";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$affected_rows = mysqli_affected_rows($link);
@@ -2304,175 +2322,175 @@ if ($function == 'update_fields')
 					if (preg_match('/phone_code/',$query_string))
 						{
 						if ($DB) {echo _QXZ("phone_code set to")." $phone_code\n";}
-						$fieldsSQL .= "phone_code='$phone_code',";
+						$fieldsSQL .= "phone_code=\"$phone_code\",";
 						$fieldsLIST .= "phone_code,";
 						$field_set++;
 						}
 					if (preg_match('/address1/',$query_string))
 						{
 						if ($DB) {echo _QXZ("address1 set to")." $address1\n";}
-						$fieldsSQL .= "address1='$address1',";
+						$fieldsSQL .= "address1=\"$address1\",";
 						$fieldsLIST .= "address1,";
 						$field_set++;
 						}
 					if (preg_match('/address2/',$query_string))
 						{
 						if ($DB) {echo _QXZ("address2 set to")." $address2\n";}
-						$fieldsSQL .= "address2='$address2',";
+						$fieldsSQL .= "address2=\"$address2\",";
 						$fieldsLIST .= "address2,";
 						$field_set++;
 						}
 					if (preg_match('/address3/',$query_string))
 						{
 						if ($DB) {echo _QXZ("address3 set to")." $address3\n";}
-						$fieldsSQL .= "address3='$address3',";
+						$fieldsSQL .= "address3=\"$address3\",";
 						$fieldsLIST .= "address3,";
 						$field_set++;
 						}
 					if (preg_match('/alt_phone/',$query_string))
 						{
 						if ($DB) {echo _QXZ("alt_phone set to")." $alt_phone\n";}
-						$fieldsSQL .= "alt_phone='$alt_phone',";
+						$fieldsSQL .= "alt_phone=\"$alt_phone\",";
 						$fieldsLIST .= "alt_phone,";
 						$field_set++;
 						}
 					if (preg_match('/city/',$query_string))
 						{
 						if ($DB) {echo _QXZ("city set to")." $city\n";}
-						$fieldsSQL .= "city='$city',";
+						$fieldsSQL .= "city=\"$city\",";
 						$fieldsLIST .= "city,";
 						$field_set++;
 						}
 					if (preg_match('/comments/',$query_string))
 						{
 						if ($DB) {echo _QXZ("comments set to")." $comments\n";}
-						$fieldsSQL .= "comments='$comments',";
+						$fieldsSQL .= "comments=\"$comments\",";
 						$fieldsLIST .= "comments,";
 						$field_set++;
 						}
 					if (preg_match('/country_code/',$query_string))
 						{
 						if ($DB) {echo _QXZ("country_code set to")." $country_code\n";}
-						$fieldsSQL .= "country_code='$country_code',";
+						$fieldsSQL .= "country_code=\"$country_code\",";
 						$fieldsLIST .= "country_code,";
 						$field_set++;
 						}
 					if (preg_match('/date_of_birth/',$query_string))
 						{
 						if ($DB) {echo _QXZ("date_of_birth set to")." $date_of_birth\n";}
-						$fieldsSQL .= "date_of_birth='$date_of_birth',";
+						$fieldsSQL .= "date_of_birth=\"$date_of_birth\",";
 						$fieldsLIST .= "date_of_birth,";
 						$field_set++;
 						}
 					if (preg_match('/email/',$query_string))
 						{
 						if ($DB) {echo _QXZ("email set to")." $email\n";}
-						$fieldsSQL .= "email='$email',";
+						$fieldsSQL .= "email=\"$email\",";
 						$fieldsLIST .= "email,";
 						$field_set++;
 						}
 					if (preg_match('/first_name/',$query_string))
 						{
 						if ($DB) {echo _QXZ("first_name set to")." $first_name\n";}
-						$fieldsSQL .= "first_name='$first_name',";
+						$fieldsSQL .= "first_name=\"$first_name\",";
 						$fieldsLIST .= "first_name,";
 						$field_set++;
 						}
 					if (preg_match('/gender/',$query_string))
 						{
 						if ($DB) {echo _QXZ("gender set to")." $gender\n";}
-						$fieldsSQL .= "gender='$gender',";
+						$fieldsSQL .= "gender=\"$gender\",";
 						$fieldsLIST .= "gender,";
 						$field_set++;
 						}
 					if (preg_match('/gmt_offset_now/',$query_string))
 						{
 						if ($DB) {echo _QXZ("gmt_offset_now set to")." $gmt_offset_now\n";}
-						$fieldsSQL .= "gmt_offset_now='$gmt_offset_now',";
+						$fieldsSQL .= "gmt_offset_now=\"$gmt_offset_now\",";
 						$fieldsLIST .= "gmt_offset_now,";
 						$field_set++;
 						}
 					if (preg_match('/last_name/',$query_string))
 						{
 						if ($DB) {echo _QXZ("last_name set to")." $last_name\n";}
-						$fieldsSQL .= "last_name='$last_name',";
+						$fieldsSQL .= "last_name=\"$last_name\",";
 						$fieldsLIST .= "last_name,";
 						$field_set++;
 						}
 					if (preg_match('/middle_initial/',$query_string))
 						{
 						if ($DB) {echo _QXZ("middle_initial set to")." $middle_initial\n";}
-						$fieldsSQL .= "middle_initial='$middle_initial',";
+						$fieldsSQL .= "middle_initial=\"$middle_initial\",";
 						$fieldsLIST .= "middle_initial,";
 						$field_set++;
 						}
 					if (preg_match('/phone_number/',$query_string))
 						{
 						if ($DB) {echo _QXZ("phone_number set to")." $phone_number\n";}
-						$fieldsSQL .= "phone_number='$phone_number',";
+						$fieldsSQL .= "phone_number=\"$phone_number\",";
 						$fieldsLIST .= "phone_number,";
 						$field_set++;
 						}
 					if (preg_match('/postal_code/i',$query_string))
 						{
 						if ($DB) {echo _QXZ("postal_code set to")." $postal_code\n";}
-						$fieldsSQL .= "postal_code='$postal_code',";
+						$fieldsSQL .= "postal_code=\"$postal_code\",";
 						$fieldsLIST .= "postal_code,";
 						$field_set++;
 						}
 					if (preg_match('/province/i',$query_string))
 						{
 						if ($DB) {echo _QXZ("province set to")." $province\n";}
-						$fieldsSQL .= "province='$province',";
+						$fieldsSQL .= "province=\"$province\",";
 						$fieldsLIST .= "province,";
 						$field_set++;
 						}
 					if (preg_match('/security_phrase/i',$query_string))
 						{
 						if ($DB) {echo _QXZ("security_phrase set to")." $security_phrase\n";}
-						$fieldsSQL .= "security_phrase='$security_phrase',";
+						$fieldsSQL .= "security_phrase=\"$security_phrase\",";
 						$fieldsLIST .= "security_phrase,";
 						$field_set++;
 						}
 					if (preg_match('/source_id/i',$query_string))
 						{
 						if ($DB) {echo _QXZ("source_id set to")." $source_id\n";}
-						$fieldsSQL .= "source_id='$source_id',";
+						$fieldsSQL .= "source_id=\"$source_id\",";
 						$fieldsLIST .= "source_id,";
 						$field_set++;
 						}
 					if (preg_match('/state/i',$query_string))
 						{
 						if ($DB) {echo _QXZ("state set to")." $state\n";}
-						$fieldsSQL .= "state='$state',";
+						$fieldsSQL .= "state=\"$state\",";
 						$fieldsLIST .= "state,";
 						$field_set++;
 						}
 					if (preg_match('/title/i',$query_string))
 						{
 						if ($DB) {echo _QXZ("title set to")." $title\n";}
-						$fieldsSQL .= "title='$title',";
+						$fieldsSQL .= "title=\"$title\",";
 						$fieldsLIST .= "title,";
 						$field_set++;
 						}
 					if (preg_match('/vendor_lead_code/i',$query_string))
 						{
 						if ($DB) {echo _QXZ("vendor_lead_code set to")." $vendor_lead_code\n";}
-						$fieldsSQL .= "vendor_lead_code='$vendor_lead_code',";
+						$fieldsSQL .= "vendor_lead_code=\"$vendor_lead_code\",";
 						$fieldsLIST .= "vendor_lead_code,";
 						$field_set++;
 						}
 					if (preg_match('/rank/i',$query_string))
 						{
 						if ($DB) {echo _QXZ("rank set to")." $rank\n";}
-						$fieldsSQL .= "rank='$rank',";
+						$fieldsSQL .= "rank=\"$rank\",";
 						$fieldsLIST .= "rank,";
 						$field_set++;
 						}
 					if (preg_match('/owner/i',$query_string))
 						{
 						if ($DB) {echo _QXZ("owner set to")." $owner\n";}
-						$fieldsSQL .= "owner='$owner',";
+						$fieldsSQL .= "owner=\"$owner\",";
 						$fieldsLIST .= "owner,";
 						$field_set++;
 						}

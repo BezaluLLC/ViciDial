@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# VICIDIAL_IN_new_leads_file.pl version 2.6
+# VICIDIAL_IN_new_leads_file.pl version 2.12
 #
 # DESCRIPTION:
 # script lets you insert leads into the vicidial_list table from a TAB-delimited
@@ -10,7 +10,7 @@
 #
 # NOTE: the machine this is run on must have a servers entry in the database
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES
@@ -57,9 +57,10 @@
 # 120907-1109 - Added vote17csv format
 # 121005-0728 - Added twotab format
 # 130419-2138 - Added --NANPA-ac-prefix-check and --nanpa-gmt options using add-on NANPA prefix database
+# 150312-1458 - Allow single quotes in standard formats
 #
 
-$version = '130419-2138';
+$version = '150312-1458';
 
 $secX = time();
 $MT[0]='';
@@ -759,8 +760,7 @@ foreach(@FILES)
 			chomp($number);
 	#		$number =~ s/,/\|/gi;
 			$number =~ s/\t/\|/gi;
-			$number =~ s/\'|\t|\r|\n|\l//gi;
-			$number =~ s/\'|\t|\r|\n|\l//gi;
+			$number =~ s/|\t|\r|\n|\l//gi;
 			$number =~ s/\",,,,,,,\"/\|\|\|\|\|\|\|/gi;
 			$number =~ s/\",,,,,,\"/\|\|\|\|\|\|/gi;
 			$number =~ s/\",,,,,\"/\|\|\|\|\|/gi;
@@ -1178,7 +1178,6 @@ foreach(@FILES)
 				chomp($number);
 				$number =~ s/,"0"//gi;
 				$number =~ s/\t/\|/gi;
-				$number =~ s/\'|\t|\r|\n|\l//gi;
 				$number =~ s/\'|\t|\r|\n|\l//gi;
 				$number =~ s/\",,,,,,,\"/\|\|\|\|\|\|\|/gi;
 				$number =~ s/\",,,,,,\"/\|\|\|\|\|\|/gi;
@@ -2347,7 +2346,7 @@ foreach(@FILES)
 
 				if ($map_count > 0)
 					{
-					$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values('','$insert_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments','$called_count','2008-01-01 00:00:00','$rank','$owner');";
+					$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values('',\"$insert_date\",\"$modify_date\",\"$status\",\"$user\",\"$vendor_lead_code\",\"$source_id\",\"$list_id\",\"$gmt_offset\",\"$called_since_last_reset\",\"$phone_code\",\"$phone_number\",\"$title\",\"$first_name\",\"$middle_initial\",\"$last_name\",\"$address1\",\"$address2\",\"$address3\",\"$city\",\"$state\",\"$province\",\"$postal_code\",\"$country\",\"$gender\",\"$date_of_birth\",\"$alt_phone\",\"$email\",\"$security_phrase\",\"$comments\",\"$called_count\",'2008-01-01 00:00:00',\"$rank\",\"$owner\");";
 						if (!$T) {$affected_rows = $dbhA->do($stmtZ); } #  or die  "Couldn't execute query: |$stmtZ|\n";
 						$lead_id = $dbhA->{'mysql_insertid'};
 						if($DB){print STDERR "\n|$affected_rows|$stmtZ|\n";}
@@ -2369,7 +2368,7 @@ foreach(@FILES)
 					if ($multi_insert_counter > 8)
 						{
 						### insert good lead into pending_transactions table ###
-						$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values$multistmt('','$insert_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments','$called_count','2008-01-01 00:00:00','$rank','$owner');";
+						$stmtZ = "INSERT INTO vicidial_list (lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner) values$multistmt('',\"$insert_date\",\"$modify_date\",\"$status\",\"$user\",\"$vendor_lead_code\",\"$source_id\",\"$list_id\",\"$gmt_offset\",\"$called_since_last_reset\",\"$phone_code\",\"$phone_number\",\"$title\",\"$first_name\",\"$middle_initial\",\"$last_name\",\"$address1\",\"$address2\",\"$address3\",\"$city\",\"$state\",\"$province\",\"$postal_code\",\"$country\",\"$gender\",\"$date_of_birth\",\"$alt_phone\",\"$email\",\"$security_phrase\",\"$comments\",\"$called_count\",'2008-01-01 00:00:00',\"$rank\",\"$owner\");";
 							if (!$T) {$affected_rows = $dbhA->do($stmtZ); } #  or die  "Couldn't execute query: |$stmtZ|\n";
 							if($DB){print STDERR "\n|$affected_rows|$stmtZ|\n";}
 
@@ -2379,7 +2378,7 @@ foreach(@FILES)
 						}
 					else
 						{
-						$multistmt .= "('','$insert_date','$modify_date','$status','$user','$vendor_lead_code','$source_id','$list_id','$gmt_offset','$called_since_last_reset','$phone_code','$phone_number','$title','$first_name','$middle_initial','$last_name','$address1','$address2','$address3','$city','$state','$province','$postal_code','$country','$gender','$date_of_birth','$alt_phone','$email','$security_phrase','$comments','$called_count','2008-01-01 00:00:00','$rank','$owner'),";
+						$multistmt .= "('',\"$insert_date\",\"$modify_date\",\"$status\",\"$user\",\"$vendor_lead_code\",\"$source_id\",\"$list_id\",\"$gmt_offset\",\"$called_since_last_reset\",\"$phone_code\",\"$phone_number\",\"$title\",\"$first_name\",\"$middle_initial\",\"$last_name\",\"$address1\",\"$address2\",\"$address3\",\"$city\",\"$state\",\"$province\",\"$postal_code\",\"$country\",\"$gender\",\"$date_of_birth\",\"$alt_phone\",\"$email\",\"$security_phrase\",\"$comments\",\"$called_count\",'2008-01-01 00:00:00',\"$rank\",\"$owner\"),";
 						$multi_insert_counter++;
 						}
 					}

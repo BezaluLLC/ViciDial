@@ -1,6 +1,6 @@
 <?php
 # 
-# dbconnect_mysqli.php    version 2.10
+# dbconnect_mysqli.php    version 2.12
 #
 # database connection settings and some global web settings
 #
@@ -12,6 +12,7 @@
 # 131101-0713 - Fixed slave server setting
 # 131210-1746 - Added ability to define slave server with port number, issue #687
 # 150216-1529 - Removed non-latin set to 0
+# 150313-0913 - Added ExpectedDBSchema conf file value
 #
 
 if ( file_exists("/etc/astguiclient.conf") )
@@ -40,6 +41,8 @@ if ( file_exists("/etc/astguiclient.conf") )
 			{$VARDB_custom_pass = $DBCline;   $VARDB_custom_pass = preg_replace("/.*=/","",$VARDB_custom_pass);}
 		if (preg_match("/^VARDB_port/", $DBCline))
 			{$VARDB_port = $DBCline;   $VARDB_port = preg_replace("/.*=/","",$VARDB_port);}
+		if (preg_match("/^ExpectedDBSchema/", $DBCline))
+			{$ExpectedDBSchema = $DBCline;   $ExpectedDBSchema = preg_replace("/.*=/","",$ExpectedDBSchema);}
 		}
 	}
 else

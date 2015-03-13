@@ -1,7 +1,7 @@
 <?php
 # lead_tools_advanced.php - Various tools for lead basic lead management, advanced version.
 #
-# Copyright (C) 2014  Matt Florell,Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell,Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 131016-1948 - Initial Build based upon lead_tools.php
@@ -9,10 +9,11 @@
 # 140606-1242 - Added the state field as an option to Move, Update, and Delete
 # 141007-2036 - Finalized adding QXZ translation to all admin files
 # 141229-2028 - Added code for on-the-fly language translations display
+# 150312-1508 - Allow for single quotes in vicidial_list data fields
 #
 
-$version = '2.10-5';
-$build = '141229-2028';
+$version = '2.12-6';
+$build = '150312-1508';
 
 # This limit is to prevent data inconsistancies.
 # If there are too many leads in a list this
@@ -601,13 +602,13 @@ if ($move_submit == "move" )
 	$enable_move_security_phrase = preg_replace('/[^a-zA-Z]/','',$enable_move_security_phrase);
 	$enable_move_count = preg_replace('/[^a-zA-Z]/','',$enable_move_count);
 	$move_country_code = preg_replace('/[^-_%a-zA-Z0-9]/','',$move_country_code);
-	$move_vendor_lead_code = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_vendor_lead_code);
-	$move_source_id = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_source_id);
-	$move_owner = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_owner);
+	$move_vendor_lead_code = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$move_vendor_lead_code);
+	$move_source_id = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$move_source_id);
+	$move_owner = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$move_owner);
 	$move_state = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_state);
 	$move_entry_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_entry_date);
 	$move_modify_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_modify_date);
-	$move_security_phrase = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_security_phrase);
+	$move_security_phrase = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$move_security_phrase);
 	$move_status = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_status);
 	$move_from_list = preg_replace('/[^0-9]/','',$move_from_list);
 	$move_to_list = preg_replace('/[^0-9]/','',$move_to_list);
@@ -660,7 +661,7 @@ if ($move_submit == "move" )
 	if (($enable_move_country_code == "enabled") && ($move_country_code != ''))
 		{
 		if ($move_country_code == '---BLANK---') {$move_country_code = '';}
-		$sql_where = $sql_where . " and country_code like '$move_country_code' ";
+		$sql_where = $sql_where . " and country_code like \"$move_country_code\" ";
 		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("country code is like")." $move_country_code<br />";
 		if ($move_country_code == '') {$move_country_code = '---BLANK---';}
 		}
@@ -671,7 +672,7 @@ if ($move_submit == "move" )
 	if (($enable_move_vendor_lead_code == "enabled") && ($move_vendor_lead_code != ''))
 		{
 		if ($move_vendor_lead_code == '---BLANK---') {$move_vendor_lead_code = '';}
-		$sql_where = $sql_where . " and vendor_lead_code like '$move_vendor_lead_code' ";
+		$sql_where = $sql_where . " and vendor_lead_code like \"$move_vendor_lead_code\" ";
 		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("vendor lead code is like")." $move_vendor_lead_code<br />";
 		if ($move_vendor_lead_code == '') {$move_vendor_lead_code = '---BLANK---';}
 		}
@@ -682,7 +683,7 @@ if ($move_submit == "move" )
 	if (($enable_move_source_id == "enabled") && ( $move_source_id != ''))
 		{
 		if ($move_source_id == '---BLANK---') {$move_source_id = '';}
-		$sql_where = $sql_where . " and source_id like '$move_source_id' ";
+		$sql_where = $sql_where . " and source_id like \"$move_source_id\" ";
 		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("source id is like")." $move_source_id<br />";
 		if ($move_source_id == '') {$move_source_id = '---BLANK---';}
 		}
@@ -693,7 +694,7 @@ if ($move_submit == "move" )
 	if (($enable_move_owner == "enabled") && ($move_owner != ''))
 		{
 		if ($move_owner == '---BLANK---') {$move_owner = '';}
-		$sql_where = $sql_where . " and owner like '$move_owner' ";
+		$sql_where = $sql_where . " and owner like \"$move_owner\" ";
 		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("owner is like")." $move_owner<br />";
 		if ($move_owner == '') {$move_owner = '---BLANK---';}
 		}
@@ -704,7 +705,7 @@ if ($move_submit == "move" )
 	if (($enable_move_state == "enabled") && ($move_state != ''))
 		{
 		if ($move_state == '---BLANK---') {$move_state = '';}
-		$sql_where = $sql_where . " and state like '$move_state' ";
+		$sql_where = $sql_where . " and state like \"$move_state\" ";
 		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("state is like")." $move_state<br />";
 		if ($move_state == '') {$move_state = '---BLANK---';}
 		}
@@ -715,7 +716,7 @@ if ($move_submit == "move" )
 	if (($enable_move_security_phrase == "enabled") && ($move_security_phrase != ''))
 		{
 		if ($move_security_phrase == '---BLANK---') {$move_security_phrase = '';}
-		$sql_where = $sql_where . " and security_phrase like '$move_security_phrase' ";
+		$sql_where = $sql_where . " and security_phrase like \"$move_security_phrase\" ";
 		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("security phrase is like")." $move_security_phrase<br />";
 		if ($move_security_phrase == '') {$move_security_phrase = '---BLANK---';}
 		}
@@ -813,19 +814,19 @@ if ($move_submit == "move" )
 		echo "<input type=hidden name=enable_move_modify_date value='$enable_move_modify_date'>\n";
 		echo "<input type=hidden name=enable_move_security_phrase value='$enable_move_security_phrase'>\n";
 		echo "<input type=hidden name=enable_move_count value='$enable_move_count'>\n";
-		echo "<input type=hidden name=move_country_code value='$move_country_code'>\n";
-		echo "<input type=hidden name=move_vendor_lead_code value='$move_vendor_lead_code'>\n";
-		echo "<input type=hidden name=move_source_id value='$move_source_id'>\n";
-		echo "<input type=hidden name=move_owner value='$move_owner'>\n";
-		echo "<input type=hidden name=move_state value='$move_state'>\n";
-		echo "<input type=hidden name=move_entry_date value='$move_entry_date'>\n";
-		echo "<input type=hidden name=move_modify_date value='$move_modify_date'>\n";
-		echo "<input type=hidden name=move_security_phrase value='$move_security_phrase'>\n";
-		echo "<input type=hidden name=move_from_list value='$move_from_list'>\n";
-		echo "<input type=hidden name=move_to_list value='$move_to_list'>\n";
-		echo "<input type=hidden name=move_status value='$move_status'>\n";
-		echo "<input type=hidden name=move_count_op value='$move_count_op'>\n";
-		echo "<input type=hidden name=move_count_num value='$move_count_num'>\n";
+		echo "<input type=hidden name=move_country_code value=\"$move_country_code\">\n";
+		echo "<input type=hidden name=move_vendor_lead_code value=\"$move_vendor_lead_code\">\n";
+		echo "<input type=hidden name=move_source_id value=\"$move_source_id\">\n";
+		echo "<input type=hidden name=move_owner value=\"$move_owner\">\n";
+		echo "<input type=hidden name=move_state value=\"$move_state\">\n";
+		echo "<input type=hidden name=move_entry_date value=\"$move_entry_date\">\n";
+		echo "<input type=hidden name=move_modify_date value=\"$move_modify_date\">\n";
+		echo "<input type=hidden name=move_security_phrase value=\"$move_security_phrase\">\n";
+		echo "<input type=hidden name=move_from_list value=\"$move_from_list\">\n";
+		echo "<input type=hidden name=move_to_list value=\"$move_to_list\">\n";
+		echo "<input type=hidden name=move_status value=\"$move_status\">\n";
+		echo "<input type=hidden name=move_count_op value=\"$move_count_op\">\n";
+		echo "<input type=hidden name=move_count_num value=\"$move_count_num\">\n";
 		echo "<input type=hidden name=DB value='$DB'>\n";
 		echo "<input type=submit name=confirm_move value='"._QXZ("confirm")."'>\n";
 		echo "</form></center>\n";
@@ -927,13 +928,13 @@ if ($confirm_move == "confirm")
 	$enable_move_security_phrase = preg_replace('/[^a-zA-Z]/','',$enable_move_security_phrase);
 	$enable_move_count = preg_replace('/[^a-zA-Z]/','',$enable_move_count);
 	$move_country_code = preg_replace('/[^-_%a-zA-Z0-9]/','',$move_country_code);
-	$move_vendor_lead_code = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_vendor_lead_code);
-	$move_source_id = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_source_id);
-	$move_owner = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_owner);
+	$move_vendor_lead_code = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$move_vendor_lead_code);
+	$move_source_id = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$move_source_id);
+	$move_owner = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$move_owner);
 	$move_state = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_state);
 	$move_entry_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_entry_date);
 	$move_modify_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_modify_date);
-	$move_security_phrase = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_security_phrase);
+	$move_security_phrase = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$move_security_phrase);
 	$move_status = preg_replace('/[^-_%0-9a-zA-Z]/','',$move_status);
 	$move_from_list = preg_replace('/[^0-9]/','',$move_from_list);
 	$move_to_list = preg_replace('/[^0-9]/','',$move_to_list);
@@ -984,7 +985,7 @@ if ($confirm_move == "confirm")
 	if (($enable_move_country_code == "enabled") && ($move_country_code != ''))
 		{
 		if ($move_country_code == '---BLANK---') {$move_country_code = '';}
-		$sql_where = $sql_where . " and country_code like '$move_country_code' ";
+		$sql_where = $sql_where . " and country_code like \"$move_country_code\" ";
 		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("country code is like")." $move_country_code<br />";
 		if ($move_country_code == '') {$move_country_code = '---BLANK---';}
 		}
@@ -995,7 +996,7 @@ if ($confirm_move == "confirm")
 	if (($enable_move_vendor_lead_code == "enabled") && ($move_vendor_lead_code != ''))
 		{
 		if ($move_vendor_lead_code == '---BLANK---') {$move_vendor_lead_code = '';}
-		$sql_where = $sql_where . " and vendor_lead_code like '$move_vendor_lead_code' ";
+		$sql_where = $sql_where . " and vendor_lead_code like \"$move_vendor_lead_code\" ";
 		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("vendor lead code is like")." $move_vendor_lead_code<br />";
 		if ($move_vendor_lead_code == '') {$move_vendor_lead_code = '---BLANK---';}
 		}
@@ -1006,7 +1007,7 @@ if ($confirm_move == "confirm")
 	if (($enable_move_source_id == "enabled") && ( $move_source_id != ''))
 		{
 		if ($move_source_id == '---BLANK---') {$move_source_id = '';}
-		$sql_where = $sql_where . " and source_id like '$move_source_id' ";
+		$sql_where = $sql_where . " and source_id like \"$move_source_id\" ";
 		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("source id is like")." $move_source_id<br />";
 		if ($move_source_id == '') {$move_source_id = '---BLANK---';}
 		}
@@ -1017,7 +1018,7 @@ if ($confirm_move == "confirm")
 	if (($enable_move_owner == "enabled") && ($move_owner != ''))
 		{
 		if ($move_owner == '---BLANK---') {$move_owner = '';}
-		$sql_where = $sql_where . " and owner like '$move_owner' ";
+		$sql_where = $sql_where . " and owner like \"$move_owner\" ";
 		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("owner is like")." $move_owner<br />";
 		if ($move_owner == '') {$move_owner = '---BLANK---';}
 		}
@@ -1028,7 +1029,7 @@ if ($confirm_move == "confirm")
 	if (($enable_move_state == "enabled") && ($move_state != ''))
 		{
 		if ($move_state == '---BLANK---') {$move_state = '';}
-		$sql_where = $sql_where . " and state like '$move_state' ";
+		$sql_where = $sql_where . " and state like \"$move_state\" ";
 		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("state is like")." $move_state<br />";
 		if ($move_state == '') {$move_state = '---BLANK---';}
 		}
@@ -1039,7 +1040,7 @@ if ($confirm_move == "confirm")
 	if (($enable_move_security_phrase == "enabled") && ($move_security_phrase != ''))
 		{
 		if ($move_security_phrase == '---BLANK---') {$move_security_phrase = '';}
-		$sql_where = $sql_where . " and security_phrase like '$move_security_phrase' ";
+		$sql_where = $sql_where . " and security_phrase like \"$move_security_phrase\" ";
 		$move_parm = $move_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("security phrase is like")." $move_security_phrase<br />";
 		if ($move_security_phrase == '') {$move_security_phrase = '---BLANK---';}
 		}
@@ -1104,8 +1105,8 @@ if ($confirm_move == "confirm")
 
 	$SQL_log = "$move_lead_stmt|";
 	$SQL_log = preg_replace('/;/', '', $SQL_log);
-	$SQL_log = addslashes($SQL_log);
-	$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='OTHER', record_id='$move_from_list', event_code='ADMIN MOVE LEADS', event_sql=\"$SQL_log\", event_notes='$move_sentence';";
+	$SQL_log = preg_replace('/\"/', "'", $SQL_log);
+	$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='OTHER', record_id='$move_from_list', event_code='ADMIN MOVE LEADS', event_sql=\"$SQL_log\", event_notes=\"$move_sentence\";";
 	if ($DB) {echo "|$admin_log_stmt|\n";}
 	$admin_log_rslt=mysql_to_mysqli($admin_log_stmt, $link);
 
@@ -1207,13 +1208,13 @@ if ($update_submit == "update" )
 	$enable_update_security_phrase = preg_replace('/[^a-zA-Z]/','',$enable_update_security_phrase);
 	$enable_update_count = preg_replace('/[^a-zA-Z]/','',$enable_update_count);
 	$update_country_code = preg_replace('/[^-_%a-zA-Z0-9]/','',$update_country_code);
-	$update_vendor_lead_code = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_vendor_lead_code);
-	$update_source_id = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_source_id);
-	$update_owner = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_owner);
+	$update_vendor_lead_code = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$update_vendor_lead_code);
+	$update_source_id = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$update_source_id);
+	$update_owner = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$update_owner);
 	$update_state = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_state);
 	$update_entry_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_entry_date);
 	$update_modify_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_modify_date);
-	$update_security_phrase = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_security_phrase);
+	$update_security_phrase = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$update_security_phrase);
 	$update_to_status = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_to_status);
 	$update_from_status = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_from_status);
 	$update_list = preg_replace('/[^0-9]/','',$update_list);
@@ -1264,7 +1265,7 @@ if ($update_submit == "update" )
 	if (($enable_update_country_code == "enabled") && ($update_country_code != ''))
 		{
 		if ($update_country_code == '---BLANK---') {$update_country_code = '';}
-		$sql_where = $sql_where . " and country_code like '$update_country_code' ";
+		$sql_where = $sql_where . " and country_code like \"$update_country_code\" ";
 		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("country code is like")." $update_country_code<br />";
 				if ($update_country_code == '') {$update_country_code = '---BLANK---';}
 		}
@@ -1275,7 +1276,7 @@ if ($update_submit == "update" )
 	if (($enable_update_vendor_lead_code == "enabled") && ($update_vendor_lead_code != ''))
 		{
 		if ($update_vendor_lead_code == '---BLANK---') {$update_vendor_lead_code = '';}
-		$sql_where = $sql_where . " and vendor_lead_code like '$update_vendor_lead_code' ";
+		$sql_where = $sql_where . " and vendor_lead_code like \"$update_vendor_lead_code\" ";
 		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("vendor lead code is like")." $update_vendor_lead_code<br />";
 		if ($update_vendor_lead_code == '') {$update_vendor_lead_code = '---BLANK---';}
 		}
@@ -1286,7 +1287,7 @@ if ($update_submit == "update" )
 	if (($enable_update_source_id == "enabled") && ( $update_source_id != ''))
 		{
 		if ($update_source_id == '---BLANK---') {$update_source_id = '';}
-		$sql_where = $sql_where . " and source_id like '$update_source_id' ";
+		$sql_where = $sql_where . " and source_id like \"$update_source_id\" ";
 		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("source id is like")." $update_source_id<br />";
 		if ($update_source_id == '') {$update_source_id = '---BLANK---';}
 		}
@@ -1297,7 +1298,7 @@ if ($update_submit == "update" )
 	if (($enable_update_owner == "enabled") && ($update_owner != ''))
 		{
 		if ($update_owner == '---BLANK---') {$update_owner = '';}
-		$sql_where = $sql_where . " and owner like '$update_owner' ";
+		$sql_where = $sql_where . " and owner like \"$update_owner\" ";
 		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("owner is like")." $update_owner<br />";
 		if ($update_owner == '') {$update_owner = '---BLANK---';}
 		}
@@ -1308,7 +1309,7 @@ if ($update_submit == "update" )
 	if (($enable_update_state == "enabled") && ($update_state != ''))
 		{
 		if ($update_state == '---BLANK---') {$update_state = '';}
-		$sql_where = $sql_where . " and state like '$update_state' ";
+		$sql_where = $sql_where . " and state like \"$update_state\" ";
 		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("state is like")." $update_state<br />";
 		if ($update_state == '') {$update_state = '---BLANK---';}
 		}
@@ -1319,7 +1320,7 @@ if ($update_submit == "update" )
 	if (($enable_update_security_phrase == "enabled") && ($update_security_phrase != ''))
 		{
 		if ($update_security_phrase == '---BLANK---') {$update_security_phrase = '';}
-		$sql_where = $sql_where . " and security_phrase like '$update_security_phrase' ";
+		$sql_where = $sql_where . " and security_phrase like \"$update_security_phrase\" ";
 		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("security phrase is like")." $update_security_phrase<br />";
 		if ($update_security_phrase == '') {$update_security_phrase = '---BLANK---';}
 		}
@@ -1395,19 +1396,19 @@ if ($update_submit == "update" )
 	echo "<input type=hidden name=enable_update_modify_date value='$enable_update_modify_date'>\n";
 	echo "<input type=hidden name=enable_update_security_phrase value='$enable_update_security_phrase'>\n";
 	echo "<input type=hidden name=enable_update_count value='$enable_update_count'>\n";
-	echo "<input type=hidden name=update_country_code value='$update_country_code'>\n";
-	echo "<input type=hidden name=update_vendor_lead_code value='$update_vendor_lead_code'>\n";
-	echo "<input type=hidden name=update_source_id value='$update_source_id'>\n";
-	echo "<input type=hidden name=update_owner value='$update_owner'>\n";
-	echo "<input type=hidden name=update_state value='$update_state'>\n";
-	echo "<input type=hidden name=update_entry_date value='$update_entry_date'>\n";
-	echo "<input type=hidden name=update_modify_date value='$update_modify_date'>\n";
-	echo "<input type=hidden name=update_security_phrase value='$update_security_phrase'>\n";
-	echo "<input type=hidden name=update_list value='$update_list'>\n";
-	echo "<input type=hidden name=update_to_status value='$update_to_status'>\n";
-	echo "<input type=hidden name=update_from_status value='$update_from_status'>\n";
-	echo "<input type=hidden name=update_count_op value='$update_count_op'>\n";
-	echo "<input type=hidden name=update_count_num value='$update_count_num'>\n";
+	echo "<input type=hidden name=update_country_code value=\"$update_country_code\">\n";
+	echo "<input type=hidden name=update_vendor_lead_code value=\"$update_vendor_lead_code\">\n";
+	echo "<input type=hidden name=update_source_id value=\"$update_source_id\">\n";
+	echo "<input type=hidden name=update_owner value=\"$update_owner\">\n";
+	echo "<input type=hidden name=update_state value=\"$update_state\">\n";
+	echo "<input type=hidden name=update_entry_date value=\"$update_entry_date\">\n";
+	echo "<input type=hidden name=update_modify_date value=\"$update_modify_date\">\n";
+	echo "<input type=hidden name=update_security_phrase value=\"$update_security_phrase\">\n";
+	echo "<input type=hidden name=update_list value=\"$update_list\">\n";
+	echo "<input type=hidden name=update_to_status value=\"$update_to_status\">\n";
+	echo "<input type=hidden name=update_from_status value=\"$update_from_status\">\n";
+	echo "<input type=hidden name=update_count_op value=\"$update_count_op\">\n";
+	echo "<input type=hidden name=update_count_num value=\"$update_count_num\">\n";
 	echo "<input type=hidden name=DB value='$DB'>\n";
 	echo "<input type=submit name=confirm_update value='"._QXZ("confirm")."'>\n";
 	echo "</form></center>\n";
@@ -1509,13 +1510,13 @@ if ($confirm_update == "confirm")
 	$enable_update_security_phrase = preg_replace('/[^a-zA-Z]/','',$enable_update_security_phrase);
 	$enable_update_count = preg_replace('/[^a-zA-Z]/','',$enable_update_count);
 	$update_country_code = preg_replace('/[^-_%a-zA-Z0-9]/','',$update_country_code);
-	$update_vendor_lead_code = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_vendor_lead_code);
-	$update_source_id = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_source_id);
-	$update_owner = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_owner);
+	$update_vendor_lead_code = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$update_vendor_lead_code);
+	$update_source_id = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$update_source_id);
+	$update_owner = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$update_owner);
 	$update_state = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_state);
 	$update_entry_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_entry_date);
 	$update_modify_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_modify_date);
-	$update_security_phrase = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_security_phrase);
+	$update_security_phrase = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$update_security_phrase);
 	$update_to_status = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_to_status);
 	$update_from_status = preg_replace('/[^-_%0-9a-zA-Z]/','',$update_from_status);
 	$update_list = preg_replace('/[^0-9]/','',$update_list);
@@ -1566,7 +1567,7 @@ if ($confirm_update == "confirm")
 	if (($enable_update_country_code == "enabled") && ($update_country_code != ''))
 		{
 		if ($update_country_code == '---BLANK---') {$update_country_code = '';}
-		$sql_where = $sql_where . " and country_code like '$update_country_code' ";
+		$sql_where = $sql_where . " and country_code like \"$update_country_code\" ";
 		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("country code is like")." $update_country_code<br />";
 		if ($update_country_code == '') {$update_country_code = '---BLANK---';}
 		}
@@ -1577,7 +1578,7 @@ if ($confirm_update == "confirm")
 	if (($enable_update_vendor_lead_code == "enabled") && ($update_vendor_lead_code != ''))
 		{
 		if ($update_vendor_lead_code == '---BLANK---') {$update_vendor_lead_code = '';}
-		$sql_where = $sql_where . " and vendor_lead_code like '$update_vendor_lead_code' ";
+		$sql_where = $sql_where . " and vendor_lead_code like \"$update_vendor_lead_code\" ";
 		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("vendor lead code is like")." $update_vendor_lead_code<br />";
 		if ($update_vendor_lead_code == '') {$update_vendor_lead_code = '---BLANK---';}
 		}
@@ -1588,7 +1589,7 @@ if ($confirm_update == "confirm")
 	if (($enable_update_source_id == "enabled") && ( $update_source_id != ''))
 		{
 		if ($update_source_id == '---BLANK---') {$update_source_id = '';}
-		$sql_where = $sql_where . " and source_id like '$update_source_id' ";
+		$sql_where = $sql_where . " and source_id like \"$update_source_id\" ";
 		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("source id is like")." $update_source_id<br />";
 		if ($update_source_id == '') {$update_source_id = '---BLANK---';}
 		}
@@ -1599,7 +1600,7 @@ if ($confirm_update == "confirm")
 	if (($enable_update_owner == "enabled") && ($update_owner != ''))
 		{
 		if ($update_owner == '---BLANK---') {$update_owner = '';}
-		$sql_where = $sql_where . " and owner like '$update_owner' ";
+		$sql_where = $sql_where . " and owner like \"$update_owner\" ";
 		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("owner is like")." $update_owner<br />";
 		if ($update_owner == '') {$update_owner = '---BLANK---';}
 		}
@@ -1610,7 +1611,7 @@ if ($confirm_update == "confirm")
 	if (($enable_update_state == "enabled") && ($update_state != ''))
 		{
 		if ($update_state == '---BLANK---') {$update_state = '';}
-		$sql_where = $sql_where . " and state like '$update_state' ";
+		$sql_where = $sql_where . " and state like \"$update_state\" ";
 		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("state is like")." $update_state<br />";
 		if ($update_state == '') {$update_state = '---BLANK---';}
 		}
@@ -1621,7 +1622,7 @@ if ($confirm_update == "confirm")
 	if (($enable_update_security_phrase == "enabled") && ($update_security_phrase != ''))
 		{
 		if ($update_security_phrase == '---BLANK---') {$update_security_phrase = '';}
-		$sql_where = $sql_where . " and security_phrase like '$update_security_phrase' ";
+		$sql_where = $sql_where . " and security_phrase like \"$update_security_phrase\" ";
 		$update_parm = $update_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("security phrase is like")." $update_security_phrase<br />";
 		if ($update_security_phrase == '') {$update_security_phrase = '---BLANK---';}
 		}
@@ -1686,8 +1687,8 @@ if ($confirm_update == "confirm")
 
 	$SQL_log = "$update_lead_stmt|";
 	$SQL_log = preg_replace('/;/', '', $SQL_log);
-	$SQL_log = addslashes($SQL_log);
-	$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='MODIFY', record_id='$update_list', event_code='ADMIN UPDATE LEADS', event_sql=\"$SQL_log\", event_notes='$update_sentence';";
+	$SQL_log = preg_replace('/\"/', "'", $SQL_log);
+	$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='MODIFY', record_id='$update_list', event_code='ADMIN UPDATE LEADS', event_sql=\"$SQL_log\", event_notes=\"$update_sentence\";";
 	if ($DB) {echo "|$admin_log_stmt|\n";}
 	$admin_log_rslt=mysql_to_mysqli($admin_log_stmt, $link);
 
@@ -1789,13 +1790,13 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	$enable_delete_security_phrase = preg_replace('/[^a-zA-Z]/','',$enable_delete_security_phrase);
 	$enable_delete_count = preg_replace('/[^a-zA-Z]/','',$enable_delete_count);
 	$delete_country_code = preg_replace('/[^-_%a-zA-Z0-9]/','',$delete_country_code);
-	$delete_vendor_lead_code = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_vendor_lead_code);
-	$delete_source_id = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_source_id);
-	$delete_owner = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_owner);
+	$delete_vendor_lead_code = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$delete_vendor_lead_code);
+	$delete_source_id = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$delete_source_id);
+	$delete_owner = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$delete_owner);
 	$delete_state = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_state);
 	$delete_entry_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_entry_date);
 	$delete_modify_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_modify_date);
-	$delete_security_phrase = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_security_phrase);
+	$delete_security_phrase = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$delete_security_phrase);
 	$delete_status = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_status);
 	$delete_lead_id = preg_replace('/[^0-9]/','',$delete_lead_id);
 	$delete_list = preg_replace('/[^0-9]/','',$delete_list);
@@ -1848,7 +1849,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	if (($enable_delete_country_code == "enabled") && ($delete_country_code != ''))
 		{
 		if ($delete_country_code == '---BLANK---') {$delete_country_code = '';}
-		$sql_where = $sql_where . " and country_code like '$delete_country_code' ";
+		$sql_where = $sql_where . " and country_code like \"$delete_country_code\" ";
 		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("country code is like")." $delete_country_code<br />";
 		if ($delete_country_code == '') {$delete_country_code = '---BLANK---';}
 		}
@@ -1859,7 +1860,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	if (($enable_delete_vendor_lead_code == "enabled") && ($delete_vendor_lead_code != ''))
 		{
 		if ($delete_vendor_lead_code == '---BLANK---') {$delete_vendor_lead_code = '';}
-		$sql_where = $sql_where . " and vendor_lead_code like '$delete_vendor_lead_code' ";
+		$sql_where = $sql_where . " and vendor_lead_code like \"$delete_vendor_lead_code\" ";
 		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("vendor lead code is like")." $delete_vendor_lead_code<br />";
 		if ($delete_vendor_lead_code == '') {$delete_vendor_lead_code = '---BLANK---';}
 		}
@@ -1870,7 +1871,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	if (($enable_delete_source_id == "enabled") && ($delete_source_id != ''))
 		{
 		if ($delete_source_id == '---BLANK---') {$delete_source_id = '';}
-		$sql_where = $sql_where . " and source_id like '$delete_source_id' ";
+		$sql_where = $sql_where . " and source_id like \"$delete_source_id\" ";
 		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("source id code is like")." $delete_source_id<br />";
 		if ($delete_source_id == '') {$delete_source_id = '---BLANK---';}
 		}
@@ -1881,7 +1882,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	if (($enable_delete_security_phrase == "enabled") && ($delete_security_phrase != ''))
 		{
 		if ($delete_security_phrase == '---BLANK---') {$delete_security_phrase = '';}
-		$sql_where = $sql_where . " and security_phrase like '$delete_security_phrase' ";
+		$sql_where = $sql_where . " and security_phrase like \"$delete_security_phrase\" ";
 		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("security phrase is like")." $delete_security_phrase<br />";
 		if ($delete_security_phrase == '') {$delete_security_phrase = '---BLANK---';}
 		}
@@ -1892,7 +1893,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	if (($enable_delete_owner == "enabled") && ($delete_owner != ''))
 		{
 		if ($delete_owner == '---BLANK---') {$delete_owner = '';}
-		$sql_where = $sql_where . " and owner like '$delete_owner' ";
+		$sql_where = $sql_where . " and owner like \"$delete_owner\" ";
 		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("owner is like")." $delete_owner<br />";
 		if ($delete_owner == '') {$delete_owner = '---BLANK---';}
 		}
@@ -1903,7 +1904,7 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	if (($enable_delete_state == "enabled") && ($delete_state != ''))
 		{
 		if ($delete_state == '---BLANK---') {$delete_state = '';}
-		$sql_where = $sql_where . " and state like '$delete_state' ";
+		$sql_where = $sql_where . " and state like \"$delete_state\" ";
 		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("state is like")." $delete_state<br />";
 		if ($delete_state == '') {$delete_state = '---BLANK---';}
 		}
@@ -1979,19 +1980,19 @@ if ( ( $delete_submit == "delete" ) && ( $delete_lists > 0 ) )
 	echo "<input type=hidden name=enable_delete_modify_date value='$enable_delete_modify_date'>\n";
 	echo "<input type=hidden name=enable_delete_security_phrase value='$enable_delete_security_phrase'>\n";
 	echo "<input type=hidden name=enable_delete_count value='$enable_delete_count'>\n";
-	echo "<input type=hidden name=delete_country_code value='$delete_country_code'>\n";
-	echo "<input type=hidden name=delete_vendor_lead_code value='$delete_vendor_lead_code'>\n";
-	echo "<input type=hidden name=delete_source_id value='$delete_source_id'>\n";
-	echo "<input type=hidden name=delete_owner value='$delete_owner'>\n";
-	echo "<input type=hidden name=delete_state value='$delete_state'>\n";
-	echo "<input type=hidden name=delete_entry_date value='$delete_entry_date'>\n";
-	echo "<input type=hidden name=delete_modify_date value='$delete_modify_date'>\n";
-	echo "<input type=hidden name=delete_security_phrase value='$delete_security_phrase'>\n";
-	echo "<input type=hidden name=delete_list value='$delete_list'>\n";
-	echo "<input type=hidden name=delete_status value='$delete_status'>\n";
-	echo "<input type=hidden name=delete_count_op value='$delete_count_op'>\n";
-	echo "<input type=hidden name=delete_count_num value='$delete_count_num'>\n";
-	echo "<input type=hidden name=delete_lead_id value='$delete_lead_id'>\n";
+	echo "<input type=hidden name=delete_country_code value=\"$delete_country_code\">\n";
+	echo "<input type=hidden name=delete_vendor_lead_code value=\"$delete_vendor_lead_code\">\n";
+	echo "<input type=hidden name=delete_source_id value=\"$delete_source_id\">\n";
+	echo "<input type=hidden name=delete_owner value=\"$delete_owner\">\n";
+	echo "<input type=hidden name=delete_state value=\"$delete_state\">\n";
+	echo "<input type=hidden name=delete_entry_date value=\"$delete_entry_date\">\n";
+	echo "<input type=hidden name=delete_modify_date value=\"$delete_modify_date\">\n";
+	echo "<input type=hidden name=delete_security_phrase value=\"$delete_security_phrase\">\n";
+	echo "<input type=hidden name=delete_list value=\"$delete_list\">\n";
+	echo "<input type=hidden name=delete_status value=\"$delete_status\">\n";
+	echo "<input type=hidden name=delete_count_op value=\"$delete_count_op\">\n";
+	echo "<input type=hidden name=delete_count_num value=\"$delete_count_num\">\n";
+	echo "<input type=hidden name=delete_lead_id value=\"$delete_lead_id\">\n";
 	echo "<input type=hidden name=DB value='$DB'>\n";
 	echo "<input type=submit name=confirm_delete value=confirm>\n";
 	echo "</form></center>\n";
@@ -2093,13 +2094,13 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	$enable_delete_security_phrase = preg_replace('/[^a-zA-Z]/','',$enable_delete_security_phrase);
 	$enable_delete_count = preg_replace('/[^a-zA-Z]/','',$enable_delete_count);
 	$delete_country_code = preg_replace('/[^-_%a-zA-Z0-9]/','',$delete_country_code);
-	$delete_vendor_lead_code = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_vendor_lead_code);
-	$delete_source_id = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_source_id);
-	$delete_owner = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_owner);
+	$delete_vendor_lead_code = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$delete_vendor_lead_code);
+	$delete_source_id = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$delete_source_id);
+	$delete_owner = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$delete_owner);
 	$delete_state = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_state);
 	$delete_entry_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_entry_date);
 	$delete_modify_date = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_modify_date);
-	$delete_security_phrase = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_security_phrase);
+	$delete_security_phrase = preg_replace('/[^- _\'%0-9a-zA-Z]/','',$delete_security_phrase);
 	$delete_status = preg_replace('/[^-_%0-9a-zA-Z]/','',$delete_status);
 	$delete_lead_id = preg_replace('/[^0-9]/','',$delete_lead_id);
 	$delete_list = preg_replace('/[^0-9]/','',$delete_list);
@@ -2152,7 +2153,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	if (($enable_delete_country_code == "enabled") && ($delete_country_code != ''))
 		{
 		if ($delete_country_code == '---BLANK---') {$delete_country_code = '';}
-		$sql_where = $sql_where . " and country_code like '$delete_country_code' ";
+		$sql_where = $sql_where . " and country_code like \"$delete_country_code\" ";
 		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("country code is like")." $delete_country_code<br />";
 		if ($delete_country_code == '') {$delete_country_code = '---BLANK---';}
 		}
@@ -2163,7 +2164,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	if (($enable_delete_vendor_lead_code == "enabled") && ($delete_vendor_lead_code != ''))
 		{
 		if ($delete_vendor_lead_code == '---BLANK---') {$delete_vendor_lead_code = '';}
-		$sql_where = $sql_where . " and vendor_lead_code like '$delete_vendor_lead_code' ";
+		$sql_where = $sql_where . " and vendor_lead_code like \"$delete_vendor_lead_code\" ";
 		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("vendor lead code is like")." $delete_vendor_lead_code<br />";
 		if ($delete_vendor_lead_code == '') {$delete_vendor_lead_code = '---BLANK---';}
 		}
@@ -2174,7 +2175,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	if (($enable_delete_source_id == "enabled") && ($delete_source_id != ''))
 		{
 		if ($delete_source_id == '---BLANK---') {$delete_source_id = '';}
-		$sql_where = $sql_where . " and source_id like '$delete_source_id' ";
+		$sql_where = $sql_where . " and source_id like \"$delete_source_id\" ";
 		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("source id code is like")." $delete_source_id<br />";
 		if ($delete_source_id == '') {$delete_source_id = '---BLANK---';}
 		}
@@ -2185,7 +2186,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	if (($enable_delete_security_phrase == "enabled") && ($delete_security_phrase != ''))
 		{
 		if ($delete_security_phrase == '---BLANK---') {$delete_security_phrase = '';}
-		$sql_where = $sql_where . " and security_phrase like '$delete_security_phrase' ";
+		$sql_where = $sql_where . " and security_phrase like \"$delete_security_phrase\" ";
 		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("security phrase is like")." $delete_security_phrase<br />";
 		if ($delete_security_phrase == '') {$delete_security_phrase = '---BLANK---';}
 		}
@@ -2196,7 +2197,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	if (($enable_delete_owner == "enabled") && ($delete_owner != ''))
 		{
 		if ($delete_owner == '---BLANK---') {$delete_owner = '';}
-		$sql_where = $sql_where . " and owner like '$delete_owner' ";
+		$sql_where = $sql_where . " and owner like \"$delete_owner\" ";
 		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("owner is like")." $delete_owner<br />";
 		if ($delete_owner == '') {$delete_owner = '---BLANK---';}
 		}
@@ -2207,7 +2208,7 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 	if (($enable_delete_state == "enabled") && ($delete_state != ''))
 		{
 		if ($delete_state == '---BLANK---') {$delete_state = '';}
-		$sql_where = $sql_where . " and state like '$delete_state' ";
+		$sql_where = $sql_where . " and state like \"$delete_state\" ";
 		$delete_parm = $delete_parm . "&nbsp;&nbsp;&nbsp;&nbsp;"._QXZ("state is like")." $delete_state<br />";
 		if ($delete_state == '') {$delete_state = '---BLANK---';}
 		}
@@ -2272,8 +2273,8 @@ if ( ( $confirm_delete == "confirm" ) && ( $delete_lists > 0 ) )
 
 	$SQL_log = "$delete_lead_stmt|";
 	$SQL_log = preg_replace('/;/', '', $SQL_log);
-	$SQL_log = addslashes($SQL_log);
-	$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='DELETE', record_id='$delete_list', event_code='ADMIN DELETE LEADS', event_sql=\"$SQL_log\", event_notes='$delete_sentence';";
+	$SQL_log = preg_replace('/\"/', "'", $SQL_log);
+	$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='DELETE', record_id='$delete_list', event_code='ADMIN DELETE LEADS', event_sql=\"$SQL_log\", event_notes=\"$delete_sentence\";";
 	if ($DB) {echo "|$admin_log_stmt|\n";}
 	$admin_log_rslt=mysql_to_mysqli($admin_log_stmt, $link);
 
@@ -2509,8 +2510,8 @@ if ($confirm_callback == "confirm")
 
 	$SQL_log = "$callback_lead_stmt|";
 	$SQL_log = preg_replace('/;/', '', $SQL_log);
-	$SQL_log = addslashes($SQL_log);
-	$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='OTHER', record_id='$callback_from_list', event_code='ADMIN SWITCH CALLBACKS', event_sql=\"$SQL_log\", event_notes='$callback_sentence';";
+	$SQL_log = preg_replace('/\"/', "'", $SQL_log);
+	$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='OTHER', record_id='$callback_from_list', event_code='ADMIN SWITCH CALLBACKS', event_sql=\"$SQL_log\", event_notes=\"$callback_sentence\";";
 	if ($DB) {echo "|$admin_log_stmt|\n";}
 	$admin_log_rslt=mysql_to_mysqli($admin_log_stmt, $link);
 

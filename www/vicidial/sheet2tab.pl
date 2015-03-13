@@ -1,8 +1,8 @@
 #!/usr/bin/perl
 #
-# sheet2tab.pl - Convert spreadsheet to tab-delimited text file   version 2.4
+# sheet2tab.pl - Convert spreadsheet to tab-delimited text file   version 2.12
 #
-# Copyright (C) 2013  Matt Florell & Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell & Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Lead file conversion and scrubbing script.  This is the first stage in the lead loading process.
 #
@@ -33,6 +33,7 @@
 # 100706-1244 - Reformat and add comments
 # 110927-1750 - Fixed issue with improperly CSV files locking up servers <mikec>
 # 130619-2310 - Fixed missing XLSX perl module declaration
+# 150312-1547 - Allow for single quotes in vicidial_list data fields
 #
 
 # disable when not debugging
@@ -49,7 +50,7 @@ sub scrub_lead_field
 	my $lead_field = $_[0];
 
 	# remove bad characters
-	$lead_field	=~ s/\'|\\|\"|;|\`|\224//gi;
+	$lead_field	=~ s/\\|\"|;|\`|\224//gi;
 	
 	# replace tabs and newlines with spaces
 	$lead_field	=~ s/\n|\r|\t|\174/ /gi;

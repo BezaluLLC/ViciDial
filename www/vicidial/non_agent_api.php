@@ -94,10 +94,11 @@
 # 150123-1611 - Fixed issue with list local call times and add_lead
 # 150217-1404 - archive deleted callbacks to vicidial_callbacks_archive table
 # 150309-0250 - Added ability to use urlencoded web form addresses
+# 150313-0818 - Allow for single quotes in vicidial_list and custom data fields
 #
 
-$version = '2.12-70';
-$build = '150309-0250';
+$version = '2.12-71';
+$build = '150313-0818';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -401,33 +402,33 @@ if ($non_latin < 1)
 	$source_id = preg_replace('/;/','',$source_id);
 		$source_id = preg_replace('/\+/',' ',$source_id);
 	$gmt_offset_now = preg_replace('/-\_\.0-9/','',$gmt_offset_now);
-	$title = preg_replace('/[^- \_\.0-9a-zA-Z]/','',$title);
-	$first_name = preg_replace('/[^- \+\_\.0-9a-zA-Z]/','',$first_name);
+	$title = preg_replace('/[^- \'\_\.0-9a-zA-Z]/','',$title);
+	$first_name = preg_replace('/[^- \'\+\_\.0-9a-zA-Z]/','',$first_name);
 		$first_name = preg_replace('/\+/',' ',$first_name);
 	$middle_initial = preg_replace('/[^0-9a-zA-Z]/','',$middle_initial);
-	$last_name = preg_replace('/[^- \+\_\.0-9a-zA-Z]/','',$last_name);
+	$last_name = preg_replace('/[^- \'\+\_\.0-9a-zA-Z]/','',$last_name);
 		$last_name = preg_replace('/\+/',' ',$last_name);
-	$address1 = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$address1);
-	$address2 = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$address2);
-	$address3 = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$address3);
+	$address1 = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$address1);
+	$address2 = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$address2);
+	$address3 = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$address3);
 		$address1 = preg_replace('/\+/',' ',$address1);
 		$address2 = preg_replace('/\+/',' ',$address2);
 		$address3 = preg_replace('/\+/',' ',$address3);
-	$city = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$city);
+	$city = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$city);
 		$city = preg_replace('/\+/',' ',$city);
 	$state = preg_replace('/[^- 0-9a-zA-Z]/','',$state);
-	$province = preg_replace('/[^- \+\.\_0-9a-zA-Z]/','',$province);
+	$province = preg_replace('/[^- \'\+\.\_0-9a-zA-Z]/','',$province);
 		$province = preg_replace('/\+/',' ',$province);
-	$postal_code = preg_replace('/[^- \+0-9a-zA-Z]/','',$postal_code);
+	$postal_code = preg_replace('/[^- \'\+0-9a-zA-Z]/','',$postal_code);
 		$postal_code = preg_replace('/\+/',' ',$postal_code);
 	$country_code = preg_replace('/[^A-Z]/','',$country_code);
 	$gender = preg_replace('/[^A-Z]/','',$gender);
 	$date_of_birth = preg_replace('/[^-0-9]/','',$date_of_birth);
-	$alt_phone = preg_replace('/[^- \+\_\.0-9a-zA-Z]/','',$alt_phone);
+	$alt_phone = preg_replace('/[^- \'\+\_\.0-9a-zA-Z]/','',$alt_phone);
 		$alt_phone = preg_replace('/\+/',' ',$alt_phone);
-	$email = preg_replace('/[^- \+\.\:\/\@\%\_0-9a-zA-Z]/','',$email);
+	$email = preg_replace('/[^- \'\+\.\:\/\@\%\_0-9a-zA-Z]/','',$email);
 		$email = preg_replace('/\+/',' ',$email);
-	$security_phrase = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$security_phrase);
+	$security_phrase = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$security_phrase);
 		$security_phrase = preg_replace('/\+/',' ',$security_phrase);
 	$comments = preg_replace('/;/','',$comments);
 		$comments = preg_replace('/\+/',' ',$comments);
@@ -445,7 +446,8 @@ if ($non_latin < 1)
 	$server_ip = preg_replace('/[^\.0-9]/','',$server_ip);
 	$stage = preg_replace('/[^a-zA-Z]/','',$stage);
 	$rank = preg_replace('/[^0-9]/','',$rank);
-	$owner = preg_replace('/[^-_0-9a-zA-Z]/','',$owner);
+	$owner = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$owner);
+		$owner = preg_replace('/\+/',' ',$owner);
 	$duplicate_check = preg_replace('/[^-_0-9a-zA-Z]/','',$duplicate_check);
 	$custom_fields = preg_replace('/[^0-9a-zA-Z]/','',$custom_fields);
 	$search_method = preg_replace('/[^-_0-9a-zA-Z]/','',$search_method);
@@ -465,7 +467,6 @@ if ($non_latin < 1)
 	$agent_full_name=preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$agent_full_name);
 	$agent_user_group=preg_replace('/[^-_0-9a-zA-Z]/','',$agent_user_group);
 	$phone_pass=preg_replace('/[^-_0-9a-zA-Z]/','',$phone_pass);
-	$email=preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$email);
 	$custom_one=preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$custom_one);
 	$custom_two=preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$custom_two);
 	$custom_three=preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$custom_three);
@@ -6019,7 +6020,7 @@ if ($function == 'add_lead')
 					{$new_status='CBHOLD';}
 
 				### insert a new lead in the system with this phone number
-				$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$list_id',status='$new_status',user='$user',vendor_lead_code='$vendor_lead_code',source_id='$source_id',gmt_offset_now='$gmt_offset',title='$title',first_name='$first_name',middle_initial='$middle_initial',last_name='$last_name',address1='$address1',address2='$address2',address3='$address3',city='$city',state='$state',province='$province',postal_code='$postal_code',country_code='$country_code',gender='$gender',date_of_birth='$date_of_birth',alt_phone='$alt_phone',email='$email',security_phrase='$security_phrase',comments='$comments',called_since_last_reset='N',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME',rank='$rank',owner='$owner',entry_list_id='0';";
+				$stmt = "INSERT INTO vicidial_list SET phone_code=\"$phone_code\",phone_number=\"$phone_number\",list_id=\"$list_id\",status=\"$new_status\",user=\"$user\",vendor_lead_code=\"$vendor_lead_code\",source_id=\"$source_id\",gmt_offset_now=\"$gmt_offset\",title=\"$title\",first_name=\"$first_name\",middle_initial=\"$middle_initial\",last_name=\"$last_name\",address1=\"$address1\",address2=\"$address2\",address3=\"$address3\",city=\"$city\",state=\"$state\",province=\"$province\",postal_code=\"$postal_code\",country_code=\"$country_code\",gender=\"$gender\",date_of_birth=\"$date_of_birth\",alt_phone=\"$alt_phone\",email=\"$email\",security_phrase=\"$security_phrase\",comments=\"$comments\",called_since_last_reset=\"N\",entry_date=\"$ENTRYdate\",last_local_call_time=\"$NOW_TIME\",rank=\"$rank\",owner=\"$owner\",entry_list_id='0';";
 				if ($DB>0) {echo "DEBUG: add_lead query - $stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$affected_rows = mysqli_affected_rows($link);
@@ -6106,7 +6107,7 @@ if ($function == 'add_lead')
 										elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
 
 									$form_field_value = preg_replace("/\+/"," ",$form_field_value);
-									$form_field_value = preg_replace("/\'/","",$form_field_value);
+									$form_field_value = preg_replace("/;|\"/","",$form_field_value);
 									$form_field_value = preg_replace("/\\b/","",$form_field_value);
 									$A_field_value[$o] = $form_field_value;
 
@@ -6118,7 +6119,7 @@ if ($function == 'add_lead')
 										{
 										if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
 											{
-											$CFinsert_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
+											$CFinsert_SQL .= "$A_field_label[$o]=\"$A_field_value[$o]\",";
 											}
 										}
 									$o++;
@@ -6213,7 +6214,7 @@ if ($function == 'add_lead')
 						else
 							{
 							### insert record into vicidial_hopper for alt_phone call attempt
-							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$VD_campaign_id',status='READY',list_id='$list_id',gmt_offset_now='$gmt_offset',state='$state',user='',priority='$hopper_priority',source='P',vendor_lead_code='$vendor_lead_code';";
+							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$VD_campaign_id',status='READY',list_id='$list_id',gmt_offset_now='$gmt_offset',state='$state',user='',priority='$hopper_priority',source='P',vendor_lead_code=\"$vendor_lead_code\";";
 							if ($DB>0) {echo "DEBUG: add_lead query - $stmt\n";}
 							$rslt=mysql_to_mysqli($stmt, $link);
 							$Haffected_rows = mysqli_affected_rows($link);
@@ -6383,7 +6384,7 @@ if ($function == 'update_lead')
 			if ( (preg_match("/VENDOR_LEAD_CODE/",$search_method)) and (strlen($vendor_lead_code)>0) )
 				{
 				$find_vendor_lead_code=1;
-				$vendor_lead_code_SQL = "vendor_lead_code='$vendor_lead_code'";
+				$vendor_lead_code_SQL = "vendor_lead_code=\"$vendor_lead_code\"";
 				}
 			if ( (preg_match("/PHONE_NUMBER/",$search_method)) and (strlen($phone_number)>5) and (strlen($phone_number)<19) )
 				{
@@ -6513,33 +6514,33 @@ if ($function == 'update_lead')
 						{
 						$VL_update_SQL='';
 						##### BEGIN update lead information in the system #####
-						if (strlen($user_field)>0)			{$VL_update_SQL .= "user='$user_field',";}
-						if (strlen($list_id_field)>0)		{$VL_update_SQL .= "list_id='$list_id_field',";}
-						if (strlen($status)>0)				{$VL_update_SQL .= "status='$status',";}
-						if (strlen($vendor_lead_code)>0)	{$VL_update_SQL .= "vendor_lead_code='$vendor_lead_code',";}
-						if (strlen($source_id)>0)			{$VL_update_SQL .= "source_id='$source_id',";}
-						if (strlen($gmt_offset_now)>0)		{$VL_update_SQL .= "gmt_offset_now='$gmt_offset_now',";}
-						if (strlen($title)>0)				{$VL_update_SQL .= "title='$title',";}
-						if (strlen($first_name)>0)			{$VL_update_SQL .= "first_name='$first_name',";}
-						if (strlen($middle_initial)>0)		{$VL_update_SQL .= "middle_initial='$middle_initial',";}
-						if (strlen($last_name)>0)			{$VL_update_SQL .= "last_name='$last_name',";}
-						if (strlen($address1)>0)			{$VL_update_SQL .= "address1='$address1',";}
-						if (strlen($address2)>0)			{$VL_update_SQL .= "address2='$address2',";}
-						if (strlen($address3)>0)			{$VL_update_SQL .= "address3='$address3',";}
-						if (strlen($city)>0)				{$VL_update_SQL .= "city='$city',";}
-						if (strlen($state)>0)				{$VL_update_SQL .= "state='$state',";}
-						if (strlen($province)>0)			{$VL_update_SQL .= "province='$province',";}
-						if (strlen($postal_code)>0)			{$VL_update_SQL .= "postal_code='$postal_code',";}
-						if (strlen($country_code)>0)		{$VL_update_SQL .= "country_code='$country_code',";}
-						if (strlen($gender)>0)				{$VL_update_SQL .= "gender='$gender',";}
-						if (strlen($date_of_birth)>0)		{$VL_update_SQL .= "date_of_birth='$date_of_birth',";}
-						if (strlen($alt_phone)>0)			{$VL_update_SQL .= "alt_phone='$alt_phone',";}
-						if (strlen($email)>0)				{$VL_update_SQL .= "email='$email',";}
-						if (strlen($security_phrase)>0)		{$VL_update_SQL .= "security_phrase='$security_phrase',";}
-						if (strlen($comments)>0)			{$VL_update_SQL .= "comments='$comments',";}
-						if (strlen($rank)>0)				{$VL_update_SQL .= "rank='$rank',";}
-						if (strlen($owner)>0)				{$VL_update_SQL .= "owner='$owner',";}
-						if (strlen($called_count)>0)		{$VL_update_SQL .= "called_count='$called_count',";}
+						if (strlen($user_field)>0)			{$VL_update_SQL .= "user=\"$user_field\",";}
+						if (strlen($list_id_field)>0)		{$VL_update_SQL .= "list_id=\"$list_id_field\",";}
+						if (strlen($status)>0)				{$VL_update_SQL .= "status=\"$status\",";}
+						if (strlen($vendor_lead_code)>0)	{$VL_update_SQL .= "vendor_lead_code=\"$vendor_lead_code\",";}
+						if (strlen($source_id)>0)			{$VL_update_SQL .= "source_id=\"$source_id\",";}
+						if (strlen($gmt_offset_now)>0)		{$VL_update_SQL .= "gmt_offset_now=\"$gmt_offset_now\",";}
+						if (strlen($title)>0)				{$VL_update_SQL .= "title=\"$title\",";}
+						if (strlen($first_name)>0)			{$VL_update_SQL .= "first_name=\"$first_name\",";}
+						if (strlen($middle_initial)>0)		{$VL_update_SQL .= "middle_initial=\"$middle_initial\",";}
+						if (strlen($last_name)>0)			{$VL_update_SQL .= "last_name=\"$last_name\",";}
+						if (strlen($address1)>0)			{$VL_update_SQL .= "address1=\"$address1\",";}
+						if (strlen($address2)>0)			{$VL_update_SQL .= "address2=\"$address2\",";}
+						if (strlen($address3)>0)			{$VL_update_SQL .= "address3=\"$address3\",";}
+						if (strlen($city)>0)				{$VL_update_SQL .= "city=\"$city\",";}
+						if (strlen($state)>0)				{$VL_update_SQL .= "state=\"$state\",";}
+						if (strlen($province)>0)			{$VL_update_SQL .= "province=\"$province\",";}
+						if (strlen($postal_code)>0)			{$VL_update_SQL .= "postal_code=\"$postal_code\",";}
+						if (strlen($country_code)>0)		{$VL_update_SQL .= "country_code=\"$country_code\",";}
+						if (strlen($gender)>0)				{$VL_update_SQL .= "gender=\"$gender\",";}
+						if (strlen($date_of_birth)>0)		{$VL_update_SQL .= "date_of_birth=\"$date_of_birth\",";}
+						if (strlen($alt_phone)>0)			{$VL_update_SQL .= "alt_phone=\"$alt_phone\",";}
+						if (strlen($email)>0)				{$VL_update_SQL .= "email=\"$email\",";}
+						if (strlen($security_phrase)>0)		{$VL_update_SQL .= "security_phrase=\"$security_phrase\",";}
+						if (strlen($comments)>0)			{$VL_update_SQL .= "comments=\"$comments\",";}
+						if (strlen($rank)>0)				{$VL_update_SQL .= "rank=\"$rank\",";}
+						if (strlen($owner)>0)				{$VL_update_SQL .= "owner=\"$owner\",";}
+						if (strlen($called_count)>0)		{$VL_update_SQL .= "called_count=\"$called_count\",";}
 						if ( (strlen($reset_lead) > 0 && $reset_lead == 'Y') )	{$VL_update_SQL .= "called_since_last_reset='N',";}
                         if ( (strlen($update_phone_number)>0 && $update_phone_number=='Y' && strlen($phone_number)>0) ) {$VL_update_SQL .= "phone_number='$phone_number',";}
 						$VL_update_SQL = preg_replace("/,$/","",$VL_update_SQL);
@@ -6788,7 +6789,7 @@ if ($function == 'update_lead')
 												elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
 
 											$form_field_value = preg_replace("/\+/"," ",$form_field_value);
-											$form_field_value = preg_replace("/\'/","",$form_field_value);
+											$form_field_value = preg_replace("/;|\"/","",$form_field_value);
 											$form_field_value = preg_replace("/\\b/","",$form_field_value);
 											$A_field_value[$o] = $form_field_value;
 
@@ -6800,7 +6801,7 @@ if ($function == 'update_lead')
 												{
 												if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
 													{
-													$update_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
+													$update_SQL .= "$A_field_label[$o]=\"$A_field_value[$o]\",";
 													}
 												}
 											$o++;
@@ -6896,7 +6897,7 @@ if ($function == 'update_lead')
 								if (strlen($status)<1)
 									{$status='NEW';}
 								### insert a new lead in the system with this phone number
-								$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$list_id',status='$status',user='$user',vendor_lead_code='$vendor_lead_code',source_id='$source_id',gmt_offset_now='$gmt_offset',title='$title',first_name='$first_name',middle_initial='$middle_initial',last_name='$last_name',address1='$address1',address2='$address2',address3='$address3',city='$city',state='$state',province='$province',postal_code='$postal_code',country_code='$country_code',gender='$gender',date_of_birth='$date_of_birth',alt_phone='$alt_phone',email='$email',security_phrase='$security_phrase',comments='$comments',called_since_last_reset='N',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME',rank='$rank',owner='$owner',entry_list_id='0';";
+								$stmt = "INSERT INTO vicidial_list SET phone_code=\"$phone_code\",phone_number=\"$phone_number\",list_id=\"$list_id\",status=\"$status\",user=\"$user\",vendor_lead_code=\"$vendor_lead_code\",source_id=\"$source_id\",gmt_offset_now=\"$gmt_offset\",title=\"$title\",first_name=\"$first_name\",middle_initial=\"$middle_initial\",last_name=\"$last_name\",address1=\"$address1\",address2=\"$address2\",address3=\"$address3\",city=\"$city\",state=\"$state\",province=\"$province\",postal_code=\"$postal_code\",country_code=\"$country_code\",gender=\"$gender\",date_of_birth=\"$date_of_birth\",alt_phone=\"$alt_phone\",email=\"$email\",security_phrase=\"$security_phrase\",comments=\"$comments\",called_since_last_reset=\"N\",entry_date=\"$ENTRYdate\",last_local_call_time=\"$NOW_TIME\",rank=\"$rank\",owner=\"$owner\",entry_list_id='0';";
 								if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
 								$rslt=mysql_to_mysqli($stmt, $link);
 								$affected_rows = mysqli_affected_rows($link);

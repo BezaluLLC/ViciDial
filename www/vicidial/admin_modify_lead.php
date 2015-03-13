@@ -66,6 +66,7 @@
 # 141229-1745 - Added code for on-the-fly language translations display
 # 150107-1729 - Added ignore_group_on_search user option
 # 150114-2321 - Added date_of_birth as editable field
+# 150312-1506 - Fixed minor Iframe form bug related to custom fields
 #
 
 require("dbconnect_mysqli.php");
@@ -1050,6 +1051,7 @@ else
 	echo "<input type=hidden name=channel value=\"$channel\">\n";
 	echo "<input type=hidden name=call_began value=\"$call_began\">\n";
 	echo "<input type=hidden name=parked_time value=\"$parked_time\">\n";
+	echo "<input type=hidden name=FORM_LOADED id=FORM_LOADED value=\"0\" />\n";
 	echo "<table cellpadding=1 cellspacing=0>\n";
 	echo "<tr><td colspan=2>"._QXZ("Lead ID").": $lead_id &nbsp; &nbsp; "._QXZ("List ID").": $list_id</td></tr>\n";
 	echo "<tr><td colspan=2>"._QXZ("Fronter").": <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; "._QXZ("Called Count").": $called_count</td></tr>\n";

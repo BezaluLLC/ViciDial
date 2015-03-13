@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2015-03-09
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2015-03-13
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -100,6 +100,7 @@ Changes:
 150123-1611 - Fixed issue with list local call times and add_lead
 150217-1404 - archive deleted callbacks to vicidial_callbacks_archive table
 150309-0250 - Added ability to use urlencoded web form addresses
+150313-0818 - Allow for single quotes in vicidial_list and custom data fields
 
 
 API Functions use the 'function' variable
@@ -724,7 +725,7 @@ owner -			1-20 characters (user ID, Territory or user group)
 called_count -		digits only, the number of attempts dialing the lead
 NOTES: 
  - in order to set a field to empty('') set it equal to --BLANK--, i.e. "&province=--BLANK--"
- - please use no special characters like apostrophes, quotes or amphersands
+ - please use no special characters like apostrophes, double-quotes or amphersands
 
 Example URL strings for API calls:
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_lead&lead_id=27&last_name=SMITH

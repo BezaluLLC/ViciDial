@@ -29,10 +29,11 @@
 # 141128-0855 - Code cleanup for QXZ functions
 # 141216-2116 - Added language settings lookups and user/pass variable standardization
 # 150114-2045 - Added list_name variable
+# 150312-1502 - Allow for single quotes in vicidial_list data fields
 #
 
-$version = '2.10-20';
-$build = '150114-2045';
+$version = '2.12-21';
+$build = '150312-1502';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -322,7 +323,7 @@ if ($stage=='SUBMIT')
 
 			if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
 				elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
-			$form_field_value = preg_replace("/\'/","",$form_field_value);	// remove single-quote
+			$form_field_value = preg_replace("/\"/","",$form_field_value);	// remove double-quote
 			$form_field_value = preg_replace("/\\b/","",$form_field_value);	// remove backslashes
 
 			if ( ($A_field_type[$o]=='MULTI') or ($A_field_type[$o]=='CHECKBOX') or ($A_field_type[$o]=='RADIO') )
@@ -357,11 +358,11 @@ if ($stage=='SUBMIT')
 				{
 				if (preg_match("/\|$A_field_label[$o]\|/i",$vicidial_list_fields))
 					{
-					$VL_update_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
+					$VL_update_SQL .= "$A_field_label[$o]=\"$A_field_value[$o]\",";
 					}
 				else
 					{
-					$update_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
+					$update_SQL .= "$A_field_label[$o]=\"$A_field_value[$o]\",";
 					}
 
 				$SUBMIT_output .= "<b>$A_field_name[$o]:</b> $A_field_value[$o]<BR>";

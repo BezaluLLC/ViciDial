@@ -374,10 +374,11 @@
 # 150111-1544 - Added lists option: local call time(Issue #812) and added manual_dial_search_filter feature
 # 150114-2051 - Added list_name web url variable
 # 150117-1412 - Added list local call time validation
+# 150312-1501 - Allow for single quotes in vicidial_list data fields
 #
 
-$version = '2.10-269';
-$build = '150117-1412';
+$version = '2.12-270';
+$build = '150312-1501';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=616;
 $one_mysql_log=0;
@@ -1812,7 +1813,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						}
 					if (strlen($vendor_lead_code)>0)
 						{
-						$stmt="SELECT lead_id FROM vicidial_list where vendor_lead_code='$vendor_lead_code' $manual_dial_search_filterSQL order by modify_date desc LIMIT 1;";
+						$stmt="SELECT lead_id FROM vicidial_list where vendor_lead_code=\"$vendor_lead_code\" $manual_dial_search_filterSQL order by modify_date desc LIMIT 1;";
 						$rslt=mysql_to_mysqli($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00021',$user,$server_ip,$session_name,$one_mysql_log);}
 						if ($DB) {echo "$stmt\n";}
@@ -2093,7 +2094,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			if ($lookup_empty_insert_lead > 0)
 				{
 				### insert a new lead in the system with this phone number
-				$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$list_id',status='QUEUE',user='$user',called_since_last_reset='Y',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME',vendor_lead_code='$vendor_lead_code';";
+				$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$list_id',status='QUEUE',user='$user',called_since_last_reset='Y',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME',vendor_lead_code=\"$vendor_lead_code\";";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00022',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3198,7 +3199,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 								$entry_list_id =	$row[4];
 								$vendor_lead_code = $row[5];
 
-								$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='QUEUE',list_id='$list_id',gmt_offset_now='$gmt_offset_now',state='$state',alt_dial='MAIN',user='$user',priority='0',source='Q',vendor_lead_code='$vendor_lead_code';";
+								$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='QUEUE',list_id='$list_id',gmt_offset_now='$gmt_offset_now',state='$state',alt_dial='MAIN',user='$user',priority='0',source='Q',vendor_lead_code=\"$vendor_lead_code\";";
 								if ($DB) {echo "$stmt\n";}
 								$rslt=mysql_to_mysqli($stmt, $link);
 									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00244',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -5265,7 +5266,7 @@ if ($stage == "end")
 						if ($VD_alt_dnc_count < 1)
 							{
 							### insert record into vicidial_hopper for alt_phone call attempt
-							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='HOLD',list_id='$list_id',gmt_offset_now='$gmt_offset_now',state='$state',alt_dial='ALT',user='',priority='25',source='A',vendor_lead_code='$vendor_lead_code';";
+							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='HOLD',list_id='$list_id',gmt_offset_now='$gmt_offset_now',state='$state',alt_dial='ALT',user='',priority='25',source='A',vendor_lead_code=\"$vendor_lead_code\";";
 							if ($DB) {echo "$stmt\n";}
 							$rslt=mysql_to_mysqli($stmt, $link);
 								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00068',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -5345,7 +5346,7 @@ if ($stage == "end")
 						if ($VD_alt_dnc_count < 1)
 							{
 							### insert record into vicidial_hopper for address3 call attempt
-							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='HOLD',list_id='$list_id',gmt_offset_now='$gmt_offset_now',state='$state',alt_dial='ADDR3',user='',priority='20',source='A',vendor_lead_code='$vendor_lead_code';";
+							$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='HOLD',list_id='$list_id',gmt_offset_now='$gmt_offset_now',state='$state',alt_dial='ADDR3',user='',priority='20',source='A',vendor_lead_code=\"$vendor_lead_code\";";
 							if ($DB) {echo "$stmt\n";}
 							$rslt=mysql_to_mysqli($stmt, $link);
 								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00072',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -5464,7 +5465,7 @@ if ($stage == "end")
 								{
 								if ($alt_dial_phones_count == $Xlast) 
 									{$Xlast = 'LAST';}
-								$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='HOLD',list_id='$EA_list_id',gmt_offset_now='$EA_gmt_offset_now',state='$EA_state',alt_dial='X$Xlast',user='',priority='15',source='A',vendor_lead_code='$EA_vendor_lead_code';";
+								$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='HOLD',list_id='$EA_list_id',gmt_offset_now='$EA_gmt_offset_now',state='$EA_state',alt_dial='X$Xlast',user='',priority='15',source='A',vendor_lead_code=\"$EA_vendor_lead_code\";";
 								if ($DB) {echo "$stmt\n";}
 								$rslt=mysql_to_mysqli($stmt, $link);
 									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00078',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -12127,12 +12128,12 @@ if ($ACTION == 'SEARCHRESULTSview')
 		$searchmethodSQL='';
 	
 		$lead_id=preg_replace("/[^0-9]/","",$lead_id);
-		$vendor_lead_code = preg_replace("/\'|\"|\\\\|;/","",$vendor_lead_code);
-		$last_name = preg_replace("/\'|\"|\\\\|;/","",$last_name);
-		$first_name = preg_replace("/\'|\"|\\\\|;/","",$first_name);
-		$city = preg_replace("/\'|\"|\\\\|;/","",$city);
-		$state = preg_replace("/\'|\"|\\\\|;/","",$state);
-		$postal_code = preg_replace("/\'|\"|\\\\|;/","",$postal_code);
+		$vendor_lead_code = preg_replace("/\"|\\\\|;/","",$vendor_lead_code);
+		$last_name = preg_replace("/\"|\\\\|;/","",$last_name);
+		$first_name = preg_replace("/\"|\\\\|;/","",$first_name);
+		$city = preg_replace("/\"|\\\\|;/","",$city);
+		$state = preg_replace("/\"|\\\\|;/","",$state);
+		$postal_code = preg_replace("/\"|\\\\|;/","",$postal_code);
 
 		if (strlen($lead_id) > 0)
 			{
@@ -12142,7 +12143,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 		elseif (strlen($vendor_lead_code) > 0)
 			{
 			### vendor ID entered, search by this
-			$searchSQL = "vendor_lead_code='$vendor_lead_code'";
+			$searchSQL = "vendor_lead_code=\"$vendor_lead_code\"";
 			}
 		elseif ( (strlen($phone_number) >= 6) and (strlen($search) > 2) )
 			{
@@ -12169,30 +12170,30 @@ if ($ACTION == 'SEARCHRESULTSview')
 		elseif (strlen($last_name) > 0)
 			{
 			### last name entered, search by this and other fields
-			$searchSQL = "last_name='$last_name'";
+			$searchSQL = "last_name=\"$last_name\"";
 			if (strlen($first_name) > 0)
 				{
 				if (strlen($searchSQL) > 10)
 					{$searchSQL .= " and ";}
-				$searchSQL .= "first_name='$first_name'";
+				$searchSQL .= "first_name=\"$first_name\"";
 				}
 			if (strlen($city) > 0)
 				{
 				if (strlen($searchSQL) > 10)
 					{$searchSQL .= " and ";}
-				$searchSQL .= "city='$city'";
+				$searchSQL .= "city=\"$city\"";
 				}
 			if (strlen($state) > 0)
 				{
 				if (strlen($searchSQL) > 10)
 					{$searchSQL .= " and ";}
-				$searchSQL .= "state='$state'";
+				$searchSQL .= "state=\"$state\"";
 				}
 			if (strlen($postal_code) > 0)
 				{
 				if (strlen($searchSQL) > 10)
 					{$searchSQL .= " and ";}
-				$searchSQL .= "postal_code='$postal_code'";
+				$searchSQL .= "postal_code=\"$postal_code\"";
 				}
 			}
 		else
@@ -12504,136 +12505,136 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 			}
 		elseif (strlen($last_name) > 0)
 			{
-			$searchSQL = "last_name='$last_name'";
+			$searchSQL = "last_name=\"$last_name\"";
 			if (strlen($first_name) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "first_name='$first_name'";
+				$searchSQL .= "first_name=\"$first_name\"";
 				}
 			if (strlen($bu_name) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "bu_name='$bu_name'";
+				$searchSQL .= "bu_name=\"$bu_name\"";
 				}
 			if (strlen($department) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "department='$department'";
+				$searchSQL .= "department=\"$department\"";
 				}
 			if (strlen($group_name) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "group_name='$group_name'";
+				$searchSQL .= "group_name=\"$group_name\"";
 				}
 			if (strlen($job_title) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "job_title='$job_title'";
+				$searchSQL .= "job_title=\"$job_title\"";
 				}
 			if (strlen($location) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "location='$location'";
+				$searchSQL .= "location=\"$location\"";
 				}
 			}
 		elseif (strlen($first_name) > 0)
 			{
-			$searchSQL = "first_name='$first_name'";
+			$searchSQL = "first_name=\"$first_name\"";
 			if (strlen($bu_name) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "bu_name='$bu_name'";
+				$searchSQL .= "bu_name=\"$bu_name\"";
 				}
 			if (strlen($department) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "department='$department'";
+				$searchSQL .= "department=\"$department\"";
 				}
 			if (strlen($group_name) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "group_name='$group_name'";
+				$searchSQL .= "group_name=\"$group_name\"";
 				}
 			if (strlen($job_title) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "job_title='$job_title'";
+				$searchSQL .= "job_title=\"$job_title\"";
 				}
 			if (strlen($location) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "location='$location'";
+				$searchSQL .= "location=\"$location\"";
 				}
 			}
 		elseif (strlen($bu_name) > 0)
 			{
-			$searchSQL = "bu_name='$bu_name'";
+			$searchSQL = "bu_name=\"$bu_name\"";
 			if (strlen($department) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "department='$department'";
+				$searchSQL .= "department=\"$department\"";
 				}
 			if (strlen($group_name) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "group_name='$group_name'";
+				$searchSQL .= "group_name=\"$group_name\"";
 				}
 			if (strlen($job_title) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "job_title='$job_title'";
+				$searchSQL .= "job_title=\"$job_title\"";
 				}
 			if (strlen($location) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "location='$location'";
+				$searchSQL .= "location=\"$location\"";
 				}
 			}
 		elseif (strlen($department) > 0)
 			{
-			$searchSQL = "department='$department'";
+			$searchSQL = "department=\"$department\"";
 			if (strlen($group_name) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "group_name='$group_name'";
+				$searchSQL .= "group_name=\"$group_name\"";
 				}
 			if (strlen($job_title) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "job_title='$job_title'";
+				$searchSQL .= "job_title=\"$job_title\"";
 				}
 			if (strlen($location) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "location='$location'";
+				$searchSQL .= "location=\"$location\"";
 				}
 			}
 		elseif (strlen($group_name) > 0)
 			{
-			$searchSQL = "group_name='$group_name'";
+			$searchSQL = "group_name=\"$group_name\"";
 			if (strlen($job_title) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "job_title='$job_title'";
+				$searchSQL .= "job_title=\"$job_title\"";
 				}
 			if (strlen($location) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "location='$location'";
+				$searchSQL .= "location=\"$location\"";
 				}
 			}
 		elseif (strlen($job_title) > 0)
 			{
-			$searchSQL = "job_title='$job_title'";
+			$searchSQL = "job_title=\"$job_title\"";
 			if (strlen($location) > 0)
 				{
 				if (strlen($searchSQL) > 10) {$searchSQL .= " and ";}
-				$searchSQL .= "location='$location'";
+				$searchSQL .= "location=\"$location\"";
 				}
 			}
 		elseif (strlen($location) > 0)
 			{
-			$searchSQL = "location='$location'";
+			$searchSQL = "location=\"$location\"";
 			}
 		else
 			{

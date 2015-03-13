@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDhopper.pl version 2.10
+# AST_VDhopper.pl version 2.12
 #
 # DESCRIPTION:
 # Updates the VICIDIAL leads hopper for the streamlined approach of allocating 
@@ -83,10 +83,11 @@
 # 150111-1546 - Added lists option: local call time and enabled whole-campaign outbound call time holidays, Issue #812
 # 150114-1204 - Optimization of gmt code, Issue #812
 # 150117-1415 - Added list local call time validation
+# 150312-1459 - Allow for single quotes in data fields without crashing
 #
 
 # constants
-$build = '150117-1415';
+$build = '150312-1459';
 $DB=0;  # Debug flag, set to 0 for no debug messages. Can be overriden with CLI --debug flag
 $US='__';
 $MT[0]='';
@@ -514,7 +515,7 @@ if ($CBHOLD_count > 0)
 			$event_string = "|CALLBACKS LISTACT|$affected_rows|";
 			&event_logger;
 
-			$stmtA = "INSERT INTO $vicidial_hopper SET lead_id='$CA_lead_id[$CAu]',campaign_id='$CA_campaign_id[$CAu]',list_id='$CA_list_id[$CAu]',gmt_offset_now='$CA_gmt_offset_now[$CAu]',user='',state='$CA_state[$CAu]',priority='50',source='C',vendor_lead_code='$CA_vendor_lead_code[$cba]';";
+			$stmtA = "INSERT INTO $vicidial_hopper SET lead_id='$CA_lead_id[$CAu]',campaign_id='$CA_campaign_id[$CAu]',list_id='$CA_list_id[$CAu]',gmt_offset_now='$CA_gmt_offset_now[$CAu]',user='',state='$CA_state[$CAu]',priority='50',source='C',vendor_lead_code=\"$CA_vendor_lead_code[$cba]\";";
 			$affected_rows = $dbhA->do($stmtA);
 			if ($DB) {print "ANYONE Scheduled Callback Inserted into hopper:  $affected_rows|$CA_lead_id[$CAu]\n";}
 			$CAu++;
@@ -1100,7 +1101,7 @@ if ($ANY_hopper_vlc_dup_check =~ /Y/)
 		{
 		@aryA = $sthA->fetchrow_array;
 		if ( (length($aryA[0]) > 0) && ($aryA[0] !~ /^NULL/) )
-			{$live_vlc .= "'$aryA[0]',";}
+			{$live_vlc .= "\"$aryA[0]\",";}
 		$vlLIVE++;
 		}
 	$sthA->finish();
@@ -2539,12 +2540,12 @@ foreach(@campaign_id)
 					@aryA = $sthA->fetchrow_array;
 					$lead_id_lists .= "'$aryA[0]',";
 					if (length($aryA[1]) > 0)
-						{$vlc_lists .= "'$aryA[1]',";}
+						{$vlc_lists .= "\"$aryA[1]\",";}
 					$rec_countLISTS++;
 					}
 				$sthA->finish();
 				$lead_id_lists .= "'0'";
-				$vlc_lists .= "'--99999999987654321--'";
+				$vlc_lists .= "\"--99999999987654321--\"";
 				$order_stmt='';
 				$NEW_count = 0;
 				$NEW_level = 0;
@@ -2627,7 +2628,7 @@ foreach(@campaign_id)
 						$REC_rec_countLEADS++;
 
 						if (length($aryA[8]) > 0)
-							{$vlc_lists .= ",'$aryA[8]'";}
+							{$vlc_lists .= ",\"$aryA[8]\"";}
 						}
 					$sthA->finish();
 					}
@@ -2681,7 +2682,7 @@ foreach(@campaign_id)
 						$NEW_rec_countLEADS++;
 
 						if (length($aryA[8]) > 0)
-							{$vlc_lists .= ",'$aryA[8]'";}
+							{$vlc_lists .= ",\"$aryA[8]\"";}
 						}
 					$OTHER_level = ($hopper_level[$i] - $NEW_rec_countLEADS);
 					$sthA->finish();
@@ -2775,7 +2776,7 @@ foreach(@campaign_id)
 							$rec_count++;
 
 							if (length($aryA[8]) > 0)
-								{$vlc_lists .= ",'$aryA[8]'";}
+								{$vlc_lists .= ",\"$aryA[8]\"";}
 							}
 						$sthA->finish();
 						}
@@ -2886,7 +2887,7 @@ foreach(@campaign_id)
 							$w++;
 
 							if (length($aryA[9]) > 0)
-								{$vlc_lists .= ",'$aryA[9]'";}
+								{$vlc_lists .= ",\"$aryA[9]\"";}
 							}
 						}
 					}
@@ -3006,7 +3007,7 @@ foreach(@campaign_id)
 						$VLC_exist=0;
 						if ( ($hopper_vlc_dup_check[$i] =~ /Y/) && (length($vlc_to_hopper[$h]) > 0) )
 							{
-							$stmtA="SELECT count(*) FROM $vicidial_hopper where vendor_lead_code='$vlc_to_hopper[$h]';";
+							$stmtA="SELECT count(*) FROM $vicidial_hopper where vendor_lead_code=\"$vlc_to_hopper[$h]\";";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
@@ -3034,7 +3035,7 @@ foreach(@campaign_id)
 								{
 								if ($DNClead == '0')
 									{
-									$stmtA = "INSERT INTO $vicidial_hopper (lead_id,campaign_id,status,user,list_id,gmt_offset_now,state,priority,source,vendor_lead_code) values('$leads_to_hopper[$h]','$campaign_id[$i]','READY','','$lists_to_hopper[$h]','$gmt_to_hopper[$h]','$state_to_hopper[$h]','0','$source_to_hopper[$h]','$vlc_to_hopper[$h]');";
+									$stmtA = "INSERT INTO $vicidial_hopper (lead_id,campaign_id,status,user,list_id,gmt_offset_now,state,priority,source,vendor_lead_code) values('$leads_to_hopper[$h]','$campaign_id[$i]','READY','','$lists_to_hopper[$h]','$gmt_to_hopper[$h]','$state_to_hopper[$h]','0','$source_to_hopper[$h]',\"$vlc_to_hopper[$h]\");";
 									$affected_rows = $dbhA->do($stmtA);
 									if ($DBX) {print "LEAD INSERTED: $affected_rows|$leads_to_hopper[$h]|\n";}
 									if ($DB_detail) 
@@ -3048,7 +3049,7 @@ foreach(@campaign_id)
 									##### Auto-Alt-Dial if DNCC or DNCL are set to campaign auto-alt-dial statuses, insert lead into hopper as DNC status
 									if ( ( ($auto_alt_dial_statuses[$i] =~ / DNCC /) && ($DNCC > 0) ) || ( ($auto_alt_dial_statuses[$i] =~ / DNCL /) && ($DNCL > 0) ) )
 										{
-										$stmtA = "INSERT INTO $vicidial_hopper (lead_id,campaign_id,status,user,list_id,gmt_offset_now,state,priority,source,vendor_lead_code) values('$leads_to_hopper[$h]','$campaign_id[$i]','DNC','','$lists_to_hopper[$h]','$gmt_to_hopper[$h]','$state_to_hopper[$h]','0','$source_to_hopper[$h]','$vlc_to_hopper[$h]');";
+										$stmtA = "INSERT INTO $vicidial_hopper (lead_id,campaign_id,status,user,list_id,gmt_offset_now,state,priority,source,vendor_lead_code) values('$leads_to_hopper[$h]','$campaign_id[$i]','DNC','','$lists_to_hopper[$h]','$gmt_to_hopper[$h]','$state_to_hopper[$h]','0','$source_to_hopper[$h]',\"$vlc_to_hopper[$h]\");";
 										$affected_rows = $dbhA->do($stmtA);
 										if ($DBX) {print "LEAD INSERTED AS DNC: $affected_rows|$leads_to_hopper[$h]|\n";}
 										if ($DB_detail) 
