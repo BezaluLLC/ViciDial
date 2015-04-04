@@ -42,6 +42,7 @@
 # 150218-0800 - Added Callbacks Bulk Move help
 # 150223-1548 - Added DYN option to am_message_exten
 # 150307-2317 - Added custom meetme enter options
+# 150404-0934 - Added enable_did_entry_list_id and related DID options
 #
 
 require("dbconnect_mysqli.php");
@@ -2675,6 +2676,11 @@ if ($SSqc_features_active > 0)
 <B><?php echo _QXZ("In-Group List ID"); ?> -</B><?php echo _QXZ("If IN_GROUP is selected as the DID Route, then this is the List ID that leads may be searched through and that leads will be inserted into if necessary."); ?>
 
 <BR>
+<A NAME="inbound_dids-entry_list_id">
+<BR>
+<B><?php echo _QXZ("In-Group Entry List ID"); ?> -</B><?php echo _QXZ("If IN_GROUP is selected as the DID Route, then this is the Entry List ID that a new lead will be populated with if a new lead is added. Default is 0 for disabled."); ?>
+
+<BR>
 <A NAME="inbound_dids-campaign_id">
 <BR>
 <B><?php echo _QXZ("In-Group Campaign ID"); ?> -</B><?php echo _QXZ("If IN_GROUP is selected as the DID Route, then this is the Campaign ID that leads may be searched for in if the call handle method is CIDLOOKUPRC."); ?>
@@ -4662,6 +4668,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-country_code_list_stats">
 <BR>
 <B><?php echo _QXZ("Country Code List Stats"); ?> -</B><?php echo _QXZ("This setting if enabled will show a country code breakdown summary on the list modify screen. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="settings-enable_did_entry_list_id">
+<BR>
+<B><?php echo _QXZ("Enable DID Entry List ID"); ?> -</B><?php echo _QXZ("This setting if enabled will allow a manager to define an entry list id to use on the DID modify screen. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="settings-enhanced_disconnect_logging">

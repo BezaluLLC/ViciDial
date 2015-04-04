@@ -62,6 +62,9 @@ OTHER CHANGES:
 2. Added ability to use single-quotes in vicidial_list fields. Through the 
 	agent screen and all lead import methods
 
+3. Added option to populate the entry_list_id from the DID when routing to an
+	In-Group
+
 
 
 

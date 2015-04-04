@@ -722,11 +722,11 @@ else
 	while ($sthArows > $rec_count)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$lead_id =		$aryA[0];
-		$vicidial_id =	$aryA[1];
-		$uniqueid =		$aryA[1];
-		$length_in_sec = $aryA[2];
-		$epoch =		$aryA[3];
+		$lead_id =			$aryA[0];
+		$vicidial_id =		$aryA[1];
+		$uniqueid =			$aryA[1];
+		$length_in_sec =	$aryA[2];
+		$epoch =			$aryA[3];
 
 		$outbound = 'Y';
 		$domestic = 'Y';
@@ -753,12 +753,12 @@ else
 		while ($sthArows > $rec_count)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$lead_id =		$aryA[0];
-			$xfercallid =	$aryA[1];
-			$vicidial_id =	$aryA[2];
-			$uniqueid =		$aryA[3];
-			$length_in_sec = $aryA[4];
-			$epoch =		$aryA[5];
+			$lead_id =			$aryA[0];
+			$xfercallid =		$aryA[1];
+			$vicidial_id =		$aryA[2];
+			$uniqueid =			$aryA[3];
+			$length_in_sec =	$aryA[4];
+			$epoch =			$aryA[5];
 
 			$outbound = 'N';
 			$domestic = 'Y';

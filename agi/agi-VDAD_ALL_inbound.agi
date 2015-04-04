@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_ALL_inbound.agi version 2.10
+# agi-VDAD_ALL_inbound.agi version 2.12
 # 
 # runs when a call comes in from an inbound call. This script will 
 # send the calls out to the closers that are logged in.
@@ -82,7 +82,7 @@
 #exten => _99909*.,2,AGI(agi-VDAD_ALL_inbound.agi)
 #exten => _99909*.,3,Hangup
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 70828-0924 - First Build
@@ -192,6 +192,7 @@
 # 140312-2111 - Added CALLID as recording filename variable
 # 140417-0932 - Added max inbound calls feature
 # 141211-2028 - Added list_id to call url functions
+# 150404-1011 - Added entry_list_id related DID options
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -207,6 +208,7 @@ $mysql_log_count=208;
 $one_mysql_log=0;
 $dial_ingroup_flag=0;
 $called_count=1;
+$entry_list_id=0;
 
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -320,7 +322,7 @@ $sthA->finish();
 
 #############################################
 ##### START SYSTEM SETTINGS LOOKUP      #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_pe_phone_append,did_agent_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_ra_extensions_enabled,queuemetrics_socket,queuemetrics_socket_url FROM system_settings;";
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_pe_phone_append,did_agent_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_ra_extensions_enabled,queuemetrics_socket,queuemetrics_socket_url,enable_did_entry_list_id FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -345,6 +347,7 @@ if ($sthArows > 0)
 	$did_ra_extensions_enabled =	$aryA[14];
 	$queuemetrics_socket =			$aryA[15];
 	$queuemetrics_socket_url = 		$aryA[16];
+	$enable_did_entry_list_id =		$aryA[17];
 	}
 $sthA->finish();
 ##### END SYSTEM SETTINGS LOOKUP      #####
@@ -454,11 +457,11 @@ if ($extension =~ /^999\d\d\*/)
 	### Grab DID values from the database
 	if ($route_type =~ /FILTER/) 
 		{
-		$stmtA = "SELECT filter_call_handle_method,filter_agent_search_method,filter_group_id,did_pattern,filter_list_id,filter_phone_code,filter_campaign_id,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_action,filter_voicemail_ext,filter_extension,filter_exten_context,filter_phone,filter_server_ip FROM vicidial_inbound_dids where did_id = '$did_id';";
+		$stmtA = "SELECT filter_call_handle_method,filter_agent_search_method,filter_group_id,did_pattern,filter_list_id,filter_phone_code,filter_campaign_id,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_action,filter_voicemail_ext,filter_extension,filter_exten_context,filter_phone,filter_server_ip,filter_entry_list_id FROM vicidial_inbound_dids where did_id = '$did_id';";
 		}
 	else
 		{
-		$stmtA = "SELECT call_handle_method,agent_search_method,group_id,did_pattern,list_id,phone_code,campaign_id,user,user_unavailable_action,user_route_settings_ingroup,did_route,voicemail_ext,extension,exten_context,phone,server_ip FROM vicidial_inbound_dids where did_id = '$did_id';";
+		$stmtA = "SELECT call_handle_method,agent_search_method,group_id,did_pattern,list_id,phone_code,campaign_id,user,user_unavailable_action,user_route_settings_ingroup,did_route,voicemail_ext,extension,exten_context,phone,server_ip,entry_list_id FROM vicidial_inbound_dids where did_id = '$did_id';";
 		}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -483,6 +486,7 @@ if ($extension =~ /^999\d\d\*/)
 		$did_exten_context =			$aryA[13];
 		$did_phone =					$aryA[14];
 		$did_phone_server_ip =			$aryA[15];
+		$entry_list_id =				$aryA[16];
 		if ($did_route =~ /AGENT/)
 			{$channel_group = $user_route_settings_ingroup;}
 		else
@@ -977,8 +981,14 @@ if ($call_handle_method =~ /LOOKUP/)
 	{
 	if ( ( ($call_handle_method =~ /^VID/) && (length($vendor_id)) < 3) || (length($phone_number) < 3) )
 		{
+		$entry_list_idSQLa='';   $entry_list_idSQLb='';
+		if ( ($enable_did_entry_list_id > 0) && ($entry_list_id > 0) ) 
+			{
+			$entry_list_idSQLa=',entry_list_id';
+			$entry_list_idSQLb=",'$entry_list_id'";
+			}
 		### insert a record into the vicidial_list table 
-		$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','$called_count','$local_gmt','$VLcomments');";
+		$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb);";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02007';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		$cbc=0;
@@ -1120,8 +1130,14 @@ if ($call_handle_method =~ /LOOKUP/)
 				}
 			if ($VLfound < 1)
 				{
+				$entry_list_idSQLa='';   $entry_list_idSQLb='';
+				if ( ($enable_did_entry_list_id > 0) && ($entry_list_id > 0) ) 
+					{
+					$entry_list_idSQLa=',entry_list_id';
+					$entry_list_idSQLb=",'$entry_list_id'";
+					}
 				### insert a record into the vicidial_list table 
-				$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','$called_count','$local_gmt','$VLcomments');";
+				$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb);";
 				$affected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02011';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				$cbc=0;
@@ -1197,8 +1213,14 @@ else
 
 	else
 		{
+		$entry_list_idSQLa='';   $entry_list_idSQLb='';
+		if ( ($enable_did_entry_list_id > 0) && ($entry_list_id > 0) ) 
+			{
+			$entry_list_idSQLa=',entry_list_id';
+			$entry_list_idSQLb=",'$entry_list_id'";
+			}
  		### insert a record into the vicidial_list table if no record was found above
-		$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','$called_count','-5.00','$VLcomments');";
+		$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','$called_count','-5.00','$VLcomments'$entry_list_idSQLb);";
  		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02014';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		$cbc=0;
@@ -4196,8 +4218,14 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 			# if callerid is not valid do not execute
 			if ( ( length($phone_number) > 6 ) && ( $phone_number > 0) )
 				{
+				$entry_list_idSQLa='';   $entry_list_idSQLb='';
+				if ( ($enable_did_entry_list_id > 0) && ($entry_list_id > 0) ) 
+					{
+					$entry_list_idSQLa=',entry_list_id';
+					$entry_list_idSQLb=",'$entry_list_id'";
+					}
 				### insert a record into the vicidial_list table 
-				$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$wait_time_option_callback_list_id','N','$phone_code','$phone_number','$channel_group','$called_count','$local_gmt','$VLcomments');";
+				$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$wait_time_option_callback_list_id','N','$phone_code','$phone_number','$channel_group','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb);";
 				$affected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02089';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
@@ -4627,8 +4655,14 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					# if callerid is not valid do not execute
 					if ( ( length($phone_number) > 6 ) && ( $phone_number > 0) )
 						{
+						$entry_list_idSQLa='';   $entry_list_idSQLb='';
+						if ( ($enable_did_entry_list_id > 0) && ($entry_list_id > 0) ) 
+							{
+							$entry_list_idSQLa=',entry_list_id';
+							$entry_list_idSQLb=",'$entry_list_id'";
+							}
 						### insert a record into the vicidial_list table 
-						$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$hold_time_option_callback_list_id','N','$phone_code','$phone_number','$channel_group','$called_count','$local_gmt','$VLcomments');";
+						$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$hold_time_option_callback_list_id','N','$phone_code','$phone_number','$channel_group','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb);";
 						$affected_rows = $dbhA->do($stmtA);
 							$dbhP=$dbhA;   $mysql_count='02089';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 						$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";

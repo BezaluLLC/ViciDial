@@ -1584,7 +1584,8 @@ allow_chats ENUM('0','1') default '0',
 enable_languages ENUM('0','1') default '0',
 language_method VARCHAR(20) default 'DISABLED',
 meetme_enter_login_filename VARCHAR(255) default '',
-meetme_enter_leave3way_filename VARCHAR(255) default ''
+meetme_enter_leave3way_filename VARCHAR(255) default '',
+enable_did_entry_list_id ENUM('0','1') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -1891,6 +1892,8 @@ no_agent_ingroup_id VARCHAR(20) default '',
 no_agent_ingroup_extension VARCHAR(50) default '9998811112',
 pre_filter_phone_group_id VARCHAR(20) default '',
 pre_filter_extension VARCHAR(50) default '',
+entry_list_id BIGINT(14) UNSIGNED default '0',
+filter_entry_list_id BIGINT(14) UNSIGNED default '0',
 unique index (did_pattern),
 index (group_id)
 ) ENGINE=MyISAM;
@@ -3334,8 +3337,8 @@ INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,cate
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('ADC','Disconnected Number Auto','N','N','UNDEFINED','N','N','N','N','Y','N','N');
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('DEC','Declined Sale','Y','Y','UNDEFINED','N','N','Y','N','N','N','N');
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('DNC','DO NOT CALL','Y','Y','UNDEFINED','N','Y','N','N','N','N','Y');
-INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('DNCL','DO NOT CALL Hopper Match','N','N','UNDEFINED','N','Y','N','N','N','N','Y');
-INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('DNCC','DO NOT CALL Camp Match','N','N','UNDEFINED','N','Y','N','N','N','N','Y');
+INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('DNCL','DO NOT CALL Hopper Sys Match','N','N','UNDEFINED','N','Y','N','N','N','N','Y');
+INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('DNCC','DO NOT CALL Hopper Camp Match','N','N','UNDEFINED','N','Y','N','N','N','N','Y');
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('SALE','Sale Made','Y','Y','UNDEFINED','Y','N','N','N','N','N','Y');
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('N','No Answer','Y','N','UNDEFINED','N','N','N','N','N','N','N');
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed) values('NI','Not Interested','Y','Y','UNDEFINED','N','N','Y','Y','N','N','N');
@@ -3372,4 +3375,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1406',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1407',db_schema_update_date=NOW(),reload_timestamp=NOW();
