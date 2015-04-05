@@ -482,10 +482,11 @@
 # 150220-1533 - Fix for leave page confirmation after logout and QXZ fixes
 # 150302-0950 - Release of 2.11 stable branch and raising trunk to 2.12
 # 150309-0315 - Added custom agent login prompt option
+# 150405-1410 - Fixed issue with API dialing and preview
 #
 
-$version = '2.12-454c';
-$build = '150309-0315';
+$version = '2.12-455c';
+$build = '150405-1410';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -5222,6 +5223,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 										{window.focus();   alert_box("<?php echo _QXZ("Placing call to next number"); ?>");}
 									if (APIDiaL_array_detail[3] == 'YES')
 										{document.vicidial_form.LeadPreview.checked=true;}
+									if (APIDiaL_array_detail[3] == 'NO')
+										{document.vicidial_form.LeadPreview.checked=false;}
 									ManualDialNext('','','','','','0');
 									}
 								else
@@ -5245,6 +5248,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 										{document.vicidial_form.LeadLookuP.checked=false;}
 									if (APIDiaL_array_detail[4] == 'YES')  // focus on vicidial agent screen
 										{window.focus();   alert_box("Placing call to:" + APIDiaL_array_detail[1] + " " + APIDiaL_array_detail[0]);}
+									if (APIDiaL_array_detail[3] == 'NO')  // NO call preview
+										{document.vicidial_form.LeadPreview.checked=false;}
 									if (APIDiaL_array_detail[3] == 'YES')  // call preview
 										{NeWManuaLDiaLCalLSubmiT('PREVIEW');}
 									else
