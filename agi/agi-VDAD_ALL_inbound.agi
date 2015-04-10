@@ -193,6 +193,7 @@
 # 140417-0932 - Added max inbound calls feature
 # 141211-2028 - Added list_id to call url functions
 # 150404-1011 - Added entry_list_id related DID options
+# 150410-0637 - Fixed NANQUE bug with VMAIL_NO_INST
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -1683,7 +1684,7 @@ if ( ( ($no_agent_no_queue =~ /Y|NO_PAUSED/) || ($MCnanque_override > 0) ) && ($
 			$dbhP=$dbhA;   $mysql_count='02107';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		if ($AGILOG) {$agi_string = "--  NA VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
 
-		if ($no_agent_action =~ /CALLMENU|INGROUP|DID|EXTENSION|VOICEMAIL/)
+		if ($no_agent_action =~ /CALLMENU|INGROUP|DID|EXTENSION|VOICEMAIL|VMAIL_NO_INST/)
 			{
 			if ($no_agent_action =~ /EXTENSION/)
 				{
