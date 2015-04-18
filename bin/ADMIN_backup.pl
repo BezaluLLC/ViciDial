@@ -1,11 +1,11 @@
 #!/usr/bin/perl
 #
-# ADMIN_backup.pl    version 2.10
+# ADMIN_backup.pl    version 2.12
 #
 # DESCRIPTION:
 # Backs-up the asterisk database, conf/agi/sounds/bin files 
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 #
@@ -19,6 +19,7 @@
 # 101208-0452 - Added checks for zaptel and dahdi conf files
 # 141103-1505 - Added option to export without leads, logs, servers or phones
 # 141124-2309 - Fixed Fhour variable bug
+# 150418-1801 - Added --db_raw_files_copy flag, issue #839
 #
 
 $secT = time();
@@ -34,6 +35,7 @@ if ($sec < 10) {$sec = "0$sec";}
 $file_date = "$year-$mon-$mday";
 $now_date = "$year-$mon-$mday $hour:$min:$sec";
 $VDL_date = "$year-$mon-$mday 00:00:01";
+$db_raw_files_copy=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -62,6 +64,7 @@ if (length($ARGV[0])>1)
 		print "  [--debugX] = super debug\n";
 		print "  [--debug] = debug\n";
 		print "  [--test] = test\n";
+		print "  [--db_raw_files_copy] = if set the backup won't be a mysql dump. It will tar the /var/lib/mysql folder. WARNING, THIS OPTION WILL STOP THE MYSQL SERVER!\n";
 		exit;
 		}
 	else
@@ -135,6 +138,10 @@ if (length($ARGV[0])>1)
 			{
 			$ftp_transfer=1;
 			print "\n----- FTP transfer -----\n\n";
+			}
+		if ($args =~ /--db_raw_files_copy/i)
+			{
+			$db_raw_files_copy = 1;
 			}
 		}
 	}
@@ -247,63 +254,27 @@ $sgSTRING='';
 
 if ( ($without_db < 1) && ($conf_only < 1) )
 	{
-	### find mysqldump binary to do the database dump
-	$mysqldumpbin = '';
-	if ( -e ('/usr/bin/mysqldump')) {$mysqldumpbin = '/usr/bin/mysqldump';}
-	else 
+	if ($db_raw_files_copy < 1)
 		{
-		if ( -e ('/usr/local/mysql/bin/mysqldump')) {$mysqldumpbin = '/usr/local/mysql/bin/mysqldump';}
-		else
+		### find mysqldump binary to do the database dump
+		print "\n----- Mysql dump -----\n\n";
+		$mysqldumpbin = '';
+		if ( -e ('/usr/bin/mysqldump')) {$mysqldumpbin = '/usr/bin/mysqldump';}
+		else 
 			{
-			if ( -e ('/bin/mysqldump')) {$mysqldumpbin = '/bin/mysqldump';}
+			if ( -e ('/usr/local/mysql/bin/mysqldump')) {$mysqldumpbin = '/usr/local/mysql/bin/mysqldump';}
 			else
 				{
-				print "Can't find mysqldump binary! MySQL backups will not work...\n";
+				if ( -e ('/bin/mysqldump')) {$mysqldumpbin = '/bin/mysqldump';}
+				else
+					{
+					print "Can't find mysqldump binary! MySQL backups will not work...\n";
+					}
 				}
 			}
-		}
 
-	### BACKUP THE MYSQL FILES ON THE DB SERVER ###
-	if ($db_without_logs)
-		{
-		use DBI;
-			
-		### connect to MySQL database defined in the conf file
-		$dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
-		or die "Couldn't connect to database: " . DBI->errstr;
-
-		$stmtA = "show tables;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		$rec_count=0;
-		$log_tables='';
-		$archive_tables='';
-		while ($sthArows > $rec_count)
-			{
-			@aryA = $sthA->fetchrow_array;
-			if ($aryA[0] =~ /_log|server_performance|vicidial_ivr|vicidial_hopper|vicidial_manager|web_client_sessions|imm_outcomes/) 
-				{
-				$log_tables .= " $aryA[0]";
-				}
-			else 
-				{
-				$archive_tables .= " $aryA[0]";
-				}
-			$rec_count++;
-			}
-		$sthA->finish();
-
-		$dump_non_log_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database $archive_tables | $gzipbin > $ARCHIVEpath/temp/$VARserver_ip$VARDB_database$wday.gz";
-		$dump_log_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs --no-data --no-create-db $VARDB_database $log_tables | $gzipbin > $ARCHIVEpath/temp/LOGS_$VARserver_ip$VARDB_database$wday.gz";
-
-		if ($DBX) {print "$dump_non_log_command\nDEBUG: LOG EXPORT COMMAND(not run): $dump_log_command\n";}
-		`$dump_non_log_command`;
-	#	`$dump_log_command`;
-		}
-	else
-		{
-		if ($db_settings_only)
+		### BACKUP THE MYSQL FILES ON THE DB SERVER ###
+		if ($db_without_logs)
 			{
 			use DBI;
 				
@@ -321,7 +292,7 @@ if ( ($without_db < 1) && ($conf_only < 1) )
 			while ($sthArows > $rec_count)
 				{
 				@aryA = $sthA->fetchrow_array;
-				if ($aryA[0] =~ /_log|server_performance|vicidial_ivr|vicidial_hopper|vicidial_manager|web_client_sessions|imm_outcomes|server|^phones|conferences|stats|vicidial_list$/) 
+				if ($aryA[0] =~ /_log|server_performance|vicidial_ivr|vicidial_hopper|vicidial_manager|web_client_sessions|imm_outcomes/) 
 					{
 					$log_tables .= " $aryA[0]";
 					}
@@ -333,18 +304,65 @@ if ( ($without_db < 1) && ($conf_only < 1) )
 				}
 			$sthA->finish();
 
-			$dump_non_log_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database $archive_tables | $gzipbin > $ARCHIVEpath/temp/SETTINGSONLY_$VARserver_ip$VARDB_database$wday.gz";
+			$dump_non_log_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database $archive_tables | $gzipbin > $ARCHIVEpath/temp/$VARserver_ip$VARDB_database$wday.gz";
 			$dump_log_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs --no-data --no-create-db $VARDB_database $log_tables | $gzipbin > $ARCHIVEpath/temp/LOGS_$VARserver_ip$VARDB_database$wday.gz";
 
-			if ($DBX) {print "$dump_non_log_command\nNOT ARCHIVED: $dump_log_command\n";}
+			if ($DBX) {print "$dump_non_log_command\nDEBUG: LOG EXPORT COMMAND(not run): $dump_log_command\n";}
 			`$dump_non_log_command`;
 		#	`$dump_log_command`;
 			}
 		else
 			{
-			if ($DBX) {print "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database | $gzipbin > $ARCHIVEpath/temp/$VARserver_ip$VARDB_database$wday.gz\n";}
-			`$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database | $gzipbin > $ARCHIVEpath/temp/$VARserver_ip$VARDB_database$wday.gz`;
+			if ($db_settings_only)
+				{
+				use DBI;
+					
+				### connect to MySQL database defined in the conf file
+				$dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
+				or die "Couldn't connect to database: " . DBI->errstr;
+
+				$stmtA = "show tables;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				$rec_count=0;
+				$log_tables='';
+				$archive_tables='';
+				while ($sthArows > $rec_count)
+					{
+					@aryA = $sthA->fetchrow_array;
+					if ($aryA[0] =~ /_log|server_performance|vicidial_ivr|vicidial_hopper|vicidial_manager|web_client_sessions|imm_outcomes|server|^phones|conferences|stats|vicidial_list$/) 
+						{
+						$log_tables .= " $aryA[0]";
+						}
+					else 
+						{
+						$archive_tables .= " $aryA[0]";
+						}
+					$rec_count++;
+					}
+				$sthA->finish();
+
+				$dump_non_log_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database $archive_tables | $gzipbin > $ARCHIVEpath/temp/SETTINGSONLY_$VARserver_ip$VARDB_database$wday.gz";
+				$dump_log_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs --no-data --no-create-db $VARDB_database $log_tables | $gzipbin > $ARCHIVEpath/temp/LOGS_$VARserver_ip$VARDB_database$wday.gz";
+
+				if ($DBX) {print "$dump_non_log_command\nNOT ARCHIVED: $dump_log_command\n";}
+				`$dump_non_log_command`;
+			#	`$dump_log_command`;
+				}
+			else
+				{
+				if ($DBX) {print "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database | $gzipbin > $ARCHIVEpath/temp/$VARserver_ip$VARDB_database$wday.gz\n";}
+				`$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database | $gzipbin > $ARCHIVEpath/temp/$VARserver_ip$VARDB_database$wday.gz`;
+				}
 			}
+		}
+	else
+		{
+		print "\n----- Mysql Raw Copy -----\n\n";
+		`service mysql stop`;
+		`$tarbin -zcvf $ARCHIVEpath/temp/"$VARserver_ip"_mysql_raw_"$wday".tar.gz /var/lib/mysql/test /var/lib/mysql/mysql /var/lib/mysql/performance_schema /var/lib/mysql/asterisk`;
+		`service mysql start`;
 		}
 	}
 
