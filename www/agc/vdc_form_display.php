@@ -30,10 +30,11 @@
 # 141216-2116 - Added language settings lookups and user/pass variable standardization
 # 150114-2045 - Added list_name variable
 # 150312-1502 - Allow for single quotes in vicidial_list data fields
+# 150418-1751 - Added fixed fields to submit output, issue #842
 #
 
-$version = '2.12-21';
-$build = '150312-1502';
+$version = '2.12-22';
+$build = '150418-1751';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -352,6 +353,10 @@ if ($stage=='SUBMIT')
 
 			if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') or ($A_field_type[$o]=='HIDDEN') or ($A_field_type[$o]=='HIDEBLOB') or ($A_field_type[$o]=='READONLY') )
 				{
+                if (($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') or ($A_field_type[$o]=='READONLY'))
+					{
+					$SUBMIT_output .= "<b>$A_field_name[$o]:</b> $A_field_value[$o]<BR>";
+					}
 				$A_field_value[$o]='----IGNORE----';
 				}
 			else
