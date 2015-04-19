@@ -483,10 +483,11 @@
 # 150302-0950 - Release of 2.11 stable branch and raising trunk to 2.12
 # 150309-0315 - Added custom agent login prompt option
 # 150405-1410 - Fixed issue with API dialing and preview
+# 150418-2206 - Fixed issue with manual dial with hotkeys in RATIO method, issue #836
 #
 
-$version = '2.12-455c';
-$build = '150405-1410';
+$version = '2.12-456c';
+$build = '150418-2206';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -14846,7 +14847,8 @@ function phone_number_format(formatphone) {
 					else
 						{
 						manual_auto_hotkey = 0;
-						ManualDialNext('','','','','','0');
+						if ( (dial_method == "INBOUND_MAN") || (dial_method == "MANUAL") )
+							{ManualDialNext('','','','','','0');}
 						}
 					}
 				if (manual_auto_hotkey > 1) {manual_auto_hotkey = (manual_auto_hotkey - 1);}
