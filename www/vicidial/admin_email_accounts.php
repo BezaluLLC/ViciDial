@@ -15,10 +15,11 @@
 # 141007-1125 - Finalized adding QXZ translation to all admin files
 # 141230-0021 - Added code for on-the-fly language translations display
 # 150421-2255 - Fixed links to default list ID and default_list_id issue
+# 150422-1229 - Changed Default List ID
 #
 
-$admin_version = '2.12-9';
-$build = '150421-2255';
+$admin_version = '2.12-10';
+$build = '150422-1229';
 
 $sh="emails"; 
 
@@ -329,10 +330,10 @@ if ($eact=="DELETE" && $confirm_deletion=="yes" && $email_account_id)
 
 
 
-if (($SUBMIT=="SUBMIT" || $SUBMIT=="UPDATE") && $email_account_id) 
+if (($SUBMIT=="SUBMIT" || $SUBMIT=="UPDATE") && $email_account_id)
 	{
 	$error_msg="";
-	if (!$default_list_id) {$error_msg.="- "._QXZ("Default list ID is invalid or null")."<BR/>";}
+	if ( (!$default_list_id) or ($default_list_id < 99) ) {$error_msg.="- "._QXZ("Default list ID is invalid or null")."<BR/>";}
 	if (!$email_account_id) {$error_msg.="- "._QXZ("Email account ID is invalid or null")."<BR/>";}
 	if (!$email_account_name) {$error_msg.="- "._QXZ("Email account name is invalid or null")."<BR/>";}
 	if (!$email_account_server) {$error_msg.="- "._QXZ("Email account server is invalid or null")."<BR/>";}
