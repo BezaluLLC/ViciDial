@@ -40,6 +40,7 @@
 # 141204-0548 - Fix for download headers, issue #805
 # 141230-0929 - Added code for on-the-fly language translations display
 # 150210-1356 - Added option to show time in seconds
+# 150422-1643 - Added two new shift options
 #
 
 $startMS = microtime();
@@ -481,6 +482,16 @@ else
 		{
 		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "00:00:00";}
 		if (strlen($time_END) < 6) {$time_END = "23:59:59";}
+		}
+	if ($shift == '9AM-5PM') 
+		{
+		$time_BEGIN = "09:00:00";
+		$time_END = "16:59:59";
+		}
+	if ($shift == '5PM-MIDNIGHT') 
+		{
+		$time_BEGIN = "17:00:00";
+		$time_END = "23:59:59";
 		}
 	$query_date_BEGIN = "$query_date $time_BEGIN";   
 	$query_date_END = "$end_date $time_END";
@@ -1483,6 +1494,8 @@ echo "<option value=\"\">--</option>\n";
 echo "<option value=\"AM\">"._QXZ("AM")."</option>\n";
 echo "<option value=\"PM\">"._QXZ("PM")."</option>\n";
 echo "<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
+echo "<option value=\"9AM-5PM\">"._QXZ("9AM-5PM")."</option>\n";
+echo "<option value=\"5PM-MIDNIGHT\">"._QXZ("5PM-MIDNIGHT")."</option>\n";
 echo "</SELECT><BR>\n";
 echo "<input type='checkbox' name='show_parks' value='checked' $show_parks>"._QXZ("Show parks-holds")."<BR>";
 echo "<input type='checkbox' name='time_in_sec' value='checked' $time_in_sec>"._QXZ("Time in seconds")."<BR>";
