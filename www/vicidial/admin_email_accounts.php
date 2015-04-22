@@ -1,7 +1,7 @@
 <?php
 # admin_email_accounts.php
 # 
-# Copyright (C) 2014  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This page manages the inbound email accounts in ViciDial
 #
@@ -14,10 +14,11 @@
 # 130902-0754 - Changed to mysqli PHP functions
 # 141007-1125 - Finalized adding QXZ translation to all admin files
 # 141230-0021 - Added code for on-the-fly language translations display
+# 150421-2255 - Fixed links to default list ID
 #
 
-$admin_version = '2.10-8';
-$build = '141230-0021';
+$admin_version = '2.12-9';
+$build = '150421-2255';
 
 $sh="emails"; 
 
@@ -608,7 +609,7 @@ else if ($eact == "ADD")
 		echo "$Dgroups_menu";
 		echo "</select>$NWB#email_accounts-in_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">"._QXZ("Default List ID")."</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#email_accounts-default_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=100\">"._QXZ("Default List ID")."</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#email_accounts-default_list_id$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("In-Group Call Handle Method").": </td><td align=left><select size=1 name=call_handle_method><option>EMAIL</option><option>EMAILLOOKUP</option><option>EMAILLOOKUPRL</option><option>EMAILLOOKUPRC</option><option SELECTED>$call_handle_method</option></select>$NWB#email_accounts-call_handle_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("In-Group Agent Search Method").": </td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#email_accounts-agent_search_method$NWE</td></tr>\n";
@@ -792,7 +793,7 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 		echo "$Dgroups_menu";
 		echo "<option value='$group_id' selected>$group_id</option></select>$NWB#email_accounts-in_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=1000\">"._QXZ("Default List ID")."</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#email_accounts-default_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin.php?ADD=311&list_id=$default_list_id\">"._QXZ("Default List ID")."</a>: </td><td align=left><input type=text name=default_list_id size=20 maxlength=255 value='$default_list_id'>$NWB#email_accounts-default_list_id$NWE</td></tr>\n";
 
 ###############
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("In-Group Call Handle Method").": </td><td align=left><select size=1 name=call_handle_method><option>EMAIL</option><option>EMAILLOOKUP</option><option>EMAILLOOKUPRL</option><option>EMAILLOOKUPRC</option><option SELECTED>$call_handle_method</option></select>$NWB#email_accounts-call_handle_method$NWE</td></tr>\n";

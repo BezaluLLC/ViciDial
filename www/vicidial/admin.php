@@ -1908,6 +1908,8 @@ if (isset($_GET["entry_list_id"]))			{$entry_list_id=$_GET["entry_list_id"];}
 	elseif (isset($_POST["entry_list_id"]))	{$entry_list_id=$_POST["entry_list_id"];}
 if (isset($_GET["filter_entry_list_id"]))			{$filter_entry_list_id=$_GET["filter_entry_list_id"];}
 	elseif (isset($_POST["filter_entry_list_id"]))	{$filter_entry_list_id=$_POST["filter_entry_list_id"];}
+if (isset($_GET["allow_chats"]))			{$allow_chats=$_GET["allow_chats"];}
+	elseif (isset($_POST["allow_chats"]))	{$allow_chats=$_POST["allow_chats"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2432,6 +2434,8 @@ if ($non_latin < 1)
 	$wrapup_after_hotkey = preg_replace('/[^0-9a-zA-Z]/','',$wrapup_after_hotkey);
 	$show_previous_callback = preg_replace('/[^0-9a-zA-Z]/','',$show_previous_callback);
 	$clear_script = preg_replace('/[^0-9a-zA-Z]/','',$clear_script);
+	$allow_chats = preg_replace('/[^0-9a-zA-Z]/','',$allow_chats);
+	$allow_emails = preg_replace('/[^0-9a-zA-Z]/','',$allow_emails);
 
 	### DIGITS and Dots
 	$server_ip = preg_replace('/[^\.0-9]/','',$server_ip);
@@ -3459,12 +3463,13 @@ else
 # 150307-1914 - Added login and leave3way custom sounds system settings options
 # 150313-0912 - Added DB Schema Version warning if mismatched with astguiclient.conf value
 # 150404-0932 - Added enable_did_entry_list_id and related DID options
+# 150421-2315 - Fixed bugs in allow_emails
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-480a';
-$build = '150404-0932';
+$admin_version = '2.12-481a';
+$build = '150421-2315';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -18815,7 +18820,7 @@ if ($ADD==31)
 			}
 		else
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right></td><td align=left><input type=hidden name=allow_emails value=$allow_emails></td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right></td><td align=left><input type=hidden name=allow_chats value=$allow_chats></td></tr>\n";
 			}
 		if ($SSoutbound_autodial_active > 0)
 			{
