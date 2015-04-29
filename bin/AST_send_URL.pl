@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_send_URL.pl   version 2.10
+# AST_send_URL.pl   version 2.12
 # 
 # DESCRIPTION:
 # This script is spawned for remote agents when the Start Call URL is set in the
@@ -19,6 +19,7 @@
 # 141211-1742 - Added list override for no-agent url
 # 141219-1218 - url logging fix for some inputs
 # 150114-2037 - Added list_name variable
+# 150429-0910 - Added campaign variables
 #
 
 $|++;
@@ -521,6 +522,9 @@ if (length($lead_id) > 0)
 		$na_call_url =~ s/--A--uniqueid--B--/$VAR_uniqueid/gi;
 		$na_call_url =~ s/--A--call_id--B--/$VAR_call_id/gi;
 		$na_call_url =~ s/--A--user_group--B--/$VAR_user_group/gi;
+		$na_call_url =~ s/--A--campaign--B--/$VAR_campaign_id/gi;
+		$na_call_url =~ s/--A--campaign_id--B--/$VAR_campaign_id/gi;
+		$na_call_url =~ s/--A--group--B--/$VAR_campaign_id/gi;
 		$na_call_url =~ s/ /+/gi;
 		$na_call_url =~ s/&/\\&/gi;
 		$parse_url = $na_call_url;
@@ -695,6 +699,9 @@ if (length($lead_id) > 0)
 		$start_call_url =~ s/--A--uniqueid--B--/$VAR_uniqueid/gi;
 		$start_call_url =~ s/--A--call_id--B--/$VAR_call_id/gi;
 		$start_call_url =~ s/--A--user_group--B--/$VAR_user_group/gi;
+		$start_call_url =~ s/--A--campaign--B--/$VAR_campaign_id/gi;
+		$start_call_url =~ s/--A--campaign_id--B--/$VAR_campaign_id/gi;
+		$start_call_url =~ s/--A--group--B--/$VAR_campaign_id/gi;
 		$start_call_url =~ s/ /+/gi;
 		$start_call_url =~ s/&/\\&/gi;
 		$parse_url = $start_call_url;

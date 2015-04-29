@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2015-03-13
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2015-04-28
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -101,6 +101,7 @@ Changes:
 150217-1404 - archive deleted callbacks to vicidial_callbacks_archive table
 150309-0250 - Added ability to use urlencoded web form addresses
 150313-0818 - Allow for single quotes in vicidial_list and custom data fields
+150428-1720 - Added web_form_address_three to add_list/update_list functions
 
 
 API Functions use the 'function' variable
@@ -1110,6 +1111,7 @@ am_message -		2-100 characters
 drop_inbound_group -	1-10 characters, must be a valid in-group
 web_form_address -	6-100 characters
 web_form_address_two -	6-100 characters
+web_form_address_three - 6-100 characters
 reset_time -		4-100 characters, must be in valid 4-digit groups of 24-hour time (i.e. 0900-1700-2359)
 expiration_date -	10 characters, must be in valid date format YYYY-MM-DD (i.e. 2012-11-25)
 NOTES: 
@@ -1161,6 +1163,7 @@ am_message -		2-100 characters
 drop_inbound_group -	1-10 characters, must be a valid in-group
 web_form_address -	6-100 characters
 web_form_address_two -	6-100 characters
+web_form_address_three - 6-100 characters
 reset_time -		4-100 characters, must be in valid 4-digit groups of 24-hour time (i.e. 0900-1700-2359)
 expiration_date -	10 characters, must be in valid date format YYYY-MM-DD (i.e. 2012-11-25)
 NOTES: 

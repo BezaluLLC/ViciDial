@@ -43,6 +43,7 @@
 # 150223-1548 - Added DYN option to am_message_exten
 # 150307-2317 - Added custom meetme enter options
 # 150404-0934 - Added enable_did_entry_list_id and related DID options
+# 150428-1704 - Added enable_third_webform
 #
 
 require("dbconnect_mysqli.php");
@@ -50,7 +51,7 @@ require("functions.php");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key,pass_hash_enabled,disable_auto_dial,country_code_list_stats,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key,pass_hash_enabled,disable_auto_dial,country_code_list_stats,enable_languages,language_method,enable_third_webform FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -100,6 +101,7 @@ if ($qm_conf_ct > 0)
 	$SScountry_code_list_stats =			$row[40];
 	$SSenable_languages =					$row[41];
 	$SSlanguage_method =					$row[42];
+	$SSenable_third_webform =				$row[43];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -1756,7 +1758,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="campaigns-na_call_url">
 <BR>
-<B><?php echo _QXZ("No Agent Call URL"); ?> -</B><?php echo _QXZ("This web URL address is not seen by the agent, but if it is populated it is called every time a call that is not handled by an agent is hung up or transferred. Uses the same variables as the web form fields and scripts. dispo can be used to retrieve the system-defined disposition for the call. This URL can NOT be a relative path. Default is blank."); ?>
+<B><?php echo _QXZ("No Agent Call URL"); ?> -</B><?php echo _QXZ("This web URL address is not seen by the agent, but if it is populated it is called every time a call that is not handled by an agent is hung up or transferred. Uses the same variables as the web form fields and scripts. dispo can be used to retrieve the system-defined disposition for the call. This URL can NOT be a relative path. Default is blank."); ?> <?php echo _QXZ("Custom Fields are not available with this feature."); ?>
 
 <BR>
 <A NAME="campaigns-agent_allow_group_alias">
@@ -1912,7 +1914,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="lists-na_call_url">
 <BR>
-<B><?php echo _QXZ("No Agent Call URL"); ?> -</B><?php echo _QXZ("This web URL address is not seen by the agent, but if it is populated it is called every time a call that is not handled by an agent is hung up or transferred. Uses the same variables as the web form fields and scripts. dispo can be used to retrieve the system-defined disposition for the call. This URL can NOT be a relative path. Default is blank."); ?>
+<B><?php echo _QXZ("No Agent Call URL"); ?> -</B><?php echo _QXZ("This web URL address is not seen by the agent, but if it is populated it is called every time a call that is not handled by an agent is hung up or transferred. Uses the same variables as the web form fields and scripts. dispo can be used to retrieve the system-defined disposition for the call. This URL can NOT be a relative path. Default is blank."); ?> <?php echo _QXZ("Custom Fields are not available with this feature."); ?>
 
 <BR>
 <A NAME="lists-xferconf_a_dtmf">
@@ -2546,7 +2548,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_groups-na_call_url">
 <BR>
-<B><?php echo _QXZ("No Agent Call URL"); ?> -</B><?php echo _QXZ("This web URL address is not seen by the agent, but if it is populated it is called every time a call that is not handled by an agent is hung up or transferred. Uses the same variables as the web form fields and scripts. dispo can be used to retrieve the system-defined disposition for the call. This URL can NOT be a relative path. Default is blank."); ?>
+<B><?php echo _QXZ("No Agent Call URL"); ?> -</B><?php echo _QXZ("This web URL address is not seen by the agent, but if it is populated it is called every time a call that is not handled by an agent is hung up or transferred. Uses the same variables as the web form fields and scripts. dispo can be used to retrieve the system-defined disposition for the call. This URL can NOT be a relative path. Default is blank."); ?> <?php echo _QXZ("Custom Fields are not available with this feature."); ?>
 
 <BR>
 <A NAME="inbound_groups-default_group_alias">
@@ -4638,6 +4640,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-enable_second_webform">
 <BR>
 <B><?php echo _QXZ("Enable Second Webform"); ?> -</B><?php echo _QXZ("This setting allows you to have a second web form for campaigns and in-groups in the agent interface. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="settings-enable_third_webform">
+<BR>
+<B><?php echo _QXZ("Enable Third Webform"); ?> -</B><?php echo _QXZ("This setting allows you to have a third web form for campaigns and in-groups in the agent interface. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="settings-enable_tts_integration">

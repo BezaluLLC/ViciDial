@@ -484,10 +484,11 @@
 # 150309-0315 - Added custom agent login prompt option
 # 150405-1410 - Fixed issue with API dialing and preview
 # 150418-2206 - Fixed issue with manual dial with hotkeys in RATIO method, issue #836
+# 150428-1735 - Added web form three
 #
 
-$version = '2.12-456c';
-$build = '150418-2206';
+$version = '2.12-457c';
+$build = '150428-1735';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -584,7 +585,7 @@ if ($sl_ct > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -613,6 +614,7 @@ if ($qm_conf_ct > 0)
 	$SSlanguage_method =				$row[18];
 	$meetme_enter_login_filename =		$row[19];
 	$meetme_enter_leave3way_filename =	$row[20];
+	$enable_third_webform =				$row[21];
 	}
 else
 	{
@@ -1590,7 +1592,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history,show_previous_callback,clear_script,manual_dial_search_filter FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history,show_previous_callback,clear_script,manual_dial_search_filter,web_form_address_three FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1721,6 +1723,7 @@ else
 				$show_previous_callback =	$row[123];
 				$clear_script =				$row[124];
 				$manual_dial_search_filter =$row[125];
+				$web_form_address_three =	$row[126];
 
 				if ( ($callback_active_limit_override == 'Y') and ($callback_active_limit > 0) )
 					{
@@ -2681,6 +2684,20 @@ else
 			$VICIDiaL_web_form_address_two_enc = rawurlencode($VICIDiaL_web_form_address_two);
 			}
 		$VICIDiaL_web_form_address_two_enc = rawurlencode($VICIDiaL_web_form_address_two);
+
+		# If a web form address three is not set, use the first one
+		if (strlen($web_form_address_three)>0)
+			{
+			$VICIDiaL_web_form_address_three = "$web_form_address_three";
+			echo "<!-- CAMPAIGN CUSTOM WEB FORM 3:   |$VICIDiaL_web_form_address_three| -->\n";
+			}
+		else
+			{
+			$VICIDiaL_web_form_address_three = "$VICIDiaL_web_form_address";
+			echo "<!-- CAMPAIGN DEFAULT WEB FORM 3:  |$VICIDiaL_web_form_address_three| -->\n";
+			$VICIDiaL_web_form_address_three_enc = rawurlencode($VICIDiaL_web_form_address_three);
+			}
+		$VICIDiaL_web_form_address_three_enc = rawurlencode($VICIDiaL_web_form_address_three);
 
 		# If closers are allowed on this campaign
 		if ($allow_closers=="Y")
@@ -3702,6 +3719,9 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var VICIDiaL_web_form_address_two_enc = '<?php echo $VICIDiaL_web_form_address_two_enc ?>';
 	var VICIDiaL_web_form_address_two = '<?php echo $VICIDiaL_web_form_address_two ?>';
 	var VDIC_web_form_address_two = '<?php echo $VICIDiaL_web_form_address_two ?>';
+	var VICIDiaL_web_form_address_three_enc = '<?php echo $VICIDiaL_web_form_address_three_enc ?>';
+	var VICIDiaL_web_form_address_three = '<?php echo $VICIDiaL_web_form_address_three ?>';
+	var VDIC_web_form_address_three = '<?php echo $VICIDiaL_web_form_address_three ?>';
 	var CalL_ScripT_id = '';
 	var CalL_AutO_LauncH = '';
 	var panel_bgcolor = '<?php echo $MAIN_COLOR ?>';
@@ -3884,6 +3904,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var web_form_target = '<?php echo $web_form_target ?>';
 	var TEMP_VDIC_web_form_address = '';
 	var TEMP_VDIC_web_form_address_two = '';
+	var TEMP_VDIC_web_form_address_three = '';
 	var APIPausE_ID = '99999';
 	var APIDiaL_ID = '99999';
 	var CheckDEADcall = 0;
@@ -3921,6 +3942,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var script_width = '<?php echo $SDwidth ?>';
 	var script_height = '<?php echo $SSheight ?>';
 	var enable_second_webform = '<?php echo $enable_second_webform ?>';
+	var enable_third_webform = '<?php echo $enable_third_webform ?>';
 	var no_delete_VDAC=0;
 	var manager_ingroups_set=0;
 	var external_igb_set_name='';
@@ -6732,8 +6754,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							if (change_array[0] == '1')
 								{
 								var VDIC_data_VDAC=change_array[1].split("|");
-								VDIC_web_form_address = VICIDiaL_web_form_address
-								VDIC_web_form_address_two = VICIDiaL_web_form_address_two
+								VDIC_web_form_address = VICIDiaL_web_form_address;
+								VDIC_web_form_address_two = VICIDiaL_web_form_address_two;
+								VDIC_web_form_address_three = VICIDiaL_web_form_address_three;
 								var VDIC_fronter='';
 
 								var change_data=change_array[2].split("|");
@@ -6794,7 +6817,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								did_description				= change_data[31];
 								closecallid					= change_data[32];
 								xfercallid					= change_data[33];
-								
+								if (change_data[34].length > 5)
+									{VDIC_web_form_address_three = change_data[34];}
+
 								document.vicidial_form.lead_id.value			= VDIC_data_VDAC[0];
 								LeaDPreVDispO									= change_array[6];
 								fronter											= change_array[7];
@@ -7002,11 +7027,26 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','DEFAULT','2');
 									}
 
+								if (VDIC_web_form_address_three.match(regWFAcustom))
+									{
+									TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM');
+									TEMP_VDIC_web_form_address_three = TEMP_VDIC_web_form_address_three.replace(regWFAcustom, '');
+									}
+								else
+									{
+									TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','DEFAULT','3');
+									}
+
 								document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH();\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform.gif"); ?>\" border=\"0\" alt=\"Web Form\" /></a>\n";
 
 								if (enable_second_webform > 0)
 									{
 									document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH();\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform_two.gif"); ?>\" border=\"0\" alt=\"Web Form 2\" /></a>\n";
+									}
+
+								if (enable_third_webform > 0)
+									{
+									document.getElementById("WebFormSpanThree").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_three + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormThreeRefresH();\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform_three.gif"); ?>\" border=\"0\" alt=\"Web Form 3\" /></a>\n";
 									}
 
 								if ( (view_scripts == 1) && (CalL_ScripT_id.length > 0) )
@@ -7049,6 +7089,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								if (CalL_AutO_LauncH == 'WEBFORMTWO')
 									{
 									window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+									}
+								if (CalL_AutO_LauncH == 'WEBFORMTHREE')
+									{
+									window.open(TEMP_VDIC_web_form_address_three, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 									}
 
 								if (useIE > 0)
@@ -7700,10 +7744,24 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','DEFAULT','2');
 							}
 
+						if (VDIC_web_form_address_three.match(regWFAcustom))
+							{
+							TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM');
+							TEMP_VDIC_web_form_address_three = TEMP_VDIC_web_form_address_three.replace(regWFAcustom, '');
+							}
+						else
+							{
+							TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','DEFAULT','3');
+							}
+
                         document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH();\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform.gif"); ?>\" border=\"0\" alt=\"Web Form\" /></a>\n";
 						if (enable_second_webform > 0)
 							{
                             document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH();\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform_two.gif"); ?>\" border=\"0\" alt=\"Web Form 2\" /></a>\n";
+							}
+						if (enable_third_webform > 0)
+							{
+                            document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_three + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormThreeRefresH();\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform_three.gif"); ?>\" border=\"0\" alt=\"Web Form 3\" /></a>\n";
 							}
 						}
 					else
@@ -8012,6 +8070,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							//END section Added By Poundteam for Audited Comments
 
 								document.vicidial_form.list_name.value			= MDnextResponse_array[53];
+								var list_webform_three							= MDnextResponse_array[54];
 
 								timer_action = campaign_timer_action;
 								timer_action_message = campaign_timer_action_message;
@@ -8047,10 +8106,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 								LeaDDispO='';
 
-								VDIC_web_form_address = VICIDiaL_web_form_address
-								VDIC_web_form_address_two = VICIDiaL_web_form_address_two
+								VDIC_web_form_address = VICIDiaL_web_form_address;
+								VDIC_web_form_address_two = VICIDiaL_web_form_address_two;
+								VDIC_web_form_address_three = VICIDiaL_web_form_address_three;
 								if (list_webform.length > 5) {VDIC_web_form_address=list_webform;}
 								if (list_webform_two.length > 5) {VDIC_web_form_address_two=list_webform_two;}
+								if (list_webform_three.length > 5) {VDIC_web_form_address_three=list_webform_three;}
 
 								var regWFAcustom = new RegExp("^VAR","ig");
 								if (VDIC_web_form_address.match(regWFAcustom))
@@ -8073,10 +8134,24 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','DEFAULT','2');
 									}
 
+								if (VDIC_web_form_address_three.match(regWFAcustom))
+									{
+									TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM');
+									TEMP_VDIC_web_form_address_three = TEMP_VDIC_web_form_address_three.replace(regWFAcustom, '');
+									}
+								else
+									{
+									TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','DEFAULT','3');
+									}
+
 								document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH();\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform.gif"); ?>\" border=\"0\" alt=\"Web Form\" /></a>\n";
 								if (enable_second_webform > 0)
 									{
 									document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH();\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform_two.gif"); ?>\" border=\"0\" alt=\"Web Form 2\" /></a>\n";
+									}
+								if (enable_third_webform > 0)
+									{
+									document.getElementById("WebFormSpanThree").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_three + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormThreeRefresH();\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform_three.gif"); ?>\" border=\"0\" alt=\"Web Form 3\" /></a>\n";
 									}
 
 								if (CBentry_time.length > 2)
@@ -8160,6 +8235,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									if (get_call_launch == 'WEBFORMTWO')
 										{
 										window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+										}
+									if (get_call_launch == 'WEBFORMTHREE')
+										{
+										window.open(TEMP_VDIC_web_form_address_three, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 										}
 									}
 								else
@@ -8367,6 +8446,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			dialed_label = 'ALT';
 			WebFormRefresH('');
 			WebFormTwoRefresH('');
+			WebFormThreeRefresH('');
 			}
 		else
 			{
@@ -8378,6 +8458,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				dialed_label = 'ADDR3';
 				WebFormRefresH('');
 				WebFormTwoRefresH('');
+				WebFormThreeRefresH('');
 				}
 			else
 				{
@@ -8387,6 +8468,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				dialed_label = 'MAIN';
 				WebFormRefresH('');
 				WebFormTwoRefresH('');
+				WebFormThreeRefresH('');
 				}
 			}
 		if (dialed_label == 'ALT')
@@ -8547,6 +8629,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						if (get_call_launch == 'WEBFORMTWO')
 							{
 							window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+							}
+						if (get_call_launch == 'WEBFORMTHREE')
+							{
+							window.open(TEMP_VDIC_web_form_address_three, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 							}
 						}
 					}
@@ -8871,8 +8957,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							UpdatESettingSChecK = 1;
 
 							var VDIC_data_VDAC=check_VDIC_array[1].split("|");
-							VDIC_web_form_address = VICIDiaL_web_form_address
-							VDIC_web_form_address_two = VICIDiaL_web_form_address_two
+							VDIC_web_form_address = VICIDiaL_web_form_address;
+							VDIC_web_form_address_two = VICIDiaL_web_form_address_two;
+							VDIC_web_form_address_three = VICIDiaL_web_form_address_three;
 							var VDIC_fronter='';
 
 							var VDIC_data_VDIG=check_VDIC_array[2].split("|");
@@ -8953,6 +9040,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							did_description				= VDIC_data_VDIG[31];
 							closecallid					= VDIC_data_VDIG[32];
 							xfercallid					= VDIC_data_VDIG[33];
+							if (VDIC_data_VDIG[34].length > 5)
+								{VDIC_web_form_address_three = VDIC_data_VDIG[34];}
 
 							var VDIC_data_VDFR=check_VDIC_array[3].split("|");
 							if ( (VDIC_data_VDFR[1].length > 1) && (VDCL_fronter_display == 'Y') )
@@ -9283,12 +9372,27 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','DEFAULT','2');
 								}
 
+							if (VDIC_web_form_address_three.match(regWFAcustom))
+								{
+								TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM');
+								TEMP_VDIC_web_form_address_three = TEMP_VDIC_web_form_address_three.replace(regWFAcustom, '');
+								}
+							else
+								{
+								TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','DEFAULT','3');
+								}
+
 
                             document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH();\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform.gif"); ?>\" border=\"0\" alt=\"Web Form\" /></a>\n";
 
 							if (enable_second_webform > 0)
 								{
                                 document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH();\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform_two.gif"); ?>\" border=\"0\" alt=\"Web Form 2\" /></a>\n";
+								}
+
+							if (enable_third_webform > 0)
+								{
+                                document.getElementById("WebFormSpanThree").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_three + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormThreeRefresH();\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform_three.gif"); ?>\" border=\"0\" alt=\"Web Form 3\" /></a>\n";
 								}
 
 							if ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') )
@@ -9343,6 +9447,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							if (CalL_AutO_LauncH == 'WEBFORMTWO')
 								{
 								window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+								}
+							if (CalL_AutO_LauncH == 'WEBFORMTHREE')
+								{
+								window.open(TEMP_VDIC_web_form_address_three, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 								}
 
 							if (useIE > 0)
@@ -9430,8 +9538,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							UpdatESettingSChecK = 1;
 
 							var VDIC_data_VDAC=check_VDIC_array[1].split("|");
-							VDIC_web_form_address = VICIDiaL_web_form_address
-							VDIC_web_form_address_two = VICIDiaL_web_form_address_two
+							VDIC_web_form_address = VICIDiaL_web_form_address;
+							VDIC_web_form_address_two = VICIDiaL_web_form_address_two;
+							VDIC_web_form_address_three = VICIDiaL_web_form_address_three;
 							var VDIC_fronter='';
 
 							var VDIC_data_VDIG=check_VDIC_array[2].split("|");
@@ -9512,6 +9621,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							did_description				= VDIC_data_VDIG[31];
 							closecallid					= VDIC_data_VDIG[32];
 							xfercallid					= VDIC_data_VDIG[33];
+							if (VDIC_data_VDIG[34].length > 5)
+								{VDIC_web_form_address_three = VDIC_data_VDIG[34];}
 
 							var VDIC_data_VDFR=check_VDIC_array[3].split("|");
 							if ( (VDIC_data_VDFR[1].length > 1) && (VDCL_fronter_display == 'Y') )
@@ -9825,12 +9936,26 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','DEFAULT','2');
 								}
 
+							if (VDIC_web_form_address_three.match(regWFAcustom))
+								{
+								TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM');
+								TEMP_VDIC_web_form_address_three = TEMP_VDIC_web_form_address_three.replace(regWFAcustom, '');
+								}
+							else
+								{
+								TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','DEFAULT','3');
+								}
+
 
 							document.getElementById("WebFormSpan").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormRefresH();\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform.gif"); ?>\" border=\"0\" alt=\"Web Form\" /></a>\n";
 
 							if (enable_second_webform > 0)
 								{
 								document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormTwoRefresH();\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform_two.gif"); ?>\" border=\"0\" alt=\"Web Form 2\" /></a>\n";
+								}
+							if (enable_third_webform > 0)
+								{
+								document.getElementById("WebFormSpanThree").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_three + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormThreeRefresH();\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform_three.gif"); ?>\" border=\"0\" alt=\"Web Form 3\" /></a>\n";
 								}
 
 							if ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') )
@@ -9886,6 +10011,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								{
 								window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 								}
+							if (CalL_AutO_LauncH == 'WEBFORMTHREE')
+								{
+								window.open(TEMP_VDIC_web_form_address_three, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+								}
 
 							if (useIE > 0)
 								{
@@ -9930,6 +10059,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			document.getElementById("ScriptContents").innerHTML = '';
 			WebFormRefresH('','','1');
 			WebFormTwoRefresH('','','1');
+			WebFormThreeRefresH('','','1');
 			load_script_contents('ScriptContents','');
 			}
 		}
@@ -10022,6 +10152,51 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			else 
 				{
                 document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_two + "\" target=\"" + web_form_target + "\" onMouseOut=\"WebFormTwoRefresH('OUT');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform_two.gif"); ?>\" border=\"0\" alt=\"Web Form 2\" /></a>\n";
+				}
+			}
+		}
+
+
+// ################################################################################
+// refresh the content of the third web form URL
+	function WebFormThreeRefresH(taskrefresh,submittask) 
+		{
+		if (VDCL_group_id.length > 1)
+			{var group = VDCL_group_id;}
+		else
+			{var group = campaign;}
+		if ( (dialed_label.length < 2) || (dialed_label=='NONE') ) {dialed_label='MAIN';}
+
+		if (submittask != 'YES')
+			{
+			if (hide_gender < 1)
+				{
+				var genderIndex = document.getElementById("gender_list").selectedIndex;
+				var genderValue =  document.getElementById('gender_list').options[genderIndex].value;
+				document.vicidial_form.gender.value = genderValue;
+				}
+			}
+
+		var regWFAcustom = new RegExp("^VAR","ig");
+		if (VDIC_web_form_address_three.match(regWFAcustom))
+			{
+			TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM');
+			TEMP_VDIC_web_form_address_three = TEMP_VDIC_web_form_address_three.replace(regWFAcustom, '');
+			}
+		else
+			{
+			TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','DEFAULT','3');
+			}
+
+		if (enable_third_webform > 0)
+			{
+			if (taskrefresh == 'OUT')
+				{
+                document.getElementById("WebFormSpanThree").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_three + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormThreeRefresH('IN');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform_three.gif"); ?>\" border=\"0\" alt=\"Web Form 3\" /></a>\n";
+				}
+			else 
+				{
+                document.getElementById("WebFormSpanThree").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_three + "\" target=\"" + web_form_target + "\" onMouseOut=\"WebFormThreeRefresH('OUT');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform_three.gif"); ?>\" border=\"0\" alt=\"Web Form 3\" /></a>\n";
 				}
 			}
 		}
@@ -10220,6 +10395,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			if (enable_second_webform > 0)
 				{
                 document.getElementById("WebFormSpanTwo").innerHTML = "<img src=\"./images/<?php echo _QXZ("vdc_LB_webform_two_OFF.gif"); ?>\" border=\"0\" alt=\"Web Form 2\" />";
+				}
+			if (enable_third_webform > 0)
+				{
+                document.getElementById("WebFormSpanThree").innerHTML = "<img src=\"./images/<?php echo _QXZ("vdc_LB_webform_three_OFF.gif"); ?>\" border=\"0\" alt=\"Web Form 3\" />";
 				}
             document.getElementById("ParkControl").innerHTML = "<img src=\"./images/<?php echo _QXZ("vdc_LB_parkcall_OFF.gif"); ?>\" border=\"0\" alt=\"Park Call\" />";
 			if ( (ivr_park_call=='ENABLED') || (ivr_park_call=='ENABLED_PARK_ONLY') )
@@ -10962,6 +11141,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			if (enable_second_webform > 0)
 				{
                 document.getElementById("WebFormSpanTwo").innerHTML = "<img src=\"./images/<?php echo _QXZ("vdc_LB_webform_two_OFF.gif"); ?>\" border=\"0\" alt=\"Web Form 2\" />";
+				}
+			if (enable_third_webform > 0)
+				{
+                document.getElementById("WebFormSpanThree").innerHTML = "<img src=\"./images/<?php echo _QXZ("vdc_LB_webform_three_OFF.gif"); ?>\" border=\"0\" alt=\"Web Form 3\" />";
 				}
 			window.open(TEMP_VDIC_web_form_address, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 
@@ -12706,6 +12889,8 @@ else
 			{web_form_vars = web_form_varsX;}
 		if (webformnumber == '2')
 			{web_form_vars_two = web_form_varsX;}
+		if (webformnumber == '3')
+			{web_form_vars_three = web_form_varsX;}
 
 		var SCvendor_lead_code = encodeURIComponent(document.vicidial_form.vendor_lead_code.value);
 		var SCsource_id = source_id;
@@ -14146,6 +14331,11 @@ function phone_number_format(formatphone) {
 				WebFormTwoRefresH('NO','YES');
 				window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 				}
+			if (timer_action == 'WEBFORM3')
+				{
+				WebFormThreeRefresH('NO','YES');
+				window.open(TEMP_VDIC_web_form_address_three, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+				}
 			if (timer_action == 'D1_DIAL')
 				{
 				DtMf_PreSet_a_DiaL();
@@ -15546,6 +15736,8 @@ $zi=2;
 	<?php
 	if ($enable_second_webform > 0)
         {echo "<span style=\"background-color: #FFFFFF\" id=\"WebFormSpanTwo\"><img src=\"./images/"._QXZ("vdc_LB_webform_two_OFF.gif")."\" border=\"0\" alt=\"Web Form 2\" /></span><br />\n";}
+	if ($enable_third_webform > 0)
+        {echo "<span style=\"background-color: #FFFFFF\" id=\"WebFormSpanThree\"><img src=\"./images/"._QXZ("vdc_LB_webform_three_OFF.gif")."\" border=\"0\" alt=\"Web Form 3\" /></span><br />\n";}
 	?>
     <font class="body_small_bold"><span id="ParkCounterSpan"> &nbsp; </span></font><br />
     <span style="background-color: <?php echo $MAIN_COLOR ?>" id="ParkControl"><img src="./images/<?php echo _QXZ("vdc_LB_parkcall_OFF.gif"); ?>" border="0" alt="Park Call" /></span><br />

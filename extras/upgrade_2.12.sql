@@ -13,3 +13,14 @@ ALTER TABLE vicidial_inbound_dids ADD entry_list_id BIGINT(14) UNSIGNED default 
 ALTER TABLE vicidial_inbound_dids ADD filter_entry_list_id BIGINT(14) UNSIGNED default '0';
 
 UPDATE system_settings SET db_schema_version='1407',db_schema_update_date=NOW() where db_schema_version < 1407;
+
+ALTER TABLE system_settings ADD enable_third_webform ENUM('0','1') default '0';
+
+ALTER TABLE vicidial_campaigns ADD web_form_address_three TEXT;
+ALTER TABLE vicidial_lists ADD web_form_address_three TEXT;
+ALTER TABLE vicidial_inbound_groups ADD web_form_address_three TEXT;
+
+ALTER TABLE vicidial_campaigns MODIFY get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','WEBFORMTHREE','FORM') default 'NONE';
+ALTER TABLE vicidial_inbound_groups MODIFY get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','WEBFORMTHREE','FORM') default 'NONE';
+
+UPDATE system_settings SET db_schema_version='1408',db_schema_update_date=NOW() where db_schema_version < 1408;

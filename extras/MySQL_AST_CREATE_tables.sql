@@ -710,7 +710,7 @@ campaign_rec_exten VARCHAR(20) default '8309',
 campaign_recording ENUM('NEVER','ONDEMAND','ALLCALLS','ALLFORCE') default 'ONDEMAND',
 campaign_rec_filename VARCHAR(50) default 'FULLDATE_CUSTPHONE',
 campaign_script VARCHAR(10),
-get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','FORM') default 'NONE',
+get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','WEBFORMTHREE','FORM') default 'NONE',
 am_message_exten VARCHAR(100) default 'vm-goodbye',
 amd_send_to_vmx ENUM('Y','N') default 'N',
 xferconf_a_dtmf VARCHAR(50),
@@ -922,7 +922,8 @@ qc_comment_history ENUM('CLICK','AUTO_OPEN','CLICK_ALLOW_MINIMIZE','AUTO_OPEN_AL
 show_previous_callback ENUM('DISABLED','ENABLED') default 'ENABLED',
 clear_script ENUM('DISABLED','ENABLED') default 'DISABLED',
 cpd_unknown_action ENUM('DISABLED','DISPO','MESSAGE','CALLMENU','INGROUP') default 'DISABLED',
-manual_dial_search_filter VARCHAR(50) default 'NONE'
+manual_dial_search_filter VARCHAR(50) default 'NONE',
+web_form_address_three TEXT
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -949,7 +950,8 @@ time_zone_setting ENUM('COUNTRY_AND_AREA_CODE','POSTAL_CODE','NANPA_PREFIX','OWN
 inventory_report ENUM('Y','N') default 'Y',
 expiration_date DATE default '2099-12-31',
 na_call_url TEXT,
-local_call_time VARCHAR(10) NOT NULL DEFAULT 'campaign'
+local_call_time VARCHAR(10) NOT NULL DEFAULT 'campaign',
+web_form_address_three TEXT
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_statuses (
@@ -1025,7 +1027,7 @@ voicemail_ext VARCHAR(10),
 next_agent_call VARCHAR(30) default 'longest_wait_time',
 fronter_display ENUM('Y','N') default 'Y',
 ingroup_script VARCHAR(10),
-get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','FORM','EMAIL') default 'NONE',
+get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','WEBFORMTHREE','FORM','EMAIL') default 'NONE',
 xferconf_a_dtmf VARCHAR(50),
 xferconf_a_number VARCHAR(50),
 xferconf_b_dtmf VARCHAR(50),
@@ -1129,7 +1131,8 @@ max_calls_method ENUM('TOTAL','IN_QUEUE','DISABLED') default 'DISABLED',
 max_calls_count SMALLINT(5) default '0',
 max_calls_action ENUM('DROP','AFTERHOURS','NO_AGENT_NO_QUEUE') default 'NO_AGENT_NO_QUEUE',
 dial_ingroup_cid VARCHAR(20) default '',
-group_handling ENUM('PHONE','EMAIL') default 'PHONE'
+group_handling ENUM('PHONE','EMAIL') default 'PHONE',
+web_form_address_three TEXT
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -1585,7 +1588,8 @@ enable_languages ENUM('0','1') default '0',
 language_method VARCHAR(20) default 'DISABLED',
 meetme_enter_login_filename VARCHAR(255) default '',
 meetme_enter_leave3way_filename VARCHAR(255) default '',
-enable_did_entry_list_id ENUM('0','1') default '0'
+enable_did_entry_list_id ENUM('0','1') default '0',
+enable_third_webform ENUM('0','1') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3375,4 +3379,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1407',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1408',db_schema_update_date=NOW(),reload_timestamp=NOW();

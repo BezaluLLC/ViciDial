@@ -95,10 +95,11 @@
 # 150217-1404 - archive deleted callbacks to vicidial_callbacks_archive table
 # 150309-0250 - Added ability to use urlencoded web form addresses
 # 150313-0818 - Allow for single quotes in vicidial_list and custom data fields
+# 150428-1720 - Added web_form_address_three to add_list/update_list functions
 #
 
-$version = '2.12-71';
-$build = '150313-0818';
+$version = '2.12-72';
+$build = '150428-1720';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -283,6 +284,8 @@ if (isset($_GET["web_form_address"]))			{$web_form_address=$_GET["web_form_addre
 	elseif (isset($_POST["web_form_address"]))	{$web_form_address=$_POST["web_form_address"];}
 if (isset($_GET["web_form_address_two"]))			{$web_form_address_two=$_GET["web_form_address_two"];}
 	elseif (isset($_POST["web_form_address_two"]))	{$web_form_address_two=$_POST["web_form_address_two"];}
+if (isset($_GET["web_form_address_three"]))			{$web_form_address_three=$_GET["web_form_address_three"];}
+	elseif (isset($_POST["web_form_address_three"]))	{$web_form_address_three=$_POST["web_form_address_three"];}
 if (isset($_GET["reset_list"]))				{$reset_list=$_GET["reset_list"];}
 	elseif (isset($_POST["reset_list"]))	{$reset_list=$_POST["reset_list"];}
 if (isset($_GET["delete_list"]))			{$delete_list=$_GET["delete_list"];}
@@ -3474,6 +3477,7 @@ if ($function == 'update_list')
 					$ammessageSQL='';
 					$webformSQL='';
 					$webformtwoSQL='';
+					$webformthreeSQL='';
 					$resettimeSQL='';
 					$expiration_dateSQL='';
 					if (strlen($campaign_id) > 0)
@@ -3668,8 +3672,20 @@ if ($function == 'update_list')
 						else
 							{$webformtwoSQL = " ,web_form_address_two='$web_form_address_two'";}
 						}
+					if (strlen($web_form_address_three) > 0)
+						{
+						if (preg_match("/%3A%2F%2F/",$web_form_address_three)) 
+							{
+							$web_form_address_three = urldecode($web_form_address_three);
+							$web_form_address_three = preg_replace("/ /",'+',$web_form_address_three);
+							}
+						if ($web_form_address_three == '--BLANK--')
+							{$webformthreeSQL = " ,web_form_address_three=''";}
+						else
+							{$webformthreeSQL = " ,web_form_address_three='$web_form_address_three'";}
+						}
 
-					$updateSQL = "$webformtwoSQL$webformSQL$ammessageSQL$outboundcidSQL$activeSQL$listnameSQL$campaignSQL$scriptSQL$dropingroupSQL$resettimeSQL$expiration_dateSQL";
+					$updateSQL = "$webformthreeSQL$webformtwoSQL$webformSQL$ammessageSQL$outboundcidSQL$activeSQL$listnameSQL$campaignSQL$scriptSQL$dropingroupSQL$resettimeSQL$expiration_dateSQL";
 
 					if (strlen($updateSQL)< 3)
 						{
@@ -3983,6 +3999,7 @@ if ($function == 'add_list')
 								}
 							$webformSQL='';
 							$webformtwoSQL='';
+							$webformthreeSQL='';
 							if (strlen($web_form_address) > 0)
 								{
 								if (preg_match("/%3A%2F%2F/",$web_form_address)) 
@@ -4007,10 +4024,22 @@ if ($function == 'add_list')
 								else
 									{$webformtwoSQL = " ,web_form_address_two='$web_form_address_two'";}
 								}
+							if (strlen($web_form_address_three) > 0)
+								{
+								if (preg_match("/%3A%2F%2F/",$web_form_address_three)) 
+									{
+									$web_form_address_three = urldecode($web_form_address_three);
+									$web_form_address_three = preg_replace("/ /",'+',$web_form_address_three);
+									}
+								if ($web_form_address_three == '--BLANK--')
+									{$webformthreeSQL = " ,web_form_address_three=''";}
+								else
+									{$webformthreeSQL = " ,web_form_address_three='$web_form_address_three'";}
+								}
 							if (strlen($active)<1) {$active='N';}
 							if (strlen($expiration_date)<10) {$expiration_date='2099-12-31';}
 
-							$stmt="INSERT INTO vicidial_lists SET list_id='$list_id', list_name='$list_name', campaign_id='$campaign_id', active='$active', campaign_cid_override='$outbound_cid', agent_script_override='$script', am_message_exten_override='$am_message', drop_inbound_group_override='$drop_inbound_group', reset_time='$reset_time', expiration_date='$expiration_date' $webformSQL $webformtwoSQL;";
+							$stmt="INSERT INTO vicidial_lists SET list_id='$list_id', list_name='$list_name', campaign_id='$campaign_id', active='$active', campaign_cid_override='$outbound_cid', agent_script_override='$script', am_message_exten_override='$am_message', drop_inbound_group_override='$drop_inbound_group', reset_time='$reset_time', expiration_date='$expiration_date' $webformSQL $webformtwoSQL $webformthreeSQL;";
 							$rslt=mysql_to_mysqli($stmt, $link);
 							if ($DB) {echo "|$stmt|\n";}
 
