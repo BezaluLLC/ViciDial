@@ -1,4 +1,4 @@
-AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2015-03-13
+AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2015-04-29
 
 This document describes the functions of an API(Application Programming Interface)
 for the VICIDIAL Agent screen. This functionality will be rather limited at first
@@ -63,6 +63,7 @@ Response to calls will return either an ERROR or a SUCCESS along with an explana
 for example:
 SUCCESS: external_status function set - 6666|A
 ERROR: agent_user is not logged in - 6666
+ERROR: auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION - 6666|webserver|ADMIN
 
 
 

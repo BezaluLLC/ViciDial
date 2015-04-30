@@ -96,10 +96,11 @@
 # 150309-0250 - Added ability to use urlencoded web form addresses
 # 150313-0818 - Allow for single quotes in vicidial_list and custom data fields
 # 150428-1720 - Added web_form_address_three to add_list/update_list functions
+# 150430-0644 - Added API allowed function restrictions and allowed list restrictions
 #
 
-$version = '2.12-72';
-$build = '150428-1720';
+$version = '2.12-73';
+$build = '150430-0644';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -638,6 +639,57 @@ if ($auth < 1)
 	echo "$VDdisplayMESSAGE: |$user|$pass|$auth_message|\n";
 	exit;
 	}
+
+$stmt="SELECT api_list_restrict,api_allowed_functions,user_group from vicidial_users where user='$user' and active='Y';";
+if ($DB>0) {echo "DEBUG: auth query - $stmt\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
+$api_list_restrict =		$row[0];
+$api_allowed_functions =	$row[1];
+$LOGuser_group =			$row[2];
+if ( ($api_list_restrict > 0) and ( ($function == 'add_lead') or ($function == 'update_lead') or ($function == 'update_list') ) )
+	{
+	$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$LOGuser_group';";
+	if ($DB>0) {echo "|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$ss_conf_ct = mysqli_num_rows($rslt);
+	if ($ss_conf_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$LOGallowed_campaigns =			$row[0];
+		$LOGallowed_campaignsSQL='';
+		$whereLOGallowed_campaignsSQL='';
+		if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
+			{
+			$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+			$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+			$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+			$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+			}
+		$stmt="SELECT list_id from vicidial_lists $whereLOGadmin_viewable_groupsSQL order by list_id;";
+		if ($DB>0) {echo "|$stmt|\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$lists_to_print = mysqli_num_rows($rslt);
+		$i=0;
+		$allowed_lists=' ';
+		while ($i < $lists_to_print)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$allowed_lists .=	"$row[0] ";
+			$i++;
+			}
+		if ($DB>0) {echo "Allowed lists:|$allowed_lists|\n";}
+		}
+	else
+		{
+		$result = 'ERROR';
+		$result_reason = "user_group DOES NOT EXIST";
+		echo "$result: $result_reason: |$user|$LOGuser_group|\n";
+		$data = "$allowed_user";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	}
 ##### END user authentication for all functions below #####
 
 
@@ -663,6 +715,15 @@ if ($function == 'sounds_list')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$server_name = getenv("SERVER_NAME");
 		$server_port = getenv("SERVER_PORT");
 		if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
@@ -831,6 +892,15 @@ if ($function == 'moh_list')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$server_name = getenv("SERVER_NAME");
 		$server_port = getenv("SERVER_PORT");
 		if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
@@ -864,12 +934,6 @@ if ($function == 'moh_list')
 			}
 		else
 			{
-			$stmt="SELECT user_group from vicidial_users where user='$user' and user_level > 6;";
-			if ($DB>0) {echo "|$stmt|\n";}
-			$rslt=mysql_to_mysqli($stmt, $link);
-			$row=mysqli_fetch_row($rslt);
-			$LOGuser_group =			$row[0];
-
 			$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
 			if ($DB>0) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -997,12 +1061,15 @@ if ($function == 'vm_list')
 		}
 	else
 		{
-		$stmt="SELECT user_group from vicidial_users where user='$user' and user_level > 6;";
-		if ($DB>0) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
-		$row=mysqli_fetch_row($rslt);
-		$LOGuser_group =			$row[0];
-
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
 		if ($DB>0) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -1134,6 +1201,15 @@ if ($function == 'agent_ingroup_info')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -1149,12 +1225,6 @@ if ($function == 'agent_ingroup_info')
 			}
 		else
 			{
-			$stmt="SELECT user_group from vicidial_users where user='$user' and user_level > 6;";
-			if ($DB>0) {echo "|$stmt|\n";}
-			$rslt=mysql_to_mysqli($stmt, $link);
-			$row=mysqli_fetch_row($rslt);
-			$LOGuser_group =			$row[0];
-
 			$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
 			if ($DB>0) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -1460,6 +1530,15 @@ if ($function == 'blind_monitor')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -1629,6 +1708,15 @@ if ($function == 'add_user')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_users='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -1817,6 +1905,15 @@ if ($function == 'update_user')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_users='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -1843,12 +1940,6 @@ if ($function == 'update_user')
 				}
 			else
 				{
-				$stmt="SELECT user_group from vicidial_users where user='$user' and user_level >= 8;";
-				if ($DB>0) {echo "|$stmt|\n";}
-				$rslt=mysql_to_mysqli($stmt, $link);
-				$row=mysqli_fetch_row($rslt);
-				$LOGuser_group =			$row[0];
-
 				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
 				if ($DB>0) {echo "|$stmt|\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -2382,6 +2473,15 @@ if ($function == 'add_group_alias')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -2474,6 +2574,15 @@ if ($function == 'add_phone')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -2612,6 +2721,15 @@ if ($function == 'update_phone')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -2638,12 +2756,6 @@ if ($function == 'update_phone')
 				}
 			else
 				{
-				$stmt="SELECT user_group from vicidial_users where user='$user' and user_level >= 8;";
-				if ($DB>0) {echo "|$stmt|\n";}
-				$rslt=mysql_to_mysqli($stmt, $link);
-				$row=mysqli_fetch_row($rslt);
-				$LOGuser_group =			$row[0];
-
 				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
 				if ($DB>0) {echo "|$stmt|\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -3023,6 +3135,15 @@ if ($function == 'add_phone_alias')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -3132,6 +3253,15 @@ if ($function == 'update_phone_alias')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -3317,6 +3447,15 @@ if ($function == 'server_refresh')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and ast_admin_access='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -3391,6 +3530,15 @@ if ($function == 'update_list')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_lists='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -3417,12 +3565,18 @@ if ($function == 'update_list')
 				}
 			else
 				{
-				$stmt="SELECT user_group from vicidial_users where user='$user' and user_level >= 8;";
-				if ($DB>0) {echo "|$stmt|\n";}
-				$rslt=mysql_to_mysqli($stmt, $link);
-				$row=mysqli_fetch_row($rslt);
-				$LOGuser_group =			$row[0];
-
+				if ($api_list_restrict > 0)
+					{
+					if (!preg_match("/ $list_id /",$allowed_lists))
+						{
+						$result = 'ERROR';
+						$result_reason = "update_list NOT AN ALLOWED LIST ID";
+						$data = "$list_id";
+						echo "$result: $result_reason - $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
 				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
 				if ($DB>0) {echo "|$stmt|\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -3862,6 +4016,15 @@ if ($function == 'add_list')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_lists='1' and user_level >= 8 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -3888,12 +4051,6 @@ if ($function == 'add_list')
 				}
 			else
 				{
-				$stmt="SELECT user_group from vicidial_users where user='$user' and user_level >= 8;";
-				if ($DB>0) {echo "|$stmt|\n";}
-				$rslt=mysql_to_mysqli($stmt, $link);
-				$row=mysqli_fetch_row($rslt);
-				$LOGuser_group =			$row[0];
-
 				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
 				if ($DB>0) {echo "|$stmt|\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -4088,6 +4245,15 @@ if ($function == 'recording_lookup')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -4260,6 +4426,15 @@ if ($function == 'did_log_export')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -4400,6 +4575,15 @@ if ($function == 'agent_stats_export')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -4611,6 +4795,15 @@ if ($function == 'user_group_status')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -4647,12 +4840,6 @@ if ($function == 'user_group_status')
 				}
 			else
 				{
-				$stmt="SELECT user_group from vicidial_users where user='$user' and user_level > 6 and view_reports='1' and active='Y';";
-				if ($DB) {$MAIN.="|$stmt|\n";}
-				$rslt=mysql_to_mysqli($stmt, $link);
-				$row=mysqli_fetch_row($rslt);
-				$LOGuser_group =			$row[0];
-
 				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
 				if ($DB) {$MAIN.="|$stmt|\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -4687,7 +4874,7 @@ if ($function == 'user_group_status')
 					while ($i < $groups_to_print)
 						{
 						$row=mysqli_fetch_row($rslt);
-						$rawLOGallowed_ingroupsSQL .=	"row[0]','";
+						$rawLOGallowed_ingroupsSQL .=	"$row[0]','";
 						$i++;
 						}
 					$whereLOGallowed_callsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL','$rawLOGallowed_ingroupsSQL')";
@@ -4827,6 +5014,15 @@ if ($function == 'in_group_status')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -4864,12 +5060,6 @@ if ($function == 'in_group_status')
 				}
 			else
 				{
-				$stmt="SELECT user_group from vicidial_users where user='$user' and user_level > 6 and view_reports='1' and active='Y';";
-				if ($DB) {$MAIN.="|$stmt|\n";}
-				$rslt=mysql_to_mysqli($stmt, $link);
-				$row=mysqli_fetch_row($rslt);
-				$LOGuser_group =			$row[0];
-
 				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
 				if ($DB) {$MAIN.="|$stmt|\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -4904,7 +5094,7 @@ if ($function == 'in_group_status')
 					while ($i < $groups_to_print)
 						{
 						$row=mysqli_fetch_row($rslt);
-						$rawLOGallowed_ingroupsSQL .=	"row[0]','";
+						$rawLOGallowed_ingroupsSQL .=	"$row[0]','";
 						$i++;
 						}
 					$LOGallowed_callsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL','$rawLOGallowed_ingroupsSQL')";
@@ -5043,6 +5233,15 @@ if ($function == 'agent_status')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -5077,12 +5276,6 @@ if ($function == 'agent_status')
 				}
 			else
 				{
-				$stmt="SELECT user_group from vicidial_users where user='$user' and user_level > 6 and view_reports='1' and active='Y';";
-				if ($DB) {$MAIN.="|$stmt|\n";}
-				$rslt=mysql_to_mysqli($stmt, $link);
-				$row=mysqli_fetch_row($rslt);
-				$LOGuser_group =			$row[0];
-
 				$stmt="SELECT admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
 				if ($DB) {$MAIN.="|$stmt|\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -5281,6 +5474,15 @@ if ($function == 'callid_info')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -5316,12 +5518,6 @@ if ($function == 'callid_info')
 				}
 			else
 				{
-				$stmt="SELECT user_group from vicidial_users where user='$user' and user_level > 6 and view_reports='1' and active='Y';";
-				if ($DB) {$MAIN.="|$stmt|\n";}
-				$rslt=mysql_to_mysqli($stmt, $link);
-				$row=mysqli_fetch_row($rslt);
-				$LOGuser_group =			$row[0];
-
 				$stmt="SELECT admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
 				if ($DB) {$MAIN.="|$stmt|\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -5489,6 +5685,15 @@ if ($function == 'update_log_entry')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -5630,6 +5835,15 @@ if ($function == 'add_lead')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -5646,6 +5860,18 @@ if ($function == 'add_lead')
 			}
 		else
 			{
+			if ($api_list_restrict > 0)
+				{
+				if (!preg_match("/ $list_id /",$allowed_lists))
+					{
+					$result = 'ERROR';
+					$result_reason = "add_lead NOT AN ALLOWED LIST ID";
+					$data = "$phone_number|$list_id";
+					echo "$result: $result_reason - $data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				}
 			if (strlen($gender)<1) {$gender='U';}
 			if (strlen($rank)<1) {$rank='0';}
 			if (strlen($list_id)<3) {$list_id='999';}
@@ -6376,6 +6602,15 @@ if ($function == 'update_lead')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -6431,6 +6666,19 @@ if ($function == 'update_lead')
 				}
 			else
 				{
+				if ( ($api_list_restrict > 0) and ($list_id >= 99) )
+					{
+					if (!preg_match("/ $list_id /",$allowed_lists))
+						{
+						$result = 'ERROR';
+						$result_reason = "update_lead NOT AN ALLOWED LIST ID";
+						$data = "$phone_number|$list_id";
+						echo "$result: $result_reason - $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+
 				if (preg_match("/CAMPAIGN/i",$search_location)) # find lists within campaign
 					{
 					$stmt="SELECT campaign_id from vicidial_lists where list_id='$list_id';";
@@ -6582,6 +6830,19 @@ if ($function == 'update_lead')
 							$VLaffected_rows=0;
 							$CFaffected_rows=0;
 							$VCBaffected_rows=0;
+							if ( ($api_list_restrict > 0) and ($search_lead_list[$n] >= 99) )
+								{
+								if (!preg_match("/ $search_lead_list[$n] /",$allowed_lists))
+									{
+									$result = 'ERROR';
+									$result_reason = "update_lead NOT AN ALLOWED LIST ID";
+									$data = "$search_lead_list[$n]";
+									echo "$result: $result_reason - $data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								}
+
 							if ( (strlen($VL_update_SQL)>6) or ($delete_lead=='Y') )
 								{
 								if ($delete_lead=='Y')
@@ -6920,6 +7181,18 @@ if ($function == 'update_lead')
 								}
 							else
 								{
+								if ( ($api_list_restrict > 0) and ($list_id >= 99) )
+									{
+									if (!preg_match("/ $search_lead_list[$n] /",$allowed_lists))
+										{
+										$result = 'ERROR';
+										$result_reason = "update_lead NOT AN ALLOWED LIST ID";
+										$data = "$phone_number|$list_id";
+										echo "$result: $result_reason - $data\n";
+										api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+										exit;
+										}
+									}
 								### get current gmt_offset of the phone_number
 								$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner,$USprefix);
 
@@ -7125,6 +7398,15 @@ if ($function == 'check_phone_number')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and user_level > 7 and active='Y';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);

@@ -44,6 +44,7 @@
 # 150307-2317 - Added custom meetme enter options
 # 150404-0934 - Added enable_did_entry_list_id and related DID options
 # 150428-1704 - Added enable_third_webform
+# 150429-1232 - Added new user API restrictions
 #
 
 require("dbconnect_mysqli.php");
@@ -591,14 +592,24 @@ if ($SSqc_features_active > 0)
 <B><?php echo _QXZ("Delete Timeclock Log Record"); ?> -</B><?php echo _QXZ("This option allows the user to delete records in the timeclock log."); ?>
 
 <BR>
+<A NAME="users-manager_shift_enforcement_override">
+<BR>
+<B><?php echo _QXZ("Manager Shift Enforcement Override"); ?> -</B><?php echo _QXZ("This setting if set to 1 will allow a manager to enter their user and password on an agent screen to override the shift restrictions on an agent session if the agent is trying to log in outside of their shift. Default is 0."); ?>
+
+<BR>
 <A NAME="users-vdc_agent_api_access">
 <BR>
 <B><?php echo _QXZ("Agent API Access"); ?> -</B><?php echo _QXZ("This option allows the account to be used with the agent and non-agent API commands."); ?>
 
 <BR>
-<A NAME="users-manager_shift_enforcement_override">
+<A NAME="users-api_list_restrict">
 <BR>
-<B><?php echo _QXZ("Manager Shift Enforcement Override"); ?> -</B><?php echo _QXZ("This setting if set to 1 will allow a manager to enter their user and password on an agent screen to override the shift restrictions on an agent session if the agent is trying to log in outside of their shift. Default is 0."); ?>
+<B><?php echo _QXZ("API List Restrict"); ?> -</B><?php echo _QXZ("This option will restrict any API actions used by this user to be restricted only within the lists included within the user group allowable campaigns for this user. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="users-api_allowed_functions">
+<BR>
+<B><?php echo _QXZ("API Allowed Functions"); ?> -</B><?php echo _QXZ("This option will allow you to restrict the API functions that are allowed to be used by this user. Default is ALL_FUNCTIONS."); ?>
 
 <BR>
 <A NAME="users-download_lists">
@@ -4540,11 +4551,6 @@ UK_DASH 00 0000-0000 - <?php echo _QXZ("UK dash separated phone number with spac
 AU_SPAC 000 000 000 - <?php echo _QXZ("Australia space separated phone number"); ?><BR>
 IT_DASH 0000-000-000 - <?php echo _QXZ("Italy dash separated phone number"); ?><BR>
 FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number"); ?><BR>
-
-<BR>
-<A NAME="settings-vdc_agent_api_active">
-<BR>
-<B><?php echo _QXZ("Agent interface API Access Active"); ?> -</B><?php echo _QXZ("This option allows you to enable or disable the agent interface API. Default is 0."); ?>
 
 <BR>
 <A NAME="settings-agentonly_callback_campaign_lock">

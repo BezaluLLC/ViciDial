@@ -80,10 +80,11 @@
 # 141216-2118 - Added language settings lookups and user/pass variable standardization
 # 150108-1039 - Added transfer_conf-ID of epoch to help prevent double-execution of transfer commands
 # 150313-0825 - Allow for single quotes in vicidial_list and custom data fields
+# 150429-1717 - Added user allowed function restrictions
 #
 
-$version = '2.12-46';
-$build = '150313-0825';
+$version = '2.12-47';
+$build = '150429-1717';
 
 $startMS = microtime();
 
@@ -221,7 +222,7 @@ $pass = preg_replace("/'|\"|\\\\|;| /","",$pass);
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
 $VUselected_language = '';
-$stmt="SELECT selected_language from vicidial_users where user='$user';";
+$stmt="SELECT selected_language,api_list_restrict,api_allowed_functions,user_group from vicidial_users where user='$user';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -230,6 +231,9 @@ if ($sl_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
 	$VUselected_language =		$row[0];
+	$VUapi_list_restrict =		$row[1];
+	$VUapi_allowed_functions =	$row[2];
+	$VUuser_group =				$row[3];
 	}
 
 $stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
@@ -426,6 +430,49 @@ else
 				}
 			}
 		}
+
+	if ( ($VUapi_list_restrict > 0) and ( ($function == 'feature_not_needed') or ($function == 'feature_not_needed2') ) )
+		{
+		$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$VUuser_group';";
+		if ($DB>0) {echo "|$stmt|\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$ss_conf_ct = mysqli_num_rows($rslt);
+		if ($ss_conf_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$LOGallowed_campaigns =			$row[0];
+			$LOGallowed_campaignsSQL='';
+			$whereLOGallowed_campaignsSQL='';
+			if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
+				{
+				$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+				$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+				$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+				$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+				}
+			$stmt="SELECT list_id from vicidial_lists $whereLOGadmin_viewable_groupsSQL order by list_id;";
+			if ($DB>0) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$lists_to_print = mysqli_num_rows($rslt);
+			$i=0;
+			$allowed_lists=' ';
+			while ($i < $lists_to_print)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$allowed_lists .=	"$row[0] ";
+				$i++;
+				}
+			if ($DB>0) {echo "Allowed lists:|$allowed_lists|\n";}
+			}
+		else
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("user_group DOES NOT EXIST");
+			echo "$result: $result_reason - $value|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		}
 	}
 
 if ($format=='debug')
@@ -452,6 +499,14 @@ if ($format=='debug')
 ################################################################################
 if ($function == 'webserver')
 	{
+	if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+		{
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+		echo "$result: $result_reason - $user|$function|$VUuser_group\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
 	exec('ps aux | grep httpd', $output);
 	$processes = count($output);
 	$load = sys_getloadavg();
@@ -509,6 +564,14 @@ if ($function == 'external_hangup')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		if (strlen($alt_user)>1)
 			{
 			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
@@ -576,6 +639,14 @@ if ($function == 'external_status')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		if (strlen($alt_user)>1)
 			{
 			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
@@ -686,6 +757,14 @@ if ($function == 'external_pause')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		if (strlen($alt_user)>1)
 			{
 			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
@@ -769,6 +848,14 @@ if ($function == 'logout')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		if (strlen($alt_user)>1)
 			{
 			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
@@ -838,6 +925,14 @@ if ($function == 'recording')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		if (strlen($alt_user)>1)
 			{
 			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
@@ -963,6 +1058,14 @@ if ($function == 'webphone_url')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		if (strlen($alt_user)>1)
 			{
 			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
@@ -1068,6 +1171,14 @@ if ($function == 'call_agent')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		if (strlen($alt_user)>1)
 			{
 			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
@@ -1165,6 +1276,14 @@ if ($function == 'audio_playback')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		if (strlen($alt_user)>1)
 			{
 			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
@@ -1352,6 +1471,14 @@ if ($function == 'external_dial')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		if (strlen($alt_user)>1)
 			{
 			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
@@ -1703,6 +1830,14 @@ if ($function == 'preview_dial_action')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		if (strlen($alt_user)>1)
 			{
 			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
@@ -1854,6 +1989,14 @@ if ($function == 'external_add_lead')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		if (strlen($vendor_id) > 0 )
 			{
 			$vendor_lead_code = $vendor_id;
@@ -2017,6 +2160,14 @@ if ($function == 'change_ingroups')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -2297,6 +2448,14 @@ if ($function == 'update_fields')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -2569,6 +2728,14 @@ if ($function == 'set_timer_action')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -2631,6 +2798,14 @@ if ($function == 'st_login_log')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt = "select count(*) from vicidial_users where custom_three='$value';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -2684,6 +2859,14 @@ if ($function == 'st_get_agent_active_lead')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt = "select count(*) from vicidial_users where custom_three='$value';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -2772,6 +2955,14 @@ if ($function == 'ra_call_control')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -3130,6 +3321,14 @@ if ($function == 'send_dtmf')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		if (strlen($alt_user)>1)
 			{
 			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
@@ -3197,6 +3396,14 @@ if ($function == 'park_call')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		if (strlen($alt_user)>1)
 			{
 			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
@@ -3279,6 +3486,14 @@ if ($function == 'transfer_conference')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		$processed=0;
 		$SUCCESS=0;
 		if (strlen($alt_user)>1)
@@ -3526,6 +3741,14 @@ if ($function == 'pause_code')
 		}
 	else
 		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
 		if (strlen($alt_user)>1)
 			{
 			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";

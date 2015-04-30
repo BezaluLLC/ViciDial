@@ -627,7 +627,9 @@ wrapup_seconds_override SMALLINT(4) default '-1',
 modify_languages ENUM('1','0') default '0',
 selected_language VARCHAR(100) default 'default English',
 user_choose_language ENUM('1','0') default '0',
-ignore_group_on_search ENUM('1','0') default '0'
+ignore_group_on_search ENUM('1','0') default '0',
+api_list_restrict ENUM('1','0') default '0',
+api_allowed_functions VARCHAR(1000) default 'ALL_FUNCTIONS'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -3379,4 +3381,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1408',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1409',db_schema_update_date=NOW(),reload_timestamp=NOW();

@@ -65,6 +65,10 @@ OTHER CHANGES:
 3. Added option to populate the entry_list_id from the DID when routing to an
 	In-Group
 
+4. Added agent screen webform 3 feature
+
+5. Added user API restrictions for allowed lists and allowed API functions
+
 
 
 

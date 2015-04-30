@@ -24,3 +24,8 @@ ALTER TABLE vicidial_campaigns MODIFY get_call_launch ENUM('NONE','SCRIPT','WEBF
 ALTER TABLE vicidial_inbound_groups MODIFY get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','WEBFORMTHREE','FORM') default 'NONE';
 
 UPDATE system_settings SET db_schema_version='1408',db_schema_update_date=NOW() where db_schema_version < 1408;
+
+ALTER TABLE vicidial_users ADD api_list_restrict ENUM('1','0') default '0';
+ALTER TABLE vicidial_users ADD api_allowed_functions VARCHAR(1000) default 'ALL_FUNCTIONS';
+
+UPDATE system_settings SET db_schema_version='1409',db_schema_update_date=NOW() where db_schema_version < 1409;
