@@ -629,7 +629,7 @@ selected_language VARCHAR(100) default 'default English',
 user_choose_language ENUM('1','0') default '0',
 ignore_group_on_search ENUM('1','0') default '0',
 api_list_restrict ENUM('1','0') default '0',
-api_allowed_functions VARCHAR(1000) default 'ALL_FUNCTIONS'
+api_allowed_functions VARCHAR(1000) default ' ALL_FUNCTIONS '
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
