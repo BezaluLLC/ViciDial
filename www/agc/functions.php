@@ -1,6 +1,6 @@
 <?php
 # 
-# functions.php    version 2.10
+# functions.php    version 2.12
 #
 # functions for agent scripts
 #
@@ -26,6 +26,7 @@
 # 141216-1902 - Added MYSQL language method
 # 150108-1647 - removed phones count as part of validation, can cause problems when there are many phones
 # 150111-1541 - Added lists option: local call time(Issue #812)
+# 150512-0615 - Fix for non-latin customer data
 #
 
 # $mysql_queries = 20
@@ -235,6 +236,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 
 	$CFoutput='';
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
+	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	if ($DB>0) {echo "$stmt";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05002',$user,$server_ip,$session_name,$one_mysql_log);}

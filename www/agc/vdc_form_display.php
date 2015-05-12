@@ -31,10 +31,11 @@
 # 150114-2045 - Added list_name variable
 # 150312-1502 - Allow for single quotes in vicidial_list data fields
 # 150418-1751 - Added fixed fields to submit output, issue #842
+# 150512-0617 - Fix for non-latin customer data
 #
 
-$version = '2.12-22';
-$build = '150418-1751';
+$version = '2.12-23';
+$build = '150512-0617';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -293,6 +294,7 @@ if ($stage=='SUBMIT')
 	$update_sent=0;
 	$CFoutput='';
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
+	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	if ($DB>0) {echo "$stmt";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'06001',$user,$server_ip,$session_name,$one_mysql_log);}

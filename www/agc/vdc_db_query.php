@@ -376,10 +376,11 @@
 # 150117-1412 - Added list local call time validation
 # 150312-1501 - Allow for single quotes in vicidial_list data fields
 # 150428-1722 - Added web form three
+# 150512-0616 - Fix for non-latin customer data
 #
 
-$version = '2.12-271';
-$build = '150428-1722';
+$version = '2.12-272';
+$build = '150512-0616';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=616;
 $one_mysql_log=0;
@@ -1497,6 +1498,7 @@ if ($users_to_parse > 0)
 if ($ACTION == 'UpdateFields')
 	{
 	$stmt="UPDATE vicidial_live_agents set external_update_fields='0',external_update_fields_data='' where user='$user';";
+	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00276',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -1700,6 +1702,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 		##### grab number of calls today in this campaign and increment
 		$eac_phone='';
 		$stmt="SELECT calls_today,extension,external_dial FROM vicidial_live_agents WHERE user='$user' and campaign_id='$campaign';";
+		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00015',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -4193,6 +4196,7 @@ if ($ACTION == 'manDiaLonly')
 
 		### set the api dial action to blank if used
 		$stmt = "UPDATE vicidial_live_agents set external_dial='',preview_lead_id='0' where user='$user' and external_dial IN('DIALONLY','ALTDIAL','ADR3DIAL');";
+		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00539',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4980,6 +4984,7 @@ if ($stage == "end")
 	##### get call type from vicidial_live_agents table
 	$VLA_inOUT='NONE';
 	$stmt="SELECT comments FROM vicidial_live_agents where user='$user' order by last_update_time desc limit 1;";
+	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00059',$user,$server_ip,$session_name,$one_mysql_log);}
 	if ($DB) {echo "$stmt\n";}
@@ -6296,6 +6301,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 		{
 		### grab the call and lead info from the vicidial_live_agents table
 		$stmt = "SELECT lead_id,uniqueid,callerid,channel,call_server_ip,comments FROM vicidial_live_agents where server_ip = '$server_ip' and user='$user' and campaign_id='$campaign' and status='QUEUE';";
+		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00104',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -7534,9 +7540,10 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 	$email_group_str='';
 
 	$email_group_ct=count($inbound_email_groups); # This should always be greater than zero for the script to reach this point, but just in case...
-	for ($i=0; $i<$email_group_ct; $i++) {
+	for ($i=0; $i<$email_group_ct; $i++) 
+		{
 		$email_group_str.="'$inbound_email_groups[$i]',";
-	}
+		}
 	$email_group_str=substr($email_group_str, 0, -1);
 	# $DB=1;
 
@@ -7551,7 +7558,8 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 		{
 		### Check for transfers
 		#$upd_stmt="update vicidial_email_list inner join(select email_row_id from vicidial_email_list inner join vicidial_inbound_groups on vicidial_inbound_groups.group_id=vicidial_email_list.group_id order by queue_priority desc, email_date asc limit 1) as selected_row on selected_row.email_row_id=vicidial_email_list.email_row_id set status='QUEUE', user='$user'";
-		$stmt="select vicidial_email_list.lead_id, vicidial_email_list.email_date, vicidial_email_list.email_to, vicidial_email_list.email_from, vicidial_email_list.subject, vicidial_xfer_log.campaign_id, vicidial_email_list.email_row_id, vicidial_xfer_log.xfercallid from vicidial_email_list, vicidial_xfer_log where vicidial_email_list.status='QUEUE' and vicidial_email_list.user='$user' and vicidial_xfer_log.xfercallid=vicidial_email_list.xfercallid and direction='INBOUND' and vicidial_xfer_log.campaign_id in ($email_group_str) and closer='EMAIL_XFER' order by vicidial_xfer_log.call_date asc limit 1";
+		$stmt="SELECT vicidial_email_list.lead_id, vicidial_email_list.email_date, vicidial_email_list.email_to, vicidial_email_list.email_from, vicidial_email_list.subject, vicidial_xfer_log.campaign_id, vicidial_email_list.email_row_id, vicidial_xfer_log.xfercallid from vicidial_email_list, vicidial_xfer_log where vicidial_email_list.status='QUEUE' and vicidial_email_list.user='$user' and vicidial_xfer_log.xfercallid=vicidial_email_list.xfercallid and direction='INBOUND' and vicidial_xfer_log.campaign_id in ($email_group_str) and closer='EMAIL_XFER' order by vicidial_xfer_log.call_date asc limit 1";
+		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00487',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -8484,6 +8492,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 		{
 		### grab the call info from the vicidial_live_agents table
 		$stmt = "SELECT uniqueid,callerid,channel,call_server_ip,comments FROM vicidial_live_agents where server_ip = '$server_ip' and user='$user' and campaign_id='$campaign';";
+		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00447',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -9179,6 +9188,7 @@ if ($ACTION == 'updateDISPO')
 	else
 		{
 		$stmt = "SELECT dispo_call_url,queuemetrics_callstatus_override,comments_dispo_screen,comments_callback_screen from vicidial_campaigns vc,vicidial_live_agents vla where vla.campaign_id=vc.campaign_id and vla.user='$user';";
+		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00284',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -10794,6 +10804,7 @@ if ($ACTION == 'updateLEAD')
 	else
 		{
 		$stmt = "SELECT disable_alter_custdata,disable_alter_custphone FROM vicidial_campaigns where campaign_id='$campaign'";
+		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00161',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -10875,7 +10886,7 @@ if ($ACTION == 'updateLEAD')
 			}
 
 		}
-		echo _QXZ("Lead %1s information has%2s been updated",0,'',$lead_id,$DO_NOT_UPDATE_text)."\n";
+	echo _QXZ("Lead %1s information has%2s been updated",0,'',$lead_id,$DO_NOT_UPDATE_text)."\n";
 	}
 
 
@@ -12134,6 +12145,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 		{$stage = '670';}
 
 	$stmt="SELECT agent_lead_search_method,manual_dial_list_id from vicidial_campaigns where campaign_id='$campaign';";
+	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00374',$user,$server_ip,$session_name,$one_mysql_log);}
 	$camps_to_print = mysqli_num_rows($rslt);
@@ -12497,6 +12509,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 		{$stage = '670';}
 
 	$stmt="SELECT agent_lead_search_method,manual_dial_list_id from vicidial_campaigns where campaign_id='$campaign';";
+	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00431',$user,$server_ip,$session_name,$one_mysql_log);}
 	$camps_to_print = mysqli_num_rows($rslt);
