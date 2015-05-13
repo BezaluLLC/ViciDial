@@ -3482,12 +3482,13 @@ else
 # 150422-1953 - Don't allow dial_timeout of less than 4 seconds
 # 150428-1705 - Added options for third webform
 # 150429-1222 - Added new API user restrictions
+# 150512-2225 - Fixed SQL for permissions
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-484a';
-$build = '150429-1222';
+$admin_version = '2.12-485a';
+$build = '150512-2225';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3595,13 +3596,13 @@ if ($user_auth > 0)
 	$row=mysqli_fetch_row($rslt);
 	$auth=$row[0];
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports > 0;";
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports='1';";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 1 and qc_enabled > 0;";
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 1 and qc_enabled='1';";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$row=mysqli_fetch_row($rslt);
