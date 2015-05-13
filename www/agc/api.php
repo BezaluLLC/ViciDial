@@ -81,10 +81,10 @@
 # 150108-1039 - Added transfer_conf-ID of epoch to help prevent double-execution of transfer commands
 # 150313-0825 - Allow for single quotes in vicidial_list and custom data fields
 # 150429-1717 - Added user allowed function restrictions
-#
+# 150512-2027 - Added filtering of hash sign on some input variables, Issue #851
 
-$version = '2.12-47';
-$build = '150429-1717';
+$version = '2.12-48';
+$build = '150512-2027';
 
 $startMS = microtime();
 
@@ -278,13 +278,13 @@ if ($non_latin < 1)
 	$phone_code = preg_replace("/[^0-9X]/","",$phone_code);
 	$phone_number = preg_replace("/[^0-9]/","",$phone_number);
 	$lead_id = preg_replace("/[^0-9]/","",$lead_id);
-	$vendor_id = preg_replace('/;/','',$vendor_id);
+	$vendor_id = preg_replace('/;|#/','',$vendor_id);
 		$vendor_id = preg_replace('/\+/',' ',$vendor_id);
-	$vendor_lead_code = preg_replace('/;/','',$vendor_lead_code);
+	$vendor_lead_code = preg_replace('/;|#/','',$vendor_lead_code);
 		$vendor_lead_code = preg_replace('/\+/',' ',$vendor_lead_code);
-	$source_id = preg_replace('/;/','',$source_id);
+	$source_id = preg_replace('/;|#/','',$source_id);
 		$source_id = preg_replace('/\+/',' ',$source_id);
-	$gmt_offset_now = preg_replace('/-\_\.0-9/','',$gmt_offset_now);
+	$gmt_offset_now = preg_replace('/[^-\_\.0-9]/','',$gmt_offset_now);
 	$title = preg_replace('/[^- \'\_\.0-9a-zA-Z]/','',$title);
 	$first_name = preg_replace('/[^- \'\+\_\.0-9a-zA-Z]/','',$first_name);
 		$first_name = preg_replace('/\+/',' ',$first_name);
@@ -313,7 +313,7 @@ if ($non_latin < 1)
 		$email = preg_replace('/\+/',' ',$email);
 	$security_phrase = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$security_phrase);
 		$security_phrase = preg_replace('/\+/',' ',$security_phrase);
-	$comments = preg_replace('/;/','',$comments);
+	$comments = preg_replace('/;|#/','',$comments);
 		$comments = preg_replace('/\+/',' ',$comments);
 	$rank = preg_replace('/[^0-9]/','',$rank);
 	$owner = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$owner);
@@ -331,9 +331,9 @@ if ($non_latin < 1)
 	}
 else
 	{
-	$source = preg_replace("/'|\"|\\\\|;/","",$source);
-	$agent_user = preg_replace("/'|\"|\\\\|;/","",$agent_user);
-	$alt_user = preg_replace("/'|\"|\\\\|;/","",$alt_user);
+	$source = preg_replace("/'|\"|\\\\|;|#/","",$source);
+	$agent_user = preg_replace("/'|\"|\\\\|;|#/","",$agent_user);
+	$alt_user = preg_replace("/'|\"|\\\\|;|#/","",$alt_user);
 	}
 
 ### date and fixed variables

@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2015-04-30
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2015-05-12
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -103,6 +103,7 @@ Changes:
 150313-0818 - Allow for single quotes in vicidial_list and custom data fields
 150428-1720 - Added web_form_address_three to add_list/update_list functions
 150430-0644 - Added API allowed function restrictions and allowed list restrictions
+150512-2028 - Added filtering of hash sign on some input variables, Issue #851
 
 
 API Functions use the 'function' variable

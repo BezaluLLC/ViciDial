@@ -97,10 +97,11 @@
 # 150313-0818 - Allow for single quotes in vicidial_list and custom data fields
 # 150428-1720 - Added web_form_address_three to add_list/update_list functions
 # 150430-0644 - Added API allowed function restrictions and allowed list restrictions
+# 150512-2028 - Added filtering of hash sign on some input variables, Issue #851
 #
 
-$version = '2.12-73';
-$build = '150430-0644';
+$version = '2.12-74';
+$build = '150512-2028';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -401,11 +402,11 @@ if ($non_latin < 1)
 	$phone_code = preg_replace('/[^0-9]/','',$phone_code);
 	$update_phone_number=preg_replace('/[^A-Z]/','',$update_phone_number);
 	$phone_number = preg_replace('/[^0-9]/','',$phone_number);
-	$vendor_lead_code = preg_replace('/;/','',$vendor_lead_code);
+	$vendor_lead_code = preg_replace('/;|#/','',$vendor_lead_code);
 		$vendor_lead_code = preg_replace('/\+/',' ',$vendor_lead_code);
-	$source_id = preg_replace('/;/','',$source_id);
+	$source_id = preg_replace('/;|#/','',$source_id);
 		$source_id = preg_replace('/\+/',' ',$source_id);
-	$gmt_offset_now = preg_replace('/-\_\.0-9/','',$gmt_offset_now);
+	$gmt_offset_now = preg_replace('/[^-\_\.0-9]/','',$gmt_offset_now);
 	$title = preg_replace('/[^- \'\_\.0-9a-zA-Z]/','',$title);
 	$first_name = preg_replace('/[^- \'\+\_\.0-9a-zA-Z]/','',$first_name);
 		$first_name = preg_replace('/\+/',' ',$first_name);
@@ -434,7 +435,7 @@ if ($non_latin < 1)
 		$email = preg_replace('/\+/',' ',$email);
 	$security_phrase = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$security_phrase);
 		$security_phrase = preg_replace('/\+/',' ',$security_phrase);
-	$comments = preg_replace('/;/','',$comments);
+	$comments = preg_replace('/;|#/','',$comments);
 		$comments = preg_replace('/\+/',' ',$comments);
 	$dnc_check = preg_replace('/[^A-Z]/','',$dnc_check);
 	$campaign_dnc_check = preg_replace('/[^A-Z]/','',$campaign_dnc_check);
@@ -534,9 +535,9 @@ if ($non_latin < 1)
 	}
 else
 	{
-	$user = preg_replace("/'|\"|\\\\|;/","",$user);
-	$pass = preg_replace("/'|\"|\\\\|;/","",$pass);
-	$source = preg_replace("/'|\"|\\\\|;/","",$source);
+	$user = preg_replace("/'|\"|\\\\|;|#/","",$user);
+	$pass = preg_replace("/'|\"|\\\\|;|#/","",$pass);
+	$source = preg_replace("/'|\"|\\\\|;|#/","",$source);
 	}
 
 $USarea = 			substr($phone_number, 0, 3);
