@@ -1,5 +1,5 @@
 <?php
-# admin_modify_lead.php   version 2.10
+# admin_modify_lead.php   version 2.12
 # 
 # ViciDial database administration modify lead in vicidial_list
 # admin_modify_lead.php
@@ -67,6 +67,7 @@
 # 150107-1729 - Added ignore_group_on_search user option
 # 150114-2321 - Added date_of_birth as editable field
 # 150312-1506 - Fixed minor Iframe form bug related to custom fields
+# 150514-1522 - Added $gmt_offset lookup for adding a new lead
 #
 
 require("dbconnect_mysqli.php");
@@ -395,22 +396,65 @@ if ($scb_count_to_print > 0)
 <?php 
 echo "<a href=\"./admin.php?ADD=100\">"._QXZ("ADMINISTRATION")."</a>: "._QXZ("Lead record modification")."<BR>\n";
 
+### BEGIN - Add a new lead in the system ###
 if ($lead_id == 'NEW')
 	{
+	$secX = date("U");
+	$hour = date("H");
+	$min = date("i");
+	$sec = date("s");
+	$mon = date("m");
+	$mday = date("d");
+	$year = date("Y");
+	$isdst = date("I");
+	$Shour = date("H");
+	$Smin = date("i");
+	$Ssec = date("s");
+	$Smon = date("m");
+	$Smday = date("d");
+	$Syear = date("Y");
+
+	### Grab Server GMT value from the database
+	$stmt="SELECT local_gmt FROM servers where active='Y' limit 1;";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$gmt_recs = mysqli_num_rows($rslt);
+	if ($gmt_recs > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$DBSERVER_GMT		=		$row[0];
+		if (strlen($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
+		if ($isdst) {$SERVER_GMT++;} 
+		}
+	else
+		{
+		$SERVER_GMT = date("O");
+		$SERVER_GMT = preg_replace("/\+/i","",$SERVER_GMT);
+		$SERVER_GMT = ($SERVER_GMT + 0);
+		$SERVER_GMT = ($SERVER_GMT / 100);
+		}
+
+	$LOCAL_GMT_OFF = $SERVER_GMT;
+	$LOCAL_GMT_OFF_STD = $SERVER_GMT;
+
+	$USarea = substr($phone_number, 0, 3);
+	$postalgmt='';
+
+	$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
 	$comments = preg_replace("/\n/",'!N',$comments);
 	$comments = preg_replace("/\r/",'',$comments);
-	$stmt="INSERT INTO vicidial_list set status='" . mysqli_real_escape_string($link, $status) . "',title='" . mysqli_real_escape_string($link, $title) . "',first_name='" . mysqli_real_escape_string($link, $first_name) . "',middle_initial='" . mysqli_real_escape_string($link, $middle_initial) . "',last_name='" . mysqli_real_escape_string($link, $last_name) . "',address1='" . mysqli_real_escape_string($link, $address1) . "',address2='" . mysqli_real_escape_string($link, $address2) . "',address3='" . mysqli_real_escape_string($link, $address3) . "',city='" . mysqli_real_escape_string($link, $city) . "',state='" . mysqli_real_escape_string($link, $state) . "',province='" . mysqli_real_escape_string($link, $province) . "',postal_code='" . mysqli_real_escape_string($link, $postal_code) . "',country_code='" . mysqli_real_escape_string($link, $country_code) . "',alt_phone='" . mysqli_real_escape_string($link, $alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysqli_real_escape_string($link, $email) . "',security_phrase='" . mysqli_real_escape_string($link, $security) . "',comments='" . mysqli_real_escape_string($link, $comments) . "',rank='" . mysqli_real_escape_string($link, $rank) . "',owner='" . mysqli_real_escape_string($link, $owner) . "',vendor_lead_code='" . mysqli_real_escape_string($link, $vendor_id) . "', list_id='" . mysqli_real_escape_string($link, $list_id) . "',date_of_birth='" . mysqli_real_escape_string($link, $date_of_birth) . "',entry_date=NOW();";
+	$stmt="INSERT INTO vicidial_list set status='" . mysqli_real_escape_string($link, $status) . "',title='" . mysqli_real_escape_string($link, $title) . "',first_name='" . mysqli_real_escape_string($link, $first_name) . "',middle_initial='" . mysqli_real_escape_string($link, $middle_initial) . "',last_name='" . mysqli_real_escape_string($link, $last_name) . "',address1='" . mysqli_real_escape_string($link, $address1) . "',address2='" . mysqli_real_escape_string($link, $address2) . "',address3='" . mysqli_real_escape_string($link, $address3) . "',city='" . mysqli_real_escape_string($link, $city) . "',state='" . mysqli_real_escape_string($link, $state) . "',province='" . mysqli_real_escape_string($link, $province) . "',postal_code='" . mysqli_real_escape_string($link, $postal_code) . "',country_code='" . mysqli_real_escape_string($link, $country_code) . "',alt_phone='" . mysqli_real_escape_string($link, $alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysqli_real_escape_string($link, $email) . "',security_phrase='" . mysqli_real_escape_string($link, $security) . "',comments='" . mysqli_real_escape_string($link, $comments) . "',rank='" . mysqli_real_escape_string($link, $rank) . "',owner='" . mysqli_real_escape_string($link, $owner) . "',vendor_lead_code='" . mysqli_real_escape_string($link, $vendor_id) . "', list_id='" . mysqli_real_escape_string($link, $list_id) . "',date_of_birth='" . mysqli_real_escape_string($link, $date_of_birth) . "',gmt_offset_now='$gmt_offset',entry_date=NOW();";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$affected_rows = mysqli_affected_rows($link);
 	if ($affected_rows > 0)
 		{
 		$lead_id = mysqli_insert_id($link);
-		echo _QXZ("Lead has been added").": $lead_id<BR><BR>\n";
+		echo _QXZ("Lead has been added").": $lead_id ($gmt_offset)<BR><BR>\n";
 		$end_call=0;
 		}
 	else
 		{echo _QXZ("ERROR: Lead not added, please go back and look at what you entered")."<BR><BR>\n";}
+	### END - Add a new lead in the system ###
 	}
 else
 	{
