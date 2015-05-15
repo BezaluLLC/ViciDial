@@ -45,6 +45,7 @@
 # 150404-0934 - Added enable_did_entry_list_id and related DID options
 # 150428-1704 - Added enable_third_webform
 # 150429-1232 - Added new user API restrictions
+# 150513-2310 - Added POP3 Auth Mode
 #
 
 require("dbconnect_mysqli.php");
@@ -5063,6 +5064,11 @@ if ($SSallow_emails>0)
 <A NAME="email_accounts-email_account_user">
 <BR>
 <B><?php echo _QXZ("Email Account User"); ?> -</B><?php echo _QXZ("The login used to access this account.  Usually its the portion of the reply-to address before the -at- symbol.  "); ?>
+
+<BR>
+<A NAME="email_accounts-pop3_auth_mode">
+<BR>
+<B><?php echo _QXZ("Auth Mode for POP3 protocol only"); ?> -</B><?php echo _QXZ("The authorization mode to use when POP3 is the mail protocol on the email account. BEST is the default.  It will use APOP if the server appears to support it and it can be used to successfully log on, then try similarly with CRAM-MD5, and finally PASS. APOP and CRAM-MD5 imply that an MD5 checksum will be used instead of sending your password in cleartext. However, if the server does not claim to support APOP or CRAM-MD5, the cleartext method will be used. Be careful. There are a few servers that will send a timestamp in the banner greeting, but APOP will not work with them, for instance if the server does not know your password in cleartext. If you think your authentication information is correct, you may have to use PASS for that server. The same applies to CRAM-MD5."); ?>
 
 <BR>
 <A NAME="email_accounts-email_account_pass">

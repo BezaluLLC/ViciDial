@@ -32,3 +32,7 @@ UPDATE system_settings SET db_schema_version='1409',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_users ADD api_allowed_functions VARCHAR(1000) default ' ALL_FUNCTIONS ';
 
 UPDATE system_settings SET db_schema_version='1410',db_schema_update_date=NOW() where db_schema_version < 1410;
+
+ALTER TABLE vicidial_email_accounts ADD pop3_auth_mode ENUM('BEST','PASS','APOP','CRAM-MD5') default 'BEST' AFTER email_account_pass;
+
+UPDATE system_settings SET db_schema_version='1411',db_schema_update_date=NOW() where db_schema_version < 1411;

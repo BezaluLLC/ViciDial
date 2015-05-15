@@ -2924,6 +2924,7 @@ email_replyto_address VARCHAR(255) DEFAULT NULL,
 email_account_server VARCHAR(255) DEFAULT NULL,
 email_account_user VARCHAR(255) DEFAULT NULL,
 email_account_pass VARCHAR(100) DEFAULT NULL,
+pop3_auth_mode ENUM('BEST','PASS','APOP','CRAM-MD5') default 'BEST',
 active ENUM('Y','N') DEFAULT 'N',
 email_frequency_check_mins TINYINT(3) UNSIGNED DEFAULT '5',
 group_id VARCHAR(20) DEFAULT NULL,
@@ -3381,4 +3382,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1409',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1411',db_schema_update_date=NOW(),reload_timestamp=NOW();

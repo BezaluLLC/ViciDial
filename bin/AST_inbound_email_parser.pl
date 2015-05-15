@@ -59,6 +59,7 @@ use MIME::QuotedPrint;
 # 140225-1241 - Added option for SSL no-cert-verify (--ssl-no-cert)
 # 140313-0905 - Added Debug options when --debugX for both IMAP and POP3
 # 140422-1912 - Added 'related' content type
+# 150513-2310 - Added pop3_auth_mode
 #
 
 # default path to astguiclient configuration file:
@@ -210,7 +211,7 @@ if($min==0) {$min=60;}
 $minutes=($hour*60)+$min;
 # $minutes=0; # Uncomment if you want to TEST ONLY, so you can test this at any time.
 
-$stmt="SELECT email_account_id,email_account_name,email_account_description,user_group,protocol,email_replyto_address,email_account_server,email_account_user,email_account_pass,active,email_frequency_check_mins,group_id,default_list_id,call_handle_method,agent_search_method,campaign_id,list_id,email_account_type from vicidial_email_accounts where active='Y'";
+$stmt="SELECT email_account_id,email_account_name,email_account_description,user_group,protocol,email_replyto_address,email_account_server,email_account_user,email_account_pass,pop3_auth_mode,active,email_frequency_check_mins,group_id,default_list_id,call_handle_method,agent_search_method,campaign_id,list_id,email_account_type from vicidial_email_accounts where active='Y'";
 $rslt=$dbhA->prepare($stmt);
 $rslt->execute();
 
@@ -222,13 +223,14 @@ while (@row=$rslt->fetchrow_array) {
 	$VARemail_server=$row[6];
 	$VARemail_user=$row[7];
 	$VARemail_pwd=$row[8];
-	$VARemail_frequency=$row[10];
-	$VARemail_groupid=$row[11];
-	$default_list_id=$row[12];
-	$call_handle_method=$row[13];
-	$agent_search_method=$row[14];
-	$campaign_id=$row[15];
-	$list_id=$row[16];
+	$VARpop3_auth_mode=$row[9];
+	$VARemail_frequency=$row[11];
+	$VARemail_groupid=$row[12];
+	$default_list_id=$row[13];
+	$call_handle_method=$row[14];
+	$agent_search_method=$row[15];
+	$campaign_id=$row[16];
+	$list_id=$row[17];
 
 	if ($DBX) {print "$h - $VARemail_ID - $VARemail_groupid\n";}
 
@@ -621,6 +623,7 @@ while (@row=$rslt->fetchrow_array) {
 										   HOST     => "$VARemail_server",
 										   PORT		=> 995,
 										   USESSL   => true,
+										   AUTH_MODE	=> "$VARpop3_auth_mode",
 										   DEBUG => "$DBX",
 										 )
 			  or die "Cannot connect through POP3Client: $!";
@@ -952,6 +955,7 @@ while (@row=$rslt->fetchrow_array) {
 										   HOST     => "$VARemail_server",
 										   PORT		=> 995,
 										   USESSL   => true,
+										   AUTH_MODE	=> "$VARpop3_auth_mode",
 										   DEBUG => "$DBX",
 										 )
 			or die "Cannot connect through POP3Client: $!";

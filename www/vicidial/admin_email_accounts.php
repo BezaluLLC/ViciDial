@@ -16,10 +16,11 @@
 # 141230-0021 - Added code for on-the-fly language translations display
 # 150421-2255 - Fixed links to default list ID and default_list_id issue
 # 150422-1229 - Changed Default List ID
+# 150513-2310 - Added POP3 Auth Mode
 #
 
-$admin_version = '2.12-10';
-$build = '150422-1229';
+$admin_version = '2.12-11';
+$build = '150513-2310';
 
 $sh="emails"; 
 
@@ -53,6 +54,8 @@ if (isset($_GET["email_account_user"]))						{$email_account_user=$_GET["email_a
 	elseif (isset($_POST["email_account_user"]))			{$email_account_user=$_POST["email_account_user"];}
 if (isset($_GET["email_account_pass"]))						{$email_account_pass=$_GET["email_account_pass"];}
 	elseif (isset($_POST["email_account_pass"]))			{$email_account_pass=$_POST["email_account_pass"];}
+if (isset($_GET["pop3_auth_mode"]))						{$pop3_auth_mode=$_GET["pop3_auth_mode"];}
+	elseif (isset($_POST["pop3_auth_mode"]))			{$pop3_auth_mode=$_POST["pop3_auth_mode"];}
 if (isset($_GET["active"]))						{$active=$_GET["active"];}
 	elseif (isset($_POST["active"]))			{$active=$_POST["active"];}
 if (isset($_GET["email_frequency_check_mins"]))				{$email_frequency_check_mins=$_GET["email_frequency_check_mins"];}
@@ -351,7 +354,7 @@ if (($SUBMIT=="SUBMIT" || $SUBMIT=="UPDATE") && $email_account_id)
 				}
 			else
 				{
-				$ins_stmt="INSERT INTO vicidial_email_accounts(email_account_id, email_account_name, email_account_description, user_group, email_replyto_address, protocol, email_account_server, email_account_user, email_account_pass, active, email_frequency_check_mins, group_id, default_list_id, email_account_type, call_handle_method, agent_search_method, list_id, campaign_id) VALUES('$email_account_id', '$email_account_name', '$email_account_description', '$user_group', '$email_replyto_address', '$protocol', '$email_account_server', '$email_account_user', '$email_account_pass', '$active', '$email_frequency_check_mins', '$group_id', '$default_list_id', '$email_account_type', '$call_handle_method', '$agent_search_method', '$list_id', '$campaign_id')";
+				$ins_stmt="INSERT INTO vicidial_email_accounts(email_account_id, email_account_name, email_account_description, user_group, email_replyto_address, protocol, email_account_server, email_account_user, email_account_pass, pop3_auth_mode, active, email_frequency_check_mins, group_id, default_list_id, email_account_type, call_handle_method, agent_search_method, list_id, campaign_id) VALUES('$email_account_id', '$email_account_name', '$email_account_description', '$user_group', '$email_replyto_address', '$protocol', '$email_account_server', '$email_account_user', '$email_account_pass', '$pop3_auth_mode', '$active', '$email_frequency_check_mins', '$group_id', '$default_list_id', '$email_account_type', '$call_handle_method', '$agent_search_method', '$list_id', '$campaign_id')";
 				$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 				if (mysqli_affected_rows($link)==0) 
 					{
@@ -375,7 +378,7 @@ if (($SUBMIT=="SUBMIT" || $SUBMIT=="UPDATE") && $email_account_id)
 			}
 		else
 			{
-			$upd_stmt="update vicidial_email_accounts set email_account_name='$email_account_name', email_account_description='$email_account_description', user_group='$user_group', protocol='$protocol', email_replyto_address='$email_replyto_address', email_account_server='$email_account_server', email_account_user='$email_account_user', email_account_pass='$email_account_pass', active='$active', email_frequency_check_mins='$email_frequency_check_mins', group_id='$group_id', default_list_id='$default_list_id', email_account_type='$email_account_type', call_handle_method='$call_handle_method', agent_search_method='$agent_search_method', campaign_id='$campaign_id', list_id='$list_id' WHERE email_account_id='$email_account_id'";
+			$upd_stmt="update vicidial_email_accounts set email_account_name='$email_account_name', email_account_description='$email_account_description', user_group='$user_group', protocol='$protocol', email_replyto_address='$email_replyto_address', email_account_server='$email_account_server', email_account_user='$email_account_user', email_account_pass='$email_account_pass', pop3_auth_mode='$pop3_auth_mode', active='$active', email_frequency_check_mins='$email_frequency_check_mins', group_id='$group_id', default_list_id='$default_list_id', email_account_type='$email_account_type', call_handle_method='$call_handle_method', agent_search_method='$agent_search_method', campaign_id='$campaign_id', list_id='$list_id' WHERE email_account_id='$email_account_id'";
 			$upd_rslt=mysql_to_mysqli($upd_stmt, $link);
 			if (mysqli_affected_rows($link)==0) 
 				{
@@ -411,7 +414,7 @@ else if ($SUBMIT=="COPY")
 		else
 			{
 			$row=mysqli_fetch_array($rslt);
-			$ins_stmt="insert into vicidial_email_accounts(email_account_id, email_account_name, email_account_description, user_group, protocol, email_replyto_address, email_account_server, email_account_user, email_account_pass, active, email_frequency_check_mins, group_id, default_list_id, email_account_type, call_handle_method, agent_search_method, list_id, campaign_id) VALUES('$new_account_id', '$email_account_name', '$row[email_account_description]', '$row[user_group]', '$row[protocol]', '$row[email_replyto_address]', '$row[email_account_server]', '$row[email_account_user]', '$row[email_account_pass]', '$row[active]', '$row[email_frequency_check_mins]', '$row[group_id]','$row[default_list_id]', '$row[email_account_type]', '$row[call_handle_method]','$row[agent_search_method]', '$row[list_id]', '$row[campaign_id]')";
+			$ins_stmt="insert into vicidial_email_accounts(email_account_id, email_account_name, email_account_description, user_group, protocol, email_replyto_address, email_account_server, email_account_user, email_account_pass, pop3_auth_mode, active, email_frequency_check_mins, group_id, default_list_id, email_account_type, call_handle_method, agent_search_method, list_id, campaign_id) VALUES('$new_account_id', '$email_account_name', '$row[email_account_description]', '$row[user_group]', '$row[protocol]', '$row[email_replyto_address]', '$row[email_account_server]', '$row[email_account_user]', '$row[email_account_pass]', '$row[pop3_auth_mode]', '$row[active]', '$row[email_frequency_check_mins]', '$row[group_id]','$row[default_list_id]', '$row[email_account_type]', '$row[call_handle_method]','$row[agent_search_method]', '$row[list_id]', '$row[campaign_id]')";
 			$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 			if (mysqli_affected_rows($link)==0) 
 				{
@@ -594,6 +597,7 @@ else if ($eact == "ADD")
 		echo "<option SELECTED value=\"---ALL---\">"._QXZ("All Admin User Groups")."</option>\n";
 		echo "</select>$NWB#email_accounts-admin_user_group$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account Protocol").": </td><td align=left><select size=1 name=protocol><option SELECTED>IMAP</option><option>POP3</option></select>$NWB#email_accounts-protocol$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Auth Mode for POP3 protocol only").": </td><td align=left><select size=1 name=pop3_auth_mode><option SELECTED>BEST</option><option>PASS</option><option>APOP</option><option>CRAM-MD5</option></select>$NWB#email_accounts-pop3_auth_mode$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Reply-to Address").": </td><td align=left><input type=text name=email_replyto_address size=70 maxlength=255 value='$email_replyto_address'>$NWB#email_accounts-email_replyto_address$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account Server").": </td><td align=left><input type=text name=email_account_server size=70 maxlength=255 value='$email_account_server'>$NWB#email_accounts-email_account_server$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account User").": </td><td align=left><input type=text name=email_account_user size=30 maxlength=255 value='$email_account_user'>$NWB#email_accounts-email_account_user$NWE</td></tr>\n";
@@ -646,6 +650,7 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 		$email_account_server=$row["email_account_server"];
 		$email_account_user=$row["email_account_user"];
 		$email_account_pass=$row["email_account_pass"];
+		$pop3_auth_mode=$row["pop3_auth_mode"];
 		$active=$row["active"];
 		$email_frequency_check_mins=$row["email_frequency_check_mins"];
 		$group_id=$row["group_id"];
@@ -777,6 +782,7 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 		echo "<option SELECTED value=\"---ALL---\">"._QXZ("All Admin User Groups")."</option>\n";
 		echo "</select>$NWB#email_accounts-admin_user_group$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account Protocol").": </td><td align=left><select size=1 name=protocol><option>IMAP</option><option>POP3</option><option SELECTED>$protocol</option></select>$NWB#email_accounts-protocol$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Auth Mode for POP3 protocol only").": </td><td align=left><select size=1 name=pop3_auth_mode><option>BEST</option><option>PASS</option><option>APOP</option><option>CRAM-MD5</option><option SELECTED>$pop3_auth_mode</option></select>$NWB#email_accounts-pop3_auth_mode$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Reply-to Address").": </td><td align=left><input type=text name=email_replyto_address size=70 maxlength=255 value='$email_replyto_address'>$NWB#email_accounts-email_replyto_address$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account Server").": </td><td align=left><input type=text name=email_account_server size=70 maxlength=255 value='$email_account_server'>$NWB#email_accounts-email_account_server$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Email Account User").": </td><td align=left><input type=text name=email_account_user size=30 maxlength=255 value='$email_account_user'>$NWB#email_accounts-email_account_user$NWE</td></tr>\n";
