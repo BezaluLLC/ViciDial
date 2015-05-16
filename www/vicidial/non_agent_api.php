@@ -98,10 +98,11 @@
 # 150428-1720 - Added web_form_address_three to add_list/update_list functions
 # 150430-0644 - Added API allowed function restrictions and allowed list restrictions
 # 150512-2028 - Added filtering of hash sign on some input variables, Issue #851
+# 150516-1138 - Fixed conflict with functions.php
 #
 
-$version = '2.12-74';
-$build = '150512-2028';
+$version = '2.12-75';
+$build = '150516-1138';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -6269,7 +6270,7 @@ if ($function == 'add_lead')
 
 				
 				### get current gmt_offset of the phone_number
-				$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner,$USprefix);
+				$gmt_offset = lookup_gmt_api($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner,$USprefix);
 
 				$new_status='NEW';
 				if ($callback == 'Y')
@@ -7195,7 +7196,7 @@ if ($function == 'update_lead')
 										}
 									}
 								### get current gmt_offset of the phone_number
-								$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner,$USprefix);
+								$gmt_offset = lookup_gmt_api($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner,$USprefix);
 
 								if (strlen($status)<1)
 									{$status='NEW';}
@@ -7586,7 +7587,7 @@ if ($function == 'check_phone_number')
 						{
 						$tz_run++;
 						### get current gmt_offset of the phone_number
-						$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,'',$postal_code,$owner,$USprefix);
+						$gmt_offset = lookup_gmt_api($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,'',$postal_code,$owner,$USprefix);
 
 						### call function to determine if lead is dialable
 						$dialable = dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state);
@@ -7601,7 +7602,7 @@ if ($function == 'check_phone_number')
 						if ( (strlen($postal_code)>4) and (strlen($postal_code)< 6) )
 							{
 							### get current gmt_offset of the phone_number
-							$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,'POSTAL',$postal_code,$owner,$USprefix);
+							$gmt_offset = lookup_gmt_api($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,'POSTAL',$postal_code,$owner,$USprefix);
 
 							### call function to determine if lead is dialable
 							$dialable = dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state);
@@ -7617,7 +7618,7 @@ if ($function == 'check_phone_number')
 						if ( (strlen($owner)>0) and (strlen($owner)< 7) )
 							{
 							### get current gmt_offset of the phone_number
-							$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,'TZCODE',$postal_code,$owner,$USprefix);
+							$gmt_offset = lookup_gmt_api($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,'TZCODE',$postal_code,$owner,$USprefix);
 
 							### call function to determine if lead is dialable
 							$dialable = dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state);
@@ -7630,7 +7631,7 @@ if ($function == 'check_phone_number')
 						{
 						$tz_run++;
 						### get current gmt_offset of the phone_number
-						$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,'NANPA',$postal_code,$owner,$USprefix);
+						$gmt_offset = lookup_gmt_api($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,'NANPA',$postal_code,$owner,$USprefix);
 
 						### call function to determine if lead is dialable
 						$dialable = dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state);
@@ -7685,7 +7686,7 @@ exit;
 
 ##### LOOKUP GMT, FINDS THE CURRENT GMT OFFSET FOR A PHONE NUMBER #####
 
-function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner,$USprefix)
+function lookup_gmt_api($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner,$USprefix)
 {
 require("dbconnect_mysqli.php");
 
