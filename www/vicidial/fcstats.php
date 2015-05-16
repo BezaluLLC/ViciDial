@@ -1,7 +1,7 @@
 <?php 
 # fcstats.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -29,6 +29,7 @@
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141114-0017 - Finalized adding QXZ translation to all admin files
 # 141230-1345 - Added code for on-the-fly language translations display
+# 150516-1317 - Fixed Javascript element problem, Issue #857
 #
 
 $startMS = microtime();
@@ -1006,7 +1007,7 @@ if ($file_download > 0)
 else 
 	{
 	$JS_onload.="}\n";
-	$JS_text.=$JS_onload;
+	if ($report_display_type=='HTML') {$JS_text.=$JS_onload;}
 	$JS_text.="</script>\n";
 
 	echo $HTML_head;

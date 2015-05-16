@@ -41,6 +41,7 @@
 # 141230-0929 - Added code for on-the-fly language translations display
 # 150210-1356 - Added option to show time in seconds
 # 150422-1643 - Added two new shift options
+# 150516-1311 - Fixed Javascript element problem, Issue #857
 #
 
 $startMS = microtime();
@@ -1416,7 +1417,7 @@ $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIG
 ##### BEGIN HTML form section
 ############################################################################
 $JS_onload.="}\n";
-$JS_text.=$JS_onload;
+if ($report_display_type=='HTML') {$JS_text.=$JS_onload;}
 $JS_text.="</script>\n";
 
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";

@@ -1,7 +1,7 @@
 <?php 
 # AST_agent_performance_detail.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -39,6 +39,7 @@
 # 131002-2015 - Added user group to report output
 # 131010-1930 - Expanded user group column, added most recent user group
 # 140108-0712 - Added webserver and hostname to report logging
+# 150516-1309 - Fixed Javascript element problem, Issue #857
 #
 
 $startMS = microtime();
@@ -1557,7 +1558,7 @@ $JS_text.="	var graph_to_display=eval(\"graph_\"+graph);\n";
 $JS_text.="	document.getElementById('pause_detail_graph').innerHTML=graph_to_display;\n";
 $JS_text.="}\n";
 $JS_onload.="}\n";
-$JS_text.=$JS_onload;
+if ($report_display_type=='HTML') {$JS_text.=$JS_onload;}
 $JS_text.="</script>\n";
 $GRAPH3="<tr><td colspan='".(3+count($sub_statusesARY))."' class='graph_span_cell'><span id='pause_detail_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
 

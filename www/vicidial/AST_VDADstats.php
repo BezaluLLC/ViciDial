@@ -1,7 +1,7 @@
 <?php 
 # AST_VDADstats.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60619-1718 - Added variable filtering to eliminate SQL injection attack threat
@@ -43,6 +43,7 @@
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141114-0705 - Finalized adding QXZ translation to all admin files
 # 141230-1353 - Added code for on-the-fly language translations display
+# 150516-1306 - Fixed Javascript element problem, Issue #857
 #
 
 $startMS = microtime();
@@ -1970,7 +1971,7 @@ else
 	}
 
 	$JS_onload.="}\n";
-	$JS_text.=$JS_onload;	
+	if ($report_display_type=='HTML') {$JS_text.=$JS_onload;}
 	$JS_text.="</script>\n";
 	echo $JS_text;
 

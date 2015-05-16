@@ -1,7 +1,7 @@
 <?php 
 # AST_CLOSER_service_level.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -29,6 +29,7 @@
 # 141113-2336 - Finalized adding QXZ translation to all admin files
 # 141128-0856 - Code cleanup for QXZ functions
 # 141230-0923 - Added code for on-the-fly language translations display
+# 150516-1258 - Fixed Javascript element problem, Issue #857
 #
 
 $startMS = microtime();
@@ -1160,7 +1161,7 @@ $JS_text.="	document.getElementById('holdcalldrop_stats_graph').innerHTML=graph_
 $JS_text.="}\n";
 $JS_onload.="\tDrawHCDGraph('AVGHOLD','1');\n"; 
 $JS_onload.="}\n";
-$JS_text.=$JS_onload;
+if ($report_display_type=='HTML') {$JS_text.=$JS_onload;}
 $JS_text.="</script>\n";
 
 if ($report_display_type=="HTML")

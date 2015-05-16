@@ -47,6 +47,7 @@
 # 141128-0904 - Code cleanup for QXZ functions
 # 141230-0945 - Added code for on-the-fly language translations display
 # 150210-1357 - Added option to show time in seconds
+# 150516-1308 - Fixed Javascript element problem, Issue #857
 #
 
 $startMS = microtime();
@@ -1623,7 +1624,7 @@ $JS_text.="	var graph_to_display=eval(\"graph_\"+graph);\n";
 $JS_text.="	document.getElementById('pause_detail_graph').innerHTML=graph_to_display;\n";
 $JS_text.="}\n";
 $JS_onload.="}\n";
-$JS_text.=$JS_onload;
+if ($report_display_type=='HTML') {$JS_text.=$JS_onload;}
 $JS_text.="</script>\n";
 $GRAPH3="<tr><td colspan='".(3+count($sub_statusesARY))."' class='graph_span_cell'><span id='pause_detail_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
 

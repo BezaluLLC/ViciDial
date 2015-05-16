@@ -1,7 +1,7 @@
 <?php 
 # AST_CLOSERstats.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES:
 # 60619-1714 - Added variable filtering to eliminate SQL injection attack threat
@@ -46,6 +46,7 @@
 # 141114-0009 - Finalized adding QXZ translation to all admin files
 # 141128-0858 - Code cleanup for QXZ functions
 # 141230-0942 - Added code for on-the-fly language translations display
+# 150516-1259 - Fixed Javascript element problem, Issue #857
 #
 
 $startMS = microtime();
@@ -2186,7 +2187,7 @@ $JS_text.="	document.getElementById('agentstats_graph').innerHTML=graph_to_displ
 $JS_text.="}\n";
 
 $JS_onload.="}\n";
-$JS_text.=$JS_onload;
+if ($report_display_type=='HTML') {$JS_text.=$JS_onload;}
 
 $JS_text.="</script>\n";
 $GRAPH_text=$GRAPH;

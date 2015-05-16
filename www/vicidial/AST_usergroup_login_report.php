@@ -4,7 +4,7 @@
 # This User-Group based report runs some very intensive SQL queries, so it is
 # not recommended to run this on long time periods. 
 #
-# Copyright (C) 2014  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -17,6 +17,7 @@
 # 140108-0731 - Added webserver and hostname to report logging
 # 141113-2339 - Finalized adding QXZ translation to all admin files
 # 141230-1413 - Added code for on-the-fly language translations display
+# 150516-1316 - Fixed Javascript element problem, Issue #857
 #
 
 $startMS = microtime();
@@ -380,7 +381,7 @@ else
 	{
 	header("Content-type: text/html; charset=utf-8");
 #	$JS_onload.="}\n";
-#	$JS_text.=$JS_onload;
+#	if ($report_display_type=='HTML') {$JS_text.=$JS_onload;}
 #	$JS_text.="</script>\n";
 
 	if ($report_display_type=="HTML")

@@ -1,7 +1,7 @@
 <?php 
 # AST_LISTS_pass_report.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This is a list inventory report, not a calling report. This report will show
 # statistics for all of the lists in the selected campaigns
@@ -12,6 +12,7 @@
 # 140331-2122 - Converted division calculations to use MathZDC function, added HTML view
 # 141114-0827 - Finalized adding QXZ translation to all admin files
 # 141230-0919 - Added code for on-the-fly language translations display
+# 150516-1303 - Fixed Javascript element problem, Issue #857
 #
 
 $startMS = microtime();
@@ -2428,7 +2429,7 @@ else
 
 	} else {
 		$JS_onload.="}\n";
-		$JS_text.=$JS_onload;
+		if ($report_display_type=='HTML') {$JS_text.=$JS_onload;}
 		$JS_text.="</script>\n";
 
 		echo $HEADER;

@@ -1,7 +1,7 @@
 <?php 
 # AST_performance_comparison_report.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -11,6 +11,7 @@
 # 141113-2058 - Finalized adding QXZ translation to all admin files
 # 141128-0905 - Code cleanup for QXZ functions
 # 141230-0939 - Added code for on-the-fly language translations display
+# 150516-1314 - Fixed Javascript element problem, Issue #857
 #
 
 $startMS = microtime();
@@ -910,7 +911,7 @@ $HTML_text.="</BODY></HTML>";
 if ($file_download == 0 || !$file_download) 
 	{
 	$JS_onload.="}\n";
-	$JS_text.=$JS_onload;
+	if ($report_display_type=='HTML') {$JS_text.=$JS_onload;}
 	$JS_text.="</script>\n";
 	$HTML_head.=$JS_text;
 

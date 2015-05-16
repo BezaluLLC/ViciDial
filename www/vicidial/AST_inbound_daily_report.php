@@ -23,6 +23,7 @@
 # 141113-2055 - Finalized adding QXZ translation to all admin files
 # 141230-0921 - Added code for on-the-fly language translations display
 # 150218-1142 - Fix for download issue
+# 150516-1313 - Fixed Javascript element problem, Issue #857
 #
 
 $startMS = microtime();
@@ -2037,7 +2038,7 @@ else
 		}
 
 	$JS_onload.="}\n";
-	$JS_text.=$JS_onload;
+	if ($report_display_type=='HTML') {$JS_text.=$JS_onload;}
 	$JS_text.="</script>\n";
 
 	if ($report_display_type=="HTML") 
