@@ -24,6 +24,7 @@
 # 150210-1358 - Added precision S default to 0 in sec_convert
 # 150216-1528 - Fixed non-latin problem, issue #828
 # 150514-1522 - Added lookup_gmt function, copied from agc/functions.php
+# 150516-1206 - Added missing TZCODE segment to gmt_lookup function
 #
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
@@ -418,7 +419,7 @@ function download_max_system_stats($campaign_id,$days_graph,$title,$metric,$metr
 
 ##### LOOKUP GMT, FINDS THE CURRENT GMT OFFSET FOR A PHONE NUMBER #####
 
-function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code)
+function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code,$owner,$USprefix)
 	{
 	global $link;
 
@@ -440,6 +441,52 @@ function lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$
 				$postalgmt_found++;
 				$post++;
 				}
+			}
+		}
+	if ( ($postalgmt=="TZCODE") && (strlen($owner)>1) )
+		{
+		$dst_range='';
+		$dst='N';
+		$gmt_offset=0;
+
+		$stmt="select GMT_offset from vicidial_phone_codes where tz_code='$owner' and country_code='$phone_code' limit 1;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$pc_recs = mysqli_num_rows($rslt);
+		if ($pc_recs > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$gmt_offset =	$row[0];	 $gmt_offset = preg_replace("/\+/i","",$gmt_offset);
+			$PC_processed++;
+			$postalgmt_found++;
+			$post++;
+			}
+
+		$stmt = "select distinct DST_range from vicidial_phone_codes where tz_code='$owner' and country_code='$phone_code' order by DST_range desc limit 1;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$pc_recs = mysqli_num_rows($rslt);
+		if ($pc_recs > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$dst_range =	$row[0];
+			if (strlen($dst_range)>2) {$dst = 'Y';}
+			}
+		}
+	if ( (preg_match("/NANPA/i",$tz_method)) && (strlen($USarea)>2) && (strlen($USprefix)>2) )
+		{
+		$stmt="select GMT_offset,DST from vicidial_nanpa_prefix_codes where areacode='$USarea' and prefix='$USprefix';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$pc_recs = mysqli_num_rows($rslt);
+		if ($pc_recs > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$gmt_offset =	$row[0];	 $gmt_offset = preg_replace("/\+/i","",$gmt_offset);
+			$dst =			$row[1];
+			$dst_range =	'';
+			if ($dst == 'Y')
+				{$dst_range =	'SSM-FSN';}
+			$PC_processed++;
+			$postalgmt_found++;
+			$post++;
 			}
 		}
 	if ($postalgmt_found < 1)
