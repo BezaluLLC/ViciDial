@@ -47,6 +47,7 @@
 # 141128-0858 - Code cleanup for QXZ functions
 # 141230-0942 - Added code for on-the-fly language translations display
 # 150516-1259 - Fixed Javascript element problem, Issue #857
+# 150522-1304 - Fixed issue with missing calls from user stats section
 #
 
 $startMS = microtime();
@@ -2096,10 +2097,10 @@ $CALLS_graph=$graph_header."<th class='thgraph' scope='col'>$rpt_type_verbiages 
 $TIMEHMS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TIME H:M:S")."</th></tr>";
 $AVERAGE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVERAGE")."</th></tr>";
 
-$stmt="select vicidial_closer_log.user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from vicidial_closer_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and vicidial_closer_log.user is not null and length_in_sec is not null and length_in_sec > 0 and vicidial_closer_log.user=vicidial_users.user group by vicidial_closer_log.user;";
+$stmt="select vicidial_closer_log.user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from vicidial_closer_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and vicidial_closer_log.user is not null and length_in_sec is not null and vicidial_closer_log.user=vicidial_users.user group by vicidial_closer_log.user;";
 if ($DID=='Y')
 	{
-	$stmt="select vicidial_closer_log.user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from vicidial_closer_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and vicidial_closer_log.user is not null and length_in_sec is not null and length_in_sec > 0 and vicidial_closer_log.user=vicidial_users.user group by vicidial_closer_log.user;";
+	$stmt="select vicidial_closer_log.user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from vicidial_closer_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and vicidial_closer_log.user is not null and length_in_sec is not null and vicidial_closer_log.user=vicidial_users.user group by vicidial_closer_log.user;";
 	}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
