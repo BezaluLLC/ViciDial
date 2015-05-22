@@ -485,10 +485,11 @@
 # 150405-1410 - Fixed issue with API dialing and preview
 # 150418-2206 - Fixed issue with manual dial with hotkeys in RATIO method, issue #836
 # 150428-1735 - Added web form three
+# 150522-1254 - Fixed issue #859
 #
 
-$version = '2.12-457c';
-$build = '150428-1735';
+$version = '2.12-458c';
+$build = '150522-1254';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -1065,12 +1066,12 @@ if ($user_login_first == 1)
                 echo "<tr><td align=\"right\">"._QXZ("Phone Password:")."  </td>";
                 echo "<td align=\"left\"><input type=\"password\" name=\"phone_pass\" size=\"10\" maxlength=\"20\" value=\"$phone_pass\" /></td></tr>\n";
                 echo "<tr><td align=\"right\">"._QXZ("User Login").":  </td>";
-                echo "<td align=\"left\"><input type=\"text\" name=\"VD_login\" size=\"10\" maxlength=\"20\" value=\"$VD_login\"> /</td></tr>\n";
+                echo "<td align=\"left\"><input type=\"text\" name=\"VD_login\" size=\"10\" maxlength=\"20\" value=\"$VD_login\" /></td></tr>\n";
                 echo "<tr><td align=\"right\">"._QXZ("User Password:")."  </td>";
                 echo "<td align=\"left\"><input type=\"password\" name=\"VD_pass\" size=\"10\" maxlength=\"20\" value=\"$VD_pass\" /></td></tr>\n";
                 echo "<tr><td align=\"right\" valign=\"top\">"._QXZ("Campaign:")."  </td>";
                 echo "<td align=\"left\"><span id=\"LogiNCamPaigns\">$camp_form_code</span></td></tr>\n";
-                echo "<tr><td align=\"center\" colspan=\"2>\"<input type=\"submit\" name=\"SUBMIT\" value=\""._QXZ("SUBMIT")."\" /> &nbsp; \n";
+                echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\""._QXZ("SUBMIT")."\" /> &nbsp; \n";
                 echo "<span id=\"LogiNReseT\"></span></td></tr>\n";
                 echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
                 echo "</table></center>\n";
