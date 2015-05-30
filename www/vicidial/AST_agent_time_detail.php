@@ -42,6 +42,7 @@
 # 150210-1356 - Added option to show time in seconds
 # 150422-1643 - Added two new shift options
 # 150516-1311 - Fixed Javascript element problem, Issue #857
+# 150529-1921 - Sub statuses are now sorted in alphabetical order
 #
 
 $startMS = microtime();
@@ -616,40 +617,50 @@ else
 		$park_array[$park_row[0]][1]=$park_row[2];
 		}
 
-	$stmt="select $userSQL,sum(pause_sec),sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 $group_SQL $user_group_SQL group by user,sub_status order by user,sub_status desc limit 10000000;";
-	$rslt=mysql_to_mysqli($stmt, $link);
-	
-	if ($DB) {$ASCII_text.= "$stmt\n";}
-	$subs_to_print = mysqli_num_rows($rslt);
-	$i=0; 
-	while ($i < $subs_to_print)
-		{
-		$row=mysqli_fetch_row($rslt);
-		$PCuser[$i] =		$row[0];
-		$PCpause_sec[$i] =	$row[1];
-		$sub_status[$i] =	$row[2];
+	# Grab a list of sub_statuses sorted in order so they will appear in order in the resulting report - otherwise they could appear in any order
+	$ss_stmt="select distinct sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 $group_SQL $user_group_SQL order by sub_status asc limit 10000000;";
+	$ss_rslt=mysql_to_mysqli($ss_stmt, $link);
+	$j=0;
+	while($ss_row=mysqli_fetch_row($ss_rslt)) {
+		$current_ss=$ss_row[0];
 
-		if (!preg_match("/\-$sub_status[$i]\-/i", $sub_statuses))
+		$stmt="select $userSQL,sum(pause_sec),sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 and sub_status='$current_ss' $group_SQL $user_group_SQL group by user,sub_status order by user,sub_status desc limit 10000000;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		
+		if ($DB) {$ASCII_text.= "$stmt\n";}
+		$sub_subs_to_print = mysqli_num_rows($rslt);
+		$subs_to_print+=$sub_subs_to_print;
+		$i=0; 
+		while ($i < $sub_subs_to_print)
 			{
-			$sub_statusesTXT = sprintf("%10s", $sub_status[$i]);
-			$sub_statusesHEAD .= "------------+";
-			$sub_statusesHTML .= " $sub_statusesTXT |";
-			$sub_statusesFILE .= ",$sub_status[$i]";
-			$sub_statuses .= "$sub_status[$i]-";
-			$sub_statusesARY[$sub_status_count] = $sub_status[$i];
-			$sub_status_count++;
+			$row=mysqli_fetch_row($rslt);
+			$PCuser[$j] =		$row[0];
+			$PCpause_sec[$j] =	$row[1];
+			$sub_status[$j] =	$row[2];
 
-			$max_varname="max_".$sub_status[$i];
-			$$max_varname=1;
+			if (!preg_match("/\-$sub_status[$j]\-/i", $sub_statuses))
+				{
+				$sub_statusesTXT = sprintf("%10s", $sub_status[$j]);
+				$sub_statusesHEAD .= "------------+";
+				$sub_statusesHTML .= " $sub_statusesTXT |";
+				$sub_statusesFILE .= ",$sub_status[$j]";
+				$sub_statuses .= "$sub_status[$j]-";
+				$sub_statusesARY[$sub_status_count] = $sub_status[$j];
+				$sub_status_count++;
+
+				$max_varname="max_".$sub_status[$j];
+				$$max_varname=1;
+				}
+			if (!preg_match("/\-$PCuser[$j]\-/i", $PCusers))
+				{
+				$PCusers .= "$PCuser[$j]-";
+				$PCusersARY[$user_count] = $PCuser[$j];
+				$user_count++;
+				}
+			$i++;
+			$j++;
 			}
-		if (!preg_match("/\-$PCuser[$i]\-/i", $PCusers))
-			{
-			$PCusers .= "$PCuser[$i]-";
-			$PCusersARY[$user_count] = $PCuser[$i];
-			$user_count++;
-			}
-		$i++;
-		}
+	}
 	### END gather pause code information by user IDs
 
 
