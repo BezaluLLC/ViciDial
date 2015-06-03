@@ -42,6 +42,7 @@
 # 141229-1748 - Added code for on-the-fly language translations display
 # 150107-1728 - Added ignore_group_on_search user option
 # 150312-1507 - Allow for single quotes in vicidial_list data fields
+# 150602-1207 - Allow for searching by email address
 #
 
 require("dbconnect_mysqli.php");
@@ -56,6 +57,8 @@ if (isset($_GET["first_name"]))				{$first_name=$_GET["first_name"];}
 	elseif (isset($_POST["first_name"]))	{$first_name=$_POST["first_name"];}
 if (isset($_GET["last_name"]))			{$last_name=$_GET["last_name"];}
 	elseif (isset($_POST["last_name"]))	{$last_name=$_POST["last_name"];}
+if (isset($_GET["email"]))			{$email=$_GET["email"];}
+	elseif (isset($_POST["email"]))	{$email=$_POST["email"];}
 if (isset($_GET["phone"]))				{$phone=$_GET["phone"];}
 	elseif (isset($_POST["phone"]))		{$phone=$_POST["phone"];}
 if (isset($_GET["lead_id"]))			{$lead_id=$_GET["lead_id"];}
@@ -308,7 +311,7 @@ echo " "._QXZ("Lead search").": $vendor_id $phone $lead_id $status $list_id $use
 echo date("l F j, Y G:i:s A");
 echo "<BR>\n";
 
-if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_lead_id) and (!$log_phone_archive)  and (!$log_lead_id_archive) and ( (strlen($status)<1) and (strlen($list_id)<1) and (strlen($user)<1) and (strlen($owner)<1) ) and ( (strlen($first_name)<1) and (strlen($last_name)<1) ))
+if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_lead_id) and (!$log_phone_archive)  and (!$log_lead_id_archive) and ( (strlen($status)<1) and (strlen($list_id)<1) and (strlen($user)<1) and (strlen($owner)<1) ) and ( (strlen($first_name)<1) and (strlen($last_name)<1) and (strlen($email)<1) ))
 	{
 	### Lead search
 	echo "<br><center>\n";
@@ -368,6 +371,12 @@ if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_
 	echo "<TD rowspan=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
 	echo "</TR><TR bgcolor=#B9CBFD>";
 	echo "<TD ALIGN=right>$label_last_name: &nbsp; </TD><TD ALIGN=left><input type=text name=last_name size=15 maxlength=30></TD>";
+	echo "</TR><TR bgcolor=#015B91>";
+	echo "<TD colspan=3 align=center height=1></TD>";
+	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "<TD ALIGN=right>$label_email: &nbsp; </TD><TD ALIGN=left><input type=text name=email size=15 maxlength=30></TD>";
+	echo "<TD><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
+	echo "</TR><TR bgcolor=#B9CBFD>";
 	echo "</TR>";
 
 
@@ -976,8 +985,16 @@ else
 						}
 					else
 						{
-						print _QXZ("ERROR: you must search for something! Go back and search for something");
-						exit;
+						if ( (strlen($email)>0) )
+							{
+							$email_SQL = "email='" . mysqli_real_escape_string($link, $email) . "'";
+							$stmt="SELECT $vicidial_list_fields from $vl_table where $email_SQL $LOGallowed_listsSQL";
+							}
+						else
+							{
+							print _QXZ("ERROR: you must search for something! Go back and search for something");
+							exit;
+							}
 						}
 					}
 				}

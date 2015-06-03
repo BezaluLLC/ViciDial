@@ -48,6 +48,7 @@
 # 141230-0945 - Added code for on-the-fly language translations display
 # 150210-1357 - Added option to show time in seconds
 # 150516-1308 - Fixed Javascript element problem, Issue #857
+# 150603-1533 - Statuses are now sorted in alphabetical order
 #
 
 $startMS = microtime();
@@ -647,11 +648,6 @@ while ($UG_row=mysqli_fetch_row($recent_UG_rslt)) {
 	$recent_user_groups[$UG_row[1]]=$Ugrp_row[0];
 }
 
-$stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_SQL $user_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
-$rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {$HTML_text.="$stmt\n";}
-$rows_to_print = mysqli_num_rows($rslt);
-
 $graph_stats=array();
 $max_calls=1;
 $max_time=1;
@@ -685,61 +681,99 @@ $DEADAVG_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DEAD AVG")
 $CUST_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST")."</th></tr>";
 $CUSTAVG_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST AVG")."</th></tr>";
 
-$i=0;
+	$user_stmt="select distinct full_name,vicidial_users.user from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user $group_SQL $user_group_SQL order by full_name asc";
+		if ($DB) {echo "$user_stmt\n";}
+	$user_rslt=mysql_to_mysqli($user_stmt, $link);
+	$q=0;
+	while($q<mysqli_num_rows($user_rslt)) 
+		{
+		$user_row=mysqli_fetch_row($user_rslt);
+		$full_name[$q] =	$user_row[0];
+		$user[$q] =			$user_row[1];
+
+		if (!preg_match("/\-$user[$q]\-/i", $users))
+			{
+			$users .= "$user[$q]-";
+			$usersARY[$k] = $user[$q];
+			$user_namesARY[$k] = $full_name[$q];
+			$k++;
+			}
+		$q++;
+		}
+
+
+$stat_stmt="select distinct status from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_SQL $user_SQL order by status asc";
+$stat_rslt=mysql_to_mysqli($stat_stmt, $link);
+	if ($DB) {$HTML_text.="$stat_stmt\n";}
+$q=0;
 $userTOTcalls=array();
-while ($i < $rows_to_print)
-	{
-	$row=mysqli_fetch_row($rslt);
-#	$row[0] = ($row[0] - 1);	# subtract 1 for login/logout event compensation
-	
-	$calls[$i] =		$row[0];
-	$talk_sec[$i] =		$row[1];
-	$full_name[$i] =	$row[2];
-	$user[$i] =			$row[3];
-	$pause_sec[$i] =	$row[4];
-	$wait_sec[$i] =		$row[5];
-	$dispo_sec[$i] =	$row[6];
-	$status[$i] =		strtoupper($row[7]);
-	$dead_sec[$i] =		$row[8];
-	$user_group[$i] =	$row[9];
-	$customer_sec[$i] =	($talk_sec[$i] - $dead_sec[$i]);
 
-	if (strlen($status[$i])>0) {$userTOTcalls[$row[3]]+=$row[0];}
+while ($stat_row=mysqli_fetch_row($stat_rslt)) {
+	$current_status=$stat_row[0];
 
-	$max_varname="max_".$status[$i];
-	$$max_varname=1;
-	
-	if ($customer_sec[$i] < 1)
-		{$customer_sec[$i]=0;}
-	if ( (!preg_match("/\-$status[$i]\-/i", $statuses)) and (strlen($status[$i])>0) )
+	$stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 and status='$current_status' $group_SQL $user_group_SQL $user_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {$HTML_text.="$stmt\n";}
+	$rows_to_print+=mysqli_num_rows($rslt);
+
+	$stat_rows_to_print = mysqli_num_rows($rslt);
+
+	$i=0;
+	while ($i < $stat_rows_to_print)
 		{
-		$statusesTXT = sprintf("%8s", $status[$i]);
+		$row=mysqli_fetch_row($rslt);
+	#	$row[0] = ($row[0] - 1);	# subtract 1 for login/logout event compensation
+		
+		$calls[$q] =		$row[0];
+		$talk_sec[$q] =		$row[1];
+		$full_name[$q] =	$row[2];
+		$user[$q] =			$row[3];
+		$pause_sec[$q] =	$row[4];
+		$wait_sec[$q] =		$row[5];
+		$dispo_sec[$q] =	$row[6];
+		$status[$q] =		strtoupper($row[7]);
+		$dead_sec[$q] =		$row[8];
+		$user_group[$q] =	$row[9];
+		$customer_sec[$q] =	($talk_sec[$q] - $dead_sec[$q]);
 
-		$statusesHEAD .= "----------+";
-		$statusesHTML .= " $statusesTXT |";
-		$CSV_header.=",\"$status[$i]\"";
+		if (strlen($status[$q])>0) {$userTOTcalls[$row[3]]+=$row[0];}
 
-		if($show_percentages) {
-			$statusesHEAD .= "------------+";
-			$statusesHTML .= " $statusesTXT % |";
-			$CSV_header.=",\"$status[$i] %\"";
+		$max_varname="max_".$status[$q];
+		$$max_varname=1;
+		
+		if ($customer_sec[$q] < 1)
+			{$customer_sec[$q]=0;}
+		if ( (!preg_match("/\-$status[$q]\-/i", $statuses)) and (strlen($status[$q])>0) )
+			{
+			$statusesTXT = sprintf("%8s", $status[$q]);
+
+			$statusesHEAD .= "----------+";
+			$statusesHTML .= " $statusesTXT |";
+			$CSV_header.=",\"$status[$q]\"";
+
+			if($show_percentages) {
+				$statusesHEAD .= "------------+";
+				$statusesHTML .= " $statusesTXT % |";
+				$CSV_header.=",\"$status[$q] %\"";
+			}
+
+			$statuses .= "$status[$q]-";
+			$statusesARY[$j] = $status[$q];
+			$j++;
+			}
+		if (!preg_match("/\-$user[$q]\-/i", $users))
+			{
+			$users .= "$user[$q]-";
+			$usersARY[$k] = $user[$q];
+			$user_namesARY[$k] = $full_name[$q];
+			$user_groupsARY[$k] = $user_group[$q];
+			$k++;
+			}
+
+		$i++;
+		$q++;
 		}
-
-		$statuses .= "$status[$i]-";
-		$statusesARY[$j] = $status[$i];
-		$j++;
-		}
-	if (!preg_match("/\-$user[$i]\-/i", $users))
-		{
-		$users .= "$user[$i]-";
-		$usersARY[$k] = $user[$i];
-		$user_namesARY[$k] = $full_name[$i];
-		$user_groupsARY[$k] = $user_group[$i];
-		$k++;
-		}
-
-	$i++;
-	}
+}
 
 $CSV_header.="\n";
 $CSV_lines='';
@@ -1314,45 +1348,57 @@ $TOTAL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL")." </
 $NONPAUSE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("NONPAUSE")."</th></tr>";
 $PAUSE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("PAUSE")."</th></tr>";
 
-$stmt="select full_name,vicidial_users.user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 $group_SQL $user_group_SQL $user_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
-$rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {$ASCII_text.="$stmt\n";}
-$subs_to_print = mysqli_num_rows($rslt);
-$i=0;
-while ($i < $subs_to_print)
-	{
-	$row=mysqli_fetch_row($rslt);
-	$PCfull_name[$i] =	$row[0];
-	$PCuser[$i] =		$row[1];
-	$PCpause_sec[$i] =	$row[2];
-	$sub_status[$i] =	$row[3];
-	$PCnon_pause_sec[$i] =	$row[4];
-	$PCuser_group[$i] =		$row[5];
-	$max_varname="max_".$sub_status[$i];
-	$$max_varname=1;
+$sub_status_stmt="select distinct sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 $group_SQL $user_SQL order by sub_status asc limit 10000000;";
+	if ($DB) {$ASCII_text.="$sub_status_stmt\n";}
+$sub_status_rslt=mysql_to_mysqli($sub_status_stmt, $link);
+$subs_to_print=0;
+$q=0;
+while($ss_row=mysqli_fetch_row($sub_status_rslt)) {
+	$current_ss=$ss_row[0];
 
-	#	echo "$sub_status[$i]|$PCpause_sec[$i]\n";
-#	if ( (!preg_match("/\-$sub_status[$i]\-/i", $sub_statuses)) and (strlen($sub_status[$i])>0) )
-	if (!preg_match("/\-$sub_status[$i]\-/i", $sub_statuses))
+	$stmt="select full_name,vicidial_users.user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and sub_status='$current_ss' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 $group_SQL $user_group_SQL $user_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {$ASCII_text.="$stmt\n";}
+	# $subs_to_print = mysqli_num_rows($rslt);
+	$sub_subs_to_print = mysqli_num_rows($rslt);
+	$subs_to_print+=$sub_subs_to_print;
+	$i=0;
+	while ($i < $sub_subs_to_print)
 		{
-		$sub_statusesTXT = sprintf("%8s", $sub_status[$i]);
-		$sub_statusesHEAD .= "----------+";
-		$sub_statusesHTML .= " $sub_statusesTXT |";
-		$sub_statuses .= "$sub_status[$i]-";
-		$sub_statusesARY[$j] = $sub_status[$i];
-		$CSV_statuses.=",\"$sub_status[$i]\"";
-		$j++;
-		}
-	if (!preg_match("/\-$PCuser[$i]\-/i", $PCusers))
-		{
-		$PCusers .= "$PCuser[$i]-";
-		$PCusersARY[$k] = $PCuser[$i];
-		$PCuser_namesARY[$k] = $PCfull_name[$i];
-		$PCuser_groupsARY[$k] = $PCuser_group[$i];
-		$k++;
-		}
+		$row=mysqli_fetch_row($rslt);
+		$PCfull_name[$q] =	$row[0];
+		$PCuser[$q] =		$row[1];
+		$PCpause_sec[$q] =	$row[2];
+		$sub_status[$q] =	$row[3];
+		$PCnon_pause_sec[$q] =	$row[4];
+		$PCuser_group[$q] =		$row[5];
+		$max_varname="max_".$sub_status[$q];
+		$$max_varname=1;
 
-	$i++;
+		#	echo "$sub_status[$i]|$PCpause_sec[$i]\n";
+	#	if ( (!preg_match("/\-$sub_status[$i]\-/i", $sub_statuses)) and (strlen($sub_status[$i])>0) )
+		if (!preg_match("/\-$sub_status[$q]\-/i", $sub_statuses))
+			{
+			$sub_statusesTXT = sprintf("%8s", $sub_status[$q]);
+			$sub_statusesHEAD .= "----------+";
+			$sub_statusesHTML .= " $sub_statusesTXT |";
+			$sub_statuses .= "$sub_status[$q]-";
+			$sub_statusesARY[$j] = $sub_status[$q];
+			$CSV_statuses.=",\"$sub_status[$q]\"";
+			$j++;
+			}
+		if (!preg_match("/\-$PCuser[$q]\-/i", $PCusers))
+			{
+			$PCusers .= "$PCuser[$q]-";
+			$PCusersARY[$k] = $PCuser[$q];
+			$PCuser_namesARY[$k] = $PCfull_name[$q];
+			$PCuser_groupsARY[$k] = $PCuser_group[$q];
+			$k++;
+			}
+
+		$i++;
+		$q++;
+		}
 	}
 
 $ASCII_text.=_QXZ("PAUSE CODE BREAKDOWN",20).":     <a href=\"$LINKbase&stage=$stage&file_download=2\">["._QXZ("DOWNLOAD")."]</a>\n\n";
@@ -1426,8 +1472,8 @@ while ($m < $k)
 			}
 		if ($status_found < 1)
 			{
-			$SstatusesHTML .= "        0 |";
-			$CSV_statuses.=",\"0\"";
+			$SstatusesHTML .= "     0:00 |";
+			$CSV_statuses.=",\"0:00\"";
 			$graph_stats[$m][(4+$n)]=0;					
 			}
 		### END loop through each stat line ###

@@ -26,6 +26,7 @@
 # 140108-0711 - Added webserver and hostname to report logging
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 150516-1310 - Fixed Javascript element problem, Issue #857
+# 150603-1532 - Statuses are now sorted in alphabetical order
 #
 
 $startMS = microtime();
@@ -478,46 +479,78 @@ else
 	$user_namesARY[0]='';
 	$k=0;
 
-	$stmt="select count(*) as calls,full_name,vicidial_users.user,status from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user $group_SQL $user_group_SQL group by user,full_name,status order by full_name,user,status desc limit 500000;";
-	$rslt=mysql_to_mysqli($stmt, $link);
-	if ($DB) {echo "$stmt\n";}
-	$rows_to_print = mysqli_num_rows($rslt);
-	$i=0; $sub_status_count=0;
-	while ($i < $rows_to_print)
+	$user_stmt="select distinct full_name,vicidial_users.user from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and status is not null $group_SQL $user_group_SQL order by full_name asc";
+		if ($DB) {echo "$user_stmt\n";}
+	$user_rslt=mysql_to_mysqli($user_stmt, $link);
+	$q=0;
+	while($q<mysqli_num_rows($user_rslt)) 
 		{
-		$row=mysqli_fetch_row($rslt);
+		$user_row=mysqli_fetch_row($user_rslt);
+		$full_name[$q] =	$user_row[0];
+		$user[$q] =			$user_row[1];
 
-		if ( ($row[0] > 0) and (strlen($row[3]) > 0) and (!preg_match("/NULL/i",$row[3])))
+		if (!preg_match("/\-$user[$q]\-/i", $users))
 			{
-			$calls[$i] =		$row[0];
-			$full_name[$i] =	$row[1];
-			$user[$i] =			$row[2];
-			$status[$i] =		$row[3];
-			if ( (!preg_match("/-$status[$i]-/i", $statuses)) and (strlen($status[$i])>0) )
-				{
-				$statusesTXT = sprintf("%8s", $status[$i]);
-				$statusesHEAD .= "----------+";
-				$statusesHTML .= " $statusesTXT |";
-				$statusesFILE .= "$statusesTXT,";
-				$statuses .= "$status[$i]-";
-				$statusesARY[$j] = $status[$i];
-
-				$sub_statusesARY[$sub_status_count] = $status[$i];
-				$sub_status_count++;
-				$max_varname="max_".$status[$i];
-				$$max_varname=1;
-
-				$j++;
-				}
-			if (!preg_match("/\-$user[$i]\-/i", $users))
-				{
-				$users .= "$user[$i]-";
-				$usersARY[$k] = $user[$i];
-				$user_namesARY[$k] = $full_name[$i];
-				$k++;
-				}
+			$users .= "$user[$q]-";
+			$usersARY[$k] = $user[$q];
+			$user_namesARY[$k] = $full_name[$q];
+			$k++;
 			}
-		$i++;
+		$q++;
+		}
+
+	$status_stmt="select distinct status from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user $group_SQL $user_group_SQL order by status";
+		if ($DB) {echo "$status_stmt\n";}
+	$status_rslt=mysql_to_mysqli($status_stmt, $link);
+	$q=0;
+	$status_rows_to_print=0;
+	while($status_row=mysqli_fetch_row($status_rslt)) 
+		{
+		$current_status=$status_row[0];
+
+		$stmt="select count(*) as calls,full_name,vicidial_users.user,status from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and status='$current_status' $group_SQL $user_group_SQL group by user,full_name,status order by full_name,user,status desc limit 500000;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$status_rows_to_print = mysqli_num_rows($rslt);
+		$rows_to_print+=$status_rows_to_print;
+		$i=0; $sub_status_count=0;
+		while ($i < $status_rows_to_print)
+			{
+			$row=mysqli_fetch_row($rslt);
+
+			if ( ($row[0] > 0) and (strlen($row[2]) > 0) and (strlen($row[3]) > 0) and (!preg_match("/NULL/i",$row[3])))
+				{
+				$calls[$q] =		$row[0];
+				$full_name[$q] =	$row[1];
+				$user[$q] =			$row[2];
+				$status[$q] =		$row[3];
+				if ( (!preg_match("/-$status[$q]-/i", $statuses)) and (strlen($status[$q])>0) )
+					{
+					$statusesTXT = sprintf("%8s", $status[$q]);
+					$statusesHEAD .= "----------+";
+					$statusesHTML .= " $statusesTXT |";
+					$statusesFILE .= "$statusesTXT,";
+					$statuses .= "$status[$q]-";
+					$statusesARY[$j] = $status[$q];
+
+					$sub_statusesARY[$sub_status_count] = $status[$q];
+					$sub_status_count++;
+					$max_varname="max_".$status[$q];
+					$$max_varname=1;
+
+					$j++;
+					}
+				if (!preg_match("/\-$user[$q]\-/i", $users))
+					{
+					$users .= "$user[$q]-";
+					$usersARY[$k] = $user[$q];
+					$user_namesARY[$k] = $full_name[$q];
+					$k++;
+					}
+				}
+			$i++;
+			$q++;
+			}
 		}
 
 	if ($file_download < 1)

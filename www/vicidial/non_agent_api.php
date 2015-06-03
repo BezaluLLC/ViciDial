@@ -99,10 +99,11 @@
 # 150430-0644 - Added API allowed function restrictions and allowed list restrictions
 # 150512-2028 - Added filtering of hash sign on some input variables, Issue #851
 # 150516-1138 - Fixed conflict with functions.php
+# 150603-1528 - Fixed format issue in recording_lookup
 #
 
-$version = '2.12-75';
-$build = '150516-1138';
+$version = '2.12-76';
+$build = '150603-1528';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -4373,7 +4374,7 @@ if ($function == 'recording_lookup')
 					if ($stage == 'pipe')
 						{$DL = '|';   $DLset++;}
 					if ($DLset < 1)
-						{$DL='pipe';}
+						{$DL='|';}
 					if ($header == 'YES')
 						{$output .= 'start_time' . $DL . 'user' . $DL . 'recording_id' . $DL . 'lead_id' . $DL . "location\n";}
 

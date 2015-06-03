@@ -68,6 +68,7 @@
 # 150114-2321 - Added date_of_birth as editable field
 # 150312-1506 - Fixed minor Iframe form bug related to custom fields
 # 150514-1522 - Added $gmt_offset lookup for adding a new lead
+# 150603-1527 - Allow non-digit characters in alt_phone field
 #
 
 require("dbconnect_mysqli.php");
@@ -232,7 +233,7 @@ if ($non_latin < 1)
 
 	$old_phone = preg_replace('/[^0-9]/','',$old_phone);
 	$phone_number = preg_replace('/[^0-9]/','',$phone_number);
-	$alt_phone = preg_replace('/[^0-9]/','',$alt_phone);
+	$alt_phone = preg_replace('/[^- \'\+\_\.0-9a-zA-Z]/','',$alt_phone);
 	}	# end of non_latin
 else
 	{

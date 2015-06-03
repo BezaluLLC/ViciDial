@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2015-05-12
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2015-06-03
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -104,6 +104,7 @@ Changes:
 150428-1720 - Added web_form_address_three to add_list/update_list functions
 150430-0644 - Added API allowed function restrictions and allowed list restrictions
 150512-2028 - Added filtering of hash sign on some input variables, Issue #851
+150603-1528 - Fixed format issue in recording_lookup
 
 
 API Functions use the 'function' variable
@@ -160,7 +161,7 @@ moh_list - outputs a list of music on hold classes in the system
 NOTE: api user for this function must have user_level set to 7 or higher
 
 OPTIONAL FIELDS-
-format -		format of the output(tab, link, selectframe)
+format -		format of the output(only 'selectframe' works)
 comments -		name of the field to populate
 
 
@@ -184,7 +185,7 @@ vm_list - outputs a list of voicemail boxes in the system
 NOTE: api user for this function must have user_level set to 7 or higher
 
 OPTIONAL FIELDS-
-format -		format of the output(tab, link, selectframe)
+format -		format of the output(only 'selectframe' works)
 comments -		name of the field to populate
 
 

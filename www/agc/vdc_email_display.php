@@ -1,7 +1,7 @@
 <?php
 # vdc_email_display.php - VICIDIAL agent email display script
 #
-# Copyright (C) 2014  Matt Florell, Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell, Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This page displays any incoming emails in the Vicidial user interface.  It 
 # also allows the user to download and view any attachments sent in the email,
@@ -20,10 +20,11 @@
 # 141118-1426 - Added agent_email variable
 # 141128-0850 - Code cleanup for QXZ functions
 # 141216-2117 - Added language settings lookups and user/pass variable standardization
+# 150603-1541 - Fixed email attachments issue
 #
 
-$version = '2.10-10';
-$build = '141216-2117';
+$version = '2.12-11';
+$build = '150603-1541';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -197,7 +198,7 @@ if ($REPLY)
 	$semi_rand = md5(time()); 
 	$mime_boundary = "==Multipart_Boundary_x{$semi_rand}x";
 	$headers .= "\nMIME-Version: 1.0\n" . "Content-Type: multipart/mixed;\n" . " boundary=\"{$mime_boundary}\""; 
-	$message = "This is a multi-part message in MIME format.\n\n" . "--{$mime_boundary}\n" . "Content-Type: text/plain; charset=\"utf-8\"\n" . "Content-Transfer-Encoding: 7bit\n\n" . $message . "\n\n"; 
+	$message = "This is a multi-part message in MIME format.\n\n" . "--{$mime_boundary}\n" . "Content-Type: text/plain; charset=\"utf-8\"\n" . "Content-Transfer-Encoding: 7bit\n\n" . $reply_message . "\n\n"; 
 	$message .= "--{$mime_boundary}\n";
 
 	for ($i=1; $i<=5; $i++) 
@@ -206,7 +207,7 @@ if ($REPLY)
 		$attachment_path="A".$i."_path";
 		$LF_orig=$$attachment_orig_name;
 		$LF_path=$$attachment_path;
-		#echo "<p>".$$attachment_name."<BR/>".$$attachment_orig_name."<BR/>".$$attachment_path."<BR/><p>"; 
+		# echo "<p>".$$attachment_name."<BR/>".$$attachment_orig_name."<BR/>".$$attachment_path."<BR/><p>"; 
 		if ($LF_orig) 
 			{
 			if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig))
@@ -284,7 +285,7 @@ if ($lead_id) {
 		if (mysqli_num_rows($att_rslt)>0) {
 			$EMAIL_form.="<tr bgcolor=white><td align='right' valign='top' width='150'>"._QXZ("Attachments:")."</td><td align='left' valign='top' width='*'><pre>";
 			while($att_row=mysqli_fetch_array($att_rslt)) {
-				$EMAIL_form.="<LI><a href='$_SERVER[PHP_SELF]?attachment_id=$att_row[attachment_id]&lead_id=$lead_id'>$att_row[filename]</a>\n";
+				$EMAIL_form.="<LI><a href='$_SERVER[PHP_SELF]?attachment_id=$att_row[attachment_id]&lead_id=$lead_id&user=$user&pass=$pass'>$att_row[filename]</a>\n";
 			}
 			$EMAIL_form.="</pre></td></tr>";
 		}
@@ -384,7 +385,7 @@ if ($lead_id) {
 	pre { white-space: pre-wrap; }
 	</style>
 	<body>
-	<form action='<?php echo $_SERVER['PHP_SELF']; ?>' method='get' name="email_display_form" id="email_display_form" onSubmit="if (this.submitted) return false; this.submitted=true" enctype="multipart/form-data">
+	<form action='<?php echo $_SERVER['PHP_SELF']; ?>' method='post' name="email_display_form" id="email_display_form" onSubmit="if (this.submitted) return false; this.submitted=true" enctype="multipart/form-data">
 	<?php echo $EMAIL_form; ?>
 	</form>
 	</body>
