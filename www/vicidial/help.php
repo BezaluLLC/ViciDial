@@ -46,6 +46,7 @@
 # 150428-1704 - Added enable_third_webform
 # 150429-1232 - Added new user API restrictions
 # 150513-2310 - Added POP3 Auth Mode
+# 150608-1154 - Added manual dial override field entry and updated manual dial search and filter entries
 #
 
 require("dbconnect_mysqli.php");
@@ -1563,6 +1564,11 @@ if ($SSoutbound_autodial_active > 0)
 <B><?php echo _QXZ("Manual Dial Override"); ?> -</B><?php echo _QXZ("The setting can override the Users setting for manual dial ability for agents when they are logged into this campaign. NONE will follow the Users setting, ALLOW_ALL will allow any agent logged into this campaign to place manual dial calls, DISABLE_ALL will not allow anyone logged into this campaign to place manual dial calls. Default is NONE."); ?>
 
 <BR>
+<A NAME="campaigns-manual_dial_override_field">
+<BR>
+<B><?php echo _QXZ("Manual Dial Override Field"); ?> -</B><?php echo _QXZ("The setting if set to ENABLED will show the Manual Dial Override field in the agent screen. Default is ENABLED."); ?>
+
+<BR>
 <A NAME="campaigns-manual_dial_list_id">
 <BR>
 <B><?php echo _QXZ("Manual Dial List ID"); ?> -</B><?php echo _QXZ("The default list_id to be used when an agent places a manual call and a new lead record is created in the list table. Default is 999. This field can contain digits only."); ?>
@@ -1570,7 +1576,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-manual_dial_filter">
 <BR>
-<B><?php echo _QXZ("Manual Dial Filter"); ?> -</B><?php echo _QXZ("This allows you to filter the calls that agents make in manual dial mode for this campaign by any combination of the following: DNC - to kick out, CAMPAIGNLISTS - the number must be within the lists for the campaign, NONE - no filter on manual dial or fast dial lists. CAMPLISTS_ALL - will include inactive lists in the search for the number."); ?>
+<B><?php echo _QXZ("Manual Dial Filter"); ?> -</B><?php echo _QXZ("This allows you to filter the calls that agents make in manual dial mode for this campaign by any combination of the following: DNC - to kick out, CAMPAIGNLISTS - the number must be within the lists for the campaign, NONE - no filter on manual dial or fast dial lists. CAMPLISTS_ALL - will include inactive lists in the search for the number. WITH_ALT will also search the Alt Phone field for the phone number. WITH_ALT_ADDR3 will also search the Alt Phone field and the Address 3 field for the phone number."); ?>
 
 <BR>
 <A NAME="campaigns-manual_dial_search_checkbox">
@@ -1580,7 +1586,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-manual_dial_search_filter">
 <BR>
-<B><?php echo _QXZ("Manual Dial Search Filter"); ?> -</B><?php echo _QXZ("This allows the agent to search only within lists belonging to this campaign when the agent has the Manual Dial Search Checkbox selected in the manual dial screen. The options are, CAMPLISTS_ONLY - will check for the number within the active lists for the campaign, CAMPLISTS_ALL - will also include inactive lists in the search for the number, NONE - no filter on manual dial searching. Default is NONE. If a lead is not found, then a new lead will be added."); ?>
+<B><?php echo _QXZ("Manual Dial Search Filter"); ?> -</B><?php echo _QXZ("This allows the agent to search only within lists belonging to this campaign when the agent has the Manual Dial Search Checkbox selected in the manual dial screen. The options are, CAMPLISTS_ONLY - will check for the number within the active lists for the campaign, CAMPLISTS_ALL - will also include inactive lists in the search for the number, NONE - no filter on manual dial searching. Default is NONE. If a lead is not found, then a new lead will be added. WITH_ALT will also search the Alt Phone field for the phone number. WITH_ALT_ADDR3 will also search the Alt Phone field and the Address 3 field for the phone number."); ?>
 
 <BR>
 <A NAME="campaigns-manual_preview_dial">

@@ -152,3 +152,7 @@ PRIMARY KEY (manager_chat_id)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 UPDATE system_settings SET db_schema_version='1412',db_schema_update_date=NOW() where db_schema_version < 1412;
+
+ALTER TABLE vicidial_campaigns ADD manual_dial_override_field ENUM('ENABLED','DISABLED') default 'ENABLED';
+
+UPDATE system_settings SET db_schema_version='1413',db_schema_update_date=NOW() where db_schema_version < 1413;

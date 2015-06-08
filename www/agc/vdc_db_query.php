@@ -377,10 +377,11 @@
 # 150312-1501 - Allow for single quotes in vicidial_list data fields
 # 150428-1722 - Added web form three
 # 150512-0616 - Fix for non-latin customer data
+# 150608-1051 - Added alt and addr3 options for manual dial search and filtering
 #
 
-$version = '2.12-272';
-$build = '150512-0616';
+$version = '2.12-273';
+$build = '150608-1051';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=616;
 $one_mysql_log=0;
@@ -1689,6 +1690,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 	$row='';   $rowx='';
 	$override_dial_number='';
 	$channel_live=1;
+	$MDF_search_flag='MAIN';
 	$lead_id = preg_replace("/[^0-9]/","",$lead_id);
 	if ( (strlen($conf_exten)<1) || (strlen($campaign)<1)  || (strlen($ext_context)<1) )
 		{
@@ -1832,6 +1834,26 @@ if ($ACTION == 'manDiaLnextCaLL')
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00362',$user,$server_ip,$session_name,$one_mysql_log);}
 						if ($DB) {echo "$stmt\n";}
 						$man_leadID_ct = mysqli_num_rows($rslt);
+
+						if ( ($man_leadID_ct < 1) and (preg_match("/WITH_ALT/",$manual_dial_search_filter)) )
+							{
+							$stmt="SELECT lead_id FROM vicidial_list where alt_phone='$phone_number' $manual_dial_search_filterSQL order by modify_date desc LIMIT 1;";
+							$rslt=mysql_to_mysqli($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+							if ($DB) {echo "$stmt\n";}
+							$man_leadID_ct = mysqli_num_rows($rslt);
+							if ($man_leadID_ct > 0) {$MDF_search_flag='ALT';   $agent_dialed_type='ALT';}
+
+							if ( ($man_leadID_ct < 1) and (preg_match("/WITH_ALT_ADDR3/",$manual_dial_search_filter)) )
+								{
+								$stmt="SELECT lead_id FROM vicidial_list where address3='$phone_number' $manual_dial_search_filterSQL order by modify_date desc LIMIT 1;";
+								$rslt=mysql_to_mysqli($stmt, $link);
+									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+								if ($DB) {echo "$stmt\n";}
+								$man_leadID_ct = mysqli_num_rows($rslt);
+								if ($man_leadID_ct > 0) {$MDF_search_flag='ADDR3';   $agent_dialed_type='ADDR3';}
+								}
+							}
 						}
 					if ($man_leadID_ct > 0)
 						{
@@ -2073,7 +2095,28 @@ if ($ACTION == 'manDiaLnextCaLL')
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00020',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$row=mysqli_fetch_row($rslt);
-				
+				$MDF_search_flag='MAIN';
+
+				if ( ($row[0] < 1) and (preg_match("/WITH_ALT/",$manual_dial_filter)) )
+					{
+					$stmt="SELECT count(*) FROM vicidial_list where alt_phone='$phone_number' and list_id IN($camp_lists);";
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$row=mysqli_fetch_row($rslt);
+					$MDF_search_flag='ALT';
+					}
+
+				if ( ($row[0] < 1) and (preg_match("/WITH_ALT_ADDR3/",$manual_dial_filter)) )
+					{
+					$stmt="SELECT count(*) FROM vicidial_list where address3='$phone_number' and list_id IN($camp_lists);";
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$row=mysqli_fetch_row($rslt);
+					$MDF_search_flag='ADDR3';
+					}
+
 				if ($row[0] < 1)
 					{
 					### purge from the dial queue and api
@@ -4171,6 +4214,7 @@ if ($ACTION == 'manDiaLonly')
 	$MT[0]='';
 	$row='';   $rowx='';
 	$channel_live=1;
+	$MDF_search_flag='MAIN';
 	if ( (strlen($conf_exten)<1) || (strlen($campaign)<1) || (strlen($ext_context)<1) || (strlen($phone_number)<1) || (strlen($lead_id)<1) )
 		{
 		$channel_live=0;
@@ -4319,7 +4363,28 @@ if ($ACTION == 'manDiaLonly')
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00533',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
 			$row=mysqli_fetch_row($rslt);
-			
+			$MDF_search_flag='MAIN';
+
+			if ( ($row[0] < 1) and (preg_match("/WITH_ALT/",$manual_dial_filter)) )
+				{
+				$stmt="SELECT count(*) FROM vicidial_list where alt_phone='$phone_number' and list_id IN($camp_lists);";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$row=mysqli_fetch_row($rslt);
+				$MDF_search_flag='ALT';
+				}
+
+			if ( ($row[0] < 1) and (preg_match("/WITH_ALT_ADDR3/",$manual_dial_filter)) )
+				{
+				$stmt="SELECT count(*) FROM vicidial_list where address3='$phone_number' and list_id IN($camp_lists);";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$row=mysqli_fetch_row($rslt);
+				$MDF_search_flag='ADDR3';
+				}
+
 			if ($row[0] < 1)
 				{
 				echo " CALL NOT PLACED\nNUMBER NOT IN CAMPLISTS\n";

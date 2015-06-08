@@ -925,7 +925,8 @@ show_previous_callback ENUM('DISABLED','ENABLED') default 'ENABLED',
 clear_script ENUM('DISABLED','ENABLED') default 'DISABLED',
 cpd_unknown_action ENUM('DISABLED','DISPO','MESSAGE','CALLMENU','INGROUP') default 'DISABLED',
 manual_dial_search_filter VARCHAR(50) default 'NONE',
-web_form_address_three TEXT
+web_form_address_three TEXT,
+manual_dial_override_field ENUM('ENABLED','DISABLED') default 'ENABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -3493,4 +3494,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1412',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1413',db_schema_update_date=NOW(),reload_timestamp=NOW();

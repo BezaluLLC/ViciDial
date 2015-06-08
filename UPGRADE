@@ -71,6 +71,11 @@ OTHER CHANGES:
 
 6. Added web administration for chat features
 
+7. Added new campaign settings for Manual Dial Search and Manual Dial Filter to
+	allow for Alt phone and Address3 phone numbers to be allowed
+
+8. Added campaign option to disable the Manual Dial Override field
+
 
 
 

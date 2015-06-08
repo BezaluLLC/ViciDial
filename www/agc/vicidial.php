@@ -486,10 +486,11 @@
 # 150418-2206 - Fixed issue with manual dial with hotkeys in RATIO method, issue #836
 # 150428-1735 - Added web form three
 # 150522-1254 - Fixed issue #859
+# 150608-1126 - Added campaign option to disable the manual dial override field
 #
 
-$version = '2.12-458c';
-$build = '150522-1254';
+$version = '2.12-459c';
+$build = '150608-1126';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -1593,7 +1594,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history,show_previous_callback,clear_script,manual_dial_search_filter,web_form_address_three FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history,show_previous_callback,clear_script,manual_dial_search_filter,web_form_address_three,manual_dial_override_field FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1725,6 +1726,7 @@ else
 				$clear_script =				$row[124];
 				$manual_dial_search_filter =$row[125];
 				$web_form_address_three =	$row[126];
+				$manual_dial_override_field=$row[127];
 
 				if ( ($callback_active_limit_override == 'Y') and ($callback_active_limit > 0) )
 					{
@@ -4122,6 +4124,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var clear_script='<?php echo $clear_script ?>';
 	var parked_hangup='0';
 	var api_transferconf_ID = '';
+	var manual_dial_override_field='<?php echo $manual_dial_override_field ?>';
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -4540,7 +4543,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			}
 		else
 			{
-			if (document.vicidial_form.xferoverride.checked==false)
+			if ( (document.vicidial_form.xferoverride.checked==false) || (manual_dial_override_field == 'DISABLED') )
 				{
 				if (three_way_dial_prefix == 'X') {var temp_dial_prefix = '';}
 				else {var temp_dial_prefix = three_way_dial_prefix;}
@@ -5765,7 +5768,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							}
 						else
 							{
-							if (document.vicidial_form.xferoverride.checked==false)
+							if ( (document.vicidial_form.xferoverride.checked==false) || (manual_dial_override_field == 'DISABLED') )
 								{
 								if (three_way_dial_prefix == 'X') {var temp_dial_prefix = '';}
 								else {var temp_dial_prefix = three_way_dial_prefix;}
@@ -7158,7 +7161,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			if (MDLeadIDEntryform.length > 0)
 				{MDLeadIDform = document.vicidial_form.MDLeadIDEntry.value;}
 
-			if ( (MDDiaLOverridEform.length > 0) && (active_ingroup_dial.length < 1) )
+			if ( (MDDiaLOverridEform.length > 0) && (active_ingroup_dial.length < 1) && (manual_dial_override_field == 'ENABLED') )
 				{
 				agent_dialed_number=1;
 				agent_dialed_type='MANUAL_OVERRIDE';
@@ -14648,6 +14651,8 @@ function phone_number_format(formatphone) {
 				{
 				showDiv('ivrParkControl');
 				}
+			if (manual_dial_override_field == 'DISABLED')
+				{document.getElementById("xferoverride").disabled = true;}
 
 			VICIDiaL_closer_login_checked = 1;
 			}
@@ -16264,7 +16269,7 @@ if ($agent_display_dialable_leads > 0)
     <input type="hidden" name="xfernumhidden" id="xfernumhidden" />
  </td>
     <td align="left">
-    <span id="dialoverride_checkbox"><input type="checkbox" name="xferoverride" id="xferoverride" size="1" value="0"><font class="body_tiny" /> <?php echo _QXZ("DIAL OVERRIDE"); ?></font></span>
+    <span id="dialoverride_checkbox"><input type="checkbox" name="xferoverride" id="xferoverride" size="1" value="0"><font class="body_tiny" /> <?php echo _QXZ("DIAL OVERRIDE"); ?>	<?php if ($manual_dial_override_field == 'DISABLED'){echo " "._QXZ("DISABLED");}?></font></span>
  </td>
     <td align="left">
     <span style="background-color: <?php echo $MAIN_COLOR ?>" id="Leave3WayCall"><a href="#" onclick="leave_3way_call('FIRST');return false;"><img src="./images/<?php echo _QXZ("vdc_XB_leave3waycall.gif"); ?>" border="0" alt="LEAVE 3-WAY CALL" style="vertical-align:middle" /></a></span>
@@ -16628,7 +16633,24 @@ if ($agent_display_dialable_leads > 0)
     <br /><br /><?php echo _QXZ("If you want to dial a number and have it NOT be added as a new lead, enter in the exact dialstring that you want to call in the Dial Override field below. To hangup this call you will have to open the CALLS IN THIS SESSION link at the bottom of the screen and hang it up by clicking on its channel link there."); ?><br /> &nbsp; </td>
 	</tr><tr>
     <td align="right"><font class="body_text"> <?php echo _QXZ("Dial Override:"); ?> </font></td>
-    <td align="left"><font class="body_text"><input type="text" size="24" maxlength="20" name="MDDiaLOverridE" id="MDDiaLOverridE" class="cust_form" value="" />&nbsp; <?php echo _QXZ("(digits only please)"); ?></font>
+    <td align="left"><font class="body_text">
+	<?php
+	if ($manual_dial_override_field == 'ENABLED')
+		{
+		?>
+		<input type="text" size="24" maxlength="20" name="MDDiaLOverridE" id="MDDiaLOverridE" class="cust_form" value="" />&nbsp; 
+		<?php
+		echo _QXZ("(digits only please)");
+		}
+	else
+		{
+		?>
+		<input type="hidden" name="MDDiaLOverridE" id="MDDiaLOverridE" value="" />&nbsp; 
+		<?php
+		echo _QXZ("DISABLED");
+		}
+	 ?>
+	</font>
 	</td>
     </tr></table>
  <br />
