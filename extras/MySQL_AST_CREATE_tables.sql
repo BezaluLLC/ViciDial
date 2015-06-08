@@ -1133,7 +1133,7 @@ max_calls_method ENUM('TOTAL','IN_QUEUE','DISABLED') default 'DISABLED',
 max_calls_count SMALLINT(5) default '0',
 max_calls_action ENUM('DROP','AFTERHOURS','NO_AGENT_NO_QUEUE') default 'NO_AGENT_NO_QUEUE',
 dial_ingroup_cid VARCHAR(20) default '',
-group_handling ENUM('PHONE','EMAIL') default 'PHONE',
+group_handling ENUM('PHONE','EMAIL','CHAT') default 'PHONE',
 web_form_address_three TEXT
 ) ENGINE=MyISAM;
 
@@ -1591,7 +1591,9 @@ language_method VARCHAR(20) default 'DISABLED',
 meetme_enter_login_filename VARCHAR(255) default '',
 meetme_enter_leave3way_filename VARCHAR(255) default '',
 enable_did_entry_list_id ENUM('0','1') default '0',
-enable_third_webform ENUM('0','1') default '0'
+enable_third_webform ENUM('0','1') default '0',
+chat_url VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+chat_timeout INT(3) unsigned DEFAULT NULL
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3133,6 +3135,115 @@ index (language_id),
 index (english_text)
 ) ENGINE=MyISAM CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 
+CREATE TABLE vicidial_chat_archive (
+chat_id INT(9) UNSIGNED NOT NULL AUTO_INCREMENT,
+chat_start_time DATETIME DEFAULT NULL,
+status VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+chat_creator VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+group_id VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+lead_id INT(9) UNSIGNED DEFAULT NULL,
+PRIMARY KEY (chat_id),
+KEY vicidial_chat_archive_lead_id_key (lead_id),
+KEY vicidial_chat_archive_start_time_key (chat_start_time)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE vicidial_chat_log (
+message_row_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+chat_id VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+message MEDIUMTEXT COLLATE utf8_unicode_ci,
+message_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+poster VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+chat_member_name VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+chat_level ENUM('0','1') COLLATE utf8_unicode_ci DEFAULT '0',
+PRIMARY KEY (message_row_id),
+KEY vicidial_chat_log_user_key (poster)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE vicidial_chat_log_archive (
+message_row_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+chat_id VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+message MEDIUMTEXT COLLATE utf8_unicode_ci,
+message_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+poster VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+chat_member_name VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+chat_level ENUM('0','1') COLLATE utf8_unicode_ci DEFAULT '0',
+PRIMARY KEY (message_row_id),
+KEY vicidial_chat_log_archive_user_key (poster)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE vicidial_chat_participants (
+chat_participant_id INT(9) UNSIGNED NOT NULL AUTO_INCREMENT,
+chat_id INT(9) UNSIGNED DEFAULT NULL,
+chat_member VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+chat_member_name VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+ping_date DATETIME DEFAULT NULL,
+vd_agent ENUM('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N',
+PRIMARY KEY (chat_participant_id),
+UNIQUE KEY vicidial_chat_participants_key (chat_id,chat_member)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE vicidial_live_chats (
+chat_id INT(9) UNSIGNED NOT NULL AUTO_INCREMENT,
+chat_start_time DATETIME DEFAULT NULL,
+status VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+chat_creator VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+group_id VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+lead_id INT(9) UNSIGNED DEFAULT NULL,
+PRIMARY KEY (chat_id),
+KEY vicidial_live_chats_lead_id_key (lead_id),
+KEY vicidial_live_chats_start_time_key (chat_start_time)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE vicidial_manager_chat_log (
+manager_chat_message_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+manager_chat_id INT(10) UNSIGNED DEFAULT NULL,
+manager_chat_subid TINYINT(3) UNSIGNED DEFAULT NULL,
+manager VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+user VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+message MEDIUMTEXT COLLATE utf8_unicode_ci,
+message_date DATETIME DEFAULT NULL,
+message_viewed_date DATETIME DEFAULT NULL,
+message_posted_by VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+audio_alerted ENUM('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N',
+PRIMARY KEY (manager_chat_message_id)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE vicidial_manager_chat_log_archive (
+manager_chat_message_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+manager_chat_id INT(10) UNSIGNED DEFAULT NULL,
+manager_chat_subid TINYINT(3) UNSIGNED DEFAULT NULL,
+manager VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+user VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+message MEDIUMTEXT COLLATE utf8_unicode_ci,
+message_date DATETIME DEFAULT NULL,
+message_viewed_date DATETIME DEFAULT NULL,
+message_posted_by VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+audio_alerted ENUM('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N',
+PRIMARY KEY (manager_chat_message_id)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE vicidial_manager_chats (
+manager_chat_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+chat_start_date DATETIME DEFAULT NULL,
+manager VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+selected_agents MEDIUMTEXT COLLATE utf8_unicode_ci,
+selected_user_groups MEDIUMTEXT COLLATE utf8_unicode_ci,
+selected_campaigns MEDIUMTEXT COLLATE utf8_unicode_ci,
+allow_replies ENUM('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N',
+PRIMARY KEY (manager_chat_id)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE vicidial_manager_chats_archive (
+manager_chat_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+chat_start_date DATETIME DEFAULT NULL,
+manager VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+selected_agents MEDIUMTEXT COLLATE utf8_unicode_ci,
+selected_user_groups MEDIUMTEXT COLLATE utf8_unicode_ci,
+selected_campaigns MEDIUMTEXT COLLATE utf8_unicode_ci,
+allow_replies ENUM('Y','N') COLLATE utf8_unicode_ci DEFAULT 'N',
+PRIMARY KEY (manager_chat_id)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3382,4 +3493,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1411',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1412',db_schema_update_date=NOW(),reload_timestamp=NOW();
