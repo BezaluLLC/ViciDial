@@ -47,6 +47,7 @@
 # 150429-1232 - Added new user API restrictions
 # 150513-2310 - Added POP3 Auth Mode
 # 150608-1154 - Added manual dial override field entry and updated manual dial search and filter entries
+# 150609-1204 - Added chat-related entries
 #
 
 require("dbconnect_mysqli.php");
@@ -54,7 +55,7 @@ require("functions.php");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key,pass_hash_enabled,disable_auto_dial,country_code_list_stats,enable_languages,language_method,enable_third_webform FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key,pass_hash_enabled,disable_auto_dial,country_code_list_stats,enable_languages,language_method,enable_third_webform,allow_chats FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -105,6 +106,7 @@ if ($qm_conf_ct > 0)
 	$SSenable_languages =					$row[41];
 	$SSlanguage_method =					$row[42];
 	$SSenable_third_webform =				$row[43];
+	$SSallow_chats =						$row[44];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -736,8 +738,10 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="campaigns-allow_closers">
 <BR>
-<B><?php echo _QXZ("Allow Closers"); ?> -</B><?php echo _QXZ("This is where you can set whether the users of this campaign will have the option to send the call to a closer.");
+<B><?php echo _QXZ("Allow Closers"); ?> -</B>
+<?php 
 
+echo _QXZ("This is where you can set whether the users of this campaign will have the option to send the call to a closer.");
 
 if ($SSallow_emails > 0) 
 		{
@@ -745,9 +749,22 @@ if ($SSallow_emails > 0)
 	<BR>
 	<A NAME="campaigns-allow_emails">
 	<BR>
-	<B>Allow Emails"); ?> -</B><?php echo _QXZ("This is where you can set whether the users of this campaign will be able to receive inbound emails in addition to phone calls.");
+	<B><?php echo _QXZ("Allow Emails"); ?> -</B><?php echo _QXZ("This is where you can set whether the users of this campaign will be able to receive inbound emails in addition to phone calls."); ?>
+<?php
+		}
+
+if ($SSallow_chats > 0) 
+		{
+?>
+	<BR>
+	<A NAME="campaigns-allow_chats">
+	<BR>
+	<B><?php echo _QXZ("Allow Chats"); ?> -</B><?php echo _QXZ("This is where you can set whether the users of this campaign will be able to conduct chats in addition to receive phone calls."); ?>
+<?php
 		}
 ?>
+
+
 <BR>
 <A NAME="campaigns-default_xfer_group">
 <BR>
@@ -1321,7 +1338,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-get_call_launch">
 <BR>
-<B><?php echo _QXZ("Get Call Launch"); ?> -</B><?php echo _QXZ("This menu allows you to choose whether you want to auto-launch the web-form page in a separate window, auto-switch to the SCRIPT tab or do nothing when a call is sent to the agent for this campaign. If custom list fields are enabled on your system, FORM will open the FORM tab upon connection of a call to an agent."); ?>
+<B><?php echo _QXZ("Get Call Launch"); ?> -</B><?php echo _QXZ("This menu allows you to choose whether you want to auto-launch the web-form page in a separate window, auto-switch to the SCRIPT, EMAIL, or CHAT tab ,emails and chats must be allowed to have those options available, or do nothing when a call is sent to the agent for this campaign. If custom list fields are enabled on your system, FORM will open the FORM tab upon connection of a call to an agent."); ?>
 
 <BR>
 <A NAME="campaigns-xferconf_a_dtmf">
@@ -2136,7 +2153,12 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_groups-get_call_launch">
 <BR>
-<B><?php echo _QXZ("Get Call Launch"); ?> -</B><?php echo _QXZ("This menu allows you to choose whether you want to auto-launch the web-form page in a separate window, auto-switch to the SCRIPT tab or do nothing when a call is sent to the agent for this campaign. If custom list fields are enabled on your system, FORM will open the FORM tab upon connection of a call to an agent."); ?>
+<B><?php echo _QXZ("Get Call Launch"); ?> -</B><?php echo _QXZ("This menu allows you to choose whether you want to auto-launch the web-form page in a separate window, auto-switch to the SCRIPT, EMAIL, or CHAT tab ,emails and chats must be allowed to have those options available, or do nothing when a call is sent to the agent for this campaign. If custom list fields are enabled on your system, FORM will open the FORM tab upon connection of a call to an agent."); ?>
+
+<BR>
+<A NAME="inbound_groups-group_handling">
+<BR>
+<B><?php echo _QXZ("Group Handling"); ?> -</B><?php echo _QXZ("This menu allows you to choose what type of inbound activity this group should handle. PHONE means this in-group is for handling phone calls and will show under the In-Group section. EMAIL is for handling incoming emails and will cause the group to be listed under the Email Group section. CHAT is for handling customer chats and will cause the group to be listed under the Email Group section"); ?>
 
 <BR>
 <A NAME="inbound_groups-xferconf_a_dtmf">
@@ -2592,6 +2614,11 @@ if ($SSqc_features_active > 0)
 <A NAME="inbound_groups-uniqueid_status_prefix">
 <BR>
 <B><?php echo _QXZ("Uniqueid Status Prefix"); ?> -</B><?php echo _QXZ("If PREFIX option is selected above then this is the value of that prefix. Default is empty."); ?>
+
+<BR>
+<A NAME="inbound_groups-download_chat_files">
+<BR>
+<B><?php echo _QXZ("Download Customer Chat Files"); ?> -</B><?php echo _QXZ("Clicking this link will allow you to download the files that make up the customer chat interface.  You can then unzip, and place the unzipped vdchat_customer folder in the htdocs folder on you web server, or a server or location of your choosing.  Said location MUST be on a server with Vicidial installed specific to your system. Enter the URL of the final location in the Chat URL setting under the System Settings."); ?>
 
 
 
@@ -4734,6 +4761,21 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-allow_emails">
 <BR>
 <B><?php echo _QXZ("Allow Emails"); ?> -</B><?php echo _QXZ("This is where you can set whether this system will be able to receive inbound emails in addition to phone calls."); ?>
+
+<BR>
+<A NAME="settings-allow_chats">
+<BR>
+<B><?php echo _QXZ("Allow Chats"); ?> -</B><?php echo _QXZ("This is where you can set whether this system will be able to receive incoming chats in addition to phone calls, as well as allow agent-to-agent and agent-to-manager chatting."); ?>
+
+<BR>
+<A NAME="settings-chat_timeout">
+<BR>
+<B><?php echo _QXZ("Chat Timeout"); ?> -</B><?php echo _QXZ("This is where you can set how long a customer chat can stay alive after the customer has navigated away from or closed their chat window. When the timeout is reached the chat is closed."); ?>
+
+<BR>
+<A NAME="settings-chat_url">
+<BR>
+<B><?php echo _QXZ("Chat URL"); ?> -</B><?php echo _QXZ("This is the location where you have placed the chat web pages for customer use."); ?>
 
 <BR>
 <A NAME="settings-first_login_trigger">

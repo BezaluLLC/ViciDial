@@ -3497,12 +3497,13 @@ else
 # 150512-2225 - Fixed SQL for permissions
 # 150603-2000 - Modified for chat settings
 # 150608-1127 - Added manual dial filer and search options for ALT/ADDR3 numbers, Added manual dial override field campaign option
+# 150609-1207 - Fixes for chat settings
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-487a';
-$build = '150608-1127';
+$admin_version = '2.12-488a';
+$build = '150609-1207';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6002,6 +6003,7 @@ if ($ADD==1111)
 		if ($SSallow_chats > 0)
 			{$achHTML = "<option value='CHAT'>"._QXZ("CHAT")."</option>";}
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Get Call Launch").": </td><td align=left><select size=1 name=get_call_launch><option selected value='NONE'>"._QXZ("NONE")."</option><option value='SCRIPT'>"._QXZ("SCRIPT")."</option><option value='WEBFORM'>"._QXZ("WEBFORM")."</option>$eswHTML$cfwHTML$aemHTML$achHTML</select>$NWB#inbound_groups-get_call_launch$NWE</td></tr>\n";
+/* Don't give an option (yet).  This is clearly for phones only. 
 		if ($SSallow_emails>0 || $SSallow_chats > 0)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Group Handling").": </td><td align=left><select size=1 name=group_handling><option selected value='PHONE'>"._QXZ("PHONE")."</option>";
@@ -6010,7 +6012,10 @@ if ($ADD==1111)
 			echo "</select>$NWB#inbound_groups-group_handling$NWE</td></tr>\n";
 			}
 		else
-			{echo "<tr bgcolor=#B6D3FC><td align=right></td><td align=left><input type=hidden name=group_handling value=PHONE></td></tr>\n";}
+			{
+*/
+		echo "<tr bgcolor=#B6D3FC><td align=right></td><td align=left><input type=hidden name=group_handling value=PHONE></td></tr>\n";
+#			}
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
 		echo "</TABLE></center>\n";
 		}
@@ -6080,6 +6085,9 @@ if ($ADD==1811)
 		if ($SSallow_chats > 0)
 			{$achHTML = "<option value='CHAT'>"._QXZ("CHAT")."</option>";}
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Get Call Launch").": </td><td align=left><select size=1 name=get_call_launch><option value='NONE' selected>"._QXZ("NONE")."</option><option value='SCRIPT'>"._QXZ("SCRIPT")."</option><option value='WEBFORM'>"._QXZ("WEBFORM")."</option>$eswHTML$cfwHTML$aemHTML$achHTML</select>$NWB#inbound_groups-get_call_launch$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right></td><td align=left><input type=hidden name=group_handling value='EMAIL'></td></tr>\n";
+		
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
 		echo "</TABLE></center>\n";
 		}
@@ -6150,6 +6158,9 @@ if ($ADD==18111)
 		if ($SSallow_chats > 0)
 			{$achHTML = "<option value='CHAT'>"._QXZ("CHAT")."</option>";}
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Get Call Launch").": </td><td align=left><select size=1 name=get_call_launch><option value='NONE' selected>"._QXZ("NONE")."</option><option value='SCRIPT'>"._QXZ("SCRIPT")."</option><option value='WEBFORM'>"._QXZ("WEBFORM")."</option>$eswHTML$cfwHTML$aemHTML$achHTML</select>$NWB#inbound_groups-get_call_launch$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right></td><td align=left><input type=hidden name=group_handling value='CHAT'></td></tr>\n";
+		
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
 		echo "</TABLE></center>\n";
 		}
@@ -24585,6 +24596,14 @@ if ($ADD==3811)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Fronter Display").": </td><td align=left><select size=1 name=fronter_display><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$fronter_display' SELECTED>"._QXZ("$fronter_display")."</option></select>$NWB#inbound_groups-fronter_display$NWE</td></tr>\n";
 
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Group Handling").": </td><td align=left><select size=1 name=group_handling><option  value='PHONE'>"._QXZ("PHONE")."</option>";
+		echo "<option selected value='EMAIL'>"._QXZ("EMAIL")."</option>";
+		if ($SSallow_chats > 0)
+			{
+			if ($SSallow_chats>0) {echo "<option value='CHAT'>"._QXZ("CHAT")."</option>";}			
+			}
+		echo "</select>$NWB#inbound_groups-group_handling$NWE</td></tr>\n";
+
 /* Commenting this out because it is handled by the Email Account section and is redundant here
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Call Handle Method: </td><td align=left><select size=1 name=call_handle_method><option>CID</option><option>CIDLOOKUP</option><option>CIDLOOKUPRL</option><option>CIDLOOKUPRC</option><option>CIDLOOKUPALT</option><option>CIDLOOKUPRLALT</option><option>CIDLOOKUPRCALT</option><option>CIDLOOKUPADDR3</option><option>CIDLOOKUPRLADDR3</option><option>CIDLOOKUPRCADDR3</option><option>CIDLOOKUPALTADDR3</option><option>CIDLOOKUPRLALTADDR3</option><option>CIDLOOKUPRCALTADDR3</option><option>ANI</option><option>ANILOOKUP</option><option>ANILOOKUPRL</option><option>VIDPROMPT</option><option>VIDPROMPTLOOKUP</option><option>VIDPROMPTLOOKUPRL</option><option>VIDPROMPTLOOKUPRC</option><option>CLOSER</option><option>3DIGITID</option><option>4DIGITID</option><option>5DIGITID</option><option>10DIGITID</option><option SELECTED>$call_handle_method</option></select>$NWB#inbound_dids-call_handle_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Agent Search Method: </td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#inbound_dids-agent_search_method$NWE</td></tr>\n";
@@ -25312,6 +25331,14 @@ if ($ADD==3911)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Fronter Display").": </td><td align=left><select size=1 name=fronter_display><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED value='$fronter_display'>"._QXZ("$fronter_display")."</option></select>$NWB#inbound_groups-fronter_display$NWE</td></tr>\n";
 
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Group Handling").": </td><td align=left><select size=1 name=group_handling><option  value='PHONE'>"._QXZ("PHONE")."</option>";
+		echo "<option selected value='CHAT'>"._QXZ("CHAT")."</option>";
+		if ($SSallow_emails > 0)
+			{
+			if ($SSallow_emails>0) {echo "<option value='EMAIL'>"._QXZ("EMAIL")."</option>";}			
+			}
+		echo "</select>$NWB#inbound_groups-group_handling$NWE</td></tr>\n";
+
 /* Commenting this out because it is handled by the Email Account section and is redundant here
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Call Handle Method: </td><td align=left><select size=1 name=call_handle_method><option>CID</option><option>CIDLOOKUP</option><option>CIDLOOKUPRL</option><option>CIDLOOKUPRC</option><option>CIDLOOKUPALT</option><option>CIDLOOKUPRLALT</option><option>CIDLOOKUPRCALT</option><option>CIDLOOKUPADDR3</option><option>CIDLOOKUPRLADDR3</option><option>CIDLOOKUPRCADDR3</option><option>CIDLOOKUPALTADDR3</option><option>CIDLOOKUPRLALTADDR3</option><option>CIDLOOKUPRCALTADDR3</option><option>ANI</option><option>ANILOOKUP</option><option>ANILOOKUPRL</option><option>VIDPROMPT</option><option>VIDPROMPTLOOKUP</option><option>VIDPROMPTLOOKUPRL</option><option>VIDPROMPTLOOKUPRC</option><option>CLOSER</option><option>3DIGITID</option><option>4DIGITID</option><option>5DIGITID</option><option>10DIGITID</option><option SELECTED>$call_handle_method</option></select>$NWB#inbound_dids-call_handle_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>In-Group Agent Search Method: </td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#inbound_dids-agent_search_method$NWE</td></tr>\n";
@@ -25335,7 +25362,7 @@ if ($ADD==3911)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Uniqueid Status Prefix").": </td><td align=left><input type=text name=uniqueid_status_prefix size=10 maxlength=50 value=\"$uniqueid_status_prefix\">$NWB#inbound_groups-uniqueid_status_prefix$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Download customer chat files").": </td><td align=left><a href='vdchat_customer.zip'>"._QXZ("Download")."</a>, "._QXZ("unzip, and place unzipped vdchat_customer folder in htdocs folder on web server, or a server or location of your choosing, location MUST be on a server with Vicidial installed specific to your system. Enter the URL of the final location in the Chat URL setting under the System Settings.")."</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Download customer chat files").": </td><td align=left><a href='vdchat_customer.zip'>"._QXZ("Download")."</a> $NWB#inbound_groups-download_chat_files$NWE</td></tr>\n";
 
 		echo "<input type=hidden name=form_end value=\"END\">\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
@@ -30345,7 +30372,7 @@ if ($ADD==311111111111111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Allow Chats").": </td><td align=left><select size=1 name=allow_chats><option>1</option><option>0</option><option selected>$allow_chats</option></select>$NWB#settings-allow_chats$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Chat Timeout in seconds").": </td><td align=left><input type=text name=chat_timeout size=3 maxlength=3 value=\"$chat_timeout\">$NWB#campaigns-chat_timeout$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Chat Timeout in seconds").": </td><td align=left><input type=text name=chat_timeout size=3 maxlength=3 value=\"$chat_timeout\">$NWB#settings-chat_timeout$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Chat URL").": </td><td align=left><input type=text name=chat_url size=50 maxlength=255 value=\"$chat_url\">$NWB#settings-chat_url$NWE</td></tr>\n";
 
@@ -31399,7 +31426,7 @@ if ($ADD==1000)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT group_id,group_name,queue_priority,active,call_time_id,group_color,user_group from vicidial_inbound_groups $whereLOGadmin_viewable_groupsSQL order by group_id;";
+	$stmt="SELECT group_id,group_name,queue_priority,active,call_time_id,group_color,user_group from vicidial_inbound_groups where group_handling='PHONE' $LOGadmin_viewable_groupsSQL order by group_id;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$ingroups_to_print = mysqli_num_rows($rslt);
 
