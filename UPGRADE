@@ -76,6 +76,13 @@ OTHER CHANGES:
 
 8. Added campaign option to disable the Manual Dial Override field
 
+9. Added option to change the background color for agent scripts
+
+10. Added option to hide the In-Group ID in the agent screen for inbound calls
+
+11. Added option to not populate the In-Group Name in the security_phrase field
+	(the "Show" field) of the vicidial_list table on new inbound leads.
+
 
 
 

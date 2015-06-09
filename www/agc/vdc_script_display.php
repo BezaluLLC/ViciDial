@@ -346,11 +346,12 @@ $list_description =		$row[1];
 if (strlen($script_override)>1)
 	{$call_script = $script_override;}
 
-$stmt="SELECT script_name,script_text from vicidial_scripts where script_id='$call_script';";
+$stmt="SELECT script_name,script_text,script_color from vicidial_scripts where script_id='$call_script';";
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $script_name =		$row[0];
 $script_text =		stripslashes($row[1]);
+$script_color =		$row[2];
 
 if (preg_match("/iframe\ssrc/i",$script_text))
 	{

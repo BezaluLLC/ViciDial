@@ -48,6 +48,7 @@
 # 150513-2310 - Added POP3 Auth Mode
 # 150608-1154 - Added manual dial override field entry and updated manual dial search and filter entries
 # 150609-1204 - Added chat-related entries
+# 150609-1231 - Added new agent screen status display option entries
 #
 
 require("dbconnect_mysqli.php");
@@ -1521,6 +1522,11 @@ if ($SSoutbound_autodial_active > 0)
 <B><?php echo _QXZ("Status Display Fields"); ?> -</B><?php echo _QXZ("You can select which variables for calls will be displayed in the status line of the agent screen. CALLID will display the 20 character unique call ID, LEADID will display the system lead ID, LISTID will display the list ID, NAME will display the customer name. Default is CALLID."); ?>
 
 <BR>
+<A NAME="campaigns-status_display_ingroup">
+<BR>
+<B><?php echo _QXZ("Status Display In-Group"); ?> -</B><?php echo _QXZ("This option if set to ENABLED will display the In-Group name in the agent screen when an inbound call is sent to the agent. Default is ENABLED."); ?>
+
+<BR>
 <A NAME="campaigns-use_internal_dnc">
 <BR>
 <B><?php echo _QXZ("Use Internal DNC List"); ?> -</B><?php echo _QXZ("This defines whether this campaign is to filter leads against the Internal DNC list. If it is set to Y, the hopper will look for each phone number in the DNC list before placing it in the hopper. If it is in the DNC list then it will change that lead status to DNCL so it cannot be dialed. Default is N. The AREACODE option is just like the Y option, except it is used to also filter out an entire area code in North America from being dialed, in this case using the 201XXXXXXX entry in the DNC list would block all calls to the 201 areacode if enabled."); ?>
@@ -2616,6 +2622,11 @@ if ($SSqc_features_active > 0)
 <B><?php echo _QXZ("Uniqueid Status Prefix"); ?> -</B><?php echo _QXZ("If PREFIX option is selected above then this is the value of that prefix. Default is empty."); ?>
 
 <BR>
+<A NAME="inbound_groups-populate_lead_ingroup">
+<BR>
+<B><?php echo _QXZ("Populate Lead In-Group"); ?> -</B><?php echo _QXZ("If this option is ENABLED, then when a new lead is created when going into an In-Group, the security_phrase or Show field will be populated with the Group ID of the In-Group. Default is ENABLED."); ?>
+
+<BR>
 <A NAME="inbound_groups-download_chat_files">
 <BR>
 <B><?php echo _QXZ("Download Customer Chat Files"); ?> -</B><?php echo _QXZ("Clicking this link will allow you to download the files that make up the customer chat interface.  You can then unzip, and place the unzipped vdchat_customer folder in the htdocs folder on you web server, or a server or location of your choosing.  Said location MUST be on a server with Vicidial installed specific to your system. Enter the URL of the final location in the Chat URL setting under the System Settings."); ?>
@@ -3284,7 +3295,12 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="scripts-active">
 <BR>
-<B><?php echo _QXZ("Active"); ?> -</B><?php echo _QXZ("This determines whether this script can be selected to be used by a campaign.");
+<B><?php echo _QXZ("Active"); ?> -</B><?php echo _QXZ("This determines whether this script can be selected to be used by a campaign."); ?>
+
+<BR>
+<A NAME="scripts-script_color">
+<BR>
+<B><?php echo _QXZ("Script Color"); ?> -</B><?php echo _QXZ("This determines the background color of the script as displayed in the agent screen. default is white.");
 
 
 

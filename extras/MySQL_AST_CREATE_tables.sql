@@ -926,7 +926,8 @@ clear_script ENUM('DISABLED','ENABLED') default 'DISABLED',
 cpd_unknown_action ENUM('DISABLED','DISPO','MESSAGE','CALLMENU','INGROUP') default 'DISABLED',
 manual_dial_search_filter VARCHAR(50) default 'NONE',
 web_form_address_three TEXT,
-manual_dial_override_field ENUM('ENABLED','DISABLED') default 'ENABLED'
+manual_dial_override_field ENUM('ENABLED','DISABLED') default 'ENABLED',
+status_display_ingroup ENUM('ENABLED','DISABLED') default 'ENABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -1135,7 +1136,8 @@ max_calls_count SMALLINT(5) default '0',
 max_calls_action ENUM('DROP','AFTERHOURS','NO_AGENT_NO_QUEUE') default 'NO_AGENT_NO_QUEUE',
 dial_ingroup_cid VARCHAR(20) default '',
 group_handling ENUM('PHONE','EMAIL','CHAT') default 'PHONE',
-web_form_address_three TEXT
+web_form_address_three TEXT,
+populate_lead_ingroup ENUM('ENABLED','DISABLED') default 'ENABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -1247,7 +1249,8 @@ script_name VARCHAR(50),
 script_comments VARCHAR(255),
 script_text TEXT,
 active ENUM('Y','N'),
-user_group VARCHAR(20) default '---ALL---'
+user_group VARCHAR(20) default '---ALL---',
+script_color VARCHAR(7) default 'white'
 ) ENGINE=MyISAM;
 
 CREATE TABLE phone_favorites (
@@ -3494,4 +3497,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1413',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1414',db_schema_update_date=NOW(),reload_timestamp=NOW();

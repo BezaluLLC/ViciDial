@@ -194,6 +194,7 @@
 # 141211-2028 - Added list_id to call url functions
 # 150404-1011 - Added entry_list_id related DID options
 # 150410-0637 - Fixed NANQUE bug with VMAIL_NO_INST
+# 150609-1734 - Added populate_lead_ingroup option
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -236,7 +237,6 @@ $SQLdate = "$year-$mon-$mday $hour:$min:$sec";
 $SQLdateBEGIN = $SQLdate;
 $ORIGINAL_call_time = $SQLdate;
 	while (length($CIDdate) > 9) {$CIDdate =~ s/^.//gi;} # 0902235959 changed to 902235959
-
 
 $BDtarget = ($now_date_epoch - 5);
 ($Bsec,$Bmin,$Bhour,$Bmday,$Bmon,$Byear,$Bwday,$Byday,$Bisdst) = localtime($BDtarget);
@@ -719,7 +719,7 @@ $affected_rows = $dbhA->do($stmtA);
 
 ### Grab inbound groups values from the database
 $cbc=0;
-$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,ingroup_recording_override,ingroup_rec_filename,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,max_calls_method,max_calls_count,max_calls_action FROM vicidial_inbound_groups where group_id = '$channel_group';";
+$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,ingroup_recording_override,ingroup_rec_filename,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,max_calls_method,max_calls_count,max_calls_action,populate_lead_ingroup FROM vicidial_inbound_groups where group_id = '$channel_group';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -810,6 +810,7 @@ if ($sthArows > 0)
 	$max_calls_method =					$aryA[73];
 	$max_calls_count =					$aryA[74];
 	$max_calls_action =					$aryA[75];
+	$populate_lead_ingroup =			$aryA[76];
 
 	$custom_call_id='';
 	if ($uniqueid_status_display =~ /ENABLED/)
@@ -988,8 +989,10 @@ if ($call_handle_method =~ /LOOKUP/)
 			$entry_list_idSQLa=',entry_list_id';
 			$entry_list_idSQLb=",'$entry_list_id'";
 			}
+		$ingroup_insert = $channel_group;
+		if ($populate_lead_ingroup =~ /DISABLED/) {$ingroup_insert='';}
 		### insert a record into the vicidial_list table 
-		$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb);";
+		$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$ingroup_insert','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb);";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02007';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		$cbc=0;
@@ -1137,8 +1140,10 @@ if ($call_handle_method =~ /LOOKUP/)
 					$entry_list_idSQLa=',entry_list_id';
 					$entry_list_idSQLb=",'$entry_list_id'";
 					}
+				$ingroup_insert = $channel_group;
+				if ($populate_lead_ingroup =~ /DISABLED/) {$ingroup_insert='';}
 				### insert a record into the vicidial_list table 
-				$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb);";
+				$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$ingroup_insert','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb);";
 				$affected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02011';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				$cbc=0;
@@ -1220,8 +1225,10 @@ else
 			$entry_list_idSQLa=',entry_list_id';
 			$entry_list_idSQLb=",'$entry_list_id'";
 			}
+		$ingroup_insert = $channel_group;
+		if ($populate_lead_ingroup =~ /DISABLED/) {$ingroup_insert='';}
  		### insert a record into the vicidial_list table if no record was found above
-		$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$channel_group','$called_count','-5.00','$VLcomments'$entry_list_idSQLb);";
+		$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$ingroup_insert','$called_count','-5.00','$VLcomments'$entry_list_idSQLb);";
  		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02014';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		$cbc=0;
@@ -4225,8 +4232,10 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					$entry_list_idSQLa=',entry_list_id';
 					$entry_list_idSQLb=",'$entry_list_id'";
 					}
+				$ingroup_insert = $channel_group;
+				if ($populate_lead_ingroup =~ /DISABLED/) {$ingroup_insert='';}
 				### insert a record into the vicidial_list table 
-				$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$wait_time_option_callback_list_id','N','$phone_code','$phone_number','$channel_group','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb);";
+				$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$wait_time_option_callback_list_id','N','$phone_code','$phone_number','$ingroup_insert','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb);";
 				$affected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02089';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
@@ -4662,8 +4671,10 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 							$entry_list_idSQLa=',entry_list_id';
 							$entry_list_idSQLb=",'$entry_list_id'";
 							}
+						$ingroup_insert = $channel_group;
+						if ($populate_lead_ingroup =~ /DISABLED/) {$ingroup_insert='';}
 						### insert a record into the vicidial_list table 
-						$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$hold_time_option_callback_list_id','N','$phone_code','$phone_number','$channel_group','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb);";
+						$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$hold_time_option_callback_list_id','N','$phone_code','$phone_number','$ingroup_insert','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb);";
 						$affected_rows = $dbhA->do($stmtA);
 							$dbhP=$dbhA;   $mysql_count='02089';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 						$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";

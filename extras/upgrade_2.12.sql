@@ -156,3 +156,11 @@ UPDATE system_settings SET db_schema_version='1412',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD manual_dial_override_field ENUM('ENABLED','DISABLED') default 'ENABLED';
 
 UPDATE system_settings SET db_schema_version='1413',db_schema_update_date=NOW() where db_schema_version < 1413;
+
+ALTER TABLE vicidial_campaigns ADD status_display_ingroup ENUM('ENABLED','DISABLED') default 'ENABLED';
+
+ALTER TABLE vicidial_inbound_groups ADD populate_lead_ingroup ENUM('ENABLED','DISABLED') default 'ENABLED';
+
+ALTER TABLE vicidial_scripts ADD script_color VARCHAR(7) default 'white';
+
+UPDATE system_settings SET db_schema_version='1414',db_schema_update_date=NOW() where db_schema_version < 1414;
