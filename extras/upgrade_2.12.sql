@@ -164,3 +164,7 @@ ALTER TABLE vicidial_inbound_groups ADD populate_lead_ingroup ENUM('ENABLED','DI
 ALTER TABLE vicidial_scripts ADD script_color VARCHAR(7) default 'white';
 
 UPDATE system_settings SET db_schema_version='1414',db_schema_update_date=NOW() where db_schema_version < 1414;
+
+ALTER TABLE vicidial_campaigns ADD customer_gone_seconds SMALLINT(5) UNSIGNED default '30';
+
+UPDATE system_settings SET db_schema_version='1415',db_schema_update_date=NOW() where db_schema_version < 1415;

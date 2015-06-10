@@ -49,6 +49,7 @@
 # 150608-1154 - Added manual dial override field entry and updated manual dial search and filter entries
 # 150609-1204 - Added chat-related entries
 # 150609-1231 - Added new agent screen status display option entries
+# 150610-0938 - Added campaigns-customer_gone_seconds
 #
 
 require("dbconnect_mysqli.php");
@@ -1510,6 +1511,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-pause_max">
 <BR>
 <B><?php echo _QXZ("Agent Pause Max Seconds"); ?> -</B><?php echo _QXZ("If this is set to greater than 0, and the agent has not gone out of PAUSED status in this number of seconds, the agent will automatically be logged out of the agent screen. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="campaigns-customer_gone_seconds">
+<BR>
+<B><?php echo _QXZ("Customer Gone Warning Seconds"); ?> -</B><?php echo _QXZ("This setting controls the number of seconds after a customer hangs up before a warning that the customer has hung up will appear on the agent screen. Default is 30."); ?>
 
 <BR>
 <A NAME="campaigns-screen_labels">

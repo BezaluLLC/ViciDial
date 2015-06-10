@@ -85,6 +85,9 @@ OTHER CHANGES:
 
 12. Added list_description as a webform and script variable
 
+13. Added campaign option to allow you to set the number of seconds after a 
+	customer hangs up before the warning shows on the agent screen
+
 
 
 
