@@ -20,6 +20,7 @@
 # 141219-1218 - url logging fix for some inputs
 # 150114-2037 - Added list_name variable
 # 150429-0910 - Added campaign variables
+# 150609-1931 - Added list_description variable
 #
 
 $|++;
@@ -218,9 +219,10 @@ if (length($lead_id) > 0)
 		}
 
 	$list_name='';
+	$list_description='';
 	if (length($list_id) > 1)
 		{
-		$stmtH = "SELECT list_name FROM vicidial_lists where list_id='$list_id';";
+		$stmtH = "SELECT list_name,list_description FROM vicidial_lists where list_id='$list_id';";
 		$sthA = $dbhA->prepare($stmtH) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtH ", $dbhA->errstr;
 		$list_name_ct=$sthA->rows;
@@ -230,6 +232,10 @@ if (length($lead_id) > 0)
 			if (length($aryA[0])>0) 
 				{
 				$list_name =		$aryA[0];
+				}
+			if (length($aryA[1])>0) 
+				{
+				$list_description =	$aryA[1];
 				}
 			}
 		$sthA->finish();
@@ -315,9 +321,9 @@ if (length($lead_id) > 0)
 			}
 		$sthA->finish();
 
-		if ( (length($VAR_list_id) > 1) && (length($list_name) < 1) && ($add_lead_url =~ /--A--list_name--B--/) )
+		if ( (length($VAR_list_id) > 1) && ( ( (length($list_name) < 1) && ($add_lead_url =~ /--A--list_name--B--/) ) or ( (length($list_description) < 1) && ($add_lead_url =~ /--A--list_description--B--/) ) )
 			{
-			$stmtH = "SELECT list_name FROM vicidial_lists where list_id='$VAR_list_id';";
+			$stmtH = "SELECT list_name,list_description FROM vicidial_lists where list_id='$VAR_list_id';";
 			$sthA = $dbhA->prepare($stmtH) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtH ", $dbhA->errstr;
 			$list_name_ct=$sthA->rows;
@@ -327,6 +333,10 @@ if (length($lead_id) > 0)
 				if (length($aryA[0])>0) 
 					{
 					$list_name =		$aryA[0];
+					}
+				if (length($aryA[1])>0) 
+					{
+					$list_description =	$aryA[1];
 					}
 				}
 			$sthA->finish();
@@ -338,6 +348,7 @@ if (length($lead_id) > 0)
 		$add_lead_url =~ s/--A--vendor_lead_code--B--/$VAR_vendor_lead_code/gi;
 		$add_lead_url =~ s/--A--list_id--B--/$VAR_list_id/gi;
 		$add_lead_url =~ s/--A--list_name--B--/$list_name/gi;
+		$add_lead_url =~ s/--A--list_description--B--/$list_description/gi;
 		$add_lead_url =~ s/--A--phone_number--B--/$VAR_phone_number/gi;
 		$add_lead_url =~ s/--A--phone_code--B--/$VAR_phone_code/gi;
 		$add_lead_url =~ s/--A--did_id--B--/$VAR_did_id/gi;
@@ -454,9 +465,9 @@ if (length($lead_id) > 0)
 			$sthA->finish();
 			}
 
-		if ( (length($VAR_list_id) > 1) && (length($list_name) < 1) && ($na_call_url =~ /--A--list_name--B--/) )
+		if ( (length($VAR_list_id) > 1) && ( ( (length($list_name) < 1) && ($na_call_url =~ /--A--list_name--B--/) ) || ( (length($list_description) < 1) && ($na_call_url =~ /--A--list_description--B--/) ) ) )
 			{
-			$stmtH = "SELECT list_name FROM vicidial_lists where list_id='$VAR_list_id';";
+			$stmtH = "SELECT list_name,list_description FROM vicidial_lists where list_id='$VAR_list_id';";
 			$sthA = $dbhA->prepare($stmtH) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtH ", $dbhA->errstr;
 			$list_name_ct=$sthA->rows;
@@ -466,6 +477,10 @@ if (length($lead_id) > 0)
 				if (length($aryA[0])>0) 
 					{
 					$list_name =		$aryA[0];
+					}
+				if (length($aryA[1])>0) 
+					{
+					$list_description =	$aryA[1];
 					}
 				}
 			$sthA->finish();
@@ -483,6 +498,7 @@ if (length($lead_id) > 0)
 		$na_call_url =~ s/--A--source_id--B--/$VAR_source_id/gi;
 		$na_call_url =~ s/--A--list_id--B--/$VAR_list_id/gi;
 		$na_call_url =~ s/--A--list_name--B--/$list_name/gi;
+		$na_call_url =~ s/--A--list_description--B--/$list_description/gi;
 		$na_call_url =~ s/--A--phone_code--B--/$VAR_phone_code/gi;
 		$na_call_url =~ s/--A--phone_number--B--/$VAR_phone_number/gi;
 		$na_call_url =~ s/--A--title--B--/$VAR_title/gi;
@@ -632,9 +648,9 @@ if (length($lead_id) > 0)
 			$sthA->finish();
 			}
 
-		if ( (length($VAR_list_id) > 1) && (length($list_name) < 1) && ($start_call_url =~ /--A--list_name--B--/) )
+		if ( (length($VAR_list_id) > 1) && ( ( (length($list_name) < 1) && ($start_call_url =~ /--A--list_name--B--/) ) || ( (length($list_description) < 1) && ($start_call_url =~ /--A--list_description--B--/) ) )
 			{
-			$stmtH = "SELECT list_name FROM vicidial_lists where list_id='$VAR_list_id';";
+			$stmtH = "SELECT list_name,list_description FROM vicidial_lists where list_id='$VAR_list_id';";
 			$sthA = $dbhA->prepare($stmtH) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtH ", $dbhA->errstr;
 			$list_name_ct=$sthA->rows;
@@ -644,6 +660,10 @@ if (length($lead_id) > 0)
 				if (length($aryA[0])>0) 
 					{
 					$list_name =		$aryA[0];
+					}
+				if (length($aryA[1])>0) 
+					{
+					$list_description =	$aryA[1];
 					}
 				}
 			$sthA->finish();
@@ -660,6 +680,7 @@ if (length($lead_id) > 0)
 		$start_call_url =~ s/--A--source_id--B--/$VAR_source_id/gi;
 		$start_call_url =~ s/--A--list_id--B--/$VAR_list_id/gi;
 		$start_call_url =~ s/--A--list_name--B--/$list_name/gi;
+		$start_call_url =~ s/--A--list_description--B--/$list_description/gi;
 		$start_call_url =~ s/--A--phone_code--B--/$VAR_phone_code/gi;
 		$start_call_url =~ s/--A--phone_number--B--/$VAR_phone_number/gi;
 		$start_call_url =~ s/--A--title--B--/$VAR_title/gi;

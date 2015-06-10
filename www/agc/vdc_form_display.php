@@ -32,10 +32,11 @@
 # 150312-1502 - Allow for single quotes in vicidial_list data fields
 # 150418-1751 - Added fixed fields to submit output, issue #842
 # 150512-0617 - Fix for non-latin customer data
+# 150609-1923 - Added list_description variable
 #
 
-$version = '2.12-23';
-$build = '150512-0617';
+$version = '2.12-24';
+$build = '150609-1923';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -173,6 +174,8 @@ if (isset($_GET["called_count"]))			{$called_count=$_GET["called_count"];}
 	elseif (isset($_POST["called_count"]))	{$called_count=$_POST["called_count"];}
 if (isset($_GET["list_name"]))			{$list_name=$_GET["list_name"];}
 	elseif (isset($_POST["list_name"]))	{$list_name=$_POST["list_name"];}
+if (isset($_GET["list_description"]))			{$list_description=$_GET["list_description"];}
+	elseif (isset($_POST["list_description"]))	{$list_description=$_POST["list_description"];}
 
 if ($bcrypt == 'OFF')
 	{$bcrypt=0;}
