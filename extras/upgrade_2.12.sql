@@ -168,3 +168,7 @@ UPDATE system_settings SET db_schema_version='1414',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD customer_gone_seconds SMALLINT(5) UNSIGNED default '30';
 
 UPDATE system_settings SET db_schema_version='1415',db_schema_update_date=NOW() where db_schema_version < 1415;
+
+UPDATE vicidial_inbound_groups set group_handling='PHONE' where group_handling='';
+
+UPDATE system_settings SET db_schema_version='1416',db_schema_update_date=NOW() where db_schema_version < 1416;
