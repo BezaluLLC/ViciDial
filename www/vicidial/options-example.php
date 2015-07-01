@@ -16,6 +16,7 @@
 # 130124-1735 - Added option to display first and last name in user stats results
 # 140124-1003 - Removed extra newline at end of file
 # 140624-1422 - Added droppedOFtotal options.php option
+# 150619-0135 - Added DROPANSWERpercent_adjustment options.php option for AST_VDADstats.php
 #
 
 # used by the realtime_report.php script
@@ -81,4 +82,6 @@ $firstlastname_display_user_stats = 0;
 # agent time detail report login/logout link for user
 $atdr_login_logout_user_link = 0;
 
+# alternate calculation of 'Percent of DROP Calls taken out of Answers' in AST_VDADstats.php 
+$DROPANSWERpercent_adjustment = 0;
 ?>

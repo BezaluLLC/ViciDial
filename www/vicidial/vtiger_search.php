@@ -182,7 +182,7 @@ if (strlen($vtiger_search_category)<1)
 #$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
 $linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login", "$vtiger_pass", "$vtiger_dbname");
 
-if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_error());}
+if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_connect_error());}
 echo 'Connected successfully';
 #mysql_select_db("$vtiger_dbname", $linkV);
 

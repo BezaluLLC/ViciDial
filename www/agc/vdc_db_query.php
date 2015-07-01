@@ -380,10 +380,11 @@
 # 150608-1051 - Added alt and addr3 options for manual dial search and filtering
 # 150609-1400 - Added script color
 # 150609-1857 - Added list_description web url variable
+# 150701-1205 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 #
 
-$version = '2.12-275';
-$build = '150609-1857';
+$version = '2.12-276';
+$build = '150701-1205';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=616;
 $one_mysql_log=0;
@@ -1352,6 +1353,7 @@ if ($ACTION == 'regCLOSER')
 		if ( ($enable_queuemetrics_logging > 0) and ($queuemetrics_addmember_enabled > 0) )
 			{
 			$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+			if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 			mysqli_select_db($linkB, "$queuemetrics_dbname");
 			}
 
@@ -3841,6 +3843,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 							}
 
 						$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+						if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 						mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 						# UNPAUSEALL
@@ -4733,6 +4736,7 @@ if ($ACTION == 'manDiaLonly')
 				}
 
 			$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+			if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 			mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 			# UNPAUSEALL
@@ -5277,6 +5281,7 @@ if ($stage == "end")
 			if ($enable_queuemetrics_logging > 0)
 				{
 				$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+				if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 				mysqli_select_db($linkB, "$queuemetrics_dbname");
 				}
 			}
@@ -9992,7 +9997,7 @@ if ($ACTION == 'updateDISPO')
 
 			### connect to your vtiger database
 			$linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass", "$vtiger_dbname");
-			if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_error($linkV));}
+			if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_connect_error());}
 
 			$stmt = "SELECT vendor_lead_code FROM vicidial_list where lead_id='$lead_id';";
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -10345,6 +10350,7 @@ if ($ACTION == 'updateDISPO')
 	if ( ($enable_queuemetrics_logging > 0) and ( ( ($queuemetrics_callstatus > 0) or ($queuemetrics_callstatus_override=='YES') ) and ($queuemetrics_callstatus_override!='NO') ) )
 		{
 		$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+		if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 		mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 		if (strlen($stage) < 2) 
@@ -11169,6 +11175,7 @@ if ( ($ACTION == 'VDADpause') or ($ACTION == 'VDADready') or ($pause_trigger == 
 				if ( (preg_match('/READY/',$stage)) or (preg_match('/CLOSER/',$stage)) ) {$QMstatus='UNPAUSEALL';}
 				if ( (preg_match('/PAUSE/',$stage)) or ($pause_trigger == 'PAUSE') ) {$QMstatus='PAUSEALL';}
 				$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+				if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 				mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 				$user_group='';
@@ -11481,6 +11488,7 @@ if ($ACTION == 'userLOGout')
 					{$QM_LOGOFF = 'AGENTCALLBACKLOGOFF';}
 
 				$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+				if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 				mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 			#	$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='$campaign',agent='Agent/$user',verb='PAUSE',serverid='1';";
@@ -11746,6 +11754,7 @@ if ($ACTION == 'PauseCodeSubmit')
 				$pause_call_id='NONE';
 				if (strlen($campaign_cid) > 12) {$pause_call_id = $campaign_cid;}
 				$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+				if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 				mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 				$pause_typeSQL='';
@@ -12880,6 +12889,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 		if ( (preg_match("/contact_information/",$tables_use_alt_log_db)) and (strlen($alt_log_server_ip)>4) and (strlen($alt_log_dbname)>0) )
 			{
 			$linkALT=mysqli_connect("$alt_log_server_ip", "$alt_log_login", "$alt_log_pass");
+			if (!$linkALT) {die(_QXZ("Could not connect: ")."$alt_log_server_ip|$alt_log_login" . mysqli_connect_error());}
 			mysqli_select_db($linkALT, "$alt_log_dbname");
 			}
 		else

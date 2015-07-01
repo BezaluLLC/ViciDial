@@ -14,10 +14,11 @@
 # 140706-0834 - Incorporated into standard admin code
 # 141007-2120 - Finalized adding QXZ translation to all admin files
 # 141229-2015 - Added code for on-the-fly language translations display
+# 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 #
 
-$version = '2.10-6';
-$build = '141229-2015';
+$version = '2.10-7';
+$build = '150626-2120';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -506,7 +507,7 @@ if ($function == 'external_dial_lead')
 							### connect to your vtiger database
 							$linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login", "$vtiger_pass", "$vtiger_dbname");
 
-							if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_error());}
+							if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_connect_error());}
 							echo "Connected successfully\n<BR>\n";
 
 							# make sure the ID is present in Vtiger database as an account

@@ -14,6 +14,7 @@
 # 100806-0653 - First Build
 # 130610-1124 - Finalized changing of all ereg instances to preg
 # 130902-0756 - Changed to mysqli PHP functions
+# 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -62,7 +63,7 @@ if ( ($enable_vtiger_integration > 0) and (strlen($vtiger_server_ip) > 5) and (s
 	#$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
 	$linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login", "$vtiger_pass", "$vtiger_dbname");
 	
-	if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_error());}
+	if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_connect_error());}
 	if ($DB) {echo 'Connected successfully';}
 	#mysql_select_db("$vtiger_dbname", $linkV);
 

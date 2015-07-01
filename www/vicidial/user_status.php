@@ -1,7 +1,7 @@
 <?php
 # user_status.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -33,6 +33,7 @@
 # 141007-2214 - Finalized adding QXZ translation to all admin files
 # 141114-1702 - Fixed issue #800
 # 141229-1829 - Added code for on-the-fly language translations display
+# 150701-1250 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 #
 
 $startMS = microtime();
@@ -506,7 +507,7 @@ if ($stage == "log_agent_out")
 			#$linkB=mysql_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
 			#mysql_select_db("$queuemetrics_dbname", $linkB);
 			$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass", "$queuemetrics_dbname");
-
+			if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 
 			$agents='@agents';
 			$agent_logged_in='';

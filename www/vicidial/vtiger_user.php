@@ -12,6 +12,7 @@
 # 100127-0616 - Added Vtiger ViciDial user_level role lookup
 # 130610-1126 - Finalized changing of all ereg instances to preg
 # 130902-0756 - Changed to mysqli PHP functions
+# 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -99,7 +100,7 @@ while ($i < $VD_users_ct)
 #$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
 $linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login", "$vtiger_pass", "$vtiger_dbname");
 
-if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_error());}
+if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_connect_error());}
 echo "Connected successfully\n<BR>\n";
 #mysql_select_db("$vtiger_dbname", $linkV);
 

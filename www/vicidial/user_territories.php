@@ -17,10 +17,11 @@
 # 130901-0834 - Changed to mysqli PHP functions
 # 141007-2050 - Finalized adding QXZ translation to all admin files
 # 141229-1850 - Added code for on-the-fly language translations display
+# 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 #
 
-$version = '2.10-9';
-$build = '141229-1850';
+$version = '2.10-10';
+$build = '150626-2120';
 
 $MT[0]='';
 
@@ -157,7 +158,7 @@ if ($enable_vtiger_integration > 0)
 	#$linkV=mysql_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
 	$linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login", "$vtiger_pass", "$vtiger_dbname");
 
-	if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_error());}
+	if (!$linkV) {die("Could not connect: $vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_connect_error());}
 	#mysql_select_db("$vtiger_dbname", $linkV);
 	}
 

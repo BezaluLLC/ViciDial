@@ -490,10 +490,11 @@
 # 150609-1736 - Added status_display_ingroup option
 # 150609-1917 - Added list_description web url variable
 # 150610-0940 - Added customer_gone_seconds campaign option
+# 150701-1211 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 #
 
-$version = '2.12-462c';
-$build = '150610-0940';
+$version = '2.12-463c';
+$build = '150701-1211';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -3071,6 +3072,7 @@ else
 						$QM_PHONE = "$SIP_user_DiaL";
 						}
 					$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+					if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 					mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 					if ( ($queuemetrics_pe_phone_append > 0) and (strlen($qm_phone_environment)>0) )
@@ -3137,6 +3139,7 @@ else
 						$QM_PHONE = "$SIP_user_DiaL";
 						}
 					$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+					if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 					mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 					if ($queuemetrics_loginout!='NONE')
@@ -3263,6 +3266,7 @@ else
 			{
 			$StarTtimEpause = ($StarTtimE + 1);
 			$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+			if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 			mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 			$pause_typeSQL='';

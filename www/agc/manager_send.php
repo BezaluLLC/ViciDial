@@ -124,10 +124,11 @@
 # 141128-0851 - Code cleanup for QXZ functions
 # 141216-2107 - Added language settings lookups and user/pass variable standardization
 # 150307-1837 - Added leave 3way custom sound context
+# 150701-1208 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 #
 
-$version = '2.12-71';
-$build = '150307-1837';
+$version = '2.12-72';
+$build = '150701-1208';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=129;
 $one_mysql_log=0;
@@ -584,6 +585,7 @@ if ($ACTION=="HangupConfDial")
 ######################
 if ($ACTION=="Hangup")
 	{
+
 	$stmt="UPDATE vicidial_live_agents SET external_hangup='0' where user='$user';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -705,6 +707,7 @@ if ($ACTION=="Hangup")
 					if ($enable_queuemetrics_logging > 0)
 						{
 						$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+						if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 						mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 						$stmt="SELECT count(*) from queue_log where call_id='$CalLCID' and verb='CONNECT';";
@@ -994,6 +997,7 @@ if ($ACTION=="RedirectToPark")
 			if ($enable_queuemetrics_logging > 0)
 				{
 				$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+				if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 				mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 				$time_id=0;
@@ -1107,6 +1111,7 @@ if ($ACTION=="RedirectFromPark")
 				if ($enable_queuemetrics_logging > 0)
 					{
 					$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+					if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 					mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 					$time_id=0;
@@ -1233,6 +1238,7 @@ if ($ACTION=="RedirectToParkIVR")
 			if ($enable_queuemetrics_logging > 0)
 				{
 				$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+				if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 				mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 				$time_id=0;

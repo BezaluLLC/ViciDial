@@ -13,6 +13,7 @@
 # 131210-1746 - Added ability to define slave server with port number, issue #687
 # 150216-1529 - Removed non-latin set to 0
 # 150313-0913 - Added ExpectedDBSchema conf file value
+# 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 #
 
 if ( file_exists("/etc/astguiclient.conf") )
@@ -78,7 +79,7 @@ $link=mysqli_connect($server_string, "$VARDB_user", "$VARDB_pass", "$VARDB_datab
 if (!$link) 
 	{
  //   die("MySQL connect ERROR: |$server_string|$VARDB_user|$VARDB_pass|$VARDB_database|$VARDB_port|$temp_slave_db[0]|$temp_slave_db[1]|$slave_db_server|$use_slave_server|" . mysqli_error('mysqli'));
-    die("MySQL connect ERROR:  " . mysqli_error('mysqli'));
+    die("MySQL connect ERROR:  " . mysqli_connect_error());
 	}
 
 $local_DEF = 'Local/';

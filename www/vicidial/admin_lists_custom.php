@@ -32,10 +32,11 @@
 # 140811-2110 - Fixes for issues with default fields
 # 141006-0903 - Finalized adding QXZ translation to all admin files
 # 141230-0018 - Added code for on-the-fly language translations display
+# 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 #
 
-$admin_version = '2.10-25';
-$build = '141230-0018';
+$admin_version = '2.10-26';
+$build = '150626-2120';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -393,7 +394,7 @@ if ( ($action == "COPY_FIELDS_SUBMIT") and ($list_id > 99) and ($source_list_id 
 		$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
 		if (!$linkCUSTOM) 
 			{
-			die('MySQL '._QXZ("connect ERROR").': '. mysqli_error($linkCUSTOM));
+			die('MySQL '._QXZ("connect ERROR").': '. mysqli_connect_error());
 			}
 
 		# if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysqli_error());}
@@ -648,11 +649,10 @@ if ( ($action == "DELETE_CUSTOM_FIELD") and ($list_id > 99) and ($field_id > 0) 
 	#$linkCUSTOM=mysql_connect("$VARDB_server:$VARDB_port", "$VARDB_custom_user","$VARDB_custom_pass");
 	#if (!$linkCUSTOM) {die("Could not connect: $VARDB_server|$VARDB_port|$VARDB_database|$VARDB_custom_user|$VARDB_custom_pass" . mysqli_error());}
 	#mysql_select_db("$VARDB_database", $linkCUSTOM);
-
 	$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
 	if (!$linkCUSTOM) 
 		{
-		die('MySQL '._QXZ("connect ERROR").': '. mysqli_error($linkCUSTOM));
+		die('MySQL '._QXZ("connect ERROR").': '. mysqli_connect_error());
 		}
 
 	$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id' and field_label='$field_label';";
@@ -756,7 +756,7 @@ if ( ($action == "ADD_CUSTOM_FIELD") and ($list_id > 99) )
 						$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
 						if (!$linkCUSTOM) 
 							{
-							die('MySQL '._QXZ("connect ERROR").': '. mysqli_error($linkCUSTOM));
+							die('MySQL '._QXZ("connect ERROR").': '. mysqli_connect_error());
 							}
 
 						$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
@@ -798,7 +798,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELD_SUBMIT") and ($list_id > 99) and ($field_i
 	$linkCUSTOM=mysqli_connect("$VARDB_server", "$VARDB_custom_user", "$VARDB_custom_pass", "$VARDB_database", "$VARDB_port");
 	if (!$linkCUSTOM) 
 		{
-		die('MySQL '._QXZ("connect ERROR").': '. mysqli_error($linkCUSTOM));
+		die('MySQL '._QXZ("connect ERROR").': '. mysqli_connect_error());
 		}
 
 

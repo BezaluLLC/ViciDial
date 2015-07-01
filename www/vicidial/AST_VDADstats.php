@@ -44,6 +44,7 @@
 # 141114-0705 - Finalized adding QXZ translation to all admin files
 # 141230-1353 - Added code for on-the-fly language translations display
 # 150516-1306 - Fixed Javascript element problem, Issue #857
+# 150619-0137 - Added option to calculate 'Percent of DROP Calls taken out of Answers' differently
 #
 
 $startMS = microtime();
@@ -117,6 +118,12 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+$DROPANSWERpercent_adjustment=0;
+if (file_exists('options.php'))
+	{
+	require('options.php');
+	}
 
 ##### SERVER CARRIER LOGGING LOOKUP #####
 $stmt = "SELECT count(*) FROM servers where carrier_logging_active='Y' and max_vicidial_trunks > 0;";
@@ -861,7 +868,8 @@ else
 	$DROPpercent = (MathZDC($DROPcallsRAW, $TOTALcalls) * 100);
 	$DROPpercent = round($DROPpercent, 2);
 
-	$DROPANSWERpercent = (MathZDC($DROPcallsRAW, $ANSWERcalls) * 100);
+	# Change $DROPANSWERpercent_adjustment to '1' in options.php if you want to include the drop call count in addition to the answer call count when calculating the DROPANSWERpercent, although you really don't need to
+	$DROPANSWERpercent = (MathZDC($DROPcallsRAW, ($ANSWERcalls+($DROPcallsRAW*$DROPANSWERpercent_adjustment))) * 100);
 	$DROPANSWERpercent = round($DROPANSWERpercent, 2);
 
 	$average_hold_seconds = MathZDC($DROPseconds, $DROPcallsRAW);
@@ -869,7 +877,7 @@ else
 	$average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
 
 	$OUToutput .= _QXZ("Total Outbound DROP Calls",44).": $DROPcalls  $DROPpercent%\n";
-	$OUToutput .= _QXZ("Percent of DROP Calls taken out of Answers",44).": $DROPcalls / $ANSWERcalls  $DROPANSWERpercent%\n";
+	$OUToutput .= _QXZ("Percent of DROP Calls taken out of Answers",44).": $DROPcalls / ".($ANSWERcalls+($DROPcallsRAW*$DROPANSWERpercent_adjustment))."  $DROPANSWERpercent%\n";
 
 	if (preg_match("/YES/i",$include_rollover))
 		{

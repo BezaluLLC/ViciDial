@@ -3513,12 +3513,13 @@ else
 # 150609-1216 - Added in-group and script display settings
 # 150609-2142 - Changes for different types of in-groups
 # 150610-0934 - Added customer_gone_seconds campaign setting
+# 150701-1131 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-491a';
-$build = '150610-0934';
+$admin_version = '2.12-492a';
+$build = '150701-1131';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -7764,7 +7765,7 @@ if ($ADD=="2")
 					$linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login", "$vtiger_pass", "$vtiger_dbname");
 					if (!$linkV) 
 						{
-						die('MySQL '._QXZ("connect ERROR").': ' . mysqli_error($linkV));
+						die('MySQL '._QXZ("connect ERROR").': ' . mysqli_connect_error());
 						}
 
 					$user_name =		$user;
@@ -8077,7 +8078,7 @@ if ($ADD=="2A")
 					$linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login", "$vtiger_pass", "$vtiger_dbname");
 					if (!$linkV) 
 						{
-						die('MySQL '._QXZ("connect ERROR").': ' . mysqli_error($linkV));
+						die('MySQL '._QXZ("connect ERROR").': ' . mysqli_connect_error());
 						}
 
 
@@ -10006,7 +10007,7 @@ if ($ADD==211111)
 					$linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login", "$vtiger_pass", "$vtiger_dbname");
 					if (!$linkV) 
 						{
-						die('MySQL '._QXZ("connect ERROR").': ' . mysqli_error($linkV));
+						die('MySQL '._QXZ("connect ERROR").': ' . mysqli_connect_error());
 						}
 
 
@@ -11035,6 +11036,10 @@ if ($ADD==291111111111)
 		if ( (preg_match("/contact_information/",$SStables_use_alt_log_db)) and (strlen($SSalt_log_server_ip)>4) and (strlen($SSalt_log_dbname)>0) )
 			{
 			$linkALT=mysqli_connect("$SSalt_log_server_ip", "$SSalt_log_login", "$SSalt_log_pass", "$SSalt_log_dbname");
+				if (!$linkALT) 
+					{
+					die('MySQL '._QXZ("connect ERROR").': ' . mysqli_connect_error());
+					}
 			}
 		else
 			{$linkALT = $link;}
@@ -11351,7 +11356,7 @@ if ($ADD=="4A")
 				$linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login", "$vtiger_pass", "$vtiger_dbname");
 				if (!$linkV) 
 					{
-					die('MySQL '._QXZ("connect ERROR").': ' . mysqli_error($linkV));
+					die('MySQL '._QXZ("connect ERROR").': ' . mysqli_connect_error());
 					}
 
 				$user_name =		$user;
@@ -11613,7 +11618,7 @@ if ($ADD=="4B")
 				$linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login", "$vtiger_pass", "$vtiger_dbname");
 				if (!$linkV) 
 					{
-					die('MySQL '._QXZ("connect ERROR").': ' . mysqli_error($linkV));
+					die('MySQL '._QXZ("connect ERROR").': ' . mysqli_connect_error());
 					}
 
 
@@ -11870,7 +11875,7 @@ if ($ADD==4)
 				$linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login", "$vtiger_pass", "$vtiger_dbname");
 				if (!$linkV) 
 					{
-					die('MySQL '._QXZ("connect ERROR").': ' . mysqli_error($linkV));
+					die('MySQL '._QXZ("connect ERROR").': ' . mysqli_connect_error());
 					}
 
 				$user_name =		$user;
@@ -13924,7 +13929,7 @@ if ($ADD==411111)
 					$linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login", "$vtiger_pass", "$vtiger_dbname");
 					if (!$linkV) 
 						{
-						die('MySQL '._QXZ("connect ERROR").': ' . mysqli_error($linkV));
+						die('MySQL '._QXZ("connect ERROR").': ' . mysqli_connect_error());
 						}
 
 					######################################
@@ -14862,6 +14867,10 @@ if ($ADD==491111111111)
 			if ( (preg_match("/contact_information/",$SStables_use_alt_log_db)) and (strlen($SSalt_log_server_ip)>4) and (strlen($SSalt_log_dbname)>0) )
 				{
 				$linkALT=mysqli_connect("$SSalt_log_server_ip", "$SSalt_log_login", "$SSalt_log_pass", "$SSalt_log_dbname");
+				if (!$linkALT) 
+					{
+					die('MySQL '._QXZ("connect ERROR").': ' . mysqli_connect_error());
+					}
 				}
 			else
 				{$linkALT = $link;}
@@ -16266,7 +16275,10 @@ if ($ADD==62)
 						{$QM_LOGOFF = 'AGENTCALLBACKLOGOFF';}
 
 					$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass","$queuemetrics_dbname");
-
+					if (!$linkB) 
+						{
+						die('MySQL '._QXZ("connect ERROR").': ' . mysqli_connect_error());
+						}
 					$agents='@agents';
 					$agent_logged_in='';
 					$time_logged_in='0';
@@ -17721,6 +17733,10 @@ if ($ADD==691111111111)
 		if ( (preg_match("/contact_information/",$SStables_use_alt_log_db)) and (strlen($SSalt_log_server_ip)>4) and (strlen($SSalt_log_dbname)>0) )
 			{
 			$linkALT=mysqli_connect("$SSalt_log_server_ip", "$SSalt_log_login", "$SSalt_log_pass", "$SSalt_log_dbname");
+				if (!$linkALT) 
+					{
+					die('MySQL '._QXZ("connect ERROR").': ' . mysqli_connect_error());
+					}
 			}
 		else
 			{$linkALT = $link;}
@@ -26068,7 +26084,7 @@ if ($ADD==3311)
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter User Route Settings In-Group").": </td><td align=left><select size=1 name=filter_user_route_settings_ingroup>";
 		echo "$FXgroups_menu";
 		echo "</select>$NWB#inbound_dids-user_route_settings_ingroup$NWE</td></tr>\n";
-		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3111&group_id=$filter_phone_group_id\">"._QXZ("Filter In-Group ID")."</a>: </td><td align=left><select size=1 name=filter_group_id>";
+		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3111&group_id=$filter_group_id\">"._QXZ("Filter In-Group ID")."</a>: </td><td align=left><select size=1 name=filter_group_id>";
 		echo "$FDgroups_menu";
 		echo "</select>$NWB#inbound_dids-group_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter In-Group Call Handle Method").": </td><td align=left><select size=1 name=filter_call_handle_method><option value='CID'>"._QXZ("CID")."</option><option value='CIDLOOKUP'>"._QXZ("CIDLOOKUP")."</option><option value='CIDLOOKUPRL'>"._QXZ("CIDLOOKUPRL")."</option><option value='CIDLOOKUPRC'>"._QXZ("CIDLOOKUPRC")."</option><option value='CIDLOOKUPALT'>"._QXZ("CIDLOOKUPALT")."</option><option value='CIDLOOKUPRLALT'>"._QXZ("CIDLOOKUPRLALT")."</option><option value='CIDLOOKUPRCALT'>"._QXZ("CIDLOOKUPRCALT")."</option><option value='CIDLOOKUPADDR3'>"._QXZ("CIDLOOKUPADDR3")."</option><option value='CIDLOOKUPRLADDR3'>"._QXZ("CIDLOOKUPRLADDR3")."</option><option value='CIDLOOKUPRCADDR3'>"._QXZ("CIDLOOKUPRCADDR3")."</option><option value='CIDLOOKUPALTADDR3'>"._QXZ("CIDLOOKUPALTADDR3")."</option><option value='CIDLOOKUPRLALTADDR3'>"._QXZ("CIDLOOKUPRLALTADDR3")."</option><option value='CIDLOOKUPRCALTADDR3'>"._QXZ("CIDLOOKUPRCALTADDR3")."</option><option value='ANI'>"._QXZ("ANI")."</option><option value='ANILOOKUP'>"._QXZ("ANILOOKUP")."</option><option value='ANILOOKUPRL'>"._QXZ("ANILOOKUPRL")."</option><option value='VIDPROMPT'>"._QXZ("VIDPROMPT")."</option><option value='VIDPROMPTLOOKUP'>"._QXZ("VIDPROMPTLOOKUP")."</option><option value='VIDPROMPTLOOKUPRL'>"._QXZ("VIDPROMPTLOOKUPRL")."</option><option value='VIDPROMPTLOOKUPRC'>"._QXZ("VIDPROMPTLOOKUPRC")."</option><option value='CLOSER'>"._QXZ("CLOSER")."</option><option value='3DIGITID'>"._QXZ("3DIGITID")."</option><option value='4DIGITID'>"._QXZ("4DIGITID")."</option><option value='5DIGITID'>"._QXZ("5DIGITID")."</option><option value='10DIGITID'>"._QXZ("10DIGITID")."</option><option value='$filter_call_handle_method' SELECTED>"._QXZ("$filter_call_handle_method")."</option></select>$NWB#inbound_dids-call_handle_method$NWE</td></tr>\n";
@@ -29811,6 +29827,10 @@ if ($ADD==391111111111)
 		if ( (preg_match("/contact_information/",$SStables_use_alt_log_db)) and (strlen($SSalt_log_server_ip)>4) and (strlen($SSalt_log_dbname)>0) )
 			{
 			$linkALT=mysqli_connect("$SSalt_log_server_ip", "$SSalt_log_login", "$SSalt_log_pass", "$SSalt_log_dbname");
+				if (!$linkALT) 
+					{
+					die('MySQL '._QXZ("connect ERROR").': ' . mysqli_connect_error());
+					}
 			}
 		else
 			{$linkALT = $link;}
@@ -32745,6 +32765,10 @@ if ($ADD==190000000000)
 	if ( (preg_match("/contact_information/",$SStables_use_alt_log_db)) and (strlen($SSalt_log_server_ip)>4) and (strlen($SSalt_log_dbname)>0) )
 		{
 		$linkALT=mysqli_connect("$SSalt_log_server_ip", "$SSalt_log_login", "$SSalt_log_pass", "$SSalt_log_dbname");
+			if (!$linkALT) 
+				{
+				die('MySQL '._QXZ("connect ERROR").': ' . mysqli_connect_error());
+				}
 		}
 	else
 		{$linkALT = $link;}

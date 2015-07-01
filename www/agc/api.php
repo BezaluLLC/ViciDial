@@ -82,9 +82,10 @@
 # 150313-0825 - Allow for single quotes in vicidial_list and custom data fields
 # 150429-1717 - Added user allowed function restrictions
 # 150512-2027 - Added filtering of hash sign on some input variables, Issue #851
+# 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 
-$version = '2.12-48';
-$build = '150512-2027';
+$version = '2.12-49';
+$build = '150626-2120';
 
 $startMS = microtime();
 
@@ -1621,7 +1622,7 @@ if ($function == 'external_dial')
 
 							### connect to your vtiger database
 							$linkV=mysqli_connect("$vtiger_server_ip", "$vtiger_login","$vtiger_pass");
-							if (!$linkV) {die(_QXZ("Could not connect: ")."$vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_error($linkV));}
+							if (!$linkV) {die(_QXZ("Could not connect: ")."$vtiger_server_ip|$vtiger_dbname|$vtiger_login|$vtiger_pass" . mysqli_connect_error());}
 							mysqli_select_db($linkV, "$vtiger_dbname");
 
 							# make sure the ID is present in Vtiger database as an account
@@ -3161,6 +3162,7 @@ if ($function == 'ra_call_control')
 					if ($enable_queuemetrics_logging > 0)
 						{
 						$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+						if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
 						mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 						$stmt = "SELECT time_id from queue_log where call_id='$value' and queue='$campaign_id' and agent='Agent/$ra_user' and verb='CONNECT';";

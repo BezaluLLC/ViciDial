@@ -9,6 +9,7 @@
 # CHANGES:
 # 130328-0022 - Converted ereg to preg functions
 # 130802-0957 - Changed to PHP mysqli functions
+# 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 #
 
 if ( file_exists("/etc/astguiclient.conf") )
@@ -49,7 +50,7 @@ else
 $link=mysqli_connect("$VARDB_server", "$VARDB_user", "$VARDB_pass", "$VARDB_database", $VARDB_port);
 if (!$link) 
 	{
-    die('MySQL connect ERROR: ' . mysqli_error($link));
+    die('MySQL connect ERROR: ' . mysqli_connect_error());
 	}
 
 $local_DEF = 'Local/';
