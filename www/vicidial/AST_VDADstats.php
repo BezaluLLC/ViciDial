@@ -1541,7 +1541,7 @@ else
 	$AVGTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVG TIME")."</th></tr>";
 	###########################
 
-	$stmt="select vicidial_log.user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from vicidial_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and vicidial_log.user is not null and length_in_sec is not null and length_in_sec > 0 and vicidial_log.user=vicidial_users.user group by vicidial_log.user;";
+	$stmt="select vicidial_log.user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from vicidial_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and vicidial_log.user is not null and length_in_sec is not null and length_in_sec >= 0 and vicidial_log.user=vicidial_users.user group by vicidial_log.user;";
 	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$ASCII_text .= "$stmt\n";}
