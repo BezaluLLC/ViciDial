@@ -88,6 +88,9 @@ OTHER CHANGES:
 13. Added campaign option to allow you to set the number of seconds after a 
 	customer hangs up before the warning shows on the agent screen
 
+14. Added ability to use No Agent Call URL with the dispo_move_list.php script
+	see script comments for instructions.
+
 
 
 

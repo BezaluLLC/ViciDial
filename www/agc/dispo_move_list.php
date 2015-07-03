@@ -1,7 +1,7 @@
 <?php
 # dispo_move_list.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to be used in the "Dispo URL" field of a campaign
 # or in-group. It should take in the lead_id to check for the same lead_id
@@ -17,6 +17,10 @@
 #
 # Example of what to put in the Dispo URL field:
 # VARhttp://192.168.1.1/agc/dispo_move_list.php?lead_id=--A--lead_id--B--&dispo=--A--dispo--B--&user=--A--user--B--&pass=--A--pass--B--&new_list_id=10411099&sale_status=SALE---SSALE---XSALE&reset_dialed=Y&log_to_file=1
+# 
+# Example of what to put in the No Agent Call URL field:
+# (user needs to be NOAGENTURL and pass needs to be set to the call_id)
+# VARhttp://192.168.1.1/agc/dispo_move_list.php?lead_id=--A--lead_id--B--&dispo=--A--dispo--B--&user=NOAGENTURL&pass=--A--call_id--B--&new_list_id=10411099&sale_status=SALE---SSALE---XSALE&reset_dialed=Y&log_to_file=1
 # 
 # Definable Fields: (other fields should be left as they are)
 # - log_to_file -	(0,1) if set to 1, will create a log file in the agc directory
@@ -37,6 +41,7 @@
 # 140811-0844 - Changed to use QXZ function for echoing text
 # 141118-1235 - Formatting changes for QXZ output
 # 141216-2110 - Added language settings lookups and user/pass variable standardization
+# 150703-1453 - Added options so it would work with No-Agent Call URL
 #
 
 $api_script = 'deactivate';
@@ -168,18 +173,46 @@ if ($match_found > 0)
 	$session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
 	$server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
 
-	$auth=0;
-	$auth_message = user_authorization($user,$pass,'',0,0,0);
-	if ($auth_message == 'GOOD')
-		{$auth=1;}
+	if (preg_match("/NOAGENTURL/",$user))
+		{
+		$PADlead_id = sprintf("%010s", $lead_id);
+		if ( (strlen($pass) > 15) and (preg_match("/$PADlead_id$/",$pass)) )
+			{
+			$four_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-4,date("i"),date("s"),date("m"),date("d"),date("Y")));
 
-	$stmt="SELECT count(*) from vicidial_live_agents where user='$user';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_to_mysqli($stmt, $link);
-	$row=mysqli_fetch_row($rslt);
-	$authlive=$row[0];
+			$stmt="SELECT count(*) from vicidial_log_extended where caller_code='$pass' and call_date > \"$four_hours_ago\";";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			$authlive=$row[0];
+			$auth=$row[0];
+			if ($authlive < 1)
+				{
+				echo _QXZ("Call Not Found:")." 2|$user|$pass|$authlive|\n";
+				exit;
+				}
+			}
+		else
+			{
+			echo _QXZ("Invalid Call ID:")." 1|$user|$pass|$PADlead_id|\n";
+			exit;
+			}
+		}
+	else
+		{
+		$auth=0;
+		$auth_message = user_authorization($user,$pass,'',0,0,0);
+		if ($auth_message == 'GOOD')
+			{$auth=1;}
 
-	if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) or ($authlive==0))
+		$stmt="SELECT count(*) from vicidial_live_agents where user='$user';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$authlive=$row[0];
+		}
+
+	if ( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) or ($authlive==0))
 		{
 		echo _QXZ("Invalid Username/Password:")." |$user|$pass|$auth|$authlive|$auth_message|\n";
 		exit;

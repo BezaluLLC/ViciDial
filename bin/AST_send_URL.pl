@@ -21,6 +21,7 @@
 # 150114-2037 - Added list_name variable
 # 150429-0910 - Added campaign variables
 # 150609-1931 - Added list_description variable
+# 150703-1542 - Fixed issue with list_id check
 #
 
 $|++;
@@ -321,7 +322,7 @@ if (length($lead_id) > 0)
 			}
 		$sthA->finish();
 
-		if ( (length($VAR_list_id) > 1) && ( ( (length($list_name) < 1) && ($add_lead_url =~ /--A--list_name--B--/) ) or ( (length($list_description) < 1) && ($add_lead_url =~ /--A--list_description--B--/) ) )
+		if ( (length($VAR_list_id) > 1) && ( ( (length($list_name) < 1) && ($add_lead_url =~ /--A--list_name--B--/) ) or ( (length($list_description) < 1) && ($add_lead_url =~ /--A--list_description--B--/) ) ) )
 			{
 			$stmtH = "SELECT list_name,list_description FROM vicidial_lists where list_id='$VAR_list_id';";
 			$sthA = $dbhA->prepare($stmtH) or die "preparing: ",$dbhA->errstr;
@@ -648,7 +649,7 @@ if (length($lead_id) > 0)
 			$sthA->finish();
 			}
 
-		if ( (length($VAR_list_id) > 1) && ( ( (length($list_name) < 1) && ($start_call_url =~ /--A--list_name--B--/) ) || ( (length($list_description) < 1) && ($start_call_url =~ /--A--list_description--B--/) ) )
+		if ( (length($VAR_list_id) > 1) && ( ( (length($list_name) < 1) && ($start_call_url =~ /--A--list_name--B--/) ) || ( (length($list_description) < 1) && ($start_call_url =~ /--A--list_description--B--/) ) ) )
 			{
 			$stmtH = "SELECT list_name,list_description FROM vicidial_lists where list_id='$VAR_list_id';";
 			$sthA = $dbhA->prepare($stmtH) or die "preparing: ",$dbhA->errstr;
