@@ -1,7 +1,7 @@
 <?php
 # vdc_script_display.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display the contents of the SCRIPT tab in the agent interface
 #
@@ -29,10 +29,11 @@
 # 140810-1857 - Changed to use QXZ function for echoing text
 # 141118-1422 - Added agent_email variable
 # 141216-2121 - Added language settings lookups and user/pass variable standardization
+# 150703-2034 - Added option to fully urlencode variables if IFRAME is used in script Issue #864
 #
 
-$version = '2.10-23';
-$build = '141216-2121';
+$version = '2.12-24';
+$build = '150703-2034';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -234,6 +235,7 @@ $script_height = ($script_height - 20);
 $full_script_height = ($script_height + 200);
 
 $IFRAME=0;
+$IFRAMEencode=1;
 
 $user=preg_replace("/\'|\"|\\\\|;| /","",$user);
 $pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
@@ -356,87 +358,173 @@ $script_color =		$row[2];
 if (preg_match("/iframe\ssrc/i",$script_text))
 	{
 	$IFRAME=1;
-	$lead_id = preg_replace('/\s/i','+',$lead_id);
-	$vendor_id = preg_replace('/\s/i','+',$vendor_id);
-	$vendor_lead_code = preg_replace('/\s/i','+',$vendor_lead_code);
-	$list_id = preg_replace('/\s/i','+',$list_id);
-	$list_name = preg_replace('/\s/i','+',$list_name);
-	$list_description = preg_replace('/\s/i','+',$list_description);
-	$gmt_offset_now = preg_replace('/\s/i','+',$gmt_offset_now);
-	$phone_code = preg_replace('/\s/i','+',$phone_code);
-	$phone_number = preg_replace('/\s/i','+',$phone_number);
-	$title = preg_replace('/\s/i','+',$title);
-	$first_name = preg_replace('/\s/i','+',$first_name);
-	$middle_initial = preg_replace('/\s/i','+',$middle_initial);
-	$last_name = preg_replace('/\s/i','+',$last_name);
-	$address1 = preg_replace('/\s/i','+',$address1);
-	$address2 = preg_replace('/\s/i','+',$address2);
-	$address3 = preg_replace('/\s/i','+',$address3);
-	$city = preg_replace('/\s/i','+',$city);
-	$state = preg_replace('/\s/i','+',$state);
-	$province = preg_replace('/\s/i','+',$province);
-	$postal_code = preg_replace('/\s/i','+',$postal_code);
-	$country_code = preg_replace('/\s/i','+',$country_code);
-	$gender = preg_replace('/\s/i','+',$gender);
-	$date_of_birth = preg_replace('/\s/i','+',$date_of_birth);
-	$alt_phone = preg_replace('/\s/i','+',$alt_phone);
-	$email = preg_replace('/\s/i','+',$email);
-	$security_phrase = preg_replace('/\s/i','+',$security_phrase);
-	$comments = preg_replace('/\s/i','+',$comments);
 	$user = preg_replace('/\s/i','+',$user);
 	$pass = preg_replace('/\s/i','+',$orig_pass);
-	$campaign = preg_replace('/\s/i','+',$campaign);
-	$phone_login = preg_replace('/\s/i','+',$phone_login);
-	$original_phone_login = preg_replace('/\s/i','+',$original_phone_login);
-	$phone_pass = preg_replace('/\s/i','+',$phone_pass);
-	$fronter = preg_replace('/\s/i','+',$fronter);
-	$closer = preg_replace('/\s/i','+',$closer);
-	$group = preg_replace('/\s/i','+',$group);
-	$channel_group = preg_replace('/\s/i','+',$channel_group);
-	$SQLdate = preg_replace('/\s/i','+',$SQLdate);
-	$epoch = preg_replace('/\s/i','+',$epoch);
-	$uniqueid = preg_replace('/\s/i','+',$uniqueid);
-	$customer_zap_channel = preg_replace('/\s/i','+',$customer_zap_channel);
-	$customer_server_ip = preg_replace('/\s/i','+',$customer_server_ip);
-	$server_ip = preg_replace('/\s/i','+',$server_ip);
-	$SIPexten = preg_replace('/\s/i','+',$SIPexten);
-	$session_id = preg_replace('/\s/i','+',$session_id);
-	$phone = preg_replace('/\s/i','+',$phone);
-	$parked_by = preg_replace('/\s/i','+',$parked_by);
-	$dispo = preg_replace('/\s/i','+',$dispo);
-	$dialed_number = preg_replace('/\s/i','+',$dialed_number);
-	$dialed_label = preg_replace('/\s/i','+',$dialed_label);
-	$source_id = preg_replace('/\s/i','+',$source_id);
-	$rank = preg_replace('/\s/i','+',$rank);
-	$owner = preg_replace('/\s/i','+',$owner);
-	$camp_script = preg_replace('/\s/i','+',$camp_script);
-	$in_script = preg_replace('/\s/i','+',$in_script);
-	$script_width = preg_replace('/\s/i','+',$script_width);
-	$script_height = preg_replace('/\s/i','+',$script_height);
-	$fullname = preg_replace('/\s/i','+',$fullname);
-	$agent_email = preg_replace('/\s/i','+',$agent_email);
-	$recording_filename = preg_replace('/\s/i','+',$recording_filename);
-	$recording_id = preg_replace('/\s/i','+',$recording_id);
-	$user_custom_one = preg_replace('/\s/i','+',$user_custom_one);
-	$user_custom_two = preg_replace('/\s/i','+',$user_custom_two);
-	$user_custom_three = preg_replace('/\s/i','+',$user_custom_three);
-	$user_custom_four = preg_replace('/\s/i','+',$user_custom_four);
-	$user_custom_five = preg_replace('/\s/i','+',$user_custom_five);
-	$preset_number_a = preg_replace('/\s/i','+',$preset_number_a);
-	$preset_number_b = preg_replace('/\s/i','+',$preset_number_b);
-	$preset_number_c = preg_replace('/\s/i','+',$preset_number_c);
-	$preset_number_d = preg_replace('/\s/i','+',$preset_number_d);
-	$preset_number_e = preg_replace('/\s/i','+',$preset_number_e);
-	$preset_number_f = preg_replace('/\s/i','+',$preset_number_f);
-	$preset_dtmf_a = preg_replace('/\s/i','+',$preset_dtmf_a);
-	$preset_dtmf_b = preg_replace('/\s/i','+',$preset_dtmf_b);
-	$did_id = preg_replace('/\s/i','+',$did_id);
-	$did_extension = preg_replace('/\s/i','+',$did_extension);
-	$did_pattern = preg_replace('/\s/i','+',$did_pattern);
-	$did_description = preg_replace('/\s/i','+',$did_description);
-	$called_count = preg_replace('/\s/i','+',$called_count);
-	$session_name = preg_replace('/\s/i','+',$session_name);
-	$web_vars = preg_replace('/\s/i','+',$web_vars);
+
+	if ($IFRAMEencode=='1')
+		{
+		$lead_id = urlencode(trim($lead_id));
+		$vendor_id = urlencode(trim($vendor_id));
+		$vendor_lead_code = urlencode(trim($vendor_lead_code));
+		$list_id = urlencode(trim($list_id));
+		$list_name = urlencode(trim($list_name));
+		$list_description = urlencode(trim($list_description));
+		$gmt_offset_now = urlencode(trim($gmt_offset_now));
+		$phone_code = urlencode(trim($phone_code));
+		$phone_number = urlencode(trim($phone_number));
+		$title = urlencode(trim($title));
+		$first_name = urlencode(trim($first_name));
+		$middle_initial = urlencode(trim($middle_initial));
+		$last_name = urlencode(trim($last_name));
+		$address1 = urlencode(trim($address1));
+		$address2 = urlencode(trim($address2));
+		$address3 = urlencode(trim($address3));
+		$city = urlencode(trim($city));
+		$state = urlencode(trim($state));
+		$province = urlencode(trim($province));
+		$postal_code = urlencode(trim($postal_code));
+		$country_code = urlencode(trim($country_code));
+		$gender = urlencode(trim($gender));
+		$date_of_birth = urlencode(trim($date_of_birth));
+		$alt_phone = urlencode(trim($alt_phone));
+		$email = urlencode(trim($email));
+		$security_phrase = urlencode(trim($security_phrase));
+		$comments = urlencode(trim($comments));
+		$campaign = urlencode(trim($campaign));
+		$phone_login = urlencode(trim($phone_login));
+		$original_phone_login = urlencode(trim($original_phone_login));
+		$phone_pass = urlencode(trim($phone_pass));
+		$fronter = urlencode(trim($fronter));
+		$closer = urlencode(trim($closer));
+		$group = urlencode(trim($group));
+		$channel_group = urlencode(trim($channel_group));
+		$SQLdate = urlencode(trim($SQLdate));
+		$epoch = urlencode(trim($epoch));
+		$uniqueid = urlencode(trim($uniqueid));
+		$customer_zap_channel = urlencode(trim($customer_zap_channel));
+		$customer_server_ip = urlencode(trim($customer_server_ip));
+		$server_ip = urlencode(trim($server_ip));
+		$SIPexten = urlencode(trim($SIPexten));
+		$session_id = urlencode(trim($session_id));
+		$phone = urlencode(trim($phone));
+		$parked_by = urlencode(trim($parked_by));
+		$dispo = urlencode(trim($dispo));
+		$dialed_number = urlencode(trim($dialed_number));
+		$dialed_label = urlencode(trim($dialed_label));
+		$source_id = urlencode(trim($source_id));
+		$rank = urlencode(trim($rank));
+		$owner = urlencode(trim($owner));
+		$camp_script = urlencode(trim($camp_script));
+		$in_script = urlencode(trim($in_script));
+		$script_width = urlencode(trim($script_width));
+		$script_height = urlencode(trim($script_height));
+		$fullname = urlencode(trim($fullname));
+		$agent_email = urlencode(trim($agent_email));
+		$recording_filename = urlencode(trim($recording_filename));
+		$recording_id = urlencode(trim($recording_id));
+		$user_custom_one = urlencode(trim($user_custom_one));
+		$user_custom_two = urlencode(trim($user_custom_two));
+		$user_custom_three = urlencode(trim($user_custom_three));
+		$user_custom_four = urlencode(trim($user_custom_four));
+		$user_custom_five = urlencode(trim($user_custom_five));
+		$preset_number_a = urlencode(trim($preset_number_a));
+		$preset_number_b = urlencode(trim($preset_number_b));
+		$preset_number_c = urlencode(trim($preset_number_c));
+		$preset_number_d = urlencode(trim($preset_number_d));
+		$preset_number_e = urlencode(trim($preset_number_e));
+		$preset_number_f = urlencode(trim($preset_number_f));
+		$preset_dtmf_a = urlencode(trim($preset_dtmf_a));
+		$preset_dtmf_b = urlencode(trim($preset_dtmf_b));
+		$did_id = urlencode(trim($did_id));
+		$did_extension = urlencode(trim($did_extension));
+		$did_pattern = urlencode(trim($did_pattern));
+		$did_description = urlencode(trim($did_description));
+		$called_count = urlencode(trim($called_count));
+		$session_name = urlencode(trim($session_name));
+		$web_vars = urlencode(trim($web_vars));
+		}
+	else
+		{
+		$lead_id = preg_replace('/\s/i','+',$lead_id);
+		$vendor_id = preg_replace('/\s/i','+',$vendor_id);
+		$vendor_lead_code = preg_replace('/\s/i','+',$vendor_lead_code);
+		$list_id = preg_replace('/\s/i','+',$list_id);
+		$list_name = preg_replace('/\s/i','+',$list_name);
+		$list_description = preg_replace('/\s/i','+',$list_description);
+		$gmt_offset_now = preg_replace('/\s/i','+',$gmt_offset_now);
+		$phone_code = preg_replace('/\s/i','+',$phone_code);
+		$phone_number = preg_replace('/\s/i','+',$phone_number);
+		$title = preg_replace('/\s/i','+',$title);
+		$first_name = preg_replace('/\s/i','+',$first_name);
+		$middle_initial = preg_replace('/\s/i','+',$middle_initial);
+		$last_name = preg_replace('/\s/i','+',$last_name);
+		$address1 = preg_replace('/\s/i','+',$address1);
+		$address2 = preg_replace('/\s/i','+',$address2);
+		$address3 = preg_replace('/\s/i','+',$address3);
+		$city = preg_replace('/\s/i','+',$city);
+		$state = preg_replace('/\s/i','+',$state);
+		$province = preg_replace('/\s/i','+',$province);
+		$postal_code = preg_replace('/\s/i','+',$postal_code);
+		$country_code = preg_replace('/\s/i','+',$country_code);
+		$gender = preg_replace('/\s/i','+',$gender);
+		$date_of_birth = preg_replace('/\s/i','+',$date_of_birth);
+		$alt_phone = preg_replace('/\s/i','+',$alt_phone);
+		$email = preg_replace('/\s/i','+',$email);
+		$security_phrase = preg_replace('/\s/i','+',$security_phrase);
+		$comments = preg_replace('/\s/i','+',$comments);
+		$campaign = preg_replace('/\s/i','+',$campaign);
+		$phone_login = preg_replace('/\s/i','+',$phone_login);
+		$original_phone_login = preg_replace('/\s/i','+',$original_phone_login);
+		$phone_pass = preg_replace('/\s/i','+',$phone_pass);
+		$fronter = preg_replace('/\s/i','+',$fronter);
+		$closer = preg_replace('/\s/i','+',$closer);
+		$group = preg_replace('/\s/i','+',$group);
+		$channel_group = preg_replace('/\s/i','+',$channel_group);
+		$SQLdate = preg_replace('/\s/i','+',$SQLdate);
+		$epoch = preg_replace('/\s/i','+',$epoch);
+		$uniqueid = preg_replace('/\s/i','+',$uniqueid);
+		$customer_zap_channel = preg_replace('/\s/i','+',$customer_zap_channel);
+		$customer_server_ip = preg_replace('/\s/i','+',$customer_server_ip);
+		$server_ip = preg_replace('/\s/i','+',$server_ip);
+		$SIPexten = preg_replace('/\s/i','+',$SIPexten);
+		$session_id = preg_replace('/\s/i','+',$session_id);
+		$phone = preg_replace('/\s/i','+',$phone);
+		$parked_by = preg_replace('/\s/i','+',$parked_by);
+		$dispo = preg_replace('/\s/i','+',$dispo);
+		$dialed_number = preg_replace('/\s/i','+',$dialed_number);
+		$dialed_label = preg_replace('/\s/i','+',$dialed_label);
+		$source_id = preg_replace('/\s/i','+',$source_id);
+		$rank = preg_replace('/\s/i','+',$rank);
+		$owner = preg_replace('/\s/i','+',$owner);
+		$camp_script = preg_replace('/\s/i','+',$camp_script);
+		$in_script = preg_replace('/\s/i','+',$in_script);
+		$script_width = preg_replace('/\s/i','+',$script_width);
+		$script_height = preg_replace('/\s/i','+',$script_height);
+		$fullname = preg_replace('/\s/i','+',$fullname);
+		$agent_email = preg_replace('/\s/i','+',$agent_email);
+		$recording_filename = preg_replace('/\s/i','+',$recording_filename);
+		$recording_id = preg_replace('/\s/i','+',$recording_id);
+		$user_custom_one = preg_replace('/\s/i','+',$user_custom_one);
+		$user_custom_two = preg_replace('/\s/i','+',$user_custom_two);
+		$user_custom_three = preg_replace('/\s/i','+',$user_custom_three);
+		$user_custom_four = preg_replace('/\s/i','+',$user_custom_four);
+		$user_custom_five = preg_replace('/\s/i','+',$user_custom_five);
+		$preset_number_a = preg_replace('/\s/i','+',$preset_number_a);
+		$preset_number_b = preg_replace('/\s/i','+',$preset_number_b);
+		$preset_number_c = preg_replace('/\s/i','+',$preset_number_c);
+		$preset_number_d = preg_replace('/\s/i','+',$preset_number_d);
+		$preset_number_e = preg_replace('/\s/i','+',$preset_number_e);
+		$preset_number_f = preg_replace('/\s/i','+',$preset_number_f);
+		$preset_dtmf_a = preg_replace('/\s/i','+',$preset_dtmf_a);
+		$preset_dtmf_b = preg_replace('/\s/i','+',$preset_dtmf_b);
+		$did_id = preg_replace('/\s/i','+',$did_id);
+		$did_extension = preg_replace('/\s/i','+',$did_extension);
+		$did_pattern = preg_replace('/\s/i','+',$did_pattern);
+		$did_description = preg_replace('/\s/i','+',$did_description);
+		$called_count = preg_replace('/\s/i','+',$called_count);
+		$session_name = preg_replace('/\s/i','+',$session_name);
+		$web_vars = preg_replace('/\s/i','+',$web_vars);
+		}
 	}
 
 $script_text = preg_replace('/--A--lead_id--B--/i',"$lead_id",$script_text);
