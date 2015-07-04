@@ -3514,12 +3514,13 @@ else
 # 150609-2142 - Changes for different types of in-groups
 # 150610-0934 - Added customer_gone_seconds campaign setting
 # 150701-1131 - Modified mysqli_error() to mysqli_connect_error() where appropriate
+# 150703-2105 - Fixed field sizes in Issues #867 and #868
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-492a';
-$build = '150701-1131';
+$admin_version = '2.12-493a';
+$build = '150703-2105';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5452,8 +5453,8 @@ if ($ADD==11)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Campaign ID").": </td><td align=left><input type=text name=campaign_id size=10 maxlength=8>$NWB#campaigns-campaign_id$NWE</td></tr>\n";
 			}
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Campaign Name").": </td><td align=left><input type=text name=campaign_name size=30 maxlength=30>$NWB#campaigns-campaign_name$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Campaign Description").": </td><td align=left><input type=text name=campaign_description size=30 maxlength=255>$NWB#campaigns-campaign_description$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Campaign Name").": </td><td align=left><input type=text name=campaign_name size=40 maxlength=40>$NWB#campaigns-campaign_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Campaign Description").": </td><td align=left><input type=text name=campaign_description size=40 maxlength=255>$NWB#campaigns-campaign_description$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"---ALL---\">"._QXZ("All Admin User Groups")."</option>\n";
@@ -5591,7 +5592,7 @@ if ($ADD==12)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Campaign ID").": </td><td align=left><input type=text name=campaign_id size=10 maxlength=8>$NWB#campaigns-campaign_id$NWE</td></tr>\n";
 			}
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Campaign Name").": </td><td align=left><input type=text name=campaign_name size=30 maxlength=30>$NWB#campaigns-campaign_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Campaign Name").": </td><td align=left><input type=text name=campaign_name size=40 maxlength=40>$NWB#campaigns-campaign_name$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Source Campaign").": </td><td align=left><select size=1 name=source_campaign_id>\n";
 
@@ -5655,7 +5656,7 @@ if ($ADD==111)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List ID").": </td><td align=left><input type=text name=list_id size=19 maxlength=19> ("._QXZ("digits only").")$NWB#lists-list_id$NWE</td></tr>\n";
 			}
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List Name").": </td><td align=left><input type=text name=list_name size=20 maxlength=20>$NWB#lists-list_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List Name").": </td><td align=left><input type=text name=list_name size=30 maxlength=30>$NWB#lists-list_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List Description").": </td><td align=left><input type=text name=list_description size=30 maxlength=255>$NWB#lists-list_description$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Campaign").": </td><td align=left><select size=1 name=campaign_id>\n";
 
@@ -22525,7 +22526,7 @@ if ($ADD==311)
 		echo "<input type=hidden name=old_campaign_id value=\"$campaign_id\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List ID").": </td><td align=left><b>$list_id</b>$NWB#lists-list_id$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List Name").": </td><td align=left><input type=text name=list_name size=20 maxlength=20 value=\"$list_name\">$NWB#lists-list_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List Name").": </td><td align=left><input type=text name=list_name size=30 maxlength=30 value=\"$list_name\">$NWB#lists-list_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List Description").": </td><td align=left><input type=text name=list_description size=30 maxlength=255 value=\"$list_description\">$NWB#lists-list_description$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id\">"._QXZ("Campaign")."</a>: </td><td align=left><select size=1 name=campaign_id>\n";
 
