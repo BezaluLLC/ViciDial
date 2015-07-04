@@ -195,6 +195,7 @@
 # 150404-1011 - Added entry_list_id related DID options
 # 150410-0637 - Fixed NANQUE bug with VMAIL_NO_INST
 # 150609-1734 - Added populate_lead_ingroup option
+# 150704-0749 - Fixed issue with ALT and ADDR3 lookups with list/campaign restruction, Issue #872
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -1038,11 +1039,11 @@ if ($call_handle_method =~ /LOOKUP/)
 	else
 		{
 		$listSQL = '';
-		if ($call_handle_method =~ /LOOKUPRL$/)
+		if ($call_handle_method =~ /LOOKUPRL/)
 			{$listSQL = "and list_id='$list_id'";}
 		else
 			{
-			if ($call_handle_method =~ /LOOKUPRC$/)
+			if ($call_handle_method =~ /LOOKUPRC/)
 				{
 				### Grab all lists associated with Scampaign_id
 				$cbc=0;
@@ -1075,7 +1076,7 @@ if ($call_handle_method =~ /LOOKUP/)
 			{
 			$stmtA= "SELECT lead_id,called_count from vicidial_list where phone_number='$phone_number' $listSQL order by last_local_call_time desc limit 1;";
 			}
-			if ($AGILOG) {$agi_string = "VDAD vicidial_list search |$phone_number|$stmtA|";   &agi_output;}
+		if ($AGILOG) {$agi_string = "VDAD vicidial_list search |$phone_number|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
