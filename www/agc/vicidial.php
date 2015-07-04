@@ -491,10 +491,11 @@
 # 150609-1917 - Added list_description web url variable
 # 150610-0940 - Added customer_gone_seconds campaign option
 # 150701-1211 - Modified mysqli_error() to mysqli_connect_error() where appropriate
+# 150704-0005 - Change disposubmit to be blocking before resume, Issue #863
 #
 
-$version = '2.12-463c';
-$build = '150701-1211';
+$version = '2.12-464c';
+$build = '150704-0005';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -4141,6 +4142,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var manual_dial_override_field='<?php echo $manual_dial_override_field ?>';
 	var status_display_ingroup='<?php echo $status_display_ingroup ?>';
 	var customer_gone_seconds='<?php echo $customer_gone_seconds_negative ?>';
+	var updatedispo_resume_trigger='0';
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -11544,15 +11546,16 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								{
 								if (auto_dial_level != '0')
 									{
-									AutoDialWaiting = 1;
-									if (temp_use_pause_code==1)
-										{
-										agent_log_id = AutoDial_ReSume_PauSe("VDADready","NEW_ID",'','','',"1",temp_dispo_pause_code);
-										}
-									else
-										{
-										agent_log_id = AutoDial_ReSume_PauSe("VDADready","NEW_ID");
-										}
+									updatedispo_resume_trigger=1;
+								//	AutoDialWaiting = 1;
+								//	if (temp_use_pause_code==1)
+								//		{
+								//		agent_log_id = AutoDial_ReSume_PauSe("VDADready","NEW_ID",'','','',"1",temp_dispo_pause_code);
+								//		}
+								//	else
+								//		{
+								//		agent_log_id = AutoDial_ReSume_PauSe("VDADready","NEW_ID");
+								//		}
 									}
 								else
 									{
@@ -15112,6 +15115,21 @@ function phone_number_format(formatphone) {
 						}
 					}
 				if (manual_auto_hotkey > 1) {manual_auto_hotkey = (manual_auto_hotkey - 1);}
+				}
+
+			// resume after updatedispo received
+			if (updatedispo_resume_trigger == "1")
+				{
+				if (waiting_on_dispo == "0")
+					{
+					updatedispo_resume_trigger=0;
+					agent_log_id = AutoDial_ReSume_PauSe("VDADready","NEW_ID");
+					AutoDialWaiting = 1;
+					}
+				else
+					{
+				//	document.getElementById("debugbottomspan").innerHTML = "waiting on dispo response to resume: " + waiting_on_dispo + "|" + updatedispo_resume_trigger;
+					}
 				}
 			}
 		setTimeout("all_refresh()", refresh_interval);
