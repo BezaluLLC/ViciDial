@@ -381,10 +381,11 @@
 # 150609-1400 - Added script color
 # 150609-1857 - Added list_description web url variable
 # 150701-1205 - Modified mysqli_error() to mysqli_connect_error() where appropriate
+# 150706-0903 - Added user lead filter option for no-hopper dialing
 #
 
-$version = '2.12-276';
-$build = '150701-1205';
+$version = '2.12-277';
+$build = '150706-0903';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=616;
 $one_mysql_log=0;
@@ -2196,6 +2197,35 @@ if ($ACTION == 'manDiaLnextCaLL')
 					### BEGIN find the next lead to dial without looking in the hopper
 					##########################################################
 				#	$DB=1;
+
+					##### gather user lead filter setting
+					$USERlead_filter_id='';
+					$USERfSQL='';
+					$stmt="SELECT lead_filter_id FROM vicidial_users where user='$user';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$camp_nohopper_ct = mysqli_num_rows($rslt);
+					if ($camp_nohopper_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$USERlead_filter_id = $row[0];
+						}
+					if ( ($USERlead_filter_id != 'NONE') and (strlen($USERlead_filter_id) > 0) )
+						{
+						$stmt="SELECT lead_filter_sql FROM vicidial_lead_filters where lead_filter_id='$USERlead_filter_id';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						$filtersql_ct = mysqli_num_rows($rslt);
+						if ($DB) {echo "$filtersql_ct|$stmt\n";}
+						if ($filtersql_ct > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$USERfSQL = "and ($row[0])";
+							$USERfSQL = preg_replace('/\\\\/','',$USERfSQL);
+							}
+						}
+
 					if (strlen($dial_statuses)>2)
 						{
 						$g=0;
@@ -3225,7 +3255,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						if (preg_match("/UP TIMEZONE/i",$lead_order)){$order_stmt = "order by gmt_offset_now desc, $last_order";}
 						if (preg_match("/DOWN TIMEZONE/i",$lead_order)){$order_stmt = "order by gmt_offset_now, $last_order";}
 
-						$stmt="UPDATE vicidial_list SET user='QUEUE$user' where called_since_last_reset='N' and ( (user NOT LIKE \"QUEUE%\") or (user is NULL) ) and status IN($Dsql) and ($list_id_sql) and ($all_gmtSQL) $CCLsql $DLTsql $fSQL $adooSQL $order_stmt LIMIT 1;";
+						$stmt="UPDATE vicidial_list SET user='QUEUE$user' where called_since_last_reset='N' and ( (user NOT LIKE \"QUEUE%\") or (user is NULL) ) and status IN($Dsql) and ($list_id_sql) and ($all_gmtSQL) $CCLsql $DLTsql $fSQL $USERfSQL $adooSQL $order_stmt LIMIT 1;";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00242',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -3237,7 +3267,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 						if ($affected_rows > 0)
 							{
-							$stmt="SELECT lead_id,list_id,gmt_offset_now,state,entry_list_id,vendor_lead_code FROM vicidial_list where user='QUEUE$user' and called_since_last_reset='N' and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) and (modify_date > CONCAT(DATE_ADD(CURDATE(), INTERVAL -1 HOUR),' ',CURTIME()) ) $CCLsql $DLTsql $fSQL $adooSQL order by modify_date desc LIMIT 1;";
+							$stmt="SELECT lead_id,list_id,gmt_offset_now,state,entry_list_id,vendor_lead_code FROM vicidial_list where user='QUEUE$user' and called_since_last_reset='N' and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) and (modify_date > CONCAT(DATE_ADD(CURDATE(), INTERVAL -1 HOUR),' ',CURTIME()) ) $CCLsql $DLTsql $fSQL $USERfSQL $adooSQL order by modify_date desc LIMIT 1;";
 							$rslt=mysql_to_mysqli($stmt, $link);
 								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00243',$user,$server_ip,$session_name,$one_mysql_log);}
 							if ($DB) {echo "$stmt\n";}

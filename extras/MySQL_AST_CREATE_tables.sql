@@ -629,7 +629,8 @@ selected_language VARCHAR(100) default 'default English',
 user_choose_language ENUM('1','0') default '0',
 ignore_group_on_search ENUM('1','0') default '0',
 api_list_restrict ENUM('1','0') default '0',
-api_allowed_functions VARCHAR(1000) default ' ALL_FUNCTIONS '
+api_allowed_functions VARCHAR(1000) default ' ALL_FUNCTIONS ',
+lead_filter_id VARCHAR(20) default 'NONE'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -721,7 +722,7 @@ xferconf_b_dtmf VARCHAR(50),
 xferconf_b_number VARCHAR(50),
 alt_number_dialing ENUM('N','Y','SELECTED','SELECTED_TIMER_ALT','SELECTED_TIMER_ADDR3') default 'N',
 scheduled_callbacks ENUM('Y','N') default 'N',
-lead_filter_id VARCHAR(10) default 'NONE',
+lead_filter_id VARCHAR(20) default 'NONE',
 drop_call_seconds TINYINT(3) default '5',
 drop_action ENUM('HANGUP','MESSAGE','VOICEMAIL','IN_GROUP','AUDIO','CALLMENU','VMAIL_NO_INST') default 'AUDIO',
 safe_harbor_exten VARCHAR(20)  default '8307',
@@ -1294,7 +1295,7 @@ index (entry_time)
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lead_filters (
-lead_filter_id VARCHAR(10) PRIMARY KEY NOT NULL,
+lead_filter_id VARCHAR(20) PRIMARY KEY NOT NULL,
 lead_filter_name VARCHAR(30) NOT NULL,
 lead_filter_comments VARCHAR(255),
 lead_filter_sql TEXT,
@@ -3498,4 +3499,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1416',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1417',db_schema_update_date=NOW(),reload_timestamp=NOW();

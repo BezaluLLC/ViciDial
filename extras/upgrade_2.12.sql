@@ -172,3 +172,11 @@ UPDATE system_settings SET db_schema_version='1415',db_schema_update_date=NOW() 
 UPDATE vicidial_inbound_groups set group_handling='PHONE' where group_handling='';
 
 UPDATE system_settings SET db_schema_version='1416',db_schema_update_date=NOW() where db_schema_version < 1416;
+
+ALTER TABLE vicidial_campaigns MODIFY lead_filter_id VARCHAR(20) default 'NONE';
+
+ALTER TABLE vicidial_lead_filters MODIFY lead_filter_id VARCHAR(20) NOT NULL;
+
+ALTER TABLE vicidial_users ADD lead_filter_id VARCHAR(20) default 'NONE';
+
+UPDATE system_settings SET db_schema_version='1417',db_schema_update_date=NOW() where db_schema_version < 1417;

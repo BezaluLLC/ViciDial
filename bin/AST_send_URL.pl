@@ -359,6 +359,7 @@ if (length($lead_id) > 0)
 		$add_lead_url =~ s/--A--closecallid--B--/$VAR_closecallid/gi;
 		$add_lead_url =~ s/--A--uniqueid--B--/$VAR_uniqueid/gi;
 		$add_lead_url =~ s/--A--call_id--B--/$VAR_call_id/gi;
+		$add_lead_url =~ s/--A--function--B--/$function/gi;
 		$add_lead_url =~ s/ /+/gi;
 		$add_lead_url =~ s/&/\\&/gi;
 		$parse_url = $add_lead_url;
@@ -542,6 +543,7 @@ if (length($lead_id) > 0)
 		$na_call_url =~ s/--A--campaign--B--/$VAR_campaign_id/gi;
 		$na_call_url =~ s/--A--campaign_id--B--/$VAR_campaign_id/gi;
 		$na_call_url =~ s/--A--group--B--/$VAR_campaign_id/gi;
+		$na_call_url =~ s/--A--function--B--/$function/gi;
 		$na_call_url =~ s/ /+/gi;
 		$na_call_url =~ s/&/\\&/gi;
 		$parse_url = $na_call_url;
@@ -724,6 +726,7 @@ if (length($lead_id) > 0)
 		$start_call_url =~ s/--A--campaign--B--/$VAR_campaign_id/gi;
 		$start_call_url =~ s/--A--campaign_id--B--/$VAR_campaign_id/gi;
 		$start_call_url =~ s/--A--group--B--/$VAR_campaign_id/gi;
+		$start_call_url =~ s/--A--function--B--/$function/gi;
 		$start_call_url =~ s/ /+/gi;
 		$start_call_url =~ s/&/\\&/gi;
 		$parse_url = $start_call_url;
