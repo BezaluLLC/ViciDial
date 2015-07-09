@@ -50,6 +50,7 @@
 # 150609-1204 - Added chat-related entries
 # 150609-1231 - Added new agent screen status display option entries
 # 150610-0938 - Added campaigns-customer_gone_seconds
+# 150708-2238 - Added max_queue_ingroup_ options
 #
 
 require("dbconnect_mysqli.php");
@@ -2778,6 +2779,21 @@ if ($SSqc_features_active > 0)
  - <?php echo _QXZ("9998888888 - UNANSWERED, signal 17, busy signal, immediate hangup"); ?><BR>
  - <?php echo _QXZ("9994444444 - UNANSWERED, signal 27, out of order, immediate hangup"); ?><BR>
  - <?php echo _QXZ("9995555555 - UNANSWERED, ring for 120 seconds then hangup"); ?><BR>
+
+<BR>
+<A NAME="inbound_dids-max_queue_ingroup_calls">
+<BR>
+<B><?php echo _QXZ("Max Queue In-Group Calls"); ?> -</B><?php echo _QXZ("This setting allows you to redirect calls on this DID if the number of calls waiting in queue in a specific In-Group is above a set number. If this field is set to 0 this feature is disabled. Default is 0. See the Max Queue In-Group Extension setting below for more information."); ?>
+
+<BR>
+<A NAME="inbound_dids-max_queue_ingroup_id">
+<BR>
+<B><?php echo _QXZ("Max Queue In-Group ID"); ?> -</B><?php echo _QXZ("For the Max Queue In-Group Calls feature above to work properly, an in-Group must be selected from this menu. Default is blank."); ?>
+
+<BR>
+<A NAME="inbound_dids-max_queue_ingroup_extension">
+<BR>
+<B><?php echo _QXZ("Max Queue In-Group Extension"); ?> -</B><?php echo _QXZ("For the Max Queue In-Group Calls feature above to work properly, an Extension must be set in this field. Default is 9998811112. Directly above, in the No-Agent In-Group Extension description, you will see some examples of default extensions that you can use in the system to terminate calls to."); ?><BR>
 
 <BR>
 <A NAME="inbound_dids-pre_filter_phone_group_id">

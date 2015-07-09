@@ -180,3 +180,9 @@ ALTER TABLE vicidial_lead_filters MODIFY lead_filter_id VARCHAR(20) NOT NULL;
 ALTER TABLE vicidial_users ADD lead_filter_id VARCHAR(20) default 'NONE';
 
 UPDATE system_settings SET db_schema_version='1417',db_schema_update_date=NOW() where db_schema_version < 1417;
+
+ALTER TABLE vicidial_inbound_dids ADD max_queue_ingroup_calls SMALLINT(5) default '0';
+ALTER TABLE vicidial_inbound_dids ADD max_queue_ingroup_id VARCHAR(20) default '';
+ALTER TABLE vicidial_inbound_dids ADD max_queue_ingroup_extension VARCHAR(50) default '9998811112';
+
+UPDATE system_settings SET db_schema_version='1418',db_schema_update_date=NOW() where db_schema_version < 1418;

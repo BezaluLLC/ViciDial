@@ -1938,6 +1938,12 @@ if (isset($_GET["script_color"]))			{$script_color=$_GET["script_color"];}
 	elseif (isset($_POST["script_color"]))	{$script_color=$_POST["script_color"];}
 if (isset($_GET["customer_gone_seconds"]))			{$customer_gone_seconds=$_GET["customer_gone_seconds"];}
 	elseif (isset($_POST["customer_gone_seconds"]))	{$customer_gone_seconds=$_POST["customer_gone_seconds"];}
+if (isset($_GET["max_queue_ingroup_calls"]))			{$max_queue_ingroup_calls=$_GET["max_queue_ingroup_calls"];}
+	elseif (isset($_POST["max_queue_ingroup_calls"]))	{$max_queue_ingroup_calls=$_POST["max_queue_ingroup_calls"];}
+if (isset($_GET["max_queue_ingroup_id"]))			{$max_queue_ingroup_id=$_GET["max_queue_ingroup_id"];}
+	elseif (isset($_POST["max_queue_ingroup_id"]))	{$max_queue_ingroup_id=$_POST["max_queue_ingroup_id"];}
+if (isset($_GET["max_queue_ingroup_extension"]))			{$max_queue_ingroup_extension=$_GET["max_queue_ingroup_extension"];}
+	elseif (isset($_POST["max_queue_ingroup_extension"]))	{$max_queue_ingroup_extension=$_POST["max_queue_ingroup_extension"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2295,6 +2301,7 @@ if ($non_latin < 1)
 	$drop_call_seconds = preg_replace('/[^-0-9]/','',$drop_call_seconds);
 	$timer_alt_seconds = preg_replace('/[^-0-9]/','',$timer_alt_seconds);
 	$wrapup_seconds_override = preg_replace('/[^-0-9]/','',$wrapup_seconds_override);
+	$max_queue_ingroup_calls = preg_replace('/[^-0-9]/','',$max_queue_ingroup_calls);
 
 	### DIGITS and COLONS
 	$shift_length = preg_replace('/[^\:0-9]/','',$shift_length);
@@ -2721,6 +2728,7 @@ if ($non_latin < 1)
 	$qc_comment_history = preg_replace('/[^-_0-9a-zA-Z]/','',$qc_comment_history);
 	$language_method = preg_replace('/[^-_0-9a-zA-Z]/','',$language_method);
 	$manual_dial_override_field = preg_replace('/[^-_0-9a-zA-Z]/','',$manual_dial_override_field);
+	$max_queue_ingroup_id = preg_replace('/[^-_0-9a-zA-Z]/','',$max_queue_ingroup_id);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_timeout_prompt = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$menu_timeout_prompt);
@@ -2799,6 +2807,7 @@ if ($non_latin < 1)
 	$preset_number = preg_replace('/[^\*\#\.\_0-9a-zA-Z]/','',$preset_number);
 	$no_agent_ingroup_extension = preg_replace('/[^\*\#\.\_0-9a-zA-Z]/','',$no_agent_ingroup_extension);
 	$pre_filter_extension = preg_replace('/[^\*\#\.\_0-9a-zA-Z]/','',$pre_filter_extension);
+	$max_queue_ingroup_extension = preg_replace('/[^\*\#\.\_0-9a-zA-Z]/','',$max_queue_ingroup_extension);
 
 	### ALPHA-NUMERIC and spaces dots, commas, dashes, underscores
 	$adaptive_dl_diff_target = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$adaptive_dl_diff_target);
@@ -3516,12 +3525,13 @@ else
 # 150701-1131 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 # 150703-2105 - Fixed field sizes in Issues #867 and #868
 # 150706-0811 - Added user setting for lead_filter_id in no-hopper dialing
+# 150708-2246 - Added max_queue_ingroup_ DID settings options
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-494a';
-$build = '150706-0811';
+$admin_version = '2.12-495a';
+$build = '150708-2246';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -9564,7 +9574,7 @@ if ($ADD==2411)
 				}
 			else
 				{
-				$stmt="INSERT INTO vicidial_inbound_dids (did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id) SELECT \"$did_pattern\",\"$did_description\",did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id from vicidial_inbound_dids where did_id=\"$source_did\";";
+				$stmt="INSERT INTO vicidial_inbound_dids (did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension) SELECT \"$did_pattern\",\"$did_description\",did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension from vicidial_inbound_dids where did_id=\"$source_did\";";
 				$rslt=mysql_to_mysqli($stmt, $link);
 
 				$stmt="SELECT did_id from vicidial_inbound_dids where did_pattern='$did_pattern';";
@@ -13473,7 +13483,7 @@ if ($ADD==4311)
 				}
 			echo "<br><B>"._QXZ("DID MODIFIED").": $did_pattern</B>\n";
 
-			$stmt="UPDATE vicidial_inbound_dids set did_pattern='$did_pattern',did_description='$did_description',did_active='$did_active',did_route='$did_route',extension='$extension',exten_context='$exten_context',voicemail_ext='$voicemail_ext',phone='$phone',server_ip='$server_ip',user='$user',user_unavailable_action='$user_unavailable_action',user_route_settings_ingroup='$user_route_settings_ingroup',group_id='$group_id',call_handle_method='$call_handle_method',agent_search_method='$agent_search_method',list_id='$list_id',campaign_id='$campaign_id',phone_code='$phone_code',menu_id='$menu_id',record_call='$record_call',filter_inbound_number='$filter_inbound_number',filter_phone_group_id='$filter_phone_group_id',filter_url='$filter_url',filter_action='$filter_action',filter_extension='$filter_extension',filter_exten_context='$filter_exten_context',filter_voicemail_ext='$filter_voicemail_ext',filter_phone='$filter_phone',filter_server_ip='$filter_server_ip',filter_user='$filter_user',filter_user_unavailable_action='$filter_user_unavailable_action',filter_user_route_settings_ingroup='$filter_user_route_settings_ingroup',filter_group_id='$filter_group_id',filter_call_handle_method='$filter_call_handle_method',filter_agent_search_method='$filter_agent_search_method',filter_list_id='$filter_list_id',filter_campaign_id='$filter_campaign_id',filter_phone_code='$filter_phone_code',filter_menu_id='$filter_menu_id',filter_clean_cid_number='$filter_clean_cid_number',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five',user_group='$user_group',filter_dnc_campaign='$filter_dnc_campaign',filter_url_did_redirect='$filter_url_did_redirect',no_agent_ingroup_redirect='$no_agent_ingroup_redirect',no_agent_ingroup_id='$no_agent_ingroup_id',no_agent_ingroup_extension='$no_agent_ingroup_extension',pre_filter_phone_group_id='$pre_filter_phone_group_id',pre_filter_extension='$pre_filter_extension'$did_entry_list_idSQL where did_id='$did_id';";
+			$stmt="UPDATE vicidial_inbound_dids set did_pattern='$did_pattern',did_description='$did_description',did_active='$did_active',did_route='$did_route',extension='$extension',exten_context='$exten_context',voicemail_ext='$voicemail_ext',phone='$phone',server_ip='$server_ip',user='$user',user_unavailable_action='$user_unavailable_action',user_route_settings_ingroup='$user_route_settings_ingroup',group_id='$group_id',call_handle_method='$call_handle_method',agent_search_method='$agent_search_method',list_id='$list_id',campaign_id='$campaign_id',phone_code='$phone_code',menu_id='$menu_id',record_call='$record_call',filter_inbound_number='$filter_inbound_number',filter_phone_group_id='$filter_phone_group_id',filter_url='$filter_url',filter_action='$filter_action',filter_extension='$filter_extension',filter_exten_context='$filter_exten_context',filter_voicemail_ext='$filter_voicemail_ext',filter_phone='$filter_phone',filter_server_ip='$filter_server_ip',filter_user='$filter_user',filter_user_unavailable_action='$filter_user_unavailable_action',filter_user_route_settings_ingroup='$filter_user_route_settings_ingroup',filter_group_id='$filter_group_id',filter_call_handle_method='$filter_call_handle_method',filter_agent_search_method='$filter_agent_search_method',filter_list_id='$filter_list_id',filter_campaign_id='$filter_campaign_id',filter_phone_code='$filter_phone_code',filter_menu_id='$filter_menu_id',filter_clean_cid_number='$filter_clean_cid_number',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five',user_group='$user_group',filter_dnc_campaign='$filter_dnc_campaign',filter_url_did_redirect='$filter_url_did_redirect',no_agent_ingroup_redirect='$no_agent_ingroup_redirect',no_agent_ingroup_id='$no_agent_ingroup_id',no_agent_ingroup_extension='$no_agent_ingroup_extension',pre_filter_phone_group_id='$pre_filter_phone_group_id',pre_filter_extension='$pre_filter_extension',max_queue_ingroup_calls='$max_queue_ingroup_calls',max_queue_ingroup_id='$max_queue_ingroup_id',max_queue_ingroup_extension='$max_queue_ingroup_extension'$did_entry_list_idSQL where did_id='$did_id';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -25815,7 +25825,7 @@ if ($ADD==3311)
 		$didSQL = "did_id='$did_id'";
 		if ( (strlen($did_id)<1) and (strlen($did_pattern)>0) )
 			{$didSQL = "did_pattern='$did_pattern'";}
-		$stmt="SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id from vicidial_inbound_dids where $didSQL $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension from vicidial_inbound_dids where $didSQL $LOGadmin_viewable_groupsSQL;";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -25875,6 +25885,9 @@ if ($ADD==3311)
 		$pre_filter_extension = $row[53];
 		$entry_list_id = $row[54];
 		$filter_entry_list_id = $row[55];
+		$max_queue_ingroup_calls = $row[56];
+		$max_queue_ingroup_id = $row[57];
+		$max_queue_ingroup_extension = $row[58];
 
 		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -25936,6 +25949,8 @@ if ($ADD==3311)
 		$FDgroups_selected=0;
 		$PFDgroups_menu='';
 		$PFDgroups_selected=0;
+		$MQIgroups_menu='';
+		$MQIgroups_selected=0;
 		$o=0;
 		while ($Dgroups_to_print > $o) 
 			{
@@ -25943,6 +25958,7 @@ if ($ADD==3311)
 			$Dgroups_menu .= "<option ";
 			$FDgroups_menu .= "<option ";
 			$PFDgroups_menu .= "<option ";
+			$MQIgroups_menu .= "<option ";
 			if ($group_id == "$rowx[0]") 
 				{
 				$Dgroups_menu .= "SELECTED ";
@@ -25958,9 +25974,15 @@ if ($ADD==3311)
 				$PFDgroups_menu .= "SELECTED ";
 				$PFDgroups_selected++;
 				}
+			if ($max_queue_ingroup_id == "$rowx[0]") 
+				{
+				$MQIgroups_menu .= "SELECTED ";
+				$MQIgroups_selected++;
+				}
 			$Dgroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 			$FDgroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 			$PFDgroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+			$MQIgroups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 			$o++;
 			}
 		if ($Dgroups_selected < 1) 
@@ -25975,6 +25997,10 @@ if ($ADD==3311)
 			{$PFDgroups_menu .= "<option SELECTED value=\"\">---NONE---</option>\n";}
 		else 
 			{$PFDgroups_menu .= "<option value=\"\">---"._QXZ("NONE")."---</option>\n";}
+		if ($MQIgroups_selected < 1) 
+			{$MQIgroups_menu .= "<option SELECTED value=\"\">---NONE---</option>\n";}
+		else 
+			{$MQIgroups_menu .= "<option value=\"\">---"._QXZ("NONE")."---</option>\n";}
 
 
 		echo "<br>"._QXZ("MODIFY A DID RECORD").": $row[0]<form action=$PHP_SELF method=POST>\n";
@@ -26061,6 +26087,14 @@ if ($ADD==3311)
 		echo "</select>$NWB#inbound_dids-no_agent_ingroup_id$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("No-Agent In-Group Extension").": </td><td align=left><input type=text name=no_agent_ingroup_extension size=40 maxlength=50 value=\"$no_agent_ingroup_extension\">$NWB#inbound_dids-no_agent_ingroup_extension$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Max Queue In-Group Calls").": </td><td align=left><input type=text size=5 maxlength=4 name=max_queue_ingroup_calls value=\"$max_queue_ingroup_calls\"> $NWB#inbound_dids-max_queue_ingroup_calls$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3111&group_id=$max_queue_ingroup_id\">"._QXZ("Max Queue In-Group ID")."</a>: </td><td align=left><select size=1 name=max_queue_ingroup_id>";
+		echo "$MQIgroups_menu";
+		echo "</select>$NWB#inbound_dids-max_queue_ingroup_id$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Max Queue In-Group Extension").": </td><td align=left><input type=text name=max_queue_ingroup_extension size=40 maxlength=50 value=\"$max_queue_ingroup_extension\">$NWB#inbound_dids-max_queue_ingroup_extension$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$pre_filter_phone_group_id\">"._QXZ("Pre-Filter Phone Group ID").":</a> </td><td align=left><select size=1 name=pre_filter_phone_group_id>$Fgroups_list<option value='$pre_filter_phone_group_id' SELECTED>"._QXZ("$pre_filter_phone_group_id")."</option><option value=\"\">---"._QXZ("NONE")."---</option></select>$NWB#inbound_dids-pre_filter_phone_group_id$NWE</td></tr>\n";
 
