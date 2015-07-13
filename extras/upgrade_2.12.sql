@@ -202,3 +202,18 @@ KEY vicidial_url_multi_campaign_id_key (campaign_id)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 UPDATE system_settings SET db_schema_version='1419',db_schema_update_date=NOW() where db_schema_version < 1419;
+
+CREATE TABLE vicidial_dtmf_log (
+dtmf_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+dtmf_time DATETIME,
+channel VARCHAR(100) NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+uniqueid VARCHAR(20) default '',
+digit VARCHAR(1) default '',
+direction ENUM('Received','Sent') default 'Received',
+state ENUM('BEGIN','END') default 'BEGIN',
+PRIMARY KEY (dtmf_id),
+KEY vicidial_dtmf_uniqueid_key (uniqueid)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+UPDATE system_settings SET db_schema_version='1420',db_schema_update_date=NOW() where db_schema_version < 1420;

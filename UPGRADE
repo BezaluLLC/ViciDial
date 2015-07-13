@@ -97,6 +97,12 @@ OTHER CHANGES:
 16. Added the ability to define multiple Dispo Call URLs as well as define
 	specific statuses that they will be triggered for.
 
+17. Added compatability in the Vicidial code for Asterisk 11.
+
+18. Added database and logfile logging of DTMF events. Works with Asterisk 
+	versions 1.8 and higher. If upgrading, you will need to add "dtmf" to
+	the listencron user in manager.conf and reload asterisk.
+
 
 
 

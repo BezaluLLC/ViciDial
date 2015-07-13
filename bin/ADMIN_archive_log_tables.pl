@@ -39,6 +39,7 @@
 # 140107-1508 - Added rolling of vicidial_api_log entries
 # 140305-0955 - Changed to use --days (--months is approximation[bug fix]), changed default from 2 months to 2 years
 # 150107-2308 - Added vicidial_api_log to daily process
+# 150712-2208 - Added vicidial_dtmf_log
 #
 
 $CALC_TEST=0;
@@ -973,6 +974,29 @@ if (!$T)
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 
+
+	##### vicidial_dtmf_log
+	$stmtA = "SELECT count(*) from vicidial_dtmf_log;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$vicidial_dtmf_log_count =	$aryA[0];
+		}
+	$sthA->finish();
+
+	if (!$Q) {print "\nProcessing vicidial_dtmf_log table...  ($vicidial_dtmf_log_count)\n";}
+	$stmtA = "DELETE FROM vicidial_dtmf_log WHERE dtmf_time < '$del_time';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows = $sthA->rows;
+	if (!$Q) {print "$sthArows rows deleted from vicidial_dtmf_log table \n";}
+
+	$stmtA = "optimize table vicidial_dtmf_log;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 
 
 	##### vicidial_agent_log

@@ -64,6 +64,7 @@
 # 141113-1601 - Added concurrency check
 # 141124-2309 - Fixed Fhour variable bug
 # 150308-0911 - Added filter for agent sessions in new meetme-enter contexts
+# 150610-1200 - Added support for AMI version 1.3
 #
 
 $build = '150308-0911';
@@ -455,7 +456,7 @@ while($one_day_interval > 0)
 	if (length($ASTmgrUSERNAMEupdate) > 3) {$telnet_login = $ASTmgrUSERNAMEupdate;}
 	else {$telnet_login = $ASTmgrUSERNAME;}
 	$t->open("$telnet_host"); 
-	$t->waitfor('/[01]\n$/');			# print login
+	$t->waitfor('/[0123]\n$/');			# print login
 	$t->print("Action: Login\nUsername: $telnet_login\nSecret: $ASTmgrSECRET\n\n");
 	$t->waitfor('/Authentication accepted/');		# waitfor auth accepted
 

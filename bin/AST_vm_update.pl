@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_vm_update.pl version 2.10
+# AST_vm_update.pl version 2.12
 #
 # DESCRIPTION:
 # uses the Asterisk Manager interface to update the count of voicemail messages 
@@ -14,7 +14,7 @@
 #
 # NOTE: THIS SHOULD ONLY BE RUN ON THE DESIGNATED VOICEMAIL SERVER IN A CLUSTER!
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 50823-1422 - Added database server variable definitions lookup
 # 50823-1452 - Added commandline arguments for debug at runtime
@@ -24,6 +24,7 @@
 # 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
 # 130108-1713 - Changes for Asterisk 1.8 compatibility
 # 141124-1019 - Changed to only allow running on designated voicemail server, run for all mailboxes
+# 150610-1200 - Added support for AMI version 1.3
 #
 
 # constants
@@ -194,7 +195,7 @@ if (length($ASTmgrUSERNAMEsend) > 3) {$telnet_login = $ASTmgrUSERNAMEsend;}
 else {$telnet_login = $ASTmgrUSERNAME;}
 
 $t->open("$telnet_host"); 
-$t->waitfor('/[01]\n$/');			# print login
+$t->waitfor('/[0123]\n$/');			# print login
 $t->print("Action: Login\nUsername: $telnet_login\nSecret: $ASTmgrSECRET\n\n");
 $t->waitfor('/Authentication accepted/');		# waitfor auth accepted
 

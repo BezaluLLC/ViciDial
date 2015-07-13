@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_flush_DBqueue.pl    version 2.4
+# AST_flush_DBqueue.pl    version 2.12
 #
 # DESCRIPTION:
 # - clears out mysql records for this server for the ACQS vicidial_manager table
@@ -9,7 +9,7 @@
 # !!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!
 # THIS SCRIPT SHOULD ONLY BE RUN ON ONE SERVER ON YOUR CLUSTER
 #
-# Copyright (C) 2012  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60717-1214 - changed to DBI by Marin Blu
@@ -19,6 +19,7 @@
 # 91206-2149 - Added vicidial_campaigns and vicidial_lists optimization
 # 120404-1315 - Changed to run only on DB server<you should remove from other servers' crontabs>
 # 120411-1637 - Added --seconds option
+# 150710-0907 - Added flush of vicidial_dtmf table
 #
 
 ### begin parsing run-time options ###
@@ -197,6 +198,10 @@ if($DB){print STDERR "\n|$stmtA|\n";}
 if (!$T) {	$affected_rows = $dbhA->do($stmtA);}
 if (!$Q) {print " - vicidial_manager flush\n";}
 
+$stmtA = "DELETE from vicidial_dtmf where dtmf_time < '$flush_time';";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) {      $affected_rows = $dbhA->do($stmtA);}
+if (!$Q) {print " - vicidial_dtmf flush\n";}
 
 $stmtA = "OPTIMIZE table vicidial_manager;";
 if($DB){print STDERR "\n|$stmtA|\n";}
@@ -210,6 +215,20 @@ if (!$T)
 	$sthA->finish();
 	}
 if (!$Q) {print " - OPTIMIZE vicidial_manager          \n";}
+
+
+$stmtA = "OPTIMIZE table vicidial_dtmf;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T)
+        {
+        $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+        $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+        $sthArows=$sthA->rows;
+        @aryA = $sthA->fetchrow_array;
+        if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+        $sthA->finish();
+        }
+if (!$Q) {print " - OPTIMIZE vicidial_dtmf          \n";}
 
 
 $stmtA = "OPTIMIZE table vicidial_live_agents;";

@@ -1,12 +1,12 @@
 #!/usr/bin/perl
 #
-# ADMIN_audio_store_sync.pl      version 2.10
+# ADMIN_audio_store_sync.pl      version 2.12
 #
 # DESCRIPTION:
 # syncronizes audio between audio store and this server
 #
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 90513-0458 - First Build
@@ -18,6 +18,7 @@
 # 121019-0729 - Added audio_store_purge feature
 # 141124-2309 - Fixed Fhour variable bug
 # 141125-1555 - Added audio_store_details audio file info gathering and DB population
+# 150712-2210 - Added touch of conf files to Asterisk will notice changes
 #
 
 # constants
@@ -737,6 +738,11 @@ if ( ($force_moh_rebuild > 0) || ($new_file_moh_rebuild > 0) || ($rebuild_music_
 	### reloading moh in Asterisk
 	if ($DBX)
 		{print "reloading moh in asterisk\n";}
+
+	# Asterisk 11 will only reload a config file once after it's a time changes, so we need to touch conf files
+	`touch /etc/asterisk/musiconhold.conf`;
+	`touch /etc/asterisk/musiconhold-vicidial.conf`;
+
 	`screen -XS asterisk eval 'stuff "moh reload\015"'`;
 
 	}

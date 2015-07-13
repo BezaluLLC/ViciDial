@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_manager_listen.pl version 2.10
+# AST_manager_listen.pl version 2.12
 #
 # Part of the Asterisk Central Queue System (ACQS)
 #
@@ -17,7 +17,7 @@
 # the ADMIN_keepalive_ALL.pl script, which makes sure it is always running in a
 # screen, provided that the astguiclient.conf keepalive setting "2" is set.
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 50322-1300 - changed callerid parsing to remove quotes and number
@@ -44,6 +44,8 @@
 # 141113-1605 - Added concurrency check
 # 141124-2309 - Fixed Fhour variable bug
 # 141219-1137 - Change to keepalive processes to not run at busy times and not drop buffer
+# 150610-1200 - Added support for AMI version 1.3
+# 150709-1506 - Added DTMF logging for Asterisk 1.8 and higher
 #
 
 # constants
@@ -227,13 +229,13 @@ while($one_day_interval > 0)
 	if (length($ASTmgrUSERNAMElisten) > 3) {$telnet_login = $ASTmgrUSERNAMElisten;}
 	else {$telnet_login = $ASTmgrUSERNAME;}
 	$tn->open("$telnet_host"); 
-	$tn->waitfor('/[01]\n$/');			# print login
+	$tn->waitfor('/[0123]\n$/');			# print login
 	$tn->print("Action: Login\nUsername: $telnet_login\nSecret: $ASTmgrSECRET\n\n");
 	$tn->waitfor('/Authentication accepted/');		# waitfor auth accepted
 
-			$tn->buffer_empty;
+	$tn->buffer_empty;
 
-		$event_string="STARTING NEW MANAGER TELNET CONNECTION|$telnet_login|CONFIRMED CONNECTION|ONE DAY INTERVAL:$one_day_interval|";
+	$event_string="STARTING NEW MANAGER TELNET CONNECTION|$telnet_login|CONFIRMED CONNECTION|ONE DAY INTERVAL:$one_day_interval|";
 	&event_logger;
 
 	$endless_loop=864000;		# 1 day at .10 seconds per loop
@@ -784,7 +786,7 @@ while($one_day_interval > 0)
 			$endless_loop--;
 			$keepalive_count_loop++;
 
-			if($DB){print STDERR "          loop counter: |$endless_loop|$keepalive_count_loop|     |$vddl_update|$vdcl_update|\r";}
+			if($DB){print STDERR "	  loop counter: |$endless_loop|$keepalive_count_loop|     |$vddl_update|$vdcl_update|\r";}
 
 			### putting a blank file called "sendmgr.kill" in a directory will automatically safely kill this program
 			if ( (-e "$PATHhome/listenmgr.kill") or ($sendonlyone) )
@@ -992,7 +994,7 @@ while($one_day_interval > 0)
 						}
 
 					##### parse through all other important events #####
-					if ( ($input_lines[$ILcount] =~ /Event: Newstate|Event: Hangup|Event: NewCallerid|Event: Shutdown|Event: CPD-Result|Event: SIP-Hangup-Cause/) && ($input_lines[$ILcount] !~ /ZOMBIE/) )
+					if ( ($input_lines[$ILcount] =~ /Event: Newstate|Event: Hangup|Event: NewCallerid|Event: Shutdown|Event: CPD-Result|Event: SIP-Hangup-Cause|Event: DTMF/) && ($input_lines[$ILcount] !~ /ZOMBIE/) )
 						{
 						$input_lines[$ILcount] =~ s/^\n|^\n\n//gi;
 						@command_line=split(/\n/, $input_lines[$ILcount]);
@@ -1108,6 +1110,57 @@ while($one_day_interval > 0)
 									my $affected_rows = $dbhA->do($stmtA);
 									if($DB){print "|$affected_rows RINGINGs updated|\n";}
 									}
+								}
+							}
+
+						### Event: DTMF
+						if ($input_lines[$ILcount] =~ /Event: DTMF/)
+							{
+							if ( ($command_line[2] =~ /^Channel: /i) && ($command_line[3] =~ /^Uniqueid: /i) )
+								{
+								# get the event info
+								$channel = $command_line[2];
+								$channel =~ s/Channel: |\s*$//gi;
+								$uniqueid = $command_line[3];
+								$uniqueid =~ s/Uniqueid: |\s*$//gi;
+								$digit = $command_line[4];
+								$digit =~ s/Digit: |\s*$//gi;
+								$direction = $command_line[5];
+								$direction =~ s/Direction: |\s*$//gi;
+								$begin =  $command_line[6];
+								$begin =~ s/Begin: |\s*$//gi;
+								$end = $command_line[7];
+								$end =~ s/End: |\s*$//gi;
+
+								# set the state
+								$state = '';
+								if ($begin eq 'Yes') {$state = 'Begin';}
+								else 
+									{
+									if ($end eq 'Yes') {$state = 'End';}
+									}
+
+								# log it to the DB and file
+								$stmtA = "INSERT INTO vicidial_dtmf_log SET dtmf_time=NOW(),channel='$channel',server_ip='$server_ip',uniqueid='$uniqueid',digit='$digit',direction='$direction',state='$state'";
+								print STDERR "|$stmtA|\n";
+								my $affected_rows = $dbhA->do($stmtA);
+
+								($s_hires, $usec) = gettimeofday();   # get seconds and microseconds since the epoch
+								$usec = sprintf("%06s", $usec);
+								$HRmsec = substr($usec, -6);
+								($HRsec,$HRmin,$HRhour,$HRmday,$HRmon,$HRyear,$HRwday,$HRyday,$HRisdst) = localtime($s_hires);
+								$HRyear = ($HRyear + 1900);
+								$HRmon++;
+								if ($HRmon < 10) {$HRmon = "0$HRmon";}
+								if ($HRmday < 10) {$HRmday = "0$HRmday";}
+								if ($HRhour < 10) {$HRFhour = "0$HRhour";}
+								if ($HRmin < 10) {$HRmin = "0$HRmin";}
+								if ($HRsec < 10) {$HRsec = "0$HRsec";}
+								$HRnow_date = "$HRyear-$HRmon-$HRmday $HRhour:$HRmin:$HRsec.$HRmsec";
+								if($DB){print "|$affected_rows vicidial_dtmf inserted|$HRnow_date|$s_hires|$usec|\n";}
+
+								$dtmf_string = "$HRnow_date|$s_hires|$usec|$channel|$uniqueid|$digit|$direction|$state";
+								&dtmf_logger;
 								}
 							}
 
@@ -1261,7 +1314,7 @@ while($one_day_interval > 0)
 			$endless_loop--;
 			$keepalive_count_loop++;
 
-			if($DB){print STDERR "          loop counter: |$endless_loop|$keepalive_count_loop|     |$vddl_update|$vdcl_update|\r";}
+			if($DB){print STDERR "	  loop counter: |$endless_loop|$keepalive_count_loop|     |$vddl_update|$vdcl_update|\r";}
 
 			### putting a blank file called "sendmgr.kill" in a directory will automatically safely kill this program
 			if ( (-e "$PATHhome/listenmgr.kill") or ($sendonlyone) )
@@ -1415,6 +1468,17 @@ sub manager_output_logger
 				|| die "Can't open $PATHlogs/listen.$action_log_date: $!\n";
 		print MOout "$now_date|$manager_string|\n";
 		close(MOout);
+		}
+	}
+
+sub dtmf_logger
+	{
+	if ($SYSLOG)
+		{
+		open(Dout, ">>$PATHlogs/dtmf.$action_log_date")
+				|| die "Can't open $PATHlogs/dttmf.$action_log_date: $!\n";
+		print Dout "|$dtmf_string|\n";
+		close(Dout);
 		}
 	}
 

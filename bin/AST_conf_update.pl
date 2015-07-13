@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 #
-# AST_conf_update.pl version 2.6
+# AST_conf_update.pl version 2.12
 #
 # This script checks if there are channels in reserved conferences
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 50810-1532 - Added database server variable definitions lookup
 # 50823-1456 - Added commandline arguments for debug at runtime
@@ -17,6 +17,7 @@
 # 100811-2054 - Added --no-vc-3way-check flag to use when AST_conf_update_3way.pl script is used
 # 100928-1506 - Changed from hard-coded 60 minute limit to servers.vicidial_recording_limit
 # 130108-1712 - Changes for Asterisk 1.8 compatibility
+# 150610-1200 - Added support for AMI version 1.3
 #
 
 # constants
@@ -256,7 +257,7 @@ if ($no_vc_3way_check < 1)
 		else {$telnet_login = $ASTmgrUSERNAME;}
 
 	$t->open("$telnet_host"); 
-	$t->waitfor('/[01]\n$/');			# print login
+	$t->waitfor('/[0123]\n$/');			# print login
 	$t->print("Action: Login\nUsername: $telnet_login\nSecret: $ASTmgrSECRET\n\n");
 	$t->waitfor('/Authentication accepted/');		# waitfor auth accepted
 
@@ -385,7 +386,7 @@ if (length($ASTmgrUSERNAMEsend) > 3) {$telnet_login = $ASTmgrUSERNAMEsend;}
 else {$telnet_login = $ASTmgrUSERNAME;}
 
 $t->open("$telnet_host"); 
-$t->waitfor('/[01]\n$/');			# print login
+$t->waitfor('/[0123]\n$/');			# print login
 $t->print("Action: Login\nUsername: $telnet_login\nSecret: $ASTmgrSECRET\n\n");
 $t->waitfor('/Authentication accepted/');		# waitfor auth accepted
 

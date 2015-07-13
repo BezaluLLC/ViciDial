@@ -1,16 +1,17 @@
 #!/usr/bin/perl
 #
-# AST_phone_update.pl version 2.8
+# AST_phone_update.pl version 2.12
 #
 # DESCRIPTION:
 # checks the registered IP address of the phone and updates the phones table
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 70521-1529 - first build
 # 100625-1220 - Added waitfors after logout to fix broken pipe errors in asterisk <MikeC>
 # 130625-0947 - Added --agent-lookup option for agent phone_ip population
 # 131210-1305 - Added Asterisk 1.8 compatibility
+# 150610-1200 - Added support for AMI version 1.3
 #
 
 # constants
@@ -222,7 +223,7 @@ if ( ($sip_count > 0) || ($agent_lookup < 1) )
 	else {$telnet_login = $ASTmgrUSERNAME;}
 
 	$t->open("$telnet_host"); 
-	$t->waitfor('/[01]\n$/');			# print login
+	$t->waitfor('/[0123]\n$/');			# print login
 	$t->print("Action: Login\nUsername: $telnet_login\nSecret: $ASTmgrSECRET\n\n");
 	$t->waitfor('/Authentication accepted/');		# waitfor auth accepted
 
@@ -350,7 +351,7 @@ if ( ($iax_count > 0) || ($agent_lookup < 1) )
 	else {$telnet_login = $ASTmgrUSERNAME;}
 
 	$t->open("$telnet_host"); 
-	$t->waitfor('/[01]\n$/');			# print login
+	$t->waitfor('/[0123]\n$/');			# print login
 	$t->print("Action: Login\nUsername: $telnet_login\nSecret: $ASTmgrSECRET\n\n");
 	$t->waitfor('/Authentication accepted/');		# waitfor auth accepted
 

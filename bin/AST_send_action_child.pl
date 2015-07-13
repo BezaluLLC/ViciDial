@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_send_action_child.pl version 2.6
+# AST_send_action_child.pl version 2.12
 # 
 # Part of the Asterisk Central Queue System (ACQS)
 #
@@ -14,7 +14,7 @@
 # to be executed. connect to the manager interface, send the action and logoff
 # then exit.
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 50810-1547 - Added database server variable definitions lookup
@@ -31,6 +31,7 @@
 # 100625-1141 - Added waitfors after orginate and logout to fix broken pipe errors in asterisk <MikeC>
 # 100625-1206 - Use strict is a performance hit and should only be uncommented for debugging <MikeC>
 # 130108-1714 - Changes for Asterisk 1.8 compatibility
+# 150610-1200 - Added support for AMI version 1.3
 #
 
 $|++;
@@ -171,7 +172,7 @@ if ($action) {
 		$telnet_login = $ASTmgrUSERNAME;
 	}
 	$tn->open($telnet_host); 
-	$tn->waitfor('/[01]\n$/'); # print login
+	$tn->waitfor('/[0123]\n$/'); # print login
 	$tn->print("Action: Login\nUsername: $telnet_login\nSecret: $ASTmgrSECRET\n\n");
 	$tn->waitfor('/Authentication accepted/'); # waitfor auth accepted
 
