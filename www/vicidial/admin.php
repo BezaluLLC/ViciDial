@@ -3526,12 +3526,13 @@ else
 # 150703-2105 - Fixed field sizes in Issues #867 and #868
 # 150706-0811 - Added user setting for lead_filter_id in no-hopper dialing
 # 150708-2246 - Added max_queue_ingroup_ DID settings options
+# 150710-1120 - Added options for alternate Dispo Call URLs
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-495a';
-$build = '150708-2246';
+$admin_version = '2.12-496a';
+$build = '150710-1120';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -19834,7 +19835,23 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Start Call URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=2000 value=\"$start_call_url\">$NWB#campaigns-start_call_url$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dispo Call URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=2000 value=\"$dispo_call_url\">$NWB#campaigns-dispo_call_url$NWE</td></tr>\n";
+		if ($dispo_call_url == 'ALT')
+			{
+			$stmt="SELECT count(*) from vicidial_url_multi where campaign_id='$campaign_id' and entry_type='campaign' and url_type='dispo';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vum_to_print = mysqli_num_rows($rslt);
+			if ($vum_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$vum_count = $rowx[0]; 
+				}
+
+			echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin_url_multi.php?DB=$DB&campaign_id=$campaign_id&entry_type=campaign&url_type=dispo\">"._QXZ("Dispo Call URL")."</a>: </td><td align=left><input type=text name=dispo_call_url size=10 maxlength=2000 value=\"$dispo_call_url\">$NWB#campaigns-dispo_call_url$NWE <a href=\"admin_url_multi.php?DB=$DB&campaign_id=$campaign_id&entry_type=campaign&url_type=dispo\"> "._QXZ("Alternate Dispo URLs Defined").": $vum_count</a></td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dispo Call URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=2000 value=\"$dispo_call_url\">$NWB#campaigns-dispo_call_url$NWE</td></tr>\n";
+			}
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("No Agent Call URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=2000 value=\"$na_call_url\">$NWB#campaigns-na_call_url$NWE</td></tr>\n";
 
@@ -23961,7 +23978,23 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Start Call URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=2000 value=\"$start_call_url\">$NWB#inbound_groups-start_call_url$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dispo Call URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=2000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_call_url$NWE</td></tr>\n";
+		if ($dispo_call_url == 'ALT')
+			{
+			$stmt="SELECT count(*) from vicidial_url_multi where campaign_id='$group_id' and entry_type='ingroup' and url_type='dispo';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vum_to_print = mysqli_num_rows($rslt);
+			if ($vum_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$vum_count = $rowx[0]; 
+				}
+
+			echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin_url_multi.php?DB=$DB&campaign_id=$group_id&entry_type=ingroup&url_type=dispo\">"._QXZ("Dispo Call URL")."</a>: </td><td align=left><input type=text name=dispo_call_url size=10 maxlength=2000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_call_url$NWE <a href=\"admin_url_multi.php?DB=$DB&campaign_id=$group_id&entry_type=ingroup&url_type=dispo\"> "._QXZ("Alternate Dispo URLs Defined").": $vum_count</a></td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dispo Call URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=2000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_call_url$NWE</td></tr>\n";
+			}
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Add Lead URL").": </td><td align=left><input type=text name=add_lead_url size=70 maxlength=2000 value=\"$add_lead_url\">$NWB#inbound_groups-add_lead_url$NWE</td></tr>\n";
 
@@ -24708,7 +24741,23 @@ if ($ADD==3811)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Start Email URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=2000 value=\"$start_call_url\">$NWB#inbound_groups-start_email_url$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dispo Email URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=2000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_email_url$NWE</td></tr>\n";
+		if ($dispo_call_url == 'ALT')
+			{
+			$stmt="SELECT count(*) from vicidial_url_multi where campaign_id='$group_id' and entry_type='ingroup' and url_type='dispo';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vum_to_print = mysqli_num_rows($rslt);
+			if ($vum_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$vum_count = $rowx[0]; 
+				}
+
+			echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin_url_multi.php?DB=$DB&campaign_id=$group_id&entry_type=ingroup&url_type=dispo\">"._QXZ("Dispo Email URL")."</a>: </td><td align=left><input type=text name=dispo_call_url size=10 maxlength=2000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_call_url$NWE <a href=\"admin_url_multi.php?DB=$DB&campaign_id=$group_id&entry_type=ingroup&url_type=dispo\"> "._QXZ("Alternate Dispo URLs Defined").": $vum_count</a></td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dispo Email URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=2000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_email_url$NWE</td></tr>\n";
+			}
 
 		# echo "<tr bgcolor=#B6D3FC><td align=right>Add Lead URL: </td><td align=left><input type=text name=add_lead_url size=70 maxlength=2000 value=\"$add_lead_url\">$NWB#inbound_groups-add_lead_url$NWE</td></tr>\n";
 
@@ -25443,11 +25492,27 @@ if ($ADD==3911)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Start Chat URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=2000 value=\"$start_call_url\">$NWB#inbound_groups-start_chat_url$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dispo Chat URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=2000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_chat_url$NWE</td></tr>\n";
+		if ($dispo_call_url == 'ALT')
+			{
+			$stmt="SELECT count(*) from vicidial_url_multi where campaign_id='$group_id' and entry_type='ingroup' and url_type='dispo';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vum_to_print = mysqli_num_rows($rslt);
+			if ($vum_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$vum_count = $rowx[0]; 
+				}
+
+			echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin_url_multi.php?DB=$DB&campaign_id=$group_id&entry_type=ingroup&url_type=dispo\">"._QXZ("Dispo Chat URL")."</a>: </td><td align=left><input type=text name=dispo_call_url size=10 maxlength=2000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_call_url$NWE <a href=\"admin_url_multi.php?DB=$DB&campaign_id=$group_id&entry_type=ingroup&url_type=dispo\"> "._QXZ("Alternate Dispo URLs Defined").": $vum_count</a></td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dispo Chat URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=2000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_chat_url$NWE</td></tr>\n";
+			}
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("No Agent Chat URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=2000 value=\"$na_call_url\">$NWB#inbound_groups-na_chat_url$NWE</td></tr>\n";
 /*
-		echo "<tr bgcolor=#B6D3FC><td align=right>Extension Append CID: </td><td align=left><select size=1 name=extension_appended_cidname><option>Y</option><option>N</option><option SELECTED>$extension_appended_cidname</option></select>$NWB#inbound_groups-extension_appended_cidname$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>Extension Append CID: </td><td align=left><select size=1 name=extension_appended_cidname><option>"._QXZ("Y")."</option><option>N</option><option SELECTED>$extension_appended_cidname</option></select>$NWB#inbound_groups-extension_appended_cidname$NWE</td></tr>\n";
 */
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Uniqueid Status Display").": </td><td align=left><select size=1 name=uniqueid_status_display><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='ENABLED'>"._QXZ("ENABLED")."</option><option value='ENABLED_PREFIX'>"._QXZ("ENABLED_PREFIX")."</option><option value='ENABLED_PRESERVE'>"._QXZ("ENABLED_PRESERVE")."</option><option SELECTED value='$uniqueid_status_display'>"._QXZ("$uniqueid_status_display")."</option></select>$NWB#inbound_groups-uniqueid_status_display$NWE</td></tr>\n";
 
@@ -26080,7 +26145,7 @@ if ($ADD==3311)
 			$i++;
 			}
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("No-Agent In-Group Redirect").": </td><td align=left><select size=1 name=no_agent_ingroup_redirect><option value=\"DISABLED\">DISABLED</option><option value=\"Y\">Y</option><option value=\"NO_PAUSED\">NO_PAUSED</option><option value=\"READY_ONLY\">READY_ONLY</option><option SELECTED>$no_agent_ingroup_redirect</option></select>$NWB#inbound_dids-no_agent_ingroup_redirect$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("No-Agent In-Group Redirect").": </td><td align=left><select size=1 name=no_agent_ingroup_redirect><option value=\"DISABLED\">DISABLED</option><option value=\"Y\">"._QXZ("Y")."</option><option value=\"NO_PAUSED\">NO_PAUSED</option><option value=\"READY_ONLY\">READY_ONLY</option><option SELECTED>$no_agent_ingroup_redirect</option></select>$NWB#inbound_dids-no_agent_ingroup_redirect$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3111&group_id=$no_agent_ingroup_id\">"._QXZ("No-Agent In-Group ID")."</a>: </td><td align=left><select size=1 name=no_agent_ingroup_id>";
 		echo "$PFDgroups_menu";

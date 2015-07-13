@@ -186,3 +186,19 @@ ALTER TABLE vicidial_inbound_dids ADD max_queue_ingroup_id VARCHAR(20) default '
 ALTER TABLE vicidial_inbound_dids ADD max_queue_ingroup_extension VARCHAR(50) default '9998811112';
 
 UPDATE system_settings SET db_schema_version='1418',db_schema_update_date=NOW() where db_schema_version < 1418;
+
+CREATE TABLE vicidial_url_multi (
+url_id INT(9) UNSIGNED NOT NULL AUTO_INCREMENT,
+campaign_id VARCHAR(20) NOT NULL,
+entry_type ENUM('campaign','ingroup','list','') default '',
+active ENUM('Y','N') default 'N',
+url_type ENUM('dispo','start','addlead','noagent','') default '',
+url_rank SMALLINT(5) default '1',
+url_statuses VARCHAR(1000) default '',
+url_description VARCHAR(255) default '',
+url_address TEXT,
+PRIMARY KEY (url_id),
+KEY vicidial_url_multi_campaign_id_key (campaign_id)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+UPDATE system_settings SET db_schema_version='1419',db_schema_update_date=NOW() where db_schema_version < 1419;

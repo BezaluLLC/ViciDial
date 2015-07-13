@@ -491,11 +491,12 @@
 # 150609-1917 - Added list_description web url variable
 # 150610-0940 - Added customer_gone_seconds campaign option
 # 150701-1211 - Modified mysqli_error() to mysqli_connect_error() where appropriate
-# 150704-0005 - Change disposubmit to be blocking before resume, Issue #863
+# 150704-0005 - Changed disposubmit to be blocking before resume, Issue #863
+# 150712-2045 - Changed dispo call url to operate through a separate AJAX process
 #
 
-$version = '2.12-464c';
-$build = '150704-0005';
+$version = '2.12-465c';
+$build = '150712-2045';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -11234,6 +11235,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		waiting_on_dispo=1;
 		var VDDCU_recording_id=document.getElementById("RecorDID").innerHTML;
 		var VDDCU_recording_filename=last_recording_filename;
+		var dispo_urls='';
 		document.getElementById("callchannel").innerHTML = '';
 		document.vicidial_form.callserverip.value = '';
 		document.vicidial_form.xferchannel.value = '';
@@ -11319,16 +11321,22 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 							if (xmlhttp.readyState == 4 && xmlhttp.status == 200)
 								{
-						//		alert(xmlhttp.responseText);
+							//	alert(xmlhttp.responseText);
+								var check_dispo = null;
+								check_dispo = xmlhttp.responseText;
+								var check_DS_array=check_dispo.split("\n");
 								if (auto_dial_level < 1)
 									{
-									var check_dispo = null;
-									check_dispo = xmlhttp.responseText;
-									var check_DS_array=check_dispo.split("\n");
 									if (check_DS_array[1] == 'Next agent_log_id:')
 										{
 										agent_log_id = check_DS_array[2];
 										}
+									}
+								if (check_DS_array[3] == 'Dispo URLs:')
+									{
+									dispo_urls = check_DS_array[4];
+
+									SendURLs(dispo_urls,"dispo");
 									}
 								waiting_on_dispo=0;
 								}
@@ -11585,6 +11593,50 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				// scroll back to the top of the page
 				scroll(0,0);
 				}
+			}
+		}
+
+
+// ################################################################################
+// Submit the URLs 
+	function SendURLs(newurlids,newurltype)
+		{
+		// Send AJAX call to run the defined url_ids for dispo_call_url
+		var xmlhttp=false;
+		/*@cc_on @*/
+		/*@if (@_jscript_version >= 5)
+		// JScript gives us Conditional compilation, we can cope with old IE versions.
+		// and security blocked creation of the objects.
+		 try {
+		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+		 } catch (e) {
+		  try {
+		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		  } catch (E) {
+		   xmlhttp = false;
+		  }
+		 }
+		@end @*/
+		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+			{
+			xmlhttp = new XMLHttpRequest();
+			}
+		if (xmlhttp) 
+			{
+			DUsend_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=RUNurls&format=text&user=" + user + "&pass=" + pass + "&orig_pass=" + orig_pass + "&url_ids=" + newurlids + "&campaign=" + campaign + "&auto_dial_level=" + auto_dial_level + "&stage=dispo";
+			xmlhttp.open('POST', 'vdc_db_query.php');
+			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+			xmlhttp.send(DUsend_query); 
+			xmlhttp.onreadystatechange = function() 
+				{ 
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200)
+					{
+				//	alert(DUsend_query + "\n" + xmlhttp.responseText);
+					var dispo_url_send_response = null;
+					dispo_url_send_response = xmlhttp.responseText;
+					}
+				}
+			delete xmlhttp;
 			}
 		}
 

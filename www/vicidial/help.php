@@ -51,6 +51,7 @@
 # 150609-1231 - Added new agent screen status display option entries
 # 150610-0938 - Added campaigns-customer_gone_seconds
 # 150708-2238 - Added max_queue_ingroup_ options
+# 150710-1124 - Added explanation of new ALT URL feature and alt_multi_urls
 #
 
 require("dbconnect_mysqli.php");
@@ -1801,7 +1802,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="campaigns-dispo_call_url">
 <BR>
-<B><?php echo _QXZ("Dispo Call URL"); ?> -</B><?php echo _QXZ("This web URL address is not seen by the agent, but it is called every time a call is dispositioned by an agent if it is populated. Uses the same variables as the web form fields and scripts. dispo and talk_time are the variables you can use to retrieve the agent-defined disposition for the call and the actual talk time in seconds of the call. This URL can NOT be a relative path. Default is blank."); ?>
+<B><?php echo _QXZ("Dispo Call URL"); ?> -</B><?php echo _QXZ("This web URL address is not seen by the agent, but it is called every time a call is dispositioned by an agent if it is populated. Uses the same variables as the web form fields and scripts. dispo and talk_time are the variables you can use to retrieve the agent-defined disposition for the call and the actual talk time in seconds of the call. This URL can NOT be a relative path. Default is blank.") . " " . _QXZ("If you put ALT into this field and submit this form, you will be able to go to a separate page where you can define multiple URLs for this action as well as specific statuses that will trigger them."); ?>
 
 <BR>
 <A NAME="campaigns-na_call_url">
@@ -2591,7 +2592,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_groups-dispo_call_url">
 <BR>
-<B><?php echo _QXZ("Dispo Call URL"); ?> -</B><?php echo _QXZ("This web URL address is not seen by the agent, but it is called every time a call is dispositioned by an agent if it is populated. Uses the same variables as the web form fields and scripts. dispo and talk_time are the variables you can use to retrieve the agent-defined disposition for the call and the actual talk time in seconds of the call. Default is blank."); ?>
+<B><?php echo _QXZ("Dispo Call URL"); ?> -</B><?php echo _QXZ("This web URL address is not seen by the agent, but it is called every time a call is dispositioned by an agent if it is populated. Uses the same variables as the web form fields and scripts. dispo and talk_time are the variables you can use to retrieve the agent-defined disposition for the call and the actual talk time in seconds of the call. Default is blank.") . " " . _QXZ("If you put ALT into this field and submit this form, you will be able to go to a separate page where you can define multiple URLs for this action as well as specific statuses that will trigger them."); ?>
 
 <BR>
 <A NAME="inbound_groups-add_lead_url">
@@ -5408,6 +5409,17 @@ if ($SSqc_features_active > 0)
 <A NAME="cb-bulk-newstatus">
 <BR>
 <B><?php echo _QXZ("New Status"); ?> -</B><?php echo _QXZ("The new vicidial_list status the selected callbacks will be updated to. This affects the vicidial_list table ONLY."); ?>
+
+
+
+<BR><BR><BR><BR>
+<A NAME="alt_multi_urls">
+<B><FONT SIZE=3><?php echo _QXZ("Alternate Multi URLs"); ?></FONT></B><BR><BR>
+
+<?php echo _QXZ("This page allows you to define Alternate URLs with conditions in place of the simple URL option for Dispo, Start, Add Lead or No Agent URLs. The RANK field will define the order in which the URLs are requested, this is important because if you have a URL that may take a few seconds to run ranked as 1, that will mean that any URLs ranked after it will have to wait to be run until that first URL request receives a response. The ACTIVE field will determine whether the specific URL is run. The STATUSES field only works for the Dispo URLs and will determine which disposition statuses will trigger the URL being run, if you want to run the entry for all statuses just fill in ---ALL--- in this field. The URL field works the same as it would in the URL option in campaigns, in-groups and lists, and it is also limited to 2000 characters in length. If you want to delete a URL, it must first be set to not active, then you can click on the DELETE link below the SUBMIT button for that URL entry."); ?>
+
+
+
 
 <BR><BR><BR><BR><BR><BR><BR><BR><BR>
 </TD></TR></TABLE></BODY></HTML>

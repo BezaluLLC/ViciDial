@@ -91,6 +91,12 @@ OTHER CHANGES:
 14. Added ability to use No Agent Call URL with the dispo_move_list.php script
 	see script comments for instructions.
 
+15. Added DID options to check for a Maximum number of calls in queue in a set
+	In-Group and route the call to an extension if over the set number.
+
+16. Added the ability to define multiple Dispo Call URLs as well as define
+	specific statuses that they will be triggered for.
+
 
 
 

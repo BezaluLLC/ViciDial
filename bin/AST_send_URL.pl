@@ -22,6 +22,7 @@
 # 150429-0910 - Added campaign variables
 # 150609-1931 - Added list_description variable
 # 150703-1542 - Fixed issue with list_id check
+# 150711-1501 - Changed to add more logging and better HTTPS support
 #
 
 $|++;
@@ -758,16 +759,58 @@ if (length($lead_id) > 0)
 		}
 	$sthA->finish();
 
-	`$wgetbin -q --output-document=/tmp/ASUtmp$US$uniqueid$US$secX $parse_url `;
+	$url = $parse_url;
+	$url =~ s/'/\\'/gi;
+	$url =~ s/"/\\"/gi;
 
-	$event_string="$function|$wgetbin -q --output-document=/tmp/ASUtmp$US$uniqueid$US$secX $parse_url|";
+	my $secW = time();
+
+	`$wgetbin --no-check-certificate --output-document=/tmp/ASUBtmpD$US$url_id$US$secX --output-file=/tmp/ASUBtmpF$US$url_id$US$secX $url `;
+
+	$event_string="$function|$wgetbin --no-check-certificate --output-document=/tmp/ASUBtmpD$US$url_id$US$secX --output-file=/tmp/ASUBtmpF$US$url_id$US$secX $url|";
 	&event_logger;
 
-	### update url log entry
-	$stmtA = "UPDATE vicidial_url_log SET url_response='/tmp/ASUtmp$US$uniqueid$US$secX' where url_log_id='$url_id';";
-	$affected_rows = $dbhA->do($stmtA);
-	}
+	my $secY = time();
+	my $response_sec = ($secY - $secW);
 
+	open(Wdoc, "/tmp/ASUBtmpD$US$url_id$US$secX") || die "can't open /tmp/ASUBtmpD$US$url_id$US$secX: $!\n";
+	@Wdoc = <Wdoc>;
+	close(Wdoc);
+	$i=0;
+	$Wdocline_cat='';
+	foreach(@Wdoc)
+		{
+		$Wdocline = $Wdoc[$i];
+		$Wdocline =~ s/\n|\r/!/gi;
+		$Wdocline =~ s/  |\t|\'|\`//gi;
+		$Wdocline_cat .= "$Wdocline";
+		$i++;
+		}
+	if (length($Wdocline_cat)<1) 
+		{$Wdocline_cat='<RESPONSE EMPTY>';}
+
+	open(Wfile, "/tmp/ASUBtmpF$US$url_id$US$secX") || die "can't open /tmp/ASUBtmpF$US$url_id$US$secX: $!\n";
+	@Wfile = <Wfile>;
+	close(Wfile);
+	$i=0;
+	$Wfileline_cat='';
+	foreach(@Wfile)
+		{
+		$Wfileline = $Wfile[$i];
+		$Wfileline =~ s/\n|\r/!/gi;
+		$Wfileline =~ s/  |\t|\'|\`//gi;
+		$Wfileline_cat .= "$Wfileline";
+		$i++;
+		}
+	if (length($Wfileline_cat)<1) 
+		{$Wfileline_cat='<HEADER EMPTY>';}
+
+
+	### update url log entry
+	$stmtA = "UPDATE vicidial_url_log SET url_response='$Wdocline_cat|$Wfileline_cat',response_sec='$response_sec' where url_log_id='$url_id';";
+	$affected_rows = $dbhA->do($stmtA);
+	if ($DB) {print "$affected_rows|$stmtA\n";}
+	}
 
 
 my $secZ = time();
