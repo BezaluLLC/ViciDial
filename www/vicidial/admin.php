@@ -3527,12 +3527,13 @@ else
 # 150706-0811 - Added user setting for lead_filter_id in no-hopper dialing
 # 150708-2246 - Added max_queue_ingroup_ DID settings options
 # 150710-1120 - Added options for alternate Dispo Call URLs
+# 150717-1333 - Optimization for dialable lead count SQL
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-496a';
-$build = '150710-1120';
+$admin_version = '2.12-497a';
+$build = '150717-1333';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -36120,26 +36121,19 @@ if (isset($camp_lists))
 						}
 
 					$list_default_gmt = "$list_default_gmt'99'";
-					if ($k == 0) 
-						{
-						$list_id_sql = "((list_id=\"$cur_list_id\" and gmt_offset_now NOT IN($list_default_gmt) $ct_statesSQL) $list_state_gmt_SQL)";
-						}
-					else 
-						{
-						$list_id_sql .= " or ((list_id=\"$cur_list_id\" and gmt_offset_now NOT IN($list_default_gmt) $ct_statesSQL) $list_state_gmt_SQL)";
-						}
+					$LCTlist_id_sql .= " or ((list_id='$cur_list_id' and gmt_offset_now NOT IN($list_default_gmt) $ct_statesSQL) $list_state_gmt_SQL)";
 					}
 				##### END local call time for list set different than campaign #####
 
 				else
 					{
-					if ($k == 0) 
+					if (strlen($list_id_sql) < 3) 
 						{
-						$list_id_sql = "(list_id=\"$cur_list_id\")";
+						$list_id_sql = "(list_id IN('$cur_list_id'";
 						}
 					else 
 						{
-						$list_id_sql .= " or (list_id=\"$cur_list_id\")";
+						$list_id_sql .= ",'$cur_list_id'";
 						}
 					}
 
@@ -36148,6 +36142,8 @@ if (isset($camp_lists))
 			$camp_lists = preg_replace("/.$/i","",$camp_lists);
 			if (strlen($camp_lists) < 4) {$camp_lists="''";}
 			if (strlen($list_id_sql) < 4) {$list_id_sql="list_id=''";}
+			else {$list_id_sql .= '))';}
+			if (strlen($LCTlist_id_sql) > 1) {$list_id_sql .= "$LCTlist_id_sql";}
 
 
 			$stmt="SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and status IN($Dsql) and list_id IN($camp_lists) and ($list_id_sql) and ($all_gmtSQL) $CCLsql $DLTsql $fSQL $EXPsql";

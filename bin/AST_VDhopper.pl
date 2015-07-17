@@ -1885,7 +1885,14 @@ foreach(@campaign_id)
 						}
 					else 
 						{
-						$list_id_sql[$i] .= ",'$cur_list_id'";
+						if (length($list_id_sql[$i]) < 3) 
+							{
+							$list_id_sql[$i] = "(list_id IN('$cur_list_id'";
+							}
+						else
+							{
+							$list_id_sql[$i] .= ",'$cur_list_id'";
+							}
 						}
 					$act_rec_countLISTS++;
 					}
@@ -2287,15 +2294,8 @@ foreach(@campaign_id)
 				#only add for use if the list is active
 				if ( ($list_id_act eq "Y") || ($allow_inactive eq "Y") )
 					{
-					if ( ( ($act_rec_countLISTS == 0) && ($allow_inactive ne "Y") ) || ( ($rec_countLISTS == 0) && ($allow_inactive eq "Y") ) ) 
-						{
-						$list_id_sql[$i] = "((list_id=\"$cur_list_id\" and gmt_offset_now IN($list_default_gmt) $ct_statesSQL) $list_state_gmt_SQL)";
-						}
-					else
-						{
-						$list_id_sql[$i] .= " or ((list_id=\"$cur_list_id\" and gmt_offset_now IN($list_default_gmt) $ct_statesSQL) $list_state_gmt_SQL)";
-						}
-					$del_list_id_sql[$i] .= "((list_id=\"$cur_list_id\" and gmt_offset_now NOT IN($list_default_gmt) $ct_statesSQL) $del_list_state_gmt_SQL) or";
+					$LCTlist_id_sql[$i] .= " or ((list_id='$cur_list_id' and gmt_offset_now IN($list_default_gmt) $ct_statesSQL) $list_state_gmt_SQL)";
+					$del_list_id_sql[$i] .= "((list_id='$cur_list_id' and gmt_offset_now NOT IN($list_default_gmt) $ct_statesSQL) $del_list_state_gmt_SQL) or";
 					$act_rec_countLISTS++;
 					}
 				}
@@ -2308,6 +2308,7 @@ foreach(@campaign_id)
 		# Protect against campaigns with no list by making it an impossible list
 		if (length($list_id_sql[$i]) < 1) {$list_id_sql[$i]="list_id='999876543210'";}
 		else {$list_id_sql[$i] .= "))";}
+		if (length($LCTlist_id_sql[$i]) > 0) {$list_id_sql[$i] .= "$LCTlist_id_sql[$i]";}
 
 		if ($DB) {print "     campaign lists count ACTIVE:$act_rec_countLISTS | TOTAL:$rec_countLISTS \n";}
 		if ($DBX) {print "     LIST ID SQL $list_id_sql[$i]";}
