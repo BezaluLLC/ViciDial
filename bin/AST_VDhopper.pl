@@ -84,7 +84,7 @@
 # 150114-1204 - Optimization of gmt code, Issue #812
 # 150117-1415 - Added list local call time validation
 # 150312-1459 - Allow for single quotes in data fields without crashing
-# 150717-1050 - Added force index to vicidial_list queries, set with $VLforce_index variable
+# 150717-1050 - Added force index to some vicidial_list queries, set with $VLforce_index variable
 #
 
 # constants
@@ -374,11 +374,11 @@ if ($count_only)
 	{
 	if (length($CLIcampaign)>0)
 		{
-		$stmtA = "SELECT count(*) from $vicidial_hopper where campaign_id IN('$CLIcampaign');";
+		$stmtA = "(*) from $vicidial_hopper where campaign_id IN('$CLIcampaign');";
 		}
 	else
 		{
-		$stmtA = "SELECT count(*) from $vicidial_hopper;";
+		$stmtA = "(*) from $vicidial_hopper;";
 		}
 	$hopper_count_only=0;
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -442,11 +442,11 @@ if ($inactive_lists_count > 0)
 ##### BEGIN Change CBHOLD status leads to CALLBK if their vicidial_callbacks time has passed
 if (length($CLIcampaign)>0)
 	{
-	$stmtA = "SELECT count(*) FROM vicidial_callbacks where callback_time <= '$now_date' and status='ACTIVE' and campaign_id IN('$CLIcampaign');";
+	$stmtA = "(*) FROM vicidial_callbacks where callback_time <= '$now_date' and status='ACTIVE' and campaign_id IN('$CLIcampaign');";
 	}
 else
 	{
-	$stmtA = "SELECT count(*) FROM vicidial_callbacks where callback_time <= '$now_date' and status='ACTIVE';";
+	$stmtA = "(*) FROM vicidial_callbacks where callback_time <= '$now_date' and status='ACTIVE';";
 	}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -531,11 +531,11 @@ if ($CBHOLD_count > 0)
 $hopper_dnc_count=0;
 if (length($CLIcampaign)>0)
 	{
-	$stmtA = "SELECT count(*) from $vicidial_hopper where status='DNC' and campaign_id IN('$CLIcampaign');";
+	$stmtA = "(*) from $vicidial_hopper where status='DNC' and campaign_id IN('$CLIcampaign');";
 	}
 else
 	{
-	$stmtA = "SELECT count(*) from $vicidial_hopper where status='DNC';";
+	$stmtA = "(*) from $vicidial_hopper where status='DNC';";
 	}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -633,10 +633,10 @@ if ($hopper_dnc_count > 0)
 						{
 						$alt_areacode = substr($VD_alt_phone, 0, 3);
 						$alt_areacode .= "XXXXXXX";
-						$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number IN('$VD_alt_phone','$alt_areacode');";
+						$stmtA="(*) FROM vicidial_dnc where phone_number IN('$VD_alt_phone','$alt_areacode');";
 						}
 					else
-						{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_alt_phone';";}
+						{$stmtA="(*) FROM vicidial_dnc where phone_number='$VD_alt_phone';";}
 						if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -657,10 +657,10 @@ if ($hopper_dnc_count > 0)
 						{
 						$alt_areacode = substr($VD_alt_phone, 0, 3);
 						$alt_areacode .= "XXXXXXX";
-						$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_alt_phone','$alt_areacode') and campaign_id='$temp_VD_campaign_id';";
+						$stmtA="(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_alt_phone','$alt_areacode') and campaign_id='$temp_VD_campaign_id';";
 						}
 					else
-						{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_alt_phone' and campaign_id='$temp_VD_campaign_id';";}
+						{$stmtA="(*) FROM vicidial_campaign_dnc where phone_number='$VD_alt_phone' and campaign_id='$temp_VD_campaign_id';";}
 						if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -713,10 +713,10 @@ if ($hopper_dnc_count > 0)
 						{
 						$addr3_areacode = substr($VD_address3, 0, 3);
 						$addr3_areacode .= "XXXXXXX";
-						$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number IN('$VD_address3','$addr3_areacode');";
+						$stmtA="(*) FROM vicidial_dnc where phone_number IN('$VD_address3','$addr3_areacode');";
 						}
 					else
-						{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_address3';";}
+						{$stmtA="(*) FROM vicidial_dnc where phone_number='$VD_address3';";}
 						if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -737,10 +737,10 @@ if ($hopper_dnc_count > 0)
 						{
 						$addr3_areacode = substr($VD_address3, 0, 3);
 						$addr3_areacode .= "XXXXXXX";
-						$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_address3','$addr3_areacode') and campaign_id='$temp_VD_campaign_id';";
+						$stmtA="(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_address3','$addr3_areacode') and campaign_id='$temp_VD_campaign_id';";
 						}
 					else
-						{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_address3' and campaign_id='$temp_VD_campaign_id';";}
+						{$stmtA="(*) FROM vicidial_campaign_dnc where phone_number='$VD_address3' and campaign_id='$temp_VD_campaign_id';";}
 						if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -789,7 +789,7 @@ if ($hopper_dnc_count > 0)
 				}
 			$sthA->finish();
 			$alt_dial_phones_count=0;
-			$stmtA="SELECT count(*) FROM vicidial_list_alt_phones where lead_id='$AAD_lead_id[$aad]';";
+			$stmtA="(*) FROM vicidial_list_alt_phones where lead_id='$AAD_lead_id[$aad]';";
 				if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -835,10 +835,10 @@ if ($hopper_dnc_count > 0)
 							{
 							$ad_areacode = substr($VD_altdial_phone, 0, 3);
 							$ad_areacode .= "XXXXXXX";
-							$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number IN('$VD_altdial_phone','$ad_areacode');";
+							$stmtA="(*) FROM vicidial_dnc where phone_number IN('$VD_altdial_phone','$ad_areacode');";
 							}
 						else
-							{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$VD_altdial_phone';";}
+							{$stmtA="(*) FROM vicidial_dnc where phone_number='$VD_altdial_phone';";}
 							if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -859,10 +859,10 @@ if ($hopper_dnc_count > 0)
 							{
 							$ad_areacode = substr($VD_altdial_phone, 0, 3);
 							$ad_areacode .= "XXXXXXX";
-							$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_altdial_phone','$ad_areacode') and campaign_id='$temp_VD_campaign_id';";
+							$stmtA="(*) FROM vicidial_campaign_dnc where phone_number IN('$VD_altdial_phone','$ad_areacode') and campaign_id='$temp_VD_campaign_id';";
 							}
 						else
-							{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$VD_altdial_phone' and campaign_id='$temp_VD_campaign_id';";}
+							{$stmtA="(*) FROM vicidial_campaign_dnc where phone_number='$VD_altdial_phone' and campaign_id='$temp_VD_campaign_id';";}
 							if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -965,14 +965,14 @@ while ($sthArows > $rec_count)
 	if ( $use_auto_hopper[$rec_count] =~ /Y/) 
 		{
 		### Find the number of agents
-		$stmtB = "SELECT COUNT(*) FROM vicidial_live_agents WHERE campaign_id='$campaign_id[$rec_count]' and status IN ('READY','QUEUE','INCALL','CLOSER') and last_update_time >= '$VDL_tensec'";
+		$stmtB = "(*) FROM vicidial_live_agents WHERE campaign_id='$campaign_id[$rec_count]' and status IN ('READY','QUEUE','INCALL','CLOSER') and last_update_time >= '$VDL_tensec'";
 		$sthB = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 		$sthB->execute or die "executing: $stmtB ", $dbhA->errstr;
 		@aryAgent = $sthB->fetchrow_array;
 		$num_agents = $aryAgent[0];
 		$sthB->finish();
 
-		$stmtB = "SELECT COUNT(*) FROM vicidial_live_agents WHERE campaign_id='$campaign_id[$rec_count]' and status IN ('PAUSED') and last_update_time >= '$VDL_tensec' and last_state_change >= '$VDL_one'";
+		$stmtB = "(*) FROM vicidial_live_agents WHERE campaign_id='$campaign_id[$rec_count]' and status IN ('PAUSED') and last_update_time >= '$VDL_tensec' and last_state_change >= '$VDL_one'";
 		$sthB = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 		$sthB->execute or die "executing: $stmtB ", $dbhA->errstr;
 		@aryAgent = $sthB->fetchrow_array;
@@ -1023,7 +1023,7 @@ while ($sthArows > $rec_count)
 		{
 		if ($DB) { print "---------------Auto Trim Hopper Enabled For $campaign_id[$rec_count]---------------------\n"; }
 	
-		$stmtB = "SELECT COUNT(*) FROM $vicidial_hopper WHERE campaign_id='$campaign_id[$rec_count]' and status IN ('READY') and source IN('S','N');";
+		$stmtB = "(*) FROM $vicidial_hopper WHERE campaign_id='$campaign_id[$rec_count]' and status IN ('READY') and source IN('S','N');";
 		$sthB = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 		$sthB->execute or die "executing: $stmtB ", $dbhA->errstr;
 		@aryLead = $sthB->fetchrow_array;
@@ -1122,7 +1122,7 @@ foreach(@campaign_id)
 		if ($DB) {print "Campaign $campaign_id[$i] set to no-hopper-dialing: $no_hopper_dialing[$i]\n";}
 
 		### BEGIN Change CBHOLD status leads to CALLBK if their vicidial_callbacks time has passed
-		$stmtA = "SELECT count(*) FROM $vicidial_hopper where campaign_id='$campaign_id[$i]' and status NOT IN('QUEUE','HOLD');";
+		$stmtA = "(*) FROM $vicidial_hopper where campaign_id='$campaign_id[$i]' and status NOT IN('QUEUE','HOLD');";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		@aryA = $sthA->fetchrow_array;
@@ -1812,7 +1812,7 @@ foreach(@campaign_id)
 
 		### Find out how many leads are READY in the hopper from a specific campaign
 		$hopper_ready_count=0;
-		$stmtA = "SELECT count(*) from $vicidial_hopper where campaign_id='$campaign_id[$i]' and status='READY';";
+		$stmtA = "(*) from $vicidial_hopper where campaign_id='$campaign_id[$i]' and status='READY';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -1863,7 +1863,7 @@ foreach(@campaign_id)
 			# check that call time exists
 			if ($cur_call_time !~ /^campaign$/) 
 				{
-				$stmtB = "SELECT count(*) from vicidial_call_times where call_time_id = \"$cur_call_time\"";
+				$stmtB = "(*) from vicidial_call_times where call_time_id = \"$cur_call_time\"";
 				$sthB = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 				$sthB->execute or die "executing: $stmtB", $dbhA->errstr;
 				@aryB = $sthB->fetchrow_array;
@@ -2443,12 +2443,12 @@ foreach(@campaign_id)
 		##### Get count of leads that are dialable #####
 		if ($list_order_mix[$i] =~ /DISABLED/)
 			{
-			$stmtA = "SELECT count(*) FROM vicidial_list $VLforce_index where called_since_last_reset='N' and status IN($STATUSsql[$i]) and ($list_id_sql[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i] $CCLsql[$i];";
+			$stmtA = "(*) FROM vicidial_list $VLforce_index where called_since_last_reset='N' and status IN($STATUSsql[$i]) and ($list_id_sql[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i] $CCLsql[$i];";
 			}
 		else
 			{
 			if (length($list_mix_dialableSQL)<3) {$list_mix_dialableSQL="called_count < 0";}
-			$stmtA = "SELECT count(*) FROM vicidial_list $VLforce_index where called_since_last_reset='N' and ($list_mix_dialableSQL) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
+			$stmtA = "(*) FROM vicidial_list $VLforce_index where called_since_last_reset='N' and ($list_mix_dialableSQL) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
 			}
 			if ($DBX) {print "     |$stmtA|\n";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -2465,7 +2465,7 @@ foreach(@campaign_id)
 
 		if ( ($lead_order[$i] =~ / 2nd NEW$| 3rd NEW$| 4th NEW$| 5th NEW$| 6th NEW$/) && ($list_order_mix[$i] =~ /DISABLED/) )
 			{
-			$stmtA = "SELECT count(*) FROM vicidial_list $VLforce_index where called_since_last_reset='N' and status IN('NEW') and ($list_id_sql[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
+			$stmtA = "(*) FROM vicidial_list $VLforce_index where called_since_last_reset='N' and status IN('NEW') and ($list_id_sql[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -2606,7 +2606,7 @@ foreach(@campaign_id)
 					if ($hopper_vlc_dup_check[$i] =~ /Y/) 
 						{$vlc_dup_check_SQL = "and vendor_lead_code NOT IN($live_vlc$vlc_lists)";}
 
-					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list $VLforce_index where $recycle_SQL[$i] and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $hopper_level[$i];";
+					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list where $recycle_SQL[$i] and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $hopper_level[$i];";
 					if ($DBX) {print "     |$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2662,7 +2662,7 @@ foreach(@campaign_id)
 					if ($hopper_vlc_dup_check[$i] =~ /Y/) 
 						{$vlc_dup_check_SQL = "and vendor_lead_code NOT IN($live_vlc$vlc_lists)";}
 
-					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list $VLforce_index where called_since_last_reset='N' and status IN('NEW') and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $NEW_level;";
+					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list where called_since_last_reset='N' and status IN('NEW') and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $NEW_level;";
 					if ($DBX) {print "     |$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2715,7 +2715,7 @@ foreach(@campaign_id)
 
 					if ($list_order_mix[$i] =~ /DISABLED/)
 						{
-						$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list $VLforce_index where called_since_last_reset='N' and status IN($STATUSsql[$i]) and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $OTHER_level;";
+						$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list where called_since_last_reset='N' and status IN($STATUSsql[$i]) and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $OTHER_level;";
 						if ($DBX) {print "     |$stmtA|\n";}
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2818,7 +2818,7 @@ foreach(@campaign_id)
 							if ($hopper_vlc_dup_check[$i] =~ /Y/) 
 								{$vlc_dup_check_SQL = "and vendor_lead_code NOT IN($live_vlc$vlc_lists)";}
 
-							$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list $VLforce_index where called_since_last_reset='N' and ($list_mix_dialableSQL) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $LM_step_goal[$x];";
+							$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list where called_since_last_reset='N' and ($list_mix_dialableSQL) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $LM_step_goal[$x];";
 							if ($DBX) {print "     |$stmtA|\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2928,10 +2928,10 @@ foreach(@campaign_id)
 								{
 								$pth_areacode = substr($phone_to_hopper[$h], 0, 3);
 								$pth_areacode .= "XXXXXXX";
-								$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number IN('$phone_to_hopper[$h]','$pth_areacode');";
+								$stmtA="(*) FROM vicidial_dnc where phone_number IN('$phone_to_hopper[$h]','$pth_areacode');";
 								}
 							else
-								{$stmtA="SELECT count(*) FROM vicidial_dnc where phone_number='$phone_to_hopper[$h]';";}
+								{$stmtA="(*) FROM vicidial_dnc where phone_number='$phone_to_hopper[$h]';";}
 							if ($DB) {print "     Doing DNC Check: $phone_to_hopper[$h] - $use_internal_dnc[$i]\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2958,10 +2958,10 @@ foreach(@campaign_id)
 								{
 								$pth_areacode = substr($phone_to_hopper[$h], 0, 3);
 								$pth_areacode .= "XXXXXXX";
-								$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number IN('$phone_to_hopper[$h]','$pth_areacode') and campaign_id='$temp_campaign_id';";
+								$stmtA="(*) FROM vicidial_campaign_dnc where phone_number IN('$phone_to_hopper[$h]','$pth_areacode') and campaign_id='$temp_campaign_id';";
 								}
 							else
-								{$stmtA="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$phone_to_hopper[$h]' and campaign_id='$temp_campaign_id';";}
+								{$stmtA="(*) FROM vicidial_campaign_dnc where phone_number='$phone_to_hopper[$h]' and campaign_id='$temp_campaign_id';";}
 							if ($DBX) {print "$use_other_campaign_dnc[$i]|$stmtA\n";}
 							if ($DB) {print "Doing CAMP DNC Check: $phone_to_hopper[$h] - $use_campaign_dnc[$i] - $temp_campaign_id\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -2983,7 +2983,7 @@ foreach(@campaign_id)
 							}
 
 						$VAC_exist=0;
-						$stmtA="SELECT count(*) FROM vicidial_auto_calls where lead_id='$leads_to_hopper[$h]';";
+						$stmtA="(*) FROM vicidial_auto_calls where lead_id='$leads_to_hopper[$h]';";
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
@@ -2995,7 +2995,7 @@ foreach(@campaign_id)
 						$sthA->finish();
 
 						$VLA_exist=0;
-						$stmtA="SELECT count(*) FROM vicidial_live_agents where lead_id='$leads_to_hopper[$h]';";
+						$stmtA="(*) FROM vicidial_live_agents where lead_id='$leads_to_hopper[$h]';";
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
@@ -3009,7 +3009,7 @@ foreach(@campaign_id)
 						$VLC_exist=0;
 						if ( ($hopper_vlc_dup_check[$i] =~ /Y/) && (length($vlc_to_hopper[$h]) > 0) )
 							{
-							$stmtA="SELECT count(*) FROM $vicidial_hopper where vendor_lead_code=\"$vlc_to_hopper[$h]\";";
+							$stmtA="(*) FROM $vicidial_hopper where vendor_lead_code=\"$vlc_to_hopper[$h]\";";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
