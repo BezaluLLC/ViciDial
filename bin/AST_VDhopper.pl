@@ -3009,7 +3009,7 @@ foreach(@campaign_id)
 						$VLC_exist=0;
 						if ( ($hopper_vlc_dup_check[$i] =~ /Y/) && (length($vlc_to_hopper[$h]) > 0) )
 							{
-							$stmtA="(*) FROM $vicidial_hopper where vendor_lead_code=\"$vlc_to_hopper[$h]\";";
+							$stmtA="SELECT count(*) FROM $vicidial_hopper where vendor_lead_code=\"$vlc_to_hopper[$h]\";";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
