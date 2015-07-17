@@ -84,6 +84,7 @@
 # 150114-1204 - Optimization of gmt code, Issue #812
 # 150117-1415 - Added list local call time validation
 # 150312-1459 - Allow for single quotes in data fields without crashing
+# 150717-1050 - Added force index to vicidial_list queries, set with $VLforce_index variable
 #
 
 # constants
@@ -97,7 +98,7 @@ $count_only=0;
 
 # options
 $insert_auto_CB_to_hopper	= 1; # set to 1 to automatically insert ANYONE callbacks into the hopper, default = 1
-
+$VLforce_index = 'FORCE INDEX(list_id)'; # to disable, set to ''
 
 ### gather date and time
 $secT = time();
@@ -1880,11 +1881,11 @@ foreach(@campaign_id)
 					{
 					if ( ( ($act_rec_countLISTS == 0) && ($allow_inactive ne "Y") ) || ( ($rec_countLISTS == 0) && ($allow_inactive eq "Y") ) ) 
 						{
-						$list_id_sql[$i] = "(list_id=\"$cur_list_id\")";
+						$list_id_sql[$i] = "(list_id IN('$cur_list_id'";
 						}
 					else 
 						{
-						$list_id_sql[$i] .= " or (list_id=\"$cur_list_id\")";
+						$list_id_sql[$i] .= ",'$cur_list_id'";
 						}
 					$act_rec_countLISTS++;
 					}
@@ -2306,6 +2307,7 @@ foreach(@campaign_id)
 		$sthY->finish();
 		# Protect against campaigns with no list by making it an impossible list
 		if (length($list_id_sql[$i]) < 1) {$list_id_sql[$i]="list_id='999876543210'";}
+		else {$list_id_sql[$i] .= "))";}
 
 		if ($DB) {print "     campaign lists count ACTIVE:$act_rec_countLISTS | TOTAL:$rec_countLISTS \n";}
 		if ($DBX) {print "     LIST ID SQL $list_id_sql[$i]";}
@@ -2441,12 +2443,12 @@ foreach(@campaign_id)
 		##### Get count of leads that are dialable #####
 		if ($list_order_mix[$i] =~ /DISABLED/)
 			{
-			$stmtA = "SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and status IN($STATUSsql[$i]) and ($list_id_sql[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i] $CCLsql[$i];";
+			$stmtA = "SELECT count(*) FROM vicidial_list $VLforce_index where called_since_last_reset='N' and status IN($STATUSsql[$i]) and ($list_id_sql[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i] $CCLsql[$i];";
 			}
 		else
 			{
 			if (length($list_mix_dialableSQL)<3) {$list_mix_dialableSQL="called_count < 0";}
-			$stmtA = "SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and ($list_mix_dialableSQL) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
+			$stmtA = "SELECT count(*) FROM vicidial_list $VLforce_index where called_since_last_reset='N' and ($list_mix_dialableSQL) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
 			}
 			if ($DBX) {print "     |$stmtA|\n";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -2463,7 +2465,7 @@ foreach(@campaign_id)
 
 		if ( ($lead_order[$i] =~ / 2nd NEW$| 3rd NEW$| 4th NEW$| 5th NEW$| 6th NEW$/) && ($list_order_mix[$i] =~ /DISABLED/) )
 			{
-			$stmtA = "SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and status IN('NEW') and ($list_id_sql[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
+			$stmtA = "SELECT count(*) FROM vicidial_list $VLforce_index where called_since_last_reset='N' and status IN('NEW') and ($list_id_sql[$i]) and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $DLTsql[$i];";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -2604,7 +2606,7 @@ foreach(@campaign_id)
 					if ($hopper_vlc_dup_check[$i] =~ /Y/) 
 						{$vlc_dup_check_SQL = "and vendor_lead_code NOT IN($live_vlc$vlc_lists)";}
 
-					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list where $recycle_SQL[$i] and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $hopper_level[$i];";
+					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list $VLforce_index where $recycle_SQL[$i] and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $hopper_level[$i];";
 					if ($DBX) {print "     |$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2660,7 +2662,7 @@ foreach(@campaign_id)
 					if ($hopper_vlc_dup_check[$i] =~ /Y/) 
 						{$vlc_dup_check_SQL = "and vendor_lead_code NOT IN($live_vlc$vlc_lists)";}
 
-					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list where called_since_last_reset='N' and status IN('NEW') and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $NEW_level;";
+					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list $VLforce_index where called_since_last_reset='N' and status IN('NEW') and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $NEW_level;";
 					if ($DBX) {print "     |$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2713,7 +2715,7 @@ foreach(@campaign_id)
 
 					if ($list_order_mix[$i] =~ /DISABLED/)
 						{
-						$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list where called_since_last_reset='N' and status IN($STATUSsql[$i]) and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $OTHER_level;";
+						$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list $VLforce_index where called_since_last_reset='N' and status IN($STATUSsql[$i]) and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $OTHER_level;";
 						if ($DBX) {print "     |$stmtA|\n";}
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2816,7 +2818,7 @@ foreach(@campaign_id)
 							if ($hopper_vlc_dup_check[$i] =~ /Y/) 
 								{$vlc_dup_check_SQL = "and vendor_lead_code NOT IN($live_vlc$vlc_lists)";}
 
-							$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list where called_since_last_reset='N' and ($list_mix_dialableSQL) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $LM_step_goal[$x];";
+							$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list $VLforce_index where called_since_last_reset='N' and ($list_mix_dialableSQL) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $order_stmt limit $LM_step_goal[$x];";
 							if ($DBX) {print "     |$stmtA|\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
