@@ -19,7 +19,7 @@
 # 91206-2149 - Added vicidial_campaigns and vicidial_lists optimization
 # 120404-1315 - Changed to run only on DB server<you should remove from other servers' crontabs>
 # 120411-1637 - Added --seconds option
-# 150710-0907 - Added flush of vicidial_dtmf table
+# 150710-0907 - Added flush of vicidial_dtmf_log table
 #
 
 ### begin parsing run-time options ###
@@ -198,10 +198,10 @@ if($DB){print STDERR "\n|$stmtA|\n";}
 if (!$T) {	$affected_rows = $dbhA->do($stmtA);}
 if (!$Q) {print " - vicidial_manager flush\n";}
 
-$stmtA = "DELETE from vicidial_dtmf where dtmf_time < '$flush_time';";
+$stmtA = "DELETE from vicidial_dtmf_log where dtmf_time < '$flush_time';";
 if($DB){print STDERR "\n|$stmtA|\n";}
 if (!$T) {      $affected_rows = $dbhA->do($stmtA);}
-if (!$Q) {print " - vicidial_dtmf flush\n";}
+if (!$Q) {print " - vicidial_dtmf_log flush\n";}
 
 $stmtA = "OPTIMIZE table vicidial_manager;";
 if($DB){print STDERR "\n|$stmtA|\n";}
@@ -217,7 +217,7 @@ if (!$T)
 if (!$Q) {print " - OPTIMIZE vicidial_manager          \n";}
 
 
-$stmtA = "OPTIMIZE table vicidial_dtmf;";
+$stmtA = "OPTIMIZE table vicidial_dtmf_log;";
 if($DB){print STDERR "\n|$stmtA|\n";}
 if (!$T)
         {
@@ -228,7 +228,7 @@ if (!$T)
         if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
         $sthA->finish();
         }
-if (!$Q) {print " - OPTIMIZE vicidial_dtmf          \n";}
+if (!$Q) {print " - OPTIMIZE vicidial_dtmf_log          \n";}
 
 
 $stmtA = "OPTIMIZE table vicidial_live_agents;";
