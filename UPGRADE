@@ -108,6 +108,10 @@ OTHER CHANGES:
 	only one agent. Also added report to display logs by date/time. These 
 	agent debug logs are deleted after 7 days.
 
+20. Added agc/dispo_add_FPG.php script to be able to insert a phone number into
+	an inbound Filter Phone Group when set to a certain specific disposition
+	using the Dispo Call URL.
+
 
 
 
