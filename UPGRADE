@@ -103,6 +103,11 @@ OTHER CHANGES:
 	versions 1.8 and higher. If upgrading, you will need to add "dtmf" to
 	the listencron user in manager.conf and reload asterisk.
 
+19. Added agent screen debug logging, which will log almost all mouse clicks
+	and AJAX calls on the agent screen. Can be enabled for all agents or
+	only one agent. Also added report to display logs by date/time. These 
+	agent debug logs are deleted after 7 days.
+
 
 
 

@@ -1,7 +1,7 @@
 <?php
-# conf_exten_check.php    version 2.10
+# conf_exten_check.php    version 2.12
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to send whether the meetme conference has live channels connected and which they are
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -67,14 +67,18 @@
 # 141128-0853 - Code cleanup for QXZ functions
 # 141216-2111 - Added language settings lookups and user/pass variable standardization
 # 141228-0053 - Found missing phrase for QXZ
+# 150723-1708 - Added ajax logging and agent screen click logging
 #
 
-$version = '2.10-42';
-$build = '141228-0053';
+$version = '2.12-43';
+$build = '150723-1708';
+$php_script = 'conf_exten_check.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=40;
 $one_mysql_log=0;
 $DB=0;
+$SSagent_debug_logging=0;
+$startMS = microtime();
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -108,6 +112,8 @@ if (isset($_GET["campagentstdisp"]))			{$campagentstdisp=$_GET["campagentstdisp"
 	elseif (isset($_POST["campagentstdisp"]))	{$campagentstdisp=$_POST["campagentstdisp"];}
 if (isset($_GET["bcrypt"]))					{$bcrypt=$_GET["bcrypt"];}
 	elseif (isset($_POST["bcrypt"]))		{$bcrypt=$_POST["bcrypt"];}
+if (isset($_GET["clicks"]))					{$clicks=$_GET["clicks"];}
+	elseif (isset($_POST["clicks"]))		{$clicks=$_POST["clicks"];}
 
 if ($bcrypt == 'OFF')
 	{$bcrypt=0;}
@@ -134,7 +140,7 @@ if ($sl_ct > 0)
 	$VUselected_language =		$row[0];
 	}
 
-$stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_languages,language_method,agent_debug_logging FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03001',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -145,6 +151,7 @@ if ($qm_conf_ct > 0)
 	$non_latin =				$row[0];
 	$SSenable_languages =		$row[1];
 	$SSlanguage_method =		$row[2];
+	$SSagent_debug_logging =	$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -161,6 +168,13 @@ $server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
 if (!isset($format))   {$format="text";}
 if (!isset($ACTION))   {$ACTION="refresh";}
 if (!isset($client))   {$client="agc";}
+if (strlen($SSagent_debug_logging) > 1)
+	{
+	if ($SSagent_debug_logging == "$user")
+		{$SSagent_debug_logging=1;}
+	else
+		{$SSagent_debug_logging=0;}
+	}
 
 $Alogin='N';
 $RingCalls='N';
@@ -792,7 +806,33 @@ if ($format=='debug')
 	echo "\n<!-- script runtime: $RUNtime seconds -->";
 	echo "\n</body>\n</html>\n";
 	}
+
+if ($SSagent_debug_logging > 0) 
+	{
+	vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);
 	
+	### log the clicks that are sent from the agent screen
+	if (strlen($clicks) > 1)
+		{
+		$cd=0;
+		$clicks = preg_replace("/\|$/",'',$clicks);
+		$clicks_details = explode('|',$clicks);
+		$clicks_details_ct = count($clicks_details);
+		while($cd < $clicks_details_ct)
+			{
+			$click_data = explode('-----',$clicks_details[$cd]);
+			$click_time = $click_data[0];
+			$click_function_data = explode('---',$click_data[1]);
+			$click_function = $click_function_data[0];
+			$click_options = $click_function_data[1];
+
+			$stmtA="INSERT INTO vicidial_ajax_log set user='$user',start_time='$click_time',db_time=NOW(),run_time='0',php_script='vicidial.php',action='$click_function',lead_id='$lead_id',stage='$cd|$click_options',session_name='$session_name',last_sql='';";
+			$rslt=mysql_to_mysqli($stmtA, $link);
+
+			$cd++;
+			}
+		}
+	}
 exit; 
 
 ?>

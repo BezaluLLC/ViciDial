@@ -99,9 +99,10 @@
 # 141227-0957 - Changed to clear out old unavail voicemail greetings before copying custom greeting
 # 150112-2018 - Added flag to delete voicemail greeting when changed from an audio file to empty
 # 150307-1738 - Added custom meetme enter sounds(only works with Asterisk 1.8)
+# 150724-0835 - Added purge of vicidial_ajax_log records older than 7 days to end of day process
 #
 
-$build = '150307-1738';
+$build = '150724-0835';
 
 $DB=0; # Debug flag
 
@@ -154,6 +155,19 @@ if ($RMsec < 10) {$RMsec = "0$RMsec";}
 $RMSQLdate = "$RMyear-$RMmon-$RMmday $RMhour:$RMmin:$RMsec";
 $RMdate = "$RMyear-$RMmon-$RMmday";
 
+### calculate the date and time for 7 days ago
+$secX = time();
+$SDtarget = ($secX - 604800);	# 7 days ago
+($SDsec,$SDmin,$SDhour,$SDmday,$SDmon,$SDyear,$SDwday,$SDyday,$SDisdst) = localtime($SDtarget);
+$SDyear = ($SDyear + 1900);
+$SDmon++;
+if ($SDmon < 10) {$SDmon = "0$SDmon";}
+if ($SDmday < 10) {$SDmday = "0$SDmday";}
+if ($SDhour < 10) {$SDhour = "0$SDhour";}
+if ($SDmin < 10) {$SDmin = "0$SDmin";}
+if ($SDsec < 10) {$SDsec = "0$SDsec";}
+$SDSQLdate = "$SDyear-$SDmon-$SDmday $SDhour:$SDmin:$SDsec";
+$SDdate = "$SDyear-$SDmon-$SDmday";
 
 
 ### begin parsing run-time options ###
@@ -1253,6 +1267,24 @@ if ($timeclock_end_of_day_NOW > 0)
 	$affected_rows = $dbhA->do($stmtA);
 	if($DB){print STDERR "\n|$affected_rows Daily RA Stats Closed Cleanup|\n";}
 	##### END ra stats end of day process #####
+
+
+
+	##### BEGIN vicidial_ajax_log end of day process removing records older than 7 days #####
+	$stmtA = "DELETE from vicidial_ajax_log where db_time < \"$SDSQLdate\";";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "\n|$affected_rows vicidial_ajax_log records older than 7 days purged|\n";}
+
+	$stmtA = "optimize table vicidial_ajax_log;";
+	if($DBX){print STDERR "\n|$stmtA|\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+	##### END vicidial_ajax_log end of day process removing records older than 7 days #####
 
 
 

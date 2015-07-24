@@ -1599,7 +1599,8 @@ meetme_enter_leave3way_filename VARCHAR(255) default '',
 enable_did_entry_list_id ENUM('0','1') default '0',
 enable_third_webform ENUM('0','1') default '0',
 chat_url VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT NULL,
-chat_timeout INT(3) unsigned DEFAULT NULL
+chat_timeout INT(3) unsigned DEFAULT NULL,
+agent_debug_logging VARCHAR(20) default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3280,6 +3281,20 @@ PRIMARY KEY (dtmf_id),
 KEY vicidial_dtmf_uniqueid_key (uniqueid)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE vicidial_ajax_log (
+user VARCHAR(20) default '',
+start_time DATETIME NOT NULL,
+db_time DATETIME NOT NULL,
+run_time VARCHAR(20) default '0',
+php_script VARCHAR(40) NOT NULL,
+action VARCHAR(100) default '',
+lead_id INT(10) UNSIGNED default '0',
+stage VARCHAR(100) default '',
+session_name VARCHAR(40) default '',
+last_sql TEXT,
+KEY ajax_dbtime_key (db_time)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3529,4 +3544,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1420',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1421',db_schema_update_date=NOW(),reload_timestamp=NOW();

@@ -217,3 +217,21 @@ KEY vicidial_dtmf_uniqueid_key (uniqueid)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 UPDATE system_settings SET db_schema_version='1420',db_schema_update_date=NOW() where db_schema_version < 1420;
+
+CREATE TABLE vicidial_ajax_log (
+user VARCHAR(20) default '',
+start_time DATETIME NOT NULL,
+db_time DATETIME NOT NULL,
+run_time VARCHAR(20) default '0',
+php_script VARCHAR(40) NOT NULL,
+action VARCHAR(100) default '',
+lead_id INT(10) UNSIGNED default '0',
+stage VARCHAR(100) default '',
+session_name VARCHAR(40) default '',
+last_sql TEXT,
+KEY ajax_dbtime_key (db_time)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+ALTER TABLE system_settings ADD agent_debug_logging VARCHAR(20) default '0';
+
+UPDATE system_settings SET db_schema_version='1421',db_schema_update_date=NOW() where db_schema_version < 1421;

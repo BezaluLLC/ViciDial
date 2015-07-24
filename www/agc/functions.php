@@ -27,6 +27,7 @@
 # 150108-1647 - removed phones count as part of validation, can cause problems when there are many phones
 # 150111-1541 - Added lists option: local call time(Issue #812)
 # 150512-0615 - Fix for non-latin customer data
+# 150724-0843 - Added vicidial_ajax_log function
 #
 
 # $mysql_queries = 20
@@ -2024,6 +2025,30 @@ function dialable_gmt($DB,$link,$local_call_time,$gmt_offset,$state)
 	return $dialable;
 	}
 
+
+
+##### AJAX process logging #####
+function vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt)
+	{
+	$endMS = microtime();
+	$startMSary = explode(" ",$startMS);
+	$endMSary = explode(" ",$endMS);
+	$runS = ($endMSary[0] - $startMSary[0]);
+	$runM = ($endMSary[1] - $startMSary[1]);
+	$TOTALrun = ($runS + $runM);
+
+	$stmt = preg_replace('/;/', '', $stmt);
+	$stmt = addslashes($stmt);
+
+	$stmtA="INSERT INTO vicidial_ajax_log set user='$user',start_time='$NOW_TIME',db_time=NOW(),run_time='$TOTALrun',php_script='$php_script',action='$ACTION',lead_id='$lead_id',stage='$stage',session_name='$session_name',last_sql=\"$stmt\";";
+	$rslt=mysql_to_mysqli($stmtA, $link);
+
+#	$ajx = fopen ("./vicidial_ajax_log.txt", "a");
+#	fwrite ($ajx, $stmtA . "\n");
+#	fclose($ajx);
+
+	return 1;
+	}
 
 
 ##### MySQL Error Logging #####

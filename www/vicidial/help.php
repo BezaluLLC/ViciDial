@@ -52,6 +52,7 @@
 # 150610-0938 - Added campaigns-customer_gone_seconds
 # 150708-2238 - Added max_queue_ingroup_ options
 # 150710-1124 - Added explanation of new ALT URL feature and alt_multi_urls
+# 150724-0047 - Added agent_debug_logging
 #
 
 require("dbconnect_mysqli.php");
@@ -4759,6 +4760,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-enable_did_entry_list_id">
 <BR>
 <B><?php echo _QXZ("Enable DID Entry List ID"); ?> -</B><?php echo _QXZ("This setting if enabled will allow a manager to define an entry list id to use on the DID modify screen. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="settings-agent_debug_logging">
+<BR>
+<B><?php echo _QXZ("Agent Screen Debug Logging"); ?> -</B><?php echo _QXZ("This setting if enabled will log almost all agent screen mouse clicks and AJAX processes triggered by the agent screen. To enable for all agents, set this option to 1. To enable only for one agent on the system, set this option to the user that you want to log. Warning, this feature can log hundreds of entries per phone call, so use with caution. These agent debug records are deleted after 7 days. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="settings-enhanced_disconnect_logging">

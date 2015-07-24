@@ -1,7 +1,7 @@
 <?php
-# park_calls_display.php    version 2.10
+# park_calls_display.php    version 2.12
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to send the details on the parked calls on the server
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -29,10 +29,14 @@
 # 140811-0839 - Changed to use QXZ function for echoing text
 # 141118-1237 - Formatting changes for QXZ output
 # 141216-2105 - Added language settings lookups and user/pass variable standardization
+# 150723-1712 - Added ajax logging
 # 
 
-$version = '0.0.11';
-$build = '141216-2105';
+$version = '0.0.12';
+$build = '150723-1712';
+$php_script = 'park_calls_display.php';
+$SSagent_debug_logging=0;
+$startMS = microtime();
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -82,7 +86,7 @@ if ($sl_ct > 0)
 	$VUselected_language =		$row[0];
 	}
 
-$stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_languages,language_method,agent_debug_logging FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -93,6 +97,7 @@ if ($qm_conf_ct > 0)
 	$non_latin =				$row[0];
 	$SSenable_languages =		$row[1];
 	$SSlanguage_method =		$row[2];
+	$SSagent_debug_logging =	$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -100,6 +105,13 @@ if ($qm_conf_ct > 0)
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
+	}
+if (strlen($SSagent_debug_logging) > 1)
+	{
+	if ($SSagent_debug_logging == "$user")
+		{$SSagent_debug_logging=1;}
+	else
+		{$SSagent_debug_logging=0;}
 	}
 
 
@@ -186,7 +198,8 @@ if ($format=='debug')
 	echo "\n<!-- script runtime: $RUNtime seconds -->";
 	echo "\n</body>\n</html>\n";
 	}
-	
+
+if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 exit; 
 
 ?>

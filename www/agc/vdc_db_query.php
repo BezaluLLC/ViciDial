@@ -383,14 +383,18 @@
 # 150701-1205 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 # 150706-0903 - Added user lead filter option for no-hopper dialing
 # 150711-0815 - Changed to allow for multiple Dispo Call URLs
+# 150723-1705 - Added ajax logging
 #
 
-$version = '2.12-278';
-$build = '150711-0815';
+$version = '2.12-279';
+$build = '150723-1705';
+$php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=616;
 $one_mysql_log=0;
 $DB=0;
+$SSagent_debug_logging=0;
+$startMS = microtime();
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -814,7 +818,7 @@ $sip_hangup_cause_dictionary = array(
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,agent_debug_logging FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -835,6 +839,7 @@ if ($qm_conf_ct > 0)
 	$callback_time_24hour =					$row[10];
 	$SSenable_languages =					$row[11];
 	$SSlanguage_method =					$row[12];
+	$SSagent_debug_logging =				$row[13];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -865,6 +870,13 @@ if (!isset($format))   {$format="text";}
 	if ($format == 'debug')	{$DB=1;}
 if (!isset($ACTION))   {$ACTION="refresh";}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
+if (strlen($SSagent_debug_logging) > 1)
+	{
+	if ($SSagent_debug_logging == "$user")
+		{$SSagent_debug_logging=1;}
+	else
+		{$SSagent_debug_logging=0;}
+	}
 
 $VUselected_language = '';
 $stmt="SELECT selected_language from vicidial_users where user='$user';";
@@ -946,6 +958,7 @@ if ($ACTION == 'LogiNCamPaigns')
 		echo "<select size=1 name=VD_campaign id=VD_campaign onFocus=\"login_allowable_campaigns()\">\n";
 		echo "<option value=\"\">-- ERROR --</option>\n";
 		echo "</select>\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -1049,6 +1062,7 @@ if ($ACTION == 'LogiNCamPaigns')
 			echo "<select size=1 name=VD_campaign id=VD_campaign onFocus=\"login_allowable_campaigns()\">\n";
 			echo "<option value=\"\">-- "._QXZ("USER LOGIN ERROR")." --</option>\n";
 			echo "</select>\n";
+			if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 			exit;
 			}
 		}
@@ -1129,6 +1143,7 @@ if ($ACTION == 'LogiNCamPaigns')
 			$VDdisplayMESSAGE.= _QXZ("Manager Password:")." <INPUT TYPE=PASSWORD NAME=\"MGR_pass$loginDATE\" SIZE=10 MAXLENGTH=20><br>\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=submit NAME=SUBMIT VALUE="._QXZ("SUBMIT")."></FORM><BR><BR><BR><BR>\n";
 			echo "$VDdisplayMESSAGE";
+			if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 			exit;
 			}
 		}
@@ -1187,6 +1202,7 @@ if ($ACTION == 'LogiNCamPaigns')
 		echo "<option value=\"\">-- "._QXZ("YOU MUST LOG IN TO THE TIMECLOCK FIRST")." --</option>\n";
 		echo "</select>\n";
 		}
+	if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 	exit;
 	}
 
@@ -1204,6 +1220,7 @@ if ($ACTION == 'regCLOSER')
 		{
 		$channel_live=0;
 		echo _QXZ("Group Choice is not valid").": $closer_choice\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -1440,6 +1457,7 @@ if ($ACTION == 'regTERRITORY')
 		{
 		$channel_live=0;
 		echo _QXZ("Territory Choice is not valid")."$agent_territories\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -1705,6 +1723,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 		$channel_live=0;
 		echo "HOPPER EMPTY\n";
 		echo _QXZ("Conf Exten %1s or campaign %2s or ext_context %3s is not valid",0,'',$conf_exten,$campaign,$ext_context)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -1995,6 +2014,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$VLAEDaffected_rows = mysqli_affected_rows($link);
 
 					echo "OUTSIDE OF LOCAL CALL TIME   $VMDQaffected_rows|$VLAEDaffected_rows\n";
+					if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 					exit;
 					}
 				}
@@ -2028,6 +2048,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$VLAEDaffected_rows = mysqli_affected_rows($link);
 
 					echo "DNC NUMBER\n";
+					if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 					exit;
 					}
 				if ( (preg_match("/Y/",$use_campaign_dnc)) or (preg_match("/AREACODE/",$use_campaign_dnc)) )
@@ -2068,6 +2089,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						$VLAEDaffected_rows = mysqli_affected_rows($link);
 
 						echo "DNC NUMBER\n";
+						if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 						exit;
 						}
 					}
@@ -2142,6 +2164,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$VLAEDaffected_rows = mysqli_affected_rows($link);
 
 					echo "NUMBER NOT IN CAMPLISTS\n";
+					if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 					exit;
 					}
 				}
@@ -4196,6 +4219,7 @@ if ($ACTION == 'alt_phone_change')
 		$channel_live=0;
 		echo _QXZ("ALT PHONE NUMBER STATUS NOT CHANGED")."\n";
 		echo _QXZ("%1s %2s %3s or %4s is not valid",0,'',$phone_number,$stage,$lead_id,$called_count)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -4221,6 +4245,7 @@ if ($ACTION == 'AlertControl')
 		$channel_live=0;
 		echo _QXZ("AGENT ALERT SETTING NOT CHANGED")."\n";
 		echo _QXZ("%1s is not valid",0,'',$stage)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -4252,6 +4277,7 @@ if ($ACTION == 'manDiaLskip')
 		$channel_live=0;
 		echo "LEAD NOT REVERTED\n";
 		echo _QXZ("Conf Exten %1s or campaign %2s or ext_context %3s is not valid",0,'',$conf_exten,$campaign,$ext_context)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -4301,6 +4327,7 @@ if ($ACTION == 'manDiaLonly')
 		$channel_live=0;
 		echo " CALL NOT PLACED\n";
 		echo _QXZ("Conf Exten %1s or campaign %2s or ext_context %3s or phone_number %4s or lead_id %5s is not valid",0,'',$conf_exten,$campaign,$ext_context,$phone_number,$lead_id)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -4381,6 +4408,7 @@ if ($ACTION == 'manDiaLonly')
 			if ($row[0] > 0)
 				{
 				echo " CALL NOT PLACED\nDNC NUMBER\n";
+				if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 				exit;
 				}
 			if ( (preg_match("/Y/",$use_campaign_dnc)) or (preg_match("/AREACODE/",$use_campaign_dnc)) )
@@ -4408,6 +4436,7 @@ if ($ACTION == 'manDiaLonly')
 				if ($row[0] > 0)
 					{
 					echo " CALL NOT PLACED\nDNC NUMBER\n";
+					if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 					exit;
 					}
 				}
@@ -4469,6 +4498,7 @@ if ($ACTION == 'manDiaLonly')
 			if ($row[0] < 1)
 				{
 				echo " CALL NOT PLACED\nNUMBER NOT IN CAMPLISTS\n";
+				if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 				exit;
 				}
 			}
@@ -4880,6 +4910,7 @@ if ($ACTION == 'manDiaLlookCaLL')
 		{
 		echo "NO\n";
 		echo "MDnextCID $MDnextCID is not valid\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -5031,6 +5062,7 @@ if ($stage == "start")
 
 		echo "LOG NOT ENTERED\n";
 		echo _QXZ("uniqueid %1s or lead_id: %2s or list_id: %3s or phone_number: %4s or campaign: %5s is not valid",0,'',$uniqueid,$lead_id,$list_id,$phone_number,$campaign)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -6309,6 +6341,7 @@ if ($stage == "end")
 		fclose($fp);
 
 		exit;
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		}
 
 	$talk_sec=0;
@@ -6392,6 +6425,7 @@ if ($ACTION == 'VDADREcheckINCOMING')
 		echo "0\n";
 		echo _QXZ("Campaign %1s is not valid",0,'',$campaign)."\n";
 		echo _QXZ("lead_id %1s is not valid",0,'',$lead_id)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -6444,6 +6478,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 		$channel_live=0;
 		echo "0\n";
 		echo _QXZ("Campaign %1s is not valid",0,'',$campaign)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -7675,6 +7710,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 			{
 			echo "0\n";
 		#	echo "No calls in QUEUE for $user on $server_ip\n";
+			if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 			exit;
 			}
 		}
@@ -7736,6 +7772,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 		$channel_live=0;
 		echo "0\n";
 		echo _QXZ("Campaign %1s is not valid",0,'',$campaign)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -8660,6 +8697,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 			{
 			echo "0\n";
 		#	echo "No calls in QUEUE for $user on $server_ip\n";
+			if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 			exit;
 			}
 		}
@@ -8690,6 +8728,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 		$channel_live=0;
 		echo "0\n";
 		echo _QXZ("Campaign %1s is not valid or lead_id %2s is not valid",0,'',$campaign,$lead_id)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -9387,6 +9426,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 			{
 			echo "0\n";
 		#	echo "No leads to update for $user on $server_ip\n";
+			if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 			exit;
 			}
 		}
@@ -9406,6 +9446,7 @@ if ($ACTION == 'updateDISPO')
 	if ( (strlen($dispo_choice)<1) || (strlen($lead_id)<1) )
 		{
 		echo _QXZ("Dispo Choice %1s or lead_id %2s is not valid",0,'',$dispo,$lead_id)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -11069,6 +11110,7 @@ if ($ACTION == 'RUNurls')
 	if (strlen($url_ids) < 2)
 		{
 		echo _QXZ("URL IDs are is not valid",0,'',$url_ids)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -11145,6 +11187,7 @@ if ($ACTION == 'updateLEAD')
 	if ( (strlen($phone_number)<1) || (strlen($lead_id)<1) )
 		{
 		echo _QXZ("phone_number %1s or lead_id %2s is not valid",0,'',$phone_number,$lead_id)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -11251,6 +11294,7 @@ if ( ($ACTION == 'VDADpause') or ($ACTION == 'VDADready') or ($pause_trigger == 
 	if ( (strlen($vla_status)<2) or (strlen($server_ip)<1) )
 		{
 		echo _QXZ("stage %1s is not valid",0,'',$vla_status)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -11486,6 +11530,7 @@ if ($ACTION == 'userLOGout')
 		{
 		echo "NO\n";
 		echo _QXZ("campaign %1s or conf_exten %2s is not valid",0,'',$campaign,$conf_exten)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -11766,6 +11811,7 @@ if ($ACTION == 'UpdatEFavoritEs')
 	if ( (strlen($favorites_list)<1) || (strlen($user)<1) || (strlen($exten)<1) )
 		{
 		echo _QXZ("favorites list %1s is not valid",0,'',$favorites_list)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -11804,6 +11850,7 @@ if ($ACTION == 'PauseCodeSubmit')
 	if ( (strlen($status)<1) or (strlen($agent_log_id)<1) )
 		{
 		echo _QXZ("agent_log_id %1s or pause_code %2s is not valid",0,'',$agent_log_id,$status)."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -12146,6 +12193,7 @@ if ($ACTION == 'CALLSINQUEUEview')
 	if (preg_match('/NONE/i',$view_calls_in_queue))
 		{
 		echo _QXZ("Calls in Queue View Disabled for this campaign")."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -12472,7 +12520,7 @@ if ($ACTION == 'CALLLOGview')
 		echo "<td align=right><font size=2> $ALLhangup_reason[$i] </td>\n";
 		echo "<td align=right><font size=2> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i]);return false;\"> "._QXZ("INFO")."</A> </td>\n";
 		if ($manual_dial_filter > 0)
-			{echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]');return false;\"> "._QXZ("DIAL")." </A> </td>\n";}
+			{echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]','','YES');return false;\"> "._QXZ("DIAL")." </A> </td>\n";}
 		else
 			{echo "<td align=right><font size=2> "._QXZ("DIAL")." </td>\n";}
 		echo "</tr>\n";
@@ -12582,6 +12630,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 			echo "<BR><BR>";
 			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
+			if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 			exit;
 			}
 
@@ -12800,7 +12849,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 					if ($inbound_lead_search < 1)
 						{
 						if ($manual_dial_filter > 0)
-							{echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('LEADSEARCH','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]');return false;\"> "._QXZ("DIAL")." </A> </td>\n";}
+							{echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('LEADSEARCH','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]','','YES');return false;\"> "._QXZ("DIAL")." </A> </td>\n";}
 						else
 							{echo "<td align=right><font size=2> "._QXZ("DIAL")." </td>\n";}
 						}
@@ -12833,6 +12882,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 			echo "<BR><BR>";
 			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
+			if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 			exit;
 			}
 		##### END search queries and output #####
@@ -12843,6 +12893,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 		echo "<BR><BR>";
 		echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">"._QXZ("Go Back")."</a>";
 		echo "</CENTER>";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	}
@@ -13023,6 +13074,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 			echo "<BR><BR>";
 			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
+			if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 			exit;
 			}
 
@@ -13163,6 +13215,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 			echo "<BR><BR>";
 			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
+			if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 			exit;
 			}
 		##### END search queries and output #####
@@ -13173,6 +13226,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 		echo "<BR><BR>";
 		echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">"._QXZ("Go Back")."</a>";
 		echo "</CENTER>";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	}
@@ -13452,7 +13506,7 @@ if ($ACTION == 'LEADINFOview')
 				if ($hide_dial_links < 1)
 					{
 					if ($manual_dial_filter > 0)
-						{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\"> "._QXZ("DIAL")." </a>";}
+						{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id,'','YES');return false;\"> "._QXZ("DIAL")." </a>";}
 					else
 						{$INFOout .= _QXZ(" DIAL ");}
 					}
@@ -13460,7 +13514,7 @@ if ($ACTION == 'LEADINFOview')
 			if ( ($label_phone_number=='---HIDE---') and ($hide_dial_links < 1) )
 				{
 				if ($manual_dial_filter > 0)
-					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Dial Link:")." &nbsp; </td><td ALIGN=left><font size=2><a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id);return false;\"> "._QXZ("DIAL")." </a>";}
+					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Dial Link:")." &nbsp; </td><td ALIGN=left><font size=2><a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id,'','YES');return false;\"> "._QXZ("DIAL")." </a>";}
 				else
 					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Dial Link:")." &nbsp; </td><td ALIGN=left><font size=2>"._QXZ(" DIAL ");}
 				}
@@ -13498,7 +13552,7 @@ if ($ACTION == 'LEADINFOview')
 				if ($hide_dial_links < 1)
 					{
 					if ($manual_dial_filter > 0)
-						{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20], $lead_id, 'ALT');return false;\"> "._QXZ("DIAL")." </a>";}
+						{$INFOout .= "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[20], $lead_id, 'ALT','YES');return false;\"> "._QXZ("DIAL")." </a>";}
 					else
 						{$INFOout .= " DIAL ";}
 					}
@@ -13833,6 +13887,7 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 	if ( (preg_match('/NONE/i',$view_calls_in_queue)) or (preg_match('/N/i',$grab_calls_in_queue)) )
 		{
 		echo "ERROR: "._QXZ("Calls in Queue View Disabled for this campaign")."\n";
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	else
@@ -13887,6 +13942,7 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 				fclose($fp);
 				}
 			}
+		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
 	}
@@ -14099,7 +14155,8 @@ if ($format=='debug')
 	echo "\n<!-- script runtime: $RUNtime seconds -->";
 	echo "\n</body>\n</html>\n";
 	}
-	
+
+if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 exit; 
 
 

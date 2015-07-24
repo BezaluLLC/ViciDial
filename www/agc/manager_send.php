@@ -125,13 +125,17 @@
 # 141216-2107 - Added language settings lookups and user/pass variable standardization
 # 150307-1837 - Added leave 3way custom sound context
 # 150701-1208 - Modified mysqli_error() to mysqli_connect_error() where appropriate
+# 150723-1643 - Added ajax logging
 #
 
-$version = '2.12-72';
-$build = '150701-1208';
+$version = '2.12-73';
+$build = '150723-1643';
+$php_script = 'manager_send.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=129;
 $one_mysql_log=0;
+$SSagent_debug_logging=0;
+$startMS = microtime();
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -264,7 +268,7 @@ if ($sl_ct > 0)
 	$VUselected_language =		$row[0];
 	}
 
-$stmt = "SELECT use_non_latin,allow_sipsak_messages,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename FROM system_settings;";
+$stmt = "SELECT use_non_latin,allow_sipsak_messages,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,agent_debug_logging FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02001',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -278,6 +282,7 @@ if ($qm_conf_ct > 0)
 	$SSlanguage_method =				$row[3];
 	$meetme_enter_login_filename =		$row[4];
 	$meetme_enter_leave3way_filename =	$row[5];
+	$SSagent_debug_logging =			$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -286,6 +291,13 @@ if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
 	$secondS = preg_replace("/[^0-9]/","",$secondS);
+	}
+if (strlen($SSagent_debug_logging) > 1)
+	{
+	if ($SSagent_debug_logging == "$user")
+		{$SSagent_debug_logging=1;}
+	else
+		{$SSagent_debug_logging=0;}
 	}
 
 $threeway_context = $ext_context;
@@ -476,6 +488,7 @@ if ($ACTION=="Originate")
 		if ( (preg_match('/MANUAL/i',$agent_dialed_type)) and ( (preg_match("/^\d860\d\d\d\d$/i",$exten)) or (preg_match("/^860\d\d\d\d$/i",$exten)) ) )
 			{
 			echo "ERROR"._QXZ(" You are not allowed to dial into other agent sessions")." $exten\n";
+			if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 			exit;
 			}
 
@@ -1578,6 +1591,7 @@ if ($ACTION=="RedirectXtraCXNeW")
 				echo "NeWSessioN|$exten|\n";
 				echo "|$stmtG|\n";
 				
+				if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 				exit;
 				}
 			else
@@ -1792,6 +1806,7 @@ if ($ACTION=="RedirectXtraNeW")
 					echo "NeWSessioN|$exten|\n";
 					echo "|$stmtB|\n";
 					
+					if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 					exit;
 					}
 				else
@@ -2280,7 +2295,8 @@ $ENDtime = date("U");
 $RUNtime = ($ENDtime - $StarTtime);
 if ($format=='debug') {echo "\n<!-- script runtime: $RUNtime seconds -->";}
 if ($format=='debug') {echo "\n</body>\n</html>\n";}
-	
+
+if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 exit; 
 
 
