@@ -929,7 +929,8 @@ manual_dial_search_filter VARCHAR(50) default 'NONE',
 web_form_address_three TEXT,
 manual_dial_override_field ENUM('ENABLED','DISABLED') default 'ENABLED',
 status_display_ingroup ENUM('ENABLED','DISABLED') default 'ENABLED',
-customer_gone_seconds SMALLINT(5) UNSIGNED default '30'
+customer_gone_seconds SMALLINT(5) UNSIGNED default '30',
+agent_display_fields VARCHAR(50) default ''
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -3544,4 +3545,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1421',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1422',db_schema_update_date=NOW(),reload_timestamp=NOW();

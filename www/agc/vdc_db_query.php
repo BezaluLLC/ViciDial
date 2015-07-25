@@ -384,10 +384,11 @@
 # 150706-0903 - Added user lead filter option for no-hopper dialing
 # 150711-0815 - Changed to allow for multiple Dispo Call URLs
 # 150723-1705 - Added ajax logging
+# 150725-1613 - Added entry_date as a variable
 #
 
-$version = '2.12-279';
-$build = '150723-1705';
+$version = '2.12-280';
+$build = '150725-1613';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=616;
@@ -1547,7 +1548,7 @@ if ($ACTION == 'UpdateFields')
                 $lead_comment_count		= trim("$row[0]");
 
 		##### grab the data from vicidial_list for the lead_id
-		$stmt="SELECT vendor_lead_code,source_id,gmt_offset_now,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,rank,owner FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
+		$stmt="SELECT vendor_lead_code,source_id,gmt_offset_now,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,rank,owner,entry_date FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00546',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -1580,6 +1581,7 @@ if ($ACTION == 'UpdateFields')
 			$comments		= stripslashes(trim("$row[22]"));
 			$rank			= trim("$row[23]");
 			$owner			= trim("$row[24]");
+			$entry_date		= trim("$row[25]");
 
 			$comments = preg_replace("/\r/i",'',$comments);
 			$comments = preg_replace("/\n/i",'!N',$comments);
@@ -3349,6 +3351,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				{
 				$row=mysqli_fetch_row($rslt);
 			#	$lead_id		= trim("$row[0]");
+				$entry_date		= trim("$row[1]");
 				$dispo			= trim("$row[3]");
 				$tsr			= trim("$row[4]");
 				$vendor_id		= trim("$row[5]");
@@ -4078,7 +4081,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$custom_field_values='----------';
 				$custom_field_types='|';
 				### find the names of all custom fields, if any
-				$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
+				$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('entry_date','vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00334',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -4194,6 +4197,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$LeaD_InfO .=	$LISTweb_form_address_three . "\n";
 			$LeaD_InfO .=	$VDCL_ingroup_script_color . "\n";
 			$LeaD_InfO .=	$list_description . "\n";
+			$LeaD_InfO .=	$entry_date . "\n";
 
 			echo $LeaD_InfO;
 			}
@@ -6549,6 +6553,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				{
 				$row=mysqli_fetch_row($rslt);
 			#	$lead_id		= trim("$row[0]");
+				$entry_date		= trim("$row[1]");
 				$dispo			= trim("$row[3]");
 				$tsr			= trim("$row[4]");
 				$vendor_id		= trim("$row[5]");
@@ -7273,7 +7278,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 			$custom_field_values='----------';
 			$custom_field_types='|';
 			### find the names of all custom fields, if any
-			$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
+			$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('entry_date','vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00339',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -7371,6 +7376,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 			$LeaD_InfO .=   $LISTweb_form_address_three . "\n";
 			$LeaD_InfO .=	$VDCL_ingroup_script_color . "\n";
 			$LeaD_InfO .=	$list_description . "\n";
+			$LeaD_InfO .=	$entry_date . "\n";
 
 			echo $LeaD_InfO;
 
@@ -7542,6 +7548,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$VDCL_start_call_url = preg_replace('/--A--agent_log_id--B--/i',urlencode(trim($agent_log_id)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--call_id--B--/i',urlencode(trim($callerid)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--user_group--B--/i',urlencode(trim($user_group)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--entry_date--B--/i',urlencode(trim($entry_date)),$VDCL_start_call_url);
 
 				if (strlen($custom_field_names)>2)
 					{
@@ -7884,6 +7891,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 				{
 				$row=mysqli_fetch_row($rslt);
 			#	$lead_id		= trim("$row[0]");
+				$entry_date		= trim("$row[1]");
 				$dispo			= trim("$row[3]");
 				$tsr			= trim("$row[4]");
 				$vendor_id		= trim("$row[5]");
@@ -8261,7 +8269,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 			$custom_field_values='----------';
 			$custom_field_types='|';
 			### find the names of all custom fields, if any
-			$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
+			$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('entry_date','vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00512',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -8355,9 +8363,9 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 			$LeaD_InfO .=   $LISTweb_form_address_three . "\n";
 			$LeaD_InfO .=	$VDCL_ingroup_script_color . "\n";
 			$LeaD_InfO .=	$list_description . "\n";
+			$LeaD_InfO .=	$entry_date . "\n";
 
 			echo $LeaD_InfO;
-
 
 
 			$wait_sec=0;
@@ -8526,6 +8534,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 				$VDCL_start_call_url = preg_replace('/--A--agent_log_id--B--/i',urlencode(trim($agent_log_id)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--call_id--B--/i',urlencode(trim($callerid)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--user_group--B--/i',urlencode(trim($user_group)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--entry_date--B--/i',urlencode(trim($entry_date)),$VDCL_start_call_url);
 
 				if (strlen($custom_field_names)>2)
 					{
@@ -8810,6 +8819,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 				{
 				$row=mysqli_fetch_row($rslt);
 			#	$lead_id		= trim("$row[0]");
+				$entry_date		= trim("$row[1]");
 				$dispo			= trim("$row[3]");
 				$tsr			= trim("$row[4]");
 				$vendor_id		= trim("$row[5]");
@@ -9270,7 +9280,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 			$custom_field_values='----------';
 			$custom_field_types='|';
 			### find the names of all custom fields, if any
-			$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
+			$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('entry_date','vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00479',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -9379,6 +9389,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 			$LeaD_InfO .=   $LISTweb_form_address_three . "\n";
 			$LeaD_InfO .=	$VDCL_ingroup_script_color . "\n";
 			$LeaD_InfO .=	$list_description . "\n";
+			$LeaD_InfO .=	$entry_date . "\n";
 
 			echo $LeaD_InfO;
 
@@ -10819,6 +10830,7 @@ if ($ACTION == 'updateDISPO')
 		if ($list_lead_ct > 0)
 			{
 			$row=mysqli_fetch_row($rslt);
+			$entry_date		= urlencode(trim($row[1]));
 			$dispo			= urlencode(trim($row[3]));
 			$tsr			= urlencode(trim($row[4]));
 			$vendor_id		= urlencode(trim($row[5]));
@@ -10946,6 +10958,7 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_urlARY[$j] = preg_replace('/--A--call_notes--B--/i',"$url_call_notes",$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--recording_id--B--/i',"$recording_id",$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--recording_filename--B--/i',"$recording_filename",$dispo_call_urlARY[$j]);
+		$dispo_call_urlARY[$j] = preg_replace('/--A--entry_date--B--/i',"$entry_date",$dispo_call_urlARY[$j]);
 
 		if (strlen($FORMcustom_field_names)>2)
 			{

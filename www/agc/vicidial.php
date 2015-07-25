@@ -494,10 +494,11 @@
 # 150704-0005 - Changed disposubmit to be blocking before resume, Issue #863
 # 150712-2045 - Changed dispo call url to operate through a separate AJAX process
 # 150723-1741 - Created method for logging agent button/link clicks
+# 150725-1744 - Added Agent Display Fields campaign option
 #
 
-$version = '2.12-466c';
-$build = '150723-1741';
+$version = '2.12-467c';
+$build = '150725-1744';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -1601,7 +1602,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history,show_previous_callback,clear_script,manual_dial_search_filter,web_form_address_three,manual_dial_override_field,status_display_ingroup,customer_gone_seconds FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history,show_previous_callback,clear_script,manual_dial_search_filter,web_form_address_three,manual_dial_override_field,status_display_ingroup,customer_gone_seconds,agent_display_fields FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1736,6 +1737,7 @@ else
 				$manual_dial_override_field=$row[127];
 				$status_display_ingroup =	$row[128];
 				$customer_gone_seconds =	$row[129];
+				$agent_display_fields =		$row[130];
 
 				if ( (strlen($customer_gone_seconds) < 1) or ($customer_gone_seconds < 1) )
 					{$customer_gone_seconds=30;}
@@ -3890,6 +3892,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var dialed_number = '';
 	var dialed_label = '';
 	var source_id = '';
+	var entry_date = '';
+	var adfREGentry_date = new RegExp("entry_date","g");
+	var adfREGsource_id = new RegExp("source_id","g");
+	var adfREGdate_of_birth = new RegExp("date_of_birth","g");
+	var adfREGrank = new RegExp("rank","g");
+	var adfREGowner = new RegExp("owner","g");
 	var DispO3waychannel = '';
 	var DispO3wayXtrAchannel = '';
 	var DispO3wayCalLserverip = '';
@@ -4146,6 +4154,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var customer_gone_seconds='<?php echo $customer_gone_seconds_negative ?>';
 	var updatedispo_resume_trigger='0';
 	var button_click_log='<?php echo $NOW_TIME ?>-----LOGIN---|';
+	var agent_display_fields='<?php echo $agent_display_fields ?>';
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -6955,6 +6964,18 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								// list webform3 - 56
 								// script color - 57
 								document.vicidial_form.list_description.value	= change_array[58];
+								entry_date										= change_array[59];
+
+								if (agent_display_fields.match(adfREGentry_date))
+									{document.getElementById("entry_dateDISP").innerHTML = entry_date;}
+								if (agent_display_fields.match(adfREGsource_id))
+									{document.getElementById("source_idDISP").innerHTML = source_id;}
+								if (agent_display_fields.match(adfREGdate_of_birth))
+									{document.getElementById("date_of_birthDISP").innerHTML = document.vicidial_form.date_of_birth.value;}
+								if (agent_display_fields.match(adfREGrank))
+									{document.getElementById("rankDISP").innerHTML = document.vicidial_form.rank.value;}
+								if (agent_display_fields.match(adfREGowner))
+									{document.getElementById("ownerDISP").innerHTML = document.vicidial_form.owner.value;}
 
 								if (hide_gender > 0)
 									{
@@ -8139,6 +8160,18 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								var list_webform_three							= MDnextResponse_array[54];
 								CalL_ScripT_color								= MDnextResponse_array[55];
 								document.vicidial_form.list_description.value	= MDnextResponse_array[56];
+								entry_date										= MDnextResponse_array[57];
+
+								if (agent_display_fields.match(adfREGentry_date))
+									{document.getElementById("entry_dateDISP").innerHTML = entry_date;}
+								if (agent_display_fields.match(adfREGsource_id))
+									{document.getElementById("source_idDISP").innerHTML = source_id;}
+								if (agent_display_fields.match(adfREGdate_of_birth))
+									{document.getElementById("date_of_birthDISP").innerHTML = document.vicidial_form.date_of_birth.value;}
+								if (agent_display_fields.match(adfREGrank))
+									{document.getElementById("rankDISP").innerHTML = document.vicidial_form.rank.value;}
+								if (agent_display_fields.match(adfREGowner))
+									{document.getElementById("ownerDISP").innerHTML = document.vicidial_form.owner.value;}
 
 								timer_action = campaign_timer_action;
 								timer_action_message = campaign_timer_action_message;
@@ -8464,6 +8497,18 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							previous_dispo = '';
 							custchannellive=1;
 							xfer_agent_selected=0;
+							source_id='';
+							entry_date='';
+							if (agent_display_fields.match(adfREGentry_date))
+								{document.getElementById("entry_dateDISP").innerHTML = ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';}
+							if (agent_display_fields.match(adfREGsource_id))
+								{document.getElementById("source_idDISP").innerHTML = ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';}
+							if (agent_display_fields.match(adfREGdate_of_birth))
+								{document.getElementById("date_of_birthDISP").innerHTML = ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';}
+							if (agent_display_fields.match(adfREGrank))
+								{document.getElementById("rankDISP").innerHTML = ' &nbsp; &nbsp; ';}
+							if (agent_display_fields.match(adfREGowner))
+								{document.getElementById("ownerDISP").innerHTML = ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';}
 
 							if (post_phone_time_diff_alert_message.length > 10)
 								{
@@ -9241,6 +9286,18 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							// list webform3 - 56
 							CalL_ScripT_color								= check_VDIC_array[57];
 							document.vicidial_form.list_description.value	= check_VDIC_array[58];
+							entry_date										= check_VDIC_array[59];
+
+							if (agent_display_fields.match(adfREGentry_date))
+								{document.getElementById("entry_dateDISP").innerHTML = entry_date;}
+							if (agent_display_fields.match(adfREGsource_id))
+								{document.getElementById("source_idDISP").innerHTML = source_id;}
+							if (agent_display_fields.match(adfREGdate_of_birth))
+								{document.getElementById("date_of_birthDISP").innerHTML = document.vicidial_form.date_of_birth.value;}
+							if (agent_display_fields.match(adfREGrank))
+								{document.getElementById("rankDISP").innerHTML = document.vicidial_form.rank.value;}
+							if (agent_display_fields.match(adfREGowner))
+								{document.getElementById("ownerDISP").innerHTML = document.vicidial_form.owner.value;}
 
 							if (CalL_ScripT_color.length > 1)
 								{document.getElementById("ScriptContents").style.backgroundColor = CalL_ScripT_color;}
@@ -9816,6 +9873,18 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							// list webform3 - 52
 							// script color - 53
 							document.vicidial_form.list_description.value	= check_VDIC_array[54];
+							entry_date										= check_VDIC_array[55];
+
+							if (agent_display_fields.match(adfREGentry_date))
+								{document.getElementById("entry_dateDISP").innerHTML = entry_date;}
+							if (agent_display_fields.match(adfREGsource_id))
+								{document.getElementById("source_idDISP").innerHTML = source_id;}
+							if (agent_display_fields.match(adfREGdate_of_birth))
+								{document.getElementById("date_of_birthDISP").innerHTML = document.vicidial_form.date_of_birth.value;}
+							if (agent_display_fields.match(adfREGrank))
+								{document.getElementById("rankDISP").innerHTML = document.vicidial_form.rank.value;}
+							if (agent_display_fields.match(adfREGowner))
+								{document.getElementById("ownerDISP").innerHTML = document.vicidial_form.owner.value;}
 
 							if (hide_gender > 0)
 								{
@@ -11555,6 +11624,18 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					document.getElementById("RecorDID").innerHTML = '';
 					dial_next_failed=0;
 					xfer_agent_selected=0;
+					source_id='';
+					entry_date='';
+					if (agent_display_fields.match(adfREGentry_date))
+						{document.getElementById("entry_dateDISP").innerHTML = ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';}
+					if (agent_display_fields.match(adfREGsource_id))
+						{document.getElementById("source_idDISP").innerHTML = ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';}
+					if (agent_display_fields.match(adfREGdate_of_birth))
+						{document.getElementById("date_of_birthDISP").innerHTML = ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';}
+					if (agent_display_fields.match(adfREGrank))
+						{document.getElementById("rankDISP").innerHTML = ' &nbsp; &nbsp; ';}
+					if (agent_display_fields.match(adfREGowner))
+						{document.getElementById("ownerDISP").innerHTML = ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';}
 
 					if ( (manual_dial_search_checkbox == 'SELECTED_RESET') || (manual_dial_search_checkbox == 'SELECTED_LOCK') )
 						{document.vicidial_form.LeadLookuP.checked=true;}
@@ -12970,6 +13051,7 @@ else
 		"&user_group=" + VU_user_group + '' +
 		"&list_name=" + encodeURIComponent(document.vicidial_form.list_name.value) + 
 		"&list_description=" + encodeURIComponent(document.vicidial_form.list_description.value) + 
+		"&entry_date=" + entry_date + '' +
 		"&web_vars=" + LIVE_web_vars + '' +
 		webform_session;
 
@@ -13192,6 +13274,7 @@ else
 		var SCcall_id = LasTCID;
 		var SCuser_group = VU_user_group;
 		var SCagent_log_id = agent_log_id;
+		var SCentry_date = entry_date;
 		var SCweb_vars = LIVE_web_vars;
 
 		if (encoded.match(RGiframe))
@@ -13268,6 +13351,7 @@ else
 			SCdid_description = SCdid_description.replace(RGplus,'+');
 			SCcall_id = SCcall_id.replace(RGplus,'+');
 			SCuser_group = SCuser_group.replace(RGplus,'+');
+			SCentry_date = SCentry_date.replace(RGplus,'+');
 			SCweb_vars = SCweb_vars.replace(RGplus,'+');
 			}
 
@@ -13348,6 +13432,7 @@ else
 		var RGagent_log_id = new RegExp("--A--agent_log_id--B--","g");
 		var RGcall_id = new RegExp("--A--call_id--B--","g");
 		var RGuser_group = new RegExp("--A--user_group--B--","g");
+		var RGentry_date = new RegExp("--A--entry_date--B--","g");
 		var RGweb_vars = new RegExp("--A--web_vars--B--","g");
 
 		encoded = encoded.replace(RGvendor_lead_code, SCvendor_lead_code);
@@ -13427,6 +13512,7 @@ else
 		encoded = encoded.replace(RGagent_log_id, SCagent_log_id);
 		encoded = encoded.replace(RGcall_id, SCcall_id);
 		encoded = encoded.replace(RGuser_group, SCuser_group);
+		encoded = encoded.replace(RGentry_date, SCentry_date);
 		encoded = encoded.replace(RGweb_vars, SCweb_vars);
 		}
 
@@ -16228,6 +16314,32 @@ $zi=2;
         {echo " </td><td align=\"left\" colspan=\"3\"><input type=\"hidden\" name=\"email\" id=\"email\" value=\"\" />";}
 	else
         {echo "$label_email: </td><td align=\"left\" colspan=\"3\"><font class=\"body_text\"><input type=\"text\" size=\"45\" name=\"email\" id=\"email\" maxlength=\"70\" class=\"cust_form\" value=\"\" />";}
+
+	if (strlen($agent_display_fields) > 3)
+		{
+	    echo "</td></tr><tr><td align=\"left\" colspan=\"5\"><font class=\"body_text\">";
+
+		if (preg_match("/entry_date/",$agent_display_fields))
+			{
+			echo _QXZ("Entry Date").": &nbsp; <font class=\"body_text\"><span id=\"entry_dateDISP\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span> &nbsp; </font>";
+			}
+		if (preg_match("/source_id/",$agent_display_fields))
+			{
+			echo _QXZ("Source ID").": &nbsp; <font class=\"body_text\"><span id=\"source_idDISP\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span> &nbsp; </font>";
+			}
+		if (preg_match("/date_of_birth/",$agent_display_fields))
+			{
+			echo _QXZ("Date of Birth").": &nbsp; <font class=\"body_text\"><span id=\"date_of_birthDISP\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span> &nbsp; </font>";
+			}
+		if (preg_match("/rank/",$agent_display_fields))
+			{
+			echo _QXZ("Rank").": &nbsp; <font class=\"body_text\"><span id=\"rankDISP\"> &nbsp; &nbsp; </span> &nbsp; </font>";
+			}
+		if (preg_match("/owner/",$agent_display_fields))
+			{
+			echo _QXZ("Owner").": &nbsp; <font class=\"body_text\"><span id=\"ownerDISP\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span> &nbsp; </font>";
+			}
+		}
 
     echo "</td></tr><tr><td align=\"right\"><font class=\"body_text\">";
 

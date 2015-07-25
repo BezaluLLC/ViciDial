@@ -112,6 +112,9 @@ OTHER CHANGES:
 	an inbound Filter Phone Group when set to a certain specific disposition
 	using the Dispo Call URL.
 
+21. Added campaign option to display some lead fields as read-only in the agent 
+	screen. Those fields are: entry_date,source_id,date_of_birth,rank,owner
+
 
 
 

@@ -30,10 +30,11 @@
 # 141118-1422 - Added agent_email variable
 # 141216-2121 - Added language settings lookups and user/pass variable standardization
 # 150703-2034 - Added option to fully urlencode variables if IFRAME is used in script Issue #864
+# 150725-1622 - Added entry_date variable
 #
 
-$version = '2.12-24';
-$build = '150703-2034';
+$version = '2.12-25';
+$build = '150725-1622';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -217,6 +218,8 @@ if (isset($_GET["script_override"]))			{$script_override=$_GET["script_override"
 	elseif (isset($_POST["script_override"]))	{$script_override=$_POST["script_override"];}
 if (isset($_GET["session_name"]))			{$session_name=$_GET["session_name"];}
 	elseif (isset($_POST["session_name"]))	{$session_name=$_POST["session_name"];}
+if (isset($_GET["entry_date"]))				{$entry_date=$_GET["entry_date"];}
+	elseif (isset($_POST["entry_date"]))	{$entry_date=$_POST["entry_date"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -441,6 +444,7 @@ if (preg_match("/iframe\ssrc/i",$script_text))
 		$did_description = urlencode(trim($did_description));
 		$called_count = urlencode(trim($called_count));
 		$session_name = urlencode(trim($session_name));
+		$entry_date = urlencode(trim($entry_date));
 		$web_vars = urlencode(trim($web_vars));
 		}
 	else
@@ -523,6 +527,7 @@ if (preg_match("/iframe\ssrc/i",$script_text))
 		$did_description = preg_replace('/\s/i','+',$did_description);
 		$called_count = preg_replace('/\s/i','+',$called_count);
 		$session_name = preg_replace('/\s/i','+',$session_name);
+		$entry_date = preg_replace('/\s/i','+',$entry_date);
 		$web_vars = preg_replace('/\s/i','+',$web_vars);
 		}
 	}
@@ -614,12 +619,13 @@ $script_text = preg_replace('/--A--call_id--B--/i',"$call_id",$script_text);
 $script_text = preg_replace('/--A--user_group--B--/i',"$user_group",$script_text);
 $script_text = preg_replace('/--A--called_count--B--/i',"$called_count",$script_text);
 $script_text = preg_replace('/--A--session_name--B--/i',"$session_name",$script_text);
+$script_text = preg_replace('/--A--entry_date--B--/i',"$entry_date",$script_text);
 $script_text = preg_replace('/--A--web_vars--B--/i',"$web_vars",$script_text);
 
 if ($CF_uses_custom_fields=='Y')
 	{
 	### find the names of all custom fields, if any
-	$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
+	$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('entry_date','vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$cffn_ct = mysqli_num_rows($rslt);

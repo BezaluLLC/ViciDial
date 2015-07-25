@@ -53,6 +53,7 @@
 # 150708-2238 - Added max_queue_ingroup_ options
 # 150710-1124 - Added explanation of new ALT URL feature and alt_multi_urls
 # 150724-0047 - Added agent_debug_logging
+# 150725-1406 - Added agent_display_fields
 #
 
 require("dbconnect_mysqli.php");
@@ -1534,6 +1535,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-status_display_ingroup">
 <BR>
 <B><?php echo _QXZ("Status Display In-Group"); ?> -</B><?php echo _QXZ("This option if set to ENABLED will display the In-Group name in the agent screen when an inbound call is sent to the agent. Default is ENABLED."); ?>
+
+<BR>
+<A NAME="campaigns-agent_display_fields">
+<BR>
+<B><?php echo _QXZ("Agent Display Fields"); ?> -</B><?php echo _QXZ("This option allows you to display hidden fields as read-only in the agent screen. Available fields are entry_date, source_id, date_of_birth, rank, owner. Default is blank."); ?>
 
 <BR>
 <A NAME="campaigns-use_internal_dnc">
