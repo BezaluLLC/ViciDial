@@ -49,6 +49,7 @@
 # 150210-1357 - Added option to show time in seconds
 # 150516-1308 - Fixed Javascript element problem, Issue #857
 # 150603-1533 - Statuses are now sorted in alphabetical order
+# 150728-1230 - Fix for non-latin display issue #858
 #
 
 $startMS = microtime();
@@ -919,8 +920,10 @@ while ($m < $k)
 		{	
 		$Sfull_name=	sprintf("%-45s", $Sfull_name); 
 		while(mb_strlen($Sfull_name,'utf-8')>15) {$Sfull_name = mb_substr("$Sfull_name", 0, -1,'utf-8');}
-		$Suser_group=	sprintf("%-45s", $Suser_group); 
-		while(mb_strlen($Suser_group,'utf-8')>15) {$Suser_group = mb_substr("$Suser_group", 0, -1,'utf-8');}
+		$Suser_group=	sprintf("%-60s", $Suser_group); 
+		while(mb_strlen($Suser_group,'utf-8')>20) {$Suser_group = mb_substr("$Suser_group", 0, -1,'utf-8');}
+		$Slast_user_group=	sprintf("%-60s", $Slast_user_group); 
+		while(mb_strlen($Slast_user_group,'utf-8')>20) {$Slast_user_group = mb_substr("$Slast_user_group", 0, -1,'utf-8');}
 		$Suser =	sprintf("%-24s", $Suser);
 		while(mb_strlen($Suser,'utf-8')>8) {$Suser = mb_substr("$Suser", 0, -1,'utf-8');}
 		}
@@ -1500,8 +1503,10 @@ while ($m < $k)
 		{
 		$Sfull_name=	sprintf("%-45s", $Sfull_name); 
 		while(mb_strlen($Sfull_name,'utf-8')>15) {$Sfull_name = mb_substr("$Sfull_name", 0, -1,'utf-8');}
-		$Suser_group=	sprintf("%-45s", $Suser_group); 
-		while(mb_strlen($Suser_group,'utf-8')>15) {$Suser_group = mb_substr("$Suser_group", 0, -1,'utf-8');}
+		$Suser_group=	sprintf("%-60s", $Suser_group); 
+		while(mb_strlen($Suser_group,'utf-8')>20) {$Suser_group = mb_substr("$Suser_group", 0, -1,'utf-8');}
+		$Slast_user_group=	sprintf("%-60s", $Slast_user_group); 
+		while(mb_strlen($Slast_user_group,'utf-8')>20) {$Slast_user_group = mb_substr("$Slast_user_group", 0, -1,'utf-8');}
 		$Suser =	sprintf("%-24s", $Suser);
 		while(mb_strlen($Suser,'utf-8')>8) {$Suser = mb_substr("$Suser", 0, -1,'utf-8');}
 		}
