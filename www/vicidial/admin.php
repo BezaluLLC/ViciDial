@@ -3541,12 +3541,13 @@ else
 # 150724-0822 - Added agent_debug_logging SS option and report
 # 150725-1341 - Added agent_display_fields campaign options
 # 150727-0903 - Added default_language System Setting option
+# 150728-1012 - Added $DB hidden variable in Filter Text form, Issue #845
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-500a';
-$build = '150727-0903';
+$admin_version = '2.12-501a';
+$build = '150728-1012';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -27803,6 +27804,7 @@ if ($ADD==31111111)
 		echo "<br>"._QXZ("TEST ON CAMPAIGN").": <form action=$PHP_SELF method=POST target=\"_blank\">\n";
 		echo "<input type=hidden name=lead_filter_id value=\"$lead_filter_id\">\n";
 		echo "<input type=hidden name=ADD value=\"73\">\n";
+		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<select size=1 name=campaign_id>\n";
 		echo "$campaigns_list";
 		echo "</select>\n";
