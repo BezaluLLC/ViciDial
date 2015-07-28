@@ -3542,12 +3542,13 @@ else
 # 150725-1341 - Added agent_display_fields campaign options
 # 150727-0903 - Added default_language System Setting option
 # 150728-1012 - Added $DB hidden variable in Filter Text form, Issue #845
+# 150728-1048 - Added option for secondary sorting by vendor_lead_code, Issue #833
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-501a';
-$build = '150728-1012';
+$admin_version = '2.12-502a';
+$build = '150728-1048';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -19190,7 +19191,7 @@ if ($ADD==31)
 				}
 			else
 				{
-				echo "<select size=1 name=lead_order_secondary><option value='LEAD_ASCEND'>"._QXZ("LEAD_ASCEND")."</option><option value='LEAD_DESCEND'>"._QXZ("LEAD_DESCEND")."</option><option value='CALLTIME_ASCEND'>"._QXZ("CALLTIME_ASCEND")."</option><option value='CALLTIME_DESCEND'>"._QXZ("CALLTIME_DESCEND")."</option><option value='$lead_order_secondary' SELECTED>"._QXZ("$lead_order_secondary")."</option></select>$NWB#campaigns-lead_order_secondary$NWE";
+				echo "<select size=1 name=lead_order_secondary><option value='LEAD_ASCEND'>"._QXZ("LEAD_ASCEND")."</option><option value='LEAD_DESCEND'>"._QXZ("LEAD_DESCEND")."</option><option value='CALLTIME_ASCEND'>"._QXZ("CALLTIME_ASCEND")."</option><option value='CALLTIME_DESCEND'>"._QXZ("CALLTIME_DESCEND")."</option><option value='VENDOR_ASCEND'>"._QXZ("VENDOR_ASCEND")."</option><option value='VENDOR_DESCEND'>"._QXZ("VENDOR_DESCEND")."</option><option value='$lead_order_secondary' SELECTED>"._QXZ("$lead_order_secondary")."</option></select>$NWB#campaigns-lead_order_secondary$NWE";
 				}
 			echo "</td></tr>\n";
 

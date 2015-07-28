@@ -243,3 +243,7 @@ UPDATE system_settings SET db_schema_version='1422',db_schema_update_date=NOW() 
 ALTER TABLE system_settings ADD default_language VARCHAR(100) default 'default English';
 
 UPDATE system_settings SET db_schema_version='1423',db_schema_update_date=NOW() where db_schema_version < 1423;
+
+ALTER TABLE vicidial_campaigns MODIFY lead_order_secondary ENUM('LEAD_ASCEND','LEAD_DESCEND','CALLTIME_ASCEND','CALLTIME_DESCEND','VENDOR_ASCEND','VENDOR_DESCEND') default 'LEAD_ASCEND';
+
+UPDATE system_settings SET db_schema_version='1424',db_schema_update_date=NOW() where db_schema_version < 1424;

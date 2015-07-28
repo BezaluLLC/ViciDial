@@ -858,7 +858,7 @@ api_manual_dial ENUM('STANDARD','QUEUE','QUEUE_AND_AUTOCALL') default 'STANDARD'
 manual_dial_call_time_check ENUM('DISABLED','ENABLED') default 'DISABLED',
 display_leads_count ENUM('Y','N') default 'N',
 lead_order_randomize ENUM('Y','N') default 'N',
-lead_order_secondary ENUM('LEAD_ASCEND','LEAD_DESCEND','CALLTIME_ASCEND','CALLTIME_DESCEND') default 'LEAD_ASCEND',
+lead_order_secondary ENUM('LEAD_ASCEND','LEAD_DESCEND','CALLTIME_ASCEND','CALLTIME_DESCEND','VENDOR_ASCEND','VENDOR_DESCEND') default 'LEAD_ASCEND',
 per_call_notes ENUM('ENABLED','DISABLED') default 'DISABLED',
 my_callback_option ENUM('CHECKED','UNCHECKED') default 'UNCHECKED',
 agent_lead_search ENUM('ENABLED','LIVE_CALL_INBOUND','LIVE_CALL_INBOUND_AND_MANUAL','DISABLED') default 'DISABLED',
@@ -3546,4 +3546,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1423',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1424',db_schema_update_date=NOW(),reload_timestamp=NOW();

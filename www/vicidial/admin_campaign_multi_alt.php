@@ -1,7 +1,7 @@
 <?php
 # admin_campaign_multi_alt.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen will control the campaign settings needed for alternate number 
 # dialing using multiple leads with the same account number and different phone 
@@ -18,10 +18,11 @@
 # 130902-0755 - Changed to mysqli PHP functions
 # 141001-2200 - Finalized adding QXZ translation to all admin files
 # 141230-0024 - Added code for on-the-fly language translations display
+# 150728-1046 - Added option for secondary sorting by vendor_lead_code, Issue #833
 #
 
-$admin_version = '2.10-8';
-$build = '141230-0024';
+$admin_version = '2.12-9';
+$build = '150728-1046';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -406,18 +407,13 @@ if ($action == "BLANK")
 	echo "</td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List Order Randomize").": </td><td align=left><select size=1 name=lead_order_randomize><option>Y</option><option>N</option><option SELECTED>$lead_order_randomize</option></select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List Order Secondary").": </td><td align=left><select size=1 name=lead_order_secondary><option value='LEAD_ASCEND'>"._QXZ("LEAD_ASCEND")."</option><option value='LEAD_DESCEND'>"._QXZ("LEAD_DESCEND")."</option><option value='CALLTIME_ASCEND'>"._QXZ("CALLTIME_ASCEND")."</option><option value='CALLTIME_DESCEND'>"._QXZ("CALLTIME_DESCEND")."</option><option SELECTED>$lead_order_secondary</option></select></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List Order Secondary").": </td><td align=left><select size=1 name=lead_order_secondary><option value='LEAD_ASCEND'>"._QXZ("LEAD_ASCEND")."</option><option value='LEAD_DESCEND'>"._QXZ("LEAD_DESCEND")."</option><option value='CALLTIME_ASCEND'>"._QXZ("CALLTIME_ASCEND")."</option><option value='CALLTIME_DESCEND'>"._QXZ("CALLTIME_DESCEND")."</option><option value='VENDOR_ASCEND'>"._QXZ("VENDOR_ASCEND")."</option><option value='VENDOR_DESCEND'>"._QXZ("VENDOR_DESCEND")."</option><option SELECTED>$lead_order_secondary</option></select></td></tr>\n";
 
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
 	echo "</TABLE></center>\n";
 	echo "</TD></TR></TABLE>\n";
 	}
 ### END multi-lead alt dial control form
-
-
-
-
-
 
 
 

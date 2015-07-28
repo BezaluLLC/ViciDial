@@ -386,10 +386,11 @@
 # 150723-1705 - Added ajax logging
 # 150725-1613 - Added entry_date as a variable
 # 150727-0910 - Added default_language
+# 150728-1049 - Added option for secondary sorting by vendor_lead_code, Issue #833
 #
 
-$version = '2.12-281';
-$build = '150727-0910';
+$version = '2.12-282';
+$build = '150728-1049';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=616;
@@ -3264,6 +3265,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 							if ($lead_order_secondary == 'LEAD_DESCEND') {$last_order = "lead_id desc";}
 							if ($lead_order_secondary == 'CALLTIME_ASCEND') {$last_order = "last_local_call_time asc";}
 							if ($lead_order_secondary == 'CALLTIME_DESCEND') {$last_order = "last_local_call_time desc";}
+							if ($lead_order_secondary == 'VENDOR_ASCEND') {$last_order = "vendor_lead_code+0 asc, vendor_lead_code asc";}
+							if ($lead_order_secondary == 'VENDOR_DESCEND') {$last_order = "vendor_lead_code+0 desc, vendor_lead_code desc";}
 							}
 
 						$order_stmt = '';

@@ -85,10 +85,11 @@
 # 150117-1415 - Added list local call time validation
 # 150312-1459 - Allow for single quotes in data fields without crashing
 # 150717-1050 - Added force index to some vicidial_list queries, set with $VLforce_index variable
+# 150728-1050 - Added option for secondary sorting by vendor_lead_code, Issue #833
 #
 
 # constants
-$build = '150312-1459';
+$build = '150728-1050';
 $DB=0;  # Debug flag, set to 0 for no debug messages. Can be overriden with CLI --debug flag
 $US='__';
 $MT[0]='';
@@ -2562,6 +2563,8 @@ foreach(@campaign_id)
 					if ($lead_order_secondary[$i] =~ /LEAD_DESCEND/) {$last_order = "lead_id desc";}
 					if ($lead_order_secondary[$i] =~ /CALLTIME_ASCEND/) {$last_order = "last_local_call_time asc";}
 					if ($lead_order_secondary[$i] =~ /CALLTIME_DESCEND/) {$last_order = "last_local_call_time desc";}
+					if ($lead_order_secondary[$i] =~ /VENDOR_ASCEND/) {$last_order = "vendor_lead_code+0 asc, vendor_lead_code asc";}
+					if ($lead_order_secondary[$i] =~ /VENDOR_DESCEND/) {$last_order = "vendor_lead_code+0 desc, vendor_lead_code desc";}
 					}
 
 				if ($lead_order[$i] =~ /^DOWN/) {$order_stmt = "order by lead_id asc";}

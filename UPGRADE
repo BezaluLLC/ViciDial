@@ -118,6 +118,8 @@ OTHER CHANGES:
 22. Added option in the web-based lead loader to convert state names to their
 	two-letter abbreviations.
 
+23. Added option to Secondary Lead Sort by vendor lead code
+
 
 
 
