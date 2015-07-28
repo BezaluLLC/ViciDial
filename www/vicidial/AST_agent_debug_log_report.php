@@ -5,6 +5,7 @@
 #
 # CHANGES
 # 150724-0740 - First build
+# 150727-2111 - Added different colors for higher run times, added user variable, code cleanup
 #
 
 $startMS = microtime();
@@ -23,8 +24,8 @@ if (isset($_GET["query_date_D"]))			{$query_date_D=$_GET["query_date_D"];}
 	elseif (isset($_POST["query_date_D"]))	{$query_date_D=$_POST["query_date_D"];}
 if (isset($_GET["query_date_T"]))			{$query_date_T=$_GET["query_date_T"];}
 	elseif (isset($_POST["query_date_T"]))	{$query_date_T=$_POST["query_date_T"];}
-if (isset($_GET["server_ip"]))				{$server_ip=$_GET["server_ip"];}
-	elseif (isset($_POST["server_ip"]))		{$server_ip=$_POST["server_ip"];}
+if (isset($_GET["agent_user"]))				{$agent_user=$_GET["agent_user"];}
+	elseif (isset($_POST["agent_user"]))	{$agent_user=$_POST["agent_user"];}
 if (isset($_GET["file_download"]))			{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 if (isset($_GET["lower_limit"]))			{$lower_limit=$_GET["lower_limit"];}
@@ -63,11 +64,13 @@ if ($non_latin < 1)
 	{
 	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
 	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	$agent_user = preg_replace('/[^-_0-9a-zA-Z]/', '', $agent_user);
 	}
 else
 	{
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	$agent_user = preg_replace("/'|\"|\\\\|;/","",$agent_user);
 	}
 
 $stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
@@ -268,6 +271,8 @@ $MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 $MAIN.="<TABLE BORDER=0 cellspacing=5 cellpadding=5><TR><TD VALIGN=TOP align=center>\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
+$MAIN.=_QXZ("User").":\n";
+$MAIN.="<INPUT TYPE=TEXT NAME=agent_user SIZE=10 MAXLENGTH=20 VALUE=\"$agent_user\"> &nbsp; ";
 $MAIN.=_QXZ("Date").":\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 $MAIN.="<script language=\"JavaScript\">\n";
@@ -281,9 +286,9 @@ $MAIN.="o_cal.a_tpl.yearscroll = false;\n";
 $MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $MAIN.="</script>\n";
 
-$MAIN.="<BR><BR><INPUT TYPE=TEXT NAME=query_date_D SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_D\">";
+$MAIN.=" &nbsp; &nbsp; &nbsp; &nbsp; <INPUT TYPE=TEXT NAME=query_date_D SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_D\">";
 
-$MAIN.="<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_T\">";
+$MAIN.=" "._QXZ("to")." <INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_T\"> &nbsp; ";
 
 /*
 $MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>"._QXZ("Server IP").":<BR/>\n";
@@ -304,7 +309,7 @@ while ($servers_to_print > $o)
 $MAIN.="</SELECT></TD><TD ROWSPAN=2 VALIGN=middle align=center>\n";
 */
 
-$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'><BR/><BR/>\n";
+$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'><BR/>\n";
 $MAIN.="</TD></TR></TABLE>\n";
 
 
@@ -356,8 +361,10 @@ if ($SUBMIT) {
 
 
 	$MAIN.="<PRE><font size=2>\n";
-
-		$rpt_stmt="select user,start_time,db_time,run_time,php_script,action,lead_id,stage from vicidial_ajax_log where db_time >= '$query_date $query_date_D' and db_time <= '$query_date $query_date_T' order by db_time desc;";
+		$agent_userSQL='';
+		if (strlen($agent_user) > 1)
+			{$agent_userSQL = "and user='$agent_user'";}
+		$rpt_stmt="select user,start_time,db_time,run_time,php_script,action,lead_id,stage from vicidial_ajax_log where db_time >= '$query_date $query_date_D' and db_time <= '$query_date $query_date_T' $agent_userSQL order by db_time desc;";
 		$rpt_rslt=mysql_to_mysqli($rpt_stmt, $link);
 		if ($DB) {$MAIN.=$rpt_stmt."\n";}
 		if (mysqli_num_rows($rpt_rslt)>0) {
@@ -365,43 +372,49 @@ if ($SUBMIT) {
 		if (!$lower_limit) {$lower_limit=1;}
 		if ($lower_limit+999>=mysqli_num_rows($rpt_rslt)) {$upper_limit=($lower_limit+mysqli_num_rows($rpt_rslt)%1000)-1;} else {$upper_limit=$lower_limit+999;}
 		
-		$MAIN.="--- "._QXZ("AGENT SCREEN DEBUG LOG RECORDS FOR")." $query_date, $query_date_D "._QXZ("TO")." $query_date_T $server_rpt_string, "._QXZ("RECORDS")." #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">["._QXZ("DOWNLOAD")."]</a>\n";
+		$MAIN.="--- "._QXZ("AGENT SCREEN DEBUG LOG RECORDS FOR")." $query_date, $query_date_D "._QXZ("TO")." $query_date_T $server_rpt_string, "._QXZ("RECORDS")." #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T&agent_user=$agent_user&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">["._QXZ("DOWNLOAD")."]</a>\n";
 		$agntdb_rpt.="+----------------------+---------------------+---------------------+------------+----------------------+------------------------------------------+------------+------------------------------------------+\n";
 		$agntdb_rpt.="| "._QXZ("USER",20)." | "._QXZ("SCREEN DATE",19)." | "._QXZ("DB DATE",19)." | "._QXZ("RUN TIME",10)." | "._QXZ("SCRIPT",20)." | "._QXZ("ACTION",40)." | "._QXZ("LEAD_ID",10)." | "._QXZ("STAGE",40)." |\n";
 		$agntdb_rpt.="+----------------------+---------------------+---------------------+------------+----------------------+------------------------------------------+------------+------------------------------------------+\n";
 		$CSV_text="\""._QXZ("USER")."\",\""._QXZ("SCREEN DATE")."\",\""._QXZ("DB DATE")."\",\""._QXZ("RUN TIME")."\",\""._QXZ("SCRIPT")."\",\""._QXZ("ACTION")."\",\""._QXZ("LEAD_ID")."\",\""._QXZ("STAGE")."\"\n";
 
-		for ($i=1; $i<=mysqli_num_rows($rpt_rslt); $i++) {
+		for ($i=1; $i<=mysqli_num_rows($rpt_rslt); $i++) 
+			{
 			$row=mysqli_fetch_array($rpt_rslt);
 
-			$CSV_text.="\"$row[user]\",\"$row[call_date]\",\"$row[server_ip]\",\"$row[lead_id]\",\"$row[hangup_cause]\",\"$row[dialstatus]\",\"$row[channel]\",\"$row[dial_time]\",\"$row[answered_time]\",\"$row[sip_hangup_cause]\",\"$row[sip_hangup_reason]\",\"$phone_number\"\n";
-			if ($i>=$lower_limit && $i<=$upper_limit) {
+			$CSV_text.="\"$row[user]\",\"$row[start_time]\",\"$row[db_time]\",\"$row[run_time]\",\"$row[php_script]\",\"$row[action]\",\"$row[lead_id]\",\"$row[stage]\"\n";
+			if ($i>=$lower_limit && $i<=$upper_limit) 
+				{
 				$agntdb_rpt.="| ".sprintf("%-20s", $row["user"]); 
 				$agntdb_rpt.=" | ".sprintf("%-19s", $row["start_time"]); 
 				$agntdb_rpt.=" | ".sprintf("%-19s", $row["db_time"]); 
 				if (strlen($row["run_time"])>10) {$row["run_time"]=substr($row["run_time"],0,10)."";}
-				$agntdb_rpt.=" | ".sprintf("%-10s", $row["run_time"]); 
+				$run_color='color=black';
+				if ($row["run_time"] > 1) {$run_color='color=blue';} 
+				if ($row["run_time"] > 2) {$run_color='color=purple';} 
+				if ($row["run_time"] > 3) {$run_color='color=red';} 
+				$agntdb_rpt.=" | <font size=2 $run_color>".sprintf("%-10s", $row["run_time"])."</font>"; 
 				$agntdb_rpt.=" | ".sprintf("%-20s", $row["php_script"]); 
 				if (strlen($row["action"])>37) {$row["action"]=substr($row["action"],0,37)."...";}
 				$agntdb_rpt.=" | ".sprintf("%-40s", $row["action"]); 
 				$agntdb_rpt.=" | ".sprintf("%-10s", $row["lead_id"]); 
 				if (strlen($row["stage"])>37) {$row["stage"]=substr($row["stage"],0,37)."...";}
 				$agntdb_rpt.=" | ".sprintf("%-40s", $row["stage"])." |\n"; 
+				}
 			}
-		}
 		$agntdb_rpt.="+----------------------+---------------------+---------------------+------------+----------------------+------------------------------------------+------------+------------------------------------------+\n";
 
 		$agntdb_rpt_hf="";
 		$ll=$lower_limit-1000;
 		if ($ll>=1) {
-			$agntdb_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS&lower_limit=$ll\">[<<< "._QXZ("PREV")." 1000 "._QXZ("records")."]</a>";
+			$agntdb_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T&agent_user=$agent_user&lower_limit=$ll\">[<<< "._QXZ("PREV")." 1000 "._QXZ("records")."]</a>";
 		} else {
 			$agntdb_rpt_hf.=sprintf("%-23s", " ");
 		}
 		$agntdb_rpt_hf.=sprintf("%-145s", " ");
 		if (($lower_limit+1000)<mysqli_num_rows($rpt_rslt)) {
 			if ($upper_limit+1000>=mysqli_num_rows($rpt_rslt)) {$max_limit=mysqli_num_rows($rpt_rslt)-$upper_limit;} else {$max_limit=1000;}
-			$agntdb_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T$server_ipQS&lower_limit=".($lower_limit+1000)."\">["._QXZ("NEXT")." $max_limit "._QXZ("records")." >>>]</a>";
+			$agntdb_rpt_hf.="<a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T&agent_user=$agent_user&lower_limit=".($lower_limit+1000)."\">["._QXZ("NEXT")." $max_limit "._QXZ("records")." >>>]</a>";
 		} else {
 			$agntdb_rpt_hf.=sprintf("%23s", " ");
 		}

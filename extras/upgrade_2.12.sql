@@ -239,3 +239,7 @@ UPDATE system_settings SET db_schema_version='1421',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD agent_display_fields VARCHAR(50) default '';
 
 UPDATE system_settings SET db_schema_version='1422',db_schema_update_date=NOW() where db_schema_version < 1422;
+
+ALTER TABLE system_settings ADD default_language VARCHAR(100) default 'default English';
+
+UPDATE system_settings SET db_schema_version='1423',db_schema_update_date=NOW() where db_schema_version < 1423;

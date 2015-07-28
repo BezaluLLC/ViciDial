@@ -20,10 +20,11 @@
 # 141216-2122 - Added language settings lookups and user/pass variable standardization
 # 150210-1307 - Fixed QXZ tags and formatting(issue #827)
 # 150212-0033 - Added case-sensitive user validation(issue #682)
+# 150727-0912 - Added default_language
 #
 
-$version = '2.10-15';
-$build = '150212-0033';
+$version = '2.12-16';
+$build = '150727-0912';
 
 $StarTtimE = date("U");
 $NOW_TIME = date("Y-m-d H:i:s");
@@ -113,7 +114,7 @@ if ($sl_ct > 0)
 	$VUselected_language =	$row[1];
 	}
 
-$stmt = "SELECT use_non_latin,admin_home_url,admin_web_directory,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,admin_home_url,admin_web_directory,enable_languages,language_method,default_language FROM system_settings;";
 if ($DB) {echo "$stmt\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -126,7 +127,11 @@ if ($qm_conf_ct > 0)
 	$admin_web_directory =	$row[2];
 	$SSenable_languages =	$row[3];
 	$SSlanguage_method =	$row[4];
+	$SSdefault_language =	$row[5];
 	}
+
+if (strlen($VUselected_language) < 1)
+	{$VUselected_language = $SSdefault_language;}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
@@ -186,7 +191,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 		echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> "._QXZ("Timeclock")." </B></TD>";
 		echo "</TR>\n";
 		echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-		echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Login:")."  </TD>";
+		echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Login").": </TD>";
 		echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 MAXLENGTH=20 VALUE=\"$VD_login\"></TD></TR>\n";
 		echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Password:")."  </TD>";
 		echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 MAXLENGTH=20 VALUE=''></TD></TR>\n";
@@ -291,7 +296,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 			echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> "._QXZ("Timeclock")." </B></TD>";
 			echo "</TR>\n";
 			echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-			echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Login:")."  </TD>";
+			echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Login").": </TD>";
 			echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 MAXLENGTH=20 VALUE=\"$VD_login\"></TD></TR>\n";
 			echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Password:")."  </TD>";
 			echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 MAXLENGTH=20 VALUE=''></TD></TR>\n";
@@ -484,7 +489,7 @@ else
 	echo "<TD ALIGN=CENTER VALIGN=MIDDLE><B> "._QXZ("Timeclock")." </B></TD>";
 	echo "</TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Login:")."  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Login").": </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 MAXLENGTH=20 VALUE=\"$VD_login\"></TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Password:")."  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 MAXLENGTH=20 VALUE=''></TD></TR>\n";

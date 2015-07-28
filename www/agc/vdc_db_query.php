@@ -385,10 +385,11 @@
 # 150711-0815 - Changed to allow for multiple Dispo Call URLs
 # 150723-1705 - Added ajax logging
 # 150725-1613 - Added entry_date as a variable
+# 150727-0910 - Added default_language
 #
 
-$version = '2.12-280';
-$build = '150725-1613';
+$version = '2.12-281';
+$build = '150727-0910';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=616;
@@ -819,7 +820,7 @@ $sip_hangup_cause_dictionary = array(
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,agent_debug_logging FROM system_settings;";
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,agent_debug_logging,default_language FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -841,6 +842,7 @@ if ($qm_conf_ct > 0)
 	$SSenable_languages =					$row[11];
 	$SSlanguage_method =					$row[12];
 	$SSagent_debug_logging =				$row[13];
+	$SSdefault_language =					$row[14];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -879,7 +881,7 @@ if (strlen($SSagent_debug_logging) > 1)
 		{$SSagent_debug_logging=0;}
 	}
 
-$VUselected_language = '';
+$VUselected_language = $SSdefault_language;
 $stmt="SELECT selected_language from vicidial_users where user='$user';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);

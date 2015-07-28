@@ -42,6 +42,7 @@
 # 141230-1349 - Added code for on-the-fly language translations display
 # 150108-1110 - Fixed issue with inbound and no outbound calls export
 # 150126-1205 - Fixed issue with Extended and Alt formats
+# 150727-2143 - Enabled user features for hiding phone numbers and lead data
 #
 
 $startMS = microtime();
@@ -183,11 +184,13 @@ else
 	exit;
 	}
 
-$stmt="SELECT export_reports,user_group from vicidial_users where user='$PHP_AUTH_USER';";
+$stmt="SELECT export_reports,user_group,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER';";
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
-$LOGexport_reports =	$row[0];
-$LOGuser_group =		$row[1];
+$LOGexport_reports =			$row[0];
+$LOGuser_group =				$row[1];
+$LOGadmin_hide_lead_data =		$row[2];
+$LOGadmin_hide_phone_data =		$row[3];
 
 if ($LOGexport_reports < 1)
 	{
@@ -480,6 +483,60 @@ if ($run_export > 0)
 				$export_entry_list_id[$k] =	$row[37];
 				$export_wrapup_time[$k] =		$row[38];
 				$export_queue_time[$k] =		0;
+
+				if ($LOGadmin_hide_phone_data != '0')
+					{
+					if ($DB > 0) {echo "HIDEPHONEDATA|$row[1]|$LOGadmin_hide_phone_data|\n";}
+					$phone_temp = $row[1];
+					if (strlen($phone_temp) > 0)
+						{
+						if ($LOGadmin_hide_phone_data == '4_DIGITS')
+							{$row[1] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+						elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+							{$row[1] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+						elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+							{$row[1] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+						else
+							{$row[1] = preg_replace("/./",'X',$phone_temp);}
+						}
+					}
+				if ($LOGadmin_hide_lead_data != '0')
+					{
+					if ($DB > 0) {echo "HIDELEADDATA|$row[6]|$row[7]|$row[12]|$row[13]|$row[14]|$row[15]|$row[16]|$row[17]|$row[18]|$row[19]|$row[20]|$row[21]|$row[22]|$row[26]|$row[27]|$row[28]|$LOGadmin_hide_lead_data|\n";}
+					if (strlen($row[6]) > 0)
+						{$data_temp = $row[6];   $row[6] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[7]) > 0)
+						{$data_temp = $row[7];   $row[7] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[12]) > 0)
+						{$data_temp = $row[12];   $row[12] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[13]) > 0)
+						{$data_temp = $row[13];   $row[13] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[14]) > 0)
+						{$data_temp = $row[14];   $row[14] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[15]) > 0)
+						{$data_temp = $row[15];   $row[15] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[16]) > 0)
+						{$data_temp = $row[16];   $row[16] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[17]) > 0)
+						{$data_temp = $row[17];   $row[17] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[18]) > 0)
+						{$data_temp = $row[18];   $row[18] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[19]) > 0)
+						{$data_temp = $row[19];   $row[19] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[20]) > 0)
+						{$data_temp = $row[20];   $row[20] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[21]) > 0)
+						{$data_temp = $row[21];   $row[21] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[22]) > 0)
+						{$data_temp = $row[22];   $row[22] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[26]) > 0)
+						{$data_temp = $row[26];   $row[26] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[27]) > 0)
+						{$data_temp = $row[27];   $row[27] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[28]) > 0)
+						{$data_temp = $row[28];   $row[28] = preg_replace("/./",'X',$data_temp);}
+					}
+
 				$export_fieldsDATA='';
 				if ($export_fields == 'ALTERNATE_1')
 					{
@@ -538,6 +595,60 @@ if ($run_export > 0)
 				$export_uniqueid[$k] =		$row[38];
 				$export_wrapup_time[$k] =		$row[39];
 				$export_queue_time[$k] =		$row[32];
+
+				if ($LOGadmin_hide_phone_data != '0')
+					{
+					if ($DB > 0) {echo "HIDEPHONEDATA|$row[1]|$LOGadmin_hide_phone_data|\n";}
+					$phone_temp = $row[1];
+					if (strlen($phone_temp) > 0)
+						{
+						if ($LOGadmin_hide_phone_data == '4_DIGITS')
+							{$row[1] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+						elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+							{$row[1] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+						elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+							{$row[1] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+						else
+							{$row[1] = preg_replace("/./",'X',$phone_temp);}
+						}
+					}
+				if ($LOGadmin_hide_lead_data != '0')
+					{
+					if ($DB > 0) {echo "HIDELEADDATA|$row[6]|$row[7]|$row[12]|$row[13]|$row[14]|$row[15]|$row[16]|$row[17]|$row[18]|$row[19]|$row[20]|$row[21]|$row[22]|$row[26]|$row[27]|$row[28]|$LOGadmin_hide_lead_data|\n";}
+					if (strlen($row[6]) > 0)
+						{$data_temp = $row[6];   $row[6] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[7]) > 0)
+						{$data_temp = $row[7];   $row[7] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[12]) > 0)
+						{$data_temp = $row[12];   $row[12] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[13]) > 0)
+						{$data_temp = $row[13];   $row[13] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[14]) > 0)
+						{$data_temp = $row[14];   $row[14] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[15]) > 0)
+						{$data_temp = $row[15];   $row[15] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[16]) > 0)
+						{$data_temp = $row[16];   $row[16] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[17]) > 0)
+						{$data_temp = $row[17];   $row[17] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[18]) > 0)
+						{$data_temp = $row[18];   $row[18] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[19]) > 0)
+						{$data_temp = $row[19];   $row[19] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[20]) > 0)
+						{$data_temp = $row[20];   $row[20] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[21]) > 0)
+						{$data_temp = $row[21];   $row[21] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[22]) > 0)
+						{$data_temp = $row[22];   $row[22] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[26]) > 0)
+						{$data_temp = $row[26];   $row[26] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[27]) > 0)
+						{$data_temp = $row[27];   $row[27] = preg_replace("/./",'X',$data_temp);}
+					if (strlen($row[28]) > 0)
+						{$data_temp = $row[28];   $row[28] = preg_replace("/./",'X',$data_temp);}
+					}
+
 				$export_fieldsDATA='';
 				if ($export_fields == 'ALTERNATE_1')
 					{

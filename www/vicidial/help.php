@@ -54,6 +54,7 @@
 # 150710-1124 - Added explanation of new ALT URL feature and alt_multi_urls
 # 150724-0047 - Added agent_debug_logging
 # 150725-1406 - Added agent_display_fields
+# 150727-1039 - Added default_language
 #
 
 require("dbconnect_mysqli.php");
@@ -4518,6 +4519,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="settings-language_method">
 <BR>
 <B><?php echo _QXZ("Language Method"); ?> -</B><?php echo _QXZ("This setting defines how the language translation works when pages are loaded. The MYSQL method performs a database query for every display of a phrase in the interface. The DISABLED method will always display -default English- no matter what other settings are set to. Default is DISABLED."); ?>
+
+<BR>
+<A NAME="settings-default_language">
+<BR>
+<B><?php echo _QXZ("Default Language"); ?> -</B><?php echo _QXZ("This is the language that the agent and administrative interface will default to before the agent logs in. Default is -default English-."); ?>
 
 <BR>
 <A NAME="settings-webroot_writable">

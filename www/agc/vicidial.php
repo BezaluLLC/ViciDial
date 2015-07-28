@@ -495,10 +495,11 @@
 # 150712-2045 - Changed dispo call url to operate through a separate AJAX process
 # 150723-1741 - Created method for logging agent button/link clicks
 # 150725-1744 - Added Agent Display Fields campaign option
+# 150727-0908 - Added default_language
 #
 
-$version = '2.12-467c';
-$build = '150725-1744';
+$version = '2.12-468c';
+$build = '150727-0908';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -595,7 +596,7 @@ if ($sl_ct > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -625,6 +626,7 @@ if ($qm_conf_ct > 0)
 	$meetme_enter_login_filename =		$row[19];
 	$meetme_enter_leave3way_filename =	$row[20];
 	$enable_third_webform =				$row[21];
+	$default_language =					$row[22];
 	}
 else
 	{
@@ -727,7 +729,8 @@ $agcPAGE = "$HTTPprotocol$server_name$server_port$script_name";
 $agcDIR = preg_replace('/vicidial\.php/i','',$agcPAGE);
 if (strlen($static_agent_url) > 5)
 	{$agcPAGE = $static_agent_url;}
-
+if (strlen($VUselected_language) < 1)
+	{$VUselected_language = $default_language;}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1

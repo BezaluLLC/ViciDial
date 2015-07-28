@@ -1,7 +1,7 @@
 <?php
 # astguiclient.php - the web-based version of the astGUIclient client application
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # make sure you have added a user to the vicidial_users MySQL table with at least
 # user_level 1 or greater to access this page. Also you need to have the login
@@ -67,10 +67,11 @@
 # 141125-0947 - Using pass hashes in AJAX
 # 141216-2115 - Added language settings lookups and user/pass variable standardization
 # 150218-1110 - Fixes for QXZ enclosed in single-quotes
+# 150727-0915 - Added default_language
 #
 
 $version = '2.2.6-1';
-$build = '150218-1110';
+$build = '150727-0915';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -124,7 +125,7 @@ if ($sl_ct > 0)
 	$VUselected_language =		$row[0];
 	}
 
-$stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_languages,language_method,default_language FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -135,7 +136,11 @@ if ($qm_conf_ct > 0)
 	$non_latin =				$row[0];
 	$SSenable_languages =		$row[1];
 	$SSlanguage_method =		$row[2];
+	$SSdefault_language =		$row[3];
 	}
+
+if (strlen($VUselected_language) < 1)
+	{$VUselected_language = $SSdefault_language;}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
@@ -205,7 +210,7 @@ if( (strlen($user)<2) or (strlen($pass)<2) or (!$auth) or ($relogin == 'YES') )
 	echo "<TD ALIGN=CENTER VALIGN=MIDDLE> "._QXZ("Login")." </TD>";
 	echo "</TR>\n";
 	echo "<TR><TD ALIGN=LEFT COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
-	echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Login:")."  </TD>";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Login").": </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=TEXT NAME=user SIZE=10 MAXLENGTH=20 VALUE=\"$user\"></TD></TR>\n";
 	echo "<TR><TD ALIGN=RIGHT>"._QXZ("User Password:")."  </TD>";
 	echo "<TD ALIGN=LEFT><INPUT TYPE=PASSWORD NAME=pass SIZE=10 MAXLENGTH=20 VALUE=\"$pass\"></TD></TR>\n";
