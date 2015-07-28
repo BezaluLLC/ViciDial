@@ -55,6 +55,7 @@
 # 150724-0047 - Added agent_debug_logging
 # 150725-1406 - Added agent_display_fields
 # 150727-1039 - Added default_language
+# 150728-0904 - Added state_conversion for list loader
 #
 
 require("dbconnect_mysqli.php");
@@ -3658,6 +3659,11 @@ if ($SSoutbound_autodial_active > 0)
 	<A NAME="list_loader-template_id">
 	<BR>
 	<B><?php echo _QXZ("Template ID"); ?> -</B><?php echo _QXZ("If the user has selected Custom layout from the File layout options, then this the the template the lead loader will use.  It will also override the selected list ID with the list ID that was assigned to the selected template when it was created."); ?>
+
+	<BR>
+	<A NAME="list_loader-state_conversion">
+	<BR>
+	<B><?php echo _QXZ("State Abbreviation Lookup"); ?> -</B><?php echo _QXZ("If your lead file has state names spelled out and you would like to load them into the state field as their two-character abbreviations, this feature will look up the abbreviation from the internal database. Default is DISABLED."); ?>
 
 
 

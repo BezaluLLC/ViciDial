@@ -115,6 +115,9 @@ OTHER CHANGES:
 21. Added campaign option to display some lead fields as read-only in the agent 
 	screen. Those fields are: entry_date,source_id,date_of_birth,rank,owner
 
+22. Added option in the web-based lead loader to convert state names to their
+	two-letter abbreviations.
+
 
 
 

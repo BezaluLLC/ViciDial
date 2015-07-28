@@ -1,5 +1,5 @@
 <?php
-# admin_listloader_fourth_gen.php - version 2.10
+# admin_listloader_fourth_gen.php - version 2.12
 #  (based upon - new_listloader_superL.php script)
 # 
 # Copyright (C) 2015  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
@@ -61,10 +61,11 @@
 # 150209-2113 - Added master_list_override option to override template setting
 # 150312-1505 - Allow for single quotes in vicidial_list data fields
 # 150516-1136 - Fixed conflict with functions.php
+# 150728-0732 - Added state fullname to abbreviation conversion feature (state_conversion)
 #
 
-$version = '2.12-59';
-$build = '150516-1136';
+$version = '2.12-60';
+$build = '150728-0732';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -164,6 +165,8 @@ if (isset($_GET["template_id"]))					{$template_id=$_GET["template_id"];}
 	elseif (isset($_POST["template_id"]))		{$template_id=$_POST["template_id"];}
 if (isset($_GET["usacan_check"]))			{$usacan_check=$_GET["usacan_check"];}
 	elseif (isset($_POST["usacan_check"]))	{$usacan_check=$_POST["usacan_check"];}
+if (isset($_GET["state_conversion"]))			{$state_conversion=$_GET["state_conversion"];}
+	elseif (isset($_POST["state_conversion"]))	{$state_conversion=$_POST["state_conversion"];}
 
 if (strlen($dedupe_statuses_override)>0) {
 	$dedupe_statuses=explode(",", $dedupe_statuses_override);
@@ -631,6 +634,14 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 			<option value="NANPA"><?php echo _QXZ("NANPA AREACODE PREFIX FIRST"); ?></option>
 			</select></td>
 		  </tr>
+		  <tr>
+			<td align=right width="25%"><font face="arial, helvetica" size=2><?php echo _QXZ("State Abbreviation Lookup"); ?>: </font></td>
+			<td align=left width="75%"><font face="arial, helvetica" size=1><select size=1 name=state_conversion>
+			<option selected value=""><?php echo _QXZ("DISABLED"); ?></option>
+			<option value="STATELOOKUP"><?php echo _QXZ("FULL STATE NAME TO ABBREVIATION"); ?></option>
+			</select></td>
+		  </tr>
+
 		<tr>
 			<td align=center colspan=2><input type=submit value="<?php echo _QXZ("SUBMIT"); ?>" name='submit_file'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button onClick="javascript:document.location='admin_listloader_fourth_gen.php'" value="<?php echo _QXZ("START OVER"); ?>" name='reload_page'></td>
 		  </tr>
@@ -668,6 +679,11 @@ else
 	<td align=right width="35%"><B><font face="arial, helvetica" size=2><?php echo _QXZ("Lead Time Zone Lookup"); ?>:</font></B></td>
 	<td align=left width="75%"><font face="arial, helvetica" size=2><?php echo $postalgmt ?></font></td>
 	</tr>
+	<tr>
+	<td align=right width="35%"><B><font face="arial, helvetica" size=2><?php echo _QXZ("State Abbreviation Lookup"); ?>:</font></B></td>
+	<td align=left width="75%"><font face="arial, helvetica" size=2><?php echo $state_conversion ?></font></td>
+	</tr>
+
 
 	<tr>
 	<td align=center colspan=2><B><font face="arial, helvetica" size=2>
@@ -737,6 +753,10 @@ if ($OK_to_process)
 		if (strlen($status_dedupe_str)>0) 
 			{
 			print "<BR>"._QXZ("OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY").": $status_dedupe_str<BR>\n";
+			}
+		if (strlen($state_conversion)>9)
+			{
+			print "<BR>"._QXZ("CONVERSION OF STATE NAMES TO ABBREVIATIONS ENABLED").": $state_conversion<BR>\n";
 			}
 
 		if ($custom_fields_enabled > 0)
@@ -860,6 +880,25 @@ if ($OK_to_process)
 				if (strlen($phone_code_override)>0) 
 					{
 					$phone_code = $phone_code_override;
+					}
+				if (strlen($phone_code)<1) {$phone_code = '1';}
+
+				if ( ($state_conversion == 'STATELOOKUP') and (strlen($state) > 3) )
+					{
+					$stmt = "select state from vicidial_phone_codes where geographic_description='$state' and country_code='$phone_code' limit 1;";
+					if ($DB>0) {echo "DEBUG: state conversion query - $stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$sc_recs = mysqli_num_rows($rslt);
+					if ($sc_recs > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$state_abbr=$row[0];
+						if ( (strlen($state_abbr) > 0) and (strlen($state_abbr) < 3 ) )
+							{
+							if ($DB>0) {echo "DEBUG: state conversion found - $state|$state_abbr\n";}
+							$state = $state_abbr;
+							}
+						}
 					}
 
 				##### BEGIN custom fields columns list ###
@@ -1077,8 +1116,6 @@ if ($OK_to_process)
 
 				if ( ($valid_number>0) and ($dup_lead<1) and ($list_id >= 100 ))
 					{
-					if (strlen($phone_code)<1) {$phone_code = '1';}
-
 					if (preg_match("/TITLEALTPHONE/i",$dupcheck))
 						{$phone_list .= "$alt_phone$title$US$list_id|";}
 					else
@@ -1162,7 +1199,7 @@ if ($OK_to_process)
 			}
 
 		### LOG INSERTION Admin Log Table ###
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST CUSTOM', event_sql='', event_notes='File Name: $leadfile_name, GOOD: $good, BAD: $bad, TOTAL: $total, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check|';";
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST CUSTOM', event_sql='', event_notes='File Name: $leadfile_name, GOOD: $good, BAD: $bad, TOTAL: $total, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check| state_conversion:$state_conversion|';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -1180,7 +1217,7 @@ if (($leadfile) && ($LF_path))
 	$total=0; $good=0; $bad=0; $dup=0; $post=0; $phone_list='';
 
 	### LOG INSERTION Admin Log Table ###
-	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST', event_sql='', event_notes='File Name: $leadfile_name, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check|';";
+	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST', event_sql='', event_notes='File Name: $leadfile_name, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check| state_conversion:$state_conversion|';";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -1307,6 +1344,11 @@ if (($leadfile) && ($LF_path))
 				{
 				print "<BR>"._QXZ("OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY").": ".preg_replace('/\'/', '', $template_statuses)."<BR>\n";
 				}
+			if (strlen($state_conversion)>9)
+				{
+				print "<BR>"._QXZ("CONVERSION OF STATE NAMES TO ABBREVIATIONS ENABLED").": $state_conversion<BR>\n";
+				}
+
 			while (!feof($file)) 
 				{
 				$record++;
@@ -1394,6 +1436,26 @@ if (($leadfile) && ($LF_path))
 						{
 						$phone_code = $phone_code_override;
 						}
+					if (strlen($phone_code)<1) {$phone_code = '1';}
+
+					if ( ($state_conversion == 'STATELOOKUP') and (strlen($state) > 3) )
+						{
+						$stmt = "select state from vicidial_phone_codes where geographic_description='$state' and country_code='$phone_code' limit 1;";
+						if ($DB>0) {echo "DEBUG: state conversion query - $stmt\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$sc_recs = mysqli_num_rows($rslt);
+						if ($sc_recs > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$state_abbr=$row[0];
+							if ( (strlen($state_abbr) > 0) and (strlen($state_abbr) < 3 ) )
+								{
+								if ($DB>0) {echo "DEBUG: state conversion found - $state|$state_abbr\n";}
+								$state = $state_abbr;
+								}
+							}
+						}
+
 
 					##### Check for duplicate phone numbers in vicidial_list table for all lists in a campaign #####
 					if (preg_match("/DUPCAMP/i",$dupcheck))
@@ -1566,8 +1628,6 @@ if (($leadfile) && ($LF_path))
 
 					if ( ($valid_number>0) and ($dup_lead<1) and ($list_id >= 100 ))
 						{
-						if (strlen($phone_code)<1) {$phone_code = '1';}
-
 						if (preg_match("/TITLEALTPHONE/i",$dupcheck))
 							{$phone_list .= "$alt_phone$title$US$list_id|";}
 						else
@@ -1693,7 +1753,7 @@ if (($leadfile) && ($LF_path))
 					{fwrite($stmt_file, $custom_ins_stmt."\r\n");}
 				}
 			### LOG INSERTION Admin Log Table ###
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST STANDARD', event_sql='', event_notes='File Name: $leadfile_name, GOOD: $good, BAD: $bad, TOTAL: $total, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check|';";
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST STANDARD', event_sql='', event_notes='File Name: $leadfile_name, GOOD: $good, BAD: $bad, TOTAL: $total, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check| state_conversion:$state_conversion|';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -1795,6 +1855,11 @@ if (($leadfile) && ($LF_path))
 				{
 				print "<BR>"._QXZ("OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY").": $status_dedupe_str<BR>\n";
 				}
+			if (strlen($state_conversion)>9)
+				{
+				print "<BR>"._QXZ("CONVERSION OF STATE NAMES TO ABBREVIATIONS ENABLED").": $state_conversion<BR>\n";
+				}
+
 			while (!feof($file)) 
 				{
 				$record++;
@@ -1877,6 +1942,25 @@ if (($leadfile) && ($LF_path))
 					if (strlen($phone_code_override)>0) 
 						{
 						$phone_code = $phone_code_override;
+						}
+					if (strlen($phone_code)<1) {$phone_code = '1';}
+
+					if ( ($state_conversion == 'STATELOOKUP') and (strlen($state) > 3) )
+						{
+						$stmt = "select state from vicidial_phone_codes where geographic_description='$state' and country_code='$phone_code' limit 1;";
+						if ($DB>0) {echo "DEBUG: state conversion query - $stmt\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$sc_recs = mysqli_num_rows($rslt);
+						if ($sc_recs > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$state_abbr=$row[0];
+							if ( (strlen($state_abbr) > 0) and (strlen($state_abbr) < 3 ) )
+								{
+								if ($DB>0) {echo "DEBUG: state conversion found - $state|$state_abbr\n";}
+								$state = $state_abbr;
+								}
+							}
 						}
 
 					##### Check for duplicate phone numbers in vicidial_list table for all lists in a campaign #####
@@ -2050,8 +2134,6 @@ if (($leadfile) && ($LF_path))
 
 					if ( ($valid_number>0) and ($dup_lead<1) and ($list_id >= 100 ))
 						{
-						if (strlen($phone_code)<1) {$phone_code = '1';}
-
 						if (preg_match("/TITLEALTPHONE/i",$dupcheck))
 							{$phone_list .= "$alt_phone$title$US$list_id|";}
 						else
@@ -2115,7 +2197,7 @@ if (($leadfile) && ($LF_path))
 					{fwrite($stmt_file, $stmtZ."\r\n");}
 				}
 			### LOG INSERTION Admin Log Table ###
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST STANDARD', event_sql='', event_notes='File Name: $leadfile_name, GOOD: $good, BAD: $bad, TOTAL: $total, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check|';";
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST STANDARD', event_sql='', event_notes='File Name: $leadfile_name, GOOD: $good, BAD: $bad, TOTAL: $total, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check| state_conversion:$state_conversion|';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -2269,6 +2351,11 @@ if (($leadfile) && ($LF_path))
 			{
 			print "<BR>"._QXZ("OMITTING DUPLICATES AGAINST FOLLOWING STATUSES ONLY").": $status_dedupe_str<BR>\n";
 			}
+		if (strlen($state_conversion)>9)
+			{
+			print "<BR>"._QXZ("CONVERSION OF STATE NAMES TO ABBREVIATIONS ENABLED").": $state_conversion<BR>\n";
+			}
+
 		$buffer=rtrim(fgets($file, 4096));
 		$buffer=stripslashes($buffer);
 		$row=explode($delimiter, preg_replace('/[\"]/i', '', $buffer));
@@ -2301,6 +2388,7 @@ if (($leadfile) && ($LF_path))
 		print "  <input type=hidden name=dedupe_statuses_override value=\"$status_dedupe_str\">\r\n";
 		print "  <input type=hidden name=dupcheck value=\"$dupcheck\">\r\n";
 		print "  <input type=hidden name=usacan_check value=\"$usacan_check\">\r\n";
+		print "  <input type=hidden name=state_conversion value=\"$state_conversion\">\r\n";
 		print "  <input type=hidden name=postalgmt value=\"$postalgmt\">\r\n";
 		print "  <input type=hidden name=lead_file value=\"$lead_file\">\r\n";
 		print "  <input type=hidden name=list_id_override value=\"$list_id_override\">\r\n";
