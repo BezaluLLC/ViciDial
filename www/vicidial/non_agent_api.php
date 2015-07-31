@@ -100,10 +100,11 @@
 # 150512-2028 - Added filtering of hash sign on some input variables, Issue #851
 # 150516-1138 - Fixed conflict with functions.php
 # 150603-1528 - Fixed format issue in recording_lookup
+# 150730-2022 - Added option to set entry_list_id
 #
 
-$version = '2.12-76';
-$build = '150603-1528';
+$version = '2.12-77';
+$build = '150730-2022';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -372,6 +373,8 @@ if (isset($_GET["camp_rg_only"]))				{$camp_rg_only=$_GET["camp_rg_only"];}
 	elseif (isset($_POST["camp_rg_only"]))		{$camp_rg_only=$_POST["camp_rg_only"];}
 if (isset($_GET["wrapup_seconds_override"]))			{$wrapup_seconds_override=$_GET["wrapup_seconds_override"];}
 	elseif (isset($_POST["wrapup_seconds_override"]))	{$wrapup_seconds_override=$_POST["wrapup_seconds_override"];}
+if (isset($_GET["entry_list_id"]))			{$entry_list_id=$_GET["entry_list_id"];}
+	elseif (isset($_POST["entry_list_id"]))	{$entry_list_id=$_POST["entry_list_id"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -401,6 +404,7 @@ if ($non_latin < 1)
 	$function = preg_replace('/[^-\_0-9a-zA-Z]/', '',$function);
 	$format = preg_replace('/[^0-9a-zA-Z]/','',$format);
 	$list_id = preg_replace('/[^0-9]/','',$list_id);
+	$entry_list_id = preg_replace('/[^0-9]/','',$entry_list_id);
 	$phone_code = preg_replace('/[^0-9]/','',$phone_code);
 	$update_phone_number=preg_replace('/[^A-Z]/','',$update_phone_number);
 	$phone_number = preg_replace('/[^0-9]/','',$phone_number);
@@ -6276,9 +6280,12 @@ if ($function == 'add_lead')
 				$new_status='NEW';
 				if ($callback == 'Y')
 					{$new_status='CBHOLD';}
+				$entry_list_idSQL = ",entry_list_id='0'";
+				if (strlen($entry_list_id) > 0)
+					{$entry_list_idSQL = ",entry_list_id='$entry_list_id'";}
 
 				### insert a new lead in the system with this phone number
-				$stmt = "INSERT INTO vicidial_list SET phone_code=\"$phone_code\",phone_number=\"$phone_number\",list_id=\"$list_id\",status=\"$new_status\",user=\"$user\",vendor_lead_code=\"$vendor_lead_code\",source_id=\"$source_id\",gmt_offset_now=\"$gmt_offset\",title=\"$title\",first_name=\"$first_name\",middle_initial=\"$middle_initial\",last_name=\"$last_name\",address1=\"$address1\",address2=\"$address2\",address3=\"$address3\",city=\"$city\",state=\"$state\",province=\"$province\",postal_code=\"$postal_code\",country_code=\"$country_code\",gender=\"$gender\",date_of_birth=\"$date_of_birth\",alt_phone=\"$alt_phone\",email=\"$email\",security_phrase=\"$security_phrase\",comments=\"$comments\",called_since_last_reset=\"N\",entry_date=\"$ENTRYdate\",last_local_call_time=\"$NOW_TIME\",rank=\"$rank\",owner=\"$owner\",entry_list_id='0';";
+				$stmt = "INSERT INTO vicidial_list SET phone_code=\"$phone_code\",phone_number=\"$phone_number\",list_id=\"$list_id\",status=\"$new_status\",user=\"$user\",vendor_lead_code=\"$vendor_lead_code\",source_id=\"$source_id\",gmt_offset_now=\"$gmt_offset\",title=\"$title\",first_name=\"$first_name\",middle_initial=\"$middle_initial\",last_name=\"$last_name\",address1=\"$address1\",address2=\"$address2\",address3=\"$address3\",city=\"$city\",state=\"$state\",province=\"$province\",postal_code=\"$postal_code\",country_code=\"$country_code\",gender=\"$gender\",date_of_birth=\"$date_of_birth\",alt_phone=\"$alt_phone\",email=\"$email\",security_phrase=\"$security_phrase\",comments=\"$comments\",called_since_last_reset=\"N\",entry_date=\"$ENTRYdate\",last_local_call_time=\"$NOW_TIME\",rank=\"$rank\",owner=\"$owner\" $entry_list_idSQL;";
 				if ($DB>0) {echo "DEBUG: add_lead query - $stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$affected_rows = mysqli_affected_rows($link);
@@ -6823,6 +6830,7 @@ if ($function == 'update_lead')
 						if (strlen($called_count)>0)		{$VL_update_SQL .= "called_count=\"$called_count\",";}
 						if ( (strlen($reset_lead) > 0 && $reset_lead == 'Y') )	{$VL_update_SQL .= "called_since_last_reset='N',";}
                         if ( (strlen($update_phone_number)>0 && $update_phone_number=='Y' && strlen($phone_number)>0) ) {$VL_update_SQL .= "phone_number='$phone_number',";}
+						if ( (strlen($entry_list_id)>0) and ($custom_fields!='Y') )	{$VL_update_SQL .= "entry_list_id=\"$entry_list_id\",";}
 						$VL_update_SQL = preg_replace("/,$/","",$VL_update_SQL);
 						$VL_update_SQL = preg_replace("/'--BLANK--'/","''",$VL_update_SQL);
 						$VL_update_SQL = preg_replace("/\n/","!N",$VL_update_SQL);
@@ -7199,10 +7207,14 @@ if ($function == 'update_lead')
 								### get current gmt_offset of the phone_number
 								$gmt_offset = lookup_gmt_api($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$tz_method,$postal_code,$owner,$USprefix);
 
+								$entry_list_idSQL = ",entry_list_id='0'";
+								if ( (strlen($entry_list_id) > 0) and ($custom_fields!='Y') )
+									{$entry_list_idSQL = ",entry_list_id='$entry_list_id'";}
+
 								if (strlen($status)<1)
 									{$status='NEW';}
 								### insert a new lead in the system with this phone number
-								$stmt = "INSERT INTO vicidial_list SET phone_code=\"$phone_code\",phone_number=\"$phone_number\",list_id=\"$list_id\",status=\"$status\",user=\"$user\",vendor_lead_code=\"$vendor_lead_code\",source_id=\"$source_id\",gmt_offset_now=\"$gmt_offset\",title=\"$title\",first_name=\"$first_name\",middle_initial=\"$middle_initial\",last_name=\"$last_name\",address1=\"$address1\",address2=\"$address2\",address3=\"$address3\",city=\"$city\",state=\"$state\",province=\"$province\",postal_code=\"$postal_code\",country_code=\"$country_code\",gender=\"$gender\",date_of_birth=\"$date_of_birth\",alt_phone=\"$alt_phone\",email=\"$email\",security_phrase=\"$security_phrase\",comments=\"$comments\",called_since_last_reset=\"N\",entry_date=\"$ENTRYdate\",last_local_call_time=\"$NOW_TIME\",rank=\"$rank\",owner=\"$owner\",entry_list_id='0';";
+								$stmt = "INSERT INTO vicidial_list SET phone_code=\"$phone_code\",phone_number=\"$phone_number\",list_id=\"$list_id\",status=\"$status\",user=\"$user\",vendor_lead_code=\"$vendor_lead_code\",source_id=\"$source_id\",gmt_offset_now=\"$gmt_offset\",title=\"$title\",first_name=\"$first_name\",middle_initial=\"$middle_initial\",last_name=\"$last_name\",address1=\"$address1\",address2=\"$address2\",address3=\"$address3\",city=\"$city\",state=\"$state\",province=\"$province\",postal_code=\"$postal_code\",country_code=\"$country_code\",gender=\"$gender\",date_of_birth=\"$date_of_birth\",alt_phone=\"$alt_phone\",email=\"$email\",security_phrase=\"$security_phrase\",comments=\"$comments\",called_since_last_reset=\"N\",entry_date=\"$ENTRYdate\",last_local_call_time=\"$NOW_TIME\",rank=\"$rank\",owner=\"$owner\" $entry_list_idSQL;";
 								if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
 								$rslt=mysql_to_mysqli($stmt, $link);
 								$affected_rows = mysqli_affected_rows($link);

@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2015-06-03
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2015-07-30
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -105,6 +105,7 @@ Changes:
 150430-0644 - Added API allowed function restrictions and allowed list restrictions
 150512-2028 - Added filtering of hash sign on some input variables, Issue #851
 150603-1528 - Fixed format issue in recording_lookup
+150730-2022 - Added option to set entry_list_id
 
 
 API Functions use the 'function' variable
@@ -592,7 +593,7 @@ comments -		1-255 characters
 multi_alt_phones -	5-1024 characters (see examples for more info)
 rank -			1-5 digits
 owner -			1-20 characters (user ID, Territory or user group)
-
+entry_list_id -		WARNING! ONLY USE IF YOU KNOW WHAT YOU ARE DOING, CAN BREAK CUSTOM FIELDS! (must be all numbers, 3-12 digits, will not work if custom_fields is set to Y)
 
 
 Multi-ALT-Phones format:
@@ -731,6 +732,7 @@ comments -		1-255 characters
 rank -			1-5 digits
 owner -			1-20 characters (user ID, Territory or user group)
 called_count -		digits only, the number of attempts dialing the lead
+entry_list_id -		WARNING! ONLY USE IF YOU KNOW WHAT YOU ARE DOING, CAN BREAK CUSTOM FIELDS! (must be all numbers, 3-12 digits, will not work if custom_fields is set to Y)
 NOTES: 
  - in order to set a field to empty('') set it equal to --BLANK--, i.e. "&province=--BLANK--"
  - please use no special characters like apostrophes, double-quotes or amphersands
