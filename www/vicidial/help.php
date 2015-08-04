@@ -56,6 +56,7 @@
 # 150725-1406 - Added agent_display_fields
 # 150727-1039 - Added default_language
 # 150728-0904 - Added state_conversion for list loader
+# 150804-1108 - Added agent_whisper_enabled system settings option
 #
 
 require("dbconnect_mysqli.php");
@@ -4798,6 +4799,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-did_ra_extensions_enabled">
 <BR>
 <B><?php echo _QXZ("Enable Remote Agent Extension Overrides"); ?> -</B><?php echo _QXZ("This setting enables DIDs to have extension overrides for remote agent routed calls through in-groups. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="settings-agent_whisper_enabled">
+<BR>
+<B><?php echo _QXZ("Enable Agent Whisper Monitoring"); ?> -</B><?php echo _QXZ("This setting allows a manager to be able to speak to a logged in agent without the customer being able to hear them. WARNING, this feature is considered experimental and may not function properly in some cases. Older versions of Asterisk have shown to have serious issues at times with this feature and can cause Asterisk to freeze or crash. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="contact_information">

@@ -100,9 +100,10 @@
 # 150112-2018 - Added flag to delete voicemail greeting when changed from an audio file to empty
 # 150307-1738 - Added custom meetme enter sounds(only works with Asterisk 1.8)
 # 150724-0835 - Added purge of vicidial_ajax_log records older than 7 days to end of day process
+# 150804-0919 - Added whisper extensions
 #
 
-$build = '150724-0835';
+$build = '150804-0919';
 
 $DB=0; # Debug flag
 
@@ -1766,6 +1767,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Lext .= "exten => 473782138521111,1,Answer\n";
 		$Lext .= "exten => 473782138521111,n,Wait(5)\n";
 		$Lext .= "exten => 473782138521111,n,Hangup()\n";
+		$Lext .= "; Whisper to agent meetme entry\n";
+		$Lext .= "exten => _473782188600XXX,1,Answer\n";
+		$Lext .= "exten => _473782188600XXX,n,Wait(1)\n";
+		$Lext .= "exten => _473782188600XXX,n,AGI(getAGENTchannel.agi)\n";
+		$Lext .= "exten => _473782188600XXX,n,NoOp(\${agent_zap_channel})\n";
+		$Lext .= "exten => _473782188600XXX,n,GotoIf(\$[ \"\${agent_zap_channel}\" = \"101\" ]?fin)\n";
+		$Lext .= "exten => _473782188600XXX,n,ChanSpy(\${agent_zap_channel},qw)\n";
+		$Lext .= "exten => _473782188600XXX,n(fin),Hangup()\n";
 		}
 	else
 		{
@@ -1787,6 +1796,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Lext .= "exten => 473782138521111,1,Answer\n";
 		$Lext .= "exten => 473782138521111,n,Wait(5)\n";
 		$Lext .= "exten => 473782138521111,n,Hangup()\n";
+		$Lext .= "; Whisper to agent meetme entry\n";
+		$Lext .= "exten => _473782188600XXX,1,Answer\n";
+		$Lext .= "exten => _473782188600XXX,n,Wait(1)\n";
+		$Lext .= "exten => _473782188600XXX,n,AGI(getAGENTchannel.agi)\n";
+		$Lext .= "exten => _473782188600XXX,n,NoOp(\${agent_zap_channel})\n";
+		$Lext .= "exten => _473782188600XXX,n,GotoIf(\$[ \"\${agent_zap_channel}\" = \"101\" ]?fin)\n";
+		$Lext .= "exten => _473782188600XXX,n,ChanSpy(\${agent_zap_channel},qw)\n";
+		$Lext .= "exten => _473782188600XXX,n(fin),Hangup()\n";
 		}
 
 	$Liax .= "\n";

@@ -1602,7 +1602,8 @@ enable_third_webform ENUM('0','1') default '0',
 chat_url VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT NULL,
 chat_timeout INT(3) unsigned DEFAULT NULL,
 agent_debug_logging VARCHAR(20) default '0',
-default_language VARCHAR(100) default 'default English'
+default_language VARCHAR(100) default 'default English',
+agent_whisper_enabled ENUM('0','1') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3546,4 +3547,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1424',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1425',db_schema_update_date=NOW(),reload_timestamp=NOW();

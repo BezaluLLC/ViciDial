@@ -92,10 +92,11 @@
 # 141230-0030 - Added code for on-the-fly language translations display
 # 150211-2342 - Added hopper link, issue #825
 # 150307-0825 - small cosmetic fix
+# 150804-0956 - Added WHISPER option agent monitoring
 #
 
-$version = '2.10-81';
-$build = '150307-0825';
+$version = '2.12-82';
+$build = '150804-0956';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -178,7 +179,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,agent_whisper_enabled FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -191,6 +192,7 @@ if ($qm_conf_ct > 0)
 	$reports_use_slave_db =			$row[3];
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
+	$agent_whisper_enabled =		$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -438,7 +440,7 @@ if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGa
 else 
 	{$admin_viewable_groupsALL=1;}
 
-#  and (preg_match("/MONITOR|BARGE|HIJACK/",$monitor_active) ) )
+#  and (preg_match("/MONITOR|BARGE|HIJACK|WHISPER/",$monitor_active) ) )
 if ( (!isset($monitor_phone)) or (strlen($monitor_phone)<1) )
 	{
 	$stmt="select phone_login from vicidial_users where user='$PHP_AUTH_USER';";
@@ -673,6 +675,12 @@ $select_list .= ">"._QXZ("MONITOR")."</option>";
 $select_list .= "<option value=\"BARGE\"";
 	if ($monitor_active=='BARGE') {$select_list .= " selected";} 
 $select_list .= ">"._QXZ("BARGE")."</option>";
+if ($agent_whisper_enabled == '1')
+	{
+	$select_list .= "<option value='WHISPER'";
+		if ($monitor_active=='WHISPER') {$select_list .= " selected";} 
+	$select_list .= ">"._QXZ("WHISPER")."</option>";
+	}
 #$select_list .= "<option value=\"HIJACK\"";
 #	if ($monitor_active=='HIJACK') {$select_list .= " selected";} 
 #$select_list .= ">HIJACK</option>";
@@ -2254,6 +2262,8 @@ $HDsessionid =		"------------------+";
 $HTsessionid =		" "._QXZ("SESSIONID",16)." |";
 $HDbarge =			"-------+";
 $HTbarge =			" "._QXZ("BARGE",5)." |";
+$HDwhisper =		"---------+";
+$HTwhisper =		" "._QXZ("WHISPER",7)." |";
 $HDstatus =			"----------+";
 $HTstatus =			" "._QXZ("STATUS",8)." |";
 $HDcustphone =		"-------------+";
@@ -2299,7 +2309,7 @@ if ($UGdisplay < 1)
 	$HDusergroup =	'';
 	$HTusergroup =	'';
 	}
-if ( ($SIPmonitorLINK<1) and ($IAXmonitorLINK<1) and (!preg_match("/MONITOR|BARGE/",$monitor_active) ) ) 
+if ( ($SIPmonitorLINK<1) and ($IAXmonitorLINK<1) and (!preg_match("/MONITOR|BARGE|WHISPER/",$monitor_active) ) ) 
 	{
 	$HDsessionid =	"-----------+";
 	$HTsessionid =	" "._QXZ("SESSIONID",9)." |";
@@ -2308,6 +2318,11 @@ if ( ($SIPmonitorLINK<2) and ($IAXmonitorLINK<2) and (!preg_match("/BARGE/",$mon
 	{
 	$HDbarge =		'';
 	$HTbarge =		'';
+	}
+if ( ($SIPmonitorLINK<2) and ($IAXmonitorLINK<2) and (!preg_match("/WHISPER/",$monitor_active) ) ) 
+	{
+	$HDwhisper =		'';
+	$HTwhisper =		'';
 	}
 if ($SERVdisplay < 1)
 	{
@@ -2320,13 +2335,13 @@ if ($SERVdisplay < 1)
 
 if ($realtime_block_user_info > 0)
 	{
-	$Aline  = "$HDbegin$HDusergroup$HDsessionid$HDbarge$HDstatus$HDpause$HDcustphone$HDserver_ip$HDcall_server_ip$HDtime$HDcampaign$HDcalls$HDigcall\n";
-	$Bline  = "$HTbegin$HTusergroup$HTsessionid$HTbarge$HTstatus$HTpause$HTcustphone$HTserver_ip$HTcall_server_ip$HTtime$HTcampaign$HTcalls$HTigcall\n";
+	$Aline  = "$HDbegin$HDusergroup$HDsessionid$HDbarge$HDwhisper$HDstatus$HDpause$HDcustphone$HDserver_ip$HDcall_server_ip$HDtime$HDcampaign$HDcalls$HDigcall\n";
+	$Bline  = "$HTbegin$HTusergroup$HTsessionid$HTbarge$HTwhisper$HTstatus$HTpause$HTcustphone$HTserver_ip$HTcall_server_ip$HTtime$HTcampaign$HTcalls$HTigcall\n";
 	}
 else
 	{
-	$Aline  = "$HDbegin$HDstation$HDphone$HDuser$HDusergroup$HDsessionid$HDbarge$HDstatus$HDpause$HDcustphone$HDserver_ip$HDcall_server_ip$HDtime$HDcampaign$HDcalls$HDigcall\n";
-	$Bline  = "$HTbegin$HTstation$HTphone$HTuser$HTusergroup$HTsessionid$HTbarge$HTstatus$HTpause$HTcustphone$HTserver_ip$HTcall_server_ip$HTtime$HTcampaign$HTcalls$HTigcall\n";
+	$Aline  = "$HDbegin$HDstation$HDphone$HDuser$HDusergroup$HDsessionid$HDbarge$HDwhisper$HDstatus$HDpause$HDcustphone$HDserver_ip$HDcall_server_ip$HDtime$HDcampaign$HDcalls$HDigcall\n";
+	$Bline  = "$HTbegin$HTstation$HTphone$HTuser$HTusergroup$HTsessionid$HTbarge$HTwhisper$HTstatus$HTpause$HTcustphone$HTserver_ip$HTcall_server_ip$HTtime$HTcampaign$HTcalls$HTigcall\n";
 	}
 $Aecho .= "$Aline";
 $Aecho .= "$Bline";
@@ -2748,10 +2763,14 @@ $talking_to_print = mysqli_num_rows($rslt);
 		if ($IAXmonitorLINK>0) {$L=" <a href=\"iax:0$Lsessionid@$server_ip\">"._QXZ("LISTEN",6)."</a>";   $R='';}
 		if ($SIPmonitorLINK>1) {$R=" | <a href=\"sip:$Lsessionid@$server_ip\">"._QXZ("BARGE",5)."</a>";}
 		if ($IAXmonitorLINK>1) {$R=" | <a href=\"iax:$Lsessionid@$server_ip\">BARGE</a>";}
-		if ( (strlen($monitor_phone)>1) and (preg_match("/MONITOR|BARGE/",$monitor_active) ) )
+		if ( (strlen($monitor_phone)>1) and (preg_match("/MONITOR|BARGE|WHISPER/",$monitor_active) ) )
 			{$L=" <a href=\"javascript:send_monitor('$Lsessionid','$Lserver_ip','MONITOR');\">"._QXZ("LISTEN",6)."</a>";   $R='';}
-		if ( (strlen($monitor_phone)>1) and (preg_match("/BARGE/",$monitor_active) ) )
+		if ( (strlen($monitor_phone)>1) and (preg_match("/BARGE|WHISPER/",$monitor_active) ) )
 			{$R=" | <a href=\"javascript:send_monitor('$Lsessionid','$Lserver_ip','BARGE');\">"._QXZ("BARGE",5)."</a>";}
+		if ($SIPmonitorLINK>1) {$R=" | <a href=\"sip:47378218$Lsessionid@$server_ip\">WHISPER</a>";}
+		if ($IAXmonitorLINK>1) {$R=" | <a href=\"iax:47378218$Lsessionid@$server_ip\">WHISPER</a>";}
+		if ( (strlen($monitor_phone)>1) and (preg_match("/WHISPER/",$monitor_active) ) )
+			{$R=" | <a href=\"javascript:send_monitor('$Lsessionid','$Lserver_ip','WHISPER');\">WHISPER</a>";}
 
 		if ($CUSTPHONEdisplay > 0)	{$CP = " $G$custphone$EG |";}
 		else	{$CP = "";}

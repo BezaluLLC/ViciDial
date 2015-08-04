@@ -101,10 +101,11 @@
 # 150516-1138 - Fixed conflict with functions.php
 # 150603-1528 - Fixed format issue in recording_lookup
 # 150730-2022 - Added option to set entry_list_id
+# 150804-0948 - Added WHISPER option for blind_monitor function
 #
 
-$version = '2.12-77';
-$build = '150730-2022';
+$version = '2.12-78';
+$build = '150804-0948';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -383,7 +384,7 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,custom_fields_enabled,pass_hash_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled,pass_hash_enabled,agent_whisper_enabled FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
@@ -392,6 +393,7 @@ if ($qm_conf_ct > 0)
 	$non_latin =				$row[0];
 	$custom_fields_enabled =	$row[1];
 	$SSpass_hash_enabled =		$row[2];
+	$agent_whisper_enabled =	$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -1633,6 +1635,16 @@ if ($function == 'blind_monitor')
 					if ( (preg_match('/MONITOR/',$stage)) or (strlen($stage)<1) ) {$stage = '0';}
 					if (preg_match('/BARGE/',$stage)) {$stage = '';}
 					if (preg_match('/HIJACK/',$stage)) {$stage = '';}
+					if (preg_match('/WHISPER/',$stage)) 
+						{
+						if ($agent_whisper_enabled == '1') 
+							{$stage = '47378218';}
+						else
+							{
+							# WHISPER not enabled
+							$stage = '0';
+							}
+						}
 
 					### insert a new lead in the system with this phone number
 					$stmt = "INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$monitor_server_ip','','Originate','$BMquery','Channel: Local/$monitor_dialstring$stage$session_id@default','Context; default','Exten: $dialplan_number','Priority: 1','Callerid: \"VC Blind Monitor\" <$outbound_cid>','','','','','');";

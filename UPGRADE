@@ -123,6 +123,9 @@ OTHER CHANGES:
 24. Added option to User Status report to only show call logs with a specified
 	call status.
 
+25. Added experimental Agent Whisper Monitoring from the Real-time Report. 
+	Must be enabled in System Settings.
+
 
 
 

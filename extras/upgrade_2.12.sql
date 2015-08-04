@@ -247,3 +247,9 @@ UPDATE system_settings SET db_schema_version='1423',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns MODIFY lead_order_secondary ENUM('LEAD_ASCEND','LEAD_DESCEND','CALLTIME_ASCEND','CALLTIME_DESCEND','VENDOR_ASCEND','VENDOR_DESCEND') default 'LEAD_ASCEND';
 
 UPDATE system_settings SET db_schema_version='1424',db_schema_update_date=NOW() where db_schema_version < 1424;
+
+ALTER TABLE system_settings ADD agent_whisper_enabled ENUM('0','1') default '0';
+
+UPDATE servers SET rebuild_conf_files='Y' where active_asterisk_server='Y';
+
+UPDATE system_settings SET db_schema_version='1425',db_schema_update_date=NOW() where db_schema_version < 1425;

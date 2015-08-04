@@ -30,12 +30,13 @@
 # 141001-2200 - Finalized adding QXZ translation to all admin files
 # 141230-0032 - Added code for on-the-fly language translations display
 # 150307-0823 - Fixes for QXZ
+# 150804-0953 - Added WHISPER option agent monitoring
 #
 
 $startMS = microtime();
 
-$version = '2.10-18';
-$build = '150307-0823';
+$version = '2.12-19';
+$build = '150804-0953';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -111,7 +112,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,agent_whisper_enabled FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -124,6 +125,7 @@ if ($qm_conf_ct > 0)
 	$reports_use_slave_db =			$row[3];
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
+	$agent_whisper_enabled =		$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -483,7 +485,7 @@ if ($auth)
 
 	}
 
-#  and (preg_match("/MONITOR|BARGE|HIJACK/",$monitor_active) ) )
+#  and (preg_match("/MONITOR|BARGE|HIJACK|WHISPER/",$monitor_active) ) )
 if ( (!isset($monitor_phone)) or (strlen($monitor_phone)<1) )
 	{
 	$stmt="select phone_login from vicidial_users where user='$PHP_AUTH_USER';";
@@ -746,6 +748,12 @@ $select_list .= ">"._QXZ("MONITOR")."</option>";
 $select_list .= "<option value='BARGE'";
 	if ($monitor_active=='BARGE') {$select_list .= " selected";} 
 $select_list .= ">"._QXZ("BARGE")."</option>";
+if ($agent_whisper_enabled == '1')
+	{
+	$select_list .= "<option value='WHISPER'";
+		if ($monitor_active=='WHISPER') {$select_list .= " selected";} 
+	$select_list .= ">"._QXZ("WHISPER")."</option>";
+	}
 #$select_list .= "<option value='HIJACK'";
 #	if ($monitor_active=='HIJACK') {$select_list .= " selected";} 
 #$select_list .= ">HIJACK</option>";
