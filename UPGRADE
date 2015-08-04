@@ -120,6 +120,9 @@ OTHER CHANGES:
 
 23. Added option to Secondary Lead Sort by vendor lead code
 
+24. Added option to User Status report to only show call logs with a specified
+	call status.
+
 
 
 
