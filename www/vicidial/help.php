@@ -57,6 +57,7 @@
 # 150727-1039 - Added default_language
 # 150728-0904 - Added state_conversion for list loader
 # 150804-1108 - Added agent_whisper_enabled system settings option
+# 150804-1631 - Added multiple in-group _lead_reset options
 #
 
 require("dbconnect_mysqli.php");
@@ -2220,6 +2221,11 @@ if ($SSqc_features_active > 0)
 <B><?php echo _QXZ("Drop Action"); ?> -</B><?php echo _QXZ("This menu allows you to choose what happens to a call when it has been waiting for longer than what is set in the Drop Call Seconds field. HANGUP will simply hang up the call, MESSAGE will send the call the Drop Exten that you have defined below, VOICEMAIL will send the call to the voicemail box that you have defined below and IN_GROUP will send the call to the Inbound Group that is defined below. VMAIL_NO_INST will send the call to the voicemail box that you have defined below and will not play instructions after the voicemail message."); ?>
 
 <BR>
+<A NAME="inbound_groups-drop_lead_reset">
+<BR>
+<B><?php echo _QXZ("Drop Lead Reset"); ?> -</B><?php echo _QXZ("This option if set to Y, will set the lead called-since-last-reset field to N when the call is dropped and sent to an action like Message, Voicemail or Hangup. Default is N for disabled."); ?>
+
+<BR>
 <A NAME="inbound_groups-drop_exten">
 <BR>
 <B><?php echo _QXZ("Drop Exten"); ?> -</B><?php echo _QXZ("If Drop Action is set to MESSAGE, this is the dial plan extension that the call will be sent to if it reaches Drop Call Seconds. For AGENTDIRECT in-groups, if the user is unavailable, you can put AGENTEXT in this field and the system will look up the user custom five field and send the call to that dialplan number."); ?>
@@ -2255,6 +2261,11 @@ if ($SSqc_features_active > 0)
 <B><?php echo _QXZ("After Hours Action"); ?> -</B><?php echo _QXZ("The action to perform if it is after hours as defined in the call time for this inbound group. HANGUP will immediately hangup the call, MESSASGE will play the file in the After Hours Message Filenam field, EXTENSION will send the call to the After Hours Extension in the dialplan and VOICEMAIL will send the call to the voicemail box listed in the After Hours Voicemail field, IN_GROUP will send the call to the inbound group selected in the After Hours Transfer Group select list. Default is MESSAGE. VMAIL_NO_INST will send the call to the voicemail box that you have defined below and will not play instructions after the voicemail message."); ?>
 
 <BR>
+<A NAME="inbound_groups-after_hours_lead_reset">
+<BR>
+<B><?php echo _QXZ("After Hours Lead Reset"); ?> -</B><?php echo _QXZ("This option if set to Y, will set the lead called-since-last-reset field to N when the call is after hours and sent to an action like Message, Voicemail or Hangup. Default is N for disabled."); ?>
+
+<BR>
 <A NAME="inbound_groups-after_hours_message_filename">
 <BR>
 <B><?php echo _QXZ("After Hours Message Filename"); ?> -</B><?php echo _QXZ("The audio file located on the server to be played if the Action is set to MESSAGE. Default is vm-goodbye"); ?>
@@ -2288,6 +2299,11 @@ if ($SSqc_features_active > 0)
 <A NAME="inbound_groups-no_agent_action">
 <BR>
 <B><?php echo _QXZ("No Agent No Queue Action"); ?> -</B><?php echo _QXZ("If No Agent No Queue is enabled, then this field defines where the call will go if there are no agents in the In-Group. Default is MESSAGE, this plays the sound files in the Action Value field and then hangs up."); ?>
+
+<BR>
+<A NAME="inbound_groups-nanq_lead_reset">
+<BR>
+<B><?php echo _QXZ("No Agent No Queue Lead Reset"); ?> -</B><?php echo _QXZ("This option if set to Y, will set the lead called-since-last-reset field to N when No agent no queue is triggered and the call is sent to an action like Message, Voicemail or Hangup. Default is N for disabled."); ?>
 
 <BR>
 <A NAME="inbound_groups-no_agent_action_value">
@@ -2395,6 +2411,11 @@ if ($SSqc_features_active > 0)
 <B><?php echo _QXZ("Wait Time Option Seconds"); ?> -</B><?php echo _QXZ("If Wait Time Option is set to anything but NONE, this is the number of seconds that the customer has been waiting in queue that will trigger the wait time options. Default is 120 seconds."); ?>
 
 <BR>
+<A NAME="inbound_groups-wait_time_lead_reset">
+<BR>
+<B><?php echo _QXZ("Wait Time Option Lead Reset"); ?> -</B><?php echo _QXZ("This option if set to Y, will set the lead called-since-last-reset field to N when the Wait Time Option is triggered and the call is sent to an action like Message, Voicemail or Hangup. Default is N for disabled."); ?>
+
+<BR>
 <A NAME="inbound_groups-wait_time_option_exten">
 <BR>
 <B><?php echo _QXZ("Wait Time Option Extension"); ?> -</B><?php echo _QXZ("If Wait Time Option is set to PRESS_EXTEN, this is the dialplan extension that the call will be sent to if the customer presses the option key when presented with the option. For AGENTDIRECT in-groups, you can put AGENTEXT in this field and the system will look up the user custom five field and send the call to that dialplan number."); ?>
@@ -2468,6 +2489,11 @@ if ($SSqc_features_active > 0)
 <A NAME="inbound_groups-hold_time_option_minimum">
 <BR>
 <B><?php echo _QXZ("Hold Time Option Minimum"); ?> -</B><?php echo _QXZ("If Hold Time Option enabled, this is the minimum number of seconds the call must be waiting before it will be presented with the hold time option. The hold time option will immediately be presented at this time if the estimated hold time is greater than the Hold Time Option Seconds value. Default is 0 seconds."); ?>
+
+<BR>
+<A NAME="inbound_groups-hold_time_lead_reset">
+<BR>
+<B><?php echo _QXZ("Hold Time Option Lead Reset"); ?> -</B><?php echo _QXZ("This option if set to Y, will set the lead called-since-last-reset field to N when the Hold Time Option is triggered and the call is sent to an action like Message, Voicemail or Hangup. Default is N for disabled."); ?>
 
 <BR>
 <A NAME="inbound_groups-hold_time_option_exten">

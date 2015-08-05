@@ -1140,7 +1140,12 @@ max_calls_action ENUM('DROP','AFTERHOURS','NO_AGENT_NO_QUEUE') default 'NO_AGENT
 dial_ingroup_cid VARCHAR(20) default '',
 group_handling ENUM('PHONE','EMAIL','CHAT') default 'PHONE',
 web_form_address_three TEXT,
-populate_lead_ingroup ENUM('ENABLED','DISABLED') default 'ENABLED'
+populate_lead_ingroup ENUM('ENABLED','DISABLED') default 'ENABLED',
+drop_lead_reset ENUM('Y','N') default 'N',
+after_hours_lead_reset ENUM('Y','N') default 'N',
+nanq_lead_reset ENUM('Y','N') default 'N',
+wait_time_lead_reset ENUM('Y','N') default 'N',
+hold_time_lead_reset ENUM('Y','N') default 'N'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -3547,4 +3552,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1425',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1426',db_schema_update_date=NOW(),reload_timestamp=NOW();

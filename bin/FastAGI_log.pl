@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# FastAGI_log.pl version 2.8
+# FastAGI_log.pl version 2.12
 # 
 # Experimental Deamon using perl Net::Server that runs as FastAGI to reduce load
 # replaces the following AGI scripts:
@@ -25,7 +25,7 @@
 # exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
 # 
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 61010-1007 - First test build
@@ -70,6 +70,7 @@
 # 130925-1820 - Added variable filter to prevent DID SQL injection attack
 # 131209-1559 - Added called_count logging
 # 140215-2118 - Added several variable options for QM socket URL
+# 150804-1740 - Added code to support in-group drop_lead_reset feature
 #
 
 # defaults for PreFork
@@ -1395,6 +1396,7 @@ sub process_request
 
 
 								########## UPDATE vicidial_closer_log ##########
+								$cslr_reset_check=0;
 								if ( (length($VD_closecallid) < 1) || ($VDL_update > 0) )
 									{
 									if ($AGILOG) {$agi_string = "no VDCL record found: $uniqueid|$calleridname|$VD_lead_id|$uniqueid|$VD_uniqueid|$VDL_update|";   &agi_output;}
@@ -1406,7 +1408,10 @@ sub process_request
 									else
 										{
 										if ( ($VD_term_reason !~ /AGENT|CALLER|QUEUETIMEOUT|AFTERHOURS|HOLDRECALLXFER|HOLDTIME|NOAGENT/) && ( ($VD_user =~ /VDAD|VDCL/) || (length($VD_user) < 1) ) )
-											{$VDCLSQL_term_reason = "term_reason='ABANDON',";}
+											{
+											$VDCLSQL_term_reason = "term_reason='ABANDON',";
+											$cslr_reset_check=1;
+											}
 										else
 											{
 											if ($VD_term_reason !~ /AGENT|CALLER|QUEUETIMEOUT|AFTERHOURS|HOLDRECALLXFER|HOLDTIME|NOAGENT/)
@@ -1434,6 +1439,29 @@ sub process_request
 									$affected_rows = $dbhA->do($stmtA);
 									if ($AGILOG) {$agi_string = "--    VDCL update: |$affected_rows|$uniqueid|$VD_closecallid|";   &agi_output;}
 
+									if ($cslr_reset_check > 0) 
+										{
+										$drop_lead_reset='';
+										$stmtA = "SELECT drop_lead_reset FROM vicidial_inbound_groups where group_id='$VD_campaign_id';";
+											if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+										$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+										$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+										$sthArowsVIG=$sthA->rows;
+										if ($sthArowsVIG > 0)
+											{
+											@aryA = $sthA->fetchrow_array;
+											$drop_lead_reset = 	$aryA[0];
+											}
+										$sthA->finish();
+
+										if ($drop_lead_reset =~ /Y/)
+											{
+											$stmtA = "UPDATE vicidial_list set called_since_last_reset='N' where lead_id = '$VD_lead_id';";
+												if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+											$affected_rows = $dbhA->do($stmtA);
+											if ($AGILOG) {$agi_string = "--    VDAD vicidial_list update CSLR: |$affected_rows|$VD_lead_id";   &agi_output;}
+											}
+										}
 									}
 								}
 

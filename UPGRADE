@@ -126,6 +126,9 @@ OTHER CHANGES:
 25. Added experimental Agent Whisper Monitoring from the Real-time Report. 
 	Must be enabled in System Settings.
 
+26. Added the ability in in-groups to set reset a lead's called status when a
+	call is ended by being abandoned, dropped, hung up or sent to voicemail
+
 
 
 

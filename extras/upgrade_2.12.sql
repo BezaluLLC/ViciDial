@@ -253,3 +253,11 @@ ALTER TABLE system_settings ADD agent_whisper_enabled ENUM('0','1') default '0';
 UPDATE servers SET rebuild_conf_files='Y' where active_asterisk_server='Y';
 
 UPDATE system_settings SET db_schema_version='1425',db_schema_update_date=NOW() where db_schema_version < 1425;
+
+ALTER TABLE vicidial_inbound_groups ADD drop_lead_reset ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_inbound_groups ADD after_hours_lead_reset ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_inbound_groups ADD nanq_lead_reset ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_inbound_groups ADD wait_time_lead_reset ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_inbound_groups ADD hold_time_lead_reset ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1426',db_schema_update_date=NOW() where db_schema_version < 1426;
