@@ -51,6 +51,7 @@
 # 141230-0927 - Changed single-quote QXZ arguments to double-quotes
 # 150227-1614 - Formatting issue #831
 # 150307-0915 - Fixes for QXZ
+# 150806-1023 - Added code for Admin -> Settings Containers
 #
 
 
@@ -1508,6 +1509,8 @@ $SSenable_languages =		$row[7];
 			else {$cc_sh=''; $cc_fc='BLACK';}
 		if ($sh=='cts') {$cts_sh="bgcolor=\"$cts_color\""; $cts_fc="$cc_font";}
 			else {$cts_sh=''; $cts_fc='BLACK';}
+		if ($sh=='sc') {$sc_sh="bgcolor=\"$sc_color\""; $sc_fc="$cc_font";}
+			else {$sc_sh=''; $sc_fc='BLACK';}
 		if ($sh=='emails') {$emails_sh="bgcolor=\"$subcamp_color\""; $emails_fc="$subcamp_font";}
 			else {$emails_sh=''; $emails_fc='BLACK';}
 
@@ -1590,7 +1593,11 @@ $SSenable_languages =		$row[7];
 			</TR>
 
 		<?php }
-
+		?>
+		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $sc_sh ?>> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=192000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $sc_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Settings Containers"); ?> </a></TD>
+		</TR>
+		<?php
 			}
 		?>
 		<!-- REPORTS NAVIGATION -->
@@ -1753,6 +1760,10 @@ if ($SSenable_languages == '1')
 	if (strlen($cts_sh) > 1) { 
 		?>
 	<TR BGCOLOR=<?php echo $cts_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=190000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Contacts"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=191111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A Contact"); ?> </a><?php } ?></TD></TR>
+	<?php }
+	if (strlen($sc_sh) > 1) { 
+		?>
+	<TR BGCOLOR=<?php echo $sc_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=192000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Settings Containers"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=192111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A Settings Container"); ?> </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($status_sh) > 1) and (!preg_match('/campaign/i',$hh) ) ) { 
 		?>

@@ -100,6 +100,7 @@ $reports_color =	'#E6E6E6';
 	$tts_color = 		'#C6C6C6';
 	$cc_color = 		'#C6C6C6';
 	$cts_color = 		'#C6C6C6';
+	$sc_color = 		'#C6C6C6';
 $subcamp_color =	'#C6C6C6';
 ###
 
@@ -1962,6 +1963,14 @@ if (isset($_GET["wait_time_lead_reset"]))			{$wait_time_lead_reset=$_GET["wait_t
 	elseif (isset($_POST["wait_time_lead_reset"]))	{$wait_time_lead_reset=$_POST["wait_time_lead_reset"];}
 if (isset($_GET["hold_time_lead_reset"]))			{$hold_time_lead_reset=$_GET["hold_time_lead_reset"];}
 	elseif (isset($_POST["hold_time_lead_reset"]))	{$hold_time_lead_reset=$_POST["hold_time_lead_reset"];}
+if (isset($_GET["container_id"]))			{$container_id=$_GET["container_id"];}
+	elseif (isset($_POST["container_id"]))	{$container_id=$_POST["container_id"];}
+if (isset($_GET["container_notes"]))			{$container_notes=$_GET["container_notes"];}
+	elseif (isset($_POST["container_notes"]))	{$container_notes=$_POST["container_notes"];}
+if (isset($_GET["container_type"]))				{$container_type=$_GET["container_type"];}
+	elseif (isset($_POST["container_type"]))	{$container_type=$_POST["container_type"];}
+if (isset($_GET["container_entry"]))			{$container_entry=$_GET["container_entry"];}
+	elseif (isset($_POST["container_entry"]))	{$container_entry=$_POST["container_entry"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2755,6 +2764,8 @@ if ($non_latin < 1)
 	$manual_dial_override_field = preg_replace('/[^-_0-9a-zA-Z]/','',$manual_dial_override_field);
 	$max_queue_ingroup_id = preg_replace('/[^-_0-9a-zA-Z]/','',$max_queue_ingroup_id);
 	$agent_debug_logging = preg_replace('/[^-_0-9a-zA-Z]/','',$agent_debug_logging);
+	$container_id = preg_replace('/[^-_0-9a-zA-Z]/','',$container_id);
+	$container_type = preg_replace('/[^-_0-9a-zA-Z]/','',$container_type);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_timeout_prompt = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$menu_timeout_prompt);
@@ -2921,6 +2932,7 @@ if ($non_latin < 1)
 	$holiday_comments = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$holiday_comments);
 	$api_allowed_functions = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$api_allowed_functions);
 	$agent_display_fields = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$agent_display_fields);
+	$container_notes = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$container_notes);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
 	$call_out_number_group = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$call_out_number_group);
@@ -3029,6 +3041,7 @@ if ($non_latin < 1)
 	# $filter_url
 	# $na_call_url
 	# $web_form_address_three
+	# $container_entry
 
 	### VARIABLES not filtered at all ###
 	# $script_text
@@ -3563,12 +3576,13 @@ else
 # 150728-1048 - Added option for secondary sorting by vendor_lead_code, Issue #833
 # 150804-1107 - Added agent_whisper_enabled system settings option
 # 150804-1608 - Added inbound group _lead_reset options
+# 150806-1348 - Added Admin -> Settings Containers
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-504a';
-$build = '150804-1608';
+$admin_version = '2.12-505a';
+$build = '150806-1348';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4049,6 +4063,7 @@ if ($ADD==161111111111)	{$hh='admin';	$sh='moh';	echo _QXZ("ADD NEW MUSIC ON HOL
 if ($ADD==171111111111)	{$hh='admin';	$sh='vm';	echo _QXZ("ADD NEW VOICEMAIL BOX");}
 if ($ADD==181111111111)	{$hh='admin';	$sh='label';	echo _QXZ("ADD NEW SCREEN LABEL");}
 if ($ADD==191111111111)	{$hh='admin';	$sh='cts';	echo _QXZ("ADD NEW CONTACT");}
+if ($ADD==192111111111)	{$hh='admin';	$sh='sc';	echo _QXZ("ADD SETTINGS CONTAINER");}
 if ($ADD==1111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("ADD NEW CONFERENCE");}
 if ($ADD==11111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("ADD NEW AGENT CONFERENCE");}
 if ($ADD=='2')			{$hh='users';		echo _QXZ("New User Addition");}
@@ -4097,6 +4112,7 @@ if ($ADD==261111111111)	{$hh='admin';	$sh='moh';	echo _QXZ("ADDING NEW MUSIC ON 
 if ($ADD==271111111111)	{$hh='admin';	$sh='vm';	echo _QXZ("ADDING NEW VOICEMAIL BOX");}
 if ($ADD==281111111111)	{$hh='admin';	$sh='label';	echo _QXZ("ADDING NEW SCREEN LABEL");}
 if ($ADD==291111111111)	{$hh='admin';	$sh='cts';	echo _QXZ("ADDING NEW CONTACT");}
+if ($ADD==292111111111)	{$hh='admin';	$sh='sc';	echo _QXZ("ADDING NEW SETTINGS CONTAINER");}
 if ($ADD==2111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("ADDING NEW CONFERENCE");}
 if ($ADD==21111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("ADDING NEW AGENT CONFERENCE");}
 if ($ADD==221111111111111)	{$hh='admin';	$sh='status';	echo _QXZ("ADDING SYSTEM STATUSES");}
@@ -4171,6 +4187,7 @@ if ($ADD==361111111111)	{$hh='admin';	$sh='moh';	echo _QXZ("MODIFY MUSIC ON HOLD
 if ($ADD==371111111111)	{$hh='admin';	$sh='vm';	echo _QXZ("MODIFY VOICEMAIL BOX");}
 if ($ADD==381111111111)	{$hh='admin';	$sh='label';	echo _QXZ("MODIFY SCREEN LABEL");}
 if ($ADD==391111111111)	{$hh='admin';	$sh='cts';	echo _QXZ("MODIFY CONTACT");}
+if ($ADD==392111111111)	{$hh='admin';	$sh='sc';	echo _QXZ("MODIFY SETTINGS CONTAINER");}
 if ($ADD==3111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("MODIFY CONFERENCE");}
 if ($ADD==31111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("MODIFY AGENT CONFERENCE");}
 if ($ADD==311111111111111)	{$hh='admin';	$sh='settings';	echo _QXZ("MODIFY SYSTEM SETTINGS");}
@@ -4218,6 +4235,7 @@ if ($ADD==461111111111)	{$hh='admin';	$sh='moh';	echo _QXZ("MODIFY MUSIC ON HOLD
 if ($ADD==471111111111)	{$hh='admin';	$sh='vm';	echo _QXZ("MODIFY VOICEMAIL BOX");}
 if ($ADD==481111111111)	{$hh='admin';	$sh='label';	echo _QXZ("MODIFY SCREEN LABEL");}
 if ($ADD==491111111111)	{$hh='admin';	$sh='cts';	echo _QXZ("MODIFY CONTACT");}
+if ($ADD==492111111111)	{$hh='admin';	$sh='sc';	echo _QXZ("MODIFY SETTINGS CONTAINER");}
 if ($ADD==4111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("MODIFY CONFERENCE");}
 if ($ADD==41111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("MODIFY CONFERENCE");}
 if ($ADD==411111111111111)	{$hh='admin';	$sh='settings';	echo _QXZ("MODIFY SYSTEM SETTINGS");}
@@ -4254,6 +4272,7 @@ if ($ADD==561111111111)	{$hh='admin';	$sh='moh';	echo _QXZ("DELETE MUSIC ON HOLD
 if ($ADD==571111111111)	{$hh='admin';	$sh='vm';	echo _QXZ("DELETE VOICEMAIL BOX");}
 if ($ADD==581111111111)	{$hh='admin';	$sh='label';	echo _QXZ("DELETE SCREEN LABEL");}
 if ($ADD==591111111111)	{$hh='admin';	$sh='cts';	echo _QXZ("DELETE CONTACT");}
+if ($ADD==591111111111)	{$hh='admin';	$sh='sc';	echo _QXZ("DELETE SETTINGS CONTAINER");}
 if ($ADD==5111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("DELETE CONFERENCE");}
 if ($ADD==51111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("DELETE AGENT CONFERENCE");}
 if ($ADD==6)			{$hh='users';		echo _QXZ("Delete User");}
@@ -4293,6 +4312,7 @@ if ($ADD==661111111111)	{$hh='admin';	$sh='moh';	echo _QXZ("DELETE MUSIC ON HOLD
 if ($ADD==671111111111)	{$hh='admin';	$sh='vm';	echo _QXZ("DELETE VOICEMAIL BOX");}
 if ($ADD==681111111111)	{$hh='admin';	$sh='label';	echo _QXZ("DELETE SCREEN LABEL");}
 if ($ADD==691111111111)	{$hh='admin';	$sh='cts';	echo _QXZ("DELETE CONTACT");}
+if ($ADD==692111111111)	{$hh='admin';	$sh='sc';	echo _QXZ("DELETE SETTINGS CONTAINER");}
 if ($ADD==6111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("DELETE CONFERENCE");}
 if ($ADD==61111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("DELETE AGENT CONFERENCE");}
 if ($ADD==73)			{$hh='campaigns';	echo _QXZ("Dialable Lead Count");}
@@ -4338,6 +4358,7 @@ if ($ADD==160000000000)	{$hh='admin';	$sh='moh';	echo _QXZ("MUSIC ON HOLD ENTRY 
 if ($ADD==170000000000)	{$hh='admin';	$sh='vm';	echo _QXZ("VOICEMAIL BOXES LIST");}
 if ($ADD==180000000000)	{$hh='admin';	$sh='label';	echo _QXZ("SCREEN LABELS LIST");}
 if ($ADD==190000000000)	{$hh='admin';	$sh='cts';	echo _QXZ("CONTACTS LIST");}
+if ($ADD==192000000000)	{$hh='admin';	$sh='sc';	echo _QXZ("SETTINGS CONTAINTER LIST");}
 if ($ADD==1000000000000)	{$hh='admin';	$sh='conference';	echo _QXZ("CONFERENCE LIST");}
 if ($ADD==10000000000000)	{$hh='admin';	$sh='conference';	echo _QXZ("AGENT CONFERENCE LIST");}
 if ($ADD==100000000000000)	{$hh='qc';		echo _QXZ("Quality Control");}
@@ -7583,7 +7604,7 @@ if ($ADD==191111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		echo "<br>"._QXZ("ADD NEW SCREEN LABEL")."<form action=$PHP_SELF method=POST>\n";
+		echo "<br>"._QXZ("ADD NEW CONTACT")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=291111111111>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
@@ -7598,6 +7619,40 @@ if ($ADD==191111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Group").": </td><td align=left><input type=text name=group_name size=50 maxlength=100>$NWB#contact_information$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Job Title").": </td><td align=left><input type=text name=job_title size=50 maxlength=100>$NWB#contact_information$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Location").": </td><td align=left><input type=text name=location size=50 maxlength=100>$NWB#contact_information$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value='"._QXZ("SUBMIT")."'</td></tr>\n";
+		echo "</TABLE></center>\n";
+		}
+	else
+		{
+		echo _QXZ("You do not have permission to view this page")."\n";
+		exit;
+		}
+	}
+
+
+######################
+# ADD=192111111111 display the ADD NEW SETTINGS CONTAINER
+######################
+
+if ($ADD==192111111111)
+	{
+	if ($LOGmodify_servers==1)
+		{
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		echo "<br>"._QXZ("ADD NEW SETTINGS CONTAINER")."<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=292111111111>\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Container ID").": </td><td align=left><input type=text name=container_id size=40 maxlength=40>$NWB#settings_containers-container_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Container Notes").": </td><td align=left><input type=text name=container_notes size=50 maxlength=255>$NWB#settings_containers-container_notes$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Container Type").": </td><td align=left><select size=1 name=container_type><option value='OTHER'>"._QXZ("OTHER")."</option><option value='PERL_CLI'>"._QXZ("PERL_CLI")."</option><option value='EMAIL_TEMPLATE'>"._QXZ("EMAIL_TEMPLATE")."</option>$NWB#settings_containers-container_type$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
+		echo "$UUgroups_list";
+		echo "<option SELECTED value=\"---ALL---\">"._QXZ("All Admin User Groups")."</option>\n";
+		echo "</select>$NWB#settings_containers-user_group$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value='"._QXZ("SUBMIT")."'</td></tr>\n";
 		echo "</TABLE></center>\n";
@@ -10642,7 +10697,7 @@ if ($ADD==23111111111)
 
 if ($ADD==211111111111)
 	{
-	if ($add_copy_disabled > 0)
+	if ( ($LOGmodify_servers!=1) or ($add_copy_disabled > 0) )
 		{
 		echo "<br>"._QXZ("You do not have permission to add records on this system")." -system_settings-\n";
 		}
@@ -11121,6 +11176,49 @@ if ($ADD==291111111111)
 			}
 		}
 	$ADD=391111111111;
+	}
+
+
+######################
+# ADD=292111111111 adds new settings container to the system
+######################
+
+if ($ADD==292111111111)
+	{
+	if ( ($LOGmodify_servers!=1) or ($add_copy_disabled > 0) )
+		{
+		echo "<br>"._QXZ("You do not have permission to add records on this system")." -system_settings-\n";
+		}
+	else
+		{
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_settings_containers where container_id='$container_id';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>"._QXZ("SETTINGS CONTAINER NOT ADDED - there is already a container in the system with this ID")."\n";}
+		else
+			{
+			if ( (strlen($container_id) < 2) or (strlen($container_notes) < 2) )
+				{echo "<br>"._QXZ("SETTINGS CONTAINER NOT ADDED - Please go back and look at the data you entered")."\n";}
+			else
+				{
+				echo "<br>"._QXZ("SETTINGS CONTAINER ADDED")."\n";
+
+				$stmt="INSERT INTO vicidial_settings_containers SET container_id='$container_id',container_notes='$container_notes',container_type='$container_type',user_group='$user_group';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONTAINERS', event_type='ADD', record_id='$container_id', event_code='ADMIN ADD CONTAINER', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				}
+			}
+		}
+	$ADD=392111111111;
 	}
 
 
@@ -14947,6 +15045,43 @@ if ($ADD==491111111111)
 
 
 ######################
+# ADD=492111111111 modify settings container record in the system
+######################
+
+if ($ADD==492111111111)
+	{
+	if ($LOGmodify_servers==1)
+		{
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		if ( (strlen($container_id) < 2) or (strlen($container_notes) < 2) )
+			{echo "<br>"._QXZ("SETTINGS CONTAINER NOT MODIFIED - Please go back and look at the data you entered")."\n";}
+		else
+			{
+			$stmt="UPDATE vicidial_settings_containers set container_notes='$container_notes',container_type='$container_type',user_group='$user_group',container_entry='" . mysqli_real_escape_string($link, $container_entry) ."' where container_id='$container_id';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+
+			echo "<br>"._QXZ("SETTINGS CONTAINER MODIFIED").": $container_id\n";
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONTAINERS', event_type='MODIFY', record_id='$container_id', event_code='ADMIN MODIFY CONTAINER', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			}
+		}
+	else
+		{
+		echo _QXZ("You do not have permission to view this page")."\n";
+		exit;
+		}
+	$ADD=392111111111;	# go to settings container entry modification form below
+	}
+
+
+######################
 # ADD=4111111111111 modify conference record in the system
 ######################
 
@@ -15969,6 +16104,28 @@ if ($ADD==591111111111)
 		echo "<br><br><a href=\"$PHP_SELF?ADD=691111111111&contact_id=$contact_id&CoNfIrM=YES\">"._QXZ("Click here to delete contact")." $contact_id - $first_name - $last_name</a><br><br><br>\n";
 		}
 	$ADD='391111111111';		# go to contact entry modification below
+	}
+
+
+######################
+# ADD=592111111111 confirmation before deletion of settings container record
+######################
+
+if ($ADD==592111111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if (strlen($container_id) < 2)
+		{
+		echo "<br>"._QXZ("SETTINGS CONTAINER NOT DELETED - Please go back and look at the data you entered")."\n";
+		echo "<br>"._QXZ("Container ID be at least 2 characters in length")."\n";
+		}
+	else
+		{
+		echo "<br><B>"._QXZ("SCREEN LABEL DELETION CONFIRMATION").": $container_id - $container_notes</B>\n";
+		echo "<br><br><a href=\"$PHP_SELF?ADD=692111111111&container_id=$container_id&CoNfIrM=YES\">"._QXZ("Click here to delete settings container")." $container_id - $container_notes</a><br><br><br>\n";
+		}
+	$ADD='392111111111';		# go to settings container entry modification below
 	}
 
 
@@ -17471,7 +17628,7 @@ if ($ADD==611111111111)
 	{
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	if ( (strlen($server_id) < 2) or (strlen($server_ip) < 7) or ($CoNfIrM != 'YES') or ($LOGast_delete_phones < 1) )
+	if ( (strlen($server_id) < 2) or (strlen($server_ip) < 7) or ($CoNfIrM != 'YES') or ($LOGast_delete_phones < 1) or ($LOGmodify_servers!=1) )
 		{
 		echo "<br>"._QXZ("SERVER NOT DELETED - Please go back and look at the data you entered")."\n";
 		echo "<br>"._QXZ("Server ID must be at least 2 characters in length")."\n";
@@ -17804,6 +17961,39 @@ if ($ADD==691111111111)
 		echo "<br><br>\n";
 		}
 	$ADD='190000000000';		# go to contacts entry list
+	}
+
+
+######################
+# ADD=692111111111 delete settings container record
+######################
+
+if ($ADD==692111111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( (strlen($container_id) < 2) or ($CoNfIrM != 'YES') or ($LOGmodify_servers!=1) )
+		{
+		echo "<br>"._QXZ("SETTINGS CONTAINER NOT DELETED - Please go back and look at the data you entered")."\n";
+		echo "<br>"._QXZ("Container ID must be at least 2 characters in length")."\n";
+		}
+	else
+		{
+		$stmt="DELETE from vicidial_settings_containers where container_id='$container_id' $LOGadmin_viewable_groupsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+
+		### LOG INSERTION Admin Log Table ###
+		$SQL_log = "$stmt|";
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
+		$SQL_log = addslashes($SQL_log);
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONTAINERS', event_type='DELETE', record_id='$container_id', event_code='ADMIN DELETE CONTAINER', event_sql=\"$SQL_log\", event_notes='';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+
+		echo "<br><B>"._QXZ("SETTINGS CONTAINER DELETION COMPLETED").": $container_id</B>\n";
+		echo "<br><br>\n";
+		}
+	$ADD='192000000000';		# go to settings container entry list
 	}
 
 
@@ -30005,7 +30195,6 @@ if ($ADD==381111111111)
 	}
 
 
-
 ######################
 # ADD=391111111111 modify contact in the system
 ######################
@@ -30084,6 +30273,73 @@ if ($ADD==391111111111)
 	}
 
 
+
+
+
+######################
+# ADD=392111111111 modify settings container in the system
+######################
+if ($ADD==392111111111)
+	{
+	if ( ($LOGast_admin_access==1) and ($LOGmodify_servers==1) )
+		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=392111111111&container_id=$container_id";
+			$modify_footer_refresh=1;
+			}
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		$stmt="SELECT container_notes,container_type,user_group,container_entry from vicidial_settings_containers where container_id='$container_id' $LOGadmin_viewable_groupsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$container_notes =			$row[0];
+		$container_type =			$row[1];
+		$user_group =				$row[2];
+		$container_entry =			$row[3];
+
+		echo "<br>"._QXZ("MODIFY SETTINGS CONTAINER").": $tts_id<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=492111111111>\n";
+		echo "<input type=hidden name=container_id value=\"$container_id\">\n";
+
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Container ID").": </td><td align=left><B>$container_id</B></td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Container Notes").": </td><td align=left><input type=text name=container_notes size=50 maxlength=255 value=\"$container_notes\">$NWB#settings_containers-container_notes$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Container Type").": </td><td align=left><select size=1 name=container_type><option value='OTHER'>"._QXZ("OTHER")."</option><option value='PERL_CLI'>"._QXZ("PERL_CLI")."</option><option value='EMAIL_TEMPLATE'>"._QXZ("EMAIL_TEMPLATE")."</option><option SELECTED value='$container_type'>"._QXZ("$container_type")."</option>$NWB#settings_containers-container_type$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
+		echo "$UUgroups_list";
+		echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
+		echo "</select>$NWB#settings_containers-user_group$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Container Entry").": </td><td align=left><TEXTAREA NAME=container_entry ROWS=25 COLS=75>$container_entry</TEXTAREA> $NWB#settings_containers-container_entry$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value='"._QXZ("SUBMIT")."'</td></tr>\n";
+		echo "</TABLE></center>\n";
+
+		echo "<center><b>\n";
+
+
+		echo "</TABLE><BR><BR>\n";
+
+		if ($LOGast_delete_phones > 0)
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=592111111111&container_id=$container_id&container_notes=$container_notes\">"._QXZ("DELETE THIS SETTINGS CONTAINER")."</a>\n";
+			}
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=CONTAINERS&stage=$container_id\">"._QXZ("Click here to see Admin changes to this settings container")."</FONT>\n";
+			}
+		}
+	else
+		{
+		echo _QXZ("You do not have permission to view this page")."\n";
+		exit;
+		}
+	}
 
 
 ######################
@@ -33045,6 +33301,50 @@ if ($ADD==190000000000)
 
 
 ######################
+# ADD=192000000000 display all settings containers entries
+######################
+if ($ADD==192000000000)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	$stmt="SELECT container_id,container_notes,container_type,user_group,container_entry from vicidial_settings_containers $whereLOGadmin_viewable_groupsSQL order by container_type,container_id";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$sc_to_print = mysqli_num_rows($rslt);
+
+	echo "<br>"._QXZ("Settings Containers").":\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<tr bgcolor=black>";
+	echo "<td><font size=1 color=white align=left><B>"._QXZ("Container ID")."</B></td>";
+	echo "<td><font size=1 color=white><B>"._QXZ("Notes")."</B></td>";
+	echo "<td><font size=1 color=white><B>"._QXZ("Type")."</B></td>";
+	echo "<td><font size=1 color=white><B>"._QXZ("Length")."</B></td>";
+	echo "<td><font size=1 color=white><B>"._QXZ("ADMIN GROUP")."</B></td>";
+	echo "<td align=center><font size=1 color=white><B>"._QXZ("MODIFY")."</B></td></tr>\n";
+
+	$o=0;
+	while ($sc_to_print > $o) 
+		{
+		$row=mysqli_fetch_row($rslt);
+
+		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
+			{$bgcolor='bgcolor="#B9CBFD"';} 
+		else
+			{$bgcolor='bgcolor="#9BB9FB"';}
+		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=392111111111&container_id=$row[0]\">$row[0]</a></td>";
+		echo "<td><font size=1>$row[1]</td>";
+		echo "<td><font size=1>$row[2]</td>";
+		echo "<td><font size=1>".strlen($row[4])."</td>";
+		echo "<td><font size=1>$row[3]</td>";
+		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=392111111111&container_id=$row[0]\">"._QXZ("MODIFY")."</a></td></tr>\n";
+		$o++;
+		}
+
+	echo "</TABLE></center>\n";
+	}
+
+
+######################
 # ADD=1000000000000 display all conferences
 ######################
 if ($ADD==1000000000000)
@@ -34174,6 +34474,10 @@ if ($ADD==999998)
 		echo "<LI><a href=\"audio_store.php\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Audio Store")." </a>\n";
 		echo "<LI><a href=\"$PHP_SELF?ADD=160000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Music On Hold")." </a>\n";
 		}
+	if ($SSenable_languages > 0)
+		{
+		echo "<LI><a href=\"admin_languages.php?ADD=163000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Languages")." </a>\n";
+		}
 	if ($SSenable_tts_integration > 0)
 		{
 		echo "<LI><a href=\"$PHP_SELF?ADD=150000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Text To Speech")." </a>\n";
@@ -34186,11 +34490,8 @@ if ($ADD==999998)
 		{
 		echo "<LI><a href=\"$PHP_SELF?ADD=190000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Contacts")." </a>\n";
 		}
-	if ($SSenable_languages > 0)
-		{
-		echo "<LI><a href=\"admin_languages.php?ADD=163000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Languages")." </a>\n";
-		}
 
+	echo "<LI><a href=\"$PHP_SELF?ADD=192000000000\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Settings Containers")." </a>\n";
 	echo "</UL>\n";
 	echo "</TD><TD WIDTH=400> &nbsp; \n";
 	}

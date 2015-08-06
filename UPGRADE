@@ -120,7 +120,7 @@ OTHER CHANGES:
 
 23. Added option to Secondary Lead Sort by vendor lead code
 
-24. Added option to User Status report to only show call logs with a specified
+24. Added option to User Stats report to only show call logs with a specified
 	call status.
 
 25. Added experimental Agent Whisper Monitoring from the Real-time Report. 
@@ -128,6 +128,13 @@ OTHER CHANGES:
 
 26. Added the ability in in-groups to set reset a lead's called status when a
 	call is ended by being abandoned, dropped, hung up or sent to voicemail
+
+27. Added Admin -> Settings Containers to admin web interface to allow more easy
+	configuration of back end scripts and Dispo Email sending
+
+28. Added agc/dispo_send_email.php script to be used with the Dispo Call URL
+	option in campaigns and in-groups. See DISPO_SEND_EMAIL.txt doc for
+	more information on this feature.
 
 
 

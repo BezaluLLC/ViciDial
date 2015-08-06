@@ -58,6 +58,7 @@
 # 150728-0904 - Added state_conversion for list loader
 # 150804-1108 - Added agent_whisper_enabled system settings option
 # 150804-1631 - Added multiple in-group _lead_reset options
+# 150806-1346 - Added Settings Containers
 #
 
 require("dbconnect_mysqli.php");
@@ -5132,6 +5133,41 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="screen_labels-default_field_labels">
 <BR>
 <B><?php echo _QXZ("Default Field Labels"); ?> -</B><?php echo _QXZ("These 19 fields allow you to set the name as it will appear in the agent interface as well as the administrative modify lead page. Default is empty which will use the hard-coded defaults in the agent interface. You can also set a label to ---HIDE--- to hide both the label and the field."); ?>
+
+
+
+
+
+<BR><BR><BR><BR>
+
+<B><FONT SIZE=3>SETTINGS CONTAINERS TABLE</FONT></B><BR><BR>
+<A NAME="settings_containers">
+<BR>
+<B><?php echo _QXZ("Settings Containers allow for an easy way to add, modify and delete large configurations of settings, or for elements like email templates to be used by PHP and Perl scripts within the codebase."); ?></B>
+
+<A NAME="settings_containers-container_id">
+<BR>
+<B><?php echo _QXZ("Container ID"); ?> -</B><?php echo _QXZ("This field needs to be at least 2 characters in length and no more than 40 characters in length, no spaces or special characters. This is the ID that will be used to identify the Settings Container throughout the system."); ?>
+
+<BR>
+<A NAME="settings_containers-container_notes">
+<BR>
+<B><?php echo _QXZ("Container Notes"); ?> -</B><?php echo _QXZ("This is the descriptive name of the Settings Container entry."); ?>
+
+<BR>
+<A NAME="settings_containers-container_type">
+<BR>
+<B><?php echo _QXZ("Container Type"); ?> -</B><?php echo _QXZ("This is the type of Container entry. This is only used for categorization."); ?>
+
+<BR>
+<A NAME="settings_containers-user_group">
+<BR>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+
+<BR>
+<A NAME="settings_containers-container_entry">
+<BR>
+<B><?php echo _QXZ("Container Entry"); ?> -</B><?php echo _QXZ("This is where you put the contents of the settings that you want in this container."); ?>
 
 
 

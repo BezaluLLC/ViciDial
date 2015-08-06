@@ -3303,6 +3303,14 @@ last_sql TEXT,
 KEY ajax_dbtime_key (db_time)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE vicidial_settings_containers (
+container_id VARCHAR(40) PRIMARY KEY NOT NULL,
+container_notes VARCHAR(255) default '',
+container_type ENUM('OTHER','PERL_CLI','EMAIL_TEMPLATE') default 'OTHER',
+user_group VARCHAR(20) default '---ALL---',
+container_entry MEDIUMTEXT
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3552,4 +3560,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1426',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1427',db_schema_update_date=NOW(),reload_timestamp=NOW();
