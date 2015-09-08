@@ -271,3 +271,10 @@ container_entry MEDIUMTEXT
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 UPDATE system_settings SET db_schema_version='1427',db_schema_update_date=NOW() where db_schema_version < 1427;
+
+ALTER TABLE vicidial_lists_fields ADD field_encrypt ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_lists_fields ADD field_show_hide ENUM('DISABLED','X_OUT_ALL','LAST_1','LAST_2','LAST_3','LAST_4','FIRST_1_LAST_4') default 'DISABLED';
+
+ALTER TABLE vicidial_users ADD admin_cf_show_hidden ENUM('1','0') default '0';
+
+UPDATE system_settings SET db_schema_version='1428',db_schema_update_date=NOW() where db_schema_version < 1428;

@@ -1,16 +1,17 @@
 <?php
 # list_split.php - split one big list into smaller lists. Part of Admin Utilities.
 #
-# Copyright (C) 2014  Matt Florell,Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell,Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 140916-1215 - Initial Build
 # 141114-1330 - formatting changes, code cleanup
 # 141229-1822 - Added code for on-the-fly language translations display
+# 150808-2042 - Added compatibility for custom fields data option
 #
 
-$version = '2.10-3';
-$build = '141229-1822';
+$version = '2.12-4';
+$build = '150808-2042';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -51,7 +52,7 @@ $num_leads = preg_replace('/[^0-9]/','',$num_leads);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$sys_settings_stmt = "SELECT use_non_latin,outbound_autodial_active,sounds_central_control_active,enable_languages,language_method FROM system_settings;";
+$sys_settings_stmt = "SELECT use_non_latin,outbound_autodial_active,sounds_central_control_active,enable_languages,language_method,active_modules FROM system_settings;";
 $sys_settings_rslt=mysql_to_mysqli($sys_settings_stmt, $link);
 if ($DB) {echo "$sys_settings_stmt\n";}
 $num_rows = mysqli_num_rows($sys_settings_rslt);
@@ -63,6 +64,7 @@ if ($num_rows > 0)
 	$sounds_central_control_active =	$sys_settings_row[2];
 	$SSenable_languages =				$sys_settings_row[3];
 	$SSlanguage_method =				$sys_settings_row[4];
+	$SSactive_modules =					$sys_settings_row[5];
 	}
 else
 	{
@@ -384,7 +386,11 @@ if ($confirm == "confirm")
 		# copy the custom fields if there are any
 		if ( $cf_chk_count > 0 ) 
 			{
-			$url = "http" . (isset($_SERVER['HTTPS']) ? 's' : '') . "://$_SERVER[HTTP_HOST]/vicidial/admin_lists_custom.php?action=COPY_FIELDS_SUBMIT&list_id=$new_list_id&source_list_id=$orig_list&copy_option=APPEND";
+			$admin_lists_custom = 'admin_lists_custom.php';
+			if (preg_match("/cf_encrypt/",$SSactive_modules))
+				{$admin_lists_custom = 'admin_lists_custom_encrypt.php';}
+
+			$url = "http" . (isset($_SERVER['HTTPS']) ? 's' : '') . "://$_SERVER[HTTP_HOST]/vicidial/" . $admin_lists_custom . "?action=COPY_FIELDS_SUBMIT&list_id=$new_list_id&source_list_id=$orig_list&copy_option=APPEND";
 			
 			# use cURL to call the copy custom fields code
 			$curl = curl_init();

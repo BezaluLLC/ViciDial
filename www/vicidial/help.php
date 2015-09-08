@@ -59,6 +59,7 @@
 # 150804-1108 - Added agent_whisper_enabled system settings option
 # 150804-1631 - Added multiple in-group _lead_reset options
 # 150806-1346 - Added Settings Containers
+# 150903-1458 - Added compatibility for custom fields data options
 #
 
 require("dbconnect_mysqli.php");
@@ -318,6 +319,11 @@ echo "<TABLE WIDTH=98% BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR><TD ALIGN
 <A NAME="users-agentcall_email">
 <BR>
 <B><?php echo _QXZ("Agent Call Email"); ?> -</B><?php echo _QXZ("This option is disabled."); ?>
+
+<BR>
+<A NAME="users-agentcall_chat">
+<BR>
+<B><?php echo _QXZ("Agent Call Chat"); ?> -</B><?php echo _QXZ("This option is disabled."); ?>
 
 <BR>
 <A NAME="users-agent_recording">
@@ -625,6 +631,11 @@ if ($SSqc_features_active > 0)
 <A NAME="users-api_allowed_functions">
 <BR>
 <B><?php echo _QXZ("API Allowed Functions"); ?> -</B><?php echo _QXZ("This option will allow you to restrict the API functions that are allowed to be used by this user. Default is ALL_FUNCTIONS."); ?>
+
+<BR>
+<A NAME="users-admin_cf_show_hidden">
+<BR>
+<B><?php echo _QXZ("Admin Custom Fields Show Hidden"); ?> -</B><?php echo _QXZ("On the ViciHost.com platform this option allows an administrator to view or export custom fields that are partially or fully hidden using the Show Hide field options. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="users-download_lists">
@@ -2070,9 +2081,19 @@ if ($SSqc_features_active > 0)
 <B><?php echo _QXZ("Field Cost"); ?> -</B><?php echo _QXZ("This read only field tells you what the cost of this field is in the custom field table for this list. There is no hard limit for the number of custom fields you can have in a list, but the total of the cost of all fields for the list must be below 65000. This typically allows for hundreds of fields, but if you specify several TEXT fields that are hundreds or thousands of characters in length then you may hit this limit quickly. If you need that much text in a field you should choose an AREA type, which are stored differently and do not use as much table space."); ?>
 
 <BR>
+<A NAME="lists_fields-field_encrypt">
+<BR>
+<B><?php echo _QXZ("Field Encrypt"); ?> -</B><?php echo _QXZ("On the ViciHost.com platform a built-in, high-level NIST-approved encryption option is available for custom fields. Default is N."); ?>
+
+<BR>
+<A NAME="lists_fields-field_show_hide">
+<BR>
+<B><?php echo _QXZ("Field Show Hide"); ?> -</B><?php echo _QXZ("On the ViciHost.com platform, this option allows you to display only set characters from a READONLY or TEXT field. If a TEXT field, the value and a blank field with be displayed, if the blenk field is populated by the agent, then the previous value will be overwritten when the agent completes their call. Default is N."); ?>
+
+<BR>
 <A NAME="lists_fields-field_required">
 <BR>
-<B><?php echo _QXZ("Field Required"); ?> -</B><?php echo _QXZ("If set to Y, this field will force the agent to enter text or select an option for this field. Default is N."); ?>
+<B><?php echo _QXZ("Field Required"); ?> -</B><?php echo _QXZ("Not enabled. Default is N."); ?>
 
 <BR>
 <A NAME="lists_fields-name_position">

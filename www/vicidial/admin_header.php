@@ -52,6 +52,7 @@
 # 150227-1614 - Formatting issue #831
 # 150307-0915 - Fixes for QXZ
 # 150806-1023 - Added code for Admin -> Settings Containers
+# 150808-2043 - Added compatibility for custom fields data option
 #
 
 
@@ -1250,11 +1251,14 @@ $SSenable_languages =		$row[7];
 			<?php
 			if ($SScustom_fields_enabled > 0)
 				{
+				$admin_lists_custom = 'admin_lists_custom.php';
+				if (preg_match("/cf_encrypt/",$SSactive_modules))
+					{$admin_lists_custom = 'admin_lists_custom_encrypt.php';}
 				?>
 				</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-				<a href="./admin_lists_custom.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("List Custom Fields"); ?> </a>
+				<a href="./<?php echo $admin_lists_custom ?>"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("List Custom Fields"); ?> </a>
 				</TR><TR BGCOLOR=<?php echo $lists_color ?>><TD ALIGN=LEFT> &nbsp; 
-				<a href="./admin_lists_custom.php?action=COPY_FIELDS_FORM"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Copy Custom Fields"); ?> </a>
+				<a href="./<?php echo $admin_lists_custom ?>?action=COPY_FIELDS_FORM"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Copy Custom Fields"); ?> </a>
 				<?php
 				}
 			?>

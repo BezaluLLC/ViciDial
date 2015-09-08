@@ -1,12 +1,12 @@
 <?php
 # qc_modify_lead.php modified from: (by poundteam)
-//admin_modify_lead.php   version 2.10
+//admin_modify_lead.php   version 2.12
 #
 # ViciDial database administration modify lead in vicidial_list
 # qc_modify_lead.php
 # 
 # Copyright (C) 2012  poundteam.com    LICENSE: AGPLv2
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to allow QC review and modification of leads, contributed by poundteam.com
 #
@@ -20,6 +20,8 @@
 # 141007-2152 - Finalized adding QXZ translation to all admin files
 # 141128-0902 - Code cleanup for QXZ functions
 # 141229-1742 - Added code for on-the-fly language translations display
+# 150808-1437 - Added compatibility for custom fields data options
+# 150908-1531 - Fixed input lengths for several standard fields to match DB
 #
 
 require("dbconnect_mysqli.php");
@@ -137,7 +139,7 @@ $NOW_TIME = date("Y-m-d H:i:s");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,custom_fields_enabled,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled,enable_languages,language_method,active_modules FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -148,6 +150,7 @@ if ($qm_conf_ct > 0)
 	$custom_fields_enabled =	$row[1];
 	$SSenable_languages =		$row[2];
 	$SSlanguage_method =		$row[3];
+	$active_modules =			$row[4];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -276,6 +279,10 @@ $phone_number =			$row['phone_number'];
 $phone_code =			$row['phone_code'];
 $lead_name =			trim(trim($row['first_name'].' '.$row['middle_initial']).' '.$row['last_name']);
 $scheduled_callback =	$row['scheduled_callback'];
+
+$vdc_form_display = 'vdc_form_display.php';
+if (preg_match("/cf_encrypt/",$active_modules))
+	{$vdc_form_display = 'vdc_form_display_encrypt.php';}
 
 ?>
 <html>
@@ -831,20 +838,20 @@ else
 	echo "$label_first_name: <input type=text name=first_name size=15 maxlength=30 value=\"$first_name\"> </td></tr>\n";
 	echo "<tr><td align=right>$label_middle_initial:  </td><td align=left><input type=text name=middle_initial size=4 maxlength=1 value=\"$middle_initial\"> &nbsp; \n";
 	echo " $label_last_name: <input type=text name=last_name size=15 maxlength=30 value=\"$last_name\"> </td></tr>\n";
-	echo "<tr><td align=right>$label_address1 : </td><td align=left><input type=text name=address1 size=30 maxlength=30 value=\"$address1\"></td></tr>\n";
-	echo "<tr><td align=right>$label_address2 : </td><td align=left><input type=text name=address2 size=30 maxlength=30 value=\"$address2\"></td></tr>\n";
-	echo "<tr><td align=right>$label_address3 : </td><td align=left><input type=text name=address3 size=30 maxlength=30 value=\"$address3\"></td></tr>\n";
-	echo "<tr><td align=right>$label_city : </td><td align=left><input type=text name=city size=30 maxlength=30 value=\"$city\"></td></tr>\n";
+	echo "<tr><td align=right>$label_address1 : </td><td align=left><input type=text name=address1 size=40 maxlength=100 value=\"$address1\"></td></tr>\n";
+	echo "<tr><td align=right>$label_address2 : </td><td align=left><input type=text name=address2 size=40 maxlength=100 value=\"$address2\"></td></tr>\n";
+	echo "<tr><td align=right>$label_address3 : </td><td align=left><input type=text name=address3 size=40 maxlength=100 value=\"$address3\"></td></tr>\n";
+	echo "<tr><td align=right>$label_city : </td><td align=left><input type=text name=city size=40 maxlength=50 value=\"$city\"></td></tr>\n";
 	echo "<tr><td align=right>$label_state: </td><td align=left><input type=text name=state size=2 maxlength=2 value=\"$state\"> &nbsp; \n";
 	echo " $label_postal_code: <input type=text name=postal_code size=10 maxlength=10 value=\"$postal_code\"> </td></tr>\n";
 
 	echo "<tr><td align=right>$label_province : </td><td align=left><input type=text name=province size=30 maxlength=30 value=\"$province\"></td></tr>\n";
 	echo "<tr><td align=right>Country : </td><td align=left><input type=text name=country_code size=3 maxlength=3 value=\"$country_code\"></td></tr>\n";
-	echo "<tr><td align=right>$label_phone_number : </td><td align=left><input type=text name=phone_number size=20 maxlength=20 value=\"$phone_number\"></td></tr>\n";
+	echo "<tr><td align=right>$label_phone_number : </td><td align=left><input type=text name=phone_number size=18 maxlength=18 value=\"$phone_number\"></td></tr>\n";
 	echo "<tr><td align=right>$label_phone_code : </td><td align=left><input type=text name=phone_code size=10 maxlength=10 value=\"$phone_code\"></td></tr>\n";
-	echo "<tr><td align=right>$label_alt_phone : </td><td align=left><input type=text name=alt_phone size=20 maxlength=20 value=\"$alt_phone\"></td></tr>\n";
-	echo "<tr><td align=right>$label_email : </td><td align=left><input type=text name=email size=30 maxlength=50 value=\"$email\"></td></tr>\n";
-	echo "<tr><td align=right>$label_security_phrase : </td><td align=left><input type=text name=security size=30 maxlength=100 value=\"$security\"></td></tr>\n";
+	echo "<tr><td align=right>$label_alt_phone : </td><td align=left><input type=text name=alt_phone size=12 maxlength=12 value=\"$alt_phone\"></td></tr>\n";
+	echo "<tr><td align=right>$label_email : </td><td align=left><input type=text name=email size=40 maxlength=70 value=\"$email\"></td></tr>\n";
+	echo "<tr><td align=right>$label_security_phrase : </td><td align=left><input type=text name=security size=40 maxlength=100 value=\"$security\"></td></tr>\n";
 	echo "<tr><td align=right>Rank : </td><td align=left><input type=text name=rank size=7 maxlength=5 value=\"$rank\"></td></tr>\n";
 	echo "<tr><td align=right>Owner : </td><td align=left><input type=text name=owner size=22 maxlength=20 value=\"$owner\"></td></tr>\n";
 	echo "<tr><td align=right>$label_comments : </td><td align=left><TEXTAREA name=comments ROWS=3 COLS=65>$comments</TEXTAREA></td></tr>\n";
@@ -1171,7 +1178,7 @@ else
 				$custom_records_count =	$rowx[0];
 
 				echo "<B>"._QXZ("CUSTOM FIELDS FOR THIS LEAD").":</B><BR>\n";
-				echo "<iframe src=\"../agc/vdc_form_display.php?lead_id=$lead_id&list_id=$CLlist_id&stage=DISPLAY&submit_button=YES&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bcrypt=OFF&bgcolor=E6E6E6\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"2\" allowtransparency=\"true\" id=\"vcFormIFrame\" name=\"vcFormIFrame\" width=\"740\" height=\"300\" STYLE=\"z-index:18\"> </iframe>\n";
+				echo "<iframe src=\"../agc/$vdc_form_display?lead_id=$lead_id&list_id=$CLlist_id&stage=DISPLAY&submit_button=YES&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bcrypt=OFF&bgcolor=E6E6E6\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"2\" allowtransparency=\"true\" id=\"vcFormIFrame\" name=\"vcFormIFrame\" width=\"740\" height=\"300\" STYLE=\"z-index:18\"> </iframe>\n";
 				echo "<BR><BR>";
 				}
 			}

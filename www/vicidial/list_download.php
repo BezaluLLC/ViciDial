@@ -31,6 +31,7 @@
 # 141114-0036 - Finalized adding QXZ translation to all admin files
 # 141229-1840 - Added code for on-the-fly language translations display
 # 150727-2158 - Enabled user features for hiding phone numbers and lead data
+# 150903-1538 - Added compatibility for custom fields data options
 #
 
 $startMS = microtime();
@@ -62,7 +63,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,custom_fields_enabled,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,custom_fields_enabled,enable_languages,language_method,active_modules FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -76,6 +77,7 @@ if ($qm_conf_ct > 0)
 	$custom_fields_enabled =		$row[4];
 	$SSenable_languages =			$row[5];
 	$SSlanguage_method =			$row[6];
+	$active_modules =				$row[7];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -190,13 +192,14 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 #	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
-$stmt="SELECT user_group,admin_hide_lead_data,admin_hide_phone_data from vicidial_users where user='$PHP_AUTH_USER';";
+$stmt="SELECT user_group,admin_hide_lead_data,admin_hide_phone_data,admin_cf_show_hidden from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGuser_group =				$row[0];
 $LOGadmin_hide_lead_data =		$row[1];
 $LOGadmin_hide_phone_data =		$row[2];
+$LOGadmin_cf_show_hidden =		$row[3];
 
 $stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}
@@ -623,26 +626,125 @@ if ( ($custom_fields_enabled > 0) and ($event_code_type=='LIST') )
 				}
 			if ($valid_custom_table > 0)
 				{
-				$stmtA = "SELECT * from custom_$export_list_id[$i] where lead_id='$export_lead_id[$i]' limit 1;";
-				$rslt=mysql_to_mysqli($stmtA, $link);
-				if ($DB) {echo "$columns_ct|$stmtA\n";}
-				$customfield_ct = mysqli_num_rows($rslt);
-				if ($customfield_ct > 0)
+				$column_list='';
+				$encrypt_list='';
+				$hide_list='';
+				$stmt = "DESCRIBE custom_$export_list_id[$i];";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$columns_ct = mysqli_num_rows($rslt);
+				$u=0;
+				while ($columns_ct > $u)
 					{
 					$row=mysqli_fetch_row($rslt);
-					$t=1;
-					while ($columns_ct > $t)
+					$column =	$row[0];
+					$column_list .= "$row[0],";
+					$u++;
+					}
+				if ($columns_ct > 1)
+					{
+					$column_list = preg_replace("/lead_id,/",'',$column_list);
+					$column_list = preg_replace("/,$/",'',$column_list);
+					$column_list_array = explode(',',$column_list);
+					if (preg_match("/cf_encrypt/",$active_modules))
 						{
-						$custom_data[$i] .= "\t$row[$t]";
-						if ($ch <= $t)
+						$enc_fields=0;
+						$stmt = "SELECT count(*) from vicidial_lists_fields where field_encrypt='Y' and list_id='$export_list_id[$i]';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($DB) {echo "$stmt\n";}
+						$enc_field_ct = mysqli_num_rows($rslt);
+						if ($enc_field_ct > 0)
 							{
-							$ch++;
-							$header_columns .= "\tcustom$ch";
+							$row=mysqli_fetch_row($rslt);
+							$enc_fields =	$row[0];
 							}
-						$t++;
+						if ($enc_fields > 0)
+							{
+							$stmt = "SELECT field_label from vicidial_lists_fields where field_encrypt='Y' and list_id='$export_list_id[$i]';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							if ($DB) {echo "$stmt\n";}
+							$enc_field_ct = mysqli_num_rows($rslt);
+							$r=0;
+							while ($enc_field_ct > $r)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$encrypt_list .= "$row[0],";
+								$r++;
+								}
+							$encrypt_list = ",$encrypt_list";
+							}
+						if ($LOGadmin_cf_show_hidden < 1)
+							{
+							$hide_fields=0;
+							$stmt = "SELECT count(*) from vicidial_lists_fields where field_show_hide!='DISABLED' and list_id='$export_list_id[$i]';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							if ($DB) {echo "$stmt\n";}
+							$hide_field_ct = mysqli_num_rows($rslt);
+							if ($hide_field_ct > 0)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$hide_fields =	$row[0];
+								}
+							if ($hide_fields > 0)
+								{
+								$stmt = "SELECT field_label from vicidial_lists_fields where field_show_hide!='DISABLED' and list_id='$export_list_id[$i]';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								if ($DB) {echo "$stmt\n";}
+								$hide_field_ct = mysqli_num_rows($rslt);
+								$r=0;
+								while ($hide_field_ct > $r)
+									{
+									$row=mysqli_fetch_row($rslt);
+									$hide_list .= "$row[0],";
+									$r++;
+									}
+								$hide_list = ",$hide_list";
+								}
+							}
+						}
+					$stmt = "SELECT $column_list from custom_$export_list_id[$i] where lead_id='$export_lead_id[$i]' limit 1;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$customfield_ct = mysqli_num_rows($rslt);
+					if ($customfield_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$t=0;
+						while ($columns_ct >= $t) 
+							{
+							if ($enc_fields > 0)
+								{
+								$field_enc='';   $field_enc_all='';
+								if ($DB) {echo "|$column_list|$encrypt_list|\n";}
+								if ( (preg_match("/,$column_list_array[$t],/",$encrypt_list)) and (strlen($row[$t]) > 0) )
+									{
+									exec("../agc/aes.pl --decrypt --text=$row[$t]", $field_enc);
+									$field_enc_ct = count($field_enc);
+									$k=0;
+									while ($field_enc_ct > $k)
+										{
+										$field_enc_all .= $field_enc[$k];
+										$k++;
+										}
+									$field_enc_all = preg_replace("/CRYPT: |\n|\r|\t/",'',$field_enc_all);
+									$row[$t] = base64_decode($field_enc_all);
+									}
+								}
+							if ( (preg_match("/,$column_list_array[$t],/",$hide_list)) and (strlen($row[$t]) > 0) )
+								{
+								$field_temp_val = $row[$t];
+								$row[$t] = preg_replace("/./",'X',$field_temp_val);
+								}
+							$custom_data[$i] .= "\t$row[$t]";
+							if ($ch <= $t)
+								{
+								$ch++;
+								$header_columns .= "\tcustom$ch";
+								}
+							$t++;
+							}
 						}
 					}
-
 				$custom_data[$i] = preg_replace("/\r\n/",'!N',$custom_data[$i]);
 				$custom_data[$i] = preg_replace("/\n/",'!N',$custom_data[$i]);
 				}

@@ -224,7 +224,7 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 ##### END validate user login credentials, check for failed lock out #####
 
 
-##### BEGIN gather values for display of custom list fields for a lead #####
+##### BEGIN custom_list_fields_values - gather values for display of custom list fields for a lead #####
 function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 	{
 	$STARTtime = date("U");
@@ -894,7 +894,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 
 	return $CFoutput;
 	}
-##### END gather values for display of custom list fields for a lead #####
+##### END custom_list_fields_values - gather values for display of custom list fields for a lead #####
 
 
 

@@ -102,10 +102,11 @@
 # 150603-1528 - Fixed format issue in recording_lookup
 # 150730-2022 - Added option to set entry_list_id
 # 150804-0948 - Added WHISPER option for blind_monitor function
+# 150808-1438 - Added compatibility for custom fields data option
 #
 
-$version = '2.12-78';
-$build = '150804-0948';
+$version = '2.12-79';
+$build = '150808-1438';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -384,7 +385,7 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,custom_fields_enabled,pass_hash_enabled,agent_whisper_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled,pass_hash_enabled,agent_whisper_enabled,active_modules FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
@@ -394,6 +395,7 @@ if ($qm_conf_ct > 0)
 	$custom_fields_enabled =	$row[1];
 	$SSpass_hash_enabled =		$row[2];
 	$agent_whisper_enabled =	$row[3];
+	$active_modules =			$row[4];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -6360,7 +6362,7 @@ if ($function == 'add_lead')
 							if ($tablecount_to_print > 0) 
 								{
 								$CFinsert_SQL='';
-								$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
+								$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order,field_encrypt from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
 								$rslt=mysql_to_mysqli($stmt, $link);
 								$fields_to_print = mysqli_num_rows($rslt);
 								$fields_list='';
@@ -6377,6 +6379,7 @@ if ($function == 'add_lead')
 									$A_field_size[$o] =			$rowx[8];
 									$A_field_max[$o] =			$rowx[9];
 									$A_field_required[$o] =		$rowx[12];
+									$A_field_encrypt[$o] =		$rowx[16];
 									$A_field_value[$o] =		'';
 									$field_name_id =			$A_field_label[$o];
 
@@ -6396,7 +6399,23 @@ if ($function == 'add_lead')
 										{
 										if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
 											{
-											$CFinsert_SQL .= "$A_field_label[$o]=\"$A_field_value[$o]\",";
+											if ( (preg_match("/cf_encrypt/",$active_modules)) and ($A_field_encrypt[$o] == 'Y') and (strlen($A_field_value[$o]) > 0) )
+												{
+												$A_field_valueSQL[$o] = base64_encode($A_field_value[$o]);
+												exec("../agc/aes.pl --encrypt --text=$A_field_valueSQL[$o]", $field_enc);
+												$field_enc_ct = count($field_enc);
+												$k=0;
+												while ($field_enc_ct > $k)
+													{
+													$field_enc_all .= $field_enc[$k];
+													$k++;
+													}
+												$A_field_valueSQL[$o] = preg_replace("/CRYPT: |\n|\r|\t/",'',$field_enc_all);
+												}
+											else
+												{$A_field_valueSQL[$o] = $A_field_value[$o];}
+
+											$CFinsert_SQL .= "$A_field_label[$o]=\"$A_field_valueSQL[$o]\",";
 											}
 										}
 									$o++;
@@ -7078,7 +7097,7 @@ if ($function == 'update_lead')
 										{
 										$update_SQL='';
 										$VL_update_SQL='';
-										$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$lead_custom_list' order by field_rank,field_order,field_label;";
+										$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order,field_encrypt from vicidial_lists_fields where list_id='$lead_custom_list' order by field_rank,field_order,field_label;";
 										$rslt=mysql_to_mysqli($stmt, $link);
 										$fields_to_print = mysqli_num_rows($rslt);
 										$fields_list='';
@@ -7095,6 +7114,7 @@ if ($function == 'update_lead')
 											$A_field_size[$o] =			$rowx[8];
 											$A_field_max[$o] =			$rowx[9];
 											$A_field_required[$o] =		$rowx[12];
+											$A_field_encrypt[$o] =		$rowx[16];
 											$A_field_value[$o] =		'';
 											$field_name_id =			$A_field_label[$o];
 
@@ -7114,7 +7134,23 @@ if ($function == 'update_lead')
 												{
 												if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
 													{
-													$update_SQL .= "$A_field_label[$o]=\"$A_field_value[$o]\",";
+													if ( (preg_match("/cf_encrypt/",$active_modules)) and ($A_field_encrypt[$o] == 'Y') and (strlen($A_field_value[$o]) > 0) )
+														{
+														$A_field_valueSQL[$o] = base64_encode($A_field_value[$o]);
+														exec("../agc/aes.pl --encrypt --text=$A_field_valueSQL[$o]", $field_enc);
+														$field_enc_ct = count($field_enc);
+														$k=0;
+														while ($field_enc_ct > $k)
+															{
+															$field_enc_all .= $field_enc[$k];
+															$k++;
+															}
+														$A_field_valueSQL[$o] = preg_replace("/CRYPT: |\n|\r|\t/",'',$field_enc_all);
+														}
+													else
+														{$A_field_valueSQL[$o] = $A_field_value[$o];}
+
+													$update_SQL .= "$A_field_label[$o]=\"$A_field_valueSQL[$o]\",";
 													}
 												}
 											$o++;
@@ -7290,7 +7326,7 @@ if ($function == 'update_lead')
 											if ($tablecount_to_print > 0) 
 												{
 												$CFinsert_SQL='';
-												$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
+												$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order,field_encrypt from vicidial_lists_fields where list_id='$list_id' order by field_rank,field_order,field_label;";
 												$rslt=mysql_to_mysqli($stmt, $link);
 												$fields_to_print = mysqli_num_rows($rslt);
 												$fields_list='';
@@ -7307,6 +7343,7 @@ if ($function == 'update_lead')
 													$A_field_size[$o] =			$rowx[8];
 													$A_field_max[$o] =			$rowx[9];
 													$A_field_required[$o] =		$rowx[12];
+													$A_field_encrypt[$o] =		$rowx[16];
 													$A_field_value[$o] =		'';
 													$field_name_id =			$A_field_label[$o];
 
@@ -7326,7 +7363,23 @@ if ($function == 'update_lead')
 														{
 														if (!preg_match("/\|$A_field_label[$o]\|/",$vicidial_list_fields))
 															{
-															$CFinsert_SQL .= "$A_field_label[$o]='$A_field_value[$o]',";
+															if ( (preg_match("/cf_encrypt/",$active_modules)) and ($A_field_encrypt[$o] == 'Y') and (strlen($A_field_value[$o]) > 0) )
+																{
+																$A_field_valueSQL[$o] = base64_encode($A_field_value[$o]);
+																exec("../agc/aes.pl --encrypt --text=$A_field_valueSQL[$o]", $field_enc);
+																$field_enc_ct = count($field_enc);
+																$k=0;
+																while ($field_enc_ct > $k)
+																	{
+																	$field_enc_all .= $field_enc[$k];
+																	$k++;
+																	}
+																$A_field_valueSQL[$o] = preg_replace("/CRYPT: |\n|\r|\t/",'',$field_enc_all);
+																}
+															else
+																{$A_field_valueSQL[$o] = $A_field_value[$o];}
+
+															$CFinsert_SQL .= "$A_field_label[$o]='$A_field_valueSQL[$o]',";
 															}
 														}
 													$o++;

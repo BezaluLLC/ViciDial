@@ -198,6 +198,7 @@
 # 150704-0749 - Fixed issue with ALT and ADDR3 lookups with list/campaign restruction, Issue #872
 # 150707-0850 - Fixed issues with na_call_url function for all calls that are not sent to agent
 # 150804-1718 - Added _lead_reset options
+# 150812-2004 - Changed maximum time since last agent update to route a call to and agent from 5 to 7 seconds
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -241,7 +242,7 @@ $SQLdateBEGIN = $SQLdate;
 $ORIGINAL_call_time = $SQLdate;
 	while (length($CIDdate) > 9) {$CIDdate =~ s/^.//gi;} # 0902235959 changed to 902235959
 
-$BDtarget = ($now_date_epoch - 5);
+$BDtarget = ($now_date_epoch - 7);
 ($Bsec,$Bmin,$Bhour,$Bmday,$Bmon,$Byear,$Bwday,$Byday,$Bisdst) = localtime($BDtarget);
 $Byear = ($Byear + 1900);
 $Bmon++;

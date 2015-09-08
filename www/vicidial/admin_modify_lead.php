@@ -69,6 +69,8 @@
 # 150312-1506 - Fixed minor Iframe form bug related to custom fields
 # 150514-1522 - Added $gmt_offset lookup for adding a new lead
 # 150603-1527 - Allow non-digit characters in alt_phone field
+# 150808-1437 - Added compatibility for custom fields data options
+# 150908-1531 - Fixed input lengths for several standard fields to match DB
 #
 
 require("dbconnect_mysqli.php");
@@ -209,7 +211,7 @@ if ($nonselectable_statuses > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable,allow_emails,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable,allow_emails,enable_languages,language_method,active_modules FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -222,6 +224,7 @@ if ($qm_conf_ct > 0)
 	$allow_emails =				$row[3];
 	$SSenable_languages =		$row[4];
 	$SSlanguage_method =		$row[5];
+	$active_modules =			$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -383,6 +386,10 @@ if ($scb_count_to_print > 0)
 	$row=mysqli_fetch_row($rslt);
 	if (strlen($row[0])>0)	{$scheduled_callback =	$row[0];}
 	}
+
+$vdc_form_display = 'vdc_form_display.php';
+if (preg_match("/cf_encrypt/",$active_modules))
+	{$vdc_form_display = 'vdc_form_display_encrypt.php';}
 
 ?>
 <html>
@@ -1151,20 +1158,20 @@ else
 		echo "$label_first_name: <input type=text name=first_name size=15 maxlength=30 value=\"".htmlentities($first_name)."\"> </td></tr>\n";
 		echo "<tr><td align=right>$label_middle_initial:  </td><td align=left><input type=text name=middle_initial size=4 maxlength=1 value=\"".htmlentities($middle_initial)."\"> &nbsp; \n";
 		echo " $label_last_name: <input type=text name=last_name size=15 maxlength=30 value=\"".htmlentities($last_name)."\"> </td></tr>\n";
-		echo "<tr><td align=right>$label_address1 : </td><td align=left><input type=text name=address1 size=30 maxlength=30 value=\"".htmlentities($address1)."\"></td></tr>\n";
-		echo "<tr><td align=right>$label_address2 : </td><td align=left><input type=text name=address2 size=30 maxlength=30 value=\"".htmlentities($address2)."\"></td></tr>\n";
-		echo "<tr><td align=right>$label_address3 : </td><td align=left><input type=text name=address3 size=30 maxlength=30 value=\"".htmlentities($address3)."\"></td></tr>\n";
-		echo "<tr><td align=right>$label_city : </td><td align=left><input type=text name=city size=30 maxlength=30 value=\"".htmlentities($city)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_address1 : </td><td align=left><input type=text name=address1 size=40 maxlength=100 value=\"".htmlentities($address1)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_address2 : </td><td align=left><input type=text name=address2 size=40 maxlength=100 value=\"".htmlentities($address2)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_address3 : </td><td align=left><input type=text name=address3 size=40 maxlength=100 value=\"".htmlentities($address3)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_city : </td><td align=left><input type=text name=city size=40 maxlength=50 value=\"".htmlentities($city)."\"></td></tr>\n";
 		echo "<tr><td align=right>$label_state: </td><td align=left><input type=text name=state size=2 maxlength=2 value=\"".htmlentities($state)."\"> &nbsp; \n";
 		echo " $label_postal_code: <input type=text name=postal_code size=10 maxlength=10 value=\"".htmlentities($postal_code)."\"> </td></tr>\n";
 
-		echo "<tr><td align=right>$label_province : </td><td align=left><input type=text name=province size=30 maxlength=30 value=\"".htmlentities($province)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_province : </td><td align=left><input type=text name=province size=40 maxlength=50 value=\"".htmlentities($province)."\"></td></tr>\n";
 		echo "<tr><td align=right>"._QXZ("Country")." : </td><td align=left><input type=text name=country_code size=3 maxlength=3 value=\"".htmlentities($country_code)."\"> &nbsp; \n";
 		echo " "._QXZ("Date of Birth").": <input type=text name=date_of_birth size=12 maxlength=10 value=\"".htmlentities($date_of_birth)."\"></td></tr>\n";
-		echo "<tr><td align=right>$label_phone_number : </td><td align=left><input type=text name=phone_number size=20 maxlength=20 value=\"".htmlentities($phone_number)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_phone_number : </td><td align=left><input type=text name=phone_number size=18 maxlength=18 value=\"".htmlentities($phone_number)."\"></td></tr>\n";
 		echo "<tr><td align=right>$label_phone_code : </td><td align=left><input type=text name=phone_code size=10 maxlength=10 value=\"".htmlentities($phone_code)."\"></td></tr>\n";
-		echo "<tr><td align=right>$label_alt_phone : </td><td align=left><input type=text name=alt_phone size=20 maxlength=20 value=\"".htmlentities($alt_phone)."\"></td></tr>\n";
-		echo "<tr><td align=right>$label_email : </td><td align=left><input type=text name=email size=30 maxlength=50 value=\"".htmlentities($email)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_alt_phone : </td><td align=left><input type=text name=alt_phone size=12 maxlength=12 value=\"".htmlentities($alt_phone)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_email : </td><td align=left><input type=text name=email size=40 maxlength=70 value=\"".htmlentities($email)."\"></td></tr>\n";
 		echo "<tr><td align=right>$label_security_phrase : </td><td align=left><input type=text name=security size=30 maxlength=100 value=\"".htmlentities($security)."\"></td></tr>\n";
 		echo "<tr><td align=right>$label_vendor_lead_code : </td><td align=left><input type=text name=vendor_id size=30 maxlength=100 value=\"".htmlentities($vendor_id)."\"></td></tr>\n";
 		echo "<tr><td align=right>"._QXZ("Rank")." : </td><td align=left><input type=text name=rank size=7 maxlength=5 value=\"".htmlentities($rank)."\"></td></tr>\n";
@@ -1525,7 +1532,7 @@ else
 					$custom_records_count =	$rowx[0];
 
 					echo "<B>"._QXZ("CUSTOM FIELDS FOR THIS LEAD").":</B><BR>\n";
-					echo "<iframe src=\"../agc/vdc_form_display.php?lead_id=$lead_id&list_id=$CLlist_id&stage=DISPLAY&submit_button=YES&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bcrypt=OFF&bgcolor=E6E6E6\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"2\" allowtransparency=\"true\" id=\"vcFormIFrame\" name=\"vcFormIFrame\" width=\"740\" height=\"300\" STYLE=\"z-index:18\"> </iframe>\n";
+					echo "<iframe src=\"../agc/$vdc_form_display?lead_id=$lead_id&list_id=$CLlist_id&stage=DISPLAY&submit_button=YES&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bcrypt=OFF&bgcolor=E6E6E6\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"2\" allowtransparency=\"true\" id=\"vcFormIFrame\" name=\"vcFormIFrame\" width=\"740\" height=\"300\" STYLE=\"z-index:18\"> </iframe>\n";
 					echo "<BR><BR>";
 					}
 				}

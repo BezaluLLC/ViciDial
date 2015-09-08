@@ -387,10 +387,11 @@
 # 150725-1613 - Added entry_date as a variable
 # 150727-0910 - Added default_language
 # 150728-1049 - Added option for secondary sorting by vendor_lead_code, Issue #833
+# 150814-1057 - Added compatibility for custom fields data option
 #
 
-$version = '2.12-282';
-$build = '150728-1049';
+$version = '2.12-283';
+$build = '150814-1057';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=616;
@@ -821,7 +822,7 @@ $sip_hangup_cause_dictionary = array(
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,agent_debug_logging,default_language FROM system_settings;";
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,agent_debug_logging,default_language,active_modules FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -844,6 +845,7 @@ if ($qm_conf_ct > 0)
 	$SSlanguage_method =					$row[12];
 	$SSagent_debug_logging =				$row[13];
 	$SSdefault_language =					$row[14];
+	$active_modules =						$row[15];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -7563,6 +7565,35 @@ if ($ACTION == 'VDADcheckINCOMING')
 					$custom_field_names_ct = count($custom_field_names_ARY);
 					$custom_field_names_SQL = $custom_field_names;
 
+					if (preg_match("/cf_encrypt/",$active_modules))
+						{
+						$enc_fields=0;
+						$stmt = "SELECT count(*) from vicidial_lists_fields where field_encrypt='Y' and list_id='$entry_list_id';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($DB) {echo "$stmt\n";}
+						$enc_field_ct = mysqli_num_rows($rslt);
+						if ($enc_field_ct > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$enc_fields =	$row[0];
+							}
+						if ($enc_fields > 0)
+							{
+							$stmt = "SELECT field_label from vicidial_lists_fields where field_encrypt='Y' and list_id='$entry_list_id';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							if ($DB) {echo "$stmt\n";}
+							$enc_field_ct = mysqli_num_rows($rslt);
+							$r=0;
+							while ($enc_field_ct > $r)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$encrypt_list .= "$row[0],";
+								$r++;
+								}
+							$encrypt_list = ",$encrypt_list";
+							}
+						}
+
 					##### BEGIN grab the data from custom table for the lead_id
 					$stmt="SELECT $custom_field_names_SQL FROM custom_$entry_list_id where lead_id='$lead_id' LIMIT 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
@@ -7575,9 +7606,27 @@ if ($ACTION == 'VDADcheckINCOMING')
 						$o=0;
 						while ($custom_field_names_ct > $o) 
 							{
-							$form_field_value =		urlencode(trim("$row[$o]"));
 							$field_name_id =		$custom_field_names_ARY[$o];
 							$field_name_tag =		"--A--" . $field_name_id . "--B--";
+							if ($enc_fields > 0)
+								{
+								$field_enc='';   $field_enc_all='';
+								if ($DB) {echo "|$column_list|$encrypt_list|\n";}
+								if ( (preg_match("/,$field_name_id,/",$encrypt_list)) and (strlen($row[$o]) > 0) )
+									{
+									exec("../agc/aes.pl --decrypt --text=$row[$o]", $field_enc);
+									$field_enc_ct = count($field_enc);
+									$k=0;
+									while ($field_enc_ct > $k)
+										{
+										$field_enc_all .= $field_enc[$k];
+										$k++;
+										}
+									$field_enc_all = preg_replace("/CRYPT: |\n|\r|\t/",'',$field_enc_all);
+									$row[$o] = base64_decode($field_enc_all);
+									}
+								}
+							$form_field_value =		urlencode(trim("$row[$o]"));
 							$VDCL_start_call_url = preg_replace("/$field_name_tag/i","$form_field_value",$VDCL_start_call_url);
 							$o++;
 							}
@@ -8549,6 +8598,35 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 					$custom_field_names_ct = count($custom_field_names_ARY);
 					$custom_field_names_SQL = $custom_field_names;
 
+					if (preg_match("/cf_encrypt/",$active_modules))
+						{
+						$enc_fields=0;
+						$stmt = "SELECT count(*) from vicidial_lists_fields where field_encrypt='Y' and list_id='$entry_list_id';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($DB) {echo "$stmt\n";}
+						$enc_field_ct = mysqli_num_rows($rslt);
+						if ($enc_field_ct > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$enc_fields =	$row[0];
+							}
+						if ($enc_fields > 0)
+							{
+							$stmt = "SELECT field_label from vicidial_lists_fields where field_encrypt='Y' and list_id='$entry_list_id';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							if ($DB) {echo "$stmt\n";}
+							$enc_field_ct = mysqli_num_rows($rslt);
+							$r=0;
+							while ($enc_field_ct > $r)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$encrypt_list .= "$row[0],";
+								$r++;
+								}
+							$encrypt_list = ",$encrypt_list";
+							}
+						}
+
 					##### BEGIN grab the data from custom table for the lead_id
 					$stmt="SELECT $custom_field_names_SQL FROM custom_$entry_list_id where lead_id='$lead_id' LIMIT 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
@@ -8561,9 +8639,27 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 						$o=0;
 						while ($custom_field_names_ct > $o) 
 							{
-							$form_field_value =		urlencode(trim("$row[$o]"));
 							$field_name_id =		$custom_field_names_ARY[$o];
 							$field_name_tag =		"--A--" . $field_name_id . "--B--";
+							if ($enc_fields > 0)
+								{
+								$field_enc='';   $field_enc_all='';
+								if ($DB) {echo "|$column_list|$encrypt_list|\n";}
+								if ( (preg_match("/,$field_name_id,/",$encrypt_list)) and (strlen($row[$o]) > 0) )
+									{
+									exec("../agc/aes.pl --decrypt --text=$row[$o]", $field_enc);
+									$field_enc_ct = count($field_enc);
+									$k=0;
+									while ($field_enc_ct > $k)
+										{
+										$field_enc_all .= $field_enc[$k];
+										$k++;
+										}
+									$field_enc_all = preg_replace("/CRYPT: |\n|\r|\t/",'',$field_enc_all);
+									$row[$o] = base64_decode($field_enc_all);
+									}
+								}
+							$form_field_value =		urlencode(trim("$row[$o]"));
 							$VDCL_start_call_url = preg_replace("/$field_name_tag/i","$form_field_value",$VDCL_start_call_url);
 							$o++;
 							}
@@ -10973,6 +11069,36 @@ if ($ACTION == 'updateDISPO')
 			$custom_field_names_ct = count($custom_field_names_ARY);
 			$custom_field_names_SQL = $custom_field_names;
 
+			if (preg_match("/cf_encrypt/",$active_modules))
+				{
+				$enc_fields=0;
+				$stmt = "SELECT count(*) from vicidial_lists_fields where field_encrypt='Y' and list_id='$entry_list_id';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$enc_field_ct = mysqli_num_rows($rslt);
+				if ($enc_field_ct > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$enc_fields =	$row[0];
+					}
+				if ($enc_fields > 0)
+					{
+					$stmt = "SELECT field_label from vicidial_lists_fields where field_encrypt='Y' and list_id='$entry_list_id';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$enc_field_ct = mysqli_num_rows($rslt);
+					$r=0;
+					while ($enc_field_ct > $r)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$encrypt_list .= "$row[0],";
+						$r++;
+						}
+					$encrypt_list = ",$encrypt_list";
+					}
+				}
+
+
 			##### BEGIN grab the data from custom table for the lead_id
 			$stmt="SELECT $custom_field_names_SQL FROM custom_$entry_list_id where lead_id='$lead_id' LIMIT 1;";
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -10985,9 +11111,27 @@ if ($ACTION == 'updateDISPO')
 				$o=0;
 				while ($custom_field_names_ct > $o) 
 					{
-					$form_field_value =		urlencode(trim("$row[$o]"));
 					$field_name_id =		$custom_field_names_ARY[$o];
 					$field_name_tag =		"--A--" . $field_name_id . "--B--";
+					if ($enc_fields > 0)
+						{
+						$field_enc='';   $field_enc_all='';
+						if ($DB) {echo "|$column_list|$encrypt_list|\n";}
+						if ( (preg_match("/,$field_name_id,/",$encrypt_list)) and (strlen($row[$o]) > 0) )
+							{
+							exec("../agc/aes.pl --decrypt --text=$row[$o]", $field_enc);
+							$field_enc_ct = count($field_enc);
+							$k=0;
+							while ($field_enc_ct > $k)
+								{
+								$field_enc_all .= $field_enc[$k];
+								$k++;
+								}
+							$field_enc_all = preg_replace("/CRYPT: |\n|\r|\t/",'',$field_enc_all);
+							$row[$o] = base64_decode($field_enc_all);
+							}
+						}
+					$form_field_value =		urlencode(trim("$row[$o]"));
 					$dispo_call_urlARY[$j] = preg_replace("/$field_name_tag/i","$form_field_value",$dispo_call_urlARY[$j]);
 					$o++;
 					}
@@ -13622,6 +13766,22 @@ if ($ACTION == 'LEADINFOview')
 						$A_field_name[$o] = $rowx[0];
 						$o++;
 						}
+					### gather encrypt and hide settings for custom fields
+					$o=0;
+					while ($fields_to_print > $o) 
+						{
+						$stmt="SELECT field_encrypt,field_show_hide FROM vicidial_lists_fields where list_id='$entry_list_id' and field_label='$A_field_name[$o]';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						$fieldset_to_print = mysqli_num_rows($rslt);
+						if ($fieldset_to_print > 0) 
+							{
+							$rowx=mysqli_fetch_row($rslt);
+							$A_field_encrypt[$o] =		$rowx[0];
+							$A_field_show_hide[$o] =	$rowx[1];
+							}
+						$o++;
+						}
 					$select_SQL = preg_replace("/.$/",'',$select_SQL);
 					if (strlen($select_SQL) > 0)
 						{
@@ -13637,6 +13797,16 @@ if ($ACTION == 'LEADINFOview')
 							while ($fields_to_print > $o) 
 								{
 								$A_field_value		= trim("$row[$o]");
+								if ($A_field_encrypt[$o] == 'Y')
+									{$A_field_value = _QXZ("ENCRYPTED");}
+								else
+									{
+									if ($A_field_show_hide[$o] != 'DISABLED')
+										{
+										$field_temp_val = $A_field_value;
+										$A_field_value = preg_replace("/./",'X',$field_temp_val);
+										}
+									}
 
 								$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$A_field_name[$o]: &nbsp; </td><td ALIGN=left><font size=2>$A_field_value</td></tr>";
 								

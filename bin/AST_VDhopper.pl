@@ -86,10 +86,11 @@
 # 150312-1459 - Allow for single quotes in data fields without crashing
 # 150717-1050 - Added force index to some vicidial_list queries, set with $VLforce_index variable
 # 150728-1050 - Added option for secondary sorting by vendor_lead_code, Issue #833
+# 150908-1544 - Added debug output for vendor_lead_code duplicate rejections count
 #
 
 # constants
-$build = '150728-1050';
+$build = '150908-1544';
 $DB=0;  # Debug flag, set to 0 for no debug messages. Can be overriden with CLI --debug flag
 $US='__';
 $MT[0]='';
@@ -2700,6 +2701,7 @@ foreach(@campaign_id)
 				$NEW_in=0;
 				$rec_count=0;
 				$REC_insert_count=0;
+				$vlc_dup_check_SKIP_COUNT=0;
 				@leads_to_hopper=@MT;
 				@lists_to_hopper=@MT;
 				@gmt_to_hopper=@MT;
@@ -3036,6 +3038,7 @@ foreach(@campaign_id)
 								{
 								$detail_string = "VLC CALL SKIPPING     |$VLC_exist|$hopper_vlc_dup_check[$i]|     |$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|$vlc_to_hopper[$h]|";
 								&detail_logger;
+								$vlc_dup_check_SKIP_COUNT++;
 								}
 							else
 								{
@@ -3071,6 +3074,7 @@ foreach(@campaign_id)
 					$h++;
 					}
 				if ($DB) {print "     DONE with this campaign\n";}
+				if ($DB) {print "     VLC Dup Check Rejected: $vlc_dup_check_SKIP_COUNT\n";}
 				}
 			}
 		}

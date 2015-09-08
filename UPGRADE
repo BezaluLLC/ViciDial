@@ -136,6 +136,8 @@ OTHER CHANGES:
 	option in campaigns and in-groups. See DISPO_SEND_EMAIL.txt doc for
 	more information on this feature.
 
+29. Added code to support proprietary encryption framework for custom fields.
+
 
 
 

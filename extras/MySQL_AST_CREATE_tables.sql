@@ -630,7 +630,8 @@ user_choose_language ENUM('1','0') default '0',
 ignore_group_on_search ENUM('1','0') default '0',
 api_list_restrict ENUM('1','0') default '0',
 api_allowed_functions VARCHAR(1000) default ' ALL_FUNCTIONS ',
-lead_filter_id VARCHAR(20) default 'NONE'
+lead_filter_id VARCHAR(20) default 'NONE',
+admin_cf_show_hidden ENUM('1','0') default '0'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -2525,7 +2526,9 @@ field_cost SMALLINT(5),
 field_required ENUM('Y','N') default 'N',
 name_position ENUM('LEFT','TOP') default 'LEFT',
 multi_position ENUM('HORIZONTAL','VERTICAL') default 'HORIZONTAL',
-field_order SMALLINT(5) default '1'
+field_order SMALLINT(5) default '1',
+field_encrypt ENUM('Y','N') default 'N',
+field_show_hide ENUM('DISABLED','X_OUT_ALL','LAST_1','LAST_2','LAST_3','LAST_4','FIRST_1_LAST_4') default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX listfield on vicidial_lists_fields (list_id, field_label);
@@ -3560,4 +3563,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1427',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1428',db_schema_update_date=NOW(),reload_timestamp=NOW();
