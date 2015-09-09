@@ -3585,12 +3585,13 @@ else
 # 150806-1348 - Added Admin -> Settings Containers
 # 150903-1457 - Added options for encrypt hosted features
 # 150909-0158 - Added Report Page Servers Summary and Admin Utilities Page options for User Group Allowed Reports
+# 150909-1418 - Added $active_only_default_campaigns options.php option for Campaigns Listings
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-507a';
-$build = '150909-0158';
+$admin_version = '2.12-508a';
+$build = '150909-1418';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -31831,6 +31832,21 @@ if ($ADD==10)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
+	if (file_exists('options.php'))
+		{require('options.php');}
+
+	echo "<br>"._QXZ("CAMPAIGN LISTINGS").":\n";
+	if ( (preg_match('/display_active/',$status)) or ( (!preg_match('/display_all/',$status)) and ($active_only_default_campaigns > 0) ) )
+		{
+		$SQLstatus = 'Y';
+		echo " &nbsp; <a href=\"$PHP_SELF?ADD=10&status=display_all\"><font size=1 color=black>"._QXZ("show all campaigns")."</a>\n";
+		}
+	else
+		{
+		$SQLstatus = '';
+		echo " &nbsp; <a href=\"$PHP_SELF?ADD=10&status=display_active\"><font size=1 color=black>"._QXZ("show only active campaigns")."</a>\n";
+		}
+
 	$camp_group_SQL = $LOGadmin_viewable_groupsSQL;
 	if (strlen($whereLOGallowed_campaignsSQL) < 6)
 		{$camp_group_SQL = $whereLOGadmin_viewable_groupsSQL;}
@@ -31838,7 +31854,6 @@ if ($ADD==10)
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$campaigns_to_print = mysqli_num_rows($rslt);
 
-	echo "<br>"._QXZ("CAMPAIGN LISTINGS").":\n";
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<tr bgcolor=black>";
 	echo "<td><font size=1 color=white align=left><B>"._QXZ("CAMPAIGN ID")."</B></td>";
@@ -31854,26 +31869,32 @@ if ($ADD==10)
 		}
 	echo "<td align=center><font size=1 color=white><B>"._QXZ("MODIFY")."</B></td></tr>\n";
 
-	$o=0;
+	$o=0; $p=0;
 	while ($campaigns_to_print > $o) 
 		{
 		$row=mysqli_fetch_row($rslt);
-		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+		if ( ($SQLstatus!='') and ($row[2]=='N') )
+			{$skip_display=1;}
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=34&campaign_id=$row[0]\">$row[0]</a> &nbsp; </td>";
-		echo "<td><font size=1>$row[1] &nbsp; </td>";
-		echo "<td><font size=1>$row[2] &nbsp; </td>";
-		echo "<td><font size=1>$row[7] &nbsp; </td>";
-		if ($SSoutbound_autodial_active > 0)
 			{
-			echo "<td><font size=1>$row[3] &nbsp; </td>";
-			echo "<td><font size=1>$row[4] &nbsp; </td>";
-			echo "<td><font size=1>$row[5] &nbsp; </td>";
-			echo "<td><font size=1>$row[6]</td>";
+			if (preg_match('/1$|3$|5$|7$|9$/i', $p))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=34&campaign_id=$row[0]\">$row[0]</a> &nbsp; </td>";
+			echo "<td><font size=1>$row[1] &nbsp; </td>";
+			echo "<td><font size=1>$row[2] &nbsp; </td>";
+			echo "<td><font size=1>$row[7] &nbsp; </td>";
+			if ($SSoutbound_autodial_active > 0)
+				{
+				echo "<td><font size=1>$row[3] &nbsp; </td>";
+				echo "<td><font size=1>$row[4] &nbsp; </td>";
+				echo "<td><font size=1>$row[5] &nbsp; </td>";
+				echo "<td><font size=1>$row[6]</td>";
+				}
+			echo "<td><font size=1><a href=\"$PHP_SELF?ADD=31&campaign_id=$row[0]\">"._QXZ("MODIFY")."</a></td></tr>\n";
+			$p++;
 			}
-		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=31&campaign_id=$row[0]\">"._QXZ("MODIFY")."</a></td></tr>\n";
 		$o++;
 		}
 

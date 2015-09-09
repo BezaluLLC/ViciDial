@@ -1,7 +1,7 @@
 <?php
 # options.php - manually defined options for vicidial admin scripts
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # rename this file to options.php for the settings here to go into effect
 #
@@ -17,6 +17,7 @@
 # 140124-1003 - Removed extra newline at end of file
 # 140624-1422 - Added droppedOFtotal options.php option
 # 150619-0135 - Added DROPANSWERpercent_adjustment options.php option for AST_VDADstats.php
+# 150909-1417 - Added $active_only_default_campaigns option for admin.php
 #
 
 # used by the realtime_report.php script
@@ -84,4 +85,7 @@ $atdr_login_logout_user_link = 0;
 
 # alternate calculation of 'Percent of DROP Calls taken out of Answers' in AST_VDADstats.php 
 $DROPANSWERpercent_adjustment = 0;
+
+# Display only active campaigns by default in admin.php Campaigns Listings page 
+$active_only_default_campaigns = 0;
 ?>

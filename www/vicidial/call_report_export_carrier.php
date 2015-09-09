@@ -553,10 +553,11 @@ if ($run_export > 0)
 					}
 				
 				# Carrier/dial log
-				for ($q=$carrier_log_offset; $q<count($row); $q++) {
-					preg_replace("/\\N/",'',$row[$q]);
+				for ($q=$carrier_log_offset; $q<count($row); $q++)
+					{
+					preg_replace("/\\n/",'',$row[$q]);
 					$carrier_dial_log_rows[$k].=$delim.$row[$q];
-				}
+					}
 
 				$i++;
 				$k++;
