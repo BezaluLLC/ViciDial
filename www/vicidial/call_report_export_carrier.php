@@ -15,6 +15,7 @@
 # 150218-1701 - Added cust_sec and cust_queue_sec to EXTENDED output
 # 150727-2144 - Enabled user features for hiding phone numbers and lead data
 # 150903-1537 - Added compatibility for custom fields data options
+# 150909-0748 - Fixed issues with translated select list values, issue #885
 #
 
 $startMS = microtime();
@@ -1298,17 +1299,17 @@ if ($file_exported < 1)
 	echo "<BR><BR>\n";
 
 	echo "<B>"._QXZ("Header Row").":</B><BR>\n";
-	echo "<select size=1 name=header_row><option selected>"._QXZ("YES")."</option><option>"._QXZ("NO")."</option></select>\n";
+	echo "<select size=1 name=header_row><option selected value=\"YES\">"._QXZ("YES")."</option><option value=\"NO\">"._QXZ("NO")."</option></select>\n";
 
 	echo "<BR><BR>\n";
 
 	echo "<B>"._QXZ("Recording Fields").":</B><BR>\n";
 	echo "<select size=1 name=rec_fields>";
-	echo "<option>"._QXZ("ID")."</option>";
-	echo "<option>"._QXZ("FILENAME")."</option>";
-	echo "<option>"._QXZ("LOCATION")."</option>";
-	echo "<option>"._QXZ("ALL")."</option>";
-	echo "<option selected>"._QXZ("NONE")."</option>";
+	echo "<option value=\"ID\">"._QXZ("ID")."</option>";
+	echo "<option value=\"FILENAME\">"._QXZ("FILENAME")."</option>";
+	echo "<option value=\"LOCATION\">"._QXZ("LOCATION")."</option>";
+	echo "<option value=\"ALL\">"._QXZ("ALL")."</option>";
+	echo "<option selected value=\"NONE\">"._QXZ("NONE")."</option>";
 	echo "</select>\n";
 
 	if ($custom_fields_enabled > 0)
@@ -1316,18 +1317,18 @@ if ($file_exported < 1)
 		echo "<BR><BR>\n";
 
 		echo "<B>"._QXZ("Custom Fields").":</B><BR>\n";
-		echo "<select size=1 name=custom_fields><option>"._QXZ("YES")."</option><option selected>"._QXZ("NO")."</option></select>\n";
+		echo "<select size=1 name=custom_fields><option value=\"YES\">"._QXZ("YES")."</option><option selected value=\"NO\">"._QXZ("NO")."</option></select>\n";
 		}
 
 	echo "<BR><BR>\n";
 
 	echo "<B>"._QXZ("Per Call Notes").":</B><BR>\n";
-	echo "<select size=1 name=call_notes><option>"._QXZ("YES")."</option><option selected>"._QXZ("NO")."</option></select>\n";
+	echo "<select size=1 name=call_notes><option value=\"YES\">"._QXZ("YES")."</option><option selected value=\"NO\">"._QXZ("NO")."</option></select>\n";
 
 	echo "<BR><BR>\n";
 
 	echo "<B>"._QXZ("Export Fields").":</B><BR>\n";
-	echo "<select size=1 name=export_fields><option selected>"._QXZ("STANDARD")."</option><option>"._QXZ("EXTENDED")."</option><option>ALTERNATE_1</option></select>\n";
+	echo "<select size=1 name=export_fields><option selected value=\"STANDARD\">"._QXZ("STANDARD")."</option><option value=\"EXTENDED\">"._QXZ("EXTENDED")."</option><option value=\"ALTERNATE_1\">ALTERNATE_1</option></select>\n";
 
 	### bottom of first column
 

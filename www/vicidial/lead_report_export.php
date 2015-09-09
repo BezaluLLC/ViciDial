@@ -22,6 +22,7 @@
 # 150108-1705 - Fixed issue with inbound and no outbound calls export
 # 150727-2145 - Enabled user features for hiding phone numbers and lead data
 # 150903-1539 - Added compatibility for custom fields data options
+# 150909-0749 - Fixed issues with translated select list values, issue #885
 #
 
 $startMS = microtime();
@@ -1134,7 +1135,7 @@ else
 	echo "<BR><BR>\n";
 
 	echo "<B>"._QXZ("Header Row").":</B><BR>\n";
-	echo "<select size=1 name=header_row><option selected>"._QXZ("YES")."</option><option>"._QXZ("NO")."</option></select>\n";
+	echo "<select size=1 name=header_row><option selected value=\"YES\">"._QXZ("YES")."</option><option value=\"NO\">"._QXZ("NO")."</option></select>\n";
 
 	echo "<BR><BR>\n";
 
