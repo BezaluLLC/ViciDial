@@ -497,10 +497,11 @@
 # 150725-1744 - Added Agent Display Fields campaign option
 # 150727-0908 - Added default_language
 # 150808-1439 - Added compatibility for custom fields data option
+# 150909-0212 - Fixed MDlogEPOCH variable issue #882
 #
 
-$version = '2.12-469c';
-$build = '150808-1439';
+$version = '2.12-470c';
+$build = '150909-0212';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -6226,7 +6227,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		var alt_num_status = 0;
 		if (taskMDstage == "start") 
 			{
-			var MDlogEPOCH = 0;
+			MDlogEPOCH = 0;
 			var UID_test = document.vicidial_form.uniqueid.value;
 			if (UID_test.length < 4)
 				{
