@@ -112,7 +112,7 @@ $QUERY_STRING = getenv("QUERY_STRING");
 
 $Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Lists Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Performance Comparison Report, Single Agent Daily, Single Agent Daily Time, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Carrier Log Report, Campaign Debug, Hangup Cause Report, Lists Pass Report, Called Counts List IDs Report, Agent Debug Log Report, Agent-Manager Chat Log';
 
-$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound Email Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Lists Statuses Report, Campaign Status List Report, Export Calls Report , Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Performance Comparison Report, Single Agent Daily, Single Agent Daily Time, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Custom Reports Links, CallCard Search, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Lists Pass Report, Called Counts List IDs Report, Front Page System Summary, Agent Debug Log Report, Agent-Manager Chat Log';
+$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary , Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound Email Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Lists Statuses Report, Campaign Status List Report, Export Calls Report , Export Leads Report , Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Performance Comparison Report, Single Agent Daily, Single Agent Daily Time, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report , Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Custom Reports Links, CallCard Search, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Lists Pass Report, Called Counts List IDs Report, Front Page System Summary, Report Page Servers Summary, Admin Utilities Page, Agent Debug Log Report, Agent-Manager Chat Log';
 
 $Vtables = 'NONE,log_noanswer,did_agent_log,contact_information';
 
@@ -3584,12 +3584,13 @@ else
 # 150804-1608 - Added inbound group _lead_reset options
 # 150806-1348 - Added Admin -> Settings Containers
 # 150903-1457 - Added options for encrypt hosted features
+# 150909-0158 - Added Report Page Servers Summary and Admin Utilities Page options for User Group Allowed Reports
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-506a';
-$build = '150903-1457';
+$admin_version = '2.12-507a';
+$build = '150909-0158';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -34297,7 +34298,7 @@ if ($ADD==999999)
 			}
 
 
-		if ($reports_only_user < 1)
+		if ( ($reports_only_user < 1) and ( (preg_match("/Report Page Servers Summary/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<PRE><TABLE BORDER=1 CELLPADDING=2 cellspacing=0>\n";
 
@@ -34438,7 +34439,7 @@ if ($ADD==999999)
 				}
 			echo "</TABLE>\n";
 
-			if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
+			if ( ($LOGuser_level >= 9) and ( (preg_match("/Admin Utilities Page/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 				{
 				echo "<BR><BR> &nbsp; <a href=\"$PHP_SELF?ADD=999994\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLUE SIZE=1>"._QXZ("Admin Utilities")."</a></FONT>\n";
 				}
@@ -34762,7 +34763,7 @@ if ($ADD==999994)
 	echo "<br><B> "._QXZ("Administration: hidden utilities page - If you do not know what these utilities do, you probably should not use them")."</B><BR><BR>\n";
 	echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2><tr bgcolor=#B6D3FC><td align=left valign=top>\n";
 
-	if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
+	if ( ($LOGuser_level >= 9) and ( (preg_match("/Admin Utilities Page/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 		{
 		echo "<UL>\n";
 	#	echo "<LI><a href=\"welcome_languages.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Welcome Languages Page")."</a></FONT>\n";

@@ -138,6 +138,9 @@ OTHER CHANGES:
 
 29. Added code to support proprietary encryption framework for custom fields.
 
+30. Added new User Group options for Allowed Reports to control the Report Page 
+	Servers Summary and the Admin Utilities Page
+
 
 
 
