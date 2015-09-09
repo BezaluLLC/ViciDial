@@ -50,6 +50,7 @@
 # 150516-1308 - Fixed Javascript element problem, Issue #857
 # 150603-1533 - Statuses are now sorted in alphabetical order
 # 150728-1230 - Fix for non-latin display issue #858
+# 150909-0728 - Fix for time display issue for downloads, issue #886
 #
 
 $startMS = microtime();
@@ -80,7 +81,7 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
-if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
+if (isset($_GET["file_download"]))			{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
@@ -94,6 +95,13 @@ if (strlen($shift)<2) {$shift='ALL';}
 $TIME_HF_agentperfdetail = 'HF';
 $TIME_H_agentperfdetail = 'H';
 $TIME_M_agentperfdetail = 'M';
+
+if ($file_download == 1)
+	{
+	$TIME_HF_agentperfdetail = 'HF';
+	$TIME_H_agentperfdetail = 'HF';
+	$TIME_M_agentperfdetail = 'HF';
+	}
 
 if ($time_in_sec)
 	{
@@ -575,11 +583,11 @@ $HTML_text.="<PRE><FONT SIZE=2>\n";
 
 
 if (!$group)
-{
-$HTML_text.="\n";
-$HTML_text.=_QXZ("PLEASE SELECT A CAMPAIGN AND DATE-TIME ABOVE AND CLICK SUBMIT")."\n";
-$HTML_text.=" "._QXZ("NOTE: stats taken from shift specified")."\n";
-}
+	{
+	$HTML_text.="\n";
+	$HTML_text.=_QXZ("PLEASE SELECT A CAMPAIGN AND DATE-TIME ABOVE AND CLICK SUBMIT")."\n";
+	$HTML_text.=" "._QXZ("NOTE: stats taken from shift specified")."\n";
+	}
 
 else
 {
@@ -1152,19 +1160,22 @@ $TOTavgPAUSE_MS =	sprintf("%6s", $TOTavgPAUSE_MS);
 $TOTavgWAIT_MS =	sprintf("%6s", $TOTavgWAIT_MS);
 $TOTavgCUSTOMER_MS =	sprintf("%6s", $TOTavgCUSTOMER_MS);
 
-while(strlen($TOTtime_MS)>10) {$TOTtime_MS = substr("$TOTtime_MS", 0, -1);}
-while(strlen($TOTtotTALK_MS)>10) {$TOTtotTALK_MS = substr("$TOTtotTALK_MS", 0, -1);}
-while(strlen($TOTtotDISPO_MS)>10) {$TOTtotDISPO_MS = substr("$TOTtotDISPO_MS", 0, -1);}
-while(strlen($TOTtotDEAD_MS)>10) {$TOTtotDEAD_MS = substr("$TOTtotDEAD_MS", 0, -1);}
-while(strlen($TOTtotPAUSE_MS)>10) {$TOTtotPAUSE_MS = substr("$TOTtotPAUSE_MS", 0, -1);}
-while(strlen($TOTtotWAIT_MS)>10) {$TOTtotWAIT_MS = substr("$TOTtotWAIT_MS", 0, -1);}
-while(strlen($TOTtotCUSTOMER_MS)>10) {$TOTtotCUSTOMER_MS = substr("$TOTtotCUSTOMER_MS", 0, -1);}
-while(strlen($TOTavgTALK_MS)>6) {$TOTavgTALK_MS = substr("$TOTavgTALK_MS", 0, -1);}
-while(strlen($TOTavgDISPO_MS)>6) {$TOTavgDISPO_MS = substr("$TOTavgDISPO_MS", 0, -1);}
-while(strlen($TOTavgDEAD_MS)>6) {$TOTavgDEAD_MS = substr("$TOTavgDEAD_MS", 0, -1);}
-while(strlen($TOTavgPAUSE_MS)>6) {$TOTavgPAUSE_MS = substr("$TOTavgPAUSE_MS", 0, -1);}
-while(strlen($TOTavgWAIT_MS)>6) {$TOTavgWAIT_MS = substr("$TOTavgWAIT_MS", 0, -1);}
-while(strlen($TOTavgCUSTOMER_MS)>6) {$TOTavgCUSTOMER_MS = substr("$TOTavgCUSTOMER_MS", 0, -1);}
+if ($file_download == 0 || !$file_download)
+	{
+	while(strlen($TOTtime_MS)>10) {$TOTtime_MS = substr("$TOTtime_MS", 0, -1);}
+	while(strlen($TOTtotTALK_MS)>10) {$TOTtotTALK_MS = substr("$TOTtotTALK_MS", 0, -1);}
+	while(strlen($TOTtotDISPO_MS)>10) {$TOTtotDISPO_MS = substr("$TOTtotDISPO_MS", 0, -1);}
+	while(strlen($TOTtotDEAD_MS)>10) {$TOTtotDEAD_MS = substr("$TOTtotDEAD_MS", 0, -1);}
+	while(strlen($TOTtotPAUSE_MS)>10) {$TOTtotPAUSE_MS = substr("$TOTtotPAUSE_MS", 0, -1);}
+	while(strlen($TOTtotWAIT_MS)>10) {$TOTtotWAIT_MS = substr("$TOTtotWAIT_MS", 0, -1);}
+	while(strlen($TOTtotCUSTOMER_MS)>10) {$TOTtotCUSTOMER_MS = substr("$TOTtotCUSTOMER_MS", 0, -1);}
+	while(strlen($TOTavgTALK_MS)>6) {$TOTavgTALK_MS = substr("$TOTavgTALK_MS", 0, -1);}
+	while(strlen($TOTavgDISPO_MS)>6) {$TOTavgDISPO_MS = substr("$TOTavgDISPO_MS", 0, -1);}
+	while(strlen($TOTavgDEAD_MS)>6) {$TOTavgDEAD_MS = substr("$TOTavgDEAD_MS", 0, -1);}
+	while(strlen($TOTavgPAUSE_MS)>6) {$TOTavgPAUSE_MS = substr("$TOTavgPAUSE_MS", 0, -1);}
+	while(strlen($TOTavgWAIT_MS)>6) {$TOTavgWAIT_MS = substr("$TOTavgWAIT_MS", 0, -1);}
+	while(strlen($TOTavgCUSTOMER_MS)>6) {$TOTavgCUSTOMER_MS = substr("$TOTavgCUSTOMER_MS", 0, -1);}
+	}
 
 if ($show_percentages) {
 	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
@@ -1327,6 +1338,18 @@ $ASCII_text.="\n\n";
 
 
 
+if ($file_download == 2)
+	{
+	$TIME_HF_agentperfdetail = 'HF';
+	$TIME_H_agentperfdetail = 'HF';
+	$TIME_M_agentperfdetail = 'HF';
+	}
+if ($time_in_sec)
+	{
+	$TIME_HF_agentperfdetail = 'S';
+	$TIME_H_agentperfdetail = 'S';
+	$TIME_M_agentperfdetail = 'S';
+	}
 
 $sub_statuses='-';
 $sub_statusesTXT='';
@@ -1476,7 +1499,7 @@ while ($m < $k)
 		if ($status_found < 1)
 			{
 			$SstatusesHTML .= "     0:00 |";
-			$CSV_statuses.=",\"0:00\"";
+			$CSV_statuses.=",\"0:00:00\"";
 			$graph_stats[$m][(4+$n)]=0;					
 			}
 		### END loop through each stat line ###
@@ -1612,9 +1635,12 @@ while ($n < $j)
 	$TOTtotNONPAUSE_MS =	sprintf("%10s", $TOTtotNONPAUSE_MS);
 	$TOTtotTOTAL_MS =		sprintf("%12s", $TOTtotTOTAL_MS);
 
-	while(strlen($TOTtotPAUSE_MS)>10) {$TOTtotPAUSE_MS = substr("$TOTtotPAUSE_MS", 0, -1);}
-	while(strlen($TOTtotNONPAUSE_MS)>10) {$TOTtotNONPAUSE_MS = substr("$TOTtotNONPAUSE_MS", 0, -1);}
-	while(strlen($TOTtotTOTAL_MS)>12) {$TOTtotTOTAL_MS = substr("$TOTtotTOTAL_MS", 0, -1);}
+	if ($file_download == 0 || !$file_download)
+		{
+		while(strlen($TOTtotPAUSE_MS)>10) {$TOTtotPAUSE_MS = substr("$TOTtotPAUSE_MS", 0, -1);}
+		while(strlen($TOTtotNONPAUSE_MS)>10) {$TOTtotNONPAUSE_MS = substr("$TOTtotNONPAUSE_MS", 0, -1);}
+		while(strlen($TOTtotTOTAL_MS)>12) {$TOTtotTOTAL_MS = substr("$TOTtotTOTAL_MS", 0, -1);}
+		}
 
 $ASCII_text.="+-----------------+----------+----------------------+----------------------+------------+----------+----------+  +$sub_statusesHEAD\n";
 $ASCII_text.="|  "._QXZ("TOTALS",33)." "._QXZ("AGENTS",32,"r").":$TOT_AGENTS |$TOTtotTOTAL_MS|$TOTtotNONPAUSE_MS|$TOTtotPAUSE_MS|  |$SUMstatusesHTML\n";
@@ -1742,14 +1768,15 @@ $HTML_text.="\n\n<BR>$db_source";
 $HTML_text.="</TD></TR></TABLE>";
 
 $HTML_text.="</BODY></HTML>";
-
-
 }
-if ($file_download == 0 || !$file_download) {
+
+
+if ($file_download == 0 || !$file_download) 
+	{
 	echo $HTML_head;
 	require("admin_header.php");
 	echo $HTML_text;
-}
+	}
 
 
 if ($db_source == 'S')
