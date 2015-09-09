@@ -6401,10 +6401,12 @@ if ($function == 'add_lead')
 											{
 											if ( (preg_match("/cf_encrypt/",$active_modules)) and ($A_field_encrypt[$o] == 'Y') and (strlen($A_field_value[$o]) > 0) )
 												{
+												$field_enc=$MT;
 												$A_field_valueSQL[$o] = base64_encode($A_field_value[$o]);
 												exec("../agc/aes.pl --encrypt --text=$A_field_valueSQL[$o]", $field_enc);
 												$field_enc_ct = count($field_enc);
 												$k=0;
+												$field_enc_all='';
 												while ($field_enc_ct > $k)
 													{
 													$field_enc_all .= $field_enc[$k];
@@ -7136,10 +7138,12 @@ if ($function == 'update_lead')
 													{
 													if ( (preg_match("/cf_encrypt/",$active_modules)) and ($A_field_encrypt[$o] == 'Y') and (strlen($A_field_value[$o]) > 0) )
 														{
+														$field_enc=$MT;
 														$A_field_valueSQL[$o] = base64_encode($A_field_value[$o]);
 														exec("../agc/aes.pl --encrypt --text=$A_field_valueSQL[$o]", $field_enc);
 														$field_enc_ct = count($field_enc);
 														$k=0;
+														$field_enc_all='';
 														while ($field_enc_ct > $k)
 															{
 															$field_enc_all .= $field_enc[$k];
@@ -7365,10 +7369,12 @@ if ($function == 'update_lead')
 															{
 															if ( (preg_match("/cf_encrypt/",$active_modules)) and ($A_field_encrypt[$o] == 'Y') and (strlen($A_field_value[$o]) > 0) )
 																{
+																$field_enc=$MT;
 																$A_field_valueSQL[$o] = base64_encode($A_field_value[$o]);
 																exec("../agc/aes.pl --encrypt --text=$A_field_valueSQL[$o]", $field_enc);
 																$field_enc_ct = count($field_enc);
 																$k=0;
+																$field_enc_all='';
 																while ($field_enc_ct > $k)
 																	{
 																	$field_enc_all .= $field_enc[$k];
