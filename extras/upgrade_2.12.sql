@@ -278,3 +278,7 @@ ALTER TABLE vicidial_lists_fields ADD field_show_hide ENUM('DISABLED','X_OUT_ALL
 ALTER TABLE vicidial_users ADD admin_cf_show_hidden ENUM('1','0') default '0';
 
 UPDATE system_settings SET db_schema_version='1428',db_schema_update_date=NOW() where db_schema_version < 1428;
+
+ALTER TABLE vicidial_users ADD agentcall_chat ENUM('1','0') default '0';
+
+UPDATE system_settings SET db_schema_version='1429',db_schema_update_date=NOW() where db_schema_version < 1429;
