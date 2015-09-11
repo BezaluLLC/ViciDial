@@ -660,6 +660,7 @@ $txt = '.txt';
 $StarTtime = date("U");
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
+$SQLdate = $NOW_TIME;
 $CIDdate = date("mdHis");
 $ENTRYdate = date("YmdHis");
 $MT[0]='';
@@ -669,6 +670,7 @@ while (strlen($CIDdate) > 9) {$CIDdate = substr("$CIDdate", 1);}
 $check_time = ($StarTtime - 86400);
 
 $secX = date("U");
+$epoch = $secX;
 $hour = date("H");
 $min = date("i");
 $sec = date("s");
