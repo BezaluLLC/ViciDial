@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_recordings_export.pl                version: 2.10
+# AST_recordings_export.pl                version: 2.12
 #
 # This script is designed to gather recordings into a temp directory from
 # set in-groups and campaigns and then FTP transfer them out
@@ -12,11 +12,12 @@
 #
 # /usr/share/astguiclient/AST_recordings_export.pl --campaign=GOODB-GROUP1-GROUP3-GROUP4-SPECIALS-DNC_BEDS --output-format=fixed-as400 --sale-statuses=SALE --debug --filename=BEDSsaleMMDD.txt --date=yesterday --email-list=test@gmail.com --email-sender=test@test.com
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 130623-1739 - First version based upon AST_VDsales_export.pl
 # 141020-0612 - Added --did-only option
+# 150916-0628 - Several small fixes
 #
 
 $txt = '.txt';
@@ -614,7 +615,7 @@ $dbhB = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
  or die "Couldn't connect to database: " . DBI->errstr;
 
 $TOTAL_SALES=0;
-
+$TOTAL_RECORDINGS=0;
 
 $timezone='-5';
 $stmtA = "SELECT local_gmt FROM servers where server_ip='$server_ip';";
@@ -679,9 +680,9 @@ else
 if ($did_only > 0)
 	{
 	#################################################################################
-	########### CURRENT DAY DID RECCORDINGS GATHERING did-only: recording_log  ######
+	########### CURRENT DAY DID RECORDINGS GATHERING did-only: recording_log  ######
 	#################################################################################
-	$stmtA = "select lead_id,user,vicidial_id,vicidial_id,length_in_sec,UNIX_TIMESTAMP(start_time) from recording_log where $with_inboundSQL and start_time > '$shipdate 00:00:01' and start_time < '$shipdate_end 23:59:59' order by start_time;";
+	$stmtA = "SELECT lead_id,user,vicidial_id,vicidial_id,length_in_sec,UNIX_TIMESTAMP(start_time) from recording_log where $with_inboundSQL and start_time >= '$shipdate 00:00:00' and start_time <= '$shipdate_end 23:59:59' order by start_time;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -713,7 +714,7 @@ else
 	###########################################################################
 	########### CURRENT DAY SALES GATHERING outbound-only: vicidial_log  ######
 	###########################################################################
-	$stmtA = "select vicidial_list.lead_id,uniqueid,length_in_sec,UNIX_TIMESTAMP(vicidial_log.call_date) from vicidial_list,vicidial_log where $campaignSQL $sale_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate_end 23:59:59' and vicidial_log.lead_id=vicidial_list.lead_id order by call_date;";
+	$stmtA = "SELECT vicidial_list.lead_id,uniqueid,length_in_sec,UNIX_TIMESTAMP(vicidial_log.call_date) from vicidial_list,vicidial_log where $campaignSQL $sale_statusesSQL and call_date >= '$shipdate 00:00:00' and call_date <= '$shipdate_end 23:59:59' and vicidial_log.lead_id=vicidial_list.lead_id order by call_date;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -744,7 +745,7 @@ else
 		#################################################################################
 		########### CURRENT DAY SALES GATHERING inbound-only: vicidial_closer_log  ######
 		#################################################################################
-		$stmtA = "select vicidial_list.lead_id,xfercallid,closecallid,uniqueid,length_in_sec,UNIX_TIMESTAMP(vicidial_closer_log.call_date) from vicidial_list,vicidial_closer_log where $with_inboundSQL $close_statusesSQL and call_date > '$shipdate 00:00:01' and call_date < '$shipdate_end 23:59:59' and vicidial_closer_log.lead_id=vicidial_list.lead_id order by call_date;";
+		$stmtA = "SELECT vicidial_list.lead_id,xfercallid,closecallid,uniqueid,length_in_sec,UNIX_TIMESTAMP(vicidial_closer_log.call_date) from vicidial_list,vicidial_closer_log where $with_inboundSQL $close_statusesSQL and call_date >= '$shipdate 00:00:00' and call_date <= '$shipdate_end 23:59:59' and vicidial_closer_log.lead_id=vicidial_list.lead_id order by call_date;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -976,10 +977,11 @@ sub select_format_loop
 		$ivr_id = '0';
 		$ivr_filename = '';
 
-		$stmtB = "select recording_id,filename,location from recording_log where lead_id='$lead_id' and vicidial_id='$vicidial_id' and start_time > '$shipdate 00:00:01' and start_time < '$shipdate_end 23:59:59' order by start_time desc limit 100;";
+		$stmtB = "SELECT recording_id,filename,location from recording_log where lead_id='$lead_id' and vicidial_id='$vicidial_id' and start_time >= '$shipdate 00:00:00' and start_time <= '$shipdate_end 23:59:59' order by start_time desc limit 100;";
 		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 		$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
 		$sthBrows=$sthB->rows;
+		if ($DBX) {print "$sthBrows|$stmtB|\n";}
 		$rec_countB=0;
 		while ($sthBrows > $rec_countB)
 			{
