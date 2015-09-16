@@ -3586,12 +3586,13 @@ else
 # 150903-1457 - Added options for encrypt hosted features
 # 150909-0158 - Added Report Page Servers Summary and Admin Utilities Page options for User Group Allowed Reports
 # 150909-1418 - Added $active_only_default_campaigns options.php option for Campaigns Listings
+# 150915-2113 - Added x_ra_carrier module option
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-508a';
-$build = '150909-1418';
+$admin_version = '2.12-509a';
+$build = '150915-2113';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -3753,6 +3754,9 @@ else
 $admin_lists_custom = 'admin_lists_custom.php';
 if (preg_match("/cf_encrypt/",$SSactive_modules))
 	{$admin_lists_custom = 'admin_lists_custom_encrypt.php';}
+$x_ra_carrier = 0;
+if (preg_match("/x_ra_carrier/",$SSactive_modules))
+	{$x_ra_carrier = 1;}
 
 ##############################################
 # Include QC Agents with no other permission #
@@ -6684,7 +6688,7 @@ if ($ADD==1711)
 
 if ($ADD==11111)
 	{
-	if ($LOGmodify_remoteagents==1)
+	if ( ($LOGmodify_remoteagents==1) and ($x_ra_carrier < 1) )
 		{
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
@@ -7364,7 +7368,7 @@ if ($ADD==131111111111)
 
 if ($ADD==141111111111)
 	{
-	if ( ($LOGmodify_servers==1) or ($LOGmodify_carriers==1) )
+	if ( ( ($LOGmodify_servers==1) or ($LOGmodify_carriers==1) ) and ($x_ra_carrier < 1) )
 		{
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
@@ -7424,7 +7428,7 @@ if ($ADD==141111111111)
 
 if ($ADD==140111111111)
 	{
-	if ( ($LOGmodify_servers==1) or ($LOGmodify_carriers==1) )
+	if ( ( ($LOGmodify_servers==1) or ($LOGmodify_carriers==1) ) and ($x_ra_carrier < 1) )
 		{
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
@@ -9905,7 +9909,7 @@ if ($ADD==2711)
 
 if ($ADD==21111)
 	{
-	if ( ($add_copy_disabled > 0) or ($LOGmodify_remoteagents!='1') )
+	if ( ($add_copy_disabled > 0) or ($LOGmodify_remoteagents!='1') or ($x_ra_carrier > 0) )
 		{
 		echo "<br>"._QXZ("You do not have permission to add records on this system")." -system_settings-\n";
 		}
@@ -10863,7 +10867,7 @@ if ($ADD==231111111111)
 
 if ($ADD==241111111111)
 	{
-	if ($add_copy_disabled > 0)
+	if ( ($add_copy_disabled > 0) or ($x_ra_carrier > 0) )
 		{
 		echo "<br>"._QXZ("You do not have permission to add records on this system")." -system_settings-\n";
 		}
@@ -27196,7 +27200,7 @@ if ($ADD==3511)
 
 if ($ADD==31111)
 	{
-	if ($LOGmodify_remoteagents==1)
+	if ( ($LOGmodify_remoteagents==1) and ($x_ra_carrier < 1) )
 		{
 		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
 			{
@@ -29731,7 +29735,7 @@ if ($ADD==331111111111)
 
 if ($ADD==341111111111)
 	{
-	if ( ($LOGast_admin_access==1) or ($LOGmodify_carriers==1) )
+	if ( ( ($LOGast_admin_access==1) or ($LOGmodify_carriers==1) ) and ($x_ra_carrier < 1) )
 		{
 		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
 			{

@@ -38,6 +38,7 @@
 # 150115-0657 - Changes to save custom.css customizations, issue #816
 # 150302-0706 - Removed path changes for non-English languages
 # 150312-0942 - Added ExpectedDBSchema value in astguiclient.conf
+# 150911-1808 - Added creation of GPG directory for encrypted recordings
 #
 
 ############################################
@@ -2497,6 +2498,7 @@ if ($WEBONLY < 1)
 	if (!-e "$PATHDONEmonitor/MP3")		{`mkdir -p $PATHDONEmonitor/MP3`;}
 	if (!-e "$PATHDONEmonitor/OGG")		{`mkdir -p $PATHDONEmonitor/OGG`;}
 	if (!-e "$PATHDONEmonitor/GSW")		{`mkdir -p $PATHDONEmonitor/GSW`;}
+	if (!-e "$PATHDONEmonitor/GPG")		{`mkdir -p $PATHDONEmonitor/GPG`;}
 	if (!-e "$PATHDONEmonitor/FTP")		{`mkdir -p $PATHDONEmonitor/FTP`;}
 	if (!-e "$PATHDONEmonitor/FTP2")	{`mkdir -p $PATHDONEmonitor/FTP2`;}
 

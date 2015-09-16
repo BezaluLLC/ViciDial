@@ -39,9 +39,9 @@
 # 
 # This program assumes that recordings are saved by Asterisk as .wav
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
-# 
+# CHANGES:
 # 130730-1849 - First Build based upon AST_CRON_audio_4_ftp2.pl script
 #
 
@@ -339,7 +339,6 @@ foreach(@FILES)
 
 	if ( (length($FILES[$i]) > 4) && (!-d "$dir2/$FILES[$i]") )
 		{
-
 		$FILEsize2[$i] = (-s "$dir2/$FILES[$i]");
 		if ($DBX) {print "$dir2/$FILES[$i] $FILEsize2[$i]\n\n";}
 		
@@ -353,6 +352,7 @@ foreach(@FILES)
 			$recording_id='';
 			$ALLfile = $FILES[$i];
 			$SQLFILE = $FILES[$i];
+			$SQLFILE =~ s/\.gpg//gi;
 			$SQLFILE =~ s/-all\.wav|-all\.gsm|-all\.ogg|-all\.mp3//gi;
 
 			$stmtA = "select recording_id,start_time from recording_log where filename='$SQLFILE' order by recording_id desc LIMIT 1;";

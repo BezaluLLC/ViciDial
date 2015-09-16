@@ -21,6 +21,7 @@
 # --OGG = OGG Vorbis files
 # --WAV = WAV files
 # --GSW = GSM 6.10 codec with RIFF headers (.wav extension)
+# --GPG = GnuPG encrypted audio files
 #
 # FLAG FOR NO DATE DIRECTORY ON FTP
 # --NODATEDIR
@@ -32,7 +33,7 @@
 # 
 # This program assumes that recordings are saved by Asterisk as .wav
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 
 # 80302-1958 - First Build
@@ -48,6 +49,7 @@
 # 111128-1615 - Added Ftp persistence option
 # 111130-1751 - Added Ftp validate option
 # 130116-1536 - Added ftp port CLI flag
+# 150911-2336 - Added GPG encrypted audio file compatibility
 #
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -60,7 +62,7 @@ if ($mon < 10) {$mon = "0$mon";}
 if ($mday < 10) {$mday = "0$mday";}
 $FTPdate = "$year-$mon-$mday";
 
-$GSM=0;   $MP3=0;   $OGG=0;   $WAV=0;   $GSW=0;   $NODATEDIR=0;
+$GSM=0;   $MP3=0;   $OGG=0;   $WAV=0;   $GSW=0;   $GPG=0;   $NODATEDIR=0;
 
 # Default variables for FTP
 $VARFTP_host = '10.0.0.4';
@@ -100,8 +102,10 @@ if (length($ARGV[0])>1)
 		print "  [--OGG] = copy OGG Vorbis files\n";
 		print "  [--WAV] = copy WAV files\n";
 		print "  [--GSW] = copy GSM with RIFF headers and .wav extension files\n";
+		print "  [--GPG] = copy GPG encrypted files\n";
 		print "  [--nodatedir] = do not put into dated directories\n";
 		print "  [--run-check] = concurrency check, die if another instance is running\n";
+		print "  [--max-files=x] = maximum number of files to process, defaults to 100000\n";
 		print "  [--ftp-server=XXX] = FTP server\n";
 		print "  [--ftp-port=XXX] = FTP server port\n";
 		print "  [--ftp-login=XXX] = FTP server login account\n";
@@ -185,6 +189,14 @@ if (length($ARGV[0])>1)
 							{
 							$GSW=1;
 							if ($DB) {print "GSW audio files\n";}
+							}
+						else
+							{
+							if ($args =~ /--GPG/i)
+								{
+								$GPG=1;
+								if ($DB) {print "GPG encrypted audio files\n";}
+								}
 							}
 						}
 					}
@@ -341,6 +353,7 @@ if ($MP3 > 0) {$dir2 = "$PATHDONEmonitor/MP3";}
 if ($GSM > 0) {$dir2 = "$PATHDONEmonitor/GSM";}
 if ($OGG > 0) {$dir2 = "$PATHDONEmonitor/OGG";}
 if ($GSW > 0) {$dir2 = "$PATHDONEmonitor/GSW";}
+if ($GPG > 0) {$dir2 = "$PATHDONEmonitor/GPG";}
 
 opendir(FILE, "$dir2/");
 @FILES = readdir(FILE);
@@ -390,6 +403,7 @@ foreach(@FILES)
 			$recording_id='';
 			$ALLfile = $FILES[$i];
 			$SQLFILE = $FILES[$i];
+			$SQLFILE =~ s/\.gpg//gi;
 			$SQLFILE =~ s/-all\.wav|-all\.gsm|-all\.ogg|-all\.mp3//gi;
 
 			$stmtA = "select recording_id,start_time from recording_log where filename='$SQLFILE' order by recording_id desc LIMIT 1;";

@@ -1,43 +1,34 @@
 #!/usr/bin/perl
 #
-# AST_CRON_audio_2_compress.pl
+# AST_CRON_audio_2_encrypt.pl
 #
-# This is a STEP-2 program in the audio archival process
+# This is a STEP-2 program in the audio archival process(should happen AFTER any compression)
 #
-# runs every 3 minutes and compresses the -all recording files to GSM format
+# runs every 3 minutes and encrypts the recording files to GPG format by default
 # 
 # put an entry into the cron of of your asterisk machine to run this script 
 # every 3 minutes or however often you desire
 #
-# ### recording mixing/compressing/ftping scripts
+# You MUST define the type of audio file that this process will pull from: WAV, GSM, MP3, OGG, GSW
+#
+# ### recording mixing/compressing/encrypting/ftping scripts
 ##0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,51,54,57 * * * * /usr/share/astguiclient/AST_CRON_audio_1_move_mix.pl
 # 0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,51,54,57 * * * * /usr/share/astguiclient/AST_CRON_audio_1_move_VDonly.pl
 # 1,4,7,10,13,16,19,22,25,28,31,34,37,40,43,46,49,52,55,58 * * * * /usr/share/astguiclient/AST_CRON_audio_2_compress.pl --GSM
-# 2,5,8,11,14,17,20,23,26,29,32,35,38,41,44,47,50,53,56,59 * * * * /usr/share/astguiclient/AST_CRON_audio_3_ftp.pl --GSM
+# 2,5,8,11,14,17,20,23,26,29,32,35,38,41,44,47,50,53,56,59 * * * * /usr/share/astguiclient/AST_CRON_audio_2_encrypt.pl --GPG --GSM --recipients=gpg@vicidial.com
+# 0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,45,48,51,54,57 * * * * /usr/share/astguiclient/AST_CRON_audio_3_ftp.pl --GPG
 #
-# FLAGS FOR COMPRESSION CODECS
-# --GSM = GSM 6.10 codec
-# --MP3 = MPEG Layer3 codec
-# --OGG = OGG Vorbis codec
-# --GSW = GSM 6.10 codec with RIFF headers (.wav extension)
+# FLAGS FOR ENCRYPTION OPTIONS
+# --GPG = GnuPG encryption(assumes recipient public keys are loaded on server)
 #
-# make sure that the following directories exist:
-# /var/spool/asterisk/monitorDONE	# where the mixed -all files are put
-# 
-# This program assumes that recordings are saved by Asterisk as .wav
-# 
 # Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 
-# 80302-1958 - First Build
-# 80731-2253 - Changed size comparisons for more efficiency
-# 90727-1417 - Added GSW format option
-# 101207-1024 - Change to GSW option because of SoX flag changes in 14.3.0
-# 110524-1059 - Added run-check concurrency check option
+# 150911-1814 - First Build based upon 110524-1059 AST_CRON_audio_2_compress.pl
 #
 
-$GSM=0;   $MP3=0;   $OGG=0;   $GSW=0;
-$maxfiles = 100000;
+$WAV=0;   $GSM=0;   $MP3=0;   $OGG=0;   $GSW=0;
+$GPG=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -56,12 +47,16 @@ if (length($ARGV[0])>1)
 		print "  [--debug] = debug\n";
 		print "  [--debugX] = super debug\n";
 		print "  [-t] = test\n";
-		print "  [--GSM] = compress into GSM codec\n";
-		print "  [--MP3] = compress into MPEG-Layer-3 codec\n";
-		print "  [--OGG] = compress into OGG Vorbis codec\n";
-		print "  [--GSW] = compress into GSM codec with RIFF headers and .wav extension\n";
+		print "  [--GPG] = encrypt into GPG codec\n";
+		print "  [--WAV] = look for uncompressed WAV files\n";
+		print "  [--GSM] = look for already compressed GSM files\n";
+		print "  [--MP3] = look for already compressed MPEG-Layer-3 files\n";
+		print "  [--OGG] = look for already compressed OGG Vorbis files\n";
+		print "  [--GSW] = look for already compressed GSM codec with RIFF headers and .wav extension files\n";
 		print "  [--run-check] = concurrency check, die if another instance is running\n";
-		print "  [--max-files=x] = maximum number of files to process, default is 100000\n";
+		print "  [--max-files=x] = maximum number of files to process, defaults to 100000\n";
+		print "  [--recipients=x\@y.com---z\@a.net] = encryption recipients addresses, REQUIRED\n";
+		print "    NOTE: all recipients must be loaded into keys on local server and accessible to gpg binary\n";
 		print "\n";
 		exit;
 		}
@@ -87,37 +82,76 @@ if (length($ARGV[0])>1)
 			$run_check=1;
 			if ($DB) {print "\n----- CONCURRENCY CHECK -----\n\n";}
 			}
+		if ($args =~ /--recipients=/i)
+			{
+			@data_in = split(/--recipients=/,$args);
+			$CLIrecipient = $data_in[1];
+			$CLIrecipient =~ s/ .*$//gi;
+			if ($DB) {print "\n----- RECIPIENTS: $CLIrecipient -----\n\n";}
+			if ($CLIrecipient =~ /---/)
+				{
+				$CLIrecipient =~ s/---/ --recipient /gi;
+				}
+			}
+		else
+			{print "ERROR: recipient is required, exiting...";   exit;}
 		if ($args =~ /--max-files=/i)
 			{
 			@data_in = split(/--max-files=/,$args);
 			$maxfiles = $data_in[1];
 			$maxfiles =~ s/ .*$//gi;
+			$maxfiles = ($maxfiles + 2); # account for directory lists
 			}
-		if ($args =~ /--GSM/i)
+		else
+			{$maxfiles = 100000;}
+		if ($DB) {print "\n----- MAX FILES: $maxfiles -----\n\n";}
+		if ($args =~ /--GPG/i)
 			{
-			$GSM=1;
-			if ($DB) {print "GSM compression\n";}
+			$GPG=1;
+			if ($DB) {print "GPG encryption\n";}
 			}
 		else
 			{
-			if ($args =~ /--MP3/i)
+			$GPG=1;
+			if ($DB) {print "Defaulting to use GPG encryption\n";}
+			}
+		if ($args =~ /--WAV/i)
+			{
+			$WAV=1;
+			if ($DB) {print "WAV compression\n";}
+			}
+		else
+			{
+			if ($args =~ /--GSM/i)
 				{
-				$MP3=1;
-				if ($DB) {print "MP3 compression\n";}
+				$GSM=1;
+				if ($DB) {print "GSM compression\n";}
 				}
 			else
 				{
-				if ($args =~ /--OGG/i)
+				if ($args =~ /--MP3/i)
 					{
-					$OGG=1;
-					if ($DB) {print "OGG compression\n";}
+					$MP3=1;
+					if ($DB) {print "MP3 compression\n";}
 					}
 				else
 					{
-					if ($args =~ /--GSW/i)
+					if ($args =~ /--OGG/i)
 						{
-						$GSW=1;
-						if ($DB) {print "GSW compression\n";}
+						$OGG=1;
+						if ($DB) {print "OGG compression\n";}
+						}
+					else
+						{
+						if ($args =~ /--GSW/i)
+							{
+							$GSW=1;
+							if ($DB) {print "GSW compression\n";}
+							}
+						else
+							{
+							print "ERROR: no audio format defined, exiting...";   exit;
+							}
 						}
 					}
 				}
@@ -126,8 +160,7 @@ if (length($ARGV[0])>1)
 	}
 else
 	{
-	#print "no command line options set\n";
-	$GSM=1;
+	print "ERROR: cannot run script without any command line options, exiting...";   exit;
 	}
 
 
@@ -208,45 +241,39 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
  or die "Couldn't connect to database: " . DBI->errstr;
 
 
-if ( ($GSM > 0) || ($OGG > 0) || ($GSW > 0) )
+if ($GPG > 0)
 	{
-	### find sox binary to do the compression
-	$soxbin = '';
-	if ( -e ('/usr/bin/sox')) {$soxbin = '/usr/bin/sox';}
+	### find GnuPG encryption binary to do the encryption
+	$gpgbin = '';
+	if ( -e ('/usr/bin/gpg')) {$gpgbin = '/usr/bin/gpg';}
 	else 
 		{
-		if ( -e ('/usr/local/bin/sox')) {$soxbin = '/usr/local/bin/sox';}
+		if ( -e ('/usr/local/bin/gpg')) {$gpgbin = '/usr/local/bin/gpg';}
 		else
 			{
-			print "Can't find sox binary! Exiting...\n";
+			print "Can't find gpg binary! Exiting...\n";
 			exit;
 			}
 		}
-	}
-
-if ($MP3 > 0)
-	{
-	### find lame mp3 encoder binary to do the compression
-	$lamebin = '';
-	if ( -e ('/usr/bin/lame')) {$lamebin = '/usr/bin/lame';}
-	else 
-		{
-		if ( -e ('/usr/local/bin/lame')) {$lamebin = '/usr/local/bin/lame';}
-		else
-			{
-			print "Can't find lame binary! Exiting...\n";
-			exit;
-			}
-		}
-	}
-
-if ($DBX > 0)
-	{
-	print "SOX: $soxbin    LAME: $lamebin\n";
 	}
 
 ### directory where -all recordings are
-$dir2 = "$PATHDONEmonitor";
+if ($WAV > 0) {$dir2 = "$PATHDONEmonitor";}
+if ($MP3 > 0) {$dir2 = "$PATHDONEmonitor/MP3";}
+if ($GSM > 0) {$dir2 = "$PATHDONEmonitor/GSM";}
+if ($OGG > 0) {$dir2 = "$PATHDONEmonitor/OGG";}
+if ($GSW > 0) {$dir2 = "$PATHDONEmonitor/GSW";}
+
+if ($DBX > 0)
+	{
+	print "GPG: $gpgbin    DIR: $dir2\n";
+	}
+
+if (!-e "$PATHDONEmonitor/GPG") 
+	{
+	print "Creating directory: $PATHDONEmonitor/GPG \n";
+	`mkdir -p $PATHDONEmonitor/GPG`;
+	}
 
 opendir(FILE, "$dir2/");
 @FILES = readdir(FILE);
@@ -257,9 +284,9 @@ $i=0;
 foreach(@FILES)
 	{
 	$FILEsize1[$i] = 0;
-	if ( (length($FILES[$i]) > 4) && (!-d "$dir1/$FILES[$i]") )
+	if ( (length($FILES[$i]) > 4) && (!-d "$dir2/$FILES[$i]") )
 		{
-		$FILEsize1[$i] = (-s "$dir1/$FILES[$i]");
+		$FILEsize1[$i] = (-s "$dir2/$FILES[$i]");
 		if ($DBX) {print "$FILES[$i] $FILEsize1[$i]\n";}
 		}
 	$i++;
@@ -274,9 +301,9 @@ foreach(@FILES)
 	{
 	$FILEsize2[$i] = 0;
 
-	if ( ( (length($FILES[$i]) > 4) && (!-d "$dir1/$FILES[$i]") ) && ($maxfiles > $i) )
+	if ( (length($FILES[$i]) > 4) && (!-d "$dir2/$FILES[$i]") && ($maxfiles > $i) )
 		{
-		$FILEsize2[$i] = (-s "$dir1/$FILES[$i]");
+		$FILEsize2[$i] = (-s "$dir2/$FILES[$i]");
 		if ($DBX) {print "$FILES[$i] $FILEsize2[$i]\n\n";}
 
 		if ( ($FILES[$i] !~ /out\.|in\.|lost\+found/i) && ($FILEsize1[$i] eq $FILEsize2[$i]) && (length($FILES[$i]) > 4))
@@ -284,7 +311,7 @@ foreach(@FILES)
 			$recording_id='';
 			$ALLfile = $FILES[$i];
 			$SQLFILE = $FILES[$i];
-			$SQLFILE =~ s/-all\.wav|-all\.gsm//gi;
+			$SQLFILE =~ s/-all\.wav|-all\.gsm|-all\.mp3|-all\.gsw|-all\.ogg//gi;
 
 			$stmtA = "select recording_id from recording_log where filename='$SQLFILE' order by recording_id desc LIMIT 1;";
 			if($DBX){print STDERR "\n|$stmtA|\n";}
@@ -299,60 +326,20 @@ foreach(@FILES)
 			$sthA->finish();
 
 
-			if ($GSM > 0)
+			if ($GPG > 0)
 				{
-				$GSMfile = $FILES[$i];
-				$GSMfile =~ s/-all\.wav/-all.gsm/gi;
+				$GPGfile = $FILES[$i];
+				$GPGfile =~ s/-all\.wav/-all.wav.gpg/gi;
+				$GPGfile =~ s/-all\.gsm/-all.gsm.gpg/gi;
+				$GPGfile =~ s/-all\.mp3/-all.mp3.gpg/gi;
+				$GPGfile =~ s/-all\.gsw/-all.gsw.gpg/gi;
+				$GPGfile =~ s/-all\.ogg/-all.ogg.gpg/gi;
 
-				if ($DB) {print "|$recording_id|$ALLfile|$GSMfile|     |$SQLfile|\n";}
+				if ($DB) {print "$i|$recording_id|$ALLfile|$GPGfile|     |$SQLfile|\n";}
 
-				`$soxbin "$dir2/$ALLfile" "$dir2/GSM/$GSMfile"`;
+				`$gpgbin --trust-model always --output $PATHDONEmonitor/GPG/$GPGfile --encrypt --recipient $CLIrecipient $dir2/$ALLfile`;
 
-				$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/GSM/$GSMfile' where recording_id='$recording_id';";
-					if($DBX){print STDERR "\n|$stmtA|\n";}
-				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
-				}
-
-			if ($OGG > 0)
-				{
-				$OGGfile = $FILES[$i];
-				$OGGfile =~ s/-all\.wav/-all.ogg/gi;
-
-				if ($DB) {print "|$recording_id|$ALLfile|$OGGfile|     |$SQLfile|\n";}
-
-				`$soxbin "$dir2/$ALLfile" "$dir2/OGG/$OGGfile"`;
-
-				$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/OGG/$OGGfile' where recording_id='$recording_id';";
-					if($DBX){print STDERR "\n|$stmtA|\n";}
-				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
-				}
-
-			if ($MP3 > 0)
-				{
-				$MP3file = $FILES[$i];
-				$MP3file =~ s/-all\.wav/-all.mp3/gi;
-
-				if ($DB) {print "|$recording_id|$ALLfile|$MP3file|     |$SQLfile|\n";}
-
-				`$lamebin -b 16 -m m --silent "$dir2/$ALLfile" "$dir2/MP3/$MP3file"`;
-
-				$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/MP3/$MP3file' where recording_id='$recording_id';";
-					if($DBX){print STDERR "\n|$stmtA|\n";}
-				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
-				}
-
-			if ($GSW > 0)
-				{
-				$GSWfile = $FILES[$i];
-
-				if ($DB) {print "|$recording_id|$ALLfile|$GSWfile|     |$SQLfile|$soxbin \"$dir2/$ALLfile\" -e gsm-full-rate \"$dir2/GSW/$GSWfile\"|\n";}
-
-				# for SoX versions before 14.3.X
-			#	`$soxbin "$dir2/$ALLfile" -g -b "$dir2/GSW/$GSWfile"`;
-				# for SoX versions 14.3.0 and after
-				`$soxbin "$dir2/$ALLfile" -e gsm-full-rate "$dir2/GSW/$GSWfile"`;
-
-				$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/GSW/$GSWfile' where recording_id='$recording_id';";
+				$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/GPG/$GPGfile' where recording_id='$recording_id';";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 				}
@@ -360,7 +347,7 @@ foreach(@FILES)
 
 			if (!$T)
 				{
-				`mv -f "$dir2/$ALLfile" "$dir2/ORIG/$ALLfile"`;
+				`rm -f "$dir2/$ALLfile"`;
 				}
 
 			### sleep for twenty hundredths of a second to not flood the server with disk activity

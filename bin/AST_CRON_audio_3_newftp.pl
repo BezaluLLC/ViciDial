@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# AST_CRON_audio_3_newftp.pl   version 2.4
+# AST_CRON_audio_3_newftp.pl   version 2.12
 #
 # This is a STEP-3 program in the audio archival process. Normally you can run it 
 # every 3 minutes and copies the recording files to an FTP server.
@@ -20,6 +20,7 @@
 # --ogg or --OGG = OGG Vorbis files
 # --wav or --WAV = WAV files
 # --gsw or --GSW = GSM 6.10 codec with RIFF headers (.wav extension)
+# --gpg or --GPG = GnuPG encrypted files
 #
 # FLAGS FOR PING SETTINGS
 # --ping-type = The type of ping to send. Options are "none", "tcp", "udp", "icmp", 
@@ -52,11 +53,12 @@
 #    --ftp-host="10.10.10.15" --ftp-port=21 --ftp-user="username" --ftp-pass="password" --ftp-dir="RECORDINGS" \
 #    --url-path="http://10.10.10.15/RECORDINGS" --transfer-limit=50 --list-limit=200 --campaign_id="TESTCAMP1-TESTCAMP2"
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 90930-1405 - mikec - first build
 # 110524-1054 - Added run-check concurrency check option
+# 150912-0837 - Added GPG encrypted audio file compatibility
 #
 
 use 5.008;
@@ -181,6 +183,7 @@ if (length($ARGV[0])>1) {
 		print "  [--ogg or --OGG]       = copy OGG Vorbis files\n";
 		print "  [--wav or --WAV]       = copy WAV files\n";
 		print "  [--gsw or --GSW]       = copy GSM 6.10 codec with RIFF headers (.wav extension)\n";
+		print "  [--gpg or --GPG]		= copy GPG encrypted files\n";
 		print "  [--ping-type]          = The type of ping to send. Options are \"none\", \"tcp\", \"udp\", \"icmp\", \n";
 		print "                         \"stream\", \"syn\", and \"external\". None disables pinging. Default is \"icmp\"\n";
 		print "                         WARNING setting --ping-type=\"none\" can lead to files being \"transfer\"\n";
@@ -199,7 +202,8 @@ if (length($ARGV[0])>1) {
 		print "  [--campaign_id]        = which OUTBOUND campaigns to transfer files for in a '-' delimited list \n";
 		print "                         (this only works for outbound calls, not inbound or transfers)\n"; 
 		print "  [--ingroup_id]         = which ingroups to transfer files for in a '-' delimited list\n";
-		print "                         WARNING you can only set --campaign_id or --ingroup_id, not both.\n\n";
+		print "                         WARNING you can only set --campaign_id or --ingroup_id, not both.\n";
+		print "\n";
 		exit;
 	} else {
 		if ($args =~ /--debug/i) {
@@ -355,6 +359,13 @@ if (length($ARGV[0])>1) {
 							if ($debug) {
 								print "GSW audio files\n";
 							}
+						} else {
+							if ( ($args =~ /--GPG/i) || ($args =~ /--gpg/i) ) {
+								$trans_type="gpg";
+								if ($debug) {
+									print "GPG compressed files\n";
+								}
+							}
 						}
 					}
 				}
@@ -423,6 +434,7 @@ if ($trans_type eq "gsw") {$directory = "$PATHDONEmonitor/GSW";}
 if ($trans_type eq "gsm") {$directory = "$PATHDONEmonitor/GSM";}
 if ($trans_type eq "ogg") {$directory = "$PATHDONEmonitor/OGG";}
 if ($trans_type eq "mp3") {$directory = "$PATHDONEmonitor/MP3";}
+if ($trans_type eq "gpg") {$directory = "$PATHDONEmonitor/GPG";}
 
 
 opendir(FILE, "$directory/");
@@ -490,6 +502,7 @@ foreach(@files)	{
 			my $vicidial_id = '';
 			my $ALLfile = $files[$file_loop_count];
 			my $SQLFILE = $files[$file_loop_count];
+			$SQLFILE =~ s/\.gpg//gi;
 			$SQLFILE =~ s/-all\.wav|-all\.gsm|-all\.ogg|-all\.mp3//gi;
 
 			my $rec_log_db_stmt = "select recording_id, start_time, vicidial_id, lead_id from recording_log where filename=$SQLFILE order by recording_id desc LIMIT 1;";
@@ -592,7 +605,7 @@ foreach(@files)	{
 	
 					my $update_log_db_stmt = "UPDATE recording_log set location='$url_path/$start_date_PATH$ALLfile' where recording_id='$recording_id';";
 					if($debug){print STDERR "\n|$update_log_db_stmt|\n";}
-					my $affected_rows = $update_log_sth->execute('$url_path/$start_date_PATH$ALLfile',$recording_id) 
+					my $affected_rows = $update_log_sth->execute("$url_path/$start_date_PATH$ALLfile",$recording_id) 
 						or die "executing: $rec_log_db_stmt ", $dbhA->errstr;
 	
 					if (!$test)	{

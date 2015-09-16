@@ -26,9 +26,9 @@
 # 
 # This program assumes that recordings are saved by Asterisk as .wav
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
-# 
+# CHANGES:
 # 91123-0005 - First Build
 # 110524-1052 - Added run-check concurrency check option
 # 111128-1617 - Added Ftp persistence option
@@ -330,6 +330,7 @@ foreach(@FILES)
 			$recording_id='';
 			$ALLfile = $FILES[$i];
 			$SQLFILE = $FILES[$i];
+			$SQLFILE =~ s/\.gpg//gi;
 			$SQLFILE =~ s/-all\.wav|-all\.gsm|-all\.ogg|-all\.mp3//gi;
 
 			$stmtA = "select recording_id,start_time from recording_log where filename='$SQLFILE' order by recording_id desc LIMIT 1;";
