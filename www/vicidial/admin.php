@@ -3587,12 +3587,13 @@ else
 # 150909-0158 - Added Report Page Servers Summary and Admin Utilities Page options for User Group Allowed Reports
 # 150909-1418 - Added $active_only_default_campaigns options.php option for Campaigns Listings
 # 150915-2113 - Added x_ra_carrier module option
+# 150917-1629 - Added more permission validation before deleting records, issue #893
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-509a';
-$build = '150915-2113';
+$admin_version = '2.12-510a';
+$build = '150917-1629';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -16221,25 +16222,33 @@ if ($ADD==6)
 			}
 		else
 			{
-			$stmtA="DELETE from vicidial_users where user='$user' $LOGadmin_viewable_groupsSQL limit 1;";
-			$rslt=mysql_to_mysqli($stmtA, $link);
-
-			$stmt="DELETE from vicidial_campaign_agents where user='$user';";
+			$stmt="SELECT count(*) from vicidial_users where user='$user' $LOGadmin_viewable_groupsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			if ($row[0] < 1)
+				{echo "<br>"._QXZ("USER NOT FOUND").": $user\n";}
+			else
+				{
+				$stmtA="DELETE from vicidial_users where user='$user' $LOGadmin_viewable_groupsSQL limit 1;";
+				$rslt=mysql_to_mysqli($stmtA, $link);
 
-			$stmt="DELETE from vicidial_inbound_group_agents where user='$user';";
-			$rslt=mysql_to_mysqli($stmt, $link);
+				$stmt="DELETE from vicidial_campaign_agents where user='$user';";
+				$rslt=mysql_to_mysqli($stmt, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmtA|";
-			$SQL_log = preg_replace('/;/', '', $SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='DELETE', record_id='$user', event_code='ADMIN DELETE USER', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_to_mysqli($stmt, $link);
+				$stmt="DELETE from vicidial_inbound_group_agents where user='$user';";
+				$rslt=mysql_to_mysqli($stmt, $link);
 
-			echo "<br><B>"._QXZ("USER DELETION COMPLETED").": $user</B>\n";
-			echo "<br><br>\n";
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmtA|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='DELETE', record_id='$user', event_code='ADMIN DELETE USER', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+
+				echo "<br><B>"._QXZ("USER DELETION COMPLETED").": $user</B>\n";
+				echo "<br><br>\n";
+				}
 			}
 		}
 	$ADD='0';		# go to user list
@@ -16260,73 +16269,80 @@ if ($ADD==61)
 		}
 	else
 		{
-		$stmtA="DELETE from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL limit 1;";
-		$rslt=mysql_to_mysqli($stmtA, $link);
-
-		$stmt="DELETE from vicidial_campaign_agents where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+		$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("CAMPAIGN NOT FOUND").": $campaign_id\n";}
+		else
+			{
+			$stmtA="DELETE from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmtA, $link);
 
-		$stmt="DELETE from vicidial_live_agents where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_campaign_agents where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="DELETE from vicidial_campaign_statuses where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_live_agents where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="DELETE from vicidial_campaign_hotkeys where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_campaign_statuses where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="INSERT INTO vicidial_callbacks_archive SELECT * from vicidial_callbacks where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_campaign_hotkeys where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="DELETE from vicidial_callbacks where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="INSERT INTO vicidial_callbacks_archive SELECT * from vicidial_callbacks where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="DELETE from vicidial_campaign_stats where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_callbacks where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="DELETE from vicidial_campaign_stats_debug where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_campaign_stats where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="DELETE from vicidial_lead_recycle where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_campaign_stats_debug where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="DELETE from vicidial_campaign_server_stats where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_lead_recycle where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="DELETE from vicidial_server_trunks where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_campaign_server_stats where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="DELETE from vicidial_pause_codes where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_server_trunks where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="DELETE from vicidial_campaigns_list_mix where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_pause_codes where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="DELETE from vicidial_xfer_presets where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_campaigns_list_mix where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="DELETE from vicidial_xfer_stats where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);		
+			$stmt="DELETE from vicidial_xfer_presets where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="DELETE from vicidial_campaign_cid_areacodes where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);		
+			$stmt="DELETE from vicidial_xfer_stats where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);		
 
-		echo "<br>"._QXZ("REMOVING LIST HOPPER LEADS FROM OLD CAMPAIGN HOPPER")." ($campaign_id)\n";
-		$stmt="DELETE from vicidial_hopper where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_campaign_cid_areacodes where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);		
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmtA|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGNS', event_type='DELETE', record_id='$campaign_id', event_code='ADMIN DELETE CAMPAIGN', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			echo "<br>"._QXZ("REMOVING LIST HOPPER LEADS FROM OLD CAMPAIGN HOPPER")." ($campaign_id)\n";
+			$stmt="DELETE from vicidial_hopper where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("CAMPAIGN DELETION COMPLETED").": $campaign_id</B>\n";
-		echo "<br><br>\n";
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmtA|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGNS', event_type='DELETE', record_id='$campaign_id', event_code='ADMIN DELETE CAMPAIGN', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+
+			echo "<br><B>"._QXZ("CAMPAIGN DELETION COMPLETED").": $campaign_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
-
 	$ADD='10';		# go to campaigns list
 	}
 
@@ -16348,276 +16364,284 @@ if ($ADD==62)
 			}
 		else
 			{
-			$now_date_epoch = date('U');
-			$inactive_epoch = ($now_date_epoch - 60);
-			$stmt = "SELECT user,campaign_id,UNIX_TIMESTAMP(last_update_time),extension from vicidial_live_agents where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+			$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
-			if ($DB) {echo "<BR>$stmt\n";}
-			$vla_ct = mysqli_num_rows($rslt);
-			$k=0;
-			while ($vla_ct > $k)
+			$row=mysqli_fetch_row($rslt);
+			if ($row[0] < 1)
+				{echo "<br>"._QXZ("CAMPAIGN NOT FOUND").": $campaign_id\n";}
+			else
 				{
-				$row=mysqli_fetch_row($rslt);
-				$VLA_user[$k] =			$row[0];
-				$VLA_campaign_id[$k] =	$row[1];
-				$VLA_update_time[$k] =	$row[2];
-				$VLA_extension[$k] =	$row[3];
-				$k++;
-				}
-
-			$k=0;
-			while ($vla_ct > $k)
-				{
-				if ($VLA_update_time[$k] > $inactive_epoch)
+				$now_date_epoch = date('U');
+				$inactive_epoch = ($now_date_epoch - 60);
+				$stmt = "SELECT user,campaign_id,UNIX_TIMESTAMP(last_update_time),extension from vicidial_live_agents where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				if ($DB) {echo "<BR>$stmt\n";}
+				$vla_ct = mysqli_num_rows($rslt);
+				$k=0;
+				while ($vla_ct > $k)
 					{
-					$lead_active=0;
-					$stmt = "SELECT agent_log_id,user,server_ip,event_time,lead_id,campaign_id,pause_epoch,pause_sec,wait_epoch,wait_sec,talk_epoch,talk_sec,dispo_epoch,dispo_sec,status,user_group,comments,sub_status,dead_epoch,dead_sec from vicidial_agent_log where user='$VLA_user[$k]' order by agent_log_id desc LIMIT 1;";
-					$rslt=mysql_to_mysqli($stmt, $link);
-					if ($DB) {echo "<BR>$stmt\n";}
-					$val_ct = mysqli_num_rows($rslt);
-					if ($val_ct > 0)
+					$row=mysqli_fetch_row($rslt);
+					$VLA_user[$k] =			$row[0];
+					$VLA_campaign_id[$k] =	$row[1];
+					$VLA_update_time[$k] =	$row[2];
+					$VLA_extension[$k] =	$row[3];
+					$k++;
+					}
+
+				$k=0;
+				while ($vla_ct > $k)
+					{
+					if ($VLA_update_time[$k] > $inactive_epoch)
 						{
-						$row=mysqli_fetch_row($rslt);
-						$VAL_agent_log_id =		$row[0];
-						$VAL_user =				$row[1];
-						$VAL_server_ip =		$row[2];
-						$VAL_event_time =		$row[3];
-						$VAL_lead_id =			$row[4];
-						$VAL_campaign_id =		$row[5];
-						$VAL_pause_epoch =		$row[6];
-						$VAL_pause_sec =		$row[7];
-						$VAL_wait_epoch =		$row[8];
-						$VAL_wait_sec =			$row[9];
-						$VAL_talk_epoch =		$row[10];
-						$VAL_talk_sec =			$row[11];
-						$VAL_dispo_epoch =		$row[12];
-						$VAL_dispo_sec =		$row[13];
-						$VAL_status =			$row[14];
-						$VAL_user_group =		$row[15];
-						$VAL_comments =			$row[16];
-						$VAL_sub_status =		$row[17];
-						$VAL_dead_epoch =		$row[18];
-						$VAL_dead_sec =			$row[19];
-
-						if ($DB) {echo "\n<BR>"._QXZ("VAL VALUES").": $VAL_agent_log_id|$VAL_status|$VAL_lead_id\n";}
-
-						if ( ($VAL_wait_epoch < 1) or ( ($VAL_status == 'PAUSE') and ($VAL_dispo_epoch < 1) ) )
+						$lead_active=0;
+						$stmt = "SELECT agent_log_id,user,server_ip,event_time,lead_id,campaign_id,pause_epoch,pause_sec,wait_epoch,wait_sec,talk_epoch,talk_sec,dispo_epoch,dispo_sec,status,user_group,comments,sub_status,dead_epoch,dead_sec from vicidial_agent_log where user='$VLA_user[$k]' order by agent_log_id desc LIMIT 1;";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($DB) {echo "<BR>$stmt\n";}
+						$val_ct = mysqli_num_rows($rslt);
+						if ($val_ct > 0)
 							{
-							$VAL_pause_sec = ( ($now_date_epoch - $VAL_pause_epoch) + $VAL_pause_sec);
-							$stmt = "UPDATE vicidial_agent_log SET wait_epoch='$now_date_epoch', pause_sec='$VAL_pause_sec', pause_type='ADMIN' where agent_log_id='$VAL_agent_log_id';";
-							}
-						else
-							{
-							if ($VAL_talk_epoch < 1)
+							$row=mysqli_fetch_row($rslt);
+							$VAL_agent_log_id =		$row[0];
+							$VAL_user =				$row[1];
+							$VAL_server_ip =		$row[2];
+							$VAL_event_time =		$row[3];
+							$VAL_lead_id =			$row[4];
+							$VAL_campaign_id =		$row[5];
+							$VAL_pause_epoch =		$row[6];
+							$VAL_pause_sec =		$row[7];
+							$VAL_wait_epoch =		$row[8];
+							$VAL_wait_sec =			$row[9];
+							$VAL_talk_epoch =		$row[10];
+							$VAL_talk_sec =			$row[11];
+							$VAL_dispo_epoch =		$row[12];
+							$VAL_dispo_sec =		$row[13];
+							$VAL_status =			$row[14];
+							$VAL_user_group =		$row[15];
+							$VAL_comments =			$row[16];
+							$VAL_sub_status =		$row[17];
+							$VAL_dead_epoch =		$row[18];
+							$VAL_dead_sec =			$row[19];
+
+							if ($DB) {echo "\n<BR>"._QXZ("VAL VALUES").": $VAL_agent_log_id|$VAL_status|$VAL_lead_id\n";}
+
+							if ( ($VAL_wait_epoch < 1) or ( ($VAL_status == 'PAUSE') and ($VAL_dispo_epoch < 1) ) )
 								{
-								$VAL_wait_sec = ( ($now_date_epoch - $VAL_wait_epoch) + $VAL_wait_sec);
-								$stmt = "UPDATE vicidial_agent_log SET talk_epoch='$now_date_epoch', wait_sec='$VAL_wait_sec' where agent_log_id='$VAL_agent_log_id';";
+								$VAL_pause_sec = ( ($now_date_epoch - $VAL_pause_epoch) + $VAL_pause_sec);
+								$stmt = "UPDATE vicidial_agent_log SET wait_epoch='$now_date_epoch', pause_sec='$VAL_pause_sec', pause_type='ADMIN' where agent_log_id='$VAL_agent_log_id';";
 								}
 							else
 								{
-								$lead_active++;
-								$status_update_SQL='';
-								if ( ( (strlen($VAL_status) < 1) or ($VAL_status == 'NULL') ) and ($VAL_lead_id > 0) )
+								if ($VAL_talk_epoch < 1)
 									{
-									$status_update_SQL = ", status='PU'";
-									$stmt="UPDATE vicidial_list SET status='PU' where lead_id='$VAL_lead_id';";
-									if ($DB) {echo "<BR>$stmt\n";}
-									$rslt=mysql_to_mysqli($stmt, $link);
-									}
-								if ($VAL_dispo_epoch < 1)
-									{
-									$VAL_talk_sec = ($now_date_epoch - $VAL_talk_epoch);
-									$stmt = "UPDATE vicidial_agent_log SET dispo_epoch='$now_date_epoch', talk_sec='$VAL_talk_sec'$status_update_SQL where agent_log_id='$VAL_agent_log_id';";
+									$VAL_wait_sec = ( ($now_date_epoch - $VAL_wait_epoch) + $VAL_wait_sec);
+									$stmt = "UPDATE vicidial_agent_log SET talk_epoch='$now_date_epoch', wait_sec='$VAL_wait_sec' where agent_log_id='$VAL_agent_log_id';";
 									}
 								else
 									{
-									if ($VAL_dispo_sec < 1)
+									$lead_active++;
+									$status_update_SQL='';
+									if ( ( (strlen($VAL_status) < 1) or ($VAL_status == 'NULL') ) and ($VAL_lead_id > 0) )
 										{
-										$VAL_dispo_sec = ($now_date_epoch - $VAL_dispo_epoch);
-										$stmt = "UPDATE vicidial_agent_log SET dispo_sec='$VAL_dispo_sec' where agent_log_id='$VAL_agent_log_id';";
+										$status_update_SQL = ", status='PU'";
+										$stmt="UPDATE vicidial_list SET status='PU' where lead_id='$VAL_lead_id';";
+										if ($DB) {echo "<BR>$stmt\n";}
+										$rslt=mysql_to_mysqli($stmt, $link);
+										}
+									if ($VAL_dispo_epoch < 1)
+										{
+										$VAL_talk_sec = ($now_date_epoch - $VAL_talk_epoch);
+										$stmt = "UPDATE vicidial_agent_log SET dispo_epoch='$now_date_epoch', talk_sec='$VAL_talk_sec'$status_update_SQL where agent_log_id='$VAL_agent_log_id';";
+										}
+									else
+										{
+										if ($VAL_dispo_sec < 1)
+											{
+											$VAL_dispo_sec = ($now_date_epoch - $VAL_dispo_epoch);
+											$stmt = "UPDATE vicidial_agent_log SET dispo_sec='$VAL_dispo_sec' where agent_log_id='$VAL_agent_log_id';";
+											}
 										}
 									}
 								}
+
+							if ($DB) {echo "<BR>$stmt\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
 							}
-
-						if ($DB) {echo "<BR>$stmt\n";}
-						$rslt=mysql_to_mysqli($stmt, $link);
 						}
-					}
 
-				$stmt="DELETE from vicidial_live_agents where user='$VLA_user[$k]';";
-				if ($DB) {echo "<BR>$stmt\n";}
-				$rslt=mysql_to_mysqli($stmt, $link);
+					$stmt="DELETE from vicidial_live_agents where user='$VLA_user[$k]';";
+					if ($DB) {echo "<BR>$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
 
-				if (strlen($VAL_user_group) < 1)
-					{
-					$stmt = "SELECT user_group FROM vicidial_users where user='$VLA_user[$k]' $LOGadmin_viewable_groupsSQL;";
+					if (strlen($VAL_user_group) < 1)
+						{
+						$stmt = "SELECT user_group FROM vicidial_users where user='$VLA_user[$k]' $LOGadmin_viewable_groupsSQL;";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($DB) {echo "<BR>$stmt\n";}
+						$val_ct = mysqli_num_rows($rslt);
+						if ($val_ct > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$VAL_user_group =		$row[0];
+							}
+						}
+
+					$stmt = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$VLA_user[$k]','LOGOUT','$VLA_campaign_id[$k]','$SQLdate','$now_date_epoch','$VAL_user_group');";
+					if ($DB) {echo "<BR>$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+
+
+					#############################################
+					##### START QUEUEMETRICS LOGGING LOOKUP #####
+					$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,queuemetrics_pe_phone_append,queuemetrics_pause_type FROM system_settings;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "<BR>$stmt\n";}
-					$val_ct = mysqli_num_rows($rslt);
-					if ($val_ct > 0)
+					$qm_conf_ct = mysqli_num_rows($rslt);
+					if ($qm_conf_ct > 0)
 						{
 						$row=mysqli_fetch_row($rslt);
-						$VAL_user_group =		$row[0];
+						$enable_queuemetrics_logging =		$row[0];
+						$queuemetrics_server_ip	=			$row[1];
+						$queuemetrics_dbname =				$row[2];
+						$queuemetrics_login	=				$row[3];
+						$queuemetrics_pass =				$row[4];
+						$queuemetrics_log_id =				$row[5];
+						$queuemetrics_loginout =			$row[6];
+						$queuemetrics_addmember_enabled =	$row[7];
+						$queuemetrics_dispo_pause =			$row[8];
+						$queuemetrics_pe_phone_append =		$row[9];
+						$queuemetrics_pause_type =			$row[10];
 						}
-					}
-
-				$stmt = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$VLA_user[$k]','LOGOUT','$VLA_campaign_id[$k]','$SQLdate','$now_date_epoch','$VAL_user_group');";
-				if ($DB) {echo "<BR>$stmt\n";}
-				$rslt=mysql_to_mysqli($stmt, $link);
-
-
-				#############################################
-				##### START QUEUEMETRICS LOGGING LOOKUP #####
-				$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,queuemetrics_pe_phone_append,queuemetrics_pause_type FROM system_settings;";
-				$rslt=mysql_to_mysqli($stmt, $link);
-				if ($DB) {echo "<BR>$stmt\n";}
-				$qm_conf_ct = mysqli_num_rows($rslt);
-				if ($qm_conf_ct > 0)
-					{
-					$row=mysqli_fetch_row($rslt);
-					$enable_queuemetrics_logging =		$row[0];
-					$queuemetrics_server_ip	=			$row[1];
-					$queuemetrics_dbname =				$row[2];
-					$queuemetrics_login	=				$row[3];
-					$queuemetrics_pass =				$row[4];
-					$queuemetrics_log_id =				$row[5];
-					$queuemetrics_loginout =			$row[6];
-					$queuemetrics_addmember_enabled =	$row[7];
-					$queuemetrics_dispo_pause =			$row[8];
-					$queuemetrics_pe_phone_append =		$row[9];
-					$queuemetrics_pause_type =			$row[10];
-					}
-				##### END QUEUEMETRICS LOGGING LOOKUP #####
-				###########################################
-				if ($enable_queuemetrics_logging > 0)
-					{
-					$QM_LOGOFF = 'AGENTLOGOFF';
-					if ($queuemetrics_loginout=='CALLBACK')
-						{$QM_LOGOFF = 'AGENTCALLBACKLOGOFF';}
-
-					$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass","$queuemetrics_dbname");
-					if (!$linkB) 
+					##### END QUEUEMETRICS LOGGING LOOKUP #####
+					###########################################
+					if ($enable_queuemetrics_logging > 0)
 						{
-						die('MySQL '._QXZ("connect ERROR").': ' . mysqli_connect_error());
-						}
-					$agents='@agents';
-					$agent_logged_in='';
-					$time_logged_in='0';
+						$QM_LOGOFF = 'AGENTLOGOFF';
+						if ($queuemetrics_loginout=='CALLBACK')
+							{$QM_LOGOFF = 'AGENTCALLBACKLOGOFF';}
 
-					$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/$VLA_user[$k]' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') and time_id > $check_time order by time_id desc limit 1;";
-					$rsltB=mysql_to_mysqli($stmtB, $linkB);
-					if ($DB) {echo "<BR>$stmtB\n";}
-					$qml_ct = mysqli_num_rows($rsltB);
-					if ($qml_ct > 0)
-						{
-						$row=mysqli_fetch_row($rsltB);
-						$agent_logged_in =		$row[0];
-						$time_logged_in =		$row[1];
-						$RAWtime_logged_in =	$row[1];
-						$phone_logged_in =		$row[2];
-						}
-
-					$time_logged_in = ($now_date_epoch - $time_logged_in);
-					if ($time_logged_in > 1000000) {$time_logged_in=1;}
-
-					if ($queuemetrics_loginout == 'NONE')
-						{
-						$pause_typeSQL='';
-						if ($queuemetrics_pause_type > 0)
-							{$pause_typeSQL=",data5='ADMIN'";}
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='Agent/$VLA_user[$k]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF'$pause_typeSQL;";
-						if ($DB) {echo "$stmt\n";}
-						$rslt=mysql_to_mysqli($stmt, $linkB);
-						$affected_rows = mysqli_affected_rows($linkB);
-						}
-
-					if ($queuemetrics_addmember_enabled > 0)
-						{
-						$queuemetrics_phone_environment='';
-						$stmt = "SELECT queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id='$VLA_campaign_id[$k]' $LOGallowed_campaignsSQL;";
-						$rslt=mysql_to_mysqli($stmt, $link);
-						if ($DB) {echo "<BR>$stmt\n";}
-						$cqpe_ct = mysqli_num_rows($rslt);
-						if ($cqpe_ct > 0)
+						$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass","$queuemetrics_dbname");
+						if (!$linkB) 
 							{
-							$row=mysqli_fetch_row($rslt);
-							$queuemetrics_phone_environment =	$row[0];
+							die('MySQL '._QXZ("connect ERROR").': ' . mysqli_connect_error());
+							}
+						$agents='@agents';
+						$agent_logged_in='';
+						$time_logged_in='0';
+
+						$stmtB = "SELECT agent,time_id,data1 FROM queue_log where agent='Agent/$VLA_user[$k]' and verb IN('AGENTLOGIN','AGENTCALLBACKLOGIN') and time_id > $check_time order by time_id desc limit 1;";
+						$rsltB=mysql_to_mysqli($stmtB, $linkB);
+						if ($DB) {echo "<BR>$stmtB\n";}
+						$qml_ct = mysqli_num_rows($rsltB);
+						if ($qml_ct > 0)
+							{
+							$row=mysqli_fetch_row($rsltB);
+							$agent_logged_in =		$row[0];
+							$time_logged_in =		$row[1];
+							$RAWtime_logged_in =	$row[1];
+							$phone_logged_in =		$row[2];
 							}
 
-						if ( ($time_logged_in < 1) or ($queuemetrics_loginout == 'NONE') )
-							{
-							$stmtB = "SELECT agent,time_id,data3 FROM queue_log where agent='Agent/$VLA_user[$k]' and verb='PAUSEREASON' and data1='LOGIN' order by time_id desc limit 1;";
-							$rsltB=mysql_to_mysqli($stmtB, $linkB);
-							if ($DB) {echo "<BR>$stmtB\n";}
-							$qml_ct = mysqli_num_rows($rsltB);
-							if ($qml_ct > 0)
-								{
-								$row=mysqli_fetch_row($rsltB);
-								$agent_logged_in =		$row[0];
-								$time_logged_in =		$row[1];
-								$RAWtime_logged_in =	$row[1];
-								$phone_logged_in =		$row[2];
-								}
-							$time_logged_in = ($now_date_epoch - $time_logged_in);
-							if ($time_logged_in > 1000000) {$time_logged_in=1;}
-							}
-						$stmt = "SELECT distinct queue FROM queue_log where time_id >= $RAWtime_logged_in and agent='$agent_logged_in' and verb IN('ADDMEMBER','ADDMEMBER2')  and queue != '$VLA_campaign_id[$k]' order by time_id desc;";
-						$rslt=mysql_to_mysqli($stmt, $linkB);
-						if ($DB) {echo "$stmt\n";}
-						$amq_conf_ct = mysqli_num_rows($rslt);
-						$i=0;
-						while ($i < $amq_conf_ct)
-							{
-							$row=mysqli_fetch_row($rslt);
-							$AMqueue[$i] =	$row[0];
-							$i++;
-							}
+						$time_logged_in = ($now_date_epoch - $time_logged_in);
+						if ($time_logged_in > 1000000) {$time_logged_in=1;}
 
-						### add the logged-in campaign as well
-						$AMqueue[$i] = $VLA_campaign_id[$k];
-						$i++;
-						$amq_conf_ct++;
-
-						$i=0;
-						while ($i < $amq_conf_ct)
+						if ($queuemetrics_loginout == 'NONE')
 							{
-							$pe_append='';
-							if ( ($queuemetrics_pe_phone_append > 0) and (strlen($queuemetrics_phone_environment)>0) )
-								{
-								$qm_extension = explode('/',$phone_logged_in);
-								$pe_append = "-$qm_extension[1]";
-								}
-							$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='$AMqueue[$i]',agent='$agent_logged_in',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment$pe_append';";
+							$pause_typeSQL='';
+							if ($queuemetrics_pause_type > 0)
+								{$pause_typeSQL=",data5='ADMIN'";}
+							$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='Agent/$VLA_user[$k]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF'$pause_typeSQL;";
+							if ($DB) {echo "$stmt\n";}
 							$rslt=mysql_to_mysqli($stmt, $linkB);
 							$affected_rows = mysqli_affected_rows($linkB);
+							}
+
+						if ($queuemetrics_addmember_enabled > 0)
+							{
+							$queuemetrics_phone_environment='';
+							$stmt = "SELECT queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id='$VLA_campaign_id[$k]' $LOGallowed_campaignsSQL;";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							if ($DB) {echo "<BR>$stmt\n";}
+							$cqpe_ct = mysqli_num_rows($rslt);
+							if ($cqpe_ct > 0)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$queuemetrics_phone_environment =	$row[0];
+								}
+
+							if ( ($time_logged_in < 1) or ($queuemetrics_loginout == 'NONE') )
+								{
+								$stmtB = "SELECT agent,time_id,data3 FROM queue_log where agent='Agent/$VLA_user[$k]' and verb='PAUSEREASON' and data1='LOGIN' order by time_id desc limit 1;";
+								$rsltB=mysql_to_mysqli($stmtB, $linkB);
+								if ($DB) {echo "<BR>$stmtB\n";}
+								$qml_ct = mysqli_num_rows($rsltB);
+								if ($qml_ct > 0)
+									{
+									$row=mysqli_fetch_row($rsltB);
+									$agent_logged_in =		$row[0];
+									$time_logged_in =		$row[1];
+									$RAWtime_logged_in =	$row[1];
+									$phone_logged_in =		$row[2];
+									}
+								$time_logged_in = ($now_date_epoch - $time_logged_in);
+								if ($time_logged_in > 1000000) {$time_logged_in=1;}
+								}
+							$stmt = "SELECT distinct queue FROM queue_log where time_id >= $RAWtime_logged_in and agent='$agent_logged_in' and verb IN('ADDMEMBER','ADDMEMBER2')  and queue != '$VLA_campaign_id[$k]' order by time_id desc;";
+							$rslt=mysql_to_mysqli($stmt, $linkB);
+							if ($DB) {echo "$stmt\n";}
+							$amq_conf_ct = mysqli_num_rows($rslt);
+							$i=0;
+							while ($i < $amq_conf_ct)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$AMqueue[$i] =	$row[0];
+								$i++;
+								}
+
+							### add the logged-in campaign as well
+							$AMqueue[$i] = $VLA_campaign_id[$k];
 							$i++;
+							$amq_conf_ct++;
+
+							$i=0;
+							while ($i < $amq_conf_ct)
+								{
+								$pe_append='';
+								if ( ($queuemetrics_pe_phone_append > 0) and (strlen($queuemetrics_phone_environment)>0) )
+									{
+									$qm_extension = explode('/',$phone_logged_in);
+									$pe_append = "-$qm_extension[1]";
+									}
+								$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='$AMqueue[$i]',agent='$agent_logged_in',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment$pe_append';";
+								$rslt=mysql_to_mysqli($stmt, $linkB);
+								$affected_rows = mysqli_affected_rows($linkB);
+								$i++;
+								}
+							}
+
+						if ($queuemetrics_loginout != 'NONE')
+							{
+							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
+							if ($DB) {echo "<BR>$stmtB\n";}
+							$rsltB=mysql_to_mysqli($stmtB, $linkB);
 							}
 						}
 
-					if ($queuemetrics_loginout != 'NONE')
-						{
-						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
-						if ($DB) {echo "<BR>$stmtB\n";}
-						$rsltB=mysql_to_mysqli($stmtB, $linkB);
-						}
+					echo "<!-- Agent $VLA_user[$k] has been emergency logged out, make sure they close their web browser<BR> -->\n";
+
+					$k++;
 					}
 
-				echo "<!-- Agent $VLA_user[$k] has been emergency logged out, make sure they close their web browser<BR> -->\n";
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGNS', event_type='LOGOUT', record_id='$campaign_id', event_code='ADMIN LOGOUT CAMPAIGN AGENTS', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
 
-				$k++;
+				echo "<br><B>"._QXZ("AGENT LOGOUT COMPLETED").": $campaign_id</B>\n";
+				echo "<br><br>\n";
 				}
-
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = preg_replace('/;/', '', $SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGNS', event_type='LOGOUT', record_id='$campaign_id', event_code='ADMIN LOGOUT CAMPAIGN AGENTS', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_to_mysqli($stmt, $link);
-
-			echo "<br><B>"._QXZ("AGENT LOGOUT COMPLETED").": $campaign_id</B>\n";
-			echo "<br><br>\n";
 			}
 		}
 	else
@@ -16648,19 +16672,27 @@ if ($ADD==63)
 			}
 		else
 			{
-			$stmt="DELETE from vicidial_auto_calls where status='LIVE' and campaign_id='$campaign_id' $LOGallowed_campaignsSQL order by call_time limit 1;";
+			$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			if ($row[0] < 1)
+				{echo "<br>"._QXZ("CAMPAIGN NOT FOUND").": $campaign_id\n";}
+			else
+				{
+				$stmt="DELETE from vicidial_auto_calls where status='LIVE' and campaign_id='$campaign_id' $LOGallowed_campaignsSQL order by call_time limit 1;";
+				$rslt=mysql_to_mysqli($stmt, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = preg_replace('/;/', '', $SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGNS', event_type='RESET', record_id='$campaign_id', event_code='ADMIN RESET CAMPAIGN JAM', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_to_mysqli($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGNS', event_type='RESET', record_id='$campaign_id', event_code='ADMIN RESET CAMPAIGN JAM', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
 
-			echo "<br><B>"._QXZ("LAST VDAC RECORD CLEARED FOR CAMPAIGN").": $campaign_id</B>\n";
-			echo "<br><br>\n";
+				echo "<br><B>"._QXZ("LAST VDAC RECORD CLEARED FOR CAMPAIGN").": $campaign_id</B>\n";
+				echo "<br><br>\n";
+				}
 			}
 		}
 	else
@@ -16695,18 +16727,26 @@ if ($ADD==65)
 			}
 		else
 			{
-			echo "<br><B>"._QXZ("CAMPAIGN LEAD RECYCLE DELETED").": $campaign_id - $status - $attempt_delay</B>\n";
-
-			$stmt="DELETE FROM vicidial_lead_recycle where campaign_id='$campaign_id' and status='$status' $LOGallowed_campaignsSQL;";
+			$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			if ($row[0] < 1)
+				{echo "<br>"._QXZ("CAMPAIGN NOT FOUND").": $campaign_id\n";}
+			else
+				{
+				echo "<br><B>"._QXZ("CAMPAIGN LEAD RECYCLE DELETED").": $campaign_id - $status - $attempt_delay</B>\n";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = preg_replace('/;/', '', $SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_RECYCLE', event_type='DELETE', record_id='$campaign_id', event_code='ADMIN DELETE CAMPAIGN LEAD RECYCLE', event_sql=\"$SQL_log\", event_notes='Status: $status';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_to_mysqli($stmt, $link);
+				$stmt="DELETE FROM vicidial_lead_recycle where campaign_id='$campaign_id' and status='$status' $LOGallowed_campaignsSQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_RECYCLE', event_type='DELETE', record_id='$campaign_id', event_code='ADMIN DELETE CAMPAIGN LEAD RECYCLE', event_sql=\"$SQL_log\", event_notes='Status: $status';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				}
 			}
 		}
 	else
@@ -16742,23 +16782,31 @@ if ($ADD==66)
 				}
 			else
 				{
-				echo "<br><B>"._QXZ("AUTO ALT DIAL STATUS DELETED").": $campaign_id - $status</B>\n";
-
-				$stmt="SELECT auto_alt_dial_statuses from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+				$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$row=mysqli_fetch_row($rslt);
+				if ($row[0] < 1)
+					{echo "<br>"._QXZ("CAMPAIGN NOT FOUND").": $campaign_id\n";}
+				else
+					{
+					echo "<br><B>"._QXZ("AUTO ALT DIAL STATUS DELETED").": $campaign_id - $status</B>\n";
 
-				$auto_alt_dial_statuses = preg_replace("/\s$status\s/i", " ",$row[0]);
-				$stmt="UPDATE vicidial_campaigns set auto_alt_dial_statuses='$auto_alt_dial_statuses' where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-				$rslt=mysql_to_mysqli($stmt, $link);
+					$stmt="SELECT auto_alt_dial_statuses from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = preg_replace('/;/', '', $SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_ALTDIALS', event_type='DELETE', record_id='$campaign_id', event_code='ADMIN DELETE CAMPAIGN ALT DIAL', event_sql=\"$SQL_log\", event_notes='Status: $status';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_to_mysqli($stmt, $link);
+					$auto_alt_dial_statuses = preg_replace("/\s$status\s/i", " ",$row[0]);
+					$stmt="UPDATE vicidial_campaigns set auto_alt_dial_statuses='$auto_alt_dial_statuses' where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = preg_replace('/;/', '', $SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_ALTDIALS', event_type='DELETE', record_id='$campaign_id', event_code='ADMIN DELETE CAMPAIGN ALT DIAL', event_sql=\"$SQL_log\", event_notes='Status: $status';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					}
 				}
 			}
 		}
@@ -16789,18 +16837,26 @@ if ($ADD==67)
 			}
 		else
 			{
-			echo "<br><B>"._QXZ("CAMPAIGN PAUSE CODE DELETED").": $campaign_id - $pause_code</B>\n";
-
-			$stmt="DELETE FROM vicidial_pause_codes where campaign_id='$campaign_id' and pause_code='$pause_code' $LOGallowed_campaignsSQL;";
+			$stmt="SELECT count(*) from vicidial_pause_codes where campaign_id='$campaign_id' and pause_code='$pause_code' $LOGallowed_campaignsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			if ($row[0] < 1)
+				{echo "<br>"._QXZ("CAMPAIGN PAUSE CODE NOT FOUND").": $campaign_id - $pause_code\n";}
+			else
+				{
+				echo "<br><B>"._QXZ("CAMPAIGN PAUSE CODE DELETED").": $campaign_id - $pause_code</B>\n";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = preg_replace('/;/', '', $SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_PAUSECODES', event_type='DELETE', record_id='$campaign_id', event_code='ADMIN DELETE CAMPAIGN PAUSE CODE', event_sql=\"$SQL_log\", event_notes='Status: $pause_code';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_to_mysqli($stmt, $link);
+				$stmt="DELETE FROM vicidial_pause_codes where campaign_id='$campaign_id' and pause_code='$pause_code' $LOGallowed_campaignsSQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_PAUSECODES', event_type='DELETE', record_id='$campaign_id', event_code='ADMIN DELETE CAMPAIGN PAUSE CODE', event_sql=\"$SQL_log\", event_notes='Status: $pause_code';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				}
 			}
 		}
 	else
@@ -16836,23 +16892,31 @@ if ($ADD==68)
 				}
 			else
 				{
-				echo "<br><B>"._QXZ("CAMPAIGN DIAL STATUS REMOVED").": $campaign_id - $status</B>\n";
-
-				$stmt="SELECT dial_statuses from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+				$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$row=mysqli_fetch_row($rslt);
+				if ($row[0] < 1)
+					{echo "<br>"._QXZ("CAMPAIGN NOT FOUND").": $campaign_id\n";}
+				else
+					{
+					echo "<br><B>"._QXZ("CAMPAIGN DIAL STATUS REMOVED").": $campaign_id - $status</B>\n";
 
-				$dial_statuses = preg_replace("/\s$status\s/i", " ",$row[0]);
-				$stmt="UPDATE vicidial_campaigns set dial_statuses='$dial_statuses' where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
-				$rslt=mysql_to_mysqli($stmt, $link);
+					$stmt="SELECT dial_statuses from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
 
-				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmt|";
-				$SQL_log = preg_replace('/;/', '', $SQL_log);
-				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_DIALSTATUSES', event_type='DELETE', record_id='$campaign_id', event_code='ADMIN DELETE CAMPAIGN DIAL STATUS', event_sql=\"$SQL_log\", event_notes='Status: $status';";
-				if ($DB) {echo "|$stmt|\n";}
-				$rslt=mysql_to_mysqli($stmt, $link);
+					$dial_statuses = preg_replace("/\s$status\s/i", " ",$row[0]);
+					$stmt="UPDATE vicidial_campaigns set dial_statuses='$dial_statuses' where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = preg_replace('/;/', '', $SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_DIALSTATUSES', event_type='DELETE', record_id='$campaign_id', event_code='ADMIN DELETE CAMPAIGN DIAL STATUS', event_sql=\"$SQL_log\", event_notes='Status: $status';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					}
 				}
 			}
 		}
@@ -16883,21 +16947,29 @@ if ($ADD==601)
 			}
 		else
 			{
-			echo "<br><B>"._QXZ("CAMPAIGN PRESET DELETED").": $campaign_id - $preset_name</B>\n";
-
-			$stmt="DELETE FROM vicidial_xfer_presets where campaign_id='$campaign_id' and preset_name='$preset_name' $LOGallowed_campaignsSQL;";
+			$stmt="SELECT count(*) from vicidial_xfer_presets where campaign_id='$campaign_id' and preset_name='$preset_name' $LOGallowed_campaignsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			if ($row[0] < 1)
+				{echo "<br>"._QXZ("CAMPAIGN PRESET NOT FOUND").": $campaign_id - $preset_name\n";}
+			else
+				{
+				echo "<br><B>"._QXZ("CAMPAIGN PRESET DELETED").": $campaign_id - $preset_name</B>\n";
 
-			$stmt="DELETE FROM vicidial_xfer_stats where campaign_id='$campaign_id' and preset_name='$preset_name' $LOGallowed_campaignsSQL;";
-			$rslt=mysql_to_mysqli($stmt, $link);
+				$stmt="DELETE FROM vicidial_xfer_presets where campaign_id='$campaign_id' and preset_name='$preset_name' $LOGallowed_campaignsSQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = preg_replace('/;/', '', $SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_PRESETS', event_type='DELETE', record_id='$campaign_id', event_code='ADMIN DELETE CAMPAIGN PRESET', event_sql=\"$SQL_log\", event_notes='Preset: $preset_name';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_to_mysqli($stmt, $link);
+				$stmt="DELETE FROM vicidial_xfer_stats where campaign_id='$campaign_id' and preset_name='$preset_name' $LOGallowed_campaignsSQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_PRESETS', event_type='DELETE', record_id='$campaign_id', event_code='ADMIN DELETE CAMPAIGN PRESET', event_sql=\"$SQL_log\", event_notes='Preset: $preset_name';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				}
 			}
 		}
 	else
@@ -16925,27 +16997,35 @@ if ($ADD==611)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_lists where list_id='$list_id' $LOGallowed_campaignsSQL limit 1;";
+		$stmt="SELECT count(*) from vicidial_lists where list_id='$list_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("LIST NOT FOUND").": $list_id\n";}
+		else
+			{
+			$stmt="DELETE from vicidial_lists where list_id='$list_id' $LOGallowed_campaignsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br>"._QXZ("REMOVING LIST HOPPER LEADS FROM OLD CAMPAIGN HOPPER")." ($list_id)\n";
-		$stmt="DELETE from vicidial_hopper where list_id='$list_id' $LOGallowed_campaignsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			echo "<br>"._QXZ("REMOVING LIST HOPPER LEADS FROM OLD CAMPAIGN HOPPER")." ($list_id)\n";
+			$stmt="DELETE from vicidial_hopper where list_id='$list_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br>"._QXZ("REMOVING LIST LEADS FROM LIST TABLE")."\n";
-		$stmt="DELETE from vicidial_list where list_id='$list_id';";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			echo "<br>"._QXZ("REMOVING LIST LEADS FROM LIST TABLE")."\n";
+			$stmt="DELETE from vicidial_list where list_id='$list_id';";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='DELETE', record_id='$list_id', event_code='ADMIN DELETE LIST', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='DELETE', record_id='$list_id', event_code='ADMIN DELETE LIST', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("LIST DELETION COMPLETED").": $list_id</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("LIST DELETION COMPLETED").": $list_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
 
 	$ADD='100';		# go to lists list
@@ -16966,40 +17046,47 @@ if ($ADD==612)
 		}
 	else
 		{
-		
-		echo "<br>"._QXZ("REMOVING LIST HOPPER LEADS FROM OLD CAMPAIGN HOPPER")." ($list_id)\n";
-		$stmt="DELETE from vicidial_hopper where list_id='$list_id' $LOGallowed_campaignsSQL;";
+		$stmt="SELECT count(*) from vicidial_lists where list_id='$list_id' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
-		
-		echo "<br>"._QXZ("REMOVING LEADS FROM LIST TABLE")."\n";
-		$stmt="DELETE from vicidial_list where list_id='$list_id';";
-		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("LIST NOT FOUND").": $list_id\n";}
+		else
+			{
 
-	# Decided not to activate this in case a lead was moved to another list but still had data in this list.
-	#	$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id';";
-	#	$rslt=mysql_to_mysqli($stmt, $link);
-	#	$rowx=mysqli_fetch_row($rslt);
-	#	$custom_fields_count = $rowx[0];
-	#
-	#	if ($custom_fields_count > 0)
-	#		{
-	#		echo "<br>REMOVING CUSTOM FIELDS DATA\n";
-	#		$stmt="DELETE from custom_$list_id;";
-	#		$rslt=mysql_to_mysqli($stmt, $link);
-	#		}
+			echo "<br>"._QXZ("REMOVING LIST HOPPER LEADS FROM OLD CAMPAIGN HOPPER")." ($list_id)\n";
+			$stmt="DELETE from vicidial_hopper where list_id='$list_id' $LOGallowed_campaignsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			
+			echo "<br>"._QXZ("REMOVING LEADS FROM LIST TABLE")."\n";
+			$stmt="DELETE from vicidial_list where list_id='$list_id';";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='CLEAR', record_id='$list_id', event_code='ADMIN CLEARED LIST', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+		# Decided not to activate this in case a lead was moved to another list but still had data in this list.
+		#	$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id';";
+		#	$rslt=mysql_to_mysqli($stmt, $link);
+		#	$rowx=mysqli_fetch_row($rslt);
+		#	$custom_fields_count = $rowx[0];
+		#
+		#	if ($custom_fields_count > 0)
+		#		{
+		#		echo "<br>REMOVING CUSTOM FIELDS DATA\n";
+		#		$stmt="DELETE from custom_$list_id;";
+		#		$rslt=mysql_to_mysqli($stmt, $link);
+		#		}
 
-		echo "<br><B>"._QXZ("LIST CLEARING COMPLETED").": $list_id</B>\n";
-		echo "<br><br>\n";
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='CLEAR', record_id='$list_id', event_code='ADMIN CLEARED LIST', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+
+			echo "<br><B>"._QXZ("LIST CLEARING COMPLETED").": $list_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
-
 	$ADD='311';		# go to list modify page
 	}
 
@@ -17018,31 +17105,39 @@ if ($ADD==6111)
 		}
 	else
 		{
-		$stmtA="DELETE from vicidial_inbound_groups where group_id='$group_id' and group_id NOT IN('AGENTDIRECT') $LOGadmin_viewable_groupsSQL limit 1;";
-		$rslt=mysql_to_mysqli($stmtA, $link);
-
-		$stmt="DELETE from vicidial_inbound_group_agents where group_id='$group_id';";
+		$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$group_id' and group_id NOT IN('AGENTDIRECT') $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("IN-GROUP NOT FOUND").": $group_id\n";}
+		else
+			{
+			$stmtA="DELETE from vicidial_inbound_groups where group_id='$group_id' and group_id NOT IN('AGENTDIRECT') $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmtA, $link);
 
-		$stmt="DELETE from vicidial_live_inbound_agents where group_id='$group_id';";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_inbound_group_agents where group_id='$group_id';";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="DELETE from vicidial_campaign_stats where campaign_id='$group_id';";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_live_inbound_agents where group_id='$group_id';";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="DELETE from vicidial_campaign_stats_debug where campaign_id='$group_id';";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_campaign_stats where campaign_id='$group_id';";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmtA|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='INGROUPS', event_type='DELETE', record_id='$group_id', event_code='ADMIN DELETE INGROUP', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_campaign_stats_debug where campaign_id='$group_id';";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("IN-GROUP DELETION COMPLETED").": $group_id</B>\n";
-		echo "<br><br>\n";
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmtA|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='INGROUPS', event_type='DELETE', record_id='$group_id', event_code='ADMIN DELETE INGROUP', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+
+			echo "<br><B>"._QXZ("IN-GROUP DELETION COMPLETED").": $group_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
 
 	switch($group_handling) 
@@ -17077,19 +17172,27 @@ if ($ADD==6311)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_inbound_dids where did_id='$did_id' $LOGadmin_viewable_groupsSQL limit 1;";
+		$stmt="SELECT count(*) from vicidial_inbound_dids where did_id='$did_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("DID NOT FOUND").": $did_id\n";}
+		else
+			{
+			$stmt="DELETE from vicidial_inbound_dids where did_id='$did_id' $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='DIDS', event_type='DELETE', record_id='$did_id', event_code='ADMIN DELETE DID', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='DIDS', event_type='DELETE', record_id='$did_id', event_code='ADMIN DELETE DID', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("DID DELETION COMPLETED").": $did_id</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("DID DELETION COMPLETED").": $did_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
 
 	$ADD='1300';		# go to did list
@@ -17110,24 +17213,31 @@ if ($ADD==6511)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_call_menu where menu_id='$menu_id' $LOGadmin_viewable_groupsSQL limit 1;";
+		$stmt="SELECT count(*) from vicidial_call_menu where menu_id='$menu_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("CALL MENU NOT FOUND").": $menu_id\n";}
+		else
+			{
+			$stmt="DELETE from vicidial_call_menu where menu_id='$menu_id' $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmtA="DELETE from vicidial_call_menu_options where menu_id='$menu_id' limit 17;";
-		$rslt=mysql_to_mysqli($stmtA, $link);
+			$stmtA="DELETE from vicidial_call_menu_options where menu_id='$menu_id' limit 17;";
+			$rslt=mysql_to_mysqli($stmtA, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|$stmtA";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLMENUS', event_type='DELETE', record_id='$menu_id', event_code='ADMIN DELETE CALL MENU', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|$stmtA";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLMENUS', event_type='DELETE', record_id='$menu_id', event_code='ADMIN DELETE CALL MENU', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("CALL MENU DELETION COMPLETED").": $menu_id</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("CALL MENU DELETION COMPLETED").": $menu_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
-
 	$ADD='1500';		# go to call menu list
 	}
 
@@ -17146,24 +17256,31 @@ if ($ADD==6711)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_filter_phone_groups where filter_phone_group_id='$filter_phone_group_id' $LOGadmin_viewable_groupsSQL limit 1;";
+		$stmt="SELECT count(*) from vicidial_filter_phone_groups where filter_phone_group_id='$filter_phone_group_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("FILTER PHONE GROUP NOT FOUND").": $filter_phone_group_id\n";}
+		else
+			{
+			$stmt="DELETE from vicidial_filter_phone_groups where filter_phone_group_id='$filter_phone_group_id' $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmtA="DELETE from vicidial_filter_phone_numbers where filter_phone_group_id='$filter_phone_group_id';";
-		$rslt=mysql_to_mysqli($stmtA, $link);
+			$stmtA="DELETE from vicidial_filter_phone_numbers where filter_phone_group_id='$filter_phone_group_id';";
+			$rslt=mysql_to_mysqli($stmtA, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|$stmtA";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='FILTERPHONEGROUPS', event_type='DELETE', record_id='$filter_phone_group_id', event_code='ADMIN DELETE FILTER PHONE GROUP', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|$stmtA";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='FILTERPHONEGROUPS', event_type='DELETE', record_id='$filter_phone_group_id', event_code='ADMIN DELETE FILTER PHONE GROUP', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("FILTER PHONE GROUP DELETION COMPLETED").": $filter_phone_group_id</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("FILTER PHONE GROUP DELETION COMPLETED").": $filter_phone_group_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
-
 	$ADD='1700';		# go to filter phone group list
 	}
 
@@ -17257,19 +17374,27 @@ if ($ADD==611111)
 			}
 		else
 			{
-			$stmt="DELETE from vicidial_user_groups where user_group='$user_group' $LOGadmin_viewable_groupsSQL limit 1;";
+			$stmt="SELECT count(*) from vicidial_user_groups where user_group='$user_group' $LOGadmin_viewable_groupsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			if ($row[0] < 1)
+				{echo "<br>"._QXZ("USER GROUP NOT FOUND").": $user_group\n";}
+			else
+				{
+				$stmt="DELETE from vicidial_user_groups where user_group='$user_group' $LOGadmin_viewable_groupsSQL limit 1;";
+				$rslt=mysql_to_mysqli($stmt, $link);
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = preg_replace('/;/', '', $SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERGROUPS', event_type='DELETE', record_id='$user_group', event_code='ADMIN DELETE USER GROUP', event_sql=\"$SQL_log\", event_notes='';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_to_mysqli($stmt, $link);
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERGROUPS', event_type='DELETE', record_id='$user_group', event_code='ADMIN DELETE USER GROUP', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
 
-			echo "<br><B>"._QXZ("USER GROUP DELETION COMPLETED").": $user_group</B>\n";
-			echo "<br><br>\n";
+				echo "<br><B>"._QXZ("USER GROUP DELETION COMPLETED").": $user_group</B>\n";
+				echo "<br><br>\n";
+				}
 			}
 		}
 	$ADD='100000';		# go to user group list
@@ -17290,21 +17415,28 @@ if ($ADD==6111111)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_scripts where script_id='$script_id' $LOGadmin_viewable_groupsSQL limit 1;";
+		$stmt="SELECT count(*) from vicidial_scripts where script_id='$script_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("SCRIPT NOT FOUND").": $script_id\n";}
+		else
+			{
+			$stmt="DELETE from vicidial_scripts where script_id='$script_id' $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SCRIPTS', event_type='DELETE', record_id='$script_id', event_code='ADMIN DELETE SCRIPT', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SCRIPTS', event_type='DELETE', record_id='$script_id', event_code='ADMIN DELETE SCRIPT', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("SCRIPT DELETION COMPLETED").": $script_id</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("SCRIPT DELETION COMPLETED").": $script_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
-
 	$ADD='1000000';		# go to script list
 	}
 
@@ -17324,21 +17456,28 @@ if ($ADD==61111111)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_lead_filters where lead_filter_id='$lead_filter_id' $LOGadmin_viewable_groupsSQL limit 1;";
+		$stmt="SELECT count(*) from vicidial_lead_filters where lead_filter_id='$lead_filter_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("LEAD FILTER NOT FOUND").": $lead_filter_id\n";}
+		else
+			{
+			$stmt="DELETE from vicidial_lead_filters where lead_filter_id='$lead_filter_id' $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='FILTERS', event_type='DELETE', record_id='$lead_filter_id', event_code='ADMIN DELETE FILTERS', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='FILTERS', event_type='DELETE', record_id='$lead_filter_id', event_code='ADMIN DELETE FILTERS', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("FILTER DELETION COMPLETED").": $lead_filter_id</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("FILTER DELETION COMPLETED").": $lead_filter_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
-
 	$ADD='10000000';		# go to filter list
 	}
 
@@ -17358,24 +17497,31 @@ if ($ADD==611111111)
 		}
 	else
 		{
-		$stmtA="UPDATE vicidial_lists set local_call_time='campaign' where local_call_time='$call_time_id';";
-		$rslt=mysql_to_mysqli($stmtA, $link);
-
-		$stmt="DELETE from vicidial_call_times where call_time_id='$call_time_id' $LOGadmin_viewable_groupsSQL limit 1;";
+		$stmt="SELECT count(*) from vicidial_call_times where call_time_id='$call_time_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("CALL TIME NOT FOUND").": $call_time_id\n";}
+		else
+			{
+			$stmtA="UPDATE vicidial_lists set local_call_time='campaign' where local_call_time='$call_time_id';";
+			$rslt=mysql_to_mysqli($stmtA, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|$stmtA|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES', event_type='DELETE', record_id='$call_time_id', event_code='ADMIN DELETE CALL TIME', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_call_times where call_time_id='$call_time_id' $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("CALL TIME DELETION COMPLETED").": $call_time_id</B>\n";
-		echo "<br><br>\n";
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|$stmtA|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES', event_type='DELETE', record_id='$call_time_id', event_code='ADMIN DELETE CALL TIME', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+
+			echo "<br><B>"._QXZ("CALL TIME DELETION COMPLETED").": $call_time_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
-
 	$ADD='100000000';		# go to call times list
 	}
 
@@ -17395,45 +17541,52 @@ if ($ADD==6111111111)
 		}
 	else
 		{
-		$stmtA="DELETE from vicidial_state_call_times where state_call_time_id='$call_time_id' $LOGadmin_viewable_groupsSQL limit 1;";
-		$rslt=mysql_to_mysqli($stmtA, $link);
-
-		$stmt="SELECT call_time_id,ct_state_call_times from vicidial_call_times where ct_state_call_times LIKE \"%|$call_time_id|%\" order by call_time_id;";
+		$stmt="SELECT count(*) from vicidial_state_call_times where state_call_time_id='$call_time_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
-		$sct_to_print = mysqli_num_rows($rslt);
-		$sct_list='';
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("CALL TIME NOT FOUND").": $call_time_id\n";}
+		else
+			{
+			$stmtA="DELETE from vicidial_state_call_times where state_call_time_id='$call_time_id' $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmtA, $link);
 
-		$o=0;
-		while ($sct_to_print > $o) 
-			{
-			$rowx=mysqli_fetch_row($rslt);
-			$sct_ids[$o] = "$rowx[0]";
-			$sct_states[$o] = "$rowx[1]";
-			$o++;
-			}
-		$o=0;
-		while ($sct_to_print > $o) 
-			{
-			$sct_states[$o] = preg_replace("/\|$call_time_id\|/i", '|',$sct_states[$o]);
-			$stmt="UPDATE vicidial_call_times set ct_state_call_times='$sct_states[$o]' where call_time_id='$sct_ids[$o]';";
+			$stmt="SELECT call_time_id,ct_state_call_times from vicidial_call_times where ct_state_call_times LIKE \"%|$call_time_id|%\" order by call_time_id;";
 			$rslt=mysql_to_mysqli($stmt, $link);
-			echo "$stmt\n";
-			echo "State Rule Removed: $sct_ids[$o]<BR>\n";
-			$o++;
+			$sct_to_print = mysqli_num_rows($rslt);
+			$sct_list='';
+
+			$o=0;
+			while ($sct_to_print > $o) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$sct_ids[$o] = "$rowx[0]";
+				$sct_states[$o] = "$rowx[1]";
+				$o++;
+				}
+			$o=0;
+			while ($sct_to_print > $o) 
+				{
+				$sct_states[$o] = preg_replace("/\|$call_time_id\|/i", '|',$sct_states[$o]);
+				$stmt="UPDATE vicidial_call_times set ct_state_call_times='$sct_states[$o]' where call_time_id='$sct_ids[$o]';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				echo "$stmt\n";
+				echo "State Rule Removed: $sct_ids[$o]<BR>\n";
+				$o++;
+				}
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmtA|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES', event_type='DELETE', record_id='$call_time_id', event_code='ADMIN DELETE STATE CALL TIME', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+
+			echo "<br><B>"._QXZ("STATE CALL TIME DELETION COMPLETED").": $call_time_id</B>\n";
+			echo "<br><br>\n";
 			}
-
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmtA|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CALLTIMES', event_type='DELETE', record_id='$call_time_id', event_code='ADMIN DELETE STATE CALL TIME', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
-
-		echo "<br><B>"._QXZ("STATE CALL TIME DELETION COMPLETED").": $call_time_id</B>\n";
-		echo "<br><br>\n";
 		}
-
 	$ADD='1000000000';		# go to call times list
 	}
 
@@ -17453,45 +17606,52 @@ if ($ADD==6211111111)
 		}
 	else
 		{
-		$stmtA="DELETE from vicidial_call_time_holidays where holiday_id='$holiday_id' $LOGadmin_viewable_groupsSQL limit 1;";
-		$rslt=mysql_to_mysqli($stmtA, $link);
-
-		$stmt="SELECT call_time_id,ct_holidays from vicidial_call_times where ct_holidays LIKE \"%|$holiday_id|%\" order by call_time_id;";
+		$stmt="SELECT count(*) from vicidial_call_time_holidays where holiday_id='$holiday_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
-		$hct_to_print = mysqli_num_rows($rslt);
-		$hct_list='';
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("HOLIDAY NOT FOUND").": $holiday_id\n";}
+		else
+			{
+			$stmtA="DELETE from vicidial_call_time_holidays where holiday_id='$holiday_id' $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmtA, $link);
 
-		$o=0;
-		while ($hct_to_print > $o) 
-			{
-			$rowx=mysqli_fetch_row($rslt);
-			$hct_ids[$o] = "$rowx[0]";
-			$hct_holidays[$o] = "$rowx[1]";
-			$o++;
-			}
-		$o=0;
-		while ($hct_to_print > $o) 
-			{
-			$hct_holidays[$o] = preg_replace("/\|$holiday_id\|/i", '|',$hct_holidays[$o]);
-			$stmt="UPDATE vicidial_call_times set ct_holidays='$hct_holidays[$o]' where call_time_id='$hct_ids[$o]';";
+			$stmt="SELECT call_time_id,ct_holidays from vicidial_call_times where ct_holidays LIKE \"%|$holiday_id|%\" order by call_time_id;";
 			$rslt=mysql_to_mysqli($stmt, $link);
+			$hct_to_print = mysqli_num_rows($rslt);
+			$hct_list='';
+
+			$o=0;
+			while ($hct_to_print > $o) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$hct_ids[$o] = "$rowx[0]";
+				$hct_holidays[$o] = "$rowx[1]";
+				$o++;
+				}
+			$o=0;
+			while ($hct_to_print > $o) 
+				{
+				$hct_holidays[$o] = preg_replace("/\|$holiday_id\|/i", '|',$hct_holidays[$o]);
+				$stmt="UPDATE vicidial_call_times set ct_holidays='$hct_holidays[$o]' where call_time_id='$hct_ids[$o]';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				if ($DB) {echo "|$stmt|\n";}
+				echo "Holiday Rule Removed: $hct_ids[$o]<BR>\n";
+				$o++;
+				}
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmtA|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='HOLIDAYS', event_type='DELETE', record_id='$holiday_id', event_code='ADMIN DELETE HOLIDAY', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
-			echo "Holiday Rule Removed: $hct_ids[$o]<BR>\n";
-			$o++;
+			$rslt=mysql_to_mysqli($stmt, $link);
+
+			echo "<br><B>"._QXZ("HOLIDAY DELETION COMPLETED").": $holiday_id</B>\n";
+			echo "<br><br>\n";
 			}
-
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmtA|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='HOLIDAYS', event_type='DELETE', record_id='$holiday_id', event_code='ADMIN DELETE HOLIDAY', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
-
-		echo "<br><B>"._QXZ("HOLIDAY DELETION COMPLETED").": $holiday_id</B>\n";
-		echo "<br><br>\n";
 		}
-
 	$ADD='1200000000';		# go to holidays list
 	}
 
@@ -17511,21 +17671,28 @@ if ($ADD==631111111)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_shifts where shift_id='$shift_id' $LOGadmin_viewable_groupsSQL limit 1;";
+		$stmt="SELECT count(*) from vicidial_shifts where shift_id='$shift_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("SHIFT NOT FOUND").": $shift_id\n";}
+		else
+			{
+			$stmt="DELETE from vicidial_shifts where shift_id='$shift_id' $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmtA|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SHIFTS', event_type='DELETE', record_id='$shift_id', event_code='ADMIN DELETE SHIFT', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmtA|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SHIFTS', event_type='DELETE', record_id='$shift_id', event_code='ADMIN DELETE SHIFT', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("SHIFT DELETION COMPLETED").": $shift_id</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("SHIFT DELETION COMPLETED").": $shift_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
-
 	$ADD='130000000';		# go to shifts list
 	}
 
@@ -17546,25 +17713,33 @@ if ($ADD==61111111111)
 		}
 	else
 		{
-		$stmt="DELETE from phones where extension='$extension' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL limit 1;";
+		$stmt="SELECT count(*) from phones where extension='$extension' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("PHONE NOT FOUND").": $extension - $server_ip\n";}
+		else
+			{
+			$stmt="DELETE from phones where extension='$extension' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
-		$rslt=mysql_to_mysqli($stmtA, $link);
+			$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
+			$rslt=mysql_to_mysqli($stmtA, $link);
 
-		$stmtB="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$SSactive_voicemail_server';";
-		$rslt=mysql_to_mysqli($stmtB, $link);
+			$stmtB="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$SSactive_voicemail_server';";
+			$rslt=mysql_to_mysqli($stmtB, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONES', event_type='DELETE', record_id='$extension', event_code='ADMIN DELETE PHONE', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONES', event_type='DELETE', record_id='$extension', event_code='ADMIN DELETE PHONE', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("PHONE DELETION COMPLETED").": $extension - $server_ip</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("PHONE DELETION COMPLETED").": $extension - $server_ip</B>\n";
+			echo "<br><br>\n";
+			}
 		}
 	$ADD='10000000000';		# go to phone list
 	}
@@ -17585,19 +17760,27 @@ if ($ADD==62111111111)
 		}
 	else
 		{
-		$stmt="DELETE from phones_alias where alias_id='$alias_id' $LOGadmin_viewable_groupsSQL limit 1;";
+		$stmt="SELECT count(*) from phones_alias where alias_id='$alias_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("PHONE ALIAS NOT FOUND").": $alias_id\n";}
+		else
+			{
+			$stmt="DELETE from phones_alias where alias_id='$alias_id' $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmtA|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONEALIASES', event_type='DELETE', record_id='$alias_id', event_code='ADMIN DELETE PHONE ALIAS', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmtA|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONEALIASES', event_type='DELETE', record_id='$alias_id', event_code='ADMIN DELETE PHONE ALIAS', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("PHONE ALIAS DELETION COMPLETED").": $alias_id</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("PHONE ALIAS DELETION COMPLETED").": $alias_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
 	$ADD='12000000000';		# go to phone alias list
 	}
@@ -17618,19 +17801,27 @@ if ($ADD==63111111111)
 		}
 	else
 		{
-		$stmt="DELETE from groups_alias where group_alias_id='$group_alias_id' $LOGadmin_viewable_groupsSQL limit 1;";
+		$stmt="SELECT count(*) from groups_alias where group_alias_id='$group_alias_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("GROUP ALIAS NOT FOUND").": $group_alias_id\n";}
+		else
+			{
+			$stmt="DELETE from groups_alias where group_alias_id='$group_alias_id' $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmtA|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='GROUPALIASES', event_type='DELETE', record_id='$group_alias_id', event_code='ADMIN DELETE GROUP ALIAS', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmtA|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='GROUPALIASES', event_type='DELETE', record_id='$group_alias_id', event_code='ADMIN DELETE GROUP ALIAS', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("GROUP ALIAS DELETION COMPLETED").": $group_alias_id</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("GROUP ALIAS DELETION COMPLETED").": $group_alias_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
 	$ADD='13000000000';		# go to group alias list
 	}
@@ -17652,19 +17843,27 @@ if ($ADD==611111111111)
 		}
 	else
 		{
-		$stmt="DELETE from servers where server_id='$server_id' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL limit 1;";
+		$stmt="SELECT count(*) from servers where server_id='$server_id' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("SERVER NOT FOUND").": $server_id - $server_ip\n";}
+		else
+			{
+			$stmt="DELETE from servers where server_id='$server_id' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmtA|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SERVERS', event_type='DELETE', record_id='$server_id', event_code='ADMIN DELETE SERVER', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmtA|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SERVERS', event_type='DELETE', record_id='$server_id', event_code='ADMIN DELETE SERVER', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("SERVER DELETION COMPLETED").": $server_id - $server_ip</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("SERVER DELETION COMPLETED").": $server_id - $server_ip</B>\n";
+			echo "<br><br>\n";
+			}
 		}
 	$ADD='100000000000';		# go to server list
 	}
@@ -17688,18 +17887,26 @@ if ($ADD==621111111111)
 			}
 		else
 			{
-			echo "<br><B>"._QXZ("SERVER TRUNK RECORD DELETED").": $campaign_id - $server_ip</B>\n";
-
-			$stmt="DELETE FROM vicidial_server_trunks where campaign_id='$campaign_id' and server_ip='$server_ip';";
+			$stmt="SELECT count(*) from vicidial_server_trunks where campaign_id='$campaign_id' and server_ip='$server_ip' $LOGallowed_campaignsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			if ($row[0] < 1)
+				{echo "<br>"._QXZ("SERVER TRUNK NOT FOUND").": $campaign_id - $server_ip\n";}
+			else
+				{
+				echo "<br><B>"._QXZ("SERVER TRUNK RECORD DELETED").": $campaign_id - $server_ip</B>\n";
 
-			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|";
-			$SQL_log = preg_replace('/;/', '', $SQL_log);
-			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SERVERTRUNKS', event_type='DELETE', record_id='$server_ip', event_code='ADMIN DELETE SERVER TRUNK', event_sql=\"$SQL_log\", event_notes='Campaign: $campaign_id';";
-			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_to_mysqli($stmt, $link);
+				$stmt="DELETE FROM vicidial_server_trunks where campaign_id='$campaign_id' and server_ip='$server_ip';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SERVERTRUNKS', event_type='DELETE', record_id='$server_ip', event_code='ADMIN DELETE SERVER TRUNK', event_sql=\"$SQL_log\", event_notes='Campaign: $campaign_id';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				}
 			}
 		}
 	else
@@ -17726,28 +17933,36 @@ if ($ADD==631111111111)
 		}
 	else
 		{
-		$stmt="UPDATE phones SET template_id='' where template_id='$template_id';";
+		$stmt="SELECT count(*) from vicidial_conf_templates where template_id='$template_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
-		
-		$stmt="UPDATE vicidial_server_carriers SET template_id='' where template_id='$template_id';";
-		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("TEMPLATE NOT FOUND").": $template_id\n";}
+		else
+			{
+			$stmt="UPDATE phones SET template_id='' where template_id='$template_id';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			
+			$stmt="UPDATE vicidial_server_carriers SET template_id='' where template_id='$template_id';";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="DELETE from vicidial_conf_templates where template_id='$template_id' $LOGadmin_viewable_groupsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_conf_templates where template_id='$template_id' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONFTEMPLATES', event_type='DELETE', record_id='$template_id', event_code='ADMIN DELETE CONF TEMPLATE', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONFTEMPLATES', event_type='DELETE', record_id='$template_id', event_code='ADMIN DELETE CONF TEMPLATE', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("CONF TEMPLATE DELETION COMPLETED").": $server_id - $server_ip</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("CONF TEMPLATE DELETION COMPLETED").": $server_id - $server_ip</B>\n";
+			echo "<br><br>\n";
+			}
 		}
 	$ADD='130000000000';		# go to conf template list
 	}
@@ -17768,27 +17983,35 @@ if ($ADD==641111111111)
 		}
 	else
 		{
-		$stmt="SELECT server_ip from vicidial_server_carriers where carrier_id='$carrier_id';";
+		$stmt="SELECT count(*) from vicidial_server_carriers where carrier_id='$carrier_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
-		$CARRIERserver_ip =	$row[0];
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("CARRIER NOT FOUND").": $carrier_id\n";}
+		else
+			{
+			$stmt="SELECT server_ip from vicidial_server_carriers where carrier_id='$carrier_id';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			$CARRIERserver_ip =	$row[0];
 
-		$stmt="DELETE from vicidial_server_carriers where carrier_id='$carrier_id' $LOGadmin_viewable_groupsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="DELETE from vicidial_server_carriers where carrier_id='$carrier_id' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmt="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$CARRIERserver_ip';";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$CARRIERserver_ip';";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CARRIERS', event_type='DELETE', record_id='$carrier_id', event_code='ADMIN DELETE CARRIER', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CARRIERS', event_type='DELETE', record_id='$carrier_id', event_code='ADMIN DELETE CARRIER', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("CARRIER DELETION COMPLETED").": $carrier_id</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("CARRIER DELETION COMPLETED").": $carrier_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
 	$ADD='140000000000';		# go to carrier list
 	}
@@ -17809,19 +18032,27 @@ if ($ADD==651111111111)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_tts_prompts where tts_id='$tts_id' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT count(*) from vicidial_tts_prompts where tts_id='$tts_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("TTS NOT FOUND").": $tts_id\n";}
+		else
+			{
+			$stmt="DELETE from vicidial_tts_prompts where tts_id='$tts_id' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TTS', event_type='DELETE', record_id='$tts_id', event_code='ADMIN DELETE TTS', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='TTS', event_type='DELETE', record_id='$tts_id', event_code='ADMIN DELETE TTS', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("TTS DELETION COMPLETED").": $tts_id</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("TTS DELETION COMPLETED").": $tts_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
 	$ADD='150000000000';		# go to tts entry list
 	}
@@ -17842,22 +18073,30 @@ if ($ADD==661111111111)
 		}
 	else
 		{
-		$stmt="UPDATE vicidial_music_on_hold SET remove='Y' where moh_id='$moh_id' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT count(*) from vicidial_music_on_hold where moh_id='$moh_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("MUSIC ON HOLD NOT FOUND").": $moh_id\n";}
+		else
+			{
+			$stmt="UPDATE vicidial_music_on_hold SET remove='Y' where moh_id='$moh_id' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmtA="DELETE from vicidial_music_on_hold_files where moh_id='$moh_id';";
-		$rslt=mysql_to_mysqli($stmtA, $link);
+			$stmtA="DELETE from vicidial_music_on_hold_files where moh_id='$moh_id';";
+			$rslt=mysql_to_mysqli($stmtA, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|$stmtA|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='MOH', event_type='DELETE', record_id='$moh_id', event_code='ADMIN DELETE MOH', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|$stmtA|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='MOH', event_type='DELETE', record_id='$moh_id', event_code='ADMIN DELETE MOH', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("MUSIC ON HOLD DELETION COMPLETED").": $moh_id</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("MUSIC ON HOLD DELETION COMPLETED").": $moh_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
 	$ADD='160000000000';		# go to music on hold entry list
 	}
@@ -17878,27 +18117,35 @@ if ($ADD==671111111111)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_voicemail where voicemail_id='$voicemail_id' $LOGadmin_viewable_groupsSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
-
-		$stmt="SELECT active_voicemail_server from system_settings;";
+		$stmt="SELECT count(*) from vicidial_voicemail where voicemail_id='$voicemail_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
-		$active_voicemail_server = $row[0];
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("VOICEMAIL BOX NOT FOUND").": $voicemail_id\n";}
+		else
+			{
+			$stmt="DELETE from vicidial_voicemail where voicemail_id='$voicemail_id' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$active_voicemail_server';";
-		$rslt=mysql_to_mysqli($stmtA, $link);
+			$stmt="SELECT active_voicemail_server from system_settings;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			$active_voicemail_server = $row[0];
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='VOICEMAIL', event_type='DELETE', record_id='$voicemail_id', event_code='ADMIN DELETE VOICEMAIL', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$active_voicemail_server';";
+			$rslt=mysql_to_mysqli($stmtA, $link);
 
-		echo "<br><B>"._QXZ("VOICEMAIL BOX DELETION COMPLETED").": $voicemail_id</B>\n";
-		echo "<br><br>\n";
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='VOICEMAIL', event_type='DELETE', record_id='$voicemail_id', event_code='ADMIN DELETE VOICEMAIL', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+
+			echo "<br><B>"._QXZ("VOICEMAIL BOX DELETION COMPLETED").": $voicemail_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
 	$ADD='170000000000';		# go to voicemail entry list
 	}
@@ -17919,19 +18166,27 @@ if ($ADD==681111111111)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_screen_labels where label_id='$label_id' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT count(*) from vicidial_screen_labels where label_id='$label_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("SCREEN LABEL NOT FOUND").": $label_id\n";}
+		else
+			{
+			$stmt="DELETE from vicidial_screen_labels where label_id='$label_id' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LABEL', event_type='DELETE', record_id='$label_id', event_code='ADMIN DELETE LABEL', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LABEL', event_type='DELETE', record_id='$label_id', event_code='ADMIN DELETE LABEL', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("SCREEN LABEL DELETION COMPLETED").": $label_id</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("SCREEN LABEL DELETION COMPLETED").": $label_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
 	$ADD='180000000000';		# go to screen labels entry list
 	}
@@ -17995,19 +18250,27 @@ if ($ADD==692111111111)
 		}
 	else
 		{
-		$stmt="DELETE from vicidial_settings_containers where container_id='$container_id' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT count(*) from vicidial_settings_containers where container_id='$container_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("SETTINGS CONTAINER NOT FOUND").": $container_id\n";}
+		else
+			{
+			$stmt="DELETE from vicidial_settings_containers where container_id='$container_id' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONTAINERS', event_type='DELETE', record_id='$container_id', event_code='ADMIN DELETE CONTAINER', event_sql=\"$SQL_log\", event_notes='';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONTAINERS', event_type='DELETE', record_id='$container_id', event_code='ADMIN DELETE CONTAINER', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		echo "<br><B>"._QXZ("SETTINGS CONTAINER DELETION COMPLETED").": $container_id</B>\n";
-		echo "<br><br>\n";
+			echo "<br><B>"._QXZ("SETTINGS CONTAINER DELETION COMPLETED").": $container_id</B>\n";
+			echo "<br><br>\n";
+			}
 		}
 	$ADD='192000000000';		# go to settings container entry list
 	}
