@@ -146,6 +146,10 @@ OTHER CHANGES:
 32. Added option to use RECID as a recording filename variable. 
 	NOTE: Cannot be	used as the ONLY variable for recording filename
 
+33. Added functionality to adjust the input field lengths in the agent screen
+	and the admin modify lead pages to follow the database schema field
+	lengths for the default lead fields.
+
 
 
 

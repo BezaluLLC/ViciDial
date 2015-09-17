@@ -71,6 +71,7 @@
 # 150603-1527 - Allow non-digit characters in alt_phone field
 # 150808-1437 - Added compatibility for custom fields data options
 # 150908-1531 - Fixed input lengths for several standard fields to match DB
+# 150917-1301 - Added dynamic default field maxlengths based on DB schema
 #
 
 require("dbconnect_mysqli.php");
@@ -367,6 +368,82 @@ if (strlen($row[16])>0) {$label_security_phrase =	$row[16];}
 if (strlen($row[17])>0) {$label_email =				$row[17];}
 if (strlen($row[18])>0) {$label_comments =			$row[18];}
 
+
+##### BEGIN vicidial_list FIELD LENGTH LOOKUP #####
+$MAXvendor_lead_code =		'20';
+$MAXphone_code =			'10';
+$MAXphone_number =			'18';
+$MAXtitle =					'4';
+$MAXfirst_name =			'30';
+$MAXmiddle_initial =		'1';
+$MAXlast_name =				'30';
+$MAXaddress1 =				'100';
+$MAXaddress2 =				'100';
+$MAXaddress3 =				'100';
+$MAXcity =					'50';
+$MAXstate =					'2';
+$MAXprovince =				'50';
+$MAXpostal_code =			'10';
+$MAXalt_phone =				'12';
+$MAXemail =					'70';
+$MAXsecurity_phrase =		'100';
+$MAXcountry_code =			'3';
+$MAXowner =					'20';
+
+$stmt = "SHOW COLUMNS FROM vicidial_list;";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$scvl_ct = mysqli_num_rows($rslt);
+$s=0;
+while ($scvl_ct > $s)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$vl_field =	$row[0];
+	$vl_type = preg_replace("/[^0-9]/",'',$row[1]);
+	if (strlen($vl_type) > 0)
+		{
+		if ( ($vl_field == 'vendor_lead_code') and ($MAXvendor_lead_code != $vl_type) )
+			{$MAXvendor_lead_code = $vl_type;}
+		if ( ($vl_field == 'phone_code') and ($MAXphone_code != $vl_type) )
+			{$MAXphone_code = $vl_type;}
+		if ( ($vl_field == 'phone_number') and ($MAXphone_number != $vl_type) )
+			{$MAXphone_number = $vl_type;}
+		if ( ($vl_field == 'title') and ($MAXtitle != $vl_type) )
+			{$MAXtitle = $vl_type;}
+		if ( ($vl_field == 'first_name') and ($MAXfirst_name != $vl_type) )
+			{$MAXfirst_name = $vl_type;}
+		if ( ($vl_field == 'middle_initial') and ($MAXmiddle_initial != $vl_type) )
+			{$MAXmiddle_initial = $vl_type;}
+		if ( ($vl_field == 'last_name') and ($MAXlast_name != $vl_type) )
+			{$MAXlast_name = $vl_type;}
+		if ( ($vl_field == 'address1') and ($MAXaddress1 != $vl_type) )
+			{$MAXaddress1 = $vl_type;}
+		if ( ($vl_field == 'address2') and ($MAXaddress2 != $vl_type) )
+			{$MAXaddress2 = $vl_type;}
+		if ( ($vl_field == 'address3') and ($MAXaddress3 != $vl_type) )
+			{$MAXaddress3 = $vl_type;}
+		if ( ($vl_field == 'city') and ($MAXcity != $vl_type) )
+			{$MAXcity = $vl_type;}
+		if ( ($vl_field == 'state') and ($MAXstate != $vl_type) )
+			{$MAXstate = $vl_type;}
+		if ( ($vl_field == 'province') and ($MAXprovince != $vl_type) )
+			{$MAXprovince = $vl_type;}
+		if ( ($vl_field == 'postal_code') and ($MAXpostal_code != $vl_type) )
+			{$MAXpostal_code = $vl_type;}
+		if ( ($vl_field == 'alt_phone') and ($MAXalt_phone != $vl_type) )
+			{$MAXalt_phone = $vl_type;}
+		if ( ($vl_field == 'email') and ($MAXemail != $vl_type) )
+			{$MAXemail = $vl_type;}
+		if ( ($vl_field == 'security_phrase') and ($MAXsecurity_phrase != $vl_type) )
+			{$MAXsecurity_phrase = $vl_type;}
+		if ( ($vl_field == 'country_code') and ($MAXcountry_code != $vl_type) )
+			{$MAXcountry_code = $vl_type;}
+		if ( ($vl_field == 'owner') and ($MAXowner != $vl_type) )
+			{$MAXowner = $vl_type;}
+		}
+	$s++;
+	}
+##### END vicidial_list FIELD LENGTH LOOKUP #####
 
 ### find out if status(dispo) is a scheduled callback status
 $scheduled_callback='';
@@ -1154,28 +1231,28 @@ else
 		}
 	else
 		{
-		echo "<tr><td align=right>$label_title: </td><td align=left><input type=text name=title size=4 maxlength=4 value=\"$title\"> &nbsp; \n";
-		echo "$label_first_name: <input type=text name=first_name size=15 maxlength=30 value=\"".htmlentities($first_name)."\"> </td></tr>\n";
-		echo "<tr><td align=right>$label_middle_initial:  </td><td align=left><input type=text name=middle_initial size=4 maxlength=1 value=\"".htmlentities($middle_initial)."\"> &nbsp; \n";
-		echo " $label_last_name: <input type=text name=last_name size=15 maxlength=30 value=\"".htmlentities($last_name)."\"> </td></tr>\n";
-		echo "<tr><td align=right>$label_address1 : </td><td align=left><input type=text name=address1 size=40 maxlength=100 value=\"".htmlentities($address1)."\"></td></tr>\n";
-		echo "<tr><td align=right>$label_address2 : </td><td align=left><input type=text name=address2 size=40 maxlength=100 value=\"".htmlentities($address2)."\"></td></tr>\n";
-		echo "<tr><td align=right>$label_address3 : </td><td align=left><input type=text name=address3 size=40 maxlength=100 value=\"".htmlentities($address3)."\"></td></tr>\n";
-		echo "<tr><td align=right>$label_city : </td><td align=left><input type=text name=city size=40 maxlength=50 value=\"".htmlentities($city)."\"></td></tr>\n";
-		echo "<tr><td align=right>$label_state: </td><td align=left><input type=text name=state size=2 maxlength=2 value=\"".htmlentities($state)."\"> &nbsp; \n";
-		echo " $label_postal_code: <input type=text name=postal_code size=10 maxlength=10 value=\"".htmlentities($postal_code)."\"> </td></tr>\n";
+		echo "<tr><td align=right>$label_title: </td><td align=left><input type=text name=title size=4 maxlength=$MAXtitle value=\"$title\"> &nbsp; \n";
+		echo "$label_first_name: <input type=text name=first_name size=15 maxlength=$MAXfirst_name value=\"".htmlentities($first_name)."\"> </td></tr>\n";
+		echo "<tr><td align=right>$label_middle_initial:  </td><td align=left><input type=text name=middle_initial size=4 maxlength=$MAXmiddle_initial value=\"".htmlentities($middle_initial)."\"> &nbsp; \n";
+		echo " $label_last_name: <input type=text name=last_name size=15 maxlength=$MAXlast_name value=\"".htmlentities($last_name)."\"> </td></tr>\n";
+		echo "<tr><td align=right>$label_address1 : </td><td align=left><input type=text name=address1 size=40 maxlength=$MAXaddress1 value=\"".htmlentities($address1)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_address2 : </td><td align=left><input type=text name=address2 size=40 maxlength=$MAXaddress2 value=\"".htmlentities($address2)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_address3 : </td><td align=left><input type=text name=address3 size=40 maxlength=$MAXaddress3 value=\"".htmlentities($address3)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_city : </td><td align=left><input type=text name=city size=40 maxlength=$MAXcity value=\"".htmlentities($city)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_state: </td><td align=left><input type=text name=state size=2 maxlength=$MAXstate value=\"".htmlentities($state)."\"> &nbsp; \n";
+		echo " $label_postal_code: <input type=text name=postal_code size=10 maxlength=$MAXpostal_code value=\"".htmlentities($postal_code)."\"> </td></tr>\n";
 
-		echo "<tr><td align=right>$label_province : </td><td align=left><input type=text name=province size=40 maxlength=50 value=\"".htmlentities($province)."\"></td></tr>\n";
-		echo "<tr><td align=right>"._QXZ("Country")." : </td><td align=left><input type=text name=country_code size=3 maxlength=3 value=\"".htmlentities($country_code)."\"> &nbsp; \n";
+		echo "<tr><td align=right>$label_province : </td><td align=left><input type=text name=province size=40 maxlength=$MAXprovince value=\"".htmlentities($province)."\"></td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Country")." : </td><td align=left><input type=text name=country_code size=3 maxlength=$MAXcountry_code value=\"".htmlentities($country_code)."\"> &nbsp; \n";
 		echo " "._QXZ("Date of Birth").": <input type=text name=date_of_birth size=12 maxlength=10 value=\"".htmlentities($date_of_birth)."\"></td></tr>\n";
-		echo "<tr><td align=right>$label_phone_number : </td><td align=left><input type=text name=phone_number size=18 maxlength=18 value=\"".htmlentities($phone_number)."\"></td></tr>\n";
-		echo "<tr><td align=right>$label_phone_code : </td><td align=left><input type=text name=phone_code size=10 maxlength=10 value=\"".htmlentities($phone_code)."\"></td></tr>\n";
-		echo "<tr><td align=right>$label_alt_phone : </td><td align=left><input type=text name=alt_phone size=12 maxlength=12 value=\"".htmlentities($alt_phone)."\"></td></tr>\n";
-		echo "<tr><td align=right>$label_email : </td><td align=left><input type=text name=email size=40 maxlength=70 value=\"".htmlentities($email)."\"></td></tr>\n";
-		echo "<tr><td align=right>$label_security_phrase : </td><td align=left><input type=text name=security size=30 maxlength=100 value=\"".htmlentities($security)."\"></td></tr>\n";
-		echo "<tr><td align=right>$label_vendor_lead_code : </td><td align=left><input type=text name=vendor_id size=30 maxlength=100 value=\"".htmlentities($vendor_id)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_phone_number : </td><td align=left><input type=text name=phone_number size=18 maxlength=$MAXphone_number value=\"".htmlentities($phone_number)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_phone_code : </td><td align=left><input type=text name=phone_code size=10 maxlength=$MAXphone_code value=\"".htmlentities($phone_code)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_alt_phone : </td><td align=left><input type=text name=alt_phone size=12 maxlength=$MAXalt_phone value=\"".htmlentities($alt_phone)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_email : </td><td align=left><input type=text name=email size=40 maxlength=$MAXemail value=\"".htmlentities($email)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_security_phrase : </td><td align=left><input type=text name=security size=30 maxlength=$MAXsecurity_phrase value=\"".htmlentities($security)."\"></td></tr>\n";
+		echo "<tr><td align=right>$label_vendor_lead_code : </td><td align=left><input type=text name=vendor_id size=30 maxlength=$MAXvendor_lead_code value=\"".htmlentities($vendor_id)."\"></td></tr>\n";
 		echo "<tr><td align=right>"._QXZ("Rank")." : </td><td align=left><input type=text name=rank size=7 maxlength=5 value=\"".htmlentities($rank)."\"></td></tr>\n";
-		echo "<tr><td align=right>"._QXZ("Owner")." : </td><td align=left><input type=text name=owner size=22 maxlength=20 value=\"".htmlentities($owner)."\"></td></tr>\n";
+		echo "<tr><td align=right>"._QXZ("Owner")." : </td><td align=left><input type=text name=owner size=22 maxlength=$MAXowner value=\"".htmlentities($owner)."\"></td></tr>\n";
 		echo "<tr><td align=right>$label_comments : </td><td align=left><TEXTAREA name=comments ROWS=3 COLS=65>".htmlentities($comments)."</TEXTAREA></td></tr>\n";
 		}
 

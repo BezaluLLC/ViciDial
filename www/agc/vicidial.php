@@ -498,10 +498,11 @@
 # 150727-0908 - Added default_language
 # 150808-1439 - Added compatibility for custom fields data option
 # 150909-0212 - Fixed MDlogEPOCH variable issue #882
+# 150917-0926 - Added dynamic default field maxlengths based on DB schema
 #
 
-$version = '2.12-470c';
-$build = '150909-0212';
+$version = '2.12-471c';
+$build = '150917-0926';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -3339,6 +3340,78 @@ else
 			}
 		$MMscriptids = substr("$MMscriptids", 0, -1); 
 		$MMscriptnames = substr("$MMscriptnames", 0, -1); 
+
+
+		##### BEGIN vicidial_list FIELD LENGTH LOOKUP #####
+		$MAXvendor_lead_code =		'20';
+		$MAXphone_code =			'10';
+		$MAXphone_number =			'18';
+		$MAXtitle =					'4';
+		$MAXfirst_name =			'30';
+		$MAXmiddle_initial =		'1';
+		$MAXlast_name =				'30';
+		$MAXaddress1 =				'100';
+		$MAXaddress2 =				'100';
+		$MAXaddress3 =				'100';
+		$MAXcity =					'50';
+		$MAXstate =					'2';
+		$MAXprovince =				'50';
+		$MAXpostal_code =			'10';
+		$MAXalt_phone =				'12';
+		$MAXemail =					'70';
+		$MAXsecurity_phrase =		'100';
+
+		$stmt = "SHOW COLUMNS FROM vicidial_list;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$scvl_ct = mysqli_num_rows($rslt);
+		$s=0;
+		while ($scvl_ct > $s)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$vl_field =	$row[0];
+			$vl_type = preg_replace("/[^0-9]/",'',$row[1]);
+			if (strlen($vl_type) > 0)
+				{
+				if ( ($vl_field == 'vendor_lead_code') and ($MAXvendor_lead_code != $vl_type) )
+					{$MAXvendor_lead_code = $vl_type;}
+				if ( ($vl_field == 'phone_code') and ($MAXphone_code != $vl_type) )
+					{$MAXphone_code = $vl_type;}
+				if ( ($vl_field == 'phone_number') and ($MAXphone_number != $vl_type) )
+					{$MAXphone_number = $vl_type;}
+				if ( ($vl_field == 'title') and ($MAXtitle != $vl_type) )
+					{$MAXtitle = $vl_type;}
+				if ( ($vl_field == 'first_name') and ($MAXfirst_name != $vl_type) )
+					{$MAXfirst_name = $vl_type;}
+				if ( ($vl_field == 'middle_initial') and ($MAXmiddle_initial != $vl_type) )
+					{$MAXmiddle_initial = $vl_type;}
+				if ( ($vl_field == 'last_name') and ($MAXlast_name != $vl_type) )
+					{$MAXlast_name = $vl_type;}
+				if ( ($vl_field == 'address1') and ($MAXaddress1 != $vl_type) )
+					{$MAXaddress1 = $vl_type;}
+				if ( ($vl_field == 'address2') and ($MAXaddress2 != $vl_type) )
+					{$MAXaddress2 = $vl_type;}
+				if ( ($vl_field == 'address3') and ($MAXaddress3 != $vl_type) )
+					{$MAXaddress3 = $vl_type;}
+				if ( ($vl_field == 'city') and ($MAXcity != $vl_type) )
+					{$MAXcity = $vl_type;}
+				if ( ($vl_field == 'state') and ($MAXstate != $vl_type) )
+					{$MAXstate = $vl_type;}
+				if ( ($vl_field == 'province') and ($MAXprovince != $vl_type) )
+					{$MAXprovince = $vl_type;}
+				if ( ($vl_field == 'postal_code') and ($MAXpostal_code != $vl_type) )
+					{$MAXpostal_code = $vl_type;}
+				if ( ($vl_field == 'alt_phone') and ($MAXalt_phone != $vl_type) )
+					{$MAXalt_phone = $vl_type;}
+				if ( ($vl_field == 'email') and ($MAXemail != $vl_type) )
+					{$MAXemail = $vl_type;}
+				if ( ($vl_field == 'security_phrase') and ($MAXsecurity_phrase != $vl_type) )
+					{$MAXsecurity_phrase = $vl_type;}
+				}
+			$s++;
+			}
+		##### END vicidial_list FIELD LENGTH LOOKUP #####
 		}
 	}
 
@@ -16192,75 +16265,75 @@ $zi=2;
 	if ($label_title == '---HIDE---')
         {echo "</td><td align=\"left\" colspan=\"5\"><input type=\"hidden\" name=\"title\" id=\"title\" value=\"\" />";}
 	else
-        {echo "$label_title: </td><td align=\"left\" colspan=\"5\"><font class=\"body_text\"><input type=\"text\" size=\"4\" name=\"title\" id=\"title\" maxlength=\"4\" class=\"cust_form\" value=\"\" />";}
+        {echo "$label_title: </td><td align=\"left\" colspan=\"5\"><font class=\"body_text\"><input type=\"text\" size=\"4\" name=\"title\" id=\"title\" maxlength=\"$MAXtitle\" class=\"cust_form\" value=\"\" />";}
 	if ($label_first_name == '---HIDE---')
         {echo "&nbsp; <input type=\"hidden\" name=\"first_name\" id=\"first_name\" value=\"\" />";}
 	else
-        {echo "&nbsp; $label_first_name: <input type=\"text\" size=\"17\" name=\"first_name\" id=\"first_name\" maxlength=\"30\" class=\"cust_form\" value=\"\" />";}
+        {echo "&nbsp; $label_first_name: <input type=\"text\" size=\"17\" name=\"first_name\" id=\"first_name\" maxlength=\"$MAXfirst_name\" class=\"cust_form\" value=\"\" />";}
 	if ($label_middle_initial == '---HIDE---')
         {echo "&nbsp; <input type=\"hidden\" name=\"middle_initial\" id=\"middle_initial\" value=\"\" />";}
 	else
-        {echo "&nbsp; $label_middle_initial: <input type=\"text\" size=\"1\" name=\"middle_initial\" id=\"middle_initial\" maxlength=\"1\" class=\"cust_form\" value=\"\" />";}
+        {echo "&nbsp; $label_middle_initial: <input type=\"text\" size=\"1\" name=\"middle_initial\" id=\"middle_initial\" maxlength=\"$MAXmiddle_initial\" class=\"cust_form\" value=\"\" />";}
 	if ($label_last_name == '---HIDE---')
         {echo "&nbsp; <input type=\"hidden\" name=\"last_name\" id=\"last_name\" value=\"\" />";}
 	else
-        {echo "&nbsp; $label_last_name: <input type=\"text\" size=\"23\" name=\"last_name\" id=\"last_name\" maxlength=\"30\" class=\"cust_form\" value=\"\" />";}
+        {echo "&nbsp; $label_last_name: <input type=\"text\" size=\"23\" name=\"last_name\" id=\"last_name\" maxlength=\"$MAXlast_name\" class=\"cust_form\" value=\"\" />";}
 	
     echo "</td></tr><tr><td align=\"right\"><font class=\"body_text\">";
 	
 	if ($label_address1 == '---HIDE---')
         {echo " </td><td align=\"left\" colspan=\"5\"><input type=\"hidden\" name=\"address1\" id=\"address1\" value=\"\" />";}
 	else
-        {echo "$label_address1: </td><td align=\"left\" colspan=5><font class=\"body_text\"><input type=\"text\" size=\"85\" name=\"address1\" id=\"address1\" maxlength=\"100\" class=\"cust_form\" value=\"\" />";}
+        {echo "$label_address1: </td><td align=\"left\" colspan=5><font class=\"body_text\"><input type=\"text\" size=\"85\" name=\"address1\" id=\"address1\" maxlength=\"$MAXaddress1\" class=\"cust_form\" value=\"\" />";}
 	
     echo "</td></tr><tr><td align=\"right\"><font class=\"body_text\">";
 
 	if ($label_address2 == '---HIDE---')
         {echo " </td><td align=\"left\"><input type=\"hidden\" name=\"address2\" id=\"address2\" value=\"\" />";}
 	else
-        {echo "$label_address2: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"20\" name=\"address2\" id=\"address2\" maxlength=\"100\" class=\"cust_form\" value=\"\" />";}
+        {echo "$label_address2: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"20\" name=\"address2\" id=\"address2\" maxlength=\"$MAXaddress2\" class=\"cust_form\" value=\"\" />";}
 
     echo "</td><td align=\"right\"><font class=\"body_text\">";
 
 	if ($label_address3 == '---HIDE---')
         {echo " </td><td align=\"left\" colspan=\"3\"><input type=\"hidden\" name=\"address3\" id=\"address3\" value=\"\" />";}
 	else
-        {echo "$label_address3: </td><td align=\"left\" colspan=\"3\"><font class=\"body_text\"><input type=\"text\" size=\"45\" name=\"address3\" id=\"address3\" maxlength=\"100\" class=\"cust_form\" value=\"\" />";}
+        {echo "$label_address3: </td><td align=\"left\" colspan=\"3\"><font class=\"body_text\"><input type=\"text\" size=\"45\" name=\"address3\" id=\"address3\" maxlength=\"$MAXaddress3\" class=\"cust_form\" value=\"\" />";}
 
     echo "</td></tr><tr><td align=\"right\"><font class=\"body_text\">";
 
 	if ($label_city == '---HIDE---')
         {echo " </td><td align=\"left\"><input type=\"hidden\" name=\"city\" id=\"city\" value=\"\" />";}
 	else
-        {echo "$label_city: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"20\" name=\"city\" id=\"city\" maxlength=\"50\" class=\"cust_form\" value=\"\" />";}
+        {echo "$label_city: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"20\" name=\"city\" id=\"city\" maxlength=\"$MAXcity\" class=\"cust_form\" value=\"\" />";}
 
     echo "</td><td align=\"right\"><font class=\"body_text\">";
 
 	if ($label_state == '---HIDE---')
         {echo " </td><td align=\"left\"><input type=\"hidden\" name=\"state\" id=\"state\" value=\"\" />";}
 	else
-        {echo "$label_state: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"4\" name=\"state\" id=\"state\" maxlength=\"2\" class=\"cust_form\" value=\"\" />";}
+        {echo "$label_state: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"4\" name=\"state\" id=\"state\" maxlength=\"$MAXstate\" class=\"cust_form\" value=\"\" />";}
 
     echo "</td><td align=\"right\"><font class=\"body_text\">";
 
 	if ($label_postal_code == '---HIDE---')
         {echo " </td><td align=\"left\"><input type=\"hidden\" name=\"postal_code\" id=\"postal_code\" value=\"\" />";}
 	else
-        {echo "$label_postal_code: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"14\" name=\"postal_code\" id=\"postal_code\" maxlength=\"10\" class=\"cust_form\" value=\"\" />";}
+        {echo "$label_postal_code: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"14\" name=\"postal_code\" id=\"postal_code\" maxlength=\"$MAXpostal_code\" class=\"cust_form\" value=\"\" />";}
 
     echo "</td></tr><tr><td align=\"right\"><font class=\"body_text\">";
 
 	if ($label_province == '---HIDE---')
         {echo " </td><td align=\"left\"><input type=\"hidden\" name=\"province\" id=\"province\" value=\"\" />";}
 	else
-        {echo "$label_province: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"20\" name=\"province\" id=\"province\" maxlength=\"50\" class=\"cust_form\" value=\"\" />";}
+        {echo "$label_province: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"20\" name=\"province\" id=\"province\" maxlength=\"$MAXprovince\" class=\"cust_form\" value=\"\" />";}
 
     echo "</td><td align=\"right\"><font class=\"body_text\">";
 
 	if ($label_vendor_lead_code == '---HIDE---')
         {echo " </td><td align=\"left\"><input type=\"hidden\" name=\"vendor_lead_code\" id=\"vendor_lead_code\" value=\"\" />";}
 	else
-        {echo "$label_vendor_lead_code: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"15\" name=\"vendor_lead_code\" id=\"vendor_lead_code\" maxlength=\"20\" class=\"cust_form\" value=\"\" />";}
+        {echo "$label_vendor_lead_code: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"15\" name=\"vendor_lead_code\" id=\"vendor_lead_code\" maxlength=\"$MAXvendor_lead_code\" class=\"cust_form\" value=\"\" />";}
 
     echo "</td><td align=\"right\"><font class=\"body_text\">";
 
@@ -16291,7 +16364,7 @@ $zi=2;
 			}
 		else
 			{
-			echo "<input type=\"text\" size=\"20\" name=\"phone_number\" id=\"phone_number\" maxlength=\"16\" class=\"cust_form\" value=\"\" />";
+			echo "<input type=\"text\" size=\"20\" name=\"phone_number\" id=\"phone_number\" maxlength=\"$MAXphone_number\" class=\"cust_form\" value=\"\" />";
 			}
 		}
 
@@ -16300,28 +16373,28 @@ $zi=2;
 	if ($label_phone_code == '---HIDE---')
         {echo " </td><td align=\"left\"><input type=\"hidden\" name=\"phone_code\" id=\"phone_code\" value=\"\" />";}
 	else
-        {echo "$label_phone_code: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"4\" name=\"phone_code\" id=\"phone_code\" maxlength=\"10\" class=\"cust_form\" value=\"\" />";}
+        {echo "$label_phone_code: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"4\" name=\"phone_code\" id=\"phone_code\" maxlength=\"$MAXphone_code\" class=\"cust_form\" value=\"\" />";}
 
     echo "</td><td align=\"right\"><font class=\"body_text\">";
 
 	if ($label_alt_phone == '---HIDE---')
         {echo " </td><td align=\"left\"><input type=\"hidden\" name=\"alt_phone\" id=\"alt_phone\" value=\"\" />";}
 	else
-        {echo "$label_alt_phone: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"14\" name=\"alt_phone\" id=\"alt_phone\" maxlength=\"16\" class=\"cust_form\" value=\"\" />";}
+        {echo "$label_alt_phone: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"14\" name=\"alt_phone\" id=\"alt_phone\" maxlength=\"$MAXalt_phone\" class=\"cust_form\" value=\"\" />";}
 
     echo "</td></tr><tr><td align=\"right\"><font class=\"body_text\">";
 
 	if ($label_security_phrase == '---HIDE---')
         {echo " </td><td align=\"left\"><input type=\"hidden\" name=\"security_phrase\" id=\"security_phrase\" value=\"\" />";}
 	else
-        {echo "$label_security_phrase: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"20\" name=\"security_phrase\" id=\"security_phrase\" maxlength=\"100\" class=\"cust_form\" value=\"\" />";}
+        {echo "$label_security_phrase: </td><td align=\"left\"><font class=\"body_text\"><input type=\"text\" size=\"20\" name=\"security_phrase\" id=\"security_phrase\" maxlength=\"$MAXsecurity_phrase\" class=\"cust_form\" value=\"\" />";}
 
     echo "</td><td align=\"right\"><font class=\"body_text\">";
 
 	if ($label_email == '---HIDE---')
         {echo " </td><td align=\"left\" colspan=\"3\"><input type=\"hidden\" name=\"email\" id=\"email\" value=\"\" />";}
 	else
-        {echo "$label_email: </td><td align=\"left\" colspan=\"3\"><font class=\"body_text\"><input type=\"text\" size=\"45\" name=\"email\" id=\"email\" maxlength=\"70\" class=\"cust_form\" value=\"\" />";}
+        {echo "$label_email: </td><td align=\"left\" colspan=\"3\"><font class=\"body_text\"><input type=\"text\" size=\"45\" name=\"email\" id=\"email\" maxlength=\"$MAXemail\" class=\"cust_form\" value=\"\" />";}
 
 	if (strlen($agent_display_fields) > 3)
 		{
@@ -17206,22 +17279,22 @@ if ($agent_display_dialable_leads > 0)
 	<td align="right"> <?php echo _QXZ("Lead ID:"); ?> </td><td align="left"><input type="text" size="11" maxlength="10" name="search_lead_id" id="search_lead_id"></td>
 	</tr>
 	<tr>
-	<td align="right"> <?php echo $label_vendor_lead_code ?>: </td><td align="left"><input type="text" size="18" maxlength="20" name="search_vendor_lead_code" id="search_vendor_lead_code"></td>
+	<td align="right"> <?php echo $label_vendor_lead_code ?>: </td><td align="left"><input type="text" size="18" maxlength="<?php echo $MAXvendor_lead_code ?>" name="search_vendor_lead_code" id="search_vendor_lead_code"></td>
 	</tr>
 	<tr>
-	<td align="right"> <?php echo $label_first_name ?>: </td><td align="left"><input type="text" size="18" maxlength="20" name="search_first_name" id="search_first_name"></td>
+	<td align="right"> <?php echo $label_first_name ?>: </td><td align="left"><input type="text" size="18" maxlength="<?php echo $MAXfirst_name ?>" name="search_first_name" id="search_first_name"></td>
 	</tr>
 	<tr>
-	<td align="right"> <?php echo $label_last_name ?>: </td><td align="left"><input type="text" size="18" maxlength="20" name="search_last_name" id="search_last_name"></td>
+	<td align="right"> <?php echo $label_last_name ?>: </td><td align="left"><input type="text" size="18" maxlength="<?php echo $MAXlast_name ?>" name="search_last_name" id="search_last_name"></td>
 	</tr>
 	<tr>
-	<td align="right"> <?php echo $label_city ?>: </td><td align="left"><input type="text" size="18" maxlength="20" name="search_city" id="search_city"></td>
+	<td align="right"> <?php echo $label_city ?>: </td><td align="left"><input type="text" size="18" maxlength="<?php echo $MAXcity ?>" name="search_city" id="search_city"></td>
 	</tr>
 	<tr>
-	<td align="right"> <?php echo $label_state ?>: </td><td align="left"><input type="text" size="18" maxlength="20" name="search_state" id="search_state"></td>
+	<td align="right"> <?php echo $label_state ?>: </td><td align="left"><input type="text" size="18" maxlength="<?php echo $MAXstate ?>" name="search_state" id="search_state"></td>
 	</tr>
 	<tr>
-	<td align="right"> <?php echo $label_postal_code ?>: </td><td align="left"><input type="text" size="10" maxlength="10" name="search_postal_code" id="search_postal_code"></td>
+	<td align="right"> <?php echo $label_postal_code ?>: </td><td align="left"><input type="text" size="10" maxlength="<?php echo $MAXpostal_code ?>" name="search_postal_code" id="search_postal_code"></td>
 	</tr>
 	<tr>
 	<td align="center" colspan="2"><br /> <a href="#" onclick="LeadSearchSubmit();return false;"><?php echo _QXZ("SUBMIT SEARCH"); ?></a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href="#" onclick="LeadSearchReset();return false;"><?php echo _QXZ("reset form"); ?></a></td>
