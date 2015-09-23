@@ -72,6 +72,7 @@
 # 150808-1437 - Added compatibility for custom fields data options
 # 150908-1531 - Fixed input lengths for several standard fields to match DB
 # 150917-1301 - Added dynamic default field maxlengths based on DB schema
+# 150923-0700 - Fixed security issues with user access, issue #894
 #
 
 require("dbconnect_mysqli.php");
@@ -528,18 +529,36 @@ if ($lead_id == 'NEW')
 	$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code,$owner,$USprefix);
 	$comments = preg_replace("/\n/",'!N',$comments);
 	$comments = preg_replace("/\r/",'',$comments);
-	$stmt="INSERT INTO vicidial_list set status='" . mysqli_real_escape_string($link, $status) . "',title='" . mysqli_real_escape_string($link, $title) . "',first_name='" . mysqli_real_escape_string($link, $first_name) . "',middle_initial='" . mysqli_real_escape_string($link, $middle_initial) . "',last_name='" . mysqli_real_escape_string($link, $last_name) . "',address1='" . mysqli_real_escape_string($link, $address1) . "',address2='" . mysqli_real_escape_string($link, $address2) . "',address3='" . mysqli_real_escape_string($link, $address3) . "',city='" . mysqli_real_escape_string($link, $city) . "',state='" . mysqli_real_escape_string($link, $state) . "',province='" . mysqli_real_escape_string($link, $province) . "',postal_code='" . mysqli_real_escape_string($link, $postal_code) . "',country_code='" . mysqli_real_escape_string($link, $country_code) . "',alt_phone='" . mysqli_real_escape_string($link, $alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysqli_real_escape_string($link, $email) . "',security_phrase='" . mysqli_real_escape_string($link, $security) . "',comments='" . mysqli_real_escape_string($link, $comments) . "',rank='" . mysqli_real_escape_string($link, $rank) . "',owner='" . mysqli_real_escape_string($link, $owner) . "',vendor_lead_code='" . mysqli_real_escape_string($link, $vendor_id) . "', list_id='" . mysqli_real_escape_string($link, $list_id) . "',date_of_birth='" . mysqli_real_escape_string($link, $date_of_birth) . "',gmt_offset_now='$gmt_offset',entry_date=NOW();";
-	if ($DB) {echo "$stmt\n";}
+
+	$list_valid=0;
+	$stmt="SELECT count(*) from vicidial_lists where list_id='" . mysqli_real_escape_string($link, $list_id) . "' $LOGallowed_campaignsSQL;";
 	$rslt=mysql_to_mysqli($stmt, $link);
-	$affected_rows = mysqli_affected_rows($link);
-	if ($affected_rows > 0)
+	$list_to_print = mysqli_num_rows($rslt);
+	if ($list_to_print > 0) 
 		{
-		$lead_id = mysqli_insert_id($link);
-		echo _QXZ("Lead has been added").": $lead_id ($gmt_offset)<BR><BR>\n";
-		$end_call=0;
+		$rowx=mysqli_fetch_row($rslt);
+		$list_valid = $rowx[0];
+		}
+
+	if ( ($list_valid > 0) or (preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
+		{
+		$stmt="INSERT INTO vicidial_list set status='" . mysqli_real_escape_string($link, $status) . "',title='" . mysqli_real_escape_string($link, $title) . "',first_name='" . mysqli_real_escape_string($link, $first_name) . "',middle_initial='" . mysqli_real_escape_string($link, $middle_initial) . "',last_name='" . mysqli_real_escape_string($link, $last_name) . "',address1='" . mysqli_real_escape_string($link, $address1) . "',address2='" . mysqli_real_escape_string($link, $address2) . "',address3='" . mysqli_real_escape_string($link, $address3) . "',city='" . mysqli_real_escape_string($link, $city) . "',state='" . mysqli_real_escape_string($link, $state) . "',province='" . mysqli_real_escape_string($link, $province) . "',postal_code='" . mysqli_real_escape_string($link, $postal_code) . "',country_code='" . mysqli_real_escape_string($link, $country_code) . "',alt_phone='" . mysqli_real_escape_string($link, $alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysqli_real_escape_string($link, $email) . "',security_phrase='" . mysqli_real_escape_string($link, $security) . "',comments='" . mysqli_real_escape_string($link, $comments) . "',rank='" . mysqli_real_escape_string($link, $rank) . "',owner='" . mysqli_real_escape_string($link, $owner) . "',vendor_lead_code='" . mysqli_real_escape_string($link, $vendor_id) . "', list_id='" . mysqli_real_escape_string($link, $list_id) . "',date_of_birth='" . mysqli_real_escape_string($link, $date_of_birth) . "',gmt_offset_now='$gmt_offset',entry_date=NOW();";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$affected_rows = mysqli_affected_rows($link);
+		if ($affected_rows > 0)
+			{
+			$lead_id = mysqli_insert_id($link);
+			echo _QXZ("Lead has been added").": $lead_id ($gmt_offset)<BR><BR>\n";
+			$end_call=0;
+			}
+		else
+			{echo _QXZ("ERROR: Lead not added, please go back and look at what you entered")."<BR><BR>\n";}
 		}
 	else
-		{echo _QXZ("ERROR: Lead not added, please go back and look at what you entered")."<BR><BR>\n";}
+		{
+		echo _QXZ("you do not have permission to add this lead")." $list_id &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
+		}
 	### END - Add a new lead in the system ###
 	}
 else
@@ -569,126 +588,142 @@ if ($end_call > 0)
 	{
 	$comments = preg_replace("/\n/",'!N',$comments);
 	$comments = preg_replace("/\r/",'',$comments);
-	### update the lead record in the vicidial_list table 
-	$stmt="UPDATE $vl_table set status='" . mysqli_real_escape_string($link, $status) . "',title='" . mysqli_real_escape_string($link, $title) . "',first_name='" . mysqli_real_escape_string($link, $first_name) . "',middle_initial='" . mysqli_real_escape_string($link, $middle_initial) . "',last_name='" . mysqli_real_escape_string($link, $last_name) . "',address1='" . mysqli_real_escape_string($link, $address1) . "',address2='" . mysqli_real_escape_string($link, $address2) . "',address3='" . mysqli_real_escape_string($link, $address3) . "',city='" . mysqli_real_escape_string($link, $city) . "',state='" . mysqli_real_escape_string($link, $state) . "',province='" . mysqli_real_escape_string($link, $province) . "',postal_code='" . mysqli_real_escape_string($link, $postal_code) . "',country_code='" . mysqli_real_escape_string($link, $country_code) . "',alt_phone='" . mysqli_real_escape_string($link, $alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysqli_real_escape_string($link, $email) . "',security_phrase='" . mysqli_real_escape_string($link, $security) . "',comments='" . mysqli_real_escape_string($link, $comments) . "',rank='" . mysqli_real_escape_string($link, $rank) . "',owner='" . mysqli_real_escape_string($link, $owner) . "',vendor_lead_code='" . mysqli_real_escape_string($link, $vendor_id) . "',date_of_birth='" . mysqli_real_escape_string($link, $date_of_birth) . "' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
-	if ($DB) {echo "|$stmt|\n";}
+
+	$list_valid=0;
+	$stmt="SELECT count(*) from vicidial_lists where list_id='" . mysqli_real_escape_string($link, $list_id) . "' $LOGallowed_campaignsSQL;";
 	$rslt=mysql_to_mysqli($stmt, $link);
-
-	echo _QXZ("information modified")."<BR><BR>\n";
-	echo "<a href=\"$PHP_SELF?lead_id=$lead_id&DB=$DB&archive_search=$archive_search&archive_log=$archive_log\">Go back to the lead modification page</a><BR><BR>\n";
-	echo "<form><input type=button value=\""._QXZ("Close This Window")."\" onClick=\"javascript:window.close();\"></form>\n";
-	
-	### LOG INSERTION Admin Log Table ###
-	$SQL_log = "$stmt|";
-	$SQL_log = preg_replace('/;/', '', $SQL_log);
-	$SQL_log = addslashes($SQL_log);
-	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='MODIFY', record_id='$lead_id', event_code='ADMIN MODIFY LEAD', event_sql=\"$SQL_log\", event_notes='';";
-	if ($DB) {echo "|$stmt|\n";}
-	$rslt=mysql_to_mysqli($stmt, $link);
-
-	if ( ($dispo != $status) and ($dispo == 'CBHOLD') )
+	$list_to_print = mysqli_num_rows($rslt);
+	if ($list_to_print > 0) 
 		{
-		### inactivate vicidial_callbacks record for this lead 
-		$stmt="UPDATE vicidial_callbacks set status='INACTIVE' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and status='ACTIVE';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
-
-		echo "<BR>"._QXZ("vicidial_callback record inactivated").": $lead_id<BR>\n";
-		}
-	if ( ($dispo != $status) and ( ($dispo == 'CALLBK') or ($scheduled_callback == 'Y') ) )
-		{
-		### inactivate vicidial_callbacks record for this lead 
-		$stmt="UPDATE vicidial_callbacks set status='INACTIVE' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and status IN('ACTIVE','LIVE');";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
-
-		echo "<BR>"._QXZ("vicidial_callback record inactivated").": $lead_id<BR>\n";
+		$rowx=mysqli_fetch_row($rslt);
+		$list_valid = $rowx[0];
 		}
 
-	if ( ($dispo != $status) and ($status == 'CBHOLD') )
+	if ( ($list_valid > 0) or (preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 		{
-		### find any vicidial_callback records for this lead 
-		$stmt="SELECT callback_id from vicidial_callbacks where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and status IN('ACTIVE','LIVE') order by callback_id desc LIMIT 1;";
+		### update the lead record in the vicidial_list table 
+		$stmt="UPDATE $vl_table set status='" . mysqli_real_escape_string($link, $status) . "',title='" . mysqli_real_escape_string($link, $title) . "',first_name='" . mysqli_real_escape_string($link, $first_name) . "',middle_initial='" . mysqli_real_escape_string($link, $middle_initial) . "',last_name='" . mysqli_real_escape_string($link, $last_name) . "',address1='" . mysqli_real_escape_string($link, $address1) . "',address2='" . mysqli_real_escape_string($link, $address2) . "',address3='" . mysqli_real_escape_string($link, $address3) . "',city='" . mysqli_real_escape_string($link, $city) . "',state='" . mysqli_real_escape_string($link, $state) . "',province='" . mysqli_real_escape_string($link, $province) . "',postal_code='" . mysqli_real_escape_string($link, $postal_code) . "',country_code='" . mysqli_real_escape_string($link, $country_code) . "',alt_phone='" . mysqli_real_escape_string($link, $alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysqli_real_escape_string($link, $email) . "',security_phrase='" . mysqli_real_escape_string($link, $security) . "',comments='" . mysqli_real_escape_string($link, $comments) . "',rank='" . mysqli_real_escape_string($link, $rank) . "',owner='" . mysqli_real_escape_string($link, $owner) . "',vendor_lead_code='" . mysqli_real_escape_string($link, $vendor_id) . "',date_of_birth='" . mysqli_real_escape_string($link, $date_of_birth) . "' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
-		$CBM_to_print = mysqli_num_rows($rslt);
-		if ($CBM_to_print > 0)
-			{
-			$rowx=mysqli_fetch_row($rslt);
-			$callback_id = $rowx[0];
-			}
-		else
-			{
-			$tomorrow = date("Y-m-d", mktime(date("H"),date("i"),date("s"),date("m"),date("d")+1,date("Y")));
-			$CLEAN_campaign_id = mysqli_real_escape_string($link, $campaign_id);
-			$CLEAN_campaign_id = preg_replace("/'|\"|\\\\|;/","",$CLEAN_campaign_id);
-			$CLEAN_campaign_id = preg_replace('/[^-_0-9a-zA-Z]/','',$CLEAN_campaign_id);
 
-			if (strlen($CLEAN_campaign_id)<1)
-				{
-				$stmt="SELECT campaign_id from vicidial_lists where list_id='" . mysqli_real_escape_string($link, $list_id) . "';";
-				$rslt=mysql_to_mysqli($stmt, $link);
-				$cidvl_count_to_print = mysqli_num_rows($rslt);
-				if ($cidvl_count_to_print > 0) 
-					{
-					$row=mysqli_fetch_row($rslt);
-					if (strlen($row[0])>0)	{$CLEAN_campaign_id =	$row[0];}
-					}
-				}
+		echo _QXZ("information modified")."<BR><BR>\n";
+		echo "<a href=\"$PHP_SELF?lead_id=$lead_id&DB=$DB&archive_search=$archive_search&archive_log=$archive_log\">Go back to the lead modification page</a><BR><BR>\n";
+		echo "<form><input type=button value=\""._QXZ("Close This Window")."\" onClick=\"javascript:window.close();\"></form>\n";
+		
+		### LOG INSERTION Admin Log Table ###
+		$SQL_log = "$stmt|";
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
+		$SQL_log = addslashes($SQL_log);
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='MODIFY', record_id='$lead_id', event_code='ADMIN MODIFY LEAD', event_sql=\"$SQL_log\", event_notes='';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
 
-			$stmt="INSERT INTO vicidial_callbacks SET lead_id='" . mysqli_real_escape_string($link, $lead_id) . "',recipient='ANYONE',status='ACTIVE',user='$PHP_AUTH_USER',user_group='ADMIN',list_id='" . mysqli_real_escape_string($link, $list_id) . "',callback_time='$tomorrow 12:00:00',entry_time='$NOW_TIME',comments='',campaign_id='$CLEAN_campaign_id';";
+		if ( ($dispo != $status) and ($dispo == 'CBHOLD') )
+			{
+			### inactivate vicidial_callbacks record for this lead 
+			$stmt="UPDATE vicidial_callbacks set status='INACTIVE' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and status='ACTIVE';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 
-			echo "<BR>"._QXZ("Scheduled Callback added").": $lead_id - $phone_number<BR>\n";
+			echo "<BR>"._QXZ("vicidial_callback record inactivated").": $lead_id<BR>\n";
+			}
+		if ( ($dispo != $status) and ( ($dispo == 'CALLBK') or ($scheduled_callback == 'Y') ) )
+			{
+			### inactivate vicidial_callbacks record for this lead 
+			$stmt="UPDATE vicidial_callbacks set status='INACTIVE' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and status IN('ACTIVE','LIVE');";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+
+			echo "<BR>"._QXZ("vicidial_callback record inactivated").": $lead_id<BR>\n";
+			}
+
+		if ( ($dispo != $status) and ($status == 'CBHOLD') )
+			{
+			### find any vicidial_callback records for this lead 
+			$stmt="SELECT callback_id from vicidial_callbacks where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and status IN('ACTIVE','LIVE') order by callback_id desc LIMIT 1;";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$CBM_to_print = mysqli_num_rows($rslt);
+			if ($CBM_to_print > 0)
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$callback_id = $rowx[0];
+				}
+			else
+				{
+				$tomorrow = date("Y-m-d", mktime(date("H"),date("i"),date("s"),date("m"),date("d")+1,date("Y")));
+				$CLEAN_campaign_id = mysqli_real_escape_string($link, $campaign_id);
+				$CLEAN_campaign_id = preg_replace("/'|\"|\\\\|;/","",$CLEAN_campaign_id);
+				$CLEAN_campaign_id = preg_replace('/[^-_0-9a-zA-Z]/','',$CLEAN_campaign_id);
+
+				if (strlen($CLEAN_campaign_id)<1)
+					{
+					$stmt="SELECT campaign_id from vicidial_lists where list_id='" . mysqli_real_escape_string($link, $list_id) . "';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$cidvl_count_to_print = mysqli_num_rows($rslt);
+					if ($cidvl_count_to_print > 0) 
+						{
+						$row=mysqli_fetch_row($rslt);
+						if (strlen($row[0])>0)	{$CLEAN_campaign_id =	$row[0];}
+						}
+					}
+
+				$stmt="INSERT INTO vicidial_callbacks SET lead_id='" . mysqli_real_escape_string($link, $lead_id) . "',recipient='ANYONE',status='ACTIVE',user='$PHP_AUTH_USER',user_group='ADMIN',list_id='" . mysqli_real_escape_string($link, $list_id) . "',callback_time='$tomorrow 12:00:00',entry_time='$NOW_TIME',comments='',campaign_id='$CLEAN_campaign_id';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+
+				echo "<BR>"._QXZ("Scheduled Callback added").": $lead_id - $phone_number<BR>\n";
+				}
+			}
+
+
+		if ( ($dispo != $status) and ($status == 'DNC') )
+			{
+			### add lead to the internal DNC list 
+			$stmt="INSERT INTO vicidial_dnc (phone_number) values('" . mysqli_real_escape_string($link, $phone_number) . "');";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+
+			echo "<BR>"._QXZ("Lead added to DNC List").": $lead_id - $phone_number<BR>\n";
+			}
+		### update last record in vicidial_log table
+		   if (($dispo != $status) and ($modify_logs > 0)) 
+			{
+			$stmt="UPDATE vicidial_log set status='" . mysqli_real_escape_string($link, $status) . "' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by call_date desc limit 1";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			}
+
+		### update last record in vicidial_closer_log table
+		   if (($dispo != $status) and ($modify_closer_logs > 0)) 
+			{
+			$stmt="UPDATE vicidial_closer_log set status='" . mysqli_real_escape_string($link, $status) . "' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by call_date desc limit 1";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			}
+
+		### update last record in vicidial_agent_log table
+		   if (($dispo != $status) and ($modify_agent_logs > 0)) 
+			{
+			$stmt="UPDATE vicidial_agent_log set status='" . mysqli_real_escape_string($link, $status) . "' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by agent_log_id desc limit 1";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			}
+
+		if ($add_closer_record > 0)
+			{
+			$comments = preg_replace("/\n/",'!N',$comments);
+			$comments = preg_replace("/\r/",'',$comments);
+			### insert a NEW record to the vicidial_closer_log table 
+			$stmt="INSERT INTO vicidial_closer_log (lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed) values('" . mysqli_real_escape_string($link, $lead_id) . "','" . mysqli_real_escape_string($link, $list_id) . "','" . mysqli_real_escape_string($link, $campaign_id) . "','" . mysqli_real_escape_string($link, $parked_time) . "','$NOW_TIME','$STARTtime','1','" . mysqli_real_escape_string($link, $status) . "','" . mysqli_real_escape_string($link, $phone_code) . "','" . mysqli_real_escape_string($link, $phone_number) . "','$PHP_AUTH_USER','" . mysqli_real_escape_string($link, $comments) . "','Y')";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 			}
 		}
-
-
-	if ( ($dispo != $status) and ($status == 'DNC') )
+	else
 		{
-		### add lead to the internal DNC list 
-		$stmt="INSERT INTO vicidial_dnc (phone_number) values('" . mysqli_real_escape_string($link, $phone_number) . "');";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
-
-		echo "<BR>"._QXZ("Lead added to DNC List").": $lead_id - $phone_number<BR>\n";
+		echo _QXZ("you do not have permission to modify this lead")." $lead_id &nbsp; &nbsp; &nbsp; $list_id &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
 		}
-	### update last record in vicidial_log table
-       if (($dispo != $status) and ($modify_logs > 0)) 
-		{
-		$stmt="UPDATE vicidial_log set status='" . mysqli_real_escape_string($link, $status) . "' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by call_date desc limit 1";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
-		}
-
-	### update last record in vicidial_closer_log table
-       if (($dispo != $status) and ($modify_closer_logs > 0)) 
-		{
-		$stmt="UPDATE vicidial_closer_log set status='" . mysqli_real_escape_string($link, $status) . "' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by call_date desc limit 1";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
-		}
-
-	### update last record in vicidial_agent_log table
-       if (($dispo != $status) and ($modify_agent_logs > 0)) 
-		{
-		$stmt="UPDATE vicidial_agent_log set status='" . mysqli_real_escape_string($link, $status) . "' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by agent_log_id desc limit 1";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
-		}
-
-	if ($add_closer_record > 0)
-		{
-		$comments = preg_replace("/\n/",'!N',$comments);
-		$comments = preg_replace("/\r/",'',$comments);
-		### insert a NEW record to the vicidial_closer_log table 
-		$stmt="INSERT INTO vicidial_closer_log (lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed) values('" . mysqli_real_escape_string($link, $lead_id) . "','" . mysqli_real_escape_string($link, $list_id) . "','" . mysqli_real_escape_string($link, $campaign_id) . "','" . mysqli_real_escape_string($link, $parked_time) . "','$NOW_TIME','$STARTtime','1','" . mysqli_real_escape_string($link, $status) . "','" . mysqli_real_escape_string($link, $phone_code) . "','" . mysqli_real_escape_string($link, $phone_number) . "','$PHP_AUTH_USER','" . mysqli_real_escape_string($link, $comments) . "','Y')";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
-		}
-
-
 	}
 else
 	{
@@ -734,7 +769,7 @@ else
 		}	
 
 
-	$stmt="SELECT count(*) from $vl_table where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
+	$stmt="SELECT count(*) from $vl_table where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' $LOGallowed_listsSQL";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
@@ -770,7 +805,12 @@ else
 		}
 	else
 		{
-		echo _QXZ("lead lookup FAILED for lead_id")." $lead_id &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
+		if ($lead_id != 'NEW')
+			{
+			echo _QXZ("lead lookup FAILED for lead_id")." $lead_id &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
+			if (!preg_match('/\-ALL/i', $LOGallowed_campaigns))
+				{exit;}
+			}
 #		echo "<a href=\"$PHP_SELF\">Close this window</a>\n<BR><BR>\n";
 		}
 
@@ -1144,7 +1184,7 @@ else
 	if ($lead_id == 'NEW')
 		{
 		##### create a select list of lists if a NEW lead_id #####
-		$stmt="SELECT list_id,campaign_id,list_name from vicidial_lists order by list_id limit 5000;";
+		$stmt="SELECT list_id,campaign_id,list_name from vicidial_lists $whereLOGallowed_campaignsSQL order by list_id limit 5000;";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$lists_to_print = mysqli_num_rows($rslt);
