@@ -15,7 +15,7 @@ write = command
 
 [listencron]
 secret = 1234
-read = system,call,log,verbose,command,agent,user
+read = system,call,log,verbose,command,agent,user,dtmf
 write = command
 
 [sendcron]

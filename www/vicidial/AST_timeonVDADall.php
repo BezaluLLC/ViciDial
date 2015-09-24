@@ -93,6 +93,7 @@
 # 150211-2342 - Added hopper link, issue #825
 # 150307-0825 - small cosmetic fix
 # 150804-0956 - Added WHISPER option agent monitoring
+# 150919-0238 - Added display for chats in queue
 #
 
 $version = '2.12-82';
@@ -179,7 +180,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,agent_whisper_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,agent_whisper_enabled,allow_chats FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -193,6 +194,7 @@ if ($qm_conf_ct > 0)
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
 	$agent_whisper_enabled =		$row[6];
+	$allow_chats =					$row[7];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -2012,14 +2014,31 @@ else
 	{
 	$stmtB="from vicidial_auto_calls where status NOT IN('XFER') $group_SQLand order by queue_priority desc,campaign_id,call_time;";
 	}
+
+
 if ($CALLSdisplay > 0)
 	{
 	$stmtA = "SELECT status,campaign_id,phone_number,server_ip,UNIX_TIMESTAMP(call_time),call_type,queue_priority,agent_only";
+
+	## JCJ Display chats
+	if ($allow_chats) 
+		{
+		$chat_stmtA="SELECT vlc.status,group_id as campaign_id,if(length(v.phone_number)=0 or v.phone_number is null, v.phone_number, '**NO PHONE**') as phone_number, '' as server_ip,UNIX_TIMESTAMP(chat_start_time), 'CHAT' as call_type, '' as queue_priority, '' as agent_only";
+		}
 	}
 else
 	{
 	$stmtA = "SELECT status";
+
+	## JCJ Display chats
+	if ($allow_chats) 
+		{
+		$chat_stmtA="SELECT vlc.status";
+		}
 	}
+
+
+
 
 
 $k=0;
@@ -2138,6 +2157,48 @@ if ($parked_to_print > 0)
 	}
 
 
+if ($allow_chats) 
+	{
+	$chat_stmtB=" from vicidial_live_chats vlc, vicidial_list v where vlc.status='WAITING' and group_id IN($closer_campaignsSQL) and vlc.lead_id=v.lead_id ";
+	$chat_stmt="$chat_stmtA $chat_stmtB";
+	#$stmt="$chat_stmt UNION $stmtA $stmtB";
+	$chat_rslt=mysql_to_mysqli($chat_stmt, $link);
+	$waiting_to_chat = mysqli_num_rows($chat_rslt);
+	if ($waiting_to_chat > 0)
+		{
+		$i=0;
+		$chats_waiting=0;
+		while ($i < $waiting_to_chat)
+			{
+			$chat_row=mysqli_fetch_row($chat_rslt);
+			$chats_waiting++;
+			if ($CALLSdisplay > 0)
+				{
+				$CDstatus[$k] =			$chat_row[0];
+				$CDcampaign_id[$k] =	$chat_row[1];
+				$CDphone_number[$k] =	$chat_row[2];
+				$CDserver_ip[$k] =		$chat_row[3];
+				$CDcall_time[$k] =		$chat_row[4];
+				$CDcall_type[$k] =		$chat_row[5];
+				$CDqueue_priority[$k] =	$chat_row[6];
+				$CDagent_only[$k] =		$chat_row[7];
+				if (strlen($CDagent_only[$k]) > 0) {$agentonlycount++;}
+				$k++;
+				}
+			$i++;
+			}
+		if ($chats_waiting > 0) {$F='<FONT class="r1">'; $FG='</FONT>';}
+		if ($chats_waiting > 4) {$F='<FONT class="r2">'; $FG='</FONT>';}
+		if ($chats_waiting > 9) {$F='<FONT class="r3">'; $FG='</FONT>';}
+		if ($chats_waiting > 14) {$F='<FONT class="r4">'; $FG='</FONT>';}
+		echo " &nbsp; &nbsp; &nbsp; $NFB$F &nbsp;$chats_waiting $FG$NFE "._QXZ("chats waiting for agents")." &nbsp; &nbsp; &nbsp; \n";
+		}
+		else
+		{
+		echo _QXZ(" NO LIVE CHATS WAITING ")." \n";
+		}
+	}
+
 
 ###################################################################################
 ###### CALLS WAITING
@@ -2147,14 +2208,14 @@ if ($agentonlycount > 0)
 	{$agentonlyheader = _QXZ("AGENTONLY");}
 $Cecho = '';
 $Cecho .= "VICIDIAL: Calls Waiting                      $NOW_TIME\n";
-$Cecho .= "+--------+----------------------+--------------+-----------------+---------+------------+----------+\n";
-$Cecho .= "| "._QXZ("STATUS",6)." | "._QXZ("CAMPAIGN",20)." | "._QXZ("PHONE NUMBER",12)." | "._QXZ("SERVER IP",15)." | "._QXZ("DIALTIME",8)."| "._QXZ("CALL TYPE",10)." | "._QXZ("PRIORITY",8)." | $agentonlyheader\n";
-$Cecho .= "+--------+----------------------+--------------+-----------------+---------+------------+----------+\n";
+$Cecho .= "+---------+----------------------+--------------+-----------------+---------+------------+----------+\n";
+$Cecho .= "| "._QXZ("STATUS",7)." | "._QXZ("CAMPAIGN",20)." | "._QXZ("PHONE NUMBER",12)." | "._QXZ("SERVER IP",15)." | "._QXZ("DIALTIME",8)."| "._QXZ("CALL TYPE",10)." | "._QXZ("PRIORITY",8)." | $agentonlyheader\n";
+$Cecho .= "+---------+----------------------+--------------+-----------------+---------+------------+----------+\n";
 
 $p=0;
 while($p<$k)
 	{
-	$Cstatus =			sprintf("%-6s", _QXZ("$CDstatus[$p]",6)); #TRANSLATE
+	$Cstatus =			sprintf("%-7s", _QXZ("$CDstatus[$p]",6)); #TRANSLATE
 	$Ccampaign_id =		sprintf("%-20s", $CDcampaign_id[$p]); # Do not translate
 	$Cphone_number =	sprintf("%-12s", $CDphone_number[$p]); # Do not translate
 	$Cserver_ip =		sprintf("%-15s", $CDserver_ip[$p]); # Do not translate
@@ -2167,7 +2228,7 @@ while($p<$k)
 	$Ccall_time_MS =		sprintf("%7s", $Ccall_time_MS);
 
 	$G = '';		$EG = '';
-	if ($CDcall_type[$p] == 'IN')
+	if ($CDcall_type[$p] == 'IN' || $CDcall_type[$p] == 'CHAT')
 		{
 		$G="<SPAN class=\"csc$CDcampaign_id[$p]\"><B>"; $EG='</B></SPAN>';
 		$Ccampaign_id="<a href=\"AST_VICIDIAL_ingrouplist.php?group=$CDcampaign_id[$p]&SUBMIT=SUBMIT\">$Ccampaign_id</a>";
@@ -2181,7 +2242,7 @@ while($p<$k)
 
 	$p++;
 	}
-$Cecho .= "+--------+----------------------+--------------+-----------------+---------+------------+----------+\n";
+$Cecho .= "+---------+----------------------+--------------+-----------------+---------+------------+----------+\n";
 
 if ($p<1)
 	{$Cecho='';}
@@ -2680,10 +2741,15 @@ $talking_to_print = mysqli_num_rows($rslt);
 		$G = '';		$EG = '';
 		if ( ($Lstatus=='INCALL') or ($Lstatus=='PARK') )
 			{
-			if ($call_time_S >= 10) {$G='<SPAN class="thistle"><B>'; $EG='</B></SPAN>';}
-			if ($call_time_S >= 60) {$G='<SPAN class="violet"><B>'; $EG='</B></SPAN>';}
-			if ($call_time_S >= 300) {$G='<SPAN class="purple"><B>'; $EG='</B></SPAN>';}
-	#		if ($call_time_S >= 600) {$G='<SPAN class="purple"><B>'; $EG='</B></SPAN>';}
+			if ($comments == 'CHAT') {$G='<SPAN class="red"><B>'; $EG='</B></SPAN>'; $status='CHAT';}
+			else if ($comments == 'EMAIL') {$G='<SPAN class="orange"><B>'; $EG='</B></SPAN>'; $status='EMAIL';}
+			else 
+				{
+				if ($call_time_S >= 10) {$G='<SPAN class="thistle"><B>'; $EG='</B></SPAN>';}
+				if ($call_time_S >= 60) {$G='<SPAN class="violet"><B>'; $EG='</B></SPAN>';}
+				if ($call_time_S >= 300) {$G='<SPAN class="purple"><B>'; $EG='</B></SPAN>';}
+	#			if ($call_time_S >= 600) {$G='<SPAN class="purple"><B>'; $EG='</B></SPAN>';}
+				}
 			}
 		if ($Lstatus=='3-WAY')
 			{
@@ -2822,6 +2888,8 @@ $talking_to_print = mysqli_num_rows($rslt);
 		$Aecho .= "  "._QXZ("System Load Average").": $load_ave  &nbsp; $db_source\n\n";
 
 	#	$Aecho .= "  <SPAN class=\"orange\"><B>          </SPAN> - "._QXZ("Balanced call")."</B>\n";
+		$Aecho .= "  <SPAN class=\"red\"><B>          </SPAN> - "._QXZ("Agent chatting")."</B>\n";
+		$Aecho .= "  <SPAN class=\"orange\"><B>          </SPAN> - "._QXZ("Agent in email")."</B>\n";
 		$Aecho .= "  <SPAN class=\"lightblue\"><B>          </SPAN> - "._QXZ("Agent waiting for call")."</B>\n";
 		$Aecho .= "  <SPAN class=\"blue\"><B>          </SPAN> - "._QXZ("Agent waiting for call > 1 minute")."</B>\n";
 		$Aecho .= "  <SPAN class=\"midnightblue\"><B>          </SPAN> - "._QXZ("Agent waiting for call > 5 minutes")."</B>\n";

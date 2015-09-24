@@ -33,10 +33,11 @@
 # 150418-1751 - Added fixed fields to submit output, issue #842
 # 150512-0617 - Fix for non-latin customer data
 # 150609-1923 - Added list_description variable
+# 150923-2027 - Added DID custom variables
 #
 
-$version = '2.12-24';
-$build = '150609-1923';
+$version = '2.12-25';
+$build = '150923-2027';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -176,6 +177,16 @@ if (isset($_GET["list_name"]))			{$list_name=$_GET["list_name"];}
 	elseif (isset($_POST["list_name"]))	{$list_name=$_POST["list_name"];}
 if (isset($_GET["list_description"]))			{$list_description=$_GET["list_description"];}
 	elseif (isset($_POST["list_description"]))	{$list_description=$_POST["list_description"];}
+if (isset($_GET["did_custom_one"]))				{$did_custom_one=$_GET["did_custom_one"];}
+	elseif (isset($_POST["did_custom_one"]))	{$did_custom_one=$_POST["did_custom_one"];}
+if (isset($_GET["did_custom_two"]))				{$did_custom_two=$_GET["did_custom_two"];}
+	elseif (isset($_POST["did_custom_two"]))	{$did_custom_two=$_POST["did_custom_two"];}
+if (isset($_GET["did_custom_three"]))			{$did_custom_three=$_GET["did_custom_three"];}
+	elseif (isset($_POST["did_custom_three"]))	{$did_custom_three=$_POST["did_custom_three"];}
+if (isset($_GET["did_custom_four"]))			{$did_custom_four=$_GET["did_custom_four"];}
+	elseif (isset($_POST["did_custom_four"]))	{$did_custom_four=$_POST["did_custom_four"];}
+if (isset($_GET["did_custom_five"]))			{$did_custom_five=$_GET["did_custom_five"];}
+	elseif (isset($_POST["did_custom_five"]))	{$did_custom_five=$_POST["did_custom_five"];}
 
 if ($bcrypt == 'OFF')
 	{$bcrypt=0;}

@@ -28,6 +28,7 @@
 # 150111-1541 - Added lists option: local call time(Issue #812)
 # 150512-0615 - Fix for non-latin customer data
 # 150724-0843 - Added vicidial_ajax_log function
+# 150923-2017 - Added DID custom fields
 #
 
 # $mysql_queries = 20
@@ -877,6 +878,12 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 		$CFoutput = preg_replace('/--A--agent_log_id--B--/i',"$agent_log_id",$CFoutput);
 		$CFoutput = preg_replace('/--A--call_id--B--/i',"$call_id",$CFoutput);
 		$CFoutput = preg_replace('/--A--called_count--B--/i',"$called_count",$CFoutput);
+		$CFoutput = preg_replace('/--A--did_custom_one--B--/i',"$did_custom_one",$CFoutput);
+		$CFoutput = preg_replace('/--A--did_custom_two--B--/i',"$did_custom_two",$CFoutput);
+		$CFoutput = preg_replace('/--A--did_custom_three--B--/i',"$did_custom_three",$CFoutput);
+		$CFoutput = preg_replace('/--A--did_custom_four--B--/i',"$did_custom_four",$CFoutput);
+		$CFoutput = preg_replace('/--A--did_custom_five--B--/i',"$did_custom_five",$CFoutput);
+
 		$CFoutput = preg_replace('/--A--TABLEper_call_notes--B--/i',"$NOTESout",$CFoutput);
 
 		# custom fields replacement

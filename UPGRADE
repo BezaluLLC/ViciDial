@@ -150,6 +150,9 @@ OTHER CHANGES:
 	and the admin modify lead pages to follow the database schema field
 	lengths for the default lead fields.
 
+34. Added DID custom fields as webform and script variables
+	(did_custom_one, did_custom_two,..., did_custom_five)
+
 
 
 

@@ -31,10 +31,11 @@
 # 141216-2121 - Added language settings lookups and user/pass variable standardization
 # 150703-2034 - Added option to fully urlencode variables if IFRAME is used in script Issue #864
 # 150725-1622 - Added entry_date variable
+# 150923-2028 - Added DID custom variables
 #
 
-$version = '2.12-25';
-$build = '150725-1622';
+$version = '2.12-26';
+$build = '150923-2028';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -220,6 +221,16 @@ if (isset($_GET["session_name"]))			{$session_name=$_GET["session_name"];}
 	elseif (isset($_POST["session_name"]))	{$session_name=$_POST["session_name"];}
 if (isset($_GET["entry_date"]))				{$entry_date=$_GET["entry_date"];}
 	elseif (isset($_POST["entry_date"]))	{$entry_date=$_POST["entry_date"];}
+if (isset($_GET["did_custom_one"]))				{$did_custom_one=$_GET["did_custom_one"];}
+	elseif (isset($_POST["did_custom_one"]))	{$did_custom_one=$_POST["did_custom_one"];}
+if (isset($_GET["did_custom_two"]))				{$did_custom_two=$_GET["did_custom_two"];}
+	elseif (isset($_POST["did_custom_two"]))	{$did_custom_two=$_POST["did_custom_two"];}
+if (isset($_GET["did_custom_three"]))			{$did_custom_three=$_GET["did_custom_three"];}
+	elseif (isset($_POST["did_custom_three"]))	{$did_custom_three=$_POST["did_custom_three"];}
+if (isset($_GET["did_custom_four"]))			{$did_custom_four=$_GET["did_custom_four"];}
+	elseif (isset($_POST["did_custom_four"]))	{$did_custom_four=$_POST["did_custom_four"];}
+if (isset($_GET["did_custom_five"]))			{$did_custom_five=$_GET["did_custom_five"];}
+	elseif (isset($_POST["did_custom_five"]))	{$did_custom_five=$_POST["did_custom_five"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -445,6 +456,11 @@ if (preg_match("/iframe\ssrc/i",$script_text))
 		$called_count = urlencode(trim($called_count));
 		$session_name = urlencode(trim($session_name));
 		$entry_date = urlencode(trim($entry_date));
+		$did_custom_one = urlencode(trim($did_custom_one));
+		$did_custom_two = urlencode(trim($did_custom_two));
+		$did_custom_three = urlencode(trim($did_custom_three));
+		$did_custom_four = urlencode(trim($did_custom_four));
+		$did_custom_five = urlencode(trim($did_custom_five));
 		$web_vars = urlencode(trim($web_vars));
 		}
 	else
@@ -528,6 +544,11 @@ if (preg_match("/iframe\ssrc/i",$script_text))
 		$called_count = preg_replace('/\s/i','+',$called_count);
 		$session_name = preg_replace('/\s/i','+',$session_name);
 		$entry_date = preg_replace('/\s/i','+',$entry_date);
+		$did_custom_one = preg_replace('/\s/i','+',$did_custom_one);
+		$did_custom_two = preg_replace('/\s/i','+',$did_custom_two);
+		$did_custom_three = preg_replace('/\s/i','+',$did_custom_three);
+		$did_custom_four = preg_replace('/\s/i','+',$did_custom_four);
+		$did_custom_five = preg_replace('/\s/i','+',$did_custom_five);
 		$web_vars = preg_replace('/\s/i','+',$web_vars);
 		}
 	}
@@ -620,6 +641,11 @@ $script_text = preg_replace('/--A--user_group--B--/i',"$user_group",$script_text
 $script_text = preg_replace('/--A--called_count--B--/i',"$called_count",$script_text);
 $script_text = preg_replace('/--A--session_name--B--/i',"$session_name",$script_text);
 $script_text = preg_replace('/--A--entry_date--B--/i',"$entry_date",$script_text);
+$script_text = preg_replace('/--A--did_custom_one--B--/i',"$did_custom_one",$script_text);
+$script_text = preg_replace('/--A--did_custom_two--B--/i',"$did_custom_two",$script_text);
+$script_text = preg_replace('/--A--did_custom_three--B--/i',"$did_custom_three",$script_text);
+$script_text = preg_replace('/--A--did_custom_four--B--/i',"$did_custom_four",$script_text);
+$script_text = preg_replace('/--A--did_custom_five--B--/i',"$did_custom_five",$script_text);
 $script_text = preg_replace('/--A--web_vars--B--/i',"$web_vars",$script_text);
 
 if ($CF_uses_custom_fields=='Y')

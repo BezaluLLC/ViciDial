@@ -388,10 +388,11 @@
 # 150727-0910 - Added default_language
 # 150728-1049 - Added option for secondary sorting by vendor_lead_code, Issue #833
 # 150814-1057 - Added compatibility for custom fields data option
+# 150923-2013 - Added DID custom variables to call data transmission
 #
 
-$version = '2.12-283';
-$build = '150814-1057';
+$version = '2.12-284';
+$build = '150923-2013';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=616;
@@ -7225,7 +7226,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 					$DID_id	=			$row[0];
 					$DID_extension	=	$row[1];
 
-					$stmt = "SELECT did_pattern,did_description from vicidial_inbound_dids where did_id='$DID_id' limit 1;";
+					$stmt = "SELECT did_pattern,did_description,custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_inbound_dids where did_id='$DID_id' limit 1;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00338',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -7235,6 +7236,11 @@ if ($ACTION == 'VDADcheckINCOMING')
 						$row=mysqli_fetch_row($rslt);
 						$DID_pattern =		$row[0];
 						$DID_description =	$row[1];
+						$DID_custom_one =	$row[2];
+						$DID_custom_two=	$row[3];
+						$DID_custom_three=	$row[4];
+						$DID_custom_four=	$row[5];
+						$DID_custom_five=	$row[6];
 						}
 					}
 
@@ -7386,6 +7392,11 @@ if ($ACTION == 'VDADcheckINCOMING')
 			$LeaD_InfO .=	$VDCL_ingroup_script_color . "\n";
 			$LeaD_InfO .=	$list_description . "\n";
 			$LeaD_InfO .=	$entry_date . "\n";
+			$LeaD_InfO .=	$DID_custom_one . "\n";
+			$LeaD_InfO .=	$DID_custom_two . "\n";
+			$LeaD_InfO .=	$DID_custom_three . "\n";
+			$LeaD_InfO .=	$DID_custom_four . "\n";
+			$LeaD_InfO .=	$DID_custom_five . "\n";
 
 			echo $LeaD_InfO;
 
@@ -7558,6 +7569,11 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$VDCL_start_call_url = preg_replace('/--A--call_id--B--/i',urlencode(trim($callerid)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--user_group--B--/i',urlencode(trim($user_group)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--entry_date--B--/i',urlencode(trim($entry_date)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--did_custom_one--B--/i',urlencode(trim($DID_custom_one)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--did_custom_two--B--/i',urlencode(trim($DID_custom_two)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--did_custom_three--B--/i',urlencode(trim($DID_custom_three)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--did_custom_four--B--/i',urlencode(trim($DID_custom_four)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--did_custom_five--B--/i',urlencode(trim($DID_custom_five)),$VDCL_start_call_url);
 
 				if (strlen($custom_field_names)>2)
 					{
@@ -8290,7 +8306,7 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 				$DID_id	=			$row[0];
 				$DID_extension	=	$row[1];
 
-				$stmt = "SELECT did_pattern,did_description from vicidial_inbound_dids where did_id='$DID_id' limit 1;";
+				$stmt = "SELECT did_pattern,did_description,custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_inbound_dids where did_id='$DID_id' limit 1;";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00510',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -8300,6 +8316,11 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 					$row=mysqli_fetch_row($rslt);
 					$DID_pattern =		$row[0];
 					$DID_description =	$row[1];
+					$DID_custom_one =	$row[2];
+					$DID_custom_two=	$row[3];
+					$DID_custom_three=	$row[4];
+					$DID_custom_four=	$row[5];
+					$DID_custom_five=	$row[6];
 					}
 				}
 
@@ -8420,6 +8441,11 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 			$LeaD_InfO .=	$VDCL_ingroup_script_color . "\n";
 			$LeaD_InfO .=	$list_description . "\n";
 			$LeaD_InfO .=	$entry_date . "\n";
+			$LeaD_InfO .=	$DID_custom_one . "\n";
+			$LeaD_InfO .=	$DID_custom_two . "\n";
+			$LeaD_InfO .=	$DID_custom_three . "\n";
+			$LeaD_InfO .=	$DID_custom_four . "\n";
+			$LeaD_InfO .=	$DID_custom_five . "\n";
 
 			echo $LeaD_InfO;
 
@@ -8591,6 +8617,11 @@ if ($ACTION == 'VDADcheckINCOMINGemail')
 				$VDCL_start_call_url = preg_replace('/--A--call_id--B--/i',urlencode(trim($callerid)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--user_group--B--/i',urlencode(trim($user_group)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--entry_date--B--/i',urlencode(trim($entry_date)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--did_custom_one--B--/i',urlencode(trim($DID_custom_one)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--did_custom_two--B--/i',urlencode(trim($DID_custom_two)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--did_custom_three--B--/i',urlencode(trim($DID_custom_three)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--did_custom_four--B--/i',urlencode(trim($DID_custom_four)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--did_custom_five--B--/i',urlencode(trim($DID_custom_five)),$VDCL_start_call_url);
 
 				if (strlen($custom_field_names)>2)
 					{
@@ -9321,7 +9352,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 				$DID_id	=			$row[0];
 				$DID_extension	=	$row[1];
 
-				$stmt = "SELECT did_pattern,did_description from vicidial_inbound_dids where did_id='$DID_id' limit 1;";
+				$stmt = "SELECT did_pattern,did_description,custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_inbound_dids where did_id='$DID_id' limit 1;";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00475',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -9331,6 +9362,11 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 					$row=mysqli_fetch_row($rslt);
 					$DID_pattern =		$row[0];
 					$DID_description =	$row[1];
+					$DID_custom_one =	$row[2];
+					$DID_custom_two=	$row[3];
+					$DID_custom_three=	$row[4];
+					$DID_custom_four=	$row[5];
+					$DID_custom_five=	$row[6];
 					}
 				}
 
@@ -9493,6 +9529,11 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 			$LeaD_InfO .=	$VDCL_ingroup_script_color . "\n";
 			$LeaD_InfO .=	$list_description . "\n";
 			$LeaD_InfO .=	$entry_date . "\n";
+			$LeaD_InfO .=	$DID_custom_one . "\n";
+			$LeaD_InfO .=	$DID_custom_two . "\n";
+			$LeaD_InfO .=	$DID_custom_three . "\n";
+			$LeaD_InfO .=	$DID_custom_four . "\n";
+			$LeaD_InfO .=	$DID_custom_five . "\n";
 
 			echo $LeaD_InfO;
 
@@ -10891,7 +10932,7 @@ if ($ACTION == 'updateDISPO')
 				$DID_id	=			$row[0];
 				$DID_extension	=	$row[1];
 
-				$stmt = "SELECT did_pattern,did_description from vicidial_inbound_dids where did_id='$DID_id' limit 1;";
+				$stmt = "SELECT did_pattern,did_description,custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_inbound_dids where did_id='$DID_id' limit 1;";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00347',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -10901,6 +10942,11 @@ if ($ACTION == 'updateDISPO')
 					$row=mysqli_fetch_row($rslt);
 					$DID_pattern =		urlencode(trim($row[0]));
 					$DID_description =	urlencode(trim($row[1]));
+					$DID_custom_one =	urlencode(trim($row[2]));
+					$DID_custom_two=	urlencode(trim($row[3]));
+					$DID_custom_three=	urlencode(trim($row[4]));
+					$DID_custom_four=	urlencode(trim($row[5]));
+					$DID_custom_five=	urlencode(trim($row[6]));
 					}
 				}
 			}
@@ -11062,6 +11108,11 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_urlARY[$j] = preg_replace('/--A--recording_id--B--/i',"$recording_id",$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--recording_filename--B--/i',"$recording_filename",$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--entry_date--B--/i',"$entry_date",$dispo_call_urlARY[$j]);
+		$dispo_call_urlARY[$j] = preg_replace('/--A--did_custom_one--B--/i',urlencode(trim($DID_custom_one)),$dispo_call_urlARY[$j]);
+		$dispo_call_urlARY[$j] = preg_replace('/--A--did_custom_two--B--/i',urlencode(trim($DID_custom_two)),$dispo_call_urlARY[$j]);
+		$dispo_call_urlARY[$j] = preg_replace('/--A--did_custom_three--B--/i',urlencode(trim($DID_custom_three)),$dispo_call_urlARY[$j]);
+		$dispo_call_urlARY[$j] = preg_replace('/--A--did_custom_four--B--/i',urlencode(trim($DID_custom_four)),$dispo_call_urlARY[$j]);
+		$dispo_call_urlARY[$j] = preg_replace('/--A--did_custom_five--B--/i',urlencode(trim($DID_custom_five)),$dispo_call_urlARY[$j]);
 
 		if (strlen($FORMcustom_field_names)>2)
 			{

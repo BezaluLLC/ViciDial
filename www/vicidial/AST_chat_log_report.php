@@ -3,6 +3,10 @@
 # 
 # Copyright (C) 2015  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
 #
+# This is the report page where you can view report informatio of any of the dialer's chats.  The web page will 
+# display the information about the chat, including the start time and participants, and will also provide links 
+# allowing you to download transcripts of any chat you wish, based on your account permissions.
+#
 # CHANGES
 #
 # 150608-0647 First build
@@ -833,6 +837,11 @@ else
 				$GRAPH_text.="  <tr><th class='column_header grey_graph_cell'>"._QXZ("MESSAGE TIME")."</th><th class='column_header grey_graph_cell'>"._QXZ("CHAT MEMBER NAME")."</th><th class='thgraph'>"._QXZ("MESSAGE")."</th><th class='thgraph'>&nbsp;</th></tr>";
 				while ($sub_row=mysqli_fetch_array($sub_rslt)) 
 					{
+					$pos=strpos($sub_row["message"], "\n");
+					if ($pos) 
+						{
+						$sub_row["message"]=substr($sub_row["message"],0,$pos)."...";
+						}
 					if (strlen($sub_row["message"])>50) {$message=substr($sub_row["message"],0,50)."...";} else {$message=$sub_row["message"];}
 					$ASCII_text.="          | ".$sub_row["message_time"]." ";
 					$ASCII_text.="| ".sprintf("%-28s", substr("$sub_row[chat_member_name]", 0, 28))." ";

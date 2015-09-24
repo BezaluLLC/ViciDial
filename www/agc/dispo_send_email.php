@@ -385,6 +385,11 @@ if ($match_found > 0)
 						$email_subject = preg_replace('/--A--call_notes--B--/i',"$url_call_notes",$email_subject);
 						$email_subject = preg_replace('/--A--recording_id--B--/i',"$recording_id",$email_subject);
 						$email_subject = preg_replace('/--A--recording_filename--B--/i',"$recording_filename",$email_subject);
+						$email_subject = preg_replace('/--A--did_custom_one--B--/i',urlencode(trim($did_custom_one)),$email_subject);
+						$email_subject = preg_replace('/--A--did_custom_two--B--/i',urlencode(trim($did_custom_two)),$email_subject);
+						$email_subject = preg_replace('/--A--did_custom_three--B--/i',urlencode(trim($did_custom_three)),$email_subject);
+						$email_subject = preg_replace('/--A--did_custom_four--B--/i',urlencode(trim($did_custom_four)),$email_subject);
+						$email_subject = preg_replace('/--A--did_custom_five--B--/i',urlencode(trim($did_custom_five)),$email_subject);
 						$email_subject = urldecode($email_subject);
 						}
 
