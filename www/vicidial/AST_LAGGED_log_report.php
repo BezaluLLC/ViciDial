@@ -248,7 +248,7 @@ $MAIN.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QX
 $MAIN.="<TD VALIGN=TOP align=center><INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $MAIN.="</TD></TR></TABLE>\n";
 if ($SUBMIT && $query_date) {
-	$stmt="select server_ip, count(*) as ct From vicidial_agent_log where event_time>='$query_date $query_date_D' and event_time<='$query_date $query_date_T' and sub_status='LAGGED' group by server_ip order by server_ip";
+	$stmt="SELECT server_ip, count(*) as ct From vicidial_agent_log where event_time>='$query_date $query_date_D' and event_time<='$query_date $query_date_T' and sub_status='LAGGED' group by server_ip order by server_ip";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$ASCII_text="<PRE><font size=2>\n";
 	$HTML_text="";
@@ -276,7 +276,7 @@ if ($SUBMIT && $query_date) {
 		$HTML_text.="<TR><TH class='small_standard_bold grey_graph_cell'>"._QXZ("TOTAL")."</th><TH class='small_standard_bold grey_graph_cell'>$total_count</th></tr></table>";
 
 
-		$rpt_stmt="select * from vicidial_agent_log where sub_status='LAGGED' and event_time>='$query_date $query_date_D' and event_time<='$query_date $query_date_T' $url_type_SQL order by user, event_time asc";
+		$rpt_stmt="SELECT * from vicidial_agent_log where sub_status='LAGGED' and event_time>='$query_date $query_date_D' and event_time<='$query_date $query_date_T' $url_type_SQL order by user, event_time asc";
 		$rpt_rslt=mysql_to_mysqli($rpt_stmt, $link);
 		if ($DB) {$ASCII_text.=$rpt_stmt."\n";}
 

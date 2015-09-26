@@ -60,6 +60,7 @@
 # 150804-1631 - Added multiple in-group _lead_reset options
 # 150806-1346 - Added Settings Containers
 # 150903-1458 - Added compatibility for custom fields data options
+# 150925-2235 - Added user_hide_realtime and user lead filter options
 #
 
 require("dbconnect_mysqli.php");
@@ -375,6 +376,16 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="users-agent_lead_search_override">
 <BR>
 <B><?php echo _QXZ("Agent Lead Search Override"); ?> -</B><?php echo _QXZ("This setting will override whatever the campaign has set for Agent Lead Search. NOT_ACTIVE will use the campaign setting. ENABLED will allow lead searching and DISABLED will not allow lead searching. Default is NOT_ACTIVE. LIVE_CALL_INBOUND will allow search for a lead while on an inbound call only. LIVE_CALL_INBOUND_AND_MANUAL will allow search for a lead while on an inbound call or while paused. When Lead Search is used on a live inbound call, the lead of the call when it went to the agent will be changed to a status of LSMERG, and the logs for the call will be modified to link to the agent selected lead instead."); ?>
+
+<BR>
+<A NAME="users-lead_filter_id">
+<BR>
+<B><?php echo _QXZ("Lead Filter"); ?> -</B><?php echo _QXZ("This option allows you to set a Lead Filter for an individual user. To use this option, the user must be logged in to a campaign that has No Hopper Dialing enabled. Default is EMPTY for disabled."); ?>
+
+<BR>
+<A NAME="users-user_hide_realtime">
+<BR>
+<B><?php echo _QXZ("User Hide in RealTime"); ?> -</B><?php echo _QXZ("This setting allows you to hide this user from the Real-Time Report display. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="users-alert_enabled">
@@ -4852,6 +4863,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-agent_whisper_enabled">
 <BR>
 <B><?php echo _QXZ("Enable Agent Whisper Monitoring"); ?> -</B><?php echo _QXZ("This setting allows a manager to be able to speak to a logged in agent without the customer being able to hear them. WARNING, this feature is considered experimental and may not function properly in some cases. Older versions of Asterisk have shown to have serious issues at times with this feature and can cause Asterisk to freeze or crash. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="settings-user_hide_realtime_enabled">
+<BR>
+<B><?php echo _QXZ("Enable User Hide RealTime"); ?> -</B><?php echo _QXZ("This setting allows a User Modify setting to be changed to allow a user to be hidden from all managers in the Real-Time Report. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="contact_information">

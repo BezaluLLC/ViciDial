@@ -153,6 +153,9 @@ OTHER CHANGES:
 34. Added DID custom fields as webform and script variables
 	(did_custom_one, did_custom_two,..., did_custom_five)
 
+35. Added option to hide users from appearing on real-time report. Must be 
+	enabled in System Settings, then for each user to be hidden.
+
 
 
 
