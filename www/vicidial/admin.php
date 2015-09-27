@@ -33159,18 +33159,23 @@ if ($ADD==10000000000)
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$EXTENlink='stage=EXTENDOWN';
+	$EXTENNUMlink='stage=EXTENNUMDOWN';
 	$PROTOlink='stage=PROTODOWN';
 	$SERVERlink='stage=SERVERDOWN';
 	$STATUSlink='stage=STATUSDOWN';
 	$SQLorder='order by extension,server_ip';
+
 	if (preg_match("/EXTENUP/i",$stage)) {$SQLorder='order by extension asc';   $EXTENlink='stage=EXTENDOWN';}
 	if (preg_match("/EXTENDOWN/i",$stage)) {$SQLorder='order by extension desc';   $EXTENlink='stage=EXTENUP';}
+	if (preg_match("/EXTENNUMUP/i",$stage)) {$SQLorder='order by CAST(extension as SIGNED INTEGER) desc';   $EXTENNUMlink='stage=EXTENNUMDOWN';}
+	if (preg_match("/EXTENNUMDOWN/i",$stage)) {$SQLorder='order by CAST(extension as SIGNED INTEGER) asc';   $EXTENNUMlink='stage=EXTENNUMUP';}
 	if (preg_match("/PROTOUP/i",$stage)) {$SQLorder='order by protocol asc';   $PROTOlink='stage=PROTODOWN';}
 	if (preg_match("/PROTODOWN/i",$stage)) {$SQLorder='order by protocol desc';   $PROTOlink='stage=PROTOUP';}
 	if (preg_match("/SERVERUP/i",$stage)) {$SQLorder='order by server_ip asc';   $SERVERlink='stage=SERVERDOWN';}
 	if (preg_match("/SERVERDOWN/i",$stage)) {$SQLorder='order by server_ip desc';   $SERVERlink='stage=SERVERUP';}
 	if (preg_match("/STATUSUP/i",$stage)) {$SQLorder='order by status asc';   $STATUSlink='stage=STATUSDOWN';}
 	if (preg_match("/STATUSDOWN/i",$stage)) {$SQLorder='order by status desc';   $STATUSlink='stage=STATUSUP';}
+
 	$stmt="SELECT extension,protocol,server_ip,dialplan_number,voicemail_id,status,fullname,messages,old_messages,user_group from phones $whereLOGadmin_viewable_groupsSQL $SQLorder";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$phones_to_print = mysqli_num_rows($rslt);
@@ -33178,7 +33183,8 @@ if ($ADD==10000000000)
 	echo "<br>"._QXZ("PHONE LISTINGS").":\n";
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<tr bgcolor=black>";
-	echo "<td><a href=\"$PHP_SELF?ADD=10000000000&$EXTENlink\"><font size=1 color=white><B>"._QXZ("EXTEN")."</B></a></td>";
+	echo "<td><a href=\"$PHP_SELF?ADD=10000000000&$EXTENlink\"><font size=1 color=white><B>"._QXZ("EXTEN")."</B></a> &nbsp; ";
+	echo "<a href=\"$PHP_SELF?ADD=10000000000&$EXTENNUMlink\"><font size=1 color=white><B>- # -</B></a></td>";
 	echo "<td><a href=\"$PHP_SELF?ADD=10000000000&$PROTOlink\"><font size=1 color=white><B>"._QXZ("PROTO")."</B></a></td>";
 	echo "<td><a href=\"$PHP_SELF?ADD=10000000000&$SERVERlink\"><font size=1 color=white><B>"._QXZ("SERVER")."</B></a></td>";
 	echo "<td colspan=2><font size=1 color=white><B>"._QXZ("DIAL PLAN")."</B></td>";
