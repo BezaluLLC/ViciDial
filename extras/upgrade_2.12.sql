@@ -288,3 +288,7 @@ ALTER TABLE system_settings ADD user_hide_realtime_enabled ENUM('0','1') default
 ALTER TABLE vicidial_users ADD user_hide_realtime ENUM('1','0') default '0';
 
 UPDATE system_settings SET db_schema_version='1430',db_schema_update_date=NOW() where db_schema_version < 1430;
+
+ALTER TABLE vicidial_inbound_dids ADD did_carrier_description VARCHAR(255) default '';
+
+UPDATE system_settings SET db_schema_version='1431',db_schema_update_date=NOW() where db_schema_version < 1431;

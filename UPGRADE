@@ -156,6 +156,9 @@ OTHER CHANGES:
 35. Added option to hide users from appearing on real-time report. Must be 
 	enabled in System Settings, then for each user to be hidden.
 
+36. Added did_carrier_description, sorting by columns in DID list page, integer
+	sort for user list page.
+
 
 
 

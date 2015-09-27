@@ -61,7 +61,7 @@
 # 150806-1346 - Added Settings Containers
 # 150903-1458 - Added compatibility for custom fields data options
 # 150925-2235 - Added user_hide_realtime and user lead filter options
-#
+# 150926-1058 - Added did_carrier_description
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -2724,6 +2724,11 @@ if ($SSqc_features_active > 0)
 <A NAME="inbound_dids-did_description">
 <BR>
 <B><?php echo _QXZ("DID Description"); ?> -</B><?php echo _QXZ("This is the description of the DID routing entry."); ?>
+
+<BR>
+<A NAME="inbound_dids-did_carrier_description">
+<BR>
+<B><?php echo _QXZ("DID Carrier Description"); ?> -</B><?php echo _QXZ("This is another description field for the DID, to be used to describe the carrier of this DID. It is not used for any other purpose in the system."); ?>
 
 <BR>
 <A NAME="inbound_dids-did_active">

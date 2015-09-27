@@ -1979,6 +1979,8 @@ if (isset($_GET["user_hide_realtime_enabled"]))				{$user_hide_realtime_enabled=
 	elseif (isset($_POST["user_hide_realtime_enabled"]))	{$user_hide_realtime_enabled=$_POST["user_hide_realtime_enabled"];}
 if (isset($_GET["user_hide_realtime"]))				{$user_hide_realtime=$_GET["user_hide_realtime"];}
 	elseif (isset($_POST["user_hide_realtime"]))	{$user_hide_realtime=$_POST["user_hide_realtime"];}
+if (isset($_GET["did_carrier_description"]))			{$did_carrier_description=$_GET["did_carrier_description"];}
+	elseif (isset($_POST["did_carrier_description"]))	{$did_carrier_description=$_POST["did_carrier_description"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2946,6 +2948,7 @@ if ($non_latin < 1)
 	$api_allowed_functions = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$api_allowed_functions);
 	$agent_display_fields = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$agent_display_fields);
 	$container_notes = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$container_notes);
+	$did_carrier_description = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$did_carrier_description);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
 	$call_out_number_group = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$call_out_number_group);
@@ -3596,12 +3599,13 @@ else
 # 150915-2113 - Added x_ra_carrier module option
 # 150917-1629 - Added more permission validation before deleting records, issue #893
 # 150925-2126 - Added user_hide_realtime options
+# 150927-0820 - Added did_carrier_description, sorting by columns in DID list page, integer sort for user list page
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-511a';
-$build = '150925-2126';
+$admin_version = '2.12-512a';
+$build = '150927-0820';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -9691,7 +9695,7 @@ if ($ADD==2411)
 				}
 			else
 				{
-				$stmt="INSERT INTO vicidial_inbound_dids (did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension) SELECT \"$did_pattern\",\"$did_description\",did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension from vicidial_inbound_dids where did_id=\"$source_did\";";
+				$stmt="INSERT INTO vicidial_inbound_dids (did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension,did_carrier_description) SELECT \"$did_pattern\",\"$did_description\",did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension,did_carrier_description from vicidial_inbound_dids where did_id=\"$source_did\";";
 				$rslt=mysql_to_mysqli($stmt, $link);
 
 				$stmt="SELECT did_id from vicidial_inbound_dids where did_pattern='$did_pattern';";
@@ -13643,7 +13647,7 @@ if ($ADD==4311)
 				}
 			echo "<br><B>"._QXZ("DID MODIFIED").": $did_pattern</B>\n";
 
-			$stmt="UPDATE vicidial_inbound_dids set did_pattern='$did_pattern',did_description='$did_description',did_active='$did_active',did_route='$did_route',extension='$extension',exten_context='$exten_context',voicemail_ext='$voicemail_ext',phone='$phone',server_ip='$server_ip',user='$user',user_unavailable_action='$user_unavailable_action',user_route_settings_ingroup='$user_route_settings_ingroup',group_id='$group_id',call_handle_method='$call_handle_method',agent_search_method='$agent_search_method',list_id='$list_id',campaign_id='$campaign_id',phone_code='$phone_code',menu_id='$menu_id',record_call='$record_call',filter_inbound_number='$filter_inbound_number',filter_phone_group_id='$filter_phone_group_id',filter_url='$filter_url',filter_action='$filter_action',filter_extension='$filter_extension',filter_exten_context='$filter_exten_context',filter_voicemail_ext='$filter_voicemail_ext',filter_phone='$filter_phone',filter_server_ip='$filter_server_ip',filter_user='$filter_user',filter_user_unavailable_action='$filter_user_unavailable_action',filter_user_route_settings_ingroup='$filter_user_route_settings_ingroup',filter_group_id='$filter_group_id',filter_call_handle_method='$filter_call_handle_method',filter_agent_search_method='$filter_agent_search_method',filter_list_id='$filter_list_id',filter_campaign_id='$filter_campaign_id',filter_phone_code='$filter_phone_code',filter_menu_id='$filter_menu_id',filter_clean_cid_number='$filter_clean_cid_number',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five',user_group='$user_group',filter_dnc_campaign='$filter_dnc_campaign',filter_url_did_redirect='$filter_url_did_redirect',no_agent_ingroup_redirect='$no_agent_ingroup_redirect',no_agent_ingroup_id='$no_agent_ingroup_id',no_agent_ingroup_extension='$no_agent_ingroup_extension',pre_filter_phone_group_id='$pre_filter_phone_group_id',pre_filter_extension='$pre_filter_extension',max_queue_ingroup_calls='$max_queue_ingroup_calls',max_queue_ingroup_id='$max_queue_ingroup_id',max_queue_ingroup_extension='$max_queue_ingroup_extension'$did_entry_list_idSQL where did_id='$did_id';";
+			$stmt="UPDATE vicidial_inbound_dids set did_pattern='$did_pattern',did_description='$did_description',did_active='$did_active',did_route='$did_route',extension='$extension',exten_context='$exten_context',voicemail_ext='$voicemail_ext',phone='$phone',server_ip='$server_ip',user='$user',user_unavailable_action='$user_unavailable_action',user_route_settings_ingroup='$user_route_settings_ingroup',group_id='$group_id',call_handle_method='$call_handle_method',agent_search_method='$agent_search_method',list_id='$list_id',campaign_id='$campaign_id',phone_code='$phone_code',menu_id='$menu_id',record_call='$record_call',filter_inbound_number='$filter_inbound_number',filter_phone_group_id='$filter_phone_group_id',filter_url='$filter_url',filter_action='$filter_action',filter_extension='$filter_extension',filter_exten_context='$filter_exten_context',filter_voicemail_ext='$filter_voicemail_ext',filter_phone='$filter_phone',filter_server_ip='$filter_server_ip',filter_user='$filter_user',filter_user_unavailable_action='$filter_user_unavailable_action',filter_user_route_settings_ingroup='$filter_user_route_settings_ingroup',filter_group_id='$filter_group_id',filter_call_handle_method='$filter_call_handle_method',filter_agent_search_method='$filter_agent_search_method',filter_list_id='$filter_list_id',filter_campaign_id='$filter_campaign_id',filter_phone_code='$filter_phone_code',filter_menu_id='$filter_menu_id',filter_clean_cid_number='$filter_clean_cid_number',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five',user_group='$user_group',filter_dnc_campaign='$filter_dnc_campaign',filter_url_did_redirect='$filter_url_did_redirect',no_agent_ingroup_redirect='$no_agent_ingroup_redirect',no_agent_ingroup_id='$no_agent_ingroup_id',no_agent_ingroup_extension='$no_agent_ingroup_extension',pre_filter_phone_group_id='$pre_filter_phone_group_id',pre_filter_extension='$pre_filter_extension',max_queue_ingroup_calls='$max_queue_ingroup_calls',max_queue_ingroup_id='$max_queue_ingroup_id',max_queue_ingroup_extension='$max_queue_ingroup_extension',did_carrier_description='$did_carrier_description'$did_entry_list_idSQL where did_id='$did_id';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -26442,7 +26446,7 @@ if ($ADD==3311)
 		$didSQL = "did_id='$did_id'";
 		if ( (strlen($did_id)<1) and (strlen($did_pattern)>0) )
 			{$didSQL = "did_pattern='$did_pattern'";}
-		$stmt="SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension from vicidial_inbound_dids where $didSQL $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension,did_carrier_description from vicidial_inbound_dids where $didSQL $LOGadmin_viewable_groupsSQL;";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -26505,6 +26509,7 @@ if ($ADD==3311)
 		$max_queue_ingroup_calls = $row[56];
 		$max_queue_ingroup_id = $row[57];
 		$max_queue_ingroup_extension = $row[58];
+		$did_carrier_description = $row[59];
 
 		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -26628,6 +26633,7 @@ if ($ADD==3311)
 	#	echo "<tr bgcolor=#B6D3FC><td align=right>DID Extension: </td><td align=left><input type=text name=did_pattern size=30 maxlength=50 value=\"$did_pattern\">$NWB#inbound_dids-did_pattern$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("DID Extension").": </td><td align=left>$did_pattern $NWB#inbound_dids-did_pattern$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("DID Description").": </td><td align=left><input type=text name=did_description size=40 maxlength=50 value=\"$did_description\">$NWB#inbound_dids-did_description$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("DID Carrier Description").": </td><td align=left><input type=text name=did_carrier_description size=50 maxlength=255 value=\"$did_carrier_description\">$NWB#inbound_dids-did_carrier_description$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=did_active><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$did_active' SELECTED>"._QXZ("$did_active")."</option></select>$NWB#inbound_dids-did_active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
@@ -26677,6 +26683,7 @@ if ($ADD==3311)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("In-Group Campaign ID").": </td><td align=left><select size=1 name=campaign_id>\n";
 		echo "$campaigns_list";
+		echo "<option value=\"\">---NONE---</option>\n";
 		echo "<option SELECTED>$campaign_id</option>\n";
 		echo "</select>$NWB#inbound_dids-campaign_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("In-Group Phone Code").": </td><td align=left><input type=text name=phone_code size=14 maxlength=14 value=\"$phone_code\">$NWB#inbound_dids-phone_code$NWE</td></tr>\n";
@@ -26759,6 +26766,7 @@ if ($ADD==3311)
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter In-Group Campaign ID").": </td><td align=left><select size=1 name=filter_campaign_id>\n";
 		echo "$campaigns_list";
+		echo "<option value=\"\">---NONE---</option>\n";
 		echo "<option SELECTED>$filter_campaign_id</option>\n";
 		echo "</select>$NWB#inbound_dids-campaign_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter In-Group Phone Code").": </td><td align=left><input type=text name=filter_phone_code size=14 maxlength=14 value=\"$filter_phone_code\">$NWB#inbound_dids-phone_code$NWE</td></tr>\n";
@@ -32070,12 +32078,15 @@ if ($ADD=="0A")
 		}
 
 	$USERlink='stage=USERIDDOWN';
+	$USERNUMlink='stage=USERIDNUMDOWN';
 	$NAMElink='stage=NAMEDOWN';
 	$LEVELlink='stage=LEVELDOWN';
 	$GROUPlink='stage=GROUPDOWN';
 	$SQLorder='order by full_name';
 	if (preg_match("/USERIDUP/i",$stage)) {$SQLorder='order by user asc';   $USERlink='stage=USERIDDOWN';}
 	if (preg_match("/USERIDDOWN/i",$stage)) {$SQLorder='order by user desc';   $USERlink='stage=USERIDUP';}
+	if (preg_match("/USERIDNUMUP/i",$stage)) {$SQLorder='order by CAST(user as SIGNED INTEGER) desc';   $USERNUMlink='stage=USERIDNUMDOWN';}
+	if (preg_match("/USERIDNUMDOWN/i",$stage)) {$SQLorder='order by CAST(user as SIGNED INTEGER) asc';   $USERNUMlink='stage=USERIDNUMUP';}
 	if (preg_match("/NAMEUP/i",$stage)) {$SQLorder='order by full_name asc';   $NAMElink='stage=NAMEDOWN';}
 	if (preg_match("/NAMEDOWN/i",$stage)) {$SQLorder='order by full_name desc';   $NAMElink='stage=NAMEUP';}
 	if (preg_match("/LEVELUP/i",$stage)) {$SQLorder='order by user_level asc';   $LEVELlink='stage=LEVELDOWN';}
@@ -32088,7 +32099,8 @@ if ($ADD=="0A")
 
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<tr bgcolor=black>";
-	echo "<td><a href=\"$PHP_SELF?ADD=0A&status=$status&$USERlink\"><font size=1 color=white><B>"._QXZ("USER ID")."</B></a></td>";
+	echo "<td><a href=\"$PHP_SELF?ADD=0A&status=$status&$USERlink\"><font size=1 color=white><B>"._QXZ("USER ID")."</B></a> &nbsp; ";
+	echo "<a href=\"$PHP_SELF?ADD=0A&status=$status&$USERNUMlink\"><font size=1 color=white><B>- # -</B></a></td>";
 	echo "<td><a href=\"$PHP_SELF?ADD=0A&status=$status&$NAMElink\"><font size=1 color=white><B>"._QXZ("FULL NAME")."</B></a></td>";
 	echo "<td><a href=\"$PHP_SELF?ADD=0A&status=$status&$LEVELlink\"><font size=1 color=white><B>"._QXZ("LEVEL")."</B></a></td>";
 	echo "<td><a href=\"$PHP_SELF?ADD=0A&status=$status&$GROUPlink\"><font size=1 color=white><B>"._QXZ("GROUP")."</B></a></td>";
@@ -32513,7 +32525,34 @@ if ($ADD==1300)
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT did_id,did_pattern,did_description,did_active,did_route,record_call,user_group from vicidial_inbound_dids $whereLOGadmin_viewable_groupsSQL order by did_pattern;";
+
+
+
+	$DIDlink='stage=DIDDOWN';
+	$DESClink='stage=DESCDOWN';
+	$CARRIERlink='stage=CARRIERDOWN';
+	$ACTIVElink='stage=ACTIVEDOWN';
+	$GROUPlink='stage=GROUPDOWN';
+	$ROUTElink='stage=ROUTEDOWN';
+	$REClink='stage=RECDOWN';
+	$SQLorder='order by did_pattern';
+
+	if (preg_match("/DIDUP/i",$stage)) {$SQLorder='order by did_pattern asc';   $DIDlink='stage=DIDDOWN';}
+	if (preg_match("/DIDDOWN/i",$stage)) {$SQLorder='order by did_pattern desc';   $DIDlink='stage=DIDUP';}
+	if (preg_match("/DESCUP/i",$stage)) {$SQLorder='order by did_description asc';   $DESClink='stage=DESCDOWN';}
+	if (preg_match("/DESCDOWN/i",$stage)) {$SQLorder='order by did_description desc';   $DESClink='stage=DESCUP';}
+	if (preg_match("/CARRIERUP/i",$stage)) {$SQLorder='order by did_carrier_description asc';   $CARRIERlink='stage=CARRIERDOWN';}
+	if (preg_match("/CARRIERDOWN/i",$stage)) {$SQLorder='order by did_carrier_description desc';   $CARRIERlink='stage=CARRIERUP';}
+	if (preg_match("/ACTIVEUP/i",$stage)) {$SQLorder='order by did_active asc';   $ACTIVElink='stage=ACTIVEDOWN';}
+	if (preg_match("/ACTIVEDOWN/i",$stage)) {$SQLorder='order by did_active desc';   $ACTIVElink='stage=ACTIVEUP';}
+	if (preg_match("/GROUPUP/i",$stage)) {$SQLorder='order by user_group asc';   $GROUPlink='stage=GROUPDOWN';}
+	if (preg_match("/GROUPDOWN/i",$stage)) {$SQLorder='order by user_group desc';   $GROUPlink='stage=GROUPUP';}
+	if (preg_match("/ROUTEUP/i",$stage)) {$SQLorder='order by did_route asc';   $ROUTElink='stage=ROUTEDOWN';}
+	if (preg_match("/ROUTEDOWN/i",$stage)) {$SQLorder='order by did_route desc';   $ROUTElink='stage=ROUTEUP';}
+	if (preg_match("/RECUP/i",$stage)) {$SQLorder='order by record_call asc';   $REClink='stage=RECDOWN';}
+	if (preg_match("/RECDOWN/i",$stage)) {$SQLorder='order by record_call desc';   $REClink='stage=RECUP';}
+
+	$stmt="SELECT did_id,did_pattern,did_description,did_carrier_description,did_active,did_route,record_call,user_group from vicidial_inbound_dids $whereLOGadmin_viewable_groupsSQL  $SQLorder;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$dids_to_print = mysqli_num_rows($rslt);
 
@@ -32521,13 +32560,14 @@ if ($ADD==1300)
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<TR BGCOLOR=BLACK>";
 	echo "<TD><font size=1 color=white>#</TD>";
-	echo "<TD><font size=1 color=white>"._QXZ("DID")."</TD>";
-	echo "<TD><font size=1 color=white>"._QXZ("DESCRIPTION")."</TD>\n";
-	echo "<TD><font size=1 color=white>"._QXZ("ACTIVE")."</TD>";
-	echo "<TD><font size=1 color=white>"._QXZ("ADMIN GROUP")."</TD>";
-	echo "<TD><font size=1 color=white>"._QXZ("ROUTE")."</TD>";
-	echo "<TD><font size=1 color=white>"._QXZ("REC")."</TD>";
-	echo "<TD><font size=1 color=white>"._QXZ("MODIFY")."</TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$DIDlink\"><font size=1 color=white><B>"._QXZ("DID")."</B></a></TD>";
+	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$DESClink\"><font size=1 color=white><B>"._QXZ("DESCRIPTION")."</B></a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$CARRIERlink\"><font size=1 color=white><B>"._QXZ("CARRIER")."</B></a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$ACTIVElink\"><font size=1 color=white><B>"._QXZ("ACTIVE")."</B></a></TD>";
+	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$GROUPlink\"><font size=1 color=white><B>"._QXZ("ADMIN GROUP")."</B></a></TD>";
+	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$ROUTElink\"><font size=1 color=white><B>"._QXZ("ROUTE")."</B></a></TD>";
+	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$REClink\"><font size=1 color=white><B>"._QXZ("REC")."</B></a></TD>";
+	echo "<TD><font size=1 color=white><B>"._QXZ("MODIFY")."</B></TD>\n";
 	echo "</TR>\n";
 
 	$o=0;
@@ -32538,13 +32578,27 @@ if ($ADD==1300)
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
+
+		# truncate description and carrier if they are more than 30 characters
+		if (strlen($row[2])>30)
+			{
+			while (strlen($row[2])>30) {$row[2] = preg_replace("/.$/",'',$row[2]);}
+			$row[2] .= '...';
+			}
+		if (strlen($row[3])>30)
+			{
+			while (strlen($row[3])>30) {$row[3] = preg_replace("/.$/",'',$row[3]);}
+			$row[3] .= '...';
+			}
+
 		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3311&did_id=$row[0]\">$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3]</td>";
-		echo "<td><font size=1> $row[6]</td>";
 		echo "<td><font size=1> $row[4]</td>";
+		echo "<td><font size=1> $row[7]</td>";
 		echo "<td><font size=1> $row[5]</td>";
+		echo "<td><font size=1> $row[6]</td>";
 		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=3311&did_id=$row[0]\">"._QXZ("MODIFY")."</a></td></tr>\n";
 		$o++;
 		}

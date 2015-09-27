@@ -1924,6 +1924,7 @@ filter_entry_list_id BIGINT(14) UNSIGNED default '0',
 max_queue_ingroup_calls SMALLINT(5) default '0',
 max_queue_ingroup_id VARCHAR(20) default '',
 max_queue_ingroup_extension VARCHAR(50) default '9998811112',
+did_carrier_description VARCHAR(255) default '',
 unique index (did_pattern),
 index (group_id)
 ) ENGINE=MyISAM;
@@ -3566,4 +3567,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1430',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1431',db_schema_update_date=NOW(),reload_timestamp=NOW();
