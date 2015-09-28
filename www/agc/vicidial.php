@@ -500,10 +500,11 @@
 # 150909-0212 - Fixed MDlogEPOCH variable issue #882
 # 150917-0926 - Added dynamic default field maxlengths based on DB schema
 # 150923-1952 - Added DID custum fields as web and form variables
+# 150928-1205 - Fixed issue with API transfers and dial_override flag
 #
 
-$version = '2.12-472c';
-$build = '150923-1952';
+$version = '2.12-473c';
+$build = '150928-1205';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -5202,6 +5203,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									{leave_3way_call('FIRST');}
 								if (api_transferconf_function == 'BLIND_TRANSFER')
 									{
+									if (api_transferconf_override=='YES')
+										{document.vicidial_form.xferoverride.checked=true;}
+									if (api_transferconf_override=='NO')
+										{document.vicidial_form.xferoverride.checked=false;}
 									document.vicidial_form.xfernumber.value = api_transferconf_number;
 									mainxfer_send_redirect('XfeRBLIND',lastcustchannel,lastcustserverip);
 									}
@@ -5221,6 +5226,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 											{document.vicidial_form.consultativexfer.checked=false;}
 										if (api_transferconf_override=='YES')
 											{document.vicidial_form.xferoverride.checked=true;}
+										if (api_transferconf_override=='NO')
+											{document.vicidial_form.xferoverride.checked=false;}
 										API_selected_xfergroup = api_transferconf_group;
 										document.vicidial_form.xfernumber.value = api_transferconf_number;
 										active_group_alias = api_transferconf_group_alias;

@@ -83,9 +83,11 @@
 # 150429-1717 - Added user allowed function restrictions
 # 150512-2027 - Added filtering of hash sign on some input variables, Issue #851
 # 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
+# 150928-1157 - Fix allowing for * and # in phone_number field
+#
 
-$version = '2.12-49';
-$build = '150626-2120';
+$version = '2.12-50';
+$build = '150928-1157';
 
 $startMS = microtime();
 
@@ -277,7 +279,7 @@ if ($non_latin < 1)
 	$ingroup_choices = preg_replace("/[^- \_0-9a-zA-Z]/","",$ingroup_choices);
 	$set_as_default = preg_replace("/[^A-Z]/","",$set_as_default);
 	$phone_code = preg_replace("/[^0-9X]/","",$phone_code);
-	$phone_number = preg_replace("/[^0-9]/","",$phone_number);
+	$phone_number = preg_replace("/[^\*#0-9]/","",$phone_number);
 	$lead_id = preg_replace("/[^0-9]/","",$lead_id);
 	$vendor_id = preg_replace('/;|#/','',$vendor_id);
 		$vendor_id = preg_replace('/\+/',' ',$vendor_id);
