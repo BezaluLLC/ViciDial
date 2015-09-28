@@ -48,6 +48,7 @@
 # 141230-0942 - Added code for on-the-fly language translations display
 # 150516-1259 - Fixed Javascript element problem, Issue #857
 # 150522-1304 - Fixed issue with missing calls from user stats section
+# 150928-1234 - Separated User Group permissions for this report by in-group and by DID
 #
 
 $startMS = microtime();
@@ -86,6 +87,8 @@ if (strlen($shift)<2) {$shift='ALL';}
 
 $report_name = 'Inbound Report';
 $db_source = 'M';
+if ($DID=='Y')
+	{$report_name = 'Inbound Report by DID';}
 
 # $test_table_name="vicidial_closer_log";
 
@@ -206,7 +209,7 @@ $LOGallowed_reports =			$row[1];
 $LOGadmin_viewable_groups =		$row[2];
 $LOGadmin_viewable_call_times =	$row[3];
 
-if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
+if ( (!preg_match("/$report_name,/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
     Header("HTTP/1.0 401 Unauthorized");
