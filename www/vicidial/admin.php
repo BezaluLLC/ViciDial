@@ -3601,12 +3601,13 @@ else
 # 150925-2126 - Added user_hide_realtime options
 # 150927-0820 - Added did_carrier_description, sorting by columns in DID list page, integer sort for user list page
 # 150928-1235 - Separated User Group permissions for Inbound Report report by in-group and by DID
+# 150928-1817 - Added DNC logging and DNC phone number log search
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-513a';
-$build = '150928-1235';
+$admin_version = '2.12-514a';
+$build = '150928-1817';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5812,6 +5813,58 @@ if ($ADD==121)
 		$o++;
 		}
 
+	# DNC Log Search
+	if (strlen($phone) > 2)
+		{
+		echo "<br>"._QXZ("SEARCHING FOR PHONE NUMBER IN DNC LIST LOGS").": <b>$phone</b><br><br>\n";
+
+		$stmt = "SELECT campaign_id,action,action_date,user FROM vicidial_dnc_log where phone_number='$phone' order by action_date desc limit 1000;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$vdl_ct = mysqli_num_rows($rslt);
+		$i=0;
+		if ($vdl_ct > 0)
+			{
+			echo "<center><TABLE width=400 cellspacing=0 cellpadding=1>\n";
+			echo "<tr bgcolor=black>";
+			echo "<td><font size=1 color=white align=left><B>"._QXZ("CAMPAIGN")."</B></td>";
+			echo "<td><font size=1 color=white><B>"._QXZ("ACTION")."</B></td>";
+			echo "<td><font size=1 color=white><B>"._QXZ("DATE")." &nbsp; </B></td>";
+			echo "<td><font size=1 color=white><B>"._QXZ("USER")." &nbsp; </B></td></tr>\n";
+			}
+		else
+			{
+			echo _QXZ("No Results Found")."\n";
+			}
+		while ($vdl_ct > $i)
+			{
+			if (preg_match('/1$|3$|5$|7$|9$/i', $i))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+			$row=mysqli_fetch_row($rslt);
+			$vdl_campaign =		$row[0];
+			$vdl_action =		$row[1];
+			$vdl_action_date =	$row[2];
+			$vdl_user =			$row[3];
+
+			echo "<tr $bgcolor><td><font size=1>";
+			if ($vdl_campaign == '-SYSINT-')
+				{echo "$vdl_campaign";}
+			else
+				{echo "<a href=\"$PHP_SELF?ADD=31&campaign_id=$vdl_campaign\">$vdl_campaign</a>";}
+			echo "</font></td>";
+			echo "<td><font size=1> $vdl_action</td>";
+			echo "<td><font size=1> $vdl_action_date</td>";
+			echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=3&user=$vdl_user\">$vdl_user</a></td></tr>\n";
+
+			$i++;
+			}
+
+		echo "</TABLE></center>\n";
+		echo "<br><br><br>\n";
+		}
+
+	# Add / Delete from DNC
 	if (strlen($phone_numbers) > 2)
 		{
 		$PN = explode("\n",$phone_numbers);
@@ -5843,6 +5896,9 @@ if ($ADD==121)
 						$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='DELETE', record_id='$PN[$p]', event_code='ADMIN DELETE NUMBER FROM DNC LIST', event_sql=\"$SQL_log\", event_notes='';";
 						if ($DB) {echo "|$stmt|\n";}
 						$rslt=mysql_to_mysqli($stmt, $link);
+
+						$stmt="INSERT INTO vicidial_dnc_log SET phone_number='$PN[$p]', campaign_id='-SYSINT-', action='delete', action_date=NOW(), user='$PHP_AUTH_USER';";
+						$rslt=mysql_to_mysqli($stmt, $link);
 						}
 					}
 				else
@@ -5865,6 +5921,9 @@ if ($ADD==121)
 						$SQL_log = addslashes($SQL_log);
 						$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='DELETE', record_id='$PN[$p]', event_code='ADMIN DELETE NUMBER FROM CAMPAIGN DNC LIST $campaign_id', event_sql=\"$SQL_log\", event_notes='';";
 						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+
+						$stmt="INSERT INTO vicidial_dnc_log SET phone_number='$PN[$p]', campaign_id='$campaign_id', action='delete', action_date=NOW(), user='$PHP_AUTH_USER';";
 						$rslt=mysql_to_mysqli($stmt, $link);
 						}
 					}
@@ -5894,6 +5953,9 @@ if ($ADD==121)
 						$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='ADD', record_id='$PN[$p]', event_code='ADMIN ADD NUMBER TO DNC LIST', event_sql=\"$SQL_log\", event_notes='';";
 						if ($DB) {echo "|$stmt|\n";}
 						$rslt=mysql_to_mysqli($stmt, $link);
+
+						$stmt="INSERT INTO vicidial_dnc_log SET phone_number='$PN[$p]', campaign_id='-SYSINT-', action='add', action_date=NOW(), user='$PHP_AUTH_USER';";
+						$rslt=mysql_to_mysqli($stmt, $link);
 						}
 					}
 				else
@@ -5916,6 +5978,9 @@ if ($ADD==121)
 						$SQL_log = addslashes($SQL_log);
 						$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='ADD', record_id='$PN[$p]', event_code='ADMIN ADD NUMBER TO CAMPAIGN DNC LIST $campaign_id', event_sql=\"$SQL_log\", event_notes='';";
 						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+
+						$stmt="INSERT INTO vicidial_dnc_log SET phone_number='$PN[$p]', campaign_id='$campaign_id', action='add', action_date=NOW(), user='$PHP_AUTH_USER';";
 						$rslt=mysql_to_mysqli($stmt, $link);
 						}
 					}
@@ -5940,6 +6005,13 @@ if ($ADD==121)
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Add or Delete").": </td><td align=left><select size=1 name=stage><option value='add' SELECTED>"._QXZ("add")."</option><option value='delete'>"._QXZ("delete")."</option></select></td></tr>\n";
 		}
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
+	echo "</FORM></TABLE></center>\n";
+
+	echo "<br>"._QXZ("DNC LOG SEARCH")."<BR><form action=$PHP_SELF method=POST>\n";
+	echo "<input type=hidden name=ADD value=121>\n";
+	echo "<center><TABLE width=400 cellspacing=3>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Phone Number").": </td><td align=left><input type=text name=phone size=12 maxlength=18></td></tr>\n";
+	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SEARCH")."'></td></tr>\n";
 	echo "</FORM></TABLE></center>\n";
 
 	if ( ($LOGuser_level >= 9) and ( (preg_match("/Download List/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )

@@ -1,5 +1,7 @@
 #!/usr/bin/perl
 #
+# NOTE: IT IS RECOMMENDED THAT YOU USE cm_dnc.agi THROUGH A CALL MENU INSTEAD!
+#
 # agi-VDADinbound_NI_DNC_CIDlookup.agi version 2.0.5   *DBI-version*
 # 
 # runs when a call comes in from an inbound call. This script will 
@@ -17,11 +19,12 @@
 #exten => 1234,4,AGI(agi-VDADinbound_NI_DNC_CIDlookup.agi,YES-----TESTCAMP)
 #exten => 1234,5,Hangup
 #
-# Copyright (C) 2008  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 60914-1051 - First draft
 # 80909-0614 - Added optional field for campaign so that vicidial_campaign_dnc could be used
+# 150928-1822 - Added dnc logging
 #
 
 $script = 'agi-VDADinbound_NI_DNC_CIDlookup.agi';
@@ -287,11 +290,19 @@ if ($pin =~ /3/)	# set the phone_number to DNC
 			$stmtA = "INSERT INTO vicidial_dnc SET phone_number='$phone_number';";
 			$affected_rows = $dbhA->do($stmtA);
 				if ($AGILOG) {$agi_string = "$affected_rows|$stmtA|";   &agi_output;}
+
+			$stmtA="INSERT INTO vicidial_dnc_log SET phone_number='$phone_number', campaign_id='-SYSINT-', action='add', action_date=NOW(), user='OLDAGI';";
+			$affected_rows = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "$affected_rows|$stmtA|";   &agi_output;}
 			}
 		if ($use_campaign_dnc =~ /Y/)
 			{
 			### add the number to the vicidial_campaign_dnc table
 			$stmtA = "INSERT INTO vicidial_campaign_dnc SET phone_number='$phone_number',campaign_id='$campaign_id';";
+			$affected_rows = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "$affected_rows|$stmtA|";   &agi_output;}
+
+			$stmtA="INSERT INTO vicidial_dnc_log SET phone_number='$phone_number', campaign_id='$campaign_id', action='add', action_date=NOW(), user='OLDAGI';";
 			$affected_rows = $dbhA->do($stmtA);
 				if ($AGILOG) {$agi_string = "$affected_rows|$stmtA|";   &agi_output;}
 			}

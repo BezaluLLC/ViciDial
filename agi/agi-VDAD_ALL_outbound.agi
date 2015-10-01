@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_ALL_outbound.agi version 2.10
+# agi-VDAD_ALL_outbound.agi version 2.12
 # 
 # runs when an outbound call is answered. This script will 
 # send the calls out to the agents that are logged in.
@@ -46,7 +46,7 @@
 #exten => 8366,4,AGI(agi-VDAD_ALL_outbound.agi,SURVEY-----LB-----US_pol_survey_hello-----1238-----8-----US_pol_survey_transfer-----US_thanks_no_contact-----OPTOUT-----DNC)
 #exten => 8366,5,Hangup
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 80218-2027 - First Build
@@ -112,12 +112,13 @@
 # 140617-1946 - Added single-digit change to text for TTS
 # 141211-1635 - Added cpd_unknown_action campaign option and list_id added to AST_send_URL calls
 # 141219-1219 - Fixed issue related to QM logging
+# 150928-1822 - Added dnc logging
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
 $AGILOG = '0';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=108;
+$mysql_log_count=119;
 $one_mysql_log=0;
 
 use Time::HiRes ('gettimeofday','usleep','sleep');  # necessary to have perl sleep command of less than one second
@@ -1131,7 +1132,7 @@ if ($call_handle_method =~ /REMIND/)
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
-			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='01109';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
@@ -1189,7 +1190,7 @@ if ($call_handle_method =~ /SURVEY/)
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
-			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='01110';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
@@ -1212,7 +1213,7 @@ if ($call_handle_method =~ /SURVEY/)
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
-			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='01111';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
@@ -1360,6 +1361,10 @@ if ($call_handle_method =~ /SURVEY/)
 				$agi_string = "--    VDAD vicidial_dnc insert: $affected_rows|$VDADphone";
 				&agi_output;
 				}
+			$stmtA="INSERT INTO vicidial_dnc_log SET phone_number='$VDADphone', campaign_id='-SYSINT-', action='add', action_date=NOW(), user='OUTAGI';";
+			$affected_rows = $dbhA->do($stmtA);
+				$dbhP=$dbhA;   $mysql_count='01112';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				if ($AGILOG) {$agi_string = "$affected_rows|$stmtA|";   &agi_output;}
 			}
 		if (($use_campaign_dnc =~ /Y|AREACODE/) && ($survey_ni_status eq "DNC"))
 			{
@@ -1387,6 +1392,10 @@ if ($call_handle_method =~ /SURVEY/)
 				$agi_string = "--    VDAD vicidial_campaign_dnc insert: $affected_rows|$VDADphone|$VDADcampaign|$temp_campaign_id";
 				&agi_output;
 				}
+			$stmtA="INSERT INTO vicidial_dnc_log SET phone_number='$VDADphone', campaign_id='$temp_campaign_id', action='add', action_date=NOW(), user='OUTAGI';";
+			$affected_rows = $dbhA->do($stmtA);
+				$dbhP=$dbhA;   $mysql_count='01113';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				if ($AGILOG) {$agi_string = "$affected_rows|$stmtA|";   &agi_output;}
 			}
 
 		$AGI->hangup();
@@ -1460,6 +1469,10 @@ if ($call_handle_method =~ /SURVEY/)
 				$agi_string = "--    VDAD vicidial_dnc insert: $affected_rows|$VDADphone";
 				&agi_output;
 				}
+			$stmtA="INSERT INTO vicidial_dnc_log SET phone_number='$VDADphone', campaign_id='-SYSINT-', action='add', action_date=NOW(), user='OUTAGI';";
+			$affected_rows = $dbhA->do($stmtA);
+				$dbhP=$dbhA;   $mysql_count='01114';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				if ($AGILOG) {$agi_string = "$affected_rows|$stmtA|";   &agi_output;}
 			}
 		if (($use_campaign_dnc =~ /Y|AREACODE/) && ($survey_third_status eq "DNC"))
 			{
@@ -1487,6 +1500,10 @@ if ($call_handle_method =~ /SURVEY/)
 				$agi_string = "--    VDAD vicidial_campaign_dnc insert: $affected_rows|$VDADphone|$VDADcampaign|$temp_campaign_id";
 				&agi_output;
 				}
+			$stmtA="INSERT INTO vicidial_dnc_log SET phone_number='$VDADphone', campaign_id='$temp_campaign_id', action='add', action_date=NOW(), user='OUTAGI';";
+			$affected_rows = $dbhA->do($stmtA);
+				$dbhP=$dbhA;   $mysql_count='01119';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				if ($AGILOG) {$agi_string = "$affected_rows|$stmtA|";   &agi_output;}
 			}
 
 		if (length($survey_third_exten) > 0)
@@ -1575,6 +1592,10 @@ if ($call_handle_method =~ /SURVEY/)
 				$agi_string = "--    VDAD vicidial_dnc insert: $affected_rows|$VDADphone";
 				&agi_output;
 				}
+			$stmtA="INSERT INTO vicidial_dnc_log SET phone_number='$VDADphone', campaign_id='-SYSINT-', action='add', action_date=NOW(), user='OUTAGI';";
+			$affected_rows = $dbhA->do($stmtA);
+				$dbhP=$dbhA;   $mysql_count='01115';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				if ($AGILOG) {$agi_string = "$affected_rows|$stmtA|";   &agi_output;}
 			}
 		if (($use_campaign_dnc =~ /Y|AREACODE/) && ($survey_fourth_status eq "DNC"))
 			{
@@ -1602,6 +1623,10 @@ if ($call_handle_method =~ /SURVEY/)
 				$agi_string = "--    VDAD vicidial_campaign_dnc insert: $affected_rows|$VDADphone|$VDADcampaign|$temp_campaign_id";
 				&agi_output;
 				}
+			$stmtA="INSERT INTO vicidial_dnc_log SET phone_number='$VDADphone', campaign_id='$temp_campaign_id', action='add', action_date=NOW(), user='OUTAGI';";
+			$affected_rows = $dbhA->do($stmtA);
+				$dbhP=$dbhA;   $mysql_count='01116';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				if ($AGILOG) {$agi_string = "$affected_rows|$stmtA|";   &agi_output;}
 			}
 
 		if (length($survey_fourth_exten) > 0)
@@ -2059,7 +2084,7 @@ while ($drop_timer <= $DROP_TIME)
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
-			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='01117';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
@@ -2082,7 +2107,7 @@ while ($drop_timer <= $DROP_TIME)
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
-			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='01118';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;

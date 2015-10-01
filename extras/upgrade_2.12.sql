@@ -292,3 +292,14 @@ UPDATE system_settings SET db_schema_version='1430',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_inbound_dids ADD did_carrier_description VARCHAR(255) default '';
 
 UPDATE system_settings SET db_schema_version='1431',db_schema_update_date=NOW() where db_schema_version < 1431;
+
+CREATE TABLE vicidial_dnc_log (
+phone_number VARCHAR(18) NOT NULL,
+campaign_id VARCHAR(8) NOT NULL,
+action ENUM('add','delete') default 'add',
+action_date DATETIME NOT NULL,
+user VARCHAR(20) default '',
+index (phone_number)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+UPDATE system_settings SET db_schema_version='1432',db_schema_update_date=NOW() where db_schema_version < 1432;

@@ -3318,6 +3318,15 @@ user_group VARCHAR(20) default '---ALL---',
 container_entry MEDIUMTEXT
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE vicidial_dnc_log (
+phone_number VARCHAR(18) NOT NULL,
+campaign_id VARCHAR(8) NOT NULL,
+action ENUM('add','delete') default 'add',
+action_date DATETIME NOT NULL,
+user VARCHAR(20) default '',
+index (phone_number)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3567,4 +3576,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1431',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1432',db_schema_update_date=NOW(),reload_timestamp=NOW();

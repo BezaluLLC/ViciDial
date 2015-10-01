@@ -159,6 +159,8 @@ OTHER CHANGES:
 36. Added did_carrier_description, sorting by columns in DID list page, integer
 	sort for user list page.
 
+37. Added logging of DNC list insertion and deletion to vicidial_dnc_log table
+
 
 
 
