@@ -199,6 +199,7 @@
 # 150707-0850 - Fixed issues with na_call_url function for all calls that are not sent to agent
 # 150804-1718 - Added _lead_reset options
 # 150812-2004 - Changed maximum time since last agent update to route a call to and agent from 5 to 7 seconds
+# 151004-0815 - Fixed issue with recording vicidial_id for remote agent calls, now set to closecallid
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -3446,7 +3447,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 							}
 
 						### insert record into recording_log table ###
-						$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$phone_number','$now_date','$now_date_epoch','0','$campaign_rec_filename','$insert_lead_id','$VDADuser','$campaign_rec_filename','$uniqueid');";
+						$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,length_in_sec,filename,lead_id,user,location,vicidial_id) values('$channel','$VARserver_ip','$phone_number','$now_date','$now_date_epoch','0','$campaign_rec_filename','$insert_lead_id','$VDADuser','$campaign_rec_filename','$insert_close_id');";
 						$RLRAaffected_rows = $dbhA->do($stmtA);
 							$dbhP=$dbhA;   $mysql_count='01173';   $MEL_aff_rows=$RLRAaffected_rows;   &mysql_error_logging;
 						if ($AGILOG) {$agi_string = "--    REMOTE RECORDING STARTED : |$RLRAaffected_rows|$campaign_rec_filename|$stmtA|";   &agi_output;}
