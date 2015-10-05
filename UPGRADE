@@ -161,6 +161,8 @@ OTHER CHANGES:
 
 37. Added logging of DNC list insertion and deletion to vicidial_dnc_log table
 
+38. Added AST_DB_DNC_filter.pl script to allow filtering of existing DNC entries
+
 
 
 
