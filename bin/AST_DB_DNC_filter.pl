@@ -14,6 +14,7 @@
 #
 # CHANGES
 # 151004-0826 - first build
+# 151004-2225 - Added --remove-nondigits and --protect-areacodes options
 #
 
 ### begin parsing run-time options ###
@@ -33,6 +34,8 @@ if (length($ARGV[0])>1)
 		print "  [--campaign-dnc-only=X] = will only run on one campaign DNC list\n";
 		print "  [--remove-x-or-less=X] = remove phone numbers in the dnc list that are X digits or less <=\n";
 		print "  [--remove-x-or-more=X] = remove phone numbers in the dnc list that are X digits or more >=\n";
+		print "  [--remove-nondigits] = remove phone numbers that have non-digits in them\n";
+		print "  [--protect-areacodes] = protect areacode entries with wildcards from being deleted\n";
 		print "  [--test] = test\n";
 		print "  [--quiet] = quiet\n";
 		print "  [--debug] = verbose debug messages\n";
@@ -85,6 +88,14 @@ if (length($ARGV[0])>1)
 			}
 		else
 			{$CLIremovemore = '';}
+		if ($args =~ /--remove-nondigits/i)
+			{
+			$remove_nondigits=1;
+			}
+		if ($args =~ /--protect-areacodes/i)
+			{
+			$protect_areacodes=1;
+			}
 		if ($args =~ /--debug/i)
 			{
 			$DB=1; # Debug flag, set to 0 for no debug messages, On an active system this will generate hundreds of lines of output per minute
@@ -194,10 +205,12 @@ $sthA->finish();
 
 
 
-if ( (length($CLIremoveless)>0) or (length($CLIremovemore)>0) ) 
+if ( (length($CLIremoveless)>0) or (length($CLIremovemore)>0) or ($remove_nondigits > 0) ) 
 	{
 	$removelessSQL='';
 	$removemoreSQL='';
+	$remove_nondigitsSQL='';
+	$protect_areacodesSQL='';
 	if (length($CLIremoveless)>0) 
 		{$removelessSQL="(char_length(phone_number) <= $CLIremoveless)";}
 	if (length($CLIremovemore)>0)
@@ -206,10 +219,21 @@ if ( (length($CLIremoveless)>0) or (length($CLIremovemore)>0) )
 			{$removemoreSQL = 'or ';}
 		$removemoreSQL .= "(char_length(phone_number) >= $CLIremovemore)";
 		}
+	if ($remove_nondigits > 0)
+		{
+		if ( (length($removelessSQL) > 1) or (length($removemoreSQL) > 1) )
+			{$remove_nondigitsSQL = 'or ';}
+		$remove_nondigitsSQL .= "( (phone_number LIKE \"% %\") or (phone_number LIKE \"%*%\") or (phone_number LIKE \"%#%\") or (phone_number LIKE \"%a%\") or (phone_number LIKE \"%b%\") or (phone_number LIKE \"%c%\") or (phone_number LIKE \"%d%\") or (phone_number LIKE \"%e%\") or (phone_number LIKE \"%f%\") or (phone_number LIKE \"%g%\") or (phone_number LIKE \"%h%\") or (phone_number LIKE \"%i%\") or (phone_number LIKE \"%j%\") or (phone_number LIKE \"%k%\") or (phone_number LIKE \"%l%\") or (phone_number LIKE \"%m%\") or (phone_number LIKE \"%n%\") or (phone_number LIKE \"%o%\") or (phone_number LIKE \"%p%\") or (phone_number LIKE \"%q%\") or (phone_number LIKE \"%r%\") or (phone_number LIKE \"%s%\") or (phone_number LIKE \"%t%\") or (phone_number LIKE \"%u%\") or (phone_number LIKE \"%v%\") or (phone_number LIKE \"%q%\") or (phone_number LIKE \"%x%\") or (phone_number LIKE \"%y%\") or (phone_number LIKE \"%z%\") or (phone_number LIKE \"%.%\") or (phone_number LIKE \"%,%\") )";
+		}
+	if ($protect_areacodes > 0) 
+		{
+		if ( (length($removelessSQL) > 1) or (length($removemoreSQL) > 1) or (length($remove_nondigitsSQL) > 1) )
+			{$protect_areacodesSQL = "and (phone_number NOT LIKE \"%XXXXXXX\")";}
+		}
 	if (length($CLIcampaign)<1) 
 		{
 		##### BEGIN system internal DNC filter #####
-		$stmtA = "SELECT phone_number from vicidial_dnc where $removelessSQL $removemoreSQL limit 100000000;";
+		$stmtA = "SELECT phone_number from vicidial_dnc where $removelessSQL $removemoreSQL $remove_nondigitsSQL $protect_areacodesSQL limit 100000000;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArowsCT=$sthA->rows;
@@ -254,7 +278,7 @@ if ( (length($CLIremoveless)>0) or (length($CLIremovemore)>0) )
 		if (length($CLIcampaign) > 0) 
 			{$CLIcampaignSQL = "and campaign_id IN('$CLIcampaign')";}
 		##### BEGIN campaign DNC filter #####
-		$stmtA = "SELECT phone_number,campaign_id from vicidial_campaign_dnc where $removelessSQL $removemoreSQL $CLIcampaignSQL limit 100000000;";
+		$stmtA = "SELECT phone_number,campaign_id from vicidial_campaign_dnc where $removelessSQL $removemoreSQL $remove_nondigitsSQL $protect_areacodesSQL $CLIcampaignSQL limit 100000000;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArowsCT=$sthA->rows;
