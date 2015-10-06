@@ -390,10 +390,11 @@
 # 150814-1057 - Added compatibility for custom fields data option
 # 150923-2013 - Added DID custom variables to call data transmission
 # 150928-1818 - Added dnc logging
+# 151006-0939 - Changed campaign_cid_areacodes to operate with 2-5 digit areacodes
 #
 
-$version = '2.12-285';
-$build = '150928-1818';
+$version = '2.12-286';
+$build = '151006-0939';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=635;
@@ -3694,22 +3695,33 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$use_custom_cid =	$row[0];
 					if ( ($use_custom_cid == 'AREACODE') and ($cid_lock < 1) )
 						{
-						$temp_ac = substr("$agent_dialed_number", 0, 3);
-						$stmt = "SELECT outbound_cid FROM vicidial_campaign_cid_areacodes where campaign_id='$campaign' and areacode='$temp_ac' and active='Y' order by call_count_today limit 1;";
+						$temp_vcca='';
+						$temp_ac='';
+						$temp_ac_two = substr("$agent_dialed_number", 0, 2);
+						$temp_ac_three = substr("$agent_dialed_number", 0, 3);
+						$temp_ac_four = substr("$agent_dialed_number", 0, 4);
+						$temp_ac_five = substr("$agent_dialed_number", 0, 5);
+						$stmt = "SELECT outbound_cid,areacode FROM vicidial_campaign_cid_areacodes where campaign_id='$campaign' and areacode IN('$temp_ac_two','$temp_ac_three','$temp_ac_four','$temp_ac_five') and active='Y' order by CAST(areacode as SIGNED INTEGER) asc, call_count_today desc limit 100000;";
 						$rslt=mysql_to_mysqli($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00426',$user,$server_ip,$session_name,$one_mysql_log);}
 						if ($DB) {echo "$stmt\n";}
 						$vcca_ct = mysqli_num_rows($rslt);
-						if ($vcca_ct > 0)
+						$act=0;
+						while ($vcca_ct > $act)
 							{
 							$row=mysqli_fetch_row($rslt);
 							$temp_vcca =	$row[0];
-
+							$temp_ac =		$row[1];
+							$act++;
+							}
+						if ($act > 0) 
+							{
 							$stmt="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$campaign' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
 								if ($format=='debug') {echo "\n<!-- $stmt -->";}
 							$rslt=mysql_to_mysqli($stmt, $link);
 								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00427',$user,$server_ip,$session_name,$one_mysql_log);}
 							}
+
 						$temp_CID = preg_replace("/\D/",'',$temp_vcca);
 						}
 					if ($use_custom_cid == 'Y')
@@ -4584,22 +4596,33 @@ if ($ACTION == 'manDiaLonly')
 			$use_custom_cid =	$row[0];
 			if ( ($use_custom_cid == 'AREACODE') and ($cid_lock < 1) )
 				{
-				$temp_ac = substr("$phone_number", 0, 3);
-				$stmt = "SELECT outbound_cid FROM vicidial_campaign_cid_areacodes where campaign_id='$campaign' and areacode='$temp_ac' and active='Y' order by call_count_today limit 1;";
+				$temp_vcca='';
+				$temp_ac='';
+				$temp_ac_two = substr("$phone_number", 0, 2);
+				$temp_ac_three = substr("$phone_number", 0, 3);
+				$temp_ac_four = substr("$phone_number", 0, 4);
+				$temp_ac_five = substr("$phone_number", 0, 5);
+				$stmt = "SELECT outbound_cid,areacode FROM vicidial_campaign_cid_areacodes where campaign_id='$campaign' and areacode IN('$temp_ac_two','$temp_ac_three','$temp_ac_four','$temp_ac_five') and active='Y' order by CAST(areacode as SIGNED INTEGER) asc, call_count_today desc limit 100000;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00429',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$vcca_ct = mysqli_num_rows($rslt);
-				if ($vcca_ct > 0)
+				$act=0;
+				while ($vcca_ct > $act)
 					{
 					$row=mysqli_fetch_row($rslt);
 					$temp_vcca =	$row[0];
-
+					$temp_ac =		$row[1];
+					$act++;
+					}
+				if ($act > 0) 
+					{
 					$stmt="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$campaign' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00430',$user,$server_ip,$session_name,$one_mysql_log);}
 					}
+
 				$temp_CID = preg_replace("/\D/",'',$temp_vcca);
 				}
 			if ($use_custom_cid == 'Y')

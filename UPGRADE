@@ -163,6 +163,8 @@ OTHER CHANGES:
 
 38. Added AST_DB_DNC_filter.pl script to allow filtering of existing DNC entries
 
+39. Changed AC-CID to be able to use areacodes from 2 to 5 digits in length
+
 
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDauto_dial_FILL.pl version 2.8
+# AST_VDauto_dial_FILL.pl version 2.12
 #
 # DESCRIPTION:
 # Places auto_dial calls on the VICIDIAL dialer system across all servers only 
@@ -12,7 +12,7 @@
 #
 # Should only be run on one server in a multi-server Asterisk/VICIDIAL cluster
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 61115-1246 - First build, framework setup, non-functional
@@ -37,6 +37,7 @@
 # 130706-2024 - Added disable_auto_dial system option
 # 131016-0658 - Fix for disable_auto_dial system option
 # 131122-1237 - Formatting fixes and missing sthA->finish
+# 151006-0937 - Changed campaign_cid_areacodes to operate with 2-5 digit areacodes
 #
 
 ### begin parsing run-time options ###
@@ -773,17 +774,26 @@ while($one_day_interval > 0)
 														{
 														$temp_CID='';
 														$temp_vcca='';
-														$temp_ac = substr("$phone_number", 0, 3);
-														$stmtA = "SELECT outbound_cid FROM vicidial_campaign_cid_areacodes where campaign_id='$DBfill_campaign[$camp_CIPct]' and areacode='$temp_ac' and active='Y' order by call_count_today limit 1;";
+														$temp_ac='';
+														$temp_ac_two = substr("$phone_number", 0, 2);
+														$temp_ac_three = substr("$phone_number", 0, 3);
+														$temp_ac_four = substr("$phone_number", 0, 4);
+														$temp_ac_five = substr("$phone_number", 0, 5);
+														$stmtA = "SELECT outbound_cid,areacode FROM vicidial_campaign_cid_areacodes where campaign_id='$DBfill_campaign[$camp_CIPct]' and areacode IN('$temp_ac_two','$temp_ac_three','$temp_ac_four','$temp_ac_five') and active='Y' order by CAST(areacode as SIGNED INTEGER) asc, call_count_today desc limit 100000;";
 														$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 														$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 														$sthArows=$sthA->rows;
-														if ($sthArows > 0)
+														$act=0;
+														while ($sthArows > $act)
 															{
 															@aryA = $sthA->fetchrow_array;
-															$temp_vcca	=	$aryA[0];
+															$temp_vcca =	$aryA[0];
+															$temp_ac =		$aryA[1];
+															$act++;
+															}
+														if ($act > 0) 
+															{
 															$sthA->finish();
-
 															$stmtA="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$DBfill_campaign[$camp_CIPct]' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
 															$affected_rows = $dbhA->do($stmtA);
 															}

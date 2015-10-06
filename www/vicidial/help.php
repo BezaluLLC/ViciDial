@@ -62,6 +62,8 @@
 # 150903-1458 - Added compatibility for custom fields data options
 # 150925-2235 - Added user_hide_realtime and user lead filter options
 # 150926-1058 - Added did_carrier_description
+# 151006-0935 - Updated campaign_cid_areacodes entry
+#
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -3238,7 +3240,7 @@ if ($SSoutbound_autodial_active > 0)
 <B><FONT SIZE=3>CAMPAIGN CID AREACODES</FONT></B><BR><BR>
 <A NAME="campaign_cid_areacodes">
 <BR>
-<B><?php echo _QXZ("If the System Setting for Areacode CIDs is enabled and the Campaign setting for Use Custom CallerID is set to AREACODE then you have the ability to define Areacode CIDs that will be used when outbound calling to leads in this specific campaign. You can add multiple callerIDs per areacode and you can activate and deactivate them each in real time. If more than one callerID is active for a specific areacode then the system will use the callerid that has been used the least number of times today. If no callerIDs are active for the areacode then the campaign CallerID or list override CallerID will be used."); ?></B>
+<B><?php echo _QXZ("If the System Setting for Areacode CIDs is enabled and the Campaign setting for Use Custom CallerID is set to AREACODE then you have the ability to define Areacode CIDs that will be used when outbound calling to leads in this specific campaign. You can add multiple callerIDs per areacode and you can activate and deactivate them each in real time. If more than one callerID is active for a specific areacode then the system will use the callerid that has been used the least number of times today. If no callerIDs are active for the areacode then the campaign CallerID or list override CallerID will be used. An areacode in this section can be from 2 to 5 digits in length, and if a shorter defined areacode overlaps with a longer areacode then the longer areacode will be used. For example, if the areacodes 31 and 312 are both defined and active for a campaign, then areacode 312 would be used for phone number 3125551212."); ?></B>
 
 
 
