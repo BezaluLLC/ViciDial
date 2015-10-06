@@ -20,6 +20,7 @@
 # 141103-1505 - Added option to export without leads, logs, servers or phones
 # 141124-2309 - Fixed Fhour variable bug
 # 150418-1801 - Added --db_raw_files_copy flag, issue #839
+# 151006-1337 - Added archive_path flag, issue #896
 #
 
 $secT = time();
@@ -65,6 +66,7 @@ if (length($ARGV[0])>1)
 		print "  [--debug] = debug\n";
 		print "  [--test] = test\n";
 		print "  [--db_raw_files_copy] = if set the backup won't be a mysql dump. It will tar the /var/lib/mysql folder. WARNING, THIS OPTION WILL STOP THE MYSQL SERVER!\n";
+		print "  [--archive_path=/PATH/FROM/ROOT] = absolute path to store the resulting backup\n";
 		exit;
 		}
 	else
@@ -142,6 +144,14 @@ if (length($ARGV[0])>1)
 		if ($args =~ /--db_raw_files_copy/i)
 			{
 			$db_raw_files_copy = 1;
+			print "\n----- DB raw files copy -----\n\n";
+			}
+		if ($args =~ /--archive_path=/i)
+			{
+			@data_in = split(/--archive_path=/,$args);
+			$ARCHIVEpath = $data_in[1];
+			$ARCHIVEpath =~ s/ .*$//gi;
+			print "\n----- Archive path set to $ARCHIVEpath -----\n\n";
 			}
 		}
 	}
