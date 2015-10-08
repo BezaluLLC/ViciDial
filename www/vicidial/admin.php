@@ -4304,7 +4304,7 @@ if ($ADD==561111111111)	{$hh='admin';	$sh='moh';	echo _QXZ("DELETE MUSIC ON HOLD
 if ($ADD==571111111111)	{$hh='admin';	$sh='vm';	echo _QXZ("DELETE VOICEMAIL BOX");}
 if ($ADD==581111111111)	{$hh='admin';	$sh='label';	echo _QXZ("DELETE SCREEN LABEL");}
 if ($ADD==591111111111)	{$hh='admin';	$sh='cts';	echo _QXZ("DELETE CONTACT");}
-if ($ADD==591111111111)	{$hh='admin';	$sh='sc';	echo _QXZ("DELETE SETTINGS CONTAINER");}
+if ($ADD==592111111111)	{$hh='admin';	$sh='sc';	echo _QXZ("DELETE SETTINGS CONTAINER");}
 if ($ADD==5111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("DELETE CONFERENCE");}
 if ($ADD==51111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("DELETE AGENT CONFERENCE");}
 if ($ADD==6)			{$hh='users';		echo _QXZ("Delete User");}
