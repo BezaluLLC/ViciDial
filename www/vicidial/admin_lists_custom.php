@@ -1,7 +1,7 @@
 <?php
 # admin_lists_custom.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen manages the custom lists fields in ViciDial
 #
@@ -33,10 +33,11 @@
 # 141006-0903 - Finalized adding QXZ translation to all admin files
 # 141230-0018 - Added code for on-the-fly language translations display
 # 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
+# 151007-2001 - Fixed issue with field deletion
 #
 
-$admin_version = '2.10-26';
-$build = '150626-2120';
+$admin_version = '2.12-27';
+$build = '151007-2001';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -630,7 +631,7 @@ if ( ($action == "DELETE_CUSTOM_FIELD_CONFIRMATION") and ($list_id > 99) and ($f
 			{echo "<B><font color=red>"._QXZ("ERROR: Table does not exist")." custom_$list_id</B></font>\n<BR>";}
 		else
 			{
-			echo "<BR><BR><B><a href=\"$PHP_SELF?action=DELETE_CUSTOM_FIELD&list_id=$list_id&field_id=$field_id&field_label=$field_label&ConFiRm=YES&DB=$DB\">"._QXZ("CLICK HERE TO CONFIRM DELETION OF THIS CUSTOM FIELD").": $field_label - $field_id - $list_id</a></B><BR><BR>";
+			echo "<BR><BR><B><a href=\"$PHP_SELF?action=DELETE_CUSTOM_FIELD&list_id=$list_id&field_id=$field_id&field_label=$field_label&field_type=$field_type&ConFiRm=YES&DB=$DB\">"._QXZ("CLICK HERE TO CONFIRM DELETION OF THIS CUSTOM FIELD").": $field_label - $field_id - $list_id</a></B><BR><BR>";
 			}
 		}
 
@@ -1260,7 +1261,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	//	echo "<option selected>$A_field_required[$o]</option>\n";
 	//	echo "</select>  $NWB#lists_fields-field_required$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=center colspan=2><input type=submit name=submit value=\""._QXZ("SUBMIT")."\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
-		echo "<B><a href=\"$PHP_SELF?action=DELETE_CUSTOM_FIELD_CONFIRMATION&list_id=$list_id&field_id=$A_field_id[$o]&field_label=$A_field_label[$o]&DB=$DB\">"._QXZ("DELETE THIS CUSTOM FIELD")."</a></B>";
+		echo "<B><a href=\"$PHP_SELF?action=DELETE_CUSTOM_FIELD_CONFIRMATION&list_id=$list_id&field_id=$A_field_id[$o]&field_label=$A_field_label[$o]&field_type=$A_field_type[$o]&DB=$DB\">"._QXZ("DELETE THIS CUSTOM FIELD")."</a></B>";
 		echo "</td></tr>\n";
 		echo "</table></center></form><BR><BR>\n";
 
