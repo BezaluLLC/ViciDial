@@ -3602,12 +3602,13 @@ else
 # 150927-0820 - Added did_carrier_description, sorting by columns in DID list page, integer sort for user list page
 # 150928-1235 - Separated User Group permissions for Inbound Report report by in-group and by DID
 # 150928-1817 - Added DNC logging and DNC phone number log search
+# 151007-2224 - Added links and lists for DIDs and Call Menus in use in sections, Issue #835
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-514a';
-$build = '150928-1817';
+$admin_version = '2.12-515a';
+$build = '151007-2224';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -20055,7 +20056,21 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Omit Phone Code").": </td><td align=left><select size=1 name=omit_phone_code><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$omit_phone_code' SELECTED>"._QXZ("$omit_phone_code")."</option></select>$NWB#campaigns-omit_phone_code$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("Campaign CallerID").": </td><td align=left><input type=text name=campaign_cid size=20 maxlength=20 value=\"$campaign_cid\">$NWB#campaigns-campaign_cid$NWE\n";
+		$DID_edit_link_BEGIN='';
+		$DID_edit_link_END='';
+		if (strlen($campaign_cid) > 0)
+			{
+			$stmt="SELECT did_id from vicidial_inbound_dids where did_pattern='$campaign_cid' $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$dids_to_print = mysqli_num_rows($rslt);
+			if ($dids_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$DID_edit_link_BEGIN = "<a href=\"$PHP_SELF?ADD=3311&did_id=$rowx[0]\">";
+				$DID_edit_link_END='</a>';
+				}
+			}
+		echo "<tr bgcolor=#8EBCFD><td align=right>$DID_edit_link_BEGIN"._QXZ("Campaign CallerID")."$DID_edit_link_END: </td><td align=left><input type=text name=campaign_cid size=20 maxlength=20 value=\"$campaign_cid\">$NWB#campaigns-campaign_cid$NWE\n";
 		$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and campaign_cid_override != '' and active='Y' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$rowx=mysqli_fetch_row($rslt);
@@ -20142,7 +20157,7 @@ if ($ADD==31)
 			echo "</select>$NWB#campaigns-amd_inbound_group$NWE\n";
 			echo "</td></tr>\n";
 
-			echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("AMD Call Menu").": </td><td align=left><select size=1 name=amd_callmenu>";
+			echo "<tr bgcolor=#8EBCFD><td align=right><a href=\"$PHP_SELF?ADD=3511&menu_id=$amd_callmenu\">"._QXZ("AMD Call Menu")."</a>: </td><td align=left><select size=1 name=amd_callmenu>";
 			echo "$AMDmenus_menu";
 			echo "</select>$NWB#campaigns-amd_callmenu$NWE\n";
 			echo "</td></tr>\n";
@@ -20221,7 +20236,7 @@ if ($ADD==31)
 
 			echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("Safe Harbor Audio Field").": </td><td align=left><select size=1 name=safe_harbor_audio_field><option value='DISABLED'>"._QXZ("DISABLED")."</option><option>vendor_lead_code</option><option>source_id</option><option>list_id</option><option>phone_code</option><option>phone_number</option><option>title</option><option>first_name</option><option>middle_initial</option><option>last_name</option><option>address1</option><option>address2</option><option>address3</option><option>city</option><option>state</option><option>province</option><option>postal_code</option><option>country_code</option><option>gender</option><option>alt_phone</option><option>email</option><option>security_phrase</option><option>comments</option><option>rank</option><option>owner</option><option>entry_list_id</option><option SELECTED>$safe_harbor_audio_field</option></select>$NWB#campaigns-safe_harbor_audio_field$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("Safe Harbor Call Menu").": </td><td align=left><select size=1 name=safe_harbor_menu_id id=safe_harbor_menu_id>$call_menu_list<option SELECTED>$safe_harbor_menu_id</option></select>$NWB#campaigns-safe_harbor_menu_id$NWE</td></tr>\n";
+			echo "<tr bgcolor=#8EBCFD><td align=right><a href=\"$PHP_SELF?ADD=3511&menu_id=$safe_harbor_menu_id\">"._QXZ("Safe Harbor Call Menu")."</a>: </td><td align=left><select size=1 name=safe_harbor_menu_id id=safe_harbor_menu_id>$call_menu_list<option SELECTED>$safe_harbor_menu_id</option></select>$NWB#campaigns-safe_harbor_menu_id$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("Voicemail").": </td><td align=left><input type=text name=voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',3400);\">"._QXZ("voicemail chooser")."</a>$NWB#campaigns-voicemail_ext$NWE</td></tr>\n";
 
@@ -21352,7 +21367,7 @@ if ($ADD==31)
 		echo "<tr bgcolor=#B9CBFD><td align=right>"._QXZ("Survey Campaign Recording Directory").": </td><td><input type=text size=70 maxlength=255 name=survey_camp_record_dir value=\"$survey_camp_record_dir\"> $NWB#campaigns-survey_camp_record_dir$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>"._QXZ("Voicemail").": </td><td><input type=text size=12 maxlength=10 name=voicemail_ext id=voicemail_ext value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',300);\">"._QXZ("voicemail chooser")."</a> $NWB#campaigns-voicemail_ext$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B9CBFD><td align=right>"._QXZ("Survey Call Menu").": </td><td align=left><select size=1 name=survey_menu_id id=survey_menu_id>$call_menu_list<option SELECTED>$survey_menu_id</option></select>$NWB#campaigns-survey_menu_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B9CBFD><td align=right><a href=\"$PHP_SELF?ADD=3511&menu_id=$survey_menu_id\">"._QXZ("Survey Call Menu")."</a>: </td><td align=left><select size=1 name=survey_menu_id id=survey_menu_id>$call_menu_list<option SELECTED>$survey_menu_id</option></select>$NWB#campaigns-survey_menu_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B9CBFD><td align=right>"._QXZ("Survey Recording").": </td><td align=left><select size=1 name=survey_recording id=survey_recording><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='Y_WITH_AMD'>"._QXZ("Y_WITH_AMD")."</option><option value='$survey_recording' SELECTED>"._QXZ("$survey_recording")."</option></select>$NWB#campaigns-survey_recording$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B9CBFD><td align=center colspan=2><input type=submit name=submit value='"._QXZ("SUBMIT")."'></td></tr>\n";
@@ -21461,9 +21476,23 @@ if ($ADD==31)
 					}
 				}
 
+			$DID_edit_link_BEGIN='';
+			$DID_edit_link_END='';
+			if (strlen($Xoutbound_cid[$o]) > 0)
+				{
+				$stmt="SELECT did_id from vicidial_inbound_dids where did_pattern='$Xoutbound_cid[$o]' $LOGadmin_viewable_groupsSQL limit 1;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$dids_to_print = mysqli_num_rows($rslt);
+				if ($dids_to_print > 0) 
+					{
+					$rowx=mysqli_fetch_row($rslt);
+					$DID_edit_link_BEGIN = "<a href=\"$PHP_SELF?ADD=3311&did_id=$rowx[0]\">";
+					$DID_edit_link_END='</a>';
+					}
+				}
 			echo "<tr $bgcolor><td><font size=2> &nbsp; $ct</font></td>\n";
 			echo "<td><font size=2> &nbsp; $Xareacode[$o]</font></td>\n";
-			echo "<td><font size=2> &nbsp; $Xoutbound_cid[$o]</font></td>\n";
+			echo "<td><font size=2> &nbsp; $DID_edit_link_BEGIN$Xoutbound_cid[$o]$DID_edit_link_END</font></td>\n";
 			echo "<td><input type=text size=30 maxlength=100 name=cid_description_$Xareacode[$o]_$Xoutbound_cid[$o] value=\"$Xcid_description[$o]\" style=\"font-family: sans-serif; font-size: 10px;\"></td>\n";
 			echo "<td>\n";
 			if ($Xactive[$o] == 'Y')
@@ -23257,7 +23286,22 @@ if ($ADD==311)
 		echo "<option selected value=\"$agent_script_override\">$agent_script_override - $scriptname_list[$agent_script_override]</option>\n";
 		echo "</select>$NWB#lists-agent_script_override$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("Campaign CID Override").": </td><td align=left><input type=text name=campaign_cid_override size=20 maxlength=20 value=\"$campaign_cid_override\">$NWB#lists-campaign_cid_override$NWE</td></tr>\n";
+		$DID_edit_link_BEGIN='';
+		$DID_edit_link_END='';
+		if (strlen($campaign_cid_override) > 0)
+			{
+			$stmt="SELECT did_id from vicidial_inbound_dids where did_pattern='$campaign_cid_override' $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$dids_to_print = mysqli_num_rows($rslt);
+			if ($dids_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$DID_edit_link_BEGIN = "<a href=\"$PHP_SELF?ADD=3311&did_id=$rowx[0]\">";
+				$DID_edit_link_END='</a>';
+				}
+			}
+
+		echo "<tr bgcolor=#8EBCFD><td align=right>$DID_edit_link_BEGIN"._QXZ("Campaign CID Override")."$DID_edit_link_END: </td><td align=left><input type=text name=campaign_cid_override size=20 maxlength=20 value=\"$campaign_cid_override\">$NWB#lists-campaign_cid_override$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("Answering Machine Message Override").": </td><td align=left><input type=text name=am_message_exten_override id=am_message_exten_override size=50 maxlength=100 value=\"$am_message_exten_override\"> <a href=\"javascript:launch_chooser('am_message_exten_override','date',300);\">"._QXZ("audio chooser")."</a> $NWB#lists-am_message_exten_override$NWE</td></tr>\n";
 
@@ -24589,7 +24633,21 @@ if ($ADD==3111)
 		echo "$group_alias_menu";
 		echo "</select>$NWB#inbound_groups-default_group_alias$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dial In-Group CID").": </td><td align=left><input type=text name=dial_ingroup_cid size=20 maxlength=20 value=\"$dial_ingroup_cid\">$NWB#inbound_groups-dial_ingroup_cid$NWE</td></tr>\n";
+		$DID_edit_link_BEGIN='';
+		$DID_edit_link_END='';
+		if (strlen($dial_ingroup_cid) > 0)
+			{
+			$stmt="SELECT did_id from vicidial_inbound_dids where did_pattern='$dial_ingroup_cid' $LOGadmin_viewable_groupsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$dids_to_print = mysqli_num_rows($rslt);
+			if ($dids_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$DID_edit_link_BEGIN = "<a href=\"$PHP_SELF?ADD=3311&did_id=$rowx[0]\">";
+				$DID_edit_link_END='</a>';
+				}
+			}
+		echo "<tr bgcolor=#B6D3FC><td align=right>$DID_edit_link_BEGIN"._QXZ("Dial In-Group CID")."$DID_edit_link_END: </td><td align=left><input type=text name=dial_ingroup_cid size=20 maxlength=20 value=\"$dial_ingroup_cid\">$NWB#inbound_groups-dial_ingroup_cid$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Hold Recall Transfer In-Group").": </td><td align=left><select size=1 name=hold_recall_xfer_group>";
 		echo "$Hgroups_menu";
@@ -26854,6 +26912,92 @@ if ($ADD==3311)
 		echo "</table>\n";
 		echo "<BR></center></FORM><br>\n";
 
+
+		echo "<B>"._QXZ("CALL MENUS USING THIS DID").":</B><BR>\n";
+		echo "<TABLE>\n";
+
+		$stmt="SELECT distinct vm.menu_id,menu_name from vicidial_call_menu vm,vicidial_call_menu_options vmo where vm.menu_id=vmo.menu_id and option_route='DID' and option_route_value='$did_pattern';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$cms_to_print = mysqli_num_rows($rslt);
+		$o=0;
+		while ($cms_to_print > $o) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			echo "<TR><TD><a href=\"$PHP_SELF?ADD=3511&menu_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			$o++;
+			}
+
+		echo "</TABLE><BR>\n";
+
+
+		echo "<B>"._QXZ("CAMPAIGNS USING THIS DID").":</B><BR>\n";
+		echo "<TABLE>\n";
+
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where campaign_cid='$did_pattern' $LOGallowed_campaignsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$camps_to_print = mysqli_num_rows($rslt);
+		$o=0;
+		while ($camps_to_print > $o) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			echo "<TR><TD><a href=\"$PHP_SELF?ADD=31&campaign_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			$o++;
+			}
+
+		echo "</TABLE><BR>\n";
+
+
+		echo "<B>"._QXZ("CAMPAIGN AC-CIDs USING THIS DID").":</B><BR>\n";
+		echo "<TABLE>\n";
+
+		$stmt="SELECT camp.campaign_id,campaign_name from vicidial_campaign_cid_areacodes campac,vicidial_campaigns camp where outbound_cid='$did_pattern' and camp.campaign_id=campac.campaign_id $LOGallowed_campaignsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$campacs_to_print = mysqli_num_rows($rslt);
+		$o=0;
+		while ($campacs_to_print > $o) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			echo "<TR><TD><a href=\"$PHP_SELF?ADD=31&SUB=202&campaign_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			$o++;
+			}
+
+		echo "</TABLE><BR>\n";
+
+
+		echo "<B>"._QXZ("IN-GROUPS USING THIS DID").":</B><BR>\n";
+		echo "<TABLE>\n";
+
+		$stmt="SELECT group_id,group_name from vicidial_inbound_groups where dial_ingroup_cid='$did_pattern' $LOGadmin_viewable_groupsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$ingrps_to_print = mysqli_num_rows($rslt);
+		$o=0;
+		while ($ingrps_to_print > $o) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			echo "<TR><TD><a href=\"$PHP_SELF?ADD=3111&group_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			$o++;
+			}
+
+		echo "</TABLE><BR>\n";
+
+
+		echo "<B>"._QXZ("LISTS USING THIS DID").":</B><BR>\n";
+		echo "<TABLE>\n";
+
+		$stmt="SELECT list_id,list_name from vicidial_lists where campaign_cid_override='$did_pattern' $LOGallowed_campaignsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$lists_to_print = mysqli_num_rows($rslt);
+		$o=0;
+		while ($lists_to_print > $o) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			echo "<TR><TD><a href=\"$PHP_SELF?ADD=311&list_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			$o++;
+			}
+
+		echo "</TABLE><BR>\n";
+
+
 		echo "<br><a href=\"./AST_DIDstats.php?group[0]=$did_id\">"._QXZ("Click here to see a traffic report for this DID")."</FONT><br>\n";
 		echo "<br><a href=\"./user_stats.php?user=$did_pattern&did=1&did_id=$did_id\">"._QXZ("Click here to see a list of recordings and calls for this DID")."</FONT><br>\n";
 
@@ -27538,7 +27682,41 @@ if ($ADD==3511)
 			$o++;
 			}
 
-		echo "</TABLE>\n";
+		echo "</TABLE><BR>\n";
+
+
+		echo "<B>"._QXZ("CAMPAIGNS USING THIS CALL MENU").":</B><BR>\n";
+		echo "<TABLE>\n";
+
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where (safe_harbor_menu_id='$menu_id' or survey_menu_id='$menu_id' or amd_callmenu='$menu_id') $LOGallowed_campaignsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$camps_to_print = mysqli_num_rows($rslt);
+		$o=0;
+		while ($camps_to_print > $o) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			echo "<TR><TD><a href=\"$PHP_SELF?ADD=31&campaign_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			$o++;
+			}
+
+		echo "</TABLE><BR>\n";
+
+
+		echo "<B>"._QXZ("IN-GROUPS USING THIS CALL MENU").":</B><BR>\n";
+		echo "<TABLE>\n";
+
+		$stmt="SELECT group_id,group_name from vicidial_inbound_groups where (hold_time_option_callmenu='$menu_id' or wait_time_option_callmenu='$menu_id' or drop_callmenu='$menu_id' or after_hours_callmenu='$menu_id') $LOGadmin_viewable_groupsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$ingrps_to_print = mysqli_num_rows($rslt);
+		$o=0;
+		while ($ingrps_to_print > $o) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			echo "<TR><TD><a href=\"$PHP_SELF?ADD=3111&group_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			$o++;
+			}
+
+		echo "</TABLE><BR>\n";
 
 
 		if ($LOGdelete_dids > 0)
