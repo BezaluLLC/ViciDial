@@ -8601,7 +8601,7 @@ if ($ADD==20)
 				{echo "<br>"._QXZ("CAMPAIGN NOT ADDED - there is already an inbound group in the system with this ID")."\n";}
 			else
 				{
-				if ( (strlen($campaign_id) < 2) or (strlen($campaign_id) > 8) or  (strlen($campaign_name) < 2) or (strlen($source_campaign_id) < 2) or (strlen($source_campaign_id) > 8) )
+				if ( (strlen($campaign_id) < 2) or (strlen($campaign_id) > 8) or  (strlen($campaign_name) < 6) or (strlen($source_campaign_id) < 2) or (strlen($source_campaign_id) > 8) )
 					{
 					echo "<br>"._QXZ("CAMPAIGN NOT ADDED - Please go back and look at the data you entered")."\n";
 					echo "<br>"._QXZ("campaign ID must be between 2 and 8 characters in length")."\n";
