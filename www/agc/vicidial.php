@@ -501,10 +501,11 @@
 # 150917-0926 - Added dynamic default field maxlengths based on DB schema
 # 150923-1952 - Added DID custum fields as web and form variables
 # 150928-1205 - Fixed issue with API transfers and dial_override flag
+# 151022-0004 - Added audio alert when email arrives, issue #899
 #
 
-$version = '2.12-473c';
-$build = '150928-1205';
+$version = '2.12-474c';
+$build = '151022-0004';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -9798,6 +9799,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							VDIC_web_form_address = VICIDiaL_web_form_address;
 							VDIC_web_form_address_two = VICIDiaL_web_form_address_two;
 							VDIC_web_form_address_three = VICIDiaL_web_form_address_three;
+							document.getElementById("EmailAudioAlertFile").play();
 							var VDIC_fronter='';
 
 							var VDIC_data_VDIG=check_VDIC_array[2].split("|");
@@ -17512,6 +17514,8 @@ if ($agent_display_dialable_leads > 0)
 
 </form>
 
+<audio id='ChatAudioAlertFile'><source src="sounds/chat_alert.mp3" type="audio/mpeg"></audio>
+<audio id='EmailAudioAlertFile'><source src="sounds/email_alert.mp3" type="audio/mpeg"></audio>
 
 </body>
 </html>
