@@ -5,6 +5,7 @@
 #
 # CHANGES
 # 150218-0923 - First build based on callbacks_bulk_change.php
+# 151025-1041 - Fixed issue with check-all
 #
 
 require("dbconnect_mysqli.php");
@@ -498,68 +499,117 @@ if ($SUBMIT && $new_list_id && $new_status)
 	{
 	if (count($cb_users)>0) 
 		{
-		$usersSQL=" and vc.user in ('".implode("','", $cb_users)."') ";
-		$usersQS="";
-		for ($i=0; $i<count($cb_users); $i++) 
+		if (in_array("ALL", $cb_users))
 			{
-			$usersQS.="&cb_users[]=".$cb_users[$i];
-			if ($cb_users[$i]=="ALL") 
+			$user_stmt="SELECT distinct user from vicidial_users $ul_clause $LOGadmin_viewable_groupsSQL";
+			$user_rslt=mysql_to_mysqli($user_stmt, $link);
+			$usersSQL=" and vc.user in (";
+			$usersQS="";
+			while($user_row=mysqli_fetch_row($user_rslt)) 
 				{
-				$cb_users=array("ALL");
-				$usersSQL="";
-				$usersQS="";
-				break;
+				$usersSQL.="'$user_row[0]',";
+				$usersQS.="&cb_users[]=".$user_row[0];
+				}
+			$usersSQL=preg_replace('/,$/', '', $usersSQL);
+			$usersSQL.=") ";
+			}
+		else 
+			{
+			$usersSQL=" and vc.user in ('".implode("','", $cb_users)."') ";
+			$usersQS="";
+			for ($i=0; $i<count($cb_users); $i++) 
+				{
+				$usersQS.="&cb_users[]=".$cb_users[$i];
 				}
 			}
 		}
 
 	if (count($cb_user_groups)>0) 
 		{
-		$user_groupsSQL=" and vc.user_group in ('".implode("','", $cb_user_groups)."') ";
-		$user_groupsQS="";
-		for ($i=0; $i<count($cb_user_groups); $i++) 
+		if (in_array("ALL", $cb_user_groups)) 
 			{
-			$user_groupsQS.="&cb_user_groups[]=".$cb_user_groups[$i];
-			if ($cb_user_groups[$i]=="ALL") 
+			$UGstmt="SELECT distinct user_group from vicidial_callbacks $whereLOGadmin_viewable_groupsSQL order by user_group";
+			$UGrslt=mysql_to_mysqli($UGstmt, $link);
+			$user_groupsSQL=" and vc.user_group in (";
+			$user_groupsQS="";
+			while($UGrow=mysqli_fetch_row($UGrslt)) 
 				{
-				$cb_user_groups=array("ALL");
-				$user_groupsSQL="";
-				$user_groupsQS="";
-				break;
+				$user_groupsSQL.="'$UGrow[0]',";
+				$user_groupsQS.="&cb_user_groups[]=".$UGrow[0];
+				}
+			$user_groupsSQL=preg_replace('/,$/', '', $user_groupsSQL);
+			$user_groupsSQL.=") ";
+			}
+		else 
+			{
+			$user_groupsSQL=" and vc.user_group in ('".implode("','", $cb_user_groups)."') ";
+			$user_groupsQS="";
+			for ($i=0; $i<count($cb_user_groups); $i++) 
+				{
+				$user_groupsQS.="&cb_user_groups[]=".$cb_user_groups[$i];
 				}
 			}
 		}
 
 	if (count($cb_lists)>0) 
 		{
-		$listsSQL=" and vc.list_id in ('".implode("','", $cb_lists)."') ";
-		$listsQS="";
-		for ($i=0; $i<count($cb_lists); $i++) 
+		if (in_array("ALL", $cb_lists)) 
 			{
-			$listsQS.="&cb_lists[]=".$cb_lists[$i];
-			if ($cb_lists[$i]=="ALL") 
+			$list_stmt="SELECT list_id from vicidial_lists $whereLOGallowed_campaignsSQL";
+			$list_rslt=mysql_to_mysqli($list_stmt, $link);
+			$list_id_str="";
+			while($list_row=mysqli_fetch_row($list_rslt)) 
 				{
-				$cb_lists=array("ALL");
-				$listsSQL="";
-				$listsQS="";
-				break;
+				$list_id_str.="'$list_row[0]',";
+				}
+			$list_id_str=substr($list_id_str,0,-1);
+
+			$list_stmt="SELECT distinct list_id from vicidial_callbacks where list_id in ($list_id_str) order by list_id";
+			$list_rslt=mysql_to_mysqli($list_stmt, $link);
+			$listsSQL=" and vc.list_id in (";
+			$listsQS="";
+			while($list_row=mysqli_fetch_row($list_rslt)) 
+				{
+				$listsSQL.="'$list_row[0]',";
+				$listsQS.="&cb_lists[]=".$list_row[0];
+				}
+			$listsSQL=preg_replace('/,$/', '', $listsSQL);
+			$listsSQL.=") ";
+			}
+		else 
+			{
+			$listsSQL=" and vc.list_id in ('".implode("','", $cb_lists)."') ";
+			$listsQS="";
+			for ($i=0; $i<count($cb_lists); $i++) 
+				{
+				$listsQS.="&cb_lists[]=".$cb_lists[$i];
 				}
 			}
 		}
 
 	if (count($cb_groups)>0) 
 		{
-		$groupsSQL=" and vc.campaign_id in ('".implode("','", $cb_groups)."') ";
-		$groupsQS="";
-		for ($i=0; $i<count($cb_groups); $i++) 
+		if (in_array("ALL", $cb_groups)) 
 			{
-			$groupsQS.="&cb_groups[]=".$cb_groups[$i];
-			if ($cb_groups[$i]=="ALL") 
+			$groups_stmt="SELECT distinct campaign_id from vicidial_callbacks $whereLOGallowed_campaignsSQL";
+			$groups_rslt=mysql_to_mysqli($groups_stmt, $link);
+			$groupsSQL=" and vc.campaign_id in (";
+			$groupsQS="";
+			while($groups_row=mysqli_fetch_row($groups_rslt)) 
 				{
-				$cb_groups=array("ALL");
-				$groupsSQL="";
-				$groupsQS="";
-				break;
+				$groupsSQL.="'$groups_row[0]',";
+				$groupsQS.="&cb_groups[]=".$groups_row[0];
+				}
+			$groupsSQL=preg_replace('/,$/', '', $groupsSQL);
+			$groupsSQL.=") ";
+			}
+		else
+			{
+			$groupsSQL=" and vc.campaign_id in ('".implode("','", $cb_groups)."') ";
+			$groupsQS="";
+			for ($i=0; $i<count($cb_groups); $i++) 
+				{
+				$groupsQS.="&cb_groups[]=".$cb_groups[$i];
 				}
 			}
 		}
@@ -708,7 +758,6 @@ else if ($SUBMIT && $new_list_id && $new_status && (count($cb_users)>0 || count(
 	}
 else 
 	{
-	# JOEJ - removed "recipient='USERONLY' and status!='INACTIVE'" from all select statements in this section 2/17/15
 	echo "<table width='650' align='center' border=0>";
 	echo "<tr>";
 	echo "<td align='left' width='270'>";
