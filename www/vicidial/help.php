@@ -63,7 +63,9 @@
 # 150925-2235 - Added user_hide_realtime and user lead filter options
 # 150926-1058 - Added did_carrier_description
 # 151006-0935 - Updated campaign_cid_areacodes entry
+# 151020-0704 - Added Status Groups and Custom Reports entries
 #
+
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -1992,6 +1994,11 @@ if ($SSqc_features_active > 0)
 <B><?php echo _QXZ("Drop Inbound Group Override"); ?> -</B><?php echo _QXZ("If this field is set, this in-group will be used for outbound calls within this list that drop from the outbound campaign instead of the drop in-group set in the campaign detail screen. Default is not set."); ?>
 
 <BR>
+<A NAME="lists-status_group_id">
+<BR>
+<B><?php echo _QXZ("Status Group Override"); ?> -</B><?php echo _QXZ("If this field is set, this Status Group will be used instead of the campaign statuses for calls handled by agents from this list. This does not affect System Statuses which will always be shown. Statuses defined within this status group will not be available with Campaign HotKeys unless they are defined in Campaign Statuses. Default is not set."); ?>
+
+<BR>
 <A NAME="lists-web_form_address">
 <BR>
 <B><?php echo _QXZ("Web Form Override"); ?> -</B><?php echo _QXZ("This is the custom address that clicking on the WEB FORM button in the agent screen will take you to for calls that come in on this list. If you want to use custom fields in a web form address, you need to add &CF_uses_custom_fields=Y as part of your URL."); ?>
@@ -2209,6 +2216,11 @@ if ($SSqc_features_active > 0)
 <A NAME="inbound_groups-ignore_list_script_override">
 <BR>
 <B><?php echo _QXZ("Ignore List Script Override-</B> This option allows you to ignore the list ID Script Override option for calls coming into this In-Group. Setting this to Y will ignore any List ID script settings. Default is N."); ?>
+
+<BR>
+<A NAME="inbound_groups-status_group_id">
+<BR>
+<B><?php echo _QXZ("Status Group Override"); ?> -</B><?php echo _QXZ("If this field is set, this Status Group will be used instead of the campaign statuses for calls handled by agents from this inbound group. This does not affect System Statuses which will always be shown. Statuses defined within this status group will not be available with Campaign HotKeys unless they are defined in Campaign Statuses. Default is not set."); ?>
 
 <BR>
 <A NAME="inbound_groups-get_call_launch">
@@ -3169,7 +3181,7 @@ if ($SSqc_features_active > 0)
 <B><FONT SIZE=3>CAMPAIGN_STATUSES TABLE</FONT></B><BR><BR>
 <A NAME="campaign_statuses">
 <BR>
-<B><?php echo _QXZ("Through the use of custom campaign statuses, you can have statuses that only exist for a specific campaign. The Status must be 1-8 characters in length, the description must be 2-30 characters in length and Selectable defines whether it shows up in the system as a disposition. The human_answered field is used when calculating the drop percentage, or abandon rate. Setting human_answered to Y will use this status when counting the human-answered calls. The Category option allows you to group several statuses into a catogy that can be used for statistical analysis.")."</B>";
+<B><?php echo _QXZ("Through the use of custom campaign statuses, you can have statuses that only exist for a specific campaign. The Status must be 1-8 characters in length, the description must be 2-30 characters in length and Selectable defines whether it shows up in the system as a disposition. The human_answered field is used when calculating the drop percentage, or abandon rate. Setting human_answered to Y will use this status when counting the human-answered calls. The Category option allows you to group several statuses into a catagory that can be used for statistical analysis. There are also 7 additional settings that will define the kind of status: sale, dnc, customer contact, not interested, unworkable, scheduled callback, completed. The MIN SEC and MAX SEC fields for each status will determine whether an agent can select that status at the end of their call based upon the length of the call. If the call is 10 seconds and the MIN SEC for a status is set to 20 seconds, then the agent will not be able to select that status. Also, if a call is 40 seconds and the MAX SEC for a status is set to 30 seconds, then the agent will not be able to select that status.")."</B>";
 
 
 
@@ -3307,6 +3319,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="user_groups-allowed_reports">
 <BR>
 <B><?php echo _QXZ("Allowed Reports"); ?> -</B><?php echo _QXZ("If a user in this group is set to user level 7 or higher, then this feature can be used to restrict the reports that the users can view. Default is ALL. If you want to select more than one report then press the Ctrl key on your keyboard as you select the reports."); ?>
+
+<BR>
+<A NAME="user_groups-allowed_custom_reports">
+<BR>
+<B><?php echo _QXZ("Allowed Custom Reports"); ?> -</B><?php echo _QXZ("If a user in this group is set to user level 7 or higher, then this feature can be used to restrict the custom reports that the users can view. Access is determined as reports are added from the custom reports admin page, for example, ALL is not the default.  If you want to select more than one report then press the Ctrl key on your keyboard as you select the reports."); ?>
 
 <BR>
 <A NAME="user_groups-admin_viewable_groups">
@@ -4947,6 +4964,12 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <BR>
 <B><?php echo _QXZ("Reports to use Slave DB"); ?> -</B><?php echo _QXZ("This option allows you to select the reports that you want to have use the MySQL slave database as defined in the option above instead of the master database that your live system is running on. You must set up the MySQL slave replication before you can enable this option. Default is empty for disabled."); ?>
 
+
+<BR>
+<A NAME="settings-custom_reports_use_slave_db">
+<BR>
+<B><?php echo _QXZ("Custom Reports to use Slave DB"); ?> -</B><?php echo _QXZ("This option allows you to select the custom reports that you want to have use the MySQL slave database as defined in the option above instead of the master database that your live system is running on. You must set up the MySQL slave replication before you can enable this option. Default is empty for disabled."); ?>
+
 <BR>
 <A NAME="settings-default_field_labels">
 <BR>
@@ -5141,7 +5164,19 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <B><FONT SIZE=3>STATUSES TABLE</FONT></B><BR><BR>
 <A NAME="system_statuses">
 <BR>
-<B><?php echo _QXZ("Through the use of system statuses, you can have statuses that exist for all campaigns and in-groups. The Status must be 1-6 characters in length, the description must be 2-30 characters in length and Selectable defines whether it shows up in the system as an agent disposition. The human_answered field is used when calculating the drop percentage, or abandon rate. Setting human_answered to Y will use this status when counting the human-answered calls. The Category option allows you to group several statuses into a category that can be used for statistical analysis. There are also 5 additional settings that will define the kind of status: sale, dnc, customer contact, not interested, unworkable, scheduled callback."); ?></B>
+<B><?php echo _QXZ("Through the use of system statuses, you can have statuses that exist for all campaigns and in-groups. The Status must be 1-6 characters in length, the description must be 2-30 characters in length and Selectable defines whether it shows up in the system as an agent disposition. The human_answered field is used when calculating the drop percentage, or abandon rate. Setting human_answered to Y will use this status when counting the human-answered calls. The Category option allows you to group several statuses into a category that can be used for statistical analysis. There are also 7 additional settings that will define the kind of status: sale, dnc, customer contact, not interested, unworkable, scheduled callback, completed. The MIN SEC and MAX SEC fields for each status will determine whether an agent can select that status at the end of their call based upon the length of the call. If the call is 10 seconds and the MIN SEC for a status is set to 20 seconds, then the agent will not be able to select that status. Also, if a call is 40 seconds and the MAX SEC for a status is set to 30 seconds, then the agent will not be able to select that status."); ?></B>
+
+
+
+
+
+<BR><BR><BR><BR>
+
+<B><FONT SIZE=3>STATUS_GROUPS TABLE</FONT></B><BR><BR>
+<A NAME="status_groups">
+<BR>
+<B><?php echo _QXZ("Through the use of status groups, you can have statuses that exist for lists or in-groups specifically. The Status must be 1-6 characters in length, the description must be 2-30 characters in length and Selectable defines whether it shows up in the system as an agent disposition. The human_answered field is used when calculating the drop percentage, or abandon rate. Setting human_answered to Y will use this status when counting the human-answered calls. The Category option allows you to group several statuses into a category that can be used for statistical analysis. There are also 7 additional settings that will define the kind of status: sale, dnc, customer contact, not interested, unworkable, scheduled callback, completed. The MIN SEC and MAX SEC fields for each status will determine whether an agent can select that status at the end of their call based upon the length of the call. If the call is 10 seconds and the MIN SEC for a status is set to 20 seconds, then the agent will not be able to select that status. Also, if a call is 40 seconds and the MAX SEC for a status is set to 30 seconds, then the agent will not be able to select that status. The Status Group ID field must be between 2 and 20 characters in length, must not match a current campaign ID, and cannot contain spaces or other special characters."); ?></B>
+
 
 
 
@@ -5554,6 +5589,33 @@ if ($SSqc_features_active > 0)
 
 <?php echo _QXZ("This page allows you to define Alternate URLs with conditions in place of the simple URL option for Dispo, Start, Add Lead or No Agent URLs. The RANK field will define the order in which the URLs are requested, this is important because if you have a URL that may take a few seconds to run ranked as 1, that will mean that any URLs ranked after it will have to wait to be run until that first URL request receives a response. The ACTIVE field will determine whether the specific URL is run. The STATUSES field only works for the Dispo URLs and will determine which disposition statuses will trigger the URL being run, if you want to run the entry for all statuses just fill in ---ALL--- in this field. The URL field works the same as it would in the URL option in campaigns, in-groups and lists, and it is also limited to 2000 characters in length. If you want to delete a URL, it must first be set to not active, then you can click on the DELETE link below the SUBMIT button for that URL entry."); ?>
 
+
+<BR><BR><BR><BR>
+
+<A NAME="custom_reports_admin">
+<B><FONT SIZE=3>Custom Reports Admin</FONT></B><BR><BR>
+<BR>
+
+
+<BR>
+<A NAME="custom_reports_admin-report_name">
+<BR>
+<B><?php echo _QXZ("Report Name"); ?> -</B><?php echo _QXZ("The report name that the report will be referred to as in the system for purposes of user group access and slave server use in the system settings.  The report name may not be the same as any other custom report, nor may it be the same name as one of the standard system reports."); ?>
+
+<BR>
+<A NAME="custom_reports_admin-domain">
+<BR>
+<B><?php echo _QXZ("Domain"); ?> -</B><?php echo _QXZ("The domain that the report is located at.  This will be combined with the path name to make a complete URL to use as a link from the reports page.  You may leave this blank when the report is located on the same server as the web admin and just use the path name field to make a local URL."); ?>
+
+<BR>
+<A NAME="custom_reports_admin-path_name">
+<BR>
+<B><?php echo _QXZ("Path name"); ?> -</B><?php echo _QXZ("The path on the domain where the report is located.  When the domain is blank it is assumed that the report is housed on the local web server."); ?>
+
+<BR>
+<A NAME="custom_reports_admin-custom_reports_user_groups">
+<BR>
+<B><?php echo _QXZ("User groups"); ?> -</B><?php echo _QXZ("The user groups that will be allowed to view this report.  When a user goes to the reports page, if they belong to a user group that has access to any of the custom reports, they can see a Custom Reports section on this page with links to every custom report they can view."); ?>
 
 
 

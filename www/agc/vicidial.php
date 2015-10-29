@@ -502,10 +502,11 @@
 # 150923-1952 - Added DID custum fields as web and form variables
 # 150928-1205 - Fixed issue with API transfers and dial_override flag
 # 151022-0004 - Added audio alert when email arrives, issue #899
+# 151028-1458 - Added status groups statuses feature with min/max seconds qualifiers for statuses
 #
 
-$version = '2.12-474c';
-$build = '151022-0004';
+$version = '2.12-475c';
+$build = '151028-1458';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -1522,9 +1523,19 @@ else
 				$VARSELstatuses='';
 				$VARSELstatuses_ct=0;
 				$VARCBstatuses='';
+				$VARMINstatuses='';
+				$VARMAXstatuses='';
 				$VARCBstatusesLIST='';
+				$cVARstatuses='';
+				$cVARstatusnames='';
+				$cVARSELstatuses='';
+				$cVARSELstatuses_ct=0;
+				$cVARCBstatuses='';
+				$cVARMINstatuses='';
+				$cVARMAXstatuses='';
+				$cVARCBstatusesLIST='';
 				##### grab the statuses that can be used for dispositioning by an agent
-				$stmt="SELECT status,status_name,scheduled_callback,selectable FROM vicidial_statuses WHERE status != 'NEW' order by status limit 500;";
+				$stmt="SELECT status,status_name,scheduled_callback,selectable,min_sec,max_sec FROM vicidial_statuses WHERE status != 'NEW' order by status limit 500;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01010',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1533,15 +1544,19 @@ else
 				while ($i < $VD_statuses_ct)
 					{
 					$row=mysqli_fetch_row($rslt);
-					$statuses[$i] =$row[0];
-					$status_names[$i] =$row[1];
-					$CBstatuses[$i] =$row[2];
-					$SELstatuses[$i] =$row[3];
+					$statuses[$i] =		$row[0];
+					$status_names[$i] =	$row[1];
+					$CBstatuses[$i] =	$row[2];
+					$SELstatuses[$i] =	$row[3];
+					$MINsec[$i] =		$row[4];
+					$MAXsec[$i] =		$row[5];
 					if ($TEST_all_statuses > 0) {$SELstatuses[$i]='Y';}
 					$VARstatuses = "$VARstatuses'$statuses[$i]',";
 					$VARstatusnames = "$VARstatusnames'$status_names[$i]',";
 					$VARSELstatuses = "$VARSELstatuses'$SELstatuses[$i]',";
 					$VARCBstatuses = "$VARCBstatuses'$CBstatuses[$i]',";
+					$VARMINstatuses = "$VARMINstatuses'$MINsec[$i]',";
+					$VARMAXstatuses = "$VARMAXstatuses'$MAXsec[$i]',";
 					if ($CBstatuses[$i] == 'Y')
 						{$VARCBstatusesLIST .= " $statuses[$i]";}
 					if ($SELstatuses[$i] == 'Y')
@@ -1550,7 +1565,7 @@ else
 					}
 
 				##### grab the campaign-specific statuses that can be used for dispositioning by an agent
-				$stmt="SELECT status,status_name,scheduled_callback,selectable FROM vicidial_campaign_statuses WHERE status != 'NEW' and campaign_id='$VD_campaign' order by status limit 500;";
+				$stmt="SELECT status,status_name,scheduled_callback,selectable,min_sec,max_sec FROM vicidial_campaign_statuses WHERE status != 'NEW' and campaign_id='$VD_campaign' order by status limit 500;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01011',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1559,28 +1574,41 @@ else
 				while ($j < $VD_statuses_camp)
 					{
 					$row=mysqli_fetch_row($rslt);
-					$statuses[$i] =$row[0];
-					$status_names[$i] =$row[1];
-					$CBstatuses[$i] =$row[2];
-					$SELstatuses[$i] =$row[3];
+					$statuses[$i] =		$row[0];
+					$status_names[$i] =	$row[1];
+					$CBstatuses[$i] =	$row[2];
+					$SELstatuses[$i] =	$row[3];
+					$MINsec[$i] =		$row[4];
+					$MAXsec[$i] =		$row[5];
 					if ($TEST_all_statuses > 0) {$SELstatuses[$i]='Y';}
-					$VARstatuses = "$VARstatuses'$statuses[$i]',";
-					$VARstatusnames = "$VARstatusnames'$status_names[$i]',";
-					$VARSELstatuses = "$VARSELstatuses'$SELstatuses[$i]',";
-					$VARCBstatuses = "$VARCBstatuses'$CBstatuses[$i]',";
+					$cVARstatuses = "$cVARstatuses'$statuses[$i]',";
+					$cVARstatusnames = "$cVARstatusnames'$status_names[$i]',";
+					$cVARSELstatuses = "$cVARSELstatuses'$SELstatuses[$i]',";
+					$cVARCBstatuses = "$cVARCBstatuses'$CBstatuses[$i]',";
+					$cVARMINstatuses = "$cVARMINstatuses'$MINsec[$i]',";
+					$cVARMAXstatuses = "$cVARMAXstatuses'$MAXsec[$i]',";
 					if ($CBstatuses[$i] == 'Y')
-						{$VARCBstatusesLIST .= " $statuses[$i]";}
+						{$cVARCBstatusesLIST .= " $statuses[$i]";}
 					if ($SELstatuses[$i] == 'Y')
-						{$VARSELstatuses_ct++;}
+						{$cVARSELstatuses_ct++;}
 					$i++;
 					$j++;
 					}
-				$VD_statuses_ct = ($VD_statuses_ct+$VD_statuses_camp);
+			#	$VD_statuses_ct = ($VD_statuses_ct+$VD_statuses_camp);
 				$VARstatuses = substr("$VARstatuses", 0, -1);
 				$VARstatusnames = substr("$VARstatusnames", 0, -1);
 				$VARSELstatuses = substr("$VARSELstatuses", 0, -1);
 				$VARCBstatuses = substr("$VARCBstatuses", 0, -1);
+				$VARMINstatuses = substr("$VARMINstatuses", 0, -1);
+				$VARMAXstatuses = substr("$VARMAXstatuses", 0, -1);
 				$VARCBstatusesLIST .= " ";
+				$cVARstatuses = substr("$cVARstatuses", 0, -1);
+				$cVARstatusnames = substr("$cVARstatusnames", 0, -1);
+				$cVARSELstatuses = substr("$cVARSELstatuses", 0, -1);
+				$cVARCBstatuses = substr("$cVARCBstatuses", 0, -1);
+				$cVARMINstatuses = substr("$cVARMINstatuses", 0, -1);
+				$cVARMAXstatuses = substr("$cVARMAXstatuses", 0, -1);
+				$cVARCBstatusesLIST .= " ";
 
 				##### grab the campaign-specific HotKey statuses that can be used for dispositioning by an agent
 				$stmt="SELECT hotkey,status,status_name FROM vicidial_campaign_hotkeys WHERE selectable='Y' and status != 'NEW' and campaign_id='$VD_campaign' order by hotkey limit 9;";
@@ -3699,13 +3727,43 @@ $CCAL_OUT .= "</table>";
 	VARpreset_dtmfs = new Array(<?php echo $VARpreset_dtmfs ?>);
 	VARpreset_hide_numbers = new Array(<?php echo $VARpreset_hide_numbers ?>);
 	var VD_preset_names_ct = '<?php echo $VD_preset_names_ct ?>';
-	VARstatuses = new Array(<?php echo $VARstatuses ?>);
-	VARstatusnames = new Array(<?php echo $VARstatusnames ?>);
-	VARSELstatuses = new Array(<?php echo $VARSELstatuses ?>);
-	VARCBstatuses = new Array(<?php echo $VARCBstatuses ?>);
-	var VARCBstatusesLIST = '<?php echo $VARCBstatusesLIST ?>';
-	var VD_statuses_ct = '<?php echo $VD_statuses_ct ?>';
-	var VARSELstatuses_ct = '<?php echo $VARSELstatuses_ct ?>';
+	var status_group_statuses_data = '';
+	VARstatuses = new Array();
+	VARstatusnames = new Array();
+	VARSELstatuses = new Array();
+	VARCBstatuses = new Array();
+	VARMINstatuses = new Array();
+	VARMAXstatuses = new Array();
+	var VARCBstatusesLIST = '';
+	var VD_statuses_ct = 0;
+	var VARSELstatuses_ct = 0;
+	gVARstatuses = new Array();
+	gVARstatusnames = new Array();
+	gVARSELstatuses = new Array();
+	gVARCBstatuses = new Array();
+	gVARMINstatuses = new Array();
+	gVARMAXstatuses = new Array();
+	var gVARCBstatusesLIST = '';
+	var gVD_statuses_ct = 0;
+	var gVARSELstatuses_ct = 0;
+	sVARstatuses = new Array(<?php echo $VARstatuses ?>);
+	sVARstatusnames = new Array(<?php echo $VARstatusnames ?>);
+	sVARSELstatuses = new Array(<?php echo $VARSELstatuses ?>);
+	sVARCBstatuses = new Array(<?php echo $VARCBstatuses ?>);
+	sVARMINstatuses = new Array(<?php echo $VARMINstatuses ?>);
+	sVARMAXstatuses = new Array(<?php echo $VARMAXstatuses ?>);
+	var sVARCBstatusesLIST = '<?php echo $VARCBstatusesLIST ?>';
+	var sVD_statuses_ct = '<?php echo $VD_statuses_ct ?>';
+	var sVARSELstatuses_ct = '<?php echo $VARSELstatuses_ct ?>';
+	cVARstatuses = new Array(<?php echo $cVARstatuses ?>);
+	cVARstatusnames = new Array(<?php echo $cVARstatusnames ?>);
+	cVARSELstatuses = new Array(<?php echo $cVARSELstatuses ?>);
+	cVARCBstatuses = new Array(<?php echo $cVARCBstatuses ?>);
+	cVARMINstatuses = new Array(<?php echo $cVARMINstatuses ?>);
+	cVARMAXstatuses = new Array(<?php echo $cVARMAXstatuses ?>);
+	var cVARCBstatusesLIST = '<?php echo $cVARCBstatusesLIST ?>';
+	var cVD_statuses_ct = '<?php echo $VD_statuses_camp ?>';
+	var cVARSELstatuses_ct = '<?php echo $cVARSELstatuses_ct ?>';
 	VARingroups = new Array(<?php echo $VARingroups ?>);
 	var INgroupCOUNT = '<?php echo $INgrpCT ?>';
 
@@ -4244,6 +4302,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var updatedispo_resume_trigger='0';
 	var button_click_log='<?php echo $NOW_TIME ?>-----LOGIN---|';
 	var agent_display_fields='<?php echo $agent_display_fields ?>';
+	var customer_sec='0';
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -5455,6 +5514,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									{ document.images['livecall'].src = image_livecall_DEAD.src;}
 								CheckDEADcallON=1;
 								CheckDEADcallCOUNT++;
+								customer_sec = VD_live_call_secondS;
 
 								if ( (xfer_in_call > 0) && (customer_3way_hangup_logging=='ENABLED') )
 									{
@@ -7065,6 +7125,114 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								did_custom_three								= change_array[62];
 								did_custom_four									= change_array[63];
 								did_custom_five									= change_array[64];
+								status_group_statuses_data						= change_array[65];
+
+								// build statuses list for disposition screen
+								VARstatuses = [];
+								VARstatusnames = [];
+								VARSELstatuses = [];
+								VARCBstatuses = [];
+								VARMINstatuses = [];
+								VARMAXstatuses = [];
+								VARCBstatusesLIST = '';
+								VD_statuses_ct = 0;
+								VARSELstatuses_ct = 0;
+								gVARstatuses = [];
+								gVARstatusnames = [];
+								gVARSELstatuses = [];
+								gVARCBstatuses = [];
+								gVARMINstatuses = [];
+								gVARMAXstatuses = [];
+								gVARCBstatusesLIST = '';
+								gVD_statuses_ct = 0;
+								gVARSELstatuses_ct = 0;
+
+								if (status_group_statuses_data.length > 7)
+									{
+									var gVARstatusesRAW=status_group_statuses_data.split(',');
+									var gVARstatusesRAWct = gVARstatusesRAW.length;
+									var loop_gct=0;
+									while (loop_gct < gVARstatusesRAWct)
+										{
+										var gVARstatusesRAWtemp = gVARstatusesRAW[loop_gct];
+										var gVARstatusesDETAILS = gVARstatusesRAWtemp.split('|');
+										gVARstatuses[loop_gct] =	gVARstatusesDETAILS[0];
+										gVARstatusnames[loop_gct] =	gVARstatusesDETAILS[1];
+										gVARSELstatuses[loop_gct] =	'Y';
+										gVARCBstatuses[loop_gct] =	gVARstatusesDETAILS[2];
+										gVARMINstatuses[loop_gct] =	gVARstatusesDETAILS[3];
+										gVARMAXstatuses[loop_gct] =	gVARstatusesDETAILS[4];
+										if (gVARCBstatuses[loop_gct] == 'Y')
+											{gVARCBstatusesLIST = gVARCBstatusesLIST + " " + gVARstatusesDETAILS[0];}
+										gVD_statuses_ct++;
+										gVARSELstatuses_ct++;
+
+										loop_gct++;
+										}
+									}
+								else
+									{
+									gVARstatuses = cVARstatuses;
+									gVARstatusnames = cVARstatusnames;
+									gVARSELstatuses = cVARSELstatuses;
+									gVARCBstatuses = cVARCBstatuses;
+									gVARMINstatuses = cVARMINstatuses;
+									gVARMAXstatuses = cVARMAXstatuses;
+									gVARCBstatusesLIST = cVARCBstatusesLIST;
+									gVD_statuses_ct = cVD_statuses_ct;
+									gVARSELstatuses_ct = cVARSELstatuses_ct;
+									}
+
+								VARstatuses = sVARstatuses.concat(gVARstatuses);
+								VARstatusnames = sVARstatusnames.concat(gVARstatusnames);
+								VARSELstatuses = sVARSELstatuses.concat(gVARSELstatuses);
+								VARCBstatuses = sVARCBstatuses.concat(gVARCBstatuses);
+								VARMINstatuses = sVARMINstatuses.concat(gVARMINstatuses);
+								VARMAXstatuses = sVARMAXstatuses.concat(gVARMAXstatuses);
+								VARCBstatusesLIST = sVARCBstatusesLIST + '' + gVARCBstatusesLIST;
+								VD_statuses_ct = (Number(sVD_statuses_ct) + Number(gVD_statuses_ct));
+								VARSELstatuses_ct = (Number(sVARSELstatuses_ct) + Number(gVARSELstatuses_ct));
+
+								var HKdebug='';
+								var HKboxAtemp='';
+								var HKboxBtemp='';
+								var HKboxCtemp='';
+								if (HK_statuses_camp > 0)
+									{
+									hotkeys = [];
+									var temp_HK_valid_ct=0;
+									while (HK_statuses_camp > temp_HK_valid_ct)
+										{
+										var temp_VARstatuses_ct=0;
+										while (VD_statuses_ct > temp_VARstatuses_ct)
+											{
+											if (HKstatuses[temp_HK_valid_ct] == VARstatuses[temp_VARstatuses_ct])
+												{
+												hotkeys[HKhotkeys[temp_HK_valid_ct]] = HKstatuses[temp_HK_valid_ct] + " ----- " + HKstatusnames[temp_HK_valid_ct];
+
+												if ( (HKhotkeys[temp_HK_valid_ct] >= 1) && (HKhotkeys[temp_HK_valid_ct] <= 3) )
+													{
+													HKboxAtemp = HKboxAtemp + "<font class=\"skb_text\">" + HKhotkeys[temp_HK_valid_ct] + "</font> - " + HKstatuses[temp_HK_valid_ct] + " - " + HKstatusnames[temp_HK_valid_ct] + "<br />";
+													}
+												if ( (HKhotkeys[temp_HK_valid_ct] >= 4) && (HKhotkeys[temp_HK_valid_ct] <= 6) )
+													{
+													HKboxBtemp = HKboxBtemp + "<font class=\"skb_text\">" + HKhotkeys[temp_HK_valid_ct] + "</font> - " + HKstatuses[temp_HK_valid_ct] + " - " + HKstatusnames[temp_HK_valid_ct] + "<br />";
+													}
+												if ( (HKhotkeys[temp_HK_valid_ct] >= 7) && (HKhotkeys[temp_HK_valid_ct] <= 9) )
+													{
+													HKboxCtemp = HKboxCtemp + "<font class=\"skb_text\">" + HKhotkeys[temp_HK_valid_ct] + "</font> - " + HKstatuses[temp_HK_valid_ct] + " - " + HKstatusnames[temp_HK_valid_ct] + "<br />";
+													}
+
+												HKdebug = HKdebug + '' + HKhotkeys[temp_HK_valid_ct] + ' ' + HKstatuses[temp_HK_valid_ct] + ' ' + HKstatusnames[temp_HK_valid_ct] + '| ';
+												}
+											temp_VARstatuses_ct++;
+											}
+										temp_HK_valid_ct++;
+										}
+									document.getElementById("HotKeyBoxA").innerHTML = HKboxAtemp;
+									document.getElementById("HotKeyBoxB").innerHTML = HKboxBtemp;
+									document.getElementById("HotKeyBoxC").innerHTML = HKboxCtemp;
+									}
 
 								if (agent_display_fields.match(adfREGentry_date))
 									{document.getElementById("entry_dateDISP").innerHTML = entry_date;}
@@ -7614,6 +7782,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 								VD_live_customer_call = 1;
 								VD_live_call_secondS = 0;
+								customer_sec=0;
 
 								MD_channel_look=0;
 								var dispnum = lead_dial_number;
@@ -8261,6 +8430,116 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								CalL_ScripT_color								= MDnextResponse_array[55];
 								document.vicidial_form.list_description.value	= MDnextResponse_array[56];
 								entry_date										= MDnextResponse_array[57];
+								status_group_statuses_data						= MDnextResponse_array[58];
+
+								// build statuses list for disposition screen
+								VARstatuses = [];
+								VARstatusnames = [];
+								VARSELstatuses = [];
+								VARCBstatuses = [];
+								VARMINstatuses = [];
+								VARMAXstatuses = [];
+								VARCBstatusesLIST = '';
+								VD_statuses_ct = 0;
+								VARSELstatuses_ct = 0;
+								gVARstatuses = [];
+								gVARstatusnames = [];
+								gVARSELstatuses = [];
+								gVARCBstatuses = [];
+								gVARMINstatuses = [];
+								gVARMAXstatuses = [];
+								gVARCBstatusesLIST = '';
+								gVD_statuses_ct = 0;
+								gVARSELstatuses_ct = 0;
+
+								if (status_group_statuses_data.length > 7)
+									{
+									var gVARstatusesRAW=status_group_statuses_data.split(',');
+									var gVARstatusesRAWct = gVARstatusesRAW.length;
+									var loop_gct=0;
+									while (loop_gct < gVARstatusesRAWct)
+										{
+										var gVARstatusesRAWtemp = gVARstatusesRAW[loop_gct];
+										var gVARstatusesDETAILS = gVARstatusesRAWtemp.split('|');
+										gVARstatuses[loop_gct] =	gVARstatusesDETAILS[0];
+										gVARstatusnames[loop_gct] =	gVARstatusesDETAILS[1];
+										gVARSELstatuses[loop_gct] =	'Y';
+										gVARCBstatuses[loop_gct] =	gVARstatusesDETAILS[2];
+										gVARMINstatuses[loop_gct] =	gVARstatusesDETAILS[3];
+										gVARMAXstatuses[loop_gct] =	gVARstatusesDETAILS[4];
+										if (gVARCBstatuses[loop_gct] == 'Y')
+											{gVARCBstatusesLIST = gVARCBstatusesLIST + " " + gVARstatusesDETAILS[0];}
+										gVD_statuses_ct++;
+										gVARSELstatuses_ct++;
+
+										loop_gct++;
+										}
+									}
+								else
+									{
+									gVARstatuses = cVARstatuses;
+									gVARstatusnames = cVARstatusnames;
+									gVARSELstatuses = cVARSELstatuses;
+									gVARCBstatuses = cVARCBstatuses;
+									gVARMINstatuses = cVARMINstatuses;
+									gVARMAXstatuses = cVARMAXstatuses;
+									gVARCBstatusesLIST = cVARCBstatusesLIST;
+									gVD_statuses_ct = cVD_statuses_ct;
+									gVARSELstatuses_ct = cVARSELstatuses_ct;
+									}
+
+								VARstatuses = sVARstatuses.concat(gVARstatuses);
+								VARstatusnames = sVARstatusnames.concat(gVARstatusnames);
+								VARSELstatuses = sVARSELstatuses.concat(gVARSELstatuses);
+								VARCBstatuses = sVARCBstatuses.concat(gVARCBstatuses);
+								VARMINstatuses = sVARMINstatuses.concat(gVARMINstatuses);
+								VARMAXstatuses = sVARMAXstatuses.concat(gVARMAXstatuses);
+								VARCBstatusesLIST = sVARCBstatusesLIST + '' + gVARCBstatusesLIST;
+								VD_statuses_ct = (Number(sVD_statuses_ct) + Number(gVD_statuses_ct));
+								VARSELstatuses_ct = (Number(sVARSELstatuses_ct) + Number(gVARSELstatuses_ct));
+
+								var HKdebug='';
+								var HKboxAtemp='';
+								var HKboxBtemp='';
+								var HKboxCtemp='';
+								if (HK_statuses_camp > 0)
+									{
+									hotkeys = [];
+									var temp_HK_valid_ct=0;
+									while (HK_statuses_camp > temp_HK_valid_ct)
+										{
+										var temp_VARstatuses_ct=0;
+										while (VD_statuses_ct > temp_VARstatuses_ct)
+											{
+											if (HKstatuses[temp_HK_valid_ct] == VARstatuses[temp_VARstatuses_ct])
+												{
+												hotkeys[HKhotkeys[temp_HK_valid_ct]] = HKstatuses[temp_HK_valid_ct] + " ----- " + HKstatusnames[temp_HK_valid_ct];
+
+												if ( (HKhotkeys[temp_HK_valid_ct] >= 1) && (HKhotkeys[temp_HK_valid_ct] <= 3) )
+													{
+													HKboxAtemp = HKboxAtemp + "<font class=\"skb_text\">" + HKhotkeys[temp_HK_valid_ct] + "</font> - " + HKstatuses[temp_HK_valid_ct] + " - " + HKstatusnames[temp_HK_valid_ct] + "<br />";
+													}
+												if ( (HKhotkeys[temp_HK_valid_ct] >= 4) && (HKhotkeys[temp_HK_valid_ct] <= 6) )
+													{
+													HKboxBtemp = HKboxBtemp + "<font class=\"skb_text\">" + HKhotkeys[temp_HK_valid_ct] + "</font> - " + HKstatuses[temp_HK_valid_ct] + " - " + HKstatusnames[temp_HK_valid_ct] + "<br />";
+													}
+												if ( (HKhotkeys[temp_HK_valid_ct] >= 7) && (HKhotkeys[temp_HK_valid_ct] <= 9) )
+													{
+													HKboxCtemp = HKboxCtemp + "<font class=\"skb_text\">" + HKhotkeys[temp_HK_valid_ct] + "</font> - " + HKstatuses[temp_HK_valid_ct] + " - " + HKstatusnames[temp_HK_valid_ct] + "<br />";
+													}
+
+												HKdebug = HKdebug + '' + HKhotkeys[temp_HK_valid_ct] + ' ' + HKstatuses[temp_HK_valid_ct] + ' ' + HKstatusnames[temp_HK_valid_ct] + '| ';
+												}
+											temp_VARstatuses_ct++;
+											}
+										temp_HK_valid_ct++;
+										}
+									document.getElementById("HotKeyBoxA").innerHTML = HKboxAtemp;
+									document.getElementById("HotKeyBoxB").innerHTML = HKboxBtemp;
+									document.getElementById("HotKeyBoxC").innerHTML = HKboxCtemp;
+
+								//	document.getElementById("debugbottomspan").innerHTML = "DEBUG: UnixTime " + HKdebug;
+									}
 
 								if (agent_display_fields.match(adfREGentry_date))
 									{document.getElementById("entry_dateDISP").innerHTML = entry_date;}
@@ -8596,6 +8875,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							previous_called_count = '';
 							previous_dispo = '';
 							custchannellive=1;
+							customer_sec=0;
 							xfer_agent_selected=0;
 							source_id='';
 							entry_date='';
@@ -9300,6 +9580,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 							VD_live_customer_call = 1;
 							VD_live_call_secondS = 0;
+							customer_sec = 0;
 
 							// INSERT VICIDIAL_LOG ENTRY FOR THIS CALL PROCESS
 						//	DialLog("start");
@@ -9392,6 +9673,114 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							did_custom_three								= check_VDIC_array[62];
 							did_custom_four									= check_VDIC_array[63];
 							did_custom_five									= check_VDIC_array[64];
+							status_group_statuses_data						= check_VDIC_array[65];
+
+							// build statuses list for disposition screen
+							VARstatuses = [];
+							VARstatusnames = [];
+							VARSELstatuses = [];
+							VARCBstatuses = [];
+							VARMINstatuses = [];
+							VARMAXstatuses = [];
+							VARCBstatusesLIST = '';
+							VD_statuses_ct = 0;
+							VARSELstatuses_ct = 0;
+							gVARstatuses = [];
+							gVARstatusnames = [];
+							gVARSELstatuses = [];
+							gVARCBstatuses = [];
+							gVARMINstatuses = [];
+							gVARMAXstatuses = [];
+							gVARCBstatusesLIST = '';
+							gVD_statuses_ct = 0;
+							gVARSELstatuses_ct = 0;
+
+							if (status_group_statuses_data.length > 7)
+								{
+								var gVARstatusesRAW=status_group_statuses_data.split(',');
+								var gVARstatusesRAWct = gVARstatusesRAW.length;
+								var loop_gct=0;
+								while (loop_gct < gVARstatusesRAWct)
+									{
+									var gVARstatusesRAWtemp = gVARstatusesRAW[loop_gct];
+									var gVARstatusesDETAILS = gVARstatusesRAWtemp.split('|');
+									gVARstatuses[loop_gct] =	gVARstatusesDETAILS[0];
+									gVARstatusnames[loop_gct] =	gVARstatusesDETAILS[1];
+									gVARSELstatuses[loop_gct] =	'Y';
+									gVARCBstatuses[loop_gct] =	gVARstatusesDETAILS[2];
+									gVARMINstatuses[loop_gct] =	gVARstatusesDETAILS[3];
+									gVARMAXstatuses[loop_gct] =	gVARstatusesDETAILS[4];
+									if (gVARCBstatuses[loop_gct] == 'Y')
+										{gVARCBstatusesLIST = gVARCBstatusesLIST + " " + gVARstatusesDETAILS[0];}
+									gVD_statuses_ct++;
+									gVARSELstatuses_ct++;
+
+									loop_gct++;
+									}
+								}
+							else
+								{
+								gVARstatuses = cVARstatuses;
+								gVARstatusnames = cVARstatusnames;
+								gVARSELstatuses = cVARSELstatuses;
+								gVARCBstatuses = cVARCBstatuses;
+								gVARMINstatuses = cVARMINstatuses;
+								gVARMAXstatuses = cVARMAXstatuses;
+								gVARCBstatusesLIST = cVARCBstatusesLIST;
+								gVD_statuses_ct = cVD_statuses_ct;
+								gVARSELstatuses_ct = cVARSELstatuses_ct;
+								}
+
+							VARstatuses = sVARstatuses.concat(gVARstatuses);
+							VARstatusnames = sVARstatusnames.concat(gVARstatusnames);
+							VARSELstatuses = sVARSELstatuses.concat(gVARSELstatuses);
+							VARCBstatuses = sVARCBstatuses.concat(gVARCBstatuses);
+							VARMINstatuses = sVARMINstatuses.concat(gVARMINstatuses);
+							VARMAXstatuses = sVARMAXstatuses.concat(gVARMAXstatuses);
+							VARCBstatusesLIST = sVARCBstatusesLIST + '' + gVARCBstatusesLIST;
+							VD_statuses_ct = (Number(sVD_statuses_ct) + Number(gVD_statuses_ct));
+							VARSELstatuses_ct = (Number(sVARSELstatuses_ct) + Number(gVARSELstatuses_ct));
+
+							var HKdebug='';
+							var HKboxAtemp='';
+							var HKboxBtemp='';
+							var HKboxCtemp='';
+							if (HK_statuses_camp > 0)
+								{
+								hotkeys = [];
+								var temp_HK_valid_ct=0;
+								while (HK_statuses_camp > temp_HK_valid_ct)
+									{
+									var temp_VARstatuses_ct=0;
+									while (VD_statuses_ct > temp_VARstatuses_ct)
+										{
+										if (HKstatuses[temp_HK_valid_ct] == VARstatuses[temp_VARstatuses_ct])
+											{
+											hotkeys[HKhotkeys[temp_HK_valid_ct]] = HKstatuses[temp_HK_valid_ct] + " ----- " + HKstatusnames[temp_HK_valid_ct];
+
+											if ( (HKhotkeys[temp_HK_valid_ct] >= 1) && (HKhotkeys[temp_HK_valid_ct] <= 3) )
+												{
+												HKboxAtemp = HKboxAtemp + "<font class=\"skb_text\">" + HKhotkeys[temp_HK_valid_ct] + "</font> - " + HKstatuses[temp_HK_valid_ct] + " - " + HKstatusnames[temp_HK_valid_ct] + "<br />";
+												}
+											if ( (HKhotkeys[temp_HK_valid_ct] >= 4) && (HKhotkeys[temp_HK_valid_ct] <= 6) )
+												{
+												HKboxBtemp = HKboxBtemp + "<font class=\"skb_text\">" + HKhotkeys[temp_HK_valid_ct] + "</font> - " + HKstatuses[temp_HK_valid_ct] + " - " + HKstatusnames[temp_HK_valid_ct] + "<br />";
+												}
+											if ( (HKhotkeys[temp_HK_valid_ct] >= 7) && (HKhotkeys[temp_HK_valid_ct] <= 9) )
+												{
+												HKboxCtemp = HKboxCtemp + "<font class=\"skb_text\">" + HKhotkeys[temp_HK_valid_ct] + "</font> - " + HKstatuses[temp_HK_valid_ct] + " - " + HKstatusnames[temp_HK_valid_ct] + "<br />";
+												}
+
+											HKdebug = HKdebug + '' + HKhotkeys[temp_HK_valid_ct] + ' ' + HKstatuses[temp_HK_valid_ct] + ' ' + HKstatusnames[temp_HK_valid_ct] + '| ';
+											}
+										temp_VARstatuses_ct++;
+										}
+									temp_HK_valid_ct++;
+									}
+								document.getElementById("HotKeyBoxA").innerHTML = HKboxAtemp;
+								document.getElementById("HotKeyBoxB").innerHTML = HKboxBtemp;
+								document.getElementById("HotKeyBoxC").innerHTML = HKboxCtemp;
+								}
 
 							if (agent_display_fields.match(adfREGentry_date))
 								{document.getElementById("entry_dateDISP").innerHTML = entry_date;}
@@ -9911,6 +10300,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 							VD_live_customer_call = 1;
 							VD_live_call_secondS = 0;
+							customer_sec = 0;
 							CheckDEADcallON = 1; // Do this to keep the interface from instantly reading an email as a hangup
 							currently_in_email = 1; // Do this to block channel checks (or anything else) that would indicate a completed call
 
@@ -9985,6 +10375,114 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							did_custom_three								= check_VDIC_array[58];
 							did_custom_four									= check_VDIC_array[59];
 							did_custom_five									= check_VDIC_array[60];
+							status_group_statuses_data						= check_VDIC_array[61];
+
+							// build statuses list for disposition screen
+							VARstatuses = [];
+							VARstatusnames = [];
+							VARSELstatuses = [];
+							VARCBstatuses = [];
+							VARMINstatuses = [];
+							VARMAXstatuses = [];
+							VARCBstatusesLIST = '';
+							VD_statuses_ct = 0;
+							VARSELstatuses_ct = 0;
+							gVARstatuses = [];
+							gVARstatusnames = [];
+							gVARSELstatuses = [];
+							gVARCBstatuses = [];
+							gVARMINstatuses = [];
+							gVARMAXstatuses = [];
+							gVARCBstatusesLIST = '';
+							gVD_statuses_ct = 0;
+							gVARSELstatuses_ct = 0;
+
+							if (status_group_statuses_data.length > 7)
+								{
+								var gVARstatusesRAW=status_group_statuses_data.split(',');
+								var gVARstatusesRAWct = gVARstatusesRAW.length;
+								var loop_gct=0;
+								while (loop_gct < gVARstatusesRAWct)
+									{
+									var gVARstatusesRAWtemp = gVARstatusesRAW[loop_gct];
+									var gVARstatusesDETAILS = gVARstatusesRAWtemp.split('|');
+									gVARstatuses[loop_gct] =	gVARstatusesDETAILS[0];
+									gVARstatusnames[loop_gct] =	gVARstatusesDETAILS[1];
+									gVARSELstatuses[loop_gct] =	'Y';
+									gVARCBstatuses[loop_gct] =	gVARstatusesDETAILS[2];
+									gVARMINstatuses[loop_gct] =	gVARstatusesDETAILS[3];
+									gVARMAXstatuses[loop_gct] =	gVARstatusesDETAILS[4];
+									if (gVARCBstatuses[loop_gct] == 'Y')
+										{gVARCBstatusesLIST = gVARCBstatusesLIST + " " + gVARstatusesDETAILS[0];}
+									gVD_statuses_ct++;
+									gVARSELstatuses_ct++;
+
+									loop_gct++;
+									}
+								}
+							else
+								{
+								gVARstatuses = cVARstatuses;
+								gVARstatusnames = cVARstatusnames;
+								gVARSELstatuses = cVARSELstatuses;
+								gVARCBstatuses = cVARCBstatuses;
+								gVARMINstatuses = cVARMINstatuses;
+								gVARMAXstatuses = cVARMAXstatuses;
+								gVARCBstatusesLIST = cVARCBstatusesLIST;
+								gVD_statuses_ct = cVD_statuses_ct;
+								gVARSELstatuses_ct = cVARSELstatuses_ct;
+								}
+
+							VARstatuses = sVARstatuses.concat(gVARstatuses);
+							VARstatusnames = sVARstatusnames.concat(gVARstatusnames);
+							VARSELstatuses = sVARSELstatuses.concat(gVARSELstatuses);
+							VARCBstatuses = sVARCBstatuses.concat(gVARCBstatuses);
+							VARMINstatuses = sVARMINstatuses.concat(gVARMINstatuses);
+							VARMAXstatuses = sVARMAXstatuses.concat(gVARMAXstatuses);
+							VARCBstatusesLIST = sVARCBstatusesLIST + '' + gVARCBstatusesLIST;
+							VD_statuses_ct = (Number(sVD_statuses_ct) + Number(gVD_statuses_ct));
+							VARSELstatuses_ct = (Number(sVARSELstatuses_ct) + Number(gVARSELstatuses_ct));
+
+							var HKdebug='';
+							var HKboxAtemp='';
+							var HKboxBtemp='';
+							var HKboxCtemp='';
+							if (HK_statuses_camp > 0)
+								{
+								hotkeys = [];
+								var temp_HK_valid_ct=0;
+								while (HK_statuses_camp > temp_HK_valid_ct)
+									{
+									var temp_VARstatuses_ct=0;
+									while (VD_statuses_ct > temp_VARstatuses_ct)
+										{
+										if (HKstatuses[temp_HK_valid_ct] == VARstatuses[temp_VARstatuses_ct])
+											{
+											hotkeys[HKhotkeys[temp_HK_valid_ct]] = HKstatuses[temp_HK_valid_ct] + " ----- " + HKstatusnames[temp_HK_valid_ct];
+
+											if ( (HKhotkeys[temp_HK_valid_ct] >= 1) && (HKhotkeys[temp_HK_valid_ct] <= 3) )
+												{
+												HKboxAtemp = HKboxAtemp + "<font class=\"skb_text\">" + HKhotkeys[temp_HK_valid_ct] + "</font> - " + HKstatuses[temp_HK_valid_ct] + " - " + HKstatusnames[temp_HK_valid_ct] + "<br />";
+												}
+											if ( (HKhotkeys[temp_HK_valid_ct] >= 4) && (HKhotkeys[temp_HK_valid_ct] <= 6) )
+												{
+												HKboxBtemp = HKboxBtemp + "<font class=\"skb_text\">" + HKhotkeys[temp_HK_valid_ct] + "</font> - " + HKstatuses[temp_HK_valid_ct] + " - " + HKstatusnames[temp_HK_valid_ct] + "<br />";
+												}
+											if ( (HKhotkeys[temp_HK_valid_ct] >= 7) && (HKhotkeys[temp_HK_valid_ct] <= 9) )
+												{
+												HKboxCtemp = HKboxCtemp + "<font class=\"skb_text\">" + HKhotkeys[temp_HK_valid_ct] + "</font> - " + HKstatuses[temp_HK_valid_ct] + " - " + HKstatusnames[temp_HK_valid_ct] + "<br />";
+												}
+
+											HKdebug = HKdebug + '' + HKhotkeys[temp_HK_valid_ct] + ' ' + HKstatuses[temp_HK_valid_ct] + ' ' + HKstatusnames[temp_HK_valid_ct] + '| ';
+											}
+										temp_VARstatuses_ct++;
+										}
+									temp_HK_valid_ct++;
+									}
+								document.getElementById("HotKeyBoxA").innerHTML = HKboxAtemp;
+								document.getElementById("HotKeyBoxB").innerHTML = HKboxBtemp;
+								document.getElementById("HotKeyBoxC").innerHTML = HKboxCtemp;
+								}
 
 							if (agent_display_fields.match(adfREGentry_date))
 								{document.getElementById("entry_dateDISP").innerHTML = entry_date;}
@@ -10563,6 +11061,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		AgainCalLSecondS = VD_live_call_secondS;
 		AgaiNCalLCID = CalLCID;
 		dial_next_failed=0;
+		if (customer_sec < 1)
+			{customer_sec = VD_live_call_secondS;}
 		var process_post_hangup=0;
 		if ( (RedirecTxFEr < 1) && ( (MD_channel_look==1) || (auto_dial_level == 0) ) )
 			{
@@ -11094,6 +11594,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			HidEGenDerPulldown();
 			AgentDispoing = 1;
 			var CBflag = '';
+			var MINMAXbegin='';
+			var MINMAXend='';
 			var VD_statuses_ct_half = parseInt(VARSELstatuses_ct / 2);
 			var dispo_HTML = "<table cellpadding=\"5\" cellspacing=\"5\" width=\"500px\"><tr><td colspan=\"2\"><b> <?php echo _QXZ("CALL DISPOSITION"); ?></b></td></tr><tr><td bgcolor=\"#99FF99\" height=\"300px\" width=\"240px\" valign=\"top\"><font class=\"log_text\"><span id=\"DispoSelectA\">";
 			var loop_ct = 0;
@@ -11104,17 +11606,24 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					{
 					if (VARSELstatuses[loop_ct] == 'Y')
 						{
+						CBflag = '';
 						if (VARCBstatuses[loop_ct] == 'Y')
 							{CBflag = '*';}
-						else
-							{CBflag = '';}
-						if (taskDSgrp == VARstatuses[loop_ct]) 
+						// check for minimum and maximum customer talk seconds to see if status is non-selectable
+						if ( ( (VARMINstatuses[loop_ct] > 0) && (customer_sec < VARMINstatuses[loop_ct]) ) || ( (VARMAXstatuses[loop_ct] > 0) && (customer_sec > VARMAXstatuses[loop_ct]) ) )
 							{
-							dispo_HTML = dispo_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"DispoSelect_submit('','','YES');return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "</b></font><br /><br />";
+							dispo_HTML = dispo_HTML + '<DEL>' + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</DEL> " + CBflag + "<br /><br />";
 							}
 						else
 							{
-							dispo_HTML = dispo_HTML + "<a href=\"#\" onclick=\"DispoSelectContent_create('" + VARstatuses[loop_ct] + "','ADD','YES');return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "<br /><br />";
+							if (taskDSgrp == VARstatuses[loop_ct]) 
+								{
+								dispo_HTML = dispo_HTML + "<font size=\"3\" style=\"BACKGROUND-COLOR: #FFFFCC\"><b><a href=\"#\" onclick=\"DispoSelect_submit('','','YES');return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "</b></font><br /><br />";
+								}
+							else
+								{
+								dispo_HTML = dispo_HTML + "<a href=\"#\" onclick=\"DispoSelectContent_create('" + VARstatuses[loop_ct] + "','ADD','YES');return false;\">" + VARstatuses[loop_ct] + " - " + VARstatusnames[loop_ct] + "</a> " + CBflag + "<br /><br />";
+								}
 							}
 						if (print_ct == VD_statuses_ct_half) 
 							{dispo_HTML = dispo_HTML + "</span></font></td><td bgcolor=\"#99FF99\" height=\"300px\" width=\"240px\" valign=\"top\"><font class=\"log_text\"><span id=\"DispoSelectB\">";}
@@ -11476,6 +11985,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		blind_transfer=0;
 		CheckDEADcallON=0;
 		CheckDEADcallCOUNT=0;
+		customer_sec=0;
 		currently_in_email=0;
 		customer_3way_hangup_counter=0;
 		customer_3way_hangup_counter_trigger=0;
@@ -12864,64 +13374,85 @@ if ($useIE > 0)
 					}
 				else
 					{
-					// transfer call to answering maching message with hotkey
-					if ( (HKdispo_ary[0] == 'LTMG') || (HKdispo_ary[0] == 'XFTAMM') )
+					var HKXdebug='';
+					var HKerror=0;
+					var temp_VARstatuses_ct=0;
+					while (VD_statuses_ct > temp_VARstatuses_ct)
 						{
-						mainxfer_send_redirect('XfeRVMAIL', lastcustchannel, lastcustserverip);
+						if (HKdispo_ary[0] == VARstatuses[temp_VARstatuses_ct])
+							{
+							if ( ( (CheckDEADcallON > 0) && ( ( (VARMINstatuses[temp_VARstatuses_ct] > 0) && (customer_sec < VARMINstatuses[temp_VARstatuses_ct]) ) || ( (VARMAXstatuses[temp_VARstatuses_ct] > 0) && (customer_sec > VARMAXstatuses[temp_VARstatuses_ct]) ) ) ) || ( (CheckDEADcallON < 1) && ( ( (VARMINstatuses[temp_VARstatuses_ct] > 0) && (VD_live_call_secondS < VARMINstatuses[temp_VARstatuses_ct]) ) || ( (VARMAXstatuses[temp_VARstatuses_ct] > 0) && (VD_live_call_secondS > VARMAXstatuses[temp_VARstatuses_ct]) ) ) ) )
+								{
+								HKerror=1;
+								alert_box("<?php echo _QXZ("That status is not available at this time: "); ?>" + HKdispo_ary[0] + ' ' + VD_live_call_secondS + '(' + customer_sec + ')');
+								}
+						//	HKXdebug = HKXdebug + 'ERROR: ' + HKdispo_ary[0] + ' ' + VARstatuses[temp_VARstatuses_ct] + ' ' + VARMINstatuses[temp_VARstatuses_ct] + '| ' + VARMAXstatuses[temp_VARstatuses_ct] + '| ' + CheckDEADcallON + '| ' + VD_live_call_secondS + '| ';
+
+						//	document.getElementById("debugbottomspan").innerHTML = HKXdebug;
+							}
+						temp_VARstatuses_ct++;
 						}
-					else
+					if (HKerror < 1)
 						{
-						HKdispo_display = 3;
-						// Check for hotkeys enabled wrapup message
-						if ( (wrapup_after_hotkey == 'ENABLED') && (wrapup_seconds > 0) )
+						// transfer call to answering maching message with hotkey
+						if ( (HKdispo_ary[0] == 'LTMG') || (HKdispo_ary[0] == 'XFTAMM') )
 							{
-							HKdispo_display = wrapup_seconds;
-							if (HKdispo_display < 3)
-								{HKdispo_display = 3;}
-
-							document.getElementById("HotKeyActionBox").style.top = '1px';
-							document.getElementById("HotKeyActionBox").style.left = '1px';
-							document.getElementById("HKWrapupTimer").innerHTML = "<br /><?php echo _QXZ("Call Wrapup:"); ?> " + HKdispo_display + " <?php echo _QXZ("seconds remaining in wrapup"); ?>";
-							if (wrapup_message.match(regWFS))
-								{
-							//	document.getElementById("FSCREENWrapupMessage").innerHTML = document.getElementById("WrapupMessage").innerHTML;
-								}
-							else
-								{
-								document.getElementById("HKWrapupMessage").innerHTML = "<br /><br /><center><table width=" + CAwidth + "><tr><td height=" + WRheight + " align=center>" + document.getElementById("WrapupMessage").innerHTML + "<br /> &nbsp; </td></tr></table></center>";
-								}
-
-							if (wrapup_bypass == 'ENABLED')
-								{
-								document.getElementById("HKWrapupBypass").innerHTML = " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"HKWrapupFinish();return false;\"><?php echo _QXZ("Finish Wrapup and Move On"); ?></a>";
-								}
-							else
-								{document.getElementById("HKWrapupBypass").innerHTML = '';}
+							mainxfer_send_redirect('XfeRVMAIL', lastcustchannel, lastcustserverip);
 							}
 						else
 							{
-							document.getElementById("HotKeyActionBox").style.top = HTheight;
-							document.getElementById("HotKeyActionBox").style.left = '5px';
-							document.getElementById("HKWrapupTimer").innerHTML = '';
-							document.getElementById("HKWrapupMessage").innerHTML = '';
-							document.getElementById("HKWrapupBypass").innerHTML = '';
-							}
-						HKdispo_submit = HKdispo_display;
-						HKfinish=1;
-						alt_phone_dialing=starting_alt_phone_dialing;
-						alt_dial_active = 0;
-						alt_dial_status_display = 0;
-						document.getElementById("HotKeyDispo").innerHTML = HKdispo_ary[0] + " - " + HKdispo_ary[1];
-						if ( ( (wrapup_after_hotkey == 'ENABLED') && (wrapup_seconds > 0) ) && (wrapup_message.match(regWFS)) )
-							{showDiv('FSCREENWrapupBox');  HKFSCREENup=1;}
-						else
-							{showDiv('HotKeyActionBox');}
-						hideDiv('HotKeyEntriesBox');
-						document.vicidial_form.DispoSelection.value = HKdispo_ary[0];
-						dialedcall_send_hangup('NO', 'YES', HKdispo_ary[0]);
-						if (custom_fields_enabled > 0)
-							{
-							vcFormIFrame.document.form_custom_fields.submit();
+							HKdispo_display = 3;
+							// Check for hotkeys enabled wrapup message
+							if ( (wrapup_after_hotkey == 'ENABLED') && (wrapup_seconds > 0) )
+								{
+								HKdispo_display = wrapup_seconds;
+								if (HKdispo_display < 3)
+									{HKdispo_display = 3;}
+
+								document.getElementById("HotKeyActionBox").style.top = '1px';
+								document.getElementById("HotKeyActionBox").style.left = '1px';
+								document.getElementById("HKWrapupTimer").innerHTML = "<br /><?php echo _QXZ("Call Wrapup:"); ?> " + HKdispo_display + " <?php echo _QXZ("seconds remaining in wrapup"); ?>";
+								if (wrapup_message.match(regWFS))
+									{
+								//	document.getElementById("FSCREENWrapupMessage").innerHTML = document.getElementById("WrapupMessage").innerHTML;
+									}
+								else
+									{
+									document.getElementById("HKWrapupMessage").innerHTML = "<br /><br /><center><table width=" + CAwidth + "><tr><td height=" + WRheight + " align=center>" + document.getElementById("WrapupMessage").innerHTML + "<br /> &nbsp; </td></tr></table></center>";
+									}
+
+								if (wrapup_bypass == 'ENABLED')
+									{
+									document.getElementById("HKWrapupBypass").innerHTML = " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"HKWrapupFinish();return false;\"><?php echo _QXZ("Finish Wrapup and Move On"); ?></a>";
+									}
+								else
+									{document.getElementById("HKWrapupBypass").innerHTML = '';}
+								}
+							else
+								{
+								document.getElementById("HotKeyActionBox").style.top = HTheight;
+								document.getElementById("HotKeyActionBox").style.left = '5px';
+								document.getElementById("HKWrapupTimer").innerHTML = '';
+								document.getElementById("HKWrapupMessage").innerHTML = '';
+								document.getElementById("HKWrapupBypass").innerHTML = '';
+								}
+							HKdispo_submit = HKdispo_display;
+							HKfinish=1;
+							alt_phone_dialing=starting_alt_phone_dialing;
+							alt_dial_active = 0;
+							alt_dial_status_display = 0;
+							document.getElementById("HotKeyDispo").innerHTML = HKdispo_ary[0] + " - " + HKdispo_ary[1];
+							if ( ( (wrapup_after_hotkey == 'ENABLED') && (wrapup_seconds > 0) ) && (wrapup_message.match(regWFS)) )
+								{showDiv('FSCREENWrapupBox');  HKFSCREENup=1;}
+							else
+								{showDiv('HotKeyActionBox');}
+							hideDiv('HotKeyEntriesBox');
+							document.vicidial_form.DispoSelection.value = HKdispo_ary[0];
+							dialedcall_send_hangup('NO', 'YES', HKdispo_ary[0]);
+							if (custom_fields_enabled > 0)
+								{
+								vcFormIFrame.document.form_custom_fields.submit();
+								}
 							}
 						}
 					}
@@ -12967,71 +13498,93 @@ else
 					}
 				else
 					{
-					// transfer call to answering maching message with hotkey
-					if ( (HKdispo_ary[0] == 'LTMG') || (HKdispo_ary[0] == 'XFTAMM') )
+					var HKXdebug='';
+					var HKerror=0;
+					var temp_VARstatuses_ct=0;
+					while (VD_statuses_ct > temp_VARstatuses_ct)
 						{
-						mainxfer_send_redirect('XfeRVMAIL', lastcustchannel, lastcustserverip);
-						}
-					else
-						{
-						HKdispo_display = 3;
-						// Check for hotkeys enabled wrapup message
-						if ( (wrapup_after_hotkey == 'ENABLED') && (wrapup_seconds > 0) )
+						if (HKdispo_ary[0] == VARstatuses[temp_VARstatuses_ct])
 							{
-							HKdispo_display = wrapup_seconds;
-							if (HKdispo_display < 3)
-								{HKdispo_display = 3;}
+							if ( ( (CheckDEADcallON > 0) && ( ( (VARMINstatuses[temp_VARstatuses_ct] > 0) && (customer_sec < VARMINstatuses[temp_VARstatuses_ct]) ) || ( (VARMAXstatuses[temp_VARstatuses_ct] > 0) && (customer_sec > VARMAXstatuses[temp_VARstatuses_ct]) ) ) ) || ( (CheckDEADcallON < 1) && ( ( (VARMINstatuses[temp_VARstatuses_ct] > 0) && (VD_live_call_secondS < VARMINstatuses[temp_VARstatuses_ct]) ) || ( (VARMAXstatuses[temp_VARstatuses_ct] > 0) && (VD_live_call_secondS > VARMAXstatuses[temp_VARstatuses_ct]) ) ) ) )
+								{
+								HKerror=1;
 
-							document.getElementById("HotKeyActionBox").style.top = '1px';
-							document.getElementById("HotKeyActionBox").style.left = '1px';
-							document.getElementById("HKWrapupTimer").innerHTML = "<br /><?php echo _QXZ("Call Wrapup:"); ?> " + HKdispo_display + " <?php echo _QXZ("seconds remaining in wrapup"); ?>";
-							if (wrapup_message.match(regWFS))
-								{
-							//	document.getElementById("FSCREENWrapupMessage").innerHTML = document.getElementById("WrapupMessage").innerHTML;
+								alert_box("<?php echo _QXZ("That status is not available at this time: "); ?>" + HKdispo_ary[0] + ' ' + VD_live_call_secondS + '(' + customer_sec + ')');
 								}
-							else
-								{
-								document.getElementById("HKWrapupMessage").innerHTML = "<br /><br /><center><table width=" + CAwidth + "><tr><td height=" + WRheight + " align=center>" + document.getElementById("WrapupMessage").innerHTML + "<br /> &nbsp; </td></tr></table></center>";
-								}
+						//	HKXdebug = HKXdebug + 'ERROR: ' + HKdispo_ary[0] + ' ' + VARstatuses[temp_VARstatuses_ct] + ' ' + VARMINstatuses[temp_VARstatuses_ct] + '| ' + VARMAXstatuses[temp_VARstatuses_ct] + '| ' + CheckDEADcallON + '| ' + VD_live_call_secondS + '| ';
 
-							if (wrapup_bypass == 'ENABLED')
-								{
-								document.getElementById("HKWrapupBypass").innerHTML = " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"HKWrapupFinish();return false;\"><?php echo _QXZ("Finish Wrapup and Move On"); ?></a>";
-								}
-							else
-								{document.getElementById("HKWrapupBypass").innerHTML = '';}
+						//	document.getElementById("debugbottomspan").innerHTML = HKXdebug;
+							}
+						temp_VARstatuses_ct++;
+						}
+					if (HKerror < 1)
+						{
+						// transfer call to answering maching message with hotkey
+						if ( (HKdispo_ary[0] == 'LTMG') || (HKdispo_ary[0] == 'XFTAMM') )
+							{
+							mainxfer_send_redirect('XfeRVMAIL', lastcustchannel, lastcustserverip);
 							}
 						else
 							{
-							document.getElementById("HotKeyActionBox").style.top = HTheight;
-							document.getElementById("HotKeyActionBox").style.left = '5px';
-							document.getElementById("HKWrapupTimer").innerHTML = '';
-							document.getElementById("HKWrapupMessage").innerHTML = '';
-							document.getElementById("HKWrapupBypass").innerHTML = '';
-							}
-						HKdispo_submit = HKdispo_display;
-						HKfinish=1;
-						document.getElementById("HotKeyDispo").innerHTML = HKdispo_ary[0] + " - " + HKdispo_ary[1];
-						if ( ( (wrapup_after_hotkey == 'ENABLED') && (wrapup_seconds > 0) ) && (wrapup_message.match(regWFS)) )
-							{showDiv('FSCREENWrapupBox');  HKFSCREENup=1;}
-						else
-							{showDiv('HotKeyActionBox');}
-						hideDiv('HotKeyEntriesBox');
-						document.vicidial_form.DispoSelection.value = HKdispo_ary[0];
-						alt_phone_dialing=starting_alt_phone_dialing;
-						alt_dial_active = 0;
-						alt_dial_status_display = 0;
-						dialedcall_send_hangup('NO', 'YES', HKdispo_ary[0]);
-						if (custom_fields_enabled > 0)
-							{
-							vcFormIFrame.document.form_custom_fields.submit();
+							HKdispo_display = 3;
+							// Check for hotkeys enabled wrapup message
+							if ( (wrapup_after_hotkey == 'ENABLED') && (wrapup_seconds > 0) )
+								{
+								HKdispo_display = wrapup_seconds;
+								if (HKdispo_display < 3)
+									{HKdispo_display = 3;}
+
+								document.getElementById("HotKeyActionBox").style.top = '1px';
+								document.getElementById("HotKeyActionBox").style.left = '1px';
+								document.getElementById("HKWrapupTimer").innerHTML = "<br /><?php echo _QXZ("Call Wrapup:"); ?> " + HKdispo_display + " <?php echo _QXZ("seconds remaining in wrapup"); ?>";
+								if (wrapup_message.match(regWFS))
+									{
+								//	document.getElementById("FSCREENWrapupMessage").innerHTML = document.getElementById("WrapupMessage").innerHTML;
+									}
+								else
+									{
+									document.getElementById("HKWrapupMessage").innerHTML = "<br /><br /><center><table width=" + CAwidth + "><tr><td height=" + WRheight + " align=center>" + document.getElementById("WrapupMessage").innerHTML + "<br /> &nbsp; </td></tr></table></center>";
+									}
+
+								if (wrapup_bypass == 'ENABLED')
+									{
+									document.getElementById("HKWrapupBypass").innerHTML = " &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"HKWrapupFinish();return false;\"><?php echo _QXZ("Finish Wrapup and Move On"); ?></a>";
+									}
+								else
+									{document.getElementById("HKWrapupBypass").innerHTML = '';}
+								}
+							else
+								{
+								document.getElementById("HotKeyActionBox").style.top = HTheight;
+								document.getElementById("HotKeyActionBox").style.left = '5px';
+								document.getElementById("HKWrapupTimer").innerHTML = '';
+								document.getElementById("HKWrapupMessage").innerHTML = '';
+								document.getElementById("HKWrapupBypass").innerHTML = '';
+								}
+							HKdispo_submit = HKdispo_display;
+							HKfinish=1;
+							document.getElementById("HotKeyDispo").innerHTML = HKdispo_ary[0] + " - " + HKdispo_ary[1];
+							if ( ( (wrapup_after_hotkey == 'ENABLED') && (wrapup_seconds > 0) ) && (wrapup_message.match(regWFS)) )
+								{showDiv('FSCREENWrapupBox');  HKFSCREENup=1;}
+							else
+								{showDiv('HotKeyActionBox');}
+							hideDiv('HotKeyEntriesBox');
+							document.vicidial_form.DispoSelection.value = HKdispo_ary[0];
+							alt_phone_dialing=starting_alt_phone_dialing;
+							alt_dial_active = 0;
+							alt_dial_status_display = 0;
+							dialedcall_send_hangup('NO', 'YES', HKdispo_ary[0]);
+							if (custom_fields_enabled > 0)
+								{
+								vcFormIFrame.document.form_custom_fields.submit();
+								}
 							}
 						}
+				//	DispoSelect_submit();
+				//	AutoDialWaiting = 1;
+				//	AutoDial_ReSume_PauSe("VDADready");
+				//	alert(HKdispo + " - " + HKdispo_ary[0] + " - " + HKdispo_ary[1]);
 					}
-			//	DispoSelect_submit();
-			//	AutoDialWaiting = 1;
-			//	AutoDial_ReSume_PauSe("VDADready");
-			//	alert(HKdispo + " - " + HKdispo_ary[0] + " - " + HKdispo_ary[1]);
 				}
 			}
 		}
@@ -15227,7 +15780,7 @@ function phone_number_format(formatphone) {
 					{TerritorySelect_submit();}
 				}
 			if (logout_stop_timeouts==1)	{WaitingForNextStep=1;}
-			if ( (custchannellive < customer_gone_seconds) && (lastcustchannel.length > 3) && (no_empty_session_warnings < 1) && (document.vicidial_form.lead_id.value != '') ) 
+			if ( (custchannellive < customer_gone_seconds) && (lastcustchannel.length > 3) && (no_empty_session_warnings < 1) && (document.vicidial_form.lead_id.value != '') && (currently_in_email==0) ) 
 				{CustomerChanneLGone();}
 		//	document.getElementById("debugbottomspan").innerHTML = "custchannellive: " + custchannellive + " lastcustchannel.length: " + lastcustchannel.length + " no_empty_session_warnings: " + no_empty_session_warnings + " lead_id: |" + document.vicidial_form.lead_id.value + "|";
 			if ( (custchannellive < -10) && (lastcustchannel.length > 3) ) {ReChecKCustoMerChaN();}

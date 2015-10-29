@@ -39,6 +39,7 @@
 # 150302-0706 - Removed path changes for non-English languages
 # 150312-0942 - Added ExpectedDBSchema value in astguiclient.conf
 # 150911-1808 - Added creation of GPG directory for encrypted recordings
+# 151029-0650 - Added Asterisk 11 as listed option, added new sample voicemail.conf for 1.8 and higher
 #
 
 ############################################
@@ -1841,6 +1842,7 @@ else
 			print " 1.2\n";
 			print " 1.4\n";
 			print " 1.8\n";
+			print " 11.X\n";
 			print "Enter asterisk version or press enter for default: [$VARasterisk_version] ";
 			$PROMPTasterisk_version = <STDIN>;
 			chomp($PROMPTasterisk_version);
@@ -2700,15 +2702,17 @@ if ( ($PROMPTcopy_conf_files =~ /y/i) || ($CLIcopy_conf_files =~ /y/i) )
 		`cp -f ./docs/conf_examples/iax.conf.sample /etc/asterisk/iax.conf`;
 		`cp -f ./docs/conf_examples/sip.conf.sample /etc/asterisk/sip.conf`;
 		`cp -f ./docs/conf_examples/manager.conf.sample /etc/asterisk/manager.conf`;
+		`cp -f ./docs/conf_examples/voicemail.conf.sample /etc/asterisk/voicemail.conf`;
 		}
 	else
 		{
-		if ($VARasterisk_version =~ /^1.8/)
+		if ($VARasterisk_version =~ /^1.8|^11/)
 			{
 			`cp -f ./docs/conf_examples/extensions.conf.sample-1.8 /etc/asterisk/extensions.conf`;
 			`cp -f ./docs/conf_examples/iax.conf.sample-1.4 /etc/asterisk/iax.conf`;
 			`cp -f ./docs/conf_examples/sip.conf.sample-1.4 /etc/asterisk/sip.conf`;
 			`cp -f ./docs/conf_examples/manager.conf.sample-1.8 /etc/asterisk/manager.conf`;
+			`cp -f ./docs/conf_examples/voicemail.conf.sample-1.8 /etc/asterisk/voicemail.conf`;
 			}
 		else
 			{
@@ -2716,11 +2720,11 @@ if ( ($PROMPTcopy_conf_files =~ /y/i) || ($CLIcopy_conf_files =~ /y/i) )
 			`cp -f ./docs/conf_examples/iax.conf.sample-1.4 /etc/asterisk/iax.conf`;
 			`cp -f ./docs/conf_examples/sip.conf.sample-1.4 /etc/asterisk/sip.conf`;
 			`cp -f ./docs/conf_examples/manager.conf.sample /etc/asterisk/manager.conf`;
+			`cp -f ./docs/conf_examples/voicemail.conf.sample /etc/asterisk/voicemail.conf`;
 			}
 		}
 	`cp -f ./docs/conf_examples/meetme.conf.sample /etc/asterisk/meetme.conf`;
 	`cp -f ./docs/conf_examples/musiconhold.conf.sample /etc/asterisk/musiconhold.conf`;
-	`cp -f ./docs/conf_examples/voicemail.conf.sample /etc/asterisk/voicemail.conf`;
 	`cp -f ./docs/conf_examples/logger.conf.sample /etc/asterisk/logger.conf`;
 	`cp -f ./docs/conf_examples/dnsmgr.conf.sample /etc/asterisk/dnsmgr.conf`;
 	`cp -f ./docs/conf_examples/features.conf.sample /etc/asterisk/features.conf`;

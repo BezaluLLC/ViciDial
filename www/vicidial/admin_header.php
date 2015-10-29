@@ -53,6 +53,7 @@
 # 150307-0915 - Fixes for QXZ
 # 150806-1023 - Added code for Admin -> Settings Containers
 # 150808-2043 - Added compatibility for custom fields data option
+# 151020-0654 - Added Status Groups
 #
 
 
@@ -1515,6 +1516,8 @@ $SSenable_languages =		$row[7];
 			else {$cts_sh=''; $cts_fc='BLACK';}
 		if ($sh=='sc') {$sc_sh="bgcolor=\"$sc_color\""; $sc_fc="$cc_font";}
 			else {$sc_sh=''; $sc_fc='BLACK';}
+		if ($sh=='sg') {$sg_sh="bgcolor=\"$sg_color\""; $sg_fc="$cc_font";}
+			else {$sg_sh=''; $sg_fc='BLACK';}
 		if ($sh=='emails') {$emails_sh="bgcolor=\"$subcamp_color\""; $emails_fc="$subcamp_font";}
 			else {$emails_sh=''; $emails_fc='BLACK';}
 
@@ -1541,6 +1544,8 @@ $SSenable_languages =		$row[7];
 		<a href="<?php echo $ADMIN ?>?ADD=180000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $label_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Screen Labels"); ?> </a></TD>
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $status_sh ?>> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=321111111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $status_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("System Statuses"); ?> </a></TD>
+		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $sg_sh ?>> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=193000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $status_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Status Groups"); ?> </a></TD>
 		</TR><TR BGCOLOR=<?php echo $admin_color ?>><TD ALIGN=LEFT <?php echo $vm_sh ?>> &nbsp; 
 		<a href="<?php echo $ADMIN ?>?ADD=170000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=<?php echo $vm_fc ?> SIZE=<?php echo $header_font_size ?>> <?php echo _QXZ("Voicemail"); ?> </a></TD>
 		</TR>
@@ -1768,6 +1773,10 @@ if ($SSenable_languages == '1')
 	if (strlen($sc_sh) > 1) { 
 		?>
 	<TR BGCOLOR=<?php echo $sc_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=192000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Settings Containers"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=192111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A Settings Container"); ?> </a><?php } ?></TD></TR>
+	<?php }
+	if (strlen($sg_sh) > 1) { 
+		?>
+	<TR BGCOLOR=<?php echo $sg_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=193000000000"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Status Groups"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=193111111111"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=<?php echo $subheader_font_size ?>> <?php echo _QXZ("Add A Status Group"); ?> </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($status_sh) > 1) and (!preg_match('/campaign/i',$hh) ) ) { 
 		?>

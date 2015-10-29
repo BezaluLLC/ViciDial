@@ -72,3 +72,8 @@ textarea.chat_box {
     padding: 2px;
     border: solid 1px #000066;
 }
+.cust_form { 
+	font-family: Sans-Serif; 
+	font-size: 10px; 
+	overflow: hidden; 
+}

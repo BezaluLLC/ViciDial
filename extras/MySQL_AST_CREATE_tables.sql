@@ -686,7 +686,8 @@ webphone_url_override VARCHAR(255) default '',
 webphone_systemkey_override VARCHAR(100) default '',
 webphone_dialpad_override ENUM('DISABLED','Y','N','TOGGLE','TOGGLE_OFF') default 'DISABLED',
 admin_viewable_groups TEXT,
-admin_viewable_call_times TEXT
+admin_viewable_call_times TEXT,
+allowed_custom_reports VARCHAR(2000) default ''
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns (
@@ -961,7 +962,8 @@ inventory_report ENUM('Y','N') default 'Y',
 expiration_date DATE default '2099-12-31',
 na_call_url TEXT,
 local_call_time VARCHAR(10) NOT NULL DEFAULT 'campaign',
-web_form_address_three TEXT
+web_form_address_three TEXT,
+status_group_id VARCHAR(20) default ''
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_statuses (
@@ -976,14 +978,16 @@ customer_contact ENUM('Y','N') default 'N',
 not_interested ENUM('Y','N') default 'N',
 unworkable ENUM('Y','N') default 'N',
 scheduled_callback ENUM('Y','N') default 'N',
-completed ENUM('Y','N') default 'N'
+completed ENUM('Y','N') default 'N',
+min_sec INT(5) UNSIGNED default '0',
+max_sec INT(5) UNSIGNED default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaign_statuses (
 status VARCHAR(6) NOT NULL,
 status_name VARCHAR(30),
 selectable ENUM('Y','N'),
-campaign_id VARCHAR(8),
+campaign_id VARCHAR(20),
 human_answered ENUM('Y','N') default 'N',
 category VARCHAR(20) default 'UNDEFINED',
 sale ENUM('Y','N') default 'N',
@@ -993,6 +997,8 @@ not_interested ENUM('Y','N') default 'N',
 unworkable ENUM('Y','N') default 'N',
 scheduled_callback ENUM('Y','N') default 'N',
 completed ENUM('Y','N') default 'N',
+min_sec INT(5) UNSIGNED default '0',
+max_sec INT(5) UNSIGNED default '0',
 index (campaign_id)
 ) ENGINE=MyISAM;
 
@@ -1148,7 +1154,8 @@ drop_lead_reset ENUM('Y','N') default 'N',
 after_hours_lead_reset ENUM('Y','N') default 'N',
 nanq_lead_reset ENUM('Y','N') default 'N',
 wait_time_lead_reset ENUM('Y','N') default 'N',
-hold_time_lead_reset ENUM('Y','N') default 'N'
+hold_time_lead_reset ENUM('Y','N') default 'N',
+status_group_id VARCHAR(20) default ''
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -1612,7 +1619,8 @@ chat_timeout INT(3) unsigned DEFAULT NULL,
 agent_debug_logging VARCHAR(20) default '0',
 default_language VARCHAR(100) default 'default English',
 agent_whisper_enabled ENUM('0','1') default '0',
-user_hide_realtime_enabled ENUM('0','1') default '0'
+user_hide_realtime_enabled ENUM('0','1') default '0',
+custom_reports_use_slave_db VARCHAR(2000) default ''
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3327,6 +3335,25 @@ user VARCHAR(20) default '',
 index (phone_number)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE vicidial_status_groups (
+status_group_id VARCHAR(20) PRIMARY KEY NOT NULL,
+status_group_notes VARCHAR(255) default '',
+user_group VARCHAR(20) default '---ALL---'
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE vicidial_custom_reports (
+custom_report_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+report_name VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+date_added DATETIME DEFAULT NULL,
+user VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+domain VARCHAR(70) COLLATE utf8_unicode_ci DEFAULT NULL,
+path_name VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+date_modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+user_modify VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+PRIMARY KEY (custom_report_id),
+UNIQUE KEY custom_report_name_key (report_name)
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3576,4 +3603,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1432',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1433',db_schema_update_date=NOW(),reload_timestamp=NOW();

@@ -165,6 +165,16 @@ OTHER CHANGES:
 
 39. Changed AC-CID to be able to use areacodes from 2 to 5 digits in length
 
+40. Added admin web interface to allow for easy linking and display of custom
+	reports that are not included in Vicidial
+
+41. Added Status Groups and the ability to override Campaign Statuses on a 
+	per-In-Group or per-List basis
+
+42. Added Minimum and Maximum Seconds options for all status settings. This 
+	allows you to prevent the use of a status by an agent if they have
+	talked to a customer less than X seconds or more than Y seconds.
+
 
 
 

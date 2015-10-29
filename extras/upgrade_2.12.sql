@@ -303,3 +303,40 @@ index (phone_number)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 UPDATE system_settings SET db_schema_version='1432',db_schema_update_date=NOW() where db_schema_version < 1432;
+
+CREATE TABLE vicidial_status_groups (
+status_group_id VARCHAR(20) PRIMARY KEY NOT NULL,
+status_group_notes VARCHAR(255) default '',
+user_group VARCHAR(20) default '---ALL---'
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+ALTER TABLE vicidial_campaign_statuses MODIFY campaign_id VARCHAR(20);
+
+ALTER TABLE vicidial_lists ADD status_group_id VARCHAR(20) default '';
+
+ALTER TABLE vicidial_inbound_groups ADD status_group_id VARCHAR(20) default '';
+
+ALTER TABLE vicidial_campaign_statuses ADD min_sec INT(5) UNSIGNED default '0';
+ALTER TABLE vicidial_campaign_statuses ADD max_sec INT(5) UNSIGNED default '0';
+
+ALTER TABLE vicidial_statuses ADD min_sec INT(5) UNSIGNED default '0';
+ALTER TABLE vicidial_statuses ADD max_sec INT(5) UNSIGNED default '0';
+
+ALTER TABLE system_settings ADD custom_reports_use_slave_db VARCHAR(2000) default '';
+
+ALTER TABLE vicidial_user_groups ADD allowed_custom_reports VARCHAR(2000) default '';
+
+CREATE TABLE vicidial_custom_reports (
+custom_report_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+report_name VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+date_added DATETIME DEFAULT NULL,
+user VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+domain VARCHAR(70) COLLATE utf8_unicode_ci DEFAULT NULL,
+path_name VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+date_modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+user_modify VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+PRIMARY KEY (custom_report_id),
+UNIQUE KEY custom_report_name_key (report_name)
+) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+UPDATE system_settings SET db_schema_version='1433',db_schema_update_date=NOW() where db_schema_version < 1433;
