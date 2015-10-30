@@ -60,6 +60,7 @@ use MIME::QuotedPrint;
 # 140313-0905 - Added Debug options when --debugX for both IMAP and POP3
 # 140422-1912 - Added 'related' content type
 # 150513-2310 - Added pop3_auth_mode
+# 151030-0557 - Small change to catch more attachments properly
 #
 
 # default path to astguiclient configuration file:
@@ -417,9 +418,10 @@ while (@row=$rslt->fetchrow_array) {
 											if ($sub_content_disposition=~/attachment/) {
 												$attachment_fulltype="";
 												$attachment_filename="";
+
 												## Check to see if attachment is an accepted filetype
-												$sub_content_type=~/Content-Type\:\s+[^\;]+\;/i; $attachment_type=$&;
-												$attachment_type=~s/(^Content-Type\:\s+|\;$)//gi;
+												$sub_content_type=~/Content-Type\:\s+[^\;]+(\;.*)?$/i; $attachment_type=$&;
+												$attachment_type=~s/(^Content-Type\:\s+|(\;.*)?$)//gi;
 												$attachment_type=~s/[\r\n]//g;
 
 												switch ($attachment_type) {
@@ -746,8 +748,8 @@ while (@row=$rslt->fetchrow_array) {
 								$attachment_fulltype="";
 								$attachment_filename="";
 								## Check to see if attachment is an accepted filetype
-								$sub_content_type=~/Content-Type\:\s+[^\;]+\;/i; $attachment_type=$&;
-								$attachment_type=~s/(^Content-Type\:\s+|\;$)//gi;
+								$sub_content_type=~/Content-Type\:\s+[^\;]+(\;.*)?$/i; $attachment_type=$&;
+								$attachment_type=~s/(^Content-Type\:\s+|(\;.*)?$)//gi;
 								$attachment_type=~s/[\r\n]//g;
 
 								switch ($attachment_type) {
