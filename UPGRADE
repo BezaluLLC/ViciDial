@@ -175,6 +175,16 @@ OTHER CHANGES:
 	allows you to prevent the use of a status by an agent if they have
 	talked to a customer less than X seconds or more than Y seconds.
 
+43. Added the system setting USA-Canada Phone Number Dialcode Fix which will
+	trigger a process that will run at the Timeclock End of Day that will 
+	check all phone numbers to populate the dial code, or phone code, field
+	with a 1 if it is missing as well as remove a leading 1 from the phone
+	number field if it is present.
+
+44. Added --lstn-buffer option to keepalive script to run special enhanced 
+	buffer version of the Listen process. Requires newer Net::Telnet perl
+	module version.
+
 
 
 

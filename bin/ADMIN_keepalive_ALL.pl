@@ -101,9 +101,10 @@
 # 150307-1738 - Added custom meetme enter sounds(only works with Asterisk 1.8)
 # 150724-0835 - Added purge of vicidial_ajax_log records older than 7 days to end of day process
 # 150804-0919 - Added whisper extensions
+# 151031-0931 - Added usacan_phone_dialcode_fix feature at timeclock-end-of-day, added -lstn-buffer option
 #
 
-$build = '150804-0919';
+$build = '151031-0931';
 
 $DB=0; # Debug flag
 
@@ -190,6 +191,7 @@ if (length($ARGV[0])>1)
 		print "  [-adfill-delay=X] = setting delay milliseconds on auto-dial FILL process\n";
 		print "  [-fill-staggered] = enable experimental staggered auto-dial FILL process\n";
 		print "  [-cu3way] = keepalive for the optional 3way conference checker\n";
+		print "  [-lstn-buffer] = use special enhanced telnet buffer listen process\n";
 		print "  [-cu3way-delay=X] = setting delay seconds on 3way conference checker\n";
 		print "  [-debug] = verbose debug messages\n";
 		print "  [-debugX] = Extra-verbose debug messages\n";
@@ -257,6 +259,11 @@ if (length($ARGV[0])>1)
 			{
 			$cu3way=1;
 			if ($DB > 0) {print "\n----- cu3way ENABLED -----\n\n";}
+			}
+		if ($args =~ /-lstn-buffer/i)
+			{
+			$lstn_buffer=1;
+			if ($DB > 0) {print "\n----- lstn_buffer ENABLED -----\n\n";}
 			}
 		if ($args =~ /-cu3way-delay=/i) # CLI defined delay
 			{
@@ -667,7 +674,10 @@ else
 			{ 
 			if ($DB) {print "starting AST_manager_listen...\n";}
 			# add a '-L' to the command below to activate logging
-			`/usr/bin/screen -d -m -S ASTlisten $PATHhome/AST_manager_listen.pl`;
+			if ($lstn_buffer > 0) 
+				{`/usr/bin/screen -d -m -S ASTlisten $PATHhome/AST_manager_listenBUFFER.pl`;}
+			else
+				{`/usr/bin/screen -d -m -S ASTlisten $PATHhome/AST_manager_listen.pl`;}
 			}
 		if ( ($AST_VDauto_dial > 0) && ($runningAST_VDauto_dial < 1) )
 			{ 
@@ -800,7 +810,7 @@ $sthA->finish();
 
 if ($timeclock_end_of_day_NOW > 0)
 	{
-	$stmtA = "SELECT agents_calls_reset from system_settings;";
+	$stmtA = "SELECT agents_calls_reset,usacan_phone_dialcode_fix from system_settings;";
 	if ($DB) {print "|$stmtA|\n";}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -808,7 +818,8 @@ if ($timeclock_end_of_day_NOW > 0)
 	if ($SSsel_ct > 0)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$agents_calls_reset =	 $aryA[0];
+		$agents_calls_reset =			$aryA[0];
+		$usacan_phone_dialcode_fix =	$aryA[1];
 		}
 	$sthA->finish();
 
@@ -1270,7 +1281,6 @@ if ($timeclock_end_of_day_NOW > 0)
 	##### END ra stats end of day process #####
 
 
-
 	##### BEGIN vicidial_ajax_log end of day process removing records older than 7 days #####
 	$stmtA = "DELETE from vicidial_ajax_log where db_time < \"$SDSQLdate\";";
 	if($DBX){print STDERR "\n|$stmtA|\n";}
@@ -1287,6 +1297,29 @@ if ($timeclock_end_of_day_NOW > 0)
 	$sthA->finish();
 	##### END vicidial_ajax_log end of day process removing records older than 7 days #####
 
+
+	##### BEGIN usacan_phone_dialcode_fix funciton #####
+	if ($usacan_phone_dialcode_fix > 0)
+		{
+		$stmtA = "UPDATE vicidial_list SET phone_code='1' where phone_code!='1';";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$PCaffected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$PCaffected_rows vicidial_list.phone_code entries set to 1|\n";}
+
+		$stmtA = "UPDATE vicidial_list SET phone_number = TRIM(LEADING '1' from phone_number) where char_length(phone_number) > 10 and phone_number LIKE \"1%\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$PNaffected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$PNaffected_rows vicidial_list phone_number leading 1 entries trimmed|\n";}
+
+		if ( ($PCaffected_rows > 0) or ($PNaffected_rows > 0) )
+			{
+			if ($DB) {print "restarting Asterisk process...\n";}
+			$stmtA="INSERT INTO vicidial_admin_log set event_date=NOW(), user='VDAD', ip_address='1.1.1.1', event_section='SERVERS', event_type='MODIFY', record_id='leads', event_code='USACAN PHONE DIALCODE FIX', event_sql='', event_notes='$PCaffected_rows vicidial_list.phone_code entries set to 1|$PNaffected_rows vicidial_list phone_number leading 1 entries trimmed|';";
+			$Laffected_rows = $dbhA->do($stmtA);
+			if ($DBX) {print "Admin log of USACAN phone code fix: |$Laffected_rows|$stmtA|\n";}
+			}
+		}
+	##### END usacan_phone_dialcode_fix funciton #####
 
 
 	$dbhC = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_custom_user", "$VARDB_custom_pass")

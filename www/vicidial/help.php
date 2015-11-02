@@ -64,6 +64,7 @@
 # 150926-1058 - Added did_carrier_description
 # 151006-0935 - Updated campaign_cid_areacodes entry
 # 151020-0704 - Added Status Groups and Custom Reports entries
+# 151030-0639 - Added usacan_phone_dialcode_fix entry
 #
 
 
@@ -4812,6 +4813,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-generate_cross_server_exten">
 <BR>
 <B><?php echo _QXZ("Generate Cross-Server Phone Extensions"); ?> -</B><?php echo _QXZ("This option if set to 1 will generate dialplan entries for every phone on a multi-server system. Default is 0 for inactive."); ?>
+
+<BR>
+<A NAME="settings-usacan_phone_dialcode_fix">
+<BR>
+<B><?php echo _QXZ("USA-Canada Phone Number Dialcode Fix"); ?> -</B><?php echo _QXZ("This option if set to 1 will trigger a process that will run at the Timeclock End of Day and will check all phone numbers to populate the dial code, or phone code, field with a 1 if it is missing as well as remove a leading 1 from the phone number field if it is present. Default is 0 for inactive."); ?>
 
 <BR>
 <A NAME="settings-user_territories_active">

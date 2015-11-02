@@ -340,3 +340,7 @@ UNIQUE KEY custom_report_name_key (report_name)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 UPDATE system_settings SET db_schema_version='1433',db_schema_update_date=NOW() where db_schema_version < 1433;
+
+ALTER TABLE system_settings ADD usacan_phone_dialcode_fix ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1434',db_schema_update_date=NOW() where db_schema_version < 1434;
