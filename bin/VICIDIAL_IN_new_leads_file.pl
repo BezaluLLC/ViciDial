@@ -58,9 +58,10 @@
 # 121005-0728 - Added twotab format
 # 130419-2138 - Added --NANPA-ac-prefix-check and --nanpa-gmt options using add-on NANPA prefix database
 # 150312-1458 - Allow single quotes in standard formats
+# 151104-0938 - Added t2r13csv format
 #
 
-$version = '150312-1458';
+$version = '151104-0938';
 
 $secX = time();
 $MT[0]='';
@@ -221,6 +222,9 @@ if (length($ARGV[0])>1)
 		print "vote17csv:\n";
 		print "Voter ID,County Code,Name Last,Gender,Race,Birth Date,Party Affiliation,Precinct,Congressional District,House District,Senate District,County Commission District,School Board District,Age Bracket,_2010_GEN,_2012_PRI_A_Date,Phone_10digit\n";
 		print "\"110306742\",\"DAD\",\"Da Silva Ramos\",\"F\",\"5\",\"06/12/1950\",\"DEM\",\"100\",\"23\",\"0\",\"0\",\"0\",\"0\",\"4\",\"A\",\"\",\"0033559433\"\n\n";
+		print "t2r13csv:\n";
+		print "first_name,last_name,address3,comments1,province,phone_number,address1,city,state,postal_code,comments2,comments3,comments4\n";
+		print "Bob,Smith,\"Bob, Inc.\",lead,president,3125551212,1234 main st,Chicago,IL,60987,good,1235,T2R\n\n";
 		print "twotab:\n";
 		print "UniqueID,PhoneNumber\n";
 		print "110306742,3125556666\n\n";
@@ -923,6 +927,55 @@ foreach(@FILES)
 
 				$format_set++;
 				}
+
+		# This is the format for the t2r13csv lead files
+		# first_name,last_name,address3,comments1,province,phone_number,address1,city,state,postal_code,comments2,comments3,comments4
+		# Bob,Smith,"Bob, Inc.",lead,president,3125551212,1234 main st,Chicago,IL,60987,good,1235,T2R
+			if ( ($format =~ /t2r13csv/) && ($format_set < 1) )
+				{
+				@name=@MT;
+				$number = $raw_number;
+				chomp($number);
+				$number =~ s/"(.+?[^\\])"/($ret = $1) =~ (s#,##g); $ret/ge;
+				$number =~ s/\t/\|/gi;
+				$number =~ s/&/and/gi;
+				$number =~ s/,/\|/gi;
+				$number =~ s/|\t|\r|\n|\l//gi;
+				@m = split(/\|/, $number);
+
+				$vendor_lead_code =		'';
+				$source_id =			'';
+				$list_id =				'995';
+				$phone_code =			'1';
+				$phone_number =			$m[5];		chomp($phone_number);	$phone_number =~ s/\D//gi;
+					$USarea = 			substr($phone_number, 0, 3);
+				$title =				'';
+				$first_name =			$m[0];
+				$last_name =			$m[1];		chomp($first_name);
+
+				$middle_initial =		'';
+				$address1 =				$m[6];
+				$address2 =				'';	
+				$address3 =				$m[2];
+				$city =					$m[7];
+				$state =				$m[8];
+				$province =				$m[4];
+				$postal_code =			$m[9];
+				$country =				'USA';
+				$gender =				'';
+				$date_of_birth =		'';
+				$alt_phone =			'';
+				$email =				'';
+				$security_phrase =		'';		
+				$comments =				"$m[3] $m[10] $m[11] $m[12]";
+				$rank =					'0';
+				$owner =				'';
+				$called_count =			0;
+				$status =				'NEW';
+
+				$format_set++;
+				}
+
 
 		# This is the format for the fixed254 lead files
 		#"9185551212ROSE            SMITHS                  155 TIGER MOUNTAIN RD.                  RR 1 BOX 107                            HENRYETTA                   OK74437-941DEMG  226555                                                   0                     "
