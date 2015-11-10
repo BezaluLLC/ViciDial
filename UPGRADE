@@ -185,6 +185,10 @@ OTHER CHANGES:
 	buffer version of the Listen process. Requires newer Net::Telnet perl
 	module version.
 
+45. Added Answering Machine Message Wildcards features for campaigns. Allows for
+	calls sent to a message to play a different message depending on whether
+	a wildcard text string is present in a selected lead data field.
+
 
 
 

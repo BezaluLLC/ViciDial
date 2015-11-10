@@ -344,3 +344,21 @@ UPDATE system_settings SET db_schema_version='1433',db_schema_update_date=NOW() 
 ALTER TABLE system_settings ADD usacan_phone_dialcode_fix ENUM('0','1') default '0';
 
 UPDATE system_settings SET db_schema_version='1434',db_schema_update_date=NOW() where db_schema_version < 1434;
+
+CREATE TABLE vicidial_amm_multi (
+amm_id INT(9) UNSIGNED NOT NULL AUTO_INCREMENT,
+campaign_id VARCHAR(20) NOT NULL,
+entry_type ENUM('campaign','ingroup','list','') default '',
+active ENUM('Y','N') default 'N',
+amm_field VARCHAR(30) default 'vendor_lead_code',
+amm_rank SMALLINT(5) default '1',
+amm_wildcard VARCHAR(100) default '',
+amm_filename VARCHAR(255) default '',
+amm_description VARCHAR(255) default '',
+PRIMARY KEY (amm_id),
+KEY vicidial_AMM_multi_campaign_id_key (campaign_id)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+ALTER TABLE vicidial_campaigns ADD am_message_wildcards ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1435',db_schema_update_date=NOW() where db_schema_version < 1435;

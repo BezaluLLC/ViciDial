@@ -40,6 +40,7 @@
 # 140305-0955 - Changed to use --days (--months is approximation[bug fix]), changed default from 2 months to 2 years
 # 150107-2308 - Added vicidial_api_log to daily process
 # 150712-2208 - Added vicidial_dtmf_log
+# 151109-1646 - Added --carrier-daily flag, only active if --daily flag is also used
 #
 
 $CALC_TEST=0;
@@ -59,6 +60,7 @@ if (length($ARGV[0])>1)
 		{
 		print "allowed run time options:\n";
 		print "  [--daily] = only archives call_log, vicidial_log_extended and vicidial_dial_log tables, only last 24 hours kept\n";
+		print "  [--carrier-daily] = will also archive the vicidial_carrier_log table when --daily is run\n";
 		print "  [--days=XX] = number of days to archive past, default is 732(2 years)\n";
 		print "  [--months=XX] = number of months to archive past, default is 24(2 years) If 'days' used then 'months' ignored\n";
 		print "  [--closer-log] = archive vicidial_closer_log records\n";
@@ -89,6 +91,12 @@ if (length($ARGV[0])>1)
 			$daily=1;
 			if ($Q < 1) 
 				{print "\n----- DAILY ONLY -----\n\n";}
+			if ($args =~ /--carrier-daily/i)
+				{
+				$carrier_daily=1;
+				if ($Q < 1) 
+					{print "\n----- CARRIER DAILY OPTION -----\n\n";}
+				}
 			}
 		if ($args =~ /--months=/i)
 			{
@@ -429,6 +437,59 @@ if (!$T)
 			}
 		##### END vicidial_api_log DAILY processing #####
 
+
+		if ($carrier_daily)
+			{
+			##### BEGIN vicidial_carrier_log DAILY processing #####
+			$stmtA = "SELECT count(*) from vicidial_carrier_log;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$vicidial_carrier_log_count =	$aryA[0];
+				}
+			$sthA->finish();
+
+			$stmtA = "SELECT count(*) from vicidial_carrier_log_archive;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$vicidial_carrier_log_archive_count =	$aryA[0];
+				}
+			$sthA->finish();
+
+			if (!$Q) {print "\nProcessing vicidial_carrier_log table...  ($vicidial_carrier_log_count|$vicidial_carrier_log_archive_count)\n";}
+			$stmtA = "INSERT IGNORE INTO vicidial_carrier_log_archive SELECT * from vicidial_carrier_log;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			
+			$sthArows = $sthA->rows;
+			if (!$Q) {print "$sthArows rows inserted into vicidial_carrier_log_archive table \n";}
+			
+			$rv = $sthA->err();
+			if (!$rv) 
+				{
+				$stmtA = "DELETE FROM vicidial_carrier_log WHERE call_date < '$del_time';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows = $sthA->rows;
+				if (!$Q) {print "$sthArows rows deleted from vicidial_carrier_log table \n";}
+
+				$stmtA = "optimize table vicidial_carrier_log;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+
+				$stmtA = "optimize table vicidial_carrier_log_archive;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				}
+			##### END vicidial_carrier_log DAILY processing #####
+			}
 
 		### calculate time to run script ###
 		$secY = time();

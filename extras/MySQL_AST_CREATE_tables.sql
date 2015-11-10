@@ -934,7 +934,8 @@ web_form_address_three TEXT,
 manual_dial_override_field ENUM('ENABLED','DISABLED') default 'ENABLED',
 status_display_ingroup ENUM('ENABLED','DISABLED') default 'ENABLED',
 customer_gone_seconds SMALLINT(5) UNSIGNED default '30',
-agent_display_fields VARCHAR(50) default ''
+agent_display_fields VARCHAR(50) default '',
+am_message_wildcards ENUM('Y','N') default 'N'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -3355,6 +3356,20 @@ PRIMARY KEY (custom_report_id),
 UNIQUE KEY custom_report_name_key (report_name)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE vicidial_amm_multi (
+amm_id INT(9) UNSIGNED NOT NULL AUTO_INCREMENT,
+campaign_id VARCHAR(20) NOT NULL,
+entry_type ENUM('campaign','ingroup','list','') default '',
+active ENUM('Y','N') default 'N',
+amm_field VARCHAR(30) default 'vendor_lead_code',
+amm_rank SMALLINT(5) default '1',
+amm_wildcard VARCHAR(100) default '',
+amm_filename VARCHAR(255) default '',
+amm_description VARCHAR(255) default '',
+PRIMARY KEY (amm_id),
+KEY vicidial_AMM_multi_campaign_id_key (campaign_id)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3604,4 +3619,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1434',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1435',db_schema_update_date=NOW(),reload_timestamp=NOW();

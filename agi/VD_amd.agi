@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# VD_amd.agi version 2.10
+# VD_amd.agi version 2.12
 #
 # runs after a call goes through AMD in extensions.conf to send the call on to
 # it's proper destination, or when agent sends to VM message
@@ -48,6 +48,7 @@
 # 140312-2110 - Added CALLID as recording filename variable
 # 141211-1634 - Added cpd_unknown_action campaign option
 # 150223-1443 - Added DYN filename prefix for non-TTS dynamic files to be used for am message
+# 151109-1708 - Added new campaign feature allowing for different messages based on answering machine message wildcards
 #
 
 $script = 'VD_amd.agi';
@@ -381,9 +382,9 @@ else
 		if ($AGILOG) {$agi_string = "--    VDAD vicidial_log update: |$affected_rows|$uniqueid|";   &agi_output;}
 		}
 
-	$IN_campaign_id='';
+	$selected_campaign='';
 	### Grab vmail forward message values from the database
-	$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu,cpd_unknown_action FROM vicidial_campaigns where campaign_id = '$VD_campaign_id' limit 1;";
+	$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu,cpd_unknown_action,campaign_id,am_message_wildcards FROM vicidial_campaigns where campaign_id = '$VD_campaign_id' limit 1;";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -400,13 +401,15 @@ else
 		$amd_inbound_group =		$aryA[6];
 		$amd_callmenu =				$aryA[7];
 		$cpd_unknown_action =		$aryA[8];
+		$selected_campaign =		$aryA[9];
+		$am_message_wildcards =		$aryA[10];
 		$sthA->finish();
 		}
 	else
 		{
 		$sthA->finish();
 		### Grab vmail forward message values from the database
-		$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu,cpd_unknown_action,campaign_id FROM vicidial_campaigns where closer_campaigns LIKE \"% $VD_campaign_id %\" order by campaign_id limit 1;";
+		$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu,cpd_unknown_action,campaign_id,am_message_wildcards FROM vicidial_campaigns where closer_campaigns LIKE \"% $VD_campaign_id %\" order by campaign_id limit 1;";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -423,9 +426,10 @@ else
 			$amd_inbound_group =		$aryA[6];
 			$amd_callmenu =				$aryA[7];
 			$cpd_unknown_action =		$aryA[8];
-			$IN_campaign_id =			$aryA[9];
+			$selected_campaign =		$aryA[9];
+			$am_message_wildcards =		$aryA[10];
 			$sthA->finish();
-			if ($AGILOG) {$agi_string = "--    Inbound call, settings gathered from: |$IN_campaign_id|$DB_am_message_exten|$DB_amd_send_to_vmx|$waitforsilence_options";   &agi_output;}
+			if ($AGILOG) {$agi_string = "--    Inbound call, settings gathered from: |$selected_campaign|$DB_am_message_exten|$DB_amd_send_to_vmx|$waitforsilence_options";   &agi_output;}
 			}
 		else
 			{$sthA->finish();}
@@ -762,6 +766,287 @@ else
 			$DB_am_message_exten = $TTS_filename_path;
 			}
 		##### END Check if prompt uses TTS, if so, create TTS and set the filename to the generated prompt #####
+
+
+
+		### BEGIN am message wildcards ###
+		if ($am_message_wildcards =~ /Y/)
+			{
+			$stmtA = "SELECT count(*) FROM vicidial_amm_multi where campaign_id='$selected_campaign' and active='Y';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArowsW=$sthA->rows;
+			$sthA->finish();
+			if ($sthArowsW > 0)
+				{
+				$stmtA = "SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner FROM vicidial_list where lead_id='$VD_lead_id';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$AMM_lead_id =			$aryA[0];
+					$AMM_entry_date =		$aryA[1];
+					$AMM_modify_date =		$aryA[2];
+					$AMM_status =			$aryA[3];
+					$AMM_user =				$aryA[4];
+					$AMM_vendor_lead_code =	$aryA[5];
+					$AMM_source_id =		$aryA[6];
+					$AMM_list_id =			$aryA[7];
+					$AMM_phone_number =		$aryA[8];
+					$AMM_title =			$aryA[9];
+					$AMM_first_name =		$aryA[10];
+					$AMM_middle_initial =	$aryA[11];
+					$AMM_last_name =		$aryA[12];
+					$AMM_address1 =			$aryA[13];
+					$AMM_address2 =			$aryA[14];
+					$AMM_address3 =			$aryA[15];
+					$AMM_city =				$aryA[16];
+					$AMM_state =			$aryA[17];
+					$AMM_province =			$aryA[18];
+					$AMM_postal_code =		$aryA[19];
+					$AMM_country_code =		$aryA[20];
+					$AMM_gender =			$aryA[21];
+					$AMM_date_of_birth =	$aryA[22];
+					$AMM_alt_phone =		$aryA[23];
+					$AMM_email =			$aryA[24];
+					$AMM_security_phrase =	$aryA[25];
+					$AMM_comments =			$aryA[26];
+					$AMM_called_count =		$aryA[27];
+					$AMM_last_local_call_time = $aryA[28];
+					$AMM_rank =				$aryA[29];
+					$AMM_owner =			$aryA[30];
+					}
+				$sthA->finish();
+
+				$stmtA = "SELECT amm_field,amm_rank,amm_wildcard,amm_filename FROM vicidial_amm_multi where campaign_id='$selected_campaign' and active='Y' order by amm_rank,amm_field;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArowsA=$sthA->rows;
+				$w=0;
+				$amm_filename_match='';
+				while ( ($sthArowsA > $w) && (length($amm_filename_match) < 1) )
+					{
+					@aryA = $sthA->fetchrow_array;
+					$amm_field =	$aryA[0];
+					$amm_rank =		$aryA[1];
+					$amm_wildcard =	$aryA[2];
+					$amm_filename =	$aryA[3];
+
+					if ( (length($amm_wildcard)>0) && (length($amm_wildcard)>0) && (length($amm_filename)>0) ) 
+						{
+						if ($amm_field =~ /vendor_lead_code/) 
+							{
+							if ($AMM_vendor_lead_code =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM vendor_lead_code Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_vendor_lead_code)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /source_id/) 
+							{
+							if ($AMM_source_id =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM source_id Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_source_id)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /list_id/) 
+							{
+							if ($AMM_list_id =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM list_id Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_list_id)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /phone_number/) 
+							{
+							if ($AMM_phone_number =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM phone_number Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_phone_number)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /title/) 
+							{
+							if ($AMM_title =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM title Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_title)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /first_name/) 
+							{
+							if ($AMM_first_name =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM first_name Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_first_name)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /middle_initial/) 
+							{
+							if ($AMM_middle_initial =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM middle_initial Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_middle_initial)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /last_name/) 
+							{
+							if ($AMM_last_name =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM last_name Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_last_name)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /address1/) 
+							{
+							if ($AMM_address1 =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM address1 Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_address1)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /address2/) 
+							{
+							if ($AMM_address2 =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM address2 Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_address2)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /address3/) 
+							{
+							if ($AMM_address3 =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM address3 Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_address3)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /city/) 
+							{
+							if ($AMM_city =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM city Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_city)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /state/) 
+							{
+							if ($AMM_state =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM state Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_state)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /province/) 
+							{
+							if ($AMM_province =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM province Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_province)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /postal_code/) 
+							{
+							if ($AMM_postal_code =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM postal_code Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_postal_code)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /country_code/) 
+							{
+							if ($AMM_country_code =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM country_code Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_country_code)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /gender/) 
+							{
+							if ($AMM_gender =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM gender Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_gender)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /date_of_birth/) 
+							{
+							if ($AMM_date_of_birth =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM date_of_birth Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_date_of_birth)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /alt_phone/) 
+							{
+							if ($AMM_alt_phone =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM alt_phone Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_alt_phone)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /email/) 
+							{
+							if ($AMM_email =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM email Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_email)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /security_phrase/) 
+							{
+							if ($AMM_security_phrase =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM security_phrase Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_security_phrase)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /comments/) 
+							{
+							if ($AMM_comments =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM comments Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_comments)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /rank/) 
+							{
+							if ($AMM_rank =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM rank Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_rank)|$amm_filename|";   &agi_output;}
+								}
+							}
+						if ($amm_field =~ /owner/) 
+							{
+							if ($AMM_owner =~ /$amm_wildcard/i) 
+								{
+								$amm_filename_match = $amm_filename;
+								if ($AGILOG) {$agi_string = "AMM owner Match Found: |$amm_field|$amm_rank|$amm_wildcard($AMM_owner)|$amm_filename|";   &agi_output;}
+								}
+							}
+
+
+						if (length($amm_filename_match) > 0)
+							{$DB_am_message_exten = $amm_filename_match;}
+						else
+							{
+							if ($AGILOG) {$agi_string = "no AMM match: |$amm_field|$amm_rank|$amm_wildcard|$amm_filename|";   &agi_output;}
+							}
+						}
+					else
+						{
+						if ($AGILOG) {$agi_string = "AMM entry invalid: |$amm_field|$amm_rank|$amm_wildcard|$amm_filename|";   &agi_output;}
+						}
+					$w++;
+					}
+				$sthA->finish();
+				}
+			}
+		### END am message wildcards ###
 
 
 		### run waitforsilence if enabled

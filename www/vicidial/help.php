@@ -65,6 +65,7 @@
 # 151006-0935 - Updated campaign_cid_areacodes entry
 # 151020-0704 - Added Status Groups and Custom Reports entries
 # 151030-0639 - Added usacan_phone_dialcode_fix entry
+# 151104-1541 - Added am_message_wildcards entry
 #
 
 
@@ -1020,6 +1021,11 @@ if ($SSoutbound_autodial_active > 0)
 	<A NAME="campaigns-waitforsilence_options">
 	<BR>
 	<B><?php echo _QXZ("WaitForSilence Options"); ?> -</B><?php echo _QXZ("If Wait For Silence is desired on calls that are detected as Answering Machines then this field has those options. There are two settings separated by a comma, the first option is how long to detect silence in milliseconds and the second option is for how many times to detect that before playing the message. Default is EMPTY for disabled. A standard value for this would be wait for 2 seconds of silence twice: 2000,2"); ?>
+
+	<BR>
+	<A NAME="campaigns-am_message_wildcards">
+	<BR>
+	<B><?php echo _QXZ("AM Message Wildcards"); ?> -</B><?php echo _QXZ("This option, if enabled, allows you to go to the AM Message Wildcard administration page where you can define wildcards that can match data in a default lead field and can play a different message based upon the data in a specific lead. Default is N for disabled."); ?>
 
 	<BR>
 	<A NAME="campaigns-amd_send_to_vmx">
@@ -5594,6 +5600,13 @@ if ($SSqc_features_active > 0)
 <B><FONT SIZE=3><?php echo _QXZ("Alternate Multi URLs"); ?></FONT></B><BR><BR>
 
 <?php echo _QXZ("This page allows you to define Alternate URLs with conditions in place of the simple URL option for Dispo, Start, Add Lead or No Agent URLs. The RANK field will define the order in which the URLs are requested, this is important because if you have a URL that may take a few seconds to run ranked as 1, that will mean that any URLs ranked after it will have to wait to be run until that first URL request receives a response. The ACTIVE field will determine whether the specific URL is run. The STATUSES field only works for the Dispo URLs and will determine which disposition statuses will trigger the URL being run, if you want to run the entry for all statuses just fill in ---ALL--- in this field. The URL field works the same as it would in the URL option in campaigns, in-groups and lists, and it is also limited to 2000 characters in length. If you want to delete a URL, it must first be set to not active, then you can click on the DELETE link below the SUBMIT button for that URL entry."); ?>
+
+
+<BR><BR><BR><BR>
+<A NAME="amm_multi">
+<B><FONT SIZE=3><?php echo _QXZ("AM Message Wildcards"); ?></FONT></B><BR><BR>
+
+<?php echo _QXZ("This page allows you to define Am Message Wildcards that will check lead data from the defined lead fields for matches in the defined order specified on this page. For example, if you add a wildcard with the word -vacation- tied to the vendor_lead_code field, and the lead being played a message has -vacation- in that field, then it will hear the message defined in that AM Message Wildcard record. If you want to delete a wildcard, it must first be set to not active, then you can click on the DELETE link below the SUBMIT button for that wildcard entry."); ?>
 
 
 <BR><BR><BR><BR>
