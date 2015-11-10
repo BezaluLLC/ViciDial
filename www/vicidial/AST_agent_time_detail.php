@@ -43,6 +43,7 @@
 # 150422-1643 - Added two new shift options
 # 150516-1311 - Fixed Javascript element problem, Issue #857
 # 150529-1921 - Sub statuses are now sorted in alphabetical order
+# 151110-1612 - Changed download function to always export time with hours
 #
 
 $startMS = microtime();
@@ -111,6 +112,10 @@ if (strlen($TIME_agenttimedetail)<1)
 if ($time_in_sec)
 	{
 	$TIME_agenttimedetail = 'S';
+	}
+if ($file_download == 1)
+	{
+	$TIME_agenttimedetail = 'HF';
 	}
 
 #############################################
