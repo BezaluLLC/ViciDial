@@ -1,18 +1,19 @@
 #!/usr/bin/perl
 #
-# ADMIN_restart_roll_logs.pl    version 2.10
+# ADMIN_restart_roll_logs.pl    version 2.12
 #
 # script to roll the Asterisk logs on machine restart
 #
 # have this run on the astersik server 
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES:
 # 90311-0921 - Added /var/log/asterisk/screenlog log rolling
 # 90508-0535 - Changes root screenlog to /var/log/astguiclient
 # 130108-1715 - Changes for new log rolling script compatibility
 # 141124-2309 - Fixed Fhour variable bug
+# 151110-2005 - Added rolling of Asterisk cdr.db
 #
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -38,6 +39,12 @@ print "rolling Asterisk event log...\n";
 if ( -e '/var/log/asterisk/event_log' )
 	{
 	`mv -f /var/log/asterisk/event_log /var/log/asterisk/event_log.$now_date`;
+	}
+
+print "rolling Asterisk cdr.db...\n";
+if ( -e '/var/log/asterisk/cdr.db' )
+	{
+	`mv -f /var/log/asterisk/cdr.db /var/log/asterisk/cdr.db.$now_date`;
 	}
 
 print "rolling Asterisk cdr logs...\n";
