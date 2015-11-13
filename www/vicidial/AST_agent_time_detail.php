@@ -109,13 +109,13 @@ if (strlen($userSQL)<2)
 	{$userSQL = 'user';}
 if (strlen($TIME_agenttimedetail)<1)
 	{$TIME_agenttimedetail = 'H';}
-if ($time_in_sec)
-	{
-	$TIME_agenttimedetail = 'S';
-	}
 if ($file_download == 1)
 	{
 	$TIME_agenttimedetail = 'HF';
+	}
+if ($time_in_sec)
+	{
+	$TIME_agenttimedetail = 'S';
 	}
 
 #############################################
