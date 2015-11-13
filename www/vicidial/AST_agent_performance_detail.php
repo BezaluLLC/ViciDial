@@ -51,6 +51,7 @@
 # 150603-1533 - Statuses are now sorted in alphabetical order
 # 150728-1230 - Fix for non-latin display issue #858
 # 150909-0728 - Fix for time display issue for downloads, issue #886
+# 151112-1338 - Added ability to search archive logs and show defunct users
 #
 
 $startMS = microtime();
@@ -89,8 +90,13 @@ if (isset($_GET["show_percentages"]))			{$show_percentages=$_GET["show_percentag
 	elseif (isset($_POST["show_percentages"]))	{$show_percentages=$_POST["show_percentages"];}
 if (isset($_GET["time_in_sec"]))			{$time_in_sec=$_GET["time_in_sec"];}
 	elseif (isset($_POST["time_in_sec"]))	{$time_in_sec=$_POST["time_in_sec"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
+if (isset($_GET["show_defunct_users"]))			{$show_defunct_users=$_GET["show_defunct_users"];}
+	elseif (isset($_POST["show_defunct_users"]))	{$show_defunct_users=$_POST["show_defunct_users"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
+if ($search_archived_data=="checked") {$agent_log_table="vicidial_agent_log_archive";} else {$agent_log_table="vicidial_agent_log";}
 
 $TIME_HF_agentperfdetail = 'HF';
 $TIME_H_agentperfdetail = 'H';
@@ -338,7 +344,7 @@ while($i < $users_ct)
 	$i++;
 	}
 
-$stmt="select campaign_id from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
+$stmt="SELECT campaign_id from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 $campaigns_to_print = mysqli_num_rows($rslt);
@@ -356,7 +362,7 @@ for ($i=0; $i<count($user_group); $i++)
 	if (preg_match('/\-\-ALL\-\-/', $user_group[$i])) {$all_user_groups=1; $user_group="";}
 	}
 
-$stmt="select user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
+$stmt="SELECT user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 $user_groups_to_print = mysqli_num_rows($rslt);
@@ -369,7 +375,7 @@ while ($i < $user_groups_to_print)
 	$i++;
 	}
 
-$stmt="select user, full_name from vicidial_users $whereLOGadmin_viewable_groupsSQL order by user";
+$stmt="SELECT user, full_name from vicidial_users $whereLOGadmin_viewable_groupsSQL order by user";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 $users_to_print = mysqli_num_rows($rslt);
@@ -420,7 +426,7 @@ if ( (preg_match('/\-\-ALL\-\-/',$user_group_string) ) or ($user_group_ct < 1) )
 else
 	{
 	$user_group_SQL = preg_replace('/,$/i', '',$user_group_SQL);
-	$user_group_agent_log_SQL = "and vicidial_agent_log.user_group IN($user_group_SQL)";
+	$user_group_agent_log_SQL = "and ".$agent_log_table.".user_group IN($user_group_SQL)";
 	$user_group_SQL = "and vicidial_users.user_group IN($user_group_SQL)";
 	}
 
@@ -439,14 +445,14 @@ if ( (preg_match('/\-\-ALL\-\-/',$user_string) ) or ($user_ct < 1) )
 else
 	{
 	$user_SQL = preg_replace('/,$/i', '',$user_SQL);
-	$user_agent_log_SQL = "and vicidial_agent_log.user IN($user_SQL)";
+	$user_agent_log_SQL = "and ".$agent_log_table.".user IN($user_SQL)";
 	$user_SQL = "and vicidial_users.user IN($user_SQL)";
 	}
 
 
 if ($DB) {$HTML_text.="$user_group_string|$user_group_ct|$user_groupQS|$i<BR>";}
 
-$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&DB=$DB&show_percentages=$show_percentages&time_in_sec=$time_in_sec";
+$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&DB=$DB&show_percentages=$show_percentages&time_in_sec=$time_in_sec&search_archived_data=$search_archived_data&show_defunct_users=$show_defunct_users";
 
 $NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
@@ -562,7 +568,9 @@ $HTML_text.="<option value=\"PM\">"._QXZ("PM")."</option>\n";
 $HTML_text.="<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
 $HTML_text.="</SELECT><BR><BR>\n";
 $HTML_text.="<input type='checkbox' name='show_percentages' value='checked' $show_percentages>"._QXZ("Show %s")."<BR>\n";
-$HTML_text.="<input type='checkbox' name='time_in_sec' value='checked' $time_in_sec>"._QXZ("Time in seconds")."\n";
+$HTML_text.="<input type='checkbox' name='time_in_sec' value='checked' $time_in_sec>"._QXZ("Time in seconds")."<BR>\n";
+$HTML_text.="<input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."<BR>\n";
+$HTML_text.="<input type='checkbox' name='show_defunct_users' value='checked' $show_defunct_users>"._QXZ("Show defunct users")."\n";
 $HTML_text.="</TD><TD VALIGN=TOP>";
 $HTML_text.=_QXZ("Display as").":<BR>";
 $HTML_text.="<select name='report_display_type'>";
@@ -645,12 +653,12 @@ $usersARY[0]='';
 $user_namesARY[0]='';
 $k=0;
 
-$recent_UG_stmt="select max(agent_log_id), user from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_agent_log_SQL $user_agent_log_SQL group by user";
+$recent_UG_stmt="SELECT max(agent_log_id), user from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_agent_log_SQL $user_agent_log_SQL group by user";
 if ($DB) {$HTML_text.="$recent_UG_stmt\n";}
 $recent_UG_rslt=mysql_to_mysqli($recent_UG_stmt, $link);
 while ($UG_row=mysqli_fetch_row($recent_UG_rslt)) {
 	$agent_log_id=$UG_row[0];
-	$al_stmt="select user_group from vicidial_agent_log where agent_log_id='$agent_log_id'";
+	$al_stmt="SELECT user_group from ".$agent_log_table." where agent_log_id='$agent_log_id'";
 	if ($DB) {$HTML_text.="$al_stmt\n";}
 	$al_rslt=mysql_to_mysqli($al_stmt, $link);
 	$Ugrp_row=mysqli_fetch_row($al_rslt);
@@ -690,28 +698,67 @@ $DEADAVG_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DEAD AVG")
 $CUST_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST")."</th></tr>";
 $CUSTAVG_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST AVG")."</th></tr>";
 
-	$user_stmt="select distinct full_name,vicidial_users.user from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user $group_SQL $user_group_SQL order by full_name asc";
+	if ($show_defunct_users=="checked")
+		{
+		$user_stmt="SELECT distinct '' as full_name, user from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $group_SQL $user_agent_log_SQL order by user asc";
+		}
+	else
+		{
+		$user_stmt="SELECT distinct full_name,vicidial_users.user,vicidial_users.user_group from vicidial_users,".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=".$agent_log_table.".user $group_SQL $user_group_SQL order by full_name asc";
+		}
 		if ($DB) {echo "$user_stmt\n";}
 	$user_rslt=mysql_to_mysqli($user_stmt, $link);
 	$q=0;
 	while($q<mysqli_num_rows($user_rslt)) 
 		{
 		$user_row=mysqli_fetch_row($user_rslt);
-		$full_name[$q] =	$user_row[0];
+
+		if ($show_defunct_users=="checked")
+			{
+			$defunct_user_stmt="SELECT full_name, user_group from vicidial_users where user='$user_row[1]'";
+			$defunct_user_rslt=mysql_to_mysqli($defunct_user_stmt, $link);
+			if (mysqli_num_rows($defunct_user_rslt)>0) 
+				{
+				$defunct_user_row=mysqli_fetch_row($defunct_user_rslt);
+				$full_name_val=$defunct_user_row[0];
+				$user_group_val=$defunct_user_row[1];
+				} 
+			else 
+				{
+				$full_name_val=$user_row[1];
+				$user_group_val="** NONE **";
+				}
+			}
+		else
+			{
+			$full_name_val =	$user_row[0];
+			$user_group_val =	$user_row[2];
+			}
+
+		$full_name[$q] =	$full_name_val;
 		$user[$q] =			$user_row[1];
+		$user_group[$q] =	$user_group_val;
 
 		if (!preg_match("/\-$user[$q]\-/i", $users))
 			{
 			$users .= "$user[$q]-";
 			$usersARY[$k] = $user[$q];
 			$user_namesARY[$k] = $full_name[$q];
+			$user_groupsARY[$k] = $user_group[$q];
 			$k++;
 			}
 		$q++;
 		}
 
 
-$stat_stmt="select distinct status from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_SQL $user_SQL order by status asc";
+if ($show_defunct_users=="checked")
+	{
+	$stat_stmt="SELECT distinct status from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_agent_log_SQL $user_SQL order by status asc";
+	}
+else 
+	{
+	$stat_stmt="SELECT distinct status from vicidial_users,".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=".$agent_log_table.".user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_SQL $user_SQL order by status asc";
+	}
 $stat_rslt=mysql_to_mysqli($stat_stmt, $link);
 	if ($DB) {$HTML_text.="$stat_stmt\n";}
 $q=0;
@@ -720,7 +767,14 @@ $userTOTcalls=array();
 while ($stat_row=mysqli_fetch_row($stat_rslt)) {
 	$current_status=$stat_row[0];
 
-	$stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 and status='$current_status' $group_SQL $user_group_SQL $user_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
+	if ($show_defunct_users=="checked")
+		{
+		$stmt="SELECT count(*) as calls,sum(talk_sec) as talk,'' as full_name,user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), '' as user_group from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 and status='$current_status' $group_SQL $user_agent_log_SQL $user_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
+		}
+	else
+		{
+		$stmt="SELECT count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), vicidial_users.user_group from vicidial_users,".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=".$agent_log_table.".user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 and status='$current_status' $group_SQL $user_group_SQL $user_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
+		}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$HTML_text.="$stmt\n";}
 	$rows_to_print+=mysqli_num_rows($rslt);
@@ -733,16 +787,40 @@ while ($stat_row=mysqli_fetch_row($stat_rslt)) {
 		$row=mysqli_fetch_row($rslt);
 	#	$row[0] = ($row[0] - 1);	# subtract 1 for login/logout event compensation
 		
+		if ($show_defunct_users=="checked")
+			{
+			$defunct_user_stmt="SELECT full_name,user_group from vicidial_users where user='$row[3]'";
+	if ($DB) {$HTML_text.="$defunct_user_stmt\n";}
+			$defunct_user_rslt=mysql_to_mysqli($defunct_user_stmt, $link);
+			if (mysqli_num_rows($defunct_user_rslt)>0) 
+				{
+				$defunct_user_row=mysqli_fetch_row($defunct_user_rslt);
+				$full_name_val=$defunct_user_row[0];
+				$user_group_val=$defunct_user_row[1];
+				} 
+			else 
+				{
+				$full_name_val=$row[3];
+				$user_group_val="**NONE**";
+				}
+			}
+		else 
+			{
+			$full_name_val=$row[2];
+			$user_group_val=$row[9];
+			}
+
+	if ($DB) {$HTML_text.="$full_name_val - $user_group_val\n";}
 		$calls[$q] =		$row[0];
 		$talk_sec[$q] =		$row[1];
-		$full_name[$q] =	$row[2];
+		$full_name[$q] =	$full_name_val;
 		$user[$q] =			$row[3];
 		$pause_sec[$q] =	$row[4];
 		$wait_sec[$q] =		$row[5];
 		$dispo_sec[$q] =	$row[6];
 		$status[$q] =		strtoupper($row[7]);
 		$dead_sec[$q] =		$row[8];
-		$user_group[$q] =	$row[9];
+		$user_group[$q] =	$user_group_val;
 		$customer_sec[$q] =	($talk_sec[$q] - $dead_sec[$q]);
 
 		if (strlen($status[$q])>0) {$userTOTcalls[$row[3]]+=$row[0];}
@@ -783,7 +861,8 @@ while ($stat_row=mysqli_fetch_row($stat_rslt)) {
 		$q++;
 		}
 }
-
+if ($DB) {print "<BR>\n****$users****<BR>\n";}
+if ($DB) {print_r($user_groupsARY[$k]);}
 $CSV_header.="\n";
 $CSV_lines='';
 
@@ -807,7 +886,7 @@ while ($m < $k)
 	$Suser=$usersARY[$m];
 
 	$Slast_user_group=$recent_user_groups[$Suser];
-#	$recent_UG_stmt="select max(event_time) as most_recent_event, user_group from vicidial_agent_log where user='$Suser' and event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_agent_log_SQL group by user_group order by most_recent_event desc limit 1";
+#	$recent_UG_stmt="SELECT max(event_time) as most_recent_event, user_group from vicidial_agent_log where user='$Suser' and event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_agent_log_SQL group by user_group order by most_recent_event desc limit 1";
 #	if ($DB) {$HTML_text.="$recent_UG_stmt\n";}
 #	$recent_UG_rslt=mysql_to_mysqli($recent_UG_stmt, $link);
 #	while ($UG_row=mysqli_fetch_row($recent_UG_rslt)) {
@@ -1374,7 +1453,7 @@ $TOTAL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL")." </
 $NONPAUSE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("NONPAUSE")."</th></tr>";
 $PAUSE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("PAUSE")."</th></tr>";
 
-$sub_status_stmt="select distinct sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 $group_SQL $user_SQL order by sub_status asc limit 10000000;";
+$sub_status_stmt="SELECT distinct sub_status from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 $group_SQL $user_SQL order by sub_status asc limit 10000000;";
 	if ($DB) {$ASCII_text.="$sub_status_stmt\n";}
 $sub_status_rslt=mysql_to_mysqli($sub_status_stmt, $link);
 $subs_to_print=0;
@@ -1382,7 +1461,14 @@ $q=0;
 while($ss_row=mysqli_fetch_row($sub_status_rslt)) {
 	$current_ss=$ss_row[0];
 
-	$stmt="select full_name,vicidial_users.user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and sub_status='$current_ss' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 $group_SQL $user_group_SQL $user_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
+	if ($show_defunct_users=="checked")
+		{
+		$stmt="SELECT '' as full_name,user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec), '' as user_group from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and sub_status='$current_ss' and pause_sec<65000 $group_SQL $user_group_agent_log_SQL $user_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
+		}
+	else
+		{
+		$stmt="SELECT full_name,vicidial_users.user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec), vicidial_users.user_group from vicidial_users,".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and sub_status='$current_ss' and vicidial_users.user=".$agent_log_table.".user and pause_sec<65000 $group_SQL $user_group_SQL $user_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
+		}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$ASCII_text.="$stmt\n";}
 	# $subs_to_print = mysqli_num_rows($rslt);
@@ -1392,12 +1478,36 @@ while($ss_row=mysqli_fetch_row($sub_status_rslt)) {
 	while ($i < $sub_subs_to_print)
 		{
 		$row=mysqli_fetch_row($rslt);
-		$PCfull_name[$q] =	$row[0];
+
+		if ($show_defunct_users=="checked")
+			{
+			$defunct_user_stmt="SELECT full_name,user_group from vicidial_users where user='$row[1]'";
+			$defunct_user_rslt=mysql_to_mysqli($defunct_user_stmt, $link);
+			if (mysqli_num_rows($defunct_user_rslt)>0) 
+				{
+				$defunct_user_row=mysqli_fetch_row($defunct_user_rslt);
+				$PCfull_name_val=$defunct_user_row[0];
+				$PCuser_group_val=$defunct_user_row[1];
+				} 
+			else 
+				{
+				$PCfull_name_val=$row[1];
+				$PCuser_group_val="**NONE**";
+				}
+			}
+		else 
+			{
+			$PCfull_name_val=$row[0];
+			$PCuser_group_val=$row[5];
+			}
+		
+		
+		$PCfull_name[$q] =	$PCfull_name_val;
 		$PCuser[$q] =		$row[1];
 		$PCpause_sec[$q] =	$row[2];
 		$sub_status[$q] =	$row[3];
 		$PCnon_pause_sec[$q] =	$row[4];
-		$PCuser_group[$q] =		$row[5];
+		$PCuser_group[$q] =		$PCuser_group_val;
 		$max_varname="max_".$sub_status[$q];
 		$$max_varname=1;
 

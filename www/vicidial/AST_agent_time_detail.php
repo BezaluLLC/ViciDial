@@ -44,6 +44,7 @@
 # 150516-1311 - Fixed Javascript element problem, Issue #857
 # 150529-1921 - Sub statuses are now sorted in alphabetical order
 # 151110-1612 - Changed download function to always export time with hours
+# 151112-1335 - Added option to search archived tables
 #
 
 $startMS = microtime();
@@ -86,9 +87,31 @@ if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_d
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 if (isset($_GET["time_in_sec"]))			{$time_in_sec=$_GET["time_in_sec"];}
 	elseif (isset($_POST["time_in_sec"]))	{$time_in_sec=$_POST["time_in_sec"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($stage)<2) {$stage='NAME';}
+
+if ($search_archived_data=="checked") 
+	{
+	$agent_log_table="vicidial_agent_log_archive";
+	$table_check_stmt="show tables like 'vicidial_timeclock_log_archive'";
+	$table_check_rslt=mysql_to_mysqli($table_check_stmt, $link);
+	if (mysqli_num_rows($table_check_rslt)>0) 
+		{
+		$timeclock_log_table="vicidial_timeclock_log_archive";
+		}
+	else
+		{
+		$timeclock_log_table="vicidial_timeclock_log";
+		}
+	} 
+else 
+	{
+	$agent_log_table="vicidial_agent_log";
+	$timeclock_log_table="vicidial_timeclock_log";
+	}
 
 $report_name = 'Agent Time Detail';
 $db_source = 'M';
@@ -402,7 +425,7 @@ else
 	{
 	$user_group_SQL = preg_replace('/,$/i', '',$user_group_SQL);
 	$TCuser_group_SQL = $user_group_SQL;
-	$user_group_SQL = "and vicidial_agent_log.user_group IN($user_group_SQL)";
+	$user_group_SQL = "and ".$agent_log_table.".user_group IN($user_group_SQL)";
 	$TCuser_group_SQL = "and user_group IN($TCuser_group_SQL)";
 	}
 
@@ -421,7 +444,7 @@ while ($i < $statha_to_print)
 	$i++;
 	}
 
-$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&time_in_sec=$time_in_sec&DB=$DB";
+$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&show_parks=$show_parks&time_in_sec=$time_in_sec&search_archived_data=$search_archived_data&DB=$DB";
 
 if ($file_download < 1)
 	{
@@ -576,7 +599,7 @@ else
 
 
 	### BEGIN gather timeclock records per agent
-	$stmt="select $userSQL,sum(login_sec) from vicidial_timeclock_log where event IN('LOGIN','START') and event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END' $TCuser_group_SQL group by user limit 10000000;";
+	$stmt="select $userSQL,sum(login_sec) from ".$timeclock_log_table." where event IN('LOGIN','START') and event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END' $TCuser_group_SQL group by user limit 10000000;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$punches_to_print = mysqli_num_rows($rslt);
@@ -623,13 +646,13 @@ else
 		}
 
 	# Grab a list of sub_statuses sorted in order so they will appear in order in the resulting report - otherwise they could appear in any order
-	$ss_stmt="select distinct sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 $group_SQL $user_group_SQL order by sub_status asc limit 10000000;";
+	$ss_stmt="select distinct sub_status from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 $group_SQL $user_group_SQL order by sub_status asc limit 10000000;";
 	$ss_rslt=mysql_to_mysqli($ss_stmt, $link);
 	$j=0;
 	while($ss_row=mysqli_fetch_row($ss_rslt)) {
 		$current_ss=$ss_row[0];
 
-		$stmt="select $userSQL,sum(pause_sec),sub_status from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 and sub_status='$current_ss' $group_SQL $user_group_SQL group by user,sub_status order by user,sub_status desc limit 10000000;";
+		$stmt="select $userSQL,sum(pause_sec),sub_status from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 and sub_status='$current_ss' $group_SQL $user_group_SQL group by user,sub_status order by user,sub_status desc limit 10000000;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		
 		if ($DB) {$ASCII_text.= "$stmt\n";}
@@ -670,7 +693,7 @@ else
 
 
 	##### BEGIN Gather all agent time records and parse through them in PHP to save on DB load
-	$stmt="select $userSQL,wait_sec,talk_sec,dispo_sec,pause_sec,lead_id,status,dead_sec from vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $group_SQL $user_group_SQL limit 10000000;";
+	$stmt="select $userSQL,wait_sec,talk_sec,dispo_sec,pause_sec,lead_id,status,dead_sec from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $group_SQL $user_group_SQL limit 10000000;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$ASCII_text.= "$stmt\n";}
 	$rows_to_print = mysqli_num_rows($rslt);
@@ -901,7 +924,7 @@ else
 
 		### Check if the user had an AUTOLOGOUT timeclock event during the time period
 		$TCuserAUTOLOGOUT = ' ';
-		$stmt="select count(*) from vicidial_timeclock_log where event='AUTOLOGOUT' and user='$Suser[$m]' and event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END';";
+		$stmt="select count(*) from ".$timeclock_log_table." where event='AUTOLOGOUT' and user='$Suser[$m]' and event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$autologout_results = mysqli_num_rows($rslt);
@@ -1516,7 +1539,8 @@ echo "<option value=\"5PM-MIDNIGHT\">"._QXZ("5PM-MIDNIGHT")."</option>\n";
 echo "</SELECT><BR>\n";
 echo "<input type='checkbox' name='show_parks' value='checked' $show_parks>"._QXZ("Show parks-holds")."<BR>";
 echo "<input type='checkbox' name='time_in_sec' value='checked' $time_in_sec>"._QXZ("Time in seconds")."<BR>";
-echo _QXZ("Display as").":<BR>";
+echo "<input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."<BR>\n";
+echo "</TD><TD VALIGN=TOP>"._QXZ("Display as").":<BR>";
 echo "<select name='report_display_type'>";
 if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}
 echo "<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR><BR>";

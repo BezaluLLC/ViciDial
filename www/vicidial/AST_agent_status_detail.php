@@ -27,6 +27,7 @@
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 150516-1310 - Fixed Javascript element problem, Issue #857
 # 150603-1532 - Statuses are now sorted in alphabetical order
+# 151112-1345 - Added ability to search archive logs and show defunct users
 #
 
 $startMS = microtime();
@@ -59,8 +60,13 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
+if (isset($_GET["show_defunct_users"]))			{$show_defunct_users=$_GET["show_defunct_users"];}
+	elseif (isset($_POST["show_defunct_users"]))	{$show_defunct_users=$_POST["show_defunct_users"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
+if ($search_archived_data=="checked") {$agent_log_table="vicidial_agent_log_archive";} else {$agent_log_table="vicidial_agent_log";}
 
 $report_name = 'Agent Status Detail';
 $db_source = 'M';
@@ -269,7 +275,7 @@ while($i < $group_ct)
 	$i++;
 	}
 
-$stmt="select campaign_id from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
+$stmt="SELECT campaign_id from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $campaigns_to_print = mysqli_num_rows($rslt);
@@ -287,7 +293,7 @@ for ($i=0; $i<count($user_group); $i++)
 	{
 	if (preg_match('/\-\-ALL\-\-/', $user_group[$i])) {$all_user_groups=1; $user_group="";}
 	}
-$stmt="select user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
+$stmt="SELECT user_group from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $user_groups_to_print = mysqli_num_rows($rslt);
@@ -336,12 +342,12 @@ if ( (preg_match('/\-\-ALL\-\-/',$user_group_string) ) or ($user_group_ct < 1) )
 else
 	{
 	$user_group_SQL = preg_replace('/,$/i', '',$user_group_SQL);
-	$user_group_SQL = "and vicidial_agent_log.user_group IN($user_group_SQL)";
+	$user_group_SQL = "and ".$agent_log_table.".user_group IN($user_group_SQL)";
 	}
 
 if ($DB) {echo "$user_group_string|$user_group_ct|$user_groupQS|$i<BR>";}
 
-$stmt="select vsc_id,vsc_name from vicidial_status_categories;";
+$stmt="SELECT vsc_id,vsc_name from vicidial_status_categories;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $statcats_to_print = mysqli_num_rows($rslt);
@@ -356,7 +362,7 @@ while ($i < $statcats_to_print)
 	}
 
 $customer_interactive_statuses='';
-$stmt="select status from vicidial_statuses where human_answered='Y';";
+$stmt="SELECT status from vicidial_statuses where human_answered='Y';";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $statha_to_print = mysqli_num_rows($rslt);
@@ -367,7 +373,7 @@ while ($i < $statha_to_print)
 	$customer_interactive_statuses .= "|$row[0]";
 	$i++;
 	}
-$stmt="select status from vicidial_campaign_statuses where human_answered='Y' $LOGallowed_campaignsSQL;";
+$stmt="SELECT status from vicidial_campaign_statuses where human_answered='Y' $LOGallowed_campaignsSQL;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $statha_to_print = mysqli_num_rows($rslt);
@@ -384,7 +390,7 @@ if (strlen($customer_interactive_statuses)>0)
 #$customer_interactive_statuses = '|NI|DNC|CALLBK|AP|SALE|COMP|HAP1|HAP2|HBED|DIED|';
 #$customer_interactive_statuses = '|NI|DNC|CALLBK|XFER|C2|B7|B8|C1|';
 
-$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&DB=$DB";
+$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&search_archived_data=$search_archived_data&show_defunct_users=$show_defunct_users&DB=$DB";
 
 if ($file_download < 1)
 	{
@@ -479,14 +485,42 @@ else
 	$user_namesARY[0]='';
 	$k=0;
 
-	$user_stmt="select distinct full_name,vicidial_users.user from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and status is not null $group_SQL $user_group_SQL order by full_name asc";
+	if ($show_defunct_users) 
+		{
+		$user_stmt="SELECT distinct '' as full_name, user from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN'  and status is not null $group_SQL $user_group_SQL order by user asc";
+		}
+	else
+		{
+		$user_stmt="SELECT distinct full_name,vicidial_users.user from vicidial_users,".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=".$agent_log_table.".user and status is not null $group_SQL $user_group_SQL order by full_name asc";
+		}
+
 		if ($DB) {echo "$user_stmt\n";}
 	$user_rslt=mysql_to_mysqli($user_stmt, $link);
 	$q=0;
 	while($q<mysqli_num_rows($user_rslt)) 
 		{
 		$user_row=mysqli_fetch_row($user_rslt);
-		$full_name[$q] =	$user_row[0];
+
+		if ($show_defunct_users)
+			{
+			$defunct_user_stmt="SELECT full_name,user_group from vicidial_users where user='$user_row[1]'";
+			$defunct_user_rslt=mysql_to_mysqli($defunct_user_stmt, $link);
+			if (mysqli_num_rows($defunct_user_rslt)>0) 
+				{
+				$defunct_user_row=mysqli_fetch_row($defunct_user_rslt);
+				$full_name_val=$defunct_user_row[0];
+				} 
+			else 
+				{
+				$full_name_val=$user_row[1];
+				}
+			}
+		else 
+			{
+			$full_name_val=$user_row[0];
+			}
+
+		$full_name[$q] =	$full_name_val;
 		$user[$q] =			$user_row[1];
 
 		if (!preg_match("/\-$user[$q]\-/i", $users))
@@ -499,7 +533,15 @@ else
 		$q++;
 		}
 
-	$status_stmt="select distinct status from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user $group_SQL $user_group_SQL order by status";
+	if ($show_defunct_users) 
+		{
+		$status_stmt="SELECT distinct status from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and status is not null $group_SQL $user_group_SQL order by status";
+		}
+	else
+		{
+		$status_stmt="SELECT distinct status from vicidial_users,".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=".$agent_log_table.".user $group_SQL $user_group_SQL order by status";
+		}
+
 		if ($DB) {echo "$status_stmt\n";}
 	$status_rslt=mysql_to_mysqli($status_stmt, $link);
 	$q=0;
@@ -508,7 +550,14 @@ else
 		{
 		$current_status=$status_row[0];
 
-		$stmt="select count(*) as calls,full_name,vicidial_users.user,status from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and status='$current_status' $group_SQL $user_group_SQL group by user,full_name,status order by full_name,user,status desc limit 500000;";
+		if ($show_defunct_users) 
+			{
+			$stmt="SELECT count(*) as calls,'' as full_name,user,status from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and status='$current_status' $group_SQL $user_group_SQL group by user,full_name,status order by full_name,user,status desc limit 500000;";
+			}
+		else
+			{
+			$stmt="SELECT count(*) as calls,full_name,vicidial_users.user,status from vicidial_users,".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=".$agent_log_table.".user and status='$current_status' $group_SQL $user_group_SQL group by user,full_name,status order by full_name,user,status desc limit 500000;";
+			}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$status_rows_to_print = mysqli_num_rows($rslt);
@@ -518,10 +567,30 @@ else
 			{
 			$row=mysqli_fetch_row($rslt);
 
+			if ($show_defunct_users)
+				{
+				$defunct_user_stmt="SELECT full_name,user_group from vicidial_users where user='$row[2]'";
+				$defunct_user_rslt=mysql_to_mysqli($defunct_user_stmt, $link);
+				if (mysqli_num_rows($defunct_user_rslt)>0) 
+					{
+					$defunct_user_row=mysqli_fetch_row($defunct_user_rslt);
+					$full_name_val=$defunct_user_row[0];
+					} 
+				else 
+					{
+					$full_name_val=$row[2];
+					}
+				}
+			else 
+				{
+				$full_name_val=$row[1];
+				}
+
+
 			if ( ($row[0] > 0) and (strlen($row[2]) > 0) and (strlen($row[3]) > 0) and (!preg_match("/NULL/i",$row[3])))
 				{
 				$calls[$q] =		$row[0];
-				$full_name[$q] =	$row[1];
+				$full_name[$q] =	$full_name_val;
 				$user[$q] =			$row[2];
 				$status[$q] =		$row[3];
 				if ( (!preg_match("/-$status[$q]-/i", $statuses)) and (strlen($status[$q])>0) )
@@ -1022,6 +1091,9 @@ echo "<select name='report_display_type'>";
 if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}
 echo "<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
 echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>$NWB#agent_status_detail$NWE\n";
+echo "</TD><TD VALIGN=TOP><BR>";
+echo "<input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."<BR><BR>\n";
+echo "<input type='checkbox' name='show_defunct_users' value='checked' $show_defunct_users>"._QXZ("Show defunct users")."<BR>\n";
 echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
