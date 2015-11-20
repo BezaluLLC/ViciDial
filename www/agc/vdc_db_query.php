@@ -392,10 +392,11 @@
 # 150928-1818 - Added dnc logging
 # 151006-0939 - Changed campaign_cid_areacodes to operate with 2-5 digit areacodes
 # 151026-1710 - Added function for Status Groups lookups and delivery to agent screen
+# 151119-1931 - Fixed issue with outbound CID in some cases during dial-only function
 #
 
-$version = '2.12-287';
-$build = '151026-1710';
+$version = '2.12-288';
+$build = '151119-1931';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=635;
@@ -4555,7 +4556,7 @@ if ($ACTION == 'manDiaLonly')
 		if (strlen($lead_id) > 1)
 			{
 			$list_id='';
-			$stmt = "SELECT list_id,province FROM vicidial_list where lead_id='$lead_id';";
+			$stmt = "SELECT list_id,province,security_phrase FROM vicidial_list where lead_id='$lead_id';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00246',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -4563,8 +4564,9 @@ if ($ACTION == 'manDiaLonly')
 			if ($lio_ct > 0)
 				{
 				$row=mysqli_fetch_row($rslt);
-				$list_id =	$row[0];
-				$province =	$row[1];
+				$list_id =			$row[0];
+				$province =			$row[1];
+				$security_phrase =	$row[2];
 
 				if (strlen($list_id) > 1)
 					{

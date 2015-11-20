@@ -503,10 +503,11 @@
 # 150928-1205 - Fixed issue with API transfers and dial_override flag
 # 151022-0004 - Added audio alert when email arrives, issue #899
 # 151028-1458 - Added status groups statuses feature with min/max seconds qualifiers for statuses
+# 151119-1925 - Fixed issue with scheduled callbacks and status groups
 #
 
-$version = '2.12-475c';
-$build = '151028-1458';
+$version = '2.12-476c';
+$build = '151119-1925';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -7189,7 +7190,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								VARCBstatuses = sVARCBstatuses.concat(gVARCBstatuses);
 								VARMINstatuses = sVARMINstatuses.concat(gVARMINstatuses);
 								VARMAXstatuses = sVARMAXstatuses.concat(gVARMAXstatuses);
-								VARCBstatusesLIST = sVARCBstatusesLIST + '' + gVARCBstatusesLIST;
+								VARCBstatusesLIST = sVARCBstatusesLIST + ' ' + gVARCBstatusesLIST + ' ';
 								VD_statuses_ct = (Number(sVD_statuses_ct) + Number(gVD_statuses_ct));
 								VARSELstatuses_ct = (Number(sVARSELstatuses_ct) + Number(gVARSELstatuses_ct));
 
@@ -8494,9 +8495,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								VARCBstatuses = sVARCBstatuses.concat(gVARCBstatuses);
 								VARMINstatuses = sVARMINstatuses.concat(gVARMINstatuses);
 								VARMAXstatuses = sVARMAXstatuses.concat(gVARMAXstatuses);
-								VARCBstatusesLIST = sVARCBstatusesLIST + '' + gVARCBstatusesLIST;
+								VARCBstatusesLIST = sVARCBstatusesLIST + ' ' + gVARCBstatusesLIST + ' ';
 								VD_statuses_ct = (Number(sVD_statuses_ct) + Number(gVD_statuses_ct));
 								VARSELstatuses_ct = (Number(sVARSELstatuses_ct) + Number(gVARSELstatuses_ct));
+
+						//	document.getElementById("debugbottomspan").innerHTML = VARCBstatusesLIST + '<br />' + gVARCBstatusesLIST + '|' + cVARCBstatusesLIST + '|' + gVARstatusesDETAILS[2] + '|' + MDnextResponse_array[58] + '|' + loop_gct;
 
 								var HKdebug='';
 								var HKboxAtemp='';
@@ -9737,7 +9740,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							VARCBstatuses = sVARCBstatuses.concat(gVARCBstatuses);
 							VARMINstatuses = sVARMINstatuses.concat(gVARMINstatuses);
 							VARMAXstatuses = sVARMAXstatuses.concat(gVARMAXstatuses);
-							VARCBstatusesLIST = sVARCBstatusesLIST + '' + gVARCBstatusesLIST;
+							VARCBstatusesLIST = sVARCBstatusesLIST + ' ' + gVARCBstatusesLIST + ' ';
 							VD_statuses_ct = (Number(sVD_statuses_ct) + Number(gVD_statuses_ct));
 							VARSELstatuses_ct = (Number(sVARSELstatuses_ct) + Number(gVARSELstatuses_ct));
 
@@ -10439,7 +10442,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							VARCBstatuses = sVARCBstatuses.concat(gVARCBstatuses);
 							VARMINstatuses = sVARMINstatuses.concat(gVARMINstatuses);
 							VARMAXstatuses = sVARMAXstatuses.concat(gVARMAXstatuses);
-							VARCBstatusesLIST = sVARCBstatusesLIST + '' + gVARCBstatusesLIST;
+							VARCBstatusesLIST = sVARCBstatusesLIST + ' ' + gVARCBstatusesLIST + ' ';
 							VD_statuses_ct = (Number(sVD_statuses_ct) + Number(gVD_statuses_ct));
 							VARSELstatuses_ct = (Number(sVARSELstatuses_ct) + Number(gVARSELstatuses_ct));
 
