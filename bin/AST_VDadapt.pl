@@ -1782,12 +1782,15 @@ sub launch_carrier_stats_gather
 		while ($sthArows > $print_sctp)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$SIXhour_total+=$aryA[1];
+			$SIXhour_total = ($SIXhour_total + $aryA[1]);
 			$print_ctp=0;
 			while ($print_ctp < $ctp)
 				{
-				if ($TFhour_status[$print_ctp] == "$aryA[0]")
-					{$SIXhour_count[$print_ctp] = $aryA[1];}
+				$temp_status = $aryA[0];
+				if ($TFhour_status[$print_ctp] =~ /^$temp_status$/)
+					{
+					$SIXhour_count[$print_ctp] = $aryA[1];
+					}
 				$print_ctp++;
 				}
 			$print_sctp++;
@@ -1806,7 +1809,8 @@ sub launch_carrier_stats_gather
 			$print_ctp=0;
 			while ($print_ctp < $ctp)
 				{
-				if ($TFhour_status[$print_ctp] == "$aryA[0]")
+				$temp_status = $aryA[0];
+				if ($TFhour_status[$print_ctp] =~ /^$temp_status$/)
 					{$ONEhour_count[$print_ctp] = $aryA[1];}
 				$print_ctp++;
 				}
@@ -1826,7 +1830,8 @@ sub launch_carrier_stats_gather
 			$print_ctp=0;
 			while ($print_ctp < $ctp)
 				{
-				if ($TFhour_status[$print_ctp] == "$aryA[0]")
+				$temp_status = $aryA[0];
+				if ($TFhour_status[$print_ctp] =~ /^$temp_status$/)
 					{$FTminute_count[$print_ctp] = $aryA[1];}
 				$print_ctp++;
 				}
@@ -1846,7 +1851,8 @@ sub launch_carrier_stats_gather
 			$print_ctp=0;
 			while ($print_ctp < $ctp)
 				{
-				if ($TFhour_status[$print_ctp] == "$aryA[0]")
+				$temp_status = $aryA[0];
+				if ($TFhour_status[$print_ctp] =~ /^$temp_status$/)
 					{$FIVEminute_count[$print_ctp] = $aryA[1];}
 				$print_ctp++;
 				}
@@ -1866,7 +1872,8 @@ sub launch_carrier_stats_gather
 			$print_ctp=0;
 			while ($print_ctp < $ctp)
 				{
-				if ($TFhour_status[$print_ctp] == "$aryA[0]")
+				$temp_status = $aryA[0];
+				if ($TFhour_status[$print_ctp] =~ /^$temp_status$/)
 					{$ONEminute_count[$print_ctp] = $aryA[1];}
 				$print_ctp++;
 				}
