@@ -1,12 +1,12 @@
 #!/usr/bin/perl
 #
-# AST_VDadapt.pl version 2.10
+# AST_VDadapt.pl version 2.12
 #
 # DESCRIPTION:
 # adjusts the auto_dial_level for vicidial adaptive-predictive campaigns. 
 # gather call stats for campaigns and in-groups
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 60823-1302 - First build from AST_VDhopper.pl
@@ -41,6 +41,7 @@
 # 131122-1314 - Added several missing sthA->finish
 # 141109-1957 - Fixed issue #793
 # 141113-1616 - Added concurrency check
+# 151124-1235 - Added function to cache carrier log stats
 #
 
 # constants
@@ -55,6 +56,7 @@ $run_check=1; # concurrency check
 	$vicidial_closer_log = 'vicidial_closer_log FORCE INDEX (call_date) ';
 #	$vicidial_closer_log = 'vicidial_closer_log';
 
+$generate_carrier_stats=1;
 
 $i=0;
 $daily_stats=1;
@@ -618,6 +620,24 @@ while ($master_loop < $CLIloops)
 	if ( ($daily_stats > 0) && (($stat_count =~ /0$|5$/) || ($stat_count==1)) )
 		{
 		&launch_max_calls_gather;
+		}
+
+	if ( (($stat_count =~ /00$|50$/) || ($stat_count==1)) )
+		{
+		$stmtA = "SELECT cache_carrier_stats_realtime from system_settings;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$generate_carrier_stats = $aryA[0];
+			}
+		$sthA->finish();
+		if ($generate_carrier_stats > 0)
+			{
+			&launch_carrier_stats_gather;
+			}
 		}
 
 	if ($RESETdiff_ratio_updater > 0) {$RESETdiff_ratio_updater=0;   $diff_ratio_updater=0;}
@@ -1619,6 +1639,313 @@ sub launch_max_calls_gather
 	################################################################################
 	}
 
+
+
+sub launch_carrier_stats_gather
+	{
+	################################################################################
+	#### BEGIN gather carrier stats for real-time report
+	################################################################################
+	$TFhour_total=0; @TFhour_status=@MT; @TFhour_count=@MT;
+	$SIXhour_total=0; @SIXhour_status=@MT; @SIXhour_count=@MT;
+	$ONEhour_total=0; @ONEhour_status=@MT; @ONEhour_count=@MT;
+	$FTminute_total=0; @FTminute_status=@MT; @FTminute_count=@MT;
+	$FIVEminute_total=0; @FIVEminute_status=@MT; @FIVEminute_count=@MT;
+	$ONEminute_total=0; @ONEminute_status=@MT; @ONEminute_count=@MT;
+
+	### BEGIN calculate times needed for queries ###
+	$secC = time();
+	$epochONEminuteAGO = ($secC - 60);
+	$epochFIVEminutesAGO = ($secC - 300);
+	$epochFIFTEENminutesAGO = ($secC - 900);
+	$epochONEhourAGO = ($secC - 3600);
+	$epochSIXhoursAGO = ($secC - 21600);
+	$epochTWENTYFOURhoursAGO = ($secC - 86400);
+
+	($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime($secC);
+	$mon++;	$year = ($year + 1900);
+	if ($mon < 10) {$mon = "0$mon";}
+	if ($mday < 10) {$mday = "0$mday";}
+	if ($hour < 10) {$hour = "0$hour";}
+	if ($min < 10) {$min = "0$min";}
+	if ($sec < 10) {$sec = "0$sec";}
+	$timeNOW = "$year-$mon-$mday $hour:$min:$sec";
+
+	($Osec,$Omin,$Ohour,$Omday,$Omon,$Oyear,$Owday,$Oyday,$Oisdst) = localtime($epochONEminuteAGO);
+	$Omon++;	$Oyear = ($Oyear + 1900);
+	if ($Omon < 10) {$Omon = "0$Omon";}
+	if ($Omday < 10) {$Omday = "0$Omday";}
+	if ($Ohour < 10) {$Ohour = "0$Ohour";}
+	if ($Omin < 10) {$Omin = "0$Omin";}
+	if ($Osec < 10) {$Osec = "0$Osec";}
+	$timeONEminuteAGO = "$Oyear-$Omon-$Omday $Ohour:$Omin:$Osec";
+
+	($Fsec,$Fmin,$Fhour,$Fmday,$Fmon,$Fyear,$Fwday,$Fyday,$Fisdst) = localtime($epochFIVEminutesAGO);
+	$Fmon++;	$Fyear = ($Fyear + 1900);
+	if ($Fmon < 10) {$Fmon = "0$Fmon";}
+	if ($Fmday < 10) {$Fmday = "0$Fmday";}
+	if ($Fhour < 10) {$Fhour = "0$Fhour";}
+	if ($Fmin < 10) {$Fmin = "0$Fmin";}
+	if ($Fsec < 10) {$Fsec = "0$Fsec";}
+	$timeFIVEminutesAGO = "$Fyear-$Fmon-$Fmday $Fhour:$Fmin:$Fsec";
+
+	($Isec,$Imin,$Ihour,$Imday,$Imon,$Iyear,$Iwday,$Iyday,$Iisdst) = localtime($epochFIFTEENminutesAGO);
+	$Imon++;	$Iyear = ($Iyear + 1900);
+	if ($Imon < 10) {$Imon = "0$Imon";}
+	if ($Imday < 10) {$Imday = "0$Imday";}
+	if ($Ihour < 10) {$Ihour = "0$Ihour";}
+	if ($Imin < 10) {$Imin = "0$Imin";}
+	if ($Isec < 10) {$Isec = "0$Isec";}
+	$timeFIFTEENminutesAGO = "$Iyear-$Imon-$Imday $Ihour:$Imin:$Isec";
+
+	($Hsec,$Hmin,$Hhour,$Hmday,$Hmon,$Hyear,$Hwday,$Hyday,$Hisdst) = localtime($epochONEhourAGO);
+	$Hmon++;	$Hyear = ($Hyear + 1900);
+	if ($Hmon < 10) {$Hmon = "0$Hmon";}
+	if ($Hmday < 10) {$Hmday = "0$Hmday";}
+	if ($Hhour < 10) {$Hhour = "0$Hhour";}
+	if ($Hmin < 10) {$Hmin = "0$Hmin";}
+	if ($Hsec < 10) {$Hsec = "0$Hsec";}
+	$timeONEhourAGO = "$Hyear-$Hmon-$Hmday $Hhour:$Hmin:$Hsec";
+
+	($Ssec,$Smin,$Shour,$Smday,$Smon,$Syear,$Swday,$Syday,$Sisdst) = localtime($epochSIXhoursAGO);
+	$Smon++;	$Syear = ($Syear + 1900);
+	if ($Smon < 10) {$Smon = "0$Smon";}
+	if ($Smday < 10) {$Smday = "0$Smday";}
+	if ($Shour < 10) {$Shour = "0$Shour";}
+	if ($Smin < 10) {$Smin = "0$Smin";}
+	if ($Ssec < 10) {$Ssec = "0$Ssec";}
+	$timeSIXhoursAGO = "$Syear-$Smon-$Smday $Shour:$Smin:$Ssec";
+
+	($Wsec,$Wmin,$Whour,$Wmday,$Wmon,$Wyear,$Wwday,$Wyday,$Wisdst) = localtime($epochTWENTYFOURhoursAGO);
+	$Wmon++;	$Wyear = ($Wyear + 1900);
+	if ($Wmon < 10) {$Wmon = "0$Wmon";}
+	if ($Wmday < 10) {$Wmday = "0$Wmday";}
+	if ($Whour < 10) {$Whour = "0$Whour";}
+	if ($Wmin < 10) {$Wmin = "0$Wmin";}
+	if ($Wsec < 10) {$Wsec = "0$Wsec";}
+	$timeTWENTYFOURhoursAGO = "$Wyear-$Wmon-$Wmday $Whour:$Wmin:$Wsec";
+
+	if ($DB > 0) 
+		{
+		print "Carrier stats gather starting now:\n";
+		print "Time now:                    $timeNOW\n";
+		}
+	if ($DBX > 0) 
+		{
+		print "Time one minute ago:         $timeONEminuteAGO\n";
+		print "Time five minutes ago:       $timeFIVEminutesAGO\n";
+		print "Time fifteen minutes ago:    $timeFIFTEENminutesAGO\n";
+		print "Time one hour ago:           $timeONEhourAGO\n";
+		print "Time six hours ago:          $timeSIXhoursAGO\n";
+		print "Time twenty four hours ago:  $timeTWENTYFOURhoursAGO\n";
+		}
+	### END calculate times needed for queries ###
+
+	$CARRIERstatsHTML='';
+	$stmtA="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeTWENTYFOURhoursAGO\" group by dialstatus;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	$ctp=0;
+	while ($sthArows > $ctp)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$TFhour_status[$ctp] =	$aryA[0];
+		$TFhour_count[$ctp] =	$aryA[1];
+		$TFhour_total = ($TFhour_total + $aryA[1]);
+		$dialstatuses .= "'$aryA[0]',";
+		$ctp++;
+		}
+	$sthA->finish();
+	$dialstatuses =~ s/,$//gi;
+
+	$CARRIERstatsHTML .= "<TR BGCOLOR=white><TD ALIGN=left COLSPAN=8>";
+	$CARRIERstatsHTML .= "<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0 BGCOLOR=white>";
+	$CARRIERstatsHTML .= "<TR BGCOLOR='#E6E6E6'>";
+	$CARRIERstatsHTML .= "<TD ALIGN=LEFT><font size=2><B>CARRIER STATS: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "<TD ALIGN=LEFT><font size=2><B>&nbsp; HANGUP STATUS &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; 24 HOURS &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; 6 HOURS &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; 1 HOUR &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; 15 MIN &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; 5 MIN &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; 1 MIN &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "</TR>";
+
+	if (length($dialstatuses) > 1)
+		{
+		$stmtA="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeSIXhoursAGO\" group by dialstatus;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$print_sctp=0;
+		while ($sthArows > $print_sctp)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$SIXhour_total+=$aryA[1];
+			$print_ctp=0;
+			while ($print_ctp < $ctp)
+				{
+				if ($TFhour_status[$print_ctp] == "$aryA[0]")
+					{$SIXhour_count[$print_ctp] = $aryA[1];}
+				$print_ctp++;
+				}
+			$print_sctp++;
+			}
+		$sthA->finish();
+
+		$stmtA="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeONEhourAGO\" group by dialstatus;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$print_sctp=0;
+		while ($sthArows > $print_sctp)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$ONEhour_total = ($ONEhour_total + $aryA[1]);
+			$print_ctp=0;
+			while ($print_ctp < $ctp)
+				{
+				if ($TFhour_status[$print_ctp] == "$aryA[0]")
+					{$ONEhour_count[$print_ctp] = $aryA[1];}
+				$print_ctp++;
+				}
+			$print_sctp++;
+			}
+		$sthA->finish();
+
+		$stmtA="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeFIFTEENminutesAGO\" group by dialstatus;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$print_sctp=0;
+		while ($sthArows > $print_sctp)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$FTminute_total = ($FTminute_total + $aryA[1]);
+			$print_ctp=0;
+			while ($print_ctp < $ctp)
+				{
+				if ($TFhour_status[$print_ctp] == "$aryA[0]")
+					{$FTminute_count[$print_ctp] = $aryA[1];}
+				$print_ctp++;
+				}
+			$print_sctp++;
+			}
+		$sthA->finish();
+
+		$stmtA="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeFIVEminutesAGO\" group by dialstatus;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$print_sctp=0;
+		while ($sthArows > $print_sctp)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$FIVEminute_total = ($FIVEminute_total + $aryA[1]);
+			$print_ctp=0;
+			while ($print_ctp < $ctp)
+				{
+				if ($TFhour_status[$print_ctp] == "$aryA[0]")
+					{$FIVEminute_count[$print_ctp] = $aryA[1];}
+				$print_ctp++;
+				}
+			$print_sctp++;
+			}
+		$sthA->finish();
+
+		$stmtA="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeONEminuteAGO\" group by dialstatus;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$print_sctp=0;
+		while ($sthArows > $print_sctp)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$ONEminute_total = ($ONEminute_total + $aryA[1]);
+			$print_ctp=0;
+			while ($print_ctp < $ctp)
+				{
+				if ($TFhour_status[$print_ctp] == "$aryA[0]")
+					{$ONEminute_count[$print_ctp] = $aryA[1];}
+				$print_ctp++;
+				}
+			$print_sctp++;
+			}
+		$sthA->finish();
+
+		$print_ctp=0;
+		while ($print_ctp < $ctp)
+			{
+			if (length($TFhour_count[$print_ctp])<1) {$TFhour_count[$print_ctp]=0;}
+			if (length($SIXhour_count[$print_ctp])<1) {$SIXhour_count[$print_ctp]=0;}
+			if (length($ONEhour_count[$print_ctp])<1) {$ONEhour_count[$print_ctp]=0;}
+			if (length($FTminute_count[$print_ctp])<1) {$FTminute_count[$print_ctp]=0;}
+			if (length($FIVEminute_count[$print_ctp])<1) {$FIVEminute_count[$print_ctp]=0;}
+			if (length($ONEminute_count[$print_ctp])<1) {$ONEminute_count[$print_ctp]=0;}
+
+			$dividend=$TFhour_count[$print_ctp]; $divisor=$TFhour_total;	$TFhour_prw = &MathZDC;
+			$dividend=$SIXhour_count[$print_ctp]; $divisor=$SIXhour_total;	$SIXhour_prw = &MathZDC;
+			$dividend=$ONEhour_count[$print_ctp]; $divisor=$ONEhour_total;	$ONEhour_prw = &MathZDC;
+			$dividend=$FTminute_count[$print_ctp]; $divisor=$FTminute_total;	$TFminute_prw = &MathZDC;
+			$dividend=$FIVEminute_count[$print_ctp]; $divisor=$FIVEminute_total;	$FIVEminute_prw = &MathZDC;
+			$dividend=$ONEminute_count[$print_ctp]; $divisor=$ONEminute_total;	$ONEminute_prw = &MathZDC;
+
+			$TFhour_pct = (100 * $TFhour_prw);
+			$SIXhour_pct = (100 * $SIXhour_prw);
+			$ONEhour_pct = (100 * $ONEhour_prw);
+			$TFminute_pct = (100 * $TFminute_prw);
+			$FIVEminute_pct = (100 * $FIVEminute_prw);
+			$ONEminute_pct = (100 * $ONEminute_prw);
+
+		#	if ($DBX) 
+		#		{
+		#		print "$TFhour_prw  | ($TFhour_count[$print_ctp], $TFhour_total)\n";
+		#		print "$SIXhour_prw  | ($SIXhour_count[$print_ctp], $SIXhour_total)\n";
+		#		print "$ONEhour_prw  | ($ONEhour_count[$print_ctp], $ONEhour_total)\n";
+		#		print "$TFminute_prw  | ($FTminute_count[$print_ctp], $FTminute_total)\n";
+		#		print "$FIVEminute_prw  | ($FIVEminute_count[$print_ctp], $FIVEminute_total)\n";
+		#		print "$ONEminute_prw  | ($ONEminute_count[$print_ctp], $ONEminute_total)\n";
+		#		}
+
+			$CARRIERstatsHTML .= "<TR>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=white><font size=2>&nbsp;</TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=LEFT><font size=2>&nbsp; &nbsp; $TFhour_status[$print_ctp] </TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2> $TFhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $TFhour_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2> $SIXhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $SIXhour_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2> $ONEhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $ONEhour_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2> $FTminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $TFminute_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2> $FIVEminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $FIVEminute_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2> $ONEminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $ONEminute_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "</TR>";
+			$print_ctp++;
+			}
+		$CARRIERstatsHTML .= "<TR>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR=white><font size=1>generated: $timeNOW</TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=LEFT><font size=2><B>&nbsp; &nbsp; TOTALS</B></TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2><B> ".($TFhour_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2><B> ".($SIXhour_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2><B> ".($ONEhour_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2><B> ".($FTminute_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2><B> ".($FIVEminute_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2><B> ".($ONEminute_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "</TR>";
+		}
+	else
+		{
+		$CARRIERstatsHTML .= "<TR><TD BGCOLOR=white colspan=7><font size=2>no carrier log entries in last 24 hours</TD></TR>";
+		}
+	$CARRIERstatsHTML .= "</TABLE>";
+	$CARRIERstatsHTML .= "</TD></TR>";
+
+	$stmtA="INSERT IGNORE INTO vicidial_html_cache_stats SET stats_type='carrier_stats',stats_id='ALL',stats_date=NOW(),stats_count='$TFhour_total',stats_html=\"$CARRIERstatsHTML\" ON DUPLICATE KEY UPDATE stats_date=NOW(),stats_count='$TFhour_total',stats_html=\"$CARRIERstatsHTML\";";
+	$affected_rows = $dbhA->do($stmtA);
+	if ($DB) {print "CARRIER STATS INSERT/UPDATE    TOTAL|$affected_rows|$stmtA|\n";}
+	################################################################################
+	#### END gather carrier stats for real-time report
+	################################################################################
+	}
+
 sub launch_inbound_gather
 	{
 	################################################################################
@@ -2275,3 +2602,27 @@ sub calculate_dial_level
 	}
 ##### END calculate the proper dial level #####
 
+
+##### BEGIN math divisor sub #####
+sub MathZDC
+	{
+	$quotient=0;
+#	if ($DBX) {print "MathZDC sub DEBUG:      dividend: $dividend   divisor:  $divisor\n";}
+
+	if ( ($divisor == '0') || (length($divisor) < 1) )
+		{
+		return $quotient;
+		}
+	else 
+		{
+		if ($dividend == '0')
+			{
+			return 0;
+			}
+		else 
+			{
+			$percent = ($dividend/$divisor);
+			return $percent;
+			}
+		}
+	}

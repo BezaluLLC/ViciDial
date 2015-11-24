@@ -189,6 +189,10 @@ OTHER CHANGES:
 	calls sent to a message to play a different message depending on whether
 	a wildcard text string is present in a selected lead data field.
 
+46. Added Cached Realtime Carrier Stats option to System Settings to have the
+	Carrier Log Stats generated once per minute system-wide instead of every 
+	time the realtime report refreshes on every screen.
+
 
 
 

@@ -76,7 +76,7 @@ $PHP_SELF=$_SERVER['PHP_SELF'];
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled,admin_modify_refresh,nocache_admin,webroot_writable,allow_emails,active_modules,sounds_central_control_active,qc_features_active,contacts_enabled,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled,admin_modify_refresh,nocache_admin,webroot_writable,allow_emails,active_modules,sounds_central_control_active,qc_features_active,contacts_enabled,enable_languages,language_method,admin_web_directory FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -98,6 +98,7 @@ if ($qm_conf_ct > 0)
 	$SScontacts_enabled =			$row[12];
 	$SSenable_languages =			$row[13];
 	$SSlanguage_method =			$row[14];
+	$SSadmin_web_directory =		$row[15];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -1372,7 +1373,7 @@ if ($ADD==363111111111)
 		echo "</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=left colspan=2>\n";
 
-		echo "<iframe src=\"/vicidial/admin_languages.php?ADD=363211111111&language_id=$language_id&DB=$DB&action=$action\" name=\"language_phrases\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" width=\"100%\" height=\"400\">\n</iframe>\n";
+		echo "<iframe src=\"$PHP_SELF?ADD=363211111111&language_id=$language_id&DB=$DB&action=$action\" name=\"language_phrases\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" width=\"100%\" height=\"400\">\n</iframe>\n";
 
 
 		echo "</td></tr>\n";

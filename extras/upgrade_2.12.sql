@@ -362,3 +362,16 @@ KEY vicidial_AMM_multi_campaign_id_key (campaign_id)
 ALTER TABLE vicidial_campaigns ADD am_message_wildcards ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1435',db_schema_update_date=NOW() where db_schema_version < 1435;
+
+CREATE TABLE vicidial_html_cache_stats (
+stats_type VARCHAR(20) NOT NULL,
+stats_id VARCHAR(20) NOT NULL,
+stats_date DATETIME NOT NULL,
+stats_count INT(9) UNSIGNED default '0',
+stats_html MEDIUMTEXT,
+UNIQUE KEY vicidial_html_cache_stats_key (stats_type,stats_id)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+ALTER TABLE system_settings ADD cache_carrier_stats_realtime ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1436',db_schema_update_date=NOW() where db_schema_version < 1436;

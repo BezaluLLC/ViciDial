@@ -1622,7 +1622,8 @@ default_language VARCHAR(100) default 'default English',
 agent_whisper_enabled ENUM('0','1') default '0',
 user_hide_realtime_enabled ENUM('0','1') default '0',
 custom_reports_use_slave_db VARCHAR(2000) default '',
-usacan_phone_dialcode_fix ENUM('0','1') default '0'
+usacan_phone_dialcode_fix ENUM('0','1') default '0',
+cache_carrier_stats_realtime ENUM('0','1') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3370,6 +3371,15 @@ PRIMARY KEY (amm_id),
 KEY vicidial_AMM_multi_campaign_id_key (campaign_id)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE vicidial_html_cache_stats (
+stats_type VARCHAR(20) NOT NULL,
+stats_id VARCHAR(20) NOT NULL,
+stats_date DATETIME NOT NULL,
+stats_count INT(9) UNSIGNED default '0',
+stats_html MEDIUMTEXT,
+UNIQUE KEY vicidial_html_cache_stats_key (stats_type,stats_id)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3619,4 +3629,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1435',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1436',db_schema_update_date=NOW(),reload_timestamp=NOW();

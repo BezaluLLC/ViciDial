@@ -66,6 +66,7 @@
 # 151020-0704 - Added Status Groups and Custom Reports entries
 # 151030-0639 - Added usacan_phone_dialcode_fix entry
 # 151104-1541 - Added am_message_wildcards entry
+# 151121-1144 - Added cache_carrier_stats_realtime
 #
 
 
@@ -4884,6 +4885,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-enhanced_disconnect_logging">
 <BR>
 <B><?php echo _QXZ("Enhanced Disconnect Logging"); ?> -</B><?php echo _QXZ("This setting enables logging of calls that get a CONGESTION signal with a cause code of 1, 19, 21, 34 or 38. We usually do not recommend enabling this in the USA. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="settings-cache_carrier_stats_realtime">
+<BR>
+<B><?php echo _QXZ("Cached Realtime Carrier Stats"); ?> -</B><?php echo _QXZ("This setting if enabled will change the real-time report from gathering the carrier log stats every time it is refreshed on every screen it is running on, to a cached set of carrier log stats that are refreshed once per minute. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="settings-campaign_cid_areacodes_enabled">

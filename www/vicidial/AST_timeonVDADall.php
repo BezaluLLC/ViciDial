@@ -181,7 +181,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,agent_whisper_enabled,allow_chats FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,agent_whisper_enabled,allow_chats,cache_carrier_stats_realtime FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -196,6 +196,7 @@ if ($qm_conf_ct > 0)
 	$SSlanguage_method =			$row[5];
 	$agent_whisper_enabled =		$row[6];
 	$allow_chats =					$row[7];
+	$cache_carrier_stats_realtime = $row[8];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -1333,180 +1334,195 @@ if ( ($DROPINGROUPstats > 0) and (!preg_match("/ALL-ACTIVE/",$group_string)) )
 $CARRIERstatsHTML='';
 if ($CARRIERstats > 0)
 	{
-	$stmtB="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeTWENTYFOURhoursAGO\" group by dialstatus;";
-	if ($DB > 0) {echo "\n|$stmtB|\n";}
-	$rslt=mysql_to_mysqli($stmtB, $link);
-	$car_to_print = mysqli_num_rows($rslt);
-	$ctp=0;
-	while ($car_to_print > $ctp)
+	if ($cache_carrier_stats_realtime > 0)
 		{
-		$row=mysqli_fetch_row($rslt);
-		$TFhour_status[$ctp] =	$row[0];
-		$TFhour_count[$ctp] =	$row[1];
-		$TFhour_total+=$row[1];
-		$dialstatuses .=		"'$row[0]',";
-		$ctp++;
-		}
-	$dialstatuses = preg_replace("/,$/",'',$dialstatuses);
-
-	$CARRIERstatsHTML .= "<TR BGCOLOR=white><TD ALIGN=left COLSPAN=8>";
-	$CARRIERstatsHTML .= "<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0 BGCOLOR=white>";
-	$CARRIERstatsHTML .= "<TR BGCOLOR=\"#E6E6E6\">";
-	$CARRIERstatsHTML .= "<TD ALIGN=LEFT><font size=2><B>"._QXZ("CARRIER STATS").": &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </B></TD>";
-	$CARRIERstatsHTML .= "<TD ALIGN=LEFT><font size=2><B>&nbsp; "._QXZ("HANGUP STATUS")." &nbsp; </B></TD>";
-	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; "._QXZ("24 HOURS")." &nbsp; </B></TD>";
-	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; "._QXZ("6 HOURS")." &nbsp; </B></TD>";
-	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; "._QXZ("1 HOUR")." &nbsp; </B></TD>";
-	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; "._QXZ("15 MIN")." &nbsp; </B></TD>";
-	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; "._QXZ("5 MIN")." &nbsp; </B></TD>";
-	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; "._QXZ("1 MIN")." &nbsp; </B></TD>";
-	$CARRIERstatsHTML .= "</TR>";
-
-	if (strlen($dialstatuses) > 1)
-		{
-		$stmtB="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeSIXhoursAGO\" group by dialstatus;";
+		$stmtB="SELECT stats_html from vicidial_html_cache_stats where stats_type='carrier_stats' and stats_id='ALL';";
 		if ($DB > 0) {echo "\n|$stmtB|\n";}
 		$rslt=mysql_to_mysqli($stmtB, $link);
-		$scar_to_print = mysqli_num_rows($rslt);
-		$print_sctp=0;
-		while ($scar_to_print > $print_sctp)
+		$csh_to_print = mysqli_num_rows($rslt);
+		if ($csh_to_print > 0)
 			{
 			$row=mysqli_fetch_row($rslt);
-			$SIXhour_total+=$row[1];
-			$print_ctp=0;
-			while ($print_ctp < $ctp)
-				{
-				if ($TFhour_status[$print_ctp] == $row[0])
-					{$SIXhour_count[$print_ctp] = $row[1];}
-				$print_ctp++;
-				}
-			$print_sctp++;
+			$CARRIERstatsHTML =	$row[0];
 			}
-
-		$stmtB="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeONEhourAGO\" group by dialstatus;";
-		if ($DB > 0) {echo "\n|$stmtB|\n";}
-		$rslt=mysql_to_mysqli($stmtB, $link);
-		$scar_to_print = mysqli_num_rows($rslt);
-		$print_sctp=0;
-		while ($scar_to_print > $print_sctp)
-			{
-			$row=mysqli_fetch_row($rslt);
-			$ONEhour_total+=$row[1];
-			$print_ctp=0;
-			while ($print_ctp < $ctp)
-				{
-				if ($TFhour_status[$print_ctp] == $row[0])
-					{$ONEhour_count[$print_ctp] = $row[1];}
-				$print_ctp++;
-				}
-			$print_sctp++;
-			}
-
-		$stmtB="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeFIFTEENminutesAGO\" group by dialstatus;";
-		if ($DB > 0) {echo "\n|$stmtB|\n";}
-		$rslt=mysql_to_mysqli($stmtB, $link);
-		$scar_to_print = mysqli_num_rows($rslt);
-		$print_sctp=0;
-		while ($scar_to_print > $print_sctp)
-			{
-			$row=mysqli_fetch_row($rslt);
-			$FTminute_total+=$row[1];
-			$print_ctp=0;
-			while ($print_ctp < $ctp)
-				{
-				if ($TFhour_status[$print_ctp] == $row[0])
-					{$FTminute_count[$print_ctp] = $row[1];}
-				$print_ctp++;
-				}
-			$print_sctp++;
-			}
-
-		$stmtB="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeFIVEminutesAGO\" group by dialstatus;";
-		if ($DB > 0) {echo "\n|$stmtB|\n";}
-		$rslt=mysql_to_mysqli($stmtB, $link);
-		$scar_to_print = mysqli_num_rows($rslt);
-		$print_sctp=0;
-		while ($scar_to_print > $print_sctp)
-			{
-			$row=mysqli_fetch_row($rslt);
-			$FIVEminute_total+=$row[1];
-			$print_ctp=0;
-			while ($print_ctp < $ctp)
-				{
-				if ($TFhour_status[$print_ctp] == $row[0])
-					{$FIVEminute_count[$print_ctp] = $row[1];}
-				$print_ctp++;
-				}
-			$print_sctp++;
-			}
-
-		$stmtB="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeONEminuteAGO\" group by dialstatus;";
-		if ($DB > 0) {echo "\n|$stmtB|\n";}
-		$rslt=mysql_to_mysqli($stmtB, $link);
-		$scar_to_print = mysqli_num_rows($rslt);
-		$print_sctp=0;
-		while ($scar_to_print > $print_sctp)
-			{
-			$row=mysqli_fetch_row($rslt);
-			$ONEminute_total+=$row[1];
-			$print_ctp=0;
-			while ($print_ctp < $ctp)
-				{
-				if ($TFhour_status[$print_ctp] == $row[0])
-					{$ONEminute_count[$print_ctp] = $row[1];}
-				$print_ctp++;
-				}
-			$print_sctp++;
-			}
-
-
-		$print_ctp=0;
-		while ($print_ctp < $ctp)
-			{
-			if (strlen($TFhour_count[$print_ctp])<1) {$TFhour_count[$print_ctp]=0;}
-			if (strlen($SIXhour_count[$print_ctp])<1) {$SIXhour_count[$print_ctp]=0;}
-			if (strlen($ONEhour_count[$print_ctp])<1) {$ONEhour_count[$print_ctp]=0;}
-			if (strlen($FTminute_count[$print_ctp])<1) {$FTminute_count[$print_ctp]=0;}
-			if (strlen($FIVEminute_count[$print_ctp])<1) {$FIVEminute_count[$print_ctp]=0;}
-			if (strlen($ONEminute_count[$print_ctp])<1) {$ONEminute_count[$print_ctp]=0;}
-			
-			$TFhour_pct = (100*MathZDC($TFhour_count[$print_ctp], $TFhour_total));
-			$SIXhour_pct = (100*MathZDC($SIXhour_count[$print_ctp], $SIXhour_total));
-			$ONEhour_pct = (100*MathZDC($ONEhour_count[$print_ctp], $ONEhour_total));
-			$TFminute_pct = (100*MathZDC($FTminute_count[$print_ctp], $FTminute_total));
-			$FIVEminute_pct = (100*MathZDC($FIVEminute_count[$print_ctp], $FIVEminute_total));
-			$ONEminute_pct = (100*MathZDC($ONEminute_count[$print_ctp], $ONEminute_total));
-
-			$CARRIERstatsHTML .= "<TR>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=white><font size=2>&nbsp;</TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=LEFT><font size=2>&nbsp; &nbsp; $TFhour_status[$print_ctp] </TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $TFhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $TFhour_pct)."%</font></TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $SIXhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $SIXhour_pct)."%</font></TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $ONEhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $ONEhour_pct)."%</font></TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $FTminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $TFminute_pct)."%</font></TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $FIVEminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $FIVEminute_pct)."%</font></TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $ONEminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $ONEminute_pct)."%</font></TD>";
-			$CARRIERstatsHTML .= "</TR>";
-			$print_ctp++;
-			}
-		$CARRIERstatsHTML .= "<TR>";
-		$CARRIERstatsHTML .= "<TD BGCOLOR=white><font size=2>&nbsp;</TD>";
-		$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=LEFT><font size=2><B>&nbsp; &nbsp; "._QXZ("TOTALS")."</B></TD>";
-		$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($TFhour_total+0)."</B> </TD>";
-		$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($SIXhour_total+0)."</B> </TD>";
-		$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($ONEhour_total+0)."</B> </TD>";
-		$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($FTminute_total+0)."</B> </TD>";
-		$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($FIVEminute_total+0)."</B> </TD>";
-		$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($ONEminute_total+0)."</B> </TD>";
-		$CARRIERstatsHTML .= "</TR>";
-
 		}
 	else
 		{
-		$CARRIERstatsHTML .= "<TR><TD BGCOLOR=white colspan=7><font size=2>"._QXZ("no log entries")."</TD></TR>";
+		$stmtB="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeTWENTYFOURhoursAGO\" group by dialstatus;";
+		if ($DB > 0) {echo "\n|$stmtB|\n";}
+		$rslt=mysql_to_mysqli($stmtB, $link);
+		$car_to_print = mysqli_num_rows($rslt);
+		$ctp=0;
+		while ($car_to_print > $ctp)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$TFhour_status[$ctp] =	$row[0];
+			$TFhour_count[$ctp] =	$row[1];
+			$TFhour_total+=$row[1];
+			$dialstatuses .=		"'$row[0]',";
+			$ctp++;
+			}
+		$dialstatuses = preg_replace("/,$/",'',$dialstatuses);
+
+		$CARRIERstatsHTML .= "<TR BGCOLOR=white><TD ALIGN=left COLSPAN=8>";
+		$CARRIERstatsHTML .= "<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0 BGCOLOR=white>";
+		$CARRIERstatsHTML .= "<TR BGCOLOR=\"#E6E6E6\">";
+		$CARRIERstatsHTML .= "<TD ALIGN=LEFT><font size=2><B>"._QXZ("CARRIER STATS").": &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </B></TD>";
+		$CARRIERstatsHTML .= "<TD ALIGN=LEFT><font size=2><B>&nbsp; "._QXZ("HANGUP STATUS")." &nbsp; </B></TD>";
+		$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; "._QXZ("24 HOURS")." &nbsp; </B></TD>";
+		$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; "._QXZ("6 HOURS")." &nbsp; </B></TD>";
+		$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; "._QXZ("1 HOUR")." &nbsp; </B></TD>";
+		$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; "._QXZ("15 MIN")." &nbsp; </B></TD>";
+		$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; "._QXZ("5 MIN")." &nbsp; </B></TD>";
+		$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; "._QXZ("1 MIN")." &nbsp; </B></TD>";
+		$CARRIERstatsHTML .= "</TR>";
+
+		if (strlen($dialstatuses) > 1)
+			{
+			$stmtB="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeSIXhoursAGO\" group by dialstatus;";
+			if ($DB > 0) {echo "\n|$stmtB|\n";}
+			$rslt=mysql_to_mysqli($stmtB, $link);
+			$scar_to_print = mysqli_num_rows($rslt);
+			$print_sctp=0;
+			while ($scar_to_print > $print_sctp)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$SIXhour_total+=$row[1];
+				$print_ctp=0;
+				while ($print_ctp < $ctp)
+					{
+					if ($TFhour_status[$print_ctp] == $row[0])
+						{$SIXhour_count[$print_ctp] = $row[1];}
+					$print_ctp++;
+					}
+				$print_sctp++;
+				}
+
+			$stmtB="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeONEhourAGO\" group by dialstatus;";
+			if ($DB > 0) {echo "\n|$stmtB|\n";}
+			$rslt=mysql_to_mysqli($stmtB, $link);
+			$scar_to_print = mysqli_num_rows($rslt);
+			$print_sctp=0;
+			while ($scar_to_print > $print_sctp)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$ONEhour_total+=$row[1];
+				$print_ctp=0;
+				while ($print_ctp < $ctp)
+					{
+					if ($TFhour_status[$print_ctp] == $row[0])
+						{$ONEhour_count[$print_ctp] = $row[1];}
+					$print_ctp++;
+					}
+				$print_sctp++;
+				}
+
+			$stmtB="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeFIFTEENminutesAGO\" group by dialstatus;";
+			if ($DB > 0) {echo "\n|$stmtB|\n";}
+			$rslt=mysql_to_mysqli($stmtB, $link);
+			$scar_to_print = mysqli_num_rows($rslt);
+			$print_sctp=0;
+			while ($scar_to_print > $print_sctp)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$FTminute_total+=$row[1];
+				$print_ctp=0;
+				while ($print_ctp < $ctp)
+					{
+					if ($TFhour_status[$print_ctp] == $row[0])
+						{$FTminute_count[$print_ctp] = $row[1];}
+					$print_ctp++;
+					}
+				$print_sctp++;
+				}
+
+			$stmtB="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeFIVEminutesAGO\" group by dialstatus;";
+			if ($DB > 0) {echo "\n|$stmtB|\n";}
+			$rslt=mysql_to_mysqli($stmtB, $link);
+			$scar_to_print = mysqli_num_rows($rslt);
+			$print_sctp=0;
+			while ($scar_to_print > $print_sctp)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$FIVEminute_total+=$row[1];
+				$print_ctp=0;
+				while ($print_ctp < $ctp)
+					{
+					if ($TFhour_status[$print_ctp] == $row[0])
+						{$FIVEminute_count[$print_ctp] = $row[1];}
+					$print_ctp++;
+					}
+				$print_sctp++;
+				}
+
+			$stmtB="SELECT dialstatus,count(*) from vicidial_carrier_log where call_date >= \"$timeONEminuteAGO\" group by dialstatus;";
+			if ($DB > 0) {echo "\n|$stmtB|\n";}
+			$rslt=mysql_to_mysqli($stmtB, $link);
+			$scar_to_print = mysqli_num_rows($rslt);
+			$print_sctp=0;
+			while ($scar_to_print > $print_sctp)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$ONEminute_total+=$row[1];
+				$print_ctp=0;
+				while ($print_ctp < $ctp)
+					{
+					if ($TFhour_status[$print_ctp] == $row[0])
+						{$ONEminute_count[$print_ctp] = $row[1];}
+					$print_ctp++;
+					}
+				$print_sctp++;
+				}
+
+
+			$print_ctp=0;
+			while ($print_ctp < $ctp)
+				{
+				if (strlen($TFhour_count[$print_ctp])<1) {$TFhour_count[$print_ctp]=0;}
+				if (strlen($SIXhour_count[$print_ctp])<1) {$SIXhour_count[$print_ctp]=0;}
+				if (strlen($ONEhour_count[$print_ctp])<1) {$ONEhour_count[$print_ctp]=0;}
+				if (strlen($FTminute_count[$print_ctp])<1) {$FTminute_count[$print_ctp]=0;}
+				if (strlen($FIVEminute_count[$print_ctp])<1) {$FIVEminute_count[$print_ctp]=0;}
+				if (strlen($ONEminute_count[$print_ctp])<1) {$ONEminute_count[$print_ctp]=0;}
+				
+				$TFhour_pct = (100*MathZDC($TFhour_count[$print_ctp], $TFhour_total));
+				$SIXhour_pct = (100*MathZDC($SIXhour_count[$print_ctp], $SIXhour_total));
+				$ONEhour_pct = (100*MathZDC($ONEhour_count[$print_ctp], $ONEhour_total));
+				$TFminute_pct = (100*MathZDC($FTminute_count[$print_ctp], $FTminute_total));
+				$FIVEminute_pct = (100*MathZDC($FIVEminute_count[$print_ctp], $FIVEminute_total));
+				$ONEminute_pct = (100*MathZDC($ONEminute_count[$print_ctp], $ONEminute_total));
+
+				$CARRIERstatsHTML .= "<TR>";
+				$CARRIERstatsHTML .= "<TD BGCOLOR=white><font size=2>&nbsp;</TD>";
+				$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=LEFT><font size=2>&nbsp; &nbsp; $TFhour_status[$print_ctp] </TD>";
+				$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $TFhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $TFhour_pct)."%</font></TD>";
+				$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $SIXhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $SIXhour_pct)."%</font></TD>";
+				$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $ONEhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $ONEhour_pct)."%</font></TD>";
+				$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $FTminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $TFminute_pct)."%</font></TD>";
+				$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $FIVEminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $FIVEminute_pct)."%</font></TD>";
+				$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2> $ONEminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $ONEminute_pct)."%</font></TD>";
+				$CARRIERstatsHTML .= "</TR>";
+				$print_ctp++;
+				}
+			$CARRIERstatsHTML .= "<TR>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=white><font size=2>&nbsp;</TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=LEFT><font size=2><B>&nbsp; &nbsp; "._QXZ("TOTALS")."</B></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($TFhour_total+0)."</B> </TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($SIXhour_total+0)."</B> </TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($ONEhour_total+0)."</B> </TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($FTminute_total+0)."</B> </TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($FIVEminute_total+0)."</B> </TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=\"#E6E6E6\" ALIGN=CENTER><font size=2><B> ".($ONEminute_total+0)."</B> </TD>";
+			$CARRIERstatsHTML .= "</TR>";
+
+			}
+		else
+			{
+			$CARRIERstatsHTML .= "<TR><TD BGCOLOR=white colspan=7><font size=2>"._QXZ("no log entries")."</TD></TR>";
+			}
+		$CARRIERstatsHTML .= "</TABLE>";
+		$CARRIERstatsHTML .= "</TD></TR>";
 		}
-	$CARRIERstatsHTML .= "</TABLE>";
-	$CARRIERstatsHTML .= "</TD></TR>";
 	}
 
 
