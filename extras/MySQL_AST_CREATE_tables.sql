@@ -1623,7 +1623,8 @@ agent_whisper_enabled ENUM('0','1') default '0',
 user_hide_realtime_enabled ENUM('0','1') default '0',
 custom_reports_use_slave_db VARCHAR(2000) default '',
 usacan_phone_dialcode_fix ENUM('0','1') default '0',
-cache_carrier_stats_realtime ENUM('0','1') default '0'
+cache_carrier_stats_realtime ENUM('0','1') default '0',
+oldest_logs_date DATETIME
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3629,4 +3630,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1436',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1437',db_schema_update_date=NOW(),reload_timestamp=NOW();

@@ -375,3 +375,7 @@ UNIQUE KEY vicidial_html_cache_stats_key (stats_type,stats_id)
 ALTER TABLE system_settings ADD cache_carrier_stats_realtime ENUM('0','1') default '0';
 
 UPDATE system_settings SET db_schema_version='1436',db_schema_update_date=NOW() where db_schema_version < 1436;
+
+ALTER TABLE system_settings ADD oldest_logs_date DATETIME;
+
+UPDATE system_settings SET db_schema_version='1437',db_schema_update_date=NOW() where db_schema_version < 1437;
