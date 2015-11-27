@@ -31,6 +31,7 @@
 # 141113-2319 - Finalized adding QXZ translation to all admin files
 # 141230-1448 - Added code for on-the-fly language translations display
 # 150516-1301 - Fixed Javascript element problem, Issue #857
+# 151125-1643 - Added search archive option
 #
 
 $startMS = microtime();
@@ -61,6 +62,8 @@ if (isset($_GET["file_download"]))					{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))		{$file_download=$_POST["file_download"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($type)<2) {$type='inbound';}
@@ -91,6 +94,30 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$log_tables_array=array("vicidial_outbound_ivr_log", "vicidial_closer_log", "live_inbound_log");
+for ($t=0; $t<count($log_tables_array); $t++) 
+	{
+	$table_name=$log_tables_array[$t];
+	$archive_table_name=use_archive_table($table_name);
+	if ($archive_table_name!=$table_name) {$archives_available="Y";}
+	}
+
+if ($search_archived_data) 
+	{
+	$vicidial_outbound_ivr_log_table=use_archive_table("vicidial_outbound_ivr_log");
+	$vicidial_closer_log_table=use_archive_table("vicidial_closer_log");
+	$live_inbound_log_table=use_archive_table("live_inbound_log");
+	}
+else
+	{
+	$vicidial_outbound_ivr_log_table="vicidial_outbound_ivr_log";
+	$vicidial_closer_log_table="vicidial_closer_log";
+	$live_inbound_log_table="live_inbound_log";
+	}
+#############
 
 if ($non_latin < 1)
 	{
@@ -475,7 +502,7 @@ if ($type == 'inbound')
 	$MAIN.="</SELECT>\n";
 	$MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 	$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
-	$MAIN.="<a href=\"$PHP_SELF?DB=$DB&type=$type&query_date=$query_date&end_date=$end_date&query_date_D=$query_date_D&query_date_T=$query_date_T&end_date_D=$end_date_D&end_date_T=$end_date_T$groupQS&shift=$shift&file_download=1\">"._QXZ("DOWNLOAD")."</a> | ";
+	$MAIN.="<a href=\"$PHP_SELF?DB=$DB&type=$type&query_date=$query_date&end_date=$end_date&query_date_D=$query_date_D&query_date_T=$query_date_T&end_date_D=$end_date_D&end_date_T=$end_date_T$groupQS&shift=$shift&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a> | ";
 	$MAIN.="<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">"._QXZ("MODIFY")."</a> | ";
 	$MAIN.="<a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> | ";
 	$MAIN.="<a href=\"./AST_CLOSERstats.php?query_date=$query_date&end_date=$end_date&shift=$shift$groupQS\">"._QXZ("CLOSER REPORT")."</a> \n";
@@ -498,7 +525,7 @@ else
 	$MAIN.="</SELECT>\n";
 	$MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
 	$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
-	$MAIN.="<a href=\"$PHP_SELF?DB=$DB&type=$type&query_date=$query_date&end_date=$end_date&query_date_D=$query_date_D&query_date_T=$query_date_T&end_date_D=$end_date_D&end_date_T=$end_date_T$groupQS&shift=$shift&file_download=1\">"._QXZ("DOWNLOAD")."</a> | ";
+	$MAIN.="<a href=\"$PHP_SELF?DB=$DB&type=$type&query_date=$query_date&end_date=$end_date&query_date_D=$query_date_D&query_date_T=$query_date_T&end_date_D=$end_date_D&end_date_T=$end_date_T$groupQS&shift=$shift&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a> | ";
 	$MAIN.="<a href=\"./admin.php?ADD=31&campaign_id=$group[0]\">"._QXZ("MODIFY")."</a> | ";
 	$MAIN.="<a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> | ";
 	$MAIN.="<a href=\"./AST_VDADstats.php?query_date=$query_date&end_date=$end_date&shift=$shift$groupQS\">"._QXZ("OUTBOUND REPORT")."</a> \n";
@@ -541,6 +568,10 @@ $MAIN.="<BR>"._QXZ("Display as").":&nbsp; ";
 $MAIN.="<select name='report_display_type'>";
 if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
 $MAIN.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR>";
+if ($archives_available=="Y") 
+	{
+	$MAIN.="<BR><input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."<BR>\n";
+	}
 $MAIN.="&nbsp; &nbsp; <input type=button value=\""._QXZ("SUBMIT")."\" name=smt id=smt onClick=\"submit_form()\">\n";
 
 $MAIN.="</TD></TR></TABLE>\n";
@@ -571,11 +602,11 @@ else
 	##### Grab all records for the IVR for the specified time period
 	if ($type == 'inbound')
 		{
-		$stmt="select uniqueid,extension,start_time,comment_a,comment_b,comment_d,UNIX_TIMESTAMP(start_time),phone_ext from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a IN($group_SQL) order by uniqueid,start_time;";
+		$stmt="select uniqueid,extension,start_time,comment_a,comment_b,comment_d,UNIX_TIMESTAMP(start_time),phone_ext from ".$live_inbound_log_table." where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a IN($group_SQL) order by uniqueid,start_time;";
 		}
 	else
 		{
-		$stmt="select uniqueid,caller_code,event_date,campaign_id,menu_id,menu_action,UNIX_TIMESTAMP(event_date),caller_code from vicidial_outbound_ivr_log where event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END' and campaign_id IN($group_SQL) order by uniqueid,event_date,menu_action desc;";
+		$stmt="select uniqueid,caller_code,event_date,campaign_id,menu_id,menu_action,UNIX_TIMESTAMP(event_date),caller_code from ".$vicidial_outbound_ivr_log_table." where event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END' and campaign_id IN($group_SQL) order by uniqueid,event_date,menu_action desc;";
 		}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
@@ -759,7 +790,7 @@ else
 		if ($type == 'inbound')
 			{
 			##### Grab all records for the IVR for the specified time period
-			$stmt="select status,length_in_sec from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and uniqueid IN($FLOWunique_calls_list[$s]);";
+			$stmt="select status,length_in_sec from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and uniqueid IN($FLOWunique_calls_list[$s]);";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {$ASCII_text.="$stmt\n";}
 			$vcl_statuses_to_print = mysqli_num_rows($rslt);
@@ -893,7 +924,7 @@ else
 	if ($type == 'inbound')
 		{
 		$inb_15min_array=array();
-		$stmt="select uniqueid, SEC_TO_TIME((TIME_TO_SEC(min(start_time)) DIV 900) * 900) as stime from live_inbound_log where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a IN($group_SQL) group by uniqueid";
+		$stmt="select uniqueid, SEC_TO_TIME((TIME_TO_SEC(min(start_time)) DIV 900) * 900) as stime from ".$live_inbound_log_table." where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a IN($group_SQL) group by uniqueid";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		while ($row=mysqli_fetch_row($rslt)) 
 			{
@@ -905,7 +936,7 @@ else
 	else 
 		{
 		$inb_15min_array=array();
-		$stmt="select uniqueid, SEC_TO_TIME((TIME_TO_SEC(min(event_date)) DIV 900) * 900) as stime from vicidial_outbound_ivr_log where event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END' and campaign_id IN($group_SQL) and menu_action='' group by uniqueid";
+		$stmt="select uniqueid, SEC_TO_TIME((TIME_TO_SEC(min(event_date)) DIV 900) * 900) as stime from ".$vicidial_outbound_ivr_log_table." where event_date >= '$query_date_BEGIN' and event_date <= '$query_date_END' and campaign_id IN($group_SQL) and menu_action='' group by uniqueid";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		while ($row=mysqli_fetch_row($rslt)) 
 			{

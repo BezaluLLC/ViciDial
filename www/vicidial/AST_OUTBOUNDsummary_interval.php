@@ -24,6 +24,7 @@
 # 141114-0822 - Finalized adding QXZ translation to all admin files
 # 141230-0912 - Added code for on-the-fly language translations display
 # 150516-1305 - Fixed Javascript element problem, Issue #857
+# 151125-1632 - Added search archive option
 #
 
 $startMS = microtime();
@@ -63,6 +64,8 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 $MT[0]='0';
 if (strlen($shift)<2) {$shift='ALL';}
@@ -91,6 +94,30 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$log_tables_array=array("vicidial_log", "vicidial_closer_log", "vicidial_agent_log");
+for ($t=0; $t<count($log_tables_array); $t++) 
+	{
+	$table_name=$log_tables_array[$t];
+	$archive_table_name=use_archive_table($table_name);
+	if ($archive_table_name!=$table_name) {$archives_available="Y";}
+	}
+
+if ($search_archived_data) 
+	{
+	$vicidial_log_table=use_archive_table("vicidial_log");
+	$vicidial_closer_log_table=use_archive_table("vicidial_closer_log");
+	$vicidial_agent_log_table=use_archive_table("vicidial_agent_log");
+	}
+else
+	{
+	$vicidial_log_table="vicidial_log";
+	$vicidial_closer_log_table="vicidial_closer_log";
+	$vicidial_agent_log_table="vicidial_agent_log";
+	}
+#############
 
 $stmt = "SELECT local_gmt FROM servers where active='Y' limit 1;";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -586,7 +613,7 @@ if ($bareformat < 1)
 	$MAIN.="</SELECT>\n";
 	$MAIN.="</TD><TD VALIGN=TOP ALIGN=LEFT ROWSPAN=2>\n";
 	$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; ";
-	$MAIN.="<a href=\"$PHP_SELF?DB=$DB&costformat=$costformat&print_calls=$print_calls&query_date=$query_date&end_date=$end_date$groupQS&include_rollover=$include_rollover&time_interval=$time_interval&SUBMIT=$SUBMIT&shift=$shift&file_download=1\">"._QXZ("DOWNLOAD")."</a> | ";
+	$MAIN.="<a href=\"$PHP_SELF?DB=$DB&costformat=$costformat&print_calls=$print_calls&query_date=$query_date&end_date=$end_date$groupQS&include_rollover=$include_rollover&time_interval=$time_interval&SUBMIT=$SUBMIT&shift=$shift&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a> | ";
 	$MAIN.="<a href=\"./admin.php?ADD=34&campaign_id=$group[0]\">"._QXZ("MODIFY")."</a> | ";
 	$MAIN.="<a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a>";
 	$MAIN.="</FONT><BR><BR>\n";
@@ -594,6 +621,10 @@ if ($bareformat < 1)
 	$MAIN.="<select name='report_display_type'>";
 	if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
 	$MAIN.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR>";
+	if ($archives_available=="Y") 
+		{
+		$MAIN.="<input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."\n";
+		}
 	$MAIN.="<BR> &nbsp; &nbsp; &nbsp; &nbsp; ";
 	$MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 
@@ -775,7 +806,7 @@ else
 			$u=0;
 
 			##### Gather Agent time records
-			$stmt="select event_time,UNIX_TIMESTAMP(event_time),campaign_id,pause_sec,wait_sec,talk_sec,dispo_sec from vicidial_agent_log where event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' and campaign_id IN('$group_drop[$i]','$group[$i]');";
+			$stmt="select event_time,UNIX_TIMESTAMP(event_time),campaign_id,pause_sec,wait_sec,talk_sec,dispo_sec from ".$vicidial_agent_log_table." where event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' and campaign_id IN('$group_drop[$i]','$group[$i]');";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {$ASCII_text.="$stmt\n";}
 			$AGENTtime_to_print = mysqli_num_rows($rslt);
@@ -793,7 +824,7 @@ else
 				}
 
 			##### Gather outbound calls
-			$stmt = "SELECT status,length_in_sec,call_date,UNIX_TIMESTAMP(call_date),phone_number,campaign_id,uniqueid,lead_id from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='$group[$i]';";
+			$stmt = "SELECT status,length_in_sec,call_date,UNIX_TIMESTAMP(call_date),phone_number,campaign_id,uniqueid,lead_id from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='$group[$i]';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {$ASCII_text.="$stmt\n";}
 			$calls_to_parse = mysqli_num_rows($rslt);
@@ -834,7 +865,7 @@ else
 				$length_in_secZ=0;
 				$queue_secondsZ=0;
 				$agent_alert_delayZ=0;
-				$stmt="select status,length_in_sec,queue_seconds,agent_alert_delay,call_date,UNIX_TIMESTAMP(call_date),phone_number,campaign_id,closecallid,lead_id,uniqueid from vicidial_closer_log,vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id and campaign_id='$group_drop[$i]';";
+				$stmt="select status,length_in_sec,queue_seconds,agent_alert_delay,call_date,UNIX_TIMESTAMP(call_date),phone_number,campaign_id,closecallid,lead_id,uniqueid from ".$vicidial_closer_log_table.",vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id and campaign_id='$group_drop[$i]';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($DB) {$ASCII_text.="$stmt\n";}
 				$INallcalls_to_printZ = mysqli_num_rows($rslt);

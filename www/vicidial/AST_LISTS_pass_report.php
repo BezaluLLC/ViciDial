@@ -13,6 +13,7 @@
 # 141114-0827 - Finalized adding QXZ translation to all admin files
 # 141230-0919 - Added code for on-the-fly language translations display
 # 150516-1303 - Fixed Javascript element problem, Issue #857
+# 151125-1640 - Added search archive option
 #
 
 $startMS = microtime();
@@ -39,6 +40,8 @@ if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 if (isset($_GET["use_lists"]))			{$use_lists=$_GET["use_lists"];}
 	elseif (isset($_POST["use_lists"]))	{$use_lists=$_POST["use_lists"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 
 $report_name = 'Lists Pass Report';
@@ -64,6 +67,22 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$table_name="vicidial_log";
+$archive_table_name=use_archive_table($table_name);
+if ($archive_table_name!=$table_name) {$archives_available="Y";}
+
+if ($search_archived_data) 
+	{
+	$vicidial_log_table=use_archive_table("vicidial_log");
+	}
+else
+	{
+	$vicidial_log_table="vicidial_log";
+	}
+#############
 
 if ($non_latin < 1)
 	{
@@ -458,6 +477,10 @@ $MAIN.=_QXZ("Display as").":<BR/>";
 $MAIN.="<select name='report_display_type'>";
 if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
 $MAIN.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>&nbsp; ";
+if ($archives_available=="Y") 
+	{
+	$MAIN.="<BR><input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."\n";
+	}
 $MAIN.="<BR><BR>\n";
 $MAIN.="<INPUT type=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $MAIN.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
@@ -513,7 +536,7 @@ else
 	$TOTALleads = 0;
 
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- "._QXZ("LIST ID SUMMARY",19)." <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=1\">"._QXZ("DOWNLOAD")."</a>\n";
+	$OUToutput .= "---------- "._QXZ("LIST ID SUMMARY",19)." <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
 
 	$OUToutput .= "+------------+------------------------------------------+----------+------------+----------+";
 	$OUToutput .= "---------+---------+---------+---------+---------+---------+";
@@ -866,37 +889,37 @@ else
 		$HA_results = mysqli_num_rows($rslt);
 		if ($HA_results > 0)
 			{$row=mysqli_fetch_row($rslt); $HA_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=1 and status IN($human_answered_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=1 and status IN($human_answered_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$HA_one_results = mysqli_num_rows($rslt);
 		if ($HA_one_results > 0)
 			{$row=mysqli_fetch_row($rslt); $HA_one_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=2 and status IN($human_answered_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=2 and status IN($human_answered_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$HA_two_results = mysqli_num_rows($rslt);
 		if ($HA_two_results > 0)
 			{$row=mysqli_fetch_row($rslt); $HA_two_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=3 and status IN($human_answered_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=3 and status IN($human_answered_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$HA_three_results = mysqli_num_rows($rslt);
 		if ($HA_three_results > 0)
 			{$row=mysqli_fetch_row($rslt); $HA_three_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count='4' and status IN($human_answered_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count='4' and status IN($human_answered_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$HA_four_results = mysqli_num_rows($rslt);
 		if ($HA_four_results > 0)
 			{$row=mysqli_fetch_row($rslt); $HA_four_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count='5' and status IN($human_answered_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count='5' and status IN($human_answered_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$HA_five_results = mysqli_num_rows($rslt);
 		if ($HA_five_results > 0)
 			{$row=mysqli_fetch_row($rslt); $HA_five_count = $row[0];}
-		$stmt="select count(distinct lead_id) from vicidial_log where status IN($human_answered_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(distinct lead_id) from ".$vicidial_log_table." where status IN($human_answered_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$HA_all_results = mysqli_num_rows($rslt);
@@ -975,37 +998,37 @@ else
 		$SA_results = mysqli_num_rows($rslt);
 		if ($SA_results > 0)
 			{$row=mysqli_fetch_row($rslt); $SA_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=1 and status IN($sale_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=1 and status IN($sale_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$SA_one_results = mysqli_num_rows($rslt);
 		if ($SA_one_results > 0)
 			{$row=mysqli_fetch_row($rslt); $SA_one_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=2 and status IN($sale_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=2 and status IN($sale_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$SA_two_results = mysqli_num_rows($rslt);
 		if ($SA_two_results > 0)
 			{$row=mysqli_fetch_row($rslt); $SA_two_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=3 and status IN($sale_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=3 and status IN($sale_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$SA_three_results = mysqli_num_rows($rslt);
 		if ($SA_three_results > 0)
 			{$row=mysqli_fetch_row($rslt); $SA_three_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count='4' and status IN($sale_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count='4' and status IN($sale_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$SA_four_results = mysqli_num_rows($rslt);
 		if ($SA_four_results > 0)
 			{$row=mysqli_fetch_row($rslt); $SA_four_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count='5' and status IN($sale_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count='5' and status IN($sale_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$SA_five_results = mysqli_num_rows($rslt);
 		if ($SA_five_results > 0)
 			{$row=mysqli_fetch_row($rslt); $SA_five_count = $row[0];}
-		$stmt="select count(distinct lead_id) from vicidial_log where status IN($sale_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(distinct lead_id) from ".$vicidial_log_table." where status IN($sale_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$SA_all_results = mysqli_num_rows($rslt);
@@ -1084,37 +1107,37 @@ else
 		$DN_results = mysqli_num_rows($rslt);
 		if ($DN_results > 0)
 			{$row=mysqli_fetch_row($rslt); $DN_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=1 and status IN($dnc_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=1 and status IN($dnc_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$DN_one_results = mysqli_num_rows($rslt);
 		if ($DN_one_results > 0)
 			{$row=mysqli_fetch_row($rslt); $DN_one_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=2 and status IN($dnc_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=2 and status IN($dnc_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$DN_two_results = mysqli_num_rows($rslt);
 		if ($DN_two_results > 0)
 			{$row=mysqli_fetch_row($rslt); $DN_two_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=3 and status IN($dnc_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=3 and status IN($dnc_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$DN_three_results = mysqli_num_rows($rslt);
 		if ($DN_three_results > 0)
 			{$row=mysqli_fetch_row($rslt); $DN_three_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count='4' and status IN($dnc_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count='4' and status IN($dnc_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$DN_four_results = mysqli_num_rows($rslt);
 		if ($DN_four_results > 0)
 			{$row=mysqli_fetch_row($rslt); $DN_four_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count='5' and status IN($dnc_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count='5' and status IN($dnc_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$DN_five_results = mysqli_num_rows($rslt);
 		if ($DN_five_results > 0)
 			{$row=mysqli_fetch_row($rslt); $DN_five_count = $row[0];}
-		$stmt="select count(distinct lead_id) from vicidial_log where status IN($dnc_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(distinct lead_id) from ".$vicidial_log_table." where status IN($dnc_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$DN_all_results = mysqli_num_rows($rslt);
@@ -1193,37 +1216,37 @@ else
 		$CC_results = mysqli_num_rows($rslt);
 		if ($CC_results > 0)
 			{$row=mysqli_fetch_row($rslt); $CC_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=1 and status IN($customer_contact_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=1 and status IN($customer_contact_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$CC_one_results = mysqli_num_rows($rslt);
 		if ($CC_one_results > 0)
 			{$row=mysqli_fetch_row($rslt); $CC_one_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=2 and status IN($customer_contact_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=2 and status IN($customer_contact_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$CC_two_results = mysqli_num_rows($rslt);
 		if ($CC_two_results > 0)
 			{$row=mysqli_fetch_row($rslt); $CC_two_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=3 and status IN($customer_contact_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=3 and status IN($customer_contact_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$CC_three_results = mysqli_num_rows($rslt);
 		if ($CC_three_results > 0)
 			{$row=mysqli_fetch_row($rslt); $CC_three_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count='4' and status IN($customer_contact_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count='4' and status IN($customer_contact_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$CC_four_results = mysqli_num_rows($rslt);
 		if ($CC_four_results > 0)
 			{$row=mysqli_fetch_row($rslt); $CC_four_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count='5' and status IN($customer_contact_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count='5' and status IN($customer_contact_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$CC_five_results = mysqli_num_rows($rslt);
 		if ($CC_five_results > 0)
 			{$row=mysqli_fetch_row($rslt); $CC_five_count = $row[0];}
-		$stmt="select count(distinct lead_id) from vicidial_log where status IN($customer_contact_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(distinct lead_id) from ".$vicidial_log_table." where status IN($customer_contact_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$CC_all_results = mysqli_num_rows($rslt);
@@ -1302,37 +1325,37 @@ else
 		$UW_results = mysqli_num_rows($rslt);
 		if ($UW_results > 0)
 			{$row=mysqli_fetch_row($rslt); $UW_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=1 and status IN($unworkable_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=1 and status IN($unworkable_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$UW_one_results = mysqli_num_rows($rslt);
 		if ($UW_one_results > 0)
 			{$row=mysqli_fetch_row($rslt); $UW_one_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=2 and status IN($unworkable_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=2 and status IN($unworkable_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$UW_two_results = mysqli_num_rows($rslt);
 		if ($UW_two_results > 0)
 			{$row=mysqli_fetch_row($rslt); $UW_two_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=3 and status IN($unworkable_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=3 and status IN($unworkable_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$UW_three_results = mysqli_num_rows($rslt);
 		if ($UW_three_results > 0)
 			{$row=mysqli_fetch_row($rslt); $UW_three_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count='4' and status IN($unworkable_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count='4' and status IN($unworkable_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$UW_four_results = mysqli_num_rows($rslt);
 		if ($UW_four_results > 0)
 			{$row=mysqli_fetch_row($rslt); $UW_four_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count='5' and status IN($unworkable_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count='5' and status IN($unworkable_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$UW_five_results = mysqli_num_rows($rslt);
 		if ($UW_five_results > 0)
 			{$row=mysqli_fetch_row($rslt); $UW_five_count = $row[0];}
-		$stmt="select count(distinct lead_id) from vicidial_log where status IN($unworkable_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(distinct lead_id) from ".$vicidial_log_table." where status IN($unworkable_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$UW_all_results = mysqli_num_rows($rslt);
@@ -1411,37 +1434,37 @@ else
 		$BA_results = mysqli_num_rows($rslt);
 		if ($BA_results > 0)
 			{$row=mysqli_fetch_row($rslt); $BA_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=1 and status IN($scheduled_callback_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=1 and status IN($scheduled_callback_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$BA_one_results = mysqli_num_rows($rslt);
 		if ($BA_one_results > 0)
 			{$row=mysqli_fetch_row($rslt); $BA_one_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=2 and status IN($scheduled_callback_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=2 and status IN($scheduled_callback_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$BA_two_results = mysqli_num_rows($rslt);
 		if ($BA_two_results > 0)
 			{$row=mysqli_fetch_row($rslt); $BA_two_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=3 and status IN($scheduled_callback_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=3 and status IN($scheduled_callback_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$BA_three_results = mysqli_num_rows($rslt);
 		if ($BA_three_results > 0)
 			{$row=mysqli_fetch_row($rslt); $BA_three_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count='4' and status IN($scheduled_callback_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count='4' and status IN($scheduled_callback_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$BA_four_results = mysqli_num_rows($rslt);
 		if ($BA_four_results > 0)
 			{$row=mysqli_fetch_row($rslt); $BA_four_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count='5' and status IN($scheduled_callback_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count='5' and status IN($scheduled_callback_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$BA_five_results = mysqli_num_rows($rslt);
 		if ($BA_five_results > 0)
 			{$row=mysqli_fetch_row($rslt); $BA_five_count = $row[0];}
-		$stmt="select count(distinct lead_id) from vicidial_log where status IN($scheduled_callback_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(distinct lead_id) from ".$vicidial_log_table." where status IN($scheduled_callback_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$BA_all_results = mysqli_num_rows($rslt);
@@ -1520,37 +1543,37 @@ else
 		$MP_results = mysqli_num_rows($rslt);
 		if ($MP_results > 0)
 			{$row=mysqli_fetch_row($rslt); $MP_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=1 and status IN($completed_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=1 and status IN($completed_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$MP_one_results = mysqli_num_rows($rslt);
 		if ($MP_one_results > 0)
 			{$row=mysqli_fetch_row($rslt); $MP_one_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=2 and status IN($completed_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=2 and status IN($completed_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$MP_two_results = mysqli_num_rows($rslt);
 		if ($MP_two_results > 0)
 			{$row=mysqli_fetch_row($rslt); $MP_two_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count=3 and status IN($completed_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count=3 and status IN($completed_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$MP_three_results = mysqli_num_rows($rslt);
 		if ($MP_three_results > 0)
 			{$row=mysqli_fetch_row($rslt); $MP_three_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count='4' and status IN($completed_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count='4' and status IN($completed_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$MP_four_results = mysqli_num_rows($rslt);
 		if ($MP_four_results > 0)
 			{$row=mysqli_fetch_row($rslt); $MP_four_count = $row[0];}
-		$stmt="select count(*) from vicidial_log where called_count='5' and status IN($completed_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(*) from ".$vicidial_log_table." where called_count='5' and status IN($completed_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$MP_five_results = mysqli_num_rows($rslt);
 		if ($MP_five_results > 0)
 			{$row=mysqli_fetch_row($rslt); $MP_five_count = $row[0];}
-		$stmt="select count(distinct lead_id) from vicidial_log where status IN($completed_statuses) and list_id='$LISTIDlists[$i]';";
+		$stmt="select count(distinct lead_id) from ".$vicidial_log_table." where status IN($completed_statuses) and list_id='$LISTIDlists[$i]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$MP_all_results = mysqli_num_rows($rslt);

@@ -30,6 +30,7 @@
 # 141128-0856 - Code cleanup for QXZ functions
 # 141230-0923 - Added code for on-the-fly language translations display
 # 150516-1258 - Fixed Javascript element problem, Issue #857
+# 151125-1627 - Added search archive option
 #
 
 $startMS = microtime();
@@ -56,6 +57,8 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 
@@ -80,6 +83,24 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$table_name="vicidial_closer_log";
+$archive_table_name=use_archive_table($table_name);
+if ($archive_table_name!=$table_name) {$archives_available="Y";}
+
+if ($search_archived_data) 
+	{
+	$vicidial_closer_log_table=use_archive_table("vicidial_closer_log");
+	}
+else
+	{
+	$vicidial_closer_log_table="vicidial_closer_log";
+	}
+#############
+
+
 
 if ($non_latin < 1)
 	{
@@ -352,12 +373,16 @@ $MAIN.="<option value=\"845-1745\">845-1745</option>\n";
 $MAIN.="<option value=\"1745-100\">1745-100</option>\n";
 $MAIN.="</SELECT>\n";
 $MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
-$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&group=$group&shift=$shift&SUBMIT=$SUBMIT&file_download=1\">"._QXZ("DOWNLOAD")."</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">"._QXZ("MODIFY")."</a> | <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a>";
+$MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&group=$group&shift=$shift&SUBMIT=$SUBMIT&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">"._QXZ("MODIFY")."</a> | <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a>";
+if ($archives_available=="Y") 
+	{
+	$MAIN.="<BR><input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."\n";
+	}
 $MAIN.="</FONT>\n";
+
 $MAIN.="</FORM>\n\n";
 
 $MAIN.="<PRE><FONT SIZE=2>\n\n";
-
 
 if (!$group)
 	{
@@ -560,7 +585,7 @@ $TOTintervals = $j;
 
 
 ### GRAB ALL RECORDS WITHIN RANGE FROM THE DATABASE ###
-$stmt="select queue_seconds,UNIX_TIMESTAMP(call_date),length_in_sec,status from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysqli_real_escape_string($link, $group) . "';";
+$stmt="select queue_seconds,UNIX_TIMESTAMP(call_date),length_in_sec,status from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysqli_real_escape_string($link, $group) . "';";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $records_to_grab = mysqli_num_rows($rslt);

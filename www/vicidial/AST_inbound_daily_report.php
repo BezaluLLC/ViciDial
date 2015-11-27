@@ -24,6 +24,7 @@
 # 141230-0921 - Added code for on-the-fly language translations display
 # 150218-1142 - Fix for download issue
 # 150516-1313 - Fixed Javascript element problem, Issue #857
+# 151125-1629 - Added search archive option
 #
 
 $startMS = microtime();
@@ -63,6 +64,8 @@ if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))	{$DB=$_POST["DB"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 
@@ -89,6 +92,22 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$table_name="vicidial_closer_log";
+$archive_table_name=use_archive_table($table_name);
+if ($archive_table_name!=$table_name) {$archives_available="Y";}
+
+if ($search_archived_data) 
+	{
+	$vicidial_closer_log_table=use_archive_table("vicidial_closer_log");
+	}
+else
+	{
+	$vicidial_closer_log_table="vicidial_closer_log";
+	}
+#############
 
 if ($non_latin < 1)
 	{
@@ -431,7 +450,12 @@ if ($IDR_calltime_available==1)
 	}
 
 $MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD></TR>\n";
-$MAIN.="<TR><TD align='left'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><INPUT TYPE=checkbox NAME=hourly_breakdown VALUE='checked' $hourly_breakdown>"._QXZ("Show hourly results")."<BR><INPUT TYPE=checkbox NAME=show_disposition_statuses VALUE='checked' $show_disposition_statuses>"._QXZ("Show disposition statuses")."<BR><INPUT TYPE=checkbox NAME=ignore_afterhours VALUE='checked' $ignore_afterhours>"._QXZ("Ignore after-hours calls")."</FONT></TD><TD align='right'><a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date$selected_group_URLstr&shift=$shift&hourly_breakdown=$hourly_breakdown&show_disposition_statuses=$show_disposition_statuses&SUBMIT=$SUBMIT&file_download=1\">"._QXZ("DOWNLOAD")."</a> | <a href=\"./admin.php?ADD=3111&group_id=$group[0]\">"._QXZ("MODIFY")."</a> | <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a></TD></TR>\n";
+$MAIN.="<TR><TD align='left'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><INPUT TYPE=checkbox NAME=hourly_breakdown VALUE='checked' $hourly_breakdown>"._QXZ("Show hourly results")."<BR><INPUT TYPE=checkbox NAME=show_disposition_statuses VALUE='checked' $show_disposition_statuses>"._QXZ("Show disposition statuses")."<BR><INPUT TYPE=checkbox NAME=ignore_afterhours VALUE='checked' $ignore_afterhours>"._QXZ("Ignore after-hours calls");
+if ($archives_available=="Y") 
+	{
+	$MAIN.="<BR><input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."\n";
+	}
+$MAIN.="</FONT></TD><TD align='right'><a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date$selected_group_URLstr&shift=$shift&hourly_breakdown=$hourly_breakdown&show_disposition_statuses=$show_disposition_statuses&SUBMIT=$SUBMIT&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a> | <a href=\"./admin.php?ADD=3111&group_id=$group[0]\">"._QXZ("MODIFY")."</a> | <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a></TD></TR>\n";
 $MAIN.="<TR><TD colspan=2>";
 $MAIN.="<PRE><FONT SIZE=2>\n\n";
 
@@ -645,7 +669,7 @@ else
 	$CSV_text.="\n\n";
 
 	if ($show_disposition_statuses) {
-		$dispo_stmt="select distinct status from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id in (" . $groups_selected_str . ") $big_shift_time_SQL_clause order by status;";
+		$dispo_stmt="select distinct status from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id in (" . $groups_selected_str . ") $big_shift_time_SQL_clause order by status;";
 		#echo $dispo_stmt."<BR>";
 		$dispo_rslt=mysql_to_mysqli($dispo_stmt, $link);
 		$dispo_str="";
@@ -813,7 +837,7 @@ else
 
 
 	### GRAB ALL RECORDS WITHIN RANGE FROM THE DATABASE ###
-	$stmt="select queue_seconds,UNIX_TIMESTAMP(call_date),length_in_sec,status,term_reason,call_date,user from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id in (" . $groups_selected_str . ");";
+	$stmt="select queue_seconds,UNIX_TIMESTAMP(call_date),length_in_sec,status,term_reason,call_date,user from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id in (" . $groups_selected_str . ");";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$ASCII_text.="$stmt\n";}
 	$records_to_grab = mysqli_num_rows($rslt);

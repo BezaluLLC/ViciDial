@@ -33468,15 +33468,15 @@ if ($ADD==1300)
 		else
 			{$bgcolor='bgcolor="#9BB9FB"';}
 
-		# truncate description and carrier if they are more than 30 characters
-		if (strlen($row[2])>30)
+		# truncate description and carrier if they are more than 60 characters
+		if (strlen($row[2])>60)
 			{
-			while (strlen($row[2])>30) {$row[2] = preg_replace("/.$/",'',$row[2]);}
+			while (strlen($row[2])>60) {$row[2] = preg_replace("/.$/",'',$row[2]);}
 			$row[2] .= '...';
 			}
-		if (strlen($row[3])>30)
+		if (strlen($row[3])>40)
 			{
-			while (strlen($row[3])>30) {$row[3] = preg_replace("/.$/",'',$row[3]);}
+			while (strlen($row[3])>40) {$row[3] = preg_replace("/.$/",'',$row[3]);}
 			$row[3] .= '...';
 			}
 

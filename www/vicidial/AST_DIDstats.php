@@ -1,7 +1,7 @@
 <?php 
 # AST_DIDstats.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -26,6 +26,7 @@
 # 141020-0848 - Added 9am-10pm and 10am-6pm options
 # 141113-2040 - Finalized adding QXZ translation to all admin files
 # 141230-1508 - Added code for on-the-fly language translations display
+# 151125-1614 - Added search archive option
 #
 
 $startMS = microtime();
@@ -54,6 +55,8 @@ if (isset($_GET["file_download"]))			{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 
@@ -78,6 +81,22 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$table_name="vicidial_did_log";
+$archive_table_name=use_archive_table($table_name);
+if ($archive_table_name!=$table_name) {$archives_available="Y";}
+
+if ($search_archived_data) 
+	{
+	$vicidial_did_log_table=use_archive_table("vicidial_did_log");
+	}
+else
+	{
+	$vicidial_did_log_table="vicidial_did_log";
+	}
+#############
 
 if ($non_latin < 1)
 	{
@@ -381,7 +400,7 @@ while ($groups_to_print > $o)
 	$o++;
 	}
 $MAIN.="</SELECT>\n";
-$MAIN.="</TD><TD align=center valign=top>\n";
+$MAIN.="</TD><TD align=left valign=top><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>\n";
 $MAIN.="<SELECT SIZE=1 NAME=shift>\n";
 $MAIN.="<option selected value=\"$shift\">$shift</option>\n";
 $MAIN.="<option value=\"\">--</option>\n";
@@ -397,7 +416,13 @@ $MAIN.="<option value=\"9AM-1AM\">"._QXZ("9AM-1AM")."</option>\n";
 $MAIN.="<option value=\"845-1745\">845-1745</option>\n";
 $MAIN.="<option value=\"1745-100\">1745-100</option>\n";
 $MAIN.="</SELECT>\n";
-$MAIN.="</TD><TD align=left valign=top>\n";
+
+if ($archives_available=="Y") 
+	{
+	$MAIN.="<BR><BR><BR><input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."\n";
+	}
+
+$MAIN.="</FONT></TD><TD align=left valign=top>\n";
 $MAIN.="<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 $MAIN.=" &nbsp;";
 $MAIN.="<select name='report_display_type'>";
@@ -624,7 +649,7 @@ else
 
 
 	### GRAB ALL RECORDS WITHIN RANGE FROM THE DATABASE ###
-	$stmt="select UNIX_TIMESTAMP(call_date),extension,server_ip from vicidial_did_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and did_id IN($group_SQL);";
+	$stmt="select UNIX_TIMESTAMP(call_date),extension,server_ip from ".$vicidial_did_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and did_id IN($group_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$records_to_grab = mysqli_num_rows($rslt);

@@ -30,6 +30,7 @@
 # 141114-0017 - Finalized adding QXZ translation to all admin files
 # 141230-1345 - Added code for on-the-fly language translations display
 # 150516-1317 - Fixed Javascript element problem, Issue #857
+# 151125-1642 - Added search archive option
 #
 
 $startMS = microtime();
@@ -56,6 +57,8 @@ if (isset($_GET["file_download"]))			{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 
@@ -83,6 +86,28 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$log_tables_array=array("vicidial_xfer_log", "vicidial_closer_log");
+for ($t=0; $t<count($log_tables_array); $t++) 
+	{
+	$table_name=$log_tables_array[$t];
+	$archive_table_name=use_archive_table($table_name);
+	if ($archive_table_name!=$table_name) {$archives_available="Y";}
+	}
+
+if ($search_archived_data) 
+	{
+	$vicidial_xfer_log_table=use_archive_table("vicidial_xfer_log");
+	$vicidial_closer_log_table=use_archive_table("vicidial_closer_log");
+	}
+else
+	{
+	$vicidial_xfer_log_table="vicidial_xfer_log";
+	$vicidial_closer_log_table="vicidial_closer_log";
+	}
+#############
 
 if ($non_latin < 1)
 	{
@@ -342,9 +367,16 @@ $HTML_text.="<option value=\"AM\">"._QXZ("AM")."</option>\n";
 $HTML_text.="<option value=\"PM\">"._QXZ("PM")."</option>\n";
 $HTML_text.="<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
 $HTML_text.="</SELECT>\n";
+
+if ($archives_available=="Y") 
+	{
+	$HTML_text.="<input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."\n";
+	}
+
+
 $HTML_text.="<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 $HTML_text.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
-$HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  <a href=\"$PHP_SELF?query_date=$query_date&group=$group&shift=$shift&file_download=1\">"._QXZ("DOWNLOAD")."</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">"._QXZ("MODIFY")."</a> | <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a><BR/></FONT>\n";
+$HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  <a href=\"$PHP_SELF?query_date=$query_date&group=$group&shift=$shift&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">"._QXZ("MODIFY")."</a> | <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a><BR/></FONT>\n";
 $HTML_text.="</FORM>\n\n";
 
 $HTML_text.="<PRE><FONT SIZE=2>\n\n";
@@ -397,7 +429,7 @@ while ($ssrow=mysqli_fetch_row($sale_dispo_rslt)) {
 $sale_dispo_str.="|";
 if ($DB) {$HTML_text.=_QXZ("Sale dispo string").": $sale_dispo_str\n";}
 
-$stmt="select count(*) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='" . mysqli_real_escape_string($link, $group) . "' and status in ($sale_dispos);";
+$stmt="select count(*) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='" . mysqli_real_escape_string($link, $group) . "' and status in ($sale_dispos);";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 $row=mysqli_fetch_row($rslt);
@@ -476,7 +508,7 @@ $OTHER_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("OTHER")."</t
 ###########################
 
 #$stmt="select vicidial_xfer_log.user,full_name,count(*) from vicidial_xfer_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysqli_real_escape_string($link, $group) . "' and vicidial_xfer_log.user is not null and vicidial_xfer_log.user=vicidial_users.user group by vicidial_xfer_log.user;";
-$stmt="select user,count(distinct lead_id) from vicidial_xfer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysqli_real_escape_string($link, $group) . "' and user is not null group by user;";
+$stmt="select user,count(distinct lead_id) from ".$vicidial_xfer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysqli_real_escape_string($link, $group) . "' and user is not null group by user;";
 if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
@@ -520,7 +552,7 @@ while ($i < $users_to_print)
 		{$full_name[$i] = '               ';}
 
 	$A1=0; $A2=0; $A3=0; $A4=0; $A5=0; $A6=0; $A7=0; $A8=0; $A9=0; $DROP=0; $OTHER=0; $sales=0; 
-	$stmt="select vc.status,count(distinct vc.lead_id) from vicidial_xfer_log vx, vicidial_closer_log vc where vx.call_date >= '$query_date_BEGIN' and vx.call_date <= '$query_date_END' and vc.call_date >= '$query_date_BEGIN' and vc.call_date <= '$query_date_END' and  vc.campaign_id='" . mysqli_real_escape_string($link, $group) . "' and vx.campaign_id='" . mysqli_real_escape_string($link, $group) . "' and vx.user='$userRAW[$i]' and vc.lead_id=vx.lead_id and vc.xfercallid=vx.xfercallid group by vc.status;";
+	$stmt="select vc.status,count(distinct vc.lead_id) from ".$vicidial_xfer_log_table." vx, ".$vicidial_closer_log_table." vc where vx.call_date >= '$query_date_BEGIN' and vx.call_date <= '$query_date_END' and vc.call_date >= '$query_date_BEGIN' and vc.call_date <= '$query_date_END' and  vc.campaign_id='" . mysqli_real_escape_string($link, $group) . "' and vx.campaign_id='" . mysqli_real_escape_string($link, $group) . "' and vx.user='$userRAW[$i]' and vc.lead_id=vx.lead_id and vc.xfercallid=vx.xfercallid group by vc.status;";
 	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$ASCII_text.="$stmt\n";}
@@ -617,7 +649,7 @@ $totDROP =		sprintf("%5s", $totDROP);
 $totOTHER =		sprintf("%5s", $totOTHER);
 
 
-$stmt="select avg(queue_seconds) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='" . mysqli_real_escape_string($link, $group) . "';";
+$stmt="select avg(queue_seconds) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='" . mysqli_real_escape_string($link, $group) . "';";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
 $row=mysqli_fetch_row($rslt);
@@ -728,7 +760,7 @@ $SALES2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES")."</
 $CONVPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONV")." %</th></tr>";
 ###########################
 
-$stmt="select user,count(*) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysqli_real_escape_string($link, $group) . "' and user is not null group by user;";
+$stmt="select user,count(*) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysqli_real_escape_string($link, $group) . "' and user is not null group by user;";
 if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
@@ -771,7 +803,7 @@ while ($i < $users_to_print)
 		{$full_name[$i] = '               ';}
 
 	$A1=0; $A2=0; $A3=0; $A4=0; $A5=0; $A6=0; $A7=0; $A8=0; $A9=0; $DROP=0; $OTHER=0; $sales=0; $uTOP=0; $uBOT=0; $points=0;
-	$stmt="select status,count(*) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysqli_real_escape_string($link, $group) . "' and user='$userRAW[$i]' group by status;";
+	$stmt="select status,count(*) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysqli_real_escape_string($link, $group) . "' and user='$userRAW[$i]' group by status;";
 	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$ASCII_text.="$stmt\n";}

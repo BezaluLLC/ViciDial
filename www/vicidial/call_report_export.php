@@ -45,6 +45,7 @@
 # 150727-2143 - Enabled user features for hiding phone numbers and lead data
 # 150903-1536 - Added compatibility for custom fields data options
 # 150909-0747 - Fixed issues with translated select list values, issue #885
+# 151125-1621 - Added search archive option
 #
 
 $startMS = microtime();
@@ -89,6 +90,8 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 
@@ -116,6 +119,43 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$log_tables_array=array("vicidial_log", "vicidial_closer_log", "vicidial_agent_log", "vicidial_log_extended", "recording_log", "vicidial_carrier_log", "vicidial_cpd_log", "vicidial_did_log", "vicidial_outbound_ivr_log");
+for ($t=0; $t<count($log_tables_array); $t++) 
+	{
+	$table_name=$log_tables_array[$t];
+	$archive_table_name=use_archive_table($table_name);
+	if ($archive_table_name!=$table_name) {$archives_available="Y";}
+	}
+
+if ($search_archived_data) 
+	{
+	$vicidial_log_table=use_archive_table("vicidial_log");
+	$vicidial_closer_log_table=use_archive_table("vicidial_closer_log");
+	$vicidial_agent_log_table=use_archive_table("vicidial_agent_log");
+	$vicidial_log_extended_table=use_archive_table("vicidial_log_extended");
+	$recording_log_table=use_archive_table("recording_log");
+	$vicidial_carrier_log_table=use_archive_table("vicidial_carrier_log");
+	$vicidial_cpd_log_table=use_archive_table("vicidial_cpd_log");
+	$vicidial_did_log_table=use_archive_table("vicidial_did_log");
+	$vicidial_outbound_ivr_log_table=use_archive_table("vicidial_outbound_ivr_log");
+	}
+else
+	{
+	$vicidial_log_table="vicidial_log";
+	$vicidial_closer_log_table="vicidial_closer_log";
+	$vicidial_agent_log_table="vicidial_agent_log";
+	$vicidial_log_extended_table="vicidial_log_extended";
+	$recording_log_table="recording_log";
+	$vicidial_carrier_log_table="vicidial_carrier_log";
+	$vicidial_cpd_log_table="vicidial_cpd_log";
+	$vicidial_did_log_table="vicidial_did_log";
+	$vicidial_outbound_ivr_log_table="vicidial_outbound_ivr_log";
+	}
+#############
+
 if ($non_latin < 1)
 	{
 	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
@@ -456,11 +496,11 @@ if ($run_export > 0)
 		{
 		if ($export_fields == 'EXTENDED')
 			{
-			$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid,vi.entry_list_id, ifnull(val.dispo_sec+val.dead_sec,0)$export_fields_SQL from vicidial_users vu,vicidial_list vi,vicidial_log vl LEFT OUTER JOIN vicidial_agent_log val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+			$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid,vi.entry_list_id, ifnull(val.dispo_sec+val.dead_sec,0)$export_fields_SQL from vicidial_users vu,vicidial_list vi,".$vicidial_log_table." vl LEFT OUTER JOIN ".$vicidial_agent_log_table." val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 			}
 		else
 			{
-			$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid,vi.entry_list_id$export_fields_SQL from vicidial_users vu,vicidial_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+			$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid,vi.entry_list_id$export_fields_SQL from vicidial_users vu,".$vicidial_log_table." vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 			}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
@@ -568,11 +608,11 @@ if ($run_export > 0)
 		{
 		if ($export_fields == 'EXTENDED')
 			{
-			$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid, ifnull(val.dispo_sec+val.dead_sec,0)$export_fields_SQL from vicidial_users vu,vicidial_list vi,vicidial_closer_log vl LEFT OUTER JOIN vicidial_agent_log val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+			$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid, ifnull(val.dispo_sec+val.dead_sec,0)$export_fields_SQL from vicidial_users vu,vicidial_list vi,".$vicidial_closer_log_table." vl LEFT OUTER JOIN ".$vicidial_agent_log_table." val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 			}
 		else
 			{
-			$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid$export_fields_SQL from vicidial_users vu,vicidial_closer_log vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
+			$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid$export_fields_SQL from vicidial_users vu,".$vicidial_closer_log_table." vl,vicidial_list vi where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 			}
 		$rslt=mysql_to_mysqli($stmtA, $link);
 		if ($DB) {echo "$stmt\n";}
@@ -777,7 +817,7 @@ if ($run_export > 0)
 				$rec_id='';
 				$rec_filename='';
 				$rec_location='';
-				$stmt = "SELECT recording_id,filename,location from recording_log where vicidial_id='$export_vicidial_id[$i]' order by recording_id desc LIMIT 10;";
+				$stmt = "SELECT recording_id,filename,location from ".$recording_log_table." where vicidial_id='$export_vicidial_id[$i]' order by recording_id desc LIMIT 10;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($DB) {echo "$stmt\n";}
 				$recordings_ct = mysqli_num_rows($rslt);
@@ -816,7 +856,7 @@ if ($run_export > 0)
 					{
 					$uniqueidTEST = $export_uniqueid[$i];
 					$uniqueidTEST = preg_replace('/\..*$/','',$uniqueidTEST);
-					$stmt = "SELECT caller_code,server_ip from vicidial_log_extended where uniqueid LIKE \"$uniqueidTEST%\" and lead_id='$export_lead_id[$i]' LIMIT 1;";
+					$stmt = "SELECT caller_code,server_ip from ".$vicidial_log_extended_table." where uniqueid LIKE \"$uniqueidTEST%\" and lead_id='$export_lead_id[$i]' LIMIT 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
 					$vle_ct = mysqli_num_rows($rslt);
@@ -838,7 +878,7 @@ if ($run_export > 0)
 					{
 					$uniqueidTEST = $export_uniqueid[$i];
 					$uniqueidTEST = preg_replace('/\..*$/','',$uniqueidTEST);
-					$stmt = "SELECT caller_code,server_ip from vicidial_log_extended where uniqueid LIKE \"$uniqueidTEST%\" and lead_id='$export_lead_id[$i]' LIMIT 1;";
+					$stmt = "SELECT caller_code,server_ip from ".$vicidial_log_extended_table." where uniqueid LIKE \"$uniqueidTEST%\" and lead_id='$export_lead_id[$i]' LIMIT 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
 					$vle_ct = mysqli_num_rows($rslt);
@@ -849,7 +889,7 @@ if ($run_export > 0)
 						$export_call_id[$i] = $row[0];
 						}
 
-					$stmt = "SELECT hangup_cause,dialstatus,channel,dial_time,answered_time from vicidial_carrier_log where uniqueid LIKE \"$uniqueidTEST%\" and lead_id='$export_lead_id[$i]' LIMIT 1;";
+					$stmt = "SELECT hangup_cause,dialstatus,channel,dial_time,answered_time from ".$vicidial_carrier_log_table." where uniqueid LIKE \"$uniqueidTEST%\" and lead_id='$export_lead_id[$i]' LIMIT 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
 					$vcarl_ct = mysqli_num_rows($rslt);
@@ -859,7 +899,7 @@ if ($run_export > 0)
 						$extended_data_b =	"\t$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]";
 						}
 
-					$stmt = "SELECT result from vicidial_cpd_log where callerid='$export_call_id[$i]' LIMIT 1;";
+					$stmt = "SELECT result from ".$vicidial_cpd_log_table." where callerid='$export_call_id[$i]' LIMIT 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
 					$vcpdl_ct = mysqli_num_rows($rslt);
@@ -869,7 +909,7 @@ if ($run_export > 0)
 						$extended_data_c =	"\t$row[0]";
 						}
 
-					$stmt = "SELECT extension,did_id from vicidial_did_log where uniqueid='$export_uniqueid[$i]' LIMIT 1;";
+					$stmt = "SELECT extension,did_id from ".$vicidial_did_log_table." where uniqueid='$export_uniqueid[$i]' LIMIT 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
 					$vcdid_ct = mysqli_num_rows($rslt);
@@ -932,7 +972,7 @@ if ($run_export > 0)
 					$IVRdelimiter='|';
 					if ($export_fields=='ALTERNATE_1')
 						{$IVRdelimiter='^';}
-					$stmt="select menu_id,UNIX_TIMESTAMP(event_date) from vicidial_outbound_ivr_log where event_date >= '$query_date 00:00:00' and event_date <= '$end_date 23:59:59' and uniqueid='$export_uniqueid[$i]' order by event_date,menu_action desc;";
+					$stmt="select menu_id,UNIX_TIMESTAMP(event_date) from ".$vicidial_outbound_ivr_log_table." where event_date >= '$query_date 00:00:00' and event_date <= '$end_date 23:59:59' and uniqueid='$export_uniqueid[$i]' order by event_date,menu_action desc;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 				#	$ivr_path = "$stmt|$export_uniqueid[$i]|";
 					if ($DB) {$MAIN.="$stmt\n";}
@@ -1308,6 +1348,12 @@ else
 
 	echo "<B>"._QXZ("Export Fields").":</B><BR>\n";
 	echo "<select size=1 name=export_fields><option selected value=\"STANDARD\">"._QXZ("STANDARD")."</option><option value=\"EXTENDED\">"._QXZ("EXTENDED")."</option><option value=\"ALTERNATE_1\">ALTERNATE_1</option></select>\n";
+
+
+	if ($archives_available=="Y") 
+	{
+	echo "<BR><BR><input type='checkbox' name='search_archived_data' value='checked' $search_archived_data><B>"._QXZ("Search archived data")."</B><BR>\n";
+	}
 
 	### bottom of first column
 

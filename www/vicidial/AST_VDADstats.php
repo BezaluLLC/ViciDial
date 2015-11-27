@@ -45,6 +45,7 @@
 # 141230-1353 - Added code for on-the-fly language translations display
 # 150516-1306 - Fixed Javascript element problem, Issue #857
 # 150619-0137 - Added option to calculate 'Percent of DROP Calls taken out of Answers' differently
+# 151125-1615 - Added search archive option
 #
 
 $startMS = microtime();
@@ -89,6 +90,8 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($bottom_graph)<2) {$bottom_graph='NO';}
@@ -124,6 +127,34 @@ if (file_exists('options.php'))
 	{
 	require('options.php');
 	}
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$log_tables_array=array("vicidial_log", "user_call_log", "vicidial_carrier_log", "vicidial_closer_log", "vicidial_agent_log");
+for ($t=0; $t<count($log_tables_array); $t++) 
+	{
+	$table_name=$log_tables_array[$t];
+	$archive_table_name=use_archive_table($table_name);
+	if ($archive_table_name!=$table_name) {$archives_available="Y";}
+	}
+
+if ($search_archived_data) 
+	{
+	$vicidial_log_table=use_archive_table("vicidial_log");
+	$user_call_log_table=use_archive_table("user_call_log");
+	$vicidial_carrier_log_table=use_archive_table("vicidial_carrier_log");
+	$vicidial_closer_log_table=use_archive_table("vicidial_closer_log");
+	$vicidial_agent_log_table=use_archive_table("vicidial_agent_log");
+	}
+else
+	{
+	$vicidial_log_table="vicidial_log";
+	$user_call_log_table="user_call_log";
+	$vicidial_carrier_log_table="vicidial_carrier_log";
+	$vicidial_closer_log_table="vicidial_closer_log";
+	$vicidial_agent_log_table="vicidial_agent_log";
+	}
+#############
 
 ##### SERVER CARRIER LOGGING LOOKUP #####
 $stmt = "SELECT count(*) FROM servers where carrier_logging_active='Y' and max_vicidial_trunks > 0;";
@@ -396,8 +427,8 @@ else
 	{
 	$list_id_SQL = preg_replace('/,$/i', '',$list_id_SQL);
 	$list_id_SQLand = "and list_id IN($list_id_SQL)";
-	$list_id_SQLandVALJOIN = "and vicidial_agent_log.lead_id=vicidial_list.lead_id and vicidial_list.list_id IN($list_id_SQL)";
-	$list_id_SQLandUCLJOIN = "and user_call_log.lead_id=vicidial_list.lead_id and vicidial_list.list_id IN($list_id_SQL)";
+	$list_id_SQLandVALJOIN = "and ".$vicidial_agent_log_table.".lead_id=vicidial_list.lead_id and vicidial_list.list_id IN($list_id_SQL)";
+	$list_id_SQLandUCLJOIN = "and ".$user_call_log_table.".lead_id=vicidial_list.lead_id and vicidial_list.list_id IN($list_id_SQL)";
 	$list_id_SQL = "where list_id IN($list_id_SQL)";
 	$skip_productivity_calc=1;
 	}
@@ -591,6 +622,12 @@ if (preg_match('/MSIE/i', $_SERVER['HTTP_USER_AGENT'])) {
 } else {
 	$JS_events="onMouseUp='LoadLists(this.form.group)' onBlur='LoadLists(this.form.group)' onKeyUp='LoadLists(this.form.group)'";
 }
+
+if ($archives_available=="Y") 
+	{
+	echo "<BR><BR><input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."\n";
+	}
+
 echo "</TD><TD VALIGN=TOP> "._QXZ("Campaigns").":<BR>";
 echo "<SELECT multiple SIZE=5 NAME=group[] id='group' $JS_events>\n";
 if  (preg_match('/\-\-ALL\-\-/',$group_string))
@@ -699,7 +736,7 @@ else
 	$OUToutput .= _QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
 	$OUToutput .= "---------- "._QXZ("TOTALS")."\n";
 
-	$stmt="select count(*),sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand;";
+	$stmt="select count(*),sum(length_in_sec) from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$OUToutput .= "$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
@@ -712,7 +749,7 @@ else
 		$length_in_secZ=0;
 		$queue_secondsZ=0;
 		$agent_alert_delayZ=0;
-		$stmt="select length_in_sec,queue_seconds,agent_alert_delay from vicidial_closer_log,vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id $group_drop_SQLand $list_id_SQLand;";
+		$stmt="select length_in_sec,queue_seconds,agent_alert_delay from ".$vicidial_closer_log_table.",vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id $group_drop_SQLand $list_id_SQLand;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$INallcalls_to_printZ = mysqli_num_rows($rslt);
@@ -753,7 +790,7 @@ else
 	$OUToutput .= "\n";
 	$OUToutput .= "---------- "._QXZ("HUMAN ANSWERS")."\n";
 
-	$stmt="select count(*),sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status IN($customer_interactive_statuses) $group_SQLand $list_id_SQLand;";
+	$stmt="select count(*),sum(length_in_sec) from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status IN($customer_interactive_statuses) $group_SQLand $list_id_SQLand;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$OUToutput .= "$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
@@ -765,7 +802,7 @@ else
 		$length_in_secZ=0;
 		$queue_secondsZ=0;
 		$agent_alert_delayZ=0;
-		$stmt="select length_in_sec,queue_seconds,agent_alert_delay from vicidial_closer_log,vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id and vicidial_closer_log.status IN($customer_interactive_statuses) $group_drop_SQLand $list_id_SQLand;";
+		$stmt="select length_in_sec,queue_seconds,agent_alert_delay from ".$vicidial_closer_log_table.",vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id and ".$vicidial_closer_log_table.".status IN($customer_interactive_statuses) $group_drop_SQLand $list_id_SQLand;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$INallcalls_to_printZ = mysqli_num_rows($rslt);
@@ -806,7 +843,7 @@ else
 	$OUToutput .= "\n";
 	$OUToutput .= "---------- "._QXZ("DROPS")."\n";
 
-	$stmt="select count(*),sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and status='DROP' and (length_in_sec <= 6000 or length_in_sec is null);";
+	$stmt="select count(*),sum(length_in_sec) from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and status='DROP' and (length_in_sec <= 6000 or length_in_sec is null);";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$OUToutput .= "$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
@@ -859,7 +896,7 @@ else
 	$camp_ANS_STAT_SQL = preg_replace('/,$/i', '',$camp_ANS_STAT_SQL);
 
 
-	$stmt="select count(*) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and status IN($camp_ANS_STAT_SQL);";
+	$stmt="select count(*) from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and status IN($camp_ANS_STAT_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$OUToutput .= "$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
@@ -904,14 +941,14 @@ else
 		}
 	$closer_campaignsSQL = preg_replace('/,$/i', '',$closer_campaignsSQL);
 
-	$stmt="select count(*) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($closer_campaignsSQL) $list_id_SQLand and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE');";
+	$stmt="select count(*) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($closer_campaignsSQL) $list_id_SQLand and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE');";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$OUToutput .= "$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
 	$TOTALanswers = ($row[0] + $ANSWERcalls);
 
 	
-	$stmt = "SELECT sum(wait_sec + talk_sec + dispo_sec) from vicidial_agent_log$VL_INC where event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQLand $list_id_SQLandVALJOIN;";
+	$stmt = "SELECT sum(wait_sec + talk_sec + dispo_sec) from ".$vicidial_agent_log_table."$VL_INC where event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQLand $list_id_SQLandVALJOIN;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$OUToutput .= "$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
@@ -933,13 +970,13 @@ else
 	$OUToutput .= "\n";
 	$OUToutput .= "---------- "._QXZ("NO ANSWERS")."\n";
 
-	$stmt="select count(*),sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and status IN('NA','ADC','AB','CPDB','CPDUK','CPDATB','CPDNA','CPDREJ','CPDINV','CPDSUA','CPDSI','CPDSNC','CPDSR','CPDSUK','CPDSV','CPDERR') and (length_in_sec <= 60 or length_in_sec is null);";
+	$stmt="select count(*),sum(length_in_sec) from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and status IN('NA','ADC','AB','CPDB','CPDUK','CPDATB','CPDNA','CPDREJ','CPDINV','CPDSUA','CPDSI','CPDSNC','CPDSR','CPDSUK','CPDSV','CPDERR') and (length_in_sec <= 60 or length_in_sec is null);";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$OUToutput .= "$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
 	$autoNAcalls =	sprintf("%10s", $row[0]);
 
-	$stmt="select count(*),sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and status IN('B','DC','N') and (length_in_sec <= 60 or length_in_sec is null);";
+	$stmt="select count(*),sum(length_in_sec) from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and status IN('B','DC','N') and (length_in_sec <= 60 or length_in_sec is null);";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$OUToutput .= "$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
@@ -980,7 +1017,7 @@ else
 	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
 	$GRAPH.="</tr>\n";
 
-	$stmt="select count(*),term_reason from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand group by term_reason;";
+	$stmt="select count(*),term_reason from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand group by term_reason;";
 	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$ASCII_text .= "$stmt\n";}
@@ -1063,7 +1100,7 @@ else
 	if (preg_match("/YES/i",$include_rollover))
 		{$campaignSQL = "$both_group_SQLand";}
 	## Pull the count of agent seconds for the total tally
-	$stmt="SELECT sum(pause_sec + wait_sec + talk_sec + dispo_sec) from vicidial_agent_log$VL_INC where event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' $campaignSQL $list_id_SQLandVALJOIN and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000;";
+	$stmt="SELECT sum(pause_sec + wait_sec + talk_sec + dispo_sec) from ".$vicidial_agent_log_table."$VL_INC where event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' $campaignSQL $list_id_SQLandVALJOIN and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$Ctally_to_print = mysqli_num_rows($rslt);
 	if ($Ctally_to_print > 0) 
@@ -1078,7 +1115,7 @@ else
 	$rollover_exclude_dropSQL='';
 	if (preg_match("/YES/i",$include_rollover))
 		{$rollover_exclude_dropSQL = "and status NOT IN('DROP')";}
-	$stmt="select count(*),status,sum(length_in_sec) from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $rollover_exclude_dropSQL $group_SQLand $list_id_SQLand group by status;";
+	$stmt="select count(*),status,sum(length_in_sec) from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $rollover_exclude_dropSQL $group_SQLand $list_id_SQLand group by status;";
 
 	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -1102,7 +1139,7 @@ else
 			{
 			$statusSQL = preg_replace('/,$/i', '',$statusSQL);
 			}
-		$stmt="select distinct status from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status NOT IN($statusSQL) $group_drop_SQLand $list_id_SQLand;";
+		$stmt="select distinct status from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status NOT IN($statusSQL) $group_drop_SQLand $list_id_SQLand;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$inS_statuses_to_print = mysqli_num_rows($rslt);
 		$n=0;
@@ -1128,7 +1165,7 @@ else
 
 		if (preg_match("/YES/i",$include_rollover))
 			{
-			$stmt="select count(*),sum(length_in_sec) from vicidial_closer_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status='$RAWstatus' $group_drop_SQLand $list_id_SQLand;";
+			$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status='$RAWstatus' $group_drop_SQLand $list_id_SQLand;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			$in_statuses_to_print = mysqli_num_rows($rslt);
 			if ($in_statuses_to_print > 0) 
@@ -1277,7 +1314,7 @@ else
 	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
 	$GRAPH.="</tr>\n";
 
-	$stmt="select count(*),list_id from vicidial_log where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand group by list_id;";
+	$stmt="select count(*),list_id from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand group by list_id;";
 	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$ASCII_text .= "$stmt\n";}
@@ -1352,7 +1389,7 @@ else
 		$ASCII_text .= "+----------------------+------------+\n";
 
 		## get counts and time totals for all statuses in this campaign
-		$stmt="select dialstatus,count(*) from vicidial_carrier_log vcl,vicidial_log vl where vcl.uniqueid=vl.uniqueid and vcl.call_date > \"$query_date_BEGIN\" and vcl.call_date < \"$query_date_END\" and vl.call_date > \"$query_date_BEGIN\" and vl.call_date < \"$query_date_END\" $group_SQLand $list_id_SQLand group by dialstatus order by dialstatus;";
+		$stmt="select dialstatus,count(*) from ".$vicidial_carrier_log_table." vcl,".$vicidial_log_table." vl where vcl.uniqueid=vl.uniqueid and vcl.call_date > \"$query_date_BEGIN\" and vcl.call_date < \"$query_date_END\" and vl.call_date > \"$query_date_BEGIN\" and vl.call_date < \"$query_date_END\" $group_SQLand $list_id_SQLand group by dialstatus order by dialstatus;";
 		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$ASCII_text .= "$stmt\n";}
@@ -1410,7 +1447,7 @@ else
 		$max_calls=1; $graph_stats=array();
 
 		## get counts and time totals for all statuses in this campaign
-		$stmt="select preset_name,count(*) from user_call_log$VL_INC where call_date > \"$query_date_BEGIN\" and call_date < \"$query_date_END\" and preset_name!='' and preset_name is not NULL  $group_SQLand  $list_id_SQLandUCLJOIN group by preset_name order by preset_name;";
+		$stmt="select preset_name,count(*) from ".$user_call_log_table."$VL_INC where call_date > \"$query_date_BEGIN\" and call_date < \"$query_date_END\" and preset_name!='' and preset_name is not NULL  $group_SQLand  $list_id_SQLandUCLJOIN group by preset_name order by preset_name;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$ASCII_text .= "$stmt\n";}
 		$carrierstatuses_to_print = mysqli_num_rows($rslt);
@@ -1541,7 +1578,7 @@ else
 	$AVGTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVG TIME")."</th></tr>";
 	###########################
 
-	$stmt="select vicidial_log.user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from vicidial_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and vicidial_log.user is not null and length_in_sec is not null and length_in_sec >= 0 and vicidial_log.user=vicidial_users.user group by vicidial_log.user;";
+	$stmt="select ".$vicidial_log_table.".user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from ".$vicidial_log_table.",vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and ".$vicidial_log_table.".user is not null and length_in_sec is not null and length_in_sec >= 0 and ".$vicidial_log_table.".user=vicidial_users.user group by ".$vicidial_log_table.".user;";
 	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$ASCII_text .= "$stmt\n";}
@@ -1580,7 +1617,7 @@ else
 			$length_in_secZ=0;
 			$queue_secondsZ=0;
 			$agent_alert_delayZ=0;
-			$stmt="select length_in_sec,queue_seconds,agent_alert_delay from vicidial_closer_log,vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id and user='$RAWuser[$i]' $group_drop_SQLand $list_id_SQLand;";
+			$stmt="select length_in_sec,queue_seconds,agent_alert_delay from ".$vicidial_closer_log_table.",vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id and user='$RAWuser[$i]' $group_drop_SQLand $list_id_SQLand;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
 			$INallcalls_to_printZ = mysqli_num_rows($rslt);
@@ -1652,7 +1689,7 @@ else
 	$TOTtime =			sprintf("%8s", $TOTtime);
 	$TOTavg =			sprintf("%6s", $TOTavg);
 
-	$stmt="select avg(wait_sec) from vicidial_agent_log$VL_INC where event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQLand  $list_id_SQLandVALJOIN;";
+	$stmt="select avg(wait_sec) from ".$vicidial_agent_log_table."$VL_INC where event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQLand  $list_id_SQLandVALJOIN;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$ASCII_text .= "$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
@@ -1696,7 +1733,7 @@ else
 
 	if ($costformat > 0)
 		{
-		$stmt="select campaign_id,phone_number,length_in_sec from vicidial_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand  $list_id_SQLand and vicidial_log.user=vicidial_users.user;";
+		$stmt="select campaign_id,phone_number,length_in_sec from ".$vicidial_log_table.",vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand  $list_id_SQLand and ".$vicidial_log_table.".user=vicidial_users.user;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$allcalls_to_print = mysqli_num_rows($rslt);
@@ -1712,7 +1749,7 @@ else
 			}
 		if (preg_match("/YES/i",$include_rollover))
 			{
-			$stmt="select campaign_id,phone_number,length_in_sec,queue_seconds,agent_alert_delay from vicidial_closer_log,vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id $group_drop_SQLand $list_id_SQLand;";
+			$stmt="select campaign_id,phone_number,length_in_sec,queue_seconds,agent_alert_delay from ".$vicidial_closer_log_table.",vicidial_inbound_groups where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and group_id=campaign_id $group_drop_SQLand $list_id_SQLand;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
 			$INallcalls_to_print = mysqli_num_rows($rslt);
@@ -1792,14 +1829,14 @@ else
 		$h=0;
 		while ($i <= 96)
 			{
-			$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:00:00' and call_date <= '$query_date $h:14:59' $group_SQLand $list_id_SQLand;";
+			$stmt="select count(*) from ".$vicidial_log_table." where call_date >= '$query_date $h:00:00' and call_date <= '$query_date $h:14:59' $group_SQLand $list_id_SQLand;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
 			$row=mysqli_fetch_row($rslt);
 			$hour_count[$i] = $row[0];
 			if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
 			if ($hour_count[$i] > 0) {$last_full_record = $i;}
-			$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:00:00' and call_date <= '$query_date $h:14:59' $group_SQLand $list_id_SQLand and status='DROP';";
+			$stmt="select count(*) from ".$vicidial_log_table." where call_date >= '$query_date $h:00:00' and call_date <= '$query_date $h:14:59' $group_SQLand $list_id_SQLand and status='DROP';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
 			$row=mysqli_fetch_row($rslt);
@@ -1807,42 +1844,42 @@ else
 			$i++;
 
 
-			$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:15:00' and call_date <= '$query_date $h:29:59' $group_SQLand $list_id_SQLand;";
+			$stmt="select count(*) from ".$vicidial_log_table." where call_date >= '$query_date $h:15:00' and call_date <= '$query_date $h:29:59' $group_SQLand $list_id_SQLand;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
 			$row=mysqli_fetch_row($rslt);
 			$hour_count[$i] = $row[0];
 			if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
 			if ($hour_count[$i] > 0) {$last_full_record = $i;}
-			$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:15:00' and call_date <= '$query_date $h:29:59' $group_SQLand $list_id_SQLand and status='DROP';";
+			$stmt="select count(*) from ".$vicidial_log_table." where call_date >= '$query_date $h:15:00' and call_date <= '$query_date $h:29:59' $group_SQLand $list_id_SQLand and status='DROP';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
 			$row=mysqli_fetch_row($rslt);
 			$drop_count[$i] = $row[0];
 			$i++;
 
-			$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:30:00' and call_date <= '$query_date $h:44:59' $group_SQLand $list_id_SQLand;";
+			$stmt="select count(*) from ".$vicidial_log_table." where call_date >= '$query_date $h:30:00' and call_date <= '$query_date $h:44:59' $group_SQLand $list_id_SQLand;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
 			$row=mysqli_fetch_row($rslt);
 			$hour_count[$i] = $row[0];
 			if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
 			if ($hour_count[$i] > 0) {$last_full_record = $i;}
-			$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:30:00' and call_date <= '$query_date $h:44:59' $group_SQLand $list_id_SQLand and status='DROP';";
+			$stmt="select count(*) from ".$vicidial_log_table." where call_date >= '$query_date $h:30:00' and call_date <= '$query_date $h:44:59' $group_SQLand $list_id_SQLand and status='DROP';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
 			$row=mysqli_fetch_row($rslt);
 			$drop_count[$i] = $row[0];
 			$i++;
 
-			$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:45:00' and call_date <= '$query_date $h:59:59' $group_SQLand $list_id_SQLand;";
+			$stmt="select count(*) from ".$vicidial_log_table." where call_date >= '$query_date $h:45:00' and call_date <= '$query_date $h:59:59' $group_SQLand $list_id_SQLand;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
 			$row=mysqli_fetch_row($rslt);
 			$hour_count[$i] = $row[0];
 			if ($hour_count[$i] > $hi_hour_count) {$hi_hour_count = $hour_count[$i];}
 			if ($hour_count[$i] > 0) {$last_full_record = $i;}
-			$stmt="select count(*) from vicidial_log where call_date >= '$query_date $h:45:00' and call_date <= '$query_date $h:59:59' $group_SQLand $list_id_SQLand and status='DROP';";
+			$stmt="select count(*) from ".$vicidial_log_table." where call_date >= '$query_date $h:45:00' and call_date <= '$query_date $h:59:59' $group_SQLand $list_id_SQLand and status='DROP';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
 			$row=mysqli_fetch_row($rslt);

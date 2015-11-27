@@ -193,6 +193,8 @@ OTHER CHANGES:
 	Carrier Log Stats generated once per minute system-wide instead of every 
 	time the realtime report refreshes on every screen.
 
+47. Added option to several reports to search the archived logs.
+
 
 
 
