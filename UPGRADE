@@ -195,6 +195,10 @@ OTHER CHANGES:
 
 47. Added option to several reports to search the archived logs.
 
+48. Added AST_DNCcom_filter.pl script which allows for direct batch filtering of
+	lists within vicidial with the DNC.COM dnc filtering service. For more 
+	info, see the DNC-dot-COM_integration.txt document.
+
 
 
 

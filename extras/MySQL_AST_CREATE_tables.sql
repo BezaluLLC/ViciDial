@@ -3381,6 +3381,20 @@ stats_html MEDIUMTEXT,
 UNIQUE KEY vicidial_html_cache_stats_key (stats_type,stats_id)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE vicidial_dnccom_filter_log (
+filter_log_id INT(9) UNSIGNED NOT NULL AUTO_INCREMENT,
+lead_id INT(9) UNSIGNED NOT NULL,
+list_id BIGINT(14) UNSIGNED DEFAULT NULL,
+filter_date DATETIME DEFAULT NULL,
+new_status VARCHAR(6) COLLATE utf8_unicode_ci DEFAULT NULL,
+old_status VARCHAR(6) COLLATE utf8_unicode_ci DEFAULT NULL,
+phone_number VARCHAR(18) COLLATE utf8_unicode_ci DEFAULT NULL,
+dnccom_data VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+PRIMARY KEY (filter_log_id),
+KEY lead_id (lead_id),
+KEY filter_date (filter_date)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3630,4 +3644,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1437',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1438',db_schema_update_date=NOW(),reload_timestamp=NOW();
