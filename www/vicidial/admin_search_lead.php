@@ -43,6 +43,7 @@
 # 150107-1728 - Added ignore_group_on_search user option
 # 150312-1507 - Allow for single quotes in vicidial_list data fields
 # 150602-1207 - Allow for searching by email address
+# 151203-2104 - Added option for called_count as search variable
 #
 
 require("dbconnect_mysqli.php");
@@ -89,6 +90,8 @@ if (isset($_GET["alt_phone_search"]))			{$alt_phone_search=$_GET["alt_phone_sear
 	elseif (isset($_POST["alt_phone_search"]))	{$alt_phone_search=$_POST["alt_phone_search"];}
 if (isset($_GET["archive_search"]))			{$archive_search=$_GET["archive_search"];}
 	elseif (isset($_POST["archive_search"]))	{$archive_search=$_POST["archive_search"];}
+if (isset($_GET["called_count"]))			{$called_count=$_GET["called_count"];}
+	elseif (isset($_POST["called_count"]))	{$called_count=$_POST["called_count"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -648,7 +651,7 @@ else
 		$SQL_log = "$stmtA|$stmtB|$stmtC|";
 		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='SEARCH', record_id='$search_lead', event_code='ADMIN SEARCH LEAD', event_sql=\"$SQL_log\", event_notes=\"$DB|$SUBMIT|$alt_phone_search|$archive_search|$first_name|$last_name|$lead_id|$list_id|$log_lead_id|$log_lead_id_archive|$log_phone|$log_phone_archive|$owner|$phone|$status|$submit|$user|$vendor_id\";";
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='SEARCH', record_id='$search_lead', event_code='ADMIN SEARCH LEAD', event_sql=\"$SQL_log\", event_notes=\"$DB|$SUBMIT|$alt_phone_search|$archive_search|$first_name|$last_name|$lead_id|$list_id|$log_lead_id|$log_lead_id_archive|$log_phone|$log_phone_archive|$owner|$phone|$status|$submit|$user|$vendor_id|$called_count\";";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -894,7 +897,7 @@ else
 		$SQL_log = "$stmtA|$stmtB|$stmtC|";
 		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='SEARCH', record_id='$search_lead', event_code='ADMIN SEARCH LEAD', event_sql=\"$SQL_log\", event_notes=\"ARCHIVE   $DB|$SUBMIT|$alt_phone_search|$archive_search|$first_name|$last_name|$lead_id|$list_id|$log_lead_id|$log_lead_id_archive|$log_phone|$log_phone_archive|$owner|$phone|$status|$submit|$user|$vendor_id\";";
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LEADS', event_type='SEARCH', record_id='$search_lead', event_code='ADMIN SEARCH LEAD', event_sql=\"$SQL_log\", event_notes=\"ARCHIVE   $DB|$SUBMIT|$alt_phone_search|$archive_search|$first_name|$last_name|$lead_id|$list_id|$log_lead_id|$log_lead_id_archive|$log_phone|$log_phone_archive|$owner|$phone|$status|$submit|$user|$vendor_id|$called_count\";";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -945,26 +948,33 @@ else
 					$list_idSQL = '';
 					$userSQL = '';
 					$ownerSQL = '';
-					if (strlen($status)>0)	
+					$called_countSQL = '';
+					if (strlen($status)>0)
 						{
 						$statusSQL = "status='" . mysqli_real_escape_string($link, $status) . "'"; $SQLctA++;
 						}
-					if (strlen($list_id)>0) 
+					if (strlen($list_id)>0)
 						{
 						if ($SQLctA > 0) {$andA = 'and';}
 						$list_idSQL = "$andA list_id='" . mysqli_real_escape_string($link, $list_id) . "'"; $SQLctB++;
 						}
-					if (strlen($user)>0)	
+					if (strlen($user)>0)
 						{
 						if ( ($SQLctA > 0) or ($SQLctB > 0) ) {$andB = 'and';}
 						$userSQL = "$andB user='" . mysqli_real_escape_string($link, $user) . "'"; $SQLctC++;
 						}
-					if (strlen($owner)>0)	
+					if (strlen($owner)>0)
 						{
 						if ( ($SQLctA > 0) or ($SQLctB > 0) or ($SQLctC > 0) ) {$andC = 'and';}
 						$ownerSQL = "$andC owner='" . mysqli_real_escape_string($link, $owner) . "'";
 						}
-					$stmt="SELECT $vicidial_list_fields from $vl_table where $statusSQL $list_idSQL $userSQL $ownerSQL $LOGallowed_listsSQL";
+					if (strlen($called_count)>0)
+						{
+						$called_countSQL = "and called_count='" . mysqli_real_escape_string($link, $called_count) . "'";
+						if ($called_count > 99)
+							{$called_countSQL = "and called_count > " . mysqli_real_escape_string($link, $called_count);}
+						}
+					$stmt="SELECT $vicidial_list_fields from $vl_table where $statusSQL $list_idSQL $userSQL $ownerSQL $called_countSQL $LOGallowed_listsSQL";
 					}
 				else
 					{
@@ -1014,7 +1024,7 @@ else
 	$results_to_printX=0;
 	if ( ($alt_phone_search=="Yes") and (strlen($phone) > 4) )
 		{
-		$stmtX="SELECT lead_id from vicidial_list_alt_phones where phone_number='" . mysqli_real_escape_string($link, $phone) . "' $LOGallowed_listsSQL limit 1000;";
+		$stmtX="SELECT lead_id from vicidial_list_alt_phones where phone_number='" . mysqli_real_escape_string($link, $phone) . "' $LOGallowed_listsSQL limit 10000;";
 		$rsltX=mysql_to_mysqli($stmtX, $link);
 		$results_to_printX = mysqli_num_rows($rsltX);
 		if ($DB)
@@ -1031,7 +1041,7 @@ else
 			{$stmt_alt = "or lead_id IN($stmt_alt)";}
 		}
 
-	$stmt = "$stmt$stmt_alt order by modify_date desc limit 1000;";
+	$stmt = "$stmt$stmt_alt order by modify_date desc limit 10000;";
 
 	if ($DB)
 		{

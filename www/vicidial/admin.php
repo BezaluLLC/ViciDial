@@ -3634,12 +3634,13 @@ else
 # 151104-1518 - Added am_message_wildcards campaign option and amm-multi admin page
 # 151124-1141 - Added cache_carrier_stats_realtime settings option
 # 151125-0010 - Added oldest_logs_date display field to system settings
+# 151203-2142 - Added links to search page from called counts within this list table of list modify page
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-520a';
-$build = '151125-0010';
+$admin_version = '2.12-521a';
+$build = '151203-2142';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -24209,12 +24210,12 @@ if ($ADD==311)
 
 				$called_printed=0;
 				$o=0;
-				while ($status_called_to_print > $o) 
+				while ($status_called_to_print > $o)
 					{
 					if ( ($count_statuses[$o] == "$Pstatus") and ($count_called[$o] == "$first") )
 						{
 						$called_printed++;
-						echo "<td $AB><font size=1> $count_count[$o]</td>";
+						echo "<td $AB><font size=1> <a href=\"admin_search_lead.php?list_id=$list_id&status=$Pstatus&called_count=$first\">$count_count[$o]</a></td>";
 						}
 
 					$o++;
@@ -24223,7 +24224,7 @@ if ($ADD==311)
 					{echo "<td $AB><font size=1> &nbsp;</td>";}
 				$first++;
 				}
-			echo "<td><font size=1>$leads_in_sts[$sts]</td></tr>\n\n";
+			echo "<td><font size=1><a href=\"admin_search_lead.php?list_id=$list_id&status=$Pstatus\">$leads_in_sts[$sts]</a></td></tr>\n\n";
 
 			$sts++;
 			}
@@ -24234,7 +24235,7 @@ if ($ADD==311)
 			{
 			if (preg_match('/1$|3$|5$|7$|9$/i', $first)) {$AB='bgcolor="#AFEEEE"';} 
 			else{$AB='bgcolor="#E0FFFF"';}
-			echo "<td align=center $AB><b><font size=1>$all_called_count[$first]</td>";
+			echo "<td align=center $AB><b><font size=1><a href=\"admin_search_lead.php?list_id=$list_id&called_count=$first\">$all_called_count[$first]</a></td>";
 			$first++;
 			}
 		echo "<td align=center><b><font size=1>$leads_in_list</td></tr>\n";
