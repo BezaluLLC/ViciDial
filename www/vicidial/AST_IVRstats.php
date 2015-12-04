@@ -32,6 +32,7 @@
 # 141230-1448 - Added code for on-the-fly language translations display
 # 150516-1301 - Fixed Javascript element problem, Issue #857
 # 151125-1643 - Added search archive option
+# 151204-0544 - Added code to look for "CALL_MENU" and "XML_PULL" In-Group permissions for those list options
 #
 
 $startMS = microtime();
@@ -302,6 +303,43 @@ if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = "$NOW_DATE 00:00:00";}
 if (!isset($end_date)) {$end_date = "$NOW_DATE 23:23:59";}
 
+
+##### BEGIN Generate select list for which in-groups or campaigns to display #####
+
+if ($type == 'inbound')
+	{
+	$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='CALL_MENU';";
+	if ($DB) {$MAIN.="|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$CALL_MENUcount = $row[0];
+
+	$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='XML_PULL';";
+	if ($DB) {$MAIN.="|$stmt|\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$XML_PULLcount = $row[0];
+
+	$CALL_MENUdisplay=1;
+	$XML_PULLdisplay=1;
+	if ($CALL_MENUcount > 0)
+		{
+		$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='CALL_MENU' $LOGadmin_viewable_groupsSQL;";
+		if ($DB) {$MAIN.="|$stmt|\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$CALL_MENUdisplay = $row[0];
+		}
+	if ($XML_PULLcount > 0)
+		{
+		$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='XML_PULL' $LOGadmin_viewable_groupsSQL;";
+		if ($DB) {$MAIN.="|$stmt|\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$XML_PULLdisplay = $row[0];
+		}
+	}
+
 if ($type == 'inbound')
 	{$stmt="select group_id,group_name from vicidial_inbound_groups $whereLOGadmin_viewable_groupsSQL order by group_id;";}
 else
@@ -312,14 +350,20 @@ $groups_to_print = mysqli_num_rows($rslt);
 $i=0;
 if ($type == 'inbound')
 	{
-	$LISTgroups[$i]='CALLMENU';
-	$LISTgroups_names[$i]='IVR';
-	$i++;
-	$groups_to_print++;
-	$LISTgroups[$i]='XMLPULL';
-	$LISTgroups_names[$i]='Dynamic Application';
-	$i++;
-	$groups_to_print++;
+	if ($CALL_MENUdisplay > 0)
+		{
+		$LISTgroups[$i]='CALLMENU';
+		$LISTgroups_names[$i]='IVR';
+		$i++;
+		$groups_to_print++;
+		}
+	if ($XML_PULLdisplay > 0)
+		{
+		$LISTgroups[$i]='XMLPULL';
+		$LISTgroups_names[$i]='Dynamic Application';
+		$i++;
+		$groups_to_print++;
+		}
 	}
 while ($i < $groups_to_print)
 	{
@@ -328,6 +372,9 @@ while ($i < $groups_to_print)
 	$LISTgroups_names[$i] = $row[1];
 	$i++;
 	}
+
+##### END Generate select list for which in-groups or campaigns to display #####
+
 
 $i=0;
 $group_string='|';
