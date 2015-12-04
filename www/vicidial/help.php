@@ -3900,7 +3900,7 @@ if ($SSoutbound_autodial_active > 0)
 
 <BR>
 <A NAME="phones-unavail_dialplan_fwd_exten">
-<B><?php echo _QXZ("Unavailable Dialplan Forward"); ?> -</B><?php echo _QXZ("If this field is populated, any calls sent to this phone that go unanswered will be sent to a dialplan extension instead of going to the phone voicemail box. If conext is left blank then the call will go to the extension at the default context. Default is blank for disabled."); ?>
+<B><?php echo _QXZ("Unavailable Dialplan Forward"); ?> -</B><?php echo _QXZ("If this field is populated, any calls sent to this phone that go unanswered will be sent to a dialplan extension instead of going to the phone voicemail box. If context is left blank then the call will go to the extension at the default context. Default is blank for disabled."); ?>
 
 <BR>
 <A NAME="phones-picture">
