@@ -1,7 +1,7 @@
 <?php
 # timeclock_edit.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -16,6 +16,7 @@
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141007-2217 - Finalized adding QXZ translation to all admin files
 # 141229-1905 - Added code for on-the-fly language translations display
+# 151203-1902 - Fix for javascript timezone issues in editing of timeclock entries
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -75,6 +76,18 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+$local_gmt=0;
+$stmt = "SELECT local_gmt FROM servers where active='Y';";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$sr_conf_ct = mysqli_num_rows($rslt);
+if ($sr_conf_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$local_gmt = ($row[0] * 1);
+	}
+$local_gmt_sec = ($local_gmt * -3600);
 
 if ($non_latin < 1)
 	{

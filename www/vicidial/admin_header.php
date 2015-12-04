@@ -54,6 +54,7 @@
 # 150806-1023 - Added code for Admin -> Settings Containers
 # 150808-2043 - Added compatibility for custom fields data option
 # 151020-0654 - Added Status Groups
+# 151203-1922 - Fix for javascript timezone issues in editing of timeclock entries
 #
 
 
@@ -184,6 +185,8 @@ if ($TCedit_javascript > 0)
 	function calculate_hours() 
 		{
 		var now_epoch = '<?php echo $StarTtimE ?>';
+		var local_gmt_sec = '<?php echo $local_gmt_sec ?>';
+		var local_gmt_sec = (local_gmt_sec * 1);
 		var i=0;
 		var total_percent=0;
 		var SPANlogin_time = document.getElementById("LOGINlogin_time");
@@ -199,22 +202,16 @@ if ($TCedit_javascript > 0)
 		var LO_time_array=LO_datetime_array[1].split(":");
 
 		// Calculate milliseconds since 1970 for each date string and find diff
-		var LI_sec = ( ( (LI_time_array[2] * 1) * 1000) );
-		var LI_min = ( ( ( (LI_time_array[1] * 1) * 1000) * 60 ) );
-		var LI_hour = ( ( ( (LI_time_array[0] * 1) * 1000) * 3600 ) );
-		var LI_date_epoch = Date.parse(LI_date_array[0] + '/' + LI_date_array[1] + '/' + LI_date_array[2]);
-		var LI_epoch = (LI_date_epoch + LI_sec + LI_min + LI_hour);
-		var LO_sec = ( ( (LO_time_array[2] * 1) * 1000) );
-		var LO_min = ( ( ( (LO_time_array[1] * 1) * 1000) * 60 ) );
-		var LO_hour = ( ( ( (LO_time_array[0] * 1) * 1000) * 3600 ) );
-		var LO_date_epoch = Date.parse(LO_date_array[0] + '/' + LO_date_array[1] + '/' + LO_date_array[2]);
-		var LO_epoch = (LO_date_epoch + LO_sec + LO_min + LO_hour);
-		var temp_LI_epoch = (LI_epoch / 1000 );
-		var temp_LO_epoch = (LO_epoch / 1000 );
-		var epoch_diff = ( (LO_epoch - LI_epoch) / 1000 );
+		var LI_date_epoch = Date.UTC(LI_date_array[0], (LI_date_array[1]-1), LI_date_array[2], LI_time_array[0], LI_time_array[1], LI_time_array[2]);
+		var LO_date_epoch = Date.UTC(LO_date_array[0], (LO_date_array[1]-1), LO_date_array[2], LO_time_array[0], LO_time_array[1], LO_time_array[2]);
+		var temp_LI_epoch = ( (LI_date_epoch / 1000 ) + local_gmt_sec);
+		var temp_LO_epoch = ( (LO_date_epoch / 1000 ) + local_gmt_sec);
+		var epoch_diff = (temp_LO_epoch - temp_LI_epoch);
 		var temp_diff = epoch_diff;
 
 		document.getElementById("login_time").innerHTML = "ERROR, Please check date fields";
+
+	//	document.getElementById("login_time").innerHTML = LI_date_epoch + '|' + temp_LI_epoch + '|' + LO_date_epoch + '|' + temp_LO_epoch + '|' + (Date.UTC(LI_date_array[0], LI_date_array[1], LI_date_array[2]) / 1000) + '|' + (Date.UTC(LO_date_array[0], LO_date_array[1], LO_date_array[2]) / 1000) + "\n diff " +  epoch_diff + "\n LI " +  temp_LI_epoch + "\n LO " +  temp_LO_epoch + "\n Now " +  now_epoch + "\n local" + local_gmt_sec;
 
 		var go_submit = document.getElementById("go_submit");
 		go_submit.disabled = true;
@@ -228,6 +225,7 @@ if ($TCedit_javascript > 0)
 
 			mins = Math.floor(temp_diff / 60); 
 			temp_diff -= mins * 60;
+			if (mins < 10) {mins = "0" + mins;}
 
 			secs = Math.floor(temp_diff); 
 			temp_diff -= secs;
@@ -236,8 +234,8 @@ if ($TCedit_javascript > 0)
 
 			var form_LI_epoch = document.getElementById("LOGINepoch");
 			var form_LO_epoch = document.getElementById("LOGOUTepoch");
-			form_LI_epoch.value = (LI_epoch / 1000);
-			form_LO_epoch.value = (LO_epoch / 1000);
+			form_LI_epoch.value = temp_LI_epoch;
+			form_LO_epoch.value = temp_LO_epoch;
 			}
 		}
 
