@@ -67,6 +67,7 @@
 # 151030-0639 - Added usacan_phone_dialcode_fix entry
 # 151104-1541 - Added am_message_wildcards entry
 # 151121-1144 - Added cache_carrier_stats_realtime
+# 151204-0635 - Added phones-unavail_dialplan_fwd_exten
 #
 
 
@@ -3896,6 +3897,10 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="phones-show_vm_on_summary">
 <B><?php echo _QXZ("Show VM on Summary Screen"); ?> -</B><?php echo _QXZ("This option will display this Voicemail Box information on the summary page seen when logging into the administration page. It will show the box name, new message count, old count, and total messages in the box. Note the table will not be shown unless you have set at least one mailbox to Y. Default is N for off."); ?>
+
+<BR>
+<A NAME="phones-unavail_dialplan_fwd_exten">
+<B><?php echo _QXZ("Unavailable Dialplan Forward"); ?> -</B><?php echo _QXZ("If this field is populated, any calls sent to this phone that go unanswered will be sent to a dialplan extension instead of going to the phone voicemail box. If conext is left blank then the call will go to the extension at the default context. Default is blank for disabled."); ?>
 
 <BR>
 <A NAME="phones-picture">

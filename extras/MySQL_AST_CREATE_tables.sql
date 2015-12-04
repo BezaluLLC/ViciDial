@@ -87,6 +87,8 @@ voicemail_greeting VARCHAR(100) default '',
 voicemail_dump_exten_no_inst VARCHAR(20) default '85026666666667',
 voicemail_instructions ENUM('Y','N') default 'Y',
 on_login_report enum('Y','N') NOT NULL default 'N',
+unavail_dialplan_fwd_exten VARCHAR(40) default '',
+unavail_dialplan_fwd_context VARCHAR(100) default '',
 index (server_ip),
 index (voicemail_id),
 index (dialplan_number),
@@ -3644,4 +3646,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1438',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1439',db_schema_update_date=NOW(),reload_timestamp=NOW();

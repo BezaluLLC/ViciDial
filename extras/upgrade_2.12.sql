@@ -395,3 +395,8 @@ KEY filter_date (filter_date)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 UPDATE system_settings SET db_schema_version='1438',db_schema_update_date=NOW() where db_schema_version < 1438;
+
+ALTER TABLE phones ADD unavail_dialplan_fwd_exten VARCHAR(40) default '';
+ALTER TABLE phones ADD unavail_dialplan_fwd_context VARCHAR(100) default '';
+
+UPDATE system_settings SET db_schema_version='1439',db_schema_update_date=NOW() where db_schema_version < 1439;

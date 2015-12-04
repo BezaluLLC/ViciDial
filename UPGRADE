@@ -199,6 +199,9 @@ OTHER CHANGES:
 	lists within vicidial with the DNC.COM dnc filtering service. For more 
 	info, see the DNC-dot-COM_integration.txt document.
 
+49. Added phone options to have call go to dialplan extension instead of 
+	voicemail if phone not answered.
+
 
 
 
