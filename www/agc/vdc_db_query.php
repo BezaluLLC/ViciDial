@@ -393,10 +393,11 @@
 # 151006-0939 - Changed campaign_cid_areacodes to operate with 2-5 digit areacodes
 # 151026-1710 - Added function for Status Groups lookups and delivery to agent screen
 # 151119-1931 - Fixed issue with outbound CID in some cases during dial-only function
+# 151209-1615 - Fixed issue with possible data loss using callback or dispo comments
 #
 
-$version = '2.12-288';
-$build = '151119-1931';
+$version = '2.12-289';
+$build = '151209-1615';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=635;
@@ -9699,9 +9700,9 @@ if ($ACTION == 'updateDISPO')
 			}
 		$commentsSQL='';
 		if ( (strlen($dispo_comments)>0) and ( ($comments_dispo_screen == 'ENABLED') or ($comments_dispo_screen == 'REPLACE_CALL_NOTES') ) )
-			{$commentsSQL = ",comments='$dispo_comments'";}
+			{$commentsSQL = ",comments='" . mysqli_real_escape_string($link, $dispo_comments) . "'";}
 		if ( (strlen($cbcomment_comments)>0) and ( ($comments_callback_screen == 'ENABLED') or ($comments_callback_screen == 'REPLACE_CB_NOTES') ) )
-			{$commentsSQL = ",comments='$cbcomment_comments'";}
+			{$commentsSQL = ",comments='" . mysqli_real_escape_string($link, $cbcomment_comments) . "'";}
 		$stmt="UPDATE vicidial_list set status='$dispo_choice', user='$user' $commentsSQL where lead_id='$lead_id';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_to_mysqli($stmt, $link);
