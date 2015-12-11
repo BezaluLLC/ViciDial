@@ -13,6 +13,10 @@
 # ; 6. double-log this call in call_log (Y|N) default N, ONLY NEEDED FOR INBOUND CALLMENU FORWARDED CALLS!!!
 # ; 7. play the recording ID of this call before recording starts
 # ; 8. include the recording ID in the filename
+# ; 9. search vicidial_list for phone number dialed (Y|N) default N, assumes 10 digit phone numbers
+# ; 10. if 9 is Y, this is search method (ALLLISTS|PHONE) default ALLLISTS, search all lists, use phone setting, CURRENTLY DOES NOTHING
+# ; 11. error out and end call if phone number is not found (Y|N) default N
+# ; 12. run the phone entry's NVA Call URL (Y|N) default N
 #
 # ;custom dialplan entry example: (similar to the defaultlog Call Menu)
 #exten => _X.,1,AGI(agi-NVA_recording.agi,BOTH------Y---N---Y---N---N---N)
@@ -30,6 +34,9 @@
 # ; example of using as Call Menu prompt to record with playing of recording id
 #agi-NVA_recording.agi,BOTH------Y---N---Y---N---Y---Y
 #
+# ; example of using as Call Menu prompt to record, search for phone number, run NVA call URL and error if not found
+#agi-NVA_recording.agi,BOTH------Y---N---Y---N---N---N---Y---ALLLISTS---Y---Y
+#
 # Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
@@ -40,6 +47,7 @@
 # 130326-1510 - Added lead_id and user logging from vicidial values
 # 141124-2309 - Fixed Fhour variable bug
 # 150915-1824 - Added recording ID play and filename options
+# 151211-0932 - Added phone search and phone NVA URL features
 #
 
 &get_time_now;
@@ -143,6 +151,10 @@ if (length($ARGV[0])>1)
 		$double_log =		$ARGV_vars[5];
 		$play_recid =		$ARGV_vars[6];
 		$file_recid =		$ARGV_vars[7];
+		$search_phone =		$ARGV_vars[8];
+		$search_method =	$ARGV_vars[9];
+		$search_error =		$ARGV_vars[10];
+		$phone_url =		$ARGV_vars[11];
 
 		if ($AGI_output =~ /STDERR/)	{$AGILOG = '1';}
 		if ($AGI_output =~ /FILE/)	{$AGILOG = '2';}
@@ -247,6 +259,133 @@ else
 if (length($user) > 0)
 	{$accountcode = $user;}
 
+
+if ( ($search_phone =~ /Y/) || ($phone_url =~ /Y/) )
+	{
+	### Grab phone NVA values from the database phones table
+	$stmtA = "SELECT nva_call_url,nva_search_method,nva_error_filename FROM phones where extension='$accountcode' and server_ip = '$VARserver_ip';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$nva_call_url =			$aryA[0];
+		$nva_search_method =	$aryA[1];
+		$nva_error_filename =	$aryA[2];
+		}
+	$sthA->finish();
+	}
+
+$temp_phone = $extension;
+$search_lead_id = 'NOTFOUND';
+if ($search_phone =~ /Y/)
+	{
+	while (length($temp_phone) > 10)
+		{$temp_phone =~ s/^.//gi;}
+	$stmtA = "SELECT lead_id FROM vicidial_list where phone_number='$temp_phone' order by entry_date desc limit 1;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$search_lead_id = $aryA[0];
+		}
+	else
+		{
+		if ($search_error =~ /Y/)
+			{
+			$temp_error_filename = 'invalid';
+			if (length($nva_error_filename) > 0 )
+				{$temp_error_filename = $nva_error_filename;}
+			$AGI->stream_file('sip-silence');
+			$AGI->stream_file('sip-silence');
+			$AGI->stream_file('silence');
+			$AGI->stream_file("$temp_error_filename");
+
+			sleep(3);
+			$AGI->hangup();
+
+			exit;
+			}
+		}
+	$sthA->finish();
+	}
+
+if ( ( (length($lead_id)<1) || ($lead_id < 1) ) && ($search_lead_id !~ /NOTFOUND/) )
+	{$lead_id = $search_lead_id;}
+
+if ( ($phone_url =~ /Y/) && (length($nva_call_url) > 8) )
+	{
+	### first, find curl binary
+	$curlbin = '';
+	if ( -e ('/bin/curl')) {$curlbin = '/bin/curl';}
+	else 
+		{
+		if ( -e ('/usr/bin/curl')) {$curlbin = '/usr/bin/curl';}
+		else 
+			{
+			if ( -e ('/usr/local/bin/curl')) {$curlbin = '/usr/local/bin/curl';}
+			else
+				{
+				if ($AGILOG) {$agi_string = "ERROR: cannot do nva URL, curl binary not found";   &agi_output;}
+				}
+			}
+		}
+	if ( (length($curlbin) > 4) && ($nva_call_url =~ /http/i) )
+		{
+		$nva_call_url =~ s/^VAR|^ //gi;
+		$nva_call_url =~ s/--A--phone_number--B--/$temp_phone/gi;
+		$nva_call_url =~ s/--A--uniqueid--B--/$unique_id/gi;
+		$nva_call_url =~ s/--A--lead_id--B--/$search_lead_id/gi;
+		$nva_call_url =~ s/--A--extension--B--/$accountcode/gi;
+		$nva_call_url =~ s/--A--channel--B--/$channel/gi;
+		$nva_call_url =~ s/--A--server_ip--B--/$VARserver_ip/gi;
+		$nva_call_url =~ s/&/\\&/gi;
+		$nva_call_url =~ s/ /+/gi;
+
+		### insert a new url log entry
+		$SQL_log = "$nva_call_url";
+		$SQL_log =~ s/;|\||\\//gi;
+		$stmtA = "INSERT INTO vicidial_url_log SET uniqueid='$unique_id',url_date=NOW(),url_type='nva_phone',url='$SQL_log',url_response='';";
+		$affected_rows = $dbhA->do($stmtA);
+		$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
+		$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$url_id = $aryA[0];
+			}
+		$sthA->finish();
+		my $secW = time();
+
+		@curl_output = `$curlbin $nva_call_url`;
+
+		my $secY = time();
+		my $response_sec = ($secY - $secW);
+
+		$k=0;
+		$full_output='';
+		foreach (@curl_output)
+			{
+			$full_output_raw .= $curl_output[$k];
+			$k++;
+			}
+		$full_output = $full_output_raw;
+		$full_output =~ s/\D//gi;
+		### update url log entry
+		$full_output_raw =~ s/;|\||\\//gi;
+		$stmtA = "UPDATE vicidial_url_log SET url_response='$full_output_raw|$full_output',response_sec='$response_sec' where url_log_id='$url_id';";
+		$affected_rows = $dbhA->do($stmtA);
+
+		if ($AGILOG) {$agi_string = "phone NVA URL response: |$search_lead_id|$full_output|$nva_call_url|$affected_rows|";   &agi_output;}
+		}
+	}
+
+
 ### if set to record this call, start recording ###
 if ($record_call =~ /Y/)
 	{
@@ -291,6 +430,7 @@ if ($record_call =~ /Y/)
 		}
 
 	}
+
 
 ### if set to user log this call, insert user_call_log entry ###
 if ($log_user_call =~ /Y/)

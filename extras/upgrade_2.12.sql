@@ -400,3 +400,9 @@ ALTER TABLE phones ADD unavail_dialplan_fwd_exten VARCHAR(40) default '';
 ALTER TABLE phones ADD unavail_dialplan_fwd_context VARCHAR(100) default '';
 
 UPDATE system_settings SET db_schema_version='1439',db_schema_update_date=NOW() where db_schema_version < 1439;
+
+ALTER TABLE phones ADD nva_call_url TEXT;
+ALTER TABLE phones ADD nva_search_method VARCHAR(40) default 'NONE';
+ALTER TABLE phones ADD nva_error_filename VARCHAR(255) default '';
+
+UPDATE system_settings SET db_schema_version='1440',db_schema_update_date=NOW() where db_schema_version < 1440;

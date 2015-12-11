@@ -21,6 +21,9 @@ exten => _X.,1,AGI(agi-DID_route.agi)
 ; If you have DIDs that arrive with a plus sign at the beginning then uncomment
 ;exten => _+X.,1,AGI(agi-DID_route.agi)
 
+; If you have DIDs that arrive with a plus and 1 at the beginning that you want to filter out, then uncomment
+;exten => _+1X.,1,Goto(trunkinbound,${EXTEN:2},1)
+
 ; FastAGI for VICIDIAL/astGUIclient call logging
 exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
 

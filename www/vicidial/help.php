@@ -68,6 +68,7 @@
 # 151104-1541 - Added am_message_wildcards entry
 # 151121-1144 - Added cache_carrier_stats_realtime
 # 151204-0635 - Added phones-unavail_dialplan_fwd_exten
+# 151209-1437 - Added phones-nva entries
 #
 
 
@@ -4056,6 +4057,21 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="phones-agent_web_URL">
 <BR>
 <B><?php echo _QXZ("Agent Default URL"); ?> -</B><?php echo _QXZ("This is the web address of the page used to do custom agent Web Form queries. default testing address is defined in the database schema."); ?>
+
+<BR>
+<A NAME="phones-nva_call_url">
+<BR>
+<B><?php echo _QXZ("NVA Call URL"); ?> -</B><?php echo _QXZ("This is the optional web URL that can be used together with the NVA agi script in a Call Menu to log phone calls made outside of the agent screen. Variables that can be used with this feature are- phone_number,uniqueid,lead_id,extension,server_ip."); ?>
+
+<BR>
+<A NAME="phones-nva_search_method">
+<BR>
+<B><?php echo _QXZ("NVA Search Method"); ?> -</B><?php echo _QXZ("If this phone dials through the NVA agi script in a Call Menu, and the NVA agi option is set to use the phone NVA Seach Method, this is where that is defined."); ?>
+
+<BR>
+<A NAME="phones-nva_error_filename">
+<BR>
+<B><?php echo _QXZ("NVA Error Filename"); ?> -</B><?php echo _QXZ("If this phone dials through the NVA agi script in a Call Menu, this is the error file that is played for the user of this phone if an error occurs."); ?>
 
 <BR>
 <A NAME="phones-AGI_call_logging_enabled">

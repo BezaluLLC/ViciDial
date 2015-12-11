@@ -1,7 +1,7 @@
 <?php 
 # AST_url_log_report.php
 # 
-# Copyright (C) 2014  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 130620-0806 - First build
@@ -9,6 +9,7 @@
 # 140108-0732 - Added webserver and hostname to report logging
 # 141114-0713 - Finalized adding QXZ translation to all admin files
 # 141230-1415 - Added code for on-the-fly language translations display
+# 151211-0950 - Added missing url types
 #
 
 $startMS = microtime();
@@ -206,7 +207,7 @@ while($i < $url_type_ct)
 	$i++;
 	}
 
-$LISTurltypes=array("add_lead", "custom", "dispo", "na_callurl", "non-agent", "other", "qm_socket", "start", "start_ra");
+$LISTurltypes=array("add_lead", "custom", "dispo", "na_callurl", "non-agent", "other", "qm_socket", "start", "start_ra","nva_phone","DID_FILTER","park_ivr_c");
 
 $url_types_to_print=count($LISTurltypes);
 $i=0;

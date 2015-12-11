@@ -2004,6 +2004,12 @@ if (isset($_GET["unavail_dialplan_fwd_exten"]))					{$unavail_dialplan_fwd_exten
 	elseif (isset($_POST["unavail_dialplan_fwd_exten"]))		{$unavail_dialplan_fwd_exten=$_POST["unavail_dialplan_fwd_exten"];}
 if (isset($_GET["unavail_dialplan_fwd_context"]))				{$unavail_dialplan_fwd_context=$_GET["unavail_dialplan_fwd_context"];}
 	elseif (isset($_POST["unavail_dialplan_fwd_context"]))		{$unavail_dialplan_fwd_context=$_POST["unavail_dialplan_fwd_context"];}
+if (isset($_GET["nva_call_url"]))				{$nva_call_url=$_GET["nva_call_url"];}
+	elseif (isset($_POST["nva_call_url"]))		{$nva_call_url=$_POST["nva_call_url"];}
+if (isset($_GET["nva_search_method"]))				{$nva_search_method=$_GET["nva_search_method"];}
+	elseif (isset($_POST["nva_search_method"]))		{$nva_search_method=$_POST["nva_search_method"];}
+if (isset($_GET["nva_error_filename"]))				{$nva_error_filename=$_GET["nva_error_filename"];}
+	elseif (isset($_POST["nva_error_filename"]))	{$nva_error_filename=$_POST["nva_error_filename"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2812,6 +2818,7 @@ if ($non_latin < 1)
 	$status_group_id = preg_replace('/[^-_0-9a-zA-Z]/','',$status_group_id);
 	$unavail_dialplan_fwd_exten = preg_replace('/[^-_0-9a-zA-Z]/','',$unavail_dialplan_fwd_exten);
 	$unavail_dialplan_fwd_context = preg_replace('/[^-_0-9a-zA-Z]/','',$unavail_dialplan_fwd_context);
+	$nva_search_method = preg_replace('/[^-_0-9a-zA-Z]/','',$nva_search_method);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_timeout_prompt = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$menu_timeout_prompt);
@@ -2857,6 +2864,7 @@ if ($non_latin < 1)
 	$old_voicemail_greeting = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$old_voicemail_greeting);
 	$meetme_enter_login_filename = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$meetme_enter_login_filename);
 	$meetme_enter_leave3way_filename = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$meetme_enter_leave3way_filename);
+	$nva_error_filename = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$nva_error_filename);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot and comma
 	$menu_prompt = preg_replace('/[^-\/\|\,\._0-9a-zA-Z]/','',$menu_prompt);
@@ -3090,6 +3098,7 @@ if ($non_latin < 1)
 	# $na_call_url
 	# $web_form_address_three
 	# $container_entry
+	# $nva_call_url
 
 	### VARIABLES not filtered at all ###
 	# $script_text
@@ -3642,12 +3651,13 @@ else
 # 151125-0010 - Added oldest_logs_date display field to system settings
 # 151203-2142 - Added links to search page from called counts within this list table of list modify page
 # 151204-0615 - Added phone options to have call go to dialplan extension instead of voicemail if phone not answered
+# 151211-0940 - Added phone options for NVA recording agi script
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-522a';
-$build = '151204-0615';
+$admin_version = '2.12-523a';
+$build = '151211-0940';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -14638,7 +14648,7 @@ if ($ADD==41111111111)
 					if ( ($voicemail_greeting == '') and (strlen($old_voicemail_greeting) > 0) )
 						{$voicemail_greeting = '---DELETE---';}
 
-					$stmt="UPDATE phones set extension='$extension', dialplan_number='$dialplan_number', voicemail_id='$voicemail_id', phone_ip='$phone_ip', computer_ip='$computer_ip', server_ip='$server_ip', login='$login', pass='$pass', status='$status', active='$active', phone_type='$phone_type', fullname='$fullname', company='$company', picture='$picture', protocol='$protocol', local_gmt='$local_gmt', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', login_user='$login_user', login_pass='$login_pass', login_campaign='$login_campaign', park_on_extension='$park_on_extension', conf_on_extension='$conf_on_extension', VICIDIAL_park_on_extension='$VICIDIAL_park_on_extension', VICIDIAL_park_on_filename='$VICIDIAL_park_on_filename', monitor_prefix='$monitor_prefix', recording_exten='$recording_exten', voicemail_exten='$voicemail_exten', voicemail_dump_exten='$voicemail_dump_exten', ext_context='$ext_context', dtmf_send_extension='$dtmf_send_extension', call_out_number_group='$call_out_number_group', client_browser='$client_browser', install_directory='$install_directory', local_web_callerID_URL='" . mysqli_real_escape_string($link, $local_web_callerID_URL) . "', VICIDIAL_web_URL='" . mysqli_real_escape_string($link, $VICIDIAL_web_URL) . "', AGI_call_logging_enabled='$AGI_call_logging_enabled', user_switching_enabled='$user_switching_enabled', conferencing_enabled='$conferencing_enabled', admin_hangup_enabled='$admin_hangup_enabled', admin_hijack_enabled='$admin_hijack_enabled', admin_monitor_enabled='$admin_monitor_enabled', call_parking_enabled='$call_parking_enabled', updater_check_enabled='$updater_check_enabled', AFLogging_enabled='$AFLogging_enabled', QUEUE_ACTION_enabled='$QUEUE_ACTION_enabled', CallerID_popup_enabled='$CallerID_popup_enabled', voicemail_button_enabled='$voicemail_button_enabled', enable_fast_refresh='$enable_fast_refresh', fast_refresh_rate='$fast_refresh_rate', enable_persistant_mysql='$enable_persistant_mysql', auto_dial_next_number='$auto_dial_next_number', VDstop_rec_after_each_call='$VDstop_rec_after_each_call', DBX_server='$DBX_server', DBX_database='$DBX_database', DBX_user='$DBX_user', DBX_pass='$DBX_pass', DBX_port='$DBX_port', DBY_server='$DBY_server', DBY_database='$DBY_database', DBY_user='$DBY_user', DBY_pass='$DBY_pass', DBY_port='$DBY_port', outbound_cid='$outbound_cid', enable_sipsak_messages='$enable_sipsak_messages', email='$email', template_id='$template_id', conf_override='$conf_override',phone_context='$phone_context',phone_ring_timeout='$phone_ring_timeout',conf_secret='$conf_secret', delete_vm_after_email='$delete_vm_after_email',is_webphone='$is_webphone',use_external_server_ip='$use_external_server_ip',codecs_list='$codecs_list',codecs_with_template='$codecs_with_template',webphone_dialpad='$webphone_dialpad',on_hook_agent='$on_hook_agent',webphone_auto_answer='$webphone_auto_answer',voicemail_timezone='$voicemail_timezone',voicemail_options='$voicemail_options',user_group='$user_group',voicemail_greeting='$voicemail_greeting',voicemail_dump_exten_no_inst='$voicemail_dump_exten_no_inst',voicemail_instructions='$voicemail_instructions',on_login_report='$show_vm_on_summary',unavail_dialplan_fwd_exten='$unavail_dialplan_fwd_exten',unavail_dialplan_fwd_context='$unavail_dialplan_fwd_context' where extension='$old_extension' and server_ip='$old_server_ip';";
+					$stmt="UPDATE phones set extension='$extension', dialplan_number='$dialplan_number', voicemail_id='$voicemail_id', phone_ip='$phone_ip', computer_ip='$computer_ip', server_ip='$server_ip', login='$login', pass='$pass', status='$status', active='$active', phone_type='$phone_type', fullname='$fullname', company='$company', picture='$picture', protocol='$protocol', local_gmt='$local_gmt', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', login_user='$login_user', login_pass='$login_pass', login_campaign='$login_campaign', park_on_extension='$park_on_extension', conf_on_extension='$conf_on_extension', VICIDIAL_park_on_extension='$VICIDIAL_park_on_extension', VICIDIAL_park_on_filename='$VICIDIAL_park_on_filename', monitor_prefix='$monitor_prefix', recording_exten='$recording_exten', voicemail_exten='$voicemail_exten', voicemail_dump_exten='$voicemail_dump_exten', ext_context='$ext_context', dtmf_send_extension='$dtmf_send_extension', call_out_number_group='$call_out_number_group', client_browser='$client_browser', install_directory='$install_directory', local_web_callerID_URL='" . mysqli_real_escape_string($link, $local_web_callerID_URL) . "', VICIDIAL_web_URL='" . mysqli_real_escape_string($link, $VICIDIAL_web_URL) . "', AGI_call_logging_enabled='$AGI_call_logging_enabled', user_switching_enabled='$user_switching_enabled', conferencing_enabled='$conferencing_enabled', admin_hangup_enabled='$admin_hangup_enabled', admin_hijack_enabled='$admin_hijack_enabled', admin_monitor_enabled='$admin_monitor_enabled', call_parking_enabled='$call_parking_enabled', updater_check_enabled='$updater_check_enabled', AFLogging_enabled='$AFLogging_enabled', QUEUE_ACTION_enabled='$QUEUE_ACTION_enabled', CallerID_popup_enabled='$CallerID_popup_enabled', voicemail_button_enabled='$voicemail_button_enabled', enable_fast_refresh='$enable_fast_refresh', fast_refresh_rate='$fast_refresh_rate', enable_persistant_mysql='$enable_persistant_mysql', auto_dial_next_number='$auto_dial_next_number', VDstop_rec_after_each_call='$VDstop_rec_after_each_call', DBX_server='$DBX_server', DBX_database='$DBX_database', DBX_user='$DBX_user', DBX_pass='$DBX_pass', DBX_port='$DBX_port', DBY_server='$DBY_server', DBY_database='$DBY_database', DBY_user='$DBY_user', DBY_pass='$DBY_pass', DBY_port='$DBY_port', outbound_cid='$outbound_cid', enable_sipsak_messages='$enable_sipsak_messages', email='$email', template_id='$template_id', conf_override='$conf_override',phone_context='$phone_context',phone_ring_timeout='$phone_ring_timeout',conf_secret='$conf_secret', delete_vm_after_email='$delete_vm_after_email',is_webphone='$is_webphone',use_external_server_ip='$use_external_server_ip',codecs_list='$codecs_list',codecs_with_template='$codecs_with_template',webphone_dialpad='$webphone_dialpad',on_hook_agent='$on_hook_agent',webphone_auto_answer='$webphone_auto_answer',voicemail_timezone='$voicemail_timezone',voicemail_options='$voicemail_options',user_group='$user_group',voicemail_greeting='$voicemail_greeting',voicemail_dump_exten_no_inst='$voicemail_dump_exten_no_inst',voicemail_instructions='$voicemail_instructions',on_login_report='$show_vm_on_summary',unavail_dialplan_fwd_exten='$unavail_dialplan_fwd_exten',unavail_dialplan_fwd_context='$unavail_dialplan_fwd_context', nva_call_url='" . mysqli_real_escape_string($link, $nva_call_url) . "', nva_search_method='$nva_search_method', nva_error_filename='$nva_error_filename' where extension='$old_extension' and server_ip='$old_server_ip';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 
 					$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
@@ -29908,7 +29918,7 @@ if ($ADD==31111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,is_webphone,use_external_server_ip,codecs_list,codecs_with_template,webphone_dialpad,on_hook_agent,webphone_auto_answer,voicemail_timezone,voicemail_options,user_group,voicemail_greeting,voicemail_dump_exten_no_inst,voicemail_instructions,on_login_report,unavail_dialplan_fwd_exten,unavail_dialplan_fwd_context from phones where extension='$extension' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,is_webphone,use_external_server_ip,codecs_list,codecs_with_template,webphone_dialpad,on_hook_agent,webphone_auto_answer,voicemail_timezone,voicemail_options,user_group,voicemail_greeting,voicemail_dump_exten_no_inst,voicemail_instructions,on_login_report,unavail_dialplan_fwd_exten,unavail_dialplan_fwd_context,nva_call_url,nva_search_method,nva_error_filename from phones where extension='$extension' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 
@@ -30012,6 +30022,11 @@ if ($ADD==31111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Outbound Call Group").": </td><td align=left><input type=text name=call_out_number_group size=40 maxlength=100 value=\"$row[33]\">$NWB#phones-call_out_number_group$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("CallerID URL").": </td><td align=left><input type=text name=local_web_callerID_URL size=40 maxlength=255 value=\"$row[36]\">$NWB#phones-local_web_callerID_URL$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent Default URL").": </td><td align=left><input type=text name=agent_web_URL size=40 maxlength=255 value=\"$row[37]\">$NWB#phones-agent_web_URL$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("NVA Call URL").": </td><td align=left><input type=text name=nva_call_url size=40 maxlength=255 value=\"$row[90]\">$NWB#phones-nva_call_url$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("NVA Search Method").": </td><td align=left><input type=text name=nva_search_method size=20 maxlength=40 value=\"$row[91]\">$NWB#phones-nva_search_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("NVA Error Filename").": </td><td align=left colspan=3><input type=text name=nva_error_filename id=nva_error_filename size=40 maxlength=255 value=\"$row[92]\"> <a href=\"javascript:launch_chooser('nva_error_filename','date',1200);\">"._QXZ("audio chooser")."</a> $NWB#phones-nva_error_filename$NWE</td></tr>\n";
+
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Call Logging").": </td><td align=left><select size=1 name=AGI_call_logging_enabled><option>1</option><option>0</option><option selected>$row[38]</option></select>$NWB#phones-AGI_call_logging_enabled$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("User Switching").": </td><td align=left><select size=1 name=user_switching_enabled><option>1</option><option>0</option><option selected>$row[39]</option></select>$NWB#phones-user_switching_enabled$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Conferencing").": </td><td align=left><select size=1 name=conferencing_enabled><option>1</option><option>0</option><option selected>$row[40]</option></select>$NWB#phones-conferencing_enabled$NWE</td></tr>\n";
