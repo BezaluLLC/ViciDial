@@ -7917,13 +7917,15 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 		$email_group_str.="'$inbound_email_groups[$i]',";
 		}
 	$email_group_str=substr($email_group_str, 0, -1);
+	if (strlen($email_group_str) < 2) {$email_group_str = "''";}
 
 	$chat_group_ct=count($inbound_chat_groups); # This should always be greater than zero for the script to reach this point, but just in case...
 	for ($i=0; $i<$chat_group_ct; $i++) {
 		$chat_group_str.="'$inbound_chat_groups[$i]',";
 	}
 	$chat_group_str=substr($chat_group_str, 0, -1);
-	
+	if (strlen($chat_group_str) < 2) {$chat_group_str = "''";}
+
 	# $DB=1;
 
 	if ( (strlen($campaign)<1) || (strlen($server_ip)<1) )

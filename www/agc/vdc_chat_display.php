@@ -68,6 +68,10 @@ if (isset($_GET["last_name"]))						{$last_name=$_GET["last_name"];}
 if (isset($_GET["clickmute"]))						{$clickmute=$_GET["clickmute"];}
 	elseif (isset($_POST["clickmute"]))				{$clickmute=$_POST["clickmute"];}
 
+header ("Content-type: text/html; charset=utf-8");
+header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
+header ("Pragma: no-cache");                          // HTTP/1.0
+
 if ($clickmute!="1") {$clickmute="0";} // Prevents annoying quirk of playing the audio cue every time you click the tab to view this 
 
 $lead_id = preg_replace("/[^0-9]/","",$lead_id);
@@ -75,7 +79,6 @@ $chat_id = preg_replace('/[^- \_\.0-9a-zA-Z]/','',$chat_id);
 $chat_group_id = preg_replace('/[^- \_\.0-9a-zA-Z]/','',$chat_group_id);
 $server_ip = preg_replace('/[^- \_\.0-9a-zA-Z]/','',$server_ip);
 $email = preg_replace("/\'|\"|\\\\|;/","",$email);
-$chat_group_ids = preg_replace("/\\\\|;/","",$chat_group_ids);
 $campaign = preg_replace('/[^-\_0-9a-zA-Z]/','',$campaign);
 $dial_method = preg_replace('/[^-\_0-9a-zA-Z]/','',$dial_method);
 $clickmute = preg_replace("/\'|\"|\\\\|;/","",$clickmute);
@@ -655,7 +658,9 @@ if($child_window) {
 			echo "<option value='' selected>--SELECT A CHAT GROUP--</option>\n";
 			# CREATE LIST OF GroUP IDS to select
 			if (count($chat_group_ids)>0) {
-				$group_stmt="select group_id, group_name from vicidial_inbound_groups where group_handling='CHAT' and group_id in ('".implode("','", $chat_group_ids)."') order by group_name asc";
+				$chat_group_idsSQL = implode("','", $chat_group_ids);
+				$chat_group_idsSQL = preg_replace("/\\\\|;/","",$chat_group_idsSQL);
+				$group_stmt="select group_id, group_name from vicidial_inbound_groups where group_handling='CHAT' and group_id in ('$chat_group_idsSQL') order by group_name asc";
 				$group_rslt=mysql_to_mysqli($group_stmt, $link);
 				while ($group_row=mysqli_fetch_row($group_rslt)) {
 					echo "<option value='".$group_row[0]."'>".$group_row[1]."</option>\n";

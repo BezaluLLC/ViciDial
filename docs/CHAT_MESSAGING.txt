@@ -52,3 +52,5 @@ Chat Timeout -This is where you can set how long a customer chat can stay alive 
 
 Chat URL -This is the location where you have placed the chat web pages for customer use. 
 
+
+NOTE: You will need to Allow Chat on the campaign that you want agents to handle Chat InGroups from
