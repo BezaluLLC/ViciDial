@@ -40,6 +40,7 @@
 # 150312-0942 - Added ExpectedDBSchema value in astguiclient.conf
 # 150911-1808 - Added creation of GPG directory for encrypted recordings
 # 151029-0650 - Added Asterisk 11 as listed option, added new sample voicemail.conf for 1.8 and higher
+# 151212-0840 - Added chat_customer web directory, removed static language build actions
 #
 
 ############################################
@@ -2557,6 +2558,7 @@ if ($NOWEB < 1)
 	if (!-e "$PATHweb/vicidial/ploticus/")			{`mkdir -p $PATHweb/vicidial/ploticus/`;}
 	if (!-e "$PATHweb/vicidial/agent_reports/")		{`mkdir -p $PATHweb/vicidial/agent_reports/`;}
 	if (!-e "$PATHweb/vicidial/server_reports/")	{`mkdir -p $PATHweb/vicidial/server_reports/`;}
+	if (!-e "$PATHweb/chat_customer/")				{`mkdir -p $PATHweb/chat_customer/`;}
 
 	print "Copying web files...\n";
 	# save custom.css if its not empty
@@ -2568,11 +2570,13 @@ if ($NOWEB < 1)
 	`cp -f ./www/vicidial/robots.txt $PATHweb/vicidial/agent_reports/`;
 	`cp -f ./www/vicidial/robots.txt $PATHweb/vicidial/server_reports/`;
 	if (-e "$PATHweb/agc/css/custom.css.save_user_changes") {`mv $PATHweb/agc/css/custom.css.save_user_changes $PATHweb/agc/css/custom.css`;}
+	`cp -f ./www/vicidial/robots.txt $PATHweb/chat_customer/`;
 
 	print "setting web scripts to executable...\n";
 	`chmod 0777 $PATHweb/`;
 	`chmod -R 0755 $PATHweb/agc/`;
 	`chmod -R 0755 $PATHweb/vicidial/`;
+	`chmod -R 0755 $PATHweb/chat_customer/`;
 	`chmod 0777 $PATHweb/agc/`;
 	`chmod 0777 $PATHweb/vicidial/`;
 	`chmod 0777 $PATHweb/vicidial/ploticus/`;
@@ -2587,86 +2591,12 @@ if ($NOWEB < 1)
 	`rm -f $PATHweb/vicidial/new_listloader_superL.php`;
 	`rm -f $PATHweb/vicidial/listloader_super.pl`;
 	`rm -f $PATHweb/vicidial/listloader.pl`;
+	`chmod 0777 $PATHweb/chat_customer/`;
 	}
 
 if ( ($PROMPTcopy_web_lang =~ /y/i) || ($CLIcopy_web_lang =~ /y/i) )
 	{
-	print "Copying web language translation files to $PATHweb...\n";
-	if (!-e "$PATHweb/agc_br/")						{`mkdir -p $PATHweb/agc_br/`;}
-	if (!-e "$PATHweb/agc_de/")						{`mkdir -p $PATHweb/agc_de/`;}
-	if (!-e "$PATHweb/agc_dk/")						{`mkdir -p $PATHweb/agc_dk/`;}
-	if (!-e "$PATHweb/agc_el/")						{`mkdir -p $PATHweb/agc_el/`;}
-	if (!-e "$PATHweb/agc_en/")						{`mkdir -p $PATHweb/agc_en/`;}
-	if (!-e "$PATHweb/agc_es/")						{`mkdir -p $PATHweb/agc_es/`;}
-	if (!-e "$PATHweb/agc_fr/")						{`mkdir -p $PATHweb/agc_fr/`;}
-	if (!-e "$PATHweb/agc_it/")						{`mkdir -p $PATHweb/agc_it/`;}
-	if (!-e "$PATHweb/agc_jp/")						{`mkdir -p $PATHweb/agc_jp/`;}
-	if (!-e "$PATHweb/agc_nl/")						{`mkdir -p $PATHweb/agc_nl/`;}
-	if (!-e "$PATHweb/agc_pl/")						{`mkdir -p $PATHweb/agc_pl/`;}
-	if (!-e "$PATHweb/agc_pt/")						{`mkdir -p $PATHweb/agc_pt/`;}
-	if (!-e "$PATHweb/agc_ru/")						{`mkdir -p $PATHweb/agc_ru/`;}
-	if (!-e "$PATHweb/agc_se/")						{`mkdir -p $PATHweb/agc_se/`;}
-	if (!-e "$PATHweb/agc_sk/")						{`mkdir -p $PATHweb/agc_sk/`;}
-	if (!-e "$PATHweb/agc_tw/")						{`mkdir -p $PATHweb/agc_tw/`;}
-	if (!-e "$PATHweb/vicidial_br/")				{`mkdir -p $PATHweb/vicidial_br/`;}
-	if (!-e "$PATHweb/vicidial_de/")				{`mkdir -p $PATHweb/vicidial_de/`;}
-	if (!-e "$PATHweb/vicidial_el/")				{`mkdir -p $PATHweb/vicidial_el/`;}
-	if (!-e "$PATHweb/vicidial_en/")				{`mkdir -p $PATHweb/vicidial_en/`;}
-	if (!-e "$PATHweb/vicidial_es/")				{`mkdir -p $PATHweb/vicidial_es/`;}
-	if (!-e "$PATHweb/vicidial_fr/")				{`mkdir -p $PATHweb/vicidial_fr/`;}
-	if (!-e "$PATHweb/vicidial_it/")				{`mkdir -p $PATHweb/vicidial_it/`;}
-
-	print "Copying web files...\n";
-	`cp -f -R ./LANG_www/* $PATHweb/`;
-
-	print "setting web lang scripts to executable...\n";
-	`chmod 0777 $PATHweb/`;
-	`chmod -R 0755 $PATHweb/agc_br/`;
-	`chmod -R 0755 $PATHweb/agc_de/`;
-	`chmod -R 0755 $PATHweb/agc_dk/`;
-	`chmod -R 0755 $PATHweb/agc_el/`;
-	`chmod -R 0755 $PATHweb/agc_en/`;
-	`chmod -R 0755 $PATHweb/agc_es/`;
-	`chmod -R 0755 $PATHweb/agc_fr/`;
-	`chmod -R 0755 $PATHweb/agc_it/`;
-	`chmod -R 0755 $PATHweb/agc_jp/`;
-	`chmod -R 0755 $PATHweb/agc_nl/`;
-	`chmod -R 0755 $PATHweb/agc_pl/`;
-	`chmod -R 0755 $PATHweb/agc_pt/`;
-	`chmod -R 0755 $PATHweb/agc_ru/`;
-	`chmod -R 0755 $PATHweb/agc_se/`;
-	`chmod -R 0755 $PATHweb/agc_sk/`;
-	`chmod -R 0755 $PATHweb/agc_tw/`;
-	`chmod -R 0755 $PATHweb/vicidial_br/`;
-	`chmod -R 0755 $PATHweb/vicidial_de/`;
-	`chmod -R 0755 $PATHweb/vicidial_el/`;
-	`chmod -R 0755 $PATHweb/vicidial_en/`;
-	`chmod -R 0755 $PATHweb/vicidial_es/`;
-	`chmod -R 0755 $PATHweb/vicidial_fr/`;
-	`chmod -R 0755 $PATHweb/vicidial_it/`;
-	`chmod 0777 $PATHweb/agc_br/`;
-	`chmod 0777 $PATHweb/agc_de/`;
-	`chmod 0777 $PATHweb/agc_dk/`;
-	`chmod 0777 $PATHweb/agc_el/`;
-	`chmod 0777 $PATHweb/agc_en/`;
-	`chmod 0777 $PATHweb/agc_es/`;
-	`chmod 0777 $PATHweb/agc_fr/`;
-	`chmod 0777 $PATHweb/agc_it/`;
-	`chmod 0777 $PATHweb/agc_jp/`;
-	`chmod 0777 $PATHweb/agc_nl/`;
-	`chmod 0777 $PATHweb/agc_pl/`;
-	`chmod 0777 $PATHweb/agc_pt/`;
-	`chmod 0777 $PATHweb/agc_ru/`;
-	`chmod 0777 $PATHweb/agc_se/`;
-	`chmod 0777 $PATHweb/agc_sk/`;
-	`chmod 0777 $PATHweb/agc_tw/`;
-	`chmod 0777 $PATHweb/vicidial_br/`;
-	`chmod 0777 $PATHweb/vicidial_de/`;
-	`chmod 0777 $PATHweb/vicidial_el/`;
-	`chmod 0777 $PATHweb/vicidial_en/`;
-	`chmod 0777 $PATHweb/vicidial_es/`;
-	`chmod 0777 $PATHweb/vicidial_fr/`;
-	`chmod 0777 $PATHweb/vicidial_it/`;
+	print "Static language files no longer available, use dynamic language features.\n";
 	}
 
 if ($PATHconf !~ /\/etc\/astguiclient.conf/)
@@ -2690,6 +2620,7 @@ if ($PATHconf !~ /\/etc\/astguiclient.conf/)
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/listloader_super.pl `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/listloader_rowdisplay.pl `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/spreadsheet_sales_viewer.pl `;
+	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/chat_customer/dbconnect_mysqli.php `;
 	}
 
 if ( ($PROMPTcopy_conf_files =~ /y/i) || ($CLIcopy_conf_files =~ /y/i) )

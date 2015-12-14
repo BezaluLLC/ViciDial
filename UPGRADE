@@ -206,6 +206,9 @@ OTHER CHANGES:
 	lead_id of the phone call and send a per-phone URL at the start of the
 	phone call.
 
+51. Added Chat Messaging to agent screen, with manager chat utlitity. For more
+	information, read the CHAT_MESSAGING.txt doc.
+
 
 
 

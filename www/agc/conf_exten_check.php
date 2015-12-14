@@ -68,13 +68,14 @@
 # 141216-2111 - Added language settings lookups and user/pass variable standardization
 # 141228-0053 - Found missing phrase for QXZ
 # 150723-1708 - Added ajax logging and agent screen click logging
+# 150904-2138 - Added SQL features for chats started via agent invite, modified output
 #
 
-$version = '2.12-43';
-$build = '150723-1708';
+$version = '2.12-44';
+$build = '150904-2138';
 $php_script = 'conf_exten_check.php';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=40;
+$mysql_log_count=43;
 $one_mysql_log=0;
 $DB=0;
 $SSagent_debug_logging=0;
@@ -352,6 +353,75 @@ if ($ACTION == 'refresh')
 				$DiaLCalls='N';
 				}
 			##### END check on calls in queue, number of active calls in the campaign
+
+			### see if chats/emails are enabled, and if so how many of each are waiting
+			# 03041 and 03042 are the error logs for this
+			
+			$chat_email_stmt="select allow_chats, allow_emails from system_settings;";
+			$chat_email_rslt=mysql_to_mysqli($chat_email_stmt, $link);
+			$chat_email_row=mysqli_fetch_row($chat_email_rslt);
+
+			# GET closer logs, in case they weren't grabbed above due to campagentstdisp!=YES
+			if ($chat_email_row[0]!=0 || $chat_email_row[1]!=0) 
+				{
+				$stmt="SELECT status,campaign_id,closer_campaigns,comments from vicidial_live_agents where user='$user' and server_ip='$server_ip';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03043',$user,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysqli_fetch_row($rslt);
+				$Alogin=$row[0];
+				$Acampaign=$row[1];
+				$AccampSQL=$row[2];
+				$live_agents_comments=$row[3];
+				$AccampSQL = preg_replace('/\s\-/','', $AccampSQL);
+				$AccampSQL = preg_replace('/\s/',"','", $AccampSQL);
+				if (preg_match('/AGENTDIRECT/i', $AccampSQL))
+					{
+					$AccampSQL = preg_replace('/AGENTDIRECT/i','', $AccampSQL);
+					$ADsql = "or ( (campaign_id LIKE \"%AGENTDIRECT%\") and (agent_only='$user') )";
+					}
+				}
+
+			if ($chat_email_row[0]==0) 
+				{
+				$WaitinGChats="N";
+				} 
+			else 
+				{
+				$chat_stmt="select count(*) from vicidial_live_chats where status='WAITING' and (group_id IN('$AccampSQL')) and chat_creator!='$user'";
+				$chat_rslt=mysql_to_mysqli($chat_stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$chat_stmt,'03041',$user,$server_ip,$session_name,$one_mysql_log);}
+				$chat_row=mysqli_fetch_row($chat_rslt);
+				$WaitinGChats=$chat_row[0];
+				# Chat alert priority: waiting chats = blink, then in-chat = on, then = off
+				if ($WaitinGChats > 0) 
+					{
+					$WaitinGChats = "Y"; # Make CHAT button blink
+					}
+				else if ($Acomments=="CHAT")
+					{
+					$WaitinGChats = "C"; # in-chat, so make CHAT button display "ON";
+					}
+				else 
+					{
+					$WaitinGChats = "N"; # no chats waiting, not in chat, make CHAT display "OFF"
+					}
+				}
+			if ($chat_email_row[1]==0) 
+				{
+				$WaitinGEmails="N";
+				} 
+			else 
+				{
+				$email_stmt="select count(*) from vicidial_email_list, vicidial_xfer_log where vicidial_email_list.status='QUEUE' and vicidial_email_list.user='$user' and vicidial_xfer_log.xfercallid=vicidial_email_list.xfercallid and direction='INBOUND' and vicidial_xfer_log.campaign_id in ('$AccampSQL') and closer='EMAIL_XFER'";
+				$email_rslt=mysql_to_mysqli($email_stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$email_stmt,'03042',$user,$server_ip,$session_name,$one_mysql_log);}
+				$email_row=mysqli_fetch_row($email_rslt);
+				$WaitinGEmails=$email_row[0];
+				if ($WaitinGEmails > 0) {$WaitinGEmails = "<font class=\"queue_text_red\">"._QXZ("Emails in Queue").": $WaitinGEmails</font>";}
+				else {$WaitinGEmails = "<font class=\"queue_text\">"._QXZ("Emails in Queue").": $WaitinGEmails</font>";}
+				}
+
 
 			if ($auto_dial_level > 0)
 				{
@@ -719,8 +789,8 @@ if ($ACTION == 'refresh')
 				$Alogin='API_LOGOUT';
 				$external_pause='';
 				}
-
-			echo 'DateTime: ' . $NOW_TIME . '|UnixTime: ' . $StarTtime . '|Logged-in: ' . $Alogin . '|CampCalls: ' . $RingCalls . '|Status: ' . $Astatus . '|DiaLCalls: ' . $DiaLCalls . '|APIHanguP: ' . $external_hangup . '|APIStatuS: ' . $external_status . '|APIPausE: ' . $external_pause . '|APIDiaL: ' . $external_dial . '|DEADcall: ' . $DEADcustomer . '|InGroupChange: ' . $InGroupChangeDetails . '|APIFields: ' . $external_update_fields . '|APIFieldsData: ' . $external_update_fields_data . '|APITimerAction: ' . $timer_action . '|APITimerMessage: ' . $timer_action_message . '|APITimerSeconds: ' . $timer_action_seconds . '|APIdtmf: ' . $external_dtmf . '|APItransferconf: ' . $external_transferconf . '|APIpark: ' . $external_park . '|APITimerDestination: ' . $timer_action_destination . '|APIManualDialQueue: ' . $MDQ_count . '|APIRecording: ' . $external_recording . '|APIPaUseCodE: ' . $external_pause_code . "\n";
+			
+			echo 'DateTime: ' . $NOW_TIME . '|UnixTime: ' . $StarTtime . '|Logged-in: ' . $Alogin . '|CampCalls: ' . $RingCalls . '|Status: ' . $Astatus . '|DiaLCalls: ' . $DiaLCalls . '|APIHanguP: ' . $external_hangup . '|APIStatuS: ' . $external_status . '|APIPausE: ' . $external_pause . '|APIDiaL: ' . $external_dial . '|DEADcall: ' . $DEADcustomer . '|InGroupChange: ' . $InGroupChangeDetails . '|APIFields: ' . $external_update_fields . '|APIFieldsData: ' . $external_update_fields_data . '|APITimerAction: ' . $timer_action . '|APITimerMessage: ' . $timer_action_message . '|APITimerSeconds: ' . $timer_action_seconds . '|APIdtmf: ' . $external_dtmf . '|APItransferconf: ' . $external_transferconf . '|APIpark: ' . $external_park . '|APITimerDestination: ' . $timer_action_destination . '|APIManualDialQueue: ' . $MDQ_count . '|APIRecording: ' . $external_recording . '|APIPaUseCodE: ' . $external_pause_code . '|WaitinGChats: ' . $WaitinGChats . '|WaitinGEmails: ' . $WaitinGEmails . '|LivEAgentCommentS: ' . $live_agents_comments . "\n";
 
 			if (strlen($timer_action) > 3)
 				{

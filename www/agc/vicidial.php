@@ -9,6 +9,9 @@
 # - conf_exten_check.php: time sync and status updater, calls in queue
 # - vdc_script_display.php: displays script with variables
 # - vdc_form_display.php: display custom fields form
+# - vdc_email_display.php: display email interface
+# - vdc_chat_display.php: display chat interface
+# - agc_agent_manager_chat_interface.php: display internal chats
 #
 # CHANGELOG
 # 50607-1426 - First Build of VICIDIAL web client basic login process finished
@@ -505,10 +508,11 @@
 # 151028-1458 - Added status groups statuses feature with min/max seconds qualifiers for statuses
 # 151119-1925 - Fixed issue with scheduled callbacks and status groups
 # 151125-0942 - Fixed manual call only logging bug
+# 151212-0922 - Added all chat functionality
 #
 
-$version = '2.12-477c';
-$build = '151125-0942';
+$version = '2.12-478c';
+$build = '151212-0922';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -605,7 +609,7 @@ if ($sl_ct > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -637,6 +641,8 @@ if ($qm_conf_ct > 0)
 	$enable_third_webform =				$row[21];
 	$default_language =					$row[22];
 	$active_modules =					$row[23];
+	$chat_enabled =						$row[24];
+	$chat_URL =							$row[25];
 	}
 else
 	{
@@ -2066,6 +2072,7 @@ else
 				$VARingroup_handlers="''";
 				$VARphonegroups="''";
 				$VARemailgroups="''";
+				$VARchatgroups="''";
 				if ( ($campaign_allow_inbound == 'Y') and ($dial_method != 'MANUAL') )
 					{
 					### validate that the agent has not exceeded their max inbound calls for today
@@ -2094,6 +2101,7 @@ else
 					$VARingroup_handlers='';
 					$VARphonegroups='';
 					$VARemailgroups='';
+					$VARchatgroups='';
 					$stmt="SELECT group_id,group_handling from vicidial_inbound_groups where active = 'Y' and group_id IN($closer_campaigns) order by group_id limit 800;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01015',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -2101,22 +2109,31 @@ else
 					$closer_ct = mysqli_num_rows($rslt);
 					$INgrpCT=0;
 					$EMAILgrpCT=0;
+					$CHATgrpCT=0;
 					$PHONEgrpCT=0;
 					while ($INgrpCT < $closer_ct)
 						{
 						$row=mysqli_fetch_row($rslt);
 						$closer_groups[$INgrpCT] =$row[0];
-						$closer_group_handling[$INgrpCT] =$row[1]; // PHONE OR EMAIL - this is important
+						$closer_group_handling[$INgrpCT] =$row[1]; // PHONE OR EMAIL OR CHAT - this is important
 						$VARingroups = "$VARingroups'$closer_groups[$INgrpCT]',";
 						$VARingroup_handlers = "$VARingroup_handlers'$closer_group_handling[$INgrpCT]',";
-						if ($row[1]=="EMAIL") // Make a list of ingroups for email handling groups and one for phones, so there is no overlap
+						if ($row[1]=="EMAIL") // Make a list of ingroups for email handling groups, chat handling groups and one for phones, so there is no overlap
 							{
 							$VARemailgroups = "$VARemailgroups'$closer_groups[$INgrpCT]',";
+							$VARemailgroupsURL = $VARemailgroupsURL."&email_group_ids[]=$closer_groups[$INgrpCT]";
 							$EMAILgrpCT++;
 							} 
+						else if ($row[1]=="CHAT") 
+							{
+							$VARchatgroups = "$VARchatgroups'$closer_groups[$INgrpCT]',";
+							$VARchatgroupsURL = $VARchatgroupsURL."&chat_group_ids[]=$closer_groups[$INgrpCT]";
+							$CHATgrpCT++;
+							}
 						else 
 							{
 							$VARphonegroups = "$VARphonegroups'$closer_groups[$INgrpCT]',";
+							$VARphonegroupsURL = $VARphonegroupsURL."&phone_group_ids[]=$closer_groups[$INgrpCT]";
 							$PHONEgrpCT++;
 							}
 						$INgrpCT++;
@@ -2125,6 +2142,7 @@ else
 					$VARingroup_handlers = substr("$VARingroup_handlers", 0, -1); 
 					$VARphonegroups = substr("$VARphonegroups", 0, -1); 
 					$VARemailgroups = substr("$VARemailgroups", 0, -1); 
+					$VARchatgroups = substr("$VARchatgroups", 0, -1); 
 					}
 				else
 					{$closer_campaigns = "''";}
@@ -3774,6 +3792,10 @@ $CCAL_OUT .= "</table>";
 	var EMAILgroupCOUNT = 0;
 	var incomingEMAILgroups= new Array();
 
+	VARchatgroups = new Array(<?php echo $VARchatgroups ?>);
+	var CHATgroupCOUNT = 0;
+	var incomingCHATgroups= new Array();
+
 	VARphonegroups = new Array(<?php echo $VARphonegroups ?>);
 	// var PHONEgroupCOUNT = '<?php echo $PHONEgrpCT ?>';
 	var PHONEgroupCOUNT = 0;
@@ -4082,7 +4104,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var CheckDEADcall = 0;
 	var CheckDEADcallON = 0;
 	var CheckDEADcallCOUNT = 0;
-	var currently_in_email = 0;
+	var currently_in_email_or_chat = 0;
 	var VtigeRLogiNScripT = '<?php echo $vtiger_screen_login ?>';
 	var VtigeRurl = '<?php echo $vtiger_url ?>';
 	var VtigeREnableD = '<?php echo $enable_vtiger_integration ?>';
@@ -4186,6 +4208,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var custom_fields_enabled='<?php echo $custom_fields_enabled ?>';
 	var form_contents_loaded=0;
 	var email_enabled='<?php echo $email_enabled ?>';
+	var chat_enabled='<?php echo $chat_enabled ?>';
+	var chat_URL='<?php echo $chat_URL; ?>';
 	var enable_xfer_presets='<?php echo $enable_xfer_presets ?>';
 	var hide_xfer_number_to_dial='<?php echo $hide_xfer_number_to_dial ?>';
 	var Presets_HTML='';
@@ -4366,6 +4390,23 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		image_LB_ivrgrabparkedcall.src="./images/<?php echo _QXZ("vdc_LB_grabivrparkcall.gif") ?>";
 	var image_LB_ivrparkcall = new Image();
 		image_LB_ivrparkcall.src="./images/<?php echo _QXZ("vdc_LB_ivrparkcall.gif") ?>";
+	var image_internal_chat_OFF = new Image();
+		image_internal_chat_OFF.src="./images/<?php echo _QXZ("vdc_tab_chat_internal.gif") ?>";
+	var image_internal_chat_ON = new Image();
+		image_internal_chat_ON.src="./images/<?php echo _QXZ("vdc_tab_chat_internal_red.gif") ?>";
+	var image_internal_chat_ALERT = new Image();
+		image_internal_chat_ALERT.src="./images/<?php echo _QXZ("vdc_tab_chat_internal_blink.gif") ?>";
+	var image_customer_chat_OFF = new Image();
+		image_customer_chat_OFF.src="./images/<?php echo _QXZ("vdc_tab_chat_customer.gif") ?>";
+	var image_customer_chat_ON = new Image();
+		image_customer_chat_ON.src="./images/<?php echo _QXZ("vdc_tab_chat_customer_red.gif") ?>";
+	var image_customer_chat_ALERT = new Image();
+		image_customer_chat_ALERT.src="./images/<?php echo _QXZ("vdc_tab_chat_customer_blink.gif") ?>";
+	var image_chat_alert_UNMUTE = new Image();
+		image_chat_alert_UNMUTE.src="./images/<?php echo _QXZ("vdc_volume_UNMUTE.gif") ?>";
+	var image_chat_alert_MUTE = new Image();
+		image_chat_alert_MUTE.src="./images/<?php echo _QXZ("vdc_volume_MUTE.gif") ?>";
+
 <?php
 	if ($window_validation > 0)
 		{
@@ -5125,6 +5166,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							var CamPCalLs = CamPCalLs_array[1];
 							var DiaLCalLs_array = check_time_array[5].split("DiaLCalls: ");
 							var DiaLCalLs = DiaLCalLs_array[1];
+							var WaitinGChats_array = check_time_array[27].split("WaitinGChats: ");
+							var WaitinGChats = WaitinGChats_array[1];
+							var WaitinGEmails_array = check_time_array[28].split("WaitinGEmails: ");
+							var WaitinGEmails = WaitinGEmails_array[1];
 							if (AGLogiN != 'N')
 								{
 								document.getElementById("AgentStatusStatus").innerHTML = AGLogiN;
@@ -5136,6 +5181,27 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							if (DiaLCalLs != 'N')
 								{
 								document.getElementById("AgentStatusDiaLs").innerHTML = DiaLCalLs;
+								}
+							// Chat alert
+							if (chat_enabled > 0)
+								{
+								if (WaitinGChats == 'Y')
+									{
+									document.images['CustomerChatImg'].src=image_customer_chat_ALERT.src;
+									}
+								else if (WaitinGChats == 'C')
+									{
+									document.images['CustomerChatImg'].src=image_customer_chat_ON.src;
+									}
+								else 
+									{
+									document.images['CustomerChatImg'].src=image_customer_chat_OFF.src;
+									}
+								}
+							// Email alert
+							if (WaitinGEmails != 'N')
+								{
+								document.getElementById("AgentStatusEmails").innerHTML = WaitinGEmails;
 								}
 							if ( (AGLogiN == 'DEAD_VLA') && ( (vicidial_agent_disable == 'LIVE_AGENT') || (vicidial_agent_disable == 'ALL') ) )
 								{
@@ -6738,6 +6804,82 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			}
 		}
 
+// ################################################################################
+// Request list of active manager chats for this agent
+	function InternalChatsCheck(line_code)
+		{
+			var xmlhttp=false;
+			// var MGR_chat_print=0;
+			var MGRpre='';
+			var MGRpost='';
+			/*@cc_on @*/
+			/*@if (@_jscript_version >= 5)
+			// JScript gives us Conditional compilation, we can cope with old IE versions.
+			// and security blocked creation of the objects.
+			 try {
+			  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+			 } catch (e) {
+			  try {
+			   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+			  } catch (E) {
+			   xmlhttp = false;
+			  }
+			 }
+			@end @*/
+			if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+				{
+				xmlhttp = new XMLHttpRequest();
+				}
+			if (xmlhttp) 
+				{ 
+				var InternalChat_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=ManagerChatsCheck";
+				xmlhttp.open('POST', 'vdc_db_query.php'); 
+				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+				xmlhttp.send(InternalChat_query); 
+				xmlhttp.onreadystatechange = function() 
+					{ 
+					if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+						{
+						var active_InternalChat_info = null;
+						active_InternalChat_info = xmlhttp.responseText;
+						var Internal_chat_array=active_InternalChat_info.split("|");
+						var Internal_chat_print=Internal_chat_array[0];
+						var Internal_chat_unread_msg=Internal_chat_array[1];
+						var Internal_chat_alert_sounds=Internal_chat_array[2];
+
+						if (Internal_chat_print>0)
+							{
+							if (Internal_chat_unread_msg>0)
+								{
+									document.images['InternalChatImg'].src=image_internal_chat_ALERT.src;
+								}
+							else 
+								{
+								document.images['InternalChatImg'].src=image_internal_chat_ON.src;
+								}
+							}
+						else 
+							{
+							Internal_chat_print="NO";
+							document.images['InternalChatImg'].src=image_internal_chat_OFF.src;
+							}
+
+						var ChatIFrame = document.getElementById('InternalChatIFrame');
+						var innerChatDoc = (ChatIFrame.contentDocument) ? ChatIFrame.contentDocument : ChatIFrame.contentWindow.document;
+
+						if (innerChatDoc.getElementById("InternalMessageCount")) // Prevents javascript error when page loads
+						{
+							if (Internal_chat_alert_sounds>innerChatDoc.getElementById("InternalMessageCount").value && innerChatDoc.getElementById("InternalMessageCount").value>0 && !innerChatDoc.getElementById("MuteChatAlert").checked) 
+								{
+								document.getElementById("ChatAudioAlertFile").play(); 
+								}
+							innerChatDoc.getElementById("InternalMessageCount").value=Internal_chat_alert_sounds;
+							}
+						}
+						// alert(line_code+ " -- " + MGR_chat_print + " -- " +MGR_chat_unread_msg);
+					}
+				}
+		}
 
 // ################################################################################
 // closes callback list screen
@@ -6838,6 +6980,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		auto_dial_level=starting_dial_level;
 		MainPanelToFront();
 		CalLBacKsCounTCheck();
+		InternalChatsCheck(); 
 		manual_dial_in_progress=0;
 		}
 
@@ -8079,6 +8222,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						if (fields_list.match(regUDemailreload))
 							{EmailContentsLoad();}
 
+						// JOEJ 060514 - new for chat feature
+						var regUDchatreload = new RegExp("chatreload,","ig");
+						if (fields_list.match(regUDchatreload))
+							{CustomerChatContentsLoad();}
+
 						var regWFAcustom = new RegExp("^VAR","ig");
 						if (VDIC_web_form_address.match(regWFAcustom))
 							{
@@ -8311,6 +8459,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								auto_dial_level=starting_dial_level;
 								MainPanelToFront();
 								CalLBacKsCounTCheck();
+								InternalChatsCheck(); 
 
 								if (MDnextCID.match(regMNCvar))
 									{alert_box("<?php echo _QXZ("No more leads in the hopper for campaign:"); ?>\n" + campaign);   alert_displayed=1;}
@@ -8696,6 +8845,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 										{
 										EmailContentsLoad();
 										}
+									// JOEJ 060514 - new for chat feature
+									// Will populate chat tab in case this is a customer awaiting a chat AND the agent selected a campaign that allows chats
+									if (chat_enabled > 0 && CHATgroupCOUNT > 0)
+										{
+										CustomerChatContentsLoad();
+										}
 									if (get_call_launch == 'SCRIPT')
 										{
 										if (delayed_script_load == 'YES')
@@ -8713,6 +8868,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									if (get_call_launch == 'EMAIL')
 										{
 										EmailPanelToFront();
+										}
+
+									if (get_call_launch == 'CHAT')
+										{
+										CustomerChatPanelToFront();
 										}
 
 									if (get_call_launch == 'WEBFORM')
@@ -9115,6 +9275,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 							EmailContentsLoad();
 							}
+						// JOEJ 060514 - new for email feature
+						// Will populate chat tab in case this is a customer awaiting a chat with an agent
+						if (chat_enabled > 0)
+							{
+							CustomerChatContentsLoad();
+							}
 						if (get_call_launch == 'SCRIPT')
 							{
 							if (delayed_script_load == 'YES')
@@ -9130,6 +9296,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						if (get_call_launch == 'EMAIL')
 							{
 							EmailPanelToFront();
+							}
+						if (get_call_launch == 'CHAT')
+							{
+							CustomerChatPanelToFront();
 							}
 						if (get_call_launch == 'WEBFORM')
 							{
@@ -10074,6 +10244,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								{
 								EmailContentsLoad();
 								}
+							// JOEJ 060514 - new for chat feature
+							if (chat_enabled > 0)
+								{
+								CustomerChatContentsLoad();
+								}
 							if (CalL_AutO_LauncH == 'SCRIPT')
 								{
 								if (delayed_script_load == 'YES')
@@ -10125,15 +10300,15 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								alert(" <?php echo _QXZ("Incoming:"); ?> " + dial_display_number + "\n <?php echo _QXZ("Group"); ?>- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter);
 								}
 							}
-						else if (email_enabled>0 && EMAILgroupCOUNT>0 && AutoDialWaiting==1)
+						else if ( ((email_enabled>0 && EMAILgroupCOUNT>0) || (chat_enabled>0 && CHATgroupCOUNT>0)) && AutoDialWaiting==1)
 							{
-							// JOEJ check for EMAIL
+							// JOEJ check for EMAIL/CHAT
 							// QUEUEpadding is needed to allow inbound calls to get through QUEUE status
 							QUEUEpadding++;
 							if (QUEUEpadding==5) 
 								{
 								QUEUEpadding=0;
-								check_for_incoming_email();
+								check_for_incoming_other();
 								}
 							}
 							xmlhttprequestcheckauto = undefined;
@@ -10146,45 +10321,53 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 
 // ################################################################################
-// Check to see if there is an email unanswered in queue
+// Check to see if there is an email or chat unanswered in queue
 // This should not happen if the agent is INCALL
-	function check_for_incoming_email()
+// Pass the manual_chat_override when the agent starts a chat themselves, 
+// so the dialer will skip checking for emails
+	function check_for_incoming_other(manual_chat_override)
 		{
-		if (typeof(xmlhttprequestcheckemail) == "undefined") 
+		if (typeof(xmlhttprequestcheckother) == "undefined") 
 			{
 			all_record = 'NO';
 			all_record_count=0;
-			var xmlhttprequestcheckemail=false;
-			if (!xmlhttprequestcheckemail && typeof XMLHttpRequest!='undefined')
+			var xmlhttprequestcheckother=false;
+			if (!xmlhttprequestcheckother && typeof XMLHttpRequest!='undefined')
 				{
-				xmlhttprequestcheckemail = new XMLHttpRequest();
+				xmlhttprequestcheckother = new XMLHttpRequest();
 				}
-			if (xmlhttprequestcheckemail) 
+			if (xmlhttprequestcheckother) 
 				{ 
 		
-				checkVDAI_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&orig_pass=" + orig_pass + "&campaign=" + campaign + "&ACTION=VDADcheckINCOMINGemail" + "&agent_log_id=" + agent_log_id;
+				checkVDAI_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&orig_pass=" + orig_pass + "&campaign=" + campaign + "&ACTION=VDADcheckINCOMINGother" + "&agent_log_id=" + agent_log_id;
 
-				// Add on all the email groups the user selected in order to pass them to the vdc_db_query script
-				for (var i = 0; i < incomingEMAILgroups.length; i++) {
-				    checkVDAI_query+="&inbound_email_groups[]="+incomingEMAILgroups[i];
-				}
+				if (!manual_chat_override)
+					{
+					// Add on all the email groups the user selected in order to pass them to the vdc_db_query script
+					for (var i = 0; i < incomingEMAILgroups.length; i++) 
+						{
+						checkVDAI_query+="&inbound_email_groups[]="+incomingEMAILgroups[i];
+						}
+					}
+				// Add on all the chat groups the user selected in order to pass them to the vdc_db_query script
+				for (var i = 0; i < incomingCHATgroups.length; i++) 
+					{
+				    checkVDAI_query+="&inbound_chat_groups[]="+incomingCHATgroups[i];
+					}
 
-				xmlhttprequestcheckemail.open('POST', 'vdc_db_query.php'); 
-				xmlhttprequestcheckemail.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-				xmlhttprequestcheckemail.send(checkVDAI_query); 
+				xmlhttprequestcheckother.open('POST', 'vdc_db_query.php'); 
+				xmlhttprequestcheckother.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+				xmlhttprequestcheckother.send(checkVDAI_query); 
 
-				xmlhttprequestcheckemail.onreadystatechange = function() 
+				xmlhttprequestcheckother.onreadystatechange = function() 
 					{ 
-					if (xmlhttprequestcheckemail.readyState == 4 && xmlhttprequestcheckemail.status == 200) 
+					if (xmlhttprequestcheckother.readyState == 4 && xmlhttprequestcheckother.status == 200) 
 						{
 						var check_incoming = null;
-						check_incoming = xmlhttprequestcheckemail.responseText;
-						// alert(checkVDAI_query);
-						//alert(xmlhttprequestcheckemail.responseText);
+						check_incoming = xmlhttprequestcheckother.responseText;
 						var check_VDIC_array=check_incoming.split("\n");
 						if (check_VDIC_array[0] == '1')
 							{
-						//	alert(xmlhttprequestcheckemail.responseText);
 							AutoDialWaiting = 0;
 							UpdatESettingSChecK = 1;
 
@@ -10192,7 +10375,21 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							VDIC_web_form_address = VICIDiaL_web_form_address;
 							VDIC_web_form_address_two = VICIDiaL_web_form_address_two;
 							VDIC_web_form_address_three = VICIDiaL_web_form_address_three;
-							document.getElementById("EmailAudioAlertFile").play();
+							CalL_AutO_LauncH			= VDIC_data_VDAC[3];
+							if (CalL_AutO_LauncH=='EMAIL')
+								{
+								document.vicidial_form.email_row_id.value= VDIC_data_VDAC[4];
+								document.getElementById("EmailAudioAlertFile").play();
+								}
+							else if (CalL_AutO_LauncH=='CHAT')
+								{
+								if (chat_enabled > 0)
+									{
+									document.images['CustomerChatImg'].src=image_customer_chat_ON.src;
+									document.getElementById("ChatAudioAlertFile").play();
+									document.vicidial_form.chat_id.value= VDIC_data_VDAC[4];
+									}
+								}
 							var VDIC_fronter='';
 
 							var VDIC_data_VDIG=check_VDIC_array[2].split("|");
@@ -10203,7 +10400,6 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							var VDCL_fronter_display	= VDIC_data_VDIG[3];
 							 VDCL_group_id				= VDIC_data_VDIG[4];
 							 CalL_ScripT_id				= VDIC_data_VDIG[5];
-							 CalL_AutO_LauncH			= 'EMAIL'; // FORCE EMAIL tab
 							 CalL_XC_a_Dtmf				= VDIC_data_VDIG[7];
 							 CalL_XC_a_NuMber			= VDIC_data_VDIG[8];
 							 CalL_XC_b_Dtmf				= VDIC_data_VDIG[9];
@@ -10305,8 +10501,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							VD_live_customer_call = 1;
 							VD_live_call_secondS = 0;
 							customer_sec = 0;
-							CheckDEADcallON = 1; // Do this to keep the interface from instantly reading an email as a hangup
-							currently_in_email = 1; // Do this to block channel checks (or anything else) that would indicate a completed call
+							currently_in_email_or_chat = 1; // Do this to block channel checks (or anything else) that would indicate a completed call
 
 							// INSERT VICIDIAL_LOG ENTRY FOR THIS CALL PROCESS
 						//	DialLog("start");
@@ -10774,6 +10969,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								{
 								EmailContentsLoad();
 								}
+							// JOEJ 060514 - new for chat feature
+							if (chat_enabled > 0)
+								{
+								CustomerChatContentsLoad('', '', manual_chat_override);
+								}
 							if (CalL_AutO_LauncH == 'SCRIPT')
 								{
 								if (delayed_script_load == 'YES')
@@ -10789,6 +10989,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							if (CalL_AutO_LauncH == 'EMAIL')
 								{
 								EmailPanelToFront();
+								}
+							if (CalL_AutO_LauncH == 'CHAT')
+								{
+								CustomerChatPanelToFront();
 								}
 
 							if (CalL_AutO_LauncH == 'WEBFORM')
@@ -10825,8 +11029,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								alert(" <?php echo _QXZ("Incoming:"); ?> " + dial_display_number + "\n <?php echo _QXZ("Group"); ?>- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter);
 								}
 							}
-							xmlhttprequestcheckemail = undefined;
-							delete xmlhttprequestcheckemail;
+							xmlhttprequestcheckother = undefined;
+							delete xmlhttprequestcheckother;
 						}
 					}
 				}
@@ -11068,6 +11272,13 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if (customer_sec < 1)
 			{customer_sec = VD_live_call_secondS;}
 		var process_post_hangup=0;
+
+		// Force chat to end, if exists.  Uses hangup_override value in EndChat function to end if chat does not exist.
+		if (document.getElementById('CustomerChatIFrame') && typeof document.getElementById('CustomerChatIFrame').contentWindow.EndChat=='function')
+		{
+			document.getElementById('CustomerChatIFrame').contentWindow.EndChat('Hangup');
+		}
+
 		if ( (RedirecTxFEr < 1) && ( (MD_channel_look==1) || (auto_dial_level == 0) ) )
 			{
 			MD_channel_look=0;
@@ -11739,7 +11950,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				else
 					{
 					move_on=0;
-					alert_box("<?php echo _QXZ("YOU MUST BE PAUSED TO SEARCH FOR A LEAD"); ?>");
+					alert_box("<?php echo _QXZ("YOU MUST BE PAUSED TO SEARCH FOR A LEAD"); ?>: " + inOUT + "|" + agent_lead_search);
 					}
 				}
 			}
@@ -11990,7 +12201,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		CheckDEADcallON=0;
 		CheckDEADcallCOUNT=0;
 		customer_sec=0;
-		currently_in_email=0;
+		currently_in_email_or_chat=0;
 		customer_3way_hangup_counter=0;
 		customer_3way_hangup_counter_trigger=0;
 		waiting_on_dispo=1;
@@ -12159,6 +12370,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					document.vicidial_form.called_count.value	='';
 					document.vicidial_form.call_notes.value		='';
 					document.vicidial_form.call_notes_dispo.value ='';
+					document.vicidial_form.email_row_id.value		='';
+					document.vicidial_form.chat_id.value		='';
 					document.vicidial_form.dispo_comments.value ='';
 					document.vicidial_form.cbcomment_comments.value ='';
 					VDCL_group_id = '';
@@ -12307,6 +12520,14 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						{document.getElementById("ScriptContents").innerHTML = '';}
 					parked_hangup='0';
 
+					// Set customer chat tab to OFF, just to be sure
+					if (chat_enabled > 0)
+						{
+						document.images['CustomerChatImg'].src=image_customer_chat_OFF.src;
+						}
+					CustomerChatContentsLoad();
+					EmailContentsLoad();
+	
 					AgentDispoing = 0;
 
 					if ( (alt_number_dialing == 'SELECTED') || (alt_number_dialing == 'SELECTED_TIMER_ALT') || (alt_number_dialing == 'SELECTED_TIMER_ADDR3') )
@@ -12854,8 +13075,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			// Added to get email counts so inbound emails will come in - this is normally done in CloserSelectContent_select, which is bypassed if agents aren't allowed to select ingroups
 			var loop_ct = 0;
 			EMAILgroupCOUNT = 0;
+			CHATgroupCOUNT = 0;
 			PHONEgroupCOUNT = 0;
 			incomingEMAILS = 0;
+			incomingCHATS = 0;
 			while (loop_ct < INgroupCOUNT)
 				{
 				if (VARingroup_handlers[loop_ct]=="EMAIL") 
@@ -12863,6 +13086,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					incomingEMAILgroups[incomingEMAILS]=VARingroups[loop_ct];
 					EMAILgroupCOUNT++;
 					incomingEMAILS++;
+					}
+				else if (VARingroup_handlers[loop_ct]=="CHAT") 
+					{
+					incomingCHATgroups[incomingCHATS]=VARingroups[loop_ct];
+					CHATgroupCOUNT++;
+					incomingCHATS++;
 					}
 				else
 					{
@@ -12911,12 +13140,16 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			{
 			var loop_ct = 0;
 			EMAILgroupCOUNT = 0;
+			CHATgroupCOUNT = 0;
 			PHONEgroupCOUNT = 0;
 			var CSCcolumn = '';
 			var live_CSC_HTML_ADD = '';
 			var live_CSC_HTML_DELETE = '';
 			var live_CSC_LIST_value = " ";
 			incomingEMAILS = 0;
+			incomingCHATS = 0;
+			incomingEMAILgroups = new Array();
+			incomingCHATgroups = new Array();
 			while (loop_ct < INgroupCOUNT)
 				{
 				var regCSL = new RegExp(" " + VARingroups[loop_ct] + " ","ig");
@@ -12935,6 +13168,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						incomingEMAILgroups[incomingEMAILS]=VARingroups[loop_ct];
 						EMAILgroupCOUNT++;
 						incomingEMAILS++;
+						}
+					else if (VARingroup_handlers[loop_ct]=="CHAT") 
+						{
+						incomingCHATgroups[incomingCHATS]=VARingroups[loop_ct];
+						CHATgroupCOUNT++;
+						incomingCHATS++;
 						}
 					else
 						{
@@ -15059,6 +15298,7 @@ function phone_number_format(formatphone) {
 		{
 		if (EMLrefresh=='YES')
 			{button_click_log = button_click_log + "" + SQLdate + "-----EmailContentsLoad---|";}
+		var email_row_id = document.vicidial_form.email_row_id.value;
 		var form_list_id = document.vicidial_form.list_id.value;
 		var form_entry_list_id = document.vicidial_form.entry_list_id.value;
 		if (form_entry_list_id.length > 2)
@@ -15066,6 +15306,41 @@ function phone_number_format(formatphone) {
 		document.getElementById('vcEmailIFrame').src='./vdc_email_display.php?lead_id=' + document.vicidial_form.lead_id.value + '&list_id=' + form_list_id + '&user=' + user + '&pass=' + orig_pass + '&campaign=' + campaign + '&server_ip=' + server_ip + '&session_id=' + '&uniqueid=' + document.vicidial_form.uniqueid.value + '&stage=DISPLAY' + "&campaign=" + campaign + "&phone_login=" + phone_login + "&original_phone_login=" + original_phone_login +"&phone_pass=" + phone_pass + "&fronter=" + fronter + "&closer=" + user + "&group=" + group + "&channel_group=" + group + "&SQLdate=" + SQLdate + "&epoch=" + UnixTime + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&customer_zap_channel=" + lastcustchannel + "&customer_server_ip=" + lastcustserverip +"&server_ip=" + server_ip + "&SIPexten=" + extension + "&session_id=" + session_id + "&phone=" + document.vicidial_form.phone_number.value + "&parked_by=" + document.vicidial_form.lead_id.value +"&dispo=" + LeaDDispO + '' +"&dialed_number=" + dialed_number + '' +"&dialed_label=" + dialed_label + '' +"&camp_script=" + campaign_script + '' +"&in_script=" + CalL_ScripT_id + '' +"&script_width=" + script_width + '' +"&script_height=" + script_height + '' +"&fullname=" + LOGfullname + '' +"&agent_email=" + LOGemail + '' +"&recording_filename=" + recording_filename + '' +"&recording_id=" + recording_id + '' +"&user_custom_one=" + VU_custom_one + '' +"&user_custom_two=" + VU_custom_two + '' +"&user_custom_three=" + VU_custom_three + '' +"&user_custom_four=" + VU_custom_four + '' +"&user_custom_five=" + VU_custom_five + '' +"&preset_number_a=" + CalL_XC_a_NuMber + '' +"&preset_number_b=" + CalL_XC_b_NuMber + '' +"&preset_number_c=" + CalL_XC_c_NuMber + '' +"&preset_number_d=" + CalL_XC_d_NuMber + '' +"&preset_number_e=" + CalL_XC_e_NuMber + '' +"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +"&did_id=" + did_id + '' +"&did_extension=" + did_extension + '' +"&did_pattern=" + did_pattern + '' +"&did_description=" + did_description + '' +"&closecallid=" + closecallid + '' +"&xfercallid=" + xfercallid + '' + "&agent_log_id=" + agent_log_id + "&call_id=" + LasTCID + "&user_group=" + VU_user_group + '' + "&did_custom_one=" + did_custom_one + "&did_custom_two=" + did_custom_two + "&did_custom_three=" + did_custom_three + "&did_custom_four=" + did_custom_four + "&did_custom_five=" + did_custom_five + "&web_vars=" + LIVE_web_vars + '';
 		form_list_id = '';
 		form_entry_list_id = '';
+		}
+
+// ################################################################################
+// Refresh the agent/customer CHAT content
+	function CustomerChatContentsLoad(clickMute, CHTrefresh, email_invite_lead_id)
+		{
+		if (CHTrefresh=='YES')
+			{button_click_log = button_click_log + "" + SQLdate + "-----CustomerChatContentsLoad---|";}		var form_list_id = document.vicidial_form.list_id.value;
+		var form_entry_list_id = document.vicidial_form.entry_list_id.value;
+		var form_chat_id = document.vicidial_form.chat_id.value;
+		if (form_entry_list_id.length > 2)
+			{form_list_id = form_entry_list_id}
+		document.getElementById('CustomerChatIFrame').src='./vdc_chat_display.php?lead_id=' + document.vicidial_form.lead_id.value + '&list_id=' + form_list_id + '&user=' + user + '&pass=' + orig_pass + '&campaign=' + campaign + '&chat_id=' + form_chat_id + '&dial_method=' + dial_method + '&clickmute=' + clickMute + '&email_invite_lead_id=' + email_invite_lead_id + '&server_ip=' + server_ip + '&session_id=' + '&uniqueid=' + document.vicidial_form.uniqueid.value + '&stage=DISPLAY' + "&campaign=" + campaign + "&phone_login=" + phone_login + "&original_phone_login=" + original_phone_login +"&phone_pass=" + phone_pass + "&fronter=" + fronter + "&closer=" + user + "&group=" + group + "&channel_group=" + group + "&SQLdate=" + SQLdate + "&epoch=" + UnixTime + "&uniqueid=" + document.vicidial_form.uniqueid.value + "&customer_zap_channel=" + lastcustchannel + "&customer_server_ip=" + lastcustserverip +"&server_ip=" + server_ip + "&SIPexten=" + extension + "&session_id=" + session_id + "&phone=" + document.vicidial_form.phone_number.value + "&parked_by=" + document.vicidial_form.lead_id.value +"&dispo=" + LeaDDispO + '' +"&dialed_number=" + dialed_number + '' +"&dialed_label=" + dialed_label + '' +"&camp_script=" + campaign_script + '' +"&in_script=" + CalL_ScripT_id + '' +"&script_width=" + script_width + '' +"&script_height=" + script_height + '' +"&fullname=" + LOGfullname + '' +"&recording_filename=" + recording_filename + '' +"&recording_id=" + recording_id + '' +"&user_custom_one=" + VU_custom_one + '' +"&user_custom_two=" + VU_custom_two + '' +"&user_custom_three=" + VU_custom_three + '' +"&user_custom_four=" + VU_custom_four + '' +"&user_custom_five=" + VU_custom_five + '' +"&preset_number_a=" + CalL_XC_a_NuMber + '' +"&preset_number_b=" + CalL_XC_b_NuMber + '' +"&preset_number_c=" + CalL_XC_c_NuMber + '' +"&preset_number_d=" + CalL_XC_d_NuMber + '' +"&preset_number_e=" + CalL_XC_e_NuMber + '' +"&preset_dtmf_a=" + CalL_XC_a_Dtmf + '' +"&preset_dtmf_b=" + CalL_XC_b_Dtmf + '' +"&did_id=" + did_id + '' +"&did_extension=" + did_extension + '' +"&did_pattern=" + did_pattern + '' +"&did_description=" + did_description + '' +"&closecallid=" + closecallid + '' + "&xfercallid=" + xfercallid + '' + "&chat_group_id=" + VDCL_group_id + '' + "&agent_log_id=" + agent_log_id + "&call_id=" + LasTCID + "&user_group=" + VU_user_group + '' +"&web_vars=" + LIVE_web_vars + '';
+		form_list_id = '';
+		form_chat_id = '';
+		form_entry_list_id = '';
+		// CustomerChatPanelToFront();
+		}
+
+// ################################################################################
+// Refresh the agent/manager CHAT content
+	function InternalChatContentsLoad(ICHrefresh)
+		{
+		if (ICHrefresh=='YES')
+			{button_click_log = button_click_log + "" + SQLdate + "-----InternalChatContentsLoad---|";}		var form_list_id = document.vicidial_form.list_id.value;
+		var form_list_id = document.vicidial_form.list_id.value;
+		var form_entry_list_id = document.vicidial_form.entry_list_id.value;
+		var form_chat_id = document.vicidial_form.chat_id.value;
+		if (form_entry_list_id.length > 2)
+			{form_list_id = form_entry_list_id}
+		document.getElementById('InternalChatIFrame').src='./agc_agent_manager_chat_interface.php?lead_id=' + document.vicidial_form.lead_id.value + '&list_id=' + form_list_id + '&user=' + user ;
+		form_list_id = '';
+		form_chat_id = '';
+		form_entry_list_id = '';
+		InternalChatPanelToFront();
 		}
 
 
@@ -15501,6 +15776,9 @@ function phone_number_format(formatphone) {
 			hideDiv('ScriptRefresH');
 			hideDiv('EmailPanel');
 			hideDiv('EmailRefresH');
+			hideDiv('CustomerChatPanel');
+			hideDiv('CustomerChatRefresH');
+			hideDiv('InternalChatPanel');
 			hideDiv('FormPanel');
 			hideDiv('FormRefresH');
 			hideDiv('DispoSelectBox');
@@ -15547,6 +15825,10 @@ function phone_number_format(formatphone) {
 				{hideDiv('callsinqueuedisplay');}
 			if (agentonly_callbacks != '1')
 				{hideDiv('CallbacksButtons');}
+			if (email_enabled < 1)
+				{hideDiv('AgentStatusEmails');}
+			if (allow_alerts < 1)
+				{hideDiv('AgentAlertSpan');}
 			if (allow_alerts < 1)
 				{hideDiv('AgentAlertSpan');}
 		//	if ( (agentcall_manual != '1') && (starting_dial_level > 0) )
@@ -15784,7 +16066,7 @@ function phone_number_format(formatphone) {
 					{TerritorySelect_submit();}
 				}
 			if (logout_stop_timeouts==1)	{WaitingForNextStep=1;}
-			if ( (custchannellive < customer_gone_seconds) && (lastcustchannel.length > 3) && (no_empty_session_warnings < 1) && (document.vicidial_form.lead_id.value != '') && (currently_in_email==0) ) 
+			if ( (custchannellive < customer_gone_seconds) && (lastcustchannel.length > 3) && (no_empty_session_warnings < 1) && (document.vicidial_form.lead_id.value != '') && (currently_in_email_or_chat==0) ) 
 				{CustomerChanneLGone();}
 		//	document.getElementById("debugbottomspan").innerHTML = "custchannellive: " + custchannellive + " lastcustchannel.length: " + lastcustchannel.length + " no_empty_session_warnings: " + no_empty_session_warnings + " lead_id: |" + document.vicidial_form.lead_id.value + "|";
 			if ( (custchannellive < -10) && (lastcustchannel.length > 3) ) {ReChecKCustoMerChaN();}
@@ -15831,6 +16113,10 @@ function phone_number_format(formatphone) {
 					CalLBacKsCounTCheck();
 					CB_count_check=0;
 					}
+				if (chat_enabled=='1') // JOEJ - if chat is enabled, check if manager has sent message.
+					{
+					InternalChatsCheck();
+					}
 				if ( (even > 0) && (agent_display_dialable_leads > 0) )
 					{
 					DiaLableLeaDsCounT();
@@ -15858,7 +16144,7 @@ function phone_number_format(formatphone) {
 					VD_live_call_secondS++;
 					document.vicidial_form.SecondS.value		= VD_live_call_secondS;
 					document.getElementById("SecondSDISP").innerHTML = VD_live_call_secondS;
-					if (CheckDEADcallON > 0)
+					if (CheckDEADcallON > 0 && currently_in_email_or_chat < 1)
 						{
 						CheckDEADcallCOUNT++;
 					//	document.getElementById("debugbottomspan").innerHTML = "DEAD CALL SECONDS " + CheckDEADcallCOUNT;
@@ -16301,6 +16587,10 @@ function phone_number_format(formatphone) {
 			{
 			divref = document.getElementById(divvar).style;
 			divref.visibility = 'hidden';
+			if (divvar == 'InternalChatPanel') // Clear the manager chat panel to prevent incoming messages from immediately being marked as read
+				{
+				document.getElementById('InternalChatIFrame').src='./agc_agent_manager_chat_interface.php?user='+user;
+				}
 			}
 		}
 	function clearDiv(divvar)
@@ -16526,6 +16816,9 @@ function phone_number_format(formatphone) {
 		hideDiv('FormRefresH');
 		hideDiv('EmailPanel');
 		hideDiv('EmailRefresH');
+		hideDiv('CustomerChatPanel');
+		hideDiv('CustomerChatRefresH');
+		hideDiv('InternalChatPanel');
 		showDiv('MainPanel');
 		ShoWGenDerPulldown();
 
@@ -16598,6 +16891,9 @@ function phone_number_format(formatphone) {
 		hideDiv('FormRefresH');
 		hideDiv('EmailPanel');
 		hideDiv('EmailRefresH');
+		hideDiv('CustomerChatPanel');
+		hideDiv('CustomerChatRefresH');
+		hideDiv('InternalChatPanel');
 		document.getElementById("MainTable").style.backgroundColor="<?php echo $SCRIPT_COLOR ?>";
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $SCRIPT_COLOR ?>";
 		panel_bgcolor='<?php echo $SCRIPT_COLOR ?>';
@@ -16625,6 +16921,9 @@ function phone_number_format(formatphone) {
 			}
 		hideDiv('EmailPanel');
 		hideDiv('EmailRefresH');
+		hideDiv('CustomerChatPanel');
+		hideDiv('CustomerChatRefresH');
+		hideDiv('InternalChatPanel');
 		document.getElementById("MainTable").style.backgroundColor="<?php echo $FORM_COLOR ?>";
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $FORM_COLOR ?>";
 		panel_bgcolor='<?php echo $FORM_COLOR ?>';
@@ -16639,8 +16938,13 @@ function phone_number_format(formatphone) {
 		var CBFPheight = '<?php echo $QLheight ?>px';
 		document.getElementById("CallbacksButtons").style.top = CBFPheight;
 		document.getElementById("CallbacksButtons").style.left = '340px';
+		hideDiv('FormPanel');
+		hideDiv('FormRefresH');
 		showDiv('EmailPanel');
 		showDiv('EmailRefresH');
+		hideDiv('CustomerChatPanel');
+		hideDiv('CustomerChatRefresH');
+		hideDiv('InternalChatPanel');
 		if ( (OtherTab == '0') && (comments_all_tabs == 'ENABLED') )
 			{
 			OtherTab='1';
@@ -16649,6 +16953,49 @@ function phone_number_format(formatphone) {
 				{document.vicidial_form.other_tab_comments.value = document.vicidial_form.comments.value}
 			showDiv('OtherTabCommentsSpan');
 			}
+		document.getElementById("MainTable").style.backgroundColor="<?php echo $FORM_COLOR ?>";
+		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $FORM_COLOR ?>";
+		panel_bgcolor='<?php echo $FORM_COLOR ?>';
+	//	document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
+
+		HidEGenDerPulldown();
+		}
+	function CustomerChatPanelToFront(CPFclick)
+		{
+		if (CPFclick=='YES')
+			{button_click_log = button_click_log + "" + SQLdate + "-----CustomerChatPanelToFront---|";}
+		var CBFPheight = '<?php echo $QLheight ?>px';
+		document.getElementById("CallbacksButtons").style.top = CBFPheight;
+		document.getElementById("CallbacksButtons").style.left = '360px';
+		hideDiv('FormPanel');
+		hideDiv('FormRefresH');
+		hideDiv('EmailPanel');
+		hideDiv('EmailRefresH');
+		showDiv('CustomerChatPanel');
+		showDiv('CustomerChatRefresH');
+		hideDiv('InternalChatPanel');
+		document.getElementById("MainTable").style.backgroundColor="<?php echo $FORM_COLOR ?>";
+		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $FORM_COLOR ?>";
+		panel_bgcolor='<?php echo $FORM_COLOR ?>';
+	//	document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
+
+		HidEGenDerPulldown();
+		}
+
+	function InternalChatPanelToFront(IPFclick)
+		{
+		if (IPFclick=='YES')
+			{button_click_log = button_click_log + "" + SQLdate + "-----InternalChatPanelToFront---|";}
+		var CBFPheight = '<?php echo $QLheight ?>px';
+		document.getElementById("CallbacksButtons").style.top = CBFPheight;
+		document.getElementById("CallbacksButtons").style.left = '360px';
+		hideDiv('FormPanel');
+		hideDiv('FormRefresH');
+		hideDiv('EmailPanel');
+		hideDiv('EmailRefresH');
+		hideDiv('CustomerChatPanel');
+		hideDiv('CustomerChatRefresH');
+		showDiv('InternalChatPanel');
 		document.getElementById("MainTable").style.backgroundColor="<?php echo $FORM_COLOR ?>";
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $FORM_COLOR ?>";
 		panel_bgcolor='<?php echo $FORM_COLOR ?>';
@@ -16749,14 +17096,23 @@ $zi=2;
     <table border="0" bgcolor="#FFFFFF" width="<?php echo $MNwidth ?>px" height="30px">
     <tr valign="top" align="left">
     <td align="left" width="115px"><a href="#" onclick="MainPanelToFront('NO','YES');"><img src="./images/<?php echo _QXZ("vdc_tab_vicidial.gif"); ?>" alt="MAIN" width="115px" height="30px" border="0" /></a></td>
-    <td align="left" width="90px"><a href="#" onclick="ScriptPanelToFront('YES');"><img src="./images/<?php echo _QXZ("vdc_tab_script.gif"); ?>" alt="SCRIPT" width="90px" height="30px" border="0" /></a></td>
+    <td align="left" width="67px"><a href="#" onclick="ScriptPanelToFront('YES');"><img src="./images/<?php echo _QXZ("vdc_tab_script.gif"); ?>" alt="SCRIPT" width="67px" height="30px" border="0" /></a></td>
 	<?php if ($custom_fields_enabled > 0)
     {echo "<td align=\"left\" width=\"67px\"><a href=\"#\" onclick=\"FormPanelToFront('YES');\"><img src=\"./images/"._QXZ("vdc_tab_form.gif")."\" alt=\"FORM\" width=\"67px\" height=\"30px\" border=\"0\" /></a></td>\n";}
 	?>
 	<?php if ($email_enabled > 0)
     {echo "<td align=\"left\" width=\"67px\"><a href=\"#\" onclick=\"EmailPanelToFront('YES');\"><img src=\"./images/"._QXZ("vdc_tab_email.gif")."\" alt=\"EMAIL\" width=\"67px\" height=\"30px\" border=\"0\" /></a></td>\n";}
 	?>
-    <td width="<?php echo $HSwidth ?>px" valign="middle" align="center"><font class="body_text">&nbsp; <span id="status"><?php echo _QXZ("LIVE"); ?></span>&nbsp; &nbsp; <?php echo _QXZ("session ID:"); ?> <span id="sessionIDspan"></span>&nbsp; &nbsp;<span id="AgentStatusCalls"></span></font></td>
+	<?php if ($chat_enabled > 0)
+		{
+		# INTERNAL CHAT
+		echo "<td align=\"left\" width=\"67px\"><a href=\"#\" onclick=\"InternalChatContentsLoad('YES');\"><img src=\"./images/"._QXZ("vdc_tab_chat_internal.gif")."\" name='InternalChatImg' alt=\"CHAT\" width=\"67px\" height=\"30px\" border=\"0\"/></a></td>\n";
+
+		# CUSTOMER CHAT
+		echo "<td align=\"left\" width=\"67px\"><a href=\"#\" onclick=\"CustomerChatPanelToFront('1', 'YES');\"><img src=\"./images/"._QXZ("vdc_tab_chat_customer.gif")."\" name='CustomerChatImg' alt=\"CHAT\" width=\"67px\" height=\"30px\" border=\"0\"/></a></td>\n";
+		}
+	?>
+    <td width="<?php echo $HSwidth ?>px" valign="middle" align="center"><font class="body_tiny">&nbsp; <span id="status"><?php echo _QXZ("LIVE"); ?></span>&nbsp; &nbsp; <?php echo _QXZ("session ID:"); ?> <span id="sessionIDspan"></span></font><br><font class="body_text">&nbsp; &nbsp;<span id="AgentStatusCalls"></span>&nbsp; &nbsp;<span id="AgentStatusEmails"></span></font></td>
     <td width="109px"><img src="./images/<?php echo _QXZ("agc_live_call_OFF.gif"); ?>" name="livecall" alt="Live Call" width="109px" height="30px" border="0" /></td>
     </tr>
  </table>
@@ -16861,6 +17217,8 @@ $zi=2;
     <input type="hidden" name="uniqueid" id="uniqueid" value="" />
     <input type="hidden" name="callserverip" id="callserverip" value="" />
     <input type="hidden" name="SecondS" id="SecondS" value="" />
+    <input type="hidden" name="email_row_id" id="email_row_id" value="" />
+    <input type="hidden" name="chat_id" id="chat_id" value="" />
 	<span class="text_input" id="MainPanelCustInfo">
     <table><tr>
     <td align="right"></td>
@@ -17266,6 +17624,23 @@ if ($agent_display_dialable_leads > 0)
 	?>
     <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="EmailContents"><iframe src="./vdc_email_display.php?lead_id=&list_id=&stage=WELCOME" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="vcEmailIFrame" name="vcEmailIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:<?php $zi++; echo $zi ?>"> </iframe></div></font></td></tr></table>
 </span>
+
+<span style="position:absolute;left:154px;top:<?php echo $SFheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="CustomerChatPanel">
+	<?php
+	if ($webphone_location == 'bar')
+        {echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+	?>
+    <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="ChatContents"><iframe src="./vdc_chat_display.php?lead_id=&list_id=&dial_method=<?php echo $dial_method; ?>&stage=WELCOME&server_ip=<?php echo $server_ip; ?>&user=<?php echo $VD_login.$VARchatgroupsURL ?>" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="CustomerChatIFrame" name="CustomerChatIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:<?php $zi++; echo $zi ?>"> </iframe></div></font></td></tr></table>
+</span>
+
+<span style="position:absolute;left:154px;top:<?php echo $SFheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="InternalChatPanel">
+	<?php
+	if ($webphone_location == 'bar')
+        {echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+	?>
+    <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="InternalChatContents"><iframe src="./agc_agent_manager_chat_interface.php?user=<?php echo $VD_login; ?>" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="InternalChatIFrame" name="InternalChatIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:<?php $zi++; echo $zi ?>"> </iframe></div></font></td></tr></table>
+</span>
+
 
 <span style="position:absolute;left:<?php $tempAMwidth = ($AMwidth - 15); echo $tempAMwidth ?>px;top:<?php echo $SRheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="FormRefresH">
 <a href="#" onclick="FormContentsLoad('YES')"><font class="body_small"><?php echo _QXZ("reset form"); ?></font></a>

@@ -34,6 +34,7 @@
 # 141114-1702 - Fixed issue #800
 # 141229-1829 - Added code for on-the-fly language translations display
 # 150701-1250 - Modified mysqli_error() to mysqli_connect_error() where appropriate
+# 151211-1458 - Added chat visibility
 #
 
 $startMS = microtime();
@@ -69,7 +70,7 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,level_8_disable_add,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,level_8_disable_add,enable_languages,language_method,allow_chats FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -83,6 +84,7 @@ if ($qm_conf_ct > 0)
 	$SSlevel_8_disable_add =			$row[4];
 	$SSenable_languages =				$row[5];
 	$SSlanguage_method =				$row[6];
+	$SSallow_chats =					$row[7];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -256,6 +258,28 @@ while ($i < $agents_to_print)
 	$i++;
 	}
 
+if ($SSallow_chats > 0)
+	{
+	$stmt="SELECT chat_id,chat_start_time,status,chat_creator,group_id,lead_id from vicidial_live_chats where status='LIVE' and chat_creator='$user'";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$active_chats=mysqli_num_rows($rslt);
+	if($active_chats>0) 
+		{
+		$Achats="";
+		while ($row=mysqli_fetch_row($rslt)) 
+			{
+			$chat_id=$row[0];
+			$Achats.="$chat_id, ";
+			}
+		$Achats=preg_replace('/, $/', "", $Achats);
+		}
+	else 
+		{
+		$Achats=_QXZ("NONE");
+		}
+	}
+
 $stmt="SELECT event_date,status,ip_address from vicidial_timeclock_status where user='" . mysqli_real_escape_string($link, $user) . "';";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
@@ -313,7 +337,7 @@ while ($i < $groups_to_print)
 <html>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
-<title>ADMINISTRATION: User Status
+<title><?php echo _QXZ("ADMINISTRATION: User Status"); ?>
 <?php
 
 
@@ -862,6 +886,14 @@ if ($agents_to_print > 0)
 else
 	{
 	echo _QXZ("Agent is not logged in")."\n<BR>";
+	}
+
+if ($SSallow_chats > 0)
+	{
+	echo "<BR>\n";
+	echo "<TABLE CELLPADDING=0 CELLSPACING=0>";
+	echo "<TR><TD ALIGN=RIGHT>"._QXZ("Currently active in chats").":</TD><TD ALIGN=LEFT> &nbsp; $Achats</TD></TR>\n";
+	echo "</TABLE>\n<BR>\n";
 	}
 
 echo "\n<BR>";

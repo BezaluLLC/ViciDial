@@ -103,9 +103,10 @@
 # 150804-0919 - Added whisper extensions
 # 151031-0931 - Added usacan_phone_dialcode_fix feature at timeclock-end-of-day, added -lstn-buffer option
 # 151204-0639 - Added phones-unavail_dialplan_fwd_exten options
+# 151211-1509 - Added launching of the AST_chat_timeout_cron.pl process on the voicemail server
 #
 
-$build = '151204-0639';
+$build = '151211-1509';
 
 $DB=0; # Debug flag
 
@@ -1360,7 +1361,7 @@ if ($timeclock_end_of_day_NOW > 0)
 ################################################################################
 
 ##### Get the settings from system_settings #####
-$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename FROM system_settings;";
+$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats FROM system_settings;";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1378,8 +1379,9 @@ if ($sthArows > 0)
 	$SScall_menu_qualify_enabled =		$aryA[7];
 	$SSallow_voicemail_greeting =		$aryA[8];
 	$SSreload_timestamp =				$aryA[9];
-	$meetme_enter_login_filename =	$aryA[10];
+	$meetme_enter_login_filename =		$aryA[10];
 	$meetme_enter_leave3way_filename =	$aryA[11];
+	$SSallow_chats =					$aryA[12];
 	}
 $sthA->finish();
 if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
@@ -3642,6 +3644,12 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 			$upload_audio = 1;
 			$upload_flag = '--upload';
 			}
+		}
+	### start the chat timeout process
+	if ($SSallow_chats > 0) 
+		{
+		if ($DB) {print "running chat timeout process...\n";}
+		`/usr/bin/screen -d -m -S ChatTimeout $PATHhome/AST_chat_timeout_cron.pl 2>/dev/null 1>&2`;
 		}
 	}
 

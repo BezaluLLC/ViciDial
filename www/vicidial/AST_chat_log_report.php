@@ -3,7 +3,7 @@
 # 
 # Copyright (C) 2015  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
 #
-# This is the report page where you can view report informatio of any of the dialer's chats.  The web page will 
+# This is the report page where you can view report information of any of the dialer's chats.  The web page will 
 # display the information about the chat, including the start time and participants, and will also provide links 
 # allowing you to download transcripts of any chat you wish, based on your account permissions.
 #
@@ -988,5 +988,3 @@ else
 
 	exit;
 ?>
-
-
