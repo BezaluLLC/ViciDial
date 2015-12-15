@@ -30023,7 +30023,7 @@ if ($ADD==31111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("CallerID URL").": </td><td align=left><input type=text name=local_web_callerID_URL size=40 maxlength=255 value=\"$row[36]\">$NWB#phones-local_web_callerID_URL$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent Default URL").": </td><td align=left><input type=text name=agent_web_URL size=40 maxlength=255 value=\"$row[37]\">$NWB#phones-agent_web_URL$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("NVA Call URL").": </td><td align=left><input type=text name=nva_call_url size=40 maxlength=255 value=\"$row[90]\">$NWB#phones-nva_call_url$NWE</td></tr>\n";
+		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("NVA Call URL").": </td><td align=left><input type=text name=nva_call_url size=40 maxlength=2000 value=\"$row[90]\">$NWB#phones-nva_call_url$NWE</td></tr>\n";
 		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("NVA Search Method").": </td><td align=left><input type=text name=nva_search_method size=20 maxlength=40 value=\"$row[91]\">$NWB#phones-nva_search_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("NVA Error Filename").": </td><td align=left colspan=3><input type=text name=nva_error_filename id=nva_error_filename size=40 maxlength=255 value=\"$row[92]\"> <a href=\"javascript:launch_chooser('nva_error_filename','date',1200);\">"._QXZ("audio chooser")."</a> $NWB#phones-nva_error_filename$NWE</td></tr>\n";
 

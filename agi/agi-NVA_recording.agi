@@ -48,6 +48,7 @@
 # 141124-2309 - Fixed Fhour variable bug
 # 150915-1824 - Added recording ID play and filename options
 # 151211-0932 - Added phone search and phone NVA URL features
+# 151214-2148 - Added more variables to be used by nva url feature
 #
 
 &get_time_now;
@@ -316,75 +317,6 @@ if ($search_phone =~ /Y/)
 if ( ( (length($lead_id)<1) || ($lead_id < 1) ) && ($search_lead_id !~ /NOTFOUND/) )
 	{$lead_id = $search_lead_id;}
 
-if ( ($phone_url =~ /Y/) && (length($nva_call_url) > 8) )
-	{
-	### first, find curl binary
-	$curlbin = '';
-	if ( -e ('/bin/curl')) {$curlbin = '/bin/curl';}
-	else 
-		{
-		if ( -e ('/usr/bin/curl')) {$curlbin = '/usr/bin/curl';}
-		else 
-			{
-			if ( -e ('/usr/local/bin/curl')) {$curlbin = '/usr/local/bin/curl';}
-			else
-				{
-				if ($AGILOG) {$agi_string = "ERROR: cannot do nva URL, curl binary not found";   &agi_output;}
-				}
-			}
-		}
-	if ( (length($curlbin) > 4) && ($nva_call_url =~ /http/i) )
-		{
-		$nva_call_url =~ s/^VAR|^ //gi;
-		$nva_call_url =~ s/--A--phone_number--B--/$temp_phone/gi;
-		$nva_call_url =~ s/--A--uniqueid--B--/$unique_id/gi;
-		$nva_call_url =~ s/--A--lead_id--B--/$search_lead_id/gi;
-		$nva_call_url =~ s/--A--extension--B--/$accountcode/gi;
-		$nva_call_url =~ s/--A--channel--B--/$channel/gi;
-		$nva_call_url =~ s/--A--server_ip--B--/$VARserver_ip/gi;
-		$nva_call_url =~ s/&/\\&/gi;
-		$nva_call_url =~ s/ /+/gi;
-
-		### insert a new url log entry
-		$SQL_log = "$nva_call_url";
-		$SQL_log =~ s/;|\||\\//gi;
-		$stmtA = "INSERT INTO vicidial_url_log SET uniqueid='$unique_id',url_date=NOW(),url_type='nva_phone',url='$SQL_log',url_response='';";
-		$affected_rows = $dbhA->do($stmtA);
-		$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
-		$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		if ($sthArows > 0)
-			{
-			@aryA = $sthA->fetchrow_array;
-			$url_id = $aryA[0];
-			}
-		$sthA->finish();
-		my $secW = time();
-
-		@curl_output = `$curlbin $nva_call_url`;
-
-		my $secY = time();
-		my $response_sec = ($secY - $secW);
-
-		$k=0;
-		$full_output='';
-		foreach (@curl_output)
-			{
-			$full_output_raw .= $curl_output[$k];
-			$k++;
-			}
-		$full_output = $full_output_raw;
-		$full_output =~ s/\D//gi;
-		### update url log entry
-		$full_output_raw =~ s/;|\||\\//gi;
-		$stmtA = "UPDATE vicidial_url_log SET url_response='$full_output_raw|$full_output',response_sec='$response_sec' where url_log_id='$url_id';";
-		$affected_rows = $dbhA->do($stmtA);
-
-		if ($AGILOG) {$agi_string = "phone NVA URL response: |$search_lead_id|$full_output|$nva_call_url|$affected_rows|";   &agi_output;}
-		}
-	}
-
 
 ### if set to record this call, start recording ###
 if ($record_call =~ /Y/)
@@ -428,9 +360,168 @@ if ($record_call =~ /Y/)
 		{
 		$AGI->exec("Monitor","wav,/var/spool/asterisk/monitor/MIX/$filename"); 
 		}
-
 	}
 
+if ( ($phone_url =~ /Y/) && (length($nva_call_url) > 8) )
+	{
+	### first, find curl binary
+	$curlbin = '';
+	if ( -e ('/bin/curl')) {$curlbin = '/bin/curl';}
+	else 
+		{
+		if ( -e ('/usr/bin/curl')) {$curlbin = '/usr/bin/curl';}
+		else 
+			{
+			if ( -e ('/usr/local/bin/curl')) {$curlbin = '/usr/local/bin/curl';}
+			else
+				{
+				if ($AGILOG) {$agi_string = "ERROR: cannot do nva URL, curl binary not found";   &agi_output;}
+				}
+			}
+		}
+	if ( (length($curlbin) > 4) && ($nva_call_url =~ /http/i) )
+		{
+		if ( (length($lead_id)> 0) && ($lead_id !~ /NOTFOUND/) )
+			{
+			$stmtA = "SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner FROM vicidial_list where lead_id='$lead_id';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$entry_date =		$aryA[1];
+				$modify_date =		$aryA[2];
+				$status =			$aryA[3];
+				$user =				$aryA[4];
+				$vendor_lead_code =	$aryA[5];
+				$source_id =		$aryA[6];
+				$list_id =			$aryA[7];
+				$phone_number =		$aryA[8];
+				$title =			$aryA[9];
+				$first_name =		$aryA[10];
+				$middle_initial =	$aryA[11];
+				$last_name =		$aryA[12];
+				$address1 =			$aryA[13];
+				$address2 =			$aryA[14];
+				$address3 =			$aryA[15];
+				$city =				$aryA[16];
+				$state =			$aryA[17];
+				$province =			$aryA[18];
+				$postal_code =		$aryA[19];
+				$country_code =		$aryA[20];
+				$gender =			$aryA[21];
+				$date_of_birth =	$aryA[22];
+				$alt_phone =		$aryA[23];
+				$email =			$aryA[24];
+				$security_phrase =	$aryA[25];
+				$comments =			$aryA[26];
+				$called_count =		$aryA[27];
+				$last_local_call_time = $aryA[28];
+				$rank =				$aryA[29];
+				$owner =			$aryA[30];
+				}
+			$sthA->finish();
+
+			$stmtA = "SELECT list_description,campaign_id FROM vicidial_lists where list_id='$list_id';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$list_description =		$aryA[0];
+				$campaign_id =			$aryA[1];
+				}
+			$sthA->finish();
+			}
+
+		$nva_call_url =~ s/^VAR|^ //gi;
+		$nva_call_url =~ s/--A--phone_number--B--/$temp_phone/gi;
+		$nva_call_url =~ s/--A--uniqueid--B--/$unique_id/gi;
+		$nva_call_url =~ s/--A--lead_id--B--/$search_lead_id/gi;
+		$nva_call_url =~ s/--A--extension--B--/$accountcode/gi;
+		$nva_call_url =~ s/--A--channel--B--/$channel/gi;
+		$nva_call_url =~ s/--A--server_ip--B--/$VARserver_ip/gi;
+
+		$nva_call_url =~ s/--A--lead_id--B--/$lead_id/gi;
+		$nva_call_url =~ s/--A--entry_date--B--/$entry_date/gi;
+		$nva_call_url =~ s/--A--modify_date--B--/$modify_date/gi;
+		$nva_call_url =~ s/--A--status--B--/$status/gi;
+		$nva_call_url =~ s/--A--user--B--/$user/gi;
+		$nva_call_url =~ s/--A--vendor_lead_code--B--/$vendor_lead_code/gi;
+		$nva_call_url =~ s/--A--source_id--B--/$source_id/gi;
+		$nva_call_url =~ s/--A--list_id--B--/$list_id/gi;
+		$nva_call_url =~ s/--A--phone_number--B--/$phone_number/gi;
+		$nva_call_url =~ s/--A--title--B--/$title/gi;
+		$nva_call_url =~ s/--A--first_name--B--/$first_name/gi;
+		$nva_call_url =~ s/--A--middle_initial--B--/$middle_initial/gi;
+		$nva_call_url =~ s/--A--last_name--B--/$last_name/gi;
+		$nva_call_url =~ s/--A--address1--B--/$address1/gi;
+		$nva_call_url =~ s/--A--address2--B--/$address2/gi;
+		$nva_call_url =~ s/--A--address3--B--/$address3/gi;
+		$nva_call_url =~ s/--A--city--B--/$city/gi;
+		$nva_call_url =~ s/--A--state--B--/$state/gi;
+		$nva_call_url =~ s/--A--province--B--/$province/gi;
+		$nva_call_url =~ s/--A--postal_code--B--/$postal_code/gi;
+		$nva_call_url =~ s/--A--country_code--B--/$country_code/gi;
+		$nva_call_url =~ s/--A--gender--B--/$gender/gi;
+		$nva_call_url =~ s/--A--date_of_birth--B--/$date_of_birth/gi;
+		$nva_call_url =~ s/--A--alt_phone--B--/$alt_phone/gi;
+		$nva_call_url =~ s/--A--email--B--/$email/gi;
+		$nva_call_url =~ s/--A--security_phrase--B--/$security_phrase/gi;
+		$nva_call_url =~ s/--A--comments--B--/$comments/gi;
+		$nva_call_url =~ s/--A--called_count--B--/$called_count/gi;
+		$nva_call_url =~ s/--A--last_local_call_time--B--/$last_local_call_time/gi;
+		$nva_call_url =~ s/--A--rank--B--/$rank/gi;
+		$nva_call_url =~ s/--A--owner--B--/$owner/gi;
+		$nva_call_url =~ s/--A--campaign_id--B--/$campaign_id/gi;
+		$nva_call_url =~ s/--A--list_description--B--/$list_description/gi;
+		$nva_call_url =~ s/--A--recording_id--B--/$recording_id/gi;
+		$nva_call_url =~ s/--A--recording_filename--B--/$filename/gi;
+
+		$nva_call_url =~ s/&/\\&/gi;
+		$nva_call_url =~ s/ /+/gi;
+
+		### insert a new url log entry
+		$SQL_log = "$nva_call_url";
+		$SQL_log =~ s/;|\||\\//gi;
+		$stmtA = "INSERT INTO vicidial_url_log SET uniqueid='$unique_id',url_date=NOW(),url_type='nva_phone',url='$SQL_log',url_response='';";
+		$affected_rows = $dbhA->do($stmtA);
+		$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
+		$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$url_id = $aryA[0];
+			}
+		$sthA->finish();
+		my $secW = time();
+
+		@curl_output = `$curlbin $nva_call_url`;
+
+		my $secY = time();
+		my $response_sec = ($secY - $secW);
+
+		$k=0;
+		$full_output='';
+		foreach (@curl_output)
+			{
+			$full_output_raw .= $curl_output[$k];
+			$k++;
+			}
+		$full_output = $full_output_raw;
+		$full_output =~ s/\D//gi;
+		### update url log entry
+		$full_output_raw =~ s/;|\||\\//gi;
+		$stmtA = "UPDATE vicidial_url_log SET url_response='$full_output_raw|$full_output',response_sec='$response_sec' where url_log_id='$url_id';";
+		$affected_rows = $dbhA->do($stmtA);
+
+		if ($AGILOG) {$agi_string = "phone NVA URL response: |$search_lead_id|$full_output|$nva_call_url|$affected_rows|";   &agi_output;}
+		}
+	}
 
 ### if set to user log this call, insert user_call_log entry ###
 if ($log_user_call =~ /Y/)

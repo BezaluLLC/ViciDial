@@ -4061,7 +4061,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="phones-nva_call_url">
 <BR>
-<B><?php echo _QXZ("NVA Call URL"); ?> -</B><?php echo _QXZ("This is the optional web URL that can be used together with the NVA agi script in a Call Menu to log phone calls made outside of the agent screen. Variables that can be used with this feature are- phone_number,uniqueid,lead_id,extension,server_ip."); ?>
+<B><?php echo _QXZ("NVA Call URL"); ?> -</B><?php echo _QXZ("This is the optional web URL that can be used together with the NVA agi script in a Call Menu to log phone calls made outside of the agent screen. Variables that can be used with this feature are- phone_number, uniqueid, lead_id, extension, server_ip, entry_date, modify_date, status, user, vendor_lead_code, source_id, list_id, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, called_count, last_local_call_time, rank, owner, campaign_id, list_description, recording_id, recording_filename."); ?>
 
 <BR>
 <A NAME="phones-nva_search_method">
