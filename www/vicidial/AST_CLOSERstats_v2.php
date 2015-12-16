@@ -1,5 +1,5 @@
 <?php 
-# AST_CLOSERstats.php
+# AST_CLOSERstats_v2.php
 # 
 # Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -51,6 +51,7 @@
 # 150928-1234 - Separated User Group permissions for this report by in-group and by DID
 # 151124-1236 - Changed bottom chart to pull all time segments
 # 151125-1633 - Added search archive option
+# 151216-1023 - Forked from original as "v2" for Call Time option changes, added CHAT option
 #
 
 $startMS = microtime();
@@ -77,6 +78,8 @@ if (isset($_GET["DID"]))				{$DID=$_GET["DID"];}
 	elseif (isset($_POST["DID"]))		{$DID=$_POST["DID"];}
 if (isset($_GET["EMAIL"]))				{$EMAIL=$_GET["EMAIL"];}
 	elseif (isset($_POST["EMAIL"]))		{$EMAIL=$_POST["EMAIL"];}
+if (isset($_GET["CHAT"]))				{$CHAT=$_GET["CHAT"];}
+	elseif (isset($_POST["CHAT"]))		{$CHAT=$_POST["CHAT"];}
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
@@ -277,6 +280,10 @@ if ($DID=='Y')
 	{
 	$stmt="select did_pattern,did_description,did_id from vicidial_inbound_dids $whereLOGadmin_viewable_groupsSQL order by did_pattern;";
 	}
+if ($CHAT=='Y')
+	{
+	$stmt="select group_id,group_name,8 from vicidial_inbound_groups where group_handling='CHAT' $LOGadmin_viewable_groupsSQL order by group_id;";
+	}
 if ($EMAIL=='Y')
 	{
 	$stmt="select email_account_id,email_account_name,email_account_id from vicidial_email_accounts $whereLOGadmin_viewable_groupsSQL order by email_account_id;";
@@ -364,7 +371,7 @@ else
 
 $AMP='&';
 $QM='?';
-$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $DID, $EMAIL, $file_download, $report_display_type|', url='".$LOGfull_url."?DB=".$DB."&DID=".$DID."&EMAIL=".$EMAIL."&query_date=".$query_date."&end_date=".$end_date."&shift=".$shift."&report_display_type=".$report_display_type."$groupQS', webserver='$webserver_id';";
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $DID, $EMAIL, $CHAT, $file_download, $report_display_type|', url='".$LOGfull_url."?DB=".$DB."&DID=".$DID."&EMAIL=".$EMAIL."&CHAT=".$CHAT."&query_date=".$query_date."&end_date=".$end_date."&shift=".$shift."&report_display_type=".$report_display_type."$groupQS', webserver='$webserver_id';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $report_log_id = mysqli_insert_id($link);
@@ -435,6 +442,7 @@ $MAIN.="<TABLE BORDER=0><TR><TD VALIGN=TOP>\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DID VALUE=\"$DID\">\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=EMAIL VALUE=\"$EMAIL\">\n";
+$MAIN.="<INPUT TYPE=HIDDEN NAME=CHAT VALUE=\"$CHAT\">\n";
 $MAIN.=_QXZ("Date Range").":<BR>\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
@@ -464,7 +472,9 @@ $MAIN.="</script>\n";
 
 
 $MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
-if ($EMAIL=='Y')
+if ($CHAT=='Y')
+	{$MAIN.=_QXZ("Inbound Chat Groups").": \n";}
+elseif ($EMAIL=='Y')
 	{$MAIN.=_QXZ("Email Accts").": \n";}
 else if ($DID=='Y')
 	{$MAIN.=_QXZ("Inbound DIDs").": \n";}
@@ -489,7 +499,7 @@ if ($DID!='Y')
 	$MAIN.="<a href=\"./admin.php?ADD=3111&group_id=$group[0]\">"._QXZ("MODIFY")."</a> | ";
 	$MAIN.="<a href=\"./AST_IVRstats.php?query_date=$query_date&end_date=$end_date&shift=$shift$groupQS\">"._QXZ("IVR REPORT")."</a> | \n";
 	}
-$MAIN.="<a href=\"./AST_CLOSERstats_v2.php?group[]=$group[0]\">"._QXZ("v2")."</a> | ";
+$MAIN.="<a href=\"./AST_CLOSERstats.php?group[]=$group[0]\">"._QXZ("v1")."</a> | ";
 $MAIN.="<a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> | ";
 $MAIN.="</FONT>\n";
 
@@ -505,12 +515,24 @@ $MAIN.="<TR><TD>\n";
 #		$o++;
 #	}
 #$MAIN.="</SELECT>\n";
-$MAIN.=_QXZ("Shift").": <SELECT SIZE=1 NAME=shift>\n";
+$MAIN.=_QXZ("Shift/Call time").": <SELECT SIZE=1 NAME=shift>\n";
 $MAIN.="<option selected value=\"$shift\">$shift</option>\n";
-$MAIN.="<option value=\"\">--</option>\n";
-$MAIN.="<option value=\"AM\">"._QXZ("AM")."</option>\n";
-$MAIN.="<option value=\"PM\">"._QXZ("PM")."</option>\n";
+$MAIN.="<option value=\"\"></option>\n";
+$MAIN.="<option value=\"\">--- Shifts ---</option>\n";
+$MAIN.="<option value=\"AM\">"._QXZ("AM  (03:45 - 15:15)")."</option>\n";
+$MAIN.="<option value=\"PM\">"._QXZ("PM  (15:15 - 23:15)")."</option>\n";
 $MAIN.="<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
+
+$call_time_stmt="select call_time_id, call_time_name from vicidial_call_times order by call_time_id";
+$call_time_rslt=mysql_to_mysqli($call_time_stmt, $link);
+if (mysqli_num_rows($call_time_rslt)>0) {
+	$MAIN.="<option value=\"\"></option>\n";
+	$MAIN.="<option value=\"\">--- Call times ---</option>\n";
+	while ($call_time_row=mysqli_fetch_array($call_time_rslt)) {
+		$MAIN.="<option value=\"".$call_time_row["call_time_id"]."\">".$call_time_row["call_time_name"]."</option>\n";
+	}
+}
+
 $MAIN.="</SELECT>\n";
 $MAIN.="<BR>"._QXZ("Display as").":&nbsp; ";
 $MAIN.="<select name='report_display_type'>";
@@ -530,6 +552,8 @@ $MAIN.="<PRE><FONT SIZE=2>\n\n";
 if ($groups_to_print < 1)
 	{
 	$MAIN.="\n\n";
+	if ($CHAT=='Y')
+		{$MAIN.=_QXZ("PLEASE SELECT A CHAT IN-GROUP AND DATE RANGE ABOVE AND CLICK SUBMIT")."\n";}
 	if ($EMAIL=='Y')
 		{$MAIN.=_QXZ("PLEASE SELECT AN EMAIL ACCOUNT AND DATE RANGE ABOVE AND CLICK SUBMIT")."\n";}
 	if ($DID=='Y')
@@ -540,38 +564,301 @@ if ($groups_to_print < 1)
 
 else
 {
-if ($shift == 'AM') 
+$call_time_ranges=array();
+
+$ct_stmt="select * from vicidial_call_times where call_time_id='$shift'";
+if ($DB) {$MAIN.=$ct_stmt."\n";}
+$ct_rslt=mysql_to_mysqli($ct_stmt, $link);
+if (mysqli_num_rows($ct_rslt)>0) 
 	{
-	$time_BEGIN=$AM_shift_BEGIN;
-	$time_END=$AM_shift_END;
-	if (strlen($time_BEGIN) < 6) {$time_BEGIN = "03:45:00";}   
-	if (strlen($time_END) < 6) {$time_END = "15:14:59";}
+	$ct_row=mysqli_fetch_array($ct_rslt);
+	$default_time_BEGIN=$ct_row["ct_default_start"];
+	$default_time_END=$ct_row["ct_default_stop"];
+	while (strlen($default_time_BEGIN)<4) {$default_time_BEGIN="0".$default_time_BEGIN;}
+	while (strlen($default_time_END)<4) {$default_time_END="0".$default_time_END;}
+	$default_time_BEGIN=substr($default_time_BEGIN,0,2).":".substr($default_time_BEGIN,2,2).":00";
+	# In case default time ends after midnight the next day
+	if ($default_time_END>2400) {
+		$multiday_default="yes";
+		$multiday_default_END=($default_time_END-2400);
+		while(strlen($multiday_default_END)<4) {
+			$multiday_default_END="0".$multiday_default_END;
+		}
+		$multiday_default_END=substr($multiday_default_END,0,2).":".substr($multiday_default_END,2,2).":00";
+		# Result:  Default start time is: current-day default_time_BEGIN to current-day 23:59:59 and next-day 00:00:00 to next-day multiday_default_END
 	}
-if ($shift == 'PM') 
-	{
-	$time_BEGIN=$PM_shift_BEGIN;
-	$time_END=$PM_shift_END;
-	if (strlen($time_BEGIN) < 6) {$time_BEGIN = "15:15:00";}
-	if (strlen($time_END) < 6) {$time_END = "23:15:00";}
+	$default_time_END=substr($default_time_END,0,2).":".substr($default_time_END,2,2).":00";
+	$time_BEGIN=$default_time_BEGIN;
+	$time_END=$default_time_END;
+
+	if ($ct_row["ct_sunday_start"]==0 && $ct_row["ct_sunday_stop"]==0) {
+		if ($multiday_default=="yes") {
+			array_push($call_time_ranges, array("1", "$default_time_BEGIN", "23:59:59"));
+			array_push($call_time_ranges, array("2", "00:00:00", "$multiday_default_END"));
+		} else {
+			array_push($call_time_ranges, array("1", "$default_time_BEGIN", "$default_time_END"));
+		}
+	} else {
+		$sunday_BEGIN=$ct_row["ct_sunday_start"];
+		$sunday_END=$ct_row["ct_sunday_stop"];
+		while (strlen($sunday_BEGIN)<4) {$sunday_BEGIN="0".$sunday_BEGIN;}
+		while (strlen($sunday_END)<4) {$sunday_END="0".$sunday_END;}
+		$sunday_BEGIN=substr($sunday_BEGIN,0,2).":".substr($sunday_BEGIN,2,2).":00";
+		$sunday_END=substr($sunday_END,0,2).":".substr($sunday_END,2,2).":00";
+
+		if($ct_row["ct_sunday_stop"]>2400) {
+			$sunday_multiday_END=$ct_row["ct_sunday_stop"]-2400;
+			while(strlen($sunday_multiday_END)<4) {
+				$sunday_multiday_END="0".$sunday_multiday_END;
+			}
+			$sunday_multiday_END=substr($sunday_multiday_END,0,2).":".substr($sunday_multiday_END,2,2).":00";
+			array_push($call_time_ranges, array("1", "$sunday_BEGIN", "23:59:59"));
+			array_push($call_time_ranges, array("2", "00:00:00", "$sunday_multiday_END"));
+		} else {
+			array_push($call_time_ranges, array("1", "$sunday_BEGIN", "$sunday_END"));
+		}
 	}
-if ($shift == 'ALL') 
+
+	if ($ct_row["ct_monday_start"]==0 && $ct_row["ct_monday_stop"]==0) {
+		if ($multiday_default=="yes") {
+			array_push($call_time_ranges, array("2", "$default_time_BEGIN", "23:59:59"));
+			array_push($call_time_ranges, array("3", "00:00:00", "$multiday_default_END"));
+		} else {
+			array_push($call_time_ranges, array("2", "$default_time_BEGIN", "$default_time_END"));
+		}
+	} else {
+		$monday_BEGIN=$ct_row["ct_monday_start"];
+		$monday_END=$ct_row["ct_monday_stop"];
+		while (strlen($monday_BEGIN)<4) {$monday_BEGIN="0".$monday_BEGIN;}
+		while (strlen($monday_END)<4) {$monday_END="0".$monday_END;}
+		$monday_BEGIN=substr($monday_BEGIN,0,2).":".substr($monday_BEGIN,2,2).":00";
+		$monday_END=substr($monday_END,0,2).":".substr($monday_END,2,2).":00";
+
+		if($ct_row["ct_monday_stop"]>2400) {
+			$monday_multiday_END=$ct_row["ct_monday_stop"]-2400;
+			while(strlen($monday_multiday_END)<4) {
+				$monday_multiday_END="0".$monday_multiday_END;
+			}
+			$monday_multiday_END=substr($monday_multiday_END,0,2).":".substr($monday_multiday_END,2,2).":00";
+			array_push($call_time_ranges, array("2", "$monday_BEGIN", "23:59:59"));
+			array_push($call_time_ranges, array("3", "00:00:00", "$monday_multiday_END"));
+		} else {
+			array_push($call_time_ranges, array("2", "$monday_BEGIN", "$monday_END"));
+		}
+	}
+
+	if ($ct_row["ct_tuesday_start"]==0 && $ct_row["ct_tuesday_stop"]==0) {
+		if ($multiday_default=="yes") {
+			array_push($call_time_ranges, array("3", "$default_time_BEGIN", "23:59:59"));
+			array_push($call_time_ranges, array("4", "00:00:00", "$multiday_default_END"));
+		} else {
+			array_push($call_time_ranges, array("3", "$default_time_BEGIN", "$default_time_END"));
+		}
+	} else {
+		$tuesday_BEGIN=$ct_row["ct_tuesday_start"];
+		$tuesday_END=$ct_row["ct_tuesday_stop"];
+		while (strlen($tuesday_BEGIN)<4) {$tuesday_BEGIN="0".$tuesday_BEGIN;}
+		while (strlen($tuesday_END)<4) {$tuesday_END="0".$tuesday_END;}
+		$tuesday_BEGIN=substr($tuesday_BEGIN,0,2).":".substr($tuesday_BEGIN,2,2).":00";
+		$tuesday_END=substr($tuesday_END,0,2).":".substr($tuesday_END,2,2).":00";
+
+		if($ct_row["ct_tuesday_stop"]>2400) {
+			$tuesday_multiday_END=$ct_row["ct_tuesday_stop"]-2400;
+			while(strlen($tuesday_multiday_END)<4) {
+				$tuesday_multiday_END="0".$tuesday_multiday_END;
+			}
+			$tuesday_multiday_END=substr($tuesday_multiday_END,0,2).":".substr($tuesday_multiday_END,2,2).":00";
+			array_push($call_time_ranges, array("3", "$tuesday_BEGIN", "23:59:59"));
+			array_push($call_time_ranges, array("4", "00:00:00", "$tuesday_multiday_END"));
+		} else {
+			array_push($call_time_ranges, array("3", "$tuesday_BEGIN", "$tuesday_END"));
+		}
+	}
+
+	if ($ct_row["ct_wednesday_start"]==0 && $ct_row["ct_wednesday_stop"]==0) {
+		if ($multiday_default=="yes") {
+			array_push($call_time_ranges, array("4", "$default_time_BEGIN", "23:59:59"));
+			array_push($call_time_ranges, array("5", "00:00:00", "$multiday_default_END"));
+		} else {
+			array_push($call_time_ranges, array("4", "$default_time_BEGIN", "$default_time_END"));
+		}
+	} else {
+		$wednesday_BEGIN=$ct_row["ct_wednesday_start"];
+		$wednesday_END=$ct_row["ct_wednesday_stop"];
+		while (strlen($wednesday_BEGIN)<4) {$wednesday_BEGIN="0".$wednesday_BEGIN;}
+		while (strlen($wednesday_END)<4) {$wednesday_END="0".$wednesday_END;}
+		$wednesday_BEGIN=substr($wednesday_BEGIN,0,2).":".substr($wednesday_BEGIN,2,2).":00";
+		$wednesday_END=substr($wednesday_END,0,2).":".substr($wednesday_END,2,2).":00";
+
+		if($ct_row["ct_wednesday_stop"]>2400) {
+			$wednesday_multiday_END=$ct_row["ct_wednesday_stop"]-2400;
+			while(strlen($wednesday_multiday_END)<4) {
+				$wednesday_multiday_END="0".$wednesday_multiday_END;
+			}
+			$wednesday_multiday_END=substr($wednesday_multiday_END,0,2).":".substr($wednesday_multiday_END,2,2).":00";
+			array_push($call_time_ranges, array("4", "$wednesday_BEGIN", "23:59:59"));
+			array_push($call_time_ranges, array("5", "00:00:00", "$wednesday_multiday_END"));
+		} else {
+			array_push($call_time_ranges, array("4", "$wednesday_BEGIN", "$wednesday_END"));
+		}
+	}
+
+	if ($ct_row["ct_thursday_start"]==0 && $ct_row["ct_thursday_stop"]==0) {
+		if ($multiday_default=="yes") {
+			array_push($call_time_ranges, array("5", "$default_time_BEGIN", "23:59:59"));
+			array_push($call_time_ranges, array("6", "00:00:00", "$multiday_default_END"));
+		} else {
+			array_push($call_time_ranges, array("5", "$default_time_BEGIN", "$default_time_END"));
+		}
+	} else {
+		$thursday_BEGIN=$ct_row["ct_thursday_start"];
+		$thursday_END=$ct_row["ct_thursday_stop"];
+		while (strlen($thursday_BEGIN)<4) {$thursday_BEGIN="0".$thursday_BEGIN;}
+		while (strlen($thursday_END)<4) {$thursday_END="0".$thursday_END;}
+		$thursday_BEGIN=substr($thursday_BEGIN,0,2).":".substr($thursday_BEGIN,2,2).":00";
+		$thursday_END=substr($thursday_END,0,2).":".substr($thursday_END,2,2).":00";
+
+		if($ct_row["ct_thursday_stop"]>2400) {
+			$thursday_multiday_END=$ct_row["ct_thursday_stop"]-2400;
+			while(strlen($thursday_multiday_END)<4) {
+				$thursday_multiday_END="0".$thursday_multiday_END;
+			}
+			$thursday_multiday_END=substr($thursday_multiday_END,0,2).":".substr($thursday_multiday_END,2,2).":00";
+			array_push($call_time_ranges, array("5", "$thursday_BEGIN", "23:59:59"));
+			array_push($call_time_ranges, array("6", "00:00:00", "$thursday_multiday_END"));
+		} else {
+			array_push($call_time_ranges, array("5", "$thursday_BEGIN", "$thursday_END"));
+		}
+	}
+
+	if ($ct_row["ct_friday_start"]==0 && $ct_row["ct_friday_stop"]==0) {
+		if ($multiday_default=="yes") {
+			array_push($call_time_ranges, array("6", "$default_time_BEGIN", "23:59:59"));
+			array_push($call_time_ranges, array("7", "00:00:00", "$multiday_default_END"));
+		} else {
+			array_push($call_time_ranges, array("6", "$default_time_BEGIN", "$default_time_END"));
+		}
+	} else {
+		$friday_BEGIN=$ct_row["ct_friday_start"];
+		$friday_END=$ct_row["ct_friday_stop"];
+		while (strlen($friday_BEGIN)<4) {$friday_BEGIN="0".$friday_BEGIN;}
+		while (strlen($friday_END)<4) {$friday_END="0".$friday_END;}
+		$friday_BEGIN=substr($friday_BEGIN,0,2).":".substr($friday_BEGIN,2,2).":00";
+		$friday_END=substr($friday_END,0,2).":".substr($friday_END,2,2).":00";
+
+		if($ct_row["ct_friday_stop"]>2400) {
+			$friday_multiday_END=$ct_row["ct_friday_stop"]-2400;
+			while(strlen($friday_multiday_END)<4) {
+				$friday_multiday_END="0".$friday_multiday_END;
+			}
+			$friday_multiday_END=substr($friday_multiday_END,0,2).":".substr($friday_multiday_END,2,2).":00";
+			array_push($call_time_ranges, array("6", "$friday_BEGIN", "23:59:59"));
+			array_push($call_time_ranges, array("7", "00:00:00", "$friday_multiday_END"));
+		} else {
+			array_push($call_time_ranges, array("6", "$friday_BEGIN", "$friday_END"));
+		}
+	}
+
+	if ($ct_row["ct_saturday_start"]==0 && $ct_row["ct_saturday_stop"]==0) {
+		if ($multiday_default=="yes") {
+			array_push($call_time_ranges, array("7", "$default_time_BEGIN", "23:59:59"));
+			array_push($call_time_ranges, array("1", "00:00:00", "$multiday_default_END"));
+		} else {
+			array_push($call_time_ranges, array("7", "$default_time_BEGIN", "$default_time_END"));
+		}
+	} else {
+		$saturday_BEGIN=$ct_row["ct_saturday_start"];
+		$saturday_END=$ct_row["ct_saturday_stop"];
+		while (strlen($saturday_BEGIN)<4) {$saturday_BEGIN="0".$saturday_BEGIN;}
+		while (strlen($saturday_END)<4) {$saturday_END="0".$saturday_END;}
+		$saturday_BEGIN=substr($saturday_BEGIN,0,2).":".substr($saturday_BEGIN,2,2).":00";
+		$saturday_END=substr($saturday_END,0,2).":".substr($saturday_END,2,2).":00";
+
+		if($ct_row["ct_saturday_stop"]>2400) {
+			$saturday_multiday_END=$ct_row["ct_saturday_stop"]-2400;
+			while(strlen($saturday_multiday_END)<4) {
+				$saturday_multiday_END="0".$saturday_multiday_END;
+			}
+			$saturday_multiday_END=substr($saturday_multiday_END,0,2).":".substr($saturday_multiday_END,2,2).":00";
+			array_push($call_time_ranges, array("7", "$saturday_BEGIN", "23:59:59"));
+			array_push($call_time_ranges, array("1", "00:00:00", "$saturday_multiday_END"));
+		} else {
+			array_push($call_time_ranges, array("7", "$saturday_BEGIN", "$saturday_END"));
+		}
+	}
+	
+	} 
+else
 	{
-	if (strlen($time_BEGIN) < 6) {$time_BEGIN = "00:00:00";}
-	if (strlen($time_END) < 6) {$time_END = "23:59:59";}
+	if ($shift == 'AM') 
+		{
+		$time_BEGIN=$AM_shift_BEGIN;
+		$time_END=$AM_shift_END;
+		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "03:45:00";}   
+		if (strlen($time_END) < 6) {$time_END = "15:14:59";}
+		}
+	if ($shift == 'PM') 
+		{
+		$time_BEGIN=$PM_shift_BEGIN;
+		$time_END=$PM_shift_END;
+		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "15:15:00";}
+		if (strlen($time_END) < 6) {$time_END = "23:15:00";}
+		}
+	if ($shift == 'ALL') 
+		{
+		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "00:00:00";}
+		if (strlen($time_END) < 6) {$time_END = "23:59:59";}
+		}
+	#  CREATE CALL TIME ARRAYS
+	for ($i=1; $i<=7; $i++) 
+		{
+		array_push($call_time_ranges, array("$i", "$time_BEGIN", "$time_END"));
+		}
+
 	}
 $query_date_BEGIN = "$query_date $time_BEGIN";   
 $query_date_END = "$end_date $time_END";
 
+# GENERATE CALL TIME CLAUSE - GET MAX/MIN TIMES FOR GRAPH
+$orig_call_time_clause="and ( ";
+for ($x=0; $x<count($call_time_ranges); $x++) {
+	$orig_call_time_clause.="(DAYOFWEEK(<DATE_COLUMN>)='".$call_time_ranges[$x][0]."' and time(<DATE_COLUMN>)>='".$call_time_ranges[$x][1]."' and time(<DATE_COLUMN>)<='".$call_time_ranges[$x][2]."') OR ";
+
+	$graph_start_time = $call_time_ranges[$x][1];
+	$graph_start_time = preg_replace("/^([\d]{1,2})\:([\d]{2})$/", "00:$1:$2", $graph_start_time);
+	sscanf($graph_start_time, "%d:%d:%d", $hours, $minutes, $seconds);
+	$graph_seconds = $hours * 3600 + $minutes * 60 + $seconds;
+	if (!$min_graph_seconds || $graph_seconds<$min_graph_seconds) {$min_graph_seconds=$graph_seconds; $min_graph_start_time=$graph_start_time;}
+
+	$graph_end_time = $call_time_ranges[$x][2];
+	$graph_end_time = preg_replace("/^([\d]{1,2})\:([\d]{2})$/", "00:$1:$2", $graph_end_time);
+	sscanf($graph_end_time, "%d:%d:%d", $hours, $minutes, $seconds);
+	$graph_seconds = $hours * 3600 + $minutes * 60 + $seconds;
+	if (!$max_graph_seconds || $graph_seconds>$max_graph_seconds) {$max_graph_seconds=$graph_seconds; $max_graph_end_time=$graph_end_time;}
+}
+$orig_call_time_clause=preg_replace('/ OR $/', '', $orig_call_time_clause);
+$orig_call_time_clause.=" )";
+$calldate_call_time_clause=preg_replace('/<DATE_COLUMN>/', 'call_date', $orig_call_time_clause);
+$starttime_call_time_clause=preg_replace('/<DATE_COLUMN>/', 'start_time', $orig_call_time_clause);
+
+
 # Calculate first record in interval and last
-$time_BEGIN_array=explode(":", $time_BEGIN);
+if (!$min_graph_start_time){$min_graph_start_time="00:00:00";}
+if (!$max_graph_start_time){$max_graph_start_time="23:59:59";}
+$time_BEGIN_array=explode(":", $min_graph_start_time);
 $first_shift_record=(4*$time_BEGIN_array[0])+(ceil($time_BEGIN_array[1]/15));
-$time_END_array=explode(":", $time_END);
+$time_END_array=explode(":", $max_graph_end_time);
 $last_shift_record=(4*$time_END_array[0])+(ceil($time_END_array[1]/15));
 
-if ($EMAIL=='Y') 
+if ($CHAT=='Y') 
 	{
-	$MAIN.=_QXZ("Inbound Email Stats").": $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
-	$CSV_text1.="\""._QXZ("Inbound Call Stats").":\",\"$group_string\",\"$NOW_TIME\"\n";
+	$MAIN.=_QXZ("Inbound Chat Stats").": $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&CHAT=Y&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
+	$CSV_text1.="\""._QXZ("Inbound Chat Stats").":\",\"$group_string\",\"$NOW_TIME\"\n";
+	}
+elseif ($EMAIL=='Y') 
+	{
+	$MAIN.=_QXZ("Inbound Email Stats").": $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&EMAIL=Y&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
+	$CSV_text1.="\""._QXZ("Inbound Email Stats").":\",\"$group_string\",\"$NOW_TIME\"\n";
 	}
 else
 	{
@@ -624,7 +911,14 @@ if ($group_ct > 1)
 
 	$CSV_text1.="\n\""._QXZ("MULTI-GROUP BREAKDOWN").":\"\n";
 
-	if ($EMAIL=='Y')
+	if ($CHAT=='Y')
+		{
+		$ASCII_text.="+----------------------+---------+---------+---------+---------+\n";
+		$ASCII_text.="| "._QXZ("CHAT",20)." | "._QXZ("CHATS",7)." | "._QXZ("DROPS",7)." | "._QXZ("DROP",5)." % | "._QXZ("IVR",7)." |\n";
+		$ASCII_text.="+----------------------+---------+---------+---------+---------+\n";
+		$CSV_text1.="\""._QXZ("CHAT")."\",\""._QXZ("CALLS")."\",\""._QXZ("DROPS")."\",\""._QXZ("DROP")." %\",\""._QXZ("IVR")."\"\n";
+		}
+	else if ($EMAIL=='Y')
 		{
 		$ASCII_text.="+----------------------+---------+---------+---------+---------+\n";
 		$ASCII_text.="| "._QXZ("EMAIL",20)." | "._QXZ("EMAILS",7)." | "._QXZ("DROPS",7)." | "._QXZ("DROP",5)." % | "._QXZ("IVR",7)." |\n";
@@ -675,28 +969,28 @@ if ($group_ct > 1)
 		$DIDunid_SQL = preg_replace('/,$/i', '',$DIDunid_SQL);
 		if (strlen($DIDunid_SQL)<3) {$DIDunid_SQL="''";}
 
-		$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='$group[$i]';";
+		$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and campaign_id='$group[$i]';";
 		if ($DID=='Y')
 			{
-			$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($DIDunid_SQL);";
+			$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($DIDunid_SQL);";
 			}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$ASCII_text.="$stmt\n";}
 		$row=mysqli_fetch_row($rslt);
 
-		$stmt="select count(*) from ".$live_inbound_log_table." where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a='$group[$i]' and comment_b='START';";
+		$stmt="select count(*) from ".$live_inbound_log_table." where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' $starttime_call_time_clause and comment_a='$group[$i]' and comment_b='START';";
 		if ($DID=='Y')
 			{
-			$stmt="select count(*) from ".$live_inbound_log_table." where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and uniqueid IN($DIDunid_SQL);";
+			$stmt="select count(*) from ".$live_inbound_log_table." where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' $starttime_call_time_clause and uniqueid IN($DIDunid_SQL);";
 			}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$ASCII_text.="$stmt\n";}
 		$rowx=mysqli_fetch_row($rslt);
 
-		$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id='$group[$i]' and status IN('DROP','XDROP') and (length_in_sec <= 49999 or length_in_sec is null);";
+		$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and campaign_id='$group[$i]' and status IN('DROP','XDROP') and (length_in_sec <= 49999 or length_in_sec is null);";
 		if ($DID=='Y')
 			{
-			$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status IN('DROP','XDROP') and (length_in_sec <= 49999 or length_in_sec is null) and uniqueid IN($DIDunid_SQL);";
+			$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and status IN('DROP','XDROP') and (length_in_sec <= 49999 or length_in_sec is null) and uniqueid IN($DIDunid_SQL);";
 			}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$ASCII_text.="$stmt\n";}
@@ -774,28 +1068,28 @@ $MAIN.="---------- "._QXZ("TOTALS")."\n";
 
 $CSV_text1.="\n\""._QXZ("Time range").":\",\"$query_date_BEGIN\",\""._QXZ("to")."\",\"$query_date_END\"\n\n";
 
-$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL);";
+$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and campaign_id IN($group_SQL);";
 if ($DID=='Y')
 	{
-	$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL);";
+	$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL);";
 	}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $row=mysqli_fetch_row($rslt);
 
-$stmt="select count(*),sum(queue_seconds) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL');";
+$stmt="select count(*),sum(queue_seconds) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL');";
 if ($DID=='Y')
 	{
-	$stmt="select count(*),sum(queue_seconds) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') and uniqueid IN($unid_SQL);";
+	$stmt="select count(*),sum(queue_seconds) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') and uniqueid IN($unid_SQL);";
 	}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $rowy=mysqli_fetch_row($rslt);
 
-$stmt="select count(*) from ".$live_inbound_log_table." where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and comment_a IN($group_SQL) and comment_b='START';";
+$stmt="select count(*) from ".$live_inbound_log_table." where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' $starttime_call_time_clause and comment_a IN($group_SQL) and comment_b='START';";
 if ($DID=='Y')
 	{
-	$stmt="select count(*) from ".$live_inbound_log_table." where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' and uniqueid IN($unid_SQL);";
+	$stmt="select count(*) from ".$live_inbound_log_table." where start_time >= '$query_date_BEGIN' and start_time <= '$query_date_END' $starttime_call_time_clause and uniqueid IN($unid_SQL);";
 	}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
@@ -818,7 +1112,21 @@ $average_answer_seconds = MathZDC($rowy[1], $rowy[0]);
 $average_answer_seconds = round($average_answer_seconds, 2);
 $average_answer_seconds =	sprintf("%10s", $average_answer_seconds);
 
-if ($EMAIL=='Y')
+if ($CHAT=='Y')
+	{
+	$MAIN.=_QXZ("Total Chats taken in to this In-Group:",47)."$TOTALcalls\n";
+	$MAIN.=_QXZ("Average Chat Length for all Chats:",47)."$average_call_seconds "._QXZ("seconds")."\n";
+	$MAIN.=_QXZ("Answered Chats:",47)."$ANSWEREDcalls  $ANSWEREDpercent%\n";
+	$MAIN.=_QXZ("Average queue time for Answered Chats:",47)."$average_answer_seconds "._QXZ("seconds")."\n";
+	$MAIN.=_QXZ("Chats taken into the IVR for this In-Group:",47)."$IVRcalls\n";
+
+	$CSV_text1.="\""._QXZ("Total Chats taken in to this In-Group").":\",\"$TOTALcalls\"\n";
+	$CSV_text1.="\""._QXZ("Average Chat Length for all Chats").":\",\"$average_call_seconds "._QXZ("seconds")."\"\n";
+	$CSV_text1.="\""._QXZ("Answered Chats").":\",\"$ANSWEREDcalls\",\"$ANSWEREDpercent%\"\n";
+	$CSV_text1.="\""._QXZ("Average queue time for Answered Chats").":\",\"$average_answer_seconds "._QXZ("seconds")."\"\n";
+	$CSV_text1.="\""._QXZ("Chats taken into the IVR for this In-Group").":\",\"$IVRcalls\"\n";
+	}
+elseif ($EMAIL=='Y')
 	{
 	$MAIN.=_QXZ("Total Emails taken in to this In-Group:",47)."$TOTALcalls\n";
 	$MAIN.=_QXZ("Average Email Length for all Emails:",47)."$average_call_seconds "._QXZ("seconds")."\n";
@@ -852,10 +1160,10 @@ $MAIN.="---------- "._QXZ("DROPS")."\n";
 
 $CSV_text1.="\n\""._QXZ("DROPS")."\"\n";
 
-$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status IN('DROP','XDROP') and (length_in_sec <= 49999 or length_in_sec is null);";
+$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and campaign_id IN($group_SQL) and status IN('DROP','XDROP') and (length_in_sec <= 49999 or length_in_sec is null);";
 if ($DID=='Y')
 	{
-	$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status IN('DROP','XDROP') and (length_in_sec <= 49999 or length_in_sec is null) and uniqueid IN($unid_SQL);";
+	$stmt="select count(*),sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and status IN('DROP','XDROP') and (length_in_sec <= 49999 or length_in_sec is null) and uniqueid IN($unid_SQL);";
 	}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
@@ -872,7 +1180,15 @@ $average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
 $DROP_ANSWEREDpercent = (MathZDC($DROPcalls, $ANSWEREDcalls) * 100);
 $DROP_ANSWEREDpercent = round($DROP_ANSWEREDpercent, 0);
 
-if ($EMAIL=='Y')
+if ($CHAT=='Y')
+	{
+	$MAIN.=_QXZ("Total DROP Chats:",47)."$DROPcalls  $DROPpercent%               "._QXZ("drop/answered").": $DROP_ANSWEREDpercent%\n";
+	$MAIN.=_QXZ("Average hold time for DROP Chats:",47)."$average_hold_seconds "._QXZ("seconds")."\n";
+
+	$CSV_text1.="\"Total DROP Chats:\",\"$DROPcalls\",\"$DROPpercent%\",\""._QXZ("drop/answered").":\",\"$DROP_ANSWEREDpercent%\"\n";
+	$CSV_text1.="\"Average hold time for DROP Chats:\",\"$average_hold_seconds "._QXZ("seconds")."\"\n";
+	}
+elseif ($EMAIL=='Y')
 	{
 	$MAIN.=_QXZ("Total DROP Emails:",47)."$DROPcalls  $DROPpercent%               "._QXZ("drop/answered").": $DROP_ANSWEREDpercent%\n";
 	$MAIN.=_QXZ("Average hold time for DROP Emails:",47)."$average_hold_seconds "._QXZ("seconds")."\n";
@@ -900,13 +1216,13 @@ if (strlen($group_SQL)>3)
 		$Sanswer_sec_pct_rt_stat_one = $row[0];
 		$Sanswer_sec_pct_rt_stat_two = $row[1];
 
-		$stmt = "SELECT count(*) from ".$vicidial_closer_log_table." where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and queue_seconds <= $Sanswer_sec_pct_rt_stat_one and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL');";
+		$stmt = "SELECT count(*) from ".$vicidial_closer_log_table." where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and queue_seconds <= $Sanswer_sec_pct_rt_stat_one and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL');";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$row=mysqli_fetch_row($rslt);
 		$answer_sec_pct_rt_stat_one = $row[0];
 
-		$stmt = "SELECT count(*) from ".$vicidial_closer_log_table." where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and queue_seconds <= $Sanswer_sec_pct_rt_stat_two and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL');";
+		$stmt = "SELECT count(*) from ".$vicidial_closer_log_table." where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and queue_seconds <= $Sanswer_sec_pct_rt_stat_two and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL');";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$row=mysqli_fetch_row($rslt);
@@ -921,7 +1237,18 @@ if (strlen($group_SQL)>3)
 		}
 	}
 
-if ($EMAIL=='Y')
+if ($CHAT=='Y')
+	{
+	$MAIN.="\n";
+	$MAIN.="---------- "._QXZ("CUSTOM INDICATORS")."\n";
+	$MAIN.="GDE "._QXZ("(Answered/Total chats taken in to this In-Group):",50)."  $ANSWEREDpercent%\n";
+	$MAIN.="ACR "._QXZ("(Dropped/Answered):",50)."  $DROP_ANSWEREDpercent%\n";
+
+	$CSV_text1.="\n\""._QXZ("CUSTOM INDICATORS")."\"\n";
+	$CSV_text1.="\"GDE "._QXZ("(Answered/Total chats taken in to this In-Group)").":\",\"$ANSWEREDpercent%\"\n";
+	$CSV_text1.="\"ACR "._QXZ("(Dropped/Answered)").":\",\"$DROP_ANSWEREDpercent%\"\n";
+	}
+elseif ($EMAIL=='Y')
 	{
 	$MAIN.="\n";
 	$MAIN.="---------- "._QXZ("CUSTOM INDICATORS")."\n";
@@ -997,10 +1324,10 @@ $MAIN.="---------- "._QXZ("QUEUE STATS")."\n";
 
 $CSV_text1.="\n\""._QXZ("QUEUE STATS")."\"\n";
 
-$stmt="select count(*),sum(queue_seconds) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and (queue_seconds > 0);";
+$stmt="select count(*),sum(queue_seconds) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and campaign_id IN($group_SQL) and (queue_seconds > 0);";
 if ($DID=='Y')
 	{
-	$stmt="select count(*),sum(queue_seconds) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and (queue_seconds > 0) and uniqueid IN($unid_SQL);";
+	$stmt="select count(*),sum(queue_seconds) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and (queue_seconds > 0) and uniqueid IN($unid_SQL);";
 	}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
@@ -1018,7 +1345,17 @@ $average_total_queue_seconds = MathZDC($row[1], $TOTALcalls);
 $average_total_queue_seconds = round($average_total_queue_seconds, 2);
 $average_total_queue_seconds = sprintf("%10.2f", $average_total_queue_seconds);
 
-if ($EMAIL=='Y')
+if ($CHAT=='Y')
+	{
+	$MAIN.=_QXZ("Total Chats That entered Queue:",46)." $QUEUEcalls  $QUEUEpercent%\n";
+	$MAIN.=_QXZ("Average QUEUE Length for queue chats:",46)." $average_queue_seconds "._QXZ("seconds")."\n";
+	$MAIN.=_QXZ("Average QUEUE Length across all chats:",46)." $average_total_queue_seconds "._QXZ("seconds")."\n";
+
+	$CSV_text1.="\""._QXZ("Total Chats That entered Queue").":\",\"$QUEUEcalls\",\"$QUEUEpercent%\"\n";
+	$CSV_text1.="\""._QXZ("Average QUEUE Length for queue chats").":\",\"$average_queue_seconds "._QXZ("seconds")."\"\n";
+	$CSV_text1.="\""._QXZ("Average QUEUE Length across all chats").":\",\"$average_total_queue_seconds "._QXZ("seconds")."\"\n";
+	}
+elseif ($EMAIL=='Y')
 	{
 	$MAIN.=_QXZ("Total Emails That entered Queue:",46)." $QUEUEcalls  $QUEUEpercent%\n";
 	$MAIN.=_QXZ("Average QUEUE Length for queue emails:",46)." $average_queue_seconds "._QXZ("seconds")."\n";
@@ -1039,13 +1376,21 @@ else
 	$CSV_text1.="\""._QXZ("Average QUEUE Length across all calls").":\",\"$average_total_queue_seconds "._QXZ("seconds")."\"\n";
 	}
 
-if ($EMAIL=='Y') {
+if ($CHAT=='Y') 
+	{
+	$rpt_type_verbiage=_QXZ("CHAT",6);
+	$rpt_type_verbiages=_QXZ("CHATS",6);
+	} 
+elseif ($EMAIL=='Y') 
+	{
 	$rpt_type_verbiage=_QXZ("EMAIL",6);
 	$rpt_type_verbiages=_QXZ("EMAILS",6);
-} else {
+	} 
+else 
+	{
 	$rpt_type_verbiage=_QXZ("CALL",6);
 	$rpt_type_verbiages=_QXZ("CALLS",6);
-}
+	}
 
 ##############################
 #########  CALL HOLD TIME BREAKDOWN IN SECONDS
@@ -1062,10 +1407,10 @@ $CSV_text2.="\n\"$rpt_type_verbiage "._QXZ("HOLD TIME BREAKDOWN IN SECONDS")."\"
 $CSV_text2.="\"\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\"TOTAL\"\n";
 
 
-$stmt="select count(*),queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) group by queue_seconds;";
+$stmt="select count(*),queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and  campaign_id IN($group_SQL) group by queue_seconds;";
 if ($DID=='Y')
 	{
-	$stmt="select count(*),queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by queue_seconds;";
+	$stmt="select count(*),queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) group by queue_seconds;";
 	}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
@@ -1122,14 +1467,14 @@ $CSV_text2.="\"\",\"$hd_0\",\"$hd_5\",\"$hd10\",\"$hd15\",\"$hd20\",\"$hd25\",\"
 
 
 if ($report_display_type=="HTML") {
-	$stmt="select count(*),round(queue_seconds) as rd_sec from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) group by rd_sec order by rd_sec asc;";
-	$ms_stmt="select queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) order by queue_seconds desc limit 1;"; 
-	$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) group by queue_seconds order by ct desc limit 1;";
+	$stmt="select count(*),round(queue_seconds) as rd_sec from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and campaign_id IN($group_SQL) group by rd_sec order by rd_sec asc;";
+	$ms_stmt="select queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and campaign_id IN($group_SQL) order by queue_seconds desc limit 1;"; 
+	$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and  campaign_id IN($group_SQL) group by queue_seconds order by ct desc limit 1;";
 	if ($DID=='Y')
 		{
-		$stmt="select count(*),round(queue_seconds) as rd_sec from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by rd_sec;";
-		$ms_stmt="select queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) order by queue_seconds desc limit 1;"; 
-		$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by queue_seconds order by ct desc limit 1;";
+		$stmt="select count(*),round(queue_seconds) as rd_sec from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) group by rd_sec;";
+		$ms_stmt="select queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) order by queue_seconds desc limit 1;"; 
+		$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) group by queue_seconds order by ct desc limit 1;";
 		}
 	if ($DB) {$GRAPH_text.=$stmt."\n";}
 	$ms_rslt=mysql_to_mysqli($ms_stmt, $link);
@@ -1206,10 +1551,10 @@ $ASCII_text.="+-----------------------------------------------------------------
 $CSV_text2.="\n\"$rpt_type_verbiage "._QXZ("DROP TIME BREAKDOWN IN SECONDS")."\"\n";
 $CSV_text2.="\"\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\""._QXZ("TOTAL")."\"\n";
 
-$stmt="select count(*),queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and status IN('DROP','XDROP') group by queue_seconds;";
+$stmt="select count(*),queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and  campaign_id IN($group_SQL) and status IN('DROP','XDROP') group by queue_seconds;";
 if ($DID=='Y')
 	{
-	$stmt="select count(*),queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status IN('DROP','XDROP') group by queue_seconds;";
+	$stmt="select count(*),queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) and status IN('DROP','XDROP') group by queue_seconds;";
 	}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
@@ -1266,14 +1611,14 @@ $ASCII_text.="+-----------------------------------------------------------------
 $CSV_text2.="\"\",\"$dd_0\",\"$dd_5\",\"$dd10\",\"$dd15\",\"$dd20\",\"$dd25\",\"$dd30\",\"$dd35\",\"$dd40\",\"$dd45\",\"$dd50\",\"$dd55\",\"$dd60\",\"$dd90\",\"$dd99\",\"$BDdropCALLS\"\n";
 
 if ($report_display_type=="HTML") {
-	$stmt="select count(*),round(queue_seconds) as rd_sec from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status IN('DROP','XDROP') group by rd_sec order by rd_sec asc;";
-	$ms_stmt="select queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status IN('DROP','XDROP') order by queue_seconds desc limit 1;"; 
-	$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and status IN('DROP','XDROP') group by queue_seconds order by ct desc limit 1;";
+	$stmt="select count(*),round(queue_seconds) as rd_sec from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and campaign_id IN($group_SQL) and status IN('DROP','XDROP') group by rd_sec order by rd_sec asc;";
+	$ms_stmt="select queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and campaign_id IN($group_SQL) and status IN('DROP','XDROP') order by queue_seconds desc limit 1;"; 
+	$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and  campaign_id IN($group_SQL) and status IN('DROP','XDROP') group by queue_seconds order by ct desc limit 1;";
 	if ($DID=='Y')
 		{
-		$stmt="select count(*),round(queue_seconds) as rd_sec from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status IN('DROP','XDROP') group by rd_sec;";
-		$ms_stmt="select queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status IN('DROP','XDROP') order by queue_seconds desc limit 1;"; 
-		$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status IN('DROP','XDROP') group by queue_seconds order by ct desc limit 1;";
+		$stmt="select count(*),round(queue_seconds) as rd_sec from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) and status IN('DROP','XDROP') group by rd_sec;";
+		$ms_stmt="select queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) and status IN('DROP','XDROP') order by queue_seconds desc limit 1;"; 
+		$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) and status IN('DROP','XDROP') group by queue_seconds order by ct desc limit 1;";
 		}
 	if ($DB) {$GRAPH_text.=$stmt."\n";}
 	$ms_rslt=mysql_to_mysqli($ms_stmt, $link);
@@ -1351,10 +1696,10 @@ $ASCII_text.="----------+-------------------------------------------------------
 $CSV_text2.="\n\"$rpt_type_verbiage "._QXZ("ANSWERED TIME AND PERCENT BREAKDOWN IN SECONDS")."\"\n";
 $CSV_text2.="\"\",\"0\",\"5\",\"10\",\"15\",\"20\",\"25\",\"30\",\"35\",\"40\",\"45\",\"50\",\"55\",\"60\",\"90\",\"+90\",\""._QXZ("TOTAL")."\"\n";
 
-$stmt="select count(*),queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by queue_seconds;";
+$stmt="select count(*),queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and  campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by queue_seconds;";
 if ($DID=='Y')
 	{
-	$stmt="select count(*),queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by queue_seconds;";
+	$stmt="select count(*),queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by queue_seconds;";
 	}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
@@ -1556,14 +1901,14 @@ $CSV_text2.="\""._QXZ("CUM")." %\",\"$pCad_0\",\"$pCad_5\",\"$pCad10\",\"$pCad15
 $CSV_text2.="\""._QXZ("CUM ANS")." %\",\"$ApCad_0\",\"$ApCad_5\",\"$ApCad10\",\"$ApCad15\",\"$ApCad20\",\"$ApCad25\",\"$ApCad30\",\"$ApCad35\",\"$ApCad40\",\"$ApCad45\",\"$ApCad50\",\"$ApCad55\",\"$ApCad60\",\"$ApCad90\",\"$ApCad99\"\n";
 
 if ($report_display_type=="HTML") {
-	$stmt="select count(*),round(queue_seconds) as rd_sec from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by rd_sec order by rd_sec asc;";
-	$ms_stmt="select queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') order by queue_seconds desc limit 1;"; 
-	$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by queue_seconds order by ct desc limit 1;";
+	$stmt="select count(*),round(queue_seconds) as rd_sec from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by rd_sec order by rd_sec asc;";
+	$ms_stmt="select queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') order by queue_seconds desc limit 1;"; 
+	$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and  campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by queue_seconds order by ct desc limit 1;";
 	if ($DID=='Y')
 		{
-		$stmt="select count(*),round(queue_seconds) as rd_sec from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by rd_sec;";
-		$ms_stmt="select queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') order by queue_seconds desc limit 1;"; 
-		$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by queue_seconds order by ct desc limit 1;";
+		$stmt="select count(*),round(queue_seconds) as rd_sec from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by rd_sec;";
+		$ms_stmt="select queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') order by queue_seconds desc limit 1;"; 
+		$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by queue_seconds order by ct desc limit 1;";
 		}
 	if ($DB) {$GRAPH_text.=$stmt."\n";}
 	$ms_rslt=mysql_to_mysqli($ms_stmt, $link);
@@ -1639,10 +1984,10 @@ $ASCII_text.="+----------------------+------------+\n";
 $CSV_text3.="\n\"$rpt_type_verbiage "._QXZ("HANGUP REASON STATS")."\"\n";
 $CSV_text3.="\""._QXZ("HANGUP REASON")."\",\"$rpt_type_verbiages\"\n";
 
-$stmt="select count(*),term_reason from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) group by term_reason order by term_reason;";
+$stmt="select count(*),term_reason from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and  campaign_id IN($group_SQL) group by term_reason order by term_reason;";
 if ($DID=='Y')
 	{
-	$stmt="select count(*),term_reason from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by term_reason order by term_reason;";
+	$stmt="select count(*),term_reason from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) group by term_reason order by term_reason;";
 	}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
@@ -1732,10 +2077,10 @@ $CSV_text4.="\""._QXZ("STATUS")."\",\""._QXZ("DESCRIPTION")."\",\""._QXZ("CATEGO
 
 
 ## get counts and time totals for all statuses in this campaign
-$stmt="select count(*),status,sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) group by status;";
+$stmt="select count(*),status,sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and  campaign_id IN($group_SQL) group by status;";
 if ($DID=='Y')
 	{
-	$stmt="select count(*),status,sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by status;";
+	$stmt="select count(*),status,sum(length_in_sec) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) group by status;";
 	}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
@@ -1987,10 +2332,10 @@ $CSV_text6.="\n\"$rpt_type_verbiage "._QXZ("INITIAL QUEUE POSITION BREAKDOWN")."
 $CSV_text6.="\"\",\"1\",\"2\",\"3\",\"4\",\"5\",\"6\",\"7\",\"8\",\"9\",\"10\",\"15\",\"20\",\"25\",\"+25\",\""._QXZ("TOTAL")."\"\n";
 
 
-$stmt="select count(*),queue_position from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) group by queue_position;";
+$stmt="select count(*),queue_position from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and  campaign_id IN($group_SQL) group by queue_position;";
 if ($DID=='Y')
 	{
-	$stmt="select count(*),queue_position from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by queue_position;";
+	$stmt="select count(*),queue_position from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) group by queue_position;";
 	}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
@@ -2043,14 +2388,14 @@ $CSV_text6.="\"\",\"$qp_1\",\"$qp_2\",\"$qp_3\",\"$qp_4\",\"$qp_5\",\"$qp_6\",\"
 
 if ($report_display_type=="HTML") 
 	{
-	$stmt="select count(*),queue_position as qp from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) group by qp order by qp asc;";
-	$ms_stmt="select queue_position from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) order by queue_position desc limit 1;"; 
-	$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) group by queue_position order by ct desc limit 1;";
+	$stmt="select count(*),queue_position as qp from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and campaign_id IN($group_SQL) group by qp order by qp asc;";
+	$ms_stmt="select queue_position from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and campaign_id IN($group_SQL) order by queue_position desc limit 1;"; 
+	$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and campaign_id IN($group_SQL) group by queue_position order by ct desc limit 1;";
 	if ($DID=='Y')
 		{
-		$stmt="select count(*),queue_position as qp from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by qp order by qp asc;";
-		$ms_stmt="select queue_position from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) order by queue_position desc limit 1;"; 
-		$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by queue_position order by ct desc limit 1;";
+		$stmt="select count(*),queue_position as qp from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) group by qp order by qp asc;";
+		$ms_stmt="select queue_position from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) order by queue_position desc limit 1;"; 
+		$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) group by queue_position order by ct desc limit 1;";
 		}
 	if ($DB) {$GRAPH_text.=$stmt."\n";}
 	$ms_rslt=mysql_to_mysqli($ms_stmt, $link);
@@ -2141,10 +2486,10 @@ $CALLS_graph=$graph_header."<th class='thgraph' scope='col'>$rpt_type_verbiages 
 $TIMEHMS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TIME H:M:S")."</th></tr>";
 $AVERAGE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVERAGE")."</th></tr>";
 
-$stmt="select ".$vicidial_closer_log_table.".user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from ".$vicidial_closer_log_table.",vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and ".$vicidial_closer_log_table.".user is not null and length_in_sec is not null and ".$vicidial_closer_log_table.".user=vicidial_users.user group by ".$vicidial_closer_log_table.".user;";
+$stmt="select ".$vicidial_closer_log_table.".user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from ".$vicidial_closer_log_table.",vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and  campaign_id IN($group_SQL) and ".$vicidial_closer_log_table.".user is not null and length_in_sec is not null and ".$vicidial_closer_log_table.".user=vicidial_users.user group by ".$vicidial_closer_log_table.".user;";
 if ($DID=='Y')
 	{
-	$stmt="select ".$vicidial_closer_log_table.".user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from ".$vicidial_closer_log_table.",vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and ".$vicidial_closer_log_table.".user is not null and length_in_sec is not null and ".$vicidial_closer_log_table.".user=vicidial_users.user group by ".$vicidial_closer_log_table.".user;";
+	$stmt="select ".$vicidial_closer_log_table.".user,full_name,count(*),sum(length_in_sec),avg(length_in_sec) from ".$vicidial_closer_log_table.",vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL) and ".$vicidial_closer_log_table.".user is not null and length_in_sec is not null and ".$vicidial_closer_log_table.".user=vicidial_users.user group by ".$vicidial_closer_log_table.".user;";
 	}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
@@ -2262,10 +2607,10 @@ $MAIN.="<FONT SIZE=0>\n";
 ##############################
 #########  15-minute increment breakdowns of total calls and drops, then answered table
 $BDansweredCALLS = 0;
-$stmt="SELECT status,queue_seconds,UNIX_TIMESTAMP(call_date),call_date from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL);";
+$stmt="SELECT status,queue_seconds,UNIX_TIMESTAMP(call_date),call_date from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and campaign_id IN($group_SQL);";
 if ($DID=='Y')
 	{
-	$stmt="SELECT status,queue_seconds,UNIX_TIMESTAMP(call_date),call_date from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL);";
+	$stmt="SELECT status,queue_seconds,UNIX_TIMESTAMP(call_date),call_date from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and uniqueid IN($unid_SQL);";
 	}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
@@ -2536,6 +2881,7 @@ while ($i <= 96)
 	{
 	$char_counter=0;
 	$time = '      ';
+
 	if ($h >= 4) 
 		{
 		$hour++;
@@ -2592,8 +2938,11 @@ while ($i <= 96)
 	$adB99[$i] = sprintf("%5s", $adB99[$i]);
 	$Fanswer[$i] = sprintf("%10s", $Fanswer[$i]);
 
+	if ($i >= $first_shift_record && $i<=$last_shift_record) # May need to use lower.  Ask Matt.
+	{
 	$MAIN.="|$time| $adB_0[$i] $adB_5[$i] $adB10[$i] $adB15[$i] $adB20[$i] $adB25[$i] $adB30[$i] $adB35[$i] $adB40[$i] $adB45[$i] $adB50[$i] $adB55[$i] $adB60[$i] $adB90[$i] $adB99[$i] | $Fanswer[$i] |\n";
 	$CSV_text8.="\"$time\",\"$adB_0[$i]\",\"$adB_5[$i]\",\"$adB10[$i]\",\"$adB15[$i]\",\"$adB20[$i]\",\"$adB25[$i]\",\"$adB30[$i]\",\"$adB35[$i]\",\"$adB40[$i]\",\"$adB45[$i]\",\"$adB50[$i]\",\"$adB55[$i]\",\"$adB60[$i]\",\"$adB90[$i]\",\"$adB99[$i]\",\"$Fanswer[$i]\"\n";
+	}
 
 	$i++;
 	$h++;

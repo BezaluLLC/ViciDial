@@ -7938,9 +7938,7 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 		}
 	else
 		{
-
-		### CHECK FOR EMAILS ###
-		#if ($email_group_ct>0) {
+		### CHECK FOR EMAILS AND CHATS ###
 
 		### Check for transfers
 		$stmt="SELECT vicidial_email_list.lead_id, vicidial_email_list.email_date, vicidial_email_list.email_to, vicidial_email_list.email_from, vicidial_email_list.subject, vicidial_xfer_log.campaign_id, vicidial_email_list.email_row_id, vicidial_xfer_log.xfercallid from vicidial_email_list, vicidial_xfer_log where vicidial_email_list.status='QUEUE' and vicidial_email_list.user='$user' and vicidial_xfer_log.xfercallid=vicidial_email_list.xfercallid and direction='INBOUND' and vicidial_xfer_log.campaign_id in ($email_group_str) and closer='EMAIL_XFER' order by vicidial_xfer_log.call_date asc limit 1";
@@ -7962,7 +7960,7 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 			$email_ct = mysqli_num_rows($rslt);
 			}
 
-		### Check for chats
+		### If no emails have been sent to agent, check for chats, this is the code section where the agent interface will grab the next available chat
 		if ($email_ct==0) 
 			{
 			$stmt="select * from vicidial_live_chats where status='WAITING' and group_id in ($chat_group_str) order by chat_id asc limit 1";
