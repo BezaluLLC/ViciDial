@@ -8,12 +8,15 @@
 #
 # Builds:
 # 151212-0829 - First Build for customer chat
+# 151217-1015 - Allow for group_id variable
 #
 
 if (isset($_GET["lead_id"]))	{$lead_id=$_GET["lead_id"];}
 	elseif (isset($_POST["lead_id"]))	{$lead_id=$_POST["lead_id"];}
 if (isset($_GET["chat_id"]))	{$chat_id=$_GET["chat_id"];}
 	elseif (isset($_POST["chat_id"]))	{$chat_id=$_POST["chat_id"];}
+if (isset($_GET["group_id"]))	{$chat_group_id=$_GET["group_id"];}
+	elseif (isset($_POST["group_id"]))	{$chat_group_id=$_POST["group_id"];}
 if (isset($_GET["chat_group_id"]))	{$chat_group_id=$_GET["chat_group_id"];}
 	elseif (isset($_POST["chat_group_id"]))	{$chat_group_id=$_POST["chat_group_id"];}
 if (isset($_GET["email"]))	{$email=$_GET["email"];}

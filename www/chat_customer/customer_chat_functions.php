@@ -4,6 +4,7 @@
 # CHANGES
 # 151212-0828 - First Build for customer chat
 # 151213-1106 - Added variable filtering
+# 151217-1016 - Allow for carrying of group_id through to new chat
 #
 
 require("dbconnect_mysqli.php");
@@ -43,6 +44,8 @@ if (isset($_GET["chat_message"]))					{$chat_message=$_GET["chat_message"];}
 	elseif (isset($_POST["chat_message"]))			{$chat_message=$_POST["chat_message"];}
 if (isset($_GET["lead_id"]))						{$lead_id=$_GET["lead_id"];}
 	elseif (isset($_POST["lead_id"]))				{$lead_id=$_POST["lead_id"];}
+if (isset($_GET["group_id"]))						{$group_id=$_GET["group_id"];}
+	elseif (isset($_POST["group_id"]))				{$group_id=$_POST["group_id"];}
 if (isset($_GET["user"]))							{$user=$_GET["user"];}
 	elseif (isset($_POST["user"]))					{$user=$_POST["user"];}
 if (isset($_GET["user_level"]))						{$user_level=$_GET["user_level"];}
@@ -143,7 +146,7 @@ if ($action=="update_chat_window" && $chat_id) {
 	$status_stmt="select status, chat_creator from vicidial_live_chats where chat_id='$chat_id'";
 	$status_rslt=mysql_to_mysqli($status_stmt, $link);
 	if (mysqli_num_rows($status_rslt)==0) {
-		echo "<font class='chat_title alert'>Chat $chat_id does not exist or has been closed</font><BR/><BR/><font class='chat_title'><a href='".$chat_url."'>GO BACK TO CHAT FORM</a></font>\n";
+		echo "<font class='chat_title alert'>Chat $chat_id does not exist or has been closed</font><BR/><BR/><font class='chat_title'><a href='".$chat_url."?group_id=$group_id'>GO BACK TO CHAT FORM</a></font>\n";
 	} else {
 		$status_row=mysqli_fetch_row($status_rslt);
 		
@@ -188,7 +191,7 @@ if ($action=="update_chat_window" && $chat_id) {
 				echo "<input type='hidden' id='current_message_count' name='current_message_count' value='$current_messages'>\n";
 
 			} else {	
-				echo "<font class='chat_title bold'>You have left chat $chat_id.</font><BR/><BR/><font class='chat_title'><a href='".$chat_url."'>GO BACK TO CHAT FORM</a></font>\n";
+				echo "<font class='chat_title bold'>You have left chat $chat_id.</font><BR/><BR/><font class='chat_title'><a href='".$chat_url."?group_id=$group_id'>GO BACK TO CHAT FORM</a></font>\n";
 			}
 		} else {
 			if ($status_row[1]=="NONE") {

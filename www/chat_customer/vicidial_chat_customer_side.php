@@ -11,6 +11,7 @@
 # 150902-2100 - First build
 # 151212-0830 - First Build for customer chat
 # 151213-1105 - Added variable filtering
+# 151217-1017 - Allow for pre-populating of group_id
 #
 
 require("dbconnect_mysqli.php");
@@ -229,6 +230,8 @@ if ($send_request=="SEND REQUEST") { # For people requesting a chat with an agen
 <link rel="stylesheet" type="text/css" href="css/simpletree.css" />
 
 <script language="Javascript">
+var group_id='<?php echo $group_id ?>';
+
 function PleaseWait() {
 	document.getElementById('chat_request_span').style.display="none";
 	document.getElementById('please_wait_span').style.display="block";
@@ -251,7 +254,7 @@ function LeaveChat(chat_id, user, chat_member_name) {
 		{
 		var chat_member_name=document.getElementById('chat_member_name').value;
 		}
-
+	
 	var xmlhttp=false;
 	if (!xmlhttp && typeof XMLHttpRequest!='undefined')
 		{
@@ -259,7 +262,7 @@ function LeaveChat(chat_id, user, chat_member_name) {
 		}
 	if (xmlhttp) 
 		{ 
-		chat_query = "&action=leave_chat&chat_id="+chat_id+"&user="+user+"&chat_member_name="+chat_member_name;
+		chat_query = "&action=leave_chat&chat_id="+chat_id+"&group_id="+group_id+"&user="+user+"&chat_member_name="+chat_member_name;
 		// alert(chat_query);
 		xmlhttp.open('POST', 'customer_chat_functions.php'); 
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -294,7 +297,7 @@ function UpdateChatWindow() {
 			}
 		if (xmlhttp) 
 			{ 
-			chat_query = "&chat_id="+chat_id+"&user="+user+"&current_message_count="+current_message_count+"&action=update_chat_window&keepalive=1";
+			chat_query = "&chat_id="+chat_id+"&group_id="+group_id+"&user="+user+"&current_message_count="+current_message_count+"&action=update_chat_window&keepalive=1";
 			xmlhttp.open('POST', 'customer_chat_functions.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(chat_query); 
@@ -331,7 +334,7 @@ function CustomerSendMessage(chat_id, user, message, chat_member_name) {
 		}
 	if (xmlhttp) 
 		{ 
-		chat_query = "&chat_message="+chat_message+"&chat_id="+chat_id+"&chat_member_name="+chat_member_name+"&user="+user+"&chat_level=0&action=send_message";
+		chat_query = "&chat_message="+chat_message+"&chat_id="+chat_id+"&group_id="+group_id+"&chat_member_name="+chat_member_name+"&user="+user+"&chat_level=0&action=send_message";
 		xmlhttp.open('POST', 'customer_chat_functions.php'); 
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		xmlhttp.send(chat_query); 
@@ -363,7 +366,7 @@ $chat_title="Request chat with agent"; # This can be modified for customization 
 	<body>
 	<form action="<?php echo $PHP_SELF; ?>" method="post">
 	<span id="chat_request_span">
-		<table width="500" border=0 cellpadding=3 cellspacing=3 height="300">
+		<table width="500" border=0 cellpadding=1 cellspacing=1 height="300">
 			<tr>
 				<th colspan='2' class='body_small_bold'><?php echo $chat_title; ?></th>
 			</tr>
@@ -373,6 +376,10 @@ $chat_title="Request chat with agent"; # This can be modified for customization 
 				<input type='text' class="cust_form" name='first_name' id='first_name' size='10' maxlength='30'>&nbsp;<input class="cust_form" type='text' name='last_name' id='last_name' size='15' maxlength='30'>
 				</td>
 			</tr>
+			<?php
+			if ($group_id=='')
+				{
+			?>
 			<tr>
 				<td align='right' class='body_small'>Select the department you wish to chat with:</td>
 				<td align='left'>
@@ -387,6 +394,13 @@ $chat_title="Request chat with agent"; # This can be modified for customization 
 				</select>
 				</td>
 			</tr>
+			<?php
+				}
+			else
+				{
+				echo "<tr><td><input type=hidden name=group_id value=\"$group_id\"></td></tr>\n";
+				}
+			?>
 			<tr>
 				<td align='right' class='body_small'>Phone number (optional):</td>
 				<td align='left'>
@@ -409,7 +423,7 @@ $chat_title="Request chat with agent"; # This can be modified for customization 
 } else if ($chat_id && $group_id && (!$first_name || !$last_name)) {
 ?>
 	<body>
-	<form action="<?php echo $PHP_SELF; ?>" method="post">
+	<form action="<?php echo $PHP_SELF; ?>" method="post" name="chat_form" id="chat_form">
 	<span id="chat_request_span">
 		<table width="500" border=0 cellpadding=3 cellspacing=3 height="300">
 			<tr>
@@ -447,7 +461,7 @@ $chat_title="Request chat with agent"; # This can be modified for customization 
 } else {
 ?>
 	<body onLoad="StartRefresh();" onUnload="javascript:clearInterval(rInt); LeaveChat();">
-	<form name='chat_form' action='<?php echo $PHP_SELF; ?>'>
+	<form action='<?php echo $PHP_SELF; ?>' name="chat_form" id="chat_form">
 	<table width='100%' border='0'>
 	<tr>
 		<td class='chat_window' height='250' width='100%'>
@@ -472,7 +486,7 @@ $chat_title="Request chat with agent"; # This can be modified for customization 
 					<input type='checkbox' id='MuteCustomerChatAlert' name='MuteCustomerChatAlert'>Mute alert sound
 				</td>
 				<td valign='top' align='right'><BR>
-					<input class='red_btn' type='button' style="width:100px" value="<?php echo _QXZ("LEAVE CHAT"); ?>" onClick="LeaveChat(document.getElementById('chat_id').value, document.getElementById('user').value, document.getElementById('chat_member_name').value)"
+					<input class='red_btn' type='button' style="width:100px" value="<?php echo _QXZ("LEAVE CHAT"); ?>" onClick="LeaveChat(document.getElementById('chat_id').value, document.getElementById('user').value, document.getElementById('chat_member_name').value)">;
 				</td>
 			</tr>
 		</table>
@@ -489,6 +503,7 @@ $chat_title="Request chat with agent"; # This can be modified for customization 
 	<input type="hidden" id="chat_id" name="chat_id" value="<?php echo $chat_id; ?>">
 	<input type="hidden" id="chat_creator" name="chat_creator" value="<?php echo $chat_creator; ?>">
 	<input type="hidden" id="lead_id" name="lead_id" value="<?php echo $lead_id; ?>">
+	<input type="hidden" id="group_id" name="group_id" value="<?php echo $group_id; ?>">
 	<audio id='CustomerChatAudioAlertFile'><source src="sounds/chat_alert.mp3" type="audio/mpeg"></audio>
 	</form>
 	</body>
