@@ -52,6 +52,7 @@
 # 151124-1236 - Changed bottom chart to pull all time segments
 # 151125-1633 - Added search archive option
 # 151216-1023 - Forked from original as "v2" for Call Time option changes, added CHAT option
+# 151218-0651 - Added User Group Call Times restrictions to select list
 #
 
 $startMS = microtime();
@@ -523,7 +524,7 @@ $MAIN.="<option value=\"AM\">"._QXZ("AM  (03:45 - 15:15)")."</option>\n";
 $MAIN.="<option value=\"PM\">"._QXZ("PM  (15:15 - 23:15)")."</option>\n";
 $MAIN.="<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
 
-$call_time_stmt="select call_time_id, call_time_name from vicidial_call_times order by call_time_id";
+$call_time_stmt="select call_time_id, call_time_name from vicidial_call_times $whereLOGadmin_viewable_call_timesSQL order by call_time_id;";
 $call_time_rslt=mysql_to_mysqli($call_time_stmt, $link);
 if (mysqli_num_rows($call_time_rslt)>0) {
 	$MAIN.="<option value=\"\"></option>\n";
@@ -566,7 +567,7 @@ else
 {
 $call_time_ranges=array();
 
-$ct_stmt="select * from vicidial_call_times where call_time_id='$shift'";
+$ct_stmt="select * from vicidial_call_times where call_time_id='$shift' $LOGadmin_viewable_call_timesSQL;";
 if ($DB) {$MAIN.=$ct_stmt."\n";}
 $ct_rslt=mysql_to_mysqli($ct_stmt, $link);
 if (mysqli_num_rows($ct_rslt)>0) 
