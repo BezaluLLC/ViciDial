@@ -53,6 +53,7 @@
 # 151125-1633 - Added search archive option
 # 151216-1023 - Forked from original as "v2" for Call Time option changes, added CHAT option
 # 151218-0651 - Added User Group Call Times restrictions to select list
+# 151219-1702 - Some text changes for more efficient dynamic language function
 #
 
 $startMS = microtime();
@@ -1115,11 +1116,11 @@ $average_answer_seconds =	sprintf("%10s", $average_answer_seconds);
 
 if ($CHAT=='Y')
 	{
-	$MAIN.=_QXZ("Total Chats taken in to this In-Group:",47)."$TOTALcalls\n";
-	$MAIN.=_QXZ("Average Chat Length for all Chats:",47)."$average_call_seconds "._QXZ("seconds")."\n";
-	$MAIN.=_QXZ("Answered Chats:",47)."$ANSWEREDcalls  $ANSWEREDpercent%\n";
-	$MAIN.=_QXZ("Average queue time for Answered Chats:",47)."$average_answer_seconds "._QXZ("seconds")."\n";
-	$MAIN.=_QXZ("Chats taken into the IVR for this In-Group:",47)."$IVRcalls\n";
+	$MAIN.=_QXZ("Total Chats taken in to this In-Group",47).": $TOTALcalls\n";
+	$MAIN.=_QXZ("Average Chat Length for all Chats",47).": $average_call_seconds "._QXZ("seconds")."\n";
+	$MAIN.=_QXZ("Answered Chats",47).": $ANSWEREDcalls  $ANSWEREDpercent%\n";
+	$MAIN.=_QXZ("Average queue time for Answered Chats",47).": $average_answer_seconds "._QXZ("seconds")."\n";
+	$MAIN.=_QXZ("Chats taken into the IVR for this In-Group",47).": $IVRcalls\n";
 
 	$CSV_text1.="\""._QXZ("Total Chats taken in to this In-Group").":\",\"$TOTALcalls\"\n";
 	$CSV_text1.="\""._QXZ("Average Chat Length for all Chats").":\",\"$average_call_seconds "._QXZ("seconds")."\"\n";
@@ -1129,11 +1130,11 @@ if ($CHAT=='Y')
 	}
 elseif ($EMAIL=='Y')
 	{
-	$MAIN.=_QXZ("Total Emails taken in to this In-Group:",47)."$TOTALcalls\n";
-	$MAIN.=_QXZ("Average Email Length for all Emails:",47)."$average_call_seconds "._QXZ("seconds")."\n";
-	$MAIN.=_QXZ("Answered Emails:",47)."$ANSWEREDcalls  $ANSWEREDpercent%\n";
-	$MAIN.=_QXZ("Average queue time for Answered Emails:",47)."$average_answer_seconds "._QXZ("seconds")."\n";
-	$MAIN.=_QXZ("Emails taken into the IVR for this In-Group:",47)."$IVRcalls\n";
+	$MAIN.=_QXZ("Total Emails taken in to this In-Group",47).": $TOTALcalls\n";
+	$MAIN.=_QXZ("Average Email Length for all Emails",47).": $average_call_seconds "._QXZ("seconds")."\n";
+	$MAIN.=_QXZ("Answered Emails",47).": $ANSWEREDcalls  $ANSWEREDpercent%\n";
+	$MAIN.=_QXZ("Average queue time for Answered Emails",47).": $average_answer_seconds "._QXZ("seconds")."\n";
+	$MAIN.=_QXZ("Emails taken into the IVR for this In-Group",47).": $IVRcalls\n";
 
 	$CSV_text1.="\""._QXZ("Total Emails taken in to this In-Group").":\",\"$TOTALcalls\"\n";
 	$CSV_text1.="\""._QXZ("Average Email Length for all Emails").":\",\"$average_call_seconds "._QXZ("seconds")."\"\n";
@@ -1143,11 +1144,11 @@ elseif ($EMAIL=='Y')
 	}
 else
 	{
-	$MAIN.=_QXZ("Total calls taken in to this In-Group:",47)."$TOTALcalls\n";
-	$MAIN.=_QXZ("Average Call Length for all Calls:",47)."$average_call_seconds "._QXZ("seconds")."\n";
-	$MAIN.=_QXZ("Answered Calls:",47)."$ANSWEREDcalls  $ANSWEREDpercent%\n";
-	$MAIN.=_QXZ("Average queue time for Answered Calls:",47)."$average_answer_seconds "._QXZ("seconds")."\n";
-	$MAIN.=_QXZ("Calls taken into the IVR for this In-Group:",47)."$IVRcalls\n";
+	$MAIN.=_QXZ("Total calls taken in to this In-Group",47).": $TOTALcalls\n";
+	$MAIN.=_QXZ("Average Call Length for all Calls",47).": $average_call_seconds "._QXZ("seconds")."\n";
+	$MAIN.=_QXZ("Answered Calls",47).": $ANSWEREDcalls  $ANSWEREDpercent%\n";
+	$MAIN.=_QXZ("Average queue time for Answered Calls",47).": $average_answer_seconds "._QXZ("seconds")."\n";
+	$MAIN.=_QXZ("Calls taken into the IVR for this In-Group",47).": $IVRcalls\n";
 
 	$CSV_text1.="\""._QXZ("Total calls taken in to this In-Group").":\",\"$TOTALcalls\"\n";
 	$CSV_text1.="\""._QXZ("Average Call Length for all Calls").":\",\"$average_call_seconds "._QXZ("seconds")."\"\n";
@@ -1242,8 +1243,8 @@ if ($CHAT=='Y')
 	{
 	$MAIN.="\n";
 	$MAIN.="---------- "._QXZ("CUSTOM INDICATORS")."\n";
-	$MAIN.="GDE "._QXZ("(Answered/Total chats taken in to this In-Group):",50)."  $ANSWEREDpercent%\n";
-	$MAIN.="ACR "._QXZ("(Dropped/Answered):",50)."  $DROP_ANSWEREDpercent%\n";
+	$MAIN.="GDE "._QXZ("(Answered/Total chats taken in to this In-Group)",50).":  $ANSWEREDpercent%\n";
+	$MAIN.="ACR "._QXZ("(Dropped/Answered)",50).":  $DROP_ANSWEREDpercent%\n";
 
 	$CSV_text1.="\n\""._QXZ("CUSTOM INDICATORS")."\"\n";
 	$CSV_text1.="\"GDE "._QXZ("(Answered/Total chats taken in to this In-Group)").":\",\"$ANSWEREDpercent%\"\n";
@@ -1253,8 +1254,8 @@ elseif ($EMAIL=='Y')
 	{
 	$MAIN.="\n";
 	$MAIN.="---------- "._QXZ("CUSTOM INDICATORS")."\n";
-	$MAIN.="GDE "._QXZ("(Answered/Total emails taken in to this In-Group):",50)."  $ANSWEREDpercent%\n";
-	$MAIN.="ACR "._QXZ("(Dropped/Answered):",50)."  $DROP_ANSWEREDpercent%\n";
+	$MAIN.="GDE "._QXZ("(Answered/Total emails taken in to this In-Group)",50).":  $ANSWEREDpercent%\n";
+	$MAIN.="ACR "._QXZ("(Dropped/Answered)",50).":  $DROP_ANSWEREDpercent%\n";
 
 	$CSV_text1.="\n\""._QXZ("CUSTOM INDICATORS")."\"\n";
 	$CSV_text1.="\"GDE "._QXZ("(Answered/Total emails taken in to this In-Group)").":\",\"$ANSWEREDpercent%\"\n";
@@ -1264,8 +1265,8 @@ else
 	{
 	$MAIN.="\n";
 	$MAIN.="---------- "._QXZ("CUSTOM INDICATORS")."\n";
-	$MAIN.="GDE "._QXZ("(Answered/Total calls taken in to this In-Group):",50)."  $ANSWEREDpercent%\n";
-	$MAIN.="ACR "._QXZ("(Dropped/Answered):",50)."  $DROP_ANSWEREDpercent%\n";
+	$MAIN.="GDE "._QXZ("(Answered/Total calls taken in to this In-Group)",50).":  $ANSWEREDpercent%\n";
+	$MAIN.="ACR "._QXZ("(Dropped/Answered)",50).":  $DROP_ANSWEREDpercent%\n";
 
 	$CSV_text1.="\n\""._QXZ("CUSTOM INDICATORS")."\"\n";
 	$CSV_text1.="\"GDE "._QXZ("(Answered/Total calls taken in to this In-Group)").":\",\"$ANSWEREDpercent%\"\n";
@@ -1274,8 +1275,8 @@ else
 
 if ($DID!='Y')
 	{
-	$MAIN.="TMR1 "._QXZ("(Answered within %1s seconds/Answered):",50,'',$Sanswer_sec_pct_rt_stat_one)." $PCTanswer_sec_pct_rt_stat_one%\n";
-	$MAIN.="TMR2 "._QXZ("(Answered within %1s seconds/Answered):",50,'',$Sanswer_sec_pct_rt_stat_two)." $PCTanswer_sec_pct_rt_stat_two%\n";
+	$MAIN.="TMR1 "._QXZ("(Answered within %1s seconds/Answered)",50,'',$Sanswer_sec_pct_rt_stat_one).": $PCTanswer_sec_pct_rt_stat_one%\n";
+	$MAIN.="TMR2 "._QXZ("(Answered within %1s seconds/Answered)",50,'',$Sanswer_sec_pct_rt_stat_two).": $PCTanswer_sec_pct_rt_stat_two%\n";
 	$CSV_text1.="\"TMR1 "._QXZ("(Answered within %1s seconds/Answered)",0,'',$Sanswer_sec_pct_rt_stat_one).":\",\"$PCTanswer_sec_pct_rt_stat_one%\"\n";
 	$CSV_text1.="\"TMR2 "._QXZ("(Answered within %1s seconds/Answered)",0,'',$Sanswer_sec_pct_rt_stat_two).":\",\"$PCTanswer_sec_pct_rt_stat_two%\"\n";
 	}

@@ -12,28 +12,11 @@
 # 151212-0830 - First Build for customer chat
 # 151213-1105 - Added variable filtering
 # 151217-1017 - Allow for pre-populating of group_id
+# 151219-0850 - Added translation code
 #
 
 require("dbconnect_mysqli.php");
 require("functions.php");
-
-#############################################
-##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
-$rslt=mysql_to_mysqli($stmt, $link);
-        if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
-if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysqli_num_rows($rslt);
-if ($qm_conf_ct > 0)
-        {
-        $row=mysqli_fetch_row($rslt);
-        $non_latin =			$row[0];
-        $SSenable_languages =	$row[1];
-        $SSlanguage_method =	$row[2];
-        }
-##### END SETTINGS LOOKUP #####
-###########################################
-
 
 if (isset($_GET["first_name"]))				{$first_name=$_GET["first_name"];}
 	elseif (isset($_POST["first_name"]))	{$first_name=$_POST["first_name"];}
@@ -55,11 +38,16 @@ if (isset($_GET["lead_id"]))				{$lead_id=$_GET["lead_id"];}
 	elseif (isset($_POST["lead_id"]))		{$lead_id=$_POST["lead_id"];}
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
 	elseif (isset($_POST["user"]))			{$user=$_POST["user"];}
+if (isset($_GET["language"]))				{$language=$_GET["language"];}
+	elseif (isset($_POST["language"]))		{$language=$_POST["language"];}
+if (isset($_GET["stage"]))					{$stage=$_GET["stage"];}
+	elseif (isset($_POST["stage"]))			{$stage=$_POST["stage"];}
 $PHP_SELF=$_SERVER["PHP_SELF"];
 
 $lead_id = preg_replace("/[^0-9]/","",$lead_id);
 $chat_id = preg_replace('/[^- \_\.0-9a-zA-Z]/','',$chat_id);
 $group_id = preg_replace('/[^- \_0-9a-zA-Z]/','',$group_id);
+$language = preg_replace('/[^-\_0-9a-zA-Z]/','',$language);
 
 if ($non_latin < 1)
 	{
@@ -75,16 +63,64 @@ if ($non_latin < 1)
 else
 	{
 	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
+	$first_name = preg_replace("/\"|\\\\|;/","",$first_name);
+	$last_name = preg_replace("/\"|\\\\|;/","",$last_name);
+	$email = preg_replace("/\'|\"|\\\\|;/","",$email);
+	$phone_number = preg_replace('/[^- \'\+\.\:\/\@\%\_0-9a-zA-Z]/','',$email);
 	}
+
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$VUselected_language='';
+$stmt = "SELECT use_non_latin,enable_languages,language_method,default_language,allow_chats FROM system_settings;";
+$rslt=mysql_to_mysqli($stmt, $link);
+        if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysqli_num_rows($rslt);
+if ($qm_conf_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$non_latin =			$row[0];
+	$SSenable_languages =	$row[1];
+	$SSlanguage_method =	$row[2];
+	$SSdefault_language =	$row[3];
+	$SSallow_chats =		$row[4];
+	}
+$VUselected_language = $SSdefault_language;
+##### END SETTINGS LOOKUP #####
+###########################################
+
+if (strlen($language) > 1)
+	{
+	$stmt = "SELECT language_code,language_description FROM vicidial_languages where language_id='$language' and active='Y';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+	if ($DB) {echo "$stmt\n";}
+	$lang_good_ct = mysqli_num_rows($rslt);
+	if ($lang_good_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$language_code =		$row[0];
+		$language_description =	$row[1];
+		$VUselected_language = $language;
+		}
+	}
+if ($SSallow_chats < 1)
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo _QXZ("Error, chat disabled on this system");
+	exit;
+	}
+
 
 # http://192.168.1.2/chat_customer/vicidial_chat_customer_side.php?user=1440723435.60926&lead_id=1079350&group_id=CHAT_TEST_GROUP&chat_id=254&email=joej%40test.com
 $phone_number=preg_replace('/[^0-9]/', '', $phone_number);
 
-if ($join_chat=="JOIN CHAT") { # For people invited to an existing chat from an agent.
+if ($stage == "join_chat") { # For people invited to an existing chat from an agent.
 	$error_msg="";
 
 	if (!$first_name || !$last_name) {
-		$error_msg="Please enter your first and last name";
+		$error_msg=_QXZ("Please enter your first and last name");
 	} else { 
 		$chat_member_name="$first_name $last_name";
 		$ip_address=$_SERVER['REMOTE_ADDR'];
@@ -92,7 +128,7 @@ if ($join_chat=="JOIN CHAT") { # For people invited to an existing chat from an 
 
 		# SEARCH FOR CUSTOMER IN DATABASE - IF NOT FOUND BY PHONE OR IP ADDRESS MAKE A NEW USER
 		if ($lead_id) { # CAN OCCUR VIA INVITE
-			$upd_stmt="update vicidial_list set first_name='$first_name', last_name='$last_name', status='WCHAT' where lead_id='$lead_id' limit 1";
+			$upd_stmt="UPDATE vicidial_list set first_name=\"$first_name\", last_name=\"$last_name\", status='WCHAT' where lead_id='$lead_id' limit 1";
 			# update email and security_phrase?
 			$upd_rslt=mysql_to_mysqli($upd_stmt, $link);
 
@@ -102,7 +138,7 @@ if ($join_chat=="JOIN CHAT") { # For people invited to an existing chat from an 
 			if (mysqli_num_rows($alert_rslt)>0) {
 				$alert_row=mysqli_fetch_row($alert_rslt);
 				$chat_creator=$alert_row[0];
-				$ins_alert_stmt="insert into vicidial_chat_log(poster, chat_member_name, message_time, message, chat_id, chat_level) select '" . mysqli_real_escape_string($link, $chat_creator) . "', full_name, now(), '" . mysqli_real_escape_string($link, $chat_member_name) . " has joined chat', '" . mysqli_real_escape_string($link, $chat_id) . "', '1' from vicidial_users where user='" . mysqli_real_escape_string($link, $chat_creator) . "'";
+				$ins_alert_stmt="INSERT INTO vicidial_chat_log(poster, chat_member_name, message_time, message, chat_id, chat_level) select '" . mysqli_real_escape_string($link, $chat_creator) . "', full_name, now(), '" . mysqli_real_escape_string($link, $chat_member_name) . " has joined chat', '" . mysqli_real_escape_string($link, $chat_id) . "', '1' from vicidial_users where user='" . mysqli_real_escape_string($link, $chat_creator) . "'";
 				$ins_alert_rslt=mysql_to_mysqli($ins_alert_stmt, $link);
 			}
 		} else {
@@ -122,21 +158,21 @@ if ($join_chat=="JOIN CHAT") { # For people invited to an existing chat from an 
 				$lead_id=$row[0];
 
 				# Update to reflect chat request - should I do this?  And use WCHAT status for "waiting for chat"?
-				$upd_stmt="update vicidial_list set first_name='$first_name', last_name='$last_name', status='WCHAT' where lead_id='$lead_id' limit 1";
+				$upd_stmt="UPDATE vicidial_list set first_name=\"$first_name\", last_name=\"$last_name\", status='WCHAT' where lead_id='$lead_id' limit 1";
 				# update email and security_phrase?
 				$upd_rslt=mysql_to_mysqli($upd_stmt, $link);
 			} else if (!$error_msg) {
 				# Create lead in vicidial_list table (make special system status for waiting for chat)
-				$ins_stmt="insert into vicidial_list(status, first_name, last_name, email, list_id, phone_number, security_phrase) VALUES('WCHAT', '" . mysqli_real_escape_string($link, $first_name) . "', '" . mysqli_real_escape_string($link, $last_name) . "', '" . mysqli_real_escape_string($link, $email) . "', '" . mysqli_real_escape_string($link, $default_list_id) . "', '" . mysqli_real_escape_string($link, $phone_number) . "', '" . mysqli_real_escape_string($link, $group_id) . "')";
+				$ins_stmt="INSERT INTO vicidial_list(status, first_name, last_name, email, list_id, phone_number, security_phrase) VALUES('WCHAT', '" . mysqli_real_escape_string($link, $first_name) . "', '" . mysqli_real_escape_string($link, $last_name) . "', '" . mysqli_real_escape_string($link, $email) . "', '" . mysqli_real_escape_string($link, $default_list_id) . "', '" . mysqli_real_escape_string($link, $phone_number) . "', '" . mysqli_real_escape_string($link, $group_id) . "')";
 				$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 				$lead_id=mysqli_insert_id($link);
 			}
 		}
 
 		if (!$lead_id || $lead_id==0) {
-			$error_msg.="<BR>\nCould not find or create dialer entry";
+			$error_msg.="<BR>\n"._QXZ("Could not find or create dialer entry");
 		} else {
-			$chat_upd_stmt="update vicidial_live_chats set lead_id='$lead_id' where chat_id='$chat_id'";
+			$chat_upd_stmt="UPDATE vicidial_live_chats set lead_id='$lead_id' where chat_id='$chat_id'";
 			$chat_upd_rslt=mysql_to_mysqli($chat_upd_stmt, $link);
 
 		}
@@ -145,27 +181,27 @@ if ($join_chat=="JOIN CHAT") { # For people invited to an existing chat from an 
 	if (!$error_msg) {
 		if ($chat_id>0) {
 
-			$ins_stmt="insert into vicidial_chat_participants(chat_id, chat_member, chat_member_name, ping_date, vd_agent) VALUES('" . mysqli_real_escape_string($link, $chat_id) . "', '" . mysqli_real_escape_string($link, $user) . "', '" . mysqli_real_escape_string($link, $chat_member_name) . "', now(), 'N')";
+			$ins_stmt="INSERT INTO vicidial_chat_participants(chat_id, chat_member, chat_member_name, ping_date, vd_agent) VALUES('" . mysqli_real_escape_string($link, $chat_id) . "', '" . mysqli_real_escape_string($link, $user) . "', '" . mysqli_real_escape_string($link, $chat_member_name) . "', now(), 'N')";
 			$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 			if (mysqli_affected_rows($link)==0) {
-				$del_stmt="delete from vicidial_live_chats where chat_id='$chat_id'";
+				$del_stmt="DELETE from vicidial_live_chats where chat_id='$chat_id'";
 				$del_rslt=mysql_to_mysqli($del_stmt, $link);
-				$error_msg="Chat started, failure to join"; 
+				$error_msg=_QXZ("Chat started, failure to join"); 
 				unset($chat_id);
 			} else {
 				# echo "$chat_id|$lead_id|$ins_stmt";
 			}
 		} else {
-			$error_msg="Chat not started - $ins_stmt";
+			$error_msg=_QXZ("Chat not started")." - $ins_stmt";
 		}
 	}
 }
 
-if ($send_request=="SEND REQUEST") { # For people requesting a chat with an agent; consider using a special user variable name for this
+if ($stage == 'send_request') { # For people requesting a chat with an agent; consider using a special user variable name for this
 
 	$error_msg="";
 
-	if (!$first_name || !$last_name) {$error_msg="Please enter your first and last name";}
+	if (!$first_name || !$last_name) {$error_msg=_QXZ("Please enter your first and last name");}
 
 	$chat_member_name="$first_name $last_name";
 	$ip_address=$_SERVER['REMOTE_ADDR'];
@@ -185,42 +221,49 @@ if ($send_request=="SEND REQUEST") { # For people requesting a chat with an agen
 		$lead_id=$row[0];
 
 		# Update to reflect chat request - should I do this?  And use WCHAT status for "waiting for chat"?
-		$upd_stmt="update vicidial_list set first_name='" . mysqli_real_escape_string($link, $first_name) . "', last_name='" . mysqli_real_escape_string($link, $last_name) . "', status='WCHAT' where lead_id='$lead_id' limit 1";
+		$upd_stmt="UPDATE vicidial_list set first_name='" . mysqli_real_escape_string($link, $first_name) . "', last_name='" . mysqli_real_escape_string($link, $last_name) . "', status='WCHAT' where lead_id='$lead_id' limit 1";
 		# update email and security_phrase?
 		$upd_rslt=mysql_to_mysqli($upd_stmt, $link);
 	} else if (!$error_msg) {
 		# Create lead in vicidial_list table (make special system status for waiting for chat)
-		$ins_stmt="insert into vicidial_list(status, first_name, last_name, email, list_id, phone_number, security_phrase) VALUES('WCHAT', '" . mysqli_real_escape_string($link, $first_name) . "', '" . mysqli_real_escape_string($link, $last_name) . "', '" . mysqli_real_escape_string($link, $ip_address) . "', '" . mysqli_real_escape_string($link, $default_list_id) . "', '" . mysqli_real_escape_string($link, $phone_number) . "', '" . mysqli_real_escape_string($link, $group_id) . "')";
+		$ins_stmt="INSERT INTO vicidial_list(status, first_name, last_name, email, list_id, phone_number, security_phrase) VALUES('WCHAT', '" . mysqli_real_escape_string($link, $first_name) . "', '" . mysqli_real_escape_string($link, $last_name) . "', '" . mysqli_real_escape_string($link, $ip_address) . "', '" . mysqli_real_escape_string($link, $default_list_id) . "', '" . mysqli_real_escape_string($link, $phone_number) . "', '" . mysqli_real_escape_string($link, $group_id) . "')";
 		$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 		$lead_id=mysqli_insert_id($link);
 	}
 
 	if (!$lead_id || $lead_id==0) {
-		$error_msg.="<BR>\nCould not find or create dialer entry";
+		$error_msg.="<BR>\n"._QXZ("Could not find or create dialer entry");
 	}
 
 	if (!$error_msg) {
-		$ins_stmt="insert into vicidial_live_chats(status, chat_creator, group_id, lead_id, chat_start_time) VALUES('WAITING', 'NONE', '" . mysqli_real_escape_string($link, $group_id) . "', '" . mysqli_real_escape_string($link, $lead_id) . "', now())";
+		$ins_stmt="INSERT INTO vicidial_live_chats(status, chat_creator, group_id, lead_id, chat_start_time) VALUES('WAITING', 'NONE', '" . mysqli_real_escape_string($link, $group_id) . "', '" . mysqli_real_escape_string($link, $lead_id) . "', now())";
 		$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 		$chat_id=mysqli_insert_id($link);	
 
 		if ($chat_id>0) {
 
-			$ins_stmt="insert into vicidial_chat_participants(chat_id, chat_member, chat_member_name, ping_date, vd_agent) VALUES('$chat_id', '" . mysqli_real_escape_string($link, $user) . "', '" . mysqli_real_escape_string($link, $chat_member_name) . "', now(), 'N')";
+			$ins_stmt="INSERT INTO vicidial_chat_participants(chat_id, chat_member, chat_member_name, ping_date, vd_agent) VALUES('$chat_id', '" . mysqli_real_escape_string($link, $user) . "', '" . mysqli_real_escape_string($link, $chat_member_name) . "', now(), 'N')";
 			$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 			if (mysqli_affected_rows($link)==0) {
-				$del_stmt="delete from vicidial_live_chats where chat_id='$chat_id'";
+				$del_stmt="DELETE from vicidial_live_chats where chat_id='$chat_id'";
 				$del_rslt=mysql_to_mysqli($del_stmt, $link);
-				$error_msg="Chat started, failure to join"; 
+				$error_msg=_QXZ("Chat started, failure to join"); 
 				unset($chat_id);
 			} else {
 				# echo "$chat_id|$lead_id|$ins_stmt";
 			}
 		} else {
-			$error_msg="Chat not started - $ins_stmt";
+			$error_msg=_QXZ("Chat not started")." - $ins_stmt";
 		}
 	}
 }
+
+header ("Content-type: text/html; charset=utf-8");
+header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
+header ("Pragma: no-cache");                          // HTTP/1.0
+echo '<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+';
 ?>
 <html>
 <title><?php echo $error_msg; ?></title>
@@ -230,6 +273,7 @@ if ($send_request=="SEND REQUEST") { # For people requesting a chat with an agen
 <link rel="stylesheet" type="text/css" href="css/simpletree.css" />
 
 <script language="Javascript">
+var language='<?php echo $language ?>';
 var group_id='<?php echo $group_id ?>';
 
 function PleaseWait() {
@@ -262,7 +306,7 @@ function LeaveChat(chat_id, user, chat_member_name) {
 		}
 	if (xmlhttp) 
 		{ 
-		chat_query = "&action=leave_chat&chat_id="+chat_id+"&group_id="+group_id+"&user="+user+"&chat_member_name="+chat_member_name;
+		chat_query = "&action=leave_chat&chat_id="+chat_id+"&group_id="+group_id+"&user="+user+"&chat_member_name="+chat_member_name+"&language="+language;
 		// alert(chat_query);
 		xmlhttp.open('POST', 'customer_chat_functions.php'); 
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -297,7 +341,7 @@ function UpdateChatWindow() {
 			}
 		if (xmlhttp) 
 			{ 
-			chat_query = "&chat_id="+chat_id+"&group_id="+group_id+"&user="+user+"&current_message_count="+current_message_count+"&action=update_chat_window&keepalive=1";
+			chat_query = "&chat_id="+chat_id+"&group_id="+group_id+"&user="+user+"&current_message_count="+current_message_count+"&language="+language+"&action=update_chat_window&keepalive=1";
 			xmlhttp.open('POST', 'customer_chat_functions.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(chat_query); 
@@ -334,7 +378,7 @@ function CustomerSendMessage(chat_id, user, message, chat_member_name) {
 		}
 	if (xmlhttp) 
 		{ 
-		chat_query = "&chat_message="+chat_message+"&chat_id="+chat_id+"&group_id="+group_id+"&chat_member_name="+chat_member_name+"&user="+user+"&chat_level=0&action=send_message";
+		chat_query = "&chat_message="+chat_message+"&chat_id="+chat_id+"&group_id="+group_id+"&chat_member_name="+chat_member_name+"&user="+user+"&language="+language+"&chat_level=0&action=send_message";
 		xmlhttp.open('POST', 'customer_chat_functions.php'); 
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		xmlhttp.send(chat_query); 
@@ -361,17 +405,19 @@ function CustomerSendMessage(chat_id, user, message, chat_member_name) {
 </head>
 <?php
 if (!$chat_id) {
-$chat_title="Request chat with agent"; # This can be modified for customization later
+$chat_title= _QXZ("Request chat with agent"); # This can be modified for customization later
 ?>
 	<body>
 	<form action="<?php echo $PHP_SELF; ?>" method="post">
+	<input type=hidden name=stage value="send_request">
+	<input type=hidden name=language value="<?php echo $language; ?>">
 	<span id="chat_request_span">
 		<table width="500" border=0 cellpadding=1 cellspacing=1 height="300">
 			<tr>
 				<th colspan='2' class='body_small_bold'><?php echo $chat_title; ?></th>
 			</tr>
 			<tr>
-				<td align='right' class='body_small'>Please enter your name:</td>
+				<td align='right' class='body_small'><?php echo _QXZ("Please enter your name"); ?>:</td>
 				<td align='left'>
 				<input type='text' class="cust_form" name='first_name' id='first_name' size='10' maxlength='30'>&nbsp;<input class="cust_form" type='text' name='last_name' id='last_name' size='15' maxlength='30'>
 				</td>
@@ -381,7 +427,7 @@ $chat_title="Request chat with agent"; # This can be modified for customization 
 				{
 			?>
 			<tr>
-				<td align='right' class='body_small'>Select the department you wish to chat with:</td>
+				<td align='right' class='body_small'><?php echo _QXZ("Select the department you wish to chat with"); ?>:</td>
 				<td align='left'>
 				<select name='group_id' id='group_id' class="cust_form">
 				<?php
@@ -402,13 +448,13 @@ $chat_title="Request chat with agent"; # This can be modified for customization 
 				}
 			?>
 			<tr>
-				<td align='right' class='body_small'>Phone number (optional):</td>
+				<td align='right' class='body_small'><?php echo _QXZ("Phone number (optional)"); ?>:</td>
 				<td align='left'>
 				<input type='text' class="cust_form" name='phone_number' id='phone_number' size='10' maxlength='20'>
 				</td>
 			</tr>
 			<tr>
-				<th colspan='2'><input type='submit' class='blue_btn' value='SEND REQUEST' name="send_request"><BR></th>
+				<th colspan='2'><input type='submit' class='blue_btn' value='<?php echo _QXZ("SEND REQUEST"); ?>' name="send_request"><BR></th>
 			</tr>
 			<?php
 			if ($error_msg) {
@@ -424,25 +470,26 @@ $chat_title="Request chat with agent"; # This can be modified for customization 
 ?>
 	<body>
 	<form action="<?php echo $PHP_SELF; ?>" method="post" name="chat_form" id="chat_form">
+	<input type=hidden name=stage value="join_chat">
 	<span id="chat_request_span">
 		<table width="500" border=0 cellpadding=3 cellspacing=3 height="300">
 			<tr>
 				<th colspan='2' class='body_small_bold'><?php echo $chat_title; ?></th>
 			</tr>
 			<tr>
-				<td align='right' class='body_small'>Please enter your name:</td>
+				<td align='right' class='body_small'><?php echo _QXZ("Please enter your name"); ?>:</td>
 				<td align='left'>
 				<input type='text' class="cust_form" name='first_name' id='first_name' size='10' maxlength='30'>&nbsp;<input class="cust_form" type='text' name='last_name' id='last_name' size='15' maxlength='30'>
 				</td>
 			</tr>
 			<tr>
-				<td align='right' class='body_small'>Phone number (optional):</td>
+				<td align='right' class='body_small'><?php echo _QXZ("Phone number (optional)"); ?>:</td>
 				<td align='left'>
 				<input type='text' class="cust_form" name='phone_number' id='phone_number' size='10' maxlength='20'>
 				</td>
 			</tr>
 			<tr>
-				<th colspan='2'><input type='submit' class='blue_btn' value='JOIN CHAT' name="join_chat"><BR></th>
+				<th colspan='2'><input type='submit' class='blue_btn' value='<?php echo _QXZ("JOIN CHAT"); ?>' name="join_chat"><BR></th>
 			</tr>
 			<?php
 			if ($error_msg) {
@@ -454,6 +501,7 @@ $chat_title="Request chat with agent"; # This can be modified for customization 
 	<input type="hidden" id="chat_id" name="chat_id" value="<?php echo $chat_id; ?>">
 	<input type="hidden" id="group_id" name="group_id" value="<?php echo $group_id; ?>">
 	<input type="hidden" id="lead_id" name="lead_id" value="<?php echo $lead_id; ?>">
+	<input type="hidden" id="language" name="language" value="<?php echo $language; ?>">
 	</form>
 	</body>
 
@@ -483,19 +531,20 @@ $chat_title="Request chat with agent"; # This can be modified for customization 
 			</tr>
 			<tr>
 				<td class='chat_message' valign='top' align='left'><BR>
-					<input type='checkbox' id='MuteCustomerChatAlert' name='MuteCustomerChatAlert'>Mute alert sound
+					<input type='checkbox' id='MuteCustomerChatAlert' name='MuteCustomerChatAlert'><?php echo _QXZ("Mute alert sound"); ?>
 				</td>
 				<td valign='top' align='right'><BR>
-					<input class='red_btn' type='button' style="width:100px" value="<?php echo _QXZ("LEAVE CHAT"); ?>" onClick="LeaveChat(document.getElementById('chat_id').value, document.getElementById('user').value, document.getElementById('chat_member_name').value)">;
+					<input class='red_btn' type='button' style="width:100px" value="<?php echo _QXZ("LEAVE CHAT"); ?>" onClick="LeaveChat(document.getElementById('chat_id').value, document.getElementById('user').value, document.getElementById('chat_member_name').value);">
 				</td>
 			</tr>
 		</table>
 		</td>
 	</tr>
 	<?php
-	if ($error_msg) {
-			echo "<tr><th class='queue_text_red'>$error_msg<BR></th></tr>";
-	}
+	if ($error_msg) 
+		{
+		echo "<tr><th class='queue_text_red'>$error_msg<BR></th></tr>";
+		}
 	?>
 	</table>
 	<input type="hidden" id="user" name="user" value="<?php echo $user; ?>">
@@ -504,6 +553,7 @@ $chat_title="Request chat with agent"; # This can be modified for customization 
 	<input type="hidden" id="chat_creator" name="chat_creator" value="<?php echo $chat_creator; ?>">
 	<input type="hidden" id="lead_id" name="lead_id" value="<?php echo $lead_id; ?>">
 	<input type="hidden" id="group_id" name="group_id" value="<?php echo $group_id; ?>">
+	<input type="hidden" id="language" name="language" value="<?php echo $language; ?>">
 	<audio id='CustomerChatAudioAlertFile'><source src="sounds/chat_alert.mp3" type="audio/mpeg"></audio>
 	</form>
 	</body>

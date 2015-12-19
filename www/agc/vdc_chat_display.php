@@ -13,27 +13,11 @@
 # Builds:
 # 150903-2349 - First build
 # 151213-1107 - Added variable filtering
+# 151218-0913 - Added missing translation code and user auth
 #
 
 require("dbconnect_mysqli.php");
 require("functions.php");
-
-#############################################
-##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
-$rslt=mysql_to_mysqli($stmt, $link);
-        if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
-if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysqli_num_rows($rslt);
-if ($qm_conf_ct > 0)
-        {
-        $row=mysqli_fetch_row($rslt);
-        $non_latin =			$row[0];
-        $SSenable_languages =	$row[1];
-        $SSlanguage_method =	$row[2];
-        }
-##### END SETTINGS LOOKUP #####
-###########################################
 
 if (isset($_GET["email"]))							{$email=$_GET["email"];}
 	elseif (isset($_POST["email"]))					{$email=$_POST["email"];}
@@ -67,6 +51,29 @@ if (isset($_GET["last_name"]))						{$last_name=$_GET["last_name"];}
 	elseif (isset($_POST["last_name"]))				{$last_name=$_POST["last_name"];}
 if (isset($_GET["clickmute"]))						{$clickmute=$_GET["clickmute"];}
 	elseif (isset($_POST["clickmute"]))				{$clickmute=$_POST["clickmute"];}
+if (isset($_GET["stage"]))							{$stage=$_GET["stage"];}
+	elseif (isset($_POST["stage"]))					{$stage=$_POST["stage"];}
+
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$VUselected_language = '';
+$stmt = "SELECT use_non_latin,enable_languages,language_method,default_language,allow_chats FROM system_settings;";
+$rslt=mysql_to_mysqli($stmt, $link);
+        if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysqli_num_rows($rslt);
+if ($qm_conf_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$non_latin =			$row[0];
+	$SSenable_languages =	$row[1];
+	$SSlanguage_method =	$row[2];
+	$SSdefault_language =	$row[3];
+	$SSallow_chats =		$row[4];
+	}
+$VUselected_language = $SSdefault_language;
+##### END SETTINGS LOOKUP #####
+###########################################
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -82,6 +89,7 @@ $email = preg_replace("/\'|\"|\\\\|;/","",$email);
 $campaign = preg_replace('/[^-\_0-9a-zA-Z]/','',$campaign);
 $dial_method = preg_replace('/[^-\_0-9a-zA-Z]/','',$dial_method);
 $clickmute = preg_replace("/\'|\"|\\\\|;/","",$clickmute);
+$stage = preg_replace('/[^-\_0-9a-zA-Z]/','',$stage);
 
 if ($non_latin < 1)
 	{
@@ -100,24 +108,47 @@ else
 	$outside_user_name = preg_replace("/\'|\"|\\\\|;/","",$user);
 	}
 
-$user_stmt="select full_name, user_level from vicidial_users where user='$user'";
-echo "<!-- \n$user_stmt\n\\-->\n";
+if( (strlen($stage) > 0) and ($stage == 'WELCOME') )
+	{
+	echo _QXZ("Customer Chat Frame");
+	exit;
+	}
+if ($SSallow_chats < 1)
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo _QXZ("Error, chat disabled on this system");
+	exit;
+	}
+
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0,0,0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
+	{
+	echo _QXZ("Invalid Username/Password:")." |$user|$pass|$auth_message|vdc_chat_display|\n";
+	exit;
+	}
+
+$user_stmt="select full_name,user_level,selected_language from vicidial_users where user='$user'";
 $user_level=0;
 $user_rslt=mysql_to_mysqli($user_stmt, $link);
 if (mysqli_num_rows($user_rslt)>0) {
 	$user_row=mysqli_fetch_row($user_rslt);
-	$full_name=$user_row[0];
-	$user_level=$user_row[1];
+	$full_name =			$user_row[0];
+	$user_level =			$user_row[1];
+	$VUselected_language =	$user_row[2];
 
 	if ($chat_id) {
 		$chat_stmt="select * from vicidial_live_chats where chat_creator='$user' and chat_id='$chat_id'";
-		echo "<!-- \n$chat_stmt\n";
+	#	echo "<!-- \n$chat_stmt\n";
 		$chat_rslt=mysql_to_mysqli($chat_stmt, $link);
 		if (mysqli_num_rows($chat_rslt)>0) {
 			$chat_creator=$user;
 			echo "$chat_creator\n";
 		}
-		echo "\\-->\n";
+	#	echo "\\-->\n";
 	} else {
 	# 	echo "Waiting for chat request..."; exit;
 	}
@@ -141,10 +172,16 @@ if (mysqli_num_rows($rslt)>0) {
 	if (!$full_name) {$full_name=trim("$first_name $last_name");}
 	if (!$email) {$email=$row["email"];}
 }
+header ("Content-type: text/html; charset=utf-8");
+header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
+header ("Pragma: no-cache");                          // HTTP/1.0
+echo '<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+';
 ?>
 <html>
 <head>
-<title>Vicidial Chat Interface</title>
+<title><?php echo _QXZ("Agent Chat Interface"); ?></title>
 <script type="text/javascript" src="simpletreemenu.js">
 
 /***********************************************
@@ -223,6 +260,7 @@ function UpdateChatWindow() {
 function SendMessage(chat_id, user, message, chat_member_name) {
 	var chat_id=document.getElementById('chat_id').value;
 	var user=document.getElementById('user').value;
+	var pass=document.getElementById('pass').value;
 	var chat_message=encodeURIComponent(document.getElementById('chat_message').value.trim());
 	var chat_member_name=encodeURIComponent(document.getElementById('chat_member_name').value.trim());
 	window.user_level='<?php echo $user_level; ?>';
@@ -234,8 +272,8 @@ function SendMessage(chat_id, user, message, chat_member_name) {
 	}
 
 	if (!chat_message || !user) {return false;}
-	if (!chat_member_name) {chat_alert_box("Please enter a name to chat as.");}
-	if (!chat_id) {chat_alert_box("You have not joined a chat yet.");}
+	if (!chat_member_name) {chat_alert_box("<?php echo _QXZ("Please enter a name to chat as."); ?>");}
+	if (!chat_id) {chat_alert_box("<?php echo _QXZ("You have not joined a chat yet."); ?>");}
 	document.getElementById('chat_message').value='';
 
 	var xmlhttp=false;
@@ -245,7 +283,7 @@ function SendMessage(chat_id, user, message, chat_member_name) {
 		}
 	if (xmlhttp) 
 		{ 
-		chat_query = "&chat_message="+chat_message+"&chat_level="+chat_level+"&user_level="+user_level+"&chat_id="+chat_id+"&chat_member_name="+chat_member_name+"&user="+user+"&action=agent_send_message";
+		chat_query = "&chat_message="+chat_message+"&chat_level="+chat_level+"&user_level="+user_level+"&chat_id="+chat_id+"&chat_member_name="+chat_member_name+"&user="+user+"&pass="+pass+"&action=agent_send_message";
 		xmlhttp.open('POST', 'chat_db_query.php'); 
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		xmlhttp.send(chat_query); 
@@ -270,12 +308,13 @@ function SendMessage(chat_id, user, message, chat_member_name) {
 
 function JoinChat(chat_id) {
 	var user=document.getElementById('user').value;
+	var pass=document.getElementById('pass').value;
 	var chat_member_name=encodeURIComponent(document.getElementById('chat_member_name').value.trim());
 	var chat_creator="";
 
 	if (!chat_member_name)
 	{
-		chat_alert_box("Please enter your name before joining a chat.");
+		chat_alert_box("<?php echo _QXZ("Please enter your name before joining a chat."); ?>");
 		return false;
 	}
 
@@ -286,7 +325,7 @@ function JoinChat(chat_id) {
 		}
 	if (xmlhttp) 
 		{ 
-		chat_query = "&chat_id="+chat_id+"&chat_member_name="+chat_member_name+"&user="+user+"&action=join_chat";
+		chat_query = "&chat_id="+chat_id+"&chat_member_name="+chat_member_name+"&user="+user+"&pass="+pass+"&action=join_chat";
 		xmlhttp.open('POST', 'chat_db_query.php'); 
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		xmlhttp.send(chat_query); 
@@ -312,11 +351,11 @@ function JoinChat(chat_id) {
 					{
 					if (!email_invite_lead_id)
 						{
-						document.getElementById('chat_creator_console').innerHTML="<BR/><BR/><input class='blue_btn' type='button' style=\"width:150px\" value=\"INVITE\" onClick=\"javascript:document.getElementById('email_window').style.display='block'\">\n<BR/><BR/><input class='red_btn' type='button' style=\"width:150px\" value=\"END CHAT\" onClick=\"EndChat()\">";
+						document.getElementById('chat_creator_console').innerHTML="<BR/><BR/><input class='blue_btn' type='button' style=\"width:150px\" value=\"<?php echo _QXZ("INVITE"); ?>\" onClick=\"javascript:document.getElementById('email_window').style.display='block'\">\n<BR/><BR/><input class='red_btn' type='button' style=\"width:150px\" value=\"<?php echo _QXZ("END CHAT"); ?>\" onClick=\"EndChat()\">";
 						}
 					else 
 						{
-						document.getElementById('chat_creator_console').innerHTML="<BR/><BR/><input class='red_btn' type='button' style=\"width:150px\" value=\"END CHAT\" onClick=\"EndChat()\">";
+						document.getElementById('chat_creator_console').innerHTML="<BR/><BR/><input class='red_btn' type='button' style=\"width:150px\" value=\"<?php echo _QXZ("END CHAT"); ?>\" onClick=\"EndChat()\">";
 						}
 					}
 			}
@@ -358,6 +397,7 @@ function RefreshLiveChatWindow() {
 
 function StartChat() {
 	var user=document.getElementById('user').value;
+	var pass=document.getElementById('pass').value;
 	var chat_group_id=document.getElementById('chat_group_id').value;
 	var server_ip=document.getElementById('server_ip').value;
 
@@ -368,7 +408,7 @@ function StartChat() {
 		}
 	if (xmlhttp) 
 		{ 
-		chat_query = "&action=start_chat&user="+user+"&chat_group_id="+chat_group_id+"&server_ip="+server_ip;
+		chat_query = "&action=start_chat&user="+user+"&pass="+pass+"&chat_group_id="+chat_group_id+"&server_ip="+server_ip;
 		xmlhttp.open('POST', 'chat_db_query.php'); 
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		xmlhttp.send(chat_query); 
@@ -378,13 +418,13 @@ function StartChat() {
 				{
 				var start_chat_attempt_result = xmlhttp.responseText;
 				if (!start_chat_attempt_result) {
-					chat_alert_box("ATTEMPT TO CREATE CHAT SESSION FAILED.");
+					chat_alert_box("<?php echo _QXZ("ATTEMPT TO CREATE CHAT SESSION FAILED."); ?>");
 				} else if (start_chat_attempt_result=="NOT_PAUSED") {
-					chat_alert_box("YOU MUST BE PAUSED TO INITIATE A CUSTOMER CHAT.");
+					chat_alert_box("<?php echo _QXZ("YOU MUST BE PAUSED TO INITIATE A CUSTOMER CHAT."); ?>");
 				} else if (start_chat_attempt_result=="NO_GROUP") {
-					chat_alert_box("PLEASE SELECT A CHAT GROUP BEFORE STARTING A CHAT.");
+					chat_alert_box("<?php echo _QXZ("PLEASE SELECT A CHAT GROUP BEFORE STARTING A CHAT."); ?>");
 				} else if (start_chat_attempt_result=="FAILED_LIVE_STATUS") {
-					chat_alert_box("UNABLE TO CHANGE LIVE AGENT STATUS");
+					chat_alert_box("<?php echo _QXZ("UNABLE TO CHANGE LIVE AGENT STATUS"); ?>");
 				} else {
 					// parent.check_for_incoming_other('skip_email');
 					// DEACTIVATE PAUSE BUTTON - AGENTS SHOULD NOT BE ALLOWED TO TOGGLE THIS - THEY ARE ESSENTIALLY INCALL ONCE THEY START A CHAT EVEN IF THE CUSTOMER HASN'T JOINED YET
@@ -396,11 +436,11 @@ function StartChat() {
 						{
 						window.parent.document.getElementById("DiaLControl").innerHTML = DiaLControl_auto_HTML_OFF;
 						}
-					chat_alert_box("CHAT SESSION CREATED.  INVITE CUSTOMER VIA EMAIL TO BEGIN.");
+					chat_alert_box("<?php echo _QXZ("CHAT SESSION CREATED. INVITE CUSTOMER VIA EMAIL TO BEGIN."); ?>");
 					document.getElementById('chat_id').value=start_chat_attempt_result;
 					window.parent.document.vicidial_form.chat_id.value=start_chat_attempt_result;
 					document.getElementById('chat_creator').value=user;
-					document.getElementById('chat_creator_console').innerHTML="<BR/><BR/><input class='blue_btn' type='button' style=\"width:150px\" value=\"INVITE\" onClick=\"javascript:document.getElementById('email_window').style.display='block'\">\n<BR/><BR/><input class='red_btn' type='button' style=\"width:150px\" value=\"END CHAT\" onClick=\"EndChat()\">";
+					document.getElementById('chat_creator_console').innerHTML="<BR/><BR/><input class='blue_btn' type='button' style=\"width:150px\" value=\"<?php echo _QXZ("INVITE"); ?>\" onClick=\"javascript:document.getElementById('email_window').style.display='block'\">\n<BR/><BR/><input class='red_btn' type='button' style=\"width:150px\" value=\"<?php echo _QXZ("END CHAT"); ?>\" onClick=\"EndChat()\">";
 
 				}
 				UpdateChatWindow();
@@ -412,6 +452,7 @@ function StartChat() {
 
 function SendInvite() {
 	var user=document.getElementById('user').value;
+	var pass=document.getElementById('pass').value;
 	var lead_id=document.getElementById('lead_id').value;
 	var chat_id=document.getElementById('chat_id').value;
 	var chat_group_id=document.getElementById('chat_group_id').value;
@@ -424,7 +465,7 @@ function SendInvite() {
 		}
 	if (xmlhttp) 
 		{ 
-		chat_query = "&action=send_invite&chat_id="+chat_id+"&chat_group_id="+chat_group_id+"&lead_id="+lead_id+"&user="+user+"&email="+email;
+		chat_query = "&action=send_invite&chat_id="+chat_id+"&chat_group_id="+chat_group_id+"&lead_id="+lead_id+"&user="+user+"&pass="+pass+"&email="+email;
 		xmlhttp.open('POST', 'chat_db_query.php'); 
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		xmlhttp.send(chat_query); 
@@ -437,11 +478,11 @@ function SendInvite() {
 					{
 					parent.check_for_incoming_other(email_sent);  // Force the agent interface to do it's thing for a live chat coming across, even though in this case the customer isn't in it yet.  Sends lead ID to parent function as a flag, so as not to show the INVITE button when this page reloads
 					document.getElementById('email_window').style.display='none';
-					document.getElementById('chat_creator_console').innerHTML="<BR/><BR/><input class='red_btn' type='button' style=\"width:150px\" value=\"END CHAT\" onClick=\"EndChat()\">";
+					document.getElementById('chat_creator_console').innerHTML="<BR/><BR/><input class='red_btn' type='button' style=\"width:150px\" value=\"<?php echo _QXZ("END CHAT"); ?>\" onClick=\"EndChat()\">";
 					}
 				else 
 					{
-					chat_alert_box("There was a problem sending the email invite - please re-check your information and try again."+email_sent);
+					chat_alert_box("<?php echo _QXZ("There was a problem sending the email invite - please re-check your information and try again."); ?>"+email_sent);
 					}
 				}
 			}
@@ -456,6 +497,7 @@ function LeaveChat(extra_action) {
 		var chat_id=document.getElementById('chat_id').value;
 		var chat_creator=document.getElementById('chat_creator').value;
 		var user=document.getElementById('user').value;
+		var pass=document.getElementById('pass').value;
 
 		var xmlhttp=false;
 		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
@@ -464,7 +506,7 @@ function LeaveChat(extra_action) {
 			}
 		if (xmlhttp) 
 			{ 
-			chat_query = "&action=agent_leave_chat&chat_id="+chat_id+"&user="+user;
+			chat_query = "&action=agent_leave_chat&chat_id="+chat_id+"&user="+user+"&pass="+pass;
 			// chat_alert_box(chat_query);
 			xmlhttp.open('POST', 'chat_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -486,6 +528,7 @@ function EndChat(hangup_override) { // hangup_override comes from parent Iframe 
 	var chat_id=document.getElementById('chat_id').value;
 	var chat_creator=document.getElementById('chat_creator').value;
 	var user=document.getElementById('user').value;
+	var pass=document.getElementById('pass').value;
 	var server_ip=document.getElementById('server_ip').value;
 	var lead_id=document.getElementById('lead_id').value; // used to determine if chat involved a customer.  If so, don't allow START CHAT option until chat is fully terminated.
 
@@ -493,7 +536,7 @@ function EndChat(hangup_override) { // hangup_override comes from parent Iframe 
 	if (!chat_creator || !user || !chat_id) {
 		return false;
 	} else if (user!=chat_creator) {
-		chat_alert_box("Only the chat creator can end the chat");
+		chat_alert_box("<?php echo _QXZ("Only the chat creator can end the chat"); ?>");
 		return false;
 	}
 
@@ -504,7 +547,7 @@ function EndChat(hangup_override) { // hangup_override comes from parent Iframe 
 		}
 	if (xmlhttp) 
 		{ 
-		chat_query = "&action=end_chat&chat_id="+chat_id+"&chat_creator="+chat_creator+"&user="+user+"&lead_id="+lead_id+"&server_ip="+server_ip;
+		chat_query = "&action=end_chat&chat_id="+chat_id+"&chat_creator="+chat_creator+"&user="+user+"&pass="+pass+"&lead_id="+lead_id+"&server_ip="+server_ip;
 		xmlhttp.open('POST', 'chat_db_query.php'); 
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		xmlhttp.send(chat_query); 
@@ -568,7 +611,7 @@ window.onbeforeunload = LeaveChat;
 
 <?php
 if (!$user) {
-	echo "<body>No user ID - no chat access.  Sorry </body>";
+	echo "<body>"._QXZ("No user ID - no chat access. Sorry")."</body>";
 	exit;
 }
 
@@ -601,11 +644,11 @@ if (mysqli_num_rows($user_rslt)==0) {
 }
 
 if($child_window) {
-	$inchat_html.="<BR><BR><input type='button' class='red_btn' name='close_window_btn' id='close_window_btn' value='CLOSE WINDOW' onClick='LeaveChat(\"close_window\")'>";
+	$inchat_html.="<BR><BR><input type='button' class='red_btn' name='close_window_btn' id='close_window_btn' value=\""._QXZ("CLOSE WINDOW")."\" onClick='LeaveChat(\"close_window\")'>";
 }
 ?>
 <body onLoad="<?php echo $autojoin_js_fx; ?>" onUnload="javascript:clearInterval(rInt); LeaveChat();">
-<?php echo "<!-- $user_stmt\n vdc_chat_display.php?user=$user&pass=$pass&lead_id=$lead_id&list_id=$list_id&email=$email&chat_id=$chat_id //-->\n"; ?>
+<?php echo "<!-- $user_stmt\n vdc_chat_display.php?user=$user&pass=$pass&lead_id=$lead_id&list_id=$list_id&email=$email&chat_id=$chat_id -->\n"; ?>
 <form name='chat_form' action='<?php echo $PHP_SELF; ?>'>
 <table width='100%' border='0'>
 <tr>
@@ -627,12 +670,12 @@ if($child_window) {
 			</td>
 		</tr>
 		<tr>
-			<td align='left' class='chat_message' valign='top'><input class='blue_btn' type='button' style="width:100px" value="SEND MESSAGE" onClick="SendMessage(this.form.chat_id.value, this.form.user.value, this.form.chat_message.value)"><BR><BR><input type='checkbox' id='MuteCustomerChatAlert' name='MuteCustomerChatAlert'>Mute alert sound
+			<td align='left' class='chat_message' valign='top'><input class='blue_btn' type='button' style="width:100px" value="<?php echo _QXZ("SEND MESSAGE"); ?>" onClick="SendMessage(this.form.chat_id.value, this.form.user.value, this.form.chat_message.value)"><BR><BR><input type='checkbox' id='MuteCustomerChatAlert' name='MuteCustomerChatAlert'><?php echo _QXZ("Mute alert sound"); ?>
 			</td>
-			<td align='right' class='chat_message' valign='top'><input class='blue_btn' type='button' style="width:100px" value="CLEAR" onClick="document.getElementById('chat_message').value=''"><BR><BR>
+			<td align='right' class='chat_message' valign='top'><input class='blue_btn' type='button' style="width:100px" value="<?php echo _QXZ("CLEAR"); ?>" onClick="document.getElementById('chat_message').value=''"><BR><BR>
 			<?php
 			if ($user_level) {
-				echo "<input type='checkbox' name='private_message' id='private_message' value='1'>Privacy ON";
+				echo "<input type='checkbox' name='private_message' id='private_message' value='1'>"._QXZ("Privacy ON");
 			}
 			?>
 			</td>
@@ -652,10 +695,10 @@ if($child_window) {
 	if ($full_name) {
 		echo "<span id='chat_creator_console' name='chat_creator_console'>";
 		if (!$chat_id) {
-			echo "<BR/><BR/><input class='green_btn' type='button' style=\"width:150px\" value=\"START CHAT\" onClick=\"StartChat()\">";
+			echo "<BR/><BR/><input class='green_btn' type='button' style=\"width:150px\" value=\""._QXZ("START CHAT")."\" onClick=\"StartChat()\">";
 
 			echo "<BR/><BR/><select name='startchat_group_id' id='startchat_group_id' class='chat_window' onChange=\"document.getElementById('chat_group_id').value=this.value\">\n"; 
-			echo "<option value='' selected>--SELECT A CHAT GROUP--</option>\n";
+			echo "<option value='' selected>--"._QXZ("SELECT A CHAT GROUP")."--</option>\n";
 			# CREATE LIST OF GroUP IDS to select
 			if (count($chat_group_ids)>0) {
 				$chat_group_idsSQL = implode("','", $chat_group_ids);
@@ -687,9 +730,9 @@ if($child_window) {
 		}
 		if ($chat_creator && $chat_creator==$user) {
 			if (!$email_invite_lead_id) { # Flag from sending an invite - this page reloads as a result and this below INVITE button must be prevented from being loaded
-				echo "<BR/><BR/><input class='blue_btn' type='button' style=\"width:150px\" value=\"INVITE\" onClick=\"javascript:document.getElementById('email_window').style.display='block'\">";
+				echo "<BR/><BR/><input class='blue_btn' type='button' style=\"width:150px\" value=\""._QXZ("INVITE")."\" onClick=\"javascript:document.getElementById('email_window').style.display='block'\">";
 			}
-			echo "<BR/><BR/><input class='red_btn' type='button' style=\"width:150px\" value=\"END CHAT\" onClick=\"EndChat()\">";
+			echo "<BR/><BR/><input class='red_btn' type='button' style=\"width:150px\" value=\""._QXZ("END CHAT")."\" onClick=\"EndChat()\">";
 		}
 		echo "</span>";
 	}
@@ -702,9 +745,9 @@ if($child_window) {
 		<span id="email_window" style="display: none">
 		<table width='90%'>
 			<tr>
-				<td align='left' class='chat_message'>Enter email address of guest: <input type='text' name='email_invite' id='email_invite'  onkeypress="if (event.keyCode==13 &amp;&amp; !event.shiftKey) {SendInvite(); return false;}"></td>
-				<td align='left'><input class='green_btn' type='button' style="width:150px" value="SEND" onClick="SendInvite()"></td>
-				<td align='center'><input class='red_btn' type='button' style="width:150px" value="HIDE" onClick="javascript:document.getElementById('email_window').style.display='none'"></td>
+				<td align='left' class='chat_message'><?php echo _QXZ("Enter email address of guest"); ?>: <input type='text' name='email_invite' id='email_invite'  onkeypress="if (event.keyCode==13 &amp;&amp; !event.shiftKey) {SendInvite(); return false;}"></td>
+				<td align='left'><input class='green_btn' type='button' style="width:150px" value="<?php echo _QXZ("SEND"); ?>" onClick="SendInvite()"></td>
+				<td align='center'><input class='red_btn' type='button' style="width:150px" value="<?php echo _QXZ("HIDE"); ?>" onClick="javascript:document.getElementById('email_window').style.display='none'"></td>
 			</tr>
 		</table>
 		</span>

@@ -9,21 +9,30 @@
 # Builds:
 # 151212-0829 - First Build for customer chat
 # 151217-1015 - Allow for group_id variable
+# 151219-1415 - Added header and language variable
 #
 
-if (isset($_GET["lead_id"]))	{$lead_id=$_GET["lead_id"];}
-	elseif (isset($_POST["lead_id"]))	{$lead_id=$_POST["lead_id"];}
-if (isset($_GET["chat_id"]))	{$chat_id=$_GET["chat_id"];}
-	elseif (isset($_POST["chat_id"]))	{$chat_id=$_POST["chat_id"];}
-if (isset($_GET["group_id"]))	{$chat_group_id=$_GET["group_id"];}
-	elseif (isset($_POST["group_id"]))	{$chat_group_id=$_POST["group_id"];}
-if (isset($_GET["chat_group_id"]))	{$chat_group_id=$_GET["chat_group_id"];}
+if (isset($_GET["lead_id"]))				{$lead_id=$_GET["lead_id"];}
+	elseif (isset($_POST["lead_id"]))		{$lead_id=$_POST["lead_id"];}
+if (isset($_GET["chat_id"]))				{$chat_id=$_GET["chat_id"];}
+	elseif (isset($_POST["chat_id"]))		{$chat_id=$_POST["chat_id"];}
+if (isset($_GET["group_id"]))				{$chat_group_id=$_GET["group_id"];}
+	elseif (isset($_POST["group_id"]))		{$chat_group_id=$_POST["group_id"];}
+if (isset($_GET["chat_group_id"]))			{$chat_group_id=$_GET["chat_group_id"];}
 	elseif (isset($_POST["chat_group_id"]))	{$chat_group_id=$_POST["chat_group_id"];}
-if (isset($_GET["email"]))	{$email=$_GET["email"];}
-	elseif (isset($_POST["email"]))	{$email=$_POST["email"];}
-if (isset($_GET["unique_userID"]))	{$unique_userID=$_GET["unique_userID"];}
+if (isset($_GET["email"]))					{$email=$_GET["email"];}
+	elseif (isset($_POST["email"]))			{$email=$_POST["email"];}
+if (isset($_GET["unique_userID"]))			{$unique_userID=$_GET["unique_userID"];}
 	elseif (isset($_POST["unique_userID"]))	{$unique_userID=$_POST["unique_userID"];}
-$URL_vars="?user=".urlencode($unique_userID)."&lead_id=".$lead_id."&group_id=".urlencode($chat_group_id)."&chat_id=".$chat_id."&email=".urlencode($email);
+if (isset($_GET["language"]))				{$language=$_GET["language"];}
+	elseif (isset($_POST["language"]))		{$language=$_POST["language"];}
+
+$URL_vars="?user=".urlencode($unique_userID)."&lead_id=".$lead_id."&group_id=".urlencode($chat_group_id)."&chat_id=".$chat_id."&email=".urlencode($email)."&language=".urlencode($language);
+header ("Content-type: text/html; charset=utf-8");
+header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
+header ("Pragma: no-cache");                          // HTTP/1.0
+echo '<?xml version="1.0" encoding="UTF-8"?><html><head><title>Chat</title></head>';
 ?>
 
-<iframe src="/chat_customer/vicidial_chat_customer_side.php<?php echo $URL_vars; ?>" style="width:600;height:400;background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="ViCiDiAlChAtIfRaMe" name="ViCiDiAlChAtIfRaMe"/>
+<iframe src="/chat_customer/vicidial_chat_customer_side.php<?php echo $URL_vars; ?>" style="width:640;height:480;background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="ViCiDiAlChAtIfRaMe" name="ViCiDiAlChAtIfRaMe"/>
+</html>

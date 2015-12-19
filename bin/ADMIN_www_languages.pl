@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-# ADMIN_www_languages.pl version 2.10
+# ADMIN_www_languages.pl version 2.12
 #
 # This script is designed to traverse the vicidial and agc web directories and
 # generate a list of phrases that are output from the QXZ PHP functions so that 
@@ -13,11 +13,12 @@
 #   and alter them if necessary:
 #  ALTER TABLE audio_store_details CONVERT TO CHARACTER SET utf8 COLLATE utf8_unicode_ci;
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 141128-0024 - First build
 # 141211-2123 - Added --wipe-www-phrases-table CLI option and insert_date field
+# 151219-0756 - Added --chat-only option for chat_customer and --one-file-only option
 #
 
 $secX = time();
@@ -69,7 +70,9 @@ if (length($ARGV[0])>1)
 		print "  [--debug] = verbose debug messages\n";
 		print "  [--debugX] = extra verbose debug messages\n";
 		print "  [--agc-only] = only parse the agc directory\n";
+		print "  [--chat-only] = only parse the chat_customer directory\n";
 		print "  [--vicidial-only] = only parse the vicidial directory\n";
+		print "  [--one-file-only=/path/from/root] = process one php file only\n";
 		print "  [--QXZlines] = print full lines that include QXZ functions\n";
 		print "  [--QXZvalues] = print only QXZ function values\n";
 		print "  [--QXZvaronly] = print only QXZ function values with PHP variables in them\n";
@@ -89,6 +92,8 @@ if (length($ARGV[0])>1)
 			{$DBX=1;}
 		if ($args =~ /--agc-only/i) # agc flag
 			{$agc_only=1;}
+		if ($args =~ /--chat-only/i) # agc flag
+			{$chat_only=1;}
 		if ($args =~ /--vicidial-only/i) # vicidial flag
 			{$vicidial_only=1;}
 		if ($args =~ /--QXZlines/i) # QXZlines flag
@@ -103,6 +108,17 @@ if (length($ARGV[0])>1)
 			{$QXZplaceonly=1;}
 		if ($args =~ /--wipe-www-phrases-table/i) # wipewwwphrasestable flag
 			{$wipewwwphrasestable=1;}
+		if ($args =~ /--one-file-only=/i) # CLI defined file path for one file only
+			{
+			@CLIonefileARY = split(/--one-file-only=/,$args);
+			@CLIonefileARX = split(/ /,$CLIonefileARY[1]);
+			if (length($CLIonefileARX[0])>2)
+				{
+				$PATHone = $CLIonefileARX[0];
+				$PATHone =~ s/\/$| |\r|\n|\t//gi;
+				print "  CLI defined one-file-only path:  $PATHone\n";
+				}
+			}
 		if ($args =~ /--conffile=/i) # CLI defined file path
 			{
 			@CLIconffileARY = split(/--conffile=/,$args);
@@ -195,51 +211,97 @@ if ($wipewwwphrasestable > 0)
 
 $i=0;
 $f=0;
-if ($vicidial_only < 1)
+if (length($PATHone) > 2) 
 	{
-	opendir(FILE, "$PATHweb/agc/");
-	@agcFILES = readdir(FILE);
-	### Loop through files first to gather list
-	foreach(@agcFILES)
+	$FILEparseDIR[$f] = "$PATHweb/temp/";
+	$FILEparseNAME[$f] = '';
+	$FILEparse[$f] = '';
+	if ( (length($PATHone) > 2) && (!-d "$PATHone") )
 		{
-		$FILEparseDIR[$f] = "$PATHweb/agc/";
-		$FILEparseNAME[$f] = '';
-		$FILEparse[$f] = '';
-		if ( (length($agcFILES[$i]) > 2) && (!-d "$PATHweb/agc/$agcFILES[$i]") )
-			{
-			$FILEparse[$f] = "$PATHweb/agc/$agcFILES[$i]";
-			$FILEparseNAME[$f] = $agcFILES[$i];
-			$event_string = "$PATHweb/agc/$agcFILES[$i]   $FILEparseNAME[$f]";
-			if ($DBX > 0) {print "$event_string\n";}
-			&event_logger;
-			$f++;
-			}
-		$i++;
+		$FILEparse[$f] = "$PATHone";
+		@oneARY = split("/", $PATHone);
+		$FILEparseNAME[$f] = $oneARY[-1];
+		$event_string = "$PATHone   $FILEparseNAME[$f]";
+		if ($DBX > 0) {print "$event_string\n";}
+		&event_logger;
+		$f++;
 		}
+	$i++;
 	}
-
-$i=0;
-if ($agc_only < 1)
+else
 	{
-	opendir(FILE, "$PATHweb/vicidial/");
-	@vicidialFILES = readdir(FILE);
-
-	### Loop through files first to gather list
-	foreach(@vicidialFILES)
+	$i=0;
+	if ( ($vicidial_only < 1) && ($chat_only < 1) )
 		{
-		$FILEparseDIR[$f] = "$PATHweb/vicidial/";
-		$FILEparseNAME[$f] = '';
-		$FILEparse[$f] = '';
-		if ( (length($vicidialFILES[$i]) > 2) && (!-d "$PATHweb/vicidial/$vicidialFILES[$i]") )
+		opendir(FILE, "$PATHweb/agc/");
+		@agcFILES = readdir(FILE);
+		### Loop through files first to gather list
+		foreach(@agcFILES)
 			{
-			$FILEparse[$f] = "$PATHweb/vicidial/$vicidialFILES[$i]";
-			$FILEparseNAME[$f] = $vicidialFILES[$i];
-			$event_string = "$PATHweb/vicidial/$vicidialFILES[$i]   $FILEparseNAME[$f]";
-			if ($DBX > 0) {print "$event_string\n";}
-			&event_logger;
-			$f++;
+			$FILEparseDIR[$f] = "$PATHweb/agc/";
+			$FILEparseNAME[$f] = '';
+			$FILEparse[$f] = '';
+			if ( (length($agcFILES[$i]) > 2) && (!-d "$PATHweb/agc/$agcFILES[$i]") )
+				{
+				$FILEparse[$f] = "$PATHweb/agc/$agcFILES[$i]";
+				$FILEparseNAME[$f] = $agcFILES[$i];
+				$event_string = "$PATHweb/agc/$agcFILES[$i]   $FILEparseNAME[$f]";
+				if ($DBX > 0) {print "$event_string\n";}
+				&event_logger;
+				$f++;
+				}
+			$i++;
 			}
-		$i++;
+		}
+
+	$i=0;
+	if ( ($agc_only < 1) && ($chat_only < 1) )
+		{
+		opendir(FILE, "$PATHweb/vicidial/");
+		@vicidialFILES = readdir(FILE);
+
+		### Loop through files first to gather list
+		foreach(@vicidialFILES)
+			{
+			$FILEparseDIR[$f] = "$PATHweb/vicidial/";
+			$FILEparseNAME[$f] = '';
+			$FILEparse[$f] = '';
+			if ( (length($vicidialFILES[$i]) > 2) && (!-d "$PATHweb/vicidial/$vicidialFILES[$i]") )
+				{
+				$FILEparse[$f] = "$PATHweb/vicidial/$vicidialFILES[$i]";
+				$FILEparseNAME[$f] = $vicidialFILES[$i];
+				$event_string = "$PATHweb/vicidial/$vicidialFILES[$i]   $FILEparseNAME[$f]";
+				if ($DBX > 0) {print "$event_string\n";}
+				&event_logger;
+				$f++;
+				}
+			$i++;
+			}
+		}
+
+	$i=0;
+	if ( ($vicidial_only < 1) && ($agc_only < 1) )
+		{
+		opendir(FILE, "$PATHweb/chat_customer/");
+		@chat_customerFILES = readdir(FILE);
+
+		### Loop through files first to gather list
+		foreach(@chat_customerFILES)
+			{
+			$FILEparseDIR[$f] = "$PATHweb/chat_customer/";
+			$FILEparseNAME[$f] = '';
+			$FILEparse[$f] = '';
+			if ( (length($chat_customerFILES[$i]) > 2) && (!-d "$PATHweb/chat_customer/$chat_customerFILES[$i]") )
+				{
+				$FILEparse[$f] = "$PATHweb/chat_customer/$chat_customerFILES[$i]";
+				$FILEparseNAME[$f] = $chat_customerFILES[$i];
+				$event_string = "$PATHweb/chat_customer/$chat_customerFILES[$i]   $FILEparseNAME[$f]";
+				if ($DBX > 0) {print "$event_string\n";}
+				&event_logger;
+				$f++;
+				}
+			$i++;
+			}
 		}
 	}
 

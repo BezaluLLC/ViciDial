@@ -509,10 +509,11 @@
 # 151119-1925 - Fixed issue with scheduled callbacks and status groups
 # 151125-0942 - Fixed manual call only logging bug
 # 151212-0922 - Added all chat functionality
+# 151218-1200 - Fixes for chat security and language translation
 #
 
-$version = '2.12-478c';
-$build = '151212-0922';
+$version = '2.12-479c';
+$build = '151218-1200';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -15336,7 +15337,7 @@ function phone_number_format(formatphone) {
 		var form_chat_id = document.vicidial_form.chat_id.value;
 		if (form_entry_list_id.length > 2)
 			{form_list_id = form_entry_list_id}
-		document.getElementById('InternalChatIFrame').src='./agc_agent_manager_chat_interface.php?lead_id=' + document.vicidial_form.lead_id.value + '&list_id=' + form_list_id + '&user=' + user ;
+		document.getElementById('InternalChatIFrame').src='./agc_agent_manager_chat_interface.php?lead_id=' + document.vicidial_form.lead_id.value + '&list_id=' + form_list_id + '&user=' + user + '&pass=' + orig_pass;
 		form_list_id = '';
 		form_chat_id = '';
 		form_entry_list_id = '';
@@ -16589,7 +16590,7 @@ function phone_number_format(formatphone) {
 			divref.visibility = 'hidden';
 			if (divvar == 'InternalChatPanel') // Clear the manager chat panel to prevent incoming messages from immediately being marked as read
 				{
-				document.getElementById('InternalChatIFrame').src='./agc_agent_manager_chat_interface.php?user='+user;
+				document.getElementById('InternalChatIFrame').src='./agc_agent_manager_chat_interface.php?user='+user+'&pass='+orig_pass;
 				}
 			}
 		}
@@ -17638,7 +17639,7 @@ if ($agent_display_dialable_leads > 0)
 	if ($webphone_location == 'bar')
         {echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
-    <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="InternalChatContents"><iframe src="./agc_agent_manager_chat_interface.php?user=<?php echo $VD_login; ?>" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="InternalChatIFrame" name="InternalChatIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:<?php $zi++; echo $zi ?>"> </iframe></div></font></td></tr></table>
+    <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="InternalChatContents"><iframe src="./agc_agent_manager_chat_interface.php?user=<?php echo $VD_login; ?>&pass=<?php echo $VD_pass; ?>" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="InternalChatIFrame" name="InternalChatIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:<?php $zi++; echo $zi ?>"> </iframe></div></font></td></tr></table>
 </span>
 
 

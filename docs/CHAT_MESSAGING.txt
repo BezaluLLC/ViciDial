@@ -1,10 +1,12 @@
-CHAT MESSAGING			Started 2014-05-01	Updated 2015-12-17
+CHAT MESSAGING			Started 2014-05-01	Updated 2015-12-19
 
 
 After over 18 months of development, the Chat Messaging system for Vicidial was added to svn/trunk on December 13th, 2015(svn revision 2428). Our Chat messaging allows for customers to chat with agents from websites, as well as allowing managers to chat with agents and agents to chat with other agents all within their existing agent screen.
 
 The Chat Messaging built into Vicidial is entirely web-based and uses it's own protocol. Also, all messages are logged and searchable though the Agent-Manager Chat Log accessible through the Admin Utilities webpage.
 
+
+UPDATE 2015-12-19: We added several security enhancements related to the chat functionality. We strongly recommend that you update your system to svn/trunk revision 2435 or higher if you are running revision between 2428 and 2434. We also added dynamic language capability throughout the chat screens.
 
 
 
@@ -52,6 +54,13 @@ http://192.168.1.2/chat_customer/customer_chat_code.php?group_id=TESTCHAT
 
 If you want to put a chat page within your own IFRAME and use a specific in-group, you can use a URL like this,
 http://192.168.1.2/chat_customer/vicidial_chat_customer_side.php?group_id=TESTCHAT
+
+
+If you want to link to chat with a specific in-group and language ID in the system, you can use a link like this,
+http://192.168.1.2/chat_customer/customer_chat_code.php?group_id=TESTCHAT&language=new_spanish
+
+If you want to put a chat page within your own IFRAME and use a specific in-group and language ID in the system, you can use a URL like this,
+http://192.168.1.2/chat_customer/vicidial_chat_customer_side.php?group_id=TESTCHAT&language=new_spanish
 
 
 

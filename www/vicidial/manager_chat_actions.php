@@ -8,10 +8,11 @@
 # changes:
 # 150605-2022 First Build
 # 151213-1114 - Added variable filtering
+# 151218-0739 - Added translation where missing
 #
 
-$admin_version = '2.12-2';
-$build = '151213-1114';
+$admin_version = '2.12-3';
+$build = '151218-0739';
 
 $sh="managerchats"; 
 
@@ -40,16 +41,20 @@ if (isset($_GET["action"]))						{$action=$_GET["action"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,allow_chats FROM system_settings;";
+$stmt = "SELECT use_non_latin,allow_chats,enable_languages,language_method,default_language FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$non_latin =							$row[0];
-	$SSallow_chats =						$row[1];
+	$non_latin =			$row[0];
+	$SSallow_chats =		$row[1];
+    $SSenable_languages =	$row[2];
+    $SSlanguage_method =	$row[3];
+	$SSdefault_language =	$row[4];
 	}
+$VUselected_language = $SSdefault_language;
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
@@ -84,6 +89,23 @@ if ($auth < 1)
 	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
 	Header("HTTP/1.0 401 Unauthorized");
 	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
+	exit;
+	}
+
+$user_stmt="select full_name,user_level,selected_language from vicidial_users where user='$PHP_AUTH_USER'";
+$user_level=0;
+$user_rslt=mysql_to_mysqli($user_stmt, $link);
+if (mysqli_num_rows($user_rslt)>0) 
+	{
+	$user_row=mysqli_fetch_row($user_rslt);
+	$full_name =			$user_row[0];
+	$user_level =			$user_row[1];
+	$VUselected_language =	$user_row[2];
+	}
+if ($SSallow_chats < 1)
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo _QXZ("Error, chat disabled on this system");
 	exit;
 	}
 
@@ -233,13 +255,13 @@ if ($reload_chat_span) {
 	} else {
 		echo "<TABLE width=750 cellspacing=1 cellpadding=1>";
 		echo "<TR BGCOLOR=BLACK>\n";
-		echo "<TD align='left' colspan='3'><font FACE=\"ARIAL,HELVETICA\" size=1 color=white><B>CURRENT CHAT #$manager_chat_id</B></font></TD>\n";
+		echo "<TD align='left' colspan='3'><font FACE=\"ARIAL,HELVETICA\" size=1 color=white><B>"._QXZ("CURRENT CHAT")." #$manager_chat_id</B></font></TD>\n";
 		echo "<TD align='right'><font FACE=\"ARIAL,HELVETICA\" size=1><B><a href='manager_chat_interface.php?end_all_chats=$manager_chat_id' style=\"color: rgb(255,255,255)\">[END ALL CHATS]</a></font></td>";
 		echo "</TR>";
 		echo "<TR BGCOLOR=BLACK>\n";
 		echo "\t<TD align='left'><font FACE=\"ARIAL,HELVETICA\" size=1 color=white>Agent</font></TD>\n";
-		echo "\t<TD align='left' colspan='1'><font FACE=\"ARIAL,HELVETICA\" size=1 color=white>Transcript</font></TD>\n";
-		echo "\t<TD align='left' colspan='2'><font FACE=\"ARIAL,HELVETICA\" size=1 color=white>Message</font></TD>\n";
+		echo "\t<TD align='left' colspan='1'><font FACE=\"ARIAL,HELVETICA\" size=1 color=white>"._QXZ("Transcript")."</font></TD>\n";
+		echo "\t<TD align='left' colspan='2'><font FACE=\"ARIAL,HELVETICA\" size=1 color=white>"._QXZ("Message")."</font></TD>\n";
 		echo "</TR>";
 		$stmt="select vm.message_posted_by, vm.message, vm.message_date, vu.full_name, vm.manager, vm.manager_chat_subid, vm.user from vicidial_manager_chats vmc, vicidial_manager_chat_log vm, vicidial_users vu where vmc.manager_chat_id='$manager_chat_id' and vmc.manager_chat_id=vm.manager_chat_id and vm.user=vu.user order by vm.manager_chat_subid asc, message_date desc";
 		$rslt=mysqli_query($link, $stmt);
@@ -270,7 +292,7 @@ if ($reload_chat_span) {
 					$chat_output_footer[$chat_subid]= "</span></td>";
 					# $chat_output_footer[$chat_subid].="\t<td width='75' align='center'><input type='button' style='width: 75px' class='tiny_green_btn' value='SHOW ALL' onClick='ShowFullChat($manager_chat_id, $chat_subid)'><BR><BR><input type='button' style='width: 75px' class='tiny_red_btn' value='HIDE' onClick='HideFullChat($manager_chat_id, $chat_subid)'></td>";
 					$chat_output_footer[$chat_subid].="\t<td width='250' align='left' valign='top'><textarea class='chat_box' id='manager_chat_message_".$manager_chat_id."_".$chat_subid."' name='manager_chat_message_".$manager_chat_id."_".$chat_subid."' rows='7' cols='40'></textarea></td>";
-					$chat_output_footer[$chat_subid].="\t<td width='75' align='center'><input type='button' style='width: 75px' class='tiny_green_btn' value='SEND' onClick='SendChatMessage($manager_chat_id, $chat_subid, \"$agent_id\")'><BR><BR><input type='button' style='width: 75px' class='tiny_red_btn' value='END' onClick='EndAgentChat($manager_chat_id, $chat_subid)'></td>";
+					$chat_output_footer[$chat_subid].="\t<td width='75' align='center'><input type='button' style='width: 75px' class='tiny_green_btn' value='"._QXZ("SEND")."' onClick='SendChatMessage($manager_chat_id, $chat_subid, \"$agent_id\")'><BR><BR><input type='button' style='width: 75px' class='tiny_red_btn' value='"._QXZ("END")."' onClick='EndAgentChat($manager_chat_id, $chat_subid)'></td>";
 					$chat_output_footer[$chat_subid].="</TR>";
 
 					$backlog_limit=20;

@@ -1,7 +1,7 @@
 <?php
 # chat_db_query.php
 #
-# Copyright (C) 2014  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Called by vdc_chat_display.php and vicidial_chat_agent.js.  This contains all actions taken by the
 # agent's interface when chatting with customers, other agents, and managers, through 
@@ -11,6 +11,7 @@
 #
 # Builds:
 # 150901-2348 - First build
+# 151218-1052 - Added missing translation code and user auth
 #
 
 require("dbconnect_mysqli.php");
@@ -79,6 +80,56 @@ if (isset($_GET["ChatReloadIDNumber"]))					{$ChatReloadIDNumber=$_GET["ChatRelo
 $chat_member_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/',"",$chat_member_name);
 if (!$user) {echo "No user, no using."; exit;}
 
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$VUselected_language = '';
+$stmt = "SELECT use_non_latin,enable_languages,language_method,default_language,allow_chats FROM system_settings;";
+$rslt=mysql_to_mysqli($stmt, $link);
+        if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysqli_num_rows($rslt);
+if ($qm_conf_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$non_latin =			$row[0];
+	$SSenable_languages =	$row[1];
+	$SSlanguage_method =	$row[2];
+	$SSdefault_language =	$row[3];
+	$SSallow_chats =		$row[4];
+	}
+$VUselected_language = $SSdefault_language;
+##### END SETTINGS LOOKUP #####
+###########################################
+
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0,0,0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
+	{
+	echo _QXZ("Invalid Username/Password:")." |$user|$pass|$auth_message|chat_db_query|\n";
+	exit;
+	}
+
+$user_stmt="select full_name,user_level,selected_language from vicidial_users where user='$user'";
+$user_level=0;
+$user_rslt=mysql_to_mysqli($user_stmt, $link);
+if (mysqli_num_rows($user_rslt)>0) 
+	{
+	$user_row=mysqli_fetch_row($user_rslt);
+	$full_name =			$user_row[0];
+	$user_level =			$user_row[1];
+	$VUselected_language =	$user_row[2];
+	}
+if ($SSallow_chats < 1)
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo _QXZ("Error, chat disabled on this system");
+	exit;
+	}
+
+
 ###### AGENT/MANAGER CHAT FUNCTIONS #######
 if ($action=="CreateAgentToAgentChat" && $agent_manager && $agent_user && $manager_message) {
 
@@ -86,7 +137,7 @@ if ($action=="CreateAgentToAgentChat" && $agent_manager && $agent_user && $manag
 	$dupe_chat_stmt="select * from vicidial_manager_chats where (manager='$agent_manager' and selected_agents like '%|$agent_user|%') or (manager='$agent_user' and selected_agents like '%|$agent_manager|%')";
 	$dupe_chat_rslt=mysqli_query($link, $dupe_chat_stmt);
 	if (mysqli_num_rows($dupe_chat_rslt)>0) {
-		echo "Error:  You already have an open chat with this agent";
+		echo _QXZ("Error:  You already have an open chat with this agent");
 	} else {
 
 		# This is slightly different from the manager-to-agent chat because it's only one agent you're chatting to so for reporting all that agent's specific information is grabbed and used to make the vicidial_manager_chats entry.  Since the query should only return one result there's no while loop to insert subid chat info.
@@ -166,7 +217,7 @@ if ($action=="DisplayMgrAgentChat" && $manager_chat_id && $manager_chat_subid &&
 
 		echo $allow_replies."\n".$chat_output_text."\n".$chat_start_date."\n".$display_name."\n".$new_messages;
 	} else {
-		echo "N\nCHAT ENDED\n\n";
+		echo "N\n"._QXZ("CHAT ENDED")."\n\n";
 	}
 }
 
@@ -255,7 +306,7 @@ if ($action=="RefreshActiveChatView" && $user) {
 		echo "$new_ChatReloadIDNumber|";
 		echo "<ul class='chatview'>";
 		if (empty($chat_managers_array)) {
-			echo "\t<li class='arial_bold'>NO OPEN CHATS</li>\n";
+			echo "\t<li class='arial_bold'>"._QXZ("NO OPEN CHATS")."</li>\n";
 		} else {
 			while (list($manager_chat_id, $text) = each($chat_managers_array)) {
 				$manager_chat_subid=$chat_subid_array[$manager_chat_id];
@@ -270,7 +321,7 @@ if ($action=="RefreshActiveChatView" && $user) {
 if ($action=="ReloadAgentNewChatSpan" && $user) {
 	echo "<table width='600' border='0' cellpadding='5' cellspacing='0'>\n";
 	echo "<TR BGCOLOR='#E6E6E6' valign='top'>\n";
-	echo "<td width='*'><font class='arial'>Select a live agent:</font><BR>\n";
+	echo "<td width='*'><font class='arial'>"._QXZ("Select a live agent").":</font><BR>\n";
 
 	$stmt="SELECT user_group from vicidial_users where user='$user';";
 	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
@@ -311,7 +362,7 @@ if ($action=="ReloadAgentNewChatSpan" && $user) {
 	if ($rslt) {$agents_count = mysqli_num_rows($rslt);}
 	$loop_count=0;
 	echo "<select name='agent' id='agent'>\n";
-	echo "<option value=''>Available agents</option>\n";
+	echo "<option value=''>"._QXZ("Available agents")."</option>\n";
 	while ($agents_count > $loop_count)
 		{
 		$row=mysqli_fetch_row($rslt);
@@ -321,13 +372,13 @@ if ($action=="ReloadAgentNewChatSpan" && $user) {
 	echo "</select>";
 
 	echo "</td>\n";
-	echo "<td width='200'><font class='arial'>Message:</font><BR>\n";
+	echo "<td width='200'><font class='arial'>"._QXZ("Message").":</font><BR>\n";
 	echo "<textarea class='small_arial' rows='5' cols='36' name='agent_message' id='agent_message'></textarea>";
 	echo "</td></TR>\n";
 
 	echo "<TR BGCOLOR='#E6E6E6'>\n";
-	echo "<td><BR><input class='red_btn' type='button' style='width:200px' value='BACK TO CHAT SCREEN' onClick=\"document.getElementById('AgentChatSpan').style.display='block'; document.getElementById('AgentNewChatSpan').style.display='none';\"></td>\n";
-	echo "<td align='center'><BR><input class='green_btn' type='button' style='width:200px' value='START CHAT' onClick=\"CreateAgentToAgentChat()\">\n</td></TR>\n";
+	echo "<td><BR><input class='red_btn' type='button' style='width:200px' value='"._QXZ("BACK TO CHAT SCREEN")."' onClick=\"document.getElementById('AgentChatSpan').style.display='block'; document.getElementById('AgentNewChatSpan').style.display='none';\"></td>\n";
+	echo "<td align='center'><BR><input class='green_btn' type='button' style='width:200px' value='"._QXZ("START CHAT")."' onClick=\"CreateAgentToAgentChat()\">\n</td></TR>\n";
 	echo "</table>";
 
 }
@@ -351,10 +402,10 @@ if ($action=="SendMgrChatMessage" && $manager_chat_id && $manager_chat_subid) {
 		if (mysqli_insert_id($link)>0) {
 			$reload_chat_span=1;
 		} else {
-			echo "Error sending message.";
+			echo _QXZ("Error sending message.");
 		}
 	} else {
-		echo "Error sending message.";
+		echo _QXZ("Error sending message.");
 	}
 }
 ######################################
@@ -461,20 +512,20 @@ if ($action=="agent_send_message" && $chat_id) {
 		$live_row=mysqli_fetch_row($live_rslt);
 		$status=$live_row[0];
 		if ($status=="WAITING") {
-			echo "Chat $chat_id is waiting for an agent";
+			echo _QXZ("Chat is waiting for an agent").": $chat_id";
 		} else {
 			if ($status=="LIVE") {
 				$ins_stmt="insert ignore into vicidial_chat_log(chat_id, message, poster, chat_member_name, chat_level) VALUES('$chat_id', '".mysqli_real_escape_string($link, $chat_message)."', '$user', '".mysqli_real_escape_string($link, $chat_member_name)."', '$chat_level')";
 				$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 				if (mysqli_affected_rows($link)<1) {
-					echo "<font class='chat_title alert'>SYSTEM ERROR</font><BR/>\n";
+					echo "<font class='chat_title alert'>"._QXZ("SYSTEM ERROR")."</font><BR/>\n";
 				}
 			} else {
-				echo "<font class='chat_title alert'>SYSTEM ERROR</font><BR/>\n";
+				echo "<font class='chat_title alert'>"._QXZ("SYSTEM ERROR")."</font><BR/>\n";
 			}
 		}
 	} else if (mysqli_num_rows($rslt)==0) {
-		echo "Chat $chat_id has been closed";
+		echo _QXZ("Chat has been closed").": $chat_id";
 	}
 }
 
@@ -506,7 +557,7 @@ if ($action=="update_agent_chat_window" && $chat_id) {
 	$status_stmt="select status, chat_creator from vicidial_live_chats where chat_id='$chat_id'";
 	$status_rslt=mysql_to_mysqli($status_stmt, $link);
 	if (mysqli_num_rows($status_rslt)==0) {
-		echo "<font class='chat_title alert'>Chat $chat_id does not exist or has been closed</font><BR/>\n";
+		echo "<font class='chat_title alert'>"._QXZ("Chat does not exist or has been closed").": $chat_id</font><BR/>\n";
 	} else {
 		$status_row=mysqli_fetch_row($status_rslt);
 		
@@ -521,7 +572,7 @@ if ($action=="update_agent_chat_window" && $chat_id) {
 			$live_stmt="select * from vicidial_live_chats vlc, vicidial_chat_participants vcp where vlc.chat_id='$chat_id' and status='LIVE' and vlc.chat_id=vcp.chat_id and vcp.chat_member='$user'";
 			$live_rslt=mysql_to_mysqli($live_stmt, $link);
 			if (mysqli_num_rows($live_rslt)>0) {
-				echo "<font class='chat_title bold'>Current chat: $chat_id</font><BR/>\n";
+				echo "<font class='chat_title bold'>"._QXZ("Current chat").": $chat_id</font><BR/>\n";
 
 				# Create color-coding for chat
 				$stmt="select * from vicidial_chat_log where chat_id='$chat_id' order by message_time asc";
@@ -550,16 +601,16 @@ if ($action=="update_agent_chat_window" && $chat_id) {
 				$current_messages=mysqli_num_rows($rslt);
 				echo "<input type='hidden' id='current_message_count' name='current_message_count' value='$current_messages'>\n";
 			} else {	
-				echo "<font class='chat_title bold'>Click on a live chat at right to join it.</font><BR/>\n";
+				echo "<font class='chat_title bold'>"._QXZ("Click on a live chat at right to join it.")."</font><BR/>\n";
 			}
 		} else {
 			if ($status_row[1]=="NONE") {
-				echo "<font class='chat_title bold'>Waiting for next available agent....</font><BR/>\n";
+				echo "<font class='chat_title bold'>"._QXZ("Waiting for next available agent...")."</font><BR/>\n";
 			# 8/28 - Added in case agent starts chat but hasn't invited someone or they haven't shown up yet
 			} else if ($status_row[1]==$user || $status_row[0]=="WAITING") {
-				echo "<font class='chat_title bold'>Please send an invite to the customer to begin...</font><BR/>\n";
+				echo "<font class='chat_title bold'>"._QXZ("Please send an invite to the customer to begin...")."</font><BR/>\n";
 			} else {
-				echo "<font class='chat_title alert'>SYSTEM ERROR</font><BR/>\n";
+				echo "<font class='chat_title alert'>"._QXZ("SYSTEM ERROR")."</font><BR/>\n";
 			}
 		}
 	}
@@ -661,7 +712,7 @@ if ($action=="send_invite" && $chat_id && $email && $chat_group_id) {
 
 if ($action=="end_chat" && $chat_id && $chat_creator && $user && $server_ip) {
 	if ($user!=$chat_creator) {
-		echo "You cannot end this chat unless you are the one who started it.";
+		echo _QXZ("You cannot end this chat unless you are the one who started it.");
 		exit;
 	}
 
@@ -674,9 +725,9 @@ if ($action=="end_chat" && $chat_id && $chat_creator && $user && $server_ip) {
 	$del_stmt="delete from vicidial_live_chats where chat_id='$chat_id' and chat_creator='$chat_creator'";
 	$del_rslt=mysql_to_mysqli($del_stmt, $link);
 	if (mysqli_affected_rows($link)==0) {
-		echo "Warning: chat ID not found.  Deleting any remaining participants...<BR><BR>";
+		echo _QXZ("Warning: chat ID not found. Deleting any remaining participants...")."<BR><BR>";
 	} else {
-		echo "Chat ended<BR><BR>";
+		echo _QXZ("Chat ended")."<BR><BR>";
 	}
 	$del_log_stmt="delete from vicidial_chat_log where chat_id='$chat_id'";
 	$del_log_rslt=mysql_to_mysqli($del_log_stmt, $link);
@@ -685,7 +736,7 @@ if ($action=="end_chat" && $chat_id && $chat_creator && $user && $server_ip) {
 	$del_rslt2=mysql_to_mysqli($del_stmt2, $link);
 	$deleted_participants=mysqli_affected_rows($link);
 
-	echo "$deleted_participants removed from chat.";
+	echo "$deleted_participants "._QXZ("removed from chat.");
 
 	# HTML to display after ending chat - will only display again if no lead_id, i.e. no customer involved and no dispositioning needed.
 	echo "|";
@@ -695,9 +746,9 @@ if ($action=="end_chat" && $chat_id && $chat_creator && $user && $server_ip) {
 
 		$vla_stmt="select closer_campaigns from vicidial_live_agents where user='$user'";
 		$vla_rslt=mysql_to_mysqli($vla_stmt, $link);
-		echo "<BR/><BR/><input class='green_btn' type='button' style=\"width:150px\" value=\"START CHAT\" onClick=\"StartChat()\">";
+		echo "<BR/><BR/><input class='green_btn' type='button' style=\"width:150px\" value=\""._QXZ("START CHAT")."\" onClick=\"StartChat()\">";
 		echo "<BR/><BR/><select name='startchat_group_id' id='startchat_group_id' class='chat_window' onChange=\"document.getElementById('chat_group_id').value=this.value\">"; 
-		echo "<option value='' selected>--SELECT A CHAT GROUP--</option>";
+		echo "<option value='' selected>--"._QXZ("SELECT A CHAT GROUP")."--</option>";
 		if (mysqli_num_rows($vla_rslt)>0) {
 			$vla_row=mysqli_fetch_row($vla_rslt);
 			$closer_campaigns=trim($vla_row[0]);
@@ -723,7 +774,7 @@ if ($action=="join_chat" && $user && $chat_id && $chat_member_name) {
 	$ins_stmt="insert into vicidial_chat_participants(chat_id, chat_member, chat_member_name, vd_agent) values('$chat_id', '$user', '".mysqli_real_escape_string($link, $chat_member_name)."', 'Y')";
 	$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 	if (mysqli_affected_rows($link)==0) {
-		echo "ERROR|Chat was not joined.";
+		echo "ERROR|"._QXZ("Chat was not joined.");
 	} else {
 		$creator_stmt="select chat_creator from vicidial_live_chats where chat_id='$chat_id'";
 		$creator_rslt=mysql_to_mysqli($creator_stmt, $link);
@@ -731,7 +782,7 @@ if ($action=="join_chat" && $user && $chat_id && $chat_member_name) {
 			$crow=mysqli_fetch_row($creator_rslt);
 			echo "$crow[0]";
 		} else {
-			echo "ERROR|You have joined a non-existent chat.  Trippy.\n";
+			echo "ERROR|"._QXZ("You have joined a non-existent chat.  Trippy.")."\n";
 		}
 	}
 }
@@ -779,9 +830,9 @@ if ($action=="show_live_chats" && $user) {
 	}
 	
 	if ($active_chats) {
-		echo "<font class='chat_title bold'>Available Chats:</font><BR><BR>";
+		echo "<font class='chat_title bold'>"._QXZ("Available Chats").":</font><BR><BR>";
 		while (list($key, $val)=each($active_chats)) {
-			echo "<li class='submenu' onClick=\"JoinChat('$key', '$chat_creator');\"><font class='chat_message bold'>Chat ID #$key</font>\n";
+			echo "<li class='submenu' onClick=\"JoinChat('$key', '$chat_creator');\"><font class='chat_message bold'>"._QXZ("Chat ID")." #$key</font>\n";
 			echo "\t<ul id=\"chat_members_$key\">\n";
 			while (list($subkey, $subval)=each($val)) {
 				if ($subval[2]=="absent") {
@@ -800,7 +851,7 @@ if ($action=="show_live_chats" && $user) {
 	}
 	
 	if ($rslt && mysqli_num_rows($rslt)>0) {
-		echo "<input type='button' style='width:180px' value='CLICK CHAT TO JOIN' disabled>";
+		echo "<input type='button' style='width:180px' value='"._QXZ("CLICK CHAT TO JOIN")."' disabled>";
 	}
 }
 

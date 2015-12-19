@@ -8,36 +8,17 @@
 # changes:
 # 141212-2245 - First Build
 # 151213-1108 - Added variable filtering
+# 151218-1141 - Added missing translation code and user auth, merged js code into file
 #
 
-$admin_version = '2.12-2';
-$build = '151213-1108';
+$admin_version = '2.12-3';
+$build = '151218-1141';
 
 $sh="managerchats"; 
 
 require("dbconnect_mysqli.php");
 require("functions.php");
 
-#############################################
-##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
-$rslt=mysql_to_mysqli($stmt, $link);
-        if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
-if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysqli_num_rows($rslt);
-if ($qm_conf_ct > 0)
-        {
-        $row=mysqli_fetch_row($rslt);
-        $non_latin =			$row[0];
-        $SSenable_languages =	$row[1];
-        $SSlanguage_method =	$row[2];
-        }
-##### END SETTINGS LOOKUP #####
-###########################################
-
-$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
-$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
-$PHP_SELF=$_SERVER['PHP_SELF'];
 if (isset($_GET["DB"]))							{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))				{$DB=$_POST["DB"];}
 if (isset($_GET["action"]))						{$action=$_GET["action"];}
@@ -64,6 +45,56 @@ else
 	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	$manager_chat_id = preg_replace("/\'|\"|\\\\|;/","",$user);
 	}
+
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$VUselected_language = '';
+$stmt = "SELECT use_non_latin,enable_languages,language_method,default_language,allow_chats FROM system_settings;";
+$rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysqli_num_rows($rslt);
+if ($qm_conf_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$non_latin =			$row[0];
+	$SSenable_languages =	$row[1];
+	$SSlanguage_method =	$row[2];
+	$SSdefault_language =	$row[3];
+	$SSallow_chats =		$row[4];
+	}
+$VUselected_language = $SSdefault_language;
+##### END SETTINGS LOOKUP #####
+###########################################
+
+$auth=0;
+$auth_message = user_authorization($user,$pass,'',0,0,0);
+if ($auth_message == 'GOOD')
+	{$auth=1;}
+
+if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
+	{
+	echo _QXZ("Invalid Username/Password:")." |$user|$pass|$auth_message|$sh|\n";
+	exit;
+	}
+
+$user_stmt="select full_name,user_level,selected_language from vicidial_users where user='$user'";
+$user_level=0;
+$user_rslt=mysql_to_mysqli($user_stmt, $link);
+if (mysqli_num_rows($user_rslt)>0) 
+	{
+	$user_row=mysqli_fetch_row($user_rslt);
+	$full_name =			$user_row[0];
+	$user_level =			$user_row[1];
+	$VUselected_language =	$user_row[2];
+	}
+if ($SSallow_chats < 1)
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo _QXZ("Error, chat disabled on this system");
+	exit;
+	}
+
 
 # Get a count on unread messages where the user is involved but not the chat manager/initiator in order to create the ChatReloadIDNumber variable
 $chat_reload_id_number_array=array();
@@ -137,6 +168,13 @@ while (list($key, $id_number) = each($chat_reload_id_number_array)) {
 	$ChatReloadIDNumber.="$id_number.";
 }
 $ChatReloadIDNumber=substr($ChatReloadIDNumber,0,-1);
+
+header ("Content-type: text/html; charset=utf-8");
+header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
+header ("Pragma: no-cache");                          // HTTP/1.0
+echo '<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+';
 ?>
 <html>
 <head>
@@ -144,31 +182,424 @@ $ChatReloadIDNumber=substr($ChatReloadIDNumber,0,-1);
 </head>
 <link rel="stylesheet" href="vicidial_stylesheet.css">
 <link rel="stylesheet" href="css/simpletree.css">
-<script language="JavaScript" src="vicidial_chat_agent.js"></script>
+<script language="JavaScript">
+
+// ################################################################################
+// Show parent alert
+	function chat_alert_box(temp_message)
+		{
+		window.parent.document.getElementById("AlertBoxContent").innerHTML = temp_message;
+
+		parent.showDiv('AlertBox');
+
+		window.parent.document.alert_form.alert_button.focus();
+		}
+
+/// Functions for agent/manager chatting
+function CreateAgentToAgentChat() {
+	var agent_message=encodeURIComponent(document.getElementById("agent_message").value);
+	var user=document.getElementById("user").value;
+	var pass='<?php echo $pass ?>';
+	var agent=document.getElementById("agent").value;
+
+	if (!agent_message || agent_message=="")
+		{
+			chat_alert_box("<?php echo _QXZ("Please enter a chat message"); ?>");
+			return false;
+		}
+	if (!agent || agent=="")
+		{
+			chat_alert_box("<?php echo _QXZ("Please select an agent to chat with"); ?>");
+			return false;
+		}
+
+	var xmlhttp=false;
+	/*@cc_on @*/
+	/*@if (@_jscript_version >= 5)
+	// JScript gives us Conditional compilation, we can cope with old IE versions.
+	// and security blocked creation of the objects.
+	 try {
+	  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+	 } catch (e) {
+	  try {
+	   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	  } catch (E) {
+	   xmlhttp = false;
+	  }
+	 }
+	@end @*/
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+		{
+		xmlhttp = new XMLHttpRequest();
+		}
+	if (xmlhttp) 
+		{ 
+		var chat_SQL_query = "action=CreateAgentToAgentChat&agent_manager="+user+"&pass="+pass+"&agent_user="+agent+"&manager_message="+agent_message+"&user="+user;
+		xmlhttp.open('POST', 'chat_db_query.php'); 
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(chat_SQL_query); 
+		xmlhttp.onreadystatechange = function() 
+			{ 
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+				{
+				var ChatText = null;
+				ChatText = xmlhttp.responseText;
+				var ChatText_array=ChatText.split("|");
+
+				if (ChatText.match(/^Error/)) 
+					{
+					chat_alert_box(ChatText);
+					}
+				else 
+					{
+					document.getElementById("agent_message").value="";
+					document.getElementById("AgentNewChatSpan").style.display='none';
+					document.getElementById("AgentChatSpan").style.display='block';
+					document.getElementById("AgentEndChatSpan").style.display = 'block';
+					document.getElementById("AgentManagerOverride").value=agent;
+					document.getElementById("CurrentActiveChat").value=ChatText_array[0];
+					document.getElementById("CurrentActiveChatSubID").value=ChatText_array[1];
+					}
+				}
+			}
+		delete xmlhttp;
+		}
+}
+
+// Displays selected chat, also marks any message on it as read.
+function DisplayMgrAgentChat(manager_chat_id, manager_chat_subid) {
+	if (manager_chat_id)
+		{
+		document.getElementById("CurrentActiveChat").value=manager_chat_id;
+		document.getElementById("CurrentActiveChatSubID").value=manager_chat_subid;
+		} 
+	else 
+		{
+		var manager_chat_id=document.getElementById("CurrentActiveChat").value;
+		var manager_chat_subid=document.getElementById("CurrentActiveChatSubID").value;
+		}
+
+	if (!manager_chat_id || !manager_chat_subid)
+		{
+		document.getElementById("AllowAgentReplies").style.display = 'none';
+		// document.getElementById("ActiveManagerChatTranscript").innerHTML=ChatText_array[1];
+		// document.getElementById("ActiveChatStartDate").innerHTML=ChatText_array[2];
+		// document.getElementById("ActiveChatManager").innerHTML=ChatText_array[3];
+		return false;
+		}
+	var user=document.getElementById("user").value;
+	var pass='<?php echo $pass ?>';
+	var agent_override=document.getElementById("AgentManagerOverride").value;
+
+	// JCJ - commented out 10/19 so any agent in a-2-a chat can end it.
+	// if (agent_override && agent_override!="0" && agent_override!="")
+	//	{
+		document.getElementById("AgentEndChatSpan").style.display = 'block';
+	//	}
+	// else 
+	//	{
+	//	document.getElementById("AgentEndChatSpan").style.display = 'none';
+	//	}
+
+	var xmlhttp=false;
+	/*@cc_on @*/
+	/*@if (@_jscript_version >= 5)
+	// JScript gives us Conditional compilation, we can cope with old IE versions.
+	// and security blocked creation of the objects.
+	 try {
+	  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+	 } catch (e) {
+	  try {
+	   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	  } catch (E) {
+	   xmlhttp = false;
+	  }
+	 }
+	@end @*/
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+		{
+		xmlhttp = new XMLHttpRequest();
+		}
+	if (xmlhttp) 
+		{ 
+		var chat_SQL_query = "action=DisplayMgrAgentChat&user="+user+"&pass="+pass+"&manager_chat_id="+manager_chat_id+"&manager_chat_subid="+manager_chat_subid;
+		xmlhttp.open('POST', 'chat_db_query.php'); 
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(chat_SQL_query); 
+		xmlhttp.onreadystatechange = function() 
+			{ 
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+				{
+				var ChatText = null;
+				ChatText = xmlhttp.responseText;
+				var ChatText_array=ChatText.split("\n");
+
+				var allow_agent_replies=ChatText_array[0];
+				var new_messages=ChatText_array[4];
+
+				if (allow_agent_replies=="Y")
+					{
+					document.getElementById("AllowAgentReplies").style.display = 'block';
+					} 
+				else 
+					{
+					document.getElementById("AllowAgentReplies").style.display = 'none';
+					}
+
+				document.getElementById("ActiveManagerChatTranscript").innerHTML=ChatText_array[1];
+				document.getElementById("ActiveChatStartDate").innerHTML=ChatText_array[2];
+				document.getElementById("ActiveChatManager").innerHTML=ChatText_array[3];
+				document.getElementById("ActiveManagerChatTranscript").scrollTop = document.getElementById("ActiveManagerChatTranscript").scrollHeight;
+				RefreshActiveChatView();
+				}
+			}
+		delete xmlhttp;
+		}
+}
+
+// Ends selected displayed chat
+function EndAgentToAgentChat() {
+	var manager_chat_id=document.getElementById("CurrentActiveChat").value;
+	var manager_chat_subid=document.getElementById("CurrentActiveChatSubID").value;
+	var user=document.getElementById("user").value;
+	var pass='<?php echo $pass ?>';
+
+	if (!manager_chat_id || !manager_chat_subid)
+		{
+		document.getElementById("AllowAgentReplies").style.display = 'none';
+		return false;
+		}
+
+	var xmlhttp=false;
+	/*@cc_on @*/
+	/*@if (@_jscript_version >= 5)
+	// JScript gives us Conditional compilation, we can cope with old IE versions.
+	// and security blocked creation of the objects.
+	 try {
+	  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+	 } catch (e) {
+	  try {
+	   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	  } catch (E) {
+	   xmlhttp = false;
+	  }
+	 }
+	@end @*/
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+		{
+		xmlhttp = new XMLHttpRequest();
+		}
+	if (xmlhttp) 
+		{ 
+		var chat_SQL_query = "action=EndAgentToAgentChat&user="+user+"&pass="+pass+"&manager_chat_id="+manager_chat_id+"&manager_chat_subid="+manager_chat_subid;
+		xmlhttp.open('POST', 'chat_db_query.php'); 
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(chat_SQL_query); 
+		xmlhttp.onreadystatechange = function() 
+			{ 
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+				{
+				var ChatText = null;
+				ChatText = xmlhttp.responseText; // echoes number of lines affected - should be greater than zero.
+
+				if (ChatText>0)
+					{
+					document.getElementById("AllowAgentReplies").style.display = 'none';
+					document.getElementById("AgentEndChatSpan").style.display = 'none';
+					document.getElementById("ActiveManagerChatTranscript").innerHTML='';	
+					document.getElementById("AgentManagerOverride").value='';
+					document.getElementById("ActiveChatStartDate").innerHTML='';
+					document.getElementById("ActiveChatManager").innerHTML='';
+					}
+
+				RefreshActiveChatView();
+				}
+			}
+		delete xmlhttp;
+		}
+}
+
+function RefreshActiveChatView() {
+	var user=document.getElementById("user").value;
+	var pass='<?php echo $pass ?>';
+	var ChatReloadIDNumber=document.getElementById("ChatReloadIDNumber").value;
+	var xmlhttp=false;
+	/*@cc_on @*/
+	/*@if (@_jscript_version >= 5)
+	// JScript gives us Conditional compilation, we can cope with old IE versions.
+	// and security blocked creation of the objects.
+	 try {
+	  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+	 } catch (e) {
+	  try {
+	   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	  } catch (E) {
+	   xmlhttp = false;
+	  }
+	 }
+	@end @*/
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+		{
+		xmlhttp = new XMLHttpRequest();
+		}
+	if (xmlhttp) 
+		{ 
+		var chat_SQL_query = "action=RefreshActiveChatView&user="+user+"&pass="+pass+"&ChatReloadIDNumber="+ChatReloadIDNumber;
+		xmlhttp.open('POST', 'chat_db_query.php'); 
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(chat_SQL_query); 
+		xmlhttp.onreadystatechange = function() 
+			{ 
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+				{
+				var ActiveChatText = null;
+				ActiveChatText = xmlhttp.responseText;
+				if(ActiveChatText!="") 
+					{
+					var ActiveChatText_array=ActiveChatText.split("|");
+					document.getElementById("ChatReloadIDNumber").value=ActiveChatText_array[0];
+					document.getElementById("AllActiveChats").innerHTML=ActiveChatText_array[1];
+					}
+				}
+			}
+		delete xmlhttp;
+		}
+}
+
+function ReloadAgentNewChatSpan(user) {
+	var xmlhttp=false;
+	/*@cc_on @*/
+	/*@if (@_jscript_version >= 5)
+	// JScript gives us Conditional compilation, we can cope with old IE versions.
+	// and security blocked creation of the objects.
+	 try {
+	  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+	 } catch (e) {
+	  try {
+	   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	  } catch (E) {
+	   xmlhttp = false;
+	  }
+	 }
+	@end @*/
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+		{
+		xmlhttp = new XMLHttpRequest();
+		}
+	if (xmlhttp) 
+		{ 
+		var chat_SQL_query = "action=ReloadAgentNewChatSpan&user="+user+"&pass="+pass;
+		xmlhttp.open('POST', 'chat_db_query.php'); 
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(chat_SQL_query); 
+		xmlhttp.onreadystatechange = function() 
+			{ 
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+				{
+				var Agent2AgentText = xmlhttp.responseText;
+				document.getElementById("AgentNewChatSpan").innerHTML=Agent2AgentText;
+				}
+			}
+		delete xmlhttp;
+		}
+}
+
+function SendMgrChatMessage(manager_chat_id, manager_chat_subid) {
+	// if (!manager_chat_id) {return false;}
+	if (manager_chat_id)
+		{
+		document.getElementById("CurrentActiveChat").value=manager_chat_id;
+		document.getElementById("CurrentActiveChatSubID").value=manager_chat_subid;
+		} 
+	else 
+		{
+		var manager_chat_id=document.getElementById("CurrentActiveChat").value;
+		var manager_chat_subid=document.getElementById("CurrentActiveChatSubID").value;
+		}
+
+	var user=document.getElementById("user").value;
+	var pass='<?php echo $pass ?>';
+	var agent_override=document.getElementById("AgentManagerOverride").value;
+	var chat_message=encodeURIComponent(document.getElementById("manager_message").value);
+
+	if (!chat_message || chat_message=="") {return false;}
+
+	var xmlhttp=false;
+	/*@cc_on @*/
+	/*@if (@_jscript_version >= 5)
+	// JScript gives us Conditional compilation, we can cope with old IE versions.
+	// and security blocked creation of the objects.
+	 try {
+	  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+	 } catch (e) {
+	  try {
+	   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	  } catch (E) {
+	   xmlhttp = false;
+	  }
+	 }
+	@end @*/
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+		{
+		xmlhttp = new XMLHttpRequest();
+		}
+	if (xmlhttp) 
+		{ 
+		var chat_SQL_query = "action=SendMgrChatMessage&user="+user+"&pass="+pass+"&manager_chat_id="+manager_chat_id+"&manager_chat_subid="+manager_chat_subid+"&chat_message="+chat_message+"&agent_override="+agent_override;
+		xmlhttp.open('POST', 'chat_db_query.php'); 
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(chat_SQL_query); 
+		xmlhttp.onreadystatechange = function() 
+			{ 
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+				{
+				var ChatText = null;
+				ChatText = xmlhttp.responseText;
+
+				if (ChatText.length>0 && ChatText.match(/^Error/)) 
+					{
+					chat_alert_box(ChatText);
+					}
+				else 
+					{
+					document.getElementById("manager_message").value="";
+					}
+				}
+			}
+		delete xmlhttp;
+		}
+}
+
+function MgrAgentAutoRefresh() {
+	rInt=window.setInterval(function() {DisplayMgrAgentChat()}, 1000);
+}
+
+
+</script>
 <title><?php echo _QXZ("ADMINISTRATION: Agent/Manager Chat Interface"); ?></title>
-<body onLoad="MgrAgentAutoRefresh();" onUnLoad="clearInterval(rInt);"><!-- DisplayMgrAgentChat(<?php echo $priority_chat; ?>); //-->
+<body onLoad="MgrAgentAutoRefresh();" onUnLoad="clearInterval(rInt);"><!-- DisplayMgrAgentChat(<?php echo $priority_chat; ?>); -->
 <span id="AgentChatSpan" name="AgentChatSpan" style="display: block;">
 <?php
 echo "<form name='agent_manager_chat_form' id='agent_manager_chat_form'>";
 echo "<table width='620' border='0' cellpadding='5' cellspacing='0'>";
 echo "<TR BGCOLOR='#E6E6E6'>\n";
-echo "<td align='left' width='190' valign='top'><font class='arial'>Chatting with: </font><BR><span class='arial_bold' id='ActiveChatManager'>".$chat_managers_array[$priority_chat]."</span></td>";
-echo "<td align='right' width='190' valign='top'><font class='arial'>Chat started: </font><BR><span class='arial_bold' id='ActiveChatStartDate'>".$chat_start_date_array[$priority_chat]."</span></td>";
-echo "<td align='left' width='*' valign='bottom'><font class='arial'>Your active chats:</font></td>";
+echo "<td align='left' width='190' valign='top'><font class='arial'>"._QXZ("Chatting with").": </font><BR><span class='arial_bold' id='ActiveChatManager'>".$chat_managers_array[$priority_chat]."</span></td>";
+echo "<td align='right' width='190' valign='top'><font class='arial'>"._QXZ("Chat started").": </font><BR><span class='arial_bold' id='ActiveChatStartDate'>".$chat_start_date_array[$priority_chat]."</span></td>";
+echo "<td align='left' width='*' valign='bottom'><font class='arial'>"._QXZ("Your active chats").":</font></td>";
 echo "</TR>";
 
 echo "<TR BGCOLOR='#E6E6E6'>\n";
 echo "<TD align='left' colspan='2' valign='top' width='380'>\n";
 echo "\t<div class='scrolling_transcript' id='ActiveManagerChatTranscript'></div><BR>\n";
 echo "\t<div id='AllowAgentReplies' align='center' style='display:none;'>\n";
-echo "\t<textarea class='small_arial' rows='2' cols='65' name='manager_message' id='manager_message' onkeypress='if (event.keyCode == 13) {SendMgrChatMessage();}'></textarea><BR><input class='blue_btn' type='button' style='width:200px' value='SEND MESSAGE' onClick=\"SendMgrChatMessage()\">\n";
+echo "\t<textarea class='small_arial' rows='2' cols='65' name='manager_message' id='manager_message' onkeypress='if (event.keyCode == 13) {SendMgrChatMessage();}'></textarea><BR><input class='blue_btn' type='button' style='width:200px' value='"._QXZ("SEND MESSAGE")."' onClick=\"SendMgrChatMessage()\">\n";
 echo "\t</div>\n";
 echo "</TD>\n";
 echo "<TD align='left' rowspan='2' valign='top' width='210'>\n";
 echo "<div class='scrolling_chat_display' id='AllActiveChats'>\n";
 	echo "<ul class='chatview'>";
 	if (empty($chat_managers_array)) {
-		echo "\t<li class='arial_bold'>NO OPEN CHATS</li>\n";
+		echo "\t<li class='arial_bold'>"._QXZ("NO OPEN CHATS")."</li>\n";
 	} else {
 		while (list($manager_chat_id, $text) = each($chat_managers_array)) {
 			$manager_chat_subid=$chat_subid_array[$manager_chat_id];
@@ -180,9 +611,9 @@ echo "<div class='scrolling_chat_display' id='AllActiveChats'>\n";
 	}
 	echo "</ul>\n";
 echo "\t</div>\n";
-echo "<font class='small_arial_bold'>(bolded chats = unread messages)<BR><input type='checkbox' id='MuteChatAlert' name='MuteChatAlert'>Mute alert sound</font>\n";
-echo "\t<BR><BR><input class='green_btn' type='button' style='width:200px' value='CHAT WITH LIVE AGENT' onClick=\"document.getElementById('AgentChatSpan').style.display='none'; document.getElementById('AgentNewChatSpan').style.display='block'; ReloadAgentNewChatSpan('$user');\">\n";
-echo "\t<BR><BR><span id='AgentEndChatSpan' style='display: none;'><div align='left'><input class='red_btn' type='button' style='width:200px' value='END CHAT' onClick='EndAgentToAgentChat()'></div></span>";
+echo "<font class='small_arial_bold'>(bolded chats = unread messages)<BR><input type='checkbox' id='MuteChatAlert' name='MuteChatAlert'>"._QXZ("Mute alert sound")."</font>\n";
+echo "\t<BR><BR><input class='green_btn' type='button' style='width:200px' value='"._QXZ("CHAT WITH LIVE AGENT")."' onClick=\"document.getElementById('AgentChatSpan').style.display='none'; document.getElementById('AgentNewChatSpan').style.display='block'; ReloadAgentNewChatSpan('$user');\">\n";
+echo "\t<BR><BR><span id='AgentEndChatSpan' style='display: none;'><div align='left'><input class='red_btn' type='button' style='width:200px' value='"._QXZ("END CHAT")."' onClick='EndAgentToAgentChat()'></div></span>";
 echo "</TD>\n";
 echo "</TR>\n";
 
@@ -204,7 +635,7 @@ echo "</form>";
 <?php
 echo "<table width='600' border='0' cellpadding='5' cellspacing='0'>\n";
 echo "<TR BGCOLOR='#E6E6E6' valign='top'>\n";
-echo "<td width='*'><font class='arial'>Select a live agent:</font><BR>\n";
+echo "<td width='*'><font class='arial'>"._QXZ("Select a live agent").":</font><BR>\n";
 
 	$stmt="SELECT user_group from vicidial_users where user='$user';";
 	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
@@ -255,13 +686,13 @@ echo "<td width='*'><font class='arial'>Select a live agent:</font><BR>\n";
 	echo "</select>";
 
 echo "</td>\n";
-echo "<td width='200'><font class='arial'>Message:</font><BR>\n";
+echo "<td width='200'><font class='arial'>"._QXZ("Message").":</font><BR>\n";
 echo "<textarea class='small_arial' rows='5' style='width:200px; name='agent_message' id='agent_message'></textarea>";
 echo "</td></TR>\n";
 
 echo "<TR BGCOLOR='#E6E6E6'>\n";
-echo "<td><BR><input class='red_btn' type='button' style='width:200px' value='BACK TO CHAT SCREEN' onClick=\"document.getElementById('AgentChatSpan').style.display='block'; document.getElementById('AgentNewChatSpan').style.display='none';\"></td>\n";
-echo "<td align='center'><BR><input class='green_btn' type='button' style='width:200px' value='START CHAT' onClick=\"CreateAgentToAgentChat()\">\n</td></TR>\n";
+echo "<td><BR><input class='red_btn' type='button' style='width:200px' value='"._QXZ("BACK TO CHAT SCREEN")."' onClick=\"document.getElementById('AgentChatSpan').style.display='block'; document.getElementById('AgentNewChatSpan').style.display='none';\"></td>\n";
+echo "<td align='center'><BR><input class='green_btn' type='button' style='width:200px' value='"._QXZ("START CHAT")."' onClick=\"CreateAgentToAgentChat()\">\n</td></TR>\n";
 echo "</table>";
 ?>
 </span>

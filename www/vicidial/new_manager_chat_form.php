@@ -1,19 +1,34 @@
 <?php
+# new_manager_chat_form.php
+# 
+# Copyright (C) 2015  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+#
+# This page is for managers (level 8 or higher) to chat with live agents
+#
+# changes:
+# 150608-2041 - First Build
+# 151219-0718 - Added translation code where missing
+#
+
 require("dbconnect_mysqli.php");
 require("functions.php");
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,allow_chats FROM system_settings;";
+$stmt = "SELECT use_non_latin,allow_chats,enable_languages,language_method,default_language FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$non_latin =							$row[0];
-	$SSallow_chats =						$row[1];
+	$non_latin =			$row[0];
+	$SSallow_chats =		$row[1];
+    $SSenable_languages =	$row[2];
+    $SSlanguage_method =	$row[3];
+	$SSdefault_language =	$row[4];
 	}
+$VUselected_language = $SSdefault_language;
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
@@ -50,6 +65,24 @@ if ($auth < 1)
 	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
 	exit;
 	}
+
+$user_stmt="select full_name,user_level,selected_language from vicidial_users where user='$PHP_AUTH_USER'";
+$user_level=0;
+$user_rslt=mysql_to_mysqli($user_stmt, $link);
+if (mysqli_num_rows($user_rslt)>0) 
+	{
+	$user_row=mysqli_fetch_row($user_rslt);
+	$full_name =			$user_row[0];
+	$user_level =			$user_row[1];
+	$VUselected_language =	$user_row[2];
+	}
+if ($SSallow_chats < 1)
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	echo _QXZ("Error, chat disabled on this system");
+	exit;
+	}
+
 
 $stmt="select vla.user, vu.full_name, vu.user_group, vla.campaign_id, vc.campaign_name, vug.group_name from vicidial_users vu, vicidial_live_agents vla, vicidial_campaigns vc, vicidial_user_groups vug where vla.user=vu.user and vla.campaign_id=vc.campaign_id and vu.user_group=vug.user_group";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -121,8 +154,8 @@ echo "<textarea rows='5' cols='50' name='manager_message' id='manager_message'><
 echo "<input type='checkbox' name='allow_replies' id='allow_replies' value='Y' checked><font size='1'>"._QXZ("Allow agent replies")."</font>";
 echo "</TD>";
 echo "<td align='center' valign='middle'>";
-echo "<input type='submit' name='submit_chat' style='width: 150px' value='"._QXZ("SELECTED AGENTS")."'><BR><BR><BR>";
-echo "<input type='submit' name='submit_chat' style='width: 150px' value='"._QXZ("ALL LIVE AGENTS")."'>";
+echo "<input type='submit' name='submit_chat' style='width: 150px' value=\""._QXZ("SELECTED AGENTS")."\"><BR><BR><BR>";
+echo "<input type='submit' name='submit_chat' style='width: 150px' value=\""._QXZ("ALL LIVE AGENTS")."\">";
 echo "</td>";
 echo "</TR>";
 echo "</table>";
