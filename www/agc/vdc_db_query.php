@@ -395,10 +395,11 @@
 # 151119-1931 - Fixed issue with outbound CID in some cases during dial-only function
 # 151209-1615 - Fixed issue with possible data loss using callback or dispo comments
 # 151212-0916 - Added chat-related functions for the agent interface
+# 151220-1109 - Improved logging of chats, emails, inbound calls
 #
 
-$version = '2.12-290';
-$build = '151212-0916';
+$version = '2.12-291';
+$build = '151220-1109';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=649;
@@ -5277,7 +5278,7 @@ if ($stage == "end")
 		$term_reason='NONE';
 		if ($start_epoch < 1000)
 			{
-			if ($VLA_inOUT == 'INBOUND')
+			if ( ($VLA_inOUT == 'INBOUND') or ($VLA_inOUT == 'CHAT') or ($VLA_inOUT == 'EMAIL') )
 				{
 				$four_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-4,date("i"),date("s"),date("m"),date("d"),date("Y")));
 
@@ -5343,7 +5344,7 @@ if ($stage == "end")
 
 		$four_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-4,date("i"),date("s"),date("m"),date("d"),date("Y")));
 
-		if ($VLA_inOUT == 'INBOUND')
+		if ( ($VLA_inOUT == 'INBOUND') or ($VLA_inOUT == 'CHAT') or ($VLA_inOUT == 'EMAIL') )
 			{
 			$vcl_statusSQL='';
 			if ($VDstatus == 'INCALL') {$vcl_statusSQL = ",status='$status_dispo'";}
@@ -6427,6 +6428,10 @@ if ($stage == "end")
 				{
 				$lead_id_commentsSQL .= ",lead_id='$lead_id'";
 				}
+			}
+		if ( ( ($VLA_inOUT == 'CHAT') or ($VLA_inOUT == 'EMAIL') or ($VLA_inOUT == 'INBOUND') ) and ( (preg_match("/NULL/i",$row[5])) or (strlen($row[5]) < 1) ) )
+			{
+			$lead_id_commentsSQL .= ",comments='$VLA_inOUT'";
 			}
 		}
 	$stmt="UPDATE vicidial_agent_log set talk_sec='$talk_sec',dispo_epoch='$StarTtime',uniqueid='$uniqueid' $talk_epochSQL $dead_secSQL $lead_id_commentsSQL where agent_log_id='$agent_log_id';";
@@ -7910,6 +7915,8 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 	$INxfercallid='';
 	$email_group_str='';
 	$chat_group_str='';
+	$VLA_inOUT='NONE';
+	$queue_seconds=0;
 
 	$email_group_ct=count($inbound_email_groups); # This should always be greater than zero for the script to reach this point, but just in case...
 	for ($i=0; $i<$email_group_ct; $i++) 
@@ -7941,7 +7948,7 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 		### CHECK FOR EMAILS AND CHATS ###
 
 		### Check for transfers
-		$stmt="SELECT vicidial_email_list.lead_id, vicidial_email_list.email_date, vicidial_email_list.email_to, vicidial_email_list.email_from, vicidial_email_list.subject, vicidial_xfer_log.campaign_id, vicidial_email_list.email_row_id, vicidial_xfer_log.xfercallid from vicidial_email_list, vicidial_xfer_log where vicidial_email_list.status='QUEUE' and vicidial_email_list.user='$user' and vicidial_xfer_log.xfercallid=vicidial_email_list.xfercallid and direction='INBOUND' and vicidial_xfer_log.campaign_id in ($email_group_str) and closer='EMAIL_XFER' order by vicidial_xfer_log.call_date asc limit 1";
+		$stmt="SELECT vicidial_email_list.lead_id, UNIX_TIMESTAMP(vicidial_email_list.email_date), vicidial_email_list.email_to, vicidial_email_list.email_from, vicidial_email_list.subject, vicidial_xfer_log.campaign_id, vicidial_email_list.email_row_id, vicidial_xfer_log.xfercallid from vicidial_email_list, vicidial_xfer_log where vicidial_email_list.status='QUEUE' and vicidial_email_list.user='$user' and vicidial_xfer_log.xfercallid=vicidial_email_list.xfercallid and direction='INBOUND' and vicidial_xfer_log.campaign_id in ($email_group_str) and closer='EMAIL_XFER' order by vicidial_xfer_log.call_date asc limit 1";
 		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -7953,7 +7960,7 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 		if ($email_ct==0) 
 			{
 			# Check if there are any QUEUE emails 
-			$stmt = "select lead_id, email_date, email_to, email_from, subject, group_id, email_row_id from vicidial_email_list where status='QUEUE' and direction='INBOUND' and user='$user' and group_id in ($email_group_str) order by email_date asc";
+			$stmt = "SELECT lead_id, UNIX_TIMESTAMP(email_date), email_to, email_from, subject, group_id, email_row_id from vicidial_email_list where status='QUEUE' and direction='INBOUND' and user='$user' and group_id in ($email_group_str) order by email_date asc;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00488',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -7963,19 +7970,20 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 		### If no emails have been sent to agent, check for chats, this is the code section where the agent interface will grab the next available chat
 		if ($email_ct==0) 
 			{
-			$stmt="select * from vicidial_live_chats where status='WAITING' and group_id in ($chat_group_str) order by chat_id asc limit 1";
+			$stmt="SELECT chat_id,UNIX_TIMESTAMP(chat_start_time),status,chat_creator,group_id,lead_id from vicidial_live_chats where status='WAITING' and group_id in ($chat_group_str) order by chat_id asc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00638',$user,$server_ip,$session_name,$one_mysql_log);}
 			if (mysqli_num_rows($rslt)>0) 
 				{
 				$chat_row=mysqli_fetch_row($rslt);
-				$chat_id=$chat_row[0];
-				$status =$chat_row[2];
-				$chat_creator=$chat_row[3];
-				$group_id=$chat_row[4];
-				$VDADchannel_group=$chat_row[4];
-				$lead_id=$chat_row[5];
+				$chat_id =				$chat_row[0];
+				$other_start_epoch =	$chat_row[1];
+				$status =				$chat_row[2];
+				$chat_creator =			$chat_row[3];
+				$group_id =				$chat_row[4];
+				$VDADchannel_group =	$chat_row[4];
+				$lead_id =				$chat_row[5];
 				$uniqueid=date("U").".".rand(1, 9999);
 				$upd_stmt="update vicidial_live_chats set status='LIVE', chat_creator='$user' where chat_id='$chat_id'";
 				$upd_rslt=mysql_to_mysqli($upd_stmt, $link);
@@ -7985,15 +7993,16 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 
 		if ($email_ct > 0)
 			{
+			$VLA_inOUT='EMAIL';
 			$row=mysqli_fetch_row($rslt);
-			$lead_id	=$row[0];
-			$email_date	=$row[1];
-			$email_to	=$row[2];
-			$email_from	=$row[3];
-			$subject	=$row[4];
-			$VDADchannel_group=$row[5];
-			$email_row_id=$row[6];
-			$xfercallid=$row[7];
+			$lead_id =				$row[0];
+			$other_start_epoch =	$row[1];
+			$email_to =				$row[2];
+			$email_from =			$row[3];
+			$subject =				$row[4];
+			$VDADchannel_group =	$row[5];
+			$email_row_id =			$row[6];
+			$xfercallid =			$row[7];
 			$uniqueid=date("U").".".rand(1, 9999);
 
 			if (strlen($call_server_ip)<7) {$call_server_ip = $server_ip;}
@@ -8117,6 +8126,7 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 			}
 		else if ($chat_ct>0) 
 			{
+			$VLA_inOUT='CHAT';
 			if (strlen($call_server_ip)<7) {$call_server_ip = $server_ip;}
 
 			# Change to better suit the output processed by the agent interface
@@ -8250,9 +8260,12 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 				$fullname =			$row[1];
 				}
 
+			if ($other_start_epoch > 1000)
+				{$queue_seconds = ($StarTtime - $other_start_epoch);}
+
 			### update the vicidial_closer_log user to INCALL
 			#$stmt = "UPDATE vicidial_closer_log set user='$user', comments='AUTO', list_id='$list_id', status='INCALL', user_group='$user_group' where lead_id='$lead_id' order by closecallid desc limit 1;";
-			$stmt="INSERT INTO vicidial_closer_log(call_date, start_epoch, user, comments, list_id, status, user_group, lead_id, campaign_id, processed, phone_code, phone_number, xfercallid, queue_position, uniqueid) values('".date("Y-m-d H:i:s")."', '".date("U")."', '$user', 'AUTO', '$list_id', 'INCALL', '$user_group', '$lead_id', '$VDADchannel_group', 'N', '$phone_code', '$phone_number', '0', '1', '$uniqueid');";
+			$stmt="INSERT INTO vicidial_closer_log(call_date, start_epoch, user, comments, list_id, status, user_group, lead_id, campaign_id, processed, phone_code, phone_number, xfercallid, queue_position, uniqueid, queue_seconds) values('".date("Y-m-d H:i:s")."', '".date("U")."', '$user', '$VLA_inOUT', '$list_id', 'INCALL', '$user_group', '$lead_id', '$VDADchannel_group', 'N', '$phone_code', '$phone_number', '0', '1', '$uniqueid', '$queue_seconds');";
 
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -12044,26 +12057,26 @@ if ($ACTION == 'userLOGout')
 
 		##### End any still-active chats initiated by the agent
 		if ($allow_chats==1) {
-			$stmt="select manager_chat_id from vicidial_manager_chats where manager='$user'";
+			$stmt="SELECT manager_chat_id from vicidial_manager_chats where manager='$user';";
 			$rslt=mysqli_query($link, $stmt);
 
 			while ($row=mysqli_fetch_row($rslt)) {
 				$manager_chat_id=$row[0];
 
-				$archive_stmt="insert ignore into vicidial_manager_chat_log_archive select * from vicidial_manager_chat_log where manager_chat_id='$manager_chat_id'";
+				$archive_stmt="INSERT IGNORE INTO vicidial_manager_chat_log_archive SELECT manager_chat_message_id,manager_chat_id,manager_chat_subid,manager,user,message,message_date,message_viewed_date,message_posted_by,audio_alerted from vicidial_manager_chat_log where manager_chat_id='$manager_chat_id';";
 				$archive_rslt=mysqli_query($link, $archive_stmt);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$archive_stmt,'00646',$user,$server_ip,$session_name,$one_mysql_log);}
 
-				$archive_stmt="insert ignore into vicidial_manager_chats_archive select * from vicidial_manager_chats where manager_chat_id='$manager_chat_id'";
+				$archive_stmt="INSERT IGNORE INTO vicidial_manager_chats_archive SELECT manager_chat_id,chat_start_date,manager,selected_agents,selected_user_groups,selected_campaigns,allow_replies from vicidial_manager_chats where manager_chat_id='$manager_chat_id';";
 				$archive_rslt=mysqli_query($link, $archive_stmt);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$archive_stmt,'00647',$user,$server_ip,$session_name,$one_mysql_log);}
 
-				$delete_stmt="delete from vicidial_manager_chat_log where manager_chat_id='$manager_chat_id'";
+				$delete_stmt="DELETE from vicidial_manager_chat_log where manager_chat_id='$manager_chat_id';";
 				$delete_rslt=mysqli_query($link, $delete_stmt);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$delete_stmt,'00648',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				if (mysqli_affected_rows($link)>0) {
-					$archive_stmt="delete from vicidial_manager_chats where manager_chat_id='$manager_chat_id'";
+					$archive_stmt="DELETE from vicidial_manager_chats where manager_chat_id='$manager_chat_id';";
 					$archive_rslt=mysqli_query($link, $archive_stmt);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$archive_stmt,'00649',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
@@ -14422,7 +14435,7 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 			echo "ERROR: "._QXZ("Call %1s could not be grabbed for %2s",0,'',$stage,$user)."\n";
 			}
 
-		$stmtD="SELECT * from vicidial_auto_calls where auto_call_id='$stage';";
+		$stmtD="SELECT auto_call_id,server_ip,campaign_id,status,lead_id,uniqueid,callerid,channel,phone_code,phone_number,call_time,call_type,stage,last_update_time,alt_dial,queue_priority,agent_only,agent_grab,queue_position,extension,agent_grab_extension from vicidial_auto_calls where auto_call_id='$stage';";
 		$rslt=mysql_to_mysqli($stmtD, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtD,'00321',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($rslt) {$DEBUGvac_count = mysqli_num_rows($rslt);}

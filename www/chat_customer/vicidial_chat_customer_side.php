@@ -13,6 +13,7 @@
 # 151213-1105 - Added variable filtering
 # 151217-1017 - Allow for pre-populating of group_id
 # 151219-0850 - Added translation code
+# 151220-0959 - Only search for phone number if greater than 4 digits
 #
 
 require("dbconnect_mysqli.php");
@@ -142,14 +143,14 @@ if ($stage == "join_chat") { # For people invited to an existing chat from an ag
 				$ins_alert_rslt=mysql_to_mysqli($ins_alert_stmt, $link);
 			}
 		} else {
-			if ($phone_number) {
-				$stmt="select lead_id from vicidial_list where phone_number='$phone_number' order by entry_date desc limit 1";
+			if (strlen($phone_number) > 4) {
+				$stmt="SELECT lead_id from vicidial_list where phone_number='$phone_number' order by entry_date desc limit 1;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 			} else if ($email) {
-				$stmt="select lead_id from vicidial_list where email='$email' order by entry_date desc limit 1";
+				$stmt="SELECT lead_id from vicidial_list where email='$email' order by entry_date desc limit 1;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 			} else {
-				$stmt="select lead_id from vicidial_list where email like '%".$ip_address."%' order by entry_date desc limit 1";
+				$stmt="SELECT lead_id from vicidial_list where email like \"%".$ip_address."%\" order by entry_date desc limit 1;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 			}
 
@@ -208,11 +209,11 @@ if ($stage == 'send_request') { # For people requesting a chat with an agent; co
 	$user=time().".".rand(10000,99999);
 
 	# SEARCH FOR CUSTOMER IN DATABASE - IF NOT FOUND BY PHONE OR IP ADDRESS MAKE A NEW USER
-	if ($phone_number) {
-		$stmt="select lead_id from vicidial_list where phone_number='$phone_number' order by entry_date desc limit 1";
+	if (strlen($phone_number) > 4) {
+		$stmt="SELECT lead_id from vicidial_list where phone_number='$phone_number' order by entry_date desc limit 1;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 	} else {
-		$stmt="select lead_id from vicidial_list where email like '%".$ip_address."%' order by entry_date desc limit 1";
+		$stmt="SELECT lead_id from vicidial_list where email like \"%".$ip_address."%\" order by entry_date desc limit 1;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 	}
 
