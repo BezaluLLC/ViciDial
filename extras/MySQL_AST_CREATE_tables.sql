@@ -92,6 +92,9 @@ unavail_dialplan_fwd_context VARCHAR(100) default '',
 nva_call_url TEXT,
 nva_search_method VARCHAR(40) default 'NONE',
 nva_error_filename VARCHAR(255) default '',
+nva_new_list_id BIGINT(14) UNSIGNED default '995',
+nva_new_phone_code VARCHAR(10) default '1',
+nva_new_status VARCHAR(6) default 'NVAINS',
 index (server_ip),
 index (voicemail_id),
 index (dialplan_number),
@@ -3649,4 +3652,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1440',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1441',db_schema_update_date=NOW(),reload_timestamp=NOW();

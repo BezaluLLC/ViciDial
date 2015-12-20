@@ -406,3 +406,9 @@ ALTER TABLE phones ADD nva_search_method VARCHAR(40) default 'NONE';
 ALTER TABLE phones ADD nva_error_filename VARCHAR(255) default '';
 
 UPDATE system_settings SET db_schema_version='1440',db_schema_update_date=NOW() where db_schema_version < 1440;
+
+ALTER TABLE phones ADD nva_new_list_id BIGINT(14) UNSIGNED default '995';
+ALTER TABLE phones ADD nva_new_phone_code VARCHAR(10) default '1';
+ALTER TABLE phones ADD nva_new_status VARCHAR(6) default 'NVAINS';
+
+UPDATE system_settings SET db_schema_version='1441',db_schema_update_date=NOW() where db_schema_version < 1441;

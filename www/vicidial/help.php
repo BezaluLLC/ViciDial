@@ -69,6 +69,7 @@
 # 151121-1144 - Added cache_carrier_stats_realtime
 # 151204-0635 - Added phones-unavail_dialplan_fwd_exten
 # 151209-1437 - Added phones-nva entries
+# 151220-1553 - Added more phones nva options
 #
 
 
@@ -4072,6 +4073,21 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="phones-nva_error_filename">
 <BR>
 <B><?php echo _QXZ("NVA Error Filename"); ?> -</B><?php echo _QXZ("If this phone dials through the NVA agi script in a Call Menu, this is the error file that is played for the user of this phone if an error occurs."); ?>
+
+<BR>
+<A NAME="phones-nva_new_list_id">
+<BR>
+<B><?php echo _QXZ("NVA New List ID"); ?> -</B><?php echo _QXZ("If this phone dials through the NVA agi script in a Call Menu, this is the list ID that a new lead is inserted into if the phone number is not found and the NVA option to insert a new lead is set to Y. Default is 995."); ?>
+
+<BR>
+<A NAME="phones-nva_new_phone_code">
+<BR>
+<B><?php echo _QXZ("NVA New Phone Code"); ?> -</B><?php echo _QXZ("If this phone dials through the NVA agi script in a Call Menu, this is the phone code that a new lead is inserted with if the phone number is not found and the NVA option to insert a new lead is set to Y. Default is 1."); ?>
+
+<BR>
+<A NAME="phones-nva_new_status">
+<BR>
+<B><?php echo _QXZ("NVA New Status"); ?> -</B><?php echo _QXZ("If this phone dials through the NVA agi script in a Call Menu, this is the status that a new lead is inserted with if the phone number is not found and the NVA option to insert a new lead is set to Y. Default is NVAINS."); ?>
 
 <BR>
 <A NAME="phones-AGI_call_logging_enabled">

@@ -17,6 +17,11 @@
 # ; 10. if 9 is Y, this is search method (ALLLISTS|PHONE) default ALLLISTS, search all lists, use phone setting, CURRENTLY DOES NOTHING
 # ; 11. error out and end call if phone number is not found (Y|N) default N
 # ; 12. run the phone entry's NVA Call URL (Y|N) default N
+# ; 13. if 9 is Y, and phone number is not found, insert into phone's NVA List ID (Y|N) default N
+# ; 14. if 13 is Y, override phone's NVA List ID with this list ID when lead is inserted
+# ; 15. if 13 is Y, override phone's NVA Phone Code with this phone code when lead is inserted
+# ; 16. if 13 is Y, override phone's NVA Status with this status when lead is inserted
+#
 #
 # ;custom dialplan entry example: (similar to the defaultlog Call Menu)
 #exten => _X.,1,AGI(agi-NVA_recording.agi,BOTH------Y---N---Y---N---N---N)
@@ -37,6 +42,11 @@
 # ; example of using as Call Menu prompt to record, search for phone number, run NVA call URL and error if not found
 #agi-NVA_recording.agi,BOTH------Y---N---Y---N---N---N---Y---ALLLISTS---Y---Y
 #
+# ;custom dialplan entry example: (similar to the defaultlog Call Menu) with NVA options
+#exten => _X.,1,AGI(agi-NVA_recording.agi,BOTH------Y---N---Y---N---N---N---Y---ALLLISTS---N---Y---Y)
+#exten => _X.,n,Goto(default,${EXTEN},1)
+#exten => _X.,n,Hangup
+#
 # Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
@@ -49,6 +59,7 @@
 # 150915-1824 - Added recording ID play and filename options
 # 151211-0932 - Added phone search and phone NVA URL features
 # 151214-2148 - Added more variables to be used by nva url feature
+# 151220-1521 - Added phone NVA List ID option for not found phone numbers
 #
 
 &get_time_now;
@@ -156,6 +167,10 @@ if (length($ARGV[0])>1)
 		$search_method =	$ARGV_vars[9];
 		$search_error =		$ARGV_vars[10];
 		$phone_url =		$ARGV_vars[11];
+		$insert_list =		$ARGV_vars[12];
+		$override_list =	$ARGV_vars[13];
+		$override_code =	$ARGV_vars[14];
+		$override_status =	$ARGV_vars[15];
 
 		if ($AGI_output =~ /STDERR/)	{$AGILOG = '1';}
 		if ($AGI_output =~ /FILE/)	{$AGILOG = '2';}
@@ -264,7 +279,7 @@ if (length($user) > 0)
 if ( ($search_phone =~ /Y/) || ($phone_url =~ /Y/) )
 	{
 	### Grab phone NVA values from the database phones table
-	$stmtA = "SELECT nva_call_url,nva_search_method,nva_error_filename FROM phones where extension='$accountcode' and server_ip = '$VARserver_ip';";
+	$stmtA = "SELECT nva_call_url,nva_search_method,nva_error_filename,nva_new_list_id,nva_new_phone_code,nva_new_status FROM phones where extension='$accountcode' and server_ip = '$VARserver_ip';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -274,6 +289,9 @@ if ( ($search_phone =~ /Y/) || ($phone_url =~ /Y/) )
 		$nva_call_url =			$aryA[0];
 		$nva_search_method =	$aryA[1];
 		$nva_error_filename =	$aryA[2];
+		$nva_new_list_id =		$aryA[3];
+		$nva_new_phone_code =	$aryA[4];
+		$nva_new_status =		$aryA[5];
 		}
 	$sthA->finish();
 	}
@@ -292,11 +310,14 @@ if ($search_phone =~ /Y/)
 		{
 		@aryA = $sthA->fetchrow_array;
 		$search_lead_id = $aryA[0];
+		if ($AGILOG) {$agi_string = "NVA Search, lead found: $search_lead_id|$temp_phone($extension)";   &agi_output;}
 		}
 	else
 		{
+		if ($AGILOG) {$agi_string = "NVA Search, lead not found: $temp_phone($extension)";   &agi_output;}
 		if ($search_error =~ /Y/)
 			{
+			if ($AGILOG) {$agi_string = "NVA playing error file then exiting...";   &agi_output;}
 			$temp_error_filename = 'invalid';
 			if (length($nva_error_filename) > 0 )
 				{$temp_error_filename = $nva_error_filename;}
@@ -309,6 +330,31 @@ if ($search_phone =~ /Y/)
 			$AGI->hangup();
 
 			exit;
+			}
+		else
+			{
+			if ($insert_list =~ /Y/) 
+				{
+				if (length($override_list) > 1) {$nva_new_list_id = $override_list;}
+				if (length($override_code) > 0) {$nva_new_phone_code = $override_code;}
+				if (length($override_status) > 0) {$nva_new_status = $override_status;}
+
+
+				### insert a record into the vicidial_list table if phone number not found
+				$stmtA = "INSERT INTO vicidial_list (entry_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments) values('$now_date','$nva_new_status','$accountcode','','PHONE','$nva_new_list_id','Y','$nva_new_phone_code','$temp_phone','$accountcode','1','0','NVA PHONE INSERT');";
+				$affected_rows = $dbhA->do($stmtA);
+				$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
+				$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$search_lead_id = $aryA[0];
+					}
+				$sthA->finish();
+				if ($AGILOG) {$agi_string = "NVA Inserted New Lead: |$affected_rows|$search_lead_id|$nva_new_list_id|$nva_new_phone_code|$nva_new_status|";   &agi_output;}
+				}
 			}
 		}
 	$sthA->finish();
