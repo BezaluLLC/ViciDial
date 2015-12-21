@@ -3663,12 +3663,13 @@ else
 # 151211-0940 - Added phone options for NVA recording agi script
 # 151216-1053 - Added links to Inbound Chat Report
 # 151220-1545 - Added more phone NVA settings
+# 151221-0750 - Changes to Chat In-group Modify page
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-525a';
-$build = '151220-1545';
+$admin_version = '2.12-526a';
+$build = '151221-0750';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -26526,7 +26527,7 @@ if ($ADD==3911)
 			{
 			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Web Form Three").": </td><td align=left><input type=text name=web_form_address_three size=70 maxlength=9999 value=\"$web_form_address_three\">$NWB#inbound_groups-web_form_address$NWE</td></tr>\n";
 			}
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Next Agent Chat").": </td><td align=left><select size=1 name=next_agent_call><option value='random'>"._QXZ("random")."</option><option value='oldest_call_start'>"._QXZ("oldest_call_start")."</option><option value='oldest_call_finish'>"._QXZ("oldest_call_finish")."</option><option value='oldest_inbound_call_start'>"._QXZ("oldest_inbound_call_start")."</option><option value='oldest_inbound_call_finish'>"._QXZ("oldest_inbound_call_finish")."</option><option value='overall_user_level'>"._QXZ("overall_user_level")."</option><option value='inbound_group_rank'>"._QXZ("inbound_group_rank")."</option><option value='campaign_rank'>"._QXZ("campaign_rank")."</option><option value=ingroup_grade_random''>"._QXZ("ingroup_grade_random")."</option><option value='campaign_grade_random'>"._QXZ("campaign_grade_random")."</option><option value='fewest_calls'>"._QXZ("fewest_calls")."</option><option value='fewest_calls_campaign'>"._QXZ("fewest_calls_campaign")."</option><option value='longest_wait_time'>"._QXZ("longest_wait_time")."</option><option SELECTED value='$next_agent_call'>"._QXZ("$next_agent_call")."</option></select>$NWB#inbound_groups-next_agent_chat$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Next Agent Chat").": </td><td align=left><select size=1 name=next_agent_call><option value='random'>"._QXZ("random")."</option><option value='oldest_call_start'>"._QXZ("oldest_call_start")."</option><option value='oldest_call_finish'>"._QXZ("oldest_call_finish")."</option><option value='oldest_inbound_call_start'>"._QXZ("oldest_inbound_call_start")."</option><option value='oldest_inbound_call_finish'>"._QXZ("oldest_inbound_call_finish")."</option><option value='overall_user_level'>"._QXZ("overall_user_level")."</option><option value='inbound_group_rank'>"._QXZ("inbound_group_rank")."</option><option value='campaign_rank'>"._QXZ("campaign_rank")."</option><option value=ingroup_grade_random''>"._QXZ("ingroup_grade_random")."</option><option value='campaign_grade_random'>"._QXZ("campaign_grade_random")."</option><option value='fewest_calls'>"._QXZ("fewest_calls")."</option><option value='fewest_calls_campaign'>"._QXZ("fewest_calls_campaign")."</option><option value='longest_wait_time'>"._QXZ("longest_wait_time")."</option><option SELECTED value='$next_agent_call'>"._QXZ("$next_agent_call")."</option></select>$NWB#inbound_groups-next_agent_chat$NWE "._QXZ("THIS OPTION IS NOT ACTIVE")."</td></tr>\n";
 
 		echo "<tr bgcolor=#BDFFBD><td align=right>"._QXZ("Queue Priority").": </td><td align=left><select size=1 name=queue_priority>\n";
 		$n=99;
@@ -26623,7 +26624,7 @@ if ($ADD==3911)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Uniqueid Status Prefix").": </td><td align=left><input type=text name=uniqueid_status_prefix size=10 maxlength=50 value=\"$uniqueid_status_prefix\">$NWB#inbound_groups-uniqueid_status_prefix$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Download customer chat files").": </td><td align=left><a href='vdchat_customer.zip'>"._QXZ("Download")."</a> $NWB#inbound_groups-download_chat_files$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Customer Chat Link").": </td><td align=left><a href='../chat_customer/customer_chat_code.php?group_id=$group_id'>"._QXZ("First Link")."</a> &nbsp; <a href='../chat_customer/vicidial_chat_customer_side.php?group_id=$group_id'>"._QXZ("Second Link")."</a> $NWB#inbound_groups-customer_chat_link$NWE</td></tr>\n";
 
 		echo "<input type=hidden name=form_end value=\"END\">\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";

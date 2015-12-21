@@ -70,6 +70,7 @@
 # 151204-0635 - Added phones-unavail_dialplan_fwd_exten
 # 151209-1437 - Added phones-nva entries
 # 151220-1553 - Added more phones nva options
+# 151221-0751 - Changed in-group download link to customer chat links
 #
 
 
@@ -2729,9 +2730,9 @@ if ($SSqc_features_active > 0)
 <B><?php echo _QXZ("Populate Lead In-Group"); ?> -</B><?php echo _QXZ("If this option is ENABLED, then when a new lead is created when going into an In-Group, the security_phrase or Show field will be populated with the Group ID of the In-Group. Default is ENABLED."); ?>
 
 <BR>
-<A NAME="inbound_groups-download_chat_files">
+<A NAME="inbound_groups-customer_chat_link">
 <BR>
-<B><?php echo _QXZ("Download Customer Chat Files"); ?> -</B><?php echo _QXZ("Clicking this link will allow you to download the files that make up the customer chat interface.  You can then unzip, and place the unzipped vdchat_customer folder in the htdocs folder on you web server, or a server or location of your choosing.  Said location MUST be on a server with Vicidial installed specific to your system. Enter the URL of the final location in the Chat URL setting under the System Settings."); ?>
+<B><?php echo _QXZ("Customer Chat Link"); ?> -</B><?php echo _QXZ("Clicking this link will take you to the customer chat interface for this in-group.  You can use this link as a direct link on your website for a customer chat feature. The first link will go to a page in an IFRAME, the Second Link will go directly to a page that you can put into your own IFRAME. The Chat URL System Setting should look like one of these links without what is after the question mark."); ?>
 
 
 
