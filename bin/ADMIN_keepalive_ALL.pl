@@ -104,9 +104,10 @@
 # 151031-0931 - Added usacan_phone_dialcode_fix feature at timeclock-end-of-day, added -lstn-buffer option
 # 151204-0639 - Added phones-unavail_dialplan_fwd_exten options
 # 151211-1509 - Added launching of the AST_chat_timeout_cron.pl process on the voicemail server
+# 151226-1024 - Fix for double-write of extension in conf files for IAX and SIP, Issue #908
 #
 
-$build = '151211-1509';
+$build = '151226-1024';
 
 $DB=0; # Debug flag
 
@@ -2255,7 +2256,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			}
 		if (length($conf_override[$i]) > 10)
 			{
-			$Piax .= "\n\[$extension[$i]\]\n";
+			if ($conf_entry_written < 1) 
+				{$Piax .= "\n\[$extension[$i]\]\n";}
 			$Piax .= "$conf_override[$i]\n";
 			$conf_entry_written++;
 			}
@@ -2407,7 +2409,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			}
 		if (length($conf_override[$i]) > 10)
 			{
-			$Psip .= "\n\[$extension[$i]\]\n";
+			if ($conf_entry_written < 1) 
+				{$Psip .= "\n\[$extension[$i]\]\n";}
 			$Psip .= "$conf_override[$i]\n";
 			$conf_entry_written++;
 			}
