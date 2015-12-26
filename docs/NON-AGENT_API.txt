@@ -1311,6 +1311,6 @@ user|campaign_id|session_id|status|lead_id|callerid|calls_today|full_name|user_g
 
 user,campaign_id,session_id,status,lead_id,callerid,calls_today,full_name,user_group,user_level,pause_code,sub_status
 6666,TESTCAMP,8600051,INCALL,1079409,M2260919190001079409,1,Admin,ADMIN,9,LOGIN,DEAD
-6666|TESTCAMP|8600051|PAUSED|1079409||1|Admin|ADMIN|9|LOGIN|DISPO
+4545,TESTCAMP,8600052,PAUSED,0,,0,4545,MIKESGROUP,8,LOGIN,
 
 NOTE: real_time_sub_status field can consist of: DEAD, DISPO, 3-WAY, PARK, RING, PREVIEW or it can be empty
