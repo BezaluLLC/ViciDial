@@ -103,10 +103,11 @@
 # 150730-2022 - Added option to set entry_list_id
 # 150804-0948 - Added WHISPER option for blind_monitor function
 # 150808-1438 - Added compatibility for custom fields data option
+# 151226-0954 - Added session_id(conf_exten) field to output of agent_status, and added logged_in_agents function
 #
 
-$version = '2.12-79';
-$build = '150808-1438';
+$version = '2.12-80';
+$build = '151226-0954';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -377,6 +378,10 @@ if (isset($_GET["wrapup_seconds_override"]))			{$wrapup_seconds_override=$_GET["
 	elseif (isset($_POST["wrapup_seconds_override"]))	{$wrapup_seconds_override=$_POST["wrapup_seconds_override"];}
 if (isset($_GET["entry_list_id"]))			{$entry_list_id=$_GET["entry_list_id"];}
 	elseif (isset($_POST["entry_list_id"]))	{$entry_list_id=$_POST["entry_list_id"];}
+if (isset($_GET["show_sub_status"]))			{$show_sub_status=$_GET["show_sub_status"];}
+	elseif (isset($_POST["show_sub_status"]))	{$show_sub_status=$_POST["show_sub_status"];}
+if (isset($_GET["campaigns"]))			{$campaigns=$_GET["campaigns"];}
+	elseif (isset($_POST["campaigns"]))	{$campaigns=$_POST["campaigns"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -542,6 +547,8 @@ if ($non_latin < 1)
 	$local_call_time = preg_replace('/[^-_0-9a-zA-Z]/','',$local_call_time);
 	$camp_rg_only = preg_replace('/[^0-9]/','',$camp_rg_only);
 	$wrapup_seconds_override = preg_replace('/[^-0-9]/','',$wrapup_seconds_override);
+	$show_sub_status = preg_replace('/[^A-Z]/','',$show_sub_status);
+	$campaigns = preg_replace('/[^-\|\_0-9a-zA-Z]/','',$campaigns);
 	}
 else
 	{
@@ -5340,7 +5347,7 @@ if ($function == 'agent_status')
 					$user_group = 	$row[1];
 					$user_level = 	$row[2];
 
-					$stmt="SELECT status,callerid,lead_id,campaign_id,calls_today,agent_log_id,on_hook_agent,ring_callerid,preview_lead_id from vicidial_live_agents $agent_search_SQL;";
+					$stmt="SELECT status,callerid,lead_id,campaign_id,calls_today,agent_log_id,on_hook_agent,ring_callerid,preview_lead_id,conf_exten from vicidial_live_agents $agent_search_SQL;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
 					$agent_to_list = mysqli_num_rows($rslt);
@@ -5356,6 +5363,7 @@ if ($function == 'agent_status')
 						$on_hook_agent =	$row[6];
 						$ring_callerid =	$row[7];
 						$preview_lead_id =	$row[8];
+						$conf_exten =		$row[9];
 						$pause_code =		'';
 						$rtr_status =		'';
 
@@ -5437,7 +5445,7 @@ if ($function == 'agent_status')
 								}
 							}
 
-						$output .= "$status$DL$callerid$DL$lead_id$DL$campaign_id$DL$calls_today$DL$full_name$DL$user_group$DL$user_level$DL$pause_code$DL$rtr_status$DL$phone_number$DL$vendor_lead_code\n";
+						$output .= "$status$DL$callerid$DL$lead_id$DL$campaign_id$DL$calls_today$DL$full_name$DL$user_group$DL$user_level$DL$pause_code$DL$rtr_status$DL$phone_number$DL$vendor_lead_code$DL$conf_exten\n";
 
 						echo "$output";
 
@@ -7738,6 +7746,240 @@ if ($function == 'check_phone_number')
 ### END check_phone_number
 ################################################################################
 
+
+
+
+
+
+################################################################################
+### logged_in_agents - list of agents that are logged in to the system
+################################################################################
+if ($function == 'logged_in_agents')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "logged_in_agents USER DOES NOT HAVE PERMISSION TO GET AGENT INFO";
+			echo "$result: $result_reason: |$user|$allowed_user|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$stmt="SELECT admin_viewable_groups,allowed_campaigns from vicidial_user_groups where user_group='$LOGuser_group';";
+			if ($DB) {$MAIN.="|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			$LOGadmin_viewable_groups =		$row[0];
+			$LOGallowed_campaigns =			$row[1];
+
+			$LOGadmin_viewable_groupsSQL='';
+			$whereLOGadmin_viewable_groupsSQL='';
+			if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+				{
+				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+				$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+				$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+				}
+			$LOGallowed_campaignsSQL='';
+			$whereLOGallowed_campaignsSQL='';
+			if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
+				{
+				$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+				$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+				$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+				$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+				}
+
+			$search_UG_SQL='';
+			if ( (strlen($user_groups)>0) and (strlen($user_groups)<10000) )
+				{
+				$user_groupsSQL = preg_replace("/\|/","','",$user_groups);
+				$search_UG_SQL .= "and user_group IN('$user_groupsSQL')";
+				}
+			$search_CAMP_SQL='';
+			if ( (strlen($campaigns)>0) and (strlen($campaigns)<10000) )
+				{
+				$and_CAMP_SQL = 'where';
+				if (strlen($whereLOGallowed_campaignsSQL) > 10)
+					{$and_CAMP_SQL = 'and';}
+				$campaignsSQL = preg_replace("/\|/","','",$campaigns);
+				$search_CAMP_SQL .= "$and_CAMP_SQL campaign_id IN('$campaignsSQL')";
+				}
+
+			$k=0;
+			$output='';
+			$DLset=0;
+			if ($stage == 'csv')
+				{$DL = ',';   $DLset++;}
+			if ($stage == 'tab')
+				{$DL = "\t";   $DLset++;}
+			if ($stage == 'pipe')
+				{$DL = '|';   $DLset++;}
+			if ($DLset < 1)
+				{$DL='|';   $stage='pipe';}
+			if (strlen($time_format) < 1)
+				{$time_format = 'HF';}
+			if ($header == 'YES')
+				{
+				$header_sub_status='';
+				if ($show_sub_status == 'YES')
+					{$header_sub_status = $DL . 'pause_code' . $DL . 'sub_status';}
+				$output .= 'user' . $DL . 'campaign_id' . $DL . 'session_id' . $DL . 'status' . $DL . 'lead_id' . $DL . 'callerid' . $DL . 'calls_today' . $DL . 'full_name' . $DL . 'user_group' . $DL . 'user_level' . $header_sub_status . "\n";
+				}
+
+			$stmt="SELECT status,callerid,lead_id,campaign_id,calls_today,agent_log_id,on_hook_agent,ring_callerid,preview_lead_id,conf_exten,user from vicidial_live_agents $whereLOGallowed_campaignsSQL $search_CAMP_SQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$agents_to_list = mysqli_num_rows($rslt);
+			$i=0;
+			while ($agents_to_list > $i)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$Astatus[$i] =			$row[0];
+				$Acallerid[$i] =		$row[1];
+				$Alead_id[$i] =			$row[2];
+				$Acampaign_id[$i] =		$row[3];
+				$Acalls_today[$i] =		$row[4];
+				$Aagent_log_id[$i] =	$row[5];
+				$Aon_hook_agent[$i] =	$row[6];
+				$Aring_callerid[$i] =	$row[7];
+				$Apreview_lead_id[$i] =	$row[8];
+				$Aconf_exten[$i] =		$row[9];
+				$Auser[$i] =			$row[10];
+				$Apause_code[$i] =		'';
+				$Artr_status[$i] =		'';
+				$i++;
+				}
+
+			$i=0;
+			$printed_agents=0;
+			while ($agents_to_list > $i)
+				{
+				$stmt="SELECT full_name,user_group,user_level from vicidial_users where user='$Auser[$i]' $LOGadmin_viewable_groupsSQL $search_UG_SQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$user_to_list = mysqli_num_rows($rslt);
+				if ($user_to_list > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$full_name = 	$row[0];
+					$user_group = 	$row[1];
+					$user_level = 	$row[2];
+					$agent_sub_status = '';
+
+					if ($show_sub_status == 'YES')
+						{
+						$pause_code='';
+						$rtr_status='';
+						$stmt="SELECT sub_status from vicidial_agent_log where user='$Auser[$i]' and agent_log_id='$Aagent_log_id[$i]';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($DB) {echo "$stmt\n";}
+						$agent_to_log = mysqli_num_rows($rslt);
+						if ($agent_to_log > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$pause_code =		$row[0];
+							}
+
+						if ( ($Aon_hook_agent[$i] == 'Y') and (strlen($Aring_callerid[$i]) > 18) )
+							{$rtr_status = "RING";}
+
+						if ( ($Astatus[$i] == 'PAUSED') and ($Alead_id[$i] > 0) )
+							{$rtr_status = 'DISPO';}
+
+						if ( ($Astatus[$i] == 'PAUSED') and ($Apreview_lead_id[$i] > 0) )
+							{
+							$rtr_status = 'PREVIEW';
+							$Alead_id[$i] = $Apreview_lead_id[$i];
+							}
+
+						if ($Astatus[$i] == 'INCALL')
+							{
+							if ($Alead_id[$i] > 0)
+								{
+								$threewaystmt="select UNIX_TIMESTAMP(last_call_time) from vicidial_live_agents where lead_id='$Alead_id[$i]' and status='INCALL' order by UNIX_TIMESTAMP(last_call_time) desc;";
+								$threewayrslt=mysql_to_mysqli($threewaystmt, $link);
+								if (mysqli_num_rows($threewayrslt)>1) 
+									{$rtr_status = '3-WAY';}
+								}
+
+							$stmt="SELECT count(*) from parked_channels where channel_group='$Acallerid[$i]';";
+							$rslt=mysql_to_mysqli($stmt,$link);
+							$row=mysqli_fetch_row($rslt);
+							$parked_channel = $row[0];
+							if ($parked_channel > 0)
+								{$rtr_status = 'PARK';}
+							else
+								{
+								$stmt="SELECT count(*) from vicidial_auto_calls where callerid='$Acallerid[$i]';";
+								$rslt=mysql_to_mysqli($stmt,$link);
+								$row=mysqli_fetch_row($rslt);
+								$live_channel = $row[0];
+								if ($live_channel < 1)
+									{$rtr_status = 'DEAD';}
+								}
+							}
+						$agent_sub_status = "$DL$pause_code$DL$rtr_status";
+						}
+
+					$output .= "$Auser[$i]$DL$Acampaign_id[$i]$DL$Aconf_exten[$i]$DL$Astatus[$i]$DL$Alead_id[$i]$DL$Acallerid[$i]$DL$Acalls_today[$i]$DL$full_name$DL$user_group$DL$user_level$agent_sub_status\n";
+					$printed_agents++;
+					}
+				$i++;
+				}
+			if ($printed_agents > 0)
+				{
+				echo "$output";
+
+				$result = 'SUCCESS';
+				$data = "$user|$agents_to_list|$stage";
+				$result_reason = "logged_in_agents $output";
+
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		if ($printed_agents < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "logged_in_agents NO LOGGED IN AGENTS";
+			$data = "$user|$agent_user";
+			echo "$result: $result_reason: $data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		}
+	exit;
+	}
+################################################################################
+### END logged_in_agents
+################################################################################
 
 
 

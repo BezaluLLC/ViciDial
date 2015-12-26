@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2015-07-30
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2015-12-26
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -38,6 +38,7 @@ agent_status - real-time status of one user
 callid_info - information about a call based upon the caller_code or call ID
 server_refresh - forces a conf file refresh on all telco servers in the cluster
 check_phone_number - allows you to check if a phone number is valid and dialable
+logged_in_agents - list of agents that are logged in to the system
 
 
 New scripts:
@@ -106,6 +107,9 @@ Changes:
 150512-2028 - Added filtering of hash sign on some input variables, Issue #851
 150603-1528 - Fixed format issue in recording_lookup
 150730-2022 - Added option to set entry_list_id
+150804-0948 - Added WHISPER option for blind_monitor function
+150808-1438 - Added compatibility for custom fields data option
+151226-0954 - Added session_id(conf_exten) field to output of agent_status, and added logged_in_agents function
 
 
 API Functions use the 'function' variable
@@ -446,10 +450,10 @@ ERROR: agent_status AGENT NOT FOUND - 6666||
 ERROR: agent_status AGENT NOT LOGGED IN - 6666||
 
 A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
-status,call_id,lead_id,campaign_id,calls_today,full_name,user_group,user_level,pause_code,real_time_sub_status,phone_number,vendor_lead_code
-INCALL,M4050908070000012345,12345,TESTCAMP,1,Test Agent,AGENTS,3,LOGIN,,7275551212,123456
-INCALL|M4181606420000000104|104|TESTBLND|1|Admin|ADMIN|9|BRK2|DEAD|3125551212|123457
-PAUSED||105|TESTBLND|1|Admin|ADMIN|9||PREVIEW|9545551212|123458
+status,call_id,lead_id,campaign_id,calls_today,full_name,user_group,user_level,pause_code,real_time_sub_status,phone_number,vendor_lead_code,session_id
+INCALL,M4050908070000012345,12345,TESTCAMP,1,Test Agent,AGENTS,3,LOGIN,,7275551212,123456,8600051
+INCALL|M4181606420000000104|104|TESTBLND|1|Admin|ADMIN|9|BRK2|DEAD|3125551212|123457|8600051
+PAUSED||105|TESTBLND|1|Admin|ADMIN|9||PREVIEW|9545551212|123458|8600052
 
 NOTE: real_time_sub_status field can consist of: DEAD, DISPO, 3-WAY, PARK, RING, PREVIEW or it can be empty
 
@@ -1272,3 +1276,41 @@ AREACODE: 1|-6#POSTAL: 1|-7.0#TZCODE: 0|10#NANPA: 1|-6#PHONE: 3125551212|1|81009
 
 
 ERROR: NO FUNCTION SPECIFIED
+
+
+
+
+
+--------------------------------------------------------------------------------
+logged_in_agents - list of agents that are logged in to the system
+
+NOTE: api user for this function must have user_level set to 7 or higher and "view reports" enabled
+
+REQUIRED FIELDS-
+source -		description of what originated the API call (maximum 20 characters)
+
+OPTIONAL FIELDS-
+campaigns -		pipe-delimited list of campaigns to get status information for "TESTCAMP|INBOUND", default is all campaigns shown
+user_groups -		pipe-delimited list of user groups to get status information for "ADMIN|AGENTS", default is all user groups shown
+show_sub_status -	show agent sub-status and pause_code, requires log lookup, (YES|NO) default is NO
+
+SETTINGS FIELDS-
+stage -			the format of the exported data: csv, tab, pipe(default)
+header -		include a header(YES) or not(NO). This is optional, default is not to include a header
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=logged_in_agents&stage=csv&header=YES
+
+Example responses:
+ERROR: logged_in_agents USER DOES NOT HAVE PERMISSION TO GET AGENT INFO - 6666|0
+ERROR: logged_in_agents NO LOGGED IN AGENTS
+
+A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
+user|campaign_id|session_id|status|lead_id|callerid|calls_today|full_name|user_group|user_level
+6666|TESTCAMP|8600051|PAUSED|1079409||1|Admin|ADMIN|9
+
+user,campaign_id,session_id,status,lead_id,callerid,calls_today,full_name,user_group,user_level,pause_code,sub_status
+6666,TESTCAMP,8600051,INCALL,1079409,M2260919190001079409,1,Admin,ADMIN,9,LOGIN,DEAD
+6666|TESTCAMP|8600051|PAUSED|1079409||1|Admin|ADMIN|9|LOGIN|DISPO
+
+NOTE: real_time_sub_status field can consist of: DEAD, DISPO, 3-WAY, PARK, RING, PREVIEW or it can be empty
