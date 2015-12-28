@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# ADMIN_area_code_populate.pl    version 2.10
+# ADMIN_area_code_populate.pl    version 2.12
 #
 # Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -21,6 +21,7 @@
 # 110424-0735 - Added timezone abbreviation column
 # 130419-1237 - Added lata_type field to NANPA file format
 # 150203-1751 - code cleanup
+# 151228-1043 - Added ISO-TLD table and import
 #
 
 
@@ -30,6 +31,7 @@ $domain   =		"http://phonecodes.vicidial.com";
 #$URL1     =		"$domain/phone_codes_GMT-latest.txt";
 $URL1     =		"$domain/phone_codes_GMT-latest-24.txt";
 $URL2     =		"$domain/GMT_USA_zip-latest.txt";
+$URL3     =		"$domain/country_ISO_TLD-latest.txt";
 
 
 ### begin parsing run-time options ###
@@ -54,6 +56,7 @@ if (length($ARGV[0])>1)
 		print "\n     files used by this script are:\n";
 		print "   phone_codes_GMT-latest-24.txt - Phone codes and country codes with time zone data\n";
 		print "   GMT_USA_zip-latest.txt - USA zip code and time zone data\n";
+		print "   country_ISO_TLD-latest.txt - Country code ISO and TLD data\n";
 		print "   NANPA_prefix-latest.txt - North American areacode, prefix and time zone data\n";
 
 		exit;
@@ -288,10 +291,12 @@ else
 		# move old files
 		`mv -f $PATHhome/phone_codes_GMT-latest-24.txt $PATHhome/phone_codes_GMT-latest-24-old.txt`;
 		`mv -f $PATHhome/GMT_USA_zip-latest.txt $PATHhome/GMT_USA_zip-latest-old.txt`;
+		`mv -f $PATHhome/country_ISO_TLD-latest.txt $PATHhome/country_ISO_TLD-latest-old.txt`;
 
 		# get files
 		`wget $URL1`;
 		`wget $URL2`;
+		`wget $URL3`;
 		}
 
 	#### BEGIN vicidial_phone_codes population from phone_codes_GMT-latest-24.txt file ####
@@ -391,6 +396,51 @@ else
 	$ins_stmt="insert into vicidial_postal_codes VALUES ";
 	print STDERR "$pc\n";
 	#### END vicidial_postal_codes population ####
+
+
+	#### BEGIN vicidial_country_iso_tld population from GMT_USA_zip-latest.txt file ####
+	open(isofile, "$PATHhome/country_ISO_TLD-latest.txt") || die "can't open $PATHhome/country_ISO_TLD-latest.txt: $!\n";
+	@isofile = <isofile>;
+	close(isofile);
+	if ( ($purge_table > 0) && ($#isofile > 10) )
+		{
+		print "\n----- PURGING DATA IN vicidial_country_iso_tld TABLE -----\n\n";
+
+		$stmtA = "DELETE from vicidial_country_iso_tld;";
+				if($DB){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		$stmtA = "OPTIMIZE table vicidial_country_iso_tld;";
+				if($DB){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		}
+	$pc=0;
+	$ins_stmt="insert into vicidial_country_iso_tld VALUES ";
+	foreach (@isofile) 
+		{
+		@row=split(/\t/, $isofile[$pc]);
+		$pc++;
+		$row[0] =~ s/\r|\n|\t| $//gi;
+		$row[1] =~ s/\r|\n|\t| $//gi;
+		$row[2] =~ s/\r|\n|\t| $//gi;
+		$row[3] =~ s/\r|\n|\t| $//gi;
+		$row[4] =~ s/\r|\n|\t| $//gi;
+		$ins_stmt.="(\"$row[0]\", '$row[1]', '$row[2]', '$row[3]', '$row[4]'), ";
+		if ($pc =~ /00$/) 
+			{
+			chop($ins_stmt);
+			chop($ins_stmt);
+			$affected_rows = $dbhA->do($ins_stmt) || die "can't execute query: |$ins_stmt| $!\n";
+			$ins_stmt="insert into vicidial_country_iso_tld VALUES ";
+			print STDERR "$pc\r";
+			}
+		}
+
+	chop($ins_stmt);
+	chop($ins_stmt);
+	$affected_rows = $dbhA->do($ins_stmt);
+	$ins_stmt="insert into vicidial_country_iso_tld VALUES ";
+	print STDERR "$pc\n";
+	#### END vicidial_country_iso_tld population ####
 	}
 
 $dbhA->disconnect();

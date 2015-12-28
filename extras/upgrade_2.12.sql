@@ -412,3 +412,14 @@ ALTER TABLE phones ADD nva_new_phone_code VARCHAR(10) default '1';
 ALTER TABLE phones ADD nva_new_status VARCHAR(6) default 'NVAINS';
 
 UPDATE system_settings SET db_schema_version='1441',db_schema_update_date=NOW() where db_schema_version < 1441;
+
+CREATE TABLE vicidial_country_iso_tld (
+country_name VARCHAR(200) default '',
+iso2 VARCHAR(2) default '',
+iso3 VARCHAR(3) default '',
+num3 VARCHAR(4) default '',
+tld VARCHAR(20) default '',
+index(iso3)
+)ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+UPDATE system_settings SET db_schema_version='1442',db_schema_update_date=NOW() where db_schema_version < 1442;

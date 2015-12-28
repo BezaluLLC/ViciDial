@@ -3403,6 +3403,15 @@ KEY lead_id (lead_id),
 KEY filter_date (filter_date)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE vicidial_country_iso_tld (
+country_name VARCHAR(200) default '',
+iso2 VARCHAR(2) default '',
+iso3 VARCHAR(3) default '',
+num3 VARCHAR(4) default '',
+tld VARCHAR(20) default '',
+index(iso3)
+)ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3652,4 +3661,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1441',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1442',db_schema_update_date=NOW(),reload_timestamp=NOW();
