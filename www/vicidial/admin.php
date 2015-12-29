@@ -111,13 +111,13 @@ $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
 $QUERY_STRING = getenv("QUERY_STRING");
 
-$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary, Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Lists Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report, Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Performance Comparison Report, Single Agent Daily, Single Agent Daily Time, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report, Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Carrier Log Report, Campaign Debug, Hangup Cause Report, Lists Pass Report, Called Counts List IDs Report, Agent Debug Log Report, Agent-Manager Chat Log';
+$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary, Inbound Report, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Lists Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report, Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Performance Comparison Report, Single Agent Daily, Single Agent Daily Time, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report, Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Carrier Log Report, Campaign Debug, Asterisk Debug, Hangup Cause Report, Lists Pass Report, Called Counts List IDs Report, Agent Debug Log Report, Agent-Manager Chat Log';
 
 $UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary, Inbound Report, Inbound Report by DID, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound Email Report, Inbound Chat Report, Inbound IVR Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Fronter - Closer Report, Lists Campaign Statuses Report, Lists Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report, Agent Time Detail, Agent Status Detail, Agent Performance Detail, Team Performance Detail, Performance Comparison Report, Single Agent Daily, Single Agent Daily Time, User Group Login Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report, Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Custom Reports Links, CallCard Search, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Lists Pass Report, Called Counts List IDs Report, Front Page System Summary, Report Page Servers Summary, Admin Utilities Page, Agent Debug Log Report, Agent-Manager Chat Log';
 
 $Vtables = 'NONE,log_noanswer,did_agent_log,contact_information';
 
-$APIfunctions = 'ALL_FUNCTIONS add_group_alias add_lead add_list add_phone add_phone_alias add_user agent_ingroup_info agent_stats_export agent_status audio_playback blind_monitor call_agent callid_info change_ingroups check_phone_number did_log_export external_add_lead external_dial external_hangup external_pause external_status in_group_status logout moh_list park_call pause_code preview_dial_action ra_call_control recording recording_lookup send_dtmf server_refresh set_timer_action sounds_list st_get_agent_active_lead st_login_log transfer_conference update_fields update_lead update_list update_log_entry update_phone update_phone_alias update_user user_group_status vm_list webphone_url webserver';
+$APIfunctions = 'ALL_FUNCTIONS add_group_alias add_lead add_list add_phone add_phone_alias add_user agent_ingroup_info agent_stats_export agent_status audio_playback blind_monitor call_agent callid_info change_ingroups check_phone_number did_log_export external_add_lead external_dial external_hangup external_pause external_status in_group_status logout moh_list park_call pause_code preview_dial_action ra_call_control recording recording_lookup send_dtmf server_refresh set_timer_action sounds_list st_get_agent_active_lead st_login_log transfer_conference update_fields update_lead update_list update_log_entry update_phone update_phone_alias update_user user_group_status vm_list webphone_url webserver logged_in_agents';
 
 ######################################################################################################
 ######################################################################################################
@@ -2016,6 +2016,8 @@ if (isset($_GET["nva_new_phone_code"]))				{$nva_new_phone_code=$_GET["nva_new_p
 	elseif (isset($_POST["nva_new_phone_code"]))	{$nva_new_phone_code=$_POST["nva_new_phone_code"];}
 if (isset($_GET["nva_new_status"]))					{$nva_new_status=$_GET["nva_new_status"];}
 	elseif (isset($_POST["nva_new_status"]))		{$nva_new_status=$_POST["nva_new_status"];}
+if (isset($_GET["gather_asterisk_output"]))				{$gather_asterisk_output=$_GET["gather_asterisk_output"];}
+	elseif (isset($_POST["gather_asterisk_output"]))	{$gather_asterisk_output=$_POST["gather_asterisk_output"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2493,6 +2495,7 @@ if ($non_latin < 1)
 	$wait_time_lead_reset = preg_replace('/[^NY]/','',$wait_time_lead_reset);
 	$hold_time_lead_reset = preg_replace('/[^NY]/','',$hold_time_lead_reset);
 	$am_message_wildcards = preg_replace('/[^NY]/','',$am_message_wildcards);
+	$gather_asterisk_output = preg_replace('/[^NY]/','',$gather_asterisk_output);
 
 	$qc_enabled = preg_replace('/[^0-9NY]/','',$qc_enabled);
 	$active = preg_replace('/[^0-9NY]/','',$active);
@@ -3664,12 +3667,13 @@ else
 # 151216-1053 - Added links to Inbound Chat Report
 # 151220-1545 - Added more phone NVA settings
 # 151221-0750 - Changes to Chat In-group Modify page
+# 151229-1653 - Added gather_asterisk_output server option
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-526a';
-$build = '151221-0750';
+$admin_version = '2.12-527a';
+$build = '151229-1653';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -14797,7 +14801,7 @@ if ($ADD==411111111111)
 					$custom_dialplanSQL='';
 					if ($LOGmodify_custom_dialplans > 0)
 						{$custom_dialplanSQL = ",custom_dialplan_entry='$custom_dialplan_entry'";}
-					$stmt="UPDATE servers set server_id='$server_id',server_description='$server_description',server_ip='$server_ip',active='$active',asterisk_version='$asterisk_version', max_vicidial_trunks='$max_vicidial_trunks', telnet_host='$telnet_host', telnet_port='$telnet_port', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', ASTmgrUSERNAMEupdate='$ASTmgrUSERNAMEupdate', ASTmgrUSERNAMElisten='$ASTmgrUSERNAMElisten', ASTmgrUSERNAMEsend='$ASTmgrUSERNAMEsend', local_gmt='$local_gmt', voicemail_dump_exten='$voicemail_dump_exten', answer_transfer_agent='$answer_transfer_agent', ext_context='$ext_context', sys_perf_log='$sys_perf_log', vd_server_logs='$vd_server_logs', agi_output='$agi_output', vicidial_balance_active='$vicidial_balance_active',balance_trunks_offlimits='$balance_trunks_offlimits',recording_web_link='$recording_web_link',alt_server_ip='$alt_server_ip',active_asterisk_server='$active_asterisk_server',generate_vicidial_conf='$generate_vicidial_conf',rebuild_conf_files='$rebuild_conf_files',outbound_calls_per_second='$outbound_calls_per_second',sounds_update='$sounds_update',vicidial_recording_limit='$vicidial_recording_limit',carrier_logging_active='$carrier_logging_active',vicidial_balance_rank='$vicidial_balance_rank',rebuild_music_on_hold='$rebuild_music_on_hold',active_agent_login_server='$active_agent_login_server',conf_secret='$conf_secret',external_server_ip='$external_server_ip',active_twin_server_ip='$active_twin_server_ip',user_group='$user_group',auto_restart_asterisk='$auto_restart_asterisk',asterisk_temp_no_restart='$asterisk_temp_no_restart',voicemail_dump_exten_no_inst='$voicemail_dump_exten_no_inst'$custom_dialplanSQL where server_id='$old_server_id';";
+					$stmt="UPDATE servers set server_id='$server_id',server_description='$server_description',server_ip='$server_ip',active='$active',asterisk_version='$asterisk_version', max_vicidial_trunks='$max_vicidial_trunks', telnet_host='$telnet_host', telnet_port='$telnet_port', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', ASTmgrUSERNAMEupdate='$ASTmgrUSERNAMEupdate', ASTmgrUSERNAMElisten='$ASTmgrUSERNAMElisten', ASTmgrUSERNAMEsend='$ASTmgrUSERNAMEsend', local_gmt='$local_gmt', voicemail_dump_exten='$voicemail_dump_exten', answer_transfer_agent='$answer_transfer_agent', ext_context='$ext_context', sys_perf_log='$sys_perf_log', vd_server_logs='$vd_server_logs', agi_output='$agi_output', vicidial_balance_active='$vicidial_balance_active',balance_trunks_offlimits='$balance_trunks_offlimits',recording_web_link='$recording_web_link',alt_server_ip='$alt_server_ip',active_asterisk_server='$active_asterisk_server',generate_vicidial_conf='$generate_vicidial_conf',rebuild_conf_files='$rebuild_conf_files',outbound_calls_per_second='$outbound_calls_per_second',sounds_update='$sounds_update',vicidial_recording_limit='$vicidial_recording_limit',carrier_logging_active='$carrier_logging_active',vicidial_balance_rank='$vicidial_balance_rank',rebuild_music_on_hold='$rebuild_music_on_hold',active_agent_login_server='$active_agent_login_server',conf_secret='$conf_secret',external_server_ip='$external_server_ip',active_twin_server_ip='$active_twin_server_ip',user_group='$user_group',auto_restart_asterisk='$auto_restart_asterisk',asterisk_temp_no_restart='$asterisk_temp_no_restart',voicemail_dump_exten_no_inst='$voicemail_dump_exten_no_inst',gather_asterisk_output='$gather_asterisk_output'$custom_dialplanSQL where server_id='$old_server_id';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 
 					$stmtA="UPDATE servers SET rebuild_conf_files='Y',rebuild_music_on_hold='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";
@@ -30261,7 +30265,7 @@ if ($ADD==311111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,local_gmt,voicemail_dump_exten,answer_transfer_agent,ext_context,sys_perf_log,vd_server_logs,agi_output,vicidial_balance_active,balance_trunks_offlimits,recording_web_link,alt_server_ip,active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,outbound_calls_per_second,sysload,channels_total,cpu_idle_percent,disk_usage,sounds_update,vicidial_recording_limit,carrier_logging_active,vicidial_balance_rank,rebuild_music_on_hold,active_agent_login_server,conf_secret,external_server_ip,custom_dialplan_entry,active_twin_server_ip,user_group,system_uptime,auto_restart_asterisk,asterisk_temp_no_restart,voicemail_dump_exten_no_inst from servers where ( (server_id='$server_id') or (server_ip='$server_ip') ) $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,local_gmt,voicemail_dump_exten,answer_transfer_agent,ext_context,sys_perf_log,vd_server_logs,agi_output,vicidial_balance_active,balance_trunks_offlimits,recording_web_link,alt_server_ip,active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,outbound_calls_per_second,sysload,channels_total,cpu_idle_percent,disk_usage,sounds_update,vicidial_recording_limit,carrier_logging_active,vicidial_balance_rank,rebuild_music_on_hold,active_agent_login_server,conf_secret,external_server_ip,custom_dialplan_entry,active_twin_server_ip,user_group,system_uptime,auto_restart_asterisk,asterisk_temp_no_restart,voicemail_dump_exten_no_inst,gather_asterisk_output from servers where ( (server_id='$server_id') or (server_ip='$server_ip') ) $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		$server_id =					$row[0];
@@ -30311,6 +30315,7 @@ if ($ADD==311111111111)
 		$auto_restart_asterisk =		$row[44];
 		$asterisk_temp_no_restart =		$row[45];
 		$voicemail_dump_exten_no_inst = $row[46];
+		$gather_asterisk_output =		$row[47];
 
 
 		$cpu = (100 - $cpu_idle_percent);
@@ -30360,8 +30365,7 @@ if ($ADD==311111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Server Logs").": </td><td align=left><select size=1 name=vd_server_logs><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$vd_server_logs' selected>"._QXZ("$vd_server_logs")."</option></select>$NWB#servers-vd_server_logs$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("AGI Output").": </td><td align=left><select size=1 name=agi_output><option value='NONE'>"._QXZ("NONE")."</option><option value='STDERR'>"._QXZ("STDERR")."</option><option value='FILE'>"._QXZ("FILE")."</option><option value='BOTH'>"._QXZ("BOTH")."</option><option value='$agi_output' selected>"._QXZ("$agi_output")."</option></select>$NWB#servers-agi_output$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Carrier Logging Active").": </td><td align=left><select size=1 name=carrier_logging_active><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$carrier_logging_active' selected>$carrier_logging_active</option></select>$NWB#servers-carrier_logging_active$NWE</td></tr>\n";
-
-		#$%^
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Gather Asterisk Output").": </td><td align=left><select size=1 name=gather_asterisk_output><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$gather_asterisk_output' selected>$gather_asterisk_output</option></select>$NWB#servers-gather_asterisk_output$NWE</td></tr>\n";
 		
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Recording Web Link").": </td><td align=left><select size=1 name=recording_web_link><option value='SERVER_IP'>"._QXZ("SERVER_IP")."</option><option value='ALT_IP'>"._QXZ("ALT_IP")."</option><option value='EXTERNAL_IP'>"._QXZ("EXTERNAL_IP")."</option><option value='$recording_web_link' selected>"._QXZ("$recording_web_link")."</option></select>$NWB#servers-recording_web_link$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Alternate Recording Server IP").": </td><td align=left><input type=text name=alt_server_ip size=30 maxlength=100 value=\"$alt_server_ip\">$NWB#servers-alt_server_ip$NWE</td></tr>\n";
@@ -36169,6 +36173,7 @@ if ($ADD==999994)
 		echo "<LI><a href=\"AST_dial_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Dial Log Report")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_carrier_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Carrier Log Report")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_hangup_cause_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Hangup Cause Report")."</a></FONT>\n";
+		echo "<LI><a href=\"asterisk_debug.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Asterisk Debug Page")."</a></FONT>\n";
 		echo "<LI><a href=\"call_report_export_carrier.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Export Calls Report Carrier")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_url_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("URL Log Report")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_webserver_url_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Webserver-URL Report")."</a></FONT>\n";

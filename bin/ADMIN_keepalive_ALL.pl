@@ -105,9 +105,10 @@
 # 151204-0639 - Added phones-unavail_dialplan_fwd_exten options
 # 151211-1509 - Added launching of the AST_chat_timeout_cron.pl process on the voicemail server
 # 151226-1024 - Fix for double-write of extension in conf files for IAX and SIP, Issue #908
+# 151229-1623 - Added asterisk output logger launching, tied to server setting, runs every 5 minutes if active
 #
 
-$build = '151226-1024';
+$build = '151229-1623';
 
 $DB=0; # Debug flag
 
@@ -1388,7 +1389,7 @@ $sthA->finish();
 if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
 
 ##### Get the settings for this server's server_ip #####
-$stmtA = "SELECT active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,asterisk_version,sounds_update,conf_secret,custom_dialplan_entry,auto_restart_asterisk,asterisk_temp_no_restart FROM servers where server_ip='$server_ip';";
+$stmtA = "SELECT active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,asterisk_version,sounds_update,conf_secret,custom_dialplan_entry,auto_restart_asterisk,asterisk_temp_no_restart,gather_asterisk_output FROM servers where server_ip='$server_ip';";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1405,6 +1406,7 @@ if ($sthArows > 0)
 	$SERVERcustom_dialplan_entry =	$aryA[6];
 	$auto_restart_asterisk =		$aryA[7];
 	$asterisk_temp_no_restart =		$aryA[8];
+	$gather_asterisk_output =		$aryA[9];
 	}
 $sthA->finish();
 
@@ -3556,6 +3558,25 @@ if (length($uptimebin)>3)
 ################################################################################
 #####  END Find system uptime and update server record with the data
 ################################################################################
+
+
+
+
+
+################################################################################
+#####  BEGIN Gathering asterisk output and peers/registry
+################################################################################
+if ( ($active_asterisk_server =~ /Y/) && ($gather_asterisk_output =~ /Y/) && ($reset_test =~ /0$|5$/) ) 
+	{
+	if ($DB) {print "Gathering asterisk output and peers/registry\n";}
+	`/usr/bin/screen -d -m -S GatherOutput $PATHhome/AST_output_update.pl 2>/dev/null 1>&2`;
+	}
+################################################################################
+#####  BEGIN Gathering asterisk output and peers/registry
+################################################################################
+
+
+
 
 
 ################################################################################

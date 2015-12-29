@@ -423,3 +423,16 @@ index(iso3)
 )ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 UPDATE system_settings SET db_schema_version='1442',db_schema_update_date=NOW() where db_schema_version < 1442;
+
+CREATE TABLE vicidial_asterisk_output (
+server_ip VARCHAR(15) NOT NULL,
+sip_peers MEDIUMTEXT,
+iax_peers MEDIUMTEXT,
+asterisk MEDIUMTEXT,
+update_date DATETIME,
+unique index(server_ip)
+)ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+ALTER TABLE servers ADD gather_asterisk_output ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1443',db_schema_update_date=NOW() where db_schema_version < 1443;

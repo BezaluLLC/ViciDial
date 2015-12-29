@@ -151,7 +151,8 @@ svn_info TEXT,
 system_uptime VARCHAR(255) default '',
 auto_restart_asterisk ENUM('Y','N') default 'N',
 asterisk_temp_no_restart ENUM('Y','N') default 'N',
-voicemail_dump_exten_no_inst VARCHAR(20) default '85026666666667'
+voicemail_dump_exten_no_inst VARCHAR(20) default '85026666666667',
+gather_asterisk_output ENUM('Y','N') default 'N'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -3412,6 +3413,15 @@ tld VARCHAR(20) default '',
 index(iso3)
 )ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE vicidial_asterisk_output (
+server_ip VARCHAR(15) NOT NULL,
+sip_peers MEDIUMTEXT,
+iax_peers MEDIUMTEXT,
+asterisk MEDIUMTEXT,
+update_date DATETIME,
+unique index(server_ip)
+)ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3661,4 +3671,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1442',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1443',db_schema_update_date=NOW(),reload_timestamp=NOW();

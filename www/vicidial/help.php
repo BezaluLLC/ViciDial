@@ -71,6 +71,7 @@
 # 151209-1437 - Added phones-nva entries
 # 151220-1553 - Added more phones nva options
 # 151221-0751 - Changed in-group download link to customer chat links
+# 151229-1659 - Added servers-gather_asterisk_output entry
 #
 
 
@@ -4505,6 +4506,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="servers-carrier_logging_active">
 <BR>
 <B><?php echo _QXZ("Carrier Logging Active"); ?> -</B><?php echo _QXZ("This setting allows you to log all hangup return codes for any outbound list dialing calls that you are placing. Default is N."); ?>
+
+<BR>
+<A NAME="servers-gather_asterisk_output">
+<BR>
+<B><?php echo _QXZ("Gather Asterisk Output"); ?> -</B><?php echo _QXZ("This setting allows you to activate a process that can run every 5 minutes on an active asterisk server and log the SIP/IAX peers and registry output along with the last 1000 lines of Asterisk CLI output. This output is then available to be displayed in the Asterisk Output Report on the Admin Utilities page. Default is N for inactive."); ?>
 
 <BR>
 <A NAME="servers-custom_dialplan_entry">
