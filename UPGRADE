@@ -209,6 +209,9 @@ OTHER CHANGES:
 51. Added Chat Messaging to agent screen, with manager chat utlitity. For more
 	information, read the CHAT_MESSAGING.txt doc.
 
+52. Added example code for a CRM Iframe agent screen skin(extras/crm_iframe)
+	See the CRM_EXAMPLE_SKIN.txt doc for more information
+
 
 
 
