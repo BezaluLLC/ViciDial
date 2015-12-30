@@ -127,13 +127,14 @@
 # 150701-1208 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 # 150723-1643 - Added ajax logging
 # 150915-2039 - Added option for RECID as variable in recording filename
+# 151230-0910 - Fixed transfer of parked call logging issue #901
 #
 
-$version = '2.12-74';
-$build = '150915-2039';
+$version = '2.12-75';
+$build = '151230-0910';
 $php_script = 'manager_send.php';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=132;
+$mysql_log_count=138;
 $one_mysql_log=0;
 $SSagent_debug_logging=0;
 $startMS = microtime();
@@ -232,6 +233,8 @@ if (isset($_GET["log_campaign"]))			{$log_campaign=$_GET["log_campaign"];}
 	elseif (isset($_POST["log_campaign"]))	{$log_campaign=$_POST["log_campaign"];}
 if (isset($_GET["qm_extension"]))			{$qm_extension=$_GET["qm_extension"];}
 	elseif (isset($_POST["qm_extension"]))	{$qm_extension=$_POST["qm_extension"];}
+if (isset($_GET["customerparked"]))				{$customerparked=$_GET["customerparked"];}
+	elseif (isset($_POST["customerparked"]))	{$customerparked=$_POST["customerparked"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -925,6 +928,25 @@ if ($ACTION=="RedirectVD")
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02024',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
 
+		if ($customerparked > 0)
+			{
+			$parked_sec=0;
+			$stmt = "SELECT UNIX_TIMESTAMP(parked_time) FROM park_log where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' and (parked_sec < 1 or grab_time is NULL) order by parked_time desc limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02133',$user,$server_ip,$session_name,$one_mysql_log);}
+			$VAC_pl_ct = mysqli_num_rows($rslt);
+			if ($VAC_pl_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$parked_sec	= ($StarTtime - $row[0]);
+
+				$stmt = "UPDATE park_log SET status='GRABBED',grab_time='$NOW_TIME',parked_sec='$parked_sec' where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' order by parked_time desc limit 1;";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02134',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
+			}
+
 		if (strlen($preset_name) > 0)
 			{
 			$stmt = "INSERT INTO user_call_log (user,call_date,call_type,server_ip,phone_number,number_dialed,lead_id,preset_name,campaign_id) values('$user','$NOW_TIME','BLIND_XFER','$server_ip','$exten','$channel','$lead_id','$preset_name','$campaign')";
@@ -1452,6 +1474,24 @@ if ($ACTION=="RedirectName")
 		}
 	else
 		{
+		if ($customerparked > 0)
+			{
+			$parked_sec=0;
+			$stmt = "SELECT UNIX_TIMESTAMP(parked_time) FROM park_log where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' and (parked_sec < 1 or grab_time is NULL) order by parked_time desc limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02135',$user,$server_ip,$session_name,$one_mysql_log);}
+			$VAC_pl_ct = mysqli_num_rows($rslt);
+			if ($VAC_pl_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$parked_sec	= ($StarTtime - $row[0]);
+
+				$stmt = "UPDATE park_log SET status='GRABBED',grab_time='$NOW_TIME',parked_sec='$parked_sec' where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' order by parked_time desc limit 1;";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02136',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
+			}
 		$stmt="SELECT dialplan_number FROM phones where server_ip = '$server_ip' and extension='$extenName';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -1482,6 +1522,24 @@ if ($ACTION=="RedirectNameVmail")
 		}
 	else
 		{
+		if ($customerparked > 0)
+			{
+			$parked_sec=0;
+			$stmt = "SELECT UNIX_TIMESTAMP(parked_time) FROM park_log where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' and (parked_sec < 1 or grab_time is NULL) order by parked_time desc limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02137',$user,$server_ip,$session_name,$one_mysql_log);}
+			$VAC_pl_ct = mysqli_num_rows($rslt);
+			if ($VAC_pl_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$parked_sec	= ($StarTtime - $row[0]);
+
+				$stmt = "UPDATE park_log SET status='GRABBED',grab_time='$NOW_TIME',parked_sec='$parked_sec' where uniqueid='$uniqueid' and server_ip='$server_ip' and extension='$CalLCID' order by parked_time desc limit 1;";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02138',$user,$server_ip,$session_name,$one_mysql_log);}
+				}
+			}
 		$stmt="SELECT voicemail_id FROM phones where server_ip = '$server_ip' and extension='$extenName';";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_to_mysqli($stmt, $link);
