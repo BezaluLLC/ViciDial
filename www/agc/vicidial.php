@@ -510,10 +510,11 @@
 # 151125-0942 - Fixed manual call only logging bug
 # 151212-0922 - Added all chat functionality
 # 151218-1200 - Fixes for chat security and language translation
+# 151229-2240 - Fixed issue #907, script reload after canceling manual 3way call
 #
 
-$version = '2.12-479c';
-$build = '151218-1200';
+$version = '2.12-480c';
+$build = '151229-2240';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -5005,8 +5006,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			prefix_choice='';
 			agent_dialed_number='';
 			agent_dialed_type='';
-			CalL_ScripT_id='';
-			CalL_ScripT_color='';
+		//	CalL_ScripT_id='';
+		//	CalL_ScripT_color='';
 			call_variables='';
 			xfer_agent_selected=0;
 			}
@@ -8916,8 +8917,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					prefix_choice='';
 					agent_dialed_number='';
 					agent_dialed_type='';
-					CalL_ScripT_id='';
-					CalL_ScripT_color='';
+				//	CalL_ScripT_id='';
+				//	CalL_ScripT_color='';
 					xfer_agent_selected=0;
 					}
 				}
@@ -9080,8 +9081,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				prefix_choice='';
 				agent_dialed_number='';
 				agent_dialed_type='';
-				CalL_ScripT_id='';
-				CalL_ScripT_color='';
+			//	CalL_ScripT_id='';
+			//	CalL_ScripT_color='';
 				dial_next_failed=0;
 				xfer_agent_selected=0;
 				RefresHScript('CLEAR');
@@ -9323,8 +9324,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			prefix_choice='';
 			agent_dialed_number='';
 			agent_dialed_type='';
-			CalL_ScripT_id='';
-			CalL_ScripT_color='';
+		//	CalL_ScripT_id='';
+		//	CalL_ScripT_color='';
 			xfer_agent_selected=0;
 			}
 		}
@@ -12442,6 +12443,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					CallBackCommenTs='';
 					DispoQMcsCODE='';
 					active_ingroup_dial='';
+					CalL_ScripT_id='';
+					CalL_ScripT_color='';
 					nocall_dial_flag='DISABLED';
 					document.vicidial_form.CallBackDatESelectioN.value = '';
 					document.vicidial_form.CallBackCommenTsField.value = '';
