@@ -72,6 +72,7 @@
 # 151220-1553 - Added more phones nva options
 # 151221-0751 - Changed in-group download link to customer chat links
 # 151229-1659 - Added servers-gather_asterisk_output entry
+# 151229-2302 - Added campaigns-manual_dial_timeout entry
 #
 
 
@@ -1694,6 +1695,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-manual_dial_cid">
 <BR>
 <B><?php echo _QXZ("Manual Dial CID"); ?> -</B><?php echo _QXZ("This defines whether an agent making manual dial calls will have the campaign callerID settings used, or their agent phone callerID settings used. Default is CAMPAIGN. If the Use Custom CID campaign option is enabled or the list Campaign CID Override setting is used, this setting will be ignored."); ?>
+
+<BR>
+<A NAME="campaigns-manual_dial_timeout">
+<BR>
+<B><?php echo _QXZ("Manual Dial Timeout"); ?> -</B><?php echo _QXZ("This is an override field that, if populated, will override the campaign dial timeout setting for manual dialed calls. Default is blank for disabled."); ?>
 
 <BR>
 <A NAME="campaigns-post_phone_time_diff_alert">

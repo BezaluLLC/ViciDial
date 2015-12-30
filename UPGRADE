@@ -215,6 +215,9 @@ OTHER CHANGES:
 53. Added utility to gather and display Asterisk debug information. Includes
 	a server setting and Admin Utilities report.
 
+54. Added campaign setting for manual_dial_timeout for manual dial agent screen
+	calls only.
+
 
 
 

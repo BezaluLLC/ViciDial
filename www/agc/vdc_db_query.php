@@ -396,10 +396,11 @@
 # 151209-1615 - Fixed issue with possible data loss using callback or dispo comments
 # 151212-0916 - Added chat-related functions for the agent interface
 # 151220-1109 - Improved logging of chats, emails, inbound calls
+# 151229-2316 - Added manual_dial_timeout campaign setting
 #
 
-$version = '2.12-291';
-$build = '151220-1109';
+$version = '2.12-292';
+$build = '151229-2316';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=649;
@@ -1675,8 +1676,8 @@ if ($ACTION == 'update_settings')
 			$wrapup_seconds_override =		trim("$row[0]");
 
 
-			##### grab the data from vicidial_users for the user
-			$stmt="SELECT wrapup_seconds,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,dial_timeout,wrapup_bypass,wrapup_message,wrapup_after_hotkey FROM vicidial_campaigns where campaign_id='$campaign' LIMIT 1;";
+			##### grab the data from vicidial_campaigns for the campaign
+			$stmt="SELECT wrapup_seconds,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,dial_timeout,wrapup_bypass,wrapup_message,wrapup_after_hotkey,manual_dial_timeout FROM vicidial_campaigns where campaign_id='$campaign' LIMIT 1;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00594',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -1694,8 +1695,11 @@ if ($ACTION == 'update_settings')
 				$wrapup_bypass =		trim("$row[7]");
 				$wrapup_message =		trim("$row[8]");
 				$wrapup_after_hotkey =	trim("$row[9]");
+				$manual_dial_timeout =	trim("$row[10]");
 				}
 
+			if ( ($manual_dial_timeout < 1) or (strlen($manual_dial_timeout) < 1) )
+				{$manual_dial_timeout = $dial_timeout;}
 			if ($wrapup_seconds_override >= 0)
 				{$wrapup_seconds = $wrapup_seconds_override;}
 			if ( ($pause_max < 10) or (strlen($pause_max)<2) )
@@ -1714,6 +1718,7 @@ if ($ACTION == 'update_settings')
 			$SettingS_InfO .=	"wrapup_bypass: " . $wrapup_bypass . "\n";
 			$SettingS_InfO .=	"wrapup_message: " . $wrapup_message . "\n";
 			$SettingS_InfO .=	"wrapup_after_hotkey: " . $wrapup_after_hotkey . "\n";
+			$SettingS_InfO .=	"manual_dial_timeout: " . $manual_dial_timeout . "\n";
 			$SettingS_InfO .=	"\n";
 			}
 		echo $SettingS_InfO;

@@ -436,3 +436,7 @@ unique index(server_ip)
 ALTER TABLE servers ADD gather_asterisk_output ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1443',db_schema_update_date=NOW() where db_schema_version < 1443;
+
+ALTER TABLE vicidial_campaigns ADD manual_dial_timeout VARCHAR(3) default '';
+
+UPDATE system_settings SET db_schema_version='1444',db_schema_update_date=NOW() where db_schema_version < 1444;
