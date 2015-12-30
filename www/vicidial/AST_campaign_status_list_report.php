@@ -20,6 +20,7 @@
 # 141114-0848 - Finalized adding QXZ translation to all admin files
 # 141230-1516 - Added code for on-the-fly language translations display
 # 150516-1312 - Fixed Javascript element problem, Issue #857
+# 151219-0107 - Added option for searching archived data
 #
 
 $startMS = microtime();
@@ -50,6 +51,8 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 $report_name="Campaign Status List Report";
 $NOW_DATE = date("Y-m-d");
@@ -63,7 +66,6 @@ if (!isset($end_date_T)) {$end_date_T="23:59:59";}
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
-if ($archive_tbl) {$agent_log_table="vicidial_agent_log_archive";} else {$agent_log_table="vicidial_agent_log";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -77,6 +79,30 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$log_tables_array=array("vicidial_log", "vicidial_closer_log", "vicidial_agent_log");
+for ($t=0; $t<count($log_tables_array); $t++) 
+	{
+	$table_name=$log_tables_array[$t];
+	$archive_table_name=use_archive_table($table_name);
+	if ($archive_table_name!=$table_name) {$archives_available="Y";}
+	}
+
+if ($search_archived_data) 
+	{
+	$vicidial_log_table=use_archive_table("vicidial_log");
+	$vicidial_closer_log_table=use_archive_table("vicidial_closer_log");
+	$vicidial_agent_log_table=use_archive_table("vicidial_agent_log");
+	}
+else
+	{
+	$vicidial_log_table="vicidial_log";
+	$vicidial_closer_log_table="vicidial_closer_log";
+	$vicidial_agent_log_table="vicidial_agent_log";
+	}
+#############
 
 if ($non_latin < 1)
 	{
@@ -361,11 +387,17 @@ $HTML_text.=_QXZ("Display as").":<BR>";
 $HTML_text.="<select name='report_display_type'>";
 if ($report_display_type) {$HTML_text.="<option value='$report_display_type' selected>$report_display_type</option>";}
 $HTML_text.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR><BR>";
+
+if ($archives_available=="Y") 
+	{
+	$HTML_text.="<input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."<BR><BR>\n";
+	}
+
 $HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $HTML_text.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 $HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
-$HTML_text.="<a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&query_date_D=$query_date_D&query_date_T=$query_date_T&end_date_D=$end_date_D&end_date_T=$end_date_T$groupQS&file_download=1&SUBMIT=$SUBMIT\">"._QXZ("DOWNLOAD")."</a> |";
+$HTML_text.="<a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&query_date_D=$query_date_D&query_date_T=$query_date_T&end_date_D=$end_date_D&end_date_T=$end_date_T$groupQS&file_download=1&SUBMIT=$SUBMIT&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a> |";
 $HTML_text.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 $HTML_text.="</FONT>\n";
 $HTML_text.="</TD></TR></TABLE>";
@@ -407,7 +439,7 @@ while($i < $group_ct)
 		if (strlen($inbound_groups)>0) 
 			{
 			$inbound_groups=preg_replace("/\s/", "', '", $inbound_groups);
-			$inbound_SQL="and vicidial_closer_log.campaign_id in ('$inbound_groups')";
+			$inbound_SQL="and ".$vicidial_closer_log_table.".campaign_id in ('$inbound_groups')";
 			} 
 		else 
 			{
@@ -435,7 +467,7 @@ while($i < $group_ct)
 		$CSV_text.="\""._QXZ("List ID")." #$list_id: $list_name\"\n";
 
 
-		$stat_stmt="SELECT vicidial_log.status, vicidial_log.uniqueid, vicidial_log.length_in_sec as duration, cast(vicidial_agent_log.talk_sec as signed)-cast(vicidial_agent_log.dead_sec as signed) as handle_time from vicidial_log LEFT OUTER JOIN vicidial_agent_log on vicidial_log.lead_id=vicidial_agent_log.lead_id and vicidial_log.uniqueid=vicidial_agent_log.uniqueid where vicidial_log.call_date>='$query_date' and vicidial_log.call_date<='$end_date' and vicidial_log.list_id='$list_id' UNION SELECT vicidial_closer_log.status, vicidial_closer_log.uniqueid, vicidial_closer_log.length_in_sec as duration, cast(vicidial_agent_log.talk_sec as signed)-cast(vicidial_agent_log.dead_sec as signed) as handle_time from vicidial_closer_log LEFT OUTER JOIN vicidial_agent_log on vicidial_closer_log.lead_id=vicidial_agent_log.lead_id and vicidial_closer_log.uniqueid=vicidial_agent_log.uniqueid where call_date>='$query_date' and call_date<='$end_date' and list_id='$list_id' order by status";
+		$stat_stmt="SELECT ".$vicidial_log_table.".status, ".$vicidial_log_table.".uniqueid, ".$vicidial_log_table.".length_in_sec as duration, cast(".$vicidial_agent_log_table.".talk_sec as signed)-cast(".$vicidial_agent_log_table.".dead_sec as signed) as handle_time from ".$vicidial_log_table." LEFT OUTER JOIN ".$vicidial_agent_log_table." on ".$vicidial_log_table.".lead_id=".$vicidial_agent_log_table.".lead_id and ".$vicidial_log_table.".uniqueid=".$vicidial_agent_log_table.".uniqueid where ".$vicidial_log_table.".call_date>='$query_date' and ".$vicidial_log_table.".call_date<='$end_date' and ".$vicidial_log_table.".list_id='$list_id' UNION SELECT ".$vicidial_closer_log_table.".status, ".$vicidial_closer_log_table.".uniqueid, ".$vicidial_closer_log_table.".length_in_sec as duration, cast(".$vicidial_agent_log_table.".talk_sec as signed)-cast(".$vicidial_agent_log_table.".dead_sec as signed) as handle_time from ".$vicidial_closer_log_table." LEFT OUTER JOIN ".$vicidial_agent_log_table." on ".$vicidial_closer_log_table.".lead_id=".$vicidial_agent_log_table.".lead_id and ".$vicidial_closer_log_table.".uniqueid=".$vicidial_agent_log_table.".uniqueid where call_date>='$query_date' and call_date<='$end_date' and list_id='$list_id' order by status";
 		if ($DB) {$HTML_text.="|$stat_stmt|\n";}
 		# $ASCII_text.=$stat_stmt."\n";
 		$stat_rslt=mysql_to_mysqli($stat_stmt, $link);

@@ -26,6 +26,7 @@
 # 141114-0021 - Finalized adding QXZ translation to all admin files
 # 141230-1526 - Added code for on-the-fly language translations display
 # 150516-1307 - Fixed Javascript element problem, Issue #857
+# 151227-1718 - Added option to search archive records instead of main
 #
 
 $startMS = microtime();
@@ -58,6 +59,8 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 
@@ -84,6 +87,26 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$log_tables_array=array("vicidial_agent_log");
+for ($t=0; $t<count($log_tables_array); $t++) 
+	{
+	$table_name=$log_tables_array[$t];
+	$archive_table_name=use_archive_table($table_name);
+	if ($archive_table_name!=$table_name) {$archives_available="Y";}
+	}
+
+if ($search_archived_data) 
+	{
+	$vicidial_agent_log_table=use_archive_table("vicidial_agent_log");
+	}
+else
+	{
+	$vicidial_agent_log_table="vicidial_agent_log";
+	}
+#############
 
 if ($non_latin < 1)
 	{
@@ -345,7 +368,7 @@ if (strlen($customer_interactive_statuses)>0)
 #$customer_interactive_statuses = '|NI|DNC|CALLBK|AP|SALE|COMP|HAP1|HAP2|HBED|DIED|';
 #$customer_interactive_statuses = '|NI|DNC|CALLBK|XFER|C2|B7|B8|C1|';
 
-$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date&shift=$shift&DB=$DB&user=$user$groupQS";
+$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date&shift=$shift&DB=$DB&user=$user$groupQS&search_archived_data=$search_archived_data";
 
 if ($file_download < 1)
 	{
@@ -440,7 +463,7 @@ else
 	$date_namesARY[0]='';
 	$k=0;
 
-	$stmt="select date_format(event_time, '%Y-%m-%d') as date,count(*) as calls,status from vicidial_users,vicidial_agent_log where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=vicidial_agent_log.user and vicidial_agent_log.user='$user' $group_SQL $user_group_SQL $vuLOGadmin_viewable_groupsSQL group by date,status order by date,status desc limit 500000;";
+	$stmt="select date_format(event_time, '%Y-%m-%d') as date,count(*) as calls,status from vicidial_users,".$vicidial_agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=".$vicidial_agent_log_table.".user and ".$vicidial_agent_log_table.".user='$user' $group_SQL $user_group_SQL $vuLOGadmin_viewable_groupsSQL group by date,status order by date,status desc limit 500000;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$rows_to_print = mysqli_num_rows($rslt);
@@ -909,8 +932,14 @@ echo "<option value=\"\">--</option>\n";
 echo "<option value=\"AM\">"._QXZ("AM")."</option>\n";
 echo "<option value=\"PM\">"._QXZ("PM")."</option>\n";
 echo "<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
-echo "</SELECT><BR><BR>\n";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
+echo "</SELECT>\n";
+
+if ($archives_available=="Y") 
+	{
+	echo "<input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."\n";
+	}
+
+echo "<BR><BR><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 if (strlen($user) > 1)

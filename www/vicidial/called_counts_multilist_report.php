@@ -1,7 +1,7 @@
 <?php
 # called_counts_multilist_report.php
 # 
-# Copyright (C) 2014  Joe Johnson <freewermadmin@gmail.com>, Matt Florell <mattf@vicidial.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Joe Johnson <freewermadmin@gmail.com>, Matt Florell <mattf@vicidial.com>    LICENSE: AGPLv2
 #
 # This is a report designed for showing called counts similar to the results
 # at the bottom of each list detail screen, but for multiple lists and using
@@ -13,6 +13,7 @@
 # 140311-1940 - First build based upon admin.php & AST_VDADstats.php
 # 141114-0045 - Finalized adding QXZ translation to all admin files
 # 141230-1346 - Added code for on-the-fly language translations display
+# 151229-2050 - Added archive search option
 #
 
 $startMS = microtime();
@@ -49,6 +50,8 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($bottom_graph)<2) {$bottom_graph='NO';}
@@ -77,6 +80,32 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$log_tables_array=array("vicidial_list", "vicidial_log", "vicidial_closer_log", "user_call_log");
+for ($t=0; $t<count($log_tables_array); $t++) 
+	{
+	$table_name=$log_tables_array[$t];
+	$archive_table_name=use_archive_table($table_name);
+	if ($archive_table_name!=$table_name) {$archives_available="Y";}
+	}
+
+if ($search_archived_data) 
+	{
+	$vicidial_list_table=use_archive_table("vicidial_list");
+	$vicidial_closer_log_table=use_archive_table("vicidial_closer_log");
+	$user_call_log_table=use_archive_table("user_call_log");
+	$vicidial_log_table=use_archive_table("vicidial_log");
+	}
+else
+	{
+	$vicidial_list_table="vicidial_list";
+	$vicidial_closer_log_table="vicidial_closer_log";
+	$user_call_log_table="user_call_log";
+	$vicidial_log_table="vicidial_log";
+	}
+#############
 
 ##### SERVER CARRIER LOGGING LOOKUP #####
 $stmt = "SELECT count(*) FROM servers where carrier_logging_active='Y' and max_vicidial_trunks > 0;";
@@ -391,14 +420,14 @@ if ( preg_match('/\-\-ALL\-\-/',$list_id_string) )
 	}
 
 $list_id_SQL = preg_replace('/,$/i', '',$list_id_SQL);
-$list_id_SQLandVLJOIN = "and vicidial_log.lead_id=vicidial_list.lead_id";
-$list_id_SQLandVCLJOIN = "and vicidial_closer_log.lead_id=vicidial_list.lead_id";
-$list_id_SQLandUCLJOIN = "and user_call_log.lead_id=vicidial_list.lead_id";
+$list_id_SQLandVLJOIN = "and ".$vicidial_log_table.".lead_id=".$vicidial_list_table.".lead_id";
+$list_id_SQLandVCLJOIN = "and ".$vicidial_closer_log_table.".lead_id=".$vicidial_list_table.".lead_id";
+$list_id_SQLandUCLJOIN = "and ".$user_call_log_table.".lead_id=".$vicidial_list_table.".lead_id";
 if (strlen($list_id_SQL)>0) 
 	{
-	$list_id_SQLandVLJOIN .= " and vicidial_list.list_id IN($list_id_SQL)";
-	$list_id_SQLandVCLJOIN .= " and vicidial_list.list_id IN($list_id_SQL)";
-	$list_id_SQLandUCLJOIN .= " and vicidial_list.list_id IN($list_id_SQL)";
+	$list_id_SQLandVLJOIN .= " and ".$vicidial_list_table.".list_id IN($list_id_SQL)";
+	$list_id_SQLandVCLJOIN .= " and ".$vicidial_list_table.".list_id IN($list_id_SQL)";
+	$list_id_SQLandUCLJOIN .= " and ".$vicidial_list_table.".list_id IN($list_id_SQL)";
 	$list_id_SQL = "where list_id IN($list_id_SQL)";
 	$list_id_SQLand = "and list_id IN($list_id_SQL)";
 	}
@@ -571,7 +600,13 @@ $MAIN.=_QXZ("Lists").": <font size=1>("._QXZ("optional, possibly slow").")</font
 $MAIN.=$list_options;
 $MAIN.="</TD><TD VALIGN=TOP ALIGN=CENTER>";
 
-$MAIN.="<INPUT type=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
+if ($archives_available=="Y") 
+	{
+	$MAIN.="<BR><input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."\n";
+	}
+
+
+$MAIN.="<BR><BR><INPUT type=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $MAIN.="<BR><BR><a href=\"$PHP_SELF\">"._QXZ("reset")."</a>";
 $MAIN.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 $MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
@@ -597,7 +632,7 @@ if (strlen($QUERY_STRING) > 5)
 	
 	if (!$override_date) {
 		$date_range_title=" "._QXZ("FOR LEADS CALLED")." $query_date "._QXZ("THROUGH")." $end_date";
-		$stmt="select distinct vicidial_list.lead_id from vicidial_list, vicidial_log where vicidial_log.call_date>='$query_date 00:00:00' and vicidial_log.call_date<='$end_date 23:59:59' $list_id_SQLandVLJOIN UNION select distinct vicidial_list.lead_id from vicidial_list, vicidial_closer_log where vicidial_closer_log.call_date>='$query_date 00:00:00' and vicidial_closer_log.call_date<='$end_date 23:59:59' $list_id_SQLandVCLJOIN;";
+		$stmt="select distinct ".$vicidial_list_table.".lead_id from ".$vicidial_list_table.", ".$vicidial_log_table." where ".$vicidial_log_table.".call_date>='$query_date 00:00:00' and ".$vicidial_log_table.".call_date<='$end_date 23:59:59' $list_id_SQLandVLJOIN UNION select distinct ".$vicidial_list_table.".lead_id from ".$vicidial_list_table.", ".$vicidial_closer_log_table." where ".$vicidial_closer_log_table.".call_date>='$query_date 00:00:00' and ".$vicidial_closer_log_table.".call_date<='$end_date 23:59:59' $list_id_SQLandVCLJOIN;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if (!$rslt) {$MAIN.="<BR>**".mysqli_error($link)."<BR>$stmt";}
 		if ($DB) {$MAIN.="$stmt<BR><BR>";}
@@ -617,7 +652,7 @@ if (strlen($QUERY_STRING) > 5)
 		}
 	}
 
-	$stmt="select status, if(called_count >= 100, 100, called_count), count(*) from vicidial_list $list_id_SQL $lead_id_str group by status, if(called_count >= 100, 100, called_count) order by status,called_count;";
+	$stmt="select status, if(called_count >= 100, 100, called_count), count(*) from ".$vicidial_list_table." $list_id_SQL $lead_id_str group by status, if(called_count >= 100, 100, called_count) order by status,called_count;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if (!$rslt) {$MAIN.="<BR>**".mysqli_error($link)."<BR>$stmt";}
 	if ($DB) {$MAIN.="$stmt<BR><BR>";}
@@ -657,7 +692,7 @@ if (strlen($QUERY_STRING) > 5)
 
 	$CSV_text="";
 	$MAIN.="<center>\n";
-	$MAIN.="<br><b>"._QXZ("CALLED COUNTS WITHIN LIST(S)")." $list_id_title_str$date_range_title:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"$PHP_SELF?DB=$DB$groupQS$list_idQS&query_date=$query_date&end_date=$end_date&override_date=$override_date&SUBMIT=$SUBMIT&file_download=1\">["._QXZ("DOWNLOAD")."]</a></b><br>\n";
+	$MAIN.="<br><b>"._QXZ("CALLED COUNTS WITHIN LIST(S)")." $list_id_title_str$date_range_title:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href=\"$PHP_SELF?DB=$DB$groupQS$list_idQS&query_date=$query_date&end_date=$end_date&override_date=$override_date&SUBMIT=$SUBMIT&file_download=1&search_archived_data=$search_archived_data\">["._QXZ("DOWNLOAD")."]</a></b><br>\n";
 	$CSV_text.=_QXZ("CALLED COUNTS WITHIN LIST(S)")." $list_id_title_str$date_range_title:\n";
 	$MAIN.="<TABLE width=700 cellspacing=1>\n";
 	$MAIN.="<tr><td align=left><font size=1>"._QXZ("STATUS")."</td><td align=center><font size=1>"._QXZ("STATUS NAME")."</td>";

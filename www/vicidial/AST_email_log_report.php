@@ -1,7 +1,7 @@
 <?php 
 # AST_email_log_report.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # report of emails handled by the system
 # 
@@ -16,6 +16,7 @@
 # 140918-0615 - Fixed bug #789
 # 141113-2048 - Finalized adding QXZ translation to all admin files
 # 141230-1504 - Added code for on-the-fly language translations display
+# 151219-0117 - Added option for searching archived data
 #
 
 $startMS = microtime();
@@ -61,6 +62,8 @@ if (isset($_GET["query_date"]))				{$query_date=$_GET["query_date"];}
 	elseif (isset($_POST["query_date"]))	{$query_date=$_POST["query_date"];}
 if (isset($_GET["end_date"]))				{$end_date=$_GET["end_date"];}
 	elseif (isset($_POST["end_date"]))	{$end_date=$_POST["end_date"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 
 $report_name = 'Email Log Report';
@@ -85,6 +88,30 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$log_tables_array=array("vicidial_email_list", "vicidial_closer_log", "vicidial_email_log");
+for ($t=0; $t<count($log_tables_array); $t++) 
+	{
+	$table_name=$log_tables_array[$t];
+	$archive_table_name=use_archive_table($table_name);
+	if ($archive_table_name!=$table_name) {$archives_available="Y";}
+	}
+
+if ($search_archived_data) 
+	{
+	$vicidial_email_list_table=use_archive_table("vicidial_email_list");
+	$vicidial_email_log_table=use_archive_table("vicidial_email_log");
+	$vicidial_closer_log_table=use_archive_table("vicidial_closer_log");
+	}
+else
+	{
+	$vicidial_email_list_table="vicidial_email_list";
+	$vicidial_email_log_table="vicidial_email_log";
+	$vicidial_closer_log_table="vicidial_closer_log";
+	}
+#############
 
 $stmt = "SELECT local_gmt FROM servers where active='Y' limit 1;";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -412,7 +439,16 @@ if ($DID!='Y')
 	$MAIN.="<a href=\"./AST_IVRstats.php?query_date=$query_date&end_date=$end_date&shift=$shift$groupQS\">"._QXZ("IVR REPORT")."</a> | \n";
 	}
 $MAIN.="<a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> | ";
-$MAIN.="<BR><BR><BR><CENTER><INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></CENTER>\n";
+$MAIN.="<BR><BR>";
+
+
+if ($archives_available=="Y") 
+	{
+	$MAIN.="<input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."<BR><BR>\n";
+	}
+
+
+$MAIN.="<CENTER><INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></CENTER>\n";
 $MAIN.="</FONT>\n";
 
 
@@ -470,7 +506,7 @@ $query_date_END = "$end_date 23:59:59";
 
 $rpt_title=_QXZ("Showing emails")." $email_title "._QXZ("that were")." $date_title "._QXZ("from")." $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
 $MAIN.=$rpt_title;
-$MAIN.=_QXZ("Email log results").": $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1&date_type=$date_type&email_type=$email_type\">"._QXZ("DOWNLOAD")."</a>\n";
+$MAIN.=_QXZ("Email log results").": $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1&date_type=$date_type&email_type=$email_type&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
 $CSV_text1.="\""._QXZ("Showing emails")." $email_title "._QXZ("that were")." $date_title "._QXZ("from")." $query_date_BEGIN "._QXZ("to")." $query_date_END\"\n\n";
 
 if ($email_type=="received") 
@@ -481,16 +517,16 @@ if ($email_type=="received")
 	if ($date_type=="email_date") 
 		{
 	#	$stmt="select vel.* from vicidial_email_list vel where $date_type>='$query_date_BEGIN' and $date_type<='$query_date_END' and group_id in ($group_SQL) order by $date_type asc";
-		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status from vicidial_email_list vel where vel.$date_type>='$query_date_BEGIN' and vel.$date_type<='$query_date_END' and vel.group_id in ($group_SQL) order by vel.$date_type asc";
+		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status from ".$vicidial_email_list_table." vel where vel.$date_type>='$query_date_BEGIN' and vel.$date_type<='$query_date_END' and vel.group_id in ($group_SQL) order by vel.$date_type asc";
 		} 
 	else if ($date_type=="call_date") 
 		{
 	#	$stmt="select vel.*, vcl.call_date, from vicidial_email_list vel, vicidial_closer_log vcl where vcl.$date_type>='$query_date_BEGIN' and vcl.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) order by vcl.$date_type asc";
-		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status from vicidial_email_list vel where vcl.$date_type>='$query_date_BEGIN' and vcl.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) and vel.email_row_id=vl.email_row_id order by vcl.$date_type asc";
+		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status from ".$vicidial_email_list_table." vel where vcl.$date_type>='$query_date_BEGIN' and vcl.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) and vel.email_row_id=vl.email_row_id order by vcl.$date_type asc";
 		} 
 	else if ($date_type=="date_answered") 
 		{
-		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status, vcl.call_date, vl.email_date as date_response_sent, vl.user as sending_user, vl.message as sent_message from vicidial_email_list vel, vicidial_closer_log vcl, vicidial_email_log vl where vel.$date_type>='$query_date_BEGIN' and vel.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) and vel.email_row_id=vl.email_row_id order by vel.$date_type asc";
+		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status, vcl.call_date, vl.email_date as date_response_sent, vl.user as sending_user, vl.message as sent_message from ".$vicidial_email_list_table." vel, ".$vicidial_closer_log_table." vcl, ".$vicidial_email_log_table." vl where vel.$date_type>='$query_date_BEGIN' and vel.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) and vel.email_row_id=vl.email_row_id order by vel.$date_type asc";
 		}
 	}
 else if ($email_type=="viewed") 
@@ -500,15 +536,15 @@ else if ($email_type=="viewed")
 	$CSV_text1.="\""._QXZ("DATE EMAIL RECEIVED")."\",\""._QXZ("ADDRESS FROM")."\",\""._QXZ("SENDER NAME")."\",\""._QXZ("MESSAGE")."\",\""._QXZ("DATE EMAIL VIEWED")."\",\""._QXZ("STATUS")."\"\n";
 	if ($date_type=="email_date") 
 		{
-		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status, vcl.call_date from vicidial_email_list vel, vicidial_closer_log vcl where vel.$date_type>='$query_date_BEGIN' and vel.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) order by vel.$date_type asc";
+		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status, vcl.call_date from ".$vicidial_email_list_table." vel, ".$vicidial_closer_log_table." vcl where vel.$date_type>='$query_date_BEGIN' and vel.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) order by vel.$date_type asc";
 		} 
 	else if ($date_type=="call_date") 
 		{
-		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status, vcl.call_date from vicidial_email_list vel, vicidial_closer_log vcl where vcl.$date_type>='$query_date_BEGIN' and vcl.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) order by vcl.$date_type asc";
+		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status, vcl.call_date from ".$vicidial_email_list_table." vel, ".$vicidial_closer_log_table." vcl where vcl.$date_type>='$query_date_BEGIN' and vcl.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) order by vcl.$date_type asc";
 		} 
 	else if ($date_type=="date_answered") 
 		{
-		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status, vcl.call_date from vicidial_email_list vel, vicidial_closer_log vcl where vel.$date_type>='$query_date_BEGIN' and vel.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) order by vel.$date_type asc";
+		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status, vcl.call_date from ".$vicidial_email_list_table." vel, ".$vicidial_closer_log_table." vcl where vel.$date_type>='$query_date_BEGIN' and vel.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) order by vel.$date_type asc";
 		}
 	}
 else if ($email_type=="answered") 
@@ -518,15 +554,15 @@ else if ($email_type=="answered")
 	$CSV_text1.="\""._QXZ("DATE EMAIL RECEIVED")."\",\""._QXZ("ADDRESS FROM")."\",\""._QXZ("SENDER NAME")."\",\""._QXZ("MESSAGE")."\",\""._QXZ("DATE EMAIL VIEWED")."\",\""._QXZ("DATE EMAIL ANSWERED")."\",\""._QXZ("USER")."\",\""._QXZ("RESPONSE")."\",\""._QXZ("STATUS")."\"\n";
 	if ($date_type=="email_date") 
 		{
-		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status, vcl.call_date, vl.email_date as date_response_sent, vl.email_log_id, vl.user as sending_user, vl.message as sent_message from vicidial_email_list vel, vicidial_closer_log vcl, vicidial_email_log vl where vel.$date_type>='$query_date_BEGIN' and vel.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) and vel.email_row_id=vl.email_row_id order by vel.$date_type asc";
+		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status, vcl.call_date, vl.email_date as date_response_sent, vl.email_log_id, vl.user as sending_user, vl.message as sent_message from ".$vicidial_email_list_table." vel, ".$vicidial_closer_log_table." vcl, ".$vicidial_email_log_table." vl where vel.$date_type>='$query_date_BEGIN' and vel.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) and vel.email_row_id=vl.email_row_id order by vel.$date_type asc";
 		} 
 	else if ($date_type=="call_date") 
 		{
-		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status, vcl.call_date, vl.email_date as date_response_sent, vl.email_log_id, vl.user as sending_user, vl.message as sent_message from vicidial_email_list vel, vicidial_closer_log vcl, vicidial_email_log vl where vcl.$date_type>='$query_date_BEGIN' and vcl.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) and vel.email_row_id=vl.email_row_id order by vcl.$date_type asc";
+		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status, vcl.call_date, vl.email_date as date_response_sent, vl.email_log_id, vl.user as sending_user, vl.message as sent_message from ".$vicidial_email_list_table." vel, ".$vicidial_closer_log_table." vcl, ".$vicidial_email_log_table." vl where vcl.$date_type>='$query_date_BEGIN' and vcl.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) and vel.email_row_id=vl.email_row_id order by vcl.$date_type asc";
 		} 
 	else if ($date_type=="date_answered") 
 		{
-		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status, vcl.call_date, vl.email_date as date_response_sent, vl.email_log_id, vl.user as sending_user, vl.message as sent_message from vicidial_email_list vel, vicidial_closer_log vcl, vicidial_email_log vl where vel.$date_type>='$query_date_BEGIN' and vel.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) and vel.email_row_id=vl.email_row_id order by vel.$date_type asc";
+		$stmt="select vel.email_row_id, vel.lead_id, vel.email_date, vel.email_from, vel.email_from_name, convert(vel.message using 'UTF8') as message, vel.status, vcl.call_date, vl.email_date as date_response_sent, vl.email_log_id, vl.user as sending_user, vl.message as sent_message from ".$vicidial_email_list_table." vel, ".$vicidial_closer_log_table." vcl, ".$vicidial_email_log_table." vl where vel.$date_type>='$query_date_BEGIN' and vel.$date_type<='$query_date_END' and vcl.uniqueid=vel.uniqueid and vel.group_id in ($group_SQL) and vel.email_row_id=vl.email_row_id order by vel.$date_type asc";
 		}
 	}
 #echo $stmt."\n";

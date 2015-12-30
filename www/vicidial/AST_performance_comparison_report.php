@@ -12,6 +12,7 @@
 # 141128-0905 - Code cleanup for QXZ functions
 # 141230-0939 - Added code for on-the-fly language translations display
 # 150516-1314 - Fixed Javascript element problem, Issue #857
+# 151227-1746 - Added option for searching archived data
 #
 
 $startMS = microtime();
@@ -48,6 +49,8 @@ if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 if (isset($_GET["show_percentages"]))				{$show_percentages=$_GET["show_percentages"];}
 	elseif (isset($_POST["show_percentages"]))	{$show_percentages=$_POST["show_percentages"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 
@@ -74,6 +77,26 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$log_tables_array=array("vicidial_agent_log");
+for ($t=0; $t<count($log_tables_array); $t++) 
+	{
+	$table_name=$log_tables_array[$t];
+	$archive_table_name=use_archive_table($table_name);
+	if ($archive_table_name!=$table_name) {$archives_available="Y";}
+	}
+
+if ($search_archived_data) 
+	{
+	$vicidial_agent_log_table=use_archive_table("vicidial_agent_log");
+	}
+else
+	{
+	$vicidial_agent_log_table="vicidial_agent_log";
+	}
+#############
 
 if ($non_latin < 1)
 	{
@@ -376,7 +399,7 @@ if ( (preg_match('/\-\-ALL\-\-/',$user_group_string) ) or ($user_group_ct < 1) )
 else
 	{
 	$user_group_SQL = preg_replace('/,$/i', '',$user_group_SQL);
-	$user_group_agent_log_SQL = "and vicidial_agent_log.user_group IN($user_group_SQL)";
+	$user_group_agent_log_SQL = "and ".$vicidial_agent_log_table.".user_group IN($user_group_SQL)";
 	$user_group_SQL = "and vicidial_users.user_group IN($user_group_SQL)";
 	}
 
@@ -395,14 +418,14 @@ if ( (preg_match('/\-\-ALL\-\-/',$user_string) ) or ($user_ct < 1) )
 else
 	{
 	$user_SQL = preg_replace('/,$/i', '',$user_SQL);
-	$user_agent_log_SQL = "and vicidial_agent_log.user IN($user_SQL)";
+	$user_agent_log_SQL = "and ".$vicidial_agent_log_table.".user IN($user_SQL)";
 	$user_SQL = "and vicidial_users.user IN($user_SQL)";
 	}
 
 
 if ($DB) {$HTML_text.="$user_group_string|$user_group_ct|$user_groupQS|$i<BR>";}
 
-$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&DB=$DB&show_percentages=$show_percentages";
+$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&DB=$DB&show_percentages=$show_percentages&search_archived_data=$search_archived_data";
 
 $NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
@@ -522,8 +545,14 @@ $HTML_text.="</TD><TD VALIGN=TOP>";
 $HTML_text.=_QXZ("Display as").":<BR>";
 $HTML_text.="<select name='report_display_type'>";
 if ($report_display_type) {$HTML_text.="<option value='$report_display_type' selected>$report_display_type</option>";}
-$HTML_text.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select><BR><BR>\n";
-$HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>$NWB#agent_performance_detail$NWE\n";
+$HTML_text.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n";
+
+if ($archives_available=="Y") 
+	{
+	$HTML_text.="<input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."\n";
+	}
+
+$HTML_text.="<BR><BR><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>$NWB#agent_performance_detail$NWE\n";
 $HTML_text.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 $HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
@@ -583,7 +612,7 @@ else
 
 
 	# Get full list of agents for the past 30 days
-	$initial_user_stmt="select distinct vicidial_agent_log.user, full_name from vicidial_agent_log, vicidial_users where event_time <= '$query_date $time_END' and event_time >= '$thirtydaysago $time_BEGIN' $group_SQL $user_group_SQL $user_SQL and vicidial_agent_log.user=vicidial_users.user order by full_name asc";
+	$initial_user_stmt="select distinct ".$vicidial_agent_log_table.".user, full_name from ".$vicidial_agent_log_table.", vicidial_users where event_time <= '$query_date $time_END' and event_time >= '$thirtydaysago $time_BEGIN' $group_SQL $user_group_SQL $user_SQL and ".$vicidial_agent_log_table.".user=vicidial_users.user order by full_name asc";
 	if ($DB) {echo $initial_user_stmt;}
 	$initial_user_rslt=mysql_to_mysqli($initial_user_stmt, $link);
 	while ($user_row=mysqli_fetch_array($initial_user_rslt)) 
@@ -661,7 +690,7 @@ else
 
 		#########
 
-		$stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), vicidial_users.user_group from vicidial_users,vicidial_agent_log where event_time <= '$query_date $time_END' and event_time >= '$rpt_date $time_BEGIN' and vicidial_users.user=vicidial_agent_log.user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_SQL $user_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
+		$stmt="select count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), vicidial_users.user_group from vicidial_users,".$vicidial_agent_log_table." where event_time <= '$query_date $time_END' and event_time >= '$rpt_date $time_BEGIN' and vicidial_users.user=".$vicidial_agent_log_table.".user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_SQL $user_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
 		if ($DB) {print "<!-- $stmt //-->\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$rows_to_print = mysqli_num_rows($rslt);

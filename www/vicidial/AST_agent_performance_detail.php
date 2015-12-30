@@ -52,6 +52,7 @@
 # 150728-1230 - Fix for non-latin display issue #858
 # 150909-0728 - Fix for time display issue for downloads, issue #886
 # 151112-1338 - Added ability to search archive logs and show defunct users
+# 151229-2015 - Added feature to break down agent stats by day
 #
 
 $startMS = microtime();
@@ -90,6 +91,8 @@ if (isset($_GET["show_percentages"]))			{$show_percentages=$_GET["show_percentag
 	elseif (isset($_POST["show_percentages"]))	{$show_percentages=$_POST["show_percentages"];}
 if (isset($_GET["time_in_sec"]))			{$time_in_sec=$_GET["time_in_sec"];}
 	elseif (isset($_POST["time_in_sec"]))	{$time_in_sec=$_POST["time_in_sec"];}
+if (isset($_GET["breakdown_by_date"]))			{$breakdown_by_date=$_GET["breakdown_by_date"];}
+	elseif (isset($_POST["breakdown_by_date"]))	{$breakdown_by_date=$_POST["breakdown_by_date"];}
 if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
 	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 if (isset($_GET["show_defunct_users"]))			{$show_defunct_users=$_GET["show_defunct_users"];}
@@ -452,7 +455,7 @@ else
 
 if ($DB) {$HTML_text.="$user_group_string|$user_group_ct|$user_groupQS|$i<BR>";}
 
-$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&DB=$DB&show_percentages=$show_percentages&time_in_sec=$time_in_sec&search_archived_data=$search_archived_data&show_defunct_users=$show_defunct_users";
+$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&DB=$DB&show_percentages=$show_percentages&time_in_sec=$time_in_sec&search_archived_data=$search_archived_data&show_defunct_users=$show_defunct_users&breakdown_by_date=$breakdown_by_date";
 
 $NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
@@ -566,9 +569,10 @@ $HTML_text.="<option value=\"\">--</option>\n";
 $HTML_text.="<option value=\"AM\">"._QXZ("AM")."</option>\n";
 $HTML_text.="<option value=\"PM\">"._QXZ("PM")."</option>\n";
 $HTML_text.="<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
-$HTML_text.="</SELECT><BR><BR>\n";
+$HTML_text.="</SELECT><BR>\n";
 $HTML_text.="<input type='checkbox' name='show_percentages' value='checked' $show_percentages>"._QXZ("Show %s")."<BR>\n";
 $HTML_text.="<input type='checkbox' name='time_in_sec' value='checked' $time_in_sec>"._QXZ("Time in seconds")."<BR>\n";
+$HTML_text.="<input type='checkbox' name='breakdown_by_date' value='checked' $breakdown_by_date>"._QXZ("Show date breakdown")."<BR>\n";
 $HTML_text.="<input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."<BR>\n";
 $HTML_text.="<input type='checkbox' name='show_defunct_users' value='checked' $show_defunct_users>"._QXZ("Show defunct users")."\n";
 $HTML_text.="</TD><TD VALIGN=TOP>";
@@ -588,7 +592,6 @@ $HTML_text.="</FORM>\n\n";
 
 
 $HTML_text.="<PRE><FONT SIZE=2>\n";
-
 
 if (!$group)
 	{
@@ -628,20 +631,36 @@ $HTML_text.="---------- "._QXZ("AGENTS Details")." -------------\n\n";
 
 
 
-
-
 $statuses='-';
 $statusesTXT='';
 $statusesHEAD='';
 
+## Breakdown by date text
+if ($breakdown_by_date) 
+	{
+	$BBD_header="------------+";
+	$BBD_text=" | "._QXZ("CALL DATE",10); 
+	$BBD_filler=" | ".sprintf("%-10s", " "); 
+	$BBD_csv=_QXZ("CALL DATE",10)."\",\""; 
+	$BBD_csv_filler="\",\""; 
+	}
+else 
+	{
+	$BBD_header="";
+	$BBD_text="";
+	$BBD_filler=""; 
+	$BBD_csv="";
+	$BBD_csv_filler="";
+	}
+
+
 $CSV_header="\""._QXZ("Agent Performance Detail",47)." $NOW_TIME\"\n";
 $CSV_header.="\""._QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\"\n\n";
 $CSV_header.="\"---------- "._QXZ("AGENTS Details")." -------------\"\n";
-
 if ($show_percentages) {
-	$CSV_header.='"'._QXZ("USER NAME").'","'._QXZ("ID").'","'._QXZ("CURRENT USER GROUP").'","'._QXZ("MOST RECENT USER GROUP").'","'._QXZ("CALLS").'","'._QXZ("TIME").'","'._QXZ("PAUSE").'","'._QXZ("PAUSE").' %","'._QXZ("PAUSAVG").'","'._QXZ("WAIT").'","'._QXZ("WAIT").' %","'._QXZ("WAITAVG").'","'._QXZ("TALK").'","'._QXZ("TALK").' %","'._QXZ("TALKAVG").'","'._QXZ("DISPO").'","'._QXZ("DISPO").' %","'._QXZ("DISPAVG").'","'._QXZ("DEAD").'","'._QXZ("DEAD").' %","'._QXZ("DEADAVG").'","'._QXZ("CUSTOMER").'","'._QXZ("CUSTOMER").' %","'._QXZ("CUSTAVG").'"';
+	$CSV_header.='"'._QXZ("USER NAME").'","'._QXZ("ID").'","'._QXZ("CURRENT USER GROUP").'","'._QXZ("MOST RECENT USER GROUP").'","'.$BBD_csv._QXZ("CALLS").'","'._QXZ("TIME").'","'._QXZ("PAUSE").'","'._QXZ("PAUSE").' %","'._QXZ("PAUSAVG").'","'._QXZ("WAIT").'","'._QXZ("WAIT").' %","'._QXZ("WAITAVG").'","'._QXZ("TALK").'","'._QXZ("TALK").' %","'._QXZ("TALKAVG").'","'._QXZ("DISPO").'","'._QXZ("DISPO").' %","'._QXZ("DISPAVG").'","'._QXZ("DEAD").'","'._QXZ("DEAD").' %","'._QXZ("DEADAVG").'","'._QXZ("CUSTOMER").'","'._QXZ("CUSTOMER").' %","'._QXZ("CUSTAVG").'"';
 } else {
-	$CSV_header.='"'._QXZ("USER NAME").'","'._QXZ("ID").'","'._QXZ("CURRENT USER GROUP").'","'._QXZ("MOST RECENT USER GROUP").'","'._QXZ("CALLS").'","'._QXZ("TIME").'","'._QXZ("PAUSE").'","'._QXZ("PAUSAVG").'","'._QXZ("WAIT").'","'._QXZ("WAITAVG").'","'._QXZ("TALK").'","'._QXZ("TALKAVG").'","'._QXZ("DISPO").'","'._QXZ("DISPAVG").'","'._QXZ("DEAD").'","'._QXZ("DEADAVG").'","'._QXZ("CUSTOMER").'","'._QXZ("CUSTAVG").'"';
+	$CSV_header.='"'._QXZ("USER NAME").'","'._QXZ("ID").'","'._QXZ("CURRENT USER GROUP").'","'._QXZ("MOST RECENT USER GROUP").'","'.$BBD_csv._QXZ("CALLS").'","'._QXZ("TIME").'","'._QXZ("PAUSE").'","'._QXZ("PAUSAVG").'","'._QXZ("WAIT").'","'._QXZ("WAITAVG").'","'._QXZ("TALK").'","'._QXZ("TALKAVG").'","'._QXZ("DISPO").'","'._QXZ("DISPAVG").'","'._QXZ("DEAD").'","'._QXZ("DEADAVG").'","'._QXZ("CUSTOMER").'","'._QXZ("CUSTAVG").'"';
 }
 
 
@@ -769,14 +788,14 @@ while ($stat_row=mysqli_fetch_row($stat_rslt)) {
 
 	if ($show_defunct_users=="checked")
 		{
-		$stmt="SELECT count(*) as calls,sum(talk_sec) as talk,'' as full_name,user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), '' as user_group from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 and status='$current_status' $group_SQL $user_agent_log_SQL $user_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
+		$stmt="SELECT count(*) as calls,sum(talk_sec) as talk,'' as full_name,user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), '' as user_group from ".$agent_log_table.",date(event_time) as call_date where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 and status='$current_status' $group_SQL $user_agent_log_SQL $user_SQL group by user,full_name,user_group,status,call_date order by full_name,user,status desc limit 500000;";
 		}
 	else
 		{
-		$stmt="SELECT count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), vicidial_users.user_group from vicidial_users,".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=".$agent_log_table.".user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 and status='$current_status' $group_SQL $user_group_SQL $user_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
+		$stmt="SELECT count(*) as calls,sum(talk_sec) as talk,full_name,vicidial_users.user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), vicidial_users.user_group,date(event_time) as call_date from vicidial_users,".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and vicidial_users.user=".$agent_log_table.".user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 and status='$current_status' $group_SQL $user_group_SQL $user_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
 		}
 	$rslt=mysql_to_mysqli($stmt, $link);
-	if ($DB) {$HTML_text.="$stmt\n";}
+	if ($DB) {$HTML_text.="$stmt\n";} 
 	$rows_to_print+=mysqli_num_rows($rslt);
 
 	$stat_rows_to_print = mysqli_num_rows($rslt);
@@ -821,6 +840,7 @@ while ($stat_row=mysqli_fetch_row($stat_rslt)) {
 		$status[$q] =		strtoupper($row[7]);
 		$dead_sec[$q] =		$row[8];
 		$user_group[$q] =	$user_group_val;
+		$call_date[$q] =		$row[10];
 		$customer_sec[$q] =	($talk_sec[$q] - $dead_sec[$q]);
 
 		if (strlen($status[$q])>0) {$userTOTcalls[$row[3]]+=$row[0];}
@@ -867,15 +887,14 @@ $CSV_header.="\n";
 $CSV_lines='';
 
 $ASCII_text.=_QXZ("CALL STATS BREAKDOWN").": ("._QXZ("Statistics related to handling of calls only").")     <a href=\"$LINKbase&stage=$stage&file_download=1\">["._QXZ("DOWNLOAD")."]</a>\n";
-
 if ($show_percentages) {
-	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
-	$ASCII_text.="| <a href=\"$LINKbase\">"._QXZ("USER NAME",15)."</a> | <a href=\"$LINKbase&stage=ID\">"._QXZ("ID",8)."</a> | "._QXZ("CURRENT USER GROUP",20)." | "._QXZ("MOST RECENT USER GRP",20)." | <a href=\"$LINKbase&stage=LEADS\">"._QXZ("CALLS",6)."</a> | <a href=\"$LINKbase&stage=TIME\">"._QXZ("TIME",9)."</a> | "._QXZ("PAUSE",8)." | "._QXZ("PAUSE",8)." % |"._QXZ("PAUSAVG",7)." | "._QXZ("WAIT",8)." | "._QXZ("WAIT",8)." % |"._QXZ("WAITAVG",7)." | "._QXZ("TALK",8)." | "._QXZ("TALK",8)." % |"._QXZ("TALKAVG",7)." | "._QXZ("DISPO",8)." | "._QXZ("DISPO",8)." % |"._QXZ("DISPAVG",7)." | "._QXZ("DEAD",7)." | "._QXZ("DEAD",8)." % |"._QXZ("DEADAVG",7)." | "._QXZ("CUSTOMER",8)." | "._QXZ("CUSTOMER",8)." % |"._QXZ("CUSTAVG",7)." |$statusesHTML\n";
-	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
+	$ASCII_text.="+-----------------+----------+----------------------+----------------------+".$BBD_header."--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
+	$ASCII_text.="| <a href=\"$LINKbase\">"._QXZ("USER NAME",15)."</a> | <a href=\"$LINKbase&stage=ID\">"._QXZ("ID",8)."</a> | "._QXZ("CURRENT USER GROUP",20)." | "._QXZ("MOST RECENT USER GRP",20).$BBD_text." | <a href=\"$LINKbase&stage=LEADS\">"._QXZ("CALLS",6)."</a> | <a href=\"$LINKbase&stage=TIME\">"._QXZ("TIME",9)."</a> | "._QXZ("PAUSE",8)." | "._QXZ("PAUSE",8)." % |"._QXZ("PAUSAVG",7)." | "._QXZ("WAIT",8)." | "._QXZ("WAIT",8)." % |"._QXZ("WAITAVG",7)." | "._QXZ("TALK",8)." | "._QXZ("TALK",8)." % |"._QXZ("TALKAVG",7)." | "._QXZ("DISPO",8)." | "._QXZ("DISPO",8)." % |"._QXZ("DISPAVG",7)." | "._QXZ("DEAD",7)." | "._QXZ("DEAD",8)." % |"._QXZ("DEADAVG",7)." | "._QXZ("CUSTOMER",8)." | "._QXZ("CUSTOMER",8)." % |"._QXZ("CUSTAVG",7)." |$statusesHTML\n";
+	$ASCII_text.="+-----------------+----------+----------------------+----------------------+".$BBD_header."--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
 } else {
-	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-	$ASCII_text.="| <a href=\"$LINKbase\">"._QXZ("USER NAME",15)."</a> | <a href=\"$LINKbase&stage=ID\">"._QXZ("ID",8)."</a> | "._QXZ("CURRENT USER GROUP",20)." | "._QXZ("MOST RECENT USER GRP",20)." | <a href=\"$LINKbase&stage=LEADS\">"._QXZ("CALLS",6)."</a> | <a href=\"$LINKbase&stage=TIME\">"._QXZ("TIME",9)."</a> | "._QXZ("PAUSE",8)." |"._QXZ("PAUSAVG",7)." | "._QXZ("WAIT",8)." |"._QXZ("WAITAVG",7)." | "._QXZ("TALK",8)." |"._QXZ("TALKAVG",7)." | "._QXZ("DISPO",8)." |"._QXZ("DISPAVG",7)." | "._QXZ("DEAD",8)." |"._QXZ("DEADAVG",7)." | "._QXZ("CUSTOMER",8)." |"._QXZ("CUSTAVG",7)." |$statusesHTML\n";
-	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+	$ASCII_text.="+-----------------+----------+----------------------+----------------------+".$BBD_header."--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+	$ASCII_text.="| <a href=\"$LINKbase\">"._QXZ("USER NAME",15)."</a> | <a href=\"$LINKbase&stage=ID\">"._QXZ("ID",8)."</a> | "._QXZ("CURRENT USER GROUP",20)." | "._QXZ("MOST RECENT USER GRP",20).$BBD_text." | <a href=\"$LINKbase&stage=LEADS\">"._QXZ("CALLS",6)."</a> | <a href=\"$LINKbase&stage=TIME\">"._QXZ("TIME",9)."</a> | "._QXZ("PAUSE",8)." |"._QXZ("PAUSAVG",7)." | "._QXZ("WAIT",8)." |"._QXZ("WAITAVG",7)." | "._QXZ("TALK",8)." |"._QXZ("TALKAVG",7)." | "._QXZ("DISPO",8)." |"._QXZ("DISPAVG",7)." | "._QXZ("DEAD",8)." |"._QXZ("DEADAVG",7)." | "._QXZ("CUSTOMER",8)." |"._QXZ("CUSTAVG",7)." |$statusesHTML\n";
+	$ASCII_text.="+-----------------+----------+----------------------+----------------------+".$BBD_header."--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
 }
 
 
@@ -885,14 +904,206 @@ while ($m < $k)
 	{
 	$Suser=$usersARY[$m];
 
+	if ($breakdown_by_date) 
+		{
+		$Toutput_sub="";
+		$CSV_lines_sub="";
+
+		$SstatusesHTML='';
+		$CSVstatuses='';
+
+		$Stalk_sec_pct=0;
+		$Spause_sec_pct=0;
+		$Swait_sec_pct=0;
+		$Sdispo_sec_pct=0;
+		$Sdead_sec_pct=0;
+
+		$date_stmt="select distinct date(event_time) as call_date from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and user='$Suser' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_agent_log_SQL $user_agent_log_SQL order by call_date asc limit 500000;";
+		if ($DB) {$ASCII_text.=$date_stmt."\n";}
+		$date_rslt=mysql_to_mysqli($date_stmt, $link);
+		while($date_row=mysqli_fetch_row($date_rslt)) 
+			{
+			$call_dateX=$date_row[0];
+
+			$cd_stmt="SELECT count(*) as calls,sum(talk_sec) as talk,'' as full_name,user,sum(pause_sec),sum(wait_sec),sum(dispo_sec),status,sum(dead_sec), '' as user_group from ".$agent_log_table." where date(event_time)='$call_dateX' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 and user='$Suser' $group_SQL $user_agent_log_SQL $user_SQL group by user,full_name,user_group,status order by full_name,user,status desc limit 500000;";
+			$cd_rslt=mysql_to_mysqli($cd_stmt, $link); 
+			if ($DB) {$ASCII_text.=$cd_stmt."\n";}
+
+			$x=0;
+			while ($cd_row=mysqli_fetch_row($cd_rslt)) 
+				{
+				$calls_sub[$x] =		$cd_row[0];
+				$talk_sec_sub[$x] =		$cd_row[1];
+				$user_sub[$x] =			$cd_row[3];
+				$pause_sec_sub[$x] =	$cd_row[4];
+				$wait_sec_sub[$x] =		$cd_row[5];
+				$dispo_sec_sub[$x] =	$cd_row[6];
+				$status_sub[$x] =		strtoupper($cd_row[7]);
+				$dead_sec_sub[$x] =		$cd_row[8];
+				$customer_sec_sub[$x] =	($talk_sec_sub[$x] - $dead_sec_sub[$x]);
+				$x++;
+				}
+			
+
+			$Stime=0;
+			$Scalls=0;
+			$Stalk_sec=0;
+			$Spause_sec=0;
+			$Swait_sec=0;
+			$Sdispo_sec=0;
+			$Sdead_sec=0;
+			$Scustomer_sec=0;
+			$o=0;
+			$SstatusesHTML='';
+			$CSVstatuses='';
+			while ($o < $j)
+				{
+				$Sstatus=$statusesARY[$o];
+				$Scall_date=$call_date[$o];
+				$SstatusTXT='';
+
+				$i=0; $status_found=0;
+				while ($i < $x)
+					{
+					if ($Sstatus=="$status_sub[$i]")
+						{
+						$Scalls =		($Scalls + $calls_sub[$i]);
+						$Stalk_sec =	($Stalk_sec + $talk_sec_sub[$i]);
+						$Spause_sec =	($Spause_sec + $pause_sec_sub[$i]);
+						$Swait_sec =	($Swait_sec + $wait_sec_sub[$i]);
+						$Sdispo_sec =	($Sdispo_sec + $dispo_sec_sub[$i]);
+						$Sdead_sec =	($Sdead_sec + $dead_sec_sub[$i]);
+						$Scustomer_sec =	($Scustomer_sec + $customer_sec_sub[$i]);
+						$SstatusTXT = sprintf("%8s", $calls_sub[$i]);
+						$SstatusesHTML .= " $SstatusTXT |";
+
+						$CSVstatuses.=",\"$calls_sub[$i]\"";
+
+						if ($show_percentages) 
+							{
+							$SstatusTXT_pct=sprintf("%8s", sprintf("%0.2f", MathZDC(100*$calls[$i], $userTOTcalls[$Suser])));
+							$SstatusesHTML .= " $SstatusTXT_pct % |";
+							$CSVstatuses.=",\"$SstatusTXT_pct %\"";
+							}
+
+						$status_found++;
+						}
+					$i++;
+					}
+				if ($status_found < 1)
+					{
+					$SstatusesHTML .= "        0 |";
+					$CSVstatuses.=",\"0\"";
+					if ($show_percentages) 
+						{
+						$SstatusesHTML .= "     0.00 % |";
+						$CSVstatuses.=",\"0.00 %\"";
+						}
+					}
+				### END loop through each stat line ###
+				$o++;
+				}
+
+			$Stime = ($Stalk_sec + $Spause_sec + $Swait_sec + $Sdispo_sec);
+			
+			$Stalk_avg = MathZDC($Stalk_sec, $Scalls);
+			$Spause_avg = MathZDC($Spause_sec, $Scalls);
+			$Swait_avg = MathZDC($Swait_sec, $Scalls);
+			$Sdispo_avg = MathZDC($Sdispo_sec, $Scalls);
+			$Sdead_avg = MathZDC($Sdead_sec, $Scalls);
+			$Scustomer_avg = MathZDC($Scustomer_sec, $Scalls);
+
+			$RAWuser = $Suser;
+			$RAWcalls = $Scalls;
+			$Scalls =	sprintf("%6s", $Scalls);
+			$Sfull_nameRAW = $Sfull_name;
+			$SuserRAW = $Suser;
+
+			$pfUSERtime_MS =			sec_convert($Stime,$TIME_H_agentperfdetail); 
+			$pfUSERtotTALK_MS =			sec_convert($Stalk_sec,$TIME_H_agentperfdetail); 
+			$pfUSERtotTALK_MS_pct =		sprintf("%0.2f", MathZDC(100*$Stalk_sec, $Stime));
+			$pfUSERavgTALK_MS =			sec_convert($Stalk_avg,$TIME_M_agentperfdetail); 
+			$USERtotPAUSE_MS =			sec_convert($Spause_sec,$TIME_H_agentperfdetail); 
+			$pfUSERtotPAUSE_MS_pct =	sprintf("%0.2f", MathZDC(100*$Spause_sec, $Stime));
+			$USERavgPAUSE_MS =			sec_convert($Spause_avg,$TIME_M_agentperfdetail); 
+			$USERtotWAIT_MS =			sec_convert($Swait_sec,$TIME_H_agentperfdetail); 
+			$pfUSERtotWAIT_MS_pct =		sprintf("%0.2f", MathZDC(100*$Swait_sec, $Stime));
+			$USERavgWAIT_MS =			sec_convert($Swait_avg,$TIME_M_agentperfdetail); 
+			$USERtotDISPO_MS =			sec_convert($Sdispo_sec,$TIME_H_agentperfdetail); 
+			$pfUSERtotDISPO_MS_pct =	sprintf("%0.2f", MathZDC(100*$Sdispo_sec, $Stime));
+			$USERavgDISPO_MS =			sec_convert($Sdispo_avg,$TIME_M_agentperfdetail); 
+			$USERtotDEAD_MS =			sec_convert($Sdead_sec,$TIME_H_agentperfdetail); 
+			$pfUSERtotDEAD_MS_pct =		sprintf("%0.2f", MathZDC(100*$Sdead_sec, $Stime));
+			$USERavgDEAD_MS =			sec_convert($Sdead_avg,$TIME_M_agentperfdetail); 
+			$USERtotCUSTOMER_MS	=		sec_convert($Scustomer_sec,$TIME_H_agentperfdetail);
+			$pfUSERtotCUSTOMER_MS_pct =	sprintf("%0.2f", MathZDC(100*$Scustomer_sec, $Stime));
+			$USERavgCUSTOMER_MS =		sec_convert($Scustomer_avg,$TIME_M_agentperfdetail); 
+
+			$pfUSERtime_MS =			sprintf("%9s", $pfUSERtime_MS);
+			$pfUSERtotTALK_MS =			sprintf("%8s", $pfUSERtotTALK_MS);
+			$pfUSERtotTALK_MS_pct =		sprintf("%8s", $pfUSERtotTALK_MS_pct);
+			$pfUSERavgTALK_MS =			sprintf("%6s", $pfUSERavgTALK_MS);
+			$pfUSERtotPAUSE_MS =		sprintf("%8s", $USERtotPAUSE_MS);
+			$pfUSERtotPAUSE_MS_pct =	sprintf("%8s", $pfUSERtotPAUSE_MS_pct);
+			$pfUSERavgPAUSE_MS =		sprintf("%6s", $USERavgPAUSE_MS);
+			$pfUSERtotWAIT_MS =			sprintf("%8s", $USERtotWAIT_MS);
+			$pfUSERtotWAIT_MS_pct =		sprintf("%8s", $pfUSERtotWAIT_MS_pct);
+			$pfUSERavgWAIT_MS =			sprintf("%6s", $USERavgWAIT_MS);
+			$pfUSERtotDISPO_MS =		sprintf("%8s", $USERtotDISPO_MS);
+			$pfUSERtotDISPO_MS_pct =	sprintf("%8s", $pfUSERtotDISPO_MS_pct);
+			$pfUSERavgDISPO_MS =		sprintf("%6s", $USERavgDISPO_MS);
+			$pfUSERtotDEAD_MS =			sprintf("%8s", $USERtotDEAD_MS);
+			$pfUSERtotDEAD_MS_pct =		sprintf("%8s", $pfUSERtotDEAD_MS_pct);
+			$pfUSERavgDEAD_MS =			sprintf("%6s", $USERavgDEAD_MS);
+			$pfUSERtotCUSTOMER_MS =		sprintf("%8s", $USERtotCUSTOMER_MS);
+			$pfUSERtotCUSTOMER_MS_pct =	sprintf("%8s", $pfUSERtotCUSTOMER_MS_pct);
+			$pfUSERavgCUSTOMER_MS =		sprintf("%6s", $USERavgCUSTOMER_MS);
+			$PAUSEtotal[$m] = $pfUSERtotPAUSE_MS;
+
+			if ($non_latin < 1)
+				{
+				$Scall_date=	sprintf("%-10s", $call_dateX);
+				$Sfull_name=	sprintf("%-15s", " "); 
+				$Suser_group=	sprintf("%-20s", " "); 
+				$Slast_user_group=	sprintf("%-20s", " "); 
+				$Suser_sub =		sprintf("%-8s", " ");
+				}
+			else
+				{	
+				$Scall_date=	sprintf("%-10s", $call_dateX);
+				$Sfull_name=	sprintf("%-45s", " "); 
+				$Suser_group=	sprintf("%-60s", " "); 
+				$Slast_user_group=	sprintf("%-60s", " "); 
+				$Suser_sub =	sprintf("%-24s", " ");
+				}
+
+			if ($show_percentages) {
+				$Toutput_sub .= "| $Sfull_name | $Suser_sub | $Suser_group | $Slast_user_group | $Scall_date | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERtotPAUSE_MS_pct % | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERtotWAIT_MS_pct % | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERtotTALK_MS_pct % | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERtotDISPO_MS_pct % | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERtotDEAD_MS_pct % | $pfUSERavgDEAD_MS | $pfUSERtotCUSTOMER_MS | $pfUSERtotCUSTOMER_MS_pct % | $pfUSERavgCUSTOMER_MS |$SstatusesHTML\n";
+			} else {
+				$Toutput_sub .= "| $Sfull_name | $Suser_sub | $Suser_group | $Slast_user_group | $Scall_date | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERavgDEAD_MS | $pfUSERtotCUSTOMER_MS | $pfUSERavgCUSTOMER_MS |$SstatusesHTML\n";
+			}
+
+
+			$CSV_lines_sub.="\"\",";
+			if ($show_percentages) {
+				$CSV_lines_sub.=preg_replace('/\s/', '', "\"\",\"\",\"\",\"$Scall_date\",\"$Scalls\",\"$pfUSERtime_MS\",\"$pfUSERtotPAUSE_MS\",\"$pfUSERtotPAUSE_MS_pct\",\"$pfUSERavgPAUSE_MS\",\"$pfUSERtotWAIT_MS\",\"$pfUSERtotWAIT_MS_pct\",\"$pfUSERavgWAIT_MS\",\"$pfUSERtotTALK_MS\",\"$pfUSERtotTALK_MS_pct\",\"$pfUSERavgTALK_MS\",\"$pfUSERtotDISPO_MS\",\"$pfUSERtotDISPO_MS_pct\",\"$pfUSERavgDISPO_MS\",\"$pfUSERtotDEAD_MS\",\"$pfUSERtotDEAD_MS_pct\",\"$pfUSERavgDEAD_MS\",\"$pfUSERtotCUSTOMER_MS\",\"$pfUSERtotCUSTOMER_MS_pct\",\"$pfUSERavgCUSTOMER_MS\"$CSVstatuses");
+			} else {
+				$CSV_lines_sub.=preg_replace('/\s/', '', "\"\",\"\",\"\",\"$Scall_date\",\"$Scalls\",\"$pfUSERtime_MS\",\"$pfUSERtotPAUSE_MS\",\"$pfUSERavgPAUSE_MS\",\"$pfUSERtotWAIT_MS\",\"$pfUSERavgWAIT_MS\",\"$pfUSERtotTALK_MS\",\"$pfUSERavgTALK_MS\",\"$pfUSERtotDISPO_MS\",\"$pfUSERavgDISPO_MS\",\"$pfUSERtotDEAD_MS\",\"$pfUSERavgDEAD_MS\",\"$pfUSERtotCUSTOMER_MS\",\"$pfUSERavgCUSTOMER_MS\"$CSVstatuses");
+			}
+			$CSV_lines_sub.="\n";
+
+			}
+		if ($show_percentages) 
+			{
+			$Toutput_sub.="+-----------------+----------+----------------------+----------------------+".$BBD_header."--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
+			} 
+		else 
+			{
+			$Toutput_sub.="+-----------------+----------+----------------------+----------------------+".$BBD_header."--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+			}
+		}
+
 	$Slast_user_group=$recent_user_groups[$Suser];
-#	$recent_UG_stmt="SELECT max(event_time) as most_recent_event, user_group from vicidial_agent_log where user='$Suser' and event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 $group_SQL $user_group_agent_log_SQL group by user_group order by most_recent_event desc limit 1";
-#	if ($DB) {$HTML_text.="$recent_UG_stmt\n";}
-#	$recent_UG_rslt=mysql_to_mysqli($recent_UG_stmt, $link);
-#	while ($UG_row=mysqli_fetch_row($recent_UG_rslt)) {
-#		$Slast_user_group=$UG_row[1];
-#		$recent_user_groups[$Suser]=$UG_row[1];
-#	}
 
 	$Sfull_name=$user_namesARY[$m];
 	$Suser_group=$user_groupsARY[$m];
@@ -994,6 +1205,7 @@ while ($m < $k)
 
 	if ($non_latin < 1)
 		{
+		$Scall_date=	sprintf("%-10s", " ");
 		$Sfull_name=	sprintf("%-15s", $Sfull_name); 
 		while(strlen($Sfull_name)>15) {$Sfull_name = substr("$Sfull_name", 0, -1);}
 		$Suser_group=	sprintf("%-20s", $Suser_group); 
@@ -1005,6 +1217,7 @@ while ($m < $k)
 		}
 	else
 		{	
+		$Scall_date=	sprintf("%-10s", " ");
 		$Sfull_name=	sprintf("%-45s", $Sfull_name); 
 		while(mb_strlen($Sfull_name,'utf-8')>15) {$Sfull_name = mb_substr("$Sfull_name", 0, -1,'utf-8');}
 		$Suser_group=	sprintf("%-60s", $Suser_group); 
@@ -1088,19 +1301,22 @@ while ($m < $k)
 	$PAUSEtotal[$m] = $pfUSERtotPAUSE_MS;
 
 	if ($show_percentages) {
-		$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Suser_group | $Slast_user_group | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERtotPAUSE_MS_pct % | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERtotWAIT_MS_pct % | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERtotTALK_MS_pct % | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERtotDISPO_MS_pct % | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERtotDEAD_MS_pct % | $pfUSERavgDEAD_MS | $pfUSERtotCUSTOMER_MS | $pfUSERtotCUSTOMER_MS_pct % | $pfUSERavgCUSTOMER_MS |$SstatusesHTML\n";
+		$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Suser_group | $Slast_user_group$BBD_filler | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERtotPAUSE_MS_pct % | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERtotWAIT_MS_pct % | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERtotTALK_MS_pct % | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERtotDISPO_MS_pct % | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERtotDEAD_MS_pct % | $pfUSERavgDEAD_MS | $pfUSERtotCUSTOMER_MS | $pfUSERtotCUSTOMER_MS_pct % | $pfUSERavgCUSTOMER_MS |$SstatusesHTML\n";
 	} else {
-		$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Suser_group | $Slast_user_group | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERavgDEAD_MS | $pfUSERtotCUSTOMER_MS | $pfUSERavgCUSTOMER_MS |$SstatusesHTML\n";
+		$Toutput = "| $Sfull_name | <a href=\"./user_stats.php?user=$RAWuser\">$Suser</a> | $Suser_group | $Slast_user_group$BBD_filler | $Scalls | $pfUSERtime_MS | $pfUSERtotPAUSE_MS | $pfUSERavgPAUSE_MS | $pfUSERtotWAIT_MS | $pfUSERavgWAIT_MS | $pfUSERtotTALK_MS | $pfUSERavgTALK_MS | $pfUSERtotDISPO_MS | $pfUSERavgDISPO_MS | $pfUSERtotDEAD_MS | $pfUSERavgDEAD_MS | $pfUSERtotCUSTOMER_MS | $pfUSERavgCUSTOMER_MS |$SstatusesHTML\n";
 	}
 
+	$Toutput.=$Toutput_sub;
 
 	$CSV_lines.="\"$Sfull_nameRAW\",";
 	if ($show_percentages) {
-		$CSV_lines.=preg_replace('/\s/', '', "\"$SuserRAW\",\"$Suser_group\",\"$Slast_user_group\",\"$Scalls\",\"$pfUSERtime_MS\",\"$pfUSERtotPAUSE_MS\",\"$pfUSERtotPAUSE_MS_pct\",\"$pfUSERavgPAUSE_MS\",\"$pfUSERtotWAIT_MS\",\"$pfUSERtotWAIT_MS_pct\",\"$pfUSERavgWAIT_MS\",\"$pfUSERtotTALK_MS\",\"$pfUSERtotTALK_MS_pct\",\"$pfUSERavgTALK_MS\",\"$pfUSERtotDISPO_MS\",\"$pfUSERtotDISPO_MS_pct\",\"$pfUSERavgDISPO_MS\",\"$pfUSERtotDEAD_MS\",\"$pfUSERtotDEAD_MS_pct\",\"$pfUSERavgDEAD_MS\",\"$pfUSERtotCUSTOMER_MS\",\"$pfUSERtotCUSTOMER_MS_pct\",\"$pfUSERavgCUSTOMER_MS\"$CSVstatuses");
+		$CSV_lines.=preg_replace('/\s/', '', "\"$SuserRAW\",\"$Suser_group\",\"$Slast_user_group$BBD_csv_filler\",\"$Scalls\",\"$pfUSERtime_MS\",\"$pfUSERtotPAUSE_MS\",\"$pfUSERtotPAUSE_MS_pct\",\"$pfUSERavgPAUSE_MS\",\"$pfUSERtotWAIT_MS\",\"$pfUSERtotWAIT_MS_pct\",\"$pfUSERavgWAIT_MS\",\"$pfUSERtotTALK_MS\",\"$pfUSERtotTALK_MS_pct\",\"$pfUSERavgTALK_MS\",\"$pfUSERtotDISPO_MS\",\"$pfUSERtotDISPO_MS_pct\",\"$pfUSERavgDISPO_MS\",\"$pfUSERtotDEAD_MS\",\"$pfUSERtotDEAD_MS_pct\",\"$pfUSERavgDEAD_MS\",\"$pfUSERtotCUSTOMER_MS\",\"$pfUSERtotCUSTOMER_MS_pct\",\"$pfUSERavgCUSTOMER_MS\"$CSVstatuses");
 	} else {
-		$CSV_lines.=preg_replace('/\s/', '', "\"$SuserRAW\",\"$Suser_group\",\"$Slast_user_group\",\"$Scalls\",\"$pfUSERtime_MS\",\"$pfUSERtotPAUSE_MS\",\"$pfUSERavgPAUSE_MS\",\"$pfUSERtotWAIT_MS\",\"$pfUSERavgWAIT_MS\",\"$pfUSERtotTALK_MS\",\"$pfUSERavgTALK_MS\",\"$pfUSERtotDISPO_MS\",\"$pfUSERavgDISPO_MS\",\"$pfUSERtotDEAD_MS\",\"$pfUSERavgDEAD_MS\",\"$pfUSERtotCUSTOMER_MS\",\"$pfUSERavgCUSTOMER_MS\"$CSVstatuses");
+		$CSV_lines.=preg_replace('/\s/', '', "\"$SuserRAW\",\"$Suser_group\",\"$Slast_user_group$BBD_csv_filler\",\"$Scalls\",\"$pfUSERtime_MS\",\"$pfUSERtotPAUSE_MS\",\"$pfUSERavgPAUSE_MS\",\"$pfUSERtotWAIT_MS\",\"$pfUSERavgWAIT_MS\",\"$pfUSERtotTALK_MS\",\"$pfUSERavgTALK_MS\",\"$pfUSERtotDISPO_MS\",\"$pfUSERavgDISPO_MS\",\"$pfUSERtotDEAD_MS\",\"$pfUSERavgDEAD_MS\",\"$pfUSERtotCUSTOMER_MS\",\"$pfUSERavgCUSTOMER_MS\"$CSVstatuses");
 	}
 	$CSV_lines.="\n";
+	$CSV_lines.=$CSV_lines_sub;
+
 
 	$TOPsorted_output[$m] = $Toutput;
 
@@ -1257,13 +1473,19 @@ if ($file_download == 0 || !$file_download)
 	}
 
 if ($show_percentages) {
-	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
-	$ASCII_text.="|  "._QXZ("TOTALS",33)." "._QXZ("AGENTS",32,"r").":$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTtotPAUSE_MS_pct % | $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTtotWAIT_MS_pct % | $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTtotTALK_MS_pct % | $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTtotDISPO_MS_pct % | $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTtotDEAD_MS_pct % | $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTtotCUSTOMER_MS_pct % | $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
-	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
+	if (!$breakdown_by_date) # Prevent additional line from being printed - has to be here, won't work above in if-breakdown-by-date loop when results are sorted
+		{
+		$ASCII_text.="+-----------------+----------+----------------------+----------------------+".$BBD_header."--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
+		}
+	$ASCII_text.="|  "._QXZ("TOTALS",33)." "._QXZ("AGENTS",32,"r").":$TOT_AGENTS$BBD_filler | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTtotPAUSE_MS_pct % | $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTtotWAIT_MS_pct % | $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTtotTALK_MS_pct % | $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTtotDISPO_MS_pct % | $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTtotDEAD_MS_pct % | $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTtotCUSTOMER_MS_pct % | $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
+	$ASCII_text.="+-----------------+----------+----------------------+----------------------+".$BBD_header."--------+-----------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+----------+------------+--------+$statusesHEAD\n";
 } else {
-	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
-	$ASCII_text.="|  "._QXZ("TOTALS",33)." "._QXZ("AGENTS",32,"r").":$TOT_AGENTS | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
-	$ASCII_text.="+-----------------+----------+----------------------+----------------------+--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+	if (!$breakdown_by_date) # Prevent additional line from being printed - has to be here, won't work above in if-breakdown-by-date loop when results are sorted
+		{
+		$ASCII_text.="+-----------------+----------+----------------------+----------------------+".$BBD_header."--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
+		}
+	$ASCII_text.="|  "._QXZ("TOTALS",33)." "._QXZ("AGENTS",32,"r").":$TOT_AGENTS$BBD_filler | $TOTcalls| $TOTtime_MS|$TOTtotPAUSE_MS| $TOTavgPAUSE_MS |$TOTtotWAIT_MS| $TOTavgWAIT_MS |$TOTtotTALK_MS| $TOTavgTALK_MS |$TOTtotDISPO_MS| $TOTavgDISPO_MS |$TOTtotDEAD_MS| $TOTavgDEAD_MS |$TOTtotCUSTOMER_MS| $TOTavgCUSTOMER_MS |$SUMstatusesHTML\n";
+	$ASCII_text.="+-----------------+----------+----------------------+----------------------+".$BBD_header."--------+-----------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+----------+--------+$statusesHEAD\n";
 }
 
 for ($e=0; $e<count($statusesARY); $e++) {

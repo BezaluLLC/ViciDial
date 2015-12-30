@@ -23,6 +23,7 @@
 # 141114-0828 - Finalized adding QXZ translation to all admin files
 # 141230-1444 - Added code for on-the-fly language translations display
 # 150516-1302 - Fixed Javascript element problem, Issue #857
+# 151229-2009 - Added archive search option
 #
 
 $startMS = microtime();
@@ -47,6 +48,8 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 $report_name = 'Lists Campaign Statuses Report';
 $db_source = 'M';
@@ -71,6 +74,22 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$table_name="vicidial_list";
+$archive_table_name=use_archive_table($table_name);
+if ($archive_table_name!=$table_name) {$archives_available="Y";}
+
+if ($search_archived_data) 
+	{
+	$vicidial_list_table=use_archive_table("vicidial_list");
+	}
+else
+	{
+	$vicidial_list_table="vicidial_list";
+	}
+#############
 
 if ($non_latin < 1)
 	{
@@ -318,7 +337,7 @@ while ($i < $statcats_to_print)
         }
 	$category_statuses=substr($category_statuses, 0, -1);
 
-	$category_stmt="select count(*) from vicidial_list where status in ($category_statuses) and list_id IN($lists_id_str)";
+	$category_stmt="select count(*) from ".$vicidial_list_table." where status in ($category_statuses) and list_id IN($lists_id_str)";
 	if ($DB) {echo "$category_stmt\n";}
 	$category_rslt=mysql_to_mysqli($category_stmt, $link);
 	$category_row=mysqli_fetch_row($category_rslt);
@@ -434,8 +453,13 @@ $MAIN.=_QXZ("Display as").":<BR/>";
 $MAIN.="<select name='report_display_type'>";
 if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
 $MAIN.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>&nbsp; ";
-$MAIN.="<BR><BR>\n";
-$MAIN.="<INPUT type=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
+
+if ($archives_available=="Y") 
+	{
+	$MAIN.="<BR><BR><input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."\n";
+	}
+
+$MAIN.="<BR><BR><INPUT type=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $MAIN.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 $MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 if (strlen($group[0]) > 1)
@@ -473,7 +497,7 @@ else
 	$TOTALleads = 0;
 
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- "._QXZ("LIST ID SUMMARY",19)." <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=1\">"._QXZ("DOWNLOAD")."</a>\n";
+	$OUToutput .= "---------- "._QXZ("LIST ID SUMMARY",19)." <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
 	$OUToutput .= "+------------------------------------------+------------+----------+\n";
 	$OUToutput .= "| "._QXZ("LIST",40)." | "._QXZ("LEADS",10)." | "._QXZ("ACTIVE",8)." |\n";
 	$OUToutput .= "+------------------------------------------+------------+----------+\n";
@@ -497,7 +521,7 @@ else
 	}
 	$lists_id_str=substr($lists_id_str,0,-1);
 
-	$stmt="select count(*),list_id from vicidial_list where list_id IN($lists_id_str) group by list_id;";
+	$stmt="select count(*),list_id from ".$vicidial_list_table." where list_id IN($lists_id_str) group by list_id;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$listids_to_print = mysqli_num_rows($rslt);
@@ -595,7 +619,7 @@ else
 	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
 	$GRAPH.="</tr>\n";
 
-	$stmt="select count(*) from vicidial_list where status IN($human_answered_statuses) and list_id IN($list_id_SQL);";
+	$stmt="select count(*) from ".$vicidial_list_table." where status IN($human_answered_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$HA_results = mysqli_num_rows($rslt);
@@ -607,7 +631,7 @@ else
 		if ($HA_count>$max_calls) {$max_calls=$HA_count;}
 		$HA_percent = ( MathZDC($HA_count, $TOTALleads) * 100);
 		}
-	$stmt="select count(*) from vicidial_list where status IN($sale_statuses) and list_id IN($list_id_SQL);";
+	$stmt="select count(*) from ".$vicidial_list_table." where status IN($sale_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$SALE_results = mysqli_num_rows($rslt);
@@ -619,7 +643,7 @@ else
 		if ($SALE_count>$max_calls) {$max_calls=$SALE_count;}
 		$SALE_percent = ( MathZDC($SALE_count, $TOTALleads) * 100);
 		}
-	$stmt="select count(*) from vicidial_list where status IN($dnc_statuses) and list_id IN($list_id_SQL);";
+	$stmt="select count(*) from ".$vicidial_list_table." where status IN($dnc_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$DNC_results = mysqli_num_rows($rslt);
@@ -631,7 +655,7 @@ else
 		if ($DNC_count>$max_calls) {$max_calls=$DNC_count;}
 		$DNC_percent = ( MathZDC($DNC_count, $TOTALleads) * 100);
 		}
-	$stmt="select count(*) from vicidial_list where status IN($customer_contact_statuses) and list_id IN($list_id_SQL);";
+	$stmt="select count(*) from ".$vicidial_list_table." where status IN($customer_contact_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$CC_results = mysqli_num_rows($rslt);
@@ -643,7 +667,7 @@ else
 		if ($C_count>$max_calls) {$max_calls=$CC_count;}
 		$CC_percent = ( MathZDC($CC_count, $TOTALleads) * 100);
 		}
-	$stmt="select count(*) from vicidial_list where status IN($not_interested_statuses) and list_id IN($list_id_SQL);";
+	$stmt="select count(*) from ".$vicidial_list_table." where status IN($not_interested_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$NI_results = mysqli_num_rows($rslt);
@@ -655,7 +679,7 @@ else
 		if ($NI_count>$max_calls) {$max_calls=$NI_count;}
 		$NI_percent = ( MathZDC($NI_count, $TOTALleads) * 100);
 		}
-	$stmt="select count(*) from vicidial_list where status IN($unworkable_statuses) and list_id IN($list_id_SQL);";
+	$stmt="select count(*) from ".$vicidial_list_table." where status IN($unworkable_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$UW_results = mysqli_num_rows($rslt);
@@ -667,7 +691,7 @@ else
 		if ($UW_count>$max_calls) {$max_calls=$UW_count;}
 		$UW_percent = ( MathZDC($UW_count, $TOTALleads) * 100);
 		}
-	$stmt="select count(*) from vicidial_list where status IN($scheduled_callback_statuses) and list_id IN($list_id_SQL);";
+	$stmt="select count(*) from ".$vicidial_list_table." where status IN($scheduled_callback_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$SC_results = mysqli_num_rows($rslt);
@@ -679,7 +703,7 @@ else
 		if ($SC_count>$max_calls) {$max_calls=$SC_count;}
 		$SC_percent = ( MathZDC($SC_count, $TOTALleads) * 100);
 		}
-	$stmt="select count(*) from vicidial_list where status IN($completed_statuses) and list_id IN($list_id_SQL);";
+	$stmt="select count(*) from ".$vicidial_list_table." where status IN($completed_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$COMP_results = mysqli_num_rows($rslt);
@@ -712,7 +736,7 @@ else
 
 	$OUToutput .= "\n";
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- "._QXZ("STATUS FLAGS SUMMARY:",24)." ("._QXZ("and % of leads in selected lists").")     <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=2\">"._QXZ("DOWNLOAD")."</a>\n";
+	$OUToutput .= "---------- "._QXZ("STATUS FLAGS SUMMARY:",24)." ("._QXZ("and % of leads in selected lists").")     <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=2&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
 	$OUToutput .= "+------------------+------------+----------+\n";
 	$OUToutput .= "| "._QXZ("Human Answer",16)." | $HA_count |  $HA_percent% |\n";
 	$OUToutput .= "| "._QXZ("Sale",16)." | $SALE_count |  $SALE_percent% |\n";
@@ -778,7 +802,7 @@ else
 	#########  STATUS CATEGORY STATS
 
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- "._QXZ("CUSTOM STATUS CATEGORY STATS",32)." <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=3\">"._QXZ("DOWNLOAD")."</a>\n";
+	$OUToutput .= "---------- "._QXZ("CUSTOM STATUS CATEGORY STATS",32)." <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=3&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
 	$OUToutput .= "+----------------------+------------+--------------------------------+\n";
 	$OUToutput .= "| "._QXZ("CATEGORY",20)." | "._QXZ("CALLS",10)." | "._QXZ("DESCRIPTION",30)." |\n";
 	$OUToutput .= "+----------------------+------------+--------------------------------+\n";
@@ -844,7 +868,7 @@ else
 
 	$TOTALleads = 0;
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- "._QXZ("PER LIST DETAIL STATS",25)." <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=4\">"._QXZ("DOWNLOAD")."</a>\n";
+	$OUToutput .= "---------- "._QXZ("PER LIST DETAIL STATS",25)." <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=4&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
 	$OUToutput .= "\n";
 
 	$CSV_text4.="\""._QXZ("PER LIST DETAIL STATS")."\"\n\n";
@@ -894,7 +918,7 @@ else
 		$COMP_count=0;
 		$COMP_percent=0;
 
-		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($human_answered_statuses);";
+		$stmt="select count(*) from ".$vicidial_list_table." where list_id='$LISTIDlists[$i]' and status IN($human_answered_statuses);";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$HA_results = mysqli_num_rows($rslt);
@@ -905,7 +929,7 @@ else
 			$HA_percent = ( MathZDC($HA_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($HA_count>$max_flags) {$max_flags=$HA_count;}
-		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($sale_statuses);";
+		$stmt="select count(*) from ".$vicidial_list_table." where list_id='$LISTIDlists[$i]' and status IN($sale_statuses);";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$SALE_results = mysqli_num_rows($rslt);
@@ -916,7 +940,7 @@ else
 			$SALE_percent = ( MathZDC($SALE_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($SALE_count>$max_flags) {$max_flags=$SALE_count;}
-		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($dnc_statuses);";
+		$stmt="select count(*) from ".$vicidial_list_table." where list_id='$LISTIDlists[$i]' and status IN($dnc_statuses);";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$DNC_results = mysqli_num_rows($rslt);
@@ -927,7 +951,7 @@ else
 			$DNC_percent = ( MathZDC($DNC_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($DNC_count>$max_flags) {$max_flags=$DNC_count;}
-		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($customer_contact_statuses);";
+		$stmt="select count(*) from ".$vicidial_list_table." where list_id='$LISTIDlists[$i]' and status IN($customer_contact_statuses);";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$CC_results = mysqli_num_rows($rslt);
@@ -938,7 +962,7 @@ else
 			$CC_percent = ( MathZDC($CC_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($CC_count>$max_flags) {$max_flags=$CC_count;}
-		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($not_interested_statuses);";
+		$stmt="select count(*) from ".$vicidial_list_table." where list_id='$LISTIDlists[$i]' and status IN($not_interested_statuses);";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$NI_results = mysqli_num_rows($rslt);
@@ -949,7 +973,7 @@ else
 			$NI_percent = ( MathZDC($NI_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($NI_count>$max_flags) {$max_flags=$NI_count;}
-		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($unworkable_statuses);";
+		$stmt="select count(*) from ".$vicidial_list_table." where list_id='$LISTIDlists[$i]' and status IN($unworkable_statuses);";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$UW_results = mysqli_num_rows($rslt);
@@ -960,7 +984,7 @@ else
 			$UW_percent = ( MathZDC($UW_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($UW_count>$max_flags) {$max_flags=$UW_count;}
-		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($scheduled_callback_statuses);";
+		$stmt="select count(*) from ".$vicidial_list_table." where list_id='$LISTIDlists[$i]' and status IN($scheduled_callback_statuses);";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$SC_results = mysqli_num_rows($rslt);
@@ -971,7 +995,7 @@ else
 			$SC_percent = ( MathZDC($SC_count, $LISTIDcalls[$i]) * 100);
 			}
 		if ($SC_count>$max_flags) {$max_flags=$SC_count;}
-		$stmt="select count(*) from vicidial_list where list_id='$LISTIDlists[$i]' and status IN($completed_statuses);";
+		$stmt="select count(*) from ".$vicidial_list_table." where list_id='$LISTIDlists[$i]' and status IN($completed_statuses);";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$COMP_results = mysqli_num_rows($rslt);
@@ -1034,7 +1058,7 @@ else
 		$CSV_text4.="\""._QXZ("Completed").":\",\"$COMP_count\",\"$COMP_percent%\"\n\n";
 		$CSV_text4.="\""._QXZ("STATUS BREAKDOWN").":\",\"\",\""._QXZ("COUNT")."\"\n";
 
-		$stmt="select status,count(*) from vicidial_list where list_id='$LISTIDlists[$i]' group by status order by status;";
+		$stmt="select status,count(*) from ".$vicidial_list_table." where list_id='$LISTIDlists[$i]' group by status order by status;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$liststatussum_to_print = mysqli_num_rows($rslt);

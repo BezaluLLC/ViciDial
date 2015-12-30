@@ -23,6 +23,7 @@
 # 140108-0718 - Added webserver and hostname to report logging
 # 141114-0908 - Finalized adding QXZ translation to all admin files
 # 141230-1523 - Added code for on-the-fly language translations display
+# 151227-1735 - Added option for searching archived data
 #
 
 $startMS = microtime();
@@ -48,6 +49,8 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))		{$file_download=$_POST["file_download"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -68,6 +71,28 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$log_tables_array=array("vicidial_timeclock_log", "vicidial_agent_log");
+for ($t=0; $t<count($log_tables_array); $t++) 
+	{
+	$table_name=$log_tables_array[$t];
+	$archive_table_name=use_archive_table($table_name);
+	if ($archive_table_name!=$table_name) {$archives_available="Y";}
+	}
+
+if ($search_archived_data) 
+	{
+	$vicidial_timeclock_log_table=use_archive_table("vicidial_timeclock_log");
+	$vicidial_agent_log_table=use_archive_table("vicidial_agent_log");
+	}
+else
+	{
+	$vicidial_timeclock_log_table="vicidial_timeclock_log";
+	$vicidial_agent_log_table="vicidial_agent_log";
+	}
+#############
 
 $user=$agent;
 
@@ -292,6 +317,12 @@ $MAIN.="<BR>\n";
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET> &nbsp; \n";
 $MAIN.=_QXZ("Date").": <INPUT TYPE=TEXT NAME=query_date SIZE=19 MAXLENGTH=19 VALUE=\"$query_date\">\n";
 $MAIN.=_QXZ("User ID").": <INPUT TYPE=TEXT NAME=agent SIZE=10 MAXLENGTH=20 VALUE=\"$agent\">\n";
+
+if ($archives_available=="Y") 
+	{
+	$MAIN.="<input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."<BR><BR>\n";
+	}
+
 $MAIN.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $MAIN.="</FORM>\n\n";
 
@@ -330,7 +361,7 @@ $CSV_text_header.="\""._QXZ("AGENT TIME SHEET").": $agent - $full_name\"\n\n";
 
 if ($calls_summary)
 	{
-	$stmt="select count(*) as calls,sum(talk_sec) as talk,avg(talk_sec),sum(pause_sec),avg(pause_sec),sum(wait_sec),avg(wait_sec),sum(dispo_sec),avg(dispo_sec) from vicidial_agent_log where event_time <= '" . mysqli_real_escape_string($link, $query_date_END) . "' and event_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' and user='" . mysqli_real_escape_string($link, $agent) . "' and pause_sec<48800 and wait_sec<48800 and talk_sec<48800 and dispo_sec<48800 limit 1;";
+	$stmt="select count(*) as calls,sum(talk_sec) as talk,avg(talk_sec),sum(pause_sec),avg(pause_sec),sum(wait_sec),avg(wait_sec),sum(dispo_sec),avg(dispo_sec) from ".$vicidial_agent_log_table." where event_time <= '" . mysqli_real_escape_string($link, $query_date_END) . "' and event_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' and user='" . mysqli_real_escape_string($link, $agent) . "' and pause_sec<48800 and wait_sec<48800 and talk_sec<48800 and dispo_sec<48800 limit 1;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
@@ -357,7 +388,7 @@ if ($calls_summary)
 	$pfWAIT_AVG_MS =		sprintf("%6s", $WAIT_AVG_MS);
 	$pfWRAPUP_AVG_MS =		sprintf("%6s", $WRAPUP_AVG_MS);
 
-	$MAIN.=_QXZ("TOTAL CALLS TAKEN",17).": $row[0]     <a href='$PHP_SELF?calls_summary=$calls_summary&agent=$agent&query_date=$query_date&file_download=1'>["._QXZ("DOWNLOAD")."]</a>\n";
+	$MAIN.=_QXZ("TOTAL CALLS TAKEN",17).": $row[0]     <a href='$PHP_SELF?calls_summary=$calls_summary&agent=$agent&query_date=$query_date&file_download=1&search_archived_data=$search_archived_data'>["._QXZ("DOWNLOAD")."]</a>\n";
 	$MAIN.=_QXZ("TALK TIME:",24)." $pfTALK_TIME_HMS "._QXZ("AVERAGE",11,"r").": $pfTALK_AVG_MS\n";
 	$MAIN.=_QXZ("PAUSE TIME:",24)." $pfPAUSE_TIME_HMS "._QXZ("AVERAGE",11,"r").": $pfPAUSE_AVG_MS\n";
 	$MAIN.=_QXZ("WAIT TIME:",24)." $pfWAIT_TIME_HMS "._QXZ("AVERAGE",11,"r").": $pfWAIT_AVG_MS\n";
@@ -378,7 +409,7 @@ else
 
 	}
 
-$stmt="select event_time,UNIX_TIMESTAMP(event_time) from vicidial_agent_log where event_time <= '" . mysqli_real_escape_string($link, $query_date_END) . "' and event_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' and user='" . mysqli_real_escape_string($link, $agent) . "' order by event_time limit 1;";
+$stmt="select event_time,UNIX_TIMESTAMP(event_time) from ".$vicidial_agent_log_table." where event_time <= '" . mysqli_real_escape_string($link, $query_date_END) . "' and event_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' and user='" . mysqli_real_escape_string($link, $agent) . "' order by event_time limit 1;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $row=mysqli_fetch_row($rslt);
@@ -388,7 +419,7 @@ $start = $row[1];
 
 $CSV_login.="\"\",\""._QXZ("FIRST LOGIN").":\",\"$row[0]\"\n";
 
-$stmt="select event_time,UNIX_TIMESTAMP(event_time) from vicidial_agent_log where event_time <= '" . mysqli_real_escape_string($link, $query_date_END) . "' and event_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' and user='" . mysqli_real_escape_string($link, $agent) . "' order by event_time desc limit 1;";
+$stmt="select event_time,UNIX_TIMESTAMP(event_time) from ".$vicidial_agent_log_table." where event_time <= '" . mysqli_real_escape_string($link, $query_date_END) . "' and event_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' and user='" . mysqli_real_escape_string($link, $agent) . "' order by event_time desc limit 1;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $row=mysqli_fetch_row($rslt);
@@ -421,7 +452,7 @@ $EQepoch = mktime(23, 59, 59, $EQday_ARY[1], $EQday_ARY[2], $EQday_ARY[0]);
 
 $MAIN.="\n";
 
-$MAIN.="<B>"._QXZ("TIMECLOCK LOGIN/LOGOUT TIME").":     <a href='$PHP_SELF?calls_summary=$calls_summary&agent=$agent&query_date=$query_date&file_download=2'>["._QXZ("DOWNLOAD")."]</a></B>\n";
+$MAIN.="<B>"._QXZ("TIMECLOCK LOGIN/LOGOUT TIME").":     <a href='$PHP_SELF?calls_summary=$calls_summary&agent=$agent&query_date=$query_date&file_download=2&search_archived_data=$search_archived_data'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 $MAIN.="<TABLE width=550 cellspacing=0 cellpadding=1>\n";
 $MAIN.="<tr><td><font size=2>"._QXZ("ID")." </td><td><font size=2>"._QXZ("EDIT")." </td><td align=right><font size=2>"._QXZ("EVENT")." </td><td align=right><font size=2> "._QXZ("DATE")."</td><td align=right><font size=2> "._QXZ("IP ADDRESS")."</td><td align=right><font size=2> "._QXZ("GROUP")."</td><td align=right><font size=2>"._QXZ("HOURS:MINUTES")."</td></tr>\n";
 
@@ -430,7 +461,7 @@ $CSV_text2.=$CSV_login;
 $CSV_text2.="\""._QXZ("TIMECLOCK LOGIN/LOGOUT TIME").":\"\n";
 $CSV_text2.="\"\",\""._QXZ("ID")."\",\""._QXZ("EDIT")."\",\""._QXZ("EVENT")."\",\""._QXZ("DATE")."\",\""._QXZ("IP ADDRESS")."\",\""._QXZ("GROUP")."\",\""._QXZ("HOURS:MINUTES")."\"\n";
 
-	$stmt="SELECT event,event_epoch,user_group,login_sec,ip_address,timeclock_id,manager_user from vicidial_timeclock_log where user='$agent' and event_epoch >= '$SQepoch'  and event_epoch <= '$EQepoch';";
+	$stmt="SELECT event,event_epoch,user_group,login_sec,ip_address,timeclock_id,manager_user from ".$vicidial_timeclock_log_table." where user='$agent' and event_epoch >= '$SQepoch'  and event_epoch <= '$EQepoch';";
 	if ($DB>0) {$MAIN.="|$stmt|";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$events_to_print = mysqli_num_rows($rslt);

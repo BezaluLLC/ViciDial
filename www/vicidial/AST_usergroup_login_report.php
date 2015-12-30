@@ -18,6 +18,7 @@
 # 141113-2339 - Finalized adding QXZ translation to all admin files
 # 141230-1413 - Added code for on-the-fly language translations display
 # 150516-1316 - Fixed Javascript element problem, Issue #857
+# 151229-2014 - Added archive search option
 #
 
 $startMS = microtime();
@@ -40,6 +41,8 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 $report_name = 'User Group Login Report';
 $db_source = 'M';
@@ -63,6 +66,26 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$log_tables_array=array("vicidial_user_log");
+for ($t=0; $t<count($log_tables_array); $t++) 
+	{
+	$table_name=$log_tables_array[$t];
+	$archive_table_name=use_archive_table($table_name);
+	if ($archive_table_name!=$table_name) {$archives_available="Y";}
+	}
+
+if ($search_archived_data) 
+	{
+	$vicidial_user_log_table=use_archive_table("vicidial_user_log");
+	}
+else
+	{
+	$vicidial_user_log_table="vicidial_user_log";
+	}
+#############
 
 if ($non_latin < 1)
 	{
@@ -318,11 +341,17 @@ $HTML_text.="<TD VALIGN=TOP>\n";
 #$HTML_text.="<select name='report_display_type'>";
 #if ($report_display_type) {$HTML_text.="<option value='$report_display_type' selected>$report_display_type</option>";}
 #$HTML_text.="<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
-$HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
+
+if ($archives_available=="Y") 
+	{
+	$HTML_text.="<input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."\n";
+	}
+
+$HTML_text.="<BR><BR><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 $HTML_text.="</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 $HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
-$HTML_text.="<a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&query_date_D=$query_date_D&query_date_T=$query_date_T&end_date_D=$end_date_D&end_date_T=$end_date_T$groupQS$user_groupQS$call_statusQS&file_download=1&SUBMIT=$SUBMIT\">"._QXZ("DOWNLOAD")."</a> |";
+$HTML_text.="<a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date&query_date_D=$query_date_D&query_date_T=$query_date_T&end_date_D=$end_date_D&end_date_T=$end_date_T$groupQS$user_groupQS$call_statusQS&file_download=1&SUBMIT=$SUBMIT&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a> |";
 $HTML_text.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 $HTML_text.="</FONT>\n";
 $HTML_text.="</TD></TR></TABLE>";
@@ -340,11 +369,11 @@ if ($SUBMIT)
 	$rslt=mysql_to_mysqli($stmt, $link);
 	while ($row=mysqli_fetch_array($rslt)) 
 		{
-		$date_stmt="select min(event_date) as min_date, max(event_date) as max_date from vicidial_user_log where user='$row[user]' and event='LOGIN' and event_date>='$day30range'";
+		$date_stmt="select min(event_date) as min_date, max(event_date) as max_date from ".$vicidial_user_log_table." where user='$row[user]' and event='LOGIN' and event_date>='$day30range'";
 		$date_rslt=mysql_to_mysqli($date_stmt, $link);
 		$date_row=mysqli_fetch_array($date_rslt);
 
-		$data_stmt="select campaign_id, server_ip, computer_ip, user_group, substring(extension,1,20) as ext, extension, browser, phone_login, server_phone, phone_ip from vicidial_user_log where user='$row[user]' and event_date='$date_row[max_date]' and event='LOGIN'";
+		$data_stmt="select campaign_id, server_ip, computer_ip, user_group, substring(extension,1,20) as ext, extension, browser, phone_login, server_phone, phone_ip from ".$vicidial_user_log_table." where user='$row[user]' and event_date='$date_row[max_date]' and event='LOGIN'";
 		$data_rslt=mysql_to_mysqli($data_stmt, $link);
 		while ($data_row=mysqli_fetch_array($data_rslt)) 
 			{

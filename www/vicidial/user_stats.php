@@ -47,6 +47,7 @@
 # 141114-0025 - Finalized adding QXZ translation to all admin files
 # 141229-1836 - Added code for on-the-fly language translations display
 # 150804-0749 - Added call status as option, Issue #883
+# 151227-1839 - Added option to search archived data
 #
 
 $startMS = microtime();
@@ -89,6 +90,8 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))		{$file_download=$_POST["file_download"];}
 if (isset($_GET["pause_code_rpt"]))				{$pause_code_rpt=$_GET["pause_code_rpt"];}
 	elseif (isset($_POST["pause_code_rpt"]))	{$pause_code_rpt=$_POST["pause_code_rpt"];}
+if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
+	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -112,6 +115,48 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+### ARCHIVED DATA CHECK CONFIGURATION
+$archives_available="N";
+$log_tables_array=array("vicidial_log", "vicidial_agent_log", "vicidial_closer_log", "vicidial_user_log", "vicidial_timeclock_log", "vicidial_user_closer_log", "vicidial_email_log", "call_log", "recording_log", "user_call_log", "vicidial_lead_search_log", "vicidial_agent_skip_log");
+for ($t=0; $t<count($log_tables_array); $t++) 
+	{
+	$table_name=$log_tables_array[$t];
+	$archive_table_name=use_archive_table($table_name);
+	if ($archive_table_name!=$table_name) {$archives_available="Y";}
+	}
+
+if ($search_archived_data) 
+	{
+	$vicidial_closer_log_table=use_archive_table("vicidial_closer_log");
+	$vicidial_user_log_table=use_archive_table("vicidial_user_log");
+	$vicidial_agent_log_table=use_archive_table("vicidial_agent_log");
+	$vicidial_timeclock_log_table=use_archive_table("vicidial_timeclock_log");
+	$vicidial_user_closer_log_table=use_archive_table("vicidial_user_closer_log");
+	$vicidial_email_log_table=use_archive_table("vicidial_email_log");
+	$recording_log_table=use_archive_table("recording_log");
+	$user_call_log_table=use_archive_table("user_call_log");
+	$vicidial_lead_search_log_table=use_archive_table("vicidial_lead_search_log");
+	$vicidial_agent_skip_log_table=use_archive_table("vicidial_agent_skip_log");
+	$call_log_table=use_archive_table("call_log");
+	$vicidial_log_table=use_archive_table("vicidial_log");
+	}
+else
+	{
+	$vicidial_closer_log_table="vicidial_closer_log";
+	$vicidial_user_log_table="vicidial_user_log";
+	$vicidial_agent_log_table="vicidial_agent_log";
+	$vicidial_timeclock_log_table="vicidial_timeclock_log";
+	$vicidial_user_closer_log_table="vicidial_user_closer_log";
+	$vicidial_email_log_table="vicidial_email_log";
+	$recording_log_table="recording_log";
+	$user_call_log_table="user_call_log";
+	$vicidial_lead_search_log_table="vicidial_lead_search_log";
+	$vicidial_agent_skip_log_table="vicidial_agent_skip_log";
+	$call_log_table="call_log";
+	$vicidial_log_table="vicidial_log";
+	}
+#############
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
@@ -405,7 +450,7 @@ $MAIN.="</TD><TD ALIGN=RIGHT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> &nbsp; </TD>
 
 $MAIN.="<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> &nbsp; \n";
 
-$download_link="$PHP_SELF?DB=$DB&pause_code_rpt=$pause_code_rpt&did_id=$did_id&did=$did&begin_date=$begin_date&end_date=$end_date&user=$user&submit=$submit\n";
+$download_link="$PHP_SELF?DB=$DB&pause_code_rpt=$pause_code_rpt&did_id=$did_id&did=$did&begin_date=$begin_date&end_date=$end_date&user=$user&submit=$submit&search_archived_data=$search_archived_data\n";
 
 $MAIN.="<form action=$PHP_SELF method=GET name=vicidial_report id=vicidial_report>\n";
 $MAIN.="<input type=hidden name=DB value=\"$DB\">\n";
@@ -443,6 +488,12 @@ if (strlen($user)>1)
 else
 	{$MAIN.="<input type=text name=user size=12 maxlength=10> &nbsp; &nbsp; &nbsp; \n";}
 $MAIN.=_QXZ("Call status").": <input type=text name=call_status size=7 maxlength=6 value=\"$call_status\">\n";
+
+if ($archives_available=="Y") 
+	{
+	$MAIN.="<input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."\n";
+	}
+
 $MAIN.="<input type=submit name=submit value='"._QXZ("submit")."'>\n";
 
 
@@ -471,7 +522,7 @@ $MAIN.="<br><center>\n";
 
 if ($pause_code_rpt >= 1)
 	{
-	$stmt="SELECT vicidial_agent_log.campaign_id,event_time,talk_sec,pause_sec,sec_to_time(pause_sec) as pause_length,wait_sec,dispo_sec,dead_sec,sub_status, vicidial_users.user_group from vicidial_users,vicidial_agent_log,vicidial_pause_codes where sub_status is not null and event_time <= '$end_date 23:59:59' and event_time >= '$begin_date 00:00:00' and vicidial_agent_log.user='$user' and vicidial_agent_log.user=vicidial_users.user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 and vicidial_agent_log.sub_status=vicidial_pause_codes.pause_code and vicidial_agent_log.campaign_id=vicidial_pause_codes.campaign_id order by event_time asc limit 500000;";
+	$stmt="SELECT ".$vicidial_agent_log_table.".campaign_id,event_time,talk_sec,pause_sec,sec_to_time(pause_sec) as pause_length,wait_sec,dispo_sec,dead_sec,sub_status, vicidial_users.user_group from vicidial_users,".$vicidial_agent_log_table.",vicidial_pause_codes where sub_status is not null and event_time <= '$end_date 23:59:59' and event_time >= '$begin_date 00:00:00' and ".$vicidial_agent_log_table.".user='$user' and ".$vicidial_agent_log_table.".user=vicidial_users.user and pause_sec<65000 and wait_sec<65000 and talk_sec<65000 and dispo_sec<65000 and ".$vicidial_agent_log_table.".sub_status=vicidial_pause_codes.pause_code and ".$vicidial_agent_log_table.".campaign_id=vicidial_pause_codes.campaign_id order by event_time asc limit 500000;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
 	$rows_to_print = mysqli_num_rows($rslt);
@@ -525,7 +576,7 @@ else
 		$CSV_text1.="\""._QXZ("AGENT TALK TIME AND STATUS")."\"\n";
 		$CSV_text1.="\"\",\""._QXZ("STATUS")."\",\""._QXZ("COUNT")."\",\""._QXZ("HOURS:MM:SS")."\"\n";
 
-		$stmt="SELECT count(*),status, sum(length_in_sec) from vicidial_log where user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' $query_call_status group by status order by status";
+		$stmt="SELECT count(*),status, sum(length_in_sec) from ".$vicidial_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' $query_call_status group by status order by status";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$VLstatuses_to_print = mysqli_num_rows($rslt);
 		$total_calls=0;
@@ -540,7 +591,7 @@ else
 			$o++;
 			}
 
-		$stmt="SELECT count(*),status, sum(length_in_sec) from vicidial_closer_log where user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' $query_call_status group by status order by status";
+		$stmt="SELECT count(*),status, sum(length_in_sec) from ".$vicidial_closer_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' $query_call_status group by status order by status";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$VCLstatuses_to_print = mysqli_num_rows($rslt);
 		$o=0;
@@ -611,7 +662,7 @@ else
 		$CSV_text2.="\""._QXZ("AGENT LOGIN/LOGOUT TIME")."\"\n";
 		$CSV_text2.="\"\",\""._QXZ("EVENT")."\",\""._QXZ("DATE")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("GROUP")."\",\""._QXZ("HOURS:MM:SS")."\",\""._QXZ("SESSION")."\",\""._QXZ("SERVER")."\",\""._QXZ("PHONE")."\",\""._QXZ("COMPUTER")."\",\""._QXZ("PHONE_LOGIN")."\",\""._QXZ("PHONE_IP")."\"\n";
 
-		$stmt="SELECT event,event_epoch,event_date,campaign_id,user_group,session_id,server_ip,extension,computer_ip,phone_login,phone_ip from vicidial_user_log where user='" . mysqli_real_escape_string($link, $user) . "' and event_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by event_date;";
+		$stmt="SELECT event,event_epoch,event_date,campaign_id,user_group,session_id,server_ip,extension,computer_ip,phone_login,phone_ip from ".$vicidial_user_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and event_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by event_date;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$events_to_print = mysqli_num_rows($rslt);
 
@@ -715,7 +766,7 @@ else
 		$CSV_text3.="\""._QXZ("TIMECLOCK LOGIN/LOGOUT TIME")."\"\n";
 		$CSV_text3.="\"\",\""._QXZ("ID")."\",\""._QXZ("EDIT")."\",\""._QXZ("EVENT")."\",\""._QXZ("DATE")."\",\""._QXZ("IPADDRESS")."\",\""._QXZ("GROUP")."\",\""._QXZ("HOURS:MM:SS")."\"\n";
 
-		$stmt="SELECT event,event_epoch,user_group,login_sec,ip_address,timeclock_id,manager_user from vicidial_timeclock_log where user='" . mysqli_real_escape_string($link, $user) . "' and event_epoch >= '$SQepoch'  and event_epoch <= '$EQepoch';";
+		$stmt="SELECT event,event_epoch,user_group,login_sec,ip_address,timeclock_id,manager_user from ".$vicidial_timeclock_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and event_epoch >= '$SQepoch'  and event_epoch <= '$EQepoch';";
 		if ($DB>0) {$MAIN.="|$stmt|";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$events_to_print = mysqli_num_rows($rslt);
@@ -799,7 +850,7 @@ else
 		$CSV_text4.="\""._QXZ("CLOSER IN-GROUP SELECTION LOGS")."\"\n";
 		$CSV_text4.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("BLEND")."\",\""._QXZ("GROUPS")."\",\""._QXZ("MANAGER")."\"\n";
 
-		$stmt="SELECT user,campaign_id,event_date,blended,closer_campaigns,manager_change from vicidial_user_closer_log where user='" . mysqli_real_escape_string($link, $user) . "' and event_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by event_date desc limit 1000;";
+		$stmt="SELECT user,campaign_id,event_date,blended,closer_campaigns,manager_change from ".$vicidial_user_closer_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and event_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by event_date desc limit 1000;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$logs_to_print = mysqli_num_rows($rslt);
 
@@ -846,10 +897,10 @@ else
 		else
 			{$CSV_text5.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("LENGTH")."\",\""._QXZ("STATUS")."\",\""._QXZ("PHONE")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("GROUP")."\",\""._QXZ("LIST")."\",\""._QXZ("LEAD")."\",\""._QXZ("HANGUP REASON")."\"\n";}
 
-		$stmt="SELECT uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial from vicidial_log where user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' $query_call_status order by call_date desc limit 10000;";
+		$stmt="SELECT uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial from ".$vicidial_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' $query_call_status order by call_date desc limit 10000;";
 		if ($firstlastname_display_user_stats > 0)
 			{
-			$stmt="SELECT uniqueid,vlog.lead_id,vlog.list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,vlog.status,vlog.phone_code,vlog.phone_number,vlog.user,vlog.comments,processed,user_group,term_reason,alt_dial,first_name,last_name from vicidial_log vlog, vicidial_list vlist where vlog.user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' and vlog.lead_id=vlist.lead_id $VLquery_call_status order by call_date desc limit 10000;";
+			$stmt="SELECT uniqueid,vlog.lead_id,vlog.list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,vlog.status,vlog.phone_code,vlog.phone_number,vlog.user,vlog.comments,processed,user_group,term_reason,alt_dial,first_name,last_name from ".$vicidial_log_table." vlog, vicidial_list vlist where vlog.user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' and vlog.lead_id=vlist.lead_id $VLquery_call_status order by call_date desc limit 10000;";
 			}
 		if ($DB) {$MAIN.="outbound calls|$stmt|";}
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -925,7 +976,7 @@ else
 			$CSV_text5.="\""._QXZ("OUTBOUND EMAILS FOR THIS TIME PERIOD: (10000 record limit)")."\"\n";
 			$CSV_text5.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("USER")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("EMAIL TO")."\",\""._QXZ("ATTACHMENT")."\",\""._QXZ("LEAD")."\",\""._QXZ("MESSAGE")."\"\n";
 
-			$stmt="SELECT email_log_id,email_row_id,lead_id,email_date,user,email_to,message,campaign_id,attachments from vicidial_email_log where user='" . mysqli_real_escape_string($link, $user) . "' and email_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and email_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by email_date desc limit 10000;";
+			$stmt="SELECT email_log_id,email_row_id,lead_id,email_date,user,email_to,message,campaign_id,attachments from ".$vicidial_email_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and email_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and email_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by email_date desc limit 10000;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			$logs_to_print = mysqli_num_rows($rslt);
 
@@ -985,16 +1036,16 @@ else
 		$CSV_text6.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("LENGTH")."\",\""._QXZ("STATUS")."\",\""._QXZ("PHONE")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("WAIT(S)")."\",\""._QXZ("AGENT(S)")."\",\""._QXZ("LIST")."\",\""._QXZ("LEAD")."\",\""._QXZ("HANGUP REASON")."\"\n";
 		}
 
-	$stmt="SELECT call_date,length_in_sec,status,phone_number,campaign_id,queue_seconds,list_id,lead_id,term_reason,closecallid from vicidial_closer_log where user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' $query_call_status order by call_date desc limit 10000;";
+	$stmt="SELECT call_date,length_in_sec,status,phone_number,campaign_id,queue_seconds,list_id,lead_id,term_reason,closecallid from ".$vicidial_closer_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' $query_call_status order by call_date desc limit 10000;";
 	if ($did > 0)
 		{
-		$stmt="SELECT start_time,length_in_sec,0,caller_code,0,0,0,extension,0,0 from call_log where channel_group='DID_INBOUND' and number_dialed='" . mysqli_real_escape_string($link, $user) . "' and start_time >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and start_time <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by start_time desc limit 10000;";
+		$stmt="SELECT start_time,length_in_sec,0,caller_code,0,0,0,extension,0,0 from ".$call_log_table." where channel_group='DID_INBOUND' and number_dialed='" . mysqli_real_escape_string($link, $user) . "' and start_time >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and start_time <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by start_time desc limit 10000;";
 		}
 	else
 		{
 		if ($firstlastname_display_user_stats > 0)
 			{
-			$stmt="SELECT call_date,length_in_sec,vlog.status,vlog.phone_number,campaign_id,queue_seconds,vlog.list_id,vlog.lead_id,term_reason,closecallid,first_name,last_name from vicidial_closer_log vlog, vicidial_list vlist where vlog.user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' and vlog.lead_id=vlist.lead_id $VLquery_call_status order by call_date desc limit 10000;";
+			$stmt="SELECT call_date,length_in_sec,vlog.status,vlog.phone_number,campaign_id,queue_seconds,vlog.list_id,vlog.lead_id,term_reason,closecallid,first_name,last_name from ".$vicidial_closer_log_table." vlog, vicidial_list vlist where vlog.user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' and vlog.lead_id=vlist.lead_id $VLquery_call_status order by call_date desc limit 10000;";
 			}
 		}
 	if ($DB) {$MAIN.="inbound calls|$stmt|";}
@@ -1095,7 +1146,7 @@ else
 		$CSV_text7.="\""._QXZ("AGENT ACTIVITY FOR THIS TIME PERIOD: (10000 record limit)")."\"\n";
 		$CSV_text7.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("PAUSE")."\",\""._QXZ("WAIT")."\",\""._QXZ("TALK")."\",\""._QXZ("DISPO")."\",\""._QXZ("DEAD")."\",\""._QXZ("CUSTOMER")."\",\""._QXZ("STATUS")."\",\""._QXZ("LEAD")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("PAUSE CODE")."\"\n";
 
-		$stmt="SELECT event_time,lead_id,campaign_id,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec,status,sub_status,user_group from vicidial_agent_log where user='" . mysqli_real_escape_string($link, $user) . "' and event_time >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_time <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' and ( (pause_sec > 0) or (wait_sec > 0) or (talk_sec > 0) or (dispo_sec > 0) ) $query_call_status order by event_time desc limit 10000;";
+		$stmt="SELECT event_time,lead_id,campaign_id,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec,status,sub_status,user_group from ".$vicidial_agent_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and event_time >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_time <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' and ( (pause_sec > 0) or (wait_sec > 0) or (talk_sec > 0) or (dispo_sec > 0) ) $query_call_status order by event_time desc limit 10000;";
 		if ($DB) {$MAIN.="agent activity|$stmt|";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$logs_to_print = mysqli_num_rows($rslt);
@@ -1225,7 +1276,7 @@ else
 		$CS_vicidial_id_list_SQL = "and vicidial_id IN($CS_vicidial_id_list)";
 		}
 
-	$stmt="SELECT recording_id,channel,server_ip,extension,start_time,start_epoch,end_time,end_epoch,length_in_sec,length_in_min,filename,location,lead_id,user,vicidial_id from recording_log where user='" . mysqli_real_escape_string($link, $user) . "' and start_time >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and start_time <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' $CS_vicidial_id_list_SQL order by recording_id desc limit 10000;";
+	$stmt="SELECT recording_id,channel,server_ip,extension,start_time,start_epoch,end_time,end_epoch,length_in_sec,length_in_min,filename,location,lead_id,user,vicidial_id from ".$recording_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and start_time >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and start_time <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' $CS_vicidial_id_list_SQL order by recording_id desc limit 10000;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$logs_to_print = mysqli_num_rows($rslt);
 
@@ -1302,7 +1353,7 @@ else
 		$CSV_text9.="\""._QXZ("MANUAL OUTBOUND CALLS FOR THIS TIME PERIOD: (10000 record limit)")."\"\n";
 		$CSV_text9.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("CALL TYPE")."\",\""._QXZ("SERVER")."\",\""._QXZ("PHONE")."\",\""._QXZ("DIALED")."\",\""._QXZ("LEAD")."\",\""._QXZ("CALLERID")."\",\""._QXZ("ALIAS")."\",\""._QXZ("PRESET")."\",\""._QXZ("C3HU")."\"\n";
 
-		$stmt="SELECT call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id,preset_name,customer_hungup,customer_hungup_seconds from user_call_log where user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by call_date desc limit 10000;";
+		$stmt="SELECT call_date,call_type,server_ip,phone_number,number_dialed,lead_id,callerid,group_alias_id,preset_name,customer_hungup,customer_hungup_seconds from ".$user_call_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and call_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and call_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by call_date desc limit 10000;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$logs_to_print = mysqli_num_rows($rslt);
 
@@ -1384,7 +1435,7 @@ else
 		$CSV_text10.="\""._QXZ("LEAD SEARCHES FOR THIS TIME PERIOD: (10000 record limit)")."\"\n";
 		$CSV_text10.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("TYPE")."\",\""._QXZ("RESULTS")."\",\""._QXZ("SEC")."\",\""._QXZ("QUERY")."\"\n";
 
-		$stmt="SELECT event_date,source,results,seconds,search_query from vicidial_lead_search_log where user='" . mysqli_real_escape_string($link, $user) . "' and event_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by event_date desc limit 10000;";
+		$stmt="SELECT event_date,source,results,seconds,search_query from ".$vicidial_lead_search_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and event_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by event_date desc limit 10000;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$logs_to_print = mysqli_num_rows($rslt);
 
@@ -1425,7 +1476,7 @@ else
 		$CSV_text11.="\""._QXZ("PREVIEW LEAD SKIPS FOR THIS TIME PERIOD: (10000 record limit)")."\"\n";
 		$CSV_text11.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("LEAD ID")."\",\""._QXZ("STATUS")."\",\""._QXZ("COUNT")."\",\""._QXZ("CAMPAIGN")."\"\n";
 
-		$stmt="SELECT user,event_date,lead_id,campaign_id,previous_status,previous_called_count from vicidial_agent_skip_log where user='" . mysqli_real_escape_string($link, $user) . "' and event_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by event_date desc limit 10000;";
+		$stmt="SELECT user,event_date,lead_id,campaign_id,previous_status,previous_called_count from ".$vicidial_agent_skip_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and event_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by event_date desc limit 10000;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$logs_to_print = mysqli_num_rows($rslt);
 
