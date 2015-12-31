@@ -218,6 +218,9 @@ OTHER CHANGES:
 54. Added campaign setting for manual_dial_timeout for manual dial agent screen
 	calls only.
 
+55. Added Agent Allowed Chat Groups to User Groups to allow restriction of only
+	agent to agent chatting by itself.
+
 
 
 

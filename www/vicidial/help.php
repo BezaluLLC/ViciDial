@@ -73,6 +73,7 @@
 # 151221-0751 - Changed in-group download link to customer chat links
 # 151229-1659 - Added servers-gather_asterisk_output entry
 # 151229-2302 - Added campaigns-manual_dial_timeout entry
+# 151231-0839 - Added user_groups-agent_allowed_chat_groups entry
 #
 
 
@@ -3333,6 +3334,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="user_groups-agent_fullscreen">
 <BR>
 <B><?php echo _QXZ("Agent Fullscreen"); ?> -</B><?php echo _QXZ("This option if set to Y will set the height and width of the agent screen to the size of the web browser window without any allowance for the Agents View, Calls in Queue View or Calls in Session view. Default is N for no or disabled."); ?>
+
+<BR>
+<A NAME="user_groups-agent_allowed_chat_groups">
+<BR>
+<B><?php echo _QXZ("Agent Allowed Chat Groups"); ?> -</B><?php echo _QXZ("This is a selectable list of User Groups and user functions to which members of this user group can view the status of as well as transfer calls to inside of the agent screen. The ALL-GROUPS option allows the users in this group to see and transfer calls to any user on initiate an internal chat to within the agent screen. The CAMPAIGN-AGENTS option allows users in this group to see and start chats with any user in the campaign that they are logged into."); ?>
 
 <BR>
 <A NAME="user_groups-allowed_reports">

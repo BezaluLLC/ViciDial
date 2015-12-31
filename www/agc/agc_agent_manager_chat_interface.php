@@ -9,10 +9,11 @@
 # 141212-2245 - First Build
 # 151213-1108 - Added variable filtering
 # 151218-1141 - Added missing translation code and user auth, merged js code into file
+# 151231-0842 - Added agent_allowed_chat_groups setting
 #
 
-$admin_version = '2.12-3';
-$build = '151218-1141';
+$admin_version = '2.12-4';
+$build = '151231-0842';
 
 $sh="managerchats"; 
 
@@ -637,53 +638,60 @@ echo "<table width='600' border='0' cellpadding='5' cellspacing='0'>\n";
 echo "<TR BGCOLOR='#E6E6E6' valign='top'>\n";
 echo "<td width='*'><font class='arial'>"._QXZ("Select a live agent").":</font><BR>\n";
 
-	$stmt="SELECT user_group from vicidial_users where user='$user';";
-	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
-	$rslt=mysql_to_mysqli($stmt, $link);
-		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00573',$user,$server_ip,$session_name,$one_mysql_log);}
+$stmt="SELECT user_group from vicidial_users where user='$user';";
+if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
+$rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00573',$user,$server_ip,$session_name,$one_mysql_log);}
+$row=mysqli_fetch_row($rslt);
+$VU_user_group =	$row[0];
+
+$stmt="SELECT campaign_id from vicidial_live_agents where user='$user';";
+if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
+$rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+$row=mysqli_fetch_row($rslt);
+$campaign_id =	$row[0];
+
+$agent_allowed_chat_groupsSQL='';
+### Gather timeclock and shift enforcement restriction settings
+$stmt="SELECT agent_status_viewable_groups,agent_status_view_time,agent_allowed_chat_groups from vicidial_user_groups where user_group='$VU_user_group';";
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
+$agent_allowed_chat_groups = $row[2];
+$agent_allowed_chat_groupsSQL = preg_replace('/\s\s/i','',$agent_allowed_chat_groups);
+$agent_allowed_chat_groupsSQL = preg_replace('/\s/i',"','",$agent_allowed_chat_groupsSQL);
+$agent_allowed_chat_groupsSQL = "user_group IN('$agent_allowed_chat_groupsSQL')";
+$agent_status_view = 0;
+if (strlen($agent_allowed_chat_groups) > 2)
+	{$agent_status_view = 1;}
+$agent_status_view_time=0;
+if ($row[1] == 'Y')
+	{$agent_status_view_time=1;}
+$andSQL='';
+if (preg_match("/ALL-GROUPS/",$agent_allowed_chat_groups))
+	{$AGENTviewSQL = "";}
+else
+	{
+	$AGENTviewSQL = "($agent_allowed_chat_groupsSQL)";
+
+	if (preg_match("/CAMPAIGN-AGENTS/",$agent_allowed_chat_groups))
+		{$AGENTviewSQL = "($AGENTviewSQL or (campaign_id='$campaign_id'))";}
+	$AGENTviewSQL = "and $AGENTviewSQL";
+	}
+
+$stmt="SELECT vla.user,vu.full_name from vicidial_live_agents vla,vicidial_users vu where vla.user=vu.user and vu.user!='$user' $AGENTviewSQL order by vu.full_name;";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($rslt) {$agents_count = mysqli_num_rows($rslt);}
+$loop_count=0;
+echo "<select name='agent' id='agent'>\n";
+echo "<option value=''>Available agents</option>\n";
+while ($agents_count > $loop_count)
+	{
 	$row=mysqli_fetch_row($rslt);
-	$VU_user_group =	$row[0];
-
-	$agent_status_viewable_groupsSQL='';
-	### Gather timeclock and shift enforcement restriction settings
-	$stmt="SELECT agent_status_viewable_groups,agent_status_view_time from vicidial_user_groups where user_group='$VU_user_group';";
-	$rslt=mysql_to_mysqli($stmt, $link);
-	$row=mysqli_fetch_row($rslt);
-	$agent_status_viewable_groups = $row[0];
-	$agent_status_viewable_groupsSQL = preg_replace('/\s\s/i','',$agent_status_viewable_groups);
-	$agent_status_viewable_groupsSQL = preg_replace('/\s/i',"','",$agent_status_viewable_groupsSQL);
-	$agent_status_viewable_groupsSQL = "user_group IN('$agent_status_viewable_groupsSQL')";
-	$agent_status_view = 0;
-	if (strlen($agent_status_viewable_groups) > 2)
-		{$agent_status_view = 1;}
-	$agent_status_view_time=0;
-	if ($row[1] == 'Y')
-		{$agent_status_view_time=1;}
-	$andSQL='';
-	if (preg_match("/ALL-GROUPS/",$agent_status_viewable_groups))
-		{$AGENTviewSQL = "";}
-	else
-		{
-		$AGENTviewSQL = "($agent_status_viewable_groupsSQL)";
-
-		if (preg_match("/CAMPAIGN-AGENTS/",$agent_status_viewable_groups))
-			{$AGENTviewSQL = "($AGENTviewSQL or (campaign_id='$campaign'))";}
-		$AGENTviewSQL = "and $AGENTviewSQL";
-		}
-
-	$stmt="SELECT vla.user,vu.full_name from vicidial_live_agents vla,vicidial_users vu where vla.user=vu.user and vu.user!='$user' $AGENTviewSQL order by vu.full_name;";
-	$rslt=mysql_to_mysqli($stmt, $link);
-	if ($rslt) {$agents_count = mysqli_num_rows($rslt);}
-	$loop_count=0;
-	echo "<select name='agent' id='agent'>\n";
-	echo "<option value=''>Available agents</option>\n";
-	while ($agents_count > $loop_count)
-		{
-		$row=mysqli_fetch_row($rslt);
-		echo "<option value='$row[0]'>$row[1]</option>\n";
-		$loop_count++;
-		}
-	echo "</select>";
+	echo "<option value='$row[0]'>$row[1]</option>\n";
+	$loop_count++;
+	}
+echo "</select>";
 
 echo "</td>\n";
 echo "<td width='200'><font class='arial'>"._QXZ("Message").":</font><BR>\n";

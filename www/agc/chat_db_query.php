@@ -12,6 +12,7 @@
 # Builds:
 # 150901-2348 - First build
 # 151218-1052 - Added missing translation code and user auth
+# 151231-0841 - Added agent_allowed_chat_groups setting
 #
 
 require("dbconnect_mysqli.php");
@@ -146,10 +147,9 @@ if ($action=="CreateAgentToAgentChat" && $agent_manager && $agent_user && $manag
 		$rslt=mysqli_query($link, $stmt);
 		if (mysqli_num_rows($rslt)>0) {
 			$row=mysqli_fetch_row($rslt);
-
-			$user=$row[0];
-			$user_group=$row[2];
-			$campaign_id=$row[3];
+			$user =			$row[0];
+			$user_group =	$row[2];
+			$campaign_id =	$row[3];
 
 			$ins_stmt="insert into vicidial_manager_chats(chat_start_date, manager, selected_agents, selected_user_groups, selected_campaigns, allow_replies) VALUES(now(), '$agent_manager', '|$agent_user|', '|$user_group|', '|$campaign_id|', 'Y')";
 			$ins_rslt=mysqli_query($link, $ins_stmt);
@@ -330,30 +330,37 @@ if ($action=="ReloadAgentNewChatSpan" && $user) {
 	$row=mysqli_fetch_row($rslt);
 	$VU_user_group =	$row[0];
 
-	$agent_status_viewable_groupsSQL='';
+	$stmt="SELECT campaign_id from vicidial_live_agents where user='$user';";
+	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
+	$rslt=mysql_to_mysqli($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+	$row=mysqli_fetch_row($rslt);
+	$campaign_id =	$row[0];
+
+	$agent_allowed_chat_groupsSQL='';
 	### Gather timeclock and shift enforcement restriction settings
-	$stmt="SELECT agent_status_viewable_groups,agent_status_view_time from vicidial_user_groups where user_group='$VU_user_group';";
+	$stmt="SELECT agent_status_viewable_groups,agent_status_view_time,agent_allowed_chat_groups from vicidial_user_groups where user_group='$VU_user_group';";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$row=mysqli_fetch_row($rslt);
-	$agent_status_viewable_groups = $row[0];
-	$agent_status_viewable_groupsSQL = preg_replace('/\s\s/i','',$agent_status_viewable_groups);
-	$agent_status_viewable_groupsSQL = preg_replace('/\s/i',"','",$agent_status_viewable_groupsSQL);
-	$agent_status_viewable_groupsSQL = "user_group IN('$agent_status_viewable_groupsSQL')";
+	$agent_allowed_chat_groups = $row[2];
+	$agent_allowed_chat_groupsSQL = preg_replace('/\s\s/i','',$agent_allowed_chat_groups);
+	$agent_allowed_chat_groupsSQL = preg_replace('/\s/i',"','",$agent_allowed_chat_groupsSQL);
+	$agent_allowed_chat_groupsSQL = "user_group IN('$agent_allowed_chat_groupsSQL')";
 	$agent_status_view = 0;
-	if (strlen($agent_status_viewable_groups) > 2)
+	if (strlen($agent_allowed_chat_groups) > 2)
 		{$agent_status_view = 1;}
 	$agent_status_view_time=0;
 	if ($row[1] == 'Y')
 		{$agent_status_view_time=1;}
 	$andSQL='';
-	if (preg_match("/ALL-GROUPS/",$agent_status_viewable_groups))
+	if (preg_match("/ALL-GROUPS/",$agent_allowed_chat_groups))
 		{$AGENTviewSQL = "";}
 	else
 		{
-		$AGENTviewSQL = "($agent_status_viewable_groupsSQL)";
+		$AGENTviewSQL = "($agent_allowed_chat_groupsSQL)";
 
-		if (preg_match("/CAMPAIGN-AGENTS/",$agent_status_viewable_groups))
-			{$AGENTviewSQL = "($AGENTviewSQL or (campaign_id='$campaign'))";}
+		if (preg_match("/CAMPAIGN-AGENTS/",$agent_allowed_chat_groups))
+			{$AGENTviewSQL = "($AGENTviewSQL or (campaign_id='$campaign_id'))";}
 		$AGENTviewSQL = "and $AGENTviewSQL";
 		}
 

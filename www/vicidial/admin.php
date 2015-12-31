@@ -2020,6 +2020,8 @@ if (isset($_GET["gather_asterisk_output"]))				{$gather_asterisk_output=$_GET["g
 	elseif (isset($_POST["gather_asterisk_output"]))	{$gather_asterisk_output=$_POST["gather_asterisk_output"];}
 if (isset($_GET["manual_dial_timeout"]))			{$manual_dial_timeout=$_GET["manual_dial_timeout"];}
 	elseif (isset($_POST["manual_dial_timeout"]))	{$manual_dial_timeout=$_POST["manual_dial_timeout"];}
+if (isset($_GET["agent_allowed_chat_groups"]))			{$agent_allowed_chat_groups=$_GET["agent_allowed_chat_groups"];}
+	elseif (isset($_POST["agent_allowed_chat_groups"]))	{$agent_allowed_chat_groups=$_POST["agent_allowed_chat_groups"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -3096,6 +3098,10 @@ if ($non_latin < 1)
 	$queuemetrics_socket_url = preg_replace('/;/','',$queuemetrics_socket_url);
 	$queuemetrics_socket_url = preg_replace('/\r/', '',$queuemetrics_socket_url);
 	$queuemetrics_socket_url = preg_replace('/\'/', "\"",$queuemetrics_socket_url);
+	$agent_status_viewable_groups = preg_replace('/\\\\/', '',$agent_status_viewable_groups);
+	$agent_status_viewable_groups = preg_replace('/\\\\/', '',$agent_status_viewable_groups);
+	$agent_allowed_chat_groups = preg_replace('/\\\\/', '',$agent_allowed_chat_groups);
+	$agent_allowed_chat_groups = preg_replace('/\\\\/', '',$agent_allowed_chat_groups);
 	### VARIABLES TO BE mysql_real_escape_string ###
 	# $web_form_address
 	# $queuemetrics_url
@@ -3673,12 +3679,13 @@ else
 # 151229-1653 - Added gather_asterisk_output server option
 # 151229-2258 - Added campaign setting for manual_dial_timeout
 # 151231-0009 - Fixed admin logging in several places
+# 151231-0834 - Added agent_allowed_chat_groups to User Groups
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-529a';
-$build = '151231-0009';
+$admin_version = '2.12-530a';
+$build = '151231-0834';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -14166,6 +14173,15 @@ if ($ADD==411111)
 					$p++;
 					}
 				$p=0;
+				$VGROUP_chatgroups=' ';
+				$vgroup_chatgroups_ct = count($agent_allowed_chat_groups);
+				while ($p <= $vgroup_chatgroups_ct)
+					{
+					$agent_allowed_chat_groups[$p] = preg_replace('/[^- \_0-9a-zA-Z]/','',$agent_allowed_chat_groups[$p]);
+					$VGROUP_chatgroups .= "$agent_allowed_chat_groups[$p] ";
+					$p++;
+					}
+				$p=0;
 				$Vadmin_viewable_groups=' ';
 				$admin_viewable_groups_ct = count($admin_viewable_groups);
 				while ($p <= $admin_viewable_groups_ct)
@@ -14253,7 +14269,7 @@ if ($ADD==411111)
 					}
 					$custom_rpt_SQL=",allowed_custom_reports='$custom_report_str'";
 				}
-				$stmt="UPDATE vicidial_user_groups set user_group='$user_group', group_name='$group_name',allowed_campaigns='$campaigns_value',qc_allowed_campaigns='$qc_campaigns_value',qc_allowed_inbound_groups='$qc_groups_value',group_shifts='$GROUP_shifts',forced_timeclock_login='$forced_timeclock_login',shift_enforcement='$shift_enforcement',agent_status_viewable_groups='$VGROUP_vgroups',agent_status_view_time='$agent_status_view_time',agent_call_log_view='$agent_call_log_view',agent_xfer_consultative='$agent_xfer_consultative',agent_xfer_dial_override='$agent_xfer_dial_override',agent_xfer_vm_transfer='$agent_xfer_vm_transfer',agent_xfer_blind_transfer='$agent_xfer_blind_transfer',agent_xfer_dial_with_customer='$agent_xfer_dial_with_customer',agent_xfer_park_customer_dial='$agent_xfer_park_customer_dial',agent_fullscreen='$agent_fullscreen',allowed_reports='$allowed_reports'$custom_rpt_SQL,webphone_url_override='" . mysqli_real_escape_string($link, $webphone_url_override) . "',webphone_systemkey_override='$webphone_systemkey_override',webphone_dialpad_override='$webphone_dialpad_override',admin_viewable_groups='$Vadmin_viewable_groups',admin_viewable_call_times='$Vadmin_viewable_call_times' where user_group='$OLDuser_group';";
+				$stmt="UPDATE vicidial_user_groups set user_group='$user_group', group_name='$group_name',allowed_campaigns='$campaigns_value',qc_allowed_campaigns='$qc_campaigns_value',qc_allowed_inbound_groups='$qc_groups_value',group_shifts='$GROUP_shifts',forced_timeclock_login='$forced_timeclock_login',shift_enforcement='$shift_enforcement',agent_status_viewable_groups='$VGROUP_vgroups',agent_status_view_time='$agent_status_view_time',agent_call_log_view='$agent_call_log_view',agent_xfer_consultative='$agent_xfer_consultative',agent_xfer_dial_override='$agent_xfer_dial_override',agent_xfer_vm_transfer='$agent_xfer_vm_transfer',agent_xfer_blind_transfer='$agent_xfer_blind_transfer',agent_xfer_dial_with_customer='$agent_xfer_dial_with_customer',agent_xfer_park_customer_dial='$agent_xfer_park_customer_dial',agent_fullscreen='$agent_fullscreen',allowed_reports='$allowed_reports'$custom_rpt_SQL,webphone_url_override='" . mysqli_real_escape_string($link, $webphone_url_override) . "',webphone_systemkey_override='$webphone_systemkey_override',webphone_dialpad_override='$webphone_dialpad_override',admin_viewable_groups='$Vadmin_viewable_groups',admin_viewable_call_times='$Vadmin_viewable_call_times',agent_allowed_chat_groups='$VGROUP_chatgroups' where user_group='$OLDuser_group';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 
 				echo "<br><B>"._QXZ("USER GROUP MODIFIED")."</B>\n";
@@ -19050,6 +19066,16 @@ if ($ADD==3)
 					echo "<tr bgcolor=#9BB9FB><td align=right>"._QXZ("QC Pass").": </td><td align=left><select size=1 name=qc_pass><option>0</option><option>1</option><option SELECTED>$qc_pass</option></select>$NWB#users-qc_pass$NWE</td></tr>\n";
 					echo "<tr bgcolor=#9BB9FB><td align=right>"._QXZ("QC Finish").": </td><td align=left><select size=1 name=qc_finish><option>0</option><option>1</option><option SELECTED>$qc_finish</option></select>$NWB#users-qc_finish$NWE</td></tr>\n";
 					echo "<tr bgcolor=#9BB9FB><td align=right>"._QXZ("QC Commit").": </td><td align=left><select size=1 name=qc_commit><option>0</option><option>1</option><option SELECTED>$qc_commit</option></select>$NWB#users-qc_commit$NWE</td></tr>\n";
+					}
+				else
+					{
+					echo "<tr bgcolor=#9BB9FB><td align=right>";
+					echo "<input type=hidden name=qc_enabled value=\"$qc_enabled\">";
+					echo "<input type=hidden name=qc_user_level value=\"$qc_user_level\">";
+					echo "<input type=hidden name=qc_pass value=\"$qc_pass\">";
+					echo "<input type=hidden name=qc_finish value=\"$qc_finish\">";
+					echo "<input type=hidden name=qc_commit value=\"$qc_commit\">";
+					echo "</td></tr>\n";
 					}
 				}
 			if ( ($LOGuser_level > 8) and ($LOGalter_admin_interface > 0) )
@@ -28471,7 +28497,7 @@ if ($ADD==311111)
 			echo "<TABLE><TR><TD>\n";
 			echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-			$stmt="SELECT user_group,group_name,allowed_campaigns,qc_allowed_campaigns,qc_allowed_inbound_groups,group_shifts,forced_timeclock_login,shift_enforcement,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial,agent_fullscreen,allowed_reports,webphone_url_override,webphone_systemkey_override,webphone_dialpad_override,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$user_group' $LOGadmin_viewable_groupsSQL;";
+			$stmt="SELECT user_group,group_name,allowed_campaigns,qc_allowed_campaigns,qc_allowed_inbound_groups,group_shifts,forced_timeclock_login,shift_enforcement,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial,agent_fullscreen,allowed_reports,webphone_url_override,webphone_systemkey_override,webphone_dialpad_override,admin_viewable_groups,admin_viewable_call_times,agent_allowed_chat_groups from vicidial_user_groups where user_group='$user_group' $LOGadmin_viewable_groupsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			$row=mysqli_fetch_row($rslt);
 			$user_group =						$row[0];
@@ -28495,6 +28521,7 @@ if ($ADD==311111)
 			$webphone_dialpad_override =		$row[21];
 			$admin_viewable_groups =			$row[22];
 			$admin_viewable_call_times =		$row[23];
+			$VGROUP_chatgroups =				$row[24];
 
 			echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -28542,7 +28569,7 @@ if ($ADD==311111)
 			echo " <BR>&nbsp;</td></tr>\n";
 
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent Status Viewable Groups").": <BR>$NWB#user_groups-agent_status_viewable_groups$NWE</td><td align=left>\n";
+			echo "<tr bgcolor=#9BB9FB><td align=right>"._QXZ("Agent Status Viewable Groups").": <BR>$NWB#user_groups-agent_status_viewable_groups$NWE</td><td align=left>\n";
 			if ($admin_viewable_groupsALL > 0)
 				{
 				echo "<input type=\"checkbox\" name=\"agent_status_viewable_groups[]\" value=\"--ALL-GROUPS--\"";
@@ -28586,23 +28613,60 @@ if ($ADD==311111)
 				}
 			echo " <BR>&nbsp;</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent Status View Time").": </td><td align=left><select size=1 name=agent_status_view_time><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_status_view_time' SELECTED>"._QXZ("$agent_status_view_time")."</option></select>$NWB#user_groups-agent_status_view_time$NWE</td></tr>\n";
+			echo "<tr bgcolor=#9BB9FB><td align=right>"._QXZ("Agent Status View Time").": </td><td align=left><select size=1 name=agent_status_view_time><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_status_view_time' SELECTED>"._QXZ("$agent_status_view_time")."</option></select>$NWB#user_groups-agent_status_view_time$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent Call Log View").": </td><td align=left><select size=1 name=agent_call_log_view><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_call_log_view' SELECTED>"._QXZ("$agent_call_log_view")."</option></select>$NWB#user_groups-agent_call_log_view$NWE</td></tr>\n";
+			echo "<tr bgcolor=#9BB9FB><td align=right>"._QXZ("Agent Call Log View").": </td><td align=left><select size=1 name=agent_call_log_view><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_call_log_view' SELECTED>"._QXZ("$agent_call_log_view")."</option></select>$NWB#user_groups-agent_call_log_view$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent Allow Consultative Xfer").": </td><td align=left><select size=1 name=agent_xfer_consultative><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_xfer_consultative' SELECTED>"._QXZ("$agent_xfer_consultative")."</option></select>$NWB#user_groups-agent_xfer_options$NWE</td></tr>\n";
+			echo "<tr bgcolor=#9BB9FB><td align=right>"._QXZ("Agent Allow Consultative Xfer").": </td><td align=left><select size=1 name=agent_xfer_consultative><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_xfer_consultative' SELECTED>"._QXZ("$agent_xfer_consultative")."</option></select>$NWB#user_groups-agent_xfer_options$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent Allow Dial Override Xfer").": </td><td align=left><select size=1 name=agent_xfer_dial_override><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_xfer_dial_override' SELECTED>"._QXZ("$agent_xfer_dial_override")."</option></select>$NWB#user_groups-agent_xfer_options$NWE</td></tr>\n";
+			echo "<tr bgcolor=#9BB9FB><td align=right>"._QXZ("Agent Allow Dial Override Xfer").": </td><td align=left><select size=1 name=agent_xfer_dial_override><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_xfer_dial_override' SELECTED>"._QXZ("$agent_xfer_dial_override")."</option></select>$NWB#user_groups-agent_xfer_options$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent Allow Voicemail Message Xfer").": </td><td align=left><select size=1 name=agent_xfer_vm_transfer><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_xfer_vm_transfer' SELECTED>"._QXZ("$agent_xfer_vm_transfer")."</option></select>$NWB#user_groups-agent_xfer_options$NWE</td></tr>\n";
+			echo "<tr bgcolor=#9BB9FB><td align=right>"._QXZ("Agent Allow Voicemail Message Xfer").": </td><td align=left><select size=1 name=agent_xfer_vm_transfer><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_xfer_vm_transfer' SELECTED>"._QXZ("$agent_xfer_vm_transfer")."</option></select>$NWB#user_groups-agent_xfer_options$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent Allow Blind Xfer").": </td><td align=left><select size=1 name=agent_xfer_blind_transfer><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_xfer_blind_transfer' SELECTED>"._QXZ("$agent_xfer_blind_transfer")."</option></select>$NWB#user_groups-agent_xfer_options$NWE</td></tr>\n";
+			echo "<tr bgcolor=#9BB9FB><td align=right>"._QXZ("Agent Allow Blind Xfer").": </td><td align=left><select size=1 name=agent_xfer_blind_transfer><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_xfer_blind_transfer' SELECTED>"._QXZ("$agent_xfer_blind_transfer")."</option></select>$NWB#user_groups-agent_xfer_options$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent Allow Dial With Customer Xfer").": </td><td align=left><select size=1 name=agent_xfer_dial_with_customer><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_xfer_dial_with_customer' SELECTED>"._QXZ("$agent_xfer_dial_with_customer")."</option></select>$NWB#user_groups-agent_xfer_options$NWE</td></tr>\n";
+			echo "<tr bgcolor=#9BB9FB><td align=right>"._QXZ("Agent Allow Dial With Customer Xfer").": </td><td align=left><select size=1 name=agent_xfer_dial_with_customer><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_xfer_dial_with_customer' SELECTED>"._QXZ("$agent_xfer_dial_with_customer")."</option></select>$NWB#user_groups-agent_xfer_options$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent Allow Park Customer Dial Xfer").": </td><td align=left><select size=1 name=agent_xfer_park_customer_dial><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_xfer_park_customer_dial' SELECTED>"._QXZ("$agent_xfer_park_customer_dial")."</option></select>$NWB#user_groups-agent_xfer_options$NWE</td></tr>\n";
+			echo "<tr bgcolor=#9BB9FB><td align=right>"._QXZ("Agent Allow Park Customer Dial Xfer").": </td><td align=left><select size=1 name=agent_xfer_park_customer_dial><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_xfer_park_customer_dial' SELECTED>"._QXZ("$agent_xfer_park_customer_dial")."</option></select>$NWB#user_groups-agent_xfer_options$NWE</td></tr>\n";
 			
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent Fullscreen").": </td><td align=left><select size=1 name=agent_fullscreen><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_fullscreen' SELECTED>"._QXZ("$agent_fullscreen")."</option></select>$NWB#user_groups-agent_fullscreen$NWE</td></tr>\n";
+			echo "<tr bgcolor=#9BB9FB><td align=right>"._QXZ("Agent Fullscreen").": </td><td align=left><select size=1 name=agent_fullscreen><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$agent_fullscreen' SELECTED>"._QXZ("$agent_fullscreen")."</option></select>$NWB#user_groups-agent_fullscreen$NWE</td></tr>\n";
+
+			echo "<tr bgcolor=#9BB9FB><td align=right>"._QXZ("Agent Allowed Chat Groups").": <BR>$NWB#user_groups-agent_allowed_chat_groups$NWE</td><td align=left>\n";
+			if ($admin_viewable_groupsALL > 0)
+				{
+				echo "<input type=\"checkbox\" name=\"agent_allowed_chat_groups[]\" value=\"--ALL-GROUPS--\"";
+				if (preg_match('/\s\-\-ALL\-GROUPS\-\-\s/', $VGROUP_chatgroups))
+					{echo " CHECKED";}
+				echo "><B>"._QXZ("ALL-GROUPS")."</B> - "._QXZ("All user groups in the system")."<BR>\n";
+				}
+			echo "<input type=\"checkbox\" name=\"agent_allowed_chat_groups[]\" value=\"--CAMPAIGN-AGENTS--\"";
+			if (preg_match('/\s\-\-CAMPAIGN\-AGENTS\-\-\s/', $VGROUP_chatgroups))
+				{echo " CHECKED";}
+			echo "><B>"._QXZ("CAMPAIGN-AGENTS")."</B> - "._QXZ("All users logged into the same campaign as the agent")."<BR>\n";
+
+			$stmt="SELECT user_group,group_name from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$view_chatgroups_to_print = mysqli_num_rows($rslt);
+			$o=0;
+			while ($view_chatgroups_to_print > $o)
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$chatgroups_id_value =		$rowx[0];
+				$chatgroups_name_value =	$rowx[1];
+				echo "<input type=\"checkbox\" name=\"agent_allowed_chat_groups[]\" value=\"$chatgroups_id_value\"";
+				$p=0;
+				while ($p<1000)
+					{
+					if (preg_match("/\s$chatgroups_id_value\s/", $VGROUP_chatgroups))
+						{
+						echo " CHECKED";
+						}
+					$p++;
+					}
+				echo "> <a href=\"$PHP_SELF?ADD=311111&user_group=$chatgroups_id_value\">$chatgroups_id_value</a> - $chatgroups_name_value<BR>\n";
+				$o++;
+				}
+			echo " <BR>&nbsp;</td></tr>\n";
 
 			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Allowed Reports").": </td><td align=left><select MULTIPLE size=8 name=allowed_reports[]>\n";
 			$Vreports_ARY = explode(',',$UGreports);

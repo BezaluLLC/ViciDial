@@ -696,7 +696,8 @@ webphone_systemkey_override VARCHAR(100) default '',
 webphone_dialpad_override ENUM('DISABLED','Y','N','TOGGLE','TOGGLE_OFF') default 'DISABLED',
 admin_viewable_groups TEXT,
 admin_viewable_call_times TEXT,
-allowed_custom_reports VARCHAR(2000) default ''
+allowed_custom_reports VARCHAR(2000) default '',
+agent_allowed_chat_groups TEXT
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns (
@@ -3672,4 +3673,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1444',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1445',db_schema_update_date=NOW(),reload_timestamp=NOW();

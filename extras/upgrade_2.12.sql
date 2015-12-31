@@ -440,3 +440,9 @@ UPDATE system_settings SET db_schema_version='1443',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD manual_dial_timeout VARCHAR(3) default '';
 
 UPDATE system_settings SET db_schema_version='1444',db_schema_update_date=NOW() where db_schema_version < 1444;
+
+ALTER TABLE vicidial_user_groups ADD agent_allowed_chat_groups TEXT;
+
+UPDATE vicidial_user_groups INNER JOIN system_settings ON system_settings.db_schema_version = 1444 SET agent_allowed_chat_groups=agent_status_viewable_groups;
+
+UPDATE system_settings SET db_schema_version='1445',db_schema_update_date=NOW() where db_schema_version < 1445;
