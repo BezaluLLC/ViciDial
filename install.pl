@@ -2,7 +2,7 @@
 
 # install.pl version 2.12
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 
 # CHANGES
@@ -41,6 +41,7 @@
 # 150911-1808 - Added creation of GPG directory for encrypted recordings
 # 151029-0650 - Added Asterisk 11 as listed option, added new sample voicemail.conf for 1.8 and higher
 # 151212-0840 - Added chat_customer web directory, removed static language build actions
+# 160101-0907 - Changed ip_relay code to look for installed package
 #
 
 ############################################
@@ -2543,8 +2544,9 @@ if ($WEBONLY < 1)
 	`chmod 0755 $PATHhome/ip_relay/relay_control`;
 	`chmod 0755 $PATHhome/ip_relay/ip_relay_linux_i386`;
 	`ln -s $PATHhome/ip_relay/ip_relay_linux_i386 $PATHhome/ip_relay/ip_relay`;
-	`ln -s $PATHhome/ip_relay/ip_relay_linux_i386 /usr/bin/ip_relay`;
 	`ln -s $PATHhome/ip_relay/ip_relay_linux_i386 /usr/local/bin/ip_relay`;
+	if (! -x "/usr/bin/ip_relay" ) 
+		{`ln -s $PATHhome/ip_relay/ip_relay_linux_i386 /usr/bin/ip_relay`;}
 
 	print "Starting ip_relay port forwarding for IAX on 40569, 41569 and 42569\n";
 	`$PATHhome/ip_relay/relay_control start  2>/dev/null 1>&2`;

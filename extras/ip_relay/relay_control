@@ -2,9 +2,9 @@
 #
 # relay_control      ip_relay startup/shutdown script
 #
-# Version: 1.0     ip_relay/relay_control     7-Feb-2003
+# Version: 1.1  ip_relay/relay_control  started: 2003-02-07 modified: 2016-01-01
 #
-# info@eflo.net
+# vicidial@gmail.com
 #
 # This script is released under the BSD license 
 # (for compatibility with the ip_relay project)
@@ -14,17 +14,23 @@
 #
 # Changes:
 # 140619-0954 - Added new port 42569 for playback loops
+# 160101-0912 - Added check for installed ip_relay binary
 #
 
+IPRELAY_BIN="/usr/bin/ip_relay"
+
+if [ ! -x $IPRELAY_BIN ]; then
+	IPRELAY_BIN="/usr/local/bin/ip_relay"
+fi
 
 case "$1" in
   start)
 
-        echo "starting up ip_relay services "
+        echo "starting up ip_relay services at $IPRELAY_BIN"
 
-        ip_relay 40569 127.0.0.1    4569 9999999 &
-        ip_relay 41569 127.0.0.1    4569 9999999 &
-        ip_relay 42569 127.0.0.1    4569 9999999 &
+        $IPRELAY_BIN 40569 127.0.0.1    4569 9999999 &
+        $IPRELAY_BIN 41569 127.0.0.1    4569 9999999 &
+        $IPRELAY_BIN 42569 127.0.0.1    4569 9999999 &
 
         echo "done "
         echo
@@ -49,7 +55,9 @@ case "$1" in
         echo "Shutting down ip_relay services "
 
         # Turn off IP Forwarding
-        kill `ps -C ip_relay -o pid --no-heading`
+        echo "Running:  kill -9 `ps -C ip_relay -o pid --no-heading`"
+
+        kill -9 `ps -C ip_relay -o pid --no-heading`
 
         echo "Done "
 
