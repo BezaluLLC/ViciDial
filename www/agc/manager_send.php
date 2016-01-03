@@ -1,7 +1,7 @@
 <?php
 # manager_send.php    version 2.12
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to insert records into the vicidial_manager table to signal Actions to an asterisk server
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -128,12 +128,13 @@
 # 150723-1643 - Added ajax logging
 # 150915-2039 - Added option for RECID as variable in recording filename
 # 151230-0910 - Fixed transfer of parked call logging issue #901
+# 160101-1130 - Added code to handle routing initiated recordings
 #
 
-$version = '2.12-75';
-$build = '151230-0910';
+$version = '2.12-76';
+$build = '160101-1130';
 $php_script = 'manager_send.php';
-$mel=1;					# Mysql Error Log enabled = 1
+$mel=2;					# Mysql Error Log enabled = 1
 $mysql_log_count=138;
 $one_mysql_log=0;
 $SSagent_debug_logging=0;
@@ -2197,96 +2198,114 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 
 		if ($ACTION=="MonitorConf")
 			{
-			if (preg_match("/RECID/",$filename) )
+			$stmt="SELECT recording_id,filename FROM routing_initiated_recordings where user='$user' and processed='0' order by launch_time desc limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$rir_ct = mysqli_num_rows($rslt);
+			if ($rir_ct > 0)
 				{
-				$stmt = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename,lead_id,user) values('$channel','$server_ip','$exten','$NOW_TIME','$StarTtime','$filename','$lead_id','$user')";
+				$row=mysqli_fetch_row($rslt);
+				$recording_id =	$row[0];
+				$filename =		$row[1];
+
+				$stmt = "UPDATE routing_initiated_recordings SET processed='1' where recording_id='$recording_id';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_to_mysqli($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02133',$user,$server_ip,$session_name,$one_mysql_log);}
-				$RLaffected_rows = mysqli_affected_rows($link);
-				if ($RLaffected_rows > 0)
-					{
-					$recording_id = mysqli_insert_id($link);
-					}
-
-				$filename = preg_replace("/RECID/","$recording_id",$filename);
-
-				$stmt = "UPDATE recording_log SET filename='$filename' where recording_id='$recording_id';";
-					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_to_mysqli($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02134',$user,$server_ip,$session_name,$one_mysql_log);}
-
-				$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$filename','Channel: $channel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','Callerid: $filename','','','','','');";
-					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_to_mysqli($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02135',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 			else
 				{
-				$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$filename','Channel: $channel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','Callerid: $filename','','','','','');";
-					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_to_mysqli($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02072',$user,$server_ip,$session_name,$one_mysql_log);}
-
-				$stmt = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename,lead_id,user) values('$channel','$server_ip','$exten','$NOW_TIME','$StarTtime','$filename','$lead_id','$user')";
-					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_to_mysqli($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02073',$user,$server_ip,$session_name,$one_mysql_log);}
-				$RLaffected_rows = mysqli_affected_rows($link);
-				if ($RLaffected_rows > 0)
+				if (preg_match("/RECID/",$filename) )
 					{
-					$recording_id = mysqli_insert_id($link);
-					}
-				}
-			if ($FROMvdc=='YES')
-				{
-				##### update vla record with recording_id
-				$stmt = "UPDATE vicidial_live_agents SET external_recording='$recording_id' where user='$user';";
-					if ($format=='debug') {echo "\n<!-- $stmt -->";}
-				$rslt=mysql_to_mysqli($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02117',$user,$server_ip,$session_name,$one_mysql_log);}
+					$stmt = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename,lead_id,user) values('$channel','$server_ip','$exten','$NOW_TIME','$StarTtime','$filename','$lead_id','$user')";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02133',$user,$server_ip,$session_name,$one_mysql_log);}
+					$RLaffected_rows = mysqli_affected_rows($link);
+					if ($RLaffected_rows > 0)
+						{
+						$recording_id = mysqli_insert_id($link);
+						}
 
-				##### get call type from vicidial_live_agents table
-				$VLA_inOUT='NONE';
-				$stmt="SELECT comments FROM vicidial_live_agents where user='$user' order by last_update_time desc limit 1;";
-				$rslt=mysql_to_mysqli($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02074',$user,$server_ip,$session_name,$one_mysql_log);}
-				if ($DB) {echo "$stmt\n";}
-				$VLA_inOUT_ct = mysqli_num_rows($rslt);
-				if ($VLA_inOUT_ct > 0)
-					{
-					$row=mysqli_fetch_row($rslt);
-					$VLA_inOUT =		$row[0];
-					}
-				if ($VLA_inOUT == 'INBOUND')
-					{
-					$four_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-4,date("i"),date("s"),date("m"),date("d"),date("Y")));
+					$filename = preg_replace("/RECID/","$recording_id",$filename);
 
-					##### look for the vicidial ID in the vicidial_closer_log table
-					$stmt="SELECT closecallid FROM vicidial_closer_log where lead_id='$lead_id' and user='$user' and call_date > \"$four_hours_ago\" order by closecallid desc limit 1;";
+					$stmt = "UPDATE recording_log SET filename='$filename' where recording_id='$recording_id';";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02134',$user,$server_ip,$session_name,$one_mysql_log);}
+
+					$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$filename','Channel: $channel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','Callerid: $filename','','','','','');";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02135',$user,$server_ip,$session_name,$one_mysql_log);}
 					}
 				else
 					{
-					##### look for the vicidial ID in the vicidial_log table
-					$stmt="SELECT uniqueid FROM vicidial_log where uniqueid='$uniqueid' and lead_id='$lead_id';";
-					}
-				$rslt=mysql_to_mysqli($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02075',$user,$server_ip,$session_name,$one_mysql_log);}
-				if ($DB) {echo "$stmt\n";}
-				$VM_mancall_ct = mysqli_num_rows($rslt);
-				if ($VM_mancall_ct > 0)
-					{
-					$row=mysqli_fetch_row($rslt);
-					$VDvicidial_id =	$row[0];
-
-					$stmt = "UPDATE recording_log SET vicidial_id='$VDvicidial_id' where recording_id='$recording_id';";
+					$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$filename','Channel: $channel','Context: $ext_context','Exten: $exten','Priority: $ext_priority','Callerid: $filename','','','','','');";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					$rslt=mysql_to_mysqli($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02076',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02072',$user,$server_ip,$session_name,$one_mysql_log);}
+
+					$stmt = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename,lead_id,user) values('$channel','$server_ip','$exten','$NOW_TIME','$StarTtime','$filename','$lead_id','$user')";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02073',$user,$server_ip,$session_name,$one_mysql_log);}
+					$RLaffected_rows = mysqli_affected_rows($link);
+					if ($RLaffected_rows > 0)
+						{
+						$recording_id = mysqli_insert_id($link);
+						}
+					}
+				if ($FROMvdc=='YES')
+					{
+					##### update vla record with recording_id
+					$stmt = "UPDATE vicidial_live_agents SET external_recording='$recording_id' where user='$user';";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02117',$user,$server_ip,$session_name,$one_mysql_log);}
+
+					##### get call type from vicidial_live_agents table
+					$VLA_inOUT='NONE';
+					$stmt="SELECT comments FROM vicidial_live_agents where user='$user' order by last_update_time desc limit 1;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02074',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$VLA_inOUT_ct = mysqli_num_rows($rslt);
+					if ($VLA_inOUT_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$VLA_inOUT =		$row[0];
+						}
+					if ($VLA_inOUT == 'INBOUND')
+						{
+						$four_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-4,date("i"),date("s"),date("m"),date("d"),date("Y")));
+
+						##### look for the vicidial ID in the vicidial_closer_log table
+						$stmt="SELECT closecallid FROM vicidial_closer_log where lead_id='$lead_id' and user='$user' and call_date > \"$four_hours_ago\" order by closecallid desc limit 1;";
+						}
+					else
+						{
+						##### look for the vicidial ID in the vicidial_log table
+						$stmt="SELECT uniqueid FROM vicidial_log where uniqueid='$uniqueid' and lead_id='$lead_id';";
+						}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02075',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$VM_mancall_ct = mysqli_num_rows($rslt);
+					if ($VM_mancall_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$VDvicidial_id =	$row[0];
+
+						$stmt = "UPDATE recording_log SET vicidial_id='$VDvicidial_id' where recording_id='$recording_id';";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02076',$user,$server_ip,$session_name,$one_mysql_log);}
+						}
 					}
 				}
 			}
-
 		##### StopMonitorConf steps #####
 		else
 			{
@@ -2319,8 +2338,16 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02118',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
-			
-			$stmt="SELECT recording_id,start_epoch FROM recording_log where filename='$filename'";
+
+			$rec_searchSQL = "filename='$filename'";
+			if (preg_match("/^ID:/",$filename))
+				{
+				$recording_id = $filename;
+				$recording_id = preg_replace("/^ID:/",'',$recording_id);
+				$rec_searchSQL = "recording_id='$recording_id'";
+				}
+
+			$stmt="SELECT recording_id,start_epoch,filename FROM recording_log where $rec_searchSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02078',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -2328,13 +2355,14 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 			if ($rec_count>0)
 				{
 				$row=mysqli_fetch_row($rslt);
-				$recording_id = $row[0];
-				$start_time = $row[1];
+				$recording_id =		$row[0];
+				$start_time =		$row[1];
+				$filename =			$row[2];
 				$length_in_sec = ($StarTtime - $start_time);
 				$length_in_min = ($length_in_sec / 60);
 				$length_in_min = sprintf("%8.2f", $length_in_min);
 
-				$stmt = "UPDATE recording_log set end_time='$NOW_TIME',end_epoch='$StarTtime',length_in_sec=$length_in_sec,length_in_min='$length_in_min' $uniqueidSQL where filename='$filename'";
+				$stmt = "UPDATE recording_log set end_time='$NOW_TIME',end_epoch='$StarTtime',length_in_sec=$length_in_sec,length_in_min='$length_in_min' $uniqueidSQL where $rec_searchSQL;";
 					if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02079',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -2348,14 +2376,14 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 		#	$rec_count = intval(mysqli_num_rows($rslt) / 2);
 			$rec_count = mysqli_num_rows($rslt);
 			$h=0;
-				while ($rec_count>$h)
+			while ($rec_count>$h)
 				{
 				$rowx=mysqli_fetch_row($rslt);
 				$HUchannel[$h] = $rowx[0];
 				$h++;
 				}
 			$i=0;
-				while ($h>$i)
+			while ($h>$i)
 				{
 				$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Hangup','RH12345$StarTtime$i','Channel: $HUchannel[$i]','','','','','','','','','');";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
@@ -2364,7 +2392,7 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 				$i++;
 				}
 			}
-			echo _QXZ("%1s command sent for Channel %2s on %3s",0,'',$ACTION,$channel,$server_ip)."\nFilename: $filename\nRecorDing_ID: $recording_id\n RECORDING WILL LAST UP TO 60 MINUTES\n";
+		echo _QXZ("%1s command sent for Channel %2s on %3s",0,'',$ACTION,$channel,$server_ip)."\nFilename: $filename\nRecorDing_ID: $recording_id\n RECORDING WILL LAST UP TO 60 MINUTES\n";
 		}
 	}
 

@@ -446,3 +446,22 @@ ALTER TABLE vicidial_user_groups ADD agent_allowed_chat_groups TEXT;
 UPDATE vicidial_user_groups INNER JOIN system_settings ON system_settings.db_schema_version = 1444 SET agent_allowed_chat_groups=agent_status_viewable_groups;
 
 UPDATE system_settings SET db_schema_version='1445',db_schema_update_date=NOW() where db_schema_version < 1445;
+
+ALTER TABLE vicidial_campaigns ADD routing_initiated_recordings ENUM('Y','N') default 'N';
+
+ALTER TABLE vicidial_inbound_groups ADD routing_initiated_recordings ENUM('Y','N') default 'N';
+
+CREATE TABLE routing_initiated_recordings (
+recording_id INT(10) UNSIGNED PRIMARY KEY NOT NULL,
+filename VARCHAR(100),
+launch_time DATETIME,
+lead_id INT(9) UNSIGNED,
+vicidial_id VARCHAR(20),
+user VARCHAR(20) DEFAULT NULL,
+processed TINYINT(1) default '0',
+index(lead_id),
+index(user),
+index(processed)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+UPDATE system_settings SET db_schema_version='1446',db_schema_update_date=NOW() where db_schema_version < 1446;

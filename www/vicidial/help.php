@@ -74,6 +74,7 @@
 # 151229-1659 - Added servers-gather_asterisk_output entry
 # 151229-2302 - Added campaigns-manual_dial_timeout entry
 # 151231-0839 - Added user_groups-agent_allowed_chat_groups entry
+# 160101-0933 - Added entries for routing_initiated_recordings in campaigns and in-groups
 #
 
 
@@ -1336,6 +1337,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-allcalls_delay">
 <BR>
 <B><?php echo _QXZ("Recording Delay"); ?> -</B><?php echo _QXZ("For ALLCALLS and ALLFORCE recording only. This setting will delay the starting of the recording on all calls for the number of seconds specified in this field. Default is 0."); ?>
+
+<BR>
+<A NAME="campaigns-routing_initiated_recordings">
+<BR>
+<B><?php echo _QXZ("Routing Initiated Recording"); ?> -</B><?php echo _QXZ("This option, if enabled, allows you to have the call routing script for Outbound auto-dial calls trigger the agent call recording instead of the agent screen. This option will only work if the recording option is set to ALLCALLS or ALLFORCE. This will not work with agent manual dialed calls. Default is N for disabled."); ?>
 
 <BR>
 <A NAME="campaigns-per_call_notes">
@@ -2626,6 +2632,11 @@ if ($SSqc_features_active > 0)
 <A NAME="inbound_groups-ingroup_recording_override">
 <BR>
 <B><?php echo _QXZ("In-Group Recording Override"); ?> -</B><?php echo _QXZ("This field allows for the overriding of the campaign call recording setting. This setting can be overridden by the user recording override setting. DISABLED will not override the campaign recording setting. NEVER will disable recording on the client. ONDEMAND is the default and allows the agent to start and stop recording as needed. ALLCALLS will start recording on the client whenever a call is sent to an agent. ALLFORCE will start recording on the client whenever a call is sent to an agent giving the agent no option to stop recording."); ?>
+
+<BR>
+<A NAME="inbound_groups-routing_initiated_recordings">
+<BR>
+<B><?php echo _QXZ("Routing Initiated Recording"); ?> -</B><?php echo _QXZ("This option, if enabled, allows you to have the call routing script for Inbound calls trigger the agent call recording instead of the agent screen. This option will only work if the recording option is set to ALLCALLS or ALLFORCE. This will not work with inbound on-hook agents. Default is N for disabled."); ?>
 
 <BR>
 <A NAME="inbound_groups-ingroup_rec_filename">

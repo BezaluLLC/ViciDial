@@ -9,7 +9,7 @@
 # !!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!
 # THIS SCRIPT SHOULD ONLY BE RUN ON ONE SERVER ON YOUR CLUSTER
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60717-1214 - changed to DBI by Marin Blu
@@ -20,6 +20,7 @@
 # 120404-1315 - Changed to run only on DB server<you should remove from other servers' crontabs>
 # 120411-1637 - Added --seconds option
 # 150710-0907 - Added flush of vicidial_dtmf_log table
+# 160101-1124 - Added flush of routing_initiated_recordings table
 #
 
 ### begin parsing run-time options ###
@@ -196,12 +197,17 @@ else
 $stmtA = "DELETE from vicidial_manager where entry_date < '$flush_time';";
 if($DB){print STDERR "\n|$stmtA|\n";}
 if (!$T) {	$affected_rows = $dbhA->do($stmtA);}
-if (!$Q) {print " - vicidial_manager flush\n";}
+if (!$Q) {print " - vicidial_manager flush: $affected_rows rows\n";}
 
 $stmtA = "DELETE from vicidial_dtmf_log where dtmf_time < '$flush_time';";
 if($DB){print STDERR "\n|$stmtA|\n";}
 if (!$T) {      $affected_rows = $dbhA->do($stmtA);}
-if (!$Q) {print " - vicidial_dtmf_log flush\n";}
+if (!$Q) {print " - vicidial_dtmf_log flush: $affected_rows rows\n";}
+
+$stmtA = "DELETE from routing_initiated_recordings where launch_time < '$flush_time';";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) {      $affected_rows = $dbhA->do($stmtA);}
+if (!$Q) {print " - routing_initiated_recordings flush: $affected_rows rows\n";}
 
 $stmtA = "OPTIMIZE table vicidial_manager;";
 if($DB){print STDERR "\n|$stmtA|\n";}
@@ -229,6 +235,20 @@ if (!$T)
         $sthA->finish();
         }
 if (!$Q) {print " - OPTIMIZE vicidial_dtmf_log          \n";}
+
+
+$stmtA = "OPTIMIZE table routing_initiated_recordings;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T)
+        {
+        $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+        $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+        $sthArows=$sthA->rows;
+        @aryA = $sthA->fetchrow_array;
+        if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+        $sthA->finish();
+        }
+if (!$Q) {print " - OPTIMIZE routing_initiated_recordings          \n";}
 
 
 $stmtA = "OPTIMIZE table vicidial_live_agents;";

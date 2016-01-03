@@ -946,7 +946,8 @@ status_display_ingroup ENUM('ENABLED','DISABLED') default 'ENABLED',
 customer_gone_seconds SMALLINT(5) UNSIGNED default '30',
 agent_display_fields VARCHAR(50) default '',
 am_message_wildcards ENUM('Y','N') default 'N',
-manual_dial_timeout VARCHAR(3) default ''
+manual_dial_timeout VARCHAR(3) default '',
+routing_initiated_recordings ENUM('Y','N') default 'N'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -1167,7 +1168,8 @@ after_hours_lead_reset ENUM('Y','N') default 'N',
 nanq_lead_reset ENUM('Y','N') default 'N',
 wait_time_lead_reset ENUM('Y','N') default 'N',
 hold_time_lead_reset ENUM('Y','N') default 'N',
-status_group_id VARCHAR(20) default ''
+status_group_id VARCHAR(20) default '',
+routing_initiated_recordings ENUM('Y','N') default 'N'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -3424,6 +3426,19 @@ update_date DATETIME,
 unique index(server_ip)
 )ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE routing_initiated_recordings (
+recording_id INT(10) UNSIGNED PRIMARY KEY NOT NULL,
+filename VARCHAR(100),
+launch_time DATETIME,
+lead_id INT(9) UNSIGNED,
+vicidial_id VARCHAR(20),
+user VARCHAR(20) DEFAULT NULL,
+processed TINYINT(1) default '0',
+index(lead_id),
+index(user),
+index(processed)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3673,4 +3688,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1445',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1446',db_schema_update_date=NOW(),reload_timestamp=NOW();

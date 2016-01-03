@@ -1,7 +1,7 @@
 <?php
 # vicidial.php - the web-based version of the astVICIDIAL client application
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Other scripts that this application depends on:
 # - vdc_db_query.php: Updates information in the database
@@ -513,10 +513,11 @@
 # 151229-2240 - Fixed issue #907, script reload after canceling manual 3way call
 # 151229-2331 - Added campaign setting for manual_dial_timeout, Issue #903
 # 151230-0911 - Fixed transfer of parked call logging issue #901
+# 160101-1131 - Added code to handle routing initiated recordings
 #
 
-$version = '2.12-482c';
-$build = '151230-0911';
+$version = '2.12-483c';
+$build = '160101-1131';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -2888,6 +2889,13 @@ else
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01039',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$vliaLIaffected_rows = mysqli_affected_rows($link);
 			echo "<!-- old vicidial_live_inbound_agents records cleared: |$vliaLIaffected_rows| -->\n";
+
+			$stmt="UPDATE routing_initiated_recordings set processed='2' where user='$VD_login' and processed='0';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			$RIRaffected_rows = mysqli_affected_rows($link);
+			echo "<!-- routing_initiated_recordings invalidated:   |$RIRaffected_rows| -->\n";
 
 			$VULhostname = php_uname('n');
 			$VULservername = $_SERVER['SERVER_NAME'];
@@ -5931,6 +5939,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					{
 					var RClookResponse = null;
 			//	document.getElementById("busycallsdebug").innerHTML = confmonitor_query;
+			//		alert(confmonitor_query);
 			//		alert(xmlhttp.responseText);
 					RClookResponse = xmlhttp.responseText;
 					var RClookResponse_array=RClookResponse.split("\n");
@@ -5958,6 +5967,19 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							}
 						document.getElementById("RecorDingFilename").innerHTML = RecDispNamE;
 						document.getElementById("RecorDID").innerHTML = RClookID_array[1];
+
+						if (taskconfrectype == 'MonitorConf')
+							{
+							var conf_rec_start_html = "<a href=\"#\" onclick=\"conf_send_recording('StopMonitorConf','" + taskconfrec + "','ID:" + recording_id + "','','','YES');return false;\"><img src=\"./images/<?php echo _QXZ("vdc_LB_stoprecording.gif") ?>\" border=\"0\" alt=\"Stop Recording\" /></a>";
+							if (LIVE_campaign_recording == 'ALLFORCE')
+								{
+								document.getElementById("RecorDControl").innerHTML = "<img src=\"./images/<?php echo _QXZ("vdc_LB_startrecording_OFF.gif") ?>\" border=\"0\" alt=\"Start Recording\" />";
+								}
+							else
+								{
+								document.getElementById("RecorDControl").innerHTML = conf_rec_start_html;
+								}
+							}
 						}
 					}
 				}

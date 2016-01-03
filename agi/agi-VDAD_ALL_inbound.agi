@@ -82,7 +82,7 @@
 #exten => _99909*.,2,AGI(agi-VDAD_ALL_inbound.agi)
 #exten => _99909*.,3,Hangup
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 70828-0924 - First Build
@@ -200,6 +200,7 @@
 # 150804-1718 - Added _lead_reset options
 # 150812-2004 - Changed maximum time since last agent update to route a call to and agent from 5 to 7 seconds
 # 151004-0815 - Fixed issue with recording vicidial_id for remote agent calls, now set to closecallid
+# 160101-1525 - Added routing_initiated_recordings
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -724,7 +725,7 @@ $affected_rows = $dbhA->do($stmtA);
 
 ### Grab inbound groups values from the database
 $cbc=0;
-$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,ingroup_recording_override,ingroup_rec_filename,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,max_calls_method,max_calls_count,max_calls_action,populate_lead_ingroup,na_call_url,drop_lead_reset,after_hours_lead_reset,nanq_lead_reset,wait_time_lead_reset,hold_time_lead_reset FROM vicidial_inbound_groups where group_id = '$channel_group';";
+$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,ingroup_recording_override,ingroup_rec_filename,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,max_calls_method,max_calls_count,max_calls_action,populate_lead_ingroup,na_call_url,drop_lead_reset,after_hours_lead_reset,nanq_lead_reset,wait_time_lead_reset,hold_time_lead_reset,routing_initiated_recordings FROM vicidial_inbound_groups where group_id = '$channel_group';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -822,6 +823,7 @@ if ($sthArows > 0)
 	$nanq_lead_reset =					$aryA[80];
 	$wait_time_lead_reset =				$aryA[81];
 	$hold_time_lead_reset =				$aryA[82];
+	$routing_initiated_recordings =		$aryA[83];
 
 	$custom_call_id='';
 	if ($uniqueid_status_display =~ /ENABLED/)
@@ -1480,7 +1482,7 @@ if ( ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $c
 	$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02019';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-	if ($AGILOG) {$agi_string = "--  AH VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "--  AH VDCL vac record deleted: |$affected_rows| $channel_group|";   &agi_output;}
 	if ($AGILOG) {$agi_string = "--  AH action: |$after_hours_action|$after_hours_exten|$after_hours_message_filename|$after_hours_voicemail|";   &agi_output;}
 
 	if ($after_hours_action =~ /EXTENSION|VOICEMAIL|IN_GROUP|CALLMENU|VMAIL_NO_INST/)
@@ -1717,7 +1719,7 @@ if ( ( ($no_agent_no_queue =~ /Y|NO_PAUSED/) || ($MCnanque_override > 0) ) && ($
 		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02107';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-		if ($AGILOG) {$agi_string = "--  NA VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
+		if ($AGILOG) {$agi_string = "--  NA VDCL vac record deleted: |$affected_rows| $channel_group|";   &agi_output;}
 
 		if ($no_agent_action =~ /CALLMENU|INGROUP|DID|EXTENSION|VOICEMAIL|VMAIL_NO_INST/)
 			{
@@ -2642,6 +2644,138 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 				$stmtA = "UNLOCK TABLES;";
 				my $LOCKaffected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02060';   $MEL_aff_rows=$LOCKaffected_rows;   &mysql_error_logging;
+
+				if ( ($routing_initiated_recordings =~ /Y/) && ($found_agents > 0) && ($VDADon_hook_agent !~ /Y/) && ($CAMP_callorder !~ /ring_all$/i) && ($VDADextension !~ /^R\//))
+					{
+					### BEGIN routing-initiated agent call recording for ALLCALLS/ALLFORCE ###
+
+					### get the recording settings for the campaign that this user is logged into
+					if (length($log_campaign) > 0)
+						{
+						$stmtA = "SELECT campaign_recording,campaign_rec_filename,campaign_rec_exten FROM vicidial_campaigns where campaign_id='$log_campaign';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$CAMPingroup_recording_override =	$aryA[0];
+							$CAMPcampaign_rec_filename =		$aryA[1];
+							$recording_exten =					$aryA[2];
+							}
+						$sthA->finish();
+						}
+					if ( (length($log_campaign) > 0) && ($ingroup_recording_override =~ /DISABLED/) )
+						{$ingroup_recording_override =	$CAMPingroup_recording_override;}
+					if ( (length($log_campaign) > 0) && (length($campaign_rec_filename) < 8) )
+						{$campaign_rec_filename =		$CAMPcampaign_rec_filename;}
+					### look for the recording settings for the start user of this user
+					if (length($VDADuser) > 0)
+						{
+						$stmtA = "SELECT vicidial_recording_override,vicidial_recording FROM vicidial_users where user='$VDADuser';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArowsVUrec=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArowsVUrec;   &mysql_error_logging;
+						if ($sthArowsVUrec > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							if ($aryA[0] !~ /DISABLED/)
+								{$ingroup_recording_override =	$aryA[0];}
+							if ($aryA[1] < 1)
+								{$ingroup_recording_override =	'NONE';}
+							}
+						$sthA->finish();
+						}
+
+					### if recording is enabled then start recording on this call before sending to a remote agent
+					if ($ingroup_recording_override =~ /ALLCALLS|ALLFORCE/)
+						{
+						$stmtA = "SELECT vendor_lead_code FROM vicidial_list where lead_id='$insert_lead_id';";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$vendor_lead_code =	$aryA[0];
+							}
+						$sthA->finish();
+
+						# get date/time
+						($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+						$year = ($year + 1900);
+						$Tyear = ($year - 2000);
+						$mon++;
+						if ($mon < 10)	{$mon = "0$mon";}
+						if ($mday < 10) {$mday = "0$mday";}
+						if ($hour < 10) {$hour = "0$hour";}
+						if ($min < 10)	{$min = "0$min";}
+						if ($sec < 10)	{$sec = "0$sec";}
+
+						$now_date_epoch = time();
+						$now_date = "$year-$mon-$mday $hour:$min:$sec";
+						$recdate = "$year$mon$mday-$hour$min$sec";
+						$tinydate = "$Tyear$mon$mday$hour$min$sec";
+
+						$campaign_rec_filename =~ s/CAMPAIGN/$log_campaign/gi;
+						$campaign_rec_filename =~ s/INGROUP/$channel_group/gi;
+						$campaign_rec_filename =~ s/CUSTPHONE/$phone_number/gi;
+						$campaign_rec_filename =~ s/FULLDATE/$recdate/gi;
+						$campaign_rec_filename =~ s/TINYDATE/$tinydate/gi;
+						$campaign_rec_filename =~ s/EPOCH/$now_date_epoch/gi;
+						$campaign_rec_filename =~ s/AGENT/$VDADuser/gi;
+						$campaign_rec_filename =~ s/VENDORLEADCODE/$vendor_lead_code/gi;
+						$campaign_rec_filename =~ s/LEADID/$insert_lead_id/gi;
+						$campaign_rec_filename =~ s/CALLID/$callerid/gi;
+						$campaign_rec_filename =~ s/\"|\'//gi;
+
+						$conf_silent_prefix='5';
+						$channelrec = "Local/" . $conf_silent_prefix . '' . $VDADconf_exten . "@" . $ext_context;
+
+						### insert a record into the recording_log table 
+						$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename,lead_id,user,vicidial_id) values('$channelrec','$VDADserver_ip','$recording_exten','$now_date','$now_date_epoch','$campaign_rec_filename','$insert_lead_id','$VDADuser','$insert_close_id')";
+						$affected_rows = $dbhA->do($stmtA);
+							$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+						$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
+						$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+							$dbhP=$dbhA;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$recording_id = $aryA[0];
+							}
+						$sthA->finish();
+
+						if ($campaign_rec_filename =~ /RECID/) 
+							{
+							$campaign_rec_filename =~ s/RECID/$recording_id/gi;
+
+							$stmtA = "UPDATE recording_log SET filename='$campaign_rec_filename' where recording_id='$recording_id';";
+							$affected_rows = $dbhA->do($stmtA);
+								$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+							}
+
+						$stmtA="INSERT INTO vicidial_manager values('','','$now_date','NEW','N','$VDADserver_ip','','Originate','$campaign_rec_filename','Channel: $channelrec','Context: $ext_context','Exten: $recording_exten','Priority: 1','Callerid: $campaign_rec_filename','','','','','');";
+						$affected_rows = $dbhA->do($stmtA);
+							$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+
+						$stmtB = "INSERT INTO routing_initiated_recordings (recording_id,filename,launch_time,lead_id,vicidial_id,user,processed) values('$recording_id','$campaign_rec_filename','$now_date','$insert_lead_id','$insert_close_id','$VDADuser','0')";
+						$affected_rowsB = $dbhA->do($stmtB);
+							$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rowsB;   &mysql_error_logging;
+
+						$stmtC = "UPDATE vicidial_live_agents SET external_recording='$recording_id' where user='$VDADuser';";
+						$affected_rowsC = $dbhA->do($stmtC);
+							$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rowsC;   &mysql_error_logging;
+
+						if ($AGILOG) {$agi_string = "--    ROUTING INITIATED RECORDING STARTED : |$affected_rows|$recording_id|$campaign_rec_filename|$stmtA|   |$affected_rowsB|$stmtB|   |$affected_rowsC|$stmtC|";   &agi_output;}
+						}
+					### END routing-initiated agent call recording for ALLCALLS/ALLFORCE ###
+					}
 				}
 
 
@@ -3424,7 +3558,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						$recdate = "$year$mon$mday-$hour$min$sec";
 						$tinydate = "$Tyear$mon$mday$hour$min$sec";
 
-						$campaign_rec_filename =~ s/CAMPAIGN/$VDADcampaign/gi;
+						$campaign_rec_filename =~ s/CAMPAIGN/$log_campaign/gi;
 						$campaign_rec_filename =~ s/INGROUP/$channel_group/gi;
 						$campaign_rec_filename =~ s/CUSTPHONE/$phone_number/gi;
 						$campaign_rec_filename =~ s/FULLDATE/$recdate/gi;
@@ -3582,7 +3716,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 			$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
 			$affected_rows = $dbhA->do($stmtA);
 				$dbhP=$dbhA;   $mysql_count='02075';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-			if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
+			if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $channel_group|";   &agi_output;}
 
 			if ($drop_seconds < 1) {$drop_seconds = $drop_timer;}
 
@@ -4334,7 +4468,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 				$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
 				$affected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02090';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-				if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
+				if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $channel_group|";   &agi_output;}
 
 				$called_since_last_resetSQL='';
 				if ( ($wait_time_option =~ /VOICEMAIL|HANGUP|MESSAGE|VMAIL_NO_INST/) && ($wait_time_lead_reset =~ /Y/) )
@@ -4777,7 +4911,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
 						$affected_rows = $dbhA->do($stmtA);
 							$dbhP=$dbhA;   $mysql_count='02090';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-						if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
+						if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $channel_group|";   &agi_output;}
 
 						$called_since_last_resetSQL='';
 						if ( ($hold_time_option =~ /VOICEMAIL|HANGUP|MESSAGE|VMAIL_NO_INST/) && ($hold_time_lead_reset =~ /Y/) )
@@ -5148,7 +5282,7 @@ if ( ($drop_timer > $DROP_TIME) || ($MCdrop_override > 0) )
 	$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' and server_ip='$VARserver_ip' order by call_time desc limit 1;";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02099';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
-	if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $VDADcampaign|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "--    VDCL vac record deleted: |$affected_rows| $channel_group|";   &agi_output;}
 
 	$stmtA = "UPDATE vicidial_closer_log set status='$DRstatus',end_epoch='$now_date_epoch',length_in_sec='$drop_seconds',queue_seconds='$drop_seconds',term_reason='$DRterm' where lead_id='$insert_lead_id' order by start_epoch desc limit 1;";
 	$affected_rows = $dbhA->do($stmtA);

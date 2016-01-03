@@ -221,6 +221,11 @@ OTHER CHANGES:
 55. Added Agent Allowed Chat Groups to User Groups to allow restriction of only
 	agent to agent chatting by itself.
 
+56. Added options in In-Groups and Campaigns to allow for the agent recordings
+	to be initiated by the routing process instead of at the agent screen.
+	This only works for inbound and auto-dial outbound calls for in-groups
+	and campaigns that are set to ALLCALLS or ALLFORCE recording.
+
 
 
 

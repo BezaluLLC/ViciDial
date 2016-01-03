@@ -2,7 +2,7 @@
 #
 # sheet2tab.pl - Convert spreadsheet to tab-delimited text file   version 2.12
 #
-# Copyright (C) 2015  Matt Florell & Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell & Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Lead file conversion and scrubbing script.  This is the first stage in the lead loading process.
 #
@@ -34,6 +34,7 @@
 # 110927-1750 - Fixed issue with improperly CSV files locking up servers <mikec>
 # 130619-2310 - Fixed missing XLSX perl module declaration
 # 150312-1547 - Allow for single quotes in vicidial_list data fields
+# 160102-0958 - Fix for special characters, issue #792
 #
 
 # disable when not debugging
@@ -43,6 +44,7 @@
 use Spreadsheet::Read;
 use Spreadsheet::XLSX;
 use File::Basename;
+use open ':std', ':encoding(UTF-8)';
 
 
 sub scrub_lead_field 

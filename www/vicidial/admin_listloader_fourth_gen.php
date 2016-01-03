@@ -2,7 +2,7 @@
 # admin_listloader_fourth_gen.php - version 2.12
 #  (based upon - new_listloader_superL.php script)
 # 
-# Copyright (C) 2015  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # ViciDial web-based lead loader from formatted file
 # 
@@ -63,10 +63,11 @@
 # 150516-1136 - Fixed conflict with functions.php
 # 150728-0732 - Added state fullname to abbreviation conversion feature (state_conversion)
 # 150810-0750 - Added compatibility for custom fields data option
+# 160102-1039 - Better special characters support
 #
 
-$version = '2.12-61';
-$build = '150810-0750';
+$version = '2.12-62';
+$build = '160102-1039';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -224,6 +225,7 @@ $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
+if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 $stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -361,9 +363,11 @@ while ($stat_num_rows > $snr_count)
 
 #if ($DB) {print "SEED TIME  $secX      :   $year-$mon-$mday $hour:$min:$sec  LOCAL GMT OFFSET NOW: $LOCAL_GMT_OFF\n";}
 
+header ("Content-type: text/html; charset=utf-8");
 
 echo "<html>\n";
 echo "<head>\n";
+echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 echo "<!-- VERSION: $version     BUILD: $build -->\n";
 echo "<!-- SEED TIME  $secX:   $year-$mon-$mday $hour:$min:$sec  LOCAL GMT OFFSET NOW: $LOCAL_GMT_OFF  DST: $isdst -->\n";
 
