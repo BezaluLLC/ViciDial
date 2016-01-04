@@ -465,3 +465,7 @@ index(processed)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 UPDATE system_settings SET db_schema_version='1446',db_schema_update_date=NOW() where db_schema_version < 1446;
+
+CREATE INDEX live_chat_id on vicidial_chat_log (chat_id);
+
+UPDATE system_settings SET db_schema_version='1447',db_schema_update_date=NOW() where db_schema_version < 1447;

@@ -1,7 +1,7 @@
 <?php 
 # AST_timeonVDADall.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -95,10 +95,11 @@
 # 150804-0956 - Added WHISPER option agent monitoring
 # 150919-0238 - Added display for chats in queue
 # 150925-2223 - Added User option to hide users from real-time report
+# 160104-1059 - Added detection of dead chat sessions
 #
 
-$version = '2.12-83';
-$build = '150925-2223';
+$version = '2.12-84';
+$build = '160104-1059';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -2683,6 +2684,7 @@ $talking_to_print = mysqli_num_rows($rslt);
 		if (preg_match("/INCALL/i",$Lstatus)) 
 			{
 			$stmtP="SELECT count(*) from parked_channels where channel_group='$Acallerid[$i]';";
+			if ($DB) {echo "$stmtP\n";}
 			$rsltP=mysql_to_mysqli($stmtP,$link);
 			$rowP=mysqli_fetch_row($rsltP);
 			$parked_channel = $rowP[0];
@@ -2702,6 +2704,33 @@ $talking_to_print = mysqli_num_rows($rslt);
 					$Astatus[$i] =	'DEAD';
 					$Lstatus =		'DEAD';
 					$status =		' DEAD ';
+					}
+				if (preg_match("/CHAT/i",$comments))
+					{
+					$stmtCT="SELECT chat_id from vicidial_live_chats where chat_creator='$Auser[$i]' and lead_id='$Alead_id[$i]' order by chat_start_time desc limit 1;";
+					if ($DB) {echo "$stmtCT\n";}
+					$rsltCT=mysql_to_mysqli($stmtCT,$link);
+					$chatting_to_print = mysqli_num_rows($rslt);
+					if ($chatting_to_print > 0)
+						{
+						$rowCT=mysqli_fetch_row($rsltCT);
+						$Achat_id = $rowCT[0];
+
+						$stmtCL="SELECT count(*) from vicidial_chat_log where chat_id='$Achat_id' and message LIKE \"%has left chat\";";
+						if ($DB) {echo "$stmtCL\n";}
+						$rsltCL=mysql_to_mysqli($stmtCL,$link);
+						$rowCL=mysqli_fetch_row($rsltCL);
+						$left_chat = $rowCL[0];
+
+						if ($left_chat > 0)
+							{
+							$Acall_time[$i]=$Astate_change[$i];
+
+							$Astatus[$i] =	'DEAD';
+							$Lstatus =		'DEAD';
+							$status =		'DEAD C';
+							}
+						}
 					}
 				}
 

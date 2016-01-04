@@ -514,10 +514,11 @@
 # 151229-2331 - Added campaign setting for manual_dial_timeout, Issue #903
 # 151230-0911 - Fixed transfer of parked call logging issue #901
 # 160101-1131 - Added code to handle routing initiated recordings
+# 160104-1237 - Added images for live chat and email, and dead chat
 #
 
-$version = '2.12-483c';
-$build = '160101-1131';
+$version = '2.12-484c';
+$build = '160104-1237';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=85;
 $one_mysql_log=0;
@@ -4360,6 +4361,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		image_livecall_ON.src="./images/<?php echo _QXZ("agc_live_call_ON.gif") ?>";
 	var image_livecall_DEAD = new Image();
 		image_livecall_DEAD.src="./images/<?php echo _QXZ("agc_live_call_DEAD.gif") ?>";
+	var image_livechat_ON = new Image();
+		image_livechat_ON.src="./images/<?php echo _QXZ("agc_live_chat_ON.gif") ?>";
+	var image_livechat_DEAD = new Image();
+		image_livechat_DEAD.src="./images/<?php echo _QXZ("agc_live_chat_DEAD.gif") ?>";
+	var image_liveemail_ON = new Image();
+		image_liveemail_ON.src="./images/<?php echo _QXZ("agc_live_email_ON.gif") ?>";
 	var image_LB_dialnextnumber = new Image();
 		image_LB_dialnextnumber.src="./images/<?php echo _QXZ("vdc_LB_dialnextnumber.gif") ?>";
 	var image_LB_hangupcustomer = new Image();
@@ -5154,7 +5161,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				}
 			if (xmlhttprequestcheckconf) 
 				{
-				checkconf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&client=vdc&conf_exten=" + taskconfnum + "&auto_dial_level=" + auto_dial_level + "&campagentstdisp=" + campagentstdisp + "&clicks=" + button_click_log;
+				checkconf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&client=vdc&conf_exten=" + taskconfnum + "&auto_dial_level=" + auto_dial_level + "&campagentstdisp=" + campagentstdisp + "&customer_chat_id=" + document.vicidial_form.customer_chat_id.value + "&live_call_seconds=" + VD_live_call_secondS +"&clicks=" + button_click_log;
 				button_click_log='';
 				xmlhttprequestcheckconf.open('POST', 'conf_exten_check.php'); 
 				xmlhttprequestcheckconf.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -5270,7 +5277,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						var APIManualDialQueue_array = check_time_array[24].split("APIManualDialQueue: ");
 						APIManualDialQueue = APIManualDialQueue_array[1];
 						var CheckDEADcall_array = check_time_array[10].split("DEADcall: ");
-						var CheckDEADcall = CheckDEADcall_array[1];
+						CheckDEADcall = CheckDEADcall_array[1];
 						var InGroupChange_array = check_time_array[11].split("InGroupChange: ");
 						var InGroupChange = InGroupChange_array[1];
 						var InGroupChangeBlend = check_time_array[12];
@@ -5591,7 +5598,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								}
 							}
 
-						if ( (CheckDEADcall > 0) && (VD_live_customer_call==1) )
+						if ( (CheckDEADcall > 0) && (VD_live_customer_call==1) && (currently_in_email_or_chat < 1) )
 							{
 							if (CheckDEADcallON < 1)
 								{
@@ -5610,6 +5617,17 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									{
 									parked_hangup='1';
 									}
+								}
+							}
+						if ( (CheckDEADcall > 0) && (VD_live_customer_call==1) && (VD_live_call_secondS > 5) && ((CalL_AutO_LauncH == 'CHAT')) && (currently_in_email_or_chat > 0) )
+							{
+							if (CheckDEADcallON < 1)
+								{
+								if( document.images ) 
+									{ document.images['livecall'].src = image_livechat_DEAD.src;}
+								CheckDEADcallON=1;
+								CheckDEADcallCOUNT++;
+								customer_sec = VD_live_call_secondS;
 								}
 							}
 						if (InGroupChange > 0)
@@ -10403,10 +10421,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							VDIC_web_form_address_two = VICIDiaL_web_form_address_two;
 							VDIC_web_form_address_three = VICIDiaL_web_form_address_three;
 							CalL_AutO_LauncH			= VDIC_data_VDAC[3];
+							if( document.images ) { document.images['livecall'].src = image_livecall_ON.src;}
 							if (CalL_AutO_LauncH=='EMAIL')
 								{
 								document.vicidial_form.email_row_id.value= VDIC_data_VDAC[4];
 								document.getElementById("EmailAudioAlertFile").play();
+								if( document.images ) { document.images['livecall'].src = image_liveemail_ON.src;}
 								}
 							else if (CalL_AutO_LauncH=='CHAT')
 								{
@@ -10415,6 +10435,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									document.images['CustomerChatImg'].src=image_customer_chat_ON.src;
 									document.getElementById("ChatAudioAlertFile").play();
 									document.vicidial_form.chat_id.value= VDIC_data_VDAC[4];
+									document.vicidial_form.customer_chat_id.value= VDIC_data_VDAC[4];
+									if( document.images ) { document.images['livecall'].src = image_livechat_ON.src;}
 									}
 								}
 							var VDIC_fronter='';
@@ -10514,7 +10536,6 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							lastcustchannel = VDIC_data_VDAC[3];
 							document.vicidial_form.callserverip.value	= VDIC_data_VDAC[4];
 							lastcustserverip = VDIC_data_VDAC[4];
-							if( document.images ) { document.images['livecall'].src = image_livecall_ON.src;}
 							document.vicidial_form.SecondS.value		= 0;
 							document.getElementById("SecondSDISP").innerHTML = '0';
 
@@ -12399,6 +12420,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					document.vicidial_form.call_notes_dispo.value ='';
 					document.vicidial_form.email_row_id.value		='';
 					document.vicidial_form.chat_id.value		='';
+					document.vicidial_form.customer_chat_id.value		='';
 					document.vicidial_form.dispo_comments.value ='';
 					document.vicidial_form.cbcomment_comments.value ='';
 					VDCL_group_id = '';
@@ -17250,6 +17272,7 @@ $zi=2;
     <input type="hidden" name="SecondS" id="SecondS" value="" />
     <input type="hidden" name="email_row_id" id="email_row_id" value="" />
     <input type="hidden" name="chat_id" id="chat_id" value="" />
+    <input type="hidden" name="customer_chat_id" id="customer_chat_id" value="" />
 	<span class="text_input" id="MainPanelCustInfo">
     <table><tr>
     <td align="right"></td>

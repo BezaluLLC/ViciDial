@@ -3206,7 +3206,8 @@ poster VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT NULL,
 chat_member_name VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT NULL,
 chat_level ENUM('0','1') COLLATE utf8_unicode_ci DEFAULT '0',
 PRIMARY KEY (message_row_id),
-KEY vicidial_chat_log_user_key (poster)
+KEY vicidial_chat_log_user_key (poster),
+KEY vicidial_chat_log_chat_id (chat_id)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 CREATE TABLE vicidial_chat_log_archive (
@@ -3688,4 +3689,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1446',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1447',db_schema_update_date=NOW(),reload_timestamp=NOW();

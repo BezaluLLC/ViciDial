@@ -1,7 +1,7 @@
 <?php
 # user_stats.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -48,6 +48,7 @@
 # 141229-1836 - Added code for on-the-fly language translations display
 # 150804-0749 - Added call status as option, Issue #883
 # 151227-1839 - Added option to search archived data
+# 160104-1226 - Added call type field to the agent activity table
 #
 
 $startMS = microtime();
@@ -1142,11 +1143,11 @@ else
 		$MAIN.="<B>"._QXZ("AGENT ACTIVITY FOR THIS TIME PERIOD: (10000 record limit)")."&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=7'>["._QXZ("DOWNLOAD")."]</a></B>\n";
 		$MAIN.="<TABLE width=750 cellspacing=0 cellpadding=1>\n";
 		$MAIN.="<tr><td colspan=2><font size=1> &nbsp; </td><td colspan=6 align=center bgcolor=white><font size=1>"._QXZ("these fields are in seconds")." </td><td colspan=4><font size=1> &nbsp; </td></tr>\n";
-		$MAIN.="<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("PAUSE")."</td><td align=left><font size=2> "._QXZ("WAIT")."</td><td align=left><font size=2> "._QXZ("TALK")."</td><td align=right><font size=2> "._QXZ("DISPO")."</td><td align=right><font size=2> "._QXZ("DEAD")."</td><td align=right><font size=2> "._QXZ("CUSTOMER")."</td><td align=right><font size=2> "._QXZ("STATUS")."</td><td align=right><font size=2> "._QXZ("LEAD")."</td><td align=right><font size=2> "._QXZ("CAMPAIGN")."</td><td align=right><font size=2> "._QXZ("PAUSE CODE")."</td></tr>\n";
+		$MAIN.="<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("PAUSE")."</td><td align=left><font size=2> "._QXZ("WAIT")."</td><td align=left><font size=2> "._QXZ("TALK")."</td><td align=right><font size=2> "._QXZ("DISPO")."</td><td align=right><font size=2> "._QXZ("DEAD")."</td><td align=right><font size=2> "._QXZ("CUSTOMER")."</td><td align=right><font size=2> "._QXZ("STATUS")."</td><td align=right><font size=2> "._QXZ("LEAD")."</td><td align=right><font size=2> "._QXZ("TYPE")."</td><td align=right><font size=2> "._QXZ("CAMPAIGN")."</td><td align=right><font size=2> "._QXZ("PAUSE CODE")."</td></tr>\n";
 		$CSV_text7.="\""._QXZ("AGENT ACTIVITY FOR THIS TIME PERIOD: (10000 record limit)")."\"\n";
-		$CSV_text7.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("PAUSE")."\",\""._QXZ("WAIT")."\",\""._QXZ("TALK")."\",\""._QXZ("DISPO")."\",\""._QXZ("DEAD")."\",\""._QXZ("CUSTOMER")."\",\""._QXZ("STATUS")."\",\""._QXZ("LEAD")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("PAUSE CODE")."\"\n";
+		$CSV_text7.="\"\",\"#\",\""._QXZ("DATE/TIME")."\",\""._QXZ("PAUSE")."\",\""._QXZ("WAIT")."\",\""._QXZ("TALK")."\",\""._QXZ("DISPO")."\",\""._QXZ("DEAD")."\",\""._QXZ("CUSTOMER")."\",\""._QXZ("STATUS")."\",\""._QXZ("LEAD")."\",\""._QXZ("TYPE")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("PAUSE CODE")."\"\n";
 
-		$stmt="SELECT event_time,lead_id,campaign_id,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec,status,sub_status,user_group from ".$vicidial_agent_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and event_time >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_time <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' and ( (pause_sec > 0) or (wait_sec > 0) or (talk_sec > 0) or (dispo_sec > 0) ) $query_call_status order by event_time desc limit 10000;";
+		$stmt="SELECT event_time,lead_id,campaign_id,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec,status,sub_status,user_group,comments from ".$vicidial_agent_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and event_time >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_time <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' and ( (pause_sec > 0) or (wait_sec > 0) or (talk_sec > 0) or (dispo_sec > 0) ) $query_call_status order by event_time desc limit 10000;";
 		if ($DB) {$MAIN.="agent activity|$stmt|";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$logs_to_print = mysqli_num_rows($rslt);
@@ -1172,6 +1173,7 @@ else
 			$status =		$row[8];
 			$pause_code =	$row[9];
 			$user_group =	$row[10];
+			$comments =		$row[11];
 			$customer_sec = ($talk_sec - $dead_sec);
 			if ($customer_sec < 0)
 				{$customer_sec=0;}
@@ -1209,6 +1211,7 @@ else
 				$MAIN.="<td align=right><font size=2> &nbsp; </td>\n";
 				$MAIN.="<td align=right><font size=2> &nbsp; </td>\n";
 				$MAIN.="<td align=right><font size=2> &nbsp; </td>\n";
+				$MAIN.="<td align=right><font size=2> &nbsp; </td>\n";
 				$MAIN.="<td align=right><font size=2> &nbsp; </td></tr>\n";
 				}
 
@@ -1224,9 +1227,21 @@ else
 			$MAIN.="<td align=right><font size=2> $customer_sec </td>\n";
 			$MAIN.="<td align=right><font size=2> $status </td>\n";
 			$MAIN.="<td align=right><font size=2> <A HREF=\"admin_modify_lead.php?lead_id=$lead_id\" target=\"_blank\">$lead_id</A> </td>\n";
+			$call_type='';
+			if (strlen($lead_id) > 0)
+				{
+				$call_type='A';
+				if ($comments == 'INBOUND') {$call_type='I';}
+				if ($comments == 'EMAIL') {$call_type='E';}
+				if ($comments == 'CHAT') {$call_type='C';}
+				if ($comments == 'MANUAL') {$call_type='M';}
+				$MAIN.="<td align=center><font size=2> $call_type </td>\n";
+				}
+			else
+				{$MAIN.="<td align=right><font size=2> &nbsp;</td>\n";}
 			$MAIN.="<td align=right><font size=2> $campaign_id </td>\n";
 			$MAIN.="<td align=right><font size=2> $pause_code </td></tr>\n";
-			$CSV_text7.="\"\",\"$u\",\"$event_time\",\"$pause_sec\",\"$wait_sec\",\"$talk_sec\",\"$dispo_sec\",\"$dead_sec\",\"$customer_sec\",\"$status\",\"$lead_id\",\"$campaign_id\",\"$pause_code \"\n";
+			$CSV_text7.="\"\",\"$u\",\"$event_time\",\"$pause_sec\",\"$wait_sec\",\"$talk_sec\",\"$dispo_sec\",\"$dead_sec\",\"$customer_sec\",\"$status\",\"$lead_id\",\"$call_type\",\"$campaign_id\",\"$pause_code \"\n";
 			}
 
 		$MAIN.="<tr bgcolor=white>";

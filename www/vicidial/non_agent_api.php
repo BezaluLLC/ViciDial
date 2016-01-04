@@ -1,7 +1,7 @@
 <?php
 # non_agent_api.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with all non-agent-screen VICIDIAL functions
@@ -104,10 +104,11 @@
 # 150804-0948 - Added WHISPER option for blind_monitor function
 # 150808-1438 - Added compatibility for custom fields data option
 # 151226-0954 - Added session_id(conf_exten) field to output of agent_status, and added logged_in_agents function
+# 160104-1229 - Added detection of dead chats to a few functions
 #
 
-$version = '2.12-80';
-$build = '151226-0954';
+$version = '2.12-81';
+$build = '160104-1229';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -4984,8 +4985,36 @@ if ($function == 'user_group_status')
 								{$row[1] =	'PARK';}
 							else
 								{
-								if (!preg_match("/$row[5]\|/",$callerids))
-									{$row[1] =	'DEAD';}
+								if (preg_match("/CHAT/i",$row[4]))
+									{
+									$stmtCT="SELECT chat_id from vicidial_live_chats where chat_creator='$row[0]' and lead_id='$row[6]' order by chat_start_time desc limit 1;";
+									if ($DB) {echo "$stmtCT\n";}
+									$rsltCT=mysql_to_mysqli($stmtCT,$link);
+									$chatting_to_print = mysqli_num_rows($rslt);
+									if ($chatting_to_print > 0)
+										{
+										$rowCT=mysqli_fetch_row($rsltCT);
+										$Achat_id = $rowCT[0];
+
+										$stmtCL="SELECT count(*) from vicidial_chat_log where chat_id='$Achat_id' and message LIKE \"%has left chat\";";
+										if ($DB) {echo "$stmtCL\n";}
+										$rsltCL=mysql_to_mysqli($stmtCL,$link);
+										$rowCL=mysqli_fetch_row($rsltCL);
+										$left_chat = $rowCL[0];
+
+										if ($left_chat > 0)
+											{
+											$row[1] =	'DEAD';
+											}
+										}
+									}
+								elseif (preg_match("/EMAIL/i",$row[4]))
+									{$do_nothing=1;}
+								else
+									{
+									if (!preg_match("/$row[5]\|/",$callerids))
+										{$row[1] =	'DEAD';}
+									}
 								}
 							}
 
@@ -5347,7 +5376,7 @@ if ($function == 'agent_status')
 					$user_group = 	$row[1];
 					$user_level = 	$row[2];
 
-					$stmt="SELECT status,callerid,lead_id,campaign_id,calls_today,agent_log_id,on_hook_agent,ring_callerid,preview_lead_id,conf_exten from vicidial_live_agents $agent_search_SQL;";
+					$stmt="SELECT status,callerid,lead_id,campaign_id,calls_today,agent_log_id,on_hook_agent,ring_callerid,preview_lead_id,conf_exten,comments from vicidial_live_agents $agent_search_SQL;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
 					$agent_to_list = mysqli_num_rows($rslt);
@@ -5364,6 +5393,7 @@ if ($function == 'agent_status')
 						$ring_callerid =	$row[7];
 						$preview_lead_id =	$row[8];
 						$conf_exten =		$row[9];
+						$comments =			$row[10];
 						$pause_code =		'';
 						$rtr_status =		'';
 
@@ -5407,12 +5437,40 @@ if ($function == 'agent_status')
 								{$rtr_status = 'PARK';}
 							else
 								{
-								$stmt="SELECT count(*) from vicidial_auto_calls where callerid='$callerid';";
-								$rslt=mysql_to_mysqli($stmt,$link);
-								$row=mysqli_fetch_row($rslt);
-								$live_channel = $row[0];
-								if ($live_channel < 1)
-									{$rtr_status = 'DEAD';}
+								if (preg_match("/CHAT/i",$comments))
+									{
+									$stmtCT="SELECT chat_id from vicidial_live_chats where chat_creator='$agent_user' and lead_id='$lead_id' order by chat_start_time desc limit 1;";
+									if ($DB) {echo "$stmtCT\n";}
+									$rsltCT=mysql_to_mysqli($stmtCT,$link);
+									$chatting_to_print = mysqli_num_rows($rslt);
+									if ($chatting_to_print > 0)
+										{
+										$rowCT=mysqli_fetch_row($rsltCT);
+										$Achat_id = $rowCT[0];
+
+										$stmtCL="SELECT count(*) from vicidial_chat_log where chat_id='$Achat_id' and message LIKE \"%has left chat\";";
+										if ($DB) {echo "$stmtCL\n";}
+										$rsltCL=mysql_to_mysqli($stmtCL,$link);
+										$rowCL=mysqli_fetch_row($rsltCL);
+										$left_chat = $rowCL[0];
+
+										if ($left_chat > 0)
+											{
+											$rtr_status = 'DEAD';
+											}
+										}
+									}
+								elseif (preg_match("/EMAIL/i",$comments))
+									{$do_nothing=1;}
+								else
+									{
+									$stmt="SELECT count(*) from vicidial_auto_calls where callerid='$callerid';";
+									$rslt=mysql_to_mysqli($stmt,$link);
+									$row=mysqli_fetch_row($rslt);
+									$live_channel = $row[0];
+									if ($live_channel < 1)
+										{$rtr_status = 'DEAD';}
+									}
 								}
 							}
 
@@ -7854,7 +7912,7 @@ if ($function == 'logged_in_agents')
 				$output .= 'user' . $DL . 'campaign_id' . $DL . 'session_id' . $DL . 'status' . $DL . 'lead_id' . $DL . 'callerid' . $DL . 'calls_today' . $DL . 'full_name' . $DL . 'user_group' . $DL . 'user_level' . $header_sub_status . "\n";
 				}
 
-			$stmt="SELECT status,callerid,lead_id,campaign_id,calls_today,agent_log_id,on_hook_agent,ring_callerid,preview_lead_id,conf_exten,user from vicidial_live_agents $whereLOGallowed_campaignsSQL $search_CAMP_SQL;";
+			$stmt="SELECT status,callerid,lead_id,campaign_id,calls_today,agent_log_id,on_hook_agent,ring_callerid,preview_lead_id,conf_exten,user,comments from vicidial_live_agents $whereLOGallowed_campaignsSQL $search_CAMP_SQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			if ($DB) {echo "$stmt\n";}
 			$agents_to_list = mysqli_num_rows($rslt);
@@ -7873,6 +7931,7 @@ if ($function == 'logged_in_agents')
 				$Apreview_lead_id[$i] =	$row[8];
 				$Aconf_exten[$i] =		$row[9];
 				$Auser[$i] =			$row[10];
+				$Acomments[$i] =		$row[11];
 				$Apause_code[$i] =		'';
 				$Artr_status[$i] =		'';
 				$i++;
@@ -7938,12 +7997,40 @@ if ($function == 'logged_in_agents')
 								{$rtr_status = 'PARK';}
 							else
 								{
-								$stmt="SELECT count(*) from vicidial_auto_calls where callerid='$Acallerid[$i]';";
-								$rslt=mysql_to_mysqli($stmt,$link);
-								$row=mysqli_fetch_row($rslt);
-								$live_channel = $row[0];
-								if ($live_channel < 1)
-									{$rtr_status = 'DEAD';}
+								if (preg_match("/CHAT/i",$Acomments[$i]))
+									{
+									$stmtCT="SELECT chat_id from vicidial_live_chats where chat_creator='$Auser[$i]' and lead_id='$Alead_id[$i]' order by chat_start_time desc limit 1;";
+									if ($DB) {echo "$stmtCT\n";}
+									$rsltCT=mysql_to_mysqli($stmtCT,$link);
+									$chatting_to_print = mysqli_num_rows($rslt);
+									if ($chatting_to_print > 0)
+										{
+										$rowCT=mysqli_fetch_row($rsltCT);
+										$Achat_id = $rowCT[0];
+
+										$stmtCL="SELECT count(*) from vicidial_chat_log where chat_id='$Achat_id' and message LIKE \"%has left chat\";";
+										if ($DB) {echo "$stmtCL\n";}
+										$rsltCL=mysql_to_mysqli($stmtCL,$link);
+										$rowCL=mysqli_fetch_row($rsltCL);
+										$left_chat = $rowCL[0];
+
+										if ($left_chat > 0)
+											{
+											$rtr_status =	'DEAD';
+											}
+										}
+									}
+								elseif (preg_match("/EMAIL/i",$Acomments[$i]))
+									{$do_nothing=1;}
+								else
+									{
+									$stmt="SELECT count(*) from vicidial_auto_calls where callerid='$Acallerid[$i]';";
+									$rslt=mysql_to_mysqli($stmt,$link);
+									$row=mysqli_fetch_row($rslt);
+									$live_channel = $row[0];
+									if ($live_channel < 1)
+										{$rtr_status = 'DEAD';}
+									}
 								}
 							}
 						$agent_sub_status = "$DL$pause_code$DL$rtr_status";
