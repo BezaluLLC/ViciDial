@@ -134,7 +134,7 @@
 $version = '2.12-76';
 $build = '160101-1130';
 $php_script = 'manager_send.php';
-$mel=2;					# Mysql Error Log enabled = 1
+$mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=138;
 $one_mysql_log=0;
 $SSagent_debug_logging=0;
