@@ -1,7 +1,7 @@
 <?php
 # user_group_bulk_change.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 81119-0918 - First build
@@ -15,6 +15,7 @@
 # 130901-0837 - Changed to mysqli PHP functions
 # 141007-2112 - Finalized adding QXZ translation to all admin files
 # 141229-1820 - Added code for on-the-fly language translations display
+# 160105-1232 - Fixed SQL errors
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -220,7 +221,7 @@ if ($stage == "one_user_group_change")
 ##### GROUP CHANGE FOR ALL USERS IN THE SYSTEM EXCEPT FOR LEVEL > 6 AND ADMIN GROUP #####
 if ($stage == "all_user_group_change")
 	{
-	$stmt="UPDATE vicidial_users set user_group='" . mysqli_real_escape_string($link, $group) . "' where user_group!='ADMIN' and user_group < 7 $LOGadmin_viewable_groupsSQL;";
+	$stmt="UPDATE vicidial_users set user_group='" . mysqli_real_escape_string($link, $group) . "' where user_group!='ADMIN' and user_level < 7 $LOGadmin_viewable_groupsSQL;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 
 	echo _QXZ("All non-Admin Users changed to the")." $group "._QXZ("User Group")."<BR>\n";
@@ -229,7 +230,7 @@ if ($stage == "all_user_group_change")
 	$SQL_log = "$stmt|";
 	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
-	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERGROUPS', event_type='MODIFY', record_id='$group', event_code='ADMIN BULK USER GROUP CHANGE', event_sql=\"$SQL_log\", event_notes='ALL NON-ADMIN;";
+	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERGROUPS', event_type='MODIFY', record_id='$group', event_code='ADMIN BULK USER GROUP CHANGE', event_sql=\"$SQL_log\", event_notes='ALL NON-ADMIN';";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 
