@@ -19045,7 +19045,7 @@ if ($ADD==3)
 
 				echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Allow Alerts").": </td><td align=left><select size=1 name=allow_alerts><option>0</option><option>1</option><option SELECTED>$allow_alerts</option></select>$NWB#users-allow_alerts$NWE</td></tr>\n";
 
-				echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Preset Contact Search").": </td><td align=left><select size=1 name=preset_contact_search><option value='NOT ACTIVE'>"._QXZ("NOT_ACTIVE")."</option><option value='DISABLED'>"._QXZ("DISABLED")."</option><option SELECTED value='$preset_contact_search'>"._QXZ("$preset_contact_search")."</option></select>$NWB#users-preset_contact_search$NWE</td></tr>\n";
+				echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Preset Contact Search").": </td><td align=left><select size=1 name=preset_contact_search><option value='NOT_ACTIVE'>"._QXZ("NOT_ACTIVE")."</option><option value='DISABLED'>"._QXZ("DISABLED")."</option><option SELECTED value='$preset_contact_search'>"._QXZ("$preset_contact_search")."</option></select>$NWB#users-preset_contact_search$NWE</td></tr>\n";
 
 				echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Max Inbound Calls").": </td><td align=left><input type=text name=max_inbound_calls size=6 maxlength=5 value=\"$max_inbound_calls\">$NWB#users-max_inbound_calls$NWE &nbsp; &nbsp; <i>"._QXZ("inbound calls today").": $USER_inbound_calls_today</i></td></tr>\n";
 
