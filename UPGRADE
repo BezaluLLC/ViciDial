@@ -228,6 +228,8 @@ OTHER CHANGES:
 
 57. Added option to Inbound DID Group Filtering to filter by areacode.
 
+58. Added in-group option for On-Hook CID Number.
+
 
 
 

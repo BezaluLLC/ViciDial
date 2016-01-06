@@ -473,3 +473,7 @@ UPDATE system_settings SET db_schema_version='1447',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_inbound_dids MODIFY filter_inbound_number ENUM('DISABLED','GROUP','URL','DNC_INTERNAL','DNC_CAMPAIGN','GROUP_AREACODE') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1448',db_schema_update_date=NOW() where db_schema_version < 1448;
+
+ALTER TABLE vicidial_inbound_groups ADD on_hook_cid_number VARCHAR(18) default '';
+
+UPDATE system_settings SET db_schema_version='1449',db_schema_update_date=NOW() where db_schema_version < 1449;

@@ -19,6 +19,7 @@
 # 150619-0135 - Added DROPANSWERpercent_adjustment options.php option for AST_VDADstats.php
 # 150909-1417 - Added $active_only_default_campaigns option for admin.php
 # 160102-1249 - Added htmlconvert option for modify lead pages
+# 160106-1321 - Added disable_user_group_bulk_change option
 #
 
 # used by the realtime_report.php script
@@ -92,5 +93,8 @@ $active_only_default_campaigns = 0;
 
 # convert data to html readable in modify lead page fields
 $htmlconvert=1;
+
+# disable the user_group_bulk_change.php utility
+$disable_user_group_bulk_change=0;
 
 ?>

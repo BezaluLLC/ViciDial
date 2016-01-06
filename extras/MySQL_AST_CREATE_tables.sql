@@ -1169,7 +1169,8 @@ nanq_lead_reset ENUM('Y','N') default 'N',
 wait_time_lead_reset ENUM('Y','N') default 'N',
 hold_time_lead_reset ENUM('Y','N') default 'N',
 status_group_id VARCHAR(20) default '',
-routing_initiated_recordings ENUM('Y','N') default 'N'
+routing_initiated_recordings ENUM('Y','N') default 'N',
+on_hook_cid_number VARCHAR(18) default ''
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -3689,4 +3690,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1448',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1449',db_schema_update_date=NOW(),reload_timestamp=NOW();

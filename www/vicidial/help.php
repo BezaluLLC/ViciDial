@@ -76,6 +76,7 @@
 # 151231-0839 - Added user_groups-agent_allowed_chat_groups entry
 # 160101-0933 - Added entries for routing_initiated_recordings in campaigns and in-groups
 # 160106-0700 - Added AREACODE description to the inbound_dids-filter_inbound_number entry
+# 160106-1348 - Added inbound_groups-on_hook_cid_number entry
 #
 
 
@@ -2223,6 +2224,11 @@ if ($SSqc_features_active > 0)
 <A NAME="inbound_groups-on_hook_cid">
 <BR>
 <B><?php echo _QXZ("On-Hook CID"); ?> -</B><?php echo _QXZ("This option is only used for agents that are logged in with phones that have the agent-on-hook feature enabled. This is the caller ID that will show up on their agent phones when the calls are ringing. GENERIC is a generic RINGAGENT00000000001 type of notification. INGROUP will show only the in-group the call came from. CUSTOMER_PHONE will show only the customer phone number. CUSTOMER_PHONE_RINGAGENT will show RINGAGENT_3125551212 with the RINGAGENT as part of the CID with the customer phone number. CUSTOMER_PHONE_INGROUP will show the first 10 characters of the in-group followed by the customer phone number. Default is GENERIC."); ?>
+
+<BR>
+<A NAME="inbound_groups-on_hook_cid_number">
+<BR>
+<B><?php echo _QXZ("On-Hook CID Number"); ?> -</B><?php echo _QXZ("This option allows you to set a CID Number to be sent out with the On-Hook CID. If you put a Y, YES or CUSTOMER in this field, then the customer CID number will be sent to the ringing agent phone. If you put a different phone number, that number will be sent. Default is blank for disabled."); ?>
 
 <BR>
 <A NAME="inbound_groups-queue_priority">

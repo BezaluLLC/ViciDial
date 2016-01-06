@@ -16,6 +16,7 @@
 # 141007-2112 - Finalized adding QXZ translation to all admin files
 # 141229-1820 - Added code for on-the-fly language translations display
 # 160105-1232 - Fixed SQL errors
+# 160106-1318 - Added options.php option to disable this utility
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -74,6 +75,12 @@ if (!isset($end_date)) {$end_date = $TODAY;}
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
+
+$disable_user_group_bulk_change=0;
+if (file_exists('options.php'))
+	{
+	require('options.php');
+	}
 
 $stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
@@ -189,13 +196,19 @@ require("admin_header.php");
 ?>
 
 <CENTER>
-<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; .<?php echo
+<TABLE WIDTH=620 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; <?php echo
 _QXZ("User Group Bulk Change"); ?></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" COLOR=WHITE SIZE=2><B> &nbsp; </TD></TR>
 
 
-
-
 <?php 
+
+if ($disable_user_group_bulk_change > 0)
+	{
+	echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3><B> &nbsp; \n";
+	echo _QXZ("This utility has been disabled")."\n";
+	echo "</TD></TR><TABLE></body></html>\n";
+	exit;
+	}
 
 echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3><B> &nbsp; \n";
 
