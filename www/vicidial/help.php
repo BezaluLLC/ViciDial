@@ -1,7 +1,7 @@
 <?php
 # help.php - VICIDIAL administration page
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 # CHANGELOG:
@@ -75,6 +75,7 @@
 # 151229-2302 - Added campaigns-manual_dial_timeout entry
 # 151231-0839 - Added user_groups-agent_allowed_chat_groups entry
 # 160101-0933 - Added entries for routing_initiated_recordings in campaigns and in-groups
+# 160106-0700 - Added AREACODE description to the inbound_dids-filter_inbound_number entry
 #
 
 
@@ -2928,7 +2929,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_dids-filter_inbound_number">
 <BR>
-<B><?php echo _QXZ("Filter Inbound Number"); ?> -</B><?php echo _QXZ("This option if enabled allows you to filter calls coming into this DID and send them to an alternative action if they match a phone number that is in the filter phone group or a URL response if you have configured one. Default is DISABLED. GROUP will search in a Filter Phone Group. URL will send a URL and will match if a 1 is sent back. DNC_INTERNAL will search by the internal DNC list. DNC_CAMPAIGN will search by one specific campaign DNC list."); ?>
+<B><?php echo _QXZ("Filter Inbound Number"); ?> -</B><?php echo _QXZ("This option if enabled allows you to filter calls coming into this DID and send them to an alternative action if they match a phone number that is in the filter phone group or a URL response if you have configured one. Default is DISABLED. GROUP will search in a Filter Phone Group. URL will send a URL and will match if a 1 is sent back. DNC_INTERNAL will search by the internal DNC list. DNC_CAMPAIGN will search by one specific campaign DNC list. If the option has AREACODE at the end, then the number and an entry for that numbers 3 digit areacode will be searched for. Both DNC options already have areacode searching built in."); ?>
 
 <BR>
 <A NAME="inbound_dids-filter_phone_group_id">

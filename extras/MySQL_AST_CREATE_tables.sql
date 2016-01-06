@@ -1911,7 +1911,7 @@ campaign_id VARCHAR(8),
 phone_code VARCHAR(10) default '1',
 menu_id VARCHAR(50) default '',
 record_call ENUM('Y','N','Y_QUEUESTOP') default 'N',
-filter_inbound_number ENUM('DISABLED','GROUP','URL','DNC_INTERNAL','DNC_CAMPAIGN') default 'DISABLED',
+filter_inbound_number ENUM('DISABLED','GROUP','URL','DNC_INTERNAL','DNC_CAMPAIGN','GROUP_AREACODE') default 'DISABLED',
 filter_phone_group_id VARCHAR(20) default '',
 filter_url VARCHAR(1000) default '',
 filter_action ENUM('EXTEN','VOICEMAIL','AGENT','PHONE','IN_GROUP','CALLMENU','VMAIL_NO_INST') default 'EXTEN',
@@ -3689,4 +3689,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1447',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1448',db_schema_update_date=NOW(),reload_timestamp=NOW();

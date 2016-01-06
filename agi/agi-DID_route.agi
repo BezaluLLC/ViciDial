@@ -13,7 +13,7 @@
 # ;inbound DID catch-all:
 #exten => _X.,1,AGI(agi-DID_route.agi)
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 81007-0324 - First Build
@@ -40,6 +40,7 @@
 # 150112-1426 - Added no-agent last_update_time check to match in-group queries
 # 150708-2252 - Added max_queue_ingroup_ DID options
 # 150806-1316 - Added Filter URL logging to url log, and added variables for uniqueid, channel and server_ip
+# 160106-0719 - Added filter option for GROUP_AREACODE
 #
 
 
@@ -520,7 +521,23 @@ if ( ($filter_inbound_number =~ /GROUP|URL|DNC_INTERNAL|DNC_CAMPAIGN/) && ($pre_
 			$filter_match_found =	$aryA[0];
 			}
 		$sthA->finish();
-		if ($AGILOG) {$agi_string = "GROUP: |$filter_match_found|$stmtA|";	&agi_output;}
+
+		if ( ($filter_match_found < 1) && ($filter_inbound_number =~ /AREACODE/) ) 
+			{
+			$alt_areacode = substr($callerid, 0, 3);
+			$alt_areacode .= "XXXXXXX";
+			$stmtB = "SELECT count(*) FROM vicidial_filter_phone_numbers where filter_phone_group_id='$filter_phone_group_id' and phone_number='$alt_areacode';";
+			$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$filter_match_found =	$aryA[0];
+				}
+			$sthA->finish();
+			}
+		if ($AGILOG) {$agi_string = "GROUP: |$filter_match_found|$stmtA|$stmtB|";	&agi_output;}
 		}
 	elsif ($filter_inbound_number =~ /DNC_INTERNAL/)
 		{

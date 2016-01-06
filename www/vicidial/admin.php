@@ -3684,12 +3684,13 @@ else
 # 151231-0009 - Fixed admin logging in several places
 # 151231-0834 - Added agent_allowed_chat_groups to User Groups
 # 160101-0928 - Added routing_initiated_recordings to in-group and campaign settings, and updated for 2016
+# 160106-0751 - Added GROUP_AREACODE option to inbound did filters
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-531a';
-$build = '160101-0928';
+$admin_version = '2.12-532a';
+$build = '160106-0751';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -27353,7 +27354,7 @@ if ($ADD==3311)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Pre-Filter Phone Group DID").": </td><td align=left><input type=text name=pre_filter_extension size=40 maxlength=50 value=\"$pre_filter_extension\">$NWB#inbound_dids-pre_filter_extension$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter Inbound Number").": </td><td align=left><select size=1 name=filter_inbound_number><option value=\"DISABLED\">"._QXZ("DISABLED")."</option><option value=\"GROUP\">"._QXZ("GROUP")."</option><option value=\"URL\">"._QXZ("URL")."</option><option value=\"DNC_INTERNAL\">"._QXZ("DNC_INTERNAL")."</option><option value=\"DNC_CAMPAIGN\">"._QXZ("DNC_CAMPAIGN")."</option><option SELECTED>$filter_inbound_number</option></select>$NWB#inbound_dids-filter_inbound_number$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter Inbound Number").": </td><td align=left><select size=1 name=filter_inbound_number><option value=\"DISABLED\">"._QXZ("DISABLED")."</option><option value=\"GROUP\">"._QXZ("GROUP")."</option><option value=\"URL\">"._QXZ("URL")."</option><option value=\"DNC_INTERNAL\">"._QXZ("DNC_INTERNAL")."</option><option value=\"DNC_CAMPAIGN\">"._QXZ("DNC_CAMPAIGN")."</option><option value=\"GROUP_AREACODE\">"._QXZ("GROUP_AREACODE")."</option><option SELECTED>$filter_inbound_number</option></select>$NWB#inbound_dids-filter_inbound_number$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$filter_phone_group_id\">"._QXZ("Filter Phone Group ID").":</a> </td><td align=left><select size=1 name=filter_phone_group_id>$Fgroups_list<option value='$filter_phone_group_id' SELECTED>"._QXZ("$filter_phone_group_id")."</option></select>$NWB#inbound_dids-filter_phone_group_id$NWE</td></tr>\n";
 

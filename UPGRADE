@@ -226,6 +226,8 @@ OTHER CHANGES:
 	This only works for inbound and auto-dial outbound calls for in-groups
 	and campaigns that are set to ALLCALLS or ALLFORCE recording.
 
+57. Added option to Inbound DID Group Filtering to filter by areacode.
+
 
 
 

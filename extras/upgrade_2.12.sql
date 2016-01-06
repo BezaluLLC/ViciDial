@@ -469,3 +469,7 @@ UPDATE system_settings SET db_schema_version='1446',db_schema_update_date=NOW() 
 CREATE INDEX live_chat_id on vicidial_chat_log (chat_id);
 
 UPDATE system_settings SET db_schema_version='1447',db_schema_update_date=NOW() where db_schema_version < 1447;
+
+ALTER TABLE vicidial_inbound_dids MODIFY filter_inbound_number ENUM('DISABLED','GROUP','URL','DNC_INTERNAL','DNC_CAMPAIGN','GROUP_AREACODE') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1448',db_schema_update_date=NOW() where db_schema_version < 1448;
