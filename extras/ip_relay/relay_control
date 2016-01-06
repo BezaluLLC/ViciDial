@@ -15,6 +15,7 @@
 # Changes:
 # 140619-0954 - Added new port 42569 for playback loops
 # 160101-0912 - Added check for installed ip_relay binary
+# 160105-2336 - Fix for packaged ip_relay
 #
 
 IPRELAY_BIN="/usr/bin/ip_relay"
@@ -28,9 +29,9 @@ case "$1" in
 
         echo "starting up ip_relay services at $IPRELAY_BIN"
 
-        $IPRELAY_BIN 40569 127.0.0.1    4569 9999999 &
-        $IPRELAY_BIN 41569 127.0.0.1    4569 9999999 &
-        $IPRELAY_BIN 42569 127.0.0.1    4569 9999999 &
+        exec -a ip_relay $IPRELAY_BIN 40569 127.0.0.1    4569 9999999 &
+        exec -a ip_relay $IPRELAY_BIN 41569 127.0.0.1    4569 9999999 &
+        exec -a ip_relay $IPRELAY_BIN 42569 127.0.0.1    4569 9999999 &
 
         echo "done "
         echo
