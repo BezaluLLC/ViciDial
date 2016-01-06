@@ -3689,12 +3689,13 @@ else
 # 160101-0928 - Added routing_initiated_recordings to in-group and campaign settings, and updated for 2016
 # 160106-0751 - Added GROUP_AREACODE option to inbound did filters
 # 160106-1342 - Added on_hook_cid_number setting to in-groups
+# 160106-1733 - Fixed user modification issue with certain manager user settings
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-533a';
-$build = '160106-1342';
+$admin_version = '2.12-534a';
+$build = '160106-1733';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -18959,7 +18960,7 @@ if ($ADD==3)
 				echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"user_territories.php\">"._QXZ("User Territories")."</a>: </td><td align=left>$Uterrs_list</tr>\n";
 				}
 
-			if ( ($LOGuser_level > 7) and ($LOGalter_agent_interface == "1") )
+			if ( ($LOGuser_level > 7) and ( ($LOGalter_agent_interface == "1") or ($LOGalter_admin_interface > 0) ) )
 				{
 				echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><B>"._QXZ("AGENT INTERFACE OPTIONS").":</B></td></tr>\n";
 				echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent Choose Ingroups").": </td><td align=left><select size=1 name=agent_choose_ingroups><option>0</option><option>1</option><option SELECTED>$agent_choose_ingroups</option></select>$NWB#users-agent_choose_ingroups$NWE</td></tr>\n";
