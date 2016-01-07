@@ -515,12 +515,13 @@
 # 151230-0911 - Fixed transfer of parked call logging issue #901
 # 160101-1131 - Added code to handle routing initiated recordings
 # 160104-1237 - Added images for live chat and email, and dead chat
+# 160106-2215 - Deactivated several call action buttons while Email/Chat handling
 #
 
-$version = '2.12-484c';
-$build = '160104-1237';
+$version = '2.12-485c';
+$build = '160106-2215';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=85;
+$mysql_log_count=87;
 $one_mysql_log=0;
 
 require_once("dbconnect_mysqli.php");
@@ -2894,7 +2895,7 @@ else
 			$stmt="UPDATE routing_initiated_recordings set processed='2' where user='$VD_login' and processed='0';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01086',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$RIRaffected_rows = mysqli_affected_rows($link);
 			echo "<!-- routing_initiated_recordings invalidated:   |$RIRaffected_rows| -->\n";
 
@@ -3431,7 +3432,7 @@ else
 
 		$stmt = "SHOW COLUMNS FROM vicidial_list;";
 		$rslt=mysql_to_mysqli($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01087',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
 		$scvl_ct = mysqli_num_rows($rslt);
 		$s=0;
@@ -10826,13 +10827,14 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								document.getElementById("MainStatuSSpan").innerHTML = " <?php echo _QXZ("Incoming:"); ?> " + dial_display_number + " " + custom_call_id + " " + temp_status_display_ingroup + "&nbsp; " + VDIC_fronter + " " + status_display_content; 
 								}
 
+							document.getElementById("HangupControl").innerHTML = "<a href=\"#\" onclick=\"dialedcall_send_hangup('','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_hangupcustomer.gif"); ?>\" border=\"0\" alt=\"Hangup Customer\" /></a>";
+
+					/*
 							document.getElementById("ParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParK','" + lastcustchannel + "','" + lastcustserverip + "','','','','YES');return false;\"><img src=\"./images/<?php echo _QXZ("vdc_LB_parkcall.gif"); ?>\" border=\"0\" alt=\"Park Call\" /></a>";
 							if ( (ivr_park_call=='ENABLED') || (ivr_park_call=='ENABLED_PARK_ONLY') )
 								{
 								document.getElementById("ivrParkControl").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParKivr','" + lastcustchannel + "','" + lastcustserverip + "','','','','YES');return false;\"><img src=\"./images/<?php echo _QXZ("vdc_LB_ivrparkcall.gif"); ?>\" border=\"0\" alt=\"IVR Park Call\" /></a>";
 								}
-
-							document.getElementById("HangupControl").innerHTML = "<a href=\"#\" onclick=\"dialedcall_send_hangup('','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_hangupcustomer.gif"); ?>\" border=\"0\" alt=\"Hangup Customer\" /></a>";
 
 							document.getElementById("XferControl").innerHTML = "<a href=\"#\" onclick=\"ShoWTransferMain('ON','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_transferconf.gif"); ?>\" border=\"0\" alt=\"Transfer - Conference\" /></a>";
 
@@ -10899,7 +10901,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									document.getElementById("ReQueueCall").innerHTML =  "<img src=\"./images/<?php echo _QXZ("vdc_LB_requeue_call_OFF.gif"); ?>\" border=\"0\" alt=\"Re-Queue Call\" />";
 									}
 								}
-
+					*/
 							// Build transfer pull-down list
 							var loop_ct = 0;
 							var live_XfeR_HTML = '';
