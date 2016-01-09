@@ -1,7 +1,7 @@
 <?php
 # manager_chat_interface.php
 # 
-# Copyright (C) 2015  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This page is for managers (level 8 or higher) to chat with live agents
 #
@@ -9,10 +9,12 @@
 # 150608-2041 - First Build
 # 150909-0118 - Bug fixes, added feature to submit messages when Enter is pressed
 # 151219-0718 - Added vicidial_chat.js code, translation code where missing
+# 160107-2241 - Added realtime check to see whether sub chats are still running
+# 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 #
 
-$admin_version = '2.12-3';
-$build = '151219-0718';
+$admin_version = '2.12-5';
+$build = '160108-2300';
 
 $sh="managerchats"; 
 
@@ -163,16 +165,16 @@ if ($SSallow_chats < 1)
 if ($end_all_chats) 
 	{
 	$archive_stmt="insert ignore into vicidial_manager_chat_log_archive select * from vicidial_manager_chat_log where manager_chat_id='$end_all_chats'";
-	$archive_rslt=mysqli_query($link, $archive_stmt);
+	$archive_rslt=mysql_to_mysqli($archive_stmt, $link);
 
 	$archive_stmt="insert ignore into vicidial_manager_chats_archive select * from vicidial_manager_chats where manager_chat_id='$end_all_chats'";
-	$archive_rslt=mysqli_query($link, $archive_stmt);
+	$archive_rslt=mysql_to_mysqli($archive_stmt, $link);
 
 	$delete_stmt="delete from vicidial_manager_chat_log where manager_chat_id='$end_all_chats'";
-	$delete_rslt=mysqli_query($link, $delete_stmt);
+	$delete_rslt=mysql_to_mysqli($delete_stmt, $link);
 
 	$archive_stmt="delete from vicidial_manager_chats where manager_chat_id='$end_all_chats'";
-	$archive_rslt=mysqli_query($link, $archive_stmt);
+	$archive_rslt=mysql_to_mysqli($archive_stmt, $link);
 	}
 
 if ($submit_chat == _QXZ("ALL LIVE AGENTS")) 
@@ -235,7 +237,7 @@ else
 	}
 
 $check_stmt="select manager_chat_id from vicidial_manager_chats where manager='$PHP_AUTH_USER' limit 1";
-$check_rslt=mysqli_query($link, $check_stmt);
+$check_rslt=mysql_to_mysqli($check_stmt, $link);
 $active_chats=mysqli_num_rows($check_rslt);
 if ($active_chats>0) 
 	{
@@ -246,13 +248,11 @@ if ($active_chats>0)
 if ($active_chats<1 && $manager_message && ($submit_chat== _QXZ("ALL LIVE AGENTS") || ($submit_chat== _QXZ("SELECTED AGENTS") && ($available_chat_agents_ct+$available_chat_groups_ct+$available_chat_campaigns_ct)>0))) 
 	{
 	$stmt="select vicidial_live_agents.user, vicidial_users.full_name from vicidial_live_agents, vicidial_users where vicidial_live_agents.user=vicidial_users.user $chat_query_SQL and vicidial_users.user!='$PHP_AUTH_USER' order by vicidial_users.full_name asc";
-	$rslt=mysqli_query($link, $stmt);
-	echo "<!-- $stmt //-->\n";
+	$rslt=mysql_to_mysqli($stmt, $link);
 	if (mysqli_num_rows($rslt)>0) 
 		{
 		$ins_stmt="insert into vicidial_manager_chats(chat_start_date, manager, selected_agents, selected_user_groups, selected_campaigns, allow_replies) VALUES(now(), '$PHP_AUTH_USER', '$available_chat_agents_string', '$available_chat_groups_string', '$available_chat_campaigns_string', '$allow_replies')";
-		echo "<!-- $ins_stmt //-->\n";
-		$ins_rslt=mysqli_query($link, $ins_stmt);
+		$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 		$manager_chat_id=mysqli_insert_id($link);
 
 		$subid=1;
@@ -270,8 +270,7 @@ if ($active_chats<1 && $manager_message && ($submit_chat== _QXZ("ALL LIVE AGENTS
 			# $manager_message=addslashes(trim("$manager_message"));
 			
 			$ins_chat_stmt="insert into vicidial_manager_chat_log(manager_chat_id, manager_chat_subid, manager, user, message, message_date, message_posted_by) VALUES('$manager_chat_id', '$subid', '".$PHP_AUTH_USER."', '$user', '".mysqli_real_escape_string($link, $manager_message)."', now(), '".$PHP_AUTH_USER."')";
-			$ins_chat_rslt=mysqli_query($link, $ins_chat_stmt);
-			echo "<!-- $ins_chat_stmt //-->\n";
+			$ins_chat_rslt=mysql_to_mysqli($ins_chat_stmt, $link);
 			$subid++;
 			}
 		}
@@ -407,7 +406,7 @@ function CheckNewMessages(manager_chat_id) {
 				ChatResponseText = xmlhttp.responseText;
 				if (ChatResponseText==0)
 					{
-					return false;
+					CheckEndedChats(manager_chat_id);
 					}
 				else
 					{
@@ -476,11 +475,69 @@ function RefreshChatSubIDs(manager_chat_id, sub_ids) {
 						objDiv.scrollTop = objDiv.scrollHeight;
 						}
 					}	
+				CheckEndedChats(manager_chat_id);
 				}
 			}
 		delete xmlhttp;
 		}
 	}
+
+function CheckEndedChats(manager_chat_id) {
+	var xmlhttp=false;
+	/*@cc_on @*/
+	/*@if (@_jscript_version >= 5)
+	// JScript gives us Conditional compilation, we can cope with old IE versions.
+	// and security blocked creation of the objects.
+	 try {
+	  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+	 } catch (e) {
+	  try {
+	   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	  } catch (E) {
+	   xmlhttp = false;
+	  }
+	 }
+	@end @*/
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+		{
+		xmlhttp = new XMLHttpRequest();
+		}
+	if (xmlhttp) 
+		{
+		chat_SQL_query = "action=CheckEndedChats&manager_chat_id="+manager_chat_id;
+		// alert(chat_SQL_query);
+		xmlhttp.open('POST', 'manager_chat_actions.php'); 
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(chat_SQL_query); 
+		xmlhttp.onreadystatechange = function() 
+			{ 
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+				{
+				var ChatResponseText = null;
+				ChatResponseText = xmlhttp.responseText;
+				if (ChatResponseText==0)
+					{
+					return false;
+					}
+				else
+					{
+					var ChatText_array=ChatResponseText.split("\n");
+					for (var i=0; i<ChatText_array.length; i++) 
+						{
+						var EndedChatSpanName="manager_chat_message_"+manager_chat_id+"_"+ChatText_array[i];
+						if (document.getElementById(EndedChatSpanName))
+							{
+							document.getElementById(EndedChatSpanName).className="chat_box_ended";
+							}
+						// Set style of chat span to nothing
+						}
+					// console.log(sub_ids);
+					}
+				}
+			}
+		delete xmlhttp;
+		}
+}
 
 function PrintSubChatText(manager_chat_id, chat_sub_id) {
 	var xmlhttp=false;
@@ -746,7 +803,7 @@ $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIG
 		echo "\t<TD align='left' colspan='2'><font FACE=\"ARIAL,HELVETICA\" size=1 color=white>"._QXZ("Message")."</font></TD>\n";
 		echo "</TR>";
 		$stmt="select vm.message_posted_by, vm.message, vm.message_date, vu.full_name, vm.manager, vm.manager_chat_subid, vm.user from vicidial_manager_chats vmc, vicidial_manager_chat_log vm, vicidial_users vu where vmc.manager_chat_id='$manager_chat_id' and vmc.manager_chat_id=vm.manager_chat_id and vm.user=vu.user order by vm.manager_chat_subid asc, message_date desc";
-		$rslt=mysqli_query($link, $stmt);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if (mysqli_num_rows($rslt)>0) 
 			{
 			$prev_chat_subid="";

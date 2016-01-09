@@ -233,6 +233,11 @@ OTHER CHANGES:
 59. Added available_agents and status_link button options as well as validation
 	of active in-group to the chat_customer screen.
 
+60. Added campaign setting Manual Dial Hopper Check that will check for a lead 
+	in the hopper with the same phone number as any manual call being 
+	placed from the agent screen, and if one exists it will be deleted 
+	before the manual dial call is placed.
+
 
 
 

@@ -1,7 +1,7 @@
 <?php
 # manager_chat_actions.php
 # 
-# Copyright (C) 2015  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Contains PHP actions for manager_chat_interface.php - works with vicidial_chat.js
 #
@@ -9,10 +9,12 @@
 # 150605-2022 First Build
 # 151213-1114 - Added variable filtering
 # 151218-0739 - Added translation where missing
+# 160107-2315 - Bug fix to prevent sending messages on dead chats
+# 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 #
 
-$admin_version = '2.12-3';
-$build = '151218-0739';
+$admin_version = '2.12-5';
+$build = '160108-2300';
 
 $sh="managerchats"; 
 
@@ -116,12 +118,12 @@ $debug=0;
 
 if ($action=="EndAgentChat") {
 	$archive_stmt="insert ignore into vicidial_manager_chat_log_archive select * from vicidial_manager_chat_log where manager_chat_id='$manager_chat_id' and manager_chat_subid='$chat_sub_id'";
-	$archive_rslt=mysqli_query($link, $archive_stmt);
+	$archive_rslt=mysql_to_mysqli($archive_stmt, $link);
 
 	if ($debug==1) {echo "$archive_stmt<BR>\n";}
 
 	$delete_stmt="delete from vicidial_manager_chat_log where manager_chat_id='$manager_chat_id' and manager_chat_subid='$chat_sub_id'";
-	$delete_rslt=mysqli_query($link, $delete_stmt);
+	$delete_rslt=mysql_to_mysqli($delete_stmt, $link);
 
 	if ($debug==1) {echo "$delete_stmt<BR>\n";}
 
@@ -129,15 +131,15 @@ if ($action=="EndAgentChat") {
 
 	if ($debug==1) {echo "$count_stmt<BR>\n";}
 
-	$count_rslt=mysqli_query($link, $count_stmt);
+	$count_rslt=mysql_to_mysqli($count_stmt, $link);
 	$count_row=mysqli_fetch_row($count_rslt);
 	$active_chats=$count_row[0];
 	if ($active_chats==0) {
 		$archive_stmt="insert ignore into vicidial_manager_chats_archive select * from vicidial_manager_chats where manager_chat_id='$manager_chat_id'";
-		$archive_rslt=mysqli_query($link, $archive_stmt);
+		$archive_rslt=mysql_to_mysqli($archive_stmt, $link);
 		
 		$del_stmt="delete from vicidial_manager_chats where manager_chat_id='$manager_chat_id'";
-		$del_rslt=mysqli_query($link, $del_stmt);
+		$del_rslt=mysql_to_mysqli($del_stmt, $link);
 		$manager_chat_id="";
 		echo "ALL CHATS CLOSED";
 		exit;
@@ -148,7 +150,7 @@ if ($action=="EndAgentChat") {
 
 if ($action=="CheckNewMessages") {
 	$time_stmt="select distinct manager_chat_subid from vicidial_manager_chat_log where manager_chat_id='$manager_chat_id' and message_date>=now()-INTERVAL 6 SECOND";
-	$time_rslt=mysqli_query($link, $time_stmt);
+	$time_rslt=mysql_to_mysqli($time_stmt, $link);
 	# echo $time_stmt;
 	if (mysqli_num_rows($time_rslt)==0) {
 		echo "0";
@@ -161,6 +163,20 @@ if ($action=="CheckNewMessages") {
 	}
 }
 
+if ($action=="CheckEndedChats" && $manager_chat_id) {
+	$ended_chat_stmt="select distinct manager_chat_subid from vicidial_manager_chat_log_archive where manager_chat_id='$manager_chat_id'";
+	$ended_chat_rslt=mysql_to_mysqli($ended_chat_stmt, $link);
+	if (mysqli_num_rows($ended_chat_rslt)==0) {
+		echo "0";
+	} else {
+		$sub_id_str="";
+		while ($row=mysqli_fetch_row($ended_chat_rslt)) {
+			$sub_id_str.="$row[0]\n";
+		}
+		echo trim($sub_id_str);
+	}
+}
+
 if ($action=="PrintSubChatText") {
 	for ($i=0; $i<$chat_sub_id_ct; $i++) {
 		$chat_sub_id=$chat_sub_ids[$i];
@@ -169,7 +185,7 @@ if ($action=="PrintSubChatText") {
 		$stmt="select vm.message_posted_by, vm.message, vm.message_date, vu.full_name, vm.manager, vm.manager_chat_subid from vicidial_manager_chats vmc, vicidial_manager_chat_log vm, vicidial_users vu where vmc.manager_chat_id='$manager_chat_id' and vmc.manager_chat_id=vm.manager_chat_id and vm.manager_chat_subid='$chat_sub_id' and vm.user=vu.user order by vm.manager_chat_subid asc, message_date desc";
 	if ($debug==1) {echo "$stmt<BR>\n";}
 
-		$rslt=mysqli_query($link, $stmt);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if (mysqli_num_rows($rslt)>0) {
 			$prev_chat_subid="";
 			$backlog_limit=20;
@@ -188,15 +204,22 @@ if ($action=="PrintSubChatText") {
 
 if ($action=="SendChatMessage" && $chat_message) {
 
-	$chat_message = preg_replace("/\r/i",'',$chat_message);
-	$chat_message = preg_replace("/\n/i",' ',$chat_message);
-
-	$ins_chat_stmt="insert into vicidial_manager_chat_log(manager_chat_id, manager_chat_subid, manager, user, message, message_date, message_posted_by) VALUES('$manager_chat_id', '$chat_sub_id', '$PHP_AUTH_USER', '$user', '".mysqli_real_escape_string($link, $chat_message)."', now(), '$PHP_AUTH_USER')";
-	$ins_chat_rslt=mysqli_query($link, $ins_chat_stmt);
-	if (mysqli_insert_id($link)>0) {
-		$reload_chat_span=1;
+	$check_live_stmt="select * from vicidial_manager_chat_log where manager_chat_id='$manager_chat_id' and manager_chat_subid='$chat_sub_id'";
+	$check_live_rslt=mysql_to_mysqli($check_live_stmt, $link);
+	if (mysqli_num_rows($check_live_rslt)==0) {
+		echo _QXZ("Error - chat session was ended by the agent");
 	} else {
-		echo "Error sending message.";
+
+		$chat_message = preg_replace("/\r/i",'',$chat_message);
+		$chat_message = preg_replace("/\n/i",' ',$chat_message);
+
+		$ins_chat_stmt="insert into vicidial_manager_chat_log(manager_chat_id, manager_chat_subid, manager, user, message, message_date, message_posted_by) VALUES('$manager_chat_id', '$chat_sub_id', '$PHP_AUTH_USER', '$user', '".mysqli_real_escape_string($link, $chat_message)."', now(), '$PHP_AUTH_USER')";
+		$ins_chat_rslt=mysql_to_mysqli($ins_chat_stmt, $link);
+		if (mysqli_insert_id($link)>0) {
+			$reload_chat_span=1;
+		} else {
+			echo _QXZ("Error sending message.");
+		}
 	}
 }
 
@@ -264,7 +287,7 @@ if ($reload_chat_span) {
 		echo "\t<TD align='left' colspan='2'><font FACE=\"ARIAL,HELVETICA\" size=1 color=white>"._QXZ("Message")."</font></TD>\n";
 		echo "</TR>";
 		$stmt="select vm.message_posted_by, vm.message, vm.message_date, vu.full_name, vm.manager, vm.manager_chat_subid, vm.user from vicidial_manager_chats vmc, vicidial_manager_chat_log vm, vicidial_users vu where vmc.manager_chat_id='$manager_chat_id' and vmc.manager_chat_id=vm.manager_chat_id and vm.user=vu.user order by vm.manager_chat_subid asc, message_date desc";
-		$rslt=mysqli_query($link, $stmt);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if (mysqli_num_rows($rslt)>0) {
 			$prev_chat_subid="";
 			$backlog_limit=20;

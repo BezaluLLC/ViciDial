@@ -1,7 +1,7 @@
 <?php
 # AST_chat_log_report.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
 #
 # This is the report page where you can view report information of any of the dialer's chats.  The web page will 
 # display the information about the chat, including the start time and participants, and will also provide links 
@@ -10,6 +10,7 @@
 # CHANGES
 #
 # 150608-0647 First build
+# 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 #
 
 $startMS = microtime();
@@ -480,7 +481,7 @@ if ($text_search) {
 		$text_stmt="select distinct chat_id from vicidial_chat_log_archive where message like '%".mysqli_real_escape_string($link, $text_search)."%'";
 	}
 	if ($DB) {echo "$text_stmt<BR>\n";}
-	$text_rslt=mysqli_query($link, $text_stmt);
+	$text_rslt=mysql_to_mysqli($text_stmt, $link);
 	while ($text_row=mysqli_fetch_row($text_rslt)) {
 		array_push($matching_text_chats, $text_row[0]);
 	}
@@ -747,7 +748,7 @@ else
 
 				$sub_stmt="select manager_chat_subid, v.user, vu.full_name, count(*) from vicidial_manager_chat_log_archive v, vicidial_users vu where manager_chat_id='".$row["manager_chat_id"]."' and v.user=vu.user $matching_text_subid_SQL group by manager_chat_subid, user, full_name order by manager_chat_subid asc";
 				if ($DB) {echo "$sub_stmt<BR>\n";}
-				$sub_rslt=mysqli_query($link, $sub_stmt);
+				$sub_rslt=mysql_to_mysqli($sub_stmt, $link);
 
 				$ASCII_text.="<span id='ChatReport".$row["manager_chat_id"]."' style='display: none;'>";
 				$ASCII_text.="+---------+-------------+------------------------------+\n";
@@ -826,7 +827,7 @@ else
 
 				$sub_stmt="select message_time, chat_member_name, message, chat_id from vicidial_chat_log_archive where chat_id='".$row["chat_id"]."' $matching_text_subid_SQL order by message_time asc";
 				if ($DB) {echo "$sub_stmt<BR>\n";}
-				$sub_rslt=mysqli_query($link, $sub_stmt);
+				$sub_rslt=mysql_to_mysqli($sub_stmt, $link);
 
 				$ASCII_text.="<span id='ChatReport".$row["chat_id"]."' style='display: none;'>";
 				$ASCII_text.="+---------+---------------------+------------------------------+-------------------------------------------------------+\n";
@@ -869,7 +870,7 @@ else
 		$CSV_text.="\"".$ASCII_rpt_header."\"\n";
 
 		$mgr_stmt="select full_name from vicidial_users where user='$download_manager'";
-		$mgr_rslt=mysqli_query($link, $mgr_stmt);
+		$mgr_rslt=mysql_to_mysqli($mgr_stmt, $link);
 		$mgr_row=mysqli_fetch_row($mgr_rslt);
 		$mgr_name=$mgr_row[0];
 
@@ -878,7 +879,7 @@ else
 		if ($chat_log_type=="INTERNAL") {
 			$user_stmt="select vu.user, vu.full_name from vicidial_users vu, vicidial_manager_chat_log_archive v where manager_chat_id='$download_chat_id' and v.user=vu.user";
 			if ($download_chat_subid) {$user_stmt.=" and manager_chat_subid='$download_chat_subid' ";}
-			$user_rslt=mysqli_query($link, $user_stmt);
+			$user_rslt=mysql_to_mysqli($user_stmt, $link);
 			while ($user_row=mysqli_fetch_row($user_rslt)) {
 				$user_name["$user_row[0]"]=$user_row[1];
 			}
@@ -886,7 +887,7 @@ else
 			$csv_stmt="select * from vicidial_manager_chat_log_archive where manager_chat_id='$download_chat_id' ";
 			if ($download_chat_subid) {$csv_stmt.=" and manager_chat_subid='$download_chat_subid' ";}
 			$csv_stmt.=" order by message_date asc";
-			$csv_rslt=mysqli_query($link, $csv_stmt);
+			$csv_rslt=mysql_to_mysqli($csv_stmt, $link);
 			if ($DB) {$CSV_text.="|$csv_stmt|\n";}
 
 			$CSV_text.="\""._QXZ("MESSAGE DATE")."\",\""._QXZ("MESSAGE POSTED BY")."\",\""._QXZ("MESSAGE")."\"\n";
@@ -898,7 +899,7 @@ else
 				}
 		} else if ($chat_log_type=="CUSTOMER") {
 			$csv_stmt="select * from vicidial_chat_log_archive where chat_id='$download_chat_id'  order by message_time asc";
-			$csv_rslt=mysqli_query($link, $csv_stmt);
+			$csv_rslt=mysql_to_mysqli($csv_stmt, $link);
 
 			$CSV_text.="\""._QXZ("MESSAGE TIME")."\",\""._QXZ("MESSAGE POSTED BY")."\",\""._QXZ("MESSAGE")."\"\n";
 			while($csv_row=mysqli_fetch_array($csv_rslt)) 

@@ -1,7 +1,7 @@
 <?php
 # agc_agent_manager_chat_interface.php
 # 
-# Copyright (C) 2015  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This page is for agents to chat with managers via the agent interface.
 #
@@ -10,10 +10,11 @@
 # 151213-1108 - Added variable filtering
 # 151218-1141 - Added missing translation code and user auth, merged js code into file
 # 151231-0842 - Added agent_allowed_chat_groups setting
+# 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 #
 
-$admin_version = '2.12-4';
-$build = '151231-0842';
+$admin_version = '2.12-5';
+$build = '160108-2300';
 
 $sh="managerchats"; 
 
@@ -100,7 +101,7 @@ if ($SSallow_chats < 1)
 # Get a count on unread messages where the user is involved but not the chat manager/initiator in order to create the ChatReloadIDNumber variable
 $chat_reload_id_number_array=array();
 $unread_stmt="select manager_chat_id, manager_chat_subid, sum(if(message_viewed_date is not null, 0, 1)) as unread_count from vicidial_manager_chat_log where vicidial_manager_chat_log.user='$user' group by manager_chat_id, manager_chat_subid order by manager_chat_id, manager_chat_subid";
-$unread_rslt=mysqli_query($link, $unread_stmt);
+$unread_rslt=mysql_to_mysqli($unread_stmt, $link);
 while ($unread_row=mysqli_fetch_array($unread_rslt)) {
 	$IDNumber=$unread_row["manager_chat_id"]."-".$unread_row["manager_chat_subid"]."-".$unread_row["unread_count"];
 	array_push($chat_reload_id_number_array, "$IDNumber");
@@ -108,7 +109,7 @@ while ($unread_row=mysqli_fetch_array($unread_rslt)) {
 
 # Pull the most recently posted-to chat that has not been viewed, then the most recent period, and display that as the default window
 $stmt="select distinct vicidial_manager_chat_log.manager_chat_id, vicidial_manager_chat_log.manager_chat_subid, vicidial_users.full_name, vicidial_manager_chats.chat_start_date, sum(if(vicidial_manager_chat_log.message_viewed_date is null, 1, 0)),vicidial_manager_chat_log.user from vicidial_manager_chat_log, vicidial_manager_chats, vicidial_users where vicidial_manager_chat_log.user='$user' and vicidial_manager_chat_log.manager_chat_id=vicidial_manager_chats.manager_chat_id and vicidial_manager_chats.manager=vicidial_users.user group by manager_chat_id, manager_chat_subid order by message_viewed_date asc, message_date desc";
-$rslt=mysqli_query($link, $stmt);
+$rslt=mysql_to_mysqli($stmt, $link);
 
 $active_chats_array=array();
 $chat_subid_array=array();
@@ -134,7 +135,7 @@ while ($row=mysqli_fetch_row($rslt)) {
 
 	# Get a count on unread messages where the user is the chat manager/initiator in order to create the ChatReloadIDNumber variable
 	$unread_stmt="select manager_chat_id, manager_chat_subid, sum(if(message_viewed_date is not null, 0, 1)) as unread_count from vicidial_manager_chat_log where vicidial_manager_chat_log.manager='$user' group by manager_chat_id, manager_chat_subid order by manager_chat_id, manager_chat_subid";
-	$unread_rslt=mysqli_query($link, $unread_stmt);
+	$unread_rslt=mysql_to_mysqli($unread_stmt, $link);
 	while ($unread_row=mysqli_fetch_array($unread_rslt)) {
 		$IDNumber=$unread_row["manager_chat_id"]."-".$unread_row["manager_chat_subid"]."-".$unread_row["unread_count"];
 		array_push($chat_reload_id_number_array, "$IDNumber");
@@ -145,7 +146,7 @@ while ($row=mysqli_fetch_row($rslt)) {
 	### which will now happen because agents can now start their own chats.  Added vicidial_manager_chat_log.user to this query on 2/4/15 for
 	### manager override
 	$stmt="select distinct vicidial_manager_chat_log.manager_chat_id, vicidial_manager_chat_log.manager_chat_subid, vicidial_users.full_name, vicidial_manager_chats.chat_start_date, sum(if(vicidial_manager_chat_log.message_viewed_date is null, 1, 0)),vicidial_manager_chat_log.user from vicidial_manager_chat_log, vicidial_manager_chats, vicidial_users where vicidial_manager_chat_log.manager='$user' and vicidial_manager_chat_log.manager_chat_id=vicidial_manager_chats.manager_chat_id and vicidial_manager_chat_log.user=vicidial_users.user group by manager_chat_id, manager_chat_subid order by message_viewed_date asc, message_date desc";
-	$rslt=mysqli_query($link, $stmt);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	while ($row=mysqli_fetch_row($rslt)) {
 		if ($row[0]!="") {
 			if (!$priority_chat) {$priority_chat=$row[0];} # The priority_chat is the most recent chat that has not been viewed.

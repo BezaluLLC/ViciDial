@@ -77,6 +77,7 @@
 # 160101-0933 - Added entries for routing_initiated_recordings in campaigns and in-groups
 # 160106-0700 - Added AREACODE description to the inbound_dids-filter_inbound_number entry
 # 160106-1348 - Added inbound_groups-on_hook_cid_number entry
+# 160108-2217 - Added campaigns-manual_dial_hopper_check entry
 #
 
 
@@ -898,6 +899,11 @@ if ($SSoutbound_autodial_active > 0)
 	<A NAME="campaigns-hopper_vlc_dup_check">
 	<BR>
 	<B><?php echo _QXZ("Hopper VLC Dup Check"); ?> -</B><?php echo _QXZ("Setting this to Y will result in every lead being inserted into the hopper being checked by vendor_lead_code to make sure there are no duplicate leads inserted with the same vendor_lead_code. This is most useful when Auto-Alt-Dialing with MULTI_LEAD. Default is N."); ?>
+
+	<BR>
+	<A NAME="campaigns-manual_dial_hopper_check">
+	<BR>
+	<B><?php echo _QXZ("Manual Dial Hopper Check"); ?> -</B><?php echo _QXZ("Setting this to Y will mean that any manually dialed campaign phone call through the agent screen will first check for a lead in the hopper with the same phone number, and if one exists it will be deleted before the manual dial call is placed. Default is N."); ?>
 
 	<BR>
 	<A NAME="campaigns-lead_filter_id">

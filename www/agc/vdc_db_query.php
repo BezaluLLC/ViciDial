@@ -1,7 +1,7 @@
 <?php
 # vdc_db_query.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to exchange information between vicidial.php and the database server for various actions
 # 
@@ -397,13 +397,15 @@
 # 151212-0916 - Added chat-related functions for the agent interface
 # 151220-1109 - Improved logging of chats, emails, inbound calls
 # 151229-2316 - Added manual_dial_timeout campaign setting
+# 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
+# 160109-0747 - Added manual_dial_hopper_check campaign setting
 #
 
-$version = '2.12-292';
-$build = '151229-2316';
+$version = '2.12-293';
+$build = '160109-0747';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=649;
+$mysql_log_count=654;
 $one_mysql_log=0;
 $DB=0;
 $SSagent_debug_logging=0;
@@ -3688,8 +3690,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$local_AMP = '@';
 				$Local_out_prefix = '9';
 				$Local_dial_timeout = '60';
-			#	$Local_persist = '/n';
-                                $Local_persist = '';
+				$Local_persist = '';	#	$Local_persist = '/n';
 				if ($dial_timeout > 4) {$Local_dial_timeout = $dial_timeout;}
 				$Local_dial_timeout = ($Local_dial_timeout * 1000);
 				if (strlen($dial_prefix) > 0) {$Local_out_prefix = "$dial_prefix";}
@@ -3697,7 +3698,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				if (strlen($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
 				### check for custom cid use
 				$use_custom_cid=0;
-				$stmt = "SELECT use_custom_cid FROM vicidial_campaigns where campaign_id='$campaign';";
+				$stmt = "SELECT use_custom_cid,manual_dial_hopper_check FROM vicidial_campaigns where campaign_id='$campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00313',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -3705,7 +3706,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 				if ($uccid_ct > 0)
 					{
 					$row=mysqli_fetch_row($rslt);
-					$use_custom_cid =	$row[0];
+					$use_custom_cid =			$row[0];
+					$manual_dial_hopper_check =	$row[1];
 					if ( ($use_custom_cid == 'AREACODE') and ($cid_lock < 1) )
 						{
 						$temp_vcca='';
@@ -3747,6 +3749,32 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 				$PADlead_id = sprintf("%010s", $lead_id);
 					while (strlen($PADlead_id) > 10) {$PADlead_id = substr("$PADlead_id", 1);}
+
+				#### BEGIN run manual_dial_hopper_check process if enabled
+				if ($manual_dial_hopper_check == 'Y')
+					{
+					$mdhc_lead_ids_SQL='';
+					$stmt = "SELECT lead_id FROM vicidial_list where phone_number='$agent_dialed_number';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00650',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$mdhc_ct = mysqli_num_rows($rslt);
+					$d=0;
+					while ($mdhc_ct > $d)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$mdhc_lead_ids_SQL .=	"'$row[0]',";
+						$d++;
+						}
+					if ($mdhc_ct > 0)
+						{
+						$stmt = "DELETE FROM vicidial_hopper where lead_id IN($mdhc_lead_ids_SQL'');";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00651',$user,$server_ip,$session_name,$one_mysql_log);}
+						}
+					}
+				#### END run manual_dial_hopper_check process if enabled
 
 				### check for extension append in campaign
 				$use_eac=0;
@@ -4598,10 +4626,12 @@ if ($ACTION == 'manDiaLonly')
 					}
 				}
 			}
+
 		if (strlen($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
+
 		### check for custom cid use
 		$use_custom_cid=0;
-		$stmt = "SELECT use_custom_cid FROM vicidial_campaigns where campaign_id='$campaign';";
+		$stmt = "SELECT use_custom_cid,manual_dial_hopper_check FROM vicidial_campaigns where campaign_id='$campaign';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00314',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -4609,7 +4639,8 @@ if ($ACTION == 'manDiaLonly')
 		if ($uccid_ct > 0)
 			{
 			$row=mysqli_fetch_row($rslt);
-			$use_custom_cid =	$row[0];
+			$use_custom_cid =			$row[0];
+			$manual_dial_hopper_check =	$row[1];
 			if ( ($use_custom_cid == 'AREACODE') and ($cid_lock < 1) )
 				{
 				$temp_vcca='';
@@ -4645,6 +4676,32 @@ if ($ACTION == 'manDiaLonly')
 				{$temp_CID = preg_replace("/\D/",'',$security_phrase);}
 			if (strlen($temp_CID) > 6) 
 				{$CCID = "$temp_CID";   $CCID_on++;}
+
+			#### BEGIN run manual_dial_hopper_check process if enabled
+			if ($manual_dial_hopper_check == 'Y')
+				{
+				$mdhc_lead_ids_SQL='';
+				$stmt = "SELECT lead_id FROM vicidial_list where phone_number='$phone_number';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00652',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$mdhc_ct = mysqli_num_rows($rslt);
+				$d=0;
+				while ($mdhc_ct > $d)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$mdhc_lead_ids_SQL .=	"'$row[0]',";
+					$d++;
+					}
+				if ($mdhc_ct > 0)
+					{
+					$stmt = "DELETE FROM vicidial_hopper where lead_id IN($mdhc_lead_ids_SQL'');";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00653',$user,$server_ip,$session_name,$one_mysql_log);}
+					}
+				}
+			#### END run manual_dial_hopper_check process if enabled
 			}
 
 		$PADlead_id = sprintf("%010s", $lead_id);
@@ -12063,26 +12120,26 @@ if ($ACTION == 'userLOGout')
 		##### End any still-active chats initiated by the agent
 		if ($allow_chats==1) {
 			$stmt="SELECT manager_chat_id from vicidial_manager_chats where manager='$user';";
-			$rslt=mysqli_query($link, $stmt);
+			$rslt=mysql_to_mysqli($stmt, $link);
 
 			while ($row=mysqli_fetch_row($rslt)) {
 				$manager_chat_id=$row[0];
 
 				$archive_stmt="INSERT IGNORE INTO vicidial_manager_chat_log_archive SELECT manager_chat_message_id,manager_chat_id,manager_chat_subid,manager,user,message,message_date,message_viewed_date,message_posted_by,audio_alerted from vicidial_manager_chat_log where manager_chat_id='$manager_chat_id';";
-				$archive_rslt=mysqli_query($link, $archive_stmt);
+				$archive_rslt=mysql_to_mysqli($archive_stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$archive_stmt,'00646',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				$archive_stmt="INSERT IGNORE INTO vicidial_manager_chats_archive SELECT manager_chat_id,chat_start_date,manager,selected_agents,selected_user_groups,selected_campaigns,allow_replies from vicidial_manager_chats where manager_chat_id='$manager_chat_id';";
-				$archive_rslt=mysqli_query($link, $archive_stmt);
+				$archive_rslt=mysql_to_mysqli($archive_stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$archive_stmt,'00647',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				$delete_stmt="DELETE from vicidial_manager_chat_log where manager_chat_id='$manager_chat_id';";
-				$delete_rslt=mysqli_query($link, $delete_stmt);
+				$delete_rslt=mysql_to_mysqli($delete_stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$delete_stmt,'00648',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				if (mysqli_affected_rows($link)>0) {
 					$archive_stmt="DELETE from vicidial_manager_chats where manager_chat_id='$manager_chat_id';";
-					$archive_rslt=mysqli_query($link, $archive_stmt);
+					$archive_rslt=mysql_to_mysqli($archive_stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$archive_stmt,'00649',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 			}
@@ -14702,7 +14759,7 @@ function status_group_gather($status_group_id,$record_type)
 		$stmt = "SELECT status,status_name,scheduled_callback,min_sec,max_sec from vicidial_campaign_statuses where campaign_id='$status_group_id' and selectable='Y';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00654',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($rslt) {$cs_ct = mysqli_num_rows($rslt);}
 		$i=0;
 		while ($cs_ct > $i)

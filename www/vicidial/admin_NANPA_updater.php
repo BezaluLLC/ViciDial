@@ -1,7 +1,7 @@
 <?php
 # admin_NANPA_updater.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to launch NANPA filter batch proccesses through the
 # triggering process
@@ -12,10 +12,11 @@
 # 131019-1112 - Added help text and several small tweaks
 # 141007-1123 - Finalized adding QXZ translation to all admin files
 # 141230-0014 - Added code for on-the-fly language translations display
+# 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 #
 
-$version = '2.10-5';
-$build = '141230-0014';
+$version = '2.12-6';
+$build = '160108-2300';
 $startMS = microtime();
 
 require("dbconnect_mysqli.php");
@@ -171,7 +172,7 @@ if (strlen($active_voicemail_server)<7)
 if ($delete_trigger_id) 
 	{
 	$delete_stmt="delete from vicidial_process_triggers where trigger_id='$delete_trigger_id'";
-	$delete_rslt=mysqli_query($link, $delete_stmt);
+	$delete_rslt=mysql_to_mysqli($delete_stmt, $link);
 	}
 
 $list_ct=count($lists);
@@ -189,7 +190,7 @@ if ($submit_form=="SUBMIT" && $list_ct>0 && (strlen($vl_field_update)>0 || strle
 			### but it needs to be done
 			$j=0;
 			$stmt="SELECT list_id from vicidial_lists where active='N' order by list_id asc";
-			$rslt=mysqli_query($link, $stmt);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			while ($row=mysqli_fetch_array($rslt)) 
 				{
 				$lists[$j]=$row[0];
@@ -225,7 +226,7 @@ if ($submit_form=="SUBMIT" && $list_ct>0 && (strlen($vl_field_update)>0 || strle
 
 	$uniqueid=date("U").".".rand(1, 9999);
 	$ins_stmt="INSERT into vicidial_process_triggers (trigger_id, trigger_name, server_ip, trigger_time, trigger_run, user, trigger_lines) VALUES('NANPA_".$uniqueid."', 'NANPA updater SCREEN', '$active_voicemail_server', now()+INTERVAL $activation_delay MINUTE, '1', '$PHP_AUTH_USER', '/usr/share/astguiclient/nanpa_type_filter.pl --output-to-db $options')";
-	$ins_rslt=mysqli_query($link, $ins_stmt);
+	$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 	}
 header ("Content-type: text/html; charset=utf-8");
 if ($SSnocache_admin=='1')
@@ -236,10 +237,10 @@ if ($SSnocache_admin=='1')
 
 
 $schedule_stmt="SELECT *, sec_to_time(UNIX_TIMESTAMP(trigger_time)-UNIX_TIMESTAMP(now())) as time_until_execution from vicidial_process_triggers where trigger_name='NANPA updater SCREEN' and user='$PHP_AUTH_USER' and trigger_time>=now()";
-$schedule_rslt=mysqli_query($link, $schedule_stmt);
+$schedule_rslt=mysql_to_mysqli($schedule_stmt, $link);
 
 $running_stmt="SELECT output_code from vicidial_nanpa_filter_log where user='$PHP_AUTH_USER' and status!='COMPLETED' order by output_code asc";
-$running_rslt=mysqli_query($link, $running_stmt);
+$running_rslt=mysql_to_mysqli($running_stmt, $link);
 if (mysqli_num_rows($running_rslt)>0) {
 	$iframe_url="";
 	while ($run_row=mysqli_fetch_array($running_rslt)) {
@@ -449,7 +450,7 @@ else
 	echo "<td align='left' valign='top' rowspan='4'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Inactive lists").":<BR/>\n";
 
 	$stmt="SELECT list_id, list_name from vicidial_lists where active='N' order by list_id asc";
-	$rslt=mysqli_query($link, $stmt);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	echo "<select name='lists[]' multiple size='5'>\n";
 	echo "<option value='---ALL---'>---"._QXZ("ALL LISTS")."---</option>\n";
 	while ($row=mysqli_fetch_array($rslt)) 
@@ -462,7 +463,7 @@ else
 	echo "<td align='left' valign='top' rowspan='2'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Field to update (optional)").":<BR/>\n";
 	echo "<select name='vl_field_update'>\n";
 	$stmt="SELECT * from vicidial_list limit 1";
-	$rslt=mysqli_query($link, $stmt);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	echo "<option value=''>---"._QXZ("NONE")."---</option>\n";
 	while ($fieldinfo=mysqli_fetch_field($rslt)) 
 		{
@@ -502,7 +503,7 @@ else
 	echo "<td align='left' valign='top' rowspan='2'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Exclusion field (optional)").":<BR/>\n";
 	echo "<select name='vl_field_exclude'>\n";
 	$stmt="SELECT * from vicidial_list limit 1";
-	$rslt=mysqli_query($link, $stmt);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	echo "<option value=''>---"._QXZ("NONE")."---</option>\n";
 	while ($fieldinfo=mysqli_fetch_field($rslt)) 
 		{

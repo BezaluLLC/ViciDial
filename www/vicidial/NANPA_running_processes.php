@@ -1,7 +1,7 @@
 <?php
 # NANPA_running_processes.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script shows running NANPA filter batch proccesses
 #
@@ -9,10 +9,11 @@
 # 130921-0756 - First build of script
 # 141007-2044 - Finalized adding QXZ translation to all admin files
 # 141229-2020 - Added code for on-the-fly language translations display
+# 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 #
 
-$version = '2.10-3';
-$build = '141229-2020';
+$version = '2.12-4';
+$build = '160108-2300';
 $startMS = microtime();
 
 require("dbconnect_mysqli.php");
@@ -152,13 +153,13 @@ $oc_SQL=substr($oc_SQL, 0, -1);
 
 if (!$show_history) {
 	$process_stmt="SELECT output_code,status,server_ip,list_id,start_time,update_time,user,leads_count,filter_count,status_line,script_output from vicidial_nanpa_filter_log where output_code in ($oc_SQL) and status!='COMPLETED'";
-	$process_rslt=mysqli_query($link, $process_stmt);
+	$process_rslt=mysql_to_mysqli($process_stmt, $link);
 	$report_title=_QXZ("Currently running NANPA scrubs");
 } else {
 	if (!$process_limit) {$process_limit=10;}
 	$process_stmt="SELECT output_code,status,server_ip,list_id,start_time,update_time,user,leads_count,filter_count,status_line,script_output from vicidial_nanpa_filter_log where user='$PHP_AUTH_USER' and status='COMPLETED' order by start_time desc limit $process_limit";
 
-	$process_rslt=mysqli_query($link, $process_stmt);
+	$process_rslt=mysql_to_mysqli($process_stmt, $link);
 	$report_title=_QXZ("Past NANPA scrubs for user")." $PHP_AUTH_USER";
 
 	$past_process_ct=mysqli_num_rows($process_rslt);

@@ -72,6 +72,14 @@ textarea.chat_box {
     padding: 2px;
     border: solid 1px #000066;
 }
+textarea.chat_box_ended {
+    font-family: Arial, Sans-Serif;
+    font-size: 10px;
+    margin-bottom: 3px;
+    padding: 2px;
+    border: solid 1px #000066;
+    background-color:#999999;
+}
 .cust_form { 
 	font-family: Sans-Serif; 
 	font-size: 10px; 

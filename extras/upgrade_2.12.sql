@@ -477,3 +477,15 @@ UPDATE system_settings SET db_schema_version='1448',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_inbound_groups ADD on_hook_cid_number VARCHAR(18) default '';
 
 UPDATE system_settings SET db_schema_version='1449',db_schema_update_date=NOW() where db_schema_version < 1449;
+
+ALTER TABLE vicidial_campaigns ADD manual_dial_hopper_check ENUM('Y','N') default 'N';
+
+CREATE INDEX manager_chat_id_key on vicidial_manager_chat_log (manager_chat_id);
+CREATE INDEX manager_chat_subid_key on vicidial_manager_chat_log (manager_chat_subid);
+CREATE INDEX manager_chat_manager_key on vicidial_manager_chat_log (manager);
+CREATE INDEX manager_chat_user_key on vicidial_manager_chat_log (user);
+
+CREATE INDEX manager_chat_id_archive_key on vicidial_manager_chat_log_archive (manager_chat_id);
+CREATE INDEX manager_chat_subid_archive_key on vicidial_manager_chat_log_archive (manager_chat_subid);
+
+UPDATE system_settings SET db_schema_version='1450',db_schema_update_date=NOW() where db_schema_version < 1450;

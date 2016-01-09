@@ -1,7 +1,7 @@
 <?php
 # chat_db_query.php
 #
-# Copyright (C) 2015  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Called by vdc_chat_display.php and vicidial_chat_agent.js.  This contains all actions taken by the
 # agent's interface when chatting with customers, other agents, and managers, through 
@@ -13,6 +13,8 @@
 # 150901-2348 - First build
 # 151218-1052 - Added missing translation code and user auth
 # 151231-0841 - Added agent_allowed_chat_groups setting
+# 160107-2318 - Bug fix for agent ending chat with manager
+# 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 #
 
 require("dbconnect_mysqli.php");
@@ -136,7 +138,7 @@ if ($action=="CreateAgentToAgentChat" && $agent_manager && $agent_user && $manag
 
 	# Check that you aren't already chatting with the agent - also checks for chats where the other agent is the manager and you are the requested chat recipient
 	$dupe_chat_stmt="select * from vicidial_manager_chats where (manager='$agent_manager' and selected_agents like '%|$agent_user|%') or (manager='$agent_user' and selected_agents like '%|$agent_manager|%')";
-	$dupe_chat_rslt=mysqli_query($link, $dupe_chat_stmt);
+	$dupe_chat_rslt=mysql_to_mysqli($dupe_chat_stmt, $link);
 	if (mysqli_num_rows($dupe_chat_rslt)>0) {
 		echo _QXZ("Error:  You already have an open chat with this agent");
 	} else {
@@ -144,7 +146,7 @@ if ($action=="CreateAgentToAgentChat" && $agent_manager && $agent_user && $manag
 		# This is slightly different from the manager-to-agent chat because it's only one agent you're chatting to so for reporting all that agent's specific information is grabbed and used to make the vicidial_manager_chats entry.  Since the query should only return one result there's no while loop to insert subid chat info.
 
 		$stmt="select vicidial_live_agents.user, vicidial_users.full_name, vicidial_users.user_group, vicidial_live_agents.campaign_id from vicidial_live_agents, vicidial_users where vicidial_live_agents.user=vicidial_users.user and vicidial_live_agents.user='$agent_user' and vicidial_users.user!='$agent_manager' order by vicidial_users.full_name asc";
-		$rslt=mysqli_query($link, $stmt);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if (mysqli_num_rows($rslt)>0) {
 			$row=mysqli_fetch_row($rslt);
 			$user =			$row[0];
@@ -152,7 +154,7 @@ if ($action=="CreateAgentToAgentChat" && $agent_manager && $agent_user && $manag
 			$campaign_id =	$row[3];
 
 			$ins_stmt="insert into vicidial_manager_chats(chat_start_date, manager, selected_agents, selected_user_groups, selected_campaigns, allow_replies) VALUES(now(), '$agent_manager', '|$agent_user|', '|$user_group|', '|$campaign_id|', 'Y')";
-			$ins_rslt=mysqli_query($link, $ins_stmt);
+			$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 			$manager_chat_id=mysqli_insert_id($link);
 
 			$subid=1;
@@ -163,7 +165,7 @@ if ($action=="CreateAgentToAgentChat" && $agent_manager && $agent_user && $manag
 			# $manager_message=addslashes(trim("$manager_message"));
 						
 			$ins_chat_stmt="insert into vicidial_manager_chat_log(manager_chat_id, manager_chat_subid, manager, user, message, message_date, message_posted_by) VALUES('$manager_chat_id', '$subid', '$agent_manager', '$agent_user', '".mysqli_real_escape_string($link, $manager_message)."', now(), '$agent_manager')";
-			$ins_chat_rslt=mysqli_query($link, $ins_chat_stmt);
+			$ins_chat_rslt=mysql_to_mysqli($ins_chat_stmt, $link);
 			echo "$manager_chat_id|$subid";
 		}
 	}
@@ -221,20 +223,31 @@ if ($action=="DisplayMgrAgentChat" && $manager_chat_id && $manager_chat_subid &&
 	}
 }
 
-if ($action=="EndAgentToAgentChat" && $manager_chat_id) {
-	$archive_stmt="insert ignore into vicidial_manager_chat_log_archive select * from vicidial_manager_chat_log where manager_chat_id='$manager_chat_id'";
-	$archive_rslt=mysqli_query($link, $archive_stmt);
-
-	$archive_stmt="insert ignore into vicidial_manager_chats_archive select * from vicidial_manager_chats where manager_chat_id='$manager_chat_id'";
-	$archive_rslt=mysqli_query($link, $archive_stmt);
-
-	$delete_stmt="delete from vicidial_manager_chat_log where manager_chat_id='$manager_chat_id'";
-	$delete_rslt=mysqli_query($link, $delete_stmt);
-
-	if (mysqli_affected_rows($link)>0) {
-		$archive_stmt="delete from vicidial_manager_chats where manager_chat_id='$manager_chat_id'";
-		$archive_rslt=mysqli_query($link, $archive_stmt);
+if ($action=="EndAgentToAgentChat" && $manager_chat_id && $user) {
+	$subid_lookup="select distinct manager_chat_subid from vicidial_manager_chat_log where manager_chat_id='$manager_chat_id' and user='$user'";
+	$subid_rslt=mysql_to_mysqli($subid_lookup, $link);
+	# should only be one, but making array just in case
+	$manager_chat_subid_array=array();
+	while ($subid_row=mysqli_fetch_row($subid_rslt)) {
+		$manager_chat_subid=$subid_row[0];
+		array_push($manager_chat_subid_array, "$subid_row[0]");
 	}
+
+
+	$archive_stmt="insert ignore into vicidial_manager_chat_log_archive select * from vicidial_manager_chat_log where manager_chat_id='$manager_chat_id' and manager_chat_subid in ('".implode("','",$manager_chat_subid_array)."')";
+	$archive_rslt=mysql_to_mysqli($archive_stmt, $link);
+
+	# JCJ 1/7/16 - do not do this, as it will end the chat for all agents.
+	# $archive_stmt="insert ignore into vicidial_manager_chats_archive select * from vicidial_manager_chats where manager_chat_id='$manager_chat_id'";
+	# $archive_rslt=mysqli_query($link, $archive_stmt);
+
+	$delete_stmt="delete from vicidial_manager_chat_log where manager_chat_id='$manager_chat_id' and manager_chat_subid in ('".implode("','",$manager_chat_subid_array)."')";
+	$delete_rslt=mysql_to_mysqli($delete_stmt, $link);
+
+	#if (mysqli_affected_rows($link)>0) {
+	#	$archive_stmt="delete from vicidial_manager_chats where manager_chat_id='$manager_chat_id'";
+	#	$archive_rslt=mysqli_query($link, $archive_stmt);
+	#}
 	echo mysqli_affected_rows($link);
 }
 
@@ -242,7 +255,7 @@ if ($action=="RefreshActiveChatView" && $user) {
 	# Get a count on unread messages where the user is involved but not the chat manager/initiator in order to create the ChatReloadIDNumber variable
 	$chat_reload_id_number_array=array();
 	$unread_stmt="select manager_chat_id, manager_chat_subid, sum(if(message_viewed_date is not null, 0, 1)) as unread_count from vicidial_manager_chat_log where vicidial_manager_chat_log.user='$user' group by manager_chat_id, manager_chat_subid order by manager_chat_id, manager_chat_subid";
-	$unread_rslt=mysqli_query($link, $unread_stmt);
+	$unread_rslt=mysql_to_mysqli($unread_stmt, $link);
 	while ($unread_row=mysqli_fetch_array($unread_rslt)) {
 		$IDNumber=$unread_row["manager_chat_id"]."-".$unread_row["manager_chat_subid"]."-".$unread_row["unread_count"];
 		array_push($chat_reload_id_number_array, "$IDNumber");
@@ -250,7 +263,7 @@ if ($action=="RefreshActiveChatView" && $user) {
 
 	# Pull the most recently posted-to chat that has not been viewed, then the most recent period, and display that as the default window
 	$stmt="select distinct vicidial_manager_chat_log.manager_chat_id, vicidial_manager_chat_log.manager_chat_subid, vicidial_users.full_name, vicidial_manager_chats.chat_start_date, sum(if(vicidial_manager_chat_log.message_viewed_date is null, 1, 0)) from vicidial_manager_chat_log, vicidial_manager_chats, vicidial_users where vicidial_manager_chat_log.user='$user' and vicidial_manager_chat_log.manager_chat_id=vicidial_manager_chats.manager_chat_id and vicidial_manager_chats.manager=vicidial_users.user group by manager_chat_id, manager_chat_subid order by message_viewed_date asc, message_date desc";
-	$rslt=mysqli_query($link, $stmt);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	
 	$active_chats_array=array();
 	$chat_subid_array=array();
@@ -270,7 +283,7 @@ if ($action=="RefreshActiveChatView" && $user) {
 
 	# Get a count on unread messages where the user is the chat manager/initiator in order to create the ChatReloadIDNumber variable
 	$unread_stmt="select manager_chat_id, manager_chat_subid, sum(if(message_viewed_date is not null, 0, 1)) as unread_count from vicidial_manager_chat_log where vicidial_manager_chat_log.manager='$user' group by manager_chat_id, manager_chat_subid order by manager_chat_id, manager_chat_subid";
-	$unread_rslt=mysqli_query($link, $unread_stmt);
+	$unread_rslt=mysql_to_mysqli($unread_stmt, $link);
 	while ($unread_row=mysqli_fetch_array($unread_rslt)) {
 		$IDNumber=$unread_row["manager_chat_id"]."-".$unread_row["manager_chat_subid"]."-".$unread_row["unread_count"];
 		array_push($chat_reload_id_number_array, "$IDNumber");
@@ -280,7 +293,7 @@ if ($action=="RefreshActiveChatView" && $user) {
 	### which will now happen because agents can now start their own chats.  Added vicidial_manager_chat_log.user to this query on 2/4/15 for
 	### manager override
 	$stmt="select distinct vicidial_manager_chat_log.manager_chat_id, vicidial_manager_chat_log.manager_chat_subid, vicidial_users.full_name, vicidial_manager_chats.chat_start_date, sum(if(vicidial_manager_chat_log.message_viewed_date is null, 1, 0)),vicidial_manager_chat_log.user from vicidial_manager_chat_log, vicidial_manager_chats, vicidial_users where vicidial_manager_chat_log.manager='$user' and vicidial_manager_chat_log.manager_chat_id=vicidial_manager_chats.manager_chat_id and vicidial_manager_chat_log.user=vicidial_users.user group by manager_chat_id, manager_chat_subid order by message_viewed_date asc, message_date desc";
-	$rslt=mysqli_query($link, $stmt);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	while ($row=mysqli_fetch_row($rslt)) {
 		if ($row[0]!="") {
 			array_push($active_chats_array, "$row[0]");
@@ -396,7 +409,7 @@ if ($action=="SendMgrChatMessage" && $manager_chat_id && $manager_chat_subid) {
 	$chat_message = preg_replace("/\n/i",' ',$chat_message);
 
 	$mgr_stmt="select manager from vicidial_manager_chats where manager_chat_id='$manager_chat_id'";
-	$mgr_rslt=mysqli_query($link, $mgr_stmt);
+	$mgr_rslt=mysql_to_mysqli($mgr_stmt, $link);
 	$mgr_row=mysqli_fetch_row($mgr_rslt);
 	$manager=$mgr_row[0];
 
@@ -405,7 +418,7 @@ if ($action=="SendMgrChatMessage" && $manager_chat_id && $manager_chat_subid) {
 	
 	if ($manager) {
 		$ins_chat_stmt="insert into vicidial_manager_chat_log(manager_chat_id, manager_chat_subid, manager, user, message, message_date, message_posted_by) VALUES('$manager_chat_id', '$manager_chat_subid', '$manager', '$user', '".mysqli_real_escape_string($link, $chat_message)."', now(), '$message_posted_by')";
-		$ins_chat_rslt=mysqli_query($link, $ins_chat_stmt);
+		$ins_chat_rslt=mysql_to_mysqli($ins_chat_stmt, $link);
 		if (mysqli_insert_id($link)>0) {
 			$reload_chat_span=1;
 		} else {
