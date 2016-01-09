@@ -1,7 +1,7 @@
 <?php
 # vicidial_chat_customer_side.php
 #
-# Copyright (C) 2015  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # The main page of the customer chat interface.  This will display a form for the customer
 # to fill out to attempt to initiate a chat with an available agent in the in-group 
@@ -14,6 +14,7 @@
 # 151217-1017 - Allow for pre-populating of group_id
 # 151219-0850 - Added translation code
 # 151220-0959 - Only search for phone number if greater than 4 digits
+# 160108-1700 - Added available_agents, status_link button options and validation of active in-group
 #
 
 require("dbconnect_mysqli.php");
@@ -43,12 +44,18 @@ if (isset($_GET["language"]))				{$language=$_GET["language"];}
 	elseif (isset($_POST["language"]))		{$language=$_POST["language"];}
 if (isset($_GET["stage"]))					{$stage=$_GET["stage"];}
 	elseif (isset($_POST["stage"]))			{$stage=$_POST["stage"];}
+if (isset($_GET["available_agents"]))			{$available_agents=$_GET["available_agents"];}
+	elseif (isset($_POST["available_agents"]))	{$available_agents=$_POST["available_agents"];}
+if (isset($_GET["status_link"]))			{$status_link=$_GET["status_link"];}
+	elseif (isset($_POST["status_link"]))	{$status_link=$_POST["status_link"];}
 $PHP_SELF=$_SERVER["PHP_SELF"];
 
 $lead_id = preg_replace("/[^0-9]/","",$lead_id);
 $chat_id = preg_replace('/[^- \_\.0-9a-zA-Z]/','',$chat_id);
 $group_id = preg_replace('/[^- \_0-9a-zA-Z]/','',$group_id);
 $language = preg_replace('/[^-\_0-9a-zA-Z]/','',$language);
+$available_agents = preg_replace('/[^-\_0-9a-zA-Z]/','',$available_agents);
+$status_link = preg_replace('/[^-\_0-9a-zA-Z]/','',$status_link);
 
 if ($non_latin < 1)
 	{
@@ -109,9 +116,92 @@ if (strlen($language) > 1)
 if ($SSallow_chats < 1)
 	{
 	header ("Content-type: text/html; charset=utf-8");
-	echo _QXZ("Error, chat disabled on this system");
+	if ($status_link == 'Y')
+		{echo "<img src=\"./images/"._QXZ("chat_status_button_OFF.gif")."\" width=150 height=37 alt=\""._QXZ("no chat agents available")."\">";}
+	else
+		{echo _QXZ("Error, chat disabled on this system");}
 	exit;
 	}
+if (strlen($group_id) > 1)
+	{
+	$group_active='N';
+	$group_name='';
+	$stmt = "SELECT active,group_name FROM vicidial_inbound_groups where group_id='$group_id';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+	if ($DB) {echo "$stmt\n";}
+	$group_good_ct = mysqli_num_rows($rslt);
+	if ($group_good_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$group_active =		$row[0];
+		$group_name =		$row[1];
+		}
+
+	if ($group_active == 'N')
+		{
+		header ("Content-type: text/html; charset=utf-8");
+		if ($status_link == 'Y')
+			{echo "<img src=\"./images/"._QXZ("chat_status_button_OFF.gif")."\" width=150 height=37 alt=\""._QXZ("no chat agents available")."\">";}
+		else
+			{echo _QXZ("Error, group is not active").": $group_id $group_name";}
+		exit;
+		}
+
+	if ($available_agents == 'WAITING_ONLY')
+		{
+		$waiting_agents=0;
+		$stmt = "SELECT count(*) FROM vicidial_live_agents where closer_campaigns LIKE \"% $group_id %\" and status IN('READY','CLOSER');";
+		$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$group_good_ct = mysqli_num_rows($rslt);
+		if ($group_good_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$waiting_agents = $row[0];
+			}
+		if ($waiting_agents < 1)
+			{
+			header ("Content-type: text/html; charset=utf-8");
+			if ($status_link == 'Y')
+				{echo "<img src=\"./images/"._QXZ("chat_status_button_OFF.gif")."\" width=150 height=37 alt=\""._QXZ("no chat agents available")."\">";}
+			else
+				{echo _QXZ("We are sorry, there are no waiting agents at this time. Please try again later.").": $group_id $group_name";}
+			exit;
+			}
+		}
+	if ($available_agents == 'LOGGED_IN')
+		{
+		$loggedin_agents=0;
+		$stmt = "SELECT count(*) FROM vicidial_live_agents where closer_campaigns LIKE \"% $group_id %\";";
+		$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$group_good_ct = mysqli_num_rows($rslt);
+		if ($group_good_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$loggedin_agents = $row[0];
+			}
+		if ($loggedin_agents < 1)
+			{
+			header ("Content-type: text/html; charset=utf-8");
+			if ($status_link == 'Y')
+				{echo "<img src=\"./images/"._QXZ("chat_status_button_OFF.gif")."\" width=150 height=37 alt=\""._QXZ("no chat agents available")."\">";}
+			else
+				{echo _QXZ("We are sorry, there are no logged in agents at this time. Please try again later.").": $group_id $group_name";}
+			exit;
+			}
+		}
+
+	if ($status_link == 'Y')
+		{
+		echo "<a href=\"".$PHP_SELF."?group_id=$group_id&language=$language&available_agents=$available_agents\"><img src=\"./images/"._QXZ("chat_status_button_ON.gif")."\" width=150 height=37 border=0 alt=\""._QXZ("Agents Available, click to chat now")."\"></a>";
+		exit;
+		}
+	}
+
 
 
 # http://192.168.1.2/chat_customer/vicidial_chat_customer_side.php?user=1440723435.60926&lead_id=1079350&group_id=CHAT_TEST_GROUP&chat_id=254&email=joej%40test.com
@@ -276,6 +366,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>
 <script language="Javascript">
 var language='<?php echo $language ?>';
 var group_id='<?php echo $group_id ?>';
+var available_agents='<?php echo $available_agents ?>';
 
 function PleaseWait() {
 	document.getElementById('chat_request_span').style.display="none";
@@ -307,7 +398,7 @@ function LeaveChat(chat_id, user, chat_member_name) {
 		}
 	if (xmlhttp) 
 		{ 
-		chat_query = "&action=leave_chat&chat_id="+chat_id+"&group_id="+group_id+"&user="+user+"&chat_member_name="+chat_member_name+"&language="+language;
+		chat_query = "&action=leave_chat&chat_id="+chat_id+"&group_id="+group_id+"&user="+user+"&chat_member_name="+chat_member_name+"&language="+language+"&available_agents="+available_agents;
 		// alert(chat_query);
 		xmlhttp.open('POST', 'customer_chat_functions.php'); 
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -342,7 +433,7 @@ function UpdateChatWindow() {
 			}
 		if (xmlhttp) 
 			{ 
-			chat_query = "&chat_id="+chat_id+"&group_id="+group_id+"&user="+user+"&current_message_count="+current_message_count+"&language="+language+"&action=update_chat_window&keepalive=1";
+			chat_query = "&chat_id="+chat_id+"&group_id="+group_id+"&user="+user+"&current_message_count="+current_message_count+"&language="+language+"&available_agents="+available_agents+"&action=update_chat_window&keepalive=1";
 			xmlhttp.open('POST', 'customer_chat_functions.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(chat_query); 
@@ -379,7 +470,7 @@ function CustomerSendMessage(chat_id, user, message, chat_member_name) {
 		}
 	if (xmlhttp) 
 		{ 
-		chat_query = "&chat_message="+chat_message+"&chat_id="+chat_id+"&group_id="+group_id+"&chat_member_name="+chat_member_name+"&user="+user+"&language="+language+"&chat_level=0&action=send_message";
+		chat_query = "&chat_message="+chat_message+"&chat_id="+chat_id+"&group_id="+group_id+"&chat_member_name="+chat_member_name+"&user="+user+"&language="+language+"&available_agents="+available_agents+"&chat_level=0&action=send_message";
 		xmlhttp.open('POST', 'customer_chat_functions.php'); 
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		xmlhttp.send(chat_query); 
@@ -412,6 +503,7 @@ $chat_title= _QXZ("Request chat with agent"); # This can be modified for customi
 	<form action="<?php echo $PHP_SELF; ?>" method="post">
 	<input type=hidden name=stage value="send_request">
 	<input type=hidden name=language value="<?php echo $language; ?>">
+	<input type=hidden name=available_agents value="<?php echo $available_agents; ?>">
 	<span id="chat_request_span">
 		<table width="500" border=0 cellpadding=1 cellspacing=1 height="300">
 			<tr>
@@ -503,6 +595,7 @@ $chat_title= _QXZ("Request chat with agent"); # This can be modified for customi
 	<input type="hidden" id="group_id" name="group_id" value="<?php echo $group_id; ?>">
 	<input type="hidden" id="lead_id" name="lead_id" value="<?php echo $lead_id; ?>">
 	<input type="hidden" id="language" name="language" value="<?php echo $language; ?>">
+	<input type="hidden" id="available_agents" name="available_agents" value="<?php echo $available_agents; ?>">
 	</form>
 	</body>
 
@@ -555,6 +648,7 @@ $chat_title= _QXZ("Request chat with agent"); # This can be modified for customi
 	<input type="hidden" id="lead_id" name="lead_id" value="<?php echo $lead_id; ?>">
 	<input type="hidden" id="group_id" name="group_id" value="<?php echo $group_id; ?>">
 	<input type="hidden" id="language" name="language" value="<?php echo $language; ?>">
+	<input type="hidden" id="available_agents" name="available_agents" value="<?php echo $available_agents; ?>">
 	<audio id='CustomerChatAudioAlertFile'><source src="sounds/chat_alert.mp3" type="audio/mpeg"></audio>
 	</form>
 	</body>

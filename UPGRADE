@@ -230,6 +230,9 @@ OTHER CHANGES:
 
 58. Added in-group option for On-Hook CID Number.
 
+59. Added available_agents and status_link button options as well as validation
+	of active in-group to the chat_customer screen.
+
 
 
 

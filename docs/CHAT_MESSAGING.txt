@@ -1,4 +1,4 @@
-CHAT MESSAGING			Started 2014-05-01	Updated 2015-12-19
+CHAT MESSAGING			Started 2014-05-01	Updated 2016-01-08
 
 
 After over 18 months of development, the Chat Messaging system for Vicidial was added to svn/trunk on December 13th, 2015(svn revision 2428). Our Chat messaging allows for customers to chat with agents from websites, as well as allowing managers to chat with agents and agents to chat with other agents all within their existing agent screen.
@@ -46,7 +46,17 @@ In the Administration web screen, there is a new link at the top of the screen n
 
 CUSTOMER CHAT INSTRUCTIONS:
 
-There is a new folder in the web directory called "chat_customer". You will find a file in this folder called "customer_chat_code.php" that you can use to write your own web page for a customer to chat from, or you can just use that page as your Chat URL. The Chat URL is a field in the System Settings that you need to populate in order for  the customer chat to work. To use the default for this, just add "chat_customer/customer_chat_code.php" to your current Vicidial webserver URL. For example, if your current webserver url is "http://192.168.1.2/" then you can use this as your Chat URL: "http://192.168.1.2/chat_customer/customer_chat_code.php"
+There is a new folder in the web directory called "chat_customer". You will find a file in this folder called "customer_chat_code.php" that you can use to write your own web page for a customer to chat from, or you can just use that page as your Chat URL. The Chat URL is a field in the System Settings that you need to populate in order for  the customer chat to work. To use the default for this, just add "chat_customer/customer_chat_code.php" to your current Vicidial webserver URL. For example, if your current webserver url is "http://192.168.1.2/" then you can use this as your Chat URL: 
+    "http://192.168.1.2/chat_customer/customer_chat_code.php"
+       or 
+    "http://192.168.1.2/chat_customer/vicidial_chat_customer_side.php"
+
+
+There are several variables you can use to assemble a link to a customer chat window on your website:
+   group_id - the Inbound Chat Group that you want to use
+   language - if different than default English, the language the customer chat screen should use
+   available_agents - only allow chats to start if there are LOGGED_IN agents or WAITING_ONLY agents available
+   status_link - set to Y if you want to use as a button only on your website showing if chat agents are available or not(150 x 37 pixels)
 
 
 If you want to link to chat with a specific in-group, you can use a link like this,
@@ -61,6 +71,10 @@ http://192.168.1.2/chat_customer/customer_chat_code.php?group_id=TESTCHAT&langua
 
 If you want to put a chat page within your own IFRAME and use a specific in-group and language ID in the system, you can use a URL like this,
 http://192.168.1.2/chat_customer/vicidial_chat_customer_side.php?group_id=TESTCHAT&language=new_spanish
+
+
+If you want to link to a chat status button with a specific in-group and langauge and only if agents are ready and waiting, you can use a link like this,
+http://192.168.1.2/chat_customer/vicidial_chat_customer_side.php?status_link=Y&user=&lead_id=&group_id=MIKECHAT&language=new_spanish&available_agents=WAITING_ONLY
 
 
 

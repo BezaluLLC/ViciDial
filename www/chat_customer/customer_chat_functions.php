@@ -6,6 +6,7 @@
 # 151213-1106 - Added variable filtering
 # 151217-1016 - Allow for carrying of group_id through to new chat
 # 151219-0850 - Added translation code
+# 160108-1710 - Added available_agents variable
 #
 
 require("dbconnect_mysqli.php");
@@ -40,6 +41,8 @@ if (isset($_GET["current_message_count"]))			{$current_message_count=$_GET["curr
 	elseif (isset($_POST["current_message_count"]))	{$current_message_count=$_POST["current_message_count"];}
 if (isset($_GET["language"]))						{$language=$_GET["language"];}
 	elseif (isset($_POST["language"]))				{$language=$_POST["language"];}
+if (isset($_GET["available_agents"]))				{$available_agents=$_GET["available_agents"];}
+	elseif (isset($_POST["available_agents"]))		{$available_agents=$_POST["available_agents"];}
 
 $chat_member_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/',"",$chat_member_name);
 if (!$user) {echo "No user, no using."; exit;}
@@ -50,6 +53,7 @@ $chat_level = preg_replace('/[^- \_\.0-9a-zA-Z]/','',$chat_level);
 $group_id = preg_replace('/[^- \_0-9a-zA-Z]/','',$group_id);
 $language = preg_replace('/[^-\_0-9a-zA-Z]/','',$language);
 $chat_member_name = preg_replace("/\'|\"|\\\\|;/","",$chat_member_name);
+$available_agents = preg_replace('/[^-\_0-9a-zA-Z]/','',$available_agents);
 
 if ($non_latin < 1)
 	{
@@ -174,7 +178,7 @@ if ($action=="update_chat_window" && $chat_id) {
 	$status_stmt="SELECT status, chat_creator from vicidial_live_chats where chat_id='$chat_id'";
 	$status_rslt=mysql_to_mysqli($status_stmt, $link);
 	if (mysqli_num_rows($status_rslt)==0) {
-		echo "<font class='chat_title alert'>"._QXZ("Chat does not exist or has been closed").": $chat_id</font><BR/><BR/><font class='chat_title'><a href='".$chat_url."?group_id=$group_id&language=$language'>"._QXZ("GO BACK TO CHAT FORM")."</a></font>\n";
+		echo "<font class='chat_title alert'>"._QXZ("Chat does not exist or has been closed").": $chat_id</font><BR/><BR/><font class='chat_title'><a href='".$chat_url."?group_id=$group_id&language=$language&available_agents=$available_agents'>"._QXZ("GO BACK TO CHAT FORM")."</a></font>\n";
 	} else {
 		$status_row=mysqli_fetch_row($status_rslt);
 		
@@ -219,7 +223,7 @@ if ($action=="update_chat_window" && $chat_id) {
 				echo "<input type='hidden' id='current_message_count' name='current_message_count' value='$current_messages'>\n";
 
 			} else {	
-				echo "<font class='chat_title bold'>"._QXZ("You have left chat").": $chat_id.</font><BR/><BR/><font class='chat_title'><a href='".$chat_url."?group_id=$group_id&language=$language'>"._QXZ("GO BACK TO CHAT FORM")."</a></font>\n";
+				echo "<font class='chat_title bold'>"._QXZ("You have left chat").": $chat_id.</font><BR/><BR/><font class='chat_title'><a href='".$chat_url."?group_id=$group_id&language=$language&available_agents=$available_agents'>"._QXZ("GO BACK TO CHAT FORM")."</a></font>\n";
 			}
 		} else {
 			if ($status_row[1]=="NONE") {

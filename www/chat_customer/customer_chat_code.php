@@ -1,7 +1,7 @@
 <?php
 # customer_chat_code.php
 #
-# Copyright (C) 2015  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Example for incorporating the customer side of the Vicidial chat into a web page.  
 # Can be called as an include file, if desired.
@@ -10,6 +10,7 @@
 # 151212-0829 - First Build for customer chat
 # 151217-1015 - Allow for group_id variable
 # 151219-1415 - Added header and language variable
+# 160108-1659 - Added available_agents variable
 #
 
 if (isset($_GET["lead_id"]))				{$lead_id=$_GET["lead_id"];}
@@ -26,8 +27,10 @@ if (isset($_GET["unique_userID"]))			{$unique_userID=$_GET["unique_userID"];}
 	elseif (isset($_POST["unique_userID"]))	{$unique_userID=$_POST["unique_userID"];}
 if (isset($_GET["language"]))				{$language=$_GET["language"];}
 	elseif (isset($_POST["language"]))		{$language=$_POST["language"];}
+if (isset($_GET["available_agents"]))			{$available_agents=$_GET["available_agents"];}
+	elseif (isset($_POST["available_agents"]))	{$available_agents=$_POST["available_agents"];}
 
-$URL_vars="?user=".urlencode($unique_userID)."&lead_id=".$lead_id."&group_id=".urlencode($chat_group_id)."&chat_id=".$chat_id."&email=".urlencode($email)."&language=".urlencode($language);
+$URL_vars="?user=".urlencode($unique_userID)."&lead_id=".$lead_id."&group_id=".urlencode($chat_group_id)."&chat_id=".$chat_id."&email=".urlencode($email)."&language=".urlencode($language)."&available_agents=".urlencode($available_agents);
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
 header ("Pragma: no-cache");                          // HTTP/1.0
