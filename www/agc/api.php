@@ -1,7 +1,7 @@
 <?php
 # api.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with the VICIDIAL Agent screen
@@ -84,10 +84,11 @@
 # 150512-2027 - Added filtering of hash sign on some input variables, Issue #851
 # 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 # 150928-1157 - Fix allowing for * and # in phone_number field
+# 160113-0921 - Fix for numeric audio files in playback function
 #
 
-$version = '2.12-50';
-$build = '150928-1157';
+$version = '2.12-51';
+$build = '160113-0921';
 
 $startMS = microtime();
 
@@ -1328,6 +1329,8 @@ if ($function == 'audio_playback')
 
 				if ( (strlen($VLAconf_exten) > 5) and (strlen($VLAserver_ip) > 5) )
 					{
+					$valueCIDfull = "\"$value\" <473782158521111>";
+
 					$stmt = "select ext_context from servers where server_ip='$VLAserver_ip';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
@@ -1360,7 +1363,7 @@ if ($function == 'audio_playback')
 								$data = "$epoch";
 								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 
-								$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$VLAserver_ip','','Originate','$value','Channel: Local\/47378216$VLAconf_exten@$ext_context','Context: $ext_context','Exten: 473782158521111','Priority: 1','CallerID: $value','','','','','');";
+								$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$VLAserver_ip','','Originate','$value','Channel: Local\/47378216$VLAconf_exten@$ext_context','Context: $ext_context','Exten: 473782158521111','Priority: 1','CallerID: $valueCIDfull','','','','','');";
 								}
 							else
 								{
@@ -1374,7 +1377,7 @@ if ($function == 'audio_playback')
 							}
 						else
 							{
-							$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$VLAserver_ip','','Originate','$value','Channel: Local\/47378216$VLAconf_exten@$ext_context','Context: $ext_context','Exten: 473782158521111','Priority: 1','CallerID: $value','','','','','');";
+							$stmtX="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$VLAserver_ip','','Originate','$value','Channel: Local\/47378216$VLAconf_exten@$ext_context','Context: $ext_context','Exten: 473782158521111','Priority: 1','CallerID: $valueCIDfull','','','','','');";
 							}
 						}
 					else
