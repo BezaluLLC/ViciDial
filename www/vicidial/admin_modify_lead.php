@@ -74,6 +74,7 @@
 # 150917-1301 - Added dynamic default field maxlengths based on DB schema
 # 150923-0700 - Fixed security issues with user access, issue #894
 # 160102-1238 - Fixed issues with special characters, added $htmlconvert option
+# 160112-2344 - Added link to direct to recording logging page, access log display
 #
 
 require("dbconnect_mysqli.php");
@@ -215,7 +216,7 @@ if ($nonselectable_statuses > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable,allow_emails,enable_languages,language_method,active_modules FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable,allow_emails,enable_languages,language_method,active_modules,log_recording_access FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -229,6 +230,7 @@ if ($qm_conf_ct > 0)
 	$SSenable_languages =		$row[4];
 	$SSlanguage_method =		$row[5];
 	$active_modules =			$row[6];
+	$log_recording_access =		$row[7];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -1813,7 +1815,10 @@ else
 			else
 				{$locat = $location;}
 			if ( (preg_match('/ftp/i',$location)) or (preg_match('/http/i',$location)) )
-				{$location = "<a href=\"$location\">$locat</a>";}
+				if ($log_recording_access<1) 
+					{$location = "<a href=\"$location\">$locat</a>";}
+				else
+					{$location = "<a href=\"recording_log_redirect.php?recording_id=$row[0]&lead_id=$row[12]\">$locat</a>";}
 			else
 				{$location = $locat;}
 			$u++;
@@ -1832,6 +1837,41 @@ else
 
 		echo "</TABLE><BR><BR>\n";
 
+
+	if ($log_recording_access > 0) 
+		{
+		echo "<B>"._QXZ("RECORDING ACCESS LOG FOR THIS LEAD").":</B>\n";
+		echo "<TABLE width=750 cellspacing=1 cellpadding=1>\n";
+		echo "<tr><td><font size=1># </td><td align=left><font size=2> "._QXZ("LEAD")."</td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("RECORDING ID")."</td><td align=left><font size=2>"._QXZ("USER")."</td><td align=left><font size=2>"._QXZ("RESULT")." </td><td align=left><font size=2>"._QXZ("IP")." </td></tr>\n";
+
+		$stmt="SELECT recording_id,lead_id,user,access_datetime,access_result,ip from vicidial_recording_access_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by recording_access_log_id desc limit 500;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$logs_to_print = mysqli_num_rows($rslt);
+		if ($DB) {echo "$logs_to_print|$stmt|\n";}
+
+		$u=0;
+		while ($logs_to_print > $u) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			if (preg_match("/1$|3$|5$|7$|9$/i", $u))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+
+			$u++;
+			echo "<tr $bgcolor>";
+			echo "<td><font size=1>$u</td>";
+			echo "<td align=left><font size=2> $row[1] </td>";
+			echo "<td align=left><font size=2> $row[3] </td>\n";
+			echo "<td align=left><font size=2> $row[0] </td>\n";
+			echo "<td align=left><font size=2> $row[2] </td>\n";
+			echo "<td align=left><font size=2> $row[4] </td>\n";
+			echo "<td align=left><font size=2> $row[5] </td>\n";
+			echo "</tr>\n";
+			}
+
+		echo "</TABLE><BR><BR>\n";
+		}
 
 		$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level >= 9 and modify_leads='1';";
 		if ($DB) {echo "|$stmt|\n";}

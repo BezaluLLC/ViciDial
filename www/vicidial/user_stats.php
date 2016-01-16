@@ -49,6 +49,7 @@
 # 150804-0749 - Added call status as option, Issue #883
 # 151227-1839 - Added option to search archived data
 # 160104-1226 - Added call type field to the agent activity table
+# 160112-0759 - Added link to direct to recording logging page
 #
 
 $startMS = microtime();
@@ -96,7 +97,7 @@ if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active,webroot_writable,allow_emails,level_8_disable_add,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active,webroot_writable,allow_emails,level_8_disable_add,enable_languages,language_method,log_recording_access FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -113,6 +114,7 @@ if ($qm_conf_ct > 0)
 	$SSlevel_8_disable_add =		$row[7];
 	$SSenable_languages =			$row[8];
 	$SSlanguage_method =			$row[9];
+	$log_recording_access =			$row[10];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -1339,7 +1341,12 @@ else
 		else
 			{$locat = $location;}
 		if ( (preg_match('/ftp/i',$location)) or (preg_match('/http/i',$location)) )
-			{$location = "<a href=\"$location\">$locat</a>";}
+			{
+			if ($log_recording_access<1) 
+				{$location = "<a href=\"$location\">$locat</a>";}
+			else
+				{$location = "<a href=\"recording_log_redirect.php?recording_id=$row[0]&lead_id=$row[12]&search_archived_data=$search_archived_data\">$locat</a>";}
+			}
 		else
 			{$location = $locat;}
 		$u++;

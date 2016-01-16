@@ -78,6 +78,7 @@
 # 160106-0700 - Added AREACODE description to the inbound_dids-filter_inbound_number entry
 # 160106-1348 - Added inbound_groups-on_hook_cid_number entry
 # 160108-2217 - Added campaigns-manual_dial_hopper_check entry
+# 160116-1512 - Added access_recording and log_recording_access entries
 #
 
 
@@ -586,7 +587,12 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="users-view_reports">
 <BR>
-<B><?php echo _QXZ("View Reports"); ?> -</B><?php echo _QXZ("This option allows the user to view the system web reports.");
+<B><?php echo _QXZ("View Reports"); ?> -</B><?php echo _QXZ("This option allows the user to view the system web reports."); ?>
+
+<BR>
+<A NAME="users-access_recordings">
+<BR>
+<B><?php echo _QXZ("Access Recordings"); ?> -</B><?php echo _QXZ("This option allows the user to have access to call recordings.");
 
 
 if ($SSqc_features_active > 0)
@@ -5031,6 +5037,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-chat_url">
 <BR>
 <B><?php echo _QXZ("Chat URL"); ?> -</B><?php echo _QXZ("This is the location where you have placed the chat web pages for customer use."); ?>
+
+<BR>
+<A NAME="settings-log_recording_access">
+<BR>
+<B><?php echo _QXZ("Log Recording Access"); ?> -</B><?php echo _QXZ("This option if enabled allows the logging of user access to call recordings. It also requires the User setting Access Recordings to be set to 1 to allow a user to access call recordings. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="settings-first_login_trigger">

@@ -642,7 +642,8 @@ api_allowed_functions VARCHAR(1000) default ' ALL_FUNCTIONS ',
 lead_filter_id VARCHAR(20) default 'NONE',
 admin_cf_show_hidden ENUM('1','0') default '0',
 agentcall_chat ENUM('1','0') default '0',
-user_hide_realtime ENUM('1','0') default '0'
+user_hide_realtime ENUM('1','0') default '0',
+access_recordings ENUM('0', '1') default '0'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -1639,7 +1640,8 @@ user_hide_realtime_enabled ENUM('0','1') default '0',
 custom_reports_use_slave_db VARCHAR(2000) default '',
 usacan_phone_dialcode_fix ENUM('0','1') default '0',
 cache_carrier_stats_realtime ENUM('0','1') default '0',
-oldest_logs_date DATETIME
+oldest_logs_date DATETIME,
+log_recording_access ENUM('0', '1') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3448,6 +3450,19 @@ index(user),
 index(processed)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE vicidial_recording_access_log (
+recording_access_log_id INT(10) unsigned NOT NULL AUTO_INCREMENT,
+recording_id INT(10) unsigned DEFAULT NULL,
+lead_id INT(10) unsigned DEFAULT NULL,
+user VARCHAR(20) DEFAULT NULL,
+access_datetime DATETIME DEFAULT NULL,
+access_result ENUM('ACCESSED','INVALID USER','INVALID PERMISSIONS','NO RECORDING','RECORDING UNAVAILABLE') DEFAULT NULL,
+ip VARCHAR(15) default '',
+PRIMARY KEY (recording_access_log_id),
+index(recording_id),
+index(lead_id)
+) ENGINE=MyISAM AUTO_INCREMENT=1599 DEFAULT CHARSET=utf8;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3697,4 +3712,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1450',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1451',db_schema_update_date=NOW(),reload_timestamp=NOW();

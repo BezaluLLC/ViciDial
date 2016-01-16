@@ -489,3 +489,22 @@ CREATE INDEX manager_chat_id_archive_key on vicidial_manager_chat_log_archive (m
 CREATE INDEX manager_chat_subid_archive_key on vicidial_manager_chat_log_archive (manager_chat_subid);
 
 UPDATE system_settings SET db_schema_version='1450',db_schema_update_date=NOW() where db_schema_version < 1450;
+
+CREATE TABLE vicidial_recording_access_log (
+recording_access_log_id INT(10) unsigned NOT NULL AUTO_INCREMENT,
+recording_id INT(10) unsigned DEFAULT NULL,
+lead_id INT(10) unsigned DEFAULT NULL,
+user VARCHAR(20) DEFAULT NULL,
+access_datetime DATETIME DEFAULT NULL,
+access_result ENUM('ACCESSED','INVALID USER','INVALID PERMISSIONS','NO RECORDING','RECORDING UNAVAILABLE') DEFAULT NULL,
+ip VARCHAR(15) default '',
+PRIMARY KEY (recording_access_log_id),
+index(recording_id),
+index(lead_id)
+) ENGINE=MyISAM AUTO_INCREMENT=1599 DEFAULT CHARSET=utf8;
+
+ALTER TABLE vicidial_users ADD access_recordings ENUM('0', '1') default '0';
+
+ALTER TABLE system_settings ADD log_recording_access ENUM('0', '1') default '0';
+
+UPDATE system_settings SET db_schema_version='1451',db_schema_update_date=NOW() where db_schema_version < 1451;
