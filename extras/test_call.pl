@@ -58,7 +58,7 @@ $dbhB = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 	or die "Couldn't connect to database: " . DBI->errstr;
 
 # Insert our call record
-$stmtB = "INSERT INTO vicidial_manager values( '', '', '$date', 'NEW', 'N', '$VARserver_ip', '', 'Originate', 'TESTCIDBLASTCALL0124', 'Channel: Local/$phone_number@default', 'Context; default', 'Exten: $exten', 'Priority: 1', 'Callerid: \"$cid_name\" <$cid_num>', '', '', '', '', '' );";
+$stmtB = "INSERT INTO vicidial_manager values( '', '', '$date', 'NEW', 'N', '$VARserver_ip', '', 'Originate', 'TESTCIDBLASTCALL0124', 'Channel: Local/$phone_number@default', 'Context: default', 'Exten: $exten', 'Priority: 1', 'Callerid: \"$cid_name\" <$cid_num>', '', '', '', '', '' );";
 print $stmtB . "\n";
 $sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
 $sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
