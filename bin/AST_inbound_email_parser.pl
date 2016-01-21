@@ -10,7 +10,7 @@ use Encode qw(from_to decode encode);
 use MIME::Base64;
 use MIME::QuotedPrint;
 
-# Copyright (C) 2014  Matt Florell, Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell, Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 # AST_inbound_email_parser.pl - This script is essential for periodically checking any active POP3 or IMAP 
 # email accounts set up through the Vicidial admin.
@@ -61,6 +61,7 @@ use MIME::QuotedPrint;
 # 140422-1912 - Added 'related' content type
 # 150513-2310 - Added pop3_auth_mode
 # 151030-0557 - Small change to catch more attachments properly
+# 160120-2149 - Added missing entry_date field on vicidial_list insert
 #
 
 # default path to astguiclient configuration file:
@@ -561,7 +562,7 @@ while (@row=$rslt->fetchrow_array) {
 									my @lead_id_row=$vicidial_lead_check_rslt->fetchrow_array;
 									$lead_id=$lead_id_row[0];
 								} else {
-									my $vicidial_list_stmt="insert into vicidial_list(list_id, email, comments, status) values('$default_list_id', '$email_from', '".substr($message,0,255)."', '$status')";
+									my $vicidial_list_stmt="insert into vicidial_list(list_id, email, comments, status, entry_date) values('$default_list_id', '$email_from', '".substr($message,0,255)."', '$status', NOW())";
 									if ($DBX) {print $vicidial_list_stmt;}
 									my $vicidial_list_rslt=$dbhA->prepare($vicidial_list_stmt);
 									if ($vicidial_list_rslt->execute()) {
@@ -899,7 +900,7 @@ while (@row=$rslt->fetchrow_array) {
 					my @lead_id_row=$vicidial_lead_check_rslt->fetchrow_array;
 					$lead_id=$lead_id_row[0];
 				} else {
-					my $vicidial_list_stmt="insert into vicidial_list(list_id, email, comments, status) values('$default_list_id', '$email_from', '".substr($message,0,255)."', '$status')";
+					my $vicidial_list_stmt="insert into vicidial_list(list_id, email, comments, status, entry_date) values('$default_list_id', '$email_from', '".substr($message,0,255)."', '$status', NOW())";
 					if ($DBX) {print $vicidial_list_stmt."\n";}
 					my $vicidial_list_rslt=$dbhA->prepare($vicidial_list_stmt);
 					if ($vicidial_list_rslt->execute()) {

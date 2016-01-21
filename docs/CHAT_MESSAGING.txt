@@ -1,4 +1,4 @@
-CHAT MESSAGING			Started 2014-05-01	Updated 2016-01-08
+CHAT MESSAGING			Started 2014-05-01	Updated 2016-01-20
 
 
 After over 18 months of development, the Chat Messaging system for Vicidial was added to svn/trunk on December 13th, 2015(svn revision 2428). Our Chat messaging allows for customers to chat with agents from websites, as well as allowing managers to chat with agents and agents to chat with other agents all within their existing agent screen.
@@ -57,6 +57,7 @@ There are several variables you can use to assemble a link to a customer chat wi
    language - if different than default English, the language the customer chat screen should use
    available_agents - only allow chats to start if there are LOGGED_IN agents or WAITING_ONLY agents available
    status_link - set to Y if you want to use as a button only on your website showing if chat agents are available or not(150 x 37 pixels)
+   show_email - set to ONLY if you want to only show the email field, Y_WITH_PHONE if you want both email and phone fields
 
 
 If you want to link to chat with a specific in-group, you can use a link like this,

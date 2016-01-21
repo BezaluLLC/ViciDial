@@ -399,10 +399,11 @@
 # 151229-2316 - Added manual_dial_timeout campaign setting
 # 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 # 160109-0747 - Added manual_dial_hopper_check campaign setting
+# 160120-2226 - Fixed issue where non-phone leads were not updating, and lead_info issue
 #
 
-$version = '2.12-293';
-$build = '160109-0747';
+$version = '2.12-294';
+$build = '160120-2226';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=654;
@@ -11698,7 +11699,7 @@ if ($ACTION == 'updateLEAD')
 	$row='';   $rowx='';
 	$DO_NOT_UPDATE=0;
 	$DO_NOT_UPDATE_text='';
-	if ( (strlen($phone_number)<1) || (strlen($lead_id)<1) )
+	if ( ( (strlen($phone_number)<1) and (strlen($email)<1) ) or (strlen($lead_id)<1) )
 		{
 		echo _QXZ("phone_number %1s or lead_id %2s is not valid",0,'',$phone_number,$lead_id)."\n";
 		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
@@ -13973,8 +13974,8 @@ if ($ACTION == 'LEADINFOview')
 					$stmt="SELECT count(*) from vicidial_call_times where call_time_id='$list_local_call_time';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00615',$user,$server_ip,$session_name,$one_mysql_log);}					
-					$row=mysqli_fetch_row($rslt);
-					$call_time_exists  =	$row[0];
+					$rowc=mysqli_fetch_row($rslt);
+					$call_time_exists  =	$rowc[0];
 					if ($call_time_exists < 1) 
 						{$list_local_call_time = 'campaign';}
 					}
