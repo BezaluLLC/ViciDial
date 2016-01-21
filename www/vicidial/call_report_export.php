@@ -5,7 +5,7 @@
 # and/or vicidial_closer_log information by status, list_id and date range. 
 # downloads to a flat text file that is tab delimited
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -46,6 +46,7 @@
 # 150903-1536 - Added compatibility for custom fields data options
 # 150909-0747 - Fixed issues with translated select list values, issue #885
 # 151125-1621 - Added search archive option
+# 160121-1236 - Added EXTENDED_2 option with term_reason field
 #
 
 $startMS = microtime();
@@ -468,6 +469,11 @@ if ($run_export > 0)
 		$export_fields_SQL = ",entry_date,vl.called_count,last_local_call_time,modify_date,called_since_last_reset";
 		$EFheader = "\tentry_date\tcalled_count\tlast_local_call_time\tmodify_date\tcalled_since_last_reset";
 		}
+	if ($export_fields == 'EXTENDED_2')
+		{
+		$export_fields_SQL = ",entry_date,vl.called_count,last_local_call_time,modify_date,called_since_last_reset,term_reason";
+		$EFheader = "\tentry_date\tcalled_count\tlast_local_call_time\tmodify_date\tcalled_since_last_reset\tterm_reason";
+		}
 	if ($export_fields == 'ALTERNATE_1')
 		{
 		$export_fields_SQL = ",vl.called_count,last_local_call_time";
@@ -494,7 +500,7 @@ if ($run_export > 0)
 	$k=0;
 	if ($RUNcampaign > 0)
 		{
-		if ($export_fields == 'EXTENDED')
+		if ( ($export_fields == 'EXTENDED') or ($export_fields == 'EXTENDED_2') )
 			{
 			$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid,vi.entry_list_id, ifnull(val.dispo_sec+val.dead_sec,0)$export_fields_SQL from vicidial_users vu,vicidial_list vi,".$vicidial_log_table." vl LEFT OUTER JOIN ".$vicidial_agent_log_table." val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 			}
@@ -595,6 +601,8 @@ if ($run_export > 0)
 					{
 					if ($export_fields == 'EXTENDED')
 						{$export_fieldsDATA = "$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t";}
+					if ($export_fields == 'EXTENDED_2')
+						{$export_fieldsDATA = "$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t$row[44]\t";}
 					$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t$export_fieldsDATA";
 					}
 				$i++;
@@ -606,7 +614,7 @@ if ($run_export > 0)
 
 	if ($RUNgroup > 0)
 		{
-		if ($export_fields == 'EXTENDED')
+		if ( ($export_fields == 'EXTENDED') or ($export_fields == 'EXTENDED_2') )
 			{
 			$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid, ifnull(val.dispo_sec+val.dead_sec,0)$export_fields_SQL from vicidial_users vu,vicidial_list vi,".$vicidial_closer_log_table." vl LEFT OUTER JOIN ".$vicidial_agent_log_table." val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where vl.call_date >= '$query_date 00:00:00' and vl.call_date <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by vl.call_date limit 100000;";
 			}
@@ -707,6 +715,8 @@ if ($run_export > 0)
 					{
 					if ($export_fields == 'EXTENDED')
 						{$export_fieldsDATA = "$row[40]\t$row[41]\t$row[42]\t$row[43]\t$row[44]\t";}
+					if ($export_fields == 'EXTENDED_2')
+						{$export_fieldsDATA = "$row[40]\t$row[41]\t$row[42]\t$row[43]\t$row[44]\t$row[45]\t";}
 					$export_rows[$k] = "$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]\t$row[5]\t$row[6]\t$row[7]\t$row[8]\t$row[9]\t$row[10]\t$row[11]\t$row[12]\t$row[13]\t$row[14]\t$row[15]\t$row[16]\t$row[17]\t$row[18]\t$row[19]\t$row[20]\t$row[21]\t$row[22]\t$row[23]\t$row[24]\t$row[25]\t$row[26]\t$row[27]\t$row[28]\t$row[29]\t$row[30]\t$row[31]\t$row[32]\t$row[33]\t$row[34]\t$row[35]\t$export_fieldsDATA";
 					}
 				$i++;
@@ -746,7 +756,7 @@ if ($run_export > 0)
 				{$RFheader = "\trecording_location";}
 			if ($rec_fields=='ALL')
 				{$RFheader = "\trecording_id\trecording_filename\trecording_location";}
-			if ($export_fields=='EXTENDED')
+			if ( ($export_fields=='EXTENDED') or ($export_fields=='EXTENDED_2') )
 				{$EXheader = "\twrapup_time\tqueue_time\tuniqueid\tcaller_code\tserver_ip\thangup_cause\tdialstatus\tchannel\tdial_time\tanswered_time\tcpd_result\tdid_pattern\tdid_id\tdid_description";}
 			if ($export_fields == 'ALTERNATE_1')
 				{$EXheader = "|caller_code";}
@@ -871,7 +881,7 @@ if ($run_export > 0)
 					{$extended_data_a =	"";}
 				$extended_data .= "$extended_data_a";
 				}
-			if ($export_fields=='EXTENDED')
+			if ( ($export_fields=='EXTENDED') or ($export_fields=='EXTENDED_2') )
 				{
 				$extended_data = "\t$export_wrapup_time[$i]\t$export_queue_time[$i]\t$export_uniqueid[$i]";
 				if (strlen($export_uniqueid[$i]) > 0)
@@ -1347,7 +1357,7 @@ else
 	echo "<BR><BR>\n";
 
 	echo "<B>"._QXZ("Export Fields").":</B><BR>\n";
-	echo "<select size=1 name=export_fields><option selected value=\"STANDARD\">"._QXZ("STANDARD")."</option><option value=\"EXTENDED\">"._QXZ("EXTENDED")."</option><option value=\"ALTERNATE_1\">ALTERNATE_1</option></select>\n";
+	echo "<select size=1 name=export_fields><option selected value=\"STANDARD\">"._QXZ("STANDARD")."</option><option value=\"EXTENDED\">"._QXZ("EXTENDED")."</option><option value=\"EXTENDED_2\">"._QXZ("EXTENDED_2")."</option><option value=\"ALTERNATE_1\">ALTERNATE_1</option></select>\n";
 
 
 	if ($archives_available=="Y") 
