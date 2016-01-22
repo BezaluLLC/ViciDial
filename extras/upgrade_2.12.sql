@@ -508,3 +508,7 @@ ALTER TABLE vicidial_users ADD access_recordings ENUM('0', '1') default '0';
 ALTER TABLE system_settings ADD log_recording_access ENUM('0', '1') default '0';
 
 UPDATE system_settings SET db_schema_version='1451',db_schema_update_date=NOW() where db_schema_version < 1451;
+
+ALTER TABLE system_settings ADD report_default_format ENUM('TEXT', 'HTML') default 'TEXT';
+
+UPDATE system_settings SET db_schema_version='1452',db_schema_update_date=NOW() where db_schema_version < 1452;

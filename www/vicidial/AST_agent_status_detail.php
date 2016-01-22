@@ -1,7 +1,7 @@
 <?php 
 # AST_agent_status_detail.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -28,6 +28,7 @@
 # 150516-1310 - Fixed Javascript element problem, Issue #857
 # 150603-1532 - Statuses are now sorted in alphabetical order
 # 151112-1345 - Added ability to search archive logs and show defunct users
+# 160121-2209 - Added report title header, default report format, cleaned up formatting
 #
 
 $startMS = microtime();
@@ -58,11 +59,11 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
-if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
 	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
-if (isset($_GET["show_defunct_users"]))			{$show_defunct_users=$_GET["show_defunct_users"];}
+if (isset($_GET["show_defunct_users"]))				{$show_defunct_users=$_GET["show_defunct_users"];}
 	elseif (isset($_POST["show_defunct_users"]))	{$show_defunct_users=$_POST["show_defunct_users"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
@@ -75,7 +76,7 @@ $JS_onload="onload = function() {\n";
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,report_default_format FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -86,9 +87,11 @@ if ($qm_conf_ct > 0)
 	$outbound_autodial_active =		$row[1];
 	$slave_db_server =				$row[2];
 	$reports_use_slave_db =			$row[3];
+	$SSreport_default_format =		$row[4];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+if (strlen($report_display_type)<2) {$report_display_type = $SSreport_default_format;}
 
 if ($non_latin < 1)
 	{
@@ -390,7 +393,10 @@ if (strlen($customer_interactive_statuses)>0)
 #$customer_interactive_statuses = '|NI|DNC|CALLBK|AP|SALE|COMP|HAP1|HAP2|HBED|DIED|';
 #$customer_interactive_statuses = '|NI|DNC|CALLBK|XFER|C2|B7|B8|C1|';
 
-$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&search_archived_data=$search_archived_data&show_defunct_users=$show_defunct_users&DB=$DB";
+$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&search_archived_data=$search_archived_data&show_defunct_users=$show_defunct_users&report_display_type=$report_display_type&DB=$DB";
+
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 if ($file_download < 1)
 	{
@@ -422,15 +428,15 @@ if ($file_download < 1)
 	require("admin_header.php");
 
 	echo "</span>\n";
-	$ASCII_text.="<span style=\"position:absolute;left:3px;top:3px;z-index:19;\" id=agent_status_stats>\n";
-	$ASCII_text.="\n\n\n<PRE><FONT SIZE=2>\n";
-	$GRAPH.="<PRE><FONT SIZE=2>\n";
+	echo "<span style=\"position:absolute;left:3px;top:30px;z-index:19;\" id=agent_status_stats>\n";
+	echo "<b>"._QXZ("$report_name")."</b> $NWB#agent_status_detail$NWE";
+	echo "<PRE><FONT SIZE=2>";
 	}
 
 if ( (strlen($group[0]) < 1) or (strlen($user_group[0]) < 1) )
 	{
-	echo "<PRE><FONT SIZE=2>\n\n\n";
-	echo "PLEASE SELECT A CAMPAIGN OR USER GROUP AND DATE-TIME ABOVE AND CLICK SUBMIT\n";
+	echo "<PRE><FONT SIZE=2>";
+	echo "PLEASE SELECT A CAMPAIGN OR USER GROUP AND DATE-TIME BELOW AND CLICK SUBMIT\n";
 	echo " NOTE: stats taken from shift specified\n";
 	}
 
@@ -460,16 +466,14 @@ else
 
 	if ($file_download < 1)
 		{
-		$ASCII_text.="<BR><BR>Agent Status Detail Report                     $NOW_TIME\n";
+		$ASCII_text.=_QXZ("$report_name")." Report                     $NOW_TIME ($db_source)\n";
 		$ASCII_text.="Time range: $query_date_BEGIN to $query_date_END\n\n";
-		$ASCII_text.="---------- AGENT Details -------------\n\n";
-		$GRAPH.="<BR><BR>Agent Status Detail Report                     $NOW_TIME\n";
+		$GRAPH.=_QXZ("$report_name")." Report                     $NOW_TIME\n";
 		$GRAPH.="Time range: $query_date_BEGIN to $query_date_END\n\n";
-		$GRAPH.="---------- AGENT Details -------------";
 		}
 	else
 		{
-		$file_output .= "Agent Status Detail Report                     $NOW_TIME\n";
+		$file_output .= _QXZ("$report_name")." Report                     $NOW_TIME\n";
 		$file_output .= "Time range: $query_date_BEGIN to $query_date_END\n\n";
 		}
 
@@ -999,21 +1003,8 @@ $JS_onload.="}\n";
 if ($report_display_type=='HTML') {$JS_text.=$JS_onload;}
 $JS_text.="</script>\n";
 
-if ($report_display_type=="HTML")
-	{
-	echo $GRAPH.$GRAPH2.$GRAPH3;
-	echo $JS_text;
-	}
-else 
-	{
-	echo $ASCII_text;
-	}
-
-$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
-$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
-
-echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> Dates:<BR>";
+echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>";
+echo "<TABLE CELLSPACING=3 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN=TOP> Dates:<BR>";
 echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
@@ -1090,26 +1081,37 @@ echo "Display as:<BR>";
 echo "<select name='report_display_type'>";
 if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}
 echo "<option value='TEXT'>TEXT</option><option value='HTML'>HTML</option></select>\n<BR><BR>";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>$NWB#agent_status_detail$NWE\n";
 echo "</TD><TD VALIGN=TOP><BR>";
-echo "<input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."<BR><BR>\n";
-echo "<input type='checkbox' name='show_defunct_users' value='checked' $show_defunct_users>"._QXZ("Show defunct users")."<BR>\n";
+echo "<input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."<BR>\n";
+echo "<input type='checkbox' name='show_defunct_users' value='checked' $show_defunct_users>"._QXZ("Show defunct users")."<BR><BR>\n";
+echo " &nbsp; &nbsp; &nbsp; <INPUT TYPE=SUBMIT NAME=SUBMIT VALUE=SUBMIT>\n";
 echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
 echo " <a href=\"$LINKbase&stage=$stage&file_download=1\">DOWNLOAD</a> | \n";
-echo " <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>\n";
+echo " <a href=\"./admin.php?ADD=999999\">REPORTS</a> </FONT>";
 echo "</FONT>\n";
 echo "</TD></TR></TABLE>";
 
-echo "</FORM>\n\n<BR>$db_source";
+echo "</FORM>";
+
+if ($report_display_type=="HTML")
+	{
+	echo $GRAPH.$GRAPH2.$GRAPH3;
+	echo $JS_text;
+	}
+else 
+	{
+	echo $ASCII_text;
+	}
+
 
 echo "</span>\n";
 
 if (!$report_display_type || $report_display_type=="TEXT")
 	{
 	echo "<span style=\"position:absolute;left:3px;top:3px;z-index:18;\"  id=agent_status_bars>\n";
-	echo "<PRE><FONT SIZE=2>\n\n\n\n\n\n\n\n\n\n";
+	echo "<PRE><FONT SIZE=2>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
 
 	$m=0;
 	while ($m < $k)

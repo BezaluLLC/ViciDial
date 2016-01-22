@@ -75,6 +75,7 @@
 # 150923-0700 - Fixed security issues with user access, issue #894
 # 160102-1238 - Fixed issues with special characters, added $htmlconvert option
 # 160112-2344 - Added link to direct to recording logging page, access log display
+# 160122-1337 - Added display of gmt-offset, last-local-call and called-since-last-reset
 #
 
 require("dbconnect_mysqli.php");
@@ -1160,6 +1161,7 @@ else
 	$vendor_id			= $row[5];
 	$list_id			= $row[7];
 	$gmt_offset_now		= $row[8];
+	$called_since_last_reset = $row[9];
 	$phone_code			= $row[10];
 	$phone_number		= $row[11];
 	$title				= $row[12];
@@ -1230,8 +1232,8 @@ else
 	echo "<input type=hidden name=parked_time value=\"$parked_time\">\n";
 	echo "<input type=hidden name=FORM_LOADED id=FORM_LOADED value=\"0\" />\n";
 	echo "<table cellpadding=1 cellspacing=0>\n";
-	echo "<tr><td colspan=2>"._QXZ("Lead ID").": $lead_id &nbsp; &nbsp; "._QXZ("List ID").": $list_id</td></tr>\n";
-	echo "<tr><td colspan=2>"._QXZ("Fronter").": <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; "._QXZ("Called Count").": $called_count</td></tr>\n";
+	echo "<tr><td colspan=2>"._QXZ("Lead ID").": $lead_id &nbsp; &nbsp; "._QXZ("List ID").":  $list_id &nbsp; &nbsp; <font size=2>"._QXZ("GMT offset").": $gmt_offset_now &nbsp; &nbsp; "._QXZ("CSLR").": $called_since_last_reset</td></tr>\n";
+	echo "<tr><td colspan=2>"._QXZ("Fronter").": <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; "._QXZ("Called Count").": $called_count &nbsp; &nbsp; <font size=2>"._QXZ("Last Local Call").": $last_local_call_time</td></tr>\n";
 	if ($archive_search=="Yes") 
 		{
 		echo "<tr><td colspan=2 align='center'>";

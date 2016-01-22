@@ -1641,7 +1641,8 @@ custom_reports_use_slave_db VARCHAR(2000) default '',
 usacan_phone_dialcode_fix ENUM('0','1') default '0',
 cache_carrier_stats_realtime ENUM('0','1') default '0',
 oldest_logs_date DATETIME,
-log_recording_access ENUM('0', '1') default '0'
+log_recording_access ENUM('0', '1') default '0',
+report_default_format ENUM('TEXT', 'HTML') default 'TEXT'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3712,4 +3713,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1451',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1452',db_schema_update_date=NOW(),reload_timestamp=NOW();

@@ -4,7 +4,7 @@
 # This User-Group based report runs some very intensive SQL queries, so it is
 # not recommended to run this on long time periods. 
 #
-# Copyright (C) 2015  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -19,6 +19,7 @@
 # 141230-1413 - Added code for on-the-fly language translations display
 # 150516-1316 - Fixed Javascript element problem, Issue #857
 # 151229-2014 - Added archive search option
+# 160121-2218 - Added report title header, default report format, cleaned up formatting
 #
 
 $startMS = microtime();
@@ -49,7 +50,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,report_default_format FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 if ($archive_tbl) {$agent_log_table="vicidial_agent_log_archive";} else {$agent_log_table="vicidial_agent_log";}
@@ -63,9 +64,11 @@ if ($qm_conf_ct > 0)
 	$reports_use_slave_db =			$row[3];
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
+	$SSreport_default_format =		$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+if (strlen($report_display_type)<2) {$report_display_type = $SSreport_default_format;}
 
 ### ARCHIVED DATA CHECK CONFIGURATION
 $archives_available="N";
@@ -294,6 +297,8 @@ else
 ######################################
 if ($DB) {$HTML_text.="$user_group_string|$user_group_ct|$user_groupQS|$i<BR>";}
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 ###########################
 
@@ -307,14 +312,21 @@ $HTML_head.="   .blue {color: white; background-color: blue}\n";
 $HTML_head.="   .purple {color: white; background-color: purple}\n";
 $HTML_head.="-->\n";
 $HTML_head.=" </STYLE>\n";
+$HTML_text.="<script language=\"JavaScript\">\n";
+$HTML_text.="function openNewWindow(url)\n";
+$HTML_text.="  {\n";
+$HTML_text.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+$HTML_text.="  }\n";
+$HTML_text.="</script>\n";
 
 $HTML_head.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HTML_head.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
-$HTML_text.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$HTML_text.="<TABLE CELLPADDING=3 CELLSPACING=0><TR><TD>";
+$HTML_text.="<b>"._QXZ("$report_name")."</b> $NWB#usergroup_login$NWE\n";
 
 $HTML_text.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-$HTML_text.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP>&nbsp;<BR>";
+$HTML_text.="<TABLE CELLSPACING=3 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN=TOP>&nbsp;<BR>";
 $HTML_text.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 $HTML_text.="<INPUT TYPE=HIDDEN NAME=type VALUE=\"$type\">\n";
 $HTML_text.="</TD><TD VALIGN=TOP>"._QXZ("Teams/User Groups").":<BR>";
@@ -355,11 +367,21 @@ $HTML_text.="<a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_dat
 $HTML_text.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 $HTML_text.="</FONT>\n";
 $HTML_text.="</TD></TR></TABLE>";
-$HTML_text.="</FORM><font size=2><PRE>\n\n";
+$HTML_text.="</FORM><font size=2><PRE>\n";
+
+	if ($file_download < 1)
+		{
+		$ASCII_text.=_QXZ("Usergroup Login Report",24).": $user                     $NOW_TIME ($db_source)\n";
+		$GRAPH_text.=_QXZ("Usergroup Login Report Report",24).": $user                     $NOW_TIME ($db_source)\n";
+		}
+	else
+		{
+		$CSV_text .= _QXZ("Usergroup Login Report Report",24).": $user                     $NOW_TIME ($db_source)\n";
+		}
 
 if ($SUBMIT) 
 	{
-	$ASCII_text="+--------------------------------+----------+----------------------+---------------------+---------------------+----------+-----------------+-----------------+----------------------+--------------+-----------------+-----------------+-----------------+\n";
+	$ASCII_text.="+--------------------------------+----------+----------------------+---------------------+---------------------+----------+-----------------+-----------------+----------------------+--------------+-----------------+-----------------+-----------------+\n";
 	$ASCII_text.="| "._QXZ("USER NAME",30)." | "._QXZ("ID",8)." | "._QXZ("USER GROUP",20)." | "._QXZ("FIRST LOGIN DATE",19)." | "._QXZ("LAST LOGIN DATE",19)." | "._QXZ("CAMPAIGN",8)." | "._QXZ("SERVER IP",15)." | "._QXZ("COMPUTER IP",15)." | "._QXZ("EXTENSION",20)." | "._QXZ("BROWSER",12)." | "._QXZ("PHONE LOGIN",15)." | "._QXZ("SERVER PHONE",15)." | "._QXZ("PHONE IP",15)." |\n";
 	$ASCII_text.="+--------------------------------+----------+----------------------+---------------------+---------------------+----------+-----------------+-----------------+----------------------+--------------+-----------------+-----------------+-----------------+\n";
 
@@ -413,7 +435,7 @@ else
 #	if ($report_display_type=='HTML') {$JS_text.=$JS_onload;}
 #	$JS_text.="</script>\n";
 
-	if ($report_display_type=="HTML")
+	if ($report_display_type=="HTMLOFF")
 		{
 		$HTML_text.=$GRAPH_text;
 		}

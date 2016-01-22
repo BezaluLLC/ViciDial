@@ -4,7 +4,7 @@
 # Pulls time stats per agent selectable by campaign or user group
 # should be most accurate agent stats of all of the reports
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 90522-0723 - First build
@@ -45,6 +45,7 @@
 # 150529-1921 - Sub statuses are now sorted in alphabetical order
 # 151110-1612 - Changed download function to always export time with hours
 # 151112-1335 - Added option to search archived tables
+# 160121-2037 - Added report title header, default report format, cleaned up formatting
 #
 
 $startMS = microtime();
@@ -143,7 +144,7 @@ if ($time_in_sec)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,report_default_format FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -156,9 +157,11 @@ if ($qm_conf_ct > 0)
 	$reports_use_slave_db =			$row[3];
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
+	$SSreport_default_format =		$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+if (strlen($report_display_type)<2) {$report_display_type = $SSreport_default_format;}
 
 if ($non_latin < 1)
 	{
@@ -170,6 +173,7 @@ else
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
+
 
 $stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
@@ -444,7 +448,10 @@ while ($i < $statha_to_print)
 	$i++;
 	}
 
-$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&show_parks=$show_parks&time_in_sec=$time_in_sec&search_archived_data=$search_archived_data&DB=$DB";
+$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&show_parks=$show_parks&time_in_sec=$time_in_sec&search_archived_data=$search_archived_data&report_display_type=$report_display_type&DB=$DB";
+
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 if ($file_download < 1)
 	{
@@ -476,14 +483,15 @@ if ($file_download < 1)
 	require("admin_header.php");
 
 	echo "</span>\n";
-	echo "<span style=\"position:absolute;left:3px;top:3px;z-index:19;\" id=agent_status_stats>\n";
-	echo "<PRE><FONT SIZE=2>\n";
+	echo "<span style=\"position:absolute;left:3px;top:30px;z-index:19;\" id=agent_status_stats>\n";
+	echo "<b>"._QXZ("$report_name")."</b> $NWB#agent_time_detail$NWE\n";
+	echo "<PRE><FONT SIZE=2>";
 	}
 
 if ( (strlen($group[0]) < 1) or (strlen($user_group[0]) < 1) )
 	{
-	echo "\n";
-	echo _QXZ("PLEASE SELECT A CAMPAIGN OR USER GROUP AND DATE-TIME ABOVE AND CLICK SUBMIT")."\n";
+#	echo "\n";
+	echo _QXZ("PLEASE SELECT A CAMPAIGN OR USER GROUP AND DATE-TIME BELOW AND CLICK SUBMIT")."\n";
 	echo _QXZ(" NOTE: stats taken from shift specified")."\n";
 	}
 
@@ -528,16 +536,16 @@ else
 
 	if ($file_download < 1)
 		{
-		$ASCII_text.="\n"._QXZ("Agent Time Detail",40)." $NOW_TIME\n";
+		$ASCII_text.=""._QXZ("$report_name",40)." $NOW_TIME ($db_source)\n";
 		$ASCII_text.=_QXZ("Time range").": $query_date_BEGIN to $query_date_END\n\n";
 
-		$GRAPH.=_QXZ("Agent Time Detail",40)." $NOW_TIME\n";
-		$GRAPH.="Time range: $query_date_BEGIN to $query_date_END\n\n";
+		$GRAPH.=_QXZ("$report_name",40)." $NOW_TIME\n";
+		$GRAPH.=_QXZ("Time range").": $query_date_BEGIN to $query_date_END\n\n";
 		}
 	else
 		{
-		$file_output .= _QXZ("Agent Time Detail",40)." $NOW_TIME\n";
-		$file_output .= "Time range: $query_date_BEGIN to $query_date_END\n\n";
+		$file_output .= _QXZ("$report_name",40)." $NOW_TIME\n";
+		$file_output .= _QXZ("Time range").": $query_date_BEGIN to $query_date_END\n\n";
 		}
 
 
@@ -1449,9 +1457,6 @@ if ($file_download > 0)
 	exit;
 	}
 
-$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
-$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
-
 ############################################################################
 ##### BEGIN HTML form section
 ############################################################################
@@ -1459,8 +1464,8 @@ $JS_onload.="}\n";
 if ($report_display_type=='HTML') {$JS_text.=$JS_onload;}
 $JS_text.="</script>\n";
 
-echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> "._QXZ("Dates").":<BR>";
+echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>";
+echo "<TABLE CELLSPACING=3 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN=TOP> "._QXZ("Dates").":<BR>";
 echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
@@ -1544,7 +1549,7 @@ echo "</TD><TD VALIGN=TOP>"._QXZ("Display as").":<BR>";
 echo "<select name='report_display_type'>";
 if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}
 echo "<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR><BR>";
-echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>$NWB#agent_time_detail$NWE\n";
+echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
 
 echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
@@ -1553,7 +1558,7 @@ echo " <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 echo "</FONT>\n";
 echo "</TD></TR></TABLE>";
 
-echo "</FORM>\n\n<BR>$db_source";
+echo "</FORM>";
 ############################################################################
 ##### END HTML form section
 ############################################################################
@@ -1576,8 +1581,8 @@ echo "<font size=1 color=white>$RUNtime</font>\n";
 
 ##### BEGIN horizontal yellow transparent bar graph overlay on top of agent stats
 echo "</span>\n";
-echo "<span style=\"position:absolute;left:3px;top:3px;z-index:18;\"  id=agent_status_bars>\n";
-echo "<PRE><FONT SIZE=2>\n\n\n\n\n\n\n\n";
+echo "<span style=\"position:absolute;left:3px;top:30px;z-index:18;\"  id=agent_status_bars>\n";
+echo "<PRE><FONT SIZE=2>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
 
 if ($stage == 'NAME') {$k=0;}
 $m=0;

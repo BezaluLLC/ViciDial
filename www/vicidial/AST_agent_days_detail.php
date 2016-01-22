@@ -1,7 +1,7 @@
 <?php 
 # AST_agent_days_detail.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -27,6 +27,7 @@
 # 141230-1526 - Added code for on-the-fly language translations display
 # 150516-1307 - Fixed Javascript element problem, Issue #857
 # 151227-1718 - Added option to search archive records instead of main
+# 160121-2216 - Added report title header, default report format, cleaned up formatting
 #
 
 $startMS = microtime();
@@ -57,7 +58,7 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
-if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
 	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
@@ -71,7 +72,7 @@ $JS_onload="onload = function() {\n";
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,report_default_format FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -84,9 +85,11 @@ if ($qm_conf_ct > 0)
 	$reports_use_slave_db =			$row[3];
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
+	$SSreport_default_format =		$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+if (strlen($report_display_type)<2) {$report_display_type = $SSreport_default_format;}
 
 ### ARCHIVED DATA CHECK CONFIGURATION
 $archives_available="N";
@@ -368,7 +371,10 @@ if (strlen($customer_interactive_statuses)>0)
 #$customer_interactive_statuses = '|NI|DNC|CALLBK|AP|SALE|COMP|HAP1|HAP2|HBED|DIED|';
 #$customer_interactive_statuses = '|NI|DNC|CALLBK|XFER|C2|B7|B8|C1|';
 
-$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date&shift=$shift&DB=$DB&user=$user$groupQS&search_archived_data=$search_archived_data";
+$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date&shift=$shift&DB=$DB&user=$user$groupQS&search_archived_data=$search_archived_data&report_display_type=$report_display_type";
+
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 if ($file_download < 1)
 	{
@@ -400,15 +406,15 @@ if ($file_download < 1)
 	require("admin_header.php");
 
 	echo "</span>\n";
-	$ASCII_text.="<span style=\"position:absolute;left:3px;top:3px;z-index:19;\"  id=agent_status_stats>\n";
-	$ASCII_text.="<PRE><FONT SIZE=2>\n";
-	$GRAPH_text.="<PRE><FONT SIZE=2>\n";
+	echo "<span style=\"position:absolute;left:3px;top:30px;z-index:19;\"  id=agent_status_stats>\n";
+	echo "<b>"._QXZ("$report_name")."</b> $NWB#single_agent_daily$NWE\n";
+	echo "<PRE><FONT SIZE=2>";
 	}
 
 if (strlen($group[0]) < 1)
 	{
-	echo "\n";
-	echo _QXZ("PLEASE SELECT A USER AND DATE-TIME ABOVE AND CLICK SUBMIT")."\n";
+	echo "";
+	echo _QXZ("PLEASE SELECT A USER AND DATE-TIME BELOW AND CLICK SUBMIT")."\n";
 	echo " "._QXZ("NOTE: stats taken from shift specified")."\n";
 	}
 
@@ -438,16 +444,14 @@ else
 
 	if ($file_download < 1)
 		{
-		$ASCII_text.=_QXZ("Agent Days Status Report",24).": $user                     $NOW_TIME\n";
+		$ASCII_text.=_QXZ("Agent Days Status Report",24).": $user                     $NOW_TIME ($db_source)\n";
 		$ASCII_text.=_QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
-		$ASCII_text.="---------- "._QXZ("AGENT Details")." -------------\n\n";
-		$GRAPH_text.=_QXZ("Agent Days Status Report",24).": $user                     $NOW_TIME\n";
+		$GRAPH_text.=_QXZ("Agent Days Status Report",24).": $user                     $NOW_TIME ($db_source)\n";
 		$GRAPH_text.=_QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
-		$GRAPH_text.="---------- "._QXZ("AGENT Details")." -------------\n";
 		}
 	else
 		{
-		$file_output .= _QXZ("Agent Days Status Report",24).": $user                     $NOW_TIME\n";
+		$file_output .= _QXZ("Agent Days Status Report",24).": $user                     $NOW_TIME ($db_source)\n";
 		$file_output .= _QXZ("Time range").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
 		}
 
@@ -861,23 +865,17 @@ $JS_onload.="}\n";
 if ($report_display_type=='HTML') {$JS_text.=$JS_onload;}
 $JS_text.="</script>\n";
 
-if ($report_display_type=="HTML")
-	{
-	echo $JS_text;
-	echo $GRAPH_text;
-	}
-else
-	{
-	echo $ASCII_text;
-	}
-
-echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> "._QXZ("Dates").":<BR>";
+echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>";
+echo "<TABLE CELLSPACING=3 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN=TOP> "._QXZ("Dates").":<BR>";
 echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 echo "<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
 ?>
 <script language="JavaScript">
+function openNewWindow(url)
+  {
+  window.open (url,"",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');
+  }
 var o_cal = new tcal ({
 	// form name
 	'formname': 'vicidial_report',
@@ -953,14 +951,25 @@ else
 echo "<a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
 echo "</TD></TR></TABLE>";
 
-echo "</FORM>\n\n<BR>$db_source";
+echo "</FORM>";
+
+if ($report_display_type=="HTML")
+	{
+	echo $JS_text;
+	echo $GRAPH_text;
+	}
+else
+	{
+	echo $ASCII_text;
+	}
+
 
 echo "</span>\n";
 
 if ($report_display_type=="TEXT" || !$report_display_type) 
 	{
 	echo "<span style=\"position:absolute;left:3px;top:3px;z-index:18;\"  id=agent_status_bars>\n";
-	echo "<PRE><FONT SIZE=2>\n\n\n\n\n\n\n\n\n\n";
+	echo "<PRE><FONT SIZE=2>\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n";
 
 	$m=0;
 	while ($m < $k)

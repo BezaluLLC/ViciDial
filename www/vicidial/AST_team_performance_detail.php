@@ -6,7 +6,7 @@
 # QC statuses of QCFAIL, QCCANC and sales are defined by the Sale=Y status
 # flags being set on those statuses.
 #
-# Copyright (C) 2015  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -25,6 +25,7 @@
 # 141230-1424 - Added code for on-the-fly language translations display
 # 150516-1315 - Fixed Javascript element problem, Issue #857
 # 151219-0139 - Added option for searching archived data
+# 160121-2214 - Added report title header, default report format, cleaned up formatting
 #
 
 $startMS = microtime();
@@ -68,7 +69,7 @@ $JS_onload="onload = function() {\n";
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,report_default_format FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -81,9 +82,11 @@ if ($qm_conf_ct > 0)
 	$reports_use_slave_db =			$row[3];
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
+	$SSreport_default_format =		$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+if (strlen($report_display_type)<2) {$report_display_type = $SSreport_default_format;}
 
 ### ARCHIVED DATA CHECK CONFIGURATION
 $archives_available="N";
@@ -439,6 +442,8 @@ else
 ######################################
 if ($DB) {$HTML_text.="$user_group_string|$user_group_ct|$user_groupQS|$i<BR>";}
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 ###########################
 
@@ -463,10 +468,11 @@ $HTML_head.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 $HTML_head.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HTML_head.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>$group_S\n";
 
-$HTML_text.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$HTML_text.="<TABLE CELLPADDING=3 CELLSPACING=0><TR><TD>";
+$HTML_text.="<b>"._QXZ("$report_name")."</b> $NWB#team_performance_detail$NWE\n";
 
 $HTML_text.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-$HTML_text.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP>";
+$HTML_text.="<TABLE CELLSPACING=3 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN=TOP>";
 $HTML_text.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 $HTML_text.="<INPUT TYPE=HIDDEN NAME=type VALUE=\"$type\">\n";
 $HTML_text.="Date Range:<BR>\n";
@@ -476,6 +482,10 @@ $HTML_text.="<INPUT TYPE=hidden NAME=end_date ID=end_date VALUE=\"$end_date\">\n
 $HTML_text.="<INPUT TYPE=TEXT NAME=query_date_D SIZE=11 MAXLENGTH=10 VALUE=\"$query_date_D\">";
 
 $HTML_text.="<script language=\"JavaScript\">\n";
+$HTML_text.="function openNewWindow(url)\n";
+$HTML_text.="  {\n";
+$HTML_text.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+$HTML_text.="  }\n";
 $HTML_text.="var o_cal = new tcal ({\n";
 $HTML_text.="	// form name\n";
 $HTML_text.="	'formname': 'vicidial_report',\n";

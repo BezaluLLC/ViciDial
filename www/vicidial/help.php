@@ -79,6 +79,7 @@
 # 160106-1348 - Added inbound_groups-on_hook_cid_number entry
 # 160108-2217 - Added campaigns-manual_dial_hopper_check entry
 # 160116-1512 - Added access_recording and log_recording_access entries
+# 160121-2155 - Added settings-report_default_format entry and help text for several reports
 #
 
 
@@ -5064,6 +5065,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <B><?php echo _QXZ("Default Server Password"); ?> -</B><?php echo _QXZ("This is the default server password used when new servers are added to the system. Default is test."); ?>
 
 <BR>
+<A NAME="settings-report_default_format">
+<BR>
+<B><?php echo _QXZ("Report Default Format"); ?> -</B><?php echo _QXZ("Determines whether the reports will default to display in text or html format. Default is TEXT."); ?>
+
+<BR>
 <A NAME="settings-slave_db_server">
 <BR>
 <B><?php echo _QXZ("Slave Database Server"); ?> -</B><?php echo _QXZ("If you have a MySQL slave database server then enter the local IP address for that server here. This option is currently only used by the selected reports in the next option and has nothing to do with automatically configuring MySQL master-slave replication. Default is empty for disabled."); ?>
@@ -5565,7 +5571,7 @@ if ($SSqc_features_active > 0)
 <?php echo _QXZ("<U>TALK</U> = Time the agent talks to a customer or is in dead state (<U>DEAD</U> + <U>CUSTOMER</U>)."); ?><BR>
 <?php echo _QXZ("<U>DISPO</U> = Time the agent uses at the disposition screen (where the agent picks NI, SALE etc)."); ?><BR>
 <?php echo _QXZ("<U>PAUSE</U> = Time the agent is in pause mode (<U>LOGIN</U> + <U>LAGGED</U> + ...)."); ?><BR>
-<?php echo _QXZ("<U>DEAD</U> = Time the agent is in a call where the customer has hung up."); ?><BR>
+<?php echo _QXZ("<U>DEAD</U> = Time the agent is in a call after the customer has hung up."); ?><BR>
 <?php echo _QXZ("<U>CUSTOMER</U> = Time the agent is in a live call with a customer."); ?><BR>
 <?php echo _QXZ("- The next table is pause codes and their time."); ?><BR>
 <?php echo _QXZ("<U>LOGIN</U> = The pause code when going from login directly to pause."); ?><BR>
@@ -5584,7 +5590,7 @@ if ($SSqc_features_active > 0)
 <A NAME="agent_performance_detail">
 <BR>
 <B><?php echo _QXZ("Agent Performance Detail"); ?> -</B><?php echo _QXZ("This is a combination of Agent Time Detail and Agent Status Detail."); ?><BR>
-<?php echo _QXZ("(Statistics related to handling of calls only)"); ?><BR>
+<?php echo _QXZ("(Statistics related to handling of calls only. What this means is that the top section will only include time involving a phone call. If an agent clicks to go active, then pauses, then goes active again without taking a call, that time will not be included in the top section of this report.)"); ?><BR>
 <?php echo _QXZ("<U>CALLS</U> = Total number of calls sent to the user."); ?><BR>
 <?php echo _QXZ("<U>TIME</U> = Total time of these (<U>PAUSE</U> + <U>WAIT</U> + <U>TALK</U> + <U>DISPO</U>)."); ?><BR>
 <?php echo _QXZ("<U>PAUSE</U> = Amount of time being paused in related to call handling."); ?><BR>
@@ -5592,7 +5598,7 @@ if ($SSqc_features_active > 0)
 <?php echo _QXZ("<U>WAIT</U> = Time the agent waits for a call."); ?><BR>
 <?php echo _QXZ("<U>TALK</U> = Time the agent talks to a customer or is in dead state (<U>DEAD</U> + <U>CUSTOMER</U>)."); ?><BR>
 <?php echo _QXZ("<U>DISPO</U> = Time the agent uses at the disposition screen (where the agent picks NI, SALE etc)."); ?><BR>
-<?php echo _QXZ("<U>DEAD</U> = Time the agent is in a call where the customer has hung up."); ?><BR>
+<?php echo _QXZ("<U>DEAD</U> = Time the agent is in a call after the customer has hung up."); ?><BR>
 <?php echo _QXZ("<U>CUSTOMER</U> = Time the agent is in a live call with a customer."); ?><BR>
 <?php echo _QXZ("And the rest is just System Statuses that the agent picked and how many, to find out what they means then head over to Admin -> System Statuses."); ?><BR>
 <?php echo _QXZ("- Next table is Pause Codes."); ?><BR>
@@ -5604,6 +5610,71 @@ if ($SSqc_features_active > 0)
 <?php echo _QXZ("<U>LAGGED</U> = The time the agent had some network problem or similar."); ?><BR>
 <?php echo _QXZ("<U>ANDIAL</U> = This pause code triggers if the agent been on dispo screen for longer than 1000 seconds."); ?><BR>
 <?php echo _QXZ("and empty is undefined pause code."); ?><BR>
+
+<A NAME="team_performance_detail">
+<BR>
+<B><?php echo _QXZ("Team Performance Detail"); ?> -</B><?php echo _QXZ("This report contains some of the same information as the Agent Time Detail report, as well as several new fields. Also, the users are grouped together within their User Groups, and there is a User Group summary at the bottom of the results."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = Total number of calls sent to the user."); ?><BR>
+<?php echo _QXZ("<U>LEADS</U> = Total number of unique leads the user handled."); ?><BR>
+<?php echo _QXZ("<U>CONTACTS</U> = Total number of calls the user handled that were statused in a Customer Contact status."); ?><BR>
+<?php echo _QXZ("<U>CONTACT RATIO</U> = Percent of calls where a customer was contacted."); ?><BR>
+<?php echo _QXZ("<U>NONPAUSE</U> = Everything except pause (<U>WAIT</U> + <U>TALK</U> + <U>DISPO</U>)."); ?><BR>
+<?php echo _QXZ("<U>TIME</U> = Total time of these (<U>PAUSE</U> + <U>WAIT</U> + <U>TALK</U> + <U>DISPO</U>)."); ?><BR>
+<?php echo _QXZ("<U>TALK</U> = Time the agent talks to a customer minus <U>DEAD</U> time."); ?><BR>
+<?php echo _QXZ("<U>SALES</U> = Total number of calls the user handled that were statused in a Sales status."); ?><BR>
+<?php echo _QXZ("<U>SALES PER WORKING HOUR</U> = Total number of sales divided by system time."); ?><BR>
+<?php echo _QXZ("<U>SALES TO LEADS RATIO</U> = Total number of sales divided by leads handled."); ?><BR>
+<?php echo _QXZ("<U>SALES TO CONTACTS RATIO</U> = Total number of sales divided by contacts."); ?><BR>
+<?php echo _QXZ("<U>SALES PER HOUR</U> = Total number of sales divided by talk time."); ?><BR>
+<?php echo _QXZ("<U>INCOMPLETE SALES</U> = Total number of calls statused as QCFAIL."); ?><BR>
+<?php echo _QXZ("<U>CANCELLED SALES</U> = Total number of calls statused as QCCANC."); ?><BR>
+<?php echo _QXZ("<U>CALLBACKS</U> = Total number of active or live callbacks for this user in the system."); ?><BR>
+<?php echo _QXZ("<U>FIRST CALL RESOLUTION</U> = Total number of calls handled divided by leads handled."); ?><BR>
+<?php echo _QXZ("<U>AVERAGE SALE TIME</U> = Total number of sales divided by the talk time for those sales calls."); ?><BR>
+<?php echo _QXZ("<U>AVERAGE CONTACT TIME</U> = Total number of contacts divided by the talk time for those contact calls."); ?><BR>
+
+<A NAME="performance_comparison_report">
+<BR>
+<B><?php echo _QXZ("Performance Comparison Report"); ?> -</B><?php echo _QXZ("This report contains some of the same information as the Team Performance Detail report, and the results for today and yesterday as well as the last 2, 3, 5, 10 and 30 days."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = Total number of calls sent to the user."); ?><BR>
+<?php echo _QXZ("<U>SALES</U> = Total number of calls the user handled that were statused in a Sales status."); ?><BR>
+<?php echo _QXZ("<U>SALES CONVERSION PCT</U> = Total number of sales divided by calls handled."); ?><BR>
+<?php echo _QXZ("<U>SALES PER HOUR</U> = Total number of sales divided by system time."); ?><BR>
+<?php echo _QXZ("<U>TIME</U> = Total time of these (<U>PAUSE</U> + <U>WAIT</U> + <U>TALK</U> + <U>DISPO</U>)."); ?><BR>
+
+<A NAME="single_agent_daily">
+<BR>
+<B><?php echo _QXZ("Single Agent Daily"); ?> -</B><?php echo _QXZ("This report contains most of the same information as the Agent Status Detail report, except for only one agent across a range of days."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = Total number of calls sent to the user."); ?><BR>
+<?php echo _QXZ("<U>CI CALLS</U> = Total number of calls the user handled that were statused in a Customer Contact status."); ?><BR>
+<?php echo _QXZ("<U>DNC CI PCT</U> = Total number of DNC statused calls divided by the number of Customer Contact calls."); ?><BR>
+<?php echo _QXZ("<U>SALES PER HOUR</U> = Total number of sales divided by system time."); ?><BR>
+<?php echo _QXZ("(the rest of the fields are the statuses that the agent selected)"); ?><BR>
+
+<A NAME="single_agent_time">
+<BR>
+<B><?php echo _QXZ("Single Agent Daily Time"); ?> -</B><?php echo _QXZ("This report is similar to the Agent Time Detail report, except for only one agent across a range of days."); ?><BR>
+<?php echo _QXZ("<U>PAUSE</U> = Amount of time for the agent being paused."); ?><BR>
+<?php echo _QXZ("<U>WAIT</U> = Time the agent waits for a call."); ?><BR>
+<?php echo _QXZ("<U>TALK</U> = Time the agent talks to a customer or is in dead state (<U>DEAD</U> + <U>CUSTOMER</U>)."); ?><BR>
+<?php echo _QXZ("<U>DISPO</U> = Time the agent uses at the disposition screen (where the agent picks NI, SALE etc)."); ?><BR>
+<?php echo _QXZ("<U>DEAD</U> = Time the agent is in a call after the customer has hung up."); ?><BR>
+<?php echo _QXZ("<U>CUSTOMER</U> = Time the agent is in a live call with a customer."); ?><BR>
+<?php echo _QXZ("<U>TOTAL</U> = Total time of these (<U>PAUSE</U> + <U>WAIT</U> + <U>TALK</U> + <U>DISPO</U>)."); ?><BR>
+
+<A NAME="usergroup_login">
+<BR>
+<B><?php echo _QXZ("User Group Login Report"); ?> -</B><?php echo _QXZ("This report includes information on all of the users within a user group related to agent screen activity."); ?><BR>
+<?php echo _QXZ("<U>FIRST LOGIN DATE</U> = The earliest date this user logged in to the agent screen."); ?><BR>
+<?php echo _QXZ("<U>LAST LOGIN DATE</U> = The most recent date this user logged in to the agent screen."); ?><BR>
+<?php echo _QXZ("<U>CAMPAIGN</U> = The most recent campaign this user was logged in to."); ?><BR>
+<?php echo _QXZ("<U>SERVER IP</U> = The most recent server this user logged in to."); ?><BR>
+<?php echo _QXZ("<U>COMPUTER IP</U> = The most recent computer this user used to log in to the agent screen."); ?><BR>
+<?php echo _QXZ("<U>EXTENSION</U> = The most recent phone this user used to log in to the agent screen."); ?><BR>
+<?php echo _QXZ("<U>BROWSER</U> = The most recent web browser version this user used to log in to the agent screen."); ?><BR>
+<?php echo _QXZ("<U>PHONE LOGIN</U> = The most recent phone login this user used to log in to the agent screen."); ?><BR>
+<?php echo _QXZ("<U>SERVER PHONE</U> = The most recent server phone account this user was logged in through."); ?><BR>
+<?php echo _QXZ("<U>PHONE IP</U> = The IP address of the phone during the most recent agent screen session."); ?><BR>
 
 
 

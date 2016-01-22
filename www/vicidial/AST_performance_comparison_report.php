@@ -1,7 +1,7 @@
 <?php 
 # AST_performance_comparison_report.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -13,6 +13,7 @@
 # 141230-0939 - Added code for on-the-fly language translations display
 # 150516-1314 - Fixed Javascript element problem, Issue #857
 # 151227-1746 - Added option for searching archived data
+# 160121-2215 - Added report title header, default report format, cleaned up formatting
 #
 
 $startMS = microtime();
@@ -43,11 +44,11 @@ if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
-if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
+if (isset($_GET["file_download"]))			{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
-if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
-if (isset($_GET["show_percentages"]))				{$show_percentages=$_GET["show_percentages"];}
+if (isset($_GET["show_percentages"]))			{$show_percentages=$_GET["show_percentages"];}
 	elseif (isset($_POST["show_percentages"]))	{$show_percentages=$_POST["show_percentages"];}
 if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
 	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
@@ -61,7 +62,7 @@ $JS_onload="onload = function() {\n";
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,report_default_format FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -74,9 +75,11 @@ if ($qm_conf_ct > 0)
 	$reports_use_slave_db =			$row[3];
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
+	$SSreport_default_format =		$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+if (strlen($report_display_type)<2) {$report_display_type = $SSreport_default_format;}
 
 ### ARCHIVED DATA CHECK CONFIGURATION
 $archives_available="N";
@@ -425,7 +428,7 @@ else
 
 if ($DB) {$HTML_text.="$user_group_string|$user_group_ct|$user_groupQS|$i<BR>";}
 
-$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&DB=$DB&show_percentages=$show_percentages&search_archived_data=$search_archived_data";
+$LINKbase = "$PHP_SELF?query_date=$query_date&end_date=$end_date$groupQS$user_groupQS&shift=$shift&DB=$DB&show_percentages=$show_percentages&search_archived_data=$search_archived_data&report_display_type=$report_display_type";
 
 $NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
@@ -453,10 +456,11 @@ $HTML_head.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE m
 
 #	require("admin_header.php");
 
-$HTML_text.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$HTML_text.="<TABLE CELLPADDING=3 CELLSPACING=0><TR><TD>";
+$HTML_text.="<b>"._QXZ("$report_name")."</b> $NWB#performance_comparison_report$NWE\n";
 
 $HTML_text.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-$HTML_text.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> "._QXZ("date").":<BR>";
+$HTML_text.="<TABLE CELLSPACING=3 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN=TOP> "._QXZ("Date").":<BR>";
 $HTML_text.="<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 $HTML_text.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
@@ -560,15 +564,15 @@ $HTML_text.=" <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>
 $HTML_text.="</FONT>\n";
 $HTML_text.="</TD></TR></TABLE>";
 
-$HTML_text.="</FORM>\n\n";
+$HTML_text.="</FORM>\n";
 
 
-$HTML_text.="<PRE><FONT SIZE=2>\n";
+$HTML_text.="<PRE><FONT SIZE=2>";
 
 
 if (!$group)
 	{
-	$HTML_text.="\n";
+#	$HTML_text.="\n";
 	$HTML_text.=_QXZ("PLEASE SELECT A CAMPAIGN AND DATE-TIME ABOVE AND CLICK SUBMIT")."\n";
 	$HTML_text.=" "._QXZ("NOTE: stats taken from shift specified")."\n";
 	}
@@ -600,8 +604,6 @@ else
 	#########################
 
 
-
-	$ASCII_text="---------- "._QXZ("PERFORMANCE Details")." -------------\n";
 
 	$HTML_text.=_QXZ("Agent Performance Comparison",50)." $NOW_TIME\n";
 	$HTML_text.=""._QXZ("Starting date",15,"r").": $query_date                         <a href=\"$LINKbase&stage=$stage&file_download=1\">["._QXZ("DOWNLOAD")."]</a>\n\n";
@@ -704,7 +706,7 @@ else
 				{
 				$agent_performance_array[$row[3]][($array_offset+1)]+=$row[0]; # SALES FOR TIME RANGE
 				}
-			$agent_performance_array[$row[3]][($array_offset+4)]+=($row[4]+$row[1]+$row[6]+$row[5]+$row[8]); # TIME - pause, talk, disp, wait, dead
+			$agent_performance_array[$row[3]][($array_offset+4)]+=($row[4]+$row[1]+$row[6]+$row[5]); # TIME - pause, talk, disp, wait
 			$i++;
 			}
 
