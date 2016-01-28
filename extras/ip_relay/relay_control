@@ -2,7 +2,7 @@
 #
 # relay_control      ip_relay startup/shutdown script
 #
-# Version: 1.1  ip_relay/relay_control  started: 2003-02-07 modified: 2016-01-01
+# Version: 1.1  ip_relay/relay_control  started: 2003-02-07 modified: 2016-01-28
 #
 # vicidial@gmail.com
 #
@@ -16,22 +16,24 @@
 # 140619-0954 - Added new port 42569 for playback loops
 # 160101-0912 - Added check for installed ip_relay binary
 # 160105-2336 - Fix for packaged ip_relay
+# 160128-1733 - Fix for some linux distros
 #
-
-IPRELAY_BIN="/usr/bin/ip_relay"
-
-if [ ! -x $IPRELAY_BIN ]; then
-	IPRELAY_BIN="/usr/local/bin/ip_relay"
-fi
 
 case "$1" in
   start)
 
         echo "starting up ip_relay services at $IPRELAY_BIN"
+	
+	# Change directory to OS specific ip_relay, or user generic vicidial one
+	if [ -x "/usr/bin/ip_relay" ]; then
+		cd /usr/bin/
+	else
+		cd /usr/local/bin/
+	fi
 
-        exec -a ip_relay $IPRELAY_BIN 40569 127.0.0.1    4569 9999999 &
-        exec -a ip_relay $IPRELAY_BIN 41569 127.0.0.1    4569 9999999 &
-        exec -a ip_relay $IPRELAY_BIN 42569 127.0.0.1    4569 9999999 &
+        ip_relay 40569 127.0.0.1    4569 9999999 &
+        ip_relay 41569 127.0.0.1    4569 9999999 &
+        ip_relay 42569 127.0.0.1    4569 9999999 &
 
         echo "done "
         echo
