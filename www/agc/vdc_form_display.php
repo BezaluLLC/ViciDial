@@ -34,6 +34,7 @@
 # 150512-0617 - Fix for non-latin customer data
 # 150609-1923 - Added list_description variable
 # 150923-2027 - Added DID custom variables
+# 160129-1019 - Added missing pass field to SUBMIT stage form
 #
 
 $version = '2.12-25';
@@ -466,6 +467,7 @@ if ($stage=='SUBMIT')
 
 	echo "<form action=./vdc_form_display.php method=POST name=form_custom_fields id=form_custom_fields>\n";
 	echo "<input type=hidden name=user id=user value=\"$user\">\n";
+	echo "<input type=hidden name=pass id=pass value=\"$pass\">\n";
 	echo "</form>\n";
 	}
 ### END parse submission of the custom fields form ###
