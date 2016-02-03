@@ -8,6 +8,7 @@
 # 151219-0850 - Added translation code
 # 160108-1710 - Added available_agents variable
 # 160120-1943 - Added show_email variable
+# 160203-1051 - Added display of chat message after ending it
 #
 
 require("dbconnect_mysqli.php");
@@ -182,7 +183,30 @@ if ($action=="update_chat_window" && $chat_id) {
 	$status_stmt="SELECT status, chat_creator from vicidial_live_chats where chat_id='$chat_id'";
 	$status_rslt=mysql_to_mysqli($status_stmt, $link);
 	if (mysqli_num_rows($status_rslt)==0) {
-		echo "<font class='chat_title alert'>"._QXZ("Chat does not exist or has been closed").": $chat_id</font><BR/><BR/><font class='chat_title'><a href='".$chat_url."?group_id=$group_id&language=$language&available_agents=$available_agents&show_email=$show_email'>"._QXZ("GO BACK TO CHAT FORM")."</a></font>\n";
+		# JCJ - comment out to display in Javascript function that calls this in parent page.
+		# echo "<font class='chat_title alert'>"._QXZ("Chat does not exist or has been closed").": $chat_id</font><BR/><BR/><font class='chat_title'><a href='".$chat_url."?group_id=$group_id&language=$language&available_agents=$available_agents&show_email=$show_email'>"._QXZ("GO BACK TO CHAT FORM")."</a></font>\n";
+		echo "Error|";
+
+		# Create color-coding for archived chat
+		$stmt="SELECT * from vicidial_chat_log_archive where chat_id='$chat_id' order by message_time asc";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$chat_members=array();
+		while ($row=mysqli_fetch_row($rslt)) {
+			if (!in_array("$row[4]", $chat_members)) {
+				array_push($chat_members, "$row[4]");
+			}
+		}
+
+		## GRAB ARCHIVED CHAT MESSAGES AND DISPLAY THEM
+		if (!$user_level || $user_level==0) {$user_level_clause=" and chat_level='0' ";} else {$user_level_clause="";}
+		$stmt="SELECT * from vicidial_chat_log_archive where chat_id='$chat_id' $user_level_clause order by message_time asc";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		while ($row=mysqli_fetch_row($rslt)) {
+			$chat_color_key=array_search("$row[4]", $chat_members);
+			$row[2]=preg_replace('/\n/', '<BR/>', $row[2]);	
+			echo "<li><font color='$color_array[$chat_color_key]' class='chat_message bold'>$row[5]</font> <font class='chat_timestamp bold'>($row[3])</font> - <font class='chat_message ".$style_array[$row[6]]."'>$row[2]</font></li>\n";
+		}
+
 	} else {
 		$status_row=mysqli_fetch_row($status_rslt);
 		

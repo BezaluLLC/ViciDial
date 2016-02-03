@@ -16,6 +16,7 @@
 # 151220-0959 - Only search for phone number if greater than 4 digits
 # 160108-1700 - Added available_agents, status_link button options and validation of active in-group
 # 160120-1925 - Fixed missing list_id on vicidial_list inserts, Issue #915. Added show_email option
+# 160203-1052 - Added display of chat message after ending it
 #
 
 require("dbconnect_mysqli.php");
@@ -84,7 +85,7 @@ else
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $VUselected_language='';
-$stmt = "SELECT use_non_latin,enable_languages,language_method,default_language,allow_chats FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_languages,language_method,default_language,allow_chats,chat_url FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
         if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -97,6 +98,7 @@ if ($qm_conf_ct > 0)
 	$SSlanguage_method =	$row[2];
 	$SSdefault_language =	$row[3];
 	$SSallow_chats =		$row[4];
+	$SSchat_url =			$row[5];
 	}
 $VUselected_language = $SSdefault_language;
 ##### END SETTINGS LOOKUP #####
@@ -392,6 +394,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>
 
 <script language="Javascript">
 var language='<?php echo $language ?>';
+var chat_url='<?php echo $SSchat_url ?>';
 var group_id='<?php echo $group_id ?>';
 var available_agents='<?php echo $available_agents ?>';
 var show_email='<?php echo $show_email ?>';
@@ -469,7 +472,13 @@ function UpdateChatWindow() {
 				{ 
 				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
 					{
-					var fullchatlog = xmlhttp.responseText;
+					var chat_log_response = xmlhttp.responseText;
+					if (chat_log_response.match(/^Error/))
+						{
+						document.getElementById('chat_message_console').innerHTML="<font class='chat_title alert'><?php echo _QXZ("Chat does not exist or has been closed") ?>: "+chat_id+"</font><BR/><BR/><font class='chat_title'><a href='"+chat_url+"?group_id="+group_id+"&language="+language+"&available_agents="+available_agents+"&show_email="+show_email+"'><?php echo _QXZ("GO BACK TO CHAT FORM") ?></a></font>\n";
+						}
+					
+					var fullchatlog=chat_log_response.replace(/Error\|/, '');
 					document.getElementById('ChatDisplay').innerHTML=fullchatlog;
 					var current_message_field_update = document.getElementById('current_message_count');
 					if (current_message_field_update != null) {var current_message_count_update=current_message_field_update.value;}
@@ -662,7 +671,9 @@ $chat_title= _QXZ("Request chat with agent"); # This can be modified for customi
 		<table width='400' align='center' border='0' cellpadding='0' cellspacing='0'>
 			<tr>
 				<td align='center' colspan='2'>
+					<span id='chat_message_console' name='chat_message_console'>
 					<textarea border='1' name='chat_message' id='chat_message' class='chat_window' cols='86' rows='4' onkeypress="if (event.keyCode==13 && !event.shiftKey) {CustomerSendMessage(this.form.chat_id.value, this.form.user.value, this.form.chat_message.value); return false;}"></textarea>
+					</span>
 				</td>
 			</tr>
 			<tr>
