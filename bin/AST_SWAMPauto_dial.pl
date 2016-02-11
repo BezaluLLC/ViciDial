@@ -198,7 +198,7 @@ while($it < $total_loops)
 	$k=0;
 	while ($k < 1)
 		{
-		$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$SERVERtemp','','Originate','TESTCIDX$CIDdate$US$it','Channel: Local/$dialstring@$context','Context; $context','Exten: $exten','Priority: 1','Callerid: \"Inbound Test Call\" <$CIDtemp>','','','','','');";
+		$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$SERVERtemp','','Originate','TESTCIDX$CIDdate$US$it','Channel: Local/$dialstring@$context','Context: $context','Exten: $exten','Priority: 1','Callerid: \"Inbound Test Call\" <$CIDtemp>','','','','','');";
 		$affected_rows = $dbhA->do($stmtA);
 	#	print "|$stmtA|\n";
 		$k++;

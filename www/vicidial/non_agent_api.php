@@ -105,10 +105,11 @@
 # 150808-1438 - Added compatibility for custom fields data option
 # 151226-0954 - Added session_id(conf_exten) field to output of agent_status, and added logged_in_agents function
 # 160104-1229 - Added detection of dead chats to a few functions
+# 160211-1232 - Fixed issue with blind monitoring, Issue #924
 #
 
-$version = '2.12-81';
-$build = '160104-1229';
+$version = '2.12-82';
+$build = '160211-1232';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -1657,7 +1658,7 @@ if ($function == 'blind_monitor')
 						}
 
 					### insert a new lead in the system with this phone number
-					$stmt = "INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$monitor_server_ip','','Originate','$BMquery','Channel: Local/$monitor_dialstring$stage$session_id@default','Context; default','Exten: $dialplan_number','Priority: 1','Callerid: \"VC Blind Monitor\" <$outbound_cid>','','','','','');";
+					$stmt = "INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$monitor_server_ip','','Originate','$BMquery','Channel: Local/$monitor_dialstring$stage$session_id@default','Context: default','Exten: $dialplan_number','Priority: 1','Callerid: \"VC Blind Monitor\" <$outbound_cid>','','','','','');";
 					if ($DB>0) {echo "DEBUG: blind_monitor query - $stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$affected_rows = mysqli_affected_rows($link);
