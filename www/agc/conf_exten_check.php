@@ -70,10 +70,11 @@
 # 150723-1708 - Added ajax logging and agent screen click logging
 # 150904-2138 - Added SQL features for chats started via agent invite, modified output
 # 160104-1232 - Added proper detection of dead chats, disabled dead detection of emails
+# 160227-1007 - Fixed XSS security issue, issue #929
 #
 
-$version = '2.12-45';
-$build = '160104-1232';
+$version = '2.12-46';
+$build = '160227-1007';
 $php_script = 'conf_exten_check.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=44;
@@ -169,6 +170,7 @@ if ($non_latin < 1)
 
 $session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
 $server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
+$conf_exten=preg_replace("/[^-_0-9a-zA-Z]/","",$conf_exten);
 
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
