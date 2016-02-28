@@ -1,7 +1,7 @@
 <?php 
 # AST_IVRfilter.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -18,6 +18,7 @@
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141114-0833 - Finalized adding QXZ translation to all admin files
 # 141230-1449 - Added code for on-the-fly language translations display
+# 160227-1931 - Uniform form format
 #
 
 $startMS = microtime();
@@ -211,6 +212,9 @@ if (!isset($end_date)) {$end_date = $NOW_DATE;}
 $i=0;
 
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
+
 $HTML_header.="<HTML>\n";
 $HTML_header.="<HEAD>\n";
 $HTML_header.="<STYLE type=\"text/css\">\n";
@@ -232,15 +236,20 @@ $HTML_header.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 
 #	require("admin_header.php");
 
-$HTML_text.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$HTML_text="<b>"._QXZ("$report_name")."</b> $NWB#IVRfilter$NWE\n";
+$HTML_text.="<TABLE CELLPADDING=3 CELLSPACING=0><TR><TD>";
 
 $HTML_text.="<FORM ACTION=\"$PHP_SELF\" NAME='IVRfilter_report' METHOD=GET>\n";
-$HTML_text.="<TABLE BORDER=0><TR><TD VALIGN=TOP>\n";
+$HTML_text.="<TABLE BORDER=0 CELLPADDING=3 CELLSPACING=0 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN=TOP>\n";
 $HTML_text.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 $HTML_text.=_QXZ("Date Range").":<BR>\n";
 $HTML_text.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">\n";
 
 $HTML_text.="<script language=\"JavaScript\">\n";
+$HTML_text.="function openNewWindow(url)\n";
+$HTML_text.="  {\n";
+$HTML_text.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+$HTML_text.="  }\n";
 $HTML_text.="var o_cal = new tcal ({\n";
 $HTML_text.="	// form name\n";
 $HTML_text.="	'formname': 'IVRfilter_report',\n";

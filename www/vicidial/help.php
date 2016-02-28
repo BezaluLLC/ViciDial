@@ -80,6 +80,7 @@
 # 160108-2217 - Added campaigns-manual_dial_hopper_check entry
 # 160116-1512 - Added access_recording and log_recording_access entries
 # 160121-2155 - Added settings-report_default_format entry and help text for several reports
+# 160211-2255 - Added help text for remaining reports
 #
 
 
@@ -5684,9 +5685,277 @@ if ($SSqc_features_active > 0)
 <?php echo _QXZ("<U>SERVER PHONE</U> = The most recent server phone account this user was logged in through."); ?><BR>
 <?php echo _QXZ("<U>PHONE IP</U> = The IP address of the phone during the most recent agent screen session."); ?><BR>
 
+<A NAME="agent_timeclock_detail">
+<BR>
+<B><?php echo _QXZ("User Timeclock Detail Report"); ?> -</B><?php echo _QXZ("Pulls all timeclock records for agents meeting the selected parameters."); ?><BR>
+<?php echo _QXZ("<U>TIME CLOCK</U> = Total amount of time agent spent logged in."); ?><BR>
+<?php echo _QXZ("<U>TIME CLOCK PUNCHES</U> = A list of the punch-in and punch-out times for each agent.  Punch-out times marked with an asterisk (*) denotes AUTOLOGOUT from timeclock."); ?><BR>
+
+<A NAME="campaign_status_list_report">
+<BR>
+<B><?php echo _QXZ("Campaign Status List Report"); ?> -</B><?php echo _QXZ("This report is designed to show the breakdown by list_id of the calls and their statuses for all lists within a campaign for a set time period."); ?><BR>
+<?php echo _QXZ("<U>DISPOSITION</U> = The distinct dispositions made for the list within the time frame specified."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = The number of calls ending with the disposition listed."); ?><BR>
+<?php echo _QXZ("<U>DURATION</U> = Sum of the length of the calls ending with the disposition listed."); ?><BR>
+<?php echo _QXZ("<U>HANDLE TIME</U> = Sum of the time the calls ending with the disposition listed were handled by an agent (<U>TALK</U> + <U>DEAD</U>)."); ?><BR><BR>
+<?php echo _QXZ("<U>TOTAL CALLS</U> = Number of calls placed to leads belonging to lists in this campaign within the time frame specified."); ?><BR>
+<?php echo _QXZ("<U>STATUS FLAGS BREAKDOWN</U> = Breakdown of the total calls into status categories, including counts per category and percentage relative to the number of calls to leads in the list within the time frame specified."); ?><BR>
+
+<A NAME="CLOSER_service_level">
+<BR>
+<B><?php echo _QXZ("Inbound Service Level Report"); ?> -</B><?php echo _QXZ("This report is designed to give a daily breakdown of the number of calls, holds, and drop within the specified date range for the selected inbound group."); ?><BR>
+<?php echo _QXZ("<U>DROPS</U> = The number of dropped calls to the inbound group within the time frame specified for that time interval."); ?><BR>
+<?php echo _QXZ("<U>DROP %</U> = The percentage of calls ending in DROPS."); ?><BR>
+<?php echo _QXZ("<U>AVG DROP(S)</U> = Average length in seconds of the calls ending in DROPS."); ?><BR>
+<?php echo _QXZ("<U>HOLDS</U> = The number of calls to the inbound group that were held in queue for that time interval."); ?><BR>
+<?php echo _QXZ("<U>HOLD %</U> = The percentage of calls that went to queue relative to the total calls."); ?><BR>
+<?php echo _QXZ("<U>AVG HOLD(S) HOLD</U> = Average length in seconds of the queue time for only the calls in queue."); ?><BR>
+<?php echo _QXZ("<U>AVG HOLD(S) TOTAL</U> = Average length in seconds of the queue time for ALL calls for the time interval."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = Number of calls received by the ingroup within the time interval."); ?><BR>
+<?php echo _QXZ("<U>TOTAL CALLTIME MIN:SEC</U> = Total length of all calls received."); ?><BR>
+<?php echo _QXZ("<U>AVG CALLTIME SECONDS</U> = Average length of all calls received."); ?><BR>
+
+<A NAME="CLOSERstats">
+<BR>
+<B><?php echo _QXZ("Inbound Report (by DID)"); ?> -</B><?php echo _QXZ("This report is designed to give several different statistical breakdowns of calls received within the specified time frame, by either ingroup or by DID (refer to the title of the report)."); ?><BR>
+<?php echo _QXZ("<B>MULTI-GROUP BREAKDOWN</B>"); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = The number of calls to the inbound groups or DIDs within the time frame specified for that time interval."); ?><BR>
+<?php echo _QXZ("<U>DROPS</U> = The number of dropped calls to the inbound groups or DIDs within the time frame specified for that time interval."); ?><BR>
+<?php echo _QXZ("<U>DROP %</U> = The percentage of calls ending in DROPS."); ?><BR>
+<?php echo _QXZ("<U>IVR</U> = The number of calls to the inbound group or DID that went to an IVR within the time frame specified for that time interval."); ?><BR>
+
+<?php echo _QXZ("<B>CALL HANGUP REASON STATS</B>"); ?><BR>
+<?php echo _QXZ("<U>HANGUP REASON</U> = The reason the call terminated."); ?><BR>
+<?php echo _QXZ("<U>HOLDS</U> = The number of calls terminated from the aforementioned reason."); ?><BR>
+
+<?php echo _QXZ("<B>CALL STATUS STATS</B>"); ?><BR>
+<?php echo _QXZ("<U>STATUS</U> = The call disposition."); ?><BR>
+<?php echo _QXZ("<U>DESCRIPTION</U> = A description of the call disposition."); ?><BR>
+<?php echo _QXZ("<U>CATEGORY</U> = The call category that the disposition currently belongs to."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = The number of calls taken by the ingroups or DIDs that were dispositioned as the listed disposition."); ?><BR>
+<?php echo _QXZ("<U>TOTAL TIME</U> = The total amount of time that was spent on calls that ended as the listed disposition."); ?><BR>
+<?php echo _QXZ("<U>AVG TIME</U> = The average amount of time that was spent on calls that ended as the listed disposition."); ?><BR>
+<?php echo _QXZ("<U>CALLS /HOUR</U> = The number of calls per hour to the ingroups or DIDs that ended as the listed disposition."); ?><BR>
+
+<?php echo _QXZ("<B>CUSTOM STATUS CATEGORY STATS</B>"); ?><BR>
+<?php echo _QXZ("<U>CATEGORY</U> = The custom call category that a call was dispositioned under the selected report parameters."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = The number of calls dispositioned under the custom status category."); ?><BR>
+<?php echo _QXZ("<U>DESCRIPTION</U> = A description of the custom call category."); ?><BR>
+
+<?php echo _QXZ("<B>AGENT STATS</B>"); ?><BR>
+<?php echo _QXZ("<U>AGENT</U> = The agent who received a call to the specified inbound groups or DIDs."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = The number of calls fielded by the agent."); ?><BR>
+<?php echo _QXZ("<U>DESCRIPTION</U> = The total time the agent spent in calls to the specified inbound groups or DIDs."); ?><BR>
+<?php echo _QXZ("<U>DESCRIPTION</U> = The average time the agent spent in calls to the specified inbound groups or DIDs."); ?><BR>
+
+<A NAME="CLOSERstats_v2">
+<BR>
+<B><?php echo _QXZ("Inbound Report (by DID), v2"); ?> -</B><?php echo _QXZ("This report is designed to give several different statistical breakdowns of calls received within the specified time frame, by either ingroup or by DID (refer to the title of the report)."); ?><BR>
+<?php echo _QXZ("<B>MULTI-GROUP BREAKDOWN</B>"); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = The number of calls to the inbound groups or DIDs within the time frame specified for that time interval."); ?><BR>
+<?php echo _QXZ("<U>DROPS</U> = The number of dropped calls to the inbound groups or DIDs within the time frame specified for that time interval."); ?><BR>
+<?php echo _QXZ("<U>DROP %</U> = The percentage of calls ending in DROPS."); ?><BR>
+<?php echo _QXZ("<U>IVR</U> = The number of calls to the inbound group or DID that went to an IVR within the time frame specified for that time interval."); ?><BR>
+
+<?php echo _QXZ("<B>CALL HANGUP REASON STATS</B>"); ?><BR>
+<?php echo _QXZ("<U>HANGUP REASON</U> = The reason the call terminated."); ?><BR>
+<?php echo _QXZ("<U>HOLDS</U> = The number of calls terminated from the aforementioned reason."); ?><BR>
+
+<?php echo _QXZ("<B>CALL STATUS STATS</B>"); ?><BR>
+<?php echo _QXZ("<U>STATUS</U> = The call disposition."); ?><BR>
+<?php echo _QXZ("<U>DESCRIPTION</U> = A description of the call disposition."); ?><BR>
+<?php echo _QXZ("<U>CATEGORY</U> = The call category that the disposition currently belongs to."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = The number of calls taken by the ingroups or DIDs that were dispositioned as the listed disposition."); ?><BR>
+<?php echo _QXZ("<U>TOTAL TIME</U> = The total amount of time that was spent on calls that ended as the listed disposition."); ?><BR>
+<?php echo _QXZ("<U>AVG TIME</U> = The average amount of time that was spent on calls that ended as the listed disposition."); ?><BR>
+<?php echo _QXZ("<U>CALLS /HOUR</U> = The number of calls per hour to the ingroups or DIDs that ended as the listed disposition."); ?><BR>
+
+<?php echo _QXZ("<B>CUSTOM STATUS CATEGORY STATS</B>"); ?><BR>
+<?php echo _QXZ("<U>CATEGORY</U> = The custom call category that a call was dispositioned under the selected report parameters."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = The number of calls dispositioned under the custom status category."); ?><BR>
+<?php echo _QXZ("<U>DESCRIPTION</U> = A description of the custom call category."); ?><BR>
+
+<?php echo _QXZ("<B>AGENT STATS</B>"); ?><BR>
+<?php echo _QXZ("<U>AGENT</U> = The agent who received a call to the specified inbound groups or DIDs."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = The number of calls fielded by the agent."); ?><BR>
+<?php echo _QXZ("<U>TIME H:M:S</U> = The total time the agent spent in calls to the specified inbound groups or DIDs."); ?><BR>
+<?php echo _QXZ("<U>AVERAGE</U> = The average time the agent spent in calls to the specified inbound groups or DIDs."); ?><BR>
 
 
+<A NAME="CLOSERsummary_hourly">
+<BR>
+<B><?php echo _QXZ("Inbound Summary Hourly Report"); ?> -</B><?php echo _QXZ("This report is designed to give several different statistical breakdowns of calls received within the specified time frame, by either ingroup or by DID (refer to the title of the report)."); ?><BR>
+<?php echo _QXZ("<U>TOTAL CALLS</U> = Total calls taken by the in-group."); ?><BR>
+<?php echo _QXZ("<U>TOTAL ANSWER</U> = Total calls answered by the in-group."); ?><BR>
+<?php echo _QXZ("<U>TOTAL TALK</U> = Total amount of time spent in calls answered by the in-group."); ?><BR>
+<?php echo _QXZ("<U>AVERAGE TALK</U> = Average amount of time spent in calls answered by the in-group."); ?><BR>
+<?php echo _QXZ("<U>TOTAL QUEUE TIME</U> = Total amount of time calls handled by the in-group spent in queue."); ?><BR>
+<?php echo _QXZ("<U>TOTAL QUEUE TIME</U> = Average amount of time calls handled by the in-group spent in queue."); ?><BR>
+<?php echo _QXZ("<U>MAXIMUM QUEUE TIME</U> = The longest amount of time any single call handled by the in-group spent in queue."); ?><BR>
+<?php echo _QXZ("<U>TOTAL ABANDON CALLS</U> = The number of calls to the in-group that were unanswered and abandoned by the caller."); ?><BR>
 
+<A NAME="dialer_inventory_report">
+<BR>
+<B><?php echo _QXZ("Dialer Inventory Report"); ?> -</B><?php echo _QXZ("This report gives statistical information, including a status breakdown, of a single list or all lists in a single campaign."); ?><BR>
+<?php echo _QXZ("<U>Start Inv</U> = Total leads currently in list."); ?><BR>
+<?php echo _QXZ("<U>Call Inv Total</U> = Total leads currently dialable in list based on the campaign settings it belongs to."); ?><BR>
+<?php echo _QXZ("<U>Call Inv No filtr</U> = Total leads currently dialable in list based on the campaign settings EXCLUDING any filters."); ?><BR>
+<?php echo _QXZ("<U>Call Inv One-off</U> = Total leads currently dialable in list based on the campaign settings that are at least one dial attempt below the call count limit."); ?><BR>
+<?php echo _QXZ("<U>Call Inv Inactive</U> = Total leads currently in list that belong to INCOMPLETE statuses that are NOT currently selected as dialable for the campaign."); ?><BR>
+<?php echo _QXZ("<U>Dial Avg</U> = Total calls made on the list divided by the <U>Start Inv</U> of that list."); ?><BR>
+<?php echo _QXZ("<U>Pen. %</U> = Percentage of leads in the list that are no longer dialable (<B>Start Inv</B> - <B>Call Inv Total</B> / <B>Start Inv</B>."); ?><BR>
+
+<A NAME="DIDstats">
+<BR>
+<B><?php echo _QXZ("Inbound DID Report"); ?> -</B><?php echo _QXZ("This report breaks down activity for a DID or a list of DIDs over a given time interval."); ?><BR>
+<?php echo _QXZ("<U>ROUTE</U> = Where the DID is currently directed when a call reaches it."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = Number of calls the DIDs/servers/time frames (depending on which sub-report you are viewing) received during the specific date range."); ?><BR>
+
+<A NAME="email_log_report">
+<BR>
+<B><?php echo _QXZ("Email Log Report"); ?> -</B><?php echo _QXZ("This report gives a detailed log report of any emails handled by the dialer, including links to the full text of received emails.  It will display the date the email was received, the address and name of the sender, a bit of the beginning of the email's text (with a link to the full text), and the status that the agent dispositioned the email as."); ?><BR>
+
+<A NAME="inbound_daily_report">
+<BR>
+<B><?php echo _QXZ("Inbound Daily Report"); ?> -</B><?php echo _QXZ("This report will give a daily or hourly, weekly, monthly, and quarterly count on all calls received by the in-groups selected for the given date range."); ?><BR>
+<?php echo _QXZ("<U>TOTAL CALLS OFFERED</U> = Total calls taken by the in-group."); ?><BR>
+<?php echo _QXZ("<U>TOTAL CALLS ANSWERED</U> = Total calls answered by the in-group."); ?><BR>
+<?php echo _QXZ("<U>TOTAL AGENTS ANSWERED</U> = Total number of distinct agents who fielded calls to this in-group."); ?><BR>
+<?php echo _QXZ("<U>TOTAL CALLS ABANDONED</U> = Total calls ended in queue (dropped)."); ?><BR>
+<?php echo _QXZ("<U>TOTAL ABANDON PERCENT</U> = Percentage of calls abandoned (<U>TOTAL CALLS ABANDONED</U> / <U>TOTAL CALLS OFFERED</U>)."); ?><BR>
+<?php echo _QXZ("<U>AVG ABANDON TIME</U> = Average amount of time a caller waited in queue before abandoning the call."); ?><BR>
+<?php echo _QXZ("<U>AVG ANSWER SPEED</U> = Average amount of time a caller waited in queue before an agent answered."); ?><BR>
+<?php echo _QXZ("<U>AVG TALK TIME</U> = Average amount of time an agent remained on the line with the caller before the call was hung up - does not include caller queue time."); ?><BR>
+<?php echo _QXZ("<U>TOTAL TALK TIME</U> = Total amount of time agents remained on the line with callers before calls ended - does not include caller queue time."); ?><BR>
+<?php echo _QXZ("<U>TOTAL WRAP TIME</U> = Total amount of time agents used to 'wrap' the call - assumed to be 15 second per answered call."); ?><BR>
+<?php echo _QXZ("<U>TOTAL CALL TIME</U> = Total talk time plus total wrap time."); ?><BR>
+
+<A NAME="IVRstats">
+<BR>
+<B><?php echo _QXZ("Inbound IVR Report"); ?> -</B><?php echo _QXZ("This report shows a breakdown of IVR paths followed by callers on selected IVRs based on the date range."); ?><BR>
+<?php echo _QXZ("<U>IVR CALLS</U> = Total calls taken by or made through the selected IVRs that follow the 'CALL PATH'."); ?><BR>
+<?php echo _QXZ("<U>QUEUE CALLS</U> = Total inbound calls taken by the selected IVRs that follow the 'CALL PATH'."); ?><BR>
+<?php echo _QXZ("<U>QUEUE DROP CALLS</U> = Total inbound calls taken by the selected IVRs that follow the 'CALL PATH' that were dropped."); ?><BR>
+<?php echo _QXZ("<U>QUEUE DROP PERCENT</U> = Percentage of dropped inbound calls taken by the selected IVRs (QUEUE DROP CALLS / QUEUE CALLS)."); ?><BR>
+<?php echo _QXZ("<U>IVR AVG TIME</U> = Average amount of time spent in-call, taken by dividing IVR CALLS by the total time spent in the selected IVRs."); ?><BR>
+<?php echo _QXZ("<U>TOTAL AVG TIME</U> =  Total call time spent in the selected IVRs."); ?><BR>
+<?php echo _QXZ("<U>CALL PATH</U> = The specific call path followed on the IVR - report will display each distinct path followed by all the selected IVRs for the selected date range."); ?><BR>
+
+<A NAME="LISTS_campaign_stats">
+<BR>
+<B><?php echo _QXZ("Lists Campaign Statuses Report"); ?> -</B><?php echo _QXZ(""); ?><BR>
+<?php echo _QXZ("<U>LIST ID SUMMARY</U> = Shows each list in the campaign(s) selected by the user, the count of leads in each list, and whether the list is active or inactive."); ?><BR>
+<?php echo _QXZ("<U>STATUS FLAGS SUMMARY</U> = Shows a breakdown of the status flags for all the selected lists in all the selected campaigns combined. Status flags are set in the 'Statuses' section of a campaign or the 'System Statuses'."); ?><BR>
+<?php echo _QXZ("<U>CUSTOM STATUS CATEGORY STATS</U> = Shows a breakdown of the custom status categories for all the selected lists in all the selected campaigns combined.  Categories can be defined under the 'System Statuses' in the admin section."); ?><BR>
+<?php echo _QXZ("<U>PER LIST DETAIL STATS</U> = Shows each list in the campaign(s) selected by the user, with a breakdown of each status flag (and percentage of each flag) and status within that list."); ?><BR>
+
+<A NAME="LISTS_pass_report">
+<BR>
+<B><?php echo _QXZ("Lists Pass Report"); ?> -</B><?php echo _QXZ("This is a list inventory report, not a calling report. This report will show statistics for all of the lists in the selected campaigns"); ?><BR>
+<?php echo _QXZ("<U>FIRST LOAD DATE</U> = Date list first had leads loaded."); ?><BR>
+<?php echo _QXZ("<U>LIST ID and NAME</U> = List ID number and name of list."); ?><BR>
+<?php echo _QXZ("<U>CAMPAIGN</U> = Campaign that the list currently belongs to."); ?><BR>
+<?php echo _QXZ("<U>LEAD COUNT</U> = Number of leads in the list."); ?><BR>
+<?php echo _QXZ("<U>ACTIVE</U> = Whether or not the lead was active."); ?><BR>
+<?php echo _QXZ("<U>CONTACTS 1st-5th,LIFE PASS</U> = Leads that were 'human answered' (dispoed a status where HUMAN ANSWER is set to 'Y' on the statuses section) on or after the first-fifth call attempt, or LIFE if contacted as such at any point ever."); ?><BR>
+<?php echo _QXZ("<U>CNT RATE 1st-5th PASS</U> = Percentage of leads on the list that were 'human answered' on or after the first-fifth call attempt, or LIFE if contacted as such at any point ever."); ?><BR>
+<?php echo _QXZ("<U>SALE 1st-5th,LIFE PASS</U> = Leads that were sold to (dispoed a status where SALE is set to 'Y' on the statuses section) on or after the first-fifth call attempt, or LIFE if contacted as such at any point ever."); ?><BR>
+<?php echo _QXZ("<U>CNV RATE 1st-5th PASS</U> = Percentage of leads on the list that were sold to on or after the first-fifth call attempt, or LIFE if contacted as such at any point ever."); ?><BR>
+<?php echo _QXZ("<U>DNC 1st-5th,LIFE PASS</U> = Leads that were dispositioned 'do not call' (dispoed a status where DNC is set to 'Y' on the statuses section) on or after the first-fifth call attempt, or LIFE if contacted as such at any point ever."); ?><BR>
+<?php echo _QXZ("<U>DNC RATE 1st-5th,LIFE PASS</U> = Percentage of leads on the list that were 'do not call' on or after the first-fifth call attempt, or LIFE if contacted as such at any point ever."); ?><BR>
+<?php echo _QXZ("<U>CUST CONTACT 1st-5th,LIFE PASS</U> = Leads that were 'customer contacted' (dispoed a status where CUSTOMER CONTACT is set to 'Y' on the statuses section) on or after the first-fifth call attempt, or LIFE if contacted as such at any point ever."); ?><BR>
+<?php echo _QXZ("<U>CUCT RATE 1st-5th,LIFE PASS</U> = Percentage of leads on the list that were 'customer contacted' on or after the first-fifth call attempt, or LIFE if contacted as such at any point ever."); ?><BR>
+<?php echo _QXZ("<U>UNWORKABL 1st-5th,LIFE PASS</U> = Leads that were 'unworkable' (dispoed a status where UNWORKABLE is set to 'Y' on the statuses section) on or after the first-fifth call attempt, or LIFE if contacted as such at any point ever."); ?><BR>
+<?php echo _QXZ("<U>UNWK RATE 1st-5th,LIFE PASS</U> = Percentage of leads on the list that were 'unworkable' on or after the first-fifth call attempt, or LIFE if contacted as such at any point ever."); ?><BR>
+<?php echo _QXZ("<U>SCHEDL CB 1st-5th,LIFE PASS</U> = Leads that were 'scheduled callbacks' (dispoed a status where SCHEDULED CALLBACK is set to 'Y' on the statuses section) on or after the first-fifth call attempt, or LIFE if contacted as such at any point ever."); ?><BR>
+<?php echo _QXZ("<U>SHCB RATE 1st-5th,LIFE PASS</U> = Percentage of leads on the list that were 'scheduled callbacks' on or after the first-fifth call attempt, or LIFE if contacted as such at any point ever."); ?><BR>
+<?php echo _QXZ("<U>COMPLETED 1st-5th,LIFE PASS</U> = Leads that were 'completed' (dispoed a status where COMPLETED is set to 'Y' on the statuses section) on or after the first-fifth call attempt, or LIFE if contacted as such at any point ever."); ?><BR>
+<?php echo _QXZ("<U>COMP RATE 1st-5th,LIFE PASS</U> = Percentage of leads on the list that were 'completed' on or after the first-fifth call attempt, or LIFE if contacted as such at any point ever."); ?><BR>
+
+
+<A NAME="LISTS_stats">
+<BR>
+<B><?php echo _QXZ("Lists Statuses Report"); ?> -</B><?php echo _QXZ("This report gives a detailed breakdown of the contents of a list or lists."); ?><BR>
+<?php echo _QXZ("<U>TOTAL LIST ID SUMMARY</U> = Shows each list selected by the user, the count of leads in the list, and whether the list is active or inactive."); ?><BR>
+<?php echo _QXZ("<U>TOTAL STATUS FLAGS SUMMARY</U> = Shows a breakdown of the status flags for all the selected lists combined. Status flags are set in the 'Statuses' section of a campaign or the 'System Statuses'."); ?><BR>
+<?php echo _QXZ("<U>LIST ID SUMMARY</U> = Each list selected in the report will be listed separately after the TOTALS summaries.  The list summary gives specific information about each particular list."); ?><BR>
+<?php echo _QXZ("<U>STATUS FLAGS BREAKDOWN</U> = Same as <U>TOTAL STATUS FLAGS SUMMARY</U>, but only for one list."); ?><BR>
+<?php echo _QXZ("<U>STATUS BREAKDOWN</U> = A breakdown of each status in the individual list, along with the status description, number of leads, and percentage relative to the total leads in the list."); ?><BR>
+
+<A NAME="OUTBOUNDsummary_interval">
+<BR>
+<B><?php echo _QXZ("Outbound Summary Interval Report"); ?> -</B><?php echo _QXZ("This report gives statistical information on selected campaigns, both as a summary of all selected campaigns and also by a selected interval for each individual campaign on outbound calling activity based on a date range and call time."); ?><BR>
+<?php echo _QXZ("<U>CAMPAIGN</U> = The campaign being reported on."); ?><BR>
+<?php echo _QXZ("<U>TOTAL CALLS</U> = The number of calls taken either by a campaign or during a time interval during a campaign, depending on the report."); ?><BR>
+<?php echo _QXZ("<U>SYSTEM RELEASE CALLS</U> = The number of calls terminated by the dialer per campaign or during a time interval for a campaign, depending on the report."); ?><BR>
+<?php echo _QXZ("<U>AGENT RELEASE CALLS</U> = The number of calls terminated by the agent per campaign or during a time interval for a campaign, depending on the report."); ?><BR>
+<?php echo _QXZ("<U>SALE CALLS</U> = The number of sales made either on a campaign or during a time interval during a campaign, depending on the report."); ?><BR>
+<?php echo _QXZ("<U>DNC CALLS</U> = The number of DNC made either on a campaign or during a time interval during a campaign, depending on the report."); ?><BR>
+<?php echo _QXZ("<U>NO ANSWER PERCENT</U> = The percentage of calls dispositioned as no answer against the TOTAL CALLS."); ?><BR>
+<?php echo _QXZ("<U>DROP PERCENT</U> = The percentage of calls dispositioned as DROPs against the TOTAL CALLS."); ?><BR>
+<?php echo _QXZ("<U>AGENT LOGIN TIME (H:M:S)</U> = The total pause, wait, talk, and dispo times logged by agents for the campaign/interval."); ?><BR>
+<?php echo _QXZ("<U>AGENT PAUSE TIME (H:M:S)</U> = The total pause time logged by agents for the campaign/interval."); ?><BR>
+<?php echo _QXZ("<U>INTERVAL</U> = The interval (in 'HHii' format) being reported on under the campaign."); ?><BR>
+
+<A NAME="VDADstats">
+<BR>
+<B><?php echo _QXZ("Outbound Calling Report"); ?> -</B><?php echo _QXZ("This report gives several reports on outbound calling for campaigns and lists for a specified date range"); ?><BR>
+<?php echo _QXZ("<B>CALL HANGUP REASON STATS</B>"); ?><BR>
+<?php echo _QXZ("<U>HANGUP REASON</U> = The reason the call terminated."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = The number of calls terminated from the aforementioned reason."); ?><BR>
+
+<?php echo _QXZ("<B>CALL STATUS STATS</B>"); ?><BR>
+<?php echo _QXZ("<U>STATUS</U> = The call disposition."); ?><BR>
+<?php echo _QXZ("<U>DESCRIPTION</U> = The description of the status."); ?><BR>
+<?php echo _QXZ("<U>CATEGORY</U> = The category of the status."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = The number of calls resulting the disposition."); ?><BR>
+<?php echo _QXZ("<U>CALL TIME - TOTAL TIME</U> = The total time spent on calls resulting in the disposition."); ?><BR>
+<?php echo _QXZ("<U>CALL TIME - AVG TIME</U> = The average amount of time spent on calls resulting in the disposition."); ?><BR>
+<?php echo _QXZ("<U>CALL TIME - CALLS/HOUR</U> = The number of calls per hour where the call resulted in the disposition - this is relative to the total time of all dispositions, not just this one."); ?><BR>
+<?php echo _QXZ("<U>AGENT TIME - CALLS/HOUR</U> = The number of calls per agent hour where the call resulted in the disposition, relative to the total time agents spent in call for all dispositions."); ?><BR>
+
+<?php echo _QXZ("<B>LIST ID STATS</B>"); ?><BR>
+<?php echo _QXZ("<U>LIST</U> = The list ID number - all lists meeting the selected criteria are displayed here."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = The number of outbound calls placed from the aforementioned list."); ?><BR>
+
+<?php echo _QXZ("<B>AGENT PRESET DIALS</B>"); ?><BR>
+<?php echo _QXZ("<U>PRESET NAME</U> = The preset name logged in the user_call_log table (where applicable) for the outbound calls meeting the selected criteria."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = The number of calls logged with the aforementioned preset."); ?><BR>
+
+<?php echo _QXZ("<B>CUSTOM STATUS CATEGORY STATS</B>"); ?><BR>
+<?php echo _QXZ("<U>CATEGORY</U> = The category the custom status is currently assigned to."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = The number of calls logged with the aforementioned category."); ?><BR>
+<?php echo _QXZ("<U>DESCRIPTION</U> = The description of the category."); ?><BR>
+
+<?php echo _QXZ("<B>AGENT STATS</B>"); ?><BR>
+<?php echo _QXZ("<U>AGENT</U> = The user ID and agent involved on outbound calls meeting the selected criteria."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = The number of outbound calls handled by the aforementioned agent."); ?><BR>
+<?php echo _QXZ("<U>TIME H:M:S</U> = The total amount of time the agent spent on the outbound calls."); ?><BR>
+<?php echo _QXZ("<U>AVERAGE</U> = The average amount of time the agent spent on the outbound calls."); ?><BR>
+
+
+<A NAME="called_counts_multilist_report">
+<BR>
+<B><?php echo _QXZ("Called Counts List IDs Report"); ?> -</B><?php echo _QXZ("This report will show a called count breakdown by status for a list or group of lists, optionally within a given date range.  Lists may also be selected by campaign."); ?><BR>
+
+<A NAME="fcstats">
+<BR>
+<B><?php echo _QXZ("Fronter - Closer Report"); ?> -</B><?php echo _QXZ("This report displays fronter and closer information on an in-group for the selected date - useful in local closer campaigns so you can see the activity on internal transfers."); ?><BR>
+<?php echo _QXZ("<B>FRONTER STATS</B>"); ?><BR>
+<?php echo _QXZ("<U>AGENT</U> = The agent making the transfer (fronter)."); ?><BR>
+<?php echo _QXZ("<U>XFERS</U> = The number of transfers the agent made."); ?><BR>
+<?php echo _QXZ("<U>SALE %</U> = Percentage of transfers the agent made that resulted in a sale."); ?><BR>
+<?php echo _QXZ("<U>SALE</U> = Number of sales (dispos where sale='Y' in the 'Statuses' section) made on the agent's transfers."); ?><BR>
+<?php echo _QXZ("<U>DROP</U> = Number of transfers that were dropped (did not make it to a live closer)."); ?><BR>
+<?php echo _QXZ("<U>OTHER</U> = Number of transfers that were not dropped, but also not sold by the closer."); ?><BR>
+
+<?php echo _QXZ("<B>FRONTER STATS</B>"); ?><BR>
+<?php echo _QXZ("<U>AGENT</U> = The agent receiving the transfer (closer)."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = Total calls answered by the closer."); ?><BR>
+<?php echo _QXZ("<U>SALE</U> = Number of sales (dispos where sale='Y' in the 'Statuses' section) made on the transfers the closer fielded."); ?><BR>
+<?php echo _QXZ("<U>DROP</U> = Number of calls the closer received that were dispo'ed as dropped."); ?><BR>
+<?php echo _QXZ("<U>OTHER</U> = Calls the closer fielded that did not result in sales."); ?><BR>
+<?php echo _QXZ("<U>CONV %</U> = Percentage of transfers the closer received that resulted in sales."); ?><BR>
 
 <BR><BR><BR><BR>
 <B><FONT SIZE=3><?php echo _QXZ("Nanpa cellphone filtering"); ?></FONT></B><BR><BR>

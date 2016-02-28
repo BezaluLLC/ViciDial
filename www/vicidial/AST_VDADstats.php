@@ -1,7 +1,7 @@
 <?php 
 # AST_VDADstats.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60619-1718 - Added variable filtering to eliminate SQL injection attack threat
@@ -46,6 +46,7 @@
 # 150516-1306 - Fixed Javascript element problem, Issue #857
 # 150619-0137 - Added option to calculate 'Percent of DROP Calls taken out of Answers' differently
 # 151125-1615 - Added search archive option
+# 160227-1101 - Uniform form format
 #
 
 $startMS = microtime();
@@ -101,6 +102,10 @@ if (strlen($include_rollover)<2) {$include_rollover='NO';}
 $report_name = 'Outbound Calling Report';
 $db_source = 'M';
 $JS_text="<script language='Javascript'>\n";
+$JS_text.="function openNewWindow(url)\n";
+$JS_text.="  {\n";
+$JS_text.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+$JS_text.="  }\n";
 $JS_onload="onload = function() {\n";
 
 #############################################
@@ -476,6 +481,10 @@ if (strlen($customer_interactive_statuses)>2)
 else
 	{$customer_interactive_statuses="''";}
 
+
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
+
 ?>
 
 <!DOCTYPE HTML>
@@ -579,10 +588,11 @@ $draw_graph=1;
 
 require("admin_header.php");
 
-echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+echo "<b>"._QXZ("$report_name")."</b> $NWB#VDADstats$NWE\n";
+echo "<TABLE CELLPADDING=3 CELLSPACING=0><TR><TD>";
 
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> "._QXZ("Dates").":<BR>";
+echo "<TABLE CELLPADDING=3 CELLSPACING=0 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN=TOP> "._QXZ("Dates").":<BR>";
 echo "<INPUT TYPE=HIDDEN NAME=agent_hours VALUE=\"$agent_hours\">\n";
 echo "<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 echo "<INPUT TYPE=HIDDEN NAME=outbound_rate VALUE=\"$outbound_rate\">\n";
@@ -1234,7 +1244,7 @@ else
 			}
 		$graph_stats[$i][0]="$status - $status_name - $statcat";
 
-		$ASCII_text .= "| $status | $status_name | $statcat | $STATUScount | $STATUShours | $STATUSavg | $STATUSrate | $AGENTrate |\n";
+		$ASCII_text .= "| $status | $status_name | $statcat | $STATUScount | $STATUShours | $STATUSavg | $STATUSrate | $AGENTrate | \n";
 
 		$i++;
 		}

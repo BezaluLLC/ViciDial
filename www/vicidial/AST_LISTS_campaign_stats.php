@@ -1,7 +1,7 @@
 <?php 
 # AST_LISTS_campaign_stats.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This is a list inventory report, not a calling report. This report will show
 # statistics for all of the lists in the selected campaigns
@@ -24,6 +24,7 @@
 # 141230-1444 - Added code for on-the-fly language translations display
 # 150516-1302 - Fixed Javascript element problem, Issue #857
 # 151229-2009 - Added archive search option
+# 160227-1043 - Uniform form format
 #
 
 $startMS = microtime();
@@ -54,6 +55,10 @@ if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search
 $report_name = 'Lists Campaign Statuses Report';
 $db_source = 'M';
 $JS_text="<script language='Javascript'>\n";
+$JS_text.="function openNewWindow(url)\n";
+$JS_text.="  {\n";
+$JS_text.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+$JS_text.="  }\n";
 $JS_onload="onload = function() {\n";
 
 #############################################
@@ -411,6 +416,9 @@ else {$scheduled_callback_statuses="''";}
 if (strlen($completed_statuses)>2)			{$completed_statuses = substr("$completed_statuses", 0, -1);}
 else {$completed_statuses="''";}
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
+
 $HEADER.="<HTML>\n";
 $HEADER.="<HEAD>\n";
 $HEADER.="<STYLE type=\"text/css\">\n";
@@ -428,10 +436,11 @@ $HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marg
 
 $short_header=1;
 
-$MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$MAIN.="<b>"._QXZ("$report_name")."</b> $NWB#LISTS_campaign_stats$NWE\n";
+$MAIN.="<TABLE CELLPADDING=3 CELLSPACING=0><TR><TD>";
 
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-$MAIN.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP>";
+$MAIN.="<TABLE CELLPADDING=3 CELLSPACING=0 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN=TOP>";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 
 $MAIN.="</TD><TD VALIGN=TOP> "._QXZ("Campaigns").":<BR>";

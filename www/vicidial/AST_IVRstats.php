@@ -1,7 +1,7 @@
 <?php 
 # AST_IVRstats.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 81026-2026 - First build
@@ -33,6 +33,7 @@
 # 150516-1301 - Fixed Javascript element problem, Issue #857
 # 151125-1643 - Added search archive option
 # 151204-0544 - Added code to look for "CALL_MENU" and "XML_PULL" In-Group permissions for those list options
+# 160227-1130 - Uniform form format
 #
 
 $startMS = microtime();
@@ -413,6 +414,9 @@ while ($i < $statcats_to_print)
 	$i++;
 	}
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
+
 $HEADER.="<HTML>\n";
 $HEADER.="<HEAD>\n";
 $HEADER.="<STYLE type=\"text/css\">\n";
@@ -480,7 +484,8 @@ $HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marg
 
 #	require("admin_header.php");
 
-$MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$MAIN.="<b>"._QXZ("$report_name")."</b> $NWB#IVRstats$NWE\n";
+$MAIN.="<TABLE CELLPADDING=3 CELLSPACING=0><TR><TD>";
 
 if ($DB > 0)
 	{
@@ -492,7 +497,7 @@ if ($DB > 0)
 	}
 
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-$MAIN.="<TABLE BORDER=0><TR><TD VALIGN=TOP>\n";
+$MAIN.="<TABLE CELLPADDING=3 CELLSPACING=0 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN='TOP'>";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=type VALUE=\"$type\">\n";
 $MAIN.=_QXZ("Date Range").":<BR>\n";
@@ -502,6 +507,10 @@ $MAIN.="<INPUT TYPE=hidden NAME=end_date ID=end_date VALUE=\"$end_date\">\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date_D SIZE=11 MAXLENGTH=10 VALUE=\"$query_date_D\">";
 
 $MAIN.="<script language=\"JavaScript\">\n";
+$MAIN.="function openNewWindow(url)\n";
+$MAIN.="  {\n";
+$MAIN.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+$MAIN.="  }\n";
 $MAIN.="var o_cal = new tcal ({\n";
 $MAIN.="	// form name\n";
 $MAIN.="	'formname': 'vicidial_report',\n";

@@ -1,7 +1,7 @@
 <?php 
 # AST_CLOSERsummary_hourly.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -25,6 +25,7 @@
 # 141230-1511 - Added code for on-the-fly language translations display
 # 150516-1300 - Fixed Javascript element problem, Issue #857
 # 151125-1609 - Added search archive option
+# 160227-1151 - Uniform form format
 #
 
 $startMS = microtime();
@@ -371,6 +372,9 @@ while ($i < $times_to_print)
 	}
 
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
+
 $HEADER.="<HTML>\n";
 $HEADER.="<HEAD>\n";
 $HEADER.="<STYLE type=\"text/css\">\n";
@@ -396,7 +400,8 @@ if ($bareformat < 1)
 
 	# require("admin_header.php");
 
-	$MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+	$MAIN.="<b>"._QXZ("$report_name")."</b> $NWB#CLOSERsummary_hourly$NWE\n";
+	$MAIN.="<TABLE CELLPADDING=3 CELLSPACING=0><TR><TD>";
 
 	if ($DB > 0)
 		{
@@ -408,7 +413,7 @@ if ($bareformat < 1)
 		}
 
 	$MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-	$MAIN.="<TABLE BORDER=0><TR><TD VALIGN=TOP>\n";
+	$MAIN.="<TABLE BORDER=0 CELLPADDING=3 CELLSPACING=0 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN=TOP>\n";
 	$MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 	$MAIN.="<INPUT TYPE=HIDDEN NAME=inbound_rate VALUE=\"$inbound_rate\">\n";
 	$MAIN.="<INPUT TYPE=HIDDEN NAME=outbound_rate VALUE=\"$outbound_rate\">\n";
@@ -418,6 +423,10 @@ if ($bareformat < 1)
 	$MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
 	$MAIN.="	<script language=\"JavaScript\">\n";
+	$MAIN.="function openNewWindow(url)\n";
+	$MAIN.="  {\n";
+	$MAIN.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+	$MAIN.="  }\n";
 	$MAIN.="	var o_cal = new tcal ({\n";
 	$MAIN.="		// form name\n";
 	$MAIN.="		'formname': 'vicidial_report',\n";

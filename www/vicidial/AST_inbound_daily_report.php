@@ -1,7 +1,7 @@
 <?php 
 # AST_inbound_daily_report.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -25,6 +25,7 @@
 # 150218-1142 - Fix for download issue
 # 150516-1313 - Fixed Javascript element problem, Issue #857
 # 151125-1629 - Added search archive option
+# 160227-1142 - Uniform form format
 #
 
 $startMS = microtime();
@@ -357,6 +358,9 @@ while ($i < $times_to_print)
 	$i++;
 	}
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
+
 $HEADER.="<HTML>\n";
 $HEADER.="<HEAD>\n";
 $HEADER.="<STYLE type=\"text/css\">\n";
@@ -384,12 +388,19 @@ $short_header=1;
 
 # require("admin_header.php");
 
+$MAIN.="<b>"._QXZ("$report_name")."</b> $NWB#inbound_daily_report$NWE\n";
+$MAIN.="<TABLE CELLPADDING=3 CELLSPACING=0><TR><TD>";
+
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-$MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR valign='bottom'><TD colspan=2>";
+$MAIN.="<TABLE CELLPADDING=3 CELLSPACING=0 BGCOLOR=\"#e3e3ff\"><TR valign='top'><TD>";
 
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
 $MAIN.="<script language=\"JavaScript\">\n";
+$MAIN.="function openNewWindow(url)\n";
+$MAIN.="  {\n";
+$MAIN.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+$MAIN.="  }\n";
 $MAIN.="var o_cal = new tcal ({\n";
 $MAIN.="	// form name\n";
 $MAIN.="	'formname': 'vicidial_report',\n";
@@ -412,7 +423,7 @@ $MAIN.="});\n";
 $MAIN.="o_cal.a_tpl.yearscroll = false;\n";
 $MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $MAIN.="</script>\n";
-
+$MAIN.="</TD><TD rowspan=2>\n";
 $MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
 $MAIN.="<option $all_selected value=\"--ALL--\">--"._QXZ("ALL INGROUPS")."--</option>\n";
 
@@ -450,12 +461,13 @@ if ($IDR_calltime_available==1)
 	}
 
 $MAIN.="<INPUT TYPE=submit NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD></TR>\n";
-$MAIN.="<TR><TD align='left'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><INPUT TYPE=checkbox NAME=hourly_breakdown VALUE='checked' $hourly_breakdown>"._QXZ("Show hourly results")."<BR><INPUT TYPE=checkbox NAME=show_disposition_statuses VALUE='checked' $show_disposition_statuses>"._QXZ("Show disposition statuses")."<BR><INPUT TYPE=checkbox NAME=ignore_afterhours VALUE='checked' $ignore_afterhours>"._QXZ("Ignore after-hours calls");
+$MAIN.="<TR><TD align='left' rowspan=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><INPUT TYPE=checkbox NAME=hourly_breakdown VALUE='checked' $hourly_breakdown>"._QXZ("Show hourly results")."<BR><INPUT TYPE=checkbox NAME=show_disposition_statuses VALUE='checked' $show_disposition_statuses>"._QXZ("Show disposition statuses")."<BR><INPUT TYPE=checkbox NAME=ignore_afterhours VALUE='checked' $ignore_afterhours>"._QXZ("Ignore after-hours calls");
 if ($archives_available=="Y") 
 	{
 	$MAIN.="<BR><input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."\n";
 	}
-$MAIN.="</FONT></TD><TD align='right'><a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date$selected_group_URLstr&shift=$shift&hourly_breakdown=$hourly_breakdown&show_disposition_statuses=$show_disposition_statuses&SUBMIT=$SUBMIT&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a> | <a href=\"./admin.php?ADD=3111&group_id=$group[0]\">"._QXZ("MODIFY")."</a> | <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a></TD></TR>\n";
+$MAIN.="</FONT></TD></TR><TR><TD align='right'><a href=\"$PHP_SELF?DB=$DB&query_date=$query_date&end_date=$end_date$selected_group_URLstr&shift=$shift&hourly_breakdown=$hourly_breakdown&show_disposition_statuses=$show_disposition_statuses&SUBMIT=$SUBMIT&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a> | <a href=\"./admin.php?ADD=3111&group_id=$group[0]\">"._QXZ("MODIFY")."</a> | <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a></TD></TR>\n";
+$MAIN.="</TD></TR></TABLE>\n";
 $MAIN.="<TR><TD colspan=2>";
 $MAIN.="<PRE><FONT SIZE=2>\n\n";
 

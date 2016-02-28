@@ -1,7 +1,7 @@
 <?php 
 # fcstats.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -31,6 +31,8 @@
 # 141230-1345 - Added code for on-the-fly language translations display
 # 150516-1317 - Fixed Javascript element problem, Issue #857
 # 151125-1642 - Added search archive option
+# 160211-2249 - Overhauled report calculations and labeling to make the report more accurate and "universal"
+# 160227-1131 - Uniform form format
 #
 
 $startMS = microtime();
@@ -66,6 +68,10 @@ if (strlen($shift)<2) {$shift='ALL';}
 $report_name = 'Fronter - Closer Report';
 $db_source = 'M';
 $JS_text="<script language='Javascript'>\n";
+$JS_text.="function openNewWindow(url)\n";
+$JS_text.="  {\n";
+$JS_text.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+$JS_text.="  }\n";
 $JS_onload="onload = function() {\n";
 
 #############################################
@@ -296,6 +302,9 @@ while ($i < $groups_to_print)
 	$i++;
 	}
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
+
 $HTML_head.="<HTML>\n";
 $HTML_head.="<HEAD>\n";
 $HTML_head.="<STYLE type=\"text/css\">\n";
@@ -311,19 +320,6 @@ $HTML_head.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n"
 $HTML_head.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 $HTML_head.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
-#if (strlen($group) > 0)
-#	{
-#	if (preg_match("/\|$group\|/i",$groups_string))
-#		{
-#	#	$HTML_head.="<!-- group set: $group  $groups_string -->\n";
-#		}
-#	else
-#		{
-#	#	$HTML_head.="<!-- group not found: $group  $groups_string -->\n";
-#		$group='';
-#		}
-#	}
-
 $HTML_head.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HTML_head.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 
@@ -331,7 +327,8 @@ $HTML_head.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE m
 
 #	require("admin_header.php");
 
-$HTML_text.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$HTML_text.="<b>"._QXZ("$report_name")."</b> $NWB#fcstats$NWE\n";
+$HTML_text.="<TABLE CELLPADDING=3 CELLSPACING=0 BGCOLOR=\"#e3e3ff\"><TR><TD>";
 
 $HTML_text.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 $HTML_text.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
@@ -378,6 +375,7 @@ $HTML_text.="<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 $HTML_text.="<INPUT TYPE=submit NAME=SUBMIT VALUE=SUBMIT>\n";
 $HTML_text.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;  <a href=\"$PHP_SELF?query_date=$query_date&group=$group&shift=$shift&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a> | <a href=\"./admin.php?ADD=3111&group_id=$group\">"._QXZ("MODIFY")."</a> | <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a><BR/></FONT>\n";
 $HTML_text.="</FORM>\n\n";
+$HTML_text.="</TD></TR></TABLE>\n";
 
 $HTML_text.="<PRE><FONT SIZE=2>\n\n";
 
@@ -433,14 +431,6 @@ $stmt="select count(*) from ".$vicidial_closer_log_table." where call_date >= '$
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 $row=mysqli_fetch_row($rslt);
-$A1_points = ($row[0] * 1);
-$A1_points =	sprintf("%10s", $A1_points);
-$A1_tally =	sprintf("%10s", $row[0]);
-
-$TOT_tally = ($A1_tally + $A2_tally + $A3_tally + $A4_tally);
-$TOT_points = ($A1_points + $A2_points + $A3_points + $A4_points);
-$TOT_tally =	sprintf("%10s", $TOT_tally);
-$TOT_points =	sprintf("%10s", $TOT_points);
 
 $HTML_text.=_QXZ("STATUS",8)." "._QXZ("CUSTOMERS")."\n";
 $HTML_text.=_QXZ("SALES").":   $A1_tally\n";
@@ -461,15 +451,6 @@ $HTML_text.="\n";
 $TOTagents=0;
 $TOTcalls=0;
 $TOTsales=0;
-$totA1=0;
-$totA2=0;
-$totA3=0;
-$totA4=0;
-$totA5=0;
-$totA6=0;
-$totA7=0;
-$totA8=0;
-$totA9=0;
 $totDROP=0;
 $totOTHER=0;
 
@@ -477,15 +458,15 @@ $CSV_fronter_header="\""._QXZ("TOTALS FOR")." $query_date_BEGIN "._QXZ("to")." $
 $CSV_fronter_header.="\""._QXZ("STATUS   CUSTOMERS")."\"\n";
 $CSV_fronter_header.="\""._QXZ("SALES").":   $A1_tally\"\n\n";
 $CSV_fronter_header.="\""._QXZ("FRONTER STATS")."\"\n";
-$CSV_fronter_header.="\""._QXZ("AGENT")."\",\""._QXZ("SUCCESS")."\",\""._QXZ("XFERS")."\",\""._QXZ("SUCCESS")."%\",\""._QXZ("SALE")."\",\""._QXZ("DROP")."\",\""._QXZ("OTHER")."\"\n";
+$CSV_fronter_header.="\""._QXZ("AGENT")."\",\""._QXZ("XFERS")."\",\""._QXZ("SALE")."%\",\""._QXZ("SALE")."\",\""._QXZ("DROP")."\",\""._QXZ("OTHER")."\"\n";
 $CSV_fronter_lines="";
 $CSV_fronter_footer="";
 
 $ASCII_text="\n";
 $ASCII_text.="---------- "._QXZ("FRONTER STATS")."\n";
-$ASCII_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
-$ASCII_text.="| "._QXZ("AGENT",24)." |"._QXZ("SUCCESS",7)."| "._QXZ("XFERS",6)." |"._QXZ("SUCCESS",7)."%| "._QXZ("SALE",4)." | "._QXZ("DROP",4)." |"._QXZ("OTHER",5)." |\n";
-$ASCII_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
+$ASCII_text.="+--------------------------+--------+--------+------+------+------+\n";
+$ASCII_text.="| "._QXZ("AGENT",24)." | "._QXZ("XFERS",6)." |"._QXZ("SALE",7)."%| "._QXZ("SALE",4)." | "._QXZ("DROP",4)." |"._QXZ("OTHER",5)." |\n";
+$ASCII_text.="+--------------------------+--------+--------+------+------+------+\n";
 
 ######## GRAPHING #########
 $graph_stats=array();
@@ -496,19 +477,17 @@ $max_sales=1;
 $max_drops=1;
 $max_other=1;
 $GRAPH="<a name='frontergraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-$GRAPH.="<tr><th width='16%' class='grey_graph_cell' id='frontergraph1'><a href='#' onClick=\"DrawFronterGraph('SUCCESS', '1'); return false;\">"._QXZ("SUCCESS")."</a></th><th width='17%' class='grey_graph_cell' id='frontergraph2'><a href='#' onClick=\"DrawFronterGraph('XFERS', '2'); return false;\">"._QXZ("XFERS")."</a></th><th width='17%' class='grey_graph_cell' id='frontergraph3'><a href='#' onClick=\"DrawFronterGraph('SUCCESSPCT', '3'); return false;\">"._QXZ("SUCCESS")." %</a></th><th width='16%' class='grey_graph_cell' id='frontergraph4'><a href='#' onClick=\"DrawFronterGraph('SALE', '4'); return false;\">"._QXZ("SALE")."</a></th><th width='17%' class='grey_graph_cell' id='frontergraph5'><a href='#' onClick=\"DrawFronterGraph('DROP', '5'); return false;\">"._QXZ("DROP")."</a></th><th width='17%' class='grey_graph_cell' id='frontergraph6'><a href='#' onClick=\"DrawFronterGraph('OTHER', '6'); return false;\">"._QXZ("OTHER")."</a></th></tr>";
-$GRAPH.="<tr><td colspan='6' class='graph_span_cell'><span id='fronter_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
+$GRAPH.="<tr><th width='20%' class='grey_graph_cell' id='frontergraph1'><a href='#' onClick=\"DrawFronterGraph('XFERS', '1'); return false;\">"._QXZ("XFERS")."</a></th><th width='20%' class='grey_graph_cell' id='frontergraph2'><a href='#' onClick=\"DrawFronterGraph('SALEPCT', '2'); return false;\">"._QXZ("SALE")." %</a></th><th width='20%' class='grey_graph_cell' id='frontergraph3'><a href='#' onClick=\"DrawFronterGraph('SALE', '3'); return false;\">"._QXZ("SALE")."</a></th><th width='20%' class='grey_graph_cell' id='frontergraph4'><a href='#' onClick=\"DrawFronterGraph('DROP', '4'); return false;\">"._QXZ("DROP")."</a></th><th width='20%' class='grey_graph_cell' id='frontergraph5'><a href='#' onClick=\"DrawFronterGraph('OTHER', '5'); return false;\">"._QXZ("OTHER")."</a></th></tr>";
+$GRAPH.="<tr><td colspan='5' class='graph_span_cell'><span id='fronter_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
 $graph_header="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>"._QXZ("FRONTER STATS")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("AGENT")."</th>";
-$SUCCESS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SUCCESS")." </th></tr>";
 $XFERS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("XFERS")."</th></tr>";
-$SUCCESSPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SUCCESS")." %</th></tr>";
+$SALEPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALE")." %</th></tr>";
 $SALE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALE")."</th></tr>";
 $DROP_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DROP")."</th></tr>";
 $OTHER_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("OTHER")."</th></tr>";
 ###########################
 
-#$stmt="select vicidial_xfer_log.user,full_name,count(*) from vicidial_xfer_log,vicidial_users where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysqli_real_escape_string($link, $group) . "' and vicidial_xfer_log.user is not null and vicidial_xfer_log.user=vicidial_users.user group by vicidial_xfer_log.user;";
-$stmt="select user,count(distinct lead_id) from ".$vicidial_xfer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysqli_real_escape_string($link, $group) . "' and user is not null group by user;";
+$stmt="select user,count(*) from ".$vicidial_xfer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysqli_real_escape_string($link, $group) . "' and user is not null group by user;";
 if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$ASCII_text.="$stmt\n";}
@@ -551,8 +530,8 @@ while ($i < $users_to_print)
 	else
 		{$full_name[$i] = '               ';}
 
-	$A1=0; $A2=0; $A3=0; $A4=0; $A5=0; $A6=0; $A7=0; $A8=0; $A9=0; $DROP=0; $OTHER=0; $sales=0; 
-	$stmt="select vc.status,count(distinct vc.lead_id) from ".$vicidial_xfer_log_table." vx, ".$vicidial_closer_log_table." vc where vx.call_date >= '$query_date_BEGIN' and vx.call_date <= '$query_date_END' and vc.call_date >= '$query_date_BEGIN' and vc.call_date <= '$query_date_END' and  vc.campaign_id='" . mysqli_real_escape_string($link, $group) . "' and vx.campaign_id='" . mysqli_real_escape_string($link, $group) . "' and vx.user='$userRAW[$i]' and vc.lead_id=vx.lead_id and vc.xfercallid=vx.xfercallid group by vc.status;";
+	$DROP=0; $OTHER=0; $sales=0; 
+	$stmt="select vc.status,count(*) from ".$vicidial_xfer_log_table." vx, ".$vicidial_closer_log_table." vc where vx.call_date >= '$query_date_BEGIN' and vx.call_date <= '$query_date_END' and vc.call_date >= '$query_date_BEGIN' and vc.call_date <= '$query_date_END' and  vc.campaign_id='" . mysqli_real_escape_string($link, $group) . "' and vx.campaign_id='" . mysqli_real_escape_string($link, $group) . "' and vx.user='$userRAW[$i]' and vc.lead_id=vx.lead_id and vc.xfercallid=vx.xfercallid group by vc.status;";
 	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$ASCII_text.="$stmt\n";}
@@ -563,28 +542,11 @@ while ($i < $users_to_print)
 		$row=mysqli_fetch_row($rslt);
 		$recL=0;
 		if ( (preg_match("/\|$row[0]\|/", $sale_dispo_str)) and ($recL < 1) ) {$A1=$row[1]; $recL++; $sales=($sales + $row[1]);}
-	#	if ( ($row[0]=='A2') and ($recL < 1) ) {$A2=$row[1]; $recL++; $sales=($sales + $row[1]);}
-	#	if ( ($row[0]=='A3') and ($recL < 1) ) {$A3=$row[1]; $recL++; $sales=($sales + $row[1]);}
-	#	if ( ($row[0]=='A4') and ($recL < 1) ) {$A4=$row[1]; $recL++; $sales=($sales + $row[1]);}
-	#	if ( ($row[0]=='A5') and ($recL < 1) ) {$A5=$row[1]; $recL++;}
-	#	if ( ($row[0]=='A6') and ($recL < 1) ) {$A6=$row[1]; $recL++;}
-	#	if ( ($row[0]=='A7') and ($recL < 1) ) {$A7=$row[1]; $recL++;}
-	#	if ( ($row[0]=='A8') and ($recL < 1) ) {$A8=$row[1]; $recL++;}
-	#	if ( ($row[0]=='A9') and ($recL < 1) ) {$A9=$row[1]; $recL++;}
-		if ( ($row[0]=='DROP') and ($recL < 1) ) {$DROP=$row[1]; $recL++;}
+		if ( ($row[0]=='DROP' || $row[0]=='TIMEOT') and ($recL < 1) ) {$DROP=($DROP+$row[1]); $recL++;}
 		if ($recL < 1) {$OTHER=($row[1] + $OTHER); $recL++;}
 		$j++;
 		}
 
-	$totA1 = ($totA1 + $A1);
-	$totA2 = ($totA2 + $A2);
-	$totA3 = ($totA3 + $A3);
-	$totA4 = ($totA4 + $A4);
-	$totA5 = ($totA5 + $A5);
-	$totA6 = ($totA6 + $A6);
-	$totA7 = ($totA7 + $A7);
-	$totA8 = ($totA8 + $A8);
-	$totA9 = ($totA9 + $A9);
 	$totDROP = ($totDROP + $DROP);
 	$totOTHER = ($totOTHER + $OTHER);
 	$TOTsales = ($TOTsales + $sales);
@@ -596,33 +558,22 @@ while ($i < $users_to_print)
 	if ($sales>$max_success) {$max_success=$sales;}
 	if ($USERcalls[$i]>$max_xfers) {$max_xfers=$USERcalls[$i];}
 	if ($Spct>$max_success_pct) {$max_success_pct=$Spct;}
-	if ($A1>$max_sales) {$max_sales=$A1;}
 	if ($DROP>$max_drops) {$max_drops=$DROP;}
 	if ($OTHER>$max_other) {$max_other=$OTHER;}
 	$graph_stats[$i][0]="$user[$i] - $full_name[$i]";
-	$graph_stats[$i][1]=$sales;
-	$graph_stats[$i][2]=$USERcalls[$i];
-	$graph_stats[$i][3]=$Spct;
-	$graph_stats[$i][4]=$A1;
-	$graph_stats[$i][5]=$DROP;
-	$graph_stats[$i][6]=$OTHER;
+	$graph_stats[$i][1]=$USERcalls[$i];
+	$graph_stats[$i][2]=$Spct;
+	$graph_stats[$i][3]=$sales;
+	$graph_stats[$i][4]=$DROP;
+	$graph_stats[$i][5]=$OTHER;
 
-	$A1 =	sprintf("%4s", $A1);
-	$A2 =	sprintf("%4s", $A2);
-	$A3 =	sprintf("%4s", $A3);
-	$A4 =	sprintf("%4s", $A4);
-	$A5 =	sprintf("%4s", $A5);
-	$A6 =	sprintf("%4s", $A6);
-	$A7 =	sprintf("%4s", $A7);
-	$A8 =	sprintf("%4s", $A8);
-	$A9 =	sprintf("%4s", $A9);
 	$DROP =	sprintf("%4s", $DROP);
 	$OTHER =	sprintf("%4s", $OTHER);
-	$sales =	sprintf("%5s", $sales);
+	$sales =	sprintf("%4s", $sales);
 	$Spct =	sprintf("%6s", $Spct);
 
-	$ASCII_text.="| $user[$i] - $full_name[$i] | $sales | $USERcalls[$i] | $Spct%| $A1 | $DROP | $OTHER |\n";
-	$CSV_fronter_lines.="\"$user[$i] - $full_name[$i]\",\"$sales\",\"$USERcalls[$i]\",\"$Spct%\",\"$A1\",\"$DROP\",\"$OTHER\"\n";
+	$ASCII_text.="| $user[$i] - $full_name[$i] | $USERcalls[$i] | $Spct%| $sales | $DROP | $OTHER |\n";
+	$CSV_fronter_lines.="\"$user[$i] - $full_name[$i]\",\"$USERcalls[$i]\",\"$Spct%\",\"$sales\",\"$DROP\",\"$OTHER\"\n";
 
 	$i++;
 	}
@@ -636,15 +587,6 @@ $totSpct =	sprintf("%6s", $totSpct);
 $TOTagents =	sprintf("%6s", $i);
 $TOTcalls =		sprintf("%6s", $TOTcalls);
 $TOTsales =		sprintf("%5s", $TOTsales);
-$totA1 =		sprintf("%5s", $totA1);
-$totA2 =		sprintf("%5s", $totA2);
-$totA3 =		sprintf("%5s", $totA3);
-$totA4 =		sprintf("%5s", $totA4);
-$totA5 =		sprintf("%5s", $totA5);
-$totA6 =		sprintf("%5s", $totA6);
-$totA7 =		sprintf("%5s", $totA7);
-$totA8 =		sprintf("%5s", $totA8);
-$totA9 =		sprintf("%5s", $totA9);
 $totDROP =		sprintf("%5s", $totDROP);
 $totOTHER =		sprintf("%5s", $totOTHER);
 
@@ -666,40 +608,37 @@ $AVGwait_MS = "$AVGwait_M_int:$AVGwait_S";
 $AVGwait =		sprintf("%6s", $AVGwait_MS);
 
 
-$ASCII_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
-$ASCII_text.="| "._QXZ("TOTAL FRONTERS",14).": $TOTagents   | $TOTsales | $TOTcalls | $totSpct%|$totA1 |$totDROP |$totOTHER |\n";
-$ASCII_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
-$ASCII_text.="| "._QXZ("Average time in Queue for customers",60,"r").":    $AVGwait |\n";
-$ASCII_text.="+--------------------------+-------+--------+--------+------+------+------+\n";
+$ASCII_text.="+--------------------------+--------+--------+------+------+------+\n";
+$ASCII_text.="| "._QXZ("TOTAL FRONTERS",14).": $TOTagents   | $TOTcalls | $totSpct%|$TOTsales |$totDROP |$totOTHER |\n";
+$ASCII_text.="+--------------------------+--------+--------+------+------+------+\n";
+$ASCII_text.="| "._QXZ("Average time in Queue for customers",52,"r").":    $AVGwait |\n";
+$ASCII_text.="+--------------------------+--------+--------+------+------+------+\n";
 
-$CSV_fronter_footer.="\""._QXZ("TOTAL FRONTERS").": $TOTagents\",\"$TOTsales\",\"$TOTcalls\",\"$totSpct%\",\"$totA1\",\"$totDROP\",\"$totOTHER\"\n";
+$CSV_fronter_footer.="\""._QXZ("TOTAL FRONTERS").": $TOTagents\",\"$TOTcalls\",\"$totSpct%\",\"$TOTsales\",\"$totDROP\",\"$totOTHER\"\n";
 $CSV_fronter_footer.="\""._QXZ("Average time in Queue for customers").":    $AVGwait\"\n\n\n";
 
 	for ($d=0; $d<count($graph_stats); $d++) {
 		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-		$SUCCESS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_success))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-		$XFERS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_xfers))."' height='16' />".$graph_stats[$d][2]."</td></tr>";
-		$SUCCESSPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_success_pct))."' height='16' />".$graph_stats[$d][3]."</td></tr>";
-		$SALE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][4], $max_sales))."' height='16' />".$graph_stats[$d][4]."</td></tr>";
-		$DROP_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][5], $max_drops))."' height='16' />".$graph_stats[$d][5]."</td></tr>";
+		$XFERS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_xfers))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+		$SALEPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_success_pct))."' height='16' />".$graph_stats[$d][2]."</td></tr>";
+		$SALE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_sales))."' height='16' />".$graph_stats[$d][3]."</td></tr>";
+		$DROP_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][4], $max_drops))."' height='16' />".$graph_stats[$d][4]."</td></tr>";
 		$OTHER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][5] ,$max_other))."' height='16' />".$graph_stats[$d][5]."</td></tr>";
 	}
-	$SUCCESS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTsales)."</th></tr></table>";
 	$XFERS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTcalls)."</th></tr></table>";
-	$SUCCESSPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($totSpct)."%</th></tr></table>";
-	$SALE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($totA1)."</th></tr></table>";
+	$SALEPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($totSpct)."%</th></tr></table>";
+	$SALE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTsales)."</th></tr></table>";
 	$DROP_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($totDROP)."</th></tr></table>";
 	$OTHER_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($totOTHER)."</th></tr></table>";
-	$JS_onload.="\tDrawFronterGraph('SUCCESS', '1');\n"; 
+	$JS_onload.="\tDrawFronterGraph('XFERS', '1');\n"; 
 	$JS_text.="function DrawFronterGraph(graph, th_id) {\n";
-	$JS_text.="	var SUCCESS_graph=\"$SUCCESS_graph\";\n";
 	$JS_text.="	var XFERS_graph=\"$XFERS_graph\";\n";
-	$JS_text.="	var SUCCESSPCT_graph=\"$SUCCESSPCT_graph\";\n";
+	$JS_text.="	var SALEPCT_graph=\"$SALEPCT_graph\";\n";
 	$JS_text.="	var SALE_graph=\"$SALE_graph\";\n";
 	$JS_text.="	var DROP_graph=\"$DROP_graph\";\n";
 	$JS_text.="	var OTHER_graph=\"$OTHER_graph\";\n";
 	$JS_text.="\n";
-	$JS_text.="	for (var i=1; i<=6; i++) {\n";
+	$JS_text.="	for (var i=1; i<=5; i++) {\n";
 	$JS_text.="		var cellID=\"frontergraph\"+i;\n";
 	$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
 	$JS_text.="	}\n";
@@ -712,18 +651,9 @@ $CSV_fronter_footer.="\""._QXZ("Average time in Queue for customers").":    $AVG
 
 ##############################
 #########  CLOSER STATS
-
+$graph_stats=array();
 $TOTagents=0;
 $TOTcalls=0;
-$totA1=0;
-$totA2=0;
-$totA3=0;
-$totA4=0;
-$totA5=0;
-$totA6=0;
-$totA7=0;
-$totA8=0;
-$totA9=0;
 $totDROP=0;
 $totOTHER=0;
 $TOTsales=0;
@@ -734,12 +664,12 @@ $CSV_closer_footer="";
 
 $ASCII_text.="\n";
 $ASCII_text.="---------- "._QXZ("CLOSER STATS")."\n";
-$ASCII_text.="+--------------------------+--------+------+------+------+------+-------+\n";
-$ASCII_text.="| "._QXZ("AGENT",24)." | "._QXZ("CALLS",6)." | "._QXZ("SALE",4)." | "._QXZ("DROP",4)." |"._QXZ("OTHER",5)." | "._QXZ("SALE",4)." | "._QXZ("CONV",4)." %|\n";
-$ASCII_text.="+--------------------------+--------+------+------+------+------+-------+\n";
+$ASCII_text.="+--------------------------+--------+------+------+------+-------+\n";
+$ASCII_text.="| "._QXZ("AGENT",24)." | "._QXZ("CALLS",6)." | "._QXZ("SALE",4)." | "._QXZ("DROP",4)." |"._QXZ("OTHER",5)." | "._QXZ("CONV",4)." %|\n";
+$ASCII_text.="+--------------------------+--------+------+------+------+-------+\n";
 
 $CSV_closer_header="\""._QXZ("CLOSER STATS")."\"\n";
-$CSV_closer_header.="\""._QXZ("AGENT")."\",\""._QXZ("CALLS")."\",\""._QXZ("SALE")."\",\""._QXZ("DROP")."\",\""._QXZ("OTHER")."\",\""._QXZ("SALE")."\",\""._QXZ("CONV")." %\"\n";
+$CSV_closer_header.="\""._QXZ("AGENT")."\",\""._QXZ("CALLS")."\",\""._QXZ("SALE")."\",\""._QXZ("DROP")."\",\""._QXZ("OTHER")."\",\""._QXZ("CONV")." %\"\n";
 
 ######## GRAPHING #########
 $max_calls=1;
@@ -749,14 +679,13 @@ $max_other=1;
 $max_sales2=1;
 $max_conv_pct=1;
 $GRAPH="<BR><BR><a name='closergraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-$GRAPH.="<tr><th width='16%' class='grey_graph_cell' id='closergraph1'><a href='#' onClick=\"DrawCloserGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th width='17%' class='grey_graph_cell' id='closergraph2'><a href='#' onClick=\"DrawCloserGraph('SALES', '2'); return false;\">"._QXZ("SALE")."S</a></th><th width='17%' class='grey_graph_cell' id='closergraph3'><a href='#' onClick=\"DrawCloserGraph('DROP', '3'); return false;\">"._QXZ("DROP")."</a></th><th width='16%' class='grey_graph_cell' id='closergraph4'><a href='#' onClick=\"DrawCloserGraph('OTHER', '4'); return false;\">"._QXZ("OTHER")."</a></th><th width='17%' class='grey_graph_cell' id='closergraph5'><a href='#' onClick=\"DrawCloserGraph('SALES2', '5'); return false;\">"._QXZ("SALES")."</a></th><th width='17%' class='grey_graph_cell' id='closergraph6'><a href='#' onClick=\"DrawCloserGraph('CONVPCT', '6'); return false;\">"._QXZ("CONV")." %</a></th></tr>";
-$GRAPH.="<tr><td colspan='6' class='graph_span_cell'><span id='closer_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
+$GRAPH.="<tr><th width='20%' class='grey_graph_cell' id='closergraph1'><a href='#' onClick=\"DrawCloserGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th width='20%' class='grey_graph_cell' id='closergraph2'><a href='#' onClick=\"DrawCloserGraph('SALES', '2'); return false;\">"._QXZ("SALE")."S</a></th><th width='20%' class='grey_graph_cell' id='closergraph3'><a href='#' onClick=\"DrawCloserGraph('DROP', '3'); return false;\">"._QXZ("DROP")."</a></th><th width='20%' class='grey_graph_cell' id='closergraph4'><a href='#' onClick=\"DrawCloserGraph('OTHER', '4'); return false;\">"._QXZ("OTHER")."</a></th><th width='20%' class='grey_graph_cell' id='closergraph5'><a href='#' onClick=\"DrawCloserGraph('CONVPCT', '5'); return false;\">"._QXZ("CONV")." %</a></th></tr>";
+$GRAPH.="<tr><td colspan='5' class='graph_span_cell'><span id='closer_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
 $graph_header="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>"._QXZ("CLOSER STATS")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("AGENT")."</th>";
 $CALLS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS")." </th></tr>";
 $SALES_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES")."</th></tr>";
 $DROP_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DROP")."</th></tr>";
 $OTHER_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("OTHER")."</th></tr>";
-$SALES2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES")."</th></tr>";
 $CONVPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONV")." %</th></tr>";
 ###########################
 
@@ -802,7 +731,7 @@ while ($i < $users_to_print)
 	else
 		{$full_name[$i] = '               ';}
 
-	$A1=0; $A2=0; $A3=0; $A4=0; $A5=0; $A6=0; $A7=0; $A8=0; $A9=0; $DROP=0; $OTHER=0; $sales=0; $uTOP=0; $uBOT=0; $points=0;
+	$DROP=0; $OTHER=0; $sales=0; $uTOP=0; $uBOT=0; $points=0;
 	$stmt="select status,count(*) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysqli_real_escape_string($link, $group) . "' and user='$userRAW[$i]' group by status;";
 	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -819,50 +748,13 @@ while ($i < $users_to_print)
 			$sales=($sales + $row[1]);
 			$points = ($points + ($row[1] * 1) );
 			}
-		/*
-		if ( ($row[0]=='A2') and ($recL < 1) ) 
-			{
-			$A2=$row[1]; $recL++; 
-			$sales=($sales + $row[1]); 
-			$uTOP=($uTOP + $row[1]);
-			$points = ($points + ($row[1] * 2) );
-			}
-		if ( ($row[0]=='A3') and ($recL < 1) ) 
-			{
-			$A3=$row[1]; $recL++; 
-			$sales=($sales + $row[1]); 
-			$uBOT=($uBOT + $row[1]);
-			$points = ($points + ($row[1] * 2) );
-			}
-		if ( ($row[0]=='A4') and ($recL < 1) ) 
-			{
-			$A4=$row[1]; $recL++; 
-			$sales=($sales + $row[1]); 
-			$uTOP=($uTOP + $row[1]); 
-			$uBOT=($uBOT + $row[1]);
-			$points = ($points + ($row[1] * 3) );
-			}
-		*/
-#		if ( ($row[0]=='A5') and ($recL < 1) ) {$A5=$row[1]; $recL++;}
-#		if ( ($row[0]=='A6') and ($recL < 1) ) {$A6=$row[1]; $recL++;}
-#		if ( ($row[0]=='A7') and ($recL < 1) ) {$A7=$row[1]; $recL++;}
-#		if ( ($row[0]=='A8') and ($recL < 1) ) {$A8=$row[1]; $recL++;}
-#		if ( ($row[0]=='A9') and ($recL < 1) ) {$A9=$row[1]; $recL++;}
 		if ( ($row[0]=='DROP') and ($recL < 1) ) {$DROP=$row[1]; $recL++;}
 		if ($recL < 1) {$OTHER=($row[1] + $OTHER); $recL++;}
 		
 		$j++;
 		}
 
-	$totA1 = ($totA1 + $A1);	$TOTsales = ($TOTsales + $A1);
-	$totA2 = ($totA2 + $A2);	$TOTsales = ($TOTsales + $A2);	$totTOP = ($totTOP + $A2);
-	$totA3 = ($totA3 + $A3);	$TOTsales = ($TOTsales + $A3);	$totBOT = ($totBOT + $A3);
-	$totA4 = ($totA4 + $A4);	$TOTsales = ($TOTsales + $A4);	$totTOP = ($totTOP + $A4);	$totBOT = ($totBOT + $A4);
-	$totA5 = ($totA5 + $A5);
-	$totA6 = ($totA6 + $A6);
-	$totA7 = ($totA7 + $A7);
-	$totA8 = ($totA8 + $A8);
-	$totA9 = ($totA9 + $A9);
+	$TOTsales = ($TOTsales + $sales);
 	$totDROP = ($totDROP + $DROP);
 	$totOTHER = ($totOTHER + $OTHER);
 	$totPOINTS = ($totPOINTS + $points);
@@ -895,27 +787,17 @@ while ($i < $users_to_print)
 	if ($Cpct>$max_conv_pct) {$max_conv_pct=$Cpct;}
 	$graph_stats[$i][0]="$user[$i] - $full_name[$i]";
 	$graph_stats[$i][1]=$USERcalls[$i];
-	$graph_stats[$i][2]=$A1;
+	$graph_stats[$i][2]=$sales;
 	$graph_stats[$i][3]=$DROP;
 	$graph_stats[$i][4]=$OTHER;
-	$graph_stats[$i][5]=$sales;
-	$graph_stats[$i][6]=$Cpct;
+	$graph_stats[$i][5]=$Cpct;
 
-	$A1 =	sprintf("%4s", $A1);
-	$A2 =	sprintf("%4s", $A2);
-	$A3 =	sprintf("%4s", $A3);
-	$A4 =	sprintf("%4s", $A4);
-	$A5 =	sprintf("%4s", $A5);
-	$A6 =	sprintf("%4s", $A6);
-	$A7 =	sprintf("%4s", $A7);
-	$A8 =	sprintf("%4s", $A8);
-	$A9 =	sprintf("%4s", $A9);
 	$DROP =	sprintf("%4s", $DROP);
 	$OTHER =	sprintf("%4s", $OTHER);
 	$sales =	sprintf("%4s", $sales);
 
-	$ASCII_text.="| $user[$i] - $full_name[$i] | $USERcalls[$i] | $A1 | $DROP | $OTHER | $sales |$Cpct%|\n";
-	$CSV_closer_lines.="\"$user[$i] - $full_name[$i]\",\"$USERcalls[$i]\",\"$A1\",\"$DROP\",\"$OTHER\",\"$sales\",\"$Cpct%\"\n";
+	$ASCII_text.="| $user[$i] - $full_name[$i] | $USERcalls[$i] | $sales | $DROP | $OTHER |$Cpct%|\n";
+	$CSV_closer_lines.="\"$user[$i] - $full_name[$i]\",\"$USERcalls[$i]\",\"$sales\",\"$DROP\",\"$OTHER\",\"$Cpct%\"\n";
 
 	$i++;
 	}
@@ -943,22 +825,13 @@ $BOT =	sprintf("%3s", $BOT);
 
 $TOTagents =	sprintf("%6s", $i);
 $TOTcalls =		sprintf("%6s", $TOTcalls);
-$totA1 =		sprintf("%5s", $totA1);
-$totA2 =		sprintf("%5s", $totA2);
-$totA3 =		sprintf("%5s", $totA3);
-$totA4 =		sprintf("%5s", $totA4);
-$totA5 =		sprintf("%5s", $totA5);
-$totA6 =		sprintf("%5s", $totA6);
-$totA7 =		sprintf("%5s", $totA7);
-$totA8 =		sprintf("%5s", $totA8);
-$totA9 =		sprintf("%5s", $totA9);
 $totDROP =		sprintf("%5s", $totDROP);
 $totOTHER =		sprintf("%5s", $totOTHER);
 $TOTsales =		sprintf("%5s", $TOTsales);
 
-$ASCII_text.="+--------------------------+--------+------+------+------+------+-------+\n";
-$ASCII_text.="| "._QXZ("TOTAL CLOSERS",13).":  $TOTagents   | $TOTcalls |$totA1 |$totDROP |$totOTHER |$TOTsales |$totCpct%|\n";
-$ASCII_text.="+--------------------------+--------+------+------+------+------+-------+\n";
+$ASCII_text.="+--------------------------+--------+------+------+------+-------+\n";
+$ASCII_text.="| "._QXZ("TOTAL CLOSERS",13).":  $TOTagents   | $TOTcalls |$TOTsales |$totDROP |$totOTHER |$totCpct%|\n";
+$ASCII_text.="+--------------------------+--------+------+------+------+-------+\n";
 
 $CSV_closer_footer.="\""._QXZ("TOTAL CLOSERS").":  $TOTagents\",\"$TOTcalls\",\"$totA1\",\"$totDROP\",\"$totOTHER\",\"$TOTsales\",\"$totCpct%\"\n";
 
@@ -968,14 +841,12 @@ $CSV_closer_footer.="\""._QXZ("TOTAL CLOSERS").":  $TOTagents\",\"$TOTcalls\",\"
 		$SALES_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_sales))."' height='16' />".$graph_stats[$d][2]."</td></tr>";
 		$DROP_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_drops))."' height='16' />".$graph_stats[$d][3]."</td></tr>";
 		$OTHER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][4], $max_other))."' height='16' />".$graph_stats[$d][4]."</td></tr>";
-		$SALES2_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][5], $max_sales2))."' height='16' />".$graph_stats[$d][5]."</td></tr>";
-		$CONVPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][6], $max_conv_pct))."' height='16' />".$graph_stats[$d][6]."%</td></tr>";
+		$CONVPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][5], $max_conv_pct))."' height='16' />".$graph_stats[$d][5]."%</td></tr>";
 	}
 	$CALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTcalls)."</th></tr></table>";
-	$SALES_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($totA1)."</th></tr></table>";
+	$SALES_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTsales)."</th></tr></table>";
 	$DROP_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($totDROP)."</th></tr></table>";
 	$OTHER_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($totOTHER)."</th></tr></table>";
-	$SALES2_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTsales)."</th></tr></table>";
 	$CONVPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($totCpct)."%</th></tr></table>";
 	$JS_onload.="\tDrawCloserGraph('CALLS', '1');\n";
 	$JS_text.="function DrawCloserGraph(graph, th_id) {\n";
@@ -983,10 +854,9 @@ $CSV_closer_footer.="\""._QXZ("TOTAL CLOSERS").":  $TOTagents\",\"$TOTcalls\",\"
 	$JS_text.="	var SALES_graph=\"$SALES_graph\";\n";
 	$JS_text.="	var DROP_graph=\"$DROP_graph\";\n";
 	$JS_text.="	var OTHER_graph=\"$OTHER_graph\";\n";
-	$JS_text.="	var SALES2_graph=\"$SALES2_graph\";\n";
 	$JS_text.="	var CONVPCT_graph=\"$CONVPCT_graph\";\n";
 	$JS_text.="\n";
-	$JS_text.="	for (var i=1; i<=6; i++) {\n";
+	$JS_text.="	for (var i=1; i<=5; i++) {\n";
 	$JS_text.="		var cellID=\"closergraph\"+i;\n";
 	$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
 	$JS_text.="	}\n";
@@ -1012,7 +882,6 @@ else
 if ($DB) {$HTML_text.="\n"._QXZ("Run Time").": $RUNtime "._QXZ("seconds")."|$db_source\n";}
 
 $HTML_text.="</PRE>\n";
-$HTML_text.="</TD></TR></TABLE>\n";
 
 $HTML_text.="</BODY></HTML>\n";
 
@@ -1081,3 +950,4 @@ exit;
 
 
 ?>
+

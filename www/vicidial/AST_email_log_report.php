@@ -1,7 +1,7 @@
 <?php 
 # AST_email_log_report.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # report of emails handled by the system
 # 
@@ -17,12 +17,13 @@
 # 141113-2048 - Finalized adding QXZ translation to all admin files
 # 141230-1504 - Added code for on-the-fly language translations display
 # 151219-0117 - Added option for searching archived data
+# 160227-1045 - Uniform form format
 #
 
 $startMS = microtime();
 
-$version = '2.10-10';
-$build = '141230-1504';
+$version = '2.12-11';
+$build = '160227-1045';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -333,6 +334,9 @@ else
 	}
 if (strlen($group_SQL)<3) {$group_SQL="''";}
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
+
 $HEADER.="<HTML>\n";
 $HEADER.="<HEAD>\n";
 $HEADER.="<STYLE type=\"text/css\">\n";
@@ -353,6 +357,10 @@ $HEADER.="<script language=\"JavaScript\" src=\"wz_jsgraphics.js\"></script>\n";
 $HEADER.="<script language=\"JavaScript\" src=\"line.js\"></script>\n";
 $HEADER.="<script language=\"JavaScript\" src=\"line.js\"></script>\n";
 $HEADER.="<script language=\"JavaScript\">\n";
+$HEADER.="function openNewWindow(url)\n";
+$HEADER.="  {\n";
+$HEADER.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+$HEADER.="  }\n";
 $HEADER.="function OpenWindow(URL) {\n";
 $HEADER.="\tvar ns = navigator.appName == \"Netscape\";\n";
 $HEADER.="\tif (ns)\n";
@@ -378,7 +386,8 @@ $short_header=1;
 
 #require("admin_header.php");
 
-$MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$MAIN.="<b>"._QXZ("$report_name")."</b> $NWB#email_log_report$NWE\n";
+$MAIN.="<TABLE CELLPADDING=3 CELLSPACING=0><TR><TD>";
 
 if ($DB > 0)
 	{
@@ -390,7 +399,7 @@ if ($DB > 0)
 	}
 
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-$MAIN.="<TABLE BORDER=0><TR><TD VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>\n";
+$MAIN.="<TABLE BORDER=0 CELLPADDING=3 CELLSPACING=0 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 $MAIN.=_QXZ("Date Range").":<BR>\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";

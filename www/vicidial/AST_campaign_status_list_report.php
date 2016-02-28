@@ -4,7 +4,7 @@
 # This report is designed to show the breakdown by list_id of the calls and 
 # their statuses for all lists within a campaign for a set time period
 #
-# Copyright (C) 2015  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -21,6 +21,7 @@
 # 141230-1516 - Added code for on-the-fly language translations display
 # 150516-1312 - Fixed Javascript element problem, Issue #857
 # 151219-0107 - Added option for searching archived data
+# 160227-1059 - Uniform form format
 #
 
 $startMS = microtime();
@@ -308,6 +309,9 @@ else
 $query_date="$query_date_D $query_date_T";
 $end_date="$end_date_D $end_date_T";
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
+
 $HTML_head.="<HTML>\n";
 $HTML_head.="<HEAD>\n";
 $HTML_head.="<STYLE type=\"text/css\">\n";
@@ -329,16 +333,21 @@ $short_header=1;
 
 #	require("admin_header.php");
 
-$HTML_text.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$HTML_text.="<TABLE CELLPADDING=3 CELLSPACING=0><TR><TD>";
+$HTML_text.="<b>"._QXZ("$report_name")."</b> $NWB#campaign_status_list_report$NWE\n";
 
 $HTML_text.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-$HTML_text.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> "._QXZ("Dates").":<BR>";
+$HTML_text.="<TABLE CELLPADDING=3 CELLSPACING=0 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN=TOP> "._QXZ("Dates").":<BR>";
 $HTML_text.="<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
 $HTML_text.="<INPUT TYPE=hidden NAME=query_date ID=query_date VALUE=\"$query_date\">\n";
 $HTML_text.="<INPUT TYPE=hidden NAME=end_date ID=end_date VALUE=\"$end_date\">\n";
 $HTML_text.="<INPUT TYPE=TEXT NAME=query_date_D SIZE=11 MAXLENGTH=10 VALUE=\"$query_date_D\">";
 
 $HTML_text.="<script language=\"JavaScript\">\n";
+$HTML_text.="function openNewWindow(url)\n";
+$HTML_text.="  {\n";
+$HTML_text.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+$HTML_text.="  }\n";
 $HTML_text.="var o_cal = new tcal ({\n";
 $HTML_text.="	// form name\n";
 $HTML_text.="	'formname': 'vicidial_report',\n";

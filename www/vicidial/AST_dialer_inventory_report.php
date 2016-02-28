@@ -1,7 +1,7 @@
 <?php 
 # AST_dialer_inventory_report.php
 # 
-# Copyright (C) 2014  Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
 #                     Matt Florell <vicidial@gmail.com>
 #
 # NOTES:
@@ -22,6 +22,7 @@
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141114-0006 - Finalized adding QXZ translation to all admin files
 # 141230-1509 - Added code for on-the-fly language translations display
+# 160227-1933 - Uniform form format
 #
 
 $startMS = microtime();
@@ -350,6 +351,9 @@ while ($ss_row=mysqli_fetch_row($snapshot_rslt))
 	}
 $snapshot_span_txt.="</SELECT>\n";
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
+
 $HTML_header.="<HTML>\n";
 $HTML_header.="<HEAD>\n";
 $HTML_header.="<STYLE type='text/css'>\n";
@@ -364,6 +368,10 @@ $HTML_header.=" </STYLE>\n";
 if ($report_type=='LIST') {$onload="onload=\"ToggleSpan('list_span', 'campaign_span')\"";}
 
 $HTML_header.="<script language='Javascript'>\n";
+$HTML_header.="function openNewWindow(url)\n";
+$HTML_header.="  {\n";
+$HTML_header.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+$HTML_header.="  }\n";
 $HTML_header.="function ToggleSpan(show_span, hide_span) {\n";
 $HTML_header.="\n";
 $HTML_header.="	if (show_span) {document.getElementById(show_span).style.display = 'block';}\n";
@@ -899,11 +907,12 @@ if ($SUBMIT)
 $HTML_header.="</PRE>\n";
 ###############################
 
-$HTML_text="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>\n";
+$HTML_text="<b>"._QXZ("$report_name")."</b> $NWB#dialer_inventory_report$NWE\n";
+$HTML_text.="<TABLE CELLPADDING=3 CELLSPACING=0><TR><TD>";
 $HTML_text.="\n";
 $HTML_text.="<FORM ACTION='$PHP_SELF' METHOD=GET name=vicidial_report id=vicidial_report>\n";
 $HTML_text.="<INPUT TYPE=hidden NAME=DB VALUE='$DB'>\n";
-$HTML_text.="<TABLE CELLSPACING=3><TR height='200'><TD VALIGN=TOP>\n";
+$HTML_text.="<TABLE CELLPADDING=3 CELLSPACING=0 BGCOLOR=\"#e3e3ff\"><TR height='150'><TD VALIGN=TOP>\n";
 $HTML_text.="	<table width='*' align='center'>\n";
 $HTML_text.="	<tr><td>"._QXZ("Report type").":</td></tr>\n";
 if ($report_type=='LIST') {$cmp_checked=""; $list_checked="checked";} else {$cmp_checked="checked"; $list_checked="";}

@@ -1,7 +1,7 @@
 <?php 
 # AST_OUTBOUNDsummary_interval.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -25,6 +25,7 @@
 # 141230-0912 - Added code for on-the-fly language translations display
 # 150516-1305 - Fixed Javascript element problem, Issue #857
 # 151125-1632 - Added search archive option
+# 160227-1136 - Uniform form format
 #
 
 $startMS = microtime();
@@ -74,6 +75,10 @@ if (strlen($include_rollover)<2) {$include_rollover='NO';}
 $report_name = 'Outbound Summary Interval Report';
 $db_source = 'M';
 $JS_text="<script language='Javascript'>\n";
+$JS_text.="function openNewWindow(url)\n";
+$JS_text.="  {\n";
+$JS_text.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+$JS_text.="  }\n";
 $JS_onload="onload = function() {\n";
 
 #############################################
@@ -498,6 +503,9 @@ while ($i < $statdnc_to_print)
 	$i++;
 	}
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
+
 $HEADER.="<HTML>\n";
 $HEADER.="<HEAD>\n";
 $HEADER.="<STYLE type=\"text/css\">\n";
@@ -521,7 +529,8 @@ if ($bareformat < 1)
 	$short_header=1;
 
 
-	$MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+	$MAIN.="<b>"._QXZ("$report_name")."</b> $NWB#OUTBOUNDsummary_interval$NWE\n";
+	$MAIN.="<TABLE CELLPADDING=3 CELLSPACING=0><TR><TD>";
 
 	if ($DB > 0)
 		{
@@ -534,7 +543,7 @@ if ($bareformat < 1)
 
 
 	$MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-	$MAIN.="<TABLE BORDER=0><TR><TD VALIGN=TOP>\n";
+	$MAIN.="<TABLE BORDER=0 CELLPADDING=3 CELLSPACING=0 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN=TOP>\n";
 	$MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 	$MAIN.="<INPUT TYPE=HIDDEN NAME=costformat VALUE=\"$costformat\">\n";
 	$MAIN.="<INPUT TYPE=HIDDEN NAME=print_calls VALUE=\"$print_calls\">\n";

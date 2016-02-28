@@ -1,7 +1,7 @@
 <?php
 # called_counts_multilist_report.php
 # 
-# Copyright (C) 2015  Joe Johnson <freewermadmin@gmail.com>, Matt Florell <mattf@vicidial.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Joe Johnson <freewermadmin@gmail.com>, Matt Florell <mattf@vicidial.com>    LICENSE: AGPLv2
 #
 # This is a report designed for showing called counts similar to the results
 # at the bottom of each list detail screen, but for multiple lists and using
@@ -14,6 +14,7 @@
 # 141114-0045 - Finalized adding QXZ translation to all admin files
 # 141230-1346 - Added code for on-the-fly language translations display
 # 151229-2050 - Added archive search option
+# 160227-1036 - Uniform form format
 #
 
 $startMS = microtime();
@@ -61,6 +62,10 @@ if (strlen($include_rollover)<2) {$include_rollover='NO';}
 $report_name = 'Called Counts List IDs Report';
 $db_source = 'M';
 $JS_text="<script language='Javascript'>\n";
+$JS_text.="function openNewWindow(url)\n";
+$JS_text.="  {\n";
+$JS_text.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+$JS_text.="  }\n";
 $JS_onload="onload = function() {\n";
 
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -446,6 +451,9 @@ else
 	}
 */
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
+
 $HEADER.="<!DOCTYPE HTML>\n";
 $HEADER.="<HEAD>\n";
 $HEADER.="<STYLE type=\"text/css\">\n";
@@ -461,8 +469,8 @@ $HEADER.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
 
-
-$HEADER.="<script language=\"JavaScript\">\n";
+$HEADER.="$JS_text";
+#$HEADER.="<script language=\"JavaScript\">\n";
 $list_stmt="select list_id, list_name, campaign_id from vicidial_lists $whereLOGallowed_campaignsSQL order by list_id asc";
 $list_rslt=mysql_to_mysqli($list_stmt, $link);
 $list_rows=mysqli_num_rows($list_rslt);
@@ -544,10 +552,11 @@ $draw_graph=1;
 
 #require("admin_header.php");
 
-$MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$MAIN.="<b>"._QXZ("$report_name")."</b> $NWB#called_counts_multilist_report$NWE\n";
+$MAIN.="<TABLE CELLPADDING=3 CELLSPACING=0><TR><TD>";
 
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-$MAIN.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP><input type='checkbox' name='override_date' value='1' checked>"._QXZ("All dates")."<BR><BR>"._QXZ("Dates").":<BR>";
+$MAIN.="<TABLE CELLPADDING=3 CELLSPACING=0 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN=TOP><input type='checkbox' name='override_date' value='1' checked>"._QXZ("All dates")."<BR><BR>"._QXZ("Dates").":<BR>";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=outbound_rate VALUE=\"$outbound_rate\">\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
@@ -649,6 +658,8 @@ if (strlen($QUERY_STRING) > 5)
 			} else {
 				$lead_id_str=" and lead_id in ($lead_id_str) ";
 			}
+		} else {
+			$lead_id_str=" and lead_id is null ";
 		}
 	}
 

@@ -1,7 +1,7 @@
 <?php 
 # AST_LISTS_pass_report.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This is a list inventory report, not a calling report. This report will show
 # statistics for all of the lists in the selected campaigns
@@ -14,6 +14,7 @@
 # 141230-0919 - Added code for on-the-fly language translations display
 # 150516-1303 - Fixed Javascript element problem, Issue #857
 # 151125-1640 - Added search archive option
+# 160227-1138 - Uniform form format
 #
 
 $startMS = microtime();
@@ -47,6 +48,10 @@ if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search
 $report_name = 'Lists Pass Report';
 $db_source = 'M';
 $JS_text="<script language='Javascript'>\n";
+$JS_text.="function openNewWindow(url)\n";
+$JS_text.="  {\n";
+$JS_text.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+$JS_text.="  }\n";
 $JS_onload="onload = function() {\n";
 
 #############################################
@@ -409,8 +414,8 @@ else {$completed_statuses="''";}
 
 if ($DB) {echo "<!-- SALE statuses: $sale_statuses -->";}
 
-
-
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 $HEADER.="<HTML>\n";
 $HEADER.="<HEAD>\n";
@@ -429,10 +434,11 @@ $HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marg
 
 $short_header=1;
 
-$MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
+$MAIN.="<b>"._QXZ("$report_name")."</b> $NWB#LISTS_pass_report$NWE\n";
+$MAIN.="<TABLE CELLPADDING=3 CELLSPACING=0><TR><TD>";
 
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-$MAIN.="<TABLE CELLSPACING=3><TR><TD VALIGN=TOP>";
+$MAIN.="<TABLE CELLPADDING=3 CELLSPACING=0 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN=TOP>";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=use_lists VALUE=\"$use_lists\">\n";
 

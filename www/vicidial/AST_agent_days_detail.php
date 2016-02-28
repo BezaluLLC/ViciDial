@@ -28,6 +28,7 @@
 # 150516-1307 - Fixed Javascript element problem, Issue #857
 # 151227-1718 - Added option to search archive records instead of main
 # 160121-2216 - Added report title header, default report format, cleaned up formatting
+# 160225-1625 - Fixed download issue where report was not printing properly
 #
 
 $startMS = microtime();
@@ -486,7 +487,7 @@ else
 				$statusesTXT = sprintf("%8s", $status[$i]);
 				$statusesHEAD .= "----------+";
 				$statusesHTML .= " $statusesTXT |";
-				$statusesFILE .= "$statusesTXT,";
+				$statusesFILE .= "$status[$i],";
 				$statuses .= "$status[$i]-";
 				$statusesARY[$j] = $status[$i];
 				$j++;
@@ -579,7 +580,7 @@ else
 
 					$SstatusTXT = sprintf("%8s", $calls[$i]);
 					$SstatusesHTML .= " $SstatusTXT |";
-					$SstatusesFILE .= "$SstatusTXT,";
+					$SstatusesFILE .= "$calls[$i],";
 					$status_found++;
 					}
 				$i++;
@@ -587,6 +588,7 @@ else
 			if ($status_found < 1)
 				{
 				$SstatusesHTML .= "        0 |";
+				$SstatusesFILE .= "0,";
 				}
 			### END loop through each stat line ###
 			$n++;
@@ -729,7 +731,7 @@ else
 			{
 			$SUMstatusTXT = sprintf("%8s", $Scalls);
 			$SUMstatusesHTML .= " $SUMstatusTXT |";
-			$SUMstatusesFILE .= "$SUMstatusTXT,";
+			$SUMstatusesFILE .= "$Scalls,";
 			$$total_var=$Scalls;
 			}
 		$n++;
@@ -815,7 +817,7 @@ else
 		}
 	else
 		{
-		$file_output .= _QXZ("TOTALS").",$TOTcalls,$CIScountTOT,$DNCcountPCT%,$SUMstatusesFILE\n";
+		$file_output .= _QXZ("TOTALS").",".trim($TOTcalls).",".trim($CIScountTOT).",".trim($DNCcountPCT)."%,".trim($SUMstatusesFILE)."\n";
 		}
 	}
 

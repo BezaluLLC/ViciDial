@@ -3,7 +3,7 @@
 # 
 # Pulls all timeclock records for an agent
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 90602-2244 - First build
@@ -22,6 +22,7 @@
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141114-0905 - Finalized adding QXZ translation to all admin files
 # 141230-1520 - Added code for on-the-fly language translations display
+# 160227-1934 - Uniform form format
 #
 
 $startMS = microtime();
@@ -352,6 +353,9 @@ while ($i < $statha_to_print)
 
 $LINKbase = "$PHP_SELF?query_date=$query_dateURL&end_date=$end_dateURL$groupQS$user_groupQS&shift=$shift&DB=$DB";
 
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
+$NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
+
 if ($file_download < 1)
 	{
 	?>
@@ -370,7 +374,12 @@ if ($file_download < 1)
 	<script language="JavaScript" src="calendar_db.js"></script>
 	<link rel="stylesheet" href="calendar.css">
 	<link rel="stylesheet" href="horizontalbargraph.css">
-
+	<script language='Javascript'>
+	function openNewWindow(url)
+		{
+window.open(url,"",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');
+		}
+	</script>
 	<?php
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo "<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -381,7 +390,125 @@ if ($file_download < 1)
 	require("admin_header.php");
 
 	echo "</span>\n";
-	echo "<span style=\"position:absolute;left:3px;top:3px;z-index:19;\" id=agent_status_stats>\n";
+
+	############################################################################
+	##### BEGIN HTML form section
+	############################################################################
+	echo "<BR><BR>";
+	echo "<b>"._QXZ("$report_name")."</b> $NWB#agent_timeclock_detail$NWE\n";
+	echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
+	echo "<TABLE CELLPADDING=3 CELLSPACING=0 BGCOLOR=\"#e3e3ff\"><TR><TD VALIGN=TOP> "._QXZ("Dates").":<BR>";
+	echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
+	echo "<INPUT TYPE=hidden NAME=query_date ID=query_date VALUE=\"$query_date\">\n";
+	echo "<INPUT TYPE=hidden NAME=end_date ID=end_date VALUE=\"$end_date\">\n";
+	echo "<INPUT TYPE=TEXT NAME=query_date_D SIZE=11 MAXLENGTH=10 VALUE=\"$query_date_D\">";
+
+	?>
+	<script language="JavaScript">
+	var o_cal = new tcal ({
+		// form name
+		'formname': 'vicidial_report',
+		// input name
+		'controlname': 'query_date_D'
+	});
+	o_cal.a_tpl.yearscroll = false;
+	// o_cal.a_tpl.weekstart = 1; // Monday week start
+	</script>
+	<?php
+
+	echo " &nbsp; <INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_T\">";
+
+	echo "<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=end_date_D SIZE=11 MAXLENGTH=10 VALUE=\"$end_date_D\">";
+
+	?>
+	<script language="JavaScript">
+	var o_cal = new tcal ({
+		// form name
+		'formname': 'vicidial_report',
+		// input name
+		'controlname': 'end_date_D'
+	});
+	o_cal.a_tpl.yearscroll = false;
+	// o_cal.a_tpl.weekstart = 1; // Monday week start
+	</script>
+	<?php
+
+	echo " &nbsp; <INPUT TYPE=TEXT NAME=end_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$end_date_T\">";
+
+	#	echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
+	#	echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
+	#	if  (preg_match('/\-\-ALL\-\-/',$group_string))
+	#		{echo "<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
+	#	else
+	#		{echo "<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
+	#	$o=0;
+	#	while ($campaigns_to_print > $o)
+	#	{
+	#		if (preg_match("/$groups[$o]\|/i",$group_string)) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
+	#		  else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
+	#		$o++;
+	#	}
+	#	echo "</SELECT>\n";
+
+	echo "</TD><TD VALIGN=TOP>"._QXZ("User Groups").":<BR>";
+	echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";
+
+	if  (preg_match('/\-\-ALL\-\-/',$user_group_string))
+		{echo "<option value=\"--ALL--\" selected>-- "._QXZ("ALL USER GROUPS")." --</option>\n";}
+	else
+		{echo "<option value=\"--ALL--\">-- "._QXZ("ALL USER GROUPS")." --</option>\n";}
+	$o=0;
+	while ($user_groups_to_print > $o)
+		{
+		if  (preg_match("/\|$user_groups[$o]\|/i",$user_group_string)) {echo "<option selected value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
+		  else {echo "<option value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
+		$o++;
+		}
+	echo "</SELECT>\n";
+	echo "</TD><TD VALIGN=TOP>";
+	echo _QXZ("Display as").":&nbsp;&nbsp;&nbsp;<BR>";
+	echo "<select name='report_display_type'>";
+	if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}
+	echo "<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR><BR>";
+	echo "</TD><TD VALIGN=TOP>"._QXZ("Shift").":<BR>";
+	echo "<SELECT SIZE=1 NAME=shift>\n";
+	echo "<option selected value=\"$shift\">$shift</option>\n";
+	echo "<option value=\"\">--</option>\n";
+	echo "<option value=\"AM\">"._QXZ("AM")."</option>\n";
+	echo "<option value=\"PM\">"._QXZ("PM")."</option>\n";
+	echo "<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
+	echo "</SELECT><BR><BR>\n";
+
+?>
+	<SCRIPT LANGUAGE="JavaScript">
+
+	function submit_form()
+		{
+		document.vicidial_report.end_date.value = document.vicidial_report.end_date_D.value + " " + document.vicidial_report.end_date_T.value;
+		document.vicidial_report.query_date.value = document.vicidial_report.query_date_D.value + " " + document.vicidial_report.query_date_T.value;
+
+		document.vicidial_report.submit();
+		}
+
+	</SCRIPT>
+
+	<input type=button value="<?php echo _QXZ("SUBMIT"); ?>" name=smt id=smt onClick="submit_form()">
+<?php
+	echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
+
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
+	echo " <a href=\"$LINKbase&stage=$stage&file_download=1\">"._QXZ("DOWNLOAD")."</a> | \n";
+	echo " <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
+	echo "</FONT>\n";
+	echo "</TD></TR></TABLE>";
+
+	echo "</FORM>\n\n";
+	############################################################################
+	##### END HTML form section
+	############################################################################
+	
+
+	echo "<span style=\"z-index:19;\" id=agent_status_stats>\n";
 	echo "<PRE><FONT SIZE=2>\n";
 	}
 
@@ -814,123 +941,6 @@ else
 	{
 	echo $ASCII_text;
 	}
-
-############################################################################
-##### BEGIN HTML form section
-############################################################################
-echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
-echo "<TABLE CELLSPACING=3><TR><TD VALIGN=TOP> "._QXZ("Dates").":<BR>";
-echo "<INPUT TYPE=hidden NAME=DB VALUE=\"$DB\">\n";
-echo "<INPUT TYPE=hidden NAME=query_date ID=query_date VALUE=\"$query_date\">\n";
-echo "<INPUT TYPE=hidden NAME=end_date ID=end_date VALUE=\"$end_date\">\n";
-echo "<INPUT TYPE=TEXT NAME=query_date_D SIZE=11 MAXLENGTH=10 VALUE=\"$query_date_D\">";
-
-?>
-<script language="JavaScript">
-var o_cal = new tcal ({
-	// form name
-	'formname': 'vicidial_report',
-	// input name
-	'controlname': 'query_date_D'
-});
-o_cal.a_tpl.yearscroll = false;
-// o_cal.a_tpl.weekstart = 1; // Monday week start
-</script>
-<?php
-
-echo " &nbsp; <INPUT TYPE=TEXT NAME=query_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$query_date_T\">";
-
-echo "<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=end_date_D SIZE=11 MAXLENGTH=10 VALUE=\"$end_date_D\">";
-
-?>
-<script language="JavaScript">
-var o_cal = new tcal ({
-	// form name
-	'formname': 'vicidial_report',
-	// input name
-	'controlname': 'end_date_D'
-});
-o_cal.a_tpl.yearscroll = false;
-// o_cal.a_tpl.weekstart = 1; // Monday week start
-</script>
-<?php
-
-echo " &nbsp; <INPUT TYPE=TEXT NAME=end_date_T SIZE=9 MAXLENGTH=8 VALUE=\"$end_date_T\">";
-
-#	echo "</TD><TD VALIGN=TOP> Campaigns:<BR>";
-#	echo "<SELECT SIZE=5 NAME=group[] multiple>\n";
-#	if  (preg_match('/\-\-ALL\-\-/',$group_string))
-#		{echo "<option value=\"--ALL--\" selected>-- ALL CAMPAIGNS --</option>\n";}
-#	else
-#		{echo "<option value=\"--ALL--\">-- ALL CAMPAIGNS --</option>\n";}
-#	$o=0;
-#	while ($campaigns_to_print > $o)
-#	{
-#		if (preg_match("/$groups[$o]\|/i",$group_string)) {echo "<option selected value=\"$groups[$o]\">$groups[$o]</option>\n";}
-#		  else {echo "<option value=\"$groups[$o]\">$groups[$o]</option>\n";}
-#		$o++;
-#	}
-#	echo "</SELECT>\n";
-
-echo "</TD><TD VALIGN=TOP>"._QXZ("User Groups").":<BR>";
-echo "<SELECT SIZE=5 NAME=user_group[] multiple>\n";
-
-if  (preg_match('/\-\-ALL\-\-/',$user_group_string))
-	{echo "<option value=\"--ALL--\" selected>-- "._QXZ("ALL USER GROUPS")." --</option>\n";}
-else
-	{echo "<option value=\"--ALL--\">-- "._QXZ("ALL USER GROUPS")." --</option>\n";}
-$o=0;
-while ($user_groups_to_print > $o)
-	{
-	if  (preg_match("/\|$user_groups[$o]\|/i",$user_group_string)) {echo "<option selected value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
-	  else {echo "<option value=\"$user_groups[$o]\">$user_groups[$o]</option>\n";}
-	$o++;
-	}
-echo "</SELECT>\n";
-echo "</TD><TD VALIGN=TOP>";
-echo _QXZ("Display as").":&nbsp;&nbsp;&nbsp;<BR>";
-echo "<select name='report_display_type'>";
-if ($report_display_type) {echo "<option value='$report_display_type' selected>$report_display_type</option>";}
-echo "<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR><BR>";
-echo "</TD><TD VALIGN=TOP>"._QXZ("Shift").":<BR>";
-echo "<SELECT SIZE=1 NAME=shift>\n";
-echo "<option selected value=\"$shift\">$shift</option>\n";
-echo "<option value=\"\">--</option>\n";
-echo "<option value=\"AM\">"._QXZ("AM")."</option>\n";
-echo "<option value=\"PM\">"._QXZ("PM")."</option>\n";
-echo "<option value=\"ALL\">"._QXZ("ALL")."</option>\n";
-echo "</SELECT><BR><BR>\n";
-
-
-?>
-<SCRIPT LANGUAGE="JavaScript">
-
-function submit_form()
-	{
-	document.vicidial_report.end_date.value = document.vicidial_report.end_date_D.value + " " + document.vicidial_report.end_date_T.value;
-	document.vicidial_report.query_date.value = document.vicidial_report.query_date_D.value + " " + document.vicidial_report.query_date_T.value;
-
-	document.vicidial_report.submit();
-	}
-
-</SCRIPT>
-
-<input type=button value="<?php echo _QXZ("SUBMIT"); ?>" name=smt id=smt onClick="submit_form()">
-<?php
-
-
-echo "</TD><TD VALIGN=TOP> &nbsp; &nbsp; &nbsp; &nbsp; ";
-
-echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
-echo " <a href=\"$LINKbase&stage=$stage&file_download=1\">"._QXZ("DOWNLOAD")."</a> | \n";
-echo " <a href=\"./admin.php?ADD=999999\">"._QXZ("REPORTS")."</a> </FONT>\n";
-echo "</FONT>\n";
-echo "</TD></TR></TABLE>";
-
-echo "</FORM>\n\n";
-############################################################################
-##### END HTML form section
-############################################################################
 
 
 $ENDtime = date("U");
