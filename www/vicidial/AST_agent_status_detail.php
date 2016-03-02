@@ -29,6 +29,7 @@
 # 150603-1532 - Statuses are now sorted in alphabetical order
 # 151112-1345 - Added ability to search archive logs and show defunct users
 # 160121-2209 - Added report title header, default report format, cleaned up formatting
+# 160301-2051 - Expanded full name to 25 characters on text display
 #
 
 $startMS = microtime();
@@ -629,9 +630,9 @@ else
 	if ($file_download < 1)
 		{
 		$ASCII_text.="CALLS STATS BREAKDOWN:\n";
-		$ASCII_text.="+-----------------+----------+--------+--------+--------+$statusesHEAD\n";
-		$ASCII_text.="| <a href=\"$LINKbase\">USER NAME</a>       | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=CI\">CIcalls</a>| <a href=\"$LINKbase&stage=DNCCI\">DNC/CI%</a>|$statusesHTML\n";
-		$ASCII_text.="+-----------------+----------+--------+--------+--------+$statusesHEAD\n";
+		$ASCII_text.="+---------------------------+----------+--------+--------+--------+$statusesHEAD\n";
+		$ASCII_text.="| <a href=\"$LINKbase\">USER NAME</a>                 | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=CI\">CIcalls</a>| <a href=\"$LINKbase&stage=DNCCI\">DNC/CI%</a>|$statusesHTML\n";
+		$ASCII_text.="+---------------------------+----------+--------+--------+--------+$statusesHEAD\n";
 
 		for ($i=0; $i<count($sub_statusesARY); $i++) {
 			$Sstatus=$sub_statusesARY[$i];
@@ -728,22 +729,24 @@ else
 		$Scalls =	sprintf("%6s", $Scalls);
 		$CIScount =	sprintf("%6s", $CIScount);
 
-		if ($non_latin < 1)
+		if ($file_download<1) 
 			{
-			 $Sfull_name=	sprintf("%-15s", $Sfull_name); 
-				while(strlen($Sfull_name)>15) {$Sfull_name = substr("$Sfull_name", 0, -1);}
-			 $Suser =		sprintf("%-8s", $Suser);
-				while(strlen($Suser)>8) {$Suser = substr("$Suser", 0, -1);}
-			}
-		else
-			{	
-				$Sfull_name=	sprintf("%-45s", $Sfull_name); 
-			 while(mb_strlen($Sfull_name,'utf-8')>15) {$Sfull_name = mb_substr("$Sfull_name", 0, -1,'utf-8');}
+			if ($non_latin < 1)
+				{
+				 $Sfull_name=	sprintf("%-25s", $Sfull_name); 
+					while(strlen($Sfull_name)>25) {$Sfull_name = substr("$Sfull_name", 0, -1);}
+				 $Suser =		sprintf("%-8s", $Suser);
+					while(strlen($Suser)>8) {$Suser = substr("$Suser", 0, -1);}
+				}
+			else
+				{	
+					$Sfull_name=	sprintf("%-45s", $Sfull_name); 
+				 while(mb_strlen($Sfull_name,'utf-8')>15) {$Sfull_name = mb_substr("$Sfull_name", 0, -1,'utf-8');}
 
-				$Suser =	sprintf("%-24s", $Suser);
-			 while(mb_strlen($Suser,'utf-8')>8) {$Suser = mb_substr("$Suser", 0, -1,'utf-8');}
+					$Suser =	sprintf("%-24s", $Suser);
+				 while(mb_strlen($Suser,'utf-8')>8) {$Suser = mb_substr("$Suser", 0, -1,'utf-8');}
+				}
 			}
-
 		$DNCcountPCTs = ( MathZDC($DNCcount, $CIScount) * 100);
 		$RAWdncPCT = $DNCcountPCTs;
 	#	$DNCcountPCTs = round($DNCcountPCTs,2);
@@ -888,9 +891,9 @@ else
 
 	if ($file_download < 1)
 		{
-		$ASCII_text.="+-----------------+----------+--------+--------+--------+$statusesHEAD\n";
-		$ASCII_text.="|  TOTALS        AGENTS:$TOT_AGENTS | $TOTcalls| $CIScountTOT| $DNCcountPCT%|$SUMstatusesHTML\n";
-		$ASCII_text.="+----------------------------+--------+--------+--------+$statusesHEAD\n";
+		$ASCII_text.="+---------------------------+----------+--------+--------+--------+$statusesHEAD\n";
+		$ASCII_text.="|  TOTALS        AGENTS:$TOT_AGENTS           | $TOTcalls| $CIScountTOT| $DNCcountPCT%|$SUMstatusesHTML\n";
+		$ASCII_text.="+--------------------------------------+--------+--------+--------+$statusesHEAD\n";
 
 		$ASCII_text.="\n\n</PRE>";
 
