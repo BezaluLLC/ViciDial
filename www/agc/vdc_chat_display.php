@@ -1,7 +1,7 @@
 <?php
 # vdc_chat_display.php
 #
-# Copyright (C) 2015  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This is the interface for agents to chat with customers and each other.  It's separate from the manager-to-agent 
 # chat interface out of necessity and calls the chat_db_query.php page to send information and display it.  It will
@@ -14,6 +14,7 @@
 # 150903-2349 - First build
 # 151213-1107 - Added variable filtering
 # 151218-0913 - Added missing translation code and user auth
+# 160303-0051 - Added code for chat transfers
 #
 
 require("dbconnect_mysqli.php");
@@ -535,7 +536,7 @@ function EndChat(hangup_override) { // hangup_override comes from parent Iframe 
 
 	if (!chat_creator || !user || !chat_id) {
 		return false;
-	} else if (user!=chat_creator) {
+	} else if (user!=chat_creator && chat_creator!='XFER') {
 		chat_alert_box("<?php echo _QXZ("Only the chat creator can end the chat"); ?>");
 		return false;
 	}
@@ -605,6 +606,158 @@ function ShowHideMembers(menuName, chat_id) {
 	}
 }
 
+function ToggleSpan(span_name) {
+	var span_vis = document.getElementById(span_name).style;
+	if (span_vis.display=='none') { span_vis.display = 'block'; } else { span_vis.display = 'none'; }
+}
+
+function LoadXferOptions() {
+	var chat_group_id=document.getElementById('chat_group_id').value;
+	var user=document.getElementById('user').value;
+	var pass=document.getElementById('pass').value;
+
+	// Clear select menus
+	var GroupOptions = document.getElementById("ChatXferGroups");
+	while (GroupOptions.length > 1) {
+	    GroupOptions.remove(GroupOptions.length-1);
+	}
+	var AgentOptions = document.getElementById("ChatXferAgents");
+	while (AgentOptions.length > 1) {
+	    AgentOptions.remove(AgentOptions.length-1);
+	}
+
+	var xmlhttp=false;
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+		{
+		xmlhttp = new XMLHttpRequest();
+		}
+	if (xmlhttp) 
+		{ 
+		chat_query = "&action=load_xfer_options&user="+user+"&pass="+pass+"&lead_id="+lead_id+"&server_ip="+server_ip+"&chat_group_id="+chat_group_id;
+		xmlhttp.open('POST', 'chat_db_query.php'); 
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(chat_query); 
+		xmlhttp.onreadystatechange = function() 
+			{ 
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+				{
+				var xfer_options = xmlhttp.responseText;
+				if (xfer_options!="")
+					{
+					var xfer_options_array=xfer_options.split("\n");
+					var groups_array=xfer_options_array[0].split("|");
+					var group_names_array=xfer_options_array[1].split("|");
+					var agents_array=xfer_options_array[2].split("|");
+					var agent_names_array=xfer_options_array[3].split("|");
+/*
+					var opt = document.createElement('option');
+					opt.value = "";
+					opt.innerHTML = "<?php echo _QXZ("-- Select a group to transfer to --"); ?>";
+					GroupOptions.appendChild(opt);
+					
+					var opt = document.createElement('option');
+					opt.value = "";
+					opt.innerHTML = "<?php echo _QXZ("-- Select an agent to transfer to --"); ?>";
+					AgentOptions.appendChild(opt);
+*/					
+					for (var i = 0; i<groups_array.length; i++)
+						{
+						var opt = document.createElement('option');
+						opt.value = groups_array[i];
+						opt.innerHTML = group_names_array[i];
+						GroupOptions.appendChild(opt);
+						}
+
+					for (var i = 0; i<agents_array.length; i++)
+						{
+						var opt = document.createElement('option');
+						opt.value = agents_array[i];
+						opt.innerHTML = agent_names_array[i];
+						AgentOptions.appendChild(opt);
+						}
+					} 
+				}
+			}
+		}
+}
+
+function SendChatXferSpan(selGroup, selAgent) {
+	var chat_id=document.getElementById('chat_id').value;
+	var chat_member_name=encodeURIComponent(document.getElementById('chat_member_name').value.trim());
+	var user=document.getElementById('user').value;
+	var pass=document.getElementById('pass').value;
+	var server_ip=document.getElementById('server_ip').value;
+
+	if ((selGroup==0 && selAgent==0) || (selGroup>0 && selAgent>0))
+		{
+		return false;
+		}
+	else
+		{
+		if (selGroup>0)
+			{
+			var chat_xfer_value=document.getElementById("ChatXferGroups").options[selGroup].value;
+			var chat_xfer_type="group";
+			}
+		else 
+			{
+			var chat_xfer_value=document.getElementById("ChatXferAgents").options[selAgent].value;
+			var chat_xfer_type="agent";
+			}
+		}
+
+	var xmlhttp=false;
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+		{
+		xmlhttp = new XMLHttpRequest();
+		}
+	if (xmlhttp) 
+		{ 
+		chat_query = "&action=xfer_chat&chat_member_name="+chat_member_name+"&user="+user+"&pass="+pass+"&lead_id="+lead_id+"&chat_id="+chat_id+"&server_ip="+server_ip+"&chat_xfer_value="+chat_xfer_value+"&chat_xfer_type="+chat_xfer_type;
+		xmlhttp.open('POST', 'chat_db_query.php'); 
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(chat_query); 
+		xmlhttp.onreadystatechange = function() 
+			{ 
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+				{
+				var xfer_result_data = xmlhttp.responseText;
+				var xfer_result=xfer_result_data.split("|");
+				if (xfer_result[0]==0)
+					{
+					alert("<?php echo _QXZ("TRANSFER FAILED"); ?>");
+					}
+				else if (xfer_result[0]>1)
+					{
+					alert("<?php echo _QXZ("System error - multiple chats found"); ?>");
+					}
+				else 
+					{
+					document.getElementById('chat_creator_console').innerHTML=''; // DO NOT MAKE ANY BUTTONS AVAILABLE AT THIS POINT FOR ENDING OR STARTING A CHAT!
+					document.getElementById('ChatConsoleSpan').style.display='none';
+					document.getElementById('XferConsoleSpan').style.display='none';
+					document.getElementById('chat_group_id').value='';
+					document.getElementById('chat_creator').value='XFER';
+					// IF AGENT NEVER INVITED SOMEONE, THERE'S NO LEAD ATTACHED AND IT'S SAFE FOR THEM TO JUST GO BACK TO BEING PAUSED WITHOUT HAVING TO DO ANYTHING ELSE.  
+					// HOWEVER, SINCE WE DEACTIVATED THE PAUSE BUTTON FROM THE StartChat() FUNCTION WE NEED TO REACTIVATE IT IN PAUSED MODE.
+					if (xfer_result[2]=="TOGGLE_DIAL_CONTROL")
+						{
+						if (dial_method=="INBOUND_MAN")
+							{
+							window.parent.document.getElementById("DiaLControl").innerHTML = DiaLControl_inbound_manual_HTML;
+							}
+						else
+							{
+							window.parent.document.getElementById("DiaLControl").innerHTML = DiaLControl_auto_HTML;
+							}
+						}
+					UpdateChatWindow();				
+					}
+				}
+			}
+		}
+}
+
 window.onbeforeunload = LeaveChat;
 </script>
 </head>
@@ -663,9 +816,10 @@ if($child_window) {
 </tr>
 <tr>
 	<td align='center'>
+	<span id="ChatConsoleSpan" name="ChatConsoleSpan" style="display: block;">
 	<table width='400' align='center' border='0' cellpadding='0' cellspacing='0'>
 		<tr>
-			<td colspan='2' align='center'>
+			<td colspan='3' align='center'>
 				<textarea border='1' name='chat_message' id='chat_message' class='chat_window' cols='100' rows='4' onkeypress="if (event.keyCode==13 && !event.shiftKey) {SendMessage(this.form.chat_id.value, this.form.user.value, this.form.chat_message.value); return false;}"></textarea>
 			</td>
 		</tr>
@@ -679,6 +833,8 @@ if($child_window) {
 			}
 			?>
 			</td>
+			<td align='right' class='chat_message' valign='top'><input class='red_btn' type='button' style="width:100px" value="<?php echo _QXZ("TRANSFER"); ?>"  onClick="ToggleSpan('ChatConsoleSpan'); ToggleSpan('XferConsoleSpan'); LoadXferOptions();"><BR><BR>
+			</td>
 		</tr>
 		<tr>
 			<td colspan='2' align='center'>
@@ -688,6 +844,31 @@ if($child_window) {
 			</td>
 		</tr>
 	</table>
+	</span>
+	<span id="XferConsoleSpan" name="XferConsoleSpan" style="display: none;">
+	<table width='450' align='center' border='0' cellpadding='3' cellspacing='0'>
+		<tr>
+			<td align='right' width='100' class='chat_message'><?php echo _QXZ("Chat group"); ?>:</td>
+			<td align='left' width='240'>
+				<select name='ChatXferGroups' id='ChatXferGroups' onChange="document.getElementById('ChatXferAgents').selectedIndex='0'" class='chat_window' style="width:240px">
+					<option value=''><?php echo _QXZ("-- Select a group to transfer to --"); ?></option>
+				</select>
+			</td>
+			<td align='center' valign='middle' rowspan='2' width='*'><input class='blue_btn' type='button' style="width:100px" value="<?php echo _QXZ("TRANSFER CHAT"); ?>" onClick="SendChatXferSpan(document.getElementById('ChatXferGroups').selectedIndex, document.getElementById('ChatXferAgents').selectedIndex)"></td>
+		</tr>
+		<tr>
+			<td align='right' class='chat_message'><?php echo _QXZ("Agents"); ?>:</td>
+			<td align='left'>
+				<select name='ChatXferAgents' id='ChatXferAgents' onChange="document.getElementById('ChatXferGroups').selectedIndex='0'" class='chat_window' style="width:240px">
+					<option value=''><?php echo _QXZ("-- Select an agent to transfer to --"); ?></option>
+				</select>
+			</td>
+		</tr>
+		<tr>
+			<td align='center' colspan='3'><BR><input class='red_btn' type='button' style="width:100px" value="<?php echo _QXZ("CANCEL"); ?>" onClick="ToggleSpan('ChatConsoleSpan'); ToggleSpan('XferConsoleSpan');"></td>
+		</tr>
+	</table>
+	</span>
 	</td>
 	<td valign='middle' align='center' width='200' rowspan='2'>
 	<?php

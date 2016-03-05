@@ -238,6 +238,10 @@ OTHER CHANGES:
 	placed from the agent screen, and if one exists it will be deleted 
 	before the manual dial call is placed.
 
+61. Added ability to transfer customer chats to another chat group or agent
+
+62. Added API Log Report to Admin Utilities page
+
 
 
 

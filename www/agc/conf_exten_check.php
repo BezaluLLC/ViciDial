@@ -71,10 +71,11 @@
 # 150904-2138 - Added SQL features for chats started via agent invite, modified output
 # 160104-1232 - Added proper detection of dead chats, disabled dead detection of emails
 # 160227-1007 - Fixed XSS security issue, issue #929
+# 160303-2354 - Added code for chat transfers
 #
 
-$version = '2.12-46';
-$build = '160227-1007';
+$version = '2.12-47';
+$build = '160303-2354';
 $php_script = 'conf_exten_check.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=44;
@@ -396,7 +397,7 @@ if ($ACTION == 'refresh')
 				} 
 			else 
 				{
-				$chat_stmt="select count(*) from vicidial_live_chats where status='WAITING' and (group_id IN('$AccampSQL')) and chat_creator!='$user'";
+				$chat_stmt="select count(*) from vicidial_live_chats where status='WAITING' and ((group_id IN('$AccampSQL') and (transferring_agent is null or transferring_agent!='$user')) or (group_id='AGENTDIRECT_CHAT' and user_direct='$user')) and chat_creator!='$user'";
 				$chat_rslt=mysql_to_mysqli($chat_stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$chat_stmt,'03041',$user,$server_ip,$session_name,$one_mysql_log);}
 				$chat_row=mysqli_fetch_row($chat_rslt);

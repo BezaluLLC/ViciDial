@@ -15,6 +15,7 @@
 # 151231-0841 - Added agent_allowed_chat_groups setting
 # 160107-2318 - Bug fix for agent ending chat with manager
 # 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
+# 160303-0051 - Added code for chat transfers
 #
 
 require("dbconnect_mysqli.php");
@@ -79,6 +80,10 @@ if (isset($_GET["manager_message"]))					{$manager_message=$_GET["manager_messag
 	elseif (isset($_POST["manager_message"]))			{$manager_message=$_POST["manager_message"];}
 if (isset($_GET["ChatReloadIDNumber"]))					{$ChatReloadIDNumber=$_GET["ChatReloadIDNumber"];}
 	elseif (isset($_POST["ChatReloadIDNumber"]))			{$ChatReloadIDNumber=$_POST["ChatReloadIDNumber"];}
+if (isset($_GET["chat_xfer_type"]))					{$chat_xfer_type=$_GET["chat_xfer_type"];}
+	elseif (isset($_POST["chat_xfer_type"]))			{$chat_xfer_type=$_POST["chat_xfer_type"];}
+if (isset($_GET["chat_xfer_value"]))					{$chat_xfer_value=$_GET["chat_xfer_value"];}
+	elseif (isset($_POST["chat_xfer_value"]))			{$chat_xfer_value=$_POST["chat_xfer_value"];}
 
 $chat_member_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/',"",$chat_member_name);
 if (!$user) {echo "No user, no using."; exit;}
@@ -549,6 +554,91 @@ if ($action=="agent_send_message" && $chat_id) {
 	}
 }
 
+if ($action=="xfer_chat" && $user && $chat_id && $chat_xfer_value && $chat_xfer_type) {
+	$stmt="select group_id from vicidial_live_chats where chat_id='$chat_id'";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if (mysqli_num_rows($rslt)==0) {
+		echo "ERROR";
+		exit;
+	} else {
+		$row=mysqli_fetch_row($rslt);
+		$group_id=$row[0];
+	}
+
+	if ($chat_xfer_type=="group") {
+		$upd_stmt="update vicidial_live_chats set group_id='$chat_xfer_value', status='WAITING', chat_creator='NONE', transferring_agent='$user' where chat_id='$chat_id'";
+		$upd_rslt=mysql_to_mysqli($upd_stmt, $link);
+	} else {
+		$upd_stmt="update vicidial_live_chats set group_id='AGENTDIRECT_CHAT', user_direct='$chat_xfer_value', user_direct_group_id='$group_id', status='WAITING', transferring_agent='$user' where chat_id='$chat_id'";
+		$upd_rslt=mysql_to_mysqli($upd_stmt, $link);
+	}
+	echo mysqli_affected_rows($link)."|";
+
+	if (mysqli_affected_rows($link)==1) {
+		$log_upd_stmt="insert into vicidial_chat_log(chat_id, message, message_time, poster, chat_member_name, chat_level) VALUES('$chat_id', 'Chat transferred to ".strtoupper($chat_xfer_type)." ".strtoupper($chat_xfer_value)."', now(), '$user', '".mysqli_real_escape_string($link, $chat_member_name)."', '1')";
+		$log_upd_rslt=mysql_to_mysqli($log_upd_stmt, $link);
+
+		$upd_stmt="UPDATE vicidial_live_agents set status='PAUSED',comments='',external_hangup=0,external_status='',external_pause='',external_dial='',last_state_change='$NOW_TIME',pause_code='' where user='$user' and server_ip='$server_ip' and status='INCALL' and comments='CHAT'";
+		$upd_rslt=mysql_to_mysqli($upd_stmt, $link);
+
+		$del_stmt="delete from vicidial_chat_participants where chat_member='$user' and chat_id='$chat_id'";
+		$del_rslt=mysql_to_mysqli($del_stmt, $link);
+
+		$vla_stmt="select closer_campaigns from vicidial_live_agents where user='$user'";
+		$vla_rslt=mysql_to_mysqli($vla_stmt, $link);
+		echo "<BR/><BR/><input class='green_btn' type='button' style=\"width:150px\" value=\""._QXZ("START CHAT")."\" onClick=\"StartChat()\">";
+		echo "<BR/><BR/><select name='startchat_group_id' id='startchat_group_id' class='chat_window' onChange=\"document.getElementById('chat_group_id').value=this.value\">"; 
+		echo "<option value='' selected>--"._QXZ("SELECT A CHAT GROUP")."--</option>";
+		if (mysqli_num_rows($vla_rslt)>0) {
+			$vla_row=mysqli_fetch_row($vla_rslt);
+			$closer_campaigns=trim($vla_row[0]);
+			$closer_campaigns=preg_replace('/\s/', '\',\'', $closer_campaigns);
+			$closer_campaigns_SQL="'".$closer_campaigns."'";
+
+			$group_stmt="select group_id, group_name from vicidial_inbound_groups where group_handling='CHAT' and group_id in ($closer_campaigns_SQL) order by group_name asc";
+			$group_rslt=mysql_to_mysqli($group_stmt, $link);
+			while ($group_row=mysqli_fetch_row($group_rslt)) {
+				echo "<option value='".$group_row[0]."'>".$group_row[1]."</option>";
+			}
+		}
+		echo "</select>";
+		echo "|"; // DO NOT ECHO TOGGLE DIAL CONTROL HERE.  WE DO NOT WANT THE AGENT'S PAUSE BUTTON REACTIVATED YET.
+	}
+/*
+vicidial_live_chats
++---------+---------------------+--------+--------------+----------+---------+
+| chat_id | chat_start_time     | status | chat_creator | group_id | lead_id |
++---------+---------------------+--------+--------------+----------+---------+
+|     516 | 2015-12-18 12:04:54 | LIVE   | 6666         | MIKECHAT | 1079414 |
+|     517 | 2015-12-18 12:13:48 | LIVE   | 6666         | MIKECHAT | 1079414 |
+|     510 | 2015-12-18 09:23:09 | LIVE   | 6666         | MIKECHAT | 1079414 |
++---------+---------------------+--------+--------------+----------+---------+
+
+vicidial_chat_participants
++---------------------+-----------------+------+-----+---------+----------------+
+| Field               | Type            | Null | Key | Default | Extra          |
++---------------------+-----------------+------+-----+---------+----------------+
+| chat_participant_id | int(9) unsigned | NO   | PRI | NULL    | auto_increment |
+| chat_id             | int(9) unsigned | YES  | MUL | NULL    |                |
+| chat_member         | varchar(20)     | YES  |     | NULL    |                |
+| chat_member_name    | varchar(100)    | YES  |     | NULL    |                |
+| ping_date           | datetime        | YES  |     | NULL    |                |
+| vd_agent            | enum('Y','N')   | YES  |     | N       |                |
++---------------------+-----------------+------+-----+---------+----------------+
+
+vicidial_chat_log
++----------------+---------+----------------------------+---------------------+--------+------------------+------------+
+| message_row_id | chat_id | message                    | message_time        | poster | chat_member_name | chat_level |
++----------------+---------+----------------------------+---------------------+--------+------------------+------------+
+|            530 | 517     | Harold Smith has left chat | 2015-12-18 12:19:53 | 6666   | Admin            | 1          |
+|            529 | 516     | Harold Smith has left chat | 2015-12-18 12:06:09 | 6666   | Admin            | 1          |
+|            513 | 510     | Harold Smith has left chat | 2015-12-18 09:26:17 | 6666   | Admin            | 1          |
++----------------+---------+----------------------------+---------------------+--------+------------------+------------+
+
+*/
+}
+
+
 if ($action=="agent_leave_chat" && $user && $chat_id) { 
 	$del_stmt2="delete from vicidial_chat_participants where chat_id='$chat_id' and chat_member='$user'";
 	$del_rslt2=mysql_to_mysqli($del_stmt2, $link);
@@ -730,8 +820,107 @@ if ($action=="send_invite" && $chat_id && $email && $chat_group_id) {
 		}
 }
 
+if ($action=="load_xfer_options" && $user && $chat_group_id) {
+	$vla_stmt="select vla.campaign_id, vug.agent_allowed_chat_groups from vicidial_live_agents vla, vicidial_users vu, vicidial_user_groups vug where vla.user='$user' and vla.user=vu.user and vu.user_group=vug.user_group";
+	$vla_rslt=mysql_to_mysqli($vla_stmt, $link);
+	if (mysqli_num_rows($vla_rslt)>0) {
+		$vla_row=mysqli_fetch_row($vla_rslt);
+		$user_campaign_id=trim($vla_row[0]);
+		$allowed_chat_user_groups=trim($vla_row[1]);
+	}
+
+	$xfer_group_stmt="select xfer_groups from vicidial_campaigns where campaign_id='$user_campaign_id'";
+	$xfer_group_rslt=mysql_to_mysqli($xfer_group_stmt, $link);
+	if (mysqli_num_rows($xfer_group_rslt)>0) {
+		$xfer_row=mysqli_fetch_row($xfer_group_rslt);
+		$xfer_groups=trim($xfer_row[0]);
+		$xfer_groups=preg_replace('/\s/', '\',\'', $xfer_groups);
+		$xfer_groups_SQL="'".$xfer_groups."'";
+	}
+
+	$chat_groups_array=array();
+	$chat_group_names_array=array();
+	$chat_agents_array=array();
+	$chat_agent_names_array=array();
+
+	$group_stmt="select group_id, group_name from vicidial_inbound_groups where group_handling='CHAT' and group_id in ($xfer_groups_SQL) order by group_name asc";
+	$group_rslt=mysql_to_mysqli($group_stmt, $link);
+	if (mysqli_num_rows($group_rslt)>0) {
+		while ($group_row=mysqli_fetch_row($group_rslt)) {
+			# echo "<option value='".$group_row[0]."'>".$group_row[1]."</option>";
+			array_push($chat_groups_array, $group_row[0]);
+			array_push($chat_group_names_array, $group_row[1]);
+		} 
+	} else {
+		array_push($chat_groups_array, "");
+		array_push($chat_group_names_array, "** "._QXZ("NO AVAILABLE GROUPS")." **");		
+	}
+
+	echo implode("|", $chat_groups_array)."\n".implode("|", $chat_group_names_array);
+	echo "\n";
+	
+	$user_group_SQL="";
+	if (preg_match('/\-\-CAMPAIGN\-AGENTS\-\-/')) {
+		$user_group_SQL.="vla.campaign_id='$user_campaign_id' or ";
+		$allowed_chat_user_groups=trim(preg_replace('/\-\-CAMPAIGN\-AGENTS\-\-/', '', $allowed_chat_user_groups));
+	}
+	if (!preg_match('/\-\-ALL\-GROUPS\-\-/', $allowed_chat_user_groups)) {
+		$allowed_chat_user_groups=preg_replace('/\s/', '\',\'', $allowed_chat_user_groups);
+		$user_group_SQL.="vu.user_group in ('$allowed_chat_user_groups')";
+	} else {
+		$user_group_SQL.="vu.user_group not in ('')";
+	}
+	$user_group_SQL=preg_replace('/ or $/', '', $user_group_SQL);
+	if (strlen($user_group_SQL)>0) {	
+		$available_agents_SQL="and ($user_group_SQL)";
+	} else {
+		$available_agents_SQL="";
+	}
+
+	$agent_stmt="select vu.user, full_name from vicidial_live_agents vla, vicidial_users vu, vicidial_campaigns vc where vla.user!='$user' and vla.user=vu.user and vla.campaign_id=vc.campaign_id and vc.allow_chats='Y' $available_agents_SQL order by full_name asc";
+	$agent_rslt=mysql_to_mysqli($agent_stmt, $link);
+	if (mysqli_num_rows($agent_rslt)>0) {
+		while ($agent_row=mysqli_fetch_row($agent_rslt)) {
+#			echo "<option value='".$agent_row[0]."'>".$agent_row[0]." - ".$agent_row[1]."</option>";
+			array_push($chat_agents_array, $agent_row[0]);
+			array_push($chat_agent_names_array, $agent_row[1]);		
+		}
+	} else {
+		array_push($chat_agents_array, "");
+		array_push($chat_agent_names_array, "** "._QXZ("NO AVAILABLE AGENTS")." **");		
+	}
+ 
+	echo implode("|", $chat_agents_array)."\n".implode("|", $chat_agent_names_array);
+
+}
+
 if ($action=="end_chat" && $chat_id && $chat_creator && $user && $server_ip) {
-	if ($user!=$chat_creator) {
+	# Check that chat is actually ending by the agent and not a transfer
+	if ($chat_creator=="XFER") {
+		echo "Leaving XFER|";
+		# At this point this should only be coming from the 'HANGUP CUSTOMER' button, so once that is clicked it is safe to make the 'START CHAT' available again.
+		$vla_stmt="select closer_campaigns from vicidial_live_agents where user='$user'";
+		$vla_rslt=mysql_to_mysqli($vla_stmt, $link);
+		echo "<BR/><BR/><input class='green_btn' type='button' style=\"width:150px\" value=\""._QXZ("START CHAT")."\" onClick=\"StartChat()\">";
+		echo "<BR/><BR/><select name='startchat_group_id' id='startchat_group_id' class='chat_window' onChange=\"document.getElementById('chat_group_id').value=this.value\">"; 
+		echo "<option value='' selected>--"._QXZ("SELECT A CHAT GROUP")."--</option>";
+		if (mysqli_num_rows($vla_rslt)>0) {
+			$vla_row=mysqli_fetch_row($vla_rslt);
+			$closer_campaigns=trim($vla_row[0]);
+			$closer_campaigns=preg_replace('/\s/', '\',\'', $closer_campaigns);
+			$closer_campaigns_SQL="'".$closer_campaigns."'";
+
+			$group_stmt="select group_id, group_name from vicidial_inbound_groups where group_handling='CHAT' and group_id in ($closer_campaigns_SQL) order by group_name asc";
+			$group_rslt=mysql_to_mysqli($group_stmt, $link);
+			while ($group_row=mysqli_fetch_row($group_rslt)) {
+				echo "<option value='".$group_row[0]."'>".$group_row[1]."</option>";
+			}
+		}
+		echo "</select>";
+		echo "|TOGGLE_DIAL_CONTROL";
+		
+		exit;
+	} else if ($user!=$chat_creator) {
 		echo _QXZ("You cannot end this chat unless you are the one who started it.");
 		exit;
 	}

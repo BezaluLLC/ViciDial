@@ -2421,7 +2421,7 @@ print conf "#  5 - AST_VDadapt (If multi-server system, this must only be on one
 print conf "#  6 - FastAGI_log\n";
 print conf "#  7 - AST_VDauto_dial_FILL (only for multi-server, this must only be on one server)\n";
 print conf "#  8 - ip_relay (used for blind agent monitoring)\n";
-print conf "#  9 - Timeclock auto logout\n";
+print conf "#  9 - Timeclock auto logout, (If multi-server system, this must only be on one server)\n";
 print conf "#  E - Email processor, (If multi-server system, this must only be on one server)\n";
 print conf "VARactive_keepalives => $VARactive_keepalives\n";
 print conf "\n";

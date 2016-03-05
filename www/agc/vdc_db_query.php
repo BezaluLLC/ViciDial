@@ -400,10 +400,11 @@
 # 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 # 160109-0747 - Added manual_dial_hopper_check campaign setting
 # 160120-2226 - Fixed issue where non-phone leads were not updating, and lead_info issue
+# 160303-0049 - Fixed issue with did script variables, added code for chat transfers
 #
 
-$version = '2.12-294';
-$build = '160120-2226';
+$version = '2.12-295';
+$build = '160303-0049';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=654;
@@ -7325,7 +7326,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$DID_pattern='';
 				$DID_description='';
 
-				$stmt = "SELECT did_id,extension from vicidial_did_log where uniqueid='$uniqueid' and caller_id_number='$phone_number' order by call_date desc limit 1;";
+				$stmt = "SELECT did_id,extension from vicidial_did_log where uniqueid='$uniqueid' and ( (caller_id_number='$phone_number') or (caller_id_number LIKE \"%$phone_number\") ) order by call_date desc limit 1;";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00337',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -7977,7 +7978,7 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 	$INclosecallid='';
 	$INxfercallid='';
 	$email_group_str='';
-	$chat_group_str='';
+	$chat_group_str="";
 	$VLA_inOUT='NONE';
 	$queue_seconds=0;
 
@@ -8033,7 +8034,8 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 		### If no emails have been sent to agent, check for chats, this is the code section where the agent interface will grab the next available chat
 		if ($email_ct==0) 
 			{
-			$stmt="SELECT chat_id,UNIX_TIMESTAMP(chat_start_time),status,chat_creator,group_id,lead_id from vicidial_live_chats where status='WAITING' and group_id in ($chat_group_str) order by chat_id asc limit 1;";
+			# Chats don't have a priority setting, but we use it for the AGENTDIRECT_CHAT one (which has it set to 99 and is uneditable through the admin) so that is always the highest priority.  Also ensures that agent does not transfer to self if transferring to the same ingroup (transferring_agent!=user clause)
+			$stmt="SELECT vlc.chat_id,UNIX_TIMESTAMP(vlc.chat_start_time),vlc.status,vlc.chat_creator,vlc.group_id,vlc.lead_id,vlc.user_direct_group_id,vig.queue_priority from vicidial_live_chats vlc, vicidial_inbound_groups vig where vlc.status='WAITING' and (vlc.group_id in ($chat_group_str) or (vlc.group_id='AGENTDIRECT_CHAT' and user_direct='$user')) and (transferring_agent is null or transferring_agent!='$user') order by queue_priority desc, chat_id asc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00638',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -8047,8 +8049,12 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 				$group_id =				$chat_row[4];
 				$VDADchannel_group =	$chat_row[4];
 				$lead_id =				$chat_row[5];
+				$user_direct_group_id =	$chat_row[6];
 				$uniqueid=date("U").".".rand(1, 9999);
-				$upd_stmt="update vicidial_live_chats set status='LIVE', chat_creator='$user' where chat_id='$chat_id'";
+				# If this is a transfer directly to an agent, the group ID is 'AGENTDIRECT_CHAT', and we need to set this back to the group ID it was prior to coming over (maybe)
+				if ($group_id=="AGENTDIRECT_CHAT") {$upd_clause=", group_id='$user_direct_group_id'";} else {$upd_clause="";}
+
+				$upd_stmt="update vicidial_live_chats set status='LIVE', chat_creator='$user'$upd_clause where chat_id='$chat_id'";
 				$upd_rslt=mysql_to_mysqli($upd_stmt, $link);
 				$chat_ct=mysqli_affected_rows($link);
 				}

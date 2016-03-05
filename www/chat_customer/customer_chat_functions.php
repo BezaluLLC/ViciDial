@@ -9,6 +9,7 @@
 # 160108-1710 - Added available_agents variable
 # 160120-1943 - Added show_email variable
 # 160203-1051 - Added display of chat message after ending it
+# 160303-0055 - Added code for chat transfers
 #
 
 require("dbconnect_mysqli.php");
@@ -165,11 +166,18 @@ if ($action=="leave_chat" && $user && $chat_id) {
 				$upd_stmt="UPDATE vicidial_list set status='CDROP' where lead_id='$lead_id'";
 				$upd_rslt=mysql_to_mysqli($upd_stmt, $link);
 			
-				$ins_stmt="INSERT IGNORE INTO vicidial_chat_archive SELECT chat_id, chat_start_time, 'DROP', chat_creator, group_id, lead_id From vicidial_live_chats where chat_id='$chat_id'";
+				$ins_stmt="INSERT IGNORE INTO vicidial_chat_archive SELECT chat_id, chat_start_time, 'DROP', chat_creator, group_id, lead_id, transferring_agent, user_direct, user_direct_group_id From vicidial_live_chats where chat_id='$chat_id'";
 				$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 
 				$del_stmt="DELETE from vicidial_live_chats where chat_id='$chat_id'";
 				$del_rslt=mysql_to_mysqli($del_stmt, $link);
+
+				# ARCHIVE CHAT IN CASE CUSTOMER IS LEAVING WHILE BEING TRANSFERRED
+				$archive_log_stmt="insert ignore into vicidial_chat_log_archive select * from vicidial_chat_log where chat_id='$chat_id'";
+				$archive_log_rslt=mysql_to_mysqli($archive_log_stmt, $link);
+
+				$del_log_stmt="delete from vicidial_chat_log where chat_id='$chat_id'";
+				$del_log_rslt=mysql_to_mysqli($del_log_stmt, $link);
 			} else {
 				# CHAT IS LIVE/AGENT NEEDS NOTIFICATION
 				$ins_alert_stmt="INSERT INTO vicidial_chat_log(poster, chat_member_name, message_time, message, chat_id, chat_level) SELECT '$chat_creator', full_name, now(), '$chat_member_name has left chat', '$chat_id', '1' from vicidial_users where user='$chat_creator'";
@@ -180,7 +188,7 @@ if ($action=="leave_chat" && $user && $chat_id) {
 }
 
 if ($action=="update_chat_window" && $chat_id) {
-	$status_stmt="SELECT status, chat_creator from vicidial_live_chats where chat_id='$chat_id'";
+	$status_stmt="SELECT status, chat_creator, transferring_agent from vicidial_live_chats where chat_id='$chat_id'";
 	$status_rslt=mysql_to_mysqli($status_stmt, $link);
 	if (mysqli_num_rows($status_rslt)==0) {
 		# JCJ - comment out to display in Javascript function that calls this in parent page.
@@ -217,8 +225,8 @@ if ($action=="update_chat_window" && $chat_id) {
 		}
 
 		## CHECK IF CHAT IS ACTIVE, IF SO GRAB DISTINCT USERS IN ORDER OF POST TO ASSIGN COLORS
-		if ($status_row[0]=="LIVE") {
-			$live_stmt="SELECT * from vicidial_live_chats vlc, vicidial_chat_participants vcp where vlc.chat_id='$chat_id' and status='LIVE' and vlc.chat_id=vcp.chat_id and vcp.chat_member='$user'";
+		if ($status_row[0]=="LIVE" || ($status_row[0]=="WAITING" && $status_row[2]!="")) {
+			$live_stmt="SELECT * from vicidial_live_chats vlc, vicidial_chat_participants vcp where vlc.chat_id='$chat_id' and (status='LIVE' or (status='WAITING' and transferring_agent is not null)) and vlc.chat_id=vcp.chat_id and vcp.chat_member='$user'";
 			$live_rslt=mysql_to_mysqli($live_stmt, $link);
 			if (mysqli_num_rows($live_rslt)>0) {
 				echo "<font class='chat_title bold'>"._QXZ("Current chat").": $chat_id</font><BR/>\n";
@@ -244,6 +252,10 @@ if ($action=="update_chat_window" && $chat_id) {
 					$chat_color_key=array_search("$row[4]", $chat_members);
 					$row[2]=preg_replace('/\n/', '<BR/>', $row[2]);	
 					echo "<li><font color='$color_array[$chat_color_key]' class='chat_message bold'>$row[5]</font> <font class='chat_timestamp bold'>($row[3])</font> - <font class='chat_message ".$style_array[$row[6]]."'>$row[2]</font></li>\n";
+				}
+
+				if ($status_row[0]=="WAITING" && $status_row[2]!="") {
+					echo "<BR><font class='chat_message bold'>"._QXZ("Currently being transferred, waiting for agent...")."</font><BR/>\n";
 				}
 
 				## PLAY AUDIO FILE IF THERE ARE NEW MESSAGES
