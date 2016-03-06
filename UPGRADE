@@ -238,11 +238,13 @@ OTHER CHANGES:
 	placed from the agent screen, and if one exists it will be deleted 
 	before the manual dial call is placed.
 
-61. Added ability to transfer customer chats to another chat group or agent
+61. Added recording access logging per user(must be enabled in System Settings)
 
-62. Added API Log Report to Admin Utilities page
+62. Added ability to transfer customer chats to another chat group or agent
 
-63. Added Alternate IVR(Call Menu) Logging options
+63. Added API Log Report to Admin Utilities page
+
+64. Added Alternate IVR(Call Menu) Logging options
 
 
 
