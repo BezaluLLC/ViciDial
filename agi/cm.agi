@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# cm.agi   version 2.8
+# cm.agi   version 2.12
 # 
 # Used by Call Menus to log digit presses if enabled in the settings. You should
 # not need to manually use this script, it is used by the dialplan builder.
@@ -10,16 +10,18 @@
 # ; 1. the in-group to take settings from
 # ; 2. digit pressed
 # ; 3. field(in vicidial_list) to update with DTMF pressed (only if lead_id populated)
+# ; 4. alt-log(enable alternate logging)
+# ; 5. question number used if alt-logging is enabled
 # ;
 # ;inbound calls check calltime:
-#exten => 1,1,AGI(cm.agi,INBOUND-----1-----province)
+#exten => 1,1,AGI(cm.agi,INBOUND-----1-----province----------)
 #exten => 1,2,...
 #
 # ;to allow for multi-digit entries, put similar entry in the Custom Dialplan Entry:
 #exten => _XXXXX,1,AGI(cm.agi,INBOUND-----${EXTEN}-----postal_code)
 #exten => _XXXXX,n,Goto(next_callmenu_here,s,1)
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 110525-2100 - First Build
@@ -27,6 +29,7 @@
 # 120730-0729 - Changed to allow inbound logging when lead is defined
 # 130925-1822 - Added variable filter to prevent DID SQL injection attack
 # 130926-1547 - Added new queue_log IVR entries for QM
+# 160305-2244 - Added Alt IVR Logging options
 #
 
 $script = 'cm.agi';
@@ -152,6 +155,8 @@ if (length($ARGV[0])>1)
 	$channel_group = 	$ARGV_vars[0];
 	$dtmf =				$ARGV_vars[1];
 	$field =			$ARGV_vars[2];
+	$alt_logging =		$ARGV_vars[3];
+	$alt_question =		$ARGV_vars[4];
 	}
 
 $|=1;
@@ -206,6 +211,17 @@ elsif ($calleridname =~ /^Y\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
 	$lead_id = ($lead_id + 0);
 	$phone_number = $callerid;
 	$callerid = $calleridname;
+
+	$stmtA = "SELECT campaign_id FROM vicidial_auto_calls where callerid='$callerid';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$campaign_id =	$aryA[0];
+		}
+	$sthA->finish();
 
 	if ( (length($field)>2) && ($vicidial_list_fields =~ /\|$field\|/) )
 		{
@@ -304,6 +320,15 @@ else
 	$affected_rowsL = $dbhA->do($stmtA);
 	if ($AGILOG) {$agi_string = "--    LIL insert: |$affected_rowsL|$uniqueid|$callerid|$extension|";   &agi_output;}
 	}
+
+if ( ($alt_logging =~ /1/) && ($alt_question =~ /\d/) )
+	{
+	$stmtA = "INSERT INTO vicidial_ivr_response (btn,lead_id,question,response,uniqueid,campaign) values('$phone_number','$lead_id','$alt_question','$dtmf','$uniqueid','$campaign_id');";
+		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+	$affected_rowsAI = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "--    VIR insert: |$affected_rowsAI|$uniqueid|$phone_number|$lead_id|";   &agi_output;}
+	}
+
 
 ### QueueMetrics logging if enabled
 if ($enable_queuemetrics_logging > 0)

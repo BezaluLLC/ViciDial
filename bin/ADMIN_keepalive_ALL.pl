@@ -15,7 +15,7 @@
 #  - Auto reset lists at defined times
 #  - Auto restarts Asterisk process if enabled in servers settings
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61011-1348 - First build
@@ -106,11 +106,14 @@
 # 151211-1509 - Added launching of the AST_chat_timeout_cron.pl process on the voicemail server
 # 151226-1024 - Fix for double-write of extension in conf files for IAX and SIP, Issue #908
 # 151229-1623 - Added asterisk output logger launching, tied to server setting, runs every 5 minutes if active
+# 160305-2253 - Added --teod flag to log Timeclock End of Day processes to log file
+#               Limited max-stats process to only run on voicemail server, also added alt-logging flags to cm.agi calls
 #
 
-$build = '151229-1623';
+$build = '160305-2253';
 
 $DB=0; # Debug flag
+$teodDB=0; # flag to log Timeclock End of Day processes to log file
 
 # define blank variables
 $MT[0]='';   $MT[1]='';
@@ -200,6 +203,7 @@ if (length($ARGV[0])>1)
 		print "  [-debug] = verbose debug messages\n";
 		print "  [-debugX] = Extra-verbose debug messages\n";
 		print "  [-debugXXX] = Triple-Extra-verbose debug messages\n";
+		print "  [--teod] = log Timeclock End of Day processes to log file\n";
 		print "\n";
 		exit;
 		}
@@ -223,6 +227,11 @@ if (length($ARGV[0])>1)
 			{
 			$DBXXX=1;
 			print "\n----- TRIPLE DEBUGGING -----\n\n";
+			}
+		if ($args =~ /-teod/i)
+			{
+			$teodDB=1;
+			if ($DB > 0) {print "\n----- Timeclock end of day logfile logging -----\n\n";}
 			}
 		if ($args =~ /-autodial-delay=/i) # CLI defined delay
 			{
@@ -311,6 +320,8 @@ foreach(@conf)
 	$line =~ s/ |>|\n|\r|\t|\#.*|;.*//gi;
 	if ( ($line =~ /^PATHhome/) && ($CLIhome < 1) )
 		{$PATHhome = $line;   $PATHhome =~ s/.*=//gi;}
+	if ( ($line =~ /^PATHlogs/) && ($CLIlogs < 1) )
+		{$PATHlogs = $line;   $PATHlogs =~ s/.*=//gi;}
 	if ( ($line =~ /^VARactive_keepalives/) && ($CLIactive_keepalives < 1) )
 		{$VARactive_keepalives = $line;   $VARactive_keepalives =~ s/.*=//gi;}
 	$i++;
@@ -739,6 +750,11 @@ if ($timeclock_auto_logout > 0)
 	{
 	if ($DB) {print "running Timeclock auto-logout process...\n";}
 	`/usr/bin/screen -d -m -S Timeclock $PATHhome/ADMIN_timeclock_auto_logout.pl 2>/dev/null 1>&2`;
+	if ($teodDB) 
+		{
+		$event_string = "running Timeclock auto-logout process|/usr/bin/screen -d -m -S Timeclock $PATHhome/ADMIN_timeclock_auto_logout.pl 2>/dev/null 1>&2";
+		&teod_logger;
+		}
 	}
 ################################################################################
 #####  END keepalive of ViciDial-related scripts
@@ -798,8 +814,35 @@ use DBI;
 $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
  or die "Couldn't connect to database: " . DBI->errstr;
 
+
+##### Get the settings from system_settings #####
+$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats FROM system_settings;";
+#	print "$stmtA\n";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$sounds_central_control_active =	$aryA[0];
+	$active_voicemail_server =			$aryA[1];
+	$SScustom_dialplan_entry =			$aryA[2];
+	$SSdefault_codecs =					$aryA[3];
+	$SSgenerate_cross_server_exten =	$aryA[4];
+	$SSvoicemail_timezones =			$aryA[5];
+	$SSdefault_voicemail_timezone =		$aryA[6];
+	$SScall_menu_qualify_enabled =		$aryA[7];
+	$SSallow_voicemail_greeting =		$aryA[8];
+	$SSreload_timestamp =				$aryA[9];
+	$meetme_enter_login_filename =		$aryA[10];
+	$meetme_enter_leave3way_filename =	$aryA[11];
+	$SSallow_chats =					$aryA[12];
+	}
+$sthA->finish();
+if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
+
 $timeclock_end_of_day_NOW=0;
-### Grab system_settings values from the database
+### determine if it is the timeclock end of day right now
 $stmtA = "SELECT count(*) from system_settings where timeclock_end_of_day LIKE \"%$reset_test%\";";
 if ($DB) {print "|$stmtA|\n";}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -812,8 +855,33 @@ if ($sthArows > 0)
 	}
 $sthA->finish();
 
+##### Get the settings for this server's server_ip #####
+$stmtA = "SELECT active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,asterisk_version,sounds_update,conf_secret,custom_dialplan_entry,auto_restart_asterisk,asterisk_temp_no_restart,gather_asterisk_output FROM servers where server_ip='$server_ip';";
+#	print "$stmtA\n";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$active_asterisk_server	=		$aryA[0];
+	$generate_vicidial_conf	=		$aryA[1];
+	$rebuild_conf_files	=			$aryA[2];
+	$asterisk_version =				$aryA[3];
+	$sounds_update =				$aryA[4];
+	$self_conf_secret =				$aryA[5];
+	$SERVERcustom_dialplan_entry =	$aryA[6];
+	$auto_restart_asterisk =		$aryA[7];
+	$asterisk_temp_no_restart =		$aryA[8];
+	$gather_asterisk_output =		$aryA[9];
+	}
+$sthA->finish();
+
+
 if ($timeclock_end_of_day_NOW > 0)
 	{
+	if ($teodDB) {$event_string = "Starting timeclock end of day processes: $stmtA|$timeclock_end_of_day_NOW";   &teod_logger;}
+
 	$stmtA = "SELECT agents_calls_reset,usacan_phone_dialcode_fix from system_settings;";
 	if ($DB) {print "|$stmtA|\n";}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -845,6 +913,7 @@ if ($timeclock_end_of_day_NOW > 0)
 		}
 	$sthA->finish();
 	$k=0;
+	$conf_cleared=0;
 	while ($k < $rec_count)
 		{
 		$live_session=0;
@@ -864,489 +933,529 @@ if ($timeclock_end_of_day_NOW > 0)
 			$stmtA = "UPDATE vicidial_conferences set extension='' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$k]';";
 				if($DBX){print STDERR "\n|$stmtA|\n";}
 			$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
+			$conf_cleared = ($conf_cleared + $affected_rows);
 			}
 		$k++;
 		}
+	if ($teodDB) {$event_string = "Empty vicidial_conferences entries cleared: $conf_cleared";   &teod_logger;}
 
 
-	if ($DB) {print "Starting clear out daily reset tables...\n";}
-
-	$stmtA = "UPDATE vicidial_xfer_stats SET xfer_count='0';";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_xfer_stats records reset|\n";}
-
-	$stmtA = "optimize table vicidial_xfer_stats;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "UPDATE vicidial_campaign_stats SET dialable_leads='0', calls_today='0', answers_today='0', drops_today='0', drops_today_pct='0', drops_answers_today_pct='0', calls_hour='0', answers_hour='0', drops_hour='0', drops_hour_pct='0', calls_halfhour='0', answers_halfhour='0', drops_halfhour='0', drops_halfhour_pct='0', calls_fivemin='0', answers_fivemin='0', drops_fivemin='0', drops_fivemin_pct='0', calls_onemin='0', answers_onemin='0', drops_onemin='0', drops_onemin_pct='0', differential_onemin='0', agents_average_onemin='0', balance_trunk_fill='0', status_category_count_1='0', status_category_count_2='0', status_category_count_3='0', status_category_count_4='0',agent_calls_today='0',agent_pause_today='0',agent_wait_today='0',agent_custtalk_today='0',agent_acw_today='0';";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_campaign_stats records reset|\n";}
-
-	$stmtA = "optimize table vicidial_campaign_stats;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "UPDATE vicidial_drop_rate_groups SET calls_today='0', answers_today='0', drops_today='0', drops_today_pct='0', drops_answers_today_pct='0';";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_drop_rate_groups records reset|\n";}
-
-	$stmtA = "optimize table vicidial_drop_rate_groups;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "delete from vicidial_campaign_server_stats;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_campaign_server_stats records deleted|\n";}
-
-	$stmtA = "optimize table vicidial_campaign_server_stats;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "delete from vicidial_campaign_stats_debug;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_campaign_stats_debug records deleted|\n";}
-
-	$stmtA = "optimize table vicidial_campaign_stats_debug;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "update vicidial_inbound_group_agents SET calls_today=0;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_inbound_group_agents call counts reset|\n";}
-
-	$stmtA = "optimize table vicidial_inbound_group_agents;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "update vicidial_campaign_cid_areacodes SET call_count_today=0;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_campaign_cid_areacodes call counts reset|\n";}
-
-	$stmtA = "optimize table vicidial_campaign_cid_areacodes;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "update vicidial_did_ra_extensions SET call_count_today=0;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_did_ra_extensions call counts reset|\n";}
-
-	$stmtA = "optimize table vicidial_did_ra_extensions;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "update vicidial_extension_groups SET call_count_today=0;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_extension_groups call counts reset|\n";}
-
-	$stmtA = "optimize table vicidial_extension_groups;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "optimize table vicidial_users;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "update vicidial_campaign_agents SET calls_today=0;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_campaign_agents call counts reset|\n";}
-
-	$stmtA = "optimize table vicidial_campaign_agents;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "update vicidial_live_inbound_agents SET calls_today=0;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_live_inbound_agents call counts reset|\n";}
-
-	if ($agents_calls_reset > 0)
+	### Only run the following on one server in the cluster, the one set as the active voicemail server ###
+	if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_server)) eq (length($server_ip))) )
 		{
-		$stmtA = "delete from vicidial_live_inbound_agents where last_call_finish < \"$TDSQLdate\";";
+		if ($DB) {print "Starting clear out system-wide daily reset tables...\n";}
+
+		$stmtA = "UPDATE vicidial_xfer_stats SET xfer_count='0';";
 		if($DBX){print STDERR "\n|$stmtA|\n";}
 		$affected_rows = $dbhA->do($stmtA);
-		if($DB){print STDERR "\n|$affected_rows vicidial_live_inbound_agents old records deleted|\n";}
+		if($DB){print STDERR "\n|$affected_rows vicidial_xfer_stats records reset|\n";}
+		if ($teodDB) {$event_string = "vicidial_xfer_stats records reset: $affected_rows";   &teod_logger;}
 
-		$stmtA = "delete from vicidial_live_agents where last_state_change < \"$TDSQLdate\" and extension NOT LIKE \"R/%\";";
+		$stmtA = "optimize table vicidial_xfer_stats;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "UPDATE vicidial_campaign_stats SET dialable_leads='0', calls_today='0', answers_today='0', drops_today='0', drops_today_pct='0', drops_answers_today_pct='0', calls_hour='0', answers_hour='0', drops_hour='0', drops_hour_pct='0', calls_halfhour='0', answers_halfhour='0', drops_halfhour='0', drops_halfhour_pct='0', calls_fivemin='0', answers_fivemin='0', drops_fivemin='0', drops_fivemin_pct='0', calls_onemin='0', answers_onemin='0', drops_onemin='0', drops_onemin_pct='0', differential_onemin='0', agents_average_onemin='0', balance_trunk_fill='0', status_category_count_1='0', status_category_count_2='0', status_category_count_3='0', status_category_count_4='0',agent_calls_today='0',agent_pause_today='0',agent_wait_today='0',agent_custtalk_today='0',agent_acw_today='0';";
 		if($DBX){print STDERR "\n|$stmtA|\n";}
 		$affected_rows = $dbhA->do($stmtA);
-		if($DB){print STDERR "\n|$affected_rows vicidial_live_agents old records deleted|\n";}
+		if($DB){print STDERR "\n|$affected_rows vicidial_campaign_stats records reset|\n";}
+		if ($teodDB) {$event_string = "vicidial_campaign_stats records reset: $affected_rows";   &teod_logger;}
 
-		$stmtA = "delete from vicidial_auto_calls where last_update_time < \"$TDSQLdate\";";
+		$stmtA = "optimize table vicidial_campaign_stats;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "UPDATE vicidial_drop_rate_groups SET calls_today='0', answers_today='0', drops_today='0', drops_today_pct='0', drops_answers_today_pct='0';";
 		if($DBX){print STDERR "\n|$stmtA|\n";}
 		$affected_rows = $dbhA->do($stmtA);
-		if($DB){print STDERR "\n|$affected_rows vicidial_auto_calls old records deleted|\n";}
-		}
+		if($DB){print STDERR "\n|$affected_rows vicidial_drop_rate_groups records reset|\n";}
+		if ($teodDB) {$event_string = "vicidial_drop_rate_groups records reset: $affected_rows";   &teod_logger;}
 
-	$stmtA = "optimize table vicidial_live_inbound_agents;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "optimize table vicidial_live_agents;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "optimize table vicidial_auto_calls;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "optimize table vicidial_daily_max_stats;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "optimize table vicidial_daily_ra_stats;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "delete from vicidial_session_data where login_time < \"$TDSQLdate\";";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_session_data old records deleted|\n";}
-
-	$stmtA = "optimize table vicidial_session_data;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	$stmtA = "delete from vicidial_monitor_calls where monitor_time < \"$TDSQLdate\";";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_monitor_calls old records deleted|\n";}
-
-	$stmtA = "optimize table vicidial_monitor_calls;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-
-	# set past holidays to EXPIRED status
-	$stmtA = "UPDATE vicidial_call_time_holidays SET holiday_status='EXPIRED' where holiday_date < \"$RMdate\" and holiday_status!='EXPIRED';";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows Holidays set to expired|\n";}
-
-
-	##### BEGIN max stats end of day process #####
-	# set OPEN max stats records to CLOSING for processing
-	$stmtA = "UPDATE vicidial_daily_max_stats SET stats_flag='CLOSING' where stats_flag='OPEN';";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows Daily Max Stats Closing Process Started|\n";}
-
-	# gather data from CLOSING max stats records
-	$stmtA = "SELECT stats_date,stats_flag,stats_type,campaign_id,update_time,closed_time,max_channels,max_calls,max_inbound,max_outbound,max_agents,max_remote_agents,total_calls from vicidial_daily_max_stats where stats_flag='CLOSING';";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArowsDMS=$sthA->rows;
-	$i=0;
-	while ($sthArowsDMS > $i)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$Astats_date[$i]	= 		$aryA[0];
-		$Astats_flag[$i]	= 		$aryA[1];
-		$Astats_type[$i]	= 		$aryA[2];
-		$Acampaign_id[$i]	= 		$aryA[3];
-		$Aupdate_time[$i]	= 		$aryA[4];
-		$Aclosed_time[$i]	= 		$aryA[5];
-		$Amax_channels[$i]	= 		$aryA[6];
-		$Amax_calls[$i]	= 			$aryA[7];
-		$Amax_inbound[$i]	= 		$aryA[8];
-		$Amax_outbound[$i]	= 		$aryA[9];
-		$Amax_agents[$i]	= 		$aryA[10];
-		$Amax_remote_agents[$i]	= 	$aryA[11];
-		$Atotal_calls[$i]	= 		$aryA[12];
-
-		if($DBXXX){print STDERR "\nMAX STATS: |$i|$Astats_date[$i]|$Astats_flag[$i]|$Astats_type[$i]|$Acampaign_id[$i]|$Aupdate_time[$i]|$Aclosed_time[$i]|$Amax_channels[$i]|$Amax_calls[$i]|$Amax_inbound[$i]|$Amax_outbound[$i]|$Amax_agents[$i]|$Amax_remote_agents[$i]|$Atotal_calls[$i]|\n";}
-		$i++;
-		}
-	$sthA->finish();
-
-	### loop through CLOSING max stats records and calculate end of day numbers, updating if necessary
-	$i=0;
-	while ($sthArowsDMS > $i)
-		{
-		$NEWtotal_calls=0;
-		$inbound_count=0;
-		$outbound_count=0;
-		### calculate total calls for system, did inbound and vicidial outbound
-		if ($Astats_type[$i] =~ /TOTAL/)
-			{
-			$stmtA = "SELECT count(*) from vicidial_did_log where call_date > \"$RMSQLdate\";";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			$sthArows=$sthA->rows;
-			if ($sthArows > 0)
-				{
-				@aryA = $sthA->fetchrow_array;
-				$inbound_count =	$aryA[0];
-				}
-			$sthA->finish();
-
-			$stmtA = "SELECT count(*) from vicidial_log where call_date > \"$RMSQLdate\";";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			$sthArows=$sthA->rows;
-			if ($sthArows > 0)
-				{
-				@aryA = $sthA->fetchrow_array;
-				$outbound_count =	$aryA[0];
-				}
-			$sthA->finish();
-			$NEWtotal_calls = ($inbound_count + $outbound_count);
-
-			$stmtA = "UPDATE vicidial_daily_max_stats SET total_calls='$NEWtotal_calls',stats_flag='CLOSED' where stats_flag='CLOSING' and campaign_id='' and stats_type='TOTAL';";
-			if($DBX){print STDERR "\n|$stmtA|\n";}
-			$affected_rows = $dbhA->do($stmtA);
-			if($DB){print STDERR "\n|$affected_rows Daily Max Stats Closed for TOTAL: $NEWtotal_calls|$Atotal_calls[$i]\n";}
-			}
-		### calculate total calls for ingroups
-		if ($Astats_type[$i] =~ /INGROUP/)
-			{
-			$stmtA = "SELECT count(*) from vicidial_closer_log where call_date > \"$RMSQLdate\" and campaign_id='$Acampaign_id[$i]';";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			$sthArows=$sthA->rows;
-			if ($sthArows > 0)
-				{
-				@aryA = $sthA->fetchrow_array;
-				$inbound_count =	$aryA[0];
-				}
-			$sthA->finish();
-			$NEWtotal_calls = ($inbound_count + $outbound_count);
-
-			$stmtA = "UPDATE vicidial_daily_max_stats SET total_calls='$NEWtotal_calls',stats_flag='CLOSED' where stats_flag='CLOSING' and campaign_id='$Acampaign_id[$i]' and stats_type='INGROUP';";
-			if($DBX){print STDERR "\n|$stmtA|\n";}
-			$affected_rows = $dbhA->do($stmtA);
-			if($DB){print STDERR "\n|$affected_rows Daily Max Stats Closed for INGROUP $Acampaign_id[$i]: $NEWtotal_calls|$Atotal_calls[$i]|\n";}
-			}
-		### calculate total calls for campaigns
-		if ($Astats_type[$i] =~ /CAMPAIGN/)
-			{
-			$stmtA = "SELECT count(*) from vicidial_log where call_date > \"$RMSQLdate\" and campaign_id='$Acampaign_id[$i]';";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			$sthArows=$sthA->rows;
-			if ($sthArows > 0)
-				{
-				@aryA = $sthA->fetchrow_array;
-				$outbound_count =	$aryA[0];
-				}
-			$sthA->finish();
-			$NEWtotal_calls = ($inbound_count + $outbound_count);
-
-			$stmtA = "UPDATE vicidial_daily_max_stats SET total_calls='$NEWtotal_calls',stats_flag='CLOSED' where stats_flag='CLOSING' and campaign_id='$Acampaign_id[$i]' and stats_type='CAMPAIGN';";
-			if($DBX){print STDERR "\n|$stmtA|\n";}
-			$affected_rows = $dbhA->do($stmtA);
-			if($DB){print STDERR "\n|$affected_rows Daily Max Stats Closed for CAMPAIGN $Acampaign_id[$i]: $NEWtotal_calls|$Atotal_calls[$i]|\n";}
-			}
-
-		if($DBXXX){print STDERR "\nMAX STATS: |$i|$Astats_date[$i]|$Astats_flag[$i]|$Astats_type[$i]|$Acampaign_id[$i]|$Aupdate_time[$i]|$Aclosed_time[$i]|$Amax_channels[$i]|$Amax_calls[$i]|$Amax_inbound[$i]|$Amax_outbound[$i]|$Amax_agents[$i]|$Amax_remote_agents[$i]|$Atotal_calls[$i]|     |$NEWtotal_calls = ($inbound_count + $outbound_count)|\n";}
-		$i++;
-		}
-
-	$stmtA = "UPDATE vicidial_daily_max_stats SET stats_flag='CLOSED' where stats_flag='CLOSING';";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows Daily Max Stats Closed Cleanup|\n";}
-	##### END max stats end of day process #####
-
-
-
-	##### BEGIN ra stats end of day process #####
-	# set OPEN ra stats records to CLOSING for processing
-	$stmtA = "UPDATE vicidial_daily_ra_stats SET stats_flag='CLOSING' where stats_flag='OPEN';";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows Daily RA Stats Closing Process Started|\n";}
-
-	# gather data from CLOSING ra stats records
-	$stmtA = "SELECT stats_date,stats_flag,user,update_time,closed_time,max_calls,total_calls from vicidial_daily_ra_stats where stats_flag='CLOSING';";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArowsDMS=$sthA->rows;
-	$i=0;
-	while ($sthArowsDMS > $i)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$Astats_date[$i]	= 		$aryA[0];
-		$Astats_flag[$i]	= 		$aryA[1];
-		$Auser[$i]	= 				$aryA[2];
-		$Aupdate_time[$i]	= 		$aryA[3];
-		$Aclosed_time[$i]	= 		$aryA[4];
-		$Amax_calls[$i]	= 			$aryA[5];
-		$Atotal_calls[$i]	= 		$aryA[6];
-
-		if($DBXXX){print STDERR "\nMAX STATS: |$i|$Astats_date[$i]|$Astats_flag[$i]|$Auser[$i]|$Aupdate_time[$i]|$Aclosed_time[$i]|$Amax_calls[$i]|$Atotal_calls[$i]|\n";}
-		$i++;
-		}
-	$sthA->finish();
-
-	$stmtA = "UPDATE vicidial_daily_ra_stats SET stats_flag='CLOSED' where stats_flag='CLOSING';";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows Daily RA Stats Closed Cleanup|\n";}
-	##### END ra stats end of day process #####
-
-
-	##### BEGIN vicidial_ajax_log end of day process removing records older than 7 days #####
-	$stmtA = "DELETE from vicidial_ajax_log where db_time < \"$SDSQLdate\";";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$affected_rows = $dbhA->do($stmtA);
-	if($DB){print STDERR "\n|$affected_rows vicidial_ajax_log records older than 7 days purged|\n";}
-
-	$stmtA = "optimize table vicidial_ajax_log;";
-	if($DBX){print STDERR "\n|$stmtA|\n";}
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	@aryA = $sthA->fetchrow_array;
-	if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
-	$sthA->finish();
-	##### END vicidial_ajax_log end of day process removing records older than 7 days #####
-
-
-	##### BEGIN usacan_phone_dialcode_fix funciton #####
-	if ($usacan_phone_dialcode_fix > 0)
-		{
-		$stmtA = "UPDATE vicidial_list SET phone_code='1' where phone_code!='1';";
+		$stmtA = "optimize table vicidial_drop_rate_groups;";
 		if($DBX){print STDERR "\n|$stmtA|\n";}
-		$PCaffected_rows = $dbhA->do($stmtA);
-		if($DB){print STDERR "\n|$PCaffected_rows vicidial_list.phone_code entries set to 1|\n";}
-
-		$stmtA = "UPDATE vicidial_list SET phone_number = TRIM(LEADING '1' from phone_number) where char_length(phone_number) > 10 and phone_number LIKE \"1%\";";
-		if($DBX){print STDERR "\n|$stmtA|\n";}
-		$PNaffected_rows = $dbhA->do($stmtA);
-		if($DB){print STDERR "\n|$PNaffected_rows vicidial_list phone_number leading 1 entries trimmed|\n";}
-
-		if ( ($PCaffected_rows > 0) or ($PNaffected_rows > 0) )
-			{
-			if ($DB) {print "restarting Asterisk process...\n";}
-			$stmtA="INSERT INTO vicidial_admin_log set event_date=NOW(), user='VDAD', ip_address='1.1.1.1', event_section='SERVERS', event_type='MODIFY', record_id='leads', event_code='USACAN PHONE DIALCODE FIX', event_sql='', event_notes='$PCaffected_rows vicidial_list.phone_code entries set to 1|$PNaffected_rows vicidial_list phone_number leading 1 entries trimmed|';";
-			$Laffected_rows = $dbhA->do($stmtA);
-			if ($DBX) {print "Admin log of USACAN phone code fix: |$Laffected_rows|$stmtA|\n";}
-			}
-		}
-	##### END usacan_phone_dialcode_fix funciton #####
-
-
-	$dbhC = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_custom_user", "$VARDB_custom_pass")
-	 or die "Couldn't connect to database: " . DBI->errstr;
-
-	##### find MEMORY tables for reset of empty space #####
-	$stmtA = "SHOW TABLE STATUS WHERE Engine='MEMORY';";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	$i=0;
-	while ($sthArows > $i)
-		{
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
 		@aryA = $sthA->fetchrow_array;
-		$table_name	= 	$aryA[0];
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
 
-		$stmtC = "ALTER TABLE $table_name ENGINE=MEMORY;";
-		if($DBX){print STDERR "\n|$stmtC|\n";}
-		$Caffected_rows = $dbhC->do($stmtC);
-		if($DB){print STDERR "\n|$table_name memory reset $Caffected_rows rows|\n";}
-		$i++;
+		$stmtA = "delete from vicidial_campaign_server_stats;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_campaign_server_stats records deleted|\n";}
+		if ($teodDB) {$event_string = "vicidial_campaign_server_stats records reset: $affected_rows";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_campaign_server_stats;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "delete from vicidial_campaign_stats_debug;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_campaign_stats_debug records deleted|\n";}
+		if ($teodDB) {$event_string = "vicidial_campaign_stats_debug records reset: $affected_rows";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_campaign_stats_debug;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "update vicidial_inbound_group_agents SET calls_today=0;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_inbound_group_agents call counts reset|\n";}
+		if ($teodDB) {$event_string = "vicidial_inbound_group_agents records reset: $affected_rows";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_inbound_group_agents;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "update vicidial_campaign_cid_areacodes SET call_count_today=0;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_campaign_cid_areacodes call counts reset|\n";}
+		if ($teodDB) {$event_string = "vicidial_campaign_cid_areacodes records reset: $affected_rows";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_campaign_cid_areacodes;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "update vicidial_did_ra_extensions SET call_count_today=0;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_did_ra_extensions call counts reset|\n";}
+		if ($teodDB) {$event_string = "vicidial_did_ra_extensions records reset: $affected_rows";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_did_ra_extensions;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "update vicidial_extension_groups SET call_count_today=0;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_extension_groups call counts reset|\n";}
+		if ($teodDB) {$event_string = "vicidial_extension_groups records reset: $affected_rows";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_extension_groups;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "optimize table vicidial_users;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "update vicidial_campaign_agents SET calls_today=0;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_campaign_agents call counts reset|\n";}
+		if ($teodDB) {$event_string = "vicidial_campaign_agents records reset: $affected_rows";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_campaign_agents;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "update vicidial_live_inbound_agents SET calls_today=0;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_live_inbound_agents call counts reset|\n";}
+		if ($teodDB) {$event_string = "vicidial_live_inbound_agents records reset: $affected_rows";   &teod_logger;}
+
+		if ($agents_calls_reset > 0)
+			{
+			$stmtA = "delete from vicidial_live_inbound_agents where last_call_finish < \"$TDSQLdate\";";
+			if($DBX){print STDERR "\n|$stmtA|\n";}
+			$affected_rows = $dbhA->do($stmtA);
+			if($DB){print STDERR "\n|$affected_rows vicidial_live_inbound_agents old records deleted|\n";}
+			if ($teodDB) {$event_string = "vicidial_live_inbound_agents old records deleted($TDSQLdate): $affected_rows";   &teod_logger;}
+
+			$stmtA = "delete from vicidial_live_agents where last_state_change < \"$TDSQLdate\" and extension NOT LIKE \"R/%\";";
+			if($DBX){print STDERR "\n|$stmtA|\n";}
+			$affected_rows = $dbhA->do($stmtA);
+			if($DB){print STDERR "\n|$affected_rows vicidial_live_agents old records deleted|\n";}
+			if ($teodDB) {$event_string = "vicidial_live_agents old records deleted($TDSQLdate): $affected_rows";   &teod_logger;}
+
+			$stmtA = "delete from vicidial_auto_calls where last_update_time < \"$TDSQLdate\";";
+			if($DBX){print STDERR "\n|$stmtA|\n";}
+			$affected_rows = $dbhA->do($stmtA);
+			if($DB){print STDERR "\n|$affected_rows vicidial_auto_calls old records deleted|\n";}
+			if ($teodDB) {$event_string = "vicidial_auto_calls old records deleted($TDSQLdate): $affected_rows";   &teod_logger;}
+			}
+
+		$stmtA = "optimize table vicidial_live_inbound_agents;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "optimize table vicidial_live_agents;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "optimize table vicidial_auto_calls;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "optimize table vicidial_daily_max_stats;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "optimize table vicidial_daily_ra_stats;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "delete from vicidial_session_data where login_time < \"$TDSQLdate\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_session_data old records deleted|\n";}
+		if ($teodDB) {$event_string = "vicidial_session_data old records deleted($TDSQLdate): $affected_rows";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_session_data;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "delete from vicidial_monitor_calls where monitor_time < \"$TDSQLdate\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_monitor_calls old records deleted|\n";}
+		if ($teodDB) {$event_string = "vicidial_monitor_calls old records deleted($TDSQLdate): $affected_rows";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_monitor_calls;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		# set past holidays to EXPIRED status
+		$stmtA = "UPDATE vicidial_call_time_holidays SET holiday_status='EXPIRED' where holiday_date < \"$RMdate\" and holiday_status!='EXPIRED';";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows Holidays set to expired|\n";}
+		if ($teodDB) {$event_string = "Holidays set to expired($RMdate): $affected_rows";   &teod_logger;}
+
+
+		##### BEGIN max stats end of day process #####
+		# set OPEN max stats records to CLOSING for processing
+		$stmtA = "UPDATE vicidial_daily_max_stats SET stats_flag='CLOSING' where stats_flag='OPEN';";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows Daily Max Stats Closing Process Started|\n";}
+		if ($teodDB) {$event_string = "Daily Max Stats Closing Process Started: $affected_rows";   &teod_logger;}
+
+		# gather data from CLOSING max stats records
+		$stmtA = "SELECT stats_date,stats_flag,stats_type,campaign_id,update_time,closed_time,max_channels,max_calls,max_inbound,max_outbound,max_agents,max_remote_agents,total_calls from vicidial_daily_max_stats where stats_flag='CLOSING';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArowsDMS=$sthA->rows;
+		$i=0;
+		while ($sthArowsDMS > $i)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$Astats_date[$i]	= 		$aryA[0];
+			$Astats_flag[$i]	= 		$aryA[1];
+			$Astats_type[$i]	= 		$aryA[2];
+			$Acampaign_id[$i]	= 		$aryA[3];
+			$Aupdate_time[$i]	= 		$aryA[4];
+			$Aclosed_time[$i]	= 		$aryA[5];
+			$Amax_channels[$i]	= 		$aryA[6];
+			$Amax_calls[$i]	= 			$aryA[7];
+			$Amax_inbound[$i]	= 		$aryA[8];
+			$Amax_outbound[$i]	= 		$aryA[9];
+			$Amax_agents[$i]	= 		$aryA[10];
+			$Amax_remote_agents[$i]	= 	$aryA[11];
+			$Atotal_calls[$i]	= 		$aryA[12];
+
+			if($DBXXX){print STDERR "\nMAX STATS: |$i|$Astats_date[$i]|$Astats_flag[$i]|$Astats_type[$i]|$Acampaign_id[$i]|$Aupdate_time[$i]|$Aclosed_time[$i]|$Amax_channels[$i]|$Amax_calls[$i]|$Amax_inbound[$i]|$Amax_outbound[$i]|$Amax_agents[$i]|$Amax_remote_agents[$i]|$Atotal_calls[$i]|\n";}
+			if ($teodDB) {$event_string = "MAX STATS: |$i|$Astats_date[$i]|$Astats_flag[$i]|$Astats_type[$i]|$Acampaign_id[$i]|$Aupdate_time[$i]|$Aclosed_time[$i]|$Amax_channels[$i]|$Amax_calls[$i]|$Amax_inbound[$i]|$Amax_outbound[$i]|$Amax_agents[$i]|$Amax_remote_agents[$i]|$Atotal_calls[$i]|";   &teod_logger;}
+
+			$i++;
+			}
+		$sthA->finish();
+
+		### loop through CLOSING max stats records and calculate end of day numbers, updating if necessary
+		$i=0;
+		while ($sthArowsDMS > $i)
+			{
+			$NEWtotal_calls=0;
+			$inbound_count=0;
+			$outbound_count=0;
+			### calculate total calls for system, did inbound and vicidial outbound
+			if ($Astats_type[$i] =~ /TOTAL/)
+				{
+				$stmtA = "SELECT count(*) from vicidial_did_log where call_date >= \"$RMSQLdate\" and call_date < \"$now_date\";";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$inbound_count =	$aryA[0];
+					}
+				$sthA->finish();
+				if ($teodDB) {$event_string = "MAX STATS TOTAL DID INBOUND: |$stmtA|$inbound_count|";   &teod_logger;}
+
+				$stmtA = "SELECT count(*) from vicidial_log where call_date >= \"$RMSQLdate\" and call_date < \"$now_date\";";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$outbound_count =	$aryA[0];
+					}
+				$sthA->finish();
+				if ($teodDB) {$event_string = "MAX STATS TOTAL OUTBOUND: |$stmtA|$outbound_count|";   &teod_logger;}
+				$NEWtotal_calls = ($inbound_count + $outbound_count);
+
+				$stmtA = "UPDATE vicidial_daily_max_stats SET total_calls='$NEWtotal_calls',stats_flag='CLOSED' where stats_flag='CLOSING' and campaign_id='' and stats_type='TOTAL';";
+				if($DBX){print STDERR "\n|$stmtA|\n";}
+				$affected_rows = $dbhA->do($stmtA);
+				if($DB){print STDERR "\n|$affected_rows Daily Max Stats Closed for TOTAL: $NEWtotal_calls|$Atotal_calls[$i]\n";}
+				if ($teodDB) {$event_string = "Daily Max Stats Closed for TOTAL: |$stmtA|$affected_rows|$NEWtotal_calls|$Atotal_calls[$i]|";   &teod_logger;}
+				}
+			### calculate total calls for ingroups
+			if ($Astats_type[$i] =~ /INGROUP/)
+				{
+				$stmtA = "SELECT count(*) from vicidial_closer_log where call_date >= \"$RMSQLdate\" and call_date < \"$now_date\" and campaign_id='$Acampaign_id[$i]';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$inbound_count =	$aryA[0];
+					}
+				$sthA->finish();
+				$NEWtotal_calls = $inbound_count;
+
+				$stmtB = "UPDATE vicidial_daily_max_stats SET total_calls='$NEWtotal_calls',stats_flag='CLOSED' where stats_flag='CLOSING' and campaign_id='$Acampaign_id[$i]' and stats_type='INGROUP';";
+				if($DBX){print STDERR "\n|$stmtB|\n";}
+				$affected_rows = $dbhA->do($stmtB);
+				if($DB){print STDERR "\n|$affected_rows Daily Max Stats Closed for INGROUP $Acampaign_id[$i]: $NEWtotal_calls|$Atotal_calls[$i]|\n";}
+				if ($teodDB) {$event_string = "MAX STATS IN-GROUP INBOUND: |$stmtA|$inbound_count|$Acampaign_id[$i]|$stmtB|$affected_rows|";   &teod_logger;}
+				}
+			### calculate total calls for campaigns
+			if ($Astats_type[$i] =~ /CAMPAIGN/)
+				{
+				$stmtA = "SELECT count(*) from vicidial_log where call_date >= \"$RMSQLdate\" and call_date < \"$now_date\" and campaign_id='$Acampaign_id[$i]';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$outbound_count =	$aryA[0];
+					}
+				$sthA->finish();
+				$NEWtotal_calls = $outbound_count;
+
+				$stmtB = "UPDATE vicidial_daily_max_stats SET total_calls='$NEWtotal_calls',stats_flag='CLOSED' where stats_flag='CLOSING' and campaign_id='$Acampaign_id[$i]' and stats_type='CAMPAIGN';";
+				if($DBX){print STDERR "\n|$stmtB|\n";}
+				$affected_rows = $dbhA->do($stmtB);
+				if($DB){print STDERR "\n|$affected_rows Daily Max Stats Closed for CAMPAIGN $Acampaign_id[$i]: $NEWtotal_calls|$Atotal_calls[$i]|\n";}
+				if ($teodDB) {$event_string = "MAX STATS CAMPAIGN OUTBOUND: |$stmtA|$outbound_count|$Acampaign_id[$i]|$stmtB|$affected_rows|";   &teod_logger;}
+				}
+
+			if($DBXXX){print STDERR "\nMAX STATS: |$i|$Astats_date[$i]|$Astats_flag[$i]|$Astats_type[$i]|$Acampaign_id[$i]|$Aupdate_time[$i]|$Aclosed_time[$i]|$Amax_channels[$i]|$Amax_calls[$i]|$Amax_inbound[$i]|$Amax_outbound[$i]|$Amax_agents[$i]|$Amax_remote_agents[$i]|$Atotal_calls[$i]|     |$NEWtotal_calls = ($inbound_count + $outbound_count)|\n";}
+			if ($teodDB) {$event_string = "MAX STATS: |$i|$Astats_date[$i]|$Astats_flag[$i]|$Astats_type[$i]|$Acampaign_id[$i]|$Aupdate_time[$i]|$Aclosed_time[$i]|$Amax_channels[$i]|$Amax_calls[$i]|$Amax_inbound[$i]|$Amax_outbound[$i]|$Amax_agents[$i]|$Amax_remote_agents[$i]|$Atotal_calls[$i]|     |$NEWtotal_calls = ($inbound_count + $outbound_count)|";   &teod_logger;}
+
+			$i++;
+			}
+
+		$stmtA = "UPDATE vicidial_daily_max_stats SET stats_flag='CLOSED' where stats_flag='CLOSING';";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows Daily Max Stats Closed Cleanup|\n";}
+		if ($teodDB) {$event_string = "Daily Max Stats Closed Cleanup: |$stmtA|$affected_rows|";   &teod_logger;}
+		##### END max stats end of day process #####
+
+
+
+		##### BEGIN ra stats end of day process #####
+		# set OPEN ra stats records to CLOSING for processing
+		$stmtA = "UPDATE vicidial_daily_ra_stats SET stats_flag='CLOSING' where stats_flag='OPEN';";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows Daily RA Stats Closing Process Started|\n";}
+		if ($teodDB) {$event_string = "Daily RA Stats Closing Process Started: |$stmtA|$affected_rows|";   &teod_logger;}
+
+		# gather data from CLOSING ra stats records
+		$stmtA = "SELECT stats_date,stats_flag,user,update_time,closed_time,max_calls,total_calls from vicidial_daily_ra_stats where stats_flag='CLOSING';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArowsDMS=$sthA->rows;
+		$i=0;
+		while ($sthArowsDMS > $i)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$Astats_date[$i]	= 		$aryA[0];
+			$Astats_flag[$i]	= 		$aryA[1];
+			$Auser[$i]	= 				$aryA[2];
+			$Aupdate_time[$i]	= 		$aryA[3];
+			$Aclosed_time[$i]	= 		$aryA[4];
+			$Amax_calls[$i]	= 			$aryA[5];
+			$Atotal_calls[$i]	= 		$aryA[6];
+
+			if($DBXXX){print STDERR "\nRA MAX STATS: |$i|$Astats_date[$i]|$Astats_flag[$i]|$Auser[$i]|$Aupdate_time[$i]|$Aclosed_time[$i]|$Amax_calls[$i]|$Atotal_calls[$i]|\n";}
+			if ($teodDB) {$event_string = "RA MAX STATS: |$i|$Astats_date[$i]|$Astats_flag[$i]|$Auser[$i]|$Aupdate_time[$i]|$Aclosed_time[$i]|$Amax_calls[$i]|$Atotal_calls[$i]|";   &teod_logger;}
+			$i++;
+			}
+		$sthA->finish();
+
+		$stmtA = "UPDATE vicidial_daily_ra_stats SET stats_flag='CLOSED' where stats_flag='CLOSING';";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows Daily RA Stats Closed Cleanup|\n";}
+		if ($teodDB) {$event_string = "Daily RA Stats Closed Cleanup: |$stmtA|$affected_rows|";   &teod_logger;}
+		##### END ra stats end of day process #####
+
+
+		##### BEGIN vicidial_ajax_log end of day process removing records older than 7 days #####
+		$stmtA = "DELETE from vicidial_ajax_log where db_time < \"$SDSQLdate\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_ajax_log records older than 7 days purged|\n";}
+		if ($teodDB) {$event_string = "vicidial_ajax_log records older than 7 days purged: |$stmtA|$affected_rows|";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_ajax_log;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+		##### END vicidial_ajax_log end of day process removing records older than 7 days #####
+
+
+		##### BEGIN usacan_phone_dialcode_fix funciton #####
+		if ($usacan_phone_dialcode_fix > 0)
+			{
+			$stmtA = "UPDATE vicidial_list SET phone_code='1' where phone_code!='1';";
+			if($DBX){print STDERR "\n|$stmtA|\n";}
+			$PCaffected_rows = $dbhA->do($stmtA);
+			if($DB){print STDERR "\n|$PCaffected_rows vicidial_list.phone_code entries set to 1|\n";}
+			if ($teodDB) {$event_string = "vicidial_list.phone_code entries set to 1: |$stmtA|$PCaffected_rows|";   &teod_logger;}
+
+			$stmtB = "UPDATE vicidial_list SET phone_number = TRIM(LEADING '1' from phone_number) where char_length(phone_number) > 10 and phone_number LIKE \"1%\";";
+			if($DBX){print STDERR "\n|$stmtB|\n";}
+			$PNaffected_rows = $dbhA->do($stmtB);
+			if($DB){print STDERR "\n|$PNaffected_rows vicidial_list phone_number leading 1 entries trimmed|\n";}
+			if ($teodDB) {$event_string = "vicidial_list phone_number leading 1 entries trimmed: |$stmtB|$PNaffected_rows|";   &teod_logger;}
+
+			if ( ($PCaffected_rows > 0) or ($PNaffected_rows > 0) )
+				{
+				if ($DB) {print "restarting Asterisk process...\n";}
+				$stmtA="INSERT INTO vicidial_admin_log set event_date=NOW(), user='VDAD', ip_address='1.1.1.1', event_section='SERVERS', event_type='MODIFY', record_id='leads', event_code='USACAN PHONE DIALCODE FIX', event_sql='', event_notes='$PCaffected_rows vicidial_list.phone_code entries set to 1|$PNaffected_rows vicidial_list phone_number leading 1 entries trimmed|';";
+				$Laffected_rows = $dbhA->do($stmtA);
+				if ($DBX) {print "Admin log of USACAN phone code fix: |$Laffected_rows|$stmtA|\n";}
+				}
+			}
+		##### END usacan_phone_dialcode_fix funciton #####
+
+
+		$dbhC = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_custom_user", "$VARDB_custom_pass")
+		 or die "Couldn't connect to database: " . DBI->errstr;
+
+		##### find MEMORY tables for reset of empty space #####
+		$stmtA = "SHOW TABLE STATUS WHERE Engine='MEMORY';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$i=0;
+		while ($sthArows > $i)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$table_name	= 	$aryA[0];
+
+			$stmtC = "ALTER TABLE $table_name ENGINE=MEMORY;";
+			if($DBX){print STDERR "\n|$stmtC|\n";}
+			$Caffected_rows = $dbhC->do($stmtC);
+			if($DB){print STDERR "\n|$table_name memory reset $Caffected_rows rows|\n";}
+			$i++;
+			}
+		$sthA->finish();
 		}
-	$sthA->finish();
 	}
 
 ################################################################################
@@ -1361,54 +1470,6 @@ if ($timeclock_end_of_day_NOW > 0)
 ################################################################################
 #####  START Creation of auto-generated conf files
 ################################################################################
-
-##### Get the settings from system_settings #####
-$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats FROM system_settings;";
-#	print "$stmtA\n";
-$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-$sthArows=$sthA->rows;
-if ($sthArows > 0)
-	{
-	@aryA = $sthA->fetchrow_array;
-	$sounds_central_control_active =	$aryA[0];
-	$active_voicemail_server =			$aryA[1];
-	$SScustom_dialplan_entry =			$aryA[2];
-	$SSdefault_codecs =					$aryA[3];
-	$SSgenerate_cross_server_exten =	$aryA[4];
-	$SSvoicemail_timezones =			$aryA[5];
-	$SSdefault_voicemail_timezone =		$aryA[6];
-	$SScall_menu_qualify_enabled =		$aryA[7];
-	$SSallow_voicemail_greeting =		$aryA[8];
-	$SSreload_timestamp =				$aryA[9];
-	$meetme_enter_login_filename =		$aryA[10];
-	$meetme_enter_leave3way_filename =	$aryA[11];
-	$SSallow_chats =					$aryA[12];
-	}
-$sthA->finish();
-if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
-
-##### Get the settings for this server's server_ip #####
-$stmtA = "SELECT active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,asterisk_version,sounds_update,conf_secret,custom_dialplan_entry,auto_restart_asterisk,asterisk_temp_no_restart,gather_asterisk_output FROM servers where server_ip='$server_ip';";
-#	print "$stmtA\n";
-$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-$sthArows=$sthA->rows;
-if ($sthArows > 0)
-	{
-	@aryA = $sthA->fetchrow_array;
-	$active_asterisk_server	=		$aryA[0];
-	$generate_vicidial_conf	=		$aryA[1];
-	$rebuild_conf_files	=			$aryA[2];
-	$asterisk_version =				$aryA[3];
-	$sounds_update =				$aryA[4];
-	$self_conf_secret =				$aryA[5];
-	$SERVERcustom_dialplan_entry =	$aryA[6];
-	$auto_restart_asterisk =		$aryA[7];
-	$asterisk_temp_no_restart =		$aryA[8];
-	$gather_asterisk_output =		$aryA[9];
-	}
-$sthA->finish();
 
 if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_server)) eq (length($server_ip))) )
 	{
@@ -2541,7 +2602,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the Call Menu entries #####
-	$stmtA = "SELECT menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field,qualify_sql FROM vicidial_call_menu order by menu_id;";
+	$stmtA = "SELECT menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field,qualify_sql,alt_dtmf_log,question FROM vicidial_call_menu order by menu_id;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2565,6 +2626,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$dtmf_log[$i] =				$aryA[12];
 		$dtmf_field[$i] =			$aryA[13];
 		$qualify_sql[$i] =			$aryA[14];
+		$alt_dtmf_log[$i] =			$aryA[15];
+		$question[$i] =				$aryA[16];
 
 		if ($track_in_vdac[$i] > 0)
 			{$track_in_vdac[$i] = 'YES';}
@@ -2724,21 +2787,21 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				if ($option_route[$j] =~ /AGI/)
 					{
 					if ($dtmf_log[$i] > 0) 
-						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
+						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i]-----$alt_dtmf_log[$i]-----$question[$i])\n";   $PRI++;}
 					$call_menu_line .= "exten => $option_value[$j],$PRI,AGI($option_route_value[$j])\n";   $PRI++;
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 					}
 				if ($option_route[$j] =~ /CALLMENU/)
 					{
 					if ($dtmf_log[$i] > 0) 
-						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
+						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i]-----$alt_dtmf_log[$i]-----$question[$i])\n";   $PRI++;}
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto($option_route_value[$j],s,1)\n";   $PRI++;
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 					}
 				if ($option_route[$j] =~ /DID/)
 					{
 					if ($dtmf_log[$i] > 0) 
-						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
+						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i]-----$alt_dtmf_log[$i]-----$question[$i])\n";   $PRI++;}
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(trunkinbound,$option_route_value[$j],1)\n";   $PRI++;
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 					}
@@ -2756,14 +2819,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 					$IGvid_validate_digits =	$IGoption_route_value_context[8];
 
 					if ($dtmf_log[$i] > 0) 
-						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
+						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i]-----$alt_dtmf_log[$i]-----$question[$i])\n";   $PRI++;}
 					$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(agi-VDAD_ALL_inbound.agi,$IGhandle_method-----$IGsearch_method-----$option_route_value[$j]-----$menu_id[$i]--------------------$IGlist_id-----$IGphone_code-----$IGcampaign_id---------------$IGvid_enter_filename-----$IGvid_id_number_filename-----$IGvid_confirm_filename-----$IGvid_validate_digits)\n";   $PRI++;
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 					}
 				if ($option_route[$j] =~ /EXTENSION/)
 					{
 					if ($dtmf_log[$i] > 0) 
-						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
+						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i]-----$alt_dtmf_log[$i]-----$question[$i])\n";   $PRI++;}
 					if (length($option_route_value_context[$j])>0) {$option_route_value_context[$j] = "$option_route_value_context[$j],";}
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Goto($option_route_value_context[$j]$option_route_value[$j],1)\n";   $PRI++;
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
@@ -2771,7 +2834,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				if ($option_route[$j] =~ /VOICEMAIL|VMAIL_NO_INST/)
 					{
 					if ($dtmf_log[$i] > 0) 
-						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
+						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i]-----$alt_dtmf_log[$i]-----$question[$i])\n";   $PRI++;}
 					if ($option_route[$j] =~ /VMAIL_NO_INST/)
 						{
 						$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(default,85026666666667$option_route_value[$j],1)\n";   $PRI++;
@@ -2809,13 +2872,13 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 						$call_menu_line .= "$hangup_prompt_ext";
 						if ($dtmf_log[$i] > 0) 
-							{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
+							{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i]-----$alt_dtmf_log[$i]-----$question[$i])\n";   $PRI++;}
 						$call_menu_line .= "exten => $option_value[$j],n,Hangup()\n";
 						}
 					else
 						{
 						if ($dtmf_log[$i] > 0) 
-							{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
+							{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i]-----$alt_dtmf_log[$i]-----$question[$i])\n";   $PRI++;}
 						$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 						}
 					}
@@ -2843,7 +2906,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 							$DIALstring = "$a$S$b$S$c$S$d$S";
 							}
 						if ($dtmf_log[$i] > 0) 
-							{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i])\n";   $PRI++;}
+							{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i]-----$alt_dtmf_log[$i]-----$question[$i])\n";   $PRI++;}
 						$call_menu_line .= "exten => $option_value[$j],$PRI,Goto(default,$DIALstring$Pdialplan,1)\n";   $PRI++;
 						$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 						}
@@ -3818,6 +3881,17 @@ if ($DB) {print "DONE\n";}
 exit;
 
 
+sub teod_logger
+	{
+	if (!$teodLOGfile) {$teodLOGfile = "$PATHlogs/teod.$year-$mon-$mday";}
+
+	### open the log file for writing ###
+	open(Lout, ">>$teodLOGfile")
+			|| die "Can't open $teodLOGfile: $!\n";
+	print Lout "$now_date|$event_string|\n";
+	close(Lout);
+	$event_string='';
+	}
 
 sub leading_zero($) 
 	{

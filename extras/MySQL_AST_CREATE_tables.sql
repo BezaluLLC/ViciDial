@@ -1642,7 +1642,8 @@ usacan_phone_dialcode_fix ENUM('0','1') default '0',
 cache_carrier_stats_realtime ENUM('0','1') default '0',
 oldest_logs_date DATETIME,
 log_recording_access ENUM('0', '1') default '0',
-report_default_format ENUM('TEXT', 'HTML') default 'TEXT'
+report_default_format ENUM('TEXT', 'HTML') default 'TEXT',
+alt_ivr_logging ENUM('0', '1') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2104,7 +2105,9 @@ tracking_group VARCHAR(20) default 'CALLMENU',
 dtmf_log ENUM('0','1') default '0',
 dtmf_field VARCHAR(50) default 'NONE',
 user_group VARCHAR(20) default '---ALL---',
-qualify_sql TEXT
+qualify_sql TEXT,
+alt_dtmf_log ENUM('0','1') default '0',
+question INT(11) DEFAULT NULL
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_call_menu_options (
@@ -3470,6 +3473,20 @@ index(recording_id),
 index(lead_id)
 ) ENGINE=MyISAM AUTO_INCREMENT=1599 DEFAULT CHARSET=utf8;
 
+CREATE TABLE vicidial_ivr_response (
+id INT(11) unsigned NOT NULL AUTO_INCREMENT,
+btn VARCHAR(10) DEFAULT NULL,
+lead_id INT(10) unsigned DEFAULT NULL,
+created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+question INT(11) DEFAULT NULL,
+response VARCHAR(10) DEFAULT NULL,
+uniqueid VARCHAR(50) DEFAULT NULL,
+campaign VARCHAR(20) DEFAULT NULL,
+PRIMARY KEY (id),
+KEY question_created (question,uniqueid,campaign,created),
+index(lead_id)
+) ENGINE=MyISAM AUTO_INCREMENT=1599 DEFAULT CHARSET=utf8;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3720,4 +3737,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1453',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1454',db_schema_update_date=NOW(),reload_timestamp=NOW();

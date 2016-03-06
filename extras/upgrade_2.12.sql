@@ -524,3 +524,24 @@ ALTER TABLE vicidial_chat_archive ADD user_direct_group_id VARCHAR(20);
 INSERT INTO vicidial_inbound_groups(group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,hold_time_option_no_block,hold_time_option_prompt_seconds,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,timer_action_destination,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,na_call_url,on_hook_cid,group_calldate,action_xfer_cid,drop_callmenu,after_hours_callmenu,user_group,max_calls_method,max_calls_count,max_calls_action,dial_ingroup_cid,group_handling,web_form_address_three,populate_lead_ingroup,drop_lead_reset,after_hours_lead_reset,nanq_lead_reset,wait_time_lead_reset,hold_time_lead_reset,status_group_id,routing_initiated_recordings,on_hook_cid_number) VALUES ('AGENTDIRECT_CHAT','Agent Direct Queue for Chats','#FFFFFF','Y','','','longest_wait_time','Y','','',NULL,NULL,NULL,NULL,360,'MESSAGE','8307','24hours','MESSAGE','vm-goodbye','8300',NULL,'---NONE---','default','generic_hold',60,'ding',1000,'---NONE---',99,'---NONE---','DISABLED','NONE','---NONE---','N',NULL,'24HRMIDNIGHT','NONE','Y',NULL,NULL,'N','N','NONE',360,'8300','','---NONE---','vm-hangup',0,'---NONE---','N','ALWAYS',20,30,'','N','MESSAGE','nbdy-avail-to-take-call|vm-goodbye','','NONE','',-1,'','','','','','N','N','DISABLED','',0,'to-be-called-back|digits/1','','N',10,'N',10,'NONE','NONE','WAIT','NONE','NONE','NONE',120,'8300','','---NONE---','','vm-hangup',999,'to-be-called-back|digits/1','N',10,'',0,'','','N',10,15,'','GENERIC',NULL,'CUSTOMER','','','---ALL---','DISABLED',0,'DROP','','CHAT','','ENABLED','N','N','N','N','N','','N','');
 
 UPDATE system_settings SET db_schema_version='1453',db_schema_update_date=NOW() where db_schema_version < 1453;
+
+CREATE TABLE vicidial_ivr_response (
+id INT(11) unsigned NOT NULL AUTO_INCREMENT,
+btn VARCHAR(10) DEFAULT NULL,
+lead_id INT(10) unsigned DEFAULT NULL,
+created TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+question INT(11) DEFAULT NULL,
+response VARCHAR(10) DEFAULT NULL,
+uniqueid VARCHAR(50) DEFAULT NULL,
+campaign VARCHAR(20) DEFAULT NULL,
+PRIMARY KEY (id),
+KEY question_created (question,uniqueid,campaign,created),
+index(lead_id)
+) ENGINE=MyISAM AUTO_INCREMENT=1599 DEFAULT CHARSET=utf8;
+
+ALTER TABLE system_settings ADD alt_ivr_logging ENUM('0', '1') default '0';
+
+ALTER TABLE vicidial_call_menu ADD alt_dtmf_log ENUM('0','1') default '0';
+ALTER TABLE vicidial_call_menu ADD question INT(11) DEFAULT NULL;
+
+UPDATE system_settings SET db_schema_version='1454',db_schema_update_date=NOW() where db_schema_version < 1454;

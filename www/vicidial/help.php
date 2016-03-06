@@ -81,6 +81,7 @@
 # 160116-1512 - Added access_recording and log_recording_access entries
 # 160121-2155 - Added settings-report_default_format entry and help text for several reports
 # 160211-2255 - Added help text for remaining reports
+# 160305-2115 - Added Alt IVR(call menu) DTMF logging
 #
 
 
@@ -3073,6 +3074,16 @@ if ($SSqc_features_active > 0)
 <B><?php echo _QXZ("Log Field"); ?> -</B><?php echo _QXZ("If the Log Key Press option is enabled, this optional setting can allow the response to also be stored in this list field. vendor_lead_code, source_id, phone_code, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, alt_phone, email, security_phrase, comments, rank, owner, status, user. Default is NONE for disabled."); ?>
 
 <BR>
+<A NAME="call_menu-alt_dtmf_log">
+<BR>
+<B><?php echo _QXZ("Alt DTMF Log"); ?> -</B><?php echo _QXZ("This option if enabled will log the DTMF key press by the caller in this Call Menu to a separate database table. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="call_menu-question">
+<BR>
+<B><?php echo _QXZ("Question"); ?> -</B><?php echo _QXZ("If the Alt DTMF Log option is enabled, this is the question number that the response will be logged to. Default is blank for disabled."); ?>
+
+<BR>
 <A NAME="call_menu-option_value">
 <BR>
 <B><?php echo _QXZ("Option Value"); ?> -</B><?php echo _QXZ("This field is where you define the menu option, possible choices are: 0,1,2,3,4,5,6,7,8,9,*,#,A,B,C,D,TIMECHECK. The special option TIMECHECK can be used only if you have Menu Time Check enabled and there is a Call Time defined for the Menu. To delete an Option, just set the Route to REMOVE and the option will be deleted when you click the SUBMIT button. TIMEOUT will allow you to set what happens to the call when it times out with no input from the caller. INVALID will allow you to set what happens when the caller enters an invalid option. INVALID_2ND and 3RD can only be active if INVALID is not used, it will wait until the second or third invalid entry by the caller before it executes the option."); ?>
@@ -5017,6 +5028,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-call_menu_qualify_enabled">
 <BR>
 <B><?php echo _QXZ("Call Menu Qualify Enabled"); ?> -</B><?php echo _QXZ("This setting enables the option in Call Menus to put a SQL qualification on the people that hear that call menu. For more information on how that feature works, view the help for Call Menus. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="settings-alt_ivr_logging">
+<BR>
+<B><?php echo _QXZ("Call Menu Alt DTMF Logging"); ?> -</B><?php echo _QXZ("This setting enables the option in Call Menus to log the DTMF responses to an alternate database table. This can be used in addition to the default DTMF lead logging option. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="settings-level_8_disable_add">
