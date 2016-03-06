@@ -545,3 +545,12 @@ ALTER TABLE vicidial_call_menu ADD alt_dtmf_log ENUM('0','1') default '0';
 ALTER TABLE vicidial_call_menu ADD question INT(11) DEFAULT NULL;
 
 UPDATE system_settings SET db_schema_version='1454',db_schema_update_date=NOW() where db_schema_version < 1454;
+
+ALTER TABLE servers ADD web_socket_url VARCHAR(255) default '';
+
+ALTER TABLE phones ADD webphone_dialbox ENUM('Y','N') default 'Y';
+ALTER TABLE phones ADD webphone_mute ENUM('Y','N') default 'Y';
+ALTER TABLE phones ADD webphone_volume ENUM('Y','N') default 'Y';
+ALTER TABLE phones ADD webphone_debug ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1455',db_schema_update_date=NOW() where db_schema_version < 1455;

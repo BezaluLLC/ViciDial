@@ -108,9 +108,10 @@
 # 151229-1623 - Added asterisk output logger launching, tied to server setting, runs every 5 minutes if active
 # 160305-2253 - Added --teod flag to log Timeclock End of Day processes to log file
 #               Limited max-stats process to only run on voicemail server, also added alt-logging flags to cm.agi calls
+# 160306-1040 - Added option for carriers to be defined for all active asterisk servers
 #
 
-$build = '160305-2253';
+$build = '160306-1040';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -2112,7 +2113,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the IAX carriers for this server_ip #####
-	$stmtA = "SELECT carrier_id,carrier_name,registration_string,template_id,account_entry,globals_string,dialplan_entry,carrier_description FROM vicidial_server_carriers where server_ip='$server_ip' and active='Y' and protocol='IAX2' order by carrier_id;";
+	$stmtA = "SELECT carrier_id,carrier_name,registration_string,template_id,account_entry,globals_string,dialplan_entry,carrier_description FROM vicidial_server_carriers where server_ip IN('$server_ip','0.0.0.0') and active='Y' and protocol='IAX2' order by carrier_id;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -2169,7 +2170,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the SIP carriers for this server_ip #####
-	$stmtA = "SELECT carrier_id,carrier_name,registration_string,template_id,account_entry,globals_string,dialplan_entry,carrier_description FROM vicidial_server_carriers where server_ip='$server_ip' and active='Y' and protocol='SIP' order by carrier_id;";
+	$stmtA = "SELECT carrier_id,carrier_name,registration_string,template_id,account_entry,globals_string,dialplan_entry,carrier_description FROM vicidial_server_carriers where server_ip IN('$server_ip','0.0.0.0') and active='Y' and protocol='SIP' order by carrier_id;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;

@@ -2040,6 +2040,16 @@ if (isset($_GET["question"]))						{$question=$_GET["question"];}
 	elseif (isset($_POST["question"]))				{$question=$_POST["question"];}
 if (isset($_GET["alt_dtmf_log"]))					{$alt_dtmf_log=$_GET["alt_dtmf_log"];}
 	elseif (isset($_POST["alt_dtmf_log"]))			{$alt_dtmf_log=$_POST["alt_dtmf_log"];}
+if (isset($_GET["web_socket_url"]))					{$web_socket_url=$_GET["web_socket_url"];}
+	elseif (isset($_POST["web_socket_url"]))		{$web_socket_url=$_POST["web_socket_url"];}
+if (isset($_GET["webphone_dialbox"]))				{$webphone_dialbox=$_GET["webphone_dialbox"];}
+	elseif (isset($_POST["webphone_dialbox"]))		{$webphone_dialbox=$_POST["webphone_dialbox"];}
+if (isset($_GET["webphone_mute"]))					{$webphone_mute=$_GET["webphone_mute"];}
+	elseif (isset($_POST["webphone_mute"]))			{$webphone_mute=$_POST["webphone_mute"];}
+if (isset($_GET["webphone_volume"]))				{$webphone_volume=$_GET["webphone_volume"];}
+	elseif (isset($_POST["webphone_volume"]))		{$webphone_volume=$_POST["webphone_volume"];}
+if (isset($_GET["webphone_debug"]))					{$webphone_debug=$_GET["webphone_debug"];}
+	elseif (isset($_POST["webphone_debug"]))		{$webphone_debug=$_POST["webphone_debug"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2526,6 +2536,10 @@ if ($non_latin < 1)
 	$gather_asterisk_output = preg_replace('/[^NY]/','',$gather_asterisk_output);
 	$routing_initiated_recordings = preg_replace('/[^NY]/','',$routing_initiated_recordings);
 	$manual_dial_hopper_check = preg_replace('/[^NY]/','',$manual_dial_hopper_check);
+	$webphone_dialbox = preg_replace('/[^NY]/','',$webphone_dialbox);
+	$webphone_mute = preg_replace('/[^NY]/','',$webphone_mute);
+	$webphone_volume = preg_replace('/[^NY]/','',$webphone_volume);
+	$webphone_debug = preg_replace('/[^NY]/','',$webphone_debug);
 
 	$qc_enabled = preg_replace('/[^0-9NY]/','',$qc_enabled);
 	$active = preg_replace('/[^0-9NY]/','',$active);
@@ -3129,7 +3143,7 @@ if ($non_latin < 1)
 	$agent_status_viewable_groups = preg_replace('/\\\\/', '',$agent_status_viewable_groups);
 	$agent_allowed_chat_groups = preg_replace('/\\\\/', '',$agent_allowed_chat_groups);
 	$agent_allowed_chat_groups = preg_replace('/\\\\/', '',$agent_allowed_chat_groups);
-	### VARIABLES TO BE mysql_real_escape_string ###
+	### VARIABLES TO BE mysqli_real_escape_string ###
 	# $web_form_address
 	# $queuemetrics_url
 	# $admin_home_url
@@ -3147,6 +3161,7 @@ if ($non_latin < 1)
 	# $web_form_address_three
 	# $container_entry
 	# $nva_call_url
+	# $web_socket_url
 
 	### VARIABLES not filtered at all ###
 	# $script_text
@@ -3717,12 +3732,13 @@ else
 # 160122-1401 - Added report_default_format system setting, added agent count per server on reports page
 # 160304-2348 - Added link to API log report
 # 160305-2048 - Added alternate ivr(call menu) dtmf logging
+# 160306-1053 - Added new webphone options, added option to have carriers on all active asterisk servers
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-540a';
-$build = '160305-2048';
+$admin_version = '2.12-541a';
+$build = '160306-1053';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -11123,6 +11139,8 @@ if ($ADD==240111111111)
 				$rslt=mysql_to_mysqli($stmt, $link);
 
 				$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
+				if ($server_ip == '0.0.0.0')
+					{$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";}
 				$rslt=mysql_to_mysqli($stmtA, $link);
 
 				### LOG INSERTION Admin Log Table ###
@@ -14731,7 +14749,7 @@ if ($ADD==41111111111)
 					if ( ($voicemail_greeting == '') and (strlen($old_voicemail_greeting) > 0) )
 						{$voicemail_greeting = '---DELETE---';}
 
-					$stmt="UPDATE phones set extension='$extension', dialplan_number='$dialplan_number', voicemail_id='$voicemail_id', phone_ip='$phone_ip', computer_ip='$computer_ip', server_ip='$server_ip', login='$login', pass='$pass', status='$status', active='$active', phone_type='$phone_type', fullname='$fullname', company='$company', picture='$picture', protocol='$protocol', local_gmt='$local_gmt', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', login_user='$login_user', login_pass='$login_pass', login_campaign='$login_campaign', park_on_extension='$park_on_extension', conf_on_extension='$conf_on_extension', VICIDIAL_park_on_extension='$VICIDIAL_park_on_extension', VICIDIAL_park_on_filename='$VICIDIAL_park_on_filename', monitor_prefix='$monitor_prefix', recording_exten='$recording_exten', voicemail_exten='$voicemail_exten', voicemail_dump_exten='$voicemail_dump_exten', ext_context='$ext_context', dtmf_send_extension='$dtmf_send_extension', call_out_number_group='$call_out_number_group', client_browser='$client_browser', install_directory='$install_directory', local_web_callerID_URL='" . mysqli_real_escape_string($link, $local_web_callerID_URL) . "', VICIDIAL_web_URL='" . mysqli_real_escape_string($link, $VICIDIAL_web_URL) . "', AGI_call_logging_enabled='$AGI_call_logging_enabled', user_switching_enabled='$user_switching_enabled', conferencing_enabled='$conferencing_enabled', admin_hangup_enabled='$admin_hangup_enabled', admin_hijack_enabled='$admin_hijack_enabled', admin_monitor_enabled='$admin_monitor_enabled', call_parking_enabled='$call_parking_enabled', updater_check_enabled='$updater_check_enabled', AFLogging_enabled='$AFLogging_enabled', QUEUE_ACTION_enabled='$QUEUE_ACTION_enabled', CallerID_popup_enabled='$CallerID_popup_enabled', voicemail_button_enabled='$voicemail_button_enabled', enable_fast_refresh='$enable_fast_refresh', fast_refresh_rate='$fast_refresh_rate', enable_persistant_mysql='$enable_persistant_mysql', auto_dial_next_number='$auto_dial_next_number', VDstop_rec_after_each_call='$VDstop_rec_after_each_call', DBX_server='$DBX_server', DBX_database='$DBX_database', DBX_user='$DBX_user', DBX_pass='$DBX_pass', DBX_port='$DBX_port', DBY_server='$DBY_server', DBY_database='$DBY_database', DBY_user='$DBY_user', DBY_pass='$DBY_pass', DBY_port='$DBY_port', outbound_cid='$outbound_cid', enable_sipsak_messages='$enable_sipsak_messages', email='$email', template_id='$template_id', conf_override='$conf_override',phone_context='$phone_context',phone_ring_timeout='$phone_ring_timeout',conf_secret='$conf_secret', delete_vm_after_email='$delete_vm_after_email',is_webphone='$is_webphone',use_external_server_ip='$use_external_server_ip',codecs_list='$codecs_list',codecs_with_template='$codecs_with_template',webphone_dialpad='$webphone_dialpad',on_hook_agent='$on_hook_agent',webphone_auto_answer='$webphone_auto_answer',voicemail_timezone='$voicemail_timezone',voicemail_options='$voicemail_options',user_group='$user_group',voicemail_greeting='$voicemail_greeting',voicemail_dump_exten_no_inst='$voicemail_dump_exten_no_inst',voicemail_instructions='$voicemail_instructions',on_login_report='$show_vm_on_summary',unavail_dialplan_fwd_exten='$unavail_dialplan_fwd_exten',unavail_dialplan_fwd_context='$unavail_dialplan_fwd_context', nva_call_url='" . mysqli_real_escape_string($link, $nva_call_url) . "', nva_search_method='$nva_search_method', nva_error_filename='$nva_error_filename',nva_new_list_id='$nva_new_list_id',nva_new_phone_code='$nva_new_phone_code',nva_new_status='$nva_new_status' where extension='$old_extension' and server_ip='$old_server_ip';";
+					$stmt="UPDATE phones set extension='$extension', dialplan_number='$dialplan_number', voicemail_id='$voicemail_id', phone_ip='$phone_ip', computer_ip='$computer_ip', server_ip='$server_ip', login='$login', pass='$pass', status='$status', active='$active', phone_type='$phone_type', fullname='$fullname', company='$company', picture='$picture', protocol='$protocol', local_gmt='$local_gmt', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', login_user='$login_user', login_pass='$login_pass', login_campaign='$login_campaign', park_on_extension='$park_on_extension', conf_on_extension='$conf_on_extension', VICIDIAL_park_on_extension='$VICIDIAL_park_on_extension', VICIDIAL_park_on_filename='$VICIDIAL_park_on_filename', monitor_prefix='$monitor_prefix', recording_exten='$recording_exten', voicemail_exten='$voicemail_exten', voicemail_dump_exten='$voicemail_dump_exten', ext_context='$ext_context', dtmf_send_extension='$dtmf_send_extension', call_out_number_group='$call_out_number_group', client_browser='$client_browser', install_directory='$install_directory', local_web_callerID_URL='" . mysqli_real_escape_string($link, $local_web_callerID_URL) . "', VICIDIAL_web_URL='" . mysqli_real_escape_string($link, $VICIDIAL_web_URL) . "', AGI_call_logging_enabled='$AGI_call_logging_enabled', user_switching_enabled='$user_switching_enabled', conferencing_enabled='$conferencing_enabled', admin_hangup_enabled='$admin_hangup_enabled', admin_hijack_enabled='$admin_hijack_enabled', admin_monitor_enabled='$admin_monitor_enabled', call_parking_enabled='$call_parking_enabled', updater_check_enabled='$updater_check_enabled', AFLogging_enabled='$AFLogging_enabled', QUEUE_ACTION_enabled='$QUEUE_ACTION_enabled', CallerID_popup_enabled='$CallerID_popup_enabled', voicemail_button_enabled='$voicemail_button_enabled', enable_fast_refresh='$enable_fast_refresh', fast_refresh_rate='$fast_refresh_rate', enable_persistant_mysql='$enable_persistant_mysql', auto_dial_next_number='$auto_dial_next_number', VDstop_rec_after_each_call='$VDstop_rec_after_each_call', DBX_server='$DBX_server', DBX_database='$DBX_database', DBX_user='$DBX_user', DBX_pass='$DBX_pass', DBX_port='$DBX_port', DBY_server='$DBY_server', DBY_database='$DBY_database', DBY_user='$DBY_user', DBY_pass='$DBY_pass', DBY_port='$DBY_port', outbound_cid='$outbound_cid', enable_sipsak_messages='$enable_sipsak_messages', email='$email', template_id='$template_id', conf_override='$conf_override',phone_context='$phone_context',phone_ring_timeout='$phone_ring_timeout',conf_secret='$conf_secret', delete_vm_after_email='$delete_vm_after_email',is_webphone='$is_webphone',use_external_server_ip='$use_external_server_ip',codecs_list='$codecs_list',codecs_with_template='$codecs_with_template',webphone_dialpad='$webphone_dialpad',on_hook_agent='$on_hook_agent',webphone_auto_answer='$webphone_auto_answer',voicemail_timezone='$voicemail_timezone',voicemail_options='$voicemail_options',user_group='$user_group',voicemail_greeting='$voicemail_greeting',voicemail_dump_exten_no_inst='$voicemail_dump_exten_no_inst',voicemail_instructions='$voicemail_instructions',on_login_report='$show_vm_on_summary',unavail_dialplan_fwd_exten='$unavail_dialplan_fwd_exten',unavail_dialplan_fwd_context='$unavail_dialplan_fwd_context', nva_call_url='" . mysqli_real_escape_string($link, $nva_call_url) . "', nva_search_method='$nva_search_method', nva_error_filename='$nva_error_filename',nva_new_list_id='$nva_new_list_id',nva_new_phone_code='$nva_new_phone_code',nva_new_status='$nva_new_status',webphone_dialbox='$webphone_dialbox',webphone_mute='$webphone_mute',webphone_volume='$webphone_volume',webphone_debug='$webphone_debug' where extension='$old_extension' and server_ip='$old_server_ip';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 
 					$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
@@ -14868,7 +14886,7 @@ if ($ADD==411111111111)
 					$custom_dialplanSQL='';
 					if ($LOGmodify_custom_dialplans > 0)
 						{$custom_dialplanSQL = ",custom_dialplan_entry='$custom_dialplan_entry'";}
-					$stmt="UPDATE servers set server_id='$server_id',server_description='$server_description',server_ip='$server_ip',active='$active',asterisk_version='$asterisk_version', max_vicidial_trunks='$max_vicidial_trunks', telnet_host='$telnet_host', telnet_port='$telnet_port', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', ASTmgrUSERNAMEupdate='$ASTmgrUSERNAMEupdate', ASTmgrUSERNAMElisten='$ASTmgrUSERNAMElisten', ASTmgrUSERNAMEsend='$ASTmgrUSERNAMEsend', local_gmt='$local_gmt', voicemail_dump_exten='$voicemail_dump_exten', answer_transfer_agent='$answer_transfer_agent', ext_context='$ext_context', sys_perf_log='$sys_perf_log', vd_server_logs='$vd_server_logs', agi_output='$agi_output', vicidial_balance_active='$vicidial_balance_active',balance_trunks_offlimits='$balance_trunks_offlimits',recording_web_link='$recording_web_link',alt_server_ip='$alt_server_ip',active_asterisk_server='$active_asterisk_server',generate_vicidial_conf='$generate_vicidial_conf',rebuild_conf_files='$rebuild_conf_files',outbound_calls_per_second='$outbound_calls_per_second',sounds_update='$sounds_update',vicidial_recording_limit='$vicidial_recording_limit',carrier_logging_active='$carrier_logging_active',vicidial_balance_rank='$vicidial_balance_rank',rebuild_music_on_hold='$rebuild_music_on_hold',active_agent_login_server='$active_agent_login_server',conf_secret='$conf_secret',external_server_ip='$external_server_ip',active_twin_server_ip='$active_twin_server_ip',user_group='$user_group',auto_restart_asterisk='$auto_restart_asterisk',asterisk_temp_no_restart='$asterisk_temp_no_restart',voicemail_dump_exten_no_inst='$voicemail_dump_exten_no_inst',gather_asterisk_output='$gather_asterisk_output'$custom_dialplanSQL where server_id='$old_server_id';";
+					$stmt="UPDATE servers set server_id='$server_id',server_description='$server_description',server_ip='$server_ip',active='$active',asterisk_version='$asterisk_version', max_vicidial_trunks='$max_vicidial_trunks', telnet_host='$telnet_host', telnet_port='$telnet_port', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', ASTmgrUSERNAMEupdate='$ASTmgrUSERNAMEupdate', ASTmgrUSERNAMElisten='$ASTmgrUSERNAMElisten', ASTmgrUSERNAMEsend='$ASTmgrUSERNAMEsend', local_gmt='$local_gmt', voicemail_dump_exten='$voicemail_dump_exten', answer_transfer_agent='$answer_transfer_agent', ext_context='$ext_context', sys_perf_log='$sys_perf_log', vd_server_logs='$vd_server_logs', agi_output='$agi_output', vicidial_balance_active='$vicidial_balance_active',balance_trunks_offlimits='$balance_trunks_offlimits',recording_web_link='$recording_web_link',alt_server_ip='$alt_server_ip',active_asterisk_server='$active_asterisk_server',generate_vicidial_conf='$generate_vicidial_conf',rebuild_conf_files='$rebuild_conf_files',outbound_calls_per_second='$outbound_calls_per_second',sounds_update='$sounds_update',vicidial_recording_limit='$vicidial_recording_limit',carrier_logging_active='$carrier_logging_active',vicidial_balance_rank='$vicidial_balance_rank',rebuild_music_on_hold='$rebuild_music_on_hold',active_agent_login_server='$active_agent_login_server',conf_secret='$conf_secret',external_server_ip='$external_server_ip',active_twin_server_ip='$active_twin_server_ip',user_group='$user_group',auto_restart_asterisk='$auto_restart_asterisk',asterisk_temp_no_restart='$asterisk_temp_no_restart',voicemail_dump_exten_no_inst='$voicemail_dump_exten_no_inst',gather_asterisk_output='$gather_asterisk_output',web_socket_url='" . mysqli_real_escape_string($link, $web_socket_url) . "'$custom_dialplanSQL where server_id='$old_server_id';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 
 					$stmtA="UPDATE servers SET rebuild_conf_files='Y',rebuild_music_on_hold='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";
@@ -15010,6 +15028,8 @@ if ($ADD==441111111111)
 			$rslt=mysql_to_mysqli($stmt, $link);
 
 			$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
+			if ($server_ip == '0.0.0.0')
+				{$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";}
 			$rslt=mysql_to_mysqli($stmtA, $link);
 
 			echo "<br>"._QXZ("CARRIER MODIFIED").": $carrier_id\n";
@@ -18376,6 +18396,8 @@ if ($ADD==641111111111)
 			$rslt=mysql_to_mysqli($stmt, $link);
 
 			$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$CARRIERserver_ip';";
+			if ($CARRIERserver_ip == '0.0.0.0')
+				{$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";}
 			$rslt=mysql_to_mysqli($stmtA, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -30130,7 +30152,7 @@ if ($ADD==31111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,is_webphone,use_external_server_ip,codecs_list,codecs_with_template,webphone_dialpad,on_hook_agent,webphone_auto_answer,voicemail_timezone,voicemail_options,user_group,voicemail_greeting,voicemail_dump_exten_no_inst,voicemail_instructions,on_login_report,unavail_dialplan_fwd_exten,unavail_dialplan_fwd_context,nva_call_url,nva_search_method,nva_error_filename,nva_new_list_id,nva_new_phone_code,nva_new_status from phones where extension='$extension' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,is_webphone,use_external_server_ip,codecs_list,codecs_with_template,webphone_dialpad,on_hook_agent,webphone_auto_answer,voicemail_timezone,voicemail_options,user_group,voicemail_greeting,voicemail_dump_exten_no_inst,voicemail_instructions,on_login_report,unavail_dialplan_fwd_exten,unavail_dialplan_fwd_context,nva_call_url,nva_search_method,nva_error_filename,nva_new_list_id,nva_new_phone_code,nva_new_status,webphone_dialbox,webphone_mute,webphone_volume,webphone_debug from phones where extension='$extension' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 
@@ -30163,6 +30185,10 @@ if ($ADD==31111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Set As Webphone").": </td><td align=left><select size=1 name=is_webphone><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option>Y_API_LAUNCH</option><option selected>$row[74]</option></select>$NWB#phones-is_webphone$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Webphone Dialpad").": </td><td align=left><select size=1 name=webphone_dialpad><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='TOGGLE' SELECTED>"._QXZ("TOGGLE")."</option><option value='TOGGLE_OFF' SELECTED>"._QXZ("TOGGLE_OFF")."</option><option SELECTED>$row[78]</option></select>$NWB#phones-webphone_dialpad$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Webphone Auto-Answer").": </td><td align=left><select size=1 name=webphone_auto_answer><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED>$row[80]</option></select>$NWB#phones-webphone_auto_answer$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Webphone Dialbox").": </td><td align=left><select size=1 name=webphone_dialbox><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED>$row[96]</option></select>$NWB#phones-webphone_dialbox$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Webphone Mute").": </td><td align=left><select size=1 name=webphone_mute><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED>$row[97]</option></select>$NWB#phones-webphone_mute$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Webphone Volume").": </td><td align=left><select size=1 name=webphone_volume><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED>$row[98]</option></select>$NWB#phones-webphone_volume$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Webphone Debug").": </td><td align=left><select size=1 name=webphone_debug><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED>$row[99]</option></select>$NWB#phones-webphone_debug$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Use External Server IP").": </td><td align=left><select size=1 name=use_external_server_ip><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option selected>$row[75]</option></select>$NWB#phones-use_external_server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Status").": </td><td align=left><select size=1 name=status><option value='ACTIVE'>"._QXZ("ACTIVE")."</option><option value='SUSPENDED'>"._QXZ("SUSPENDED")."</option><option value='CLOSED'>"._QXZ("CLOSED")."</option><option value='PENDING'>"._QXZ("PENDING")."</option><option value='ADMIN'>"._QXZ("ADMIN")."</option><option value='$row[8]' selected>"._QXZ("$row[8]")."</option></select>$NWB#phones-status$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Active Account").": </td><td align=left><select size=1 name=active><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$row[9]' selected>"._QXZ("$row[9]")."</option></select>$NWB#phones-active$NWE</td></tr>\n";
@@ -30461,7 +30487,7 @@ if ($ADD==311111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,local_gmt,voicemail_dump_exten,answer_transfer_agent,ext_context,sys_perf_log,vd_server_logs,agi_output,vicidial_balance_active,balance_trunks_offlimits,recording_web_link,alt_server_ip,active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,outbound_calls_per_second,sysload,channels_total,cpu_idle_percent,disk_usage,sounds_update,vicidial_recording_limit,carrier_logging_active,vicidial_balance_rank,rebuild_music_on_hold,active_agent_login_server,conf_secret,external_server_ip,custom_dialplan_entry,active_twin_server_ip,user_group,system_uptime,auto_restart_asterisk,asterisk_temp_no_restart,voicemail_dump_exten_no_inst,gather_asterisk_output from servers where ( (server_id='$server_id') or (server_ip='$server_ip') ) $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,local_gmt,voicemail_dump_exten,answer_transfer_agent,ext_context,sys_perf_log,vd_server_logs,agi_output,vicidial_balance_active,balance_trunks_offlimits,recording_web_link,alt_server_ip,active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,outbound_calls_per_second,sysload,channels_total,cpu_idle_percent,disk_usage,sounds_update,vicidial_recording_limit,carrier_logging_active,vicidial_balance_rank,rebuild_music_on_hold,active_agent_login_server,conf_secret,external_server_ip,custom_dialplan_entry,active_twin_server_ip,user_group,system_uptime,auto_restart_asterisk,asterisk_temp_no_restart,voicemail_dump_exten_no_inst,gather_asterisk_output,web_socket_url from servers where ( (server_id='$server_id') or (server_ip='$server_ip') ) $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		$server_id =					$row[0];
@@ -30512,6 +30538,7 @@ if ($ADD==311111111111)
 		$asterisk_temp_no_restart =		$row[45];
 		$voicemail_dump_exten_no_inst = $row[46];
 		$gather_asterisk_output =		$row[47];
+		$web_socket_url =				$row[48];
 
 
 		$cpu = (100 - $cpu_idle_percent);
@@ -30562,10 +30589,10 @@ if ($ADD==311111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("AGI Output").": </td><td align=left><select size=1 name=agi_output><option value='NONE'>"._QXZ("NONE")."</option><option value='STDERR'>"._QXZ("STDERR")."</option><option value='FILE'>"._QXZ("FILE")."</option><option value='BOTH'>"._QXZ("BOTH")."</option><option value='$agi_output' selected>"._QXZ("$agi_output")."</option></select>$NWB#servers-agi_output$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Carrier Logging Active").": </td><td align=left><select size=1 name=carrier_logging_active><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$carrier_logging_active' selected>$carrier_logging_active</option></select>$NWB#servers-carrier_logging_active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Gather Asterisk Output").": </td><td align=left><select size=1 name=gather_asterisk_output><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$gather_asterisk_output' selected>$gather_asterisk_output</option></select>$NWB#servers-gather_asterisk_output$NWE</td></tr>\n";
-		
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Recording Web Link").": </td><td align=left><select size=1 name=recording_web_link><option value='SERVER_IP'>"._QXZ("SERVER_IP")."</option><option value='ALT_IP'>"._QXZ("ALT_IP")."</option><option value='EXTERNAL_IP'>"._QXZ("EXTERNAL_IP")."</option><option value='$recording_web_link' selected>"._QXZ("$recording_web_link")."</option></select>$NWB#servers-recording_web_link$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Alternate Recording Server IP").": </td><td align=left><input type=text name=alt_server_ip size=30 maxlength=100 value=\"$alt_server_ip\">$NWB#servers-alt_server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("External Server IP").": </td><td align=left><input type=text name=external_server_ip size=30 maxlength=100 value=\"$external_server_ip\">$NWB#servers-external_server_ip$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Web Socket URL").": </td><td align=left><input type=text name=web_socket_url size=30 maxlength=255 value=\"$web_socket_url\">$NWB#servers-web_socket_url$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Active Twin Server IP").": </td><td align=left><input type=text name=active_twin_server_ip size=16 maxlength=15 value=\"$active_twin_server_ip\">$NWB#servers-active_twin_server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Active Asterisk Server").": </td><td align=left><select size=1 name=active_asterisk_server><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option selected>$active_asterisk_server</option></select>$NWB#servers-active_asterisk_server$NWE</td></tr>\n";
 		echo "<tr bgcolor=#8EBCFD><td align=right>"._QXZ("Auto-Restart Asterisk").": </td><td align=left> &nbsp; &nbsp; <select size=1 name=auto_restart_asterisk><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option selected>$auto_restart_asterisk</option></select>$NWB#servers-auto_restart_asterisk$NWE</td></tr>\n";
@@ -30644,7 +30671,7 @@ if ($ADD==311111111111)
 
 		$active_carriers = 0;
 		$inactive_carriers = 0;
-		$stmt="SELECT carrier_id,carrier_name,registration_string,active from vicidial_server_carriers where server_ip='$row[2]' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT carrier_id,carrier_name,registration_string,active from vicidial_server_carriers where server_ip IN('$row[2]','0.0.0.0') $LOGadmin_viewable_groupsSQL;";
 		$rsltx=mysql_to_mysqli($stmt, $link);
 		$carriers_to_print = mysqli_num_rows($rsltx);
 		$camp_lists='';
@@ -30975,8 +31002,9 @@ if ($ADD==341111111111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Server IP").": </td><td align=left><select size=1 name=server_ip>\n";
 		echo "$servers_list";
+		echo "<option value=\"0.0.0.0\">0.0.0.0 - ALL SERVERS</option>\n";
 		echo "<option SELECTED>$server_ip</option>\n";
-		echo "</select>$NWB#server_carriers-server_ip$NWE</td></tr>\n";
+		echo "</select> <i>(0.0.0.0 "._QXZ("is all servers").")</i>$NWB#server_carriers-server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$active' SELECTED>"._QXZ("$active")."</option></select>$NWB#server_carriers-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit value='"._QXZ("SUBMIT")."'</td></tr>\n";
 		echo "</TABLE></center>\n";
@@ -34567,6 +34595,7 @@ if ($ADD==140000000000)
 			while (strlen($row[4])>14) {$row[4] = preg_replace("/.$/",'',$row[4]);}
 			$row[4] .= '...';
 			}
+		if ($row[2] == '0.0.0.0') {$row[2]='ALL SERVERS';}
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='bgcolor="#B9CBFD"';} 
 		else

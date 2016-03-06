@@ -95,6 +95,10 @@ nva_error_filename VARCHAR(255) default '',
 nva_new_list_id BIGINT(14) UNSIGNED default '995',
 nva_new_phone_code VARCHAR(10) default '1',
 nva_new_status VARCHAR(6) default 'NVAINS',
+webphone_dialbox ENUM('Y','N') default 'Y',
+webphone_mute ENUM('Y','N') default 'Y',
+webphone_volume ENUM('Y','N') default 'Y',
+webphone_debug ENUM('Y','N') default 'N',
 index (server_ip),
 index (voicemail_id),
 index (dialplan_number),
@@ -152,7 +156,8 @@ system_uptime VARCHAR(255) default '',
 auto_restart_asterisk ENUM('Y','N') default 'N',
 asterisk_temp_no_restart ENUM('Y','N') default 'N',
 voicemail_dump_exten_no_inst VARCHAR(20) default '85026666666667',
-gather_asterisk_output ENUM('Y','N') default 'N'
+gather_asterisk_output ENUM('Y','N') default 'N',
+web_socket_url VARCHAR(255) default ''
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -3737,4 +3742,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1454',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1455',db_schema_update_date=NOW(),reload_timestamp=NOW();

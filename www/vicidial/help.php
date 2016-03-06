@@ -82,6 +82,7 @@
 # 160121-2155 - Added settings-report_default_format entry and help text for several reports
 # 160211-2255 - Added help text for remaining reports
 # 160305-2115 - Added Alt IVR(call menu) DTMF logging
+# 160306-1201 - Added new webphone options and server options
 #
 
 
@@ -3915,6 +3916,26 @@ if ($SSoutbound_autodial_active > 0)
 <B><?php echo _QXZ("Webphone Auto-Answer"); ?> -</B><?php echo _QXZ(" This setting allows the web phone to be set to automatically answer calls that come in by setting it to Y, or to have calls ring by setting it to N. Default is Y."); ?>
 
 <BR>
+<A NAME="phones-webphone_dialbox">
+<BR>
+<B><?php echo _QXZ("Webphone Dialbox"); ?> - </B><?php echo _QXZ("For the WebRTC phone, this setting will allow the number to dial input box to be active. Default is Y."); ?>
+
+<BR>
+<A NAME="phones-webphone_mute">
+<BR>
+<B><?php echo _QXZ("Webphone Mute"); ?> - </B><?php echo _QXZ("For the WebRTC phone, this setting will allow the mute button to be active. Default is Y."); ?>
+
+<BR>
+<A NAME="phones-webphone_volume">
+<BR>
+<B><?php echo _QXZ("Webphone Volume"); ?> - </B><?php echo _QXZ("For the WebRTC phone, this setting will allow the volume buttons to be active. Default is Y."); ?>
+
+<BR>
+<A NAME="phones-webphone_debug">
+<BR>
+<B><?php echo _QXZ("Webphone Debug"); ?> - </B><?php echo _QXZ("For the WebRTC phone, this setting will show debug output. Default is N."); ?>
+
+<BR>
 <A NAME="phones-use_external_server_ip">
 <BR>
 <B><?php echo _QXZ("Use External Server IP"); ?> -</B><?php echo _QXZ(" If using as a web phone, you can set this to Y to use the servers External IP to register to instead of the Server IP. Default is empty."); ?>
@@ -4516,9 +4537,14 @@ if ($SSoutbound_autodial_active > 0)
 <B><?php echo _QXZ("External Server IP"); ?> -</B><?php echo _QXZ("This setting is where you can put a server IP or other machine name that can be used in place of the server_ip when using a webphone in the agent interface. For this to work you also must have the phones entry set to use the External Server IP. Default is empty."); ?>
 
 <BR>
-<A NAME="servers-active_twin_server_ip">
+<A NAME="servers-external_server_ip">
 <BR>
-<B><?php echo _QXZ("Active Twin Server IP"); ?> -</B><?php echo _QXZ("Some systems require setting up telephony servers in pairs. This setting is where you can put the server IP of another server that this server is twinned with. Default is empty for disabled."); ?>
+<B><?php echo _QXZ("External Server IP"); ?> -</B><?php echo _QXZ("This setting is where you can put a server IP or other machine name that can be used in place of the server_ip when using a webphone in the agent interface. For this to work you also must have the phones entry set to use the External Server IP. Default is empty."); ?>
+
+<BR>
+<A NAME="servers-web_socket_url">
+<BR>
+<B><?php echo _QXZ("Web Socket URL"); ?> -</B><?php echo _QXZ("For systems running Asterisk 11 and higher, this is the URL that a WebRTC phone needs to connect to the server."); ?>
 
 <BR>
 <A NAME="servers-active_asterisk_server">
@@ -4666,7 +4692,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="server_carriers-server_ip">
 <BR>
-<B><?php echo _QXZ("Server IP"); ?> -</B><?php echo _QXZ("This is the server that this specific carrier record is associated with."); ?>
+<B><?php echo _QXZ("Server IP"); ?> -</B><?php echo _QXZ("This is the server that this specific carrier record is associated with. If you set this to 0.0.0.0 then this carrier entry will be put on all active asterisk servers."); ?>
 
 <BR>
 <A NAME="server_carriers-active">

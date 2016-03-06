@@ -516,10 +516,11 @@
 # 160101-1131 - Added code to handle routing initiated recordings
 # 160104-1237 - Added images for live chat and email, and dead chat
 # 160106-2215 - Deactivated several call action buttons while Email/Chat handling
+# 160306-1019 - Added more webphone options
 #
 
-$version = '2.12-485c';
-$build = '160106-2215';
+$version = '2.12-486c';
+$build = '160306-1019';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -2599,7 +2600,7 @@ else
 		##### END phone login load balancing functions #####
 
 		echo "<title>Agent web client</title>\n";
-		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,is_webphone,use_external_server_ip,codecs_list,webphone_dialpad,phone_ring_timeout,on_hook_agent,webphone_auto_answer from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
+		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,is_webphone,use_external_server_ip,codecs_list,webphone_dialpad,phone_ring_timeout,on_hook_agent,webphone_auto_answer,webphone_dialbox,webphone_mute,webphone_volume,webphone_debug from phones where login='$phone_login' and pass='$phone_pass' and active = 'Y';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01025',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -2674,6 +2675,10 @@ else
 		$phone_ring_timeout=$row[77];
 		$on_hook_agent=$row[78];
 		$webphone_auto_answer=$row[79];
+		$webphone_dialbox=$row[80];
+		$webphone_mute=$row[81];
+		$webphone_volume=$row[82];
+		$webphone_debug=$row[83];
 
 		$login_context = $ext_context;
 		if (strlen($meetme_enter_login_filename) > 0)
@@ -2706,12 +2711,13 @@ else
 			$local_gmt = ($local_gmt + $isdst);
 			}
 
-		$stmt="SELECT asterisk_version from servers where server_ip='$server_ip';";
+		$stmt="SELECT asterisk_version,web_socket_url from servers where server_ip='$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01028',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		$row=mysqli_fetch_row($rslt);
 		$asterisk_version=$row[0];
+		$web_socket_url=$row[1];
 
 		if ($protocol == 'EXTERNAL')
 			{
@@ -3069,6 +3075,14 @@ else
 				if ($webphone_dialpad == 'TOGGLE_OFF') {$webphone_options .= "--DIALPAD_OFF_TOGGLE";}
 				if ($webphone_auto_answer == 'Y') {$webphone_options .= "--AUTOANSWER_Y";}
 				if ($webphone_auto_answer == 'N') {$webphone_options .= "--AUTOANSWER_N";}
+				if ($webphone_dialbox == 'Y') {$webphone_options .= "--DIALBOX_Y";}
+				if ($webphone_dialbox == 'N') {$webphone_options .= "--DIALBOX_N";}
+				if ($webphone_mute == 'Y') {$webphone_options .= "--MUTE_Y";}
+				if ($webphone_mute == 'N') {$webphone_options .= "--MUTE_N";}
+				if ($webphone_volume == 'Y') {$webphone_options .= "--VOLUME_Y";}
+				if ($webphone_volume == 'N') {$webphone_options .= "--VOLUME_N";}
+				if ($webphone_debug == 'Y') {$webphone_options .= "--DEBUG";}
+				if (strlen($web_socket_url) > 5) {$webphone_options .= "--WEBSOCKETURL$web_socket_url";}
 
 				### base64 encode variables
 				$b64_phone_login =		base64_encode($extension);
