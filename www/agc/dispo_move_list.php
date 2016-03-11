@@ -1,7 +1,7 @@
 <?php
 # dispo_move_list.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to be used in the "Dispo URL" field of a campaign
 # or in-group. It should take in the lead_id to check for the same lead_id
@@ -18,6 +18,9 @@
 # Example of what to put in the Dispo URL field:
 # VARhttp://192.168.1.1/agc/dispo_move_list.php?lead_id=--A--lead_id--B--&dispo=--A--dispo--B--&user=--A--user--B--&pass=--A--pass--B--&new_list_id=10411099&sale_status=SALE---SSALE---XSALE&reset_dialed=Y&log_to_file=1
 # 
+# Another example of what to put in the Dispo URL field(using status exclude with talk trigger):
+# VARhttp://192.168.1.1/agc/dispo_move_list.php?lead_id=--A--lead_id--B--&dispo=--A--dispo--B--&talk_time=--A--talk_time--B--&user=--A--user--B--&pass=--A--pass--B--&new_list_id=332&sale_status=DNC---BILLNW---POST&exclude_status=Y&talk_time_trigger=240&log_to_file=1
+#
 # Example of what to put in the No Agent Call URL field:
 # (user needs to be NOAGENTURL and pass needs to be set to the call_id)
 # VARhttp://192.168.1.1/agc/dispo_move_list.php?lead_id=--A--lead_id--B--&dispo=--A--dispo--B--&user=NOAGENTURL&pass=--A--call_id--B--&new_list_id=10411099&sale_status=SALE---SSALE---XSALE&reset_dialed=Y&log_to_file=1
@@ -25,10 +28,12 @@
 # Definable Fields: (other fields should be left as they are)
 # - log_to_file -	(0,1) if set to 1, will create a log file in the agc directory
 # - sale_status -	(SALE---XSALE) a triple-dash "---" delimited list of the statuses that are to be moved
+# - exclude_status -	(Y,N) if set to Y, will trigger for all statuses EXCEPT for those listed in sale_status, default is N
+# - talk_time_trigger -	(0,1,2,3,...) if set to number greater than 0, will only trigger for talk_time at or above set number, default is 0
 # - new_list_id -	(999,etc...) the list_id that you want the matching status leads to be moved to
 # - reset_dialed -	(Y,N) if set to Y, will reset the called_since_last_reset flag on the lead
 #    Multiple sets of statuses:
-# - sale_status_1, new_list_id_1, reset_dialed_1 - adding an underscore and number(1-99) will allow for another set of statuses to check for and what to do with them
+# - sale_status_1, new_list_id_1, reset_dialed_1, exclude_status_1 - adding an underscore and number(1-99) will allow for another set of statuses to check for and what to do with them
 #
 # CHANGES
 # 100915-1600 - First Build
@@ -42,6 +47,7 @@
 # 141118-1235 - Formatting changes for QXZ output
 # 141216-2110 - Added language settings lookups and user/pass variable standardization
 # 150703-1453 - Added options so it would work with No-Agent Call URL
+# 160309-1239 - Added talk_time_trigger and exclude_status options
 #
 
 $api_script = 'deactivate';
@@ -63,12 +69,18 @@ if (isset($_GET["lead_id"]))				{$lead_id=$_GET["lead_id"];}
 	elseif (isset($_POST["lead_id"]))		{$lead_id=$_POST["lead_id"];}
 if (isset($_GET["sale_status"]))			{$sale_status=$_GET["sale_status"];}
 	elseif (isset($_POST["sale_status"]))	{$sale_status=$_POST["sale_status"];}
+if (isset($_GET["exclude_status"]))				{$exclude_status=$_GET["exclude_status"];}
+	elseif (isset($_POST["exclude_status"]))	{$exclude_status=$_POST["exclude_status"];}
 if (isset($_GET["dispo"]))					{$dispo=$_GET["dispo"];}
 	elseif (isset($_POST["dispo"]))			{$dispo=$_POST["dispo"];}
 if (isset($_GET["new_list_id"]))			{$new_list_id=$_GET["new_list_id"];}
 	elseif (isset($_POST["new_list_id"]))	{$new_list_id=$_POST["new_list_id"];}
 if (isset($_GET["reset_dialed"]))			{$reset_dialed=$_GET["reset_dialed"];}
 	elseif (isset($_POST["reset_dialed"]))	{$reset_dialed=$_POST["reset_dialed"];}
+if (isset($_GET["talk_time"]))				{$talk_time=$_GET["talk_time"];}
+	elseif (isset($_POST["talk_time"]))		{$talk_time=$_POST["talk_time"];}
+if (isset($_GET["talk_time_trigger"]))			{$talk_time_trigger=$_GET["talk_time_trigger"];}
+	elseif (isset($_POST["talk_time_trigger"]))	{$talk_time_trigger=$_POST["talk_time_trigger"];}
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
 	elseif (isset($_POST["user"]))			{$user=$_POST["user"];}
 if (isset($_GET["pass"]))					{$pass=$_GET["pass"];}
@@ -87,6 +99,7 @@ $NOW_TIME = date("Y-m-d H:i:s");
 $sale_status = "$TD$sale_status$TD";
 $search_value='';
 $match_found=0;
+$primary_match_found=0;
 $k=0;
 
 $user=preg_replace("/\'|\"|\\\\|;| /","",$user);
@@ -126,38 +139,57 @@ if ($non_latin < 1)
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
 	}
 
-if ($DB>0) {echo "$lead_id|$search_field|$campaign_check|$sale_status|$dispo|$new_status|$user|$pass|$DB|$log_to_file|\n";}
+if ($DB>0) {echo "$lead_id|$search_field|$campaign_check|$sale_status|$dispo|$new_status|$user|$pass|$DB|$log_to_file|$talk_time|$talk_time_trigger|$exclude_status|\n";}
 
-if (preg_match("/$TD$dispo$TD/",$sale_status))
+if ( ( (strlen($talk_time_trigger)>0) and ($talk_time > $talk_time_trigger) ) or (strlen($talk_time_trigger)<1) or ($talk_time_trigger < 1) )
+	{
+	if ( ( (preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status!='Y') ) or ( (!preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status=='Y') ) )
+		{$primary_match_found=1;}
+	}
+$first_pass_vars = "$new_list_id|$reset_dialed|$sale_status|$talk_time_trigger|$exclude_status";
+if ($primary_match_found > 0)
 	{$match_found=1;}
 else
 	{
 	$sale_status='';
+	$exclude_status='';
+	$talk_time_trigger='';
 	$new_list_id='';
 	$reset_dialed='';
 	while( ($match_found < 1) and ($k < 99) )
 		{
 		$k++;
 		$sale_status='';
+		$exclude_status='';
+		$talk_time_trigger='';
 		$statusfield = "sale_status_$k";
+		$excludefield = "exclude_status_$k";
+		$talktriggerfield = "talk_time_trigger_$k";
+		if (isset($_GET["$excludefield"]))			{$exclude_status=$_GET["$excludefield"];}
+			elseif (isset($_POST["$excludefield"]))	{$exclude_status=$_POST["$excludefield"];}
+		if (isset($_GET["$talktriggerfield"]))			{$talk_time_trigger=$_GET["$talktriggerfield"];}
+			elseif (isset($_POST["$talktriggerfield"]))	{$talk_time_trigger=$_POST["$talktriggerfield"];}
 		if (isset($_GET["$statusfield"]))			{$sale_status=$_GET["$statusfield"];}
 			elseif (isset($_POST["$statusfield"]))	{$sale_status=$_POST["$statusfield"];}
 		$sale_status = "$TD$sale_status$TD";
 
-		if ($DB) {echo _QXZ("MULTI_MATCH CHECK:")." $k|$sale_status|$statusfield|\n";}
+		if ($DB) {echo _QXZ("MULTI_MATCH CHECK:")." $k|$sale_status|$statusfield|$exclude_status|$excludefield|$talk_time_trigger|$talktriggerfield|\n";}
 
-		if (strlen($sale_status)>0)
+		if ( ( (strlen($talk_time_trigger)>0) and ($talk_time > $talk_time_trigger) ) or (strlen($talk_time_trigger)<1) or ($talk_time_trigger < 1) )
 			{
-			if (preg_match("/$TD$dispo$TD/",$sale_status))
+			if (strlen($sale_status)>0)
 				{
-				$match_found=1;
-				$newlistfield = "new_list_id_$k";
-				$resetfield = "reset_dialed_$k";
-				if (isset($_GET["$newlistfield"]))			{$new_list_id=$_GET["$newlistfield"];}
-					elseif (isset($_POST["$newlistfield"]))	{$new_list_id=$_POST["$newlistfield"];}
-				if (isset($_GET["$resetfield"]))			{$reset_dialed=$_GET["$resetfield"];}
-					elseif (isset($_POST["$resetfield"]))	{$reset_dialed=$_POST["$resetfield"];}
-				if ($DB) {echo _QXZ("MULTI_MATCH:")." $k|$sale_status|$new_list_id|$reset_dialed\n";}
+				if ( ( (preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status!='Y') ) or ( (!preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status=='Y') ) )
+					{
+					$match_found=1;
+					$newlistfield = "new_list_id_$k";
+					$resetfield = "reset_dialed_$k";
+					if (isset($_GET["$newlistfield"]))			{$new_list_id=$_GET["$newlistfield"];}
+						elseif (isset($_POST["$newlistfield"]))	{$new_list_id=$_POST["$newlistfield"];}
+					if (isset($_GET["$resetfield"]))			{$reset_dialed=$_GET["$resetfield"];}
+						elseif (isset($_POST["$resetfield"]))	{$reset_dialed=$_POST["$resetfield"];}
+					if ($DB) {echo _QXZ("MULTI_MATCH:")." $k|$sale_status|$new_list_id|$reset_dialed|$exclude_status|$talk_time_trigger|\n";}
+					}
 				}
 			}
 		}
@@ -167,7 +199,7 @@ if ($match_found > 0)
 	if ($non_latin < 1)
 		{
 		$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
-		$pass=preg_replace("/[^-_0-9a-zA-Z]/","",$pass);
+	#	$pass=preg_replace("/[^-_0-9a-zA-Z]/","",$pass);
 		}
 
 	$session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
@@ -286,6 +318,6 @@ else
 if ($log_to_file > 0)
 	{
 	$fp = fopen ("./dispo_move_list.txt", "a");
-	fwrite ($fp, "$NOW_TIME|$k|$lead_id|$new_list_id|$sale_status|$dispo|$user|XXXX|$DB|$log_to_file|$MESSAGE|\n");
+	fwrite ($fp, "$NOW_TIME|$k|$lead_id|$dispo|$user|XXXX|$DB|$log_to_file|$talk_time|$first_pass_vars|$new_list_id|$sale_status|$talk_time_trigger|$exclude_status|$MESSAGE|\n");
 	fclose($fp);
 	}

@@ -30,6 +30,7 @@
 # 151112-1345 - Added ability to search archive logs and show defunct users
 # 160121-2209 - Added report title header, default report format, cleaned up formatting
 # 160301-2051 - Expanded full name to 25 characters on text display
+# 160310-2115 - Fixed bug in HTML display
 #
 
 $startMS = microtime();
@@ -550,7 +551,7 @@ else
 		if ($DB) {echo "$status_stmt\n";}
 	$status_rslt=mysql_to_mysqli($status_stmt, $link);
 	$q=0;
-	$status_rows_to_print=0;
+	$status_rows_to_print=0; $sub_status_count=0;
 	while($status_row=mysqli_fetch_row($status_rslt)) 
 		{
 		$current_status=$status_row[0];
@@ -567,7 +568,7 @@ else
 		if ($DB) {echo "$stmt\n";}
 		$status_rows_to_print = mysqli_num_rows($rslt);
 		$rows_to_print+=$status_rows_to_print;
-		$i=0; $sub_status_count=0;
+		$i=0; 
 		while ($i < $status_rows_to_print)
 			{
 			$row=mysqli_fetch_row($rslt);
