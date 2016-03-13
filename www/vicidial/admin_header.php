@@ -1,7 +1,7 @@
 <?php
 # admin_header.php - VICIDIAL administration header
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 # CHANGES
@@ -56,6 +56,7 @@
 # 151020-0654 - Added Status Groups
 # 151203-1922 - Fix for javascript timezone issues in editing of timeclock entries
 # 151212-0858 - Added Chat link at top of page
+# 160312-1656 - Added FORM_selectall javascript, also used it to replace IGU_selectall
 #
 
 
@@ -647,17 +648,17 @@ if ( ($ADD==131111111) or ($ADD==331111111) or ($ADD==431111111) )
 		length.value = shift_length;
 		}
 
-	<?php
+<?php
 	}
 
 
 
 
-### Javascript for shift end-time calculation and display
-if ( ($ADD==3111) or ($ADD==4111) or ($ADD==5111) or ($ADD==3811) or ($ADD==4811) or ($ADD==5811) )
+### Javascript for selecting and deselecting all AC-CIDs and other checkboxes "active" on the modify page
+if ( ($ADD==3111) or ($ADD==4111) or ($ADD==5111) or ($ADD==3811) or ($ADD==4811) or ($ADD==5811) or ($ADD==3911) or ($ADD==4911) or ($ADD==5911) or ($ADD==31) or ($ADD==34) or ($ADD==202) )
 	{
-	?>
-	function IGU_selectall(temp_count,temp_fields)
+?>
+	function FORM_selectall(temp_count,temp_fields,temp_option,temp_span)
 		{
 		var fields_array=temp_fields.split('|');
 		var inc=0;
@@ -665,10 +666,20 @@ if ( ($ADD==3111) or ($ADD==4111) or ($ADD==5111) or ($ADD==3811) or ($ADD==4811
 			{
 			if (fields_array[inc].length > 0)
 				{
-				document.getElementById(fields_array[inc]).checked=true;
-			//	document.admin_form.fields_array[inc].checked=true;
+				if (temp_option == 'off')
+					{document.getElementById(fields_array[inc]).checked=false;}
+				else
+					{document.getElementById(fields_array[inc]).checked=true;}
 				}
 			inc++;
+			}
+		if (temp_option == 'off')
+			{
+			document.getElementById(temp_span).innerHTML = "<a href=\"#\" onclick=\"FORM_selectall('" + temp_count + "','" + temp_fields + "','on','" + temp_span + "');return false;\"><font size=1><?php echo _QXZ("select all"); ?></font></a>";
+			}
+		else
+			{
+			document.getElementById(temp_span).innerHTML = "<a href=\"#\" onclick=\"FORM_selectall('" + temp_count + "','" + temp_fields + "','off','" + temp_span + "');return false;\"><font size=1><?php echo _QXZ("deselect all"); ?></font></a>";
 			}
 		}
 

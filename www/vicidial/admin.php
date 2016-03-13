@@ -3733,12 +3733,13 @@ else
 # 160304-2348 - Added link to API log report
 # 160305-2048 - Added alternate ivr(call menu) dtmf logging
 # 160306-1053 - Added new webphone options, added option to have carriers on all active asterisk servers
+# 160312-1931 - Added select/deselect all options to AC-CID modify page. Reworked max stats calculations
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-541a';
-$build = '160306-1053';
+$admin_version = '2.12-542a';
+$build = '160312-1931';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -21873,6 +21874,8 @@ if ($ADD==31)
 	##### CAMPAIGN AREACODE CID #####
 	if ($SUB==202)
 		{
+		$checkbox_list='';
+		$checkbox_count=0;
 		echo "<br><br><b>"._QXZ("AREACODE CIDS FOR THIS CAMPAIGN").": &nbsp; $NWB#campaign_cid_areacodes$NWE</b><br>\n";
 		if ($use_custom_cid != 'AREACODE')
 			{echo "<br><B><font color=red>"._QXZ("The campaign setting Custom CallerID is not set to AREACODE")."! </font></B><BR>";}
@@ -21881,7 +21884,6 @@ if ($ADD==31)
 		echo "<input type=hidden name=stage value=MODIFY>\n";
 		echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
 		echo "<center><TABLE width=700 cellspacing=2>\n";
-		echo "<tr><td>#</td><td>"._QXZ("AREACODE")."</td><td>"._QXZ("CID NUMBER")."</td><td>"._QXZ("DESCRIPTION")."</td><td>"._QXZ("ACTIVE")."</td><td>"._QXZ("CALLS")."</td><td>"._QXZ("DELETE")."</td></tr>\n";
 
 		$stmt="SELECT areacode,outbound_cid,active,cid_description,call_count_today from vicidial_campaign_cid_areacodes where campaign_id='$campaign_id' $LOGallowed_campaignsSQL order by areacode,outbound_cid;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -21895,8 +21897,12 @@ if ($ADD==31)
 			$Xactive[$o] =				$rowx[2];
 			$Xcid_description[$o] =		$rowx[3];
 			$Xcall_count_today[$o] =	$rowx[4];
+			$checkbox_list .= "|active_$Xareacode[$o]_$Xoutbound_cid[$o]";
 			$o++;
+			$checkbox_count++;
 			}
+
+		echo "<tr><td>#</td><td>"._QXZ("AREACODE")."</td><td>"._QXZ("CID NUMBER")."</td><td>"._QXZ("DESCRIPTION")."</td><td>"._QXZ("ACTIVE")."<br><span id=ACCID_link><a href=\"#\" onclick=\"FORM_selectall('$checkbox_count','$checkbox_list','on','ACCID_link');return false;\"><font size=1>"._QXZ("select all")."</font></a></span></td><td>"._QXZ("CALLS")."</td><td>"._QXZ("DELETE")."</td></tr>\n";
 
 		$o=0;
 		while ($accids_to_print > $o) 
@@ -21941,11 +21947,11 @@ if ($ADD==31)
 			echo "<td>\n";
 			if ($Xactive[$o] == 'Y')
 				{
-				echo "<input type=\"checkbox\" name=\"active_$Xareacode[$o]_$Xoutbound_cid[$o]\" value=\"Y\" CHECKED>";
+				echo "<input type=\"checkbox\" name=\"active_$Xareacode[$o]_$Xoutbound_cid[$o]\" id=\"active_$Xareacode[$o]_$Xoutbound_cid[$o]\" value=\"Y\" CHECKED>";
 				}
 			else
 				{
-				echo "<input type=\"checkbox\" name=\"active_$Xareacode[$o]_$Xoutbound_cid[$o]\" value=\"Y\">";
+				echo "<input type=\"checkbox\" name=\"active_$Xareacode[$o]_$Xoutbound_cid[$o]\" id=\"active_$Xareacode[$o]_$Xoutbound_cid[$o]\" value=\"Y\">";
 				}
 			echo "</td>\n";
 			echo "<td><font size=2> &nbsp; $Xcall_count_today[$o]</font></td>\n";
@@ -25521,7 +25527,7 @@ if ($ADD==3111)
 			$users_output .= "</select></td>\n";
 			$users_output .= "<td><font size=1>$ARIG_calls[$o]</td></tr>\n";
 			}
-		echo "<tr><td><font size=1> &nbsp; </font></td><td><font size=1> &nbsp; </font></td><td align=left><a href=\"#\" onclick=\"IGU_selectall('$checkbox_count','$checkbox_list');return false;\"><font size=1>"._QXZ("select all")."</font></a></td><td colspan=2><font size=1> &nbsp; </font></td></tr>\n";
+		echo "<tr><td><font size=1> &nbsp; </font></td><td><font size=1> &nbsp; </font></td><td align=left><span id=IGU_selectlink><a href=\"#\" onclick=\"FORM_selectall('$checkbox_count','$checkbox_list','on','IGU_selectlink');return false;\"><font size=1>"._QXZ("select all")."</font></a></span></td><td colspan=2><font size=1> &nbsp; </font></td></tr>\n";
 
 		echo "$users_output";
 
@@ -26313,7 +26319,7 @@ if ($ADD==3811)
 			$users_output .= "</select></td>\n";
 			$users_output .= "<td><font size=1>$ARIG_calls[$o]</td></tr>\n";
 			}
-		echo "<tr><td><font size=1> &nbsp; </font></td><td><font size=1> &nbsp; </font></td><td align=left><a href=\"#\" onclick=\"IGU_selectall('$checkbox_count','$checkbox_list');return false;\"><font size=1>"._QXZ("select all")."</font></a></td><td colspan=2><font size=1> &nbsp; </font></td></tr>\n";
+		echo "<tr><td><font size=1> &nbsp; </font></td><td><font size=1> &nbsp; </font></td><td align=left><span id=IGU_selectlink><a href=\"#\" onclick=\"FORM_selectall('$checkbox_count','$checkbox_list','on','IGU_selectlink');return false;\"><font size=1>"._QXZ("select all")."</font></a></span></td><td colspan=2><font size=1> &nbsp; </font></td></tr>\n";
 
 		echo "$users_output";
 
@@ -27094,7 +27100,7 @@ if ($ADD==3911)
 			$users_output .= "</select></td>\n";
 			$users_output .= "<td><font size=1>$ARIG_calls[$o]</td></tr>\n";
 			}
-		echo "<tr><td><font size=1> &nbsp; </font></td><td><font size=1> &nbsp; </font></td><td align=left><a href=\"#\" onclick=\"IGU_selectall('$checkbox_count','$checkbox_list');return false;\"><font size=1>"._QXZ("select all")."</font></a></td><td colspan=2><font size=1> &nbsp; </font></td></tr>\n";
+		echo "<tr><td><font size=1> &nbsp; </font></td><td><font size=1> &nbsp; </font></td><td align=left><span id=IGU_selectlink><a href=\"#\" onclick=\"FORM_selectall('$checkbox_count','$checkbox_list','on','IGU_selectlink');return false;\"><font size=1>"._QXZ("select all")."</font></a></span></td><td colspan=2><font size=1> &nbsp; </font></td></tr>\n";
 
 		echo "$users_output";
 
@@ -36870,8 +36876,22 @@ if ($ADD==999990)
 			}
 		echo "</TABLE></center>\n";
 
-		$stmt="SELECT * from vicidial_daily_max_stats where stats_date='$yesterday' and stats_type='TOTAL' order by stats_date, campaign_id asc";
+		$total_calls=0;
+		$total_inbound=0;
+		$total_outbound=0;
+		$stmt="SELECT stats_type,sum(total_calls) from vicidial_daily_max_stats where campaign_id!='' and stats_flag='CLOSED' and stats_date='$yesterday' group by stats_type;";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$rows_to_print = mysqli_num_rows($rslt);
+		if ($rows_to_print > 0) 
+			{
+			while ($rowx=mysqli_fetch_row($rslt)) 
+				{
+				$total_calls += $rowx[1];
+				if (preg_match('/INGROUP/', $rowx[0])) {$total_inbound+=$rowx[1];}
+				if (preg_match('/CAMPAIGN/', $rowx[0])) {$total_outbound+=$rowx[1];}
+				}
+			}
+
 		echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 		echo "<tr>";
 		echo "<td align='left' colspan='3'>"._QXZ("Total Stats for Yesterday").":</td>";
@@ -36884,15 +36904,17 @@ if ($ADD==999990)
 		echo "<td><font size=1 color=white><B>&nbsp; "._QXZ("Total Outbound Calls")." &nbsp;</B></font></td>";
 		echo "<td><font size=1 color=white><B>&nbsp; "._QXZ("Maximum Agents")." &nbsp;</B></font></td>";
 
+		$stmt="SELECT * from vicidial_daily_max_stats where stats_date='$yesterday' and stats_type='TOTAL' order by stats_date, campaign_id asc";
+		$rslt=mysql_to_mysqli($stmt, $link);
 		if (mysqli_num_rows($rslt)>0) 
 			{
 			while ($row=mysqli_fetch_array($rslt)) 
 				{
 				echo "<tr bgcolor='#B9CBFD'>";
 				#echo "<td align='left'><font size=1>".$row["campaign_id"]."</font></td>";
-				echo "<td align='center'><font size=1>".($row["total_calls"]+0)."</font></td>";
-				echo "<td align='center'><font size=1>".($row["max_inbound"]+0)."</font></td>";
-				echo "<td align='center'><font size=1>".($row["max_outbound"]+0)."</font></td>";
+				echo "<td align='center'><font size=1>".($row["total_calls"]+0)." / ".($total_calls+0)."</font></td>";
+				echo "<td align='center'><font size=1>".($total_inbound+0)."</font></td>";
+				echo "<td align='center'><font size=1>".($total_outbound+0)."</font></td>";
 				echo "<td align='center'><font size=1>".($row["max_agents"]+0)."</font></td>";
 				echo "</tr>";
 				}
