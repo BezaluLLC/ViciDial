@@ -554,3 +554,8 @@ ALTER TABLE phones ADD webphone_volume ENUM('Y','N') default 'Y';
 ALTER TABLE phones ADD webphone_debug ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1455',db_schema_update_date=NOW() where db_schema_version < 1455;
+
+ALTER TABLE vicidial_admin_log MODIFY event_sql MEDIUMTEXT;
+ALTER TABLE vicidial_admin_log MODIFY event_notes MEDIUMTEXT;
+
+UPDATE system_settings SET db_schema_version='1456',db_schema_update_date=NOW() where db_schema_version < 1456;

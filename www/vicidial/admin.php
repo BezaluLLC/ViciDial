@@ -3734,12 +3734,13 @@ else
 # 160305-2048 - Added alternate ivr(call menu) dtmf logging
 # 160306-1053 - Added new webphone options, added option to have carriers on all active asterisk servers
 # 160312-1931 - Added select/deselect all options to AC-CID modify page. Reworked max stats calculations
+# 160313-0756 - Changed AC-CID changes to log to the same entry instead of one per record
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-542a';
-$build = '160312-1931';
+$admin_version = '2.12-543a';
+$build = '160313-0756';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -9265,6 +9266,9 @@ if ($ADD==202)
 				$o++;
 				}
 
+			$accid_modified=0;
+			$stmt_log='';
+			$accid_log='';
 			$o=0;
 			while ($accids_to_print > $o) 
 				{
@@ -9288,20 +9292,26 @@ if ($ADD==202)
 					}
 				else
 					{
+					$accid_modified++;
 					echo "<B>"._QXZ("AREACODE CID MODIFIED").": $Xareacode[$o] - $Xoutbound_cid[$o]</B><br>\n";
 
 					$stmt="UPDATE vicidial_campaign_cid_areacodes SET active='$Factive_value',cid_description='$Fcid_description_value' WHERE campaign_id='$campaign_id' and areacode='$Xareacode[$o]' and outbound_cid='$Xoutbound_cid[$o]';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 
-					### LOG INSERTION Admin Log Table ###
-					$SQL_log = "$stmt|";
-					$SQL_log = preg_replace('/;/', '', $SQL_log);
-					$SQL_log = addslashes($SQL_log);
-					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_AC-CID', event_type='MODIFY', record_id='$campaign_id', event_code='ADMIN MODIFY CAMPAIGN AC-CID', event_sql=\"$SQL_log\", event_notes='CID: $Xareacode[$o] - $Xoutbound_cid[$o]';";
-					if ($DB) {echo "|$stmt|\n";}
-					$rslt=mysql_to_mysqli($stmt, $link);
+					$stmt_log .= "$stmt|";
+					$accid_log .= "CID: $Xareacode[$o] - $Xoutbound_cid[$o] - $Factive_value - $Fcid_description_value|";
 					}
 				$o++;
+				}
+			if ($accid_modified > 0)
+				{
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt_log|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_AC-CID', event_type='MODIFY', record_id='$campaign_id', event_code='ADMIN MODIFY CAMPAIGN AC-CID', event_sql=\"$SQL_log\", event_notes='$accid_modified AC-CIDs MODIFIED. CHANGES: $accid_log';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
 				}
 			}
 		}
@@ -21972,6 +21982,11 @@ if ($ADD==31)
 		echo "<input type=submit name=submit value='"._QXZ("ADD")."'><BR>\n";
 
 		echo "</center></FORM><br>\n";
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=CAMPAIGN_AC-CID&stage=$campaign_id\">"._QXZ("Click here to see Admin changes to this campaign")." AC-CID</a></FONT>\n";
+			}
+		echo "<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0><TR><TD>\n";
 		}
 
 

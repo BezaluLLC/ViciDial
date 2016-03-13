@@ -1873,8 +1873,8 @@ event_section VARCHAR(30) NOT NULL,
 event_type ENUM('ADD','COPY','LOAD','RESET','MODIFY','DELETE','SEARCH','LOGIN','LOGOUT','CLEAR','OVERRIDE','EXPORT','OTHER') default 'OTHER',
 record_id VARCHAR(50) NOT NULL,
 event_code VARCHAR(255) NOT NULL,
-event_sql TEXT,
-event_notes TEXT,
+event_sql MEDIUMTEXT,
+event_notes MEDIUMTEXT,
 user_group VARCHAR(20) default '---ALL---',
 index (user),
 index (event_section),
@@ -3742,4 +3742,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1455',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1456',db_schema_update_date=NOW(),reload_timestamp=NOW();
