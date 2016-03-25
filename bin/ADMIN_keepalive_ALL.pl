@@ -109,9 +109,10 @@
 # 160305-2253 - Added --teod flag to log Timeclock End of Day processes to log file
 #               Limited max-stats process to only run on voicemail server, also added alt-logging flags to cm.agi calls
 # 160306-1040 - Added option for carriers to be defined for all active asterisk servers
+# 160324-1655 - Added callback_useronly_move_minutes option
 #
 
-$build = '160306-1040';
+$build = '160324-1655';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -3696,6 +3697,70 @@ if ($active_asterisk_server =~ /Y/)
 
 
 
+################################################################################
+#####  START scheduled callbacks move old USERONLY triggered to ANYONE
+################################################################################
+# only run this on active voicemail servver
+if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_server)) eq (length($server_ip))) )
+	{
+	##### BEGIN gather campaign settings #####
+	$CBcampaign_id=$MT;
+	$CBcallback_useronly_move_minutes=$MT;
+	$stmtA = "SELECT campaign_id,callback_useronly_move_minutes FROM vicidial_campaigns where active='Y' and callback_useronly_move_minutes > 0 order by campaign_id;";
+	if ($DBX) {print "$stmtA\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	$i=0;
+	while ($sthArows > $i)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$CBcampaign_id[$i] =					$aryA[0];
+		$CBcallback_useronly_move_minutes[$i] =	$aryA[1];
+		$i++;
+		}
+	$sthA->finish();
+
+	if ($DB) {print "   old live scheduled callbacks move active campaigns: $i\n";}
+
+	$i=0;
+	while ($sthArows > $i)
+		{
+		$CBmoveCOUNT=0;
+		$stmtA = "SELECT count(*) from vicidial_callbacks where campaign_id='$CBcampaign_id[$i]' and status='LIVE' and recipient='USERONLY' and callback_time < (NOW() - INTERVAL $CBcallback_useronly_move_minutes[$i] MINUTE);";
+		if ($DBX) {print "$stmtA\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArowsX=$sthA->rows;
+		if ($sthArowsX > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$CBmoveCOUNT =			$aryA[0];
+			}
+		$sthA->finish();
+
+		if ($CBmoveCOUNT > 0) 
+			{
+			$stmtA = "UPDATE vicidial_callbacks SET recipient='ANYONE',status='ACTIVE' where campaign_id='$CBcampaign_id[$i]' and status='LIVE' and recipient='USERONLY' and callback_time < (NOW() - INTERVAL $CBcallback_useronly_move_minutes[$i] MINUTE);";
+			$affected_rows = $dbhA->do($stmtA) or die  "Couldn't execute query: |$stmtA|\n";
+			if ($DBX) {print "Callback USERONLY old move query: |$affected_rows|$stmtA|\n";}
+
+			if ($teodDB) 
+				{
+				$event_string = "Callback USERONLY old moved: $affected_rows|$CBmoveCOUNT|$CBcampaign_id[$i]|$CBcallback_useronly_move_minutes[$i]|";
+				&teod_logger;
+				}
+			}
+		$i++;
+		}
+	}
+################################################################################
+#####  END scheduled callbacks move old USERONLY triggered to ANYONE
+################################################################################
+
+
+
+
 
 ################################################################################
 #####  BEGIN  Audio Store sync
@@ -3783,7 +3848,6 @@ if ($sthBrows > 0)
 	$stmtA="UPDATE vicidial_process_triggers SET trigger_run='0' where trigger_id='$trigger_id';";
 	$affected_rows = $dbhA->do($stmtA);
 
-	$MT[0]='';
 	$trigger_results='';
 	if ($DB) {print "running process trigger: $trigger_id\n";}
 	@triggers = split(/\|/,$trigger_lines);

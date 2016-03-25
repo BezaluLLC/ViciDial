@@ -83,6 +83,7 @@
 # 160211-2255 - Added help text for remaining reports
 # 160305-2115 - Added Alt IVR(call menu) DTMF logging
 # 160306-1201 - Added new webphone options and server options
+# 160324-1940 - Added callback_useronly_move_minutes
 #
 
 
@@ -1538,6 +1539,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-show_previous_callback">
 <BR>
 <B><?php echo _QXZ("Show Previous Callback"); ?> -</B><?php echo _QXZ("This option if enabled will show on the agent screen with a separate yellow panel information about the previously set callback that the agent has up on their screen. Disabling this option will not show that panel. Default is ENABLED."); ?>
+
+<BR>
+<A NAME="campaigns-callback_useronly_move_minutes">
+<BR>
+<B><?php echo _QXZ("Scheduled Callbacks Useronly Move Minutes"); ?> -</B><?php echo _QXZ("This option if set to a number greater than 0, will change all USERONLY Scheduled Callbacks that are X minutes after their callback time to ANYONE callbacks. This process runs every minute. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="campaigns-wrapup_seconds">

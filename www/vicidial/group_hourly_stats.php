@@ -1,7 +1,7 @@
 <?php
 # group_hourly_stats.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -18,6 +18,7 @@
 # 140108-0724 - Added webserver and hostname to report logging
 # 141114-0043 - Finalized adding QXZ translation to all admin files
 # 141230-1343 - Added code for on-the-fly language translations display
+# 160325-1426 - Changes for sidebar update
 #
 
 $startMS = microtime();
@@ -227,6 +228,7 @@ if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGa
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'311111';
 $hh =					'usergroups';
+$sh =					'hour';
 $LOGast_admin_access =	'1';
 $ADMIN =				'admin.php';
 $page_width='770';

@@ -1,7 +1,7 @@
 <?php
 # admin_search_lead.php   version 2.12
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # AST GUI database administration search for lead info
 # admin_modify_lead.php
@@ -44,6 +44,7 @@
 # 150312-1507 - Allow for single quotes in vicidial_list data fields
 # 150602-1207 - Allow for searching by email address
 # 151203-2104 - Added option for called_count as search variable
+# 160325-1427 - Changes for sidebar update
 #
 
 require("dbconnect_mysqli.php");
@@ -247,6 +248,7 @@ $regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'100';
 $hh =					'lists';
+$sh =					'search';
 $LOGast_admin_access =	'1';
 $SSoutbound_autodial_active = '1';
 $ADMIN =				'admin.php';

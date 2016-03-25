@@ -1,7 +1,7 @@
 <?php
 # user_territories.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This territories script is for use with custom tables in Vtiger which is why
 # it is separate from the standard admin.php script. user_territories_active in
@@ -18,10 +18,11 @@
 # 141007-2050 - Finalized adding QXZ translation to all admin files
 # 141229-1850 - Added code for on-the-fly language translations display
 # 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
+# 160325-1432 - Changes for sidebar update
 #
 
-$version = '2.10-10';
-$build = '150626-2120';
+$version = '2.12-11';
+$build = '160325-1432';
 
 $MT[0]='';
 
@@ -309,6 +310,7 @@ if ( ($action == "PROCESS_CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_i
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'0';
 $hh =					'users';
+$sh =					'territory';
 $LOGast_admin_access =	'1';
 $ADMIN =				'admin.php';
 $page_width='770';

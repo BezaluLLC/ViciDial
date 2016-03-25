@@ -1,7 +1,7 @@
 <?php 
 # AST_agent_time_sheet.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -24,6 +24,7 @@
 # 141114-0908 - Finalized adding QXZ translation to all admin files
 # 141230-1523 - Added code for on-the-fly language translations display
 # 151227-1735 - Added option for searching archived data
+# 160325-1428 - Changes for sidebar update
 #
 
 $startMS = microtime();
@@ -293,6 +294,7 @@ $HEADER.="<TITLE>"._QXZ("$report_name");
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'3';
 $hh =					'users';
+$sh =					'sheet';
 $LOGast_admin_access =	'1';
 $ADMIN =				'admin.php';
 $page_width='770';

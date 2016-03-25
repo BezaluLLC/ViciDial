@@ -4,7 +4,7 @@
 #
 # database connection settings and some global web settings
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES:
 # 130328-0022 - Converted ereg to preg functions
@@ -14,6 +14,7 @@
 # 150216-1529 - Removed non-latin set to 0
 # 150313-0913 - Added ExpectedDBSchema conf file value
 # 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
+# 160325-1434 - Changes for sidebar update
 #
 
 if ( file_exists("/etc/astguiclient.conf") )
@@ -91,5 +92,9 @@ $WeBRooTWritablE = '1';
 # $non_latin = '0';	# set to 1 for UTF rules, overridden by system_settings
 $flag_channels=0;
 $flag_string = 'VICIast20';
+$Msubhead_color =	'#E6E6E6';
+$Mselected_color =	'#C6C6C6';
+$Mhead_color =		'#A3C3D6';
+$Mmain_bgcolor =	'#015B91';
 
 ?>

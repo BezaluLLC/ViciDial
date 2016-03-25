@@ -17,6 +17,7 @@
 # 141229-1820 - Added code for on-the-fly language translations display
 # 160105-1232 - Fixed SQL errors
 # 160106-1318 - Added options.php option to disable this utility
+# 160325-1429 - Changes for sidebar update
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -173,6 +174,7 @@ while ($i < $groups_to_print)
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'311111';
 $hh =					'usergroups';
+$sh =					'bulk';
 $LOGast_admin_access =	'1';
 $ADMIN =				'admin.php';
 $page_width='770';

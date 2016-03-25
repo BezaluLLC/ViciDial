@@ -1,7 +1,7 @@
 <?php
 # user_status.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -35,6 +35,7 @@
 # 141229-1829 - Added code for on-the-fly language translations display
 # 150701-1250 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 # 151211-1458 - Added chat visibility
+# 160325-1433 - Changes for sidebar update
 #
 
 $startMS = microtime();
@@ -344,6 +345,7 @@ while ($i < $groups_to_print)
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'3';
 $hh =					'users';
+$sh =					'status';
 $LOGast_admin_access =	'1';
 $ADMIN =				'admin.php';
 $page_width='770';

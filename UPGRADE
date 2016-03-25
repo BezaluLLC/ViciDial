@@ -248,6 +248,10 @@ OTHER CHANGES:
 
 65. Added option to define a carrier across all active asterisk servers
 
+66. Added campaign option to move USERONLY scheduled callbacks to ANYONE
+	callbacks after X minutes being LIVE without the agent calling them
+	back.
+
 
 
 

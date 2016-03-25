@@ -50,6 +50,7 @@
 # 151227-1839 - Added option to search archived data
 # 160104-1226 - Added call type field to the agent activity table
 # 160112-0759 - Added link to direct to recording logging page
+# 160325-1430 - Changes for sidebar update
 #
 
 $startMS = microtime();
@@ -416,6 +417,7 @@ else
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'3';
 $hh =					'users';
+$sh =					'stats';
 $LOGast_admin_access =	'1';
 $ADMIN =				'admin.php';
 $page_width='770';
@@ -429,9 +431,11 @@ $users_color =		'#FFFF99';
 $users_font =		'BLACK';
 $users_color =		'#E6E6E6';
 $subcamp_color =	'#C6C6C6';
+
 if ($did > 0)
 	{
 	$hh =	'ingroups';
+	$sh =	'listdid';
 	$ADD =	'3311';
 	$ingroups_color =		'#FFFF99';
 	$ingroups_font =		'BLACK';

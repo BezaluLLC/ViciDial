@@ -1,7 +1,7 @@
 <?php
 # admin_lists_custom.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen manages the custom lists fields in ViciDial
 #
@@ -34,6 +34,7 @@
 # 141230-0018 - Added code for on-the-fly language translations display
 # 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 # 151007-2001 - Fixed issue with field deletion
+# 160325-1431 - Changes for sidebar update
 #
 
 $admin_version = '2.12-27';
@@ -294,6 +295,7 @@ if ($action == "HELP")
 ##### BEGIN Set variables to make header show properly #####
 $ADD =					'100';
 $hh =					'lists';
+$sh =					'custom';
 $LOGast_admin_access =	'1';
 $SSoutbound_autodial_active = '1';
 $ADMIN =				'admin.php';
