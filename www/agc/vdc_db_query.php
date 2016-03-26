@@ -402,10 +402,11 @@
 # 160120-2226 - Fixed issue where non-phone leads were not updating, and lead_info issue
 # 160303-0049 - Fixed issue with did script variables, added code for chat transfers
 # 160326-0940 - Fixed issue #933, variables
+# 160326-1002 - Fixed issue #934, phone_login
 #
 
-$version = '2.12-296';
-$build = '160326-0940';
+$version = '2.12-297';
+$build = '160326-1002';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=654;
@@ -667,6 +668,8 @@ if (isset($_GET["manual_dial_search_filter"]))			{$manual_dial_search_filter=$_G
 	elseif (isset($_POST["manual_dial_search_filter"]))	{$manual_dial_search_filter=$_POST["manual_dial_search_filter"];}
 if (isset($_GET["url_ids"]))			{$url_ids=$_GET["url_ids"];}
 	elseif (isset($_POST["url_ids"]))	{$url_ids=$_POST["url_ids"];}
+if (isset($_GET["phone_login"]))			{$phone_login=$_GET["phone_login"];}
+	elseif (isset($_POST["phone_login"]))	{$phone_login=$_POST["phone_login"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
