@@ -517,13 +517,15 @@
 # 160104-1237 - Added images for live chat and email, and dead chat
 # 160106-2215 - Deactivated several call action buttons while Email/Chat handling
 # 160306-1019 - Added more webphone options
+# 160326-0941 - Fixed issue #933, variables
 #
 
-$version = '2.12-486c';
-$build = '160306-1019';
+$version = '2.12-487c';
+$build = '160326-0941';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
+$DB=0;
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");

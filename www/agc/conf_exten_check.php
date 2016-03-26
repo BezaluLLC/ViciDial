@@ -72,15 +72,17 @@
 # 160104-1232 - Added proper detection of dead chats, disabled dead detection of emails
 # 160227-1007 - Fixed XSS security issue, issue #929
 # 160303-2354 - Added code for chat transfers
+# 160326-0942 - Fixed issue #933, variables
 #
 
-$version = '2.12-47';
-$build = '160303-2354';
+$version = '2.12-48';
+$build = '160326-0942';
 $php_script = 'conf_exten_check.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=44;
 $one_mysql_log=0;
 $DB=0;
+$VD_login=0;
 $SSagent_debug_logging=0;
 $startMS = microtime();
 

@@ -401,15 +401,17 @@
 # 160109-0747 - Added manual_dial_hopper_check campaign setting
 # 160120-2226 - Fixed issue where non-phone leads were not updating, and lead_info issue
 # 160303-0049 - Fixed issue with did script variables, added code for chat transfers
+# 160326-0940 - Fixed issue #933, variables
 #
 
-$version = '2.12-295';
-$build = '160303-0049';
+$version = '2.12-296';
+$build = '160326-0940';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=654;
 $one_mysql_log=0;
 $DB=0;
+$VD_login=0;
 $SSagent_debug_logging=0;
 $startMS = microtime();
 
