@@ -3745,12 +3745,13 @@ else
 # 160312-1931 - Added select/deselect all options to AC-CID modify page. Reworked max stats calculations
 # 160313-0756 - Changed AC-CID changes to log to the same entry instead of one per record
 # 160325-1435 - Changes for sidebar, added callback_useronly_move_minutes campaign feature
+# 160327-0145 - Reworked System Summary Screen
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-544a';
-$build = '160325-1435';
+$admin_version = '2.12-545a';
+$build = '160327-0145';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -19919,36 +19920,36 @@ if ($ADD==31)
 		else		{$camp_accid_color=$campaigns_color;}
 	echo "<font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\"> <B>$campaign_id</B>: </font><BR>";
 	echo "<TABLE WIDTH=$page_width CELLPADDING=2 CELLSPACING=0><TR BGCOLOR=\"$campaigns_color\">\n";
-	echo "<TD> &nbsp; <a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("Basic")."</font></a></TD>";
-	echo "<TD BGCOLOR=\"$camp_detail_color\"> <a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("Detail")." </font></a> </TD>";
-	echo "<TD BGCOLOR=\"$camp_statuses_color\"><a href=\"$PHP_SELF?ADD=31&SUB=22&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("Statuses")."</font></a></TD>";
-	echo "<TD BGCOLOR=\"$camp_hotkeys_color\"><a href=\"$PHP_SELF?ADD=31&SUB=23&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("HotKeys")."</font></a></TD>";
+	echo "<TD ALIGN=CENTER> &nbsp; <a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Basic")."</font></a></TD>";
+	echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_detail_color\"> <a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Detail")." </font></a> </TD>";
+	echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_statuses_color\"><a href=\"$PHP_SELF?ADD=31&SUB=22&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Statuses")."</font></a></TD>";
+	echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_hotkeys_color\"><a href=\"$PHP_SELF?ADD=31&SUB=23&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("HotKeys")."</font></a></TD>";
 
 	if ($SSoutbound_autodial_active > 0)
 		{
-		echo "<TD BGCOLOR=\"$camp_recycle_color\"><a href=\"$PHP_SELF?ADD=31&SUB=25&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("Lead Recycling")."</font></a></TD>";
-		echo "<TD BGCOLOR=\"$camp_autoalt_color\"><a href=\"$PHP_SELF?ADD=31&SUB=26&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("Auto Alt Dial")."</font></a></TD>";
-		echo "<TD BGCOLOR=\"$camp_listmix_color\"><a href=\"$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("List Mix")."</font></a></TD>";
-		echo "<TD BGCOLOR=\"$camp_survey_color\"><a href=\"$PHP_SELF?ADD=31&SUB=20A&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("Survey")."</font></a></TD>";
+		echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_recycle_color\"><a href=\"$PHP_SELF?ADD=31&SUB=25&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Lead Recycling")."</font></a></TD>";
+		echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_autoalt_color\"><a href=\"$PHP_SELF?ADD=31&SUB=26&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Auto Alt Dial")."</font></a></TD>";
+		echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_listmix_color\"><a href=\"$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("List Mix")."</font></a></TD>";
+		echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_survey_color\"><a href=\"$PHP_SELF?ADD=31&SUB=20A&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Survey")."</font></a></TD>";
 		}
-	echo "<TD BGCOLOR=\"$camp_pause_color\"><a href=\"$PHP_SELF?ADD=31&SUB=27&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("Pause Codes")."</font></a></TD>";
+	echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_pause_color\"><a href=\"$PHP_SELF?ADD=31&SUB=27&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Pause Codes")."</font></a></TD>";
 	if ($enable_xfer_presets == 'ENABLED')
 		{
-		echo "<TD BGCOLOR=\"$camp_preset_color\"><a href=\"$PHP_SELF?ADD=31&SUB=201&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("Presets")."</font></a></TD>";
+		echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_preset_color\"><a href=\"$PHP_SELF?ADD=31&SUB=201&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Presets")."</font></a></TD>";
 		}
 	if ($SScampaign_cid_areacodes_enabled == '1')
 		{
-		echo "<TD BGCOLOR=\"$camp_accid_color\"><a href=\"$PHP_SELF?ADD=31&SUB=202&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("AC-CID")."</font></a></TD>";
+		echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_accid_color\"><a href=\"$PHP_SELF?ADD=31&SUB=202&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("AC-CID")."</font></a></TD>";
 		}
 	if ($SSqc_features_active > 0)
 		{
-		echo "<TD BGCOLOR=\"$camp_qc_color\"><a href=\"$PHP_SELF?ADD=31&SUB=28&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("QC")."</font></a></TD>";
+		echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_qc_color\"><a href=\"$PHP_SELF?ADD=31&SUB=28&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("QC")."</font></a></TD>";
 		}
 	if ($SSoutbound_autodial_active < 1)
 		{
 		echo "<TD></TD><TD></TD><TD></TD><TD></TD>\n";
 		}
-	echo "<TD> <a href=\"./realtime_report.php?RR=4&DB=0&group=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("Real-Time")."</font></a></TD>\n";
+	echo "<TD ALIGN=CENTER> <a href=\"./realtime_report.php?RR=4&DB=0&group=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Real-Time")."</font></a></TD>\n";
 	echo "</TR></TABLE>\n";
 
 	echo "<TABLE><TR><TD>\n";
@@ -22195,14 +22196,17 @@ if ($ADD==34)
 		else		{$camp_listmix_color=$campaigns_color;}
 	echo "<TABLE WIDTH=$page_width CELLPADDING=2 CELLSPACING=0><TR BGCOLOR=\"$campaigns_color\">\n";
 	echo "<TD><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\"> <B>$campaign_id</B>: </font></TD>";
-	echo "<TD BGCOLOR=\"$camp_detail_color\"><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("Basic View")." </font></a></TD>";
-	echo "<TD> <a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("Detail View")."</font></a> </TD>";
+
+
+	echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_detail_color\"> &nbsp; <a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Basic View")."</font></a></TD>";
+	echo "<TD ALIGN=CENTER> <a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Detail View")." </font></a> </TD>";
+
 	if ($SSoutbound_autodial_active > 0)
 		{
-		echo "<TD BGCOLOR=\"$camp_listmix_color\"> <a href=\"$PHP_SELF?ADD=34&SUB=29&campaign_id=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("List Mix")."</font></a> </TD>";
+		echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_listmix_color\"> <a href=\"$PHP_SELF?ADD=34&SUB=29&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("List Mix")."</font></a> </TD>";
 		}
-	echo "<TD> <a href=\"./realtime_report.php?RR=4&DB=0&group=$campaign_id\"><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\">"._QXZ("Real-Time Screen")."</font></a></TD>\n";
-	echo "<TD WIDTH=300><font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\"> &nbsp; </font></TD>\n";
+	echo "<TD ALIGN=CENTER> <a href=\"./realtime_report.php?RR=4&DB=0&group=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Real-Time Screen")."</font></a></TD>\n";
+	echo "<TD WIDTH=300><font class=\"sub_sub_head_links\"> &nbsp; </font></TD>\n";
 	if ($SSoutbound_autodial_active < 1)
 		{
 		echo "<TD></TD>";
@@ -33260,8 +33264,8 @@ if ($ADD=="0A")
 	{
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	echo "<br>"._QXZ("USER LISTINGS").": ";
-	if (preg_match('/display_all/',$status)) 
+	echo "<img src=\"images/icon_black_users.png\" alt=\"Users\" width=42 height=42> "._QXZ("USER LISTINGS").": ";
+	if (preg_match('/display_all/',$status))
 		{
 		$SQLstatus = '';
 		echo " &nbsp; <a href=\"$PHP_SELF?ADD=0A\"><font size=1 color=black>"._QXZ("show only active users")."</a>\n";
@@ -33334,7 +33338,7 @@ if ($ADD==10)
 	if (file_exists('options.php'))
 		{require('options.php');}
 
-	echo "<br>"._QXZ("CAMPAIGN LISTINGS").":\n";
+	echo "<img src=\"images/icon_black_campaigns.png\" alt=\"Campaigns\" width=42 height=42> "._QXZ("CAMPAIGN LISTINGS").":\n";
 	if ( (preg_match('/display_active/',$status)) or ( (!preg_match('/display_all/',$status)) and ($active_only_default_campaigns > 0) ) )
 		{
 		$SQLstatus = 'Y';
@@ -33355,18 +33359,18 @@ if ($ADD==10)
 
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<tr bgcolor=black>";
-	echo "<td><font size=1 color=white align=left><B>"._QXZ("CAMPAIGN ID")."</B></td>";
-	echo "<td><font size=1 color=white><CENTER><B>"._QXZ("NAME")."</B></CENTER></td>";
-	echo "<td><font size=1 color=white><B>"._QXZ("ACTIVE")." &nbsp; </B></td>";
-	echo "<td><font size=1 color=white><B>"._QXZ("GROUP")." &nbsp; </B></td>";
+	echo "<td NOWRAP><font size=1 color=white align=left><B>"._QXZ("CAMPAIGN ID")."</B></td>";
+	echo "<td NOWRAP><font size=1 color=white><CENTER><B>"._QXZ("NAME")."</B></CENTER></td>";
+	echo "<td NOWRAP><font size=1 color=white><B>"._QXZ("ACTIVE")." &nbsp; </B></td>";
+	echo "<td NOWRAP><font size=1 color=white><B>"._QXZ("GROUP")." &nbsp; </B></td>";
 	if ($SSoutbound_autodial_active > 0)
 		{
-		echo "<td><font size=1 color=white><B>"._QXZ("DIAL METHOD")." &nbsp; </B></td>";
-		echo "<td><font size=1 color=white><B> "._QXZ("LEVEL")." &nbsp; </B></td>";
-		echo "<td><font size=1 color=white><B>"._QXZ("LEAD ORDER")." &nbsp; </B></td>";
-		echo "<td><font size=1 color=white><B>"._QXZ("DIAL STATUSES")." &nbsp; </B></td>";
+		echo "<td NOWRAP><font size=1 color=white><B>"._QXZ("DIAL METHOD")." &nbsp; </B></td>";
+		echo "<td NOWRAP><font size=1 color=white><B> "._QXZ("LEVEL")." &nbsp; </B></td>";
+		echo "<td NOWRAP><font size=1 color=white><B>"._QXZ("LEAD ORDER")." &nbsp; </B></td>";
+		echo "<td NOWRAP><font size=1 color=white><B>"._QXZ("DIAL STATUSES")." &nbsp; </B></td>";
 		}
-	echo "<td align=center><font size=1 color=white><B>"._QXZ("MODIFY")."</B></td></tr>\n";
+	echo "<td align=center NOWRAP><font size=1 color=white><B>"._QXZ("MODIFY")."</B></td></tr>\n";
 
 	$o=0; $p=0;
 	while ($campaigns_to_print > $o) 
@@ -33437,7 +33441,7 @@ if ($ADD==100)
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$lists_to_print = mysqli_num_rows($rslt);
 
-	echo "<br>"._QXZ("LIST LISTINGS").":\n";
+	echo "<img src=\"images/icon_black_lists.png\" alt=\"Lists\" width=42 height=42> "._QXZ("LIST LISTINGS").":\n";
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<TR BGCOLOR=BLACK>";
 	echo "<TD><a href=\"$PHP_SELF?ADD=100&$LISTlink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("LIST ID")."</B></a></TD>";
@@ -33528,7 +33532,7 @@ if ($ADD==1000)
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$ingroups_to_print = mysqli_num_rows($rslt);
 
-	echo "<br>"._QXZ("INBOUND GROUP LISTINGS").":\n";
+	echo "<img src=\"images/icon_black_inbound.png\" alt=\"Inbound Groups\" width=42 height=42> "._QXZ("INBOUND GROUP LISTINGS").":\n";
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<TR BGCOLOR=BLACK>";
 	echo "<TD><font size=1 color=white>"._QXZ("IN-GROUP")."</TD>";
@@ -33967,7 +33971,7 @@ if ($ADD==10000)
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$remoteagents_to_print = mysqli_num_rows($rslt);
 
-	echo "<br>"._QXZ("REMOTE AGENTS LISTINGS").":\n";
+	echo "<img src=\"images/icon_black_remoteagents.png\" alt=\"Remote Agents\" width=42 height=42> "._QXZ("REMOTE AGENTS LISTINGS").":\n";
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<tr bgcolor=black>";
 	echo "<td><font size=1 color=white align=left><B>"._QXZ("USER")."</B></td>";
@@ -34061,7 +34065,7 @@ if ($ADD==100000)
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$usergroups_to_print = mysqli_num_rows($rslt);
 
-	echo "<br>"._QXZ("USER GROUPS LISTINGS").":\n";
+	echo "<img src=\"images/icon_black_usergroups.png\" alt=\"User Groups\" width=42 height=42> "._QXZ("USER GROUPS LISTINGS").":\n";
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<tr bgcolor=black>";
 	echo "<td><font size=1 color=white align=left><B>"._QXZ("USER GROUP")."</B></td>";
@@ -34100,7 +34104,7 @@ if ($ADD==1000000)
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$scripts_to_print = mysqli_num_rows($rslt);
 
-	echo "<br>"._QXZ("SCRIPTS LISTINGS").":\n";
+	echo "<img src=\"images/icon_black_scripts.png\" alt=\"Scripts\" width=42 height=42> "._QXZ("SCRIPTS LISTINGS").":\n";
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<tr bgcolor=black>";
 	echo "<td><font size=1 color=white align=left><B>"._QXZ("SCRIPT ID")."</B></td>";
@@ -34143,7 +34147,7 @@ if ($ADD==10000000)
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$filters_to_print = mysqli_num_rows($rslt);
 
-	echo "<br>"._QXZ("LEAD FILTER LISTINGS").":\n";
+	echo "<img src=\"images/icon_black_filters.png\" alt=\"Filters\" width=42 height=42> "._QXZ("LEAD FILTER LISTINGS").":\n";
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<tr bgcolor=black>";
 	echo "<td><font size=1 color=white align=left><B>"._QXZ("FILTER ID")."</B></td>";
@@ -35090,7 +35094,7 @@ if (($ADD==100000000000000) && ($qc_auth=='1'))
     $rslt=mysql_to_mysqli($stmt, $link);
     $vicidialconf_to_print = mysqli_num_rows($rslt);
 
-    echo "<br>"._QXZ("VICIDIAL QUALITY LISTINGS").":\n";
+    echo "<img src=\"images/icon_black_qc.png\" alt=\"Quality Control\" width=42 height=42> "._QXZ("Quality Control Listings").":\n";
     echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
     echo "<tr bgcolor=black>";
     echo "<td><font size=1 color=white align=left><B>"._QXZ("CAMPAIGN ID")."</B></td>";
@@ -35780,7 +35784,9 @@ if ($ADD==999999)
 
 		<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 		<TITLE><?php echo _QXZ("Server Stats and Reports"); ?></TITLE></HEAD><BODY BGCOLOR=WHITE>
-		<FONT SIZE=4><B><?php echo _QXZ("Server Stats and Reports"); ?></B></FONT><BR><BR>
+		<img src="images/icon_black_reports.png" alt="Reports" width=42 height=42 align=left> 
+		<FONT SIZE=4><B><?php echo _QXZ("Server Stats and Reports"); ?></B></FONT><BR>
+		<FONT SIZE=1><B> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; (<a href="admin.php"><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK><?php echo _QXZ("System Summary"); ?></font></a>)</B></FONT><BR><BR>
 		<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=0><TR><TD VALIGN=TOP>
 		 &nbsp; &nbsp; &nbsp;
 		</TD><TD VALIGN=TOP>
@@ -36145,7 +36151,7 @@ if ($ADD==999998)
 
 	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 	<TITLE><?php echo _QXZ("Administration: Admin"); ?></TITLE></HEAD><BODY BGCOLOR=WHITE>
-	<BR><FONT FACE="ARIAL,HELVETICA" SIZE=4><B> &nbsp; <?php echo _QXZ("Administration"); ?></B></FONT><BR><CENTER>
+	<img src="images/icon_black_admin.png" alt="Admin" width=42 height=42> <FONT FACE="ARIAL,HELVETICA" SIZE=4><B> <?php echo _QXZ("Administration"); ?></B></FONT><BR><CENTER>
 	<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=0><TR><TD VALIGN=TOP>
 	<UL>
 	<?php
@@ -36698,13 +36704,6 @@ if ($ADD==999990)
 	{
 	if ( (preg_match("/Front Page System Summary/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 		{
-		$section_width=640;
-		echo "<BR><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-		echo "<center><TABLE width=$section_width cellspacing=2>\n";
-		echo "<tr>";
-		echo "<td align='left' colspan='4'>"._QXZ("System Summary").":</td>";
-		echo "</tr>";
-
 		$stmt="SELECT closer_campaigns from vicidial_campaigns;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -36783,34 +36782,50 @@ if ($ADD==999990)
 				}
 			}
 
-		echo "<tr bgcolor=black>";
-		echo "<td nowrap><font size='+1' color=white><B>&nbsp; "._QXZ("Agents Logged In")." &nbsp;</B></font></td>";
-		echo "<td nowrap><font size='+1' color=white><B>&nbsp; "._QXZ("Agents In Calls")." &nbsp;</B></font></td>";
-		echo "<td nowrap><font size='+1' color=white><B>&nbsp; "._QXZ("Active Calls")." &nbsp;</B></font></td>";
-		echo "<td nowrap><font size='+1' color=white><B>&nbsp; "._QXZ("Calls Ringing")." &nbsp;</B></font></td>";
-		echo "</tr>";
-		echo "<tr bgcolor='#B9CBFD'>";
-		echo "<td align='center'><font size='+1'>&nbsp; $agent_total &nbsp;</font></td>";
-		echo "<td align='center'><font size='+1'>&nbsp; $agent_incall &nbsp;</font></td>";
-		echo "<td align='center'><font size='+1'>&nbsp; $active_calls &nbsp;</font></td>";
-		echo "<td align='center'><font size='+1'>&nbsp; $ringing_calls &nbsp;</font></td>";
-		echo "</tr>";
+		$section_width=700;
+		echo "<BR><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
+		echo "<center>";
+		echo "<TABLE width=$section_width cellpadding=6 cellspacing=0>\n";
 		echo "<tr>";
-		echo "<td align='left' colspan='4'>&nbsp;</td>";  # Padding
+		echo "<td align='center' valign='middle' bgcolor='#015b91' rowspan=2><img src=\"images/icon_users.png\" width=42 height=42></td>";
+		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:11;color:white;font-weight:bold;\">"._QXZ("Agents Logged In")."</font></td>";
+		echo "<td width=10 rowspan=2> &nbsp; </td>";
+		echo "<td align='center' valign='middle' bgcolor='#015b91' rowspan=2><img src=\"images/icon_agentsincalls.png\" width=42 height=42></td>";
+		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:11;color:white;font-weight:bold;\">"._QXZ("Agents In Calls")."</font></td>";
+		echo "<td width=10 rowspan=2> &nbsp; </td>";
+		echo "<td align='center' valign='middle' bgcolor='#015b91' rowspan=2><img src=\"images/icon_calls.png\" width=42 height=42></td>";
+		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:11;color:white;font-weight:bold;\">"._QXZ("Active Calls")."</font></td>";
+		echo "<td width=10 rowspan=2> &nbsp; </td>";
+		echo "<td align='center' valign='middle' bgcolor='#015b91' rowspan=2><img src=\"images/icon_ringing.png\" width=42 height=42></td>";
+		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:11;color:white;font-weight:bold;\">"._QXZ("Calls Ringing")."</font></td>";
+		echo "</tr>";
+		echo "<tr>";
+		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:18;color:white;font-weight:bold;\">$agent_total</font></td>";
+		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:18;color:white;font-weight:bold;\">$agent_incall</font></td>";
+		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:18;color:white;font-weight:bold;\">$agent_incall</font></td>";
+		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:18;color:white;font-weight:bold;\">$ringing_calls</font></td>";
+		echo "</tr>";
+		echo "</TABLE>";
+		echo "<br><br>";
+
+
+		echo "<TABLE width=$section_width cellspacing=2>\n";
+		echo "<tr>";
+		echo "<td align='left' colspan='4'><font style=\"font-family:HELVETICA;font-size:16;color:black;font-weight:bold;\">"._QXZ("System Summary").":</font></td>";
 		echo "</tr>";
 
 		echo "<tr bgcolor=black>";
-		echo "<td align='center'><font color=white><B>&nbsp; &nbsp; "._QXZ("Records")." &nbsp;</B></font></td>";
-		echo "<td align='center'><font color=white><B>&nbsp; "._QXZ("Active")." &nbsp;</B></font></td>";
-		echo "<td align='center'><font color=white><B>&nbsp; "._QXZ("Inactive")." &nbsp;</B></font></td>";
-		echo "<td align='center'><font color=white><B>&nbsp; "._QXZ("Total")." &nbsp;</B></font></td>";
+		echo "<td align='center'><font style=\"font-family:HELVETICA;font-size:14;color:white;font-weight:bold;\">&nbsp; "._QXZ("Records")." &nbsp;</font></td>";
+		echo "<td align='center'><font style=\"font-family:HELVETICA;font-size:14;color:white;font-weight:bold;\">&nbsp; "._QXZ("Active")." &nbsp;</font></td>";
+		echo "<td align='center'><font style=\"font-family:HELVETICA;font-size:14;color:white;font-weight:bold;\">&nbsp; "._QXZ("Inactive")." &nbsp;</font></td>";
+		echo "<td align='center'><font style=\"font-family:HELVETICA;font-size:14;color:white;font-weight:bold;\">&nbsp; "._QXZ("Total")." &nbsp;</font></td>";
 		echo "</tr>";
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=0A'>"._QXZ("Users").": </a></td><td align=center><b>".($users["Y"]+0)."</b></td><td align=center><b>".($users["N"]+0)."</b></td><td align=center><b>".($users["Y"]+$users["N"]+0)."</b></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=10'>"._QXZ("Campaigns").": </a></td><td align=center><b>".($campaigns["Y"]+0)."</b></td><td align=center><b>".($campaigns["N"]+0)."</b></td><td align=center><b>".($campaigns["Y"]+$campaigns["N"]+0)."</b></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=100'>"._QXZ("Lists").": </a></td><td align=center><b>".($lists["Y"]+0)."</b></td><td align=center><b>".($lists["N"]+0)."</b></td><td align=center><b>".($lists["Y"]+$lists["N"]+0)."</b></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=1000'>"._QXZ("In-Groups").": </a></td><td align=center><b>".($ingroups["Y"]+0)."</b></td><td align=center><b>".($ingroups["N"]+0)."</b></td><td align=center><b>".($ingroups["Y"]+$ingroups["N"]+0)."</b></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=1300'>"._QXZ("DIDs").": </a></td><td align=center><b>".($dids["Y"]+0)."</b></td><td align=center><b>".($dids["N"]+0)."</b></td><td align=center><b>".($dids["Y"]+$dids["N"]+0)."</b></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=0A' STYLE=\"text-decoration:none;\">"._QXZ("Users").": </a></td><td align=center><b>".($users["Y"]+0)."</b></td><td align=center><b>".($users["N"]+0)."</b></td><td align=center><b>".($users["Y"]+$users["N"]+0)."</b></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=10' STYLE=\"text-decoration:none;\">"._QXZ("Campaigns").": </a></td><td align=center><b>".($campaigns["Y"]+0)."</b></td><td align=center><b>".($campaigns["N"]+0)."</b></td><td align=center><b>".($campaigns["Y"]+$campaigns["N"]+0)."</b></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=100' STYLE=\"text-decoration:none;\">"._QXZ("Lists").": </a></td><td align=center><b>".($lists["Y"]+0)."</b></td><td align=center><b>".($lists["N"]+0)."</b></td><td align=center><b>".($lists["Y"]+$lists["N"]+0)."</b></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=1000' STYLE=\"text-decoration:none;\">"._QXZ("In-Groups").": </a></td><td align=center><b>".($ingroups["Y"]+0)."</b></td><td align=center><b>".($ingroups["N"]+0)."</b></td><td align=center><b>".($ingroups["Y"]+$ingroups["N"]+0)."</b></td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right><a href='$PHP_SELF?ADD=1300' STYLE=\"text-decoration:none;\">"._QXZ("DIDs").": </a></td><td align=center><b>".($dids["Y"]+0)."</b></td><td align=center><b>".($dids["N"]+0)."</b></td><td align=center><b>".($dids["Y"]+$dids["N"]+0)."</b></td></tr>\n";
 	
 		// New voicemailbox code
 		$stmt="(SELECT voicemail_id,count(*),messages,old_messages,'vm','vm' from vicidial_voicemail where on_login_report='Y' $LOGadmin_viewable_groupsSQL group by voicemail_id) UNION (SELECT voicemail_id,count(*),messages,old_messages,extension,server_ip from phones where on_login_report='Y' $LOGadmin_viewable_groupsSQL group by voicemail_id) order by voicemail_id;";
@@ -36822,10 +36837,10 @@ if ($ADD==999990)
 			echo "<td align='left' colspan='4'>&nbsp;</td>";  # Padding
 			echo "</tr>";
 			echo "<tr bgcolor=black>";
-			echo "<td  align='center'><font color=white><B>&nbsp; Voicemail Box &nbsp;</B></font></td>\n";
-			echo "<td  align='center'><font color=white><B>&nbsp; New &nbsp;</B></font></td>\n";
-			echo "<td  align='center'><font color=white><B>&nbsp; Old &nbsp;</B></font></td>\n";
-			echo "<td  align='center'><font color=white><B>&nbsp; Total &nbsp;</B></font></td>\n";
+			echo "<td  align='center'><font style=\"font-family:HELVETICA;font-size:14;color:white;font-weight:bold;\">&nbsp; Voicemail Box &nbsp;</font></td>\n";
+			echo "<td  align='center'><font style=\"font-family:HELVETICA;font-size:14;color:white;font-weight:bold;\">&nbsp; New &nbsp;</font></td>\n";
+			echo "<td  align='center'><font style=\"font-family:HELVETICA;font-size:14;color:white;font-weight:bold;\">&nbsp; Old &nbsp;</font></td>\n";
+			echo "<td  align='center'><font style=\"font-family:HELVETICA;font-size:14;color:white;font-weight:bold;\">&nbsp; Total &nbsp;</font></td>\n";
 			echo "</tr>\n";
 	
 			while($row=mysqli_fetch_array($rslt)) 
@@ -36833,11 +36848,11 @@ if ($ADD==999990)
 				echo "<tr bgcolor='#B9CBFD'>\n";
 				if ($row[4] == 'vm')
 					{
-					echo "<td align='right'><a href='$PHP_SELF?ADD=371111111111&voicemail_id=$row[0]'>$row[0]:</a></font></td>\n";
+					echo "<td align='right'><a href='$PHP_SELF?ADD=371111111111&voicemail_id=$row[0]' STYLE=\"text-decoration:none;\">$row[0]:</a></font></td>\n";
 					}
 				else
 					{
-					echo "<td align='right'><a href='$PHP_SELF?ADD=31111111111&extension=$row[4]&server_ip=$row[5]'>$row[0]:</a></font></td>\n";
+					echo "<td align='right'><a href='$PHP_SELF?ADD=31111111111&extension=$row[4]&server_ip=$row[5]' STYLE=\"text-decoration:none;\">$row[0]:</a></font></td>\n";
 					}
 				echo "<td align='center'>$row[2]</font></td>\n";
 				echo "<td align='center'>$row[3]</font></td>\n";
@@ -36874,7 +36889,7 @@ if ($ADD==999990)
 		$rslt=mysql_to_mysqli($stmt, $link);
 		echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 		echo "<tr>";
-		echo "<td align='left' colspan='3'>"._QXZ("Total Stats for Today").":</td>";
+		echo "<td align='left' colspan='3'><font style=\"font-family:HELVETICA;font-size:12;color:black;font-weight:bold;\">"._QXZ("Total Stats for Today").":</font></td>";
 		echo "<td align='right'><font size=1><a href='$PHP_SELF?query_date=$thirtydays&end_date=$today&max_system_stats_submit=ADJUST+DATE+RANGE&ADD=999992&stage=TOTAL'>["._QXZ("view max stats")."]</a></font></td>";
 		echo "</tr>";
 		echo "<tr bgcolor=black>";
@@ -36923,7 +36938,7 @@ if ($ADD==999990)
 
 		echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 		echo "<tr>";
-		echo "<td align='left' colspan='3'>"._QXZ("Total Stats for Yesterday").":</td>";
+		echo "<td align='left' colspan='3'><font style=\"font-family:HELVETICA;font-size:12;color:black;font-weight:bold;\">"._QXZ("Total Stats for Yesterday").":</font></td>";
 		echo "<td align='right'><font size=1><a href='$PHP_SELF?query_date=$thirtydays&end_date=$today&max_system_stats_submit=ADJUST+DATE+RANGE&ADD=999992&stage=TOTAL'>["._QXZ("view max stats")."]</a></font></td>";
 		echo "</tr>";
 		echo "<tr bgcolor=black>";
