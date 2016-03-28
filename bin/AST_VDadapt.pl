@@ -1762,14 +1762,14 @@ sub launch_carrier_stats_gather
 	$CARRIERstatsHTML .= "<TR BGCOLOR=white><TD ALIGN=left COLSPAN=8>";
 	$CARRIERstatsHTML .= "<TABLE CELLPADDING=1 CELLSPACING=1 BORDER=0 BGCOLOR=white>";
 	$CARRIERstatsHTML .= "<TR BGCOLOR='#E6E6E6'>";
-	$CARRIERstatsHTML .= "<TD ALIGN=LEFT><font size=2><B>CARRIER STATS: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </B></TD>";
-	$CARRIERstatsHTML .= "<TD ALIGN=LEFT><font size=2><B>&nbsp; HANGUP STATUS &nbsp; </B></TD>";
-	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; 24 HOURS &nbsp; </B></TD>";
-	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; 6 HOURS &nbsp; </B></TD>";
-	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; 1 HOUR &nbsp; </B></TD>";
-	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; 15 MIN &nbsp; </B></TD>";
-	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; 5 MIN &nbsp; </B></TD>";
-	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=2><B>&nbsp; 1 MIN &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "<TD ALIGN=LEFT><font size=1 face='helvetica'><B>CARRIER STATS: &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "<TD ALIGN=LEFT><font size=1 face='helvetica'><B>&nbsp; HANGUP STATUS &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=1 face='helvetica'><B>&nbsp; 24 HOURS &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=1 face='helvetica'><B>&nbsp; 6 HOURS &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=1 face='helvetica'><B>&nbsp; 1 HOUR &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=1 face='helvetica'><B>&nbsp; 15 MIN &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=1 face='helvetica'><B>&nbsp; 5 MIN &nbsp; </B></TD>";
+	$CARRIERstatsHTML .= "<TD ALIGN=CENTER><font size=1 face='helvetica'><B>&nbsp; 1 MIN &nbsp; </B></TD>";
 	$CARRIERstatsHTML .= "</TR>";
 
 	if (length($dialstatuses) > 1)
@@ -1916,31 +1916,31 @@ sub launch_carrier_stats_gather
 		#		}
 
 			$CARRIERstatsHTML .= "<TR>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR=white><font size=2>&nbsp;</TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=LEFT><font size=2>&nbsp; &nbsp; $TFhour_status[$print_ctp] </TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2> $TFhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $TFhour_pct)."%</font></TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2> $SIXhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $SIXhour_pct)."%</font></TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2> $ONEhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $ONEhour_pct)."%</font></TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2> $FTminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $TFminute_pct)."%</font></TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2> $FIVEminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $FIVEminute_pct)."%</font></TD>";
-			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2> $ONEminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000'>".sprintf("%01.1f", $ONEminute_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR=white><font size=1 face='helvetica'>&nbsp;</TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=LEFT><font size=1 face='helvetica'>&nbsp; &nbsp; $TFhour_status[$print_ctp] </TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=1 face='helvetica'> $TFhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000' face='helvetica'>".sprintf("%01.1f", $TFhour_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=1 face='helvetica'> $SIXhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000' face='helvetica'>".sprintf("%01.1f", $SIXhour_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=1 face='helvetica'> $ONEhour_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000' face='helvetica'>".sprintf("%01.1f", $ONEhour_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=1 face='helvetica'> $FTminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000' face='helvetica'>".sprintf("%01.1f", $TFminute_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=1 face='helvetica'> $FIVEminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000' face='helvetica'>".sprintf("%01.1f", $FIVEminute_pct)."%</font></TD>";
+			$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=1 face='helvetica'> $ONEminute_count[$print_ctp] </font>&nbsp;<font size=1 color='#990000' face='helvetica'>".sprintf("%01.1f", $ONEminute_pct)."%</font></TD>";
 			$CARRIERstatsHTML .= "</TR>";
 			$print_ctp++;
 			}
 		$CARRIERstatsHTML .= "<TR>";
-		$CARRIERstatsHTML .= "<TD BGCOLOR=white><font size=1>generated: $timeNOW</TD>";
-		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=LEFT><font size=2><B>&nbsp; &nbsp; TOTALS</B></TD>";
-		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2><B> ".($TFhour_total+0)."</B> </TD>";
-		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2><B> ".($SIXhour_total+0)."</B> </TD>";
-		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2><B> ".($ONEhour_total+0)."</B> </TD>";
-		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2><B> ".($FTminute_total+0)."</B> </TD>";
-		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2><B> ".($FIVEminute_total+0)."</B> </TD>";
-		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=2><B> ".($ONEminute_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR=white><font size=1 face='helvetica'>generated: $timeNOW</TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=LEFT><font size=1 face='helvetica'><B>&nbsp; &nbsp; TOTALS</B></TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=1 face='helvetica'><B> ".($TFhour_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=1 face='helvetica'><B> ".($SIXhour_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=1 face='helvetica'><B> ".($ONEhour_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=1 face='helvetica'><B> ".($FTminute_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=1 face='helvetica'><B> ".($FIVEminute_total+0)."</B> </TD>";
+		$CARRIERstatsHTML .= "<TD BGCOLOR='#E6E6E6' ALIGN=CENTER><font size=1 face='helvetica'><B> ".($ONEminute_total+0)."</B> </TD>";
 		$CARRIERstatsHTML .= "</TR>";
 		}
 	else
 		{
-		$CARRIERstatsHTML .= "<TR><TD BGCOLOR=white colspan=7><font size=2>no carrier log entries in last 24 hours</TD></TR>";
+		$CARRIERstatsHTML .= "<TR><TD BGCOLOR=white colspan=7><font size=1 face='helvetica'>no carrier log entries in last 24 hours</TD></TR>";
 		}
 	$CARRIERstatsHTML .= "</TABLE>";
 	$CARRIERstatsHTML .= "</TD></TR>";

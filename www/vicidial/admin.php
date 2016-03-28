@@ -3746,12 +3746,13 @@ else
 # 160313-0756 - Changed AC-CID changes to log to the same entry instead of one per record
 # 160325-1435 - Changes for sidebar, added callback_useronly_move_minutes campaign feature
 # 160327-0145 - Reworked System Summary Screen
+# 160328-0316 - Added links to the real-time report from the summary screen
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-545a';
-$build = '160327-0145';
+$admin_version = '2.12-546a';
+$build = '160328-0316';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -32829,7 +32830,7 @@ if ($ADD==331111111111111)
 			echo "$CATstatuses";
 			echo "</td></tr>\n";
 			echo "<tr $bgcolor>\n";
-			echo "<td colspan=3>"._QXZ("TO VDAD Display").": <select size=1 name=tovdad_display><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$Atovdad_display[$p]' selected>"._QXZ("$Atovdad_display[$p]")."</option></select> &nbsp; &nbsp; "._QXZ("Sale Category").": <select size=1 name=sale_category><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$Asale_category[$p]' selected>"._QXZ("$Asale_category[$p]")."</option></select> &nbsp; &nbsp; "._QXZ("Dead Lead Category").": <select size=1 name=dead_lead_category><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$Adead_lead_category[$p]' selected>"._QXZ("$Adead_lead_category[$p]")."</option></select> &nbsp; </td></tr>\n";
+			echo "<td colspan=3>"._QXZ("To Realtime Display").": <select size=1 name=tovdad_display><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$Atovdad_display[$p]' selected>"._QXZ("$Atovdad_display[$p]")."</option></select> &nbsp; &nbsp; "._QXZ("Sale Category").": <select size=1 name=sale_category><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$Asale_category[$p]' selected>"._QXZ("$Asale_category[$p]")."</option></select> &nbsp; &nbsp; "._QXZ("Dead Lead Category").": <select size=1 name=dead_lead_category><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$Adead_lead_category[$p]' selected>"._QXZ("$Adead_lead_category[$p]")."</option></select> &nbsp; </td></tr>\n";
 			echo "<tr $bgcolor><td colspan=3><font size=1>"._QXZ("Description").": <input type=text name=vsc_description size=90 maxlength=255 value=\"$Avsc_description[$p]\"></td></tr>\n";
 			echo "<tr $bgcolor><td colspan=3 align=center><font size=1><input type=submit name=submit value='"._QXZ("MODIFY")."'> &nbsp; &nbsp; &nbsp; &nbsp; \n";
 			echo " &nbsp; <a href=\"$PHP_SELF?ADD=431111111111111&vsc_id=$Avsc_id[$p]&stage=delete\">"._QXZ("DELETE")."</a></td></tr>\n";
@@ -36787,20 +36788,20 @@ if ($ADD==999990)
 
 		echo "<center>";
 		echo "<TABLE width=$section_width cellpadding=6 cellspacing=0>\n";
-		echo "<tr>";
-		echo "<td align='center' valign='middle' bgcolor='#015b91' rowspan=2><img src=\"images/icon_users.png\" width=42 height=42></td>";
+		echo "<tr onclick=\"window.document.location='realtime_report.php?report_display_type=HTML';\">";
+		echo "<td align='center' valign='middle' bgcolor='#015b91' rowspan=2><a href=\"realtime_report.php?report_display_type=HTML\"><img src=\"images/icon_users.png\" width=42 height=42 border=0></a></td>";
 		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:11;color:white;font-weight:bold;\">"._QXZ("Agents Logged In")."</font></td>";
 		echo "<td width=10 rowspan=2> &nbsp; </td>";
-		echo "<td align='center' valign='middle' bgcolor='#015b91' rowspan=2><img src=\"images/icon_agentsincalls.png\" width=42 height=42></td>";
+		echo "<td align='center' valign='middle' bgcolor='#015b91' rowspan=2><a href=\"realtime_report.php?report_display_type=HTML\"><img src=\"images/icon_agentsincalls.png\" width=42 height=42 border=0></a></td>";
 		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:11;color:white;font-weight:bold;\">"._QXZ("Agents In Calls")."</font></td>";
 		echo "<td width=10 rowspan=2> &nbsp; </td>";
-		echo "<td align='center' valign='middle' bgcolor='#015b91' rowspan=2><img src=\"images/icon_calls.png\" width=42 height=42></td>";
+		echo "<td align='center' valign='middle' bgcolor='#015b91' rowspan=2><a href=\"realtime_report.php?report_display_type=HTML\"><img src=\"images/icon_calls.png\" width=42 height=42 border=0></a></td>";
 		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:11;color:white;font-weight:bold;\">"._QXZ("Active Calls")."</font></td>";
 		echo "<td width=10 rowspan=2> &nbsp; </td>";
-		echo "<td align='center' valign='middle' bgcolor='#015b91' rowspan=2><img src=\"images/icon_ringing.png\" width=42 height=42></td>";
+		echo "<td align='center' valign='middle' bgcolor='#015b91' rowspan=2><a href=\"realtime_report.php?report_display_type=HTML\"><img src=\"images/icon_ringing.png\" width=42 height=42 border=0></a></td>";
 		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:11;color:white;font-weight:bold;\">"._QXZ("Calls Ringing")."</font></td>";
 		echo "</tr>";
-		echo "<tr>";
+		echo "<tr onclick=\"window.document.location='realtime_report.php?report_display_type=HTML';\">";
 		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:18;color:white;font-weight:bold;\">$agent_total</font></td>";
 		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:18;color:white;font-weight:bold;\">$agent_incall</font></td>";
 		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:18;color:white;font-weight:bold;\">$agent_incall</font></td>";
@@ -37223,12 +37224,12 @@ $RUNtime = ($ENDtime - $STARTtime);
 
 echo "</TD></TR>\n";
 echo "<TR><TD BGCOLOR=#015B91 ALIGN=CENTER>\n";
-echo "<font size=0 color=white><br><br><!-- RUNTIME: $RUNtime seconds<BR> -->";
+echo "<FONT STYLE=\"font-family:HELVETICA;font-size:9;color:white;\"><br><br><!-- RUNTIME: $RUNtime seconds<BR> -->";
 echo _QXZ("VERSION").": $admin_version<BR>";
 echo _QXZ("BUILD").": $build\n";
 if (!preg_match("/_BUILD_/",$SShosted_settings))
 	{echo "<BR><a href=\"$PHP_SELF?ADD=999995\"><font color=white>&copy; 2016 ViciDial Group</font></a><BR><img src=\"images/pixel.gif\">";}
-echo "</font>\n";
+echo "</FONT>\n";
 ?>
 
 </TD><TD BGCOLOR=#D9E6FE>
