@@ -59,6 +59,7 @@
 # 160312-1656 - Added FORM_selectall javascript, also used it to replace IGU_selectall
 # 160325-1428 - Changed layout of sidebar links
 # 160327-0146 - Changes to design
+# 160328-1930 - Fixed display bugs
 #
 
 
@@ -1277,17 +1278,17 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 	<a href="<?php echo $ADMIN ?>?ADD=0A" STYLE="text-decoration:none;"><?php echo $users_icon ?> <FONT STYLE="font-family:HELVETICA;font-size:<?php echo $header_font_size ?>;color:<?php echo $users_fc ?>"><?php echo $users_bold ?><?php echo _QXZ("Users"); ?></a>
 	</TD></TR>
 	<?php
-	$list_sh="CLASS=\"subhead_style\"";
-	$new_sh="CLASS=\"subhead_style\"";
-	$copy_sh="CLASS=\"subhead_style\"";
-	$search_sh="CLASS=\"subhead_style\"";
-	$stats_sh="CLASS=\"subhead_style\"";
-	$status_sh="CLASS=\"subhead_style\"";
-	$sheet_sh="CLASS=\"subhead_style\"";
-	$territory_sh="CLASS=\"subhead_style\"";
-
 	if (strlen($users_hh) > 25) 
 		{ 
+		$list_sh="CLASS=\"subhead_style\"";
+		$new_sh="CLASS=\"subhead_style\"";
+		$copy_sh="CLASS=\"subhead_style\"";
+		$search_sh="CLASS=\"subhead_style\"";
+		$stats_sh="CLASS=\"subhead_style\"";
+		$status_sh="CLASS=\"subhead_style\"";
+		$sheet_sh="CLASS=\"subhead_style\"";
+		$territory_sh="CLASS=\"subhead_style\"";
+
 		if ($sh=='list') {$list_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='new') {$new_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='copy') {$copy_sh="CLASS=\"subhead_style_selected\"";}
@@ -1330,18 +1331,18 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 	<a href="<?php echo $ADMIN ?>?ADD=10" STYLE="text-decoration:none;"><?php echo $campaigns_icon ?> <FONT STYLE="font-family:HELVETICA;font-size:<?php echo $header_font_size ?>;color:<?php echo $campaigns_fc ?>"><?php echo $campaigns_bold ?><?php echo _QXZ("Campaigns"); ?></a>
 	</TD></TR>
 	<?php
-	$list_sh="CLASS=\"subhead_style\"";
-	$status_sh="CLASS=\"subhead_style\"";
-	$hotkey_sh="CLASS=\"subhead_style\"";
-	$recycle_sh="CLASS=\"subhead_style\"";
-	$autoalt_sh="CLASS=\"subhead_style\"";
-	$pause_sh="CLASS=\"subhead_style\"";
-	$listmix_sh="CLASS=\"subhead_style\"";
-	$preset_sh="CLASS=\"subhead_style\"";
-	$accid_sh="CLASS=\"subhead_style\"";
-
 	if (strlen($campaigns_hh) > 25) 
 		{ 
+		$list_sh="CLASS=\"subhead_style\"";
+		$status_sh="CLASS=\"subhead_style\"";
+		$hotkey_sh="CLASS=\"subhead_style\"";
+		$recycle_sh="CLASS=\"subhead_style\"";
+		$autoalt_sh="CLASS=\"subhead_style\"";
+		$pause_sh="CLASS=\"subhead_style\"";
+		$listmix_sh="CLASS=\"subhead_style\"";
+		$preset_sh="CLASS=\"subhead_style\"";
+		$accid_sh="CLASS=\"subhead_style\"";
+
 		if ($sh=='basic') {$sh='list';}
 		if ($sh=='detail') {$sh='list';}
 		if ($sh=='dialstat') {$sh='list';}
@@ -1398,17 +1399,17 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 		<TR WIDTH=160><TD><DIV CLASS="horiz_line"></DIV></TD></TR>
 		<TR BGCOLOR=#015B91 onclick="window.document.location='<?php echo $ADMIN ?>?ADD=100';"><TD ALIGN=LEFT <?php echo $lists_hh ?>><a href="<?php echo $ADMIN ?>?ADD=100" STYLE="text-decoration:none;"><?php echo $lists_icon ?> <FONT STYLE="font-family:HELVETICA;font-size:<?php echo $header_font_size ?>;color:<?php echo $lists_fc ?>"><?php echo $lists_bold ?><?php echo _QXZ("Lists"); ?></a></TD></TR>
 		<?php
-		$list_sh="CLASS=\"subhead_style\"";
-		$new_sh="CLASS=\"subhead_style\"";
-		$search_sh="CLASS=\"subhead_style\"";
-		$lead_sh="CLASS=\"subhead_style\"";
-		$load_sh="CLASS=\"subhead_style\"";
-		$dnc_sh="CLASS=\"subhead_style\"";
-		$custom_sh="CLASS=\"subhead_style\"";
-		$cpcust_sh="CLASS=\"subhead_style\"";
-
 		if (strlen($lists_hh) > 25) 
 			{ 
+			$list_sh="CLASS=\"subhead_style\"";
+			$new_sh="CLASS=\"subhead_style\"";
+			$search_sh="CLASS=\"subhead_style\"";
+			$lead_sh="CLASS=\"subhead_style\"";
+			$load_sh="CLASS=\"subhead_style\"";
+			$dnc_sh="CLASS=\"subhead_style\"";
+			$custom_sh="CLASS=\"subhead_style\"";
+			$cpcust_sh="CLASS=\"subhead_style\"";
+
 			if ($LOGdelete_from_dnc > 0) {$DNClink = _QXZ("Add-Delete DNC Number");}
 			else {$DNClink = _QXZ("Add DNC Number");}
 
@@ -1465,12 +1466,12 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 		</TD>
 	</TR>
 	<?php
-	$list_sh="CLASS=\"subhead_style\"";
-	$enter_sh="CLASS=\"subhead_style\"";
-	$modify_sh="CLASS=\"subhead_style\"";
-
 	if (strlen($qc_hh) > 25) 
 		{
+		$list_sh="CLASS=\"subhead_style\"";
+		$enter_sh="CLASS=\"subhead_style\"";
+		$modify_sh="CLASS=\"subhead_style\"";
+
 		if ($sh=='list') {$list_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='enter') {$enter_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='modify') {$modify_sh="CLASS=\"subhead_style_selected\"";}
@@ -1500,11 +1501,11 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 	<a href="<?php echo $ADMIN ?>?ADD=1000000" STYLE="text-decoration:none;"><?php echo $scripts_icon ?> <FONT STYLE="font-family:HELVETICA;font-size:<?php echo $header_font_size ?>;color:<?php echo $scripts_fc ?>"><?php echo $scripts_bold ?> <?php echo _QXZ("Scripts"); ?> </a>
 	</TD></TR>
 	<?php
-	$list_sh="CLASS=\"subhead_style\"";
-	$new_sh="CLASS=\"subhead_style\"";
-
 	if (strlen($scripts_hh) > 25) 
 		{ 
+		$list_sh="CLASS=\"subhead_style\"";
+		$new_sh="CLASS=\"subhead_style\"";
+
 		if ($sh=='list') {$list_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='new') {$new_sh="CLASS=\"subhead_style_selected\"";}
 
@@ -1526,11 +1527,11 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 		<TR WIDTH=160><TD><DIV CLASS="horiz_line"></DIV></TD></TR>
 		<TR BGCOLOR=#015B91 onclick="window.document.location='<?php echo $ADMIN ?>?ADD=10000000';"><TD ALIGN=LEFT <?php echo $filters_hh ?>><a href="<?php echo $ADMIN ?>?ADD=10000000" STYLE="text-decoration:none;"><?php echo $filters_icon ?> <FONT STYLE="font-family:HELVETICA;font-size:<?php echo $header_font_size ?>;color:<?php echo $filters_fc ?>"><?php echo $filters_bold ?> <?php echo _QXZ("Filters"); ?> </a></TD></TR>
 		<?php
-		$list_sh="CLASS=\"subhead_style\"";
-		$new_sh="CLASS=\"subhead_style\"";
-
 		if (strlen($filters_hh) > 25) 
 			{ 
+			$list_sh="CLASS=\"subhead_style\"";
+			$new_sh="CLASS=\"subhead_style\"";
+
 			if ($sh=='list') {$list_sh="CLASS=\"subhead_style_selected\"";}
 			if ($sh=='new') {$new_sh="CLASS=\"subhead_style_selected\"";}
 			?>
@@ -1550,28 +1551,28 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 	<a href="<?php echo $ADMIN ?>?ADD=1000" STYLE="text-decoration:none;"><?php echo $inbound_icon ?> <FONT STYLE="font-family:HELVETICA;font-size:<?php echo $header_font_size ?>;color:<?php echo $ingroups_fc ?>"><?php echo $ingroups_bold ?> <?php echo _QXZ("Inbound"); ?> </a>
 	</TD></TR>
 	<?php
-	$listIG_sh="CLASS=\"subhead_style\"";
-	$newIG_sh="CLASS=\"subhead_style\"";
-	$copyIG_sh="CLASS=\"subhead_style\"";
-	$listEG_sh="CLASS=\"subhead_style\"";
-	$newEG_sh="CLASS=\"subhead_style\"";
-	$copyEG_sh="CLASS=\"subhead_style\"";
-	$listCG_sh="CLASS=\"subhead_style\"";
-	$newCG_sh="CLASS=\"subhead_style\"";
-	$copyCG_sh="CLASS=\"subhead_style\"";
-	$listDID_sh="CLASS=\"subhead_style\"";
-	$newDID_sh="CLASS=\"subhead_style\"";
-	$copyDID_sh="CLASS=\"subhead_style\"";
-	$didRA_sh="CLASS=\"subhead_style\"";
-	$listCM_sh="CLASS=\"subhead_style\"";
-	$newCM_sh="CLASS=\"subhead_style\"";
-	$copyCM_sh="CLASS=\"subhead_style\"";
-	$listFPG_sh="CLASS=\"subhead_style\"";
-	$newFPG_sh="CLASS=\"subhead_style\"";
-	$addFPG_sh="CLASS=\"subhead_style\"";
-
 	if (strlen($ingroups_hh) > 25) 
 		{
+		$listIG_sh="CLASS=\"subhead_style\"";
+		$newIG_sh="CLASS=\"subhead_style\"";
+		$copyIG_sh="CLASS=\"subhead_style\"";
+		$listEG_sh="CLASS=\"subhead_style\"";
+		$newEG_sh="CLASS=\"subhead_style\"";
+		$copyEG_sh="CLASS=\"subhead_style\"";
+		$listCG_sh="CLASS=\"subhead_style\"";
+		$newCG_sh="CLASS=\"subhead_style\"";
+		$copyCG_sh="CLASS=\"subhead_style\"";
+		$listDID_sh="CLASS=\"subhead_style\"";
+		$newDID_sh="CLASS=\"subhead_style\"";
+		$copyDID_sh="CLASS=\"subhead_style\"";
+		$didRA_sh="CLASS=\"subhead_style\"";
+		$listCM_sh="CLASS=\"subhead_style\"";
+		$newCM_sh="CLASS=\"subhead_style\"";
+		$copyCM_sh="CLASS=\"subhead_style\"";
+		$listFPG_sh="CLASS=\"subhead_style\"";
+		$newFPG_sh="CLASS=\"subhead_style\"";
+		$addFPG_sh="CLASS=\"subhead_style\"";
+
 		if ($sh=='listIG') {$listIG_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='newIG') {$newIG_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='copyIG') {$copyIG_sh="CLASS=\"subhead_style_selected\"";}
@@ -1681,13 +1682,13 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 	<a href="<?php echo $ADMIN ?>?ADD=100000" STYLE="text-decoration:none;"><?php echo $usergroups_icon ?> <FONT STYLE="font-family:HELVETICA;font-size:<?php echo $header_font_size ?>;color:<?php echo $usergroups_fc ?>"><?php echo $usergroups_bold ?> <?php echo _QXZ("User Groups"); ?> </a>
 	</TD></TR>
 	<?php
-	$list_sh="CLASS=\"subhead_style\"";
-	$new_sh="CLASS=\"subhead_style\"";
-	$hour_sh="CLASS=\"subhead_style\"";
-	$bulk_sh="CLASS=\"subhead_style\"";
-
 	if (strlen($usergroups_hh) > 25)
 		{ 
+		$list_sh="CLASS=\"subhead_style\"";
+		$new_sh="CLASS=\"subhead_style\"";
+		$hour_sh="CLASS=\"subhead_style\"";
+		$bulk_sh="CLASS=\"subhead_style\"";
+
 		if ($sh=='list') {$list_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='new') {$new_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='hour') {$hour_sh="CLASS=\"subhead_style_selected\"";}
@@ -1712,12 +1713,13 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 	<a href="<?php echo $ADMIN ?>?ADD=10000" STYLE="text-decoration:none;"><?php echo $remoteagents_icon ?> <FONT STYLE="font-family:HELVETICA;font-size:<?php echo $header_font_size ?>;color:<?php echo $remoteagent_fc ?>"><?php echo $remoteagent_bold ?> <?php echo _QXZ("Remote Agents"); ?> </a>
 	</TD></TR>
 	<?php
-	$list_sh="CLASS=\"subhead_style\"";
-	$new_sh="CLASS=\"subhead_style\"";
-	$listEG_sh="CLASS=\"subhead_style\"";
-	$newEG_sh="CLASS=\"subhead_style\"";
 	if (strlen($remoteagent_hh) > 25) 
 		{ 
+		$list_sh="CLASS=\"subhead_style\"";
+		$new_sh="CLASS=\"subhead_style\"";
+		$listEG_sh="CLASS=\"subhead_style\"";
+		$newEG_sh="CLASS=\"subhead_style\"";
+
 		if ($sh=='list') {$list_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='new') {$new_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='listEG') {$listEG_sh="CLASS=\"subhead_style_selected\"";}
@@ -1744,29 +1746,30 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 	<a href="<?php echo $ADMIN ?>?ADD=999998" STYLE="text-decoration:none;"><?php echo $admin_icon ?> <FONT STYLE="font-family:HELVETICA;font-size:<?php echo $header_font_size ?>;color:<?php echo $admin_fc ?>"><?php echo $admin_bold ?> <?php echo _QXZ("Admin"); ?> </a>
 	</TD></TR>
 	<?php
-	$times_sh="CLASS=\"subhead_style\"";
-	$shifts_sh="CLASS=\"subhead_style\"";
-	$templates_sh="CLASS=\"subhead_style\"";
-	$carriers_sh="CLASS=\"subhead_style\"";
-	$phones_sh="CLASS=\"subhead_style\"";
-	$server_sh="CLASS=\"subhead_style\"";
-	$conference_sh="CLASS=\"subhead_style\"";
-	$settings_sh="CLASS=\"subhead_style\"";
-	$label_sh="CLASS=\"subhead_style\"";
-	$status_sh="CLASS=\"subhead_style\"";
-	$audio_sh="CLASS=\"subhead_style\"";
-	$moh_sh="CLASS=\"subhead_style\"";
-	$languages_sh="CLASS=\"subhead_style\"";
-	$avatar_sh="CLASS=\"subhead_style\"";
-	$vm_sh="CLASS=\"subhead_style\"";
-	$tts_sh="CLASS=\"subhead_style\"";
-	$cc_sh="CLASS=\"subhead_style\"";
-	$cts_sh="CLASS=\"subhead_style\"";
-	$sc_sh="CLASS=\"subhead_style\"";
-	$sg_sh="CLASS=\"subhead_style\"";
-	$emails_sh="CLASS=\"subhead_style\"";
 	if (strlen($admin_hh) > 25) 
 		{
+		$times_sh="CLASS=\"subhead_style\"";
+		$shifts_sh="CLASS=\"subhead_style\"";
+		$templates_sh="CLASS=\"subhead_style\"";
+		$carriers_sh="CLASS=\"subhead_style\"";
+		$phones_sh="CLASS=\"subhead_style\"";
+		$server_sh="CLASS=\"subhead_style\"";
+		$conference_sh="CLASS=\"subhead_style\"";
+		$settings_sh="CLASS=\"subhead_style\"";
+		$label_sh="CLASS=\"subhead_style\"";
+		$status_sh="CLASS=\"subhead_style\"";
+		$audio_sh="CLASS=\"subhead_style\"";
+		$moh_sh="CLASS=\"subhead_style\"";
+		$languages_sh="CLASS=\"subhead_style\"";
+		$avatar_sh="CLASS=\"subhead_style\"";
+		$vm_sh="CLASS=\"subhead_style\"";
+		$tts_sh="CLASS=\"subhead_style\"";
+		$cc_sh="CLASS=\"subhead_style\"";
+		$cts_sh="CLASS=\"subhead_style\"";
+		$sc_sh="CLASS=\"subhead_style\"";
+		$sg_sh="CLASS=\"subhead_style\"";
+		$emails_sh="CLASS=\"subhead_style\"";
+
 		if ($sh=='times') {$times_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='shifts') {$shifts_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='templates') {$templates_sh="CLASS=\"subhead_style_selected\"";}
