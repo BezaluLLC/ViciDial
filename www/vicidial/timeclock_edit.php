@@ -1,7 +1,7 @@
 <?php
 # timeclock_edit.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -17,6 +17,7 @@
 # 141007-2217 - Finalized adding QXZ translation to all admin files
 # 141229-1905 - Added code for on-the-fly language translations display
 # 151203-1902 - Fix for javascript timezone issues in editing of timeclock entries
+# 160329-1610 - Fix for DST time and editing entries
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -77,6 +78,13 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
+$StarTtimE = date("U");
+$TODAY = date("Y-m-d");
+$NOW_TIME = date("Y-m-d H:i:s");
+$isdst = date("I");
+$ip = getenv("REMOTE_ADDR");
+$invalid_record=0;
+
 $local_gmt=0;
 $stmt = "SELECT local_gmt FROM servers where active='Y';";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -87,6 +95,7 @@ if ($sr_conf_ct > 0)
 	$row=mysqli_fetch_row($rslt);
 	$local_gmt = ($row[0] * 1);
 	}
+$local_gmt = ($local_gmt + $isdst);
 $local_gmt_sec = ($local_gmt * -3600);
 
 if ($non_latin < 1)
@@ -111,12 +120,6 @@ $LOGOUTepoch = preg_replace("/'|\"|\\\\|;/","",$LOGOUTepoch);
 $notes = preg_replace("/'|\"|\\\\|;/","",$notes);
 $LOGINevent_id = preg_replace("/'|\"|\\\\|;/","",$LOGINevent_id);
 $LOGOUTevent_id = preg_replace("/'|\"|\\\\|;/","",$LOGOUTevent_id);
-
-$StarTtimE = date("U");
-$TODAY = date("Y-m-d");
-$NOW_TIME = date("Y-m-d H:i:s");
-$ip = getenv("REMOTE_ADDR");
-$invalid_record=0;
 
 $stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
