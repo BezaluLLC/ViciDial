@@ -1,7 +1,7 @@
 <?php
 # admin_email_accounts.php
 # 
-# Copyright (C) 2015  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This page manages the inbound email accounts in ViciDial
 #
@@ -17,10 +17,11 @@
 # 150421-2255 - Fixed links to default list ID and default_list_id issue
 # 150422-1229 - Changed Default List ID
 # 150513-2310 - Added POP3 Auth Mode
+# 160330-1552 - navigation changes and fixes
 #
 
-$admin_version = '2.12-11';
-$build = '150513-2310';
+$admin_version = '2.12-12';
+$build = '160330-1552';
 
 $sh="emails"; 
 
@@ -87,7 +88,7 @@ if (isset($_GET["agent_search_method"]))					{$agent_search_method=$_GET["agent_
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,allow_emails,allow_emails,level_8_disable_add,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,allow_emails,allow_emails,level_8_disable_add,enable_languages,language_method,active_modules FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -130,6 +131,7 @@ if ($qm_conf_ct > 0)
 	$SSlevel_8_disable_add =				$row[33];
 	$SSenable_languages =					$row[34];
 	$SSlanguage_method =					$row[35];
+	$SSactive_modules =						$row[36];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -195,13 +197,14 @@ if ($auth < 1)
 	exit;
 	}
 
-$stmt="SELECT full_name,user_level,user_group,modify_email_accounts from vicidial_users where user='$PHP_AUTH_USER';";
+$stmt="SELECT full_name,user_level,user_group,modify_email_accounts,qc_enabled from vicidial_users where user='$PHP_AUTH_USER';";
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGfullname =				$row[0];
 $LOGuser_level =			$row[1];
 $LOGuser_group =			$row[2];
 $LOGemails_modify =			$row[3];
+$qc_auth =					$row[4];
 
 if ($LOGemails_modify < 1)
 	{
@@ -830,7 +833,7 @@ else if (($eact=="DELETE" || $eact=="UPDATE") && $email_account_id)
 	}
 else 
 	{
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_email.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	if ($message) {echo "<B>$message</B><BR>";}
 	echo "<br>"._QXZ("INBOUND EMAIL ACCOUNT LISTINGS").":\n";
 	echo "<center><TABLE width=750 cellspacing=0 cellpadding=1>\n";

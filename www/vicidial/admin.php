@@ -3747,12 +3747,13 @@ else
 # 160325-1435 - Changes for sidebar, added callback_useronly_move_minutes campaign feature
 # 160327-0145 - Reworked System Summary Screen
 # 160328-0316 - Added links to the real-time report from the summary screen
+# 160330-1559 - Redesign of Admin sub-menu and added icons
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-546a';
-$build = '160328-0316';
+$admin_version = '2.12-547a';
+$build = '160330-1559';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -31924,7 +31925,7 @@ if ($ADD==311111111111111)
 			$modify_footer_refresh=1;
 			}
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_settings.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		$stmt="SELECT count(*) from vicidial_phone_codes;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -32632,11 +32633,11 @@ if ($ADD==321111111111111)
 			$modify_footer_refresh=1;
 			}
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_statuses.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		echo "<br><center>\n";
+		echo "<br>\n";
 		echo "<b>"._QXZ("STATUSES WITHIN THIS SYSTEM").": &nbsp; $NWB#system_statuses$NWE</b><br>\n";
-		echo "<TABLE width=700 cellspacing=3>\n";
+		echo "<center><TABLE width=700 cellspacing=3>\n";
 		echo "<tr height='250'><td align=center valign=bottom><font size=2><b>"._QXZ("STATUS")."</b></font></td>\n";
 		echo "<td align=center valign=bottom><font size=2><b>"._QXZ("DESCRIPTION")."</td>\n";
 		echo "<td align=center valign=bottom><font size=2><b>"._QXZ("CATEGORY")."</td>\n";
@@ -32768,7 +32769,7 @@ if ($ADD==331111111111111)
 			$modify_footer_refresh=1;
 			}
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_statusgroups.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br><center>\n";
 		echo "<b>"._QXZ("STATUS CATEGORIES").": &nbsp; $NWB#status_categories$NWE</b><br>\n";
@@ -32915,7 +32916,7 @@ if ($ADD==341111111111111)
 			$modify_footer_refresh=1;
 			}
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_qc.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br><center>\n";
 		echo "<b>"._QXZ("QC STATUS CODES WITHIN THIS SYSTEM").": &nbsp; $NWB#vicidial_qc_status_codes$NWE</b><br>\n";
@@ -34181,7 +34182,7 @@ if ($ADD==10000000)
 if ($ADD==100000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_calltimes.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	if (strlen($whereLOGadmin_viewable_groupsSQL) > 0) {$tempLOGadmin_viewable_call_timesSQL = $LOGadmin_viewable_call_timesSQL;}
 	else {$tempLOGadmin_viewable_call_timesSQL = $whereLOGadmin_viewable_call_timesSQL;}
@@ -34227,7 +34228,7 @@ if ($ADD==100000000)
 if ($ADD==1000000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_calltimes.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT state_call_time_id,state_call_time_state,state_call_time_name,sct_default_start,sct_default_stop,user_group from vicidial_state_call_times $whereLOGadmin_viewable_groupsSQL order by state_call_time_id;";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -34272,7 +34273,7 @@ if ($ADD==1000000000)
 if ($ADD==1200000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_calltimes.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT holiday_id,holiday_date,holiday_name,holiday_status,ct_default_start,ct_default_stop,user_group from vicidial_call_time_holidays $whereLOGadmin_viewable_groupsSQL order by holiday_date,holiday_id;";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -34319,7 +34320,7 @@ if ($ADD==1200000000)
 if ($ADD==130000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_shifts.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT shift_id,shift_name,shift_start_time,shift_length,shift_weekdays,user_group from vicidial_shifts $whereLOGadmin_viewable_groupsSQL order by shift_id;";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -34364,7 +34365,7 @@ if ($ADD==130000000)
 if ($ADD==10000000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_phones.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$EXTENlink='stage=EXTENDOWN';
 	$EXTENNUMlink='stage=EXTENNUMDOWN';
@@ -34434,7 +34435,7 @@ if ($ADD==10000000000)
 if ($ADD==12000000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_phones.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT alias_id,alias_name,logins_list,user_group from phones_alias $whereLOGadmin_viewable_groupsSQL order by alias_id;";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -34475,7 +34476,7 @@ if ($ADD==12000000000)
 if ($ADD==13000000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_phones.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT group_alias_id,group_alias_name,caller_id_number,caller_id_name,active,user_group from groups_alias $whereLOGadmin_viewable_groupsSQL order by group_alias_id;";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -34520,7 +34521,7 @@ if ($ADD==13000000000)
 if ($ADD==100000000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_servers.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,local_gmt,active_agent_login_server from servers $whereLOGadmin_viewable_groupsSQL order by server_id";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -34569,7 +34570,7 @@ if ($ADD==100000000000)
 if ($ADD==130000000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_templates.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT template_id,template_name,user_group from vicidial_conf_templates $whereLOGadmin_viewable_groupsSQL order by template_id";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -34608,7 +34609,7 @@ if ($ADD==130000000000)
 if ($ADD==140000000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_carriers.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT carrier_id,carrier_name,server_ip,protocol,registration_string,active,user_group from vicidial_server_carriers $whereLOGadmin_viewable_groupsSQL order by carrier_id";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -34661,7 +34662,7 @@ if ($ADD==140000000000)
 if ($ADD==150000000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_texttospeech.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT tts_id,tts_name,active,tts_text,tts_voice,user_group from vicidial_tts_prompts $whereLOGadmin_viewable_groupsSQL order by tts_id";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -34710,7 +34711,7 @@ if ($ADD==150000000000)
 if ($ADD==160000000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_musiconhold.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT moh_id,moh_name,active,random,user_group from vicidial_music_on_hold where remove='N' $LOGadmin_viewable_groupsSQL order by moh_id";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -34757,7 +34758,7 @@ if ($ADD==160000000000)
 if ($ADD==170000000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_voicemail.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT voicemail_id,fullname,active,messages,old_messages,delete_vm_after_email,user_group from vicidial_voicemail $whereLOGadmin_viewable_groupsSQL order by voicemail_id";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -34805,7 +34806,7 @@ if ($ADD==170000000000)
 if ($ADD==180000000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_screenlabels.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT label_id,label_name,active,user_group from vicidial_screen_labels $whereLOGadmin_viewable_groupsSQL order by label_id";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -34847,7 +34848,7 @@ if ($ADD==180000000000)
 if ($ADD==190000000000)
 	{
 	echo "<CENTER><TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_contacts.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	if ( (preg_match("/contact_information/",$SStables_use_alt_log_db)) and (strlen($SSalt_log_server_ip)>4) and (strlen($SSalt_log_dbname)>0) )
 		{
@@ -34910,7 +34911,7 @@ if ($ADD==190000000000)
 if ($ADD==192000000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_settingscontainer.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT container_id,container_notes,container_type,user_group,container_entry from vicidial_settings_containers $whereLOGadmin_viewable_groupsSQL order by container_type,container_id";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -34954,7 +34955,7 @@ if ($ADD==192000000000)
 if ($ADD==193000000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_statusgroups.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT status_group_id,status_group_notes,user_group from vicidial_status_groups $whereLOGadmin_viewable_groupsSQL order by status_group_id;";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -35010,7 +35011,7 @@ if ($ADD==193000000000)
 if ($ADD==1000000000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_conferences.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT conf_exten,server_ip,extension from conferences order by conf_exten";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -35049,7 +35050,7 @@ if ($ADD==1000000000000)
 if ($ADD==10000000000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_conferences.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT conf_exten,server_ip,extension from vicidial_conferences order by conf_exten";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -36145,6 +36146,7 @@ if ($ADD==999999)
 ######################
 if ($ADD==999998)
 	{
+	$subhead_font = "style=\"font-family:HELVETICA;font-size:14;color:BLACK;font-weight:bold;\"";
 	?>
 
 	<HTML>
@@ -36153,52 +36155,135 @@ if ($ADD==999998)
 	<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 	<TITLE><?php echo _QXZ("Administration: Admin"); ?></TITLE></HEAD><BODY BGCOLOR=WHITE>
 	<img src="images/icon_black_admin.png" alt="Admin" width=42 height=42> <FONT FACE="ARIAL,HELVETICA" SIZE=4><B> <?php echo _QXZ("Administration"); ?></B></FONT><BR><CENTER>
-	<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=0><TR><TD VALIGN=TOP>
-	<UL>
+	<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=0 WIDTH=800>
 	<?php
+	echo "<TR>\n";
+	echo "<TD ALIGN=LEFT VALIGN=TOP WIDTH=100>&nbsp;\n";
+	echo "</TD>\n";
+	echo "<TD ALIGN=LEFT VALIGN=TOP WIDTH=220>\n";
+	echo "<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=5 WIDTH=100%>\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=100000000';\">\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=100000000\"><img src=\"images/icon_calltimes.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=100000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Call Times")." </SPAN></a></TD>\n";
+	echo "</TR>\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=130000000';\">\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=130000000\"><img src=\"images/icon_shifts.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=130000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Shifts")." </SPAN></a></TD>\n";
+	echo "</TR>\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=10000000000';\">\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=10000000000\"><img src=\"images/icon_phones.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=10000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Phones")." </SPAN></a></TD>\n";
+	echo "</TR>\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=130000000000';\">\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=130000000000\"><img src=\"images/icon_templates.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=130000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Templates")." </SPAN></a></TD>\n";
+	echo "</TR>\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=140000000000';\">\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=140000000000\"><img src=\"images/icon_carriers.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=140000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Carriers")." </SPAN></a></TD>\n";
+	echo "</TR>\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=100000000000';\">\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=100000000000\"><img src=\"images/icon_servers.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=100000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Servers")." </SPAN></a></TD>\n";
+	echo "</TR>\n";
+	echo "</TABLE>\n";
+	echo "</TD>\n";
 
-	echo "<LI><a href=\"$PHP_SELF?ADD=100000000\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Call Times")." </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=130000000\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Shifts")." </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=10000000000\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Phones")." </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=130000000000\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Templates")." </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=140000000000\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Carriers")." </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=100000000000\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Servers")." </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=1000000000000\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Conferences")." </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=311111111111111\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("System Settings")." </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=180000000000\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Agent Screen Labels")." </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=321111111111111\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("System Statuses")." </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=193000000000\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Status Groups")." </a>\n";
-	echo "<LI><a href=\"$PHP_SELF?ADD=170000000000\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Voicemail")." </a>\n";
+	echo "<TD ALIGN=LEFT VALIGN=TOP WIDTH=220>\n";
+	echo "<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=5 WIDTH=100%>\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=1000000000000';\">\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=1000000000000\"><img src=\"images/icon_conferences.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=1000000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Conferences")." </SPAN></a></TD>\n";
+	echo "</TR>\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=311111111111111';\">\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=311111111111111\"><img src=\"images/icon_settings.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=311111111111111\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("System Settings")." </SPAN></a></TD>\n";
+	echo "</TR>\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=180000000000';\">\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=180000000000\"><img src=\"images/icon_screenlabels.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=180000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Agent Screen Labels")." </SPAN></a></TD>\n";
+	echo "</TR>\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=321111111111111';\">\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=321111111111111\"><img src=\"images/icon_statuses.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=321111111111111\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("System Statuses")." </SPAN></a></TD>\n";
+	echo "</TR>\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=193000000000';\">\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=193000000000\"><img src=\"images/icon_statusgroups.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=193000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Status Groups")." </SPAN></a></TD>\n";
+	echo "</TR>\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=170000000000';\">\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=170000000000\"><img src=\"images/icon_voicemail.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=170000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Voicemail")." </SPAN></a></TD>\n";
+	echo "</TR>\n";
+	echo "</TABLE>\n";
+	echo "</TD>\n";
 
+	echo "<TD ALIGN=LEFT VALIGN=TOP WIDTH=220>\n";
+	echo "<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=5 WIDTH=100%>\n";
 	if ($SSemail_enabled > 0)
 		{
-		echo "<LI><a href=\"admin_email_accounts.php\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Email Accounts")." </a>\n";
+		echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='admin_email_accounts.php';\">\n";
+		echo "<TD><a href=\"admin_email_accounts.php\"><img src=\"images/icon_email.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+		echo "<TD><a href=\"admin_email_accounts.php\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Email Accounts")." </SPAN></a></TD>\n";
+		echo "</TR>\n";
 		}
 	if ( ($sounds_central_control_active > 0) or ($SSsounds_central_control_active > 0) )
 		{
-		echo "<LI><a href=\"audio_store.php\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Audio Store")." </a>\n";
-		echo "<LI><a href=\"$PHP_SELF?ADD=160000000000\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Music On Hold")." </a>\n";
+		echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='audio_store.php';\">\n";
+		echo "<TD><a href=\"audio_store.php\"><img src=\"images/icon_audiostore.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+		echo "<TD><a href=\"audio_store.php\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Audio Store")." </SPAN></a></TD>\n";
+		echo "</TR>\n";
+		echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=160000000000';\">\n";
+		echo "<TD><a href=\"$PHP_SELF?ADD=160000000000\"><img src=\"images/icon_musiconhold.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+		echo "<TD><a href=\"$PHP_SELF?ADD=160000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Music On Hold")." </SPAN></a></TD>\n";
+		echo "</TR>\n";
 		}
 	if ($SSenable_languages > 0)
 		{
-		echo "<LI><a href=\"admin_languages.php?ADD=163000000000\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Languages")." </a>\n";
+		echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='admin_languages.php?ADD=163000000000';\">\n";
+		echo "<TD><a href=\"admin_languages.php?ADD=163000000000\"><img src=\"images/icon_languages.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+		echo "<TD><a href=\"admin_languages.php?ADD=163000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Languages")." </SPAN></a></TD>\n";
+		echo "</TR>\n";
+		}
+	if (preg_match("/avatar/",$SSactive_modules) )
+		{
+		echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='admin_avatar.php?ADD=162000000000';\">\n";
+		echo "<TD><a href=\"admin_avatar.php?ADD=162000000000\"><img src=\"images/icon_audioavatars.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+		echo "<TD><a href=\"admin_avatar.php?ADD=162000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Audio Avatars")." </SPAN></a></TD>\n";
+		echo "</TR>\n";
 		}
 	if ($SSenable_tts_integration > 0)
 		{
-		echo "<LI><a href=\"$PHP_SELF?ADD=150000000000\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Text To Speech")." </a>\n";
+		echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=150000000000';\">\n";
+		echo "<TD><a href=\"$PHP_SELF?ADD=150000000000\"><img src=\"images/icon_texttospeech.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+		echo "<TD><a href=\"$PHP_SELF?ADD=150000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Text To Speech")." </SPAN></a></TD>\n";
+		echo "</TR>\n";
 		}
+	echo "</TABLE>\n";
+	echo "</TD>\n";
+
+	echo "<TD ALIGN=LEFT VALIGN=TOP WIDTH=220>\n";
+	echo "<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=5 WIDTH=100%>\n";
 	if ($SScallcard_enabled > 0)
 		{
-		echo "<LI><a href=\"callcard_admin.php\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("CallCard Admin")." </a>\n";
+		echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='callcard_admin.php';\">\n";
+		echo "<TD><a href=\"callcard_admin.php\"><img src=\"images/icon_callcard.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+		echo "<TD><a href=\"callcard_admin.php\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("CallCard Admin")." </SPAN></a></TD>\n";
+		echo "</TR>\n";
 		}
 	if ($SScontacts_enabled > 0)
 		{
-		echo "<LI><a href=\"$PHP_SELF?ADD=190000000000\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Contacts")." </a>\n";
+		echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=190000000000';\">\n";
+		echo "<TD><a href=\"$PHP_SELF?ADD=190000000000\"><img src=\"images/icon_contacts.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+		echo "<TD><a href=\"$PHP_SELF?ADD=190000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Contacts")." </SPAN></a></TD>\n";
+		echo "</TR>\n";
 		}
-
-	echo "<LI><a href=\"$PHP_SELF?ADD=192000000000\" STYLE=\"text-decoration:none;\"><FONT FACE=\"ARIAL,HELVETICA\" SIZE=3> "._QXZ("Settings Containers")." </a>\n";
-	echo "</UL>\n";
-	echo "</TD><TD WIDTH=400> &nbsp; \n";
+	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=192000000000';\">\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=192000000000\"><img src=\"images/icon_settingscontainer.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=192000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Settings Containers")." </SPAN></a></TD>\n";
+	echo "</TR>\n";
+	echo "</TABLE>\n";
+	echo "</TD><TD WIDTH=100> &nbsp; \n";
 	}
 ##### END admin links #####
 

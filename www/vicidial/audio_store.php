@@ -1,7 +1,7 @@
 <?php
 # audio_store.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Central Audio Storage script
 # 
@@ -21,10 +21,11 @@
 # 130901-2001 - Changed to mysqli PHP functions
 # 141007-2042 - Finalized adding QXZ translation to all admin files
 # 141229-2052 - Added code for on-the-fly language translations display
+# 160330-1550 - navigation changes and fixes, added force_allow var
 #
 
-$version = '2.10-15';
-$build = '141229-2052';
+$version = '2.12-16';
+$build = '160330-1550';
 
 $MT[0]='';
 
@@ -55,6 +56,8 @@ if (isset($_GET["audiofile_name"]))				{$audiofile_name=$_GET["audiofile_name"];
 if (isset($_FILES["audiofile"]))			{$audiofile_name=$_FILES["audiofile"]['name'];}
 if (isset($_GET["lead_file"]))				{$lead_file=$_GET["lead_file"];}
 	elseif (isset($_POST["lead_file"]))		{$lead_file=$_POST["lead_file"];}
+if (isset($_GET["force_allow"]))			{$force_allow=$_GET["force_allow"];}
+	elseif (isset($_POST["force_allow"]))	{$force_allow=$_POST["force_allow"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -63,7 +66,7 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory,outbound_autodial_active,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory,outbound_autodial_active,enable_languages,language_method,active_modules,contacts_enabled,email_enabled,qc_features_active FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $ss_conf_ct = mysqli_num_rows($rslt);
@@ -77,13 +80,17 @@ if ($ss_conf_ct > 0)
 	$SSoutbound_autodial_active =		$row[4];
 	$SSenable_languages =				$row[5];
 	$SSlanguage_method =				$row[6];
+	$SSactive_modules =					$row[7];
+	$SScontacts_enabled =				$row[8];
+	$SSemail_enabled =					$row[9];
+	$SSqc_features_active =				$row[10];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
 
 ### check if sounds server matches this server IP, if not then exit with an error
-if ( ( (strlen($sounds_web_server)) != (strlen($server_name)) ) or (!preg_match("/$sounds_web_server/i",$server_name) ) )
+if ( ( ( (strlen($sounds_web_server)) != (strlen($server_name)) ) or (!preg_match("/$sounds_web_server/i",$server_name) ) ) and ($force_allow!='FORCED') )
 	{
 	echo _QXZ("ERROR").": "._QXZ("server")."($server_name) "._QXZ("does not match sounds web server ip")."($sounds_web_server)\n";
 	exit;
@@ -157,7 +164,7 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 		}
 	$delete_file = preg_replace('/[^-\._0-9a-zA-Z]/','',$delete_file);
 
-	$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+	$stmt="SELECT selected_language,qc_enabled from vicidial_users where user='$PHP_AUTH_USER';";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$sl_ct = mysqli_num_rows($rslt);
@@ -165,6 +172,7 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 		{
 		$row=mysqli_fetch_row($rslt);
 		$VUselected_language =		$row[0];
+		$qc_auth =					$row[1];
 		}
 
 	$auth=0;
@@ -367,7 +375,7 @@ require("admin_header.php");
 
 <?php 
 
-echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3><B> &nbsp; \n";
+echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><img src=\"images/icon_audiostore.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3><B> &nbsp; \n";
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");

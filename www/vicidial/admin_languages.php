@@ -1,7 +1,7 @@
 <?php
 # admin_languages.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen manages the optional language tables in ViciDial
 #
@@ -11,10 +11,11 @@
 # 141212-0923 - Added active setting
 # 141227-1041 - Added flags next to country code and active column on list
 # 141229-1531 - Added code for on-the-fly language translations display
+# 160330-1553 - navigation changes and fixes
 #
 
-$admin_version = '2.10-5';
-$build = '141229-1531';
+$admin_version = '2.12-6';
+$build = '160330-1553';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -1410,7 +1411,7 @@ if ($ADD==363111111111)
 if ($ADD==163000000000)
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_languages.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	$stmt="SELECT language_id,language_description,language_code,user_group,modify_date,active from vicidial_languages $whereLOGadmin_viewable_groupsSQL order by language_id;";
 	if ($DB) {echo "$stmt\n";}

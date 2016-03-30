@@ -1,7 +1,7 @@
 <?php
 # callcard_admin.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This callcard script is to administer the callcard accounts in ViciDial
 # it is separate from the standard admin.php script. callcard_enabled in
@@ -18,10 +18,11 @@
 # 130901-1939 - Changed to mysqli PHP functions
 # 141007-2040 - Finalized adding QXZ translation to all admin files
 # 141229-2044 - Added code for on-the-fly language translations display
+# 160330-1551 - navigation changes and fixes
 #
 
-$version = '2.10-10';
-$build = '141229-2044';
+$version = '2.12-11';
+$build = '160330-1551';
 
 $MT[0]='';
 
@@ -83,17 +84,24 @@ $SEARCHONLY=0;
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,callcard_enabled,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,callcard_enabled,enable_languages,language_method,active_modules,contacts_enabled,email_enabled,outbound_autodial_active,enable_tts_integration,sounds_central_control_active,qc_features_active FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $ss_conf_ct = mysqli_num_rows($rslt);
 if ($ss_conf_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$non_latin =				$row[0];
-	$callcard_enabled =			$row[1];
-	$SSenable_languages =		$row[2];
-	$SSlanguage_method =		$row[3];
+	$non_latin =						$row[0];
+	$callcard_enabled =					$row[1];
+	$SSenable_languages =				$row[2];
+	$SSlanguage_method =				$row[3];
+	$SSactive_modules =					$row[4];
+	$SScontacts_enabled =				$row[5];
+	$SSemail_enabled =					$row[6];
+	$SSoutbound_autodial_active =		$row[7];
+	$SSenable_tts_integration =			$row[8];
+	$SSsounds_central_control_active =	$row[9];
+	$SSqc_features_active =				$row[10];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -205,12 +213,13 @@ else
 	exit;
 	}
 
-$stmt="SELECT callcard_admin,user_group,full_name from vicidial_users where user='$USER';";
+$stmt="SELECT callcard_admin,user_group,full_name,qc_enabled from vicidial_users where user='$USER';";
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGcallcard_admin =	$row[0];
 $LOGuser_group =		$row[1];
 $LOGfullname =			$row[2];
+$qc_auth =				$row[3];
 
 if($reports_only_user > 0)
 	{
@@ -535,7 +544,7 @@ if ($action == "CALLCARD_DETAIL")
 if ($action == "CALLCARD_SUMMARY")
 	{
 	echo "<TABLE><TR><TD>\n";
-	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+	echo "<img src=\"images/icon_callcard.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	echo "<br>"._QXZ("CallCard Summary").":\n";
 	echo "<center><TABLE width=400 cellspacing=0 cellpadding=1>\n";
 	echo "<TR BGCOLOR=BLACK>";
