@@ -47,6 +47,7 @@
 # 151112-1335 - Added option to search archived tables
 # 160121-2037 - Added report title header, default report format, cleaned up formatting
 # 160301-2051 - Expanded full name to 25 characters on text display
+# 160330-0649 - Fixed issue with names and non-latin setting
 #
 
 $startMS = microtime();
@@ -1059,8 +1060,8 @@ else
 				}
 			else
 				{	
-				$Sname[$m]=	sprintf("%-45s", $Sname[$m]); 
-				while(mb_strlen($Sname[$m],'utf-8')>15) {$Sname[$m] = mb_substr("$Sname[$m]", 0, -1,'utf-8');}
+				$Sname[$m]=	sprintf("%-75s", $Sname[$m]); 
+				while(mb_strlen($Sname[$m],'utf-8')>25) {$Sname[$m] = mb_substr("$Sname[$m]", 0, -1,'utf-8');}
 				$Suser[$m] =	sprintf("%-24s", $Suser[$m]);
 				while(mb_strlen($Suser[$m],'utf-8')>8) {$Suser[$m] = mb_substr("$Suser[$m]", 0, -1,'utf-8');}
 				}

@@ -31,6 +31,7 @@
 # 160121-2209 - Added report title header, default report format, cleaned up formatting
 # 160301-2051 - Expanded full name to 25 characters on text display
 # 160310-2115 - Fixed bug in HTML display
+# 160330-0648 - Fixed issue with names and non-latin setting
 #
 
 $startMS = microtime();
@@ -741,8 +742,8 @@ else
 				}
 			else
 				{	
-					$Sfull_name=	sprintf("%-45s", $Sfull_name); 
-				 while(mb_strlen($Sfull_name,'utf-8')>15) {$Sfull_name = mb_substr("$Sfull_name", 0, -1,'utf-8');}
+					$Sfull_name=	sprintf("%-75s", $Sfull_name); 
+				 while(mb_strlen($Sfull_name,'utf-8')>25) {$Sfull_name = mb_substr("$Sfull_name", 0, -1,'utf-8');}
 
 					$Suser =	sprintf("%-24s", $Suser);
 				 while(mb_strlen($Suser,'utf-8')>8) {$Suser = mb_substr("$Suser", 0, -1,'utf-8');}
