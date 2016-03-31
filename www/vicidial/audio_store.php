@@ -66,7 +66,7 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory,outbound_autodial_active,enable_languages,language_method,active_modules,contacts_enabled,email_enabled,qc_features_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory,outbound_autodial_active,enable_languages,language_method,active_modules,contacts_enabled,allow_emails,qc_features_active FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $ss_conf_ct = mysqli_num_rows($rslt);
