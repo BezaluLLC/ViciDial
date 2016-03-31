@@ -98,10 +98,11 @@
 # 160104-1059 - Added detection of dead chat sessions
 # 160227-1031 - Added INGROUPcolorOVERRIDE option
 # 160327-1259 - Added report_display_type option and several design changes
+# 160331-1947 - Fix for non-pausecode display in HTML format
 #
 
-$version = '2.12-86';
-$build = '160327-1259';
+$version = '2.12-87';
+$build = '160331-1947';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -3266,6 +3267,9 @@ if ($talking_to_print > 0)
 			if ($PHONEdisplay > 0)	{$phoneD = "$G$phone$EG </td><td NOWRAP>";}
 			else	{$phoneD = " ";}
 
+			if ($agent_pause_codes_active > 0)	{$pausecodeHTML = "<td bgcolor=white align=center><font class='Hblank'>$pausecode</td>";}
+			else	{$pausecodeHTML = "";}
+
 			$vac_stage='';
 			$vac_campaign='';
 			$INGRP='';
@@ -3295,11 +3299,11 @@ if ($talking_to_print > 0)
 
 			if ($realtime_block_user_info > 0)
 				{
-				$Aecho .= "<tr class='$tr_class'><td NOWRAP>$UGD $G$sessionid$EG$L$R$Aring_note[$i]</td><td NOWRAP align=center> $G"._QXZ("$status",6)."$EG</td><td bgcolor=white align=center><font class='Hblank'>$CM</td><td bgcolor=white align=center><font class='Hblank'>$pausecode</td><td NOWRAP align=right>$CP$SVD$G$call_time_MS$EG </td><td NOWRAP align=right> $G$campaign_id$EG </td><td NOWRAP align=right> $G$calls_today$EG </td>$INGRP</tr>\n";
+				$Aecho .= "<tr class='$tr_class'><td NOWRAP>$UGD $G$sessionid$EG$L$R$Aring_note[$i]</td><td NOWRAP align=center> $G"._QXZ("$status",6)."$EG</td><td bgcolor=white align=center><font class='Hblank'>$CM</td>$pausecodeHTML<td NOWRAP align=right>$CP$SVD$G$call_time_MS$EG </td><td NOWRAP align=right> $G$campaign_id$EG </td><td NOWRAP align=right> $G$calls_today$EG </td>$INGRP</tr>\n";
 				}
 			if ($realtime_block_user_info < 1)
 				{
-				$Aecho .= "<tr class='$tr_class'><td NOWRAP> $G$extension$EG$Aring_note[$i]</td><td NOWRAP>$phoneD<a href=\"./user_status.php?user=$Luser\" target=\"_blank\">$G$user$EG</a> <a href=\"javascript:ingroup_info('$Luser','$j');\">$G+$EG</a> </td><td NOWRAP align=right>$UGD $G$sessionid$EG$L$R </td><td NOWRAP align=center> $G"._QXZ("$status",6)."$EG</td><td bgcolor=white align=center><font class='Hblank'>$CM</td><td bgcolor=white align=center><font class='Hblank'>$pausecode</td><td NOWRAP align=right>$CP$SVD$G$call_time_MS$EG </td><td NOWRAP align=right> $G$campaign_id$EG </td><td NOWRAP align=right> $G$calls_today$EG </td>$INGRP</tr>\n";
+				$Aecho .= "<tr class='$tr_class'><td NOWRAP> $G$extension$EG$Aring_note[$i]</td><td NOWRAP>$phoneD<a href=\"./user_status.php?user=$Luser\" target=\"_blank\">$G$user$EG</a> <a href=\"javascript:ingroup_info('$Luser','$j');\">$G+$EG</a> </td><td NOWRAP align=right>$UGD $G$sessionid$EG$L$R </td><td NOWRAP align=center> $G"._QXZ("$status",6)."$EG</td><td bgcolor=white align=center><font class='Hblank'>$CM</td>$pausecodeHTML<td NOWRAP align=right>$CP$SVD$G$call_time_MS$EG </td><td NOWRAP align=right> $G$campaign_id$EG </td><td NOWRAP align=right> $G$calls_today$EG </td>$INGRP</tr>\n";
 				}
 			}
 		$j++;
