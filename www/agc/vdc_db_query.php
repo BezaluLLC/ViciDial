@@ -403,10 +403,11 @@
 # 160303-0049 - Fixed issue with did script variables, added code for chat transfers
 # 160326-0940 - Fixed issue #933, variables
 # 160326-1002 - Fixed issue #934, phone_login
+# 160331-2130 - Fixed missing start and dispo call url variables, issue #938
 #
 
-$version = '2.12-297';
-$build = '160326-1002';
+$version = '2.12-298';
+$build = '160331-2130';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=654;
@@ -670,6 +671,16 @@ if (isset($_GET["url_ids"]))			{$url_ids=$_GET["url_ids"];}
 	elseif (isset($_POST["url_ids"]))	{$url_ids=$_POST["url_ids"];}
 if (isset($_GET["phone_login"]))			{$phone_login=$_GET["phone_login"];}
 	elseif (isset($_POST["phone_login"]))	{$phone_login=$_POST["phone_login"];}
+if (isset($_GET["agent_email"]))	{$agent_email=$_GET["agent_email"];}
+	elseif (isset($_POST["agent_email"]))	{$agent_email=$_POST["agent_email"];}
+if (isset($_GET["original_phone_login"]))	{$original_phone_login=$_GET["original_phone_login"];}
+	elseif (isset($_POST["original_phone_login"]))	{$original_phone_login=$_POST["original_phone_login"];}
+if (isset($_GET["customer_zap_channel"]))	{$customer_zap_channel=$_GET["customer_zap_channel"];}
+	elseif (isset($_POST["customer_zap_channel"]))	{$customer_zap_channel=$_POST["customer_zap_channel"];}
+if (isset($_GET["customer_server_ip"]))	{$customer_server_ip=$_GET["customer_server_ip"];}
+	elseif (isset($_POST["customer_server_ip"]))	{$customer_server_ip=$_POST["customer_server_ip"];}
+if (isset($_GET["phone_pass"]))	{$phone_pass=$_GET["phone_pass"];}
+	elseif (isset($_POST["phone_pass"]))	{$phone_pass=$_POST["phone_pass"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -7652,12 +7663,12 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$VDCL_start_call_url = preg_replace('/--A--SQLdate--B--/i',urlencode(trim($SQLdate)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--epoch--B--/i',urlencode(trim($epoch)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--uniqueid--B--/i',urlencode(trim($uniqueid)),$VDCL_start_call_url);
-				$VDCL_start_call_url = preg_replace('/--A--customer_zap_channel--B--/i',urlencode(trim($customer_zap_channel)),$VDCL_start_call_url);
-				$VDCL_start_call_url = preg_replace('/--A--customer_server_ip--B--/i',urlencode(trim($customer_server_ip)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--customer_zap_channel--B--/i',urlencode(trim($channel)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--customer_server_ip--B--/i',urlencode(trim($call_server_ip)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--server_ip--B--/i',urlencode(trim($server_ip)),$VDCL_start_call_url);
-				$VDCL_start_call_url = preg_replace('/--A--SIPexten--B--/i',urlencode(trim($SIPexten)),$VDCL_start_call_url);
-				$VDCL_start_call_url = preg_replace('/--A--session_id--B--/i',urlencode(trim($session_id)),$VDCL_start_call_url);
-				$VDCL_start_call_url = preg_replace('/--A--phone--B--/i',urlencode(trim($phone)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--SIPexten--B--/i',urlencode(trim($exten)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--session_id--B--/i',urlencode(trim($conf_exten)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--phone--B--/i',urlencode(trim($phone_number)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--parked_by--B--/i',urlencode(trim($parked_by)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--dispo--B--/i',urlencode(trim($dispo)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--dialed_number--B--/i',urlencode(trim($dialed_number)),$VDCL_start_call_url);
@@ -7666,7 +7677,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$VDCL_start_call_url = preg_replace('/--A--rank--B--/i',urlencode(trim($rank)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--owner--B--/i',urlencode(trim($owner)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--camp_script--B--/i',urlencode(trim($camp_script)),$VDCL_start_call_url);
-				$VDCL_start_call_url = preg_replace('/--A--in_script--B--/i',urlencode(trim($in_script)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--in_script--B--/i',urlencode(trim($VDCL_ingroup_script)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--fullname--B--/i',urlencode(trim($fullname)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--user_custom_one--B--/i',urlencode(trim($user_custom_one)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--user_custom_two--B--/i',urlencode(trim($user_custom_two)),$VDCL_start_call_url);
@@ -7691,6 +7702,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$VDCL_start_call_url = preg_replace('/--A--did_custom_three--B--/i',urlencode(trim($DID_custom_three)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--did_custom_four--B--/i',urlencode(trim($DID_custom_four)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--did_custom_five--B--/i',urlencode(trim($DID_custom_five)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--agent_email--B--/i',urlencode(trim($agent_email)),$VDCL_start_call_url);
 
 				if (strlen($custom_field_names)>2)
 					{
@@ -8879,12 +8891,12 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 				$VDCL_start_call_url = preg_replace('/--A--SQLdate--B--/i',urlencode(trim($SQLdate)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--epoch--B--/i',urlencode(trim($epoch)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--uniqueid--B--/i',urlencode(trim($uniqueid)),$VDCL_start_call_url);
-				$VDCL_start_call_url = preg_replace('/--A--customer_zap_channel--B--/i',urlencode(trim($customer_zap_channel)),$VDCL_start_call_url);
-				$VDCL_start_call_url = preg_replace('/--A--customer_server_ip--B--/i',urlencode(trim($customer_server_ip)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--customer_zap_channel--B--/i',urlencode(trim($channel)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--customer_server_ip--B--/i',urlencode(trim($call_server_ip)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--server_ip--B--/i',urlencode(trim($server_ip)),$VDCL_start_call_url);
-				$VDCL_start_call_url = preg_replace('/--A--SIPexten--B--/i',urlencode(trim($SIPexten)),$VDCL_start_call_url);
-				$VDCL_start_call_url = preg_replace('/--A--session_id--B--/i',urlencode(trim($session_id)),$VDCL_start_call_url);
-				$VDCL_start_call_url = preg_replace('/--A--phone--B--/i',urlencode(trim($phone)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--SIPexten--B--/i',urlencode(trim($exten)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--session_id--B--/i',urlencode(trim($conf_exten)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--phone--B--/i',urlencode(trim($phone_number)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--parked_by--B--/i',urlencode(trim($parked_by)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--dispo--B--/i',urlencode(trim($dispo)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--dialed_number--B--/i',urlencode(trim($dialed_number)),$VDCL_start_call_url);
@@ -8893,7 +8905,7 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 				$VDCL_start_call_url = preg_replace('/--A--rank--B--/i',urlencode(trim($rank)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--owner--B--/i',urlencode(trim($owner)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--camp_script--B--/i',urlencode(trim($camp_script)),$VDCL_start_call_url);
-				$VDCL_start_call_url = preg_replace('/--A--in_script--B--/i',urlencode(trim($in_script)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--in_script--B--/i',urlencode(trim($VDCL_ingroup_script)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--fullname--B--/i',urlencode(trim($fullname)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--user_custom_one--B--/i',urlencode(trim($user_custom_one)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--user_custom_two--B--/i',urlencode(trim($user_custom_two)),$VDCL_start_call_url);
@@ -8918,6 +8930,7 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 				$VDCL_start_call_url = preg_replace('/--A--did_custom_three--B--/i',urlencode(trim($DID_custom_three)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--did_custom_four--B--/i',urlencode(trim($DID_custom_four)),$VDCL_start_call_url);
 				$VDCL_start_call_url = preg_replace('/--A--did_custom_five--B--/i',urlencode(trim($DID_custom_five)),$VDCL_start_call_url);
+				$VDCL_start_call_url = preg_replace('/--A--agent_email--B--/i',urlencode(trim($agent_email)),$VDCL_start_call_url);
 
 				if (strlen($custom_field_names)>2)
 					{
@@ -11380,12 +11393,12 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_urlARY[$j] = preg_replace('/--A--SQLdate--B--/i',"$SQLdate",$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--epoch--B--/i',"$epoch",$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--uniqueid--B--/i',"$uniqueid",$dispo_call_urlARY[$j]);
-		$dispo_call_urlARY[$j] = preg_replace('/--A--customer_zap_channel--B--/i',"$customer_zap_channel",$dispo_call_urlARY[$j]);
+		$dispo_call_urlARY[$j] = preg_replace('/--A--customer_zap_channel--B--/i',urlencode(trim($customer_zap_channel)),$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--customer_server_ip--B--/i',"$customer_server_ip",$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--server_ip--B--/i',"$server_ip",$dispo_call_urlARY[$j]);
-		$dispo_call_urlARY[$j] = preg_replace('/--A--SIPexten--B--/i',"$SIPexten",$dispo_call_urlARY[$j]);
-		$dispo_call_urlARY[$j] = preg_replace('/--A--session_id--B--/i',"$session_id",$dispo_call_urlARY[$j]);
-		$dispo_call_urlARY[$j] = preg_replace('/--A--phone--B--/i',"$phone",$dispo_call_urlARY[$j]);
+		$dispo_call_urlARY[$j] = preg_replace('/--A--SIPexten--B--/i',urlencode(trim($exten)),$dispo_call_urlARY[$j]);
+		$dispo_call_urlARY[$j] = preg_replace('/--A--session_id--B--/i',"$conf_exten",$dispo_call_urlARY[$j]);
+		$dispo_call_urlARY[$j] = preg_replace('/--A--phone--B--/i',"$phone_number",$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--parked_by--B--/i',"$parked_by",$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--dispo--B--/i',"$dispo",$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--dispo_name--B--/i',"$dispo_name",$dispo_call_urlARY[$j]);
@@ -11424,6 +11437,7 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_urlARY[$j] = preg_replace('/--A--did_custom_three--B--/i',urlencode(trim($DID_custom_three)),$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--did_custom_four--B--/i',urlencode(trim($DID_custom_four)),$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--did_custom_five--B--/i',urlencode(trim($DID_custom_five)),$dispo_call_urlARY[$j]);
+		$dispo_call_urlARY[$j] = preg_replace('/--A--agent_email--B--/i',urlencode(trim($agent_email)),$dispo_call_urlARY[$j]);
 
 		if (strlen($FORMcustom_field_names)>2)
 			{

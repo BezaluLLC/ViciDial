@@ -1,7 +1,7 @@
 <?php
 # admin_url_multi.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen will control the *url* settings needed when the Campaign or 
 # In-Group or List URL setting is set to "ALT". This screen allows for multiple 
@@ -11,10 +11,11 @@
 #
 # changes:
 # 150709-0612 - First Build
+# 160331-2203 - Made URL form input fields longer
 #
 
-$admin_version = '2.12-1';
-$build = '150709-0612';
+$admin_version = '2.12-2';
+$build = '160331-2203';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -449,7 +450,7 @@ if ($action == "BLANK")
 		echo "</td>";
 		echo "</tr>";
 		echo "<tr $bgcolor>";
-		echo "<td colspan=5><font size=1>"._QXZ("URL").":<input type=text size=80 maxlength=2000 name=url_address value=\"$Rurl_address\"></td>";
+		echo "<td colspan=5><font size=1>"._QXZ("URL").":<input type=text size=80 maxlength=5000 name=url_address value=\"$Rurl_address\"></td>";
 		echo "</form>\n";
 		echo "</tr>\n";
 		}
@@ -474,7 +475,7 @@ if ($action == "BLANK")
 	echo "<td rowspan=2><font size=1><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td>";
 	echo "</tr>";
 	echo "<tr $bgcolor>";
-	echo "<td colspan=3><font size=1>"._QXZ("URL").":<input type=text size=80 maxlength=2000 name=url_address value=\"\"></td>";
+	echo "<td colspan=3><font size=1>"._QXZ("URL").":<input type=text size=80 maxlength=5000 name=url_address value=\"\"></td>";
 	echo "</form>\n";
 	echo "</tr>\n";
 	echo "</table></center><br>\n";

@@ -3748,12 +3748,13 @@ else
 # 160327-0145 - Reworked System Summary Screen
 # 160328-0316 - Added links to the real-time report from the summary screen
 # 160330-1559 - Redesign of Admin sub-menu and added icons
+# 160331-2204 - Made URL form input fields longer
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-547a';
-$build = '160330-1559';
+$admin_version = '2.12-548a';
+$build = '160331-2204';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -20879,9 +20880,9 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("CRM Popup Login").": </td><td align=left><select size=1 name=crm_popup_login><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$crm_popup_login' SELECTED>"._QXZ("$crm_popup_login")."</option></select>$NWB#campaigns-crm_popup_login$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("CRM Popup Address").": </td><td align=left><input type=text name=crm_login_address size=70 maxlength=2000 value=\"$crm_login_address\">$NWB#campaigns-crm_login_address$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("CRM Popup Address").": </td><td align=left><input type=text name=crm_login_address size=70 maxlength=5000 value=\"$crm_login_address\">$NWB#campaigns-crm_login_address$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Start Call URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=2000 value=\"$start_call_url\">$NWB#campaigns-start_call_url$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Start Call URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=5000 value=\"$start_call_url\">$NWB#campaigns-start_call_url$NWE</td></tr>\n";
 
 		if ($dispo_call_url == 'ALT')
 			{
@@ -20894,14 +20895,14 @@ if ($ADD==31)
 				$vum_count = $rowx[0]; 
 				}
 
-			echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin_url_multi.php?DB=$DB&campaign_id=$campaign_id&entry_type=campaign&url_type=dispo\">"._QXZ("Dispo Call URL")."</a>: </td><td align=left><input type=text name=dispo_call_url size=10 maxlength=2000 value=\"$dispo_call_url\">$NWB#campaigns-dispo_call_url$NWE <a href=\"admin_url_multi.php?DB=$DB&campaign_id=$campaign_id&entry_type=campaign&url_type=dispo\"> "._QXZ("Alternate Dispo URLs Defined").": $vum_count</a></td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right><a href=\"admin_url_multi.php?DB=$DB&campaign_id=$campaign_id&entry_type=campaign&url_type=dispo\">"._QXZ("Dispo Call URL")."</a>: </td><td align=left><input type=text name=dispo_call_url size=10 maxlength=5000 value=\"$dispo_call_url\">$NWB#campaigns-dispo_call_url$NWE <a href=\"admin_url_multi.php?DB=$DB&campaign_id=$campaign_id&entry_type=campaign&url_type=dispo\"> "._QXZ("Alternate Dispo URLs Defined").": $vum_count</a></td></tr>\n";
 			}
 		else
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dispo Call URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=2000 value=\"$dispo_call_url\">$NWB#campaigns-dispo_call_url$NWE</td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dispo Call URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=5000 value=\"$dispo_call_url\">$NWB#campaigns-dispo_call_url$NWE</td></tr>\n";
 			}
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("No Agent Call URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=2000 value=\"$na_call_url\">$NWB#campaigns-na_call_url$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("No Agent Call URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=5000 value=\"$na_call_url\">$NWB#campaigns-na_call_url$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Extension Append CID").": </td><td align=left><select size=1 name=extension_appended_cidname><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$extension_appended_cidname' SELECTED>"._QXZ("$extension_appended_cidname")."</option></select>$NWB#campaigns-extension_appended_cidname$NWE</td></tr>\n";
 
@@ -25212,7 +25213,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Stats Percent of Calls Answered Within X seconds")." 2: </td><td align=left><input type=text name=answer_sec_pct_rt_stat_two size=5 maxlength=5 value=\"$answer_sec_pct_rt_stat_two\">$NWB#inbound_groups-answer_sec_pct_rt_stat_one$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Start Call URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=2000 value=\"$start_call_url\">$NWB#inbound_groups-start_call_url$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Start Call URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=5000 value=\"$start_call_url\">$NWB#inbound_groups-start_call_url$NWE</td></tr>\n";
 
 		if ($dispo_call_url == 'ALT')
 			{
@@ -25229,12 +25230,12 @@ if ($ADD==3111)
 			}
 		else
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dispo Call URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=2000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_call_url$NWE</td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dispo Call URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=5000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_call_url$NWE</td></tr>\n";
 			}
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Add Lead URL").": </td><td align=left><input type=text name=add_lead_url size=70 maxlength=2000 value=\"$add_lead_url\">$NWB#inbound_groups-add_lead_url$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Add Lead URL").": </td><td align=left><input type=text name=add_lead_url size=70 maxlength=5000 value=\"$add_lead_url\">$NWB#inbound_groups-add_lead_url$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("No Agent Call URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=2000 value=\"$na_call_url\">$NWB#inbound_groups-na_call_url$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("No Agent Call URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=5000 value=\"$na_call_url\">$NWB#inbound_groups-na_call_url$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Extension Append CID").": </td><td align=left><select size=1 name=extension_appended_cidname><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$extension_appended_cidname' SELECTED>"._QXZ("$extension_appended_cidname")."</option></select>$NWB#inbound_groups-extension_appended_cidname$NWE</td></tr>\n";
 
@@ -26006,7 +26007,7 @@ if ($ADD==3811)
 */
 
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Start Email URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=2000 value=\"$start_call_url\">$NWB#inbound_groups-start_email_url$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Start Email URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=5000 value=\"$start_call_url\">$NWB#inbound_groups-start_email_url$NWE</td></tr>\n";
 
 		if ($dispo_call_url == 'ALT')
 			{
@@ -26023,12 +26024,12 @@ if ($ADD==3811)
 			}
 		else
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dispo Email URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=2000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_email_url$NWE</td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dispo Email URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=5000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_email_url$NWE</td></tr>\n";
 			}
 
-		# echo "<tr bgcolor=#B6D3FC><td align=right>Add Lead URL: </td><td align=left><input type=text name=add_lead_url size=70 maxlength=2000 value=\"$add_lead_url\">$NWB#inbound_groups-add_lead_url$NWE</td></tr>\n";
+		# echo "<tr bgcolor=#B6D3FC><td align=right>Add Lead URL: </td><td align=left><input type=text name=add_lead_url size=70 maxlength=5000 value=\"$add_lead_url\">$NWB#inbound_groups-add_lead_url$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("No Agent Email URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=2000 value=\"$na_call_url\">$NWB#inbound_groups-na_email_url$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("No Agent Email URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=5000 value=\"$na_call_url\">$NWB#inbound_groups-na_email_url$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Extension Append CID").": </td><td align=left><select size=1 name=extension_appended_cidname><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED>$extension_appended_cidname</option></select>$NWB#inbound_groups-extension_appended_cidname$NWE</td></tr>\n";
 
@@ -26787,7 +26788,7 @@ if ($ADD==3911)
 */
 
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Start Chat URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=2000 value=\"$start_call_url\">$NWB#inbound_groups-start_chat_url$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Start Chat URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=5000 value=\"$start_call_url\">$NWB#inbound_groups-start_chat_url$NWE</td></tr>\n";
 
 		if ($dispo_call_url == 'ALT')
 			{
@@ -26804,10 +26805,10 @@ if ($ADD==3911)
 			}
 		else
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dispo Chat URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=2000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_chat_url$NWE</td></tr>\n";
+			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Dispo Chat URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=5000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_chat_url$NWE</td></tr>\n";
 			}
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("No Agent Chat URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=2000 value=\"$na_call_url\">$NWB#inbound_groups-na_chat_url$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("No Agent Chat URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=5000 value=\"$na_call_url\">$NWB#inbound_groups-na_chat_url$NWE</td></tr>\n";
 /*
 		echo "<tr bgcolor=#B6D3FC><td align=right>Extension Append CID: </td><td align=left><select size=1 name=extension_appended_cidname><option>"._QXZ("Y")."</option><option>N</option><option SELECTED>$extension_appended_cidname</option></select>$NWB#inbound_groups-extension_appended_cidname$NWE</td></tr>\n";
 */
