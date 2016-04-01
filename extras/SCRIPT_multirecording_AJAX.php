@@ -1,7 +1,7 @@
 <?php
 # SCRIPT_multirecording_AJAX.php - script that stops/starts recordings being made over a forced-recording (ALLFORCE) call
 # 
-# Copyright (C) 2013  Joe Johnson, Matt Florell <mattf@vicidial.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Joe Johnson, Matt Florell <mattf@vicidial.com>    LICENSE: AGPLv2
 #
 # Other scripts that this application depends on:
 # - SCRIPT_multirecording.php: Gives agents ability to stop and start recordings over a forced-recording (ALLFORCE) call
@@ -9,6 +9,7 @@
 # CHANGELOG
 # 120224-2240 - First Build
 # 130328-0009 - Converted ereg to preg functions
+# 160401-0026 - Fix for Asterisk 1.8
 #
 
 require("dbconnect.php");
@@ -70,7 +71,7 @@ if ($rec_action=="START")
 	} else {
 	######################## START RECORDING ##########################
 
-		$stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$channel%\" and channel LIKE \"%,1\";";
+		$stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$channel%\" and (channel LIKE \"%,1\" or channel LIKE \"%;1\");";
 		$rslt=mysql_query($stmt, $link);
 		$channel_SQL=" and channel not in (";
 		while($row=mysql_fetch_array($rslt))
@@ -93,7 +94,7 @@ if ($rec_action=="START")
 			usleep(2000000);
 			$recording_id = mysql_insert_id($link);
 			$current_rec_filename=$filename;
-			$channel_stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$channel%\" and channel LIKE \"%,1\" $channel_SQL;";
+			$channel_stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$channel%\" and (channel LIKE \"%,1\" or channel LIKE \"%;1\") $channel_SQL;";
 			$channel_rslt=mysql_query($channel_stmt, $link);
 			if (mysql_num_rows($channel_rslt)==1) 
 				{
@@ -158,7 +159,7 @@ else
 	}
 
 	# find and hang up the recording 
-	$stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$recording_channel%\" and channel LIKE \"%,1\";";
+	$stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and channel LIKE \"$recording_channel%\" and (channel LIKE \"%,1\" or channel LIKE \"%;1\");";
 	$rslt=mysql_query($stmt, $link);
 	$rec_count = mysql_num_rows($rslt);
 	$h=0;

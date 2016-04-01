@@ -1,7 +1,7 @@
 <?php
 # SCRIPT_multirecording.php - script page that stops/starts recordings being made over a forced-recording (ALLFORCE) call
 # 
-# Copyright (C) 2012  Joe Johnson <joej@vicidial.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Joe Johnson <joej@vicidial.com>    LICENSE: AGPLv2
 # - works in conjunction with SCRIPT_multirecording_AJAX.php to allow reps the ability to make their own recordings over the course of a call while the entire call is being recorded into its own file, as in ALLFORCE recording.
 #
 # Implementation is done by creating a script in the Scripts section that calls this page within an <iframe> tag which passes several essential dialer variables to the page 
@@ -14,6 +14,7 @@
 #
 # CHANGELOG
 # 120227-1512 - First Build
+# 160401-0026 - HTML formatting fixes
 #
 
 require("dbconnect.php");
@@ -35,6 +36,8 @@ if (isset($_GET["vendor_lead_code"]))	{$vendor_lead_code=$_GET["vendor_lead_code
 	elseif (isset($_POST["vendor_lead_code"]))	{$vendor_lead_code=$_POST["vendor_lead_code"];}
 ?>
 <html>
+<head>
+<title>script multirecording button page</title>
 <style type="text/css">
 input.red_btn{
    color:#FFFFFF;
@@ -112,7 +115,7 @@ function RecordingAction(campaign, lead_id, phone_number, user, session_id, serv
 					}
 				else if (recording_response=="HANGUP SUCCESSFUL")
 					{
-					document.getElementById("recording_button_span").innerHTML = "<input type=\"button\" class=\"green_btn\" onClick=\"RecordingAction(<?php echo "'$campaign', '$lead_id', '$phone_number', '$user', '$session_id', '$server_ip', '$vendor_lead_code', '$uniqueid'"; ?>, 'START')\" value=\"START RECORDING\">";
+					document.getElementById("recording_button_span").innerHTML = "<input type=\"button\" class=\"green_btn\" onClick=\"RecordingAction(<?php echo "'$campaign', '$lead_id', '$phone_number', '$user', '$session_id', '$server_ip', '$vendor_lead_code', '$uniqueid'"; ?>, 'START');\" value=\"START RECORDING\">";
 					}
 				}
 			}
@@ -120,6 +123,7 @@ function RecordingAction(campaign, lead_id, phone_number, user, session_id, serv
 		}
 }
 </script>
+</head>
 <body>
 <form action="<?php echo $PHP_SELF; ?>" method="post" target="_self">
 <center>
