@@ -18,10 +18,11 @@
 # 150422-1229 - Changed Default List ID
 # 150513-2310 - Added POP3 Auth Mode
 # 160330-1552 - navigation changes and fixes
+# 160404-0936 - design changes
 #
 
-$admin_version = '2.12-12';
-$build = '160330-1552';
+$admin_version = '2.12-13';
+$build = '160404-0936';
 
 $sh="emails"; 
 
@@ -864,10 +865,10 @@ else
 		$unhandled_emails=$ct_row[0];
 		
 		if (preg_match("/1$|3$|5$|7$|9$/i", $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?eact=UPDATE&email_account_id=$row[email_account_id]\">$row[email_account_id]</a></font></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?eact=UPDATE&email_account_id=$row[email_account_id]'\"><td><a href=\"$PHP_SELF?eact=UPDATE&email_account_id=$row[email_account_id]\"><font size=1 color=black>$row[email_account_id]</a></font></td>";
 		echo "<td><font size=1> $row[email_account_name]</font></td>";
 		echo "<td><font size=1> $row[email_account_description]</font></td>";
 		echo "<td><font size=1> $row[email_replyto_address]</font></td>";

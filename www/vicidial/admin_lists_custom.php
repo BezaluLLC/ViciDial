@@ -35,10 +35,11 @@
 # 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 # 151007-2001 - Fixed issue with field deletion
 # 160325-1431 - Changes for sidebar update
+# 160404-0938 - design changes
 #
 
-$admin_version = '2.12-27';
-$build = '151007-2001';
+$admin_version = '2.12-28';
+$build = '160404-0938';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -962,9 +963,9 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 			$LcolorE='</font>';
 			}
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
+			{$bgcolor='class="records_list_y"';}
 		echo "<tr $bgcolor align=right><td><font size=1>$A_field_rank[$o] - $A_field_order[$o] &nbsp; &nbsp; </td>";
 		echo "<td align=right><font size=2> <a href=\"#ANCHOR_$A_field_label[$o]\">$LcolorB$A_field_label[$o]$LcolorE</a> &nbsp; &nbsp; </td>";
 		echo "<td align=right><font size=2> $A_field_name[$o] &nbsp; &nbsp; </td>";
@@ -1384,10 +1385,10 @@ if ($action == "LIST")
 			$A_list_fields_count[$o] =	$rowx[0];
 			}
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor align=right><td><font size=1><a href=\"admin.php?ADD=311&list_id=$A_list_id[$o]\">$A_list_id[$o]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor align=right onclick=\"window.document.location='$PHP_SELF?action=MODIFY_CUSTOM_FIELDS&list_id=$A_list_id[$o]'\"><td><a href=\"admin.php?ADD=311&list_id=$A_list_id[$o]\"><font size=1 color=black>$A_list_id[$o]</a></td>";
 		echo "<td align=right><font size=1> $A_list_name[$o]</td>";
 		echo "<td align=right><font size=1> $A_active[$o]</td>";
 		echo "<td align=right><font size=1> $A_campaign_id[$o]</td>";
@@ -1460,10 +1461,10 @@ if ($action == "ADMIN_LOG")
 			if (preg_match('/GROUPALIAS/i', $row[4])) {$record_link = "$PHP_SELF?ADD=33111111111&group_alias_id=$row[6]";}
 
 			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='class="records_list_x"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
-			echo "<tr $bgcolor><td><font size=1><a href=\"admin.php?ADD=730000000000000&stage=$row[0]\">$row[0]</a></td>";
+				{$bgcolor='class="records_list_y"';}
+			echo "<tr $bgcolor onclick=\"window.document.location='admin.php?ADD=730000000000000&stage=$row[0]'\"><td><a href=\"admin.php?ADD=730000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 			echo "<td><font size=1> $row[1]</td>";
 			echo "<td><font size=1> <a href=\"admin.php?ADD=710000000000000&stage=$row[2]\">$row[2]</a></td>";
 			echo "<td><font size=1> $row[3]</td>";

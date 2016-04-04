@@ -19,10 +19,11 @@
 # 141229-1850 - Added code for on-the-fly language translations display
 # 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 # 160325-1432 - Changes for sidebar update
+# 160404-0939 - design changes
 #
 
-$version = '2.12-11';
-$build = '160325-1432';
+$version = '2.12-12';
+$build = '160404-0939';
 
 $MT[0]='';
 
@@ -1085,12 +1086,12 @@ if ($action == "LIST_ALL_TERRITORIES")
 			}
 
 		if (preg_match("/1$|3$|5$|7$|9$/i", $i))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1>$i</td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?action=MODIFY_TERRITORY&territory=$Lterritory[$i]'\"><td><font size=1>$i</td>";
 		echo "<td><font size=1> $Lterritory_id[$i] </td>";
-		echo "<td><font size=1> <a href=\"$PHP_SELF?action=MODIFY_TERRITORY&territory=$Lterritory[$i]\">$Lterritory[$i]</a></td>";
+		echo "<td> <a href=\"$PHP_SELF?action=MODIFY_TERRITORY&territory=$Lterritory[$i]\"><font size=1 color=black>$Lterritory[$i]</a></td>";
 		echo "<td><font size=1> $Lterritory_description[$i]</td>";
 		echo "<td><font size=1> $Lterritory_count[$i]</td>";
 		echo "<td><font size=1> $Lterritory_owner_count[$i]</td>";

@@ -12,10 +12,11 @@
 # 141227-1041 - Added flags next to country code and active column on list
 # 141229-1531 - Added code for on-the-fly language translations display
 # 160330-1553 - navigation changes and fixes
+# 160404-0935 - design changes
 #
 
-$admin_version = '2.12-6';
-$build = '160330-1553';
+$admin_version = '2.12-7';
+$build = '160404-0935';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -1462,10 +1463,10 @@ if ($ADD==163000000000)
 		$translated_phrases_count = ($phrase_count - $null_phrase_count);
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=363111111111&language_id=$Alanguage_id[$o]&DB=$DB\">$Alanguage_id[$o]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=363111111111&language_id=$Alanguage_id[$o]&DB=$DB'\"><td><a href=\"$PHP_SELF?ADD=363111111111&language_id=$Alanguage_id[$o]&DB=$DB\"><font size=1 color=black>$Alanguage_id[$o]</a></td>";
 		echo "<td><font size=1>$Alanguage_description[$o]</td>";
 		echo "<td><font size=1>";
 		if (file_exists("../agc/images/$Alanguage_code[$o]$gif"))
@@ -1545,10 +1546,10 @@ if ($ADD == "763000000000")
 			if (preg_match('/LANGUAGES/i', $row[4])) {$record_link = "$PHP_SELF?ADD=363111111111&language_id=$row[6]&DB=$DB";}
 
 			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='class="records_list_x"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
-			echo "<tr $bgcolor><td><font size=1><a href=\"admin.php?ADD=730000000000000&stage=$row[0]&DB=$DB\">$row[0]</a></td>";
+				{$bgcolor='class="records_list_y"';}
+			echo "<tr $bgcolor><td><a href=\"admin.php?ADD=730000000000000&stage=$row[0]&DB=$DB\"><font size=1 color=black>$row[0]</a></td>";
 			echo "<td><font size=1> $row[1]</td>";
 			echo "<td><font size=1> <a href=\"admin.php?ADD=710000000000000&stage=$row[2]&DB=$DB\">$row[2]</a></td>";
 			echo "<td><font size=1> $row[3]</td>";

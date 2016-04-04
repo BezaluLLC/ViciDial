@@ -61,6 +61,7 @@
 # 160327-0146 - Changes to design
 # 160328-1930 - Fixed display bugs
 # 160330-1600 - Redesign of Admin sub-menu and added icons
+# 160404-0934 - design changes
 #
 
 
@@ -1201,6 +1202,19 @@ echo "</script>\n";
 	background-color: white;
 	}
 .adminmenu_style_selected:hover{background-color: #E6E6E6;}
+
+.records_list_x
+	{
+	background-color: #B9CBFD;
+	}
+.records_list_x:hover{background-color: #E6E6E6;}
+
+.records_list_y
+	{
+	background-color: #9BB9FB;
+	}
+.records_list_y:hover{background-color: #E6E6E6;}
+
 
 .horiz_line
 	{

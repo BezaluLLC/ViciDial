@@ -3749,12 +3749,13 @@ else
 # 160328-0316 - Added links to the real-time report from the summary screen
 # 160330-1559 - Redesign of Admin sub-menu and added icons
 # 160331-2204 - Made URL form input fields longer
+# 160404-0940 - design changes
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-548a';
-$build = '160331-2204';
+$admin_version = '2.12-549a';
+$build = '160404-0940';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5556,7 +5557,7 @@ if ($ADD=="1")
 		##### END ID override optional section #####
 
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_users.png\" alt=\"Users\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD A NEW USER")."<form action=$PHP_SELF method=POST name=userform id=userform>\n";
 		echo "<input type=hidden name=ADD value=2>\n";
@@ -5587,9 +5588,9 @@ if ($ADD=="1")
 		echo "</select>$NWB#users-user_level$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("User Group").": </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
+		echo "</select>$NWB#users-user_group$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Phone Login").": </td><td align=left><input type=text name=phone_login size=20 maxlength=20>$NWB#users-phone_login$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Phone Pass").": </td><td align=left><input type=text name=phone_pass size=20 maxlength=20>$NWB#users-phone_pass$NWE</td></tr>\n";
-		echo "</select>$NWB#users-user_group$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=button name=SUBMIT value='"._QXZ("SUBMIT")."' onClick=\"user_submit()\"></td></tr>\n";
 		echo "</TABLE></center>\n";
 		}
@@ -5620,7 +5621,7 @@ if ($ADD=="1A")
 		##### END ID override optional section #####
 
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_users.png\" alt=\"Users\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("COPY USER")."<form action=$PHP_SELF method=POST name=userform id=userform>\n";
 		echo "<input type=hidden name=ADD value=2A>\n";
@@ -5688,7 +5689,7 @@ if ($ADD==11)
 		##### END ID override optional section #####
 
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_campaigns.png\" alt=\"Campaigns\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD A NEW CAMPAIGN")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=21>\n";
@@ -5827,7 +5828,7 @@ if ($ADD==12)
 		##### END ID override optional section #####
 
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_campaigns.png\" alt=\"Campaigns\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("COPY A CAMPAIGN")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=20>\n";
@@ -5890,7 +5891,7 @@ if ($ADD==111)
 		##### END ID override optional section #####
 
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_lists.png\" alt=\"Lists\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD A NEW LIST")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=211>\n";
@@ -6299,7 +6300,7 @@ if ($ADD==1111)
 		##### END ID override optional section #####
 
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_inbound.png\" alt=\"Inbound\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD A NEW INBOUND GROUP")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=2111>\n";
@@ -6526,7 +6527,7 @@ if ($ADD==1211)
 		##### END ID override optional section #####
 
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_inbound.png\" alt=\"Inbound\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("COPY INBOUND GROUP")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=2011>\n";
@@ -6701,7 +6702,7 @@ if ($ADD==1311)
 	if ($LOGmodify_dids==1)
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_inbound.png\" alt=\"Inbound\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD A NEW DID")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=2311>\n";
@@ -6731,7 +6732,7 @@ if ($ADD==1411)
 	if ($LOGmodify_dids==1)
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_inbound.png\" alt=\"Inbound\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("COPY DID")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=2411>\n";
@@ -6786,7 +6787,7 @@ if ($ADD==1511)
 		##### END ID override optional section #####
 
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_inbound.png\" alt=\"Inbound\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD A NEW CALL MENU")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=2511>\n";
@@ -6834,7 +6835,7 @@ if ($ADD==1611)
 		##### END ID override optional section #####
 
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_inbound.png\" alt=\"Inbound\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("COPY CALL MENU")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=2611>\n";
@@ -6916,7 +6917,7 @@ if ($ADD==11111)
 	if ( ($LOGmodify_remoteagents==1) and ($x_ra_carrier < 1) )
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_remoteagents.png\" alt=\"Remote Agents\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW REMOTE AGENTS")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=21111>\n";
@@ -7004,7 +7005,7 @@ if ($ADD==111111)
 		##### END ID override optional section #####
 
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_usergroups.png\" alt=\"User Groups\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW USERS GROUP")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=211111>\n";
@@ -7048,7 +7049,7 @@ if ($ADD==1111111)
 		##### END ID override optional section #####
 
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_scripts.png\" alt=\"Scripts\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW SCRIPT")."<form name=scriptForm action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=2111111>\n";
@@ -7182,7 +7183,7 @@ if ($ADD==11111111)
 		##### END ID override optional section #####
 
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_filters.png\" alt=\"Filters\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW FILTER")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=21111111>\n";
@@ -7221,7 +7222,7 @@ if ($ADD==111111111)
 	if ($LOGmodify_call_times==1)
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_calltimes.png\" alt=\"Call Times\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW CALL TIME")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=211111111>\n";
@@ -7254,7 +7255,7 @@ if ($ADD==1111111111)
 	if ($LOGmodify_call_times==1)
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_calltimes.png\" alt=\"State Call Times\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW STATE CALL TIME")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=2111111111>\n";
@@ -7288,7 +7289,7 @@ if ($ADD==1211111111)
 	if ($LOGmodify_call_times==1)
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_calltimes.png\" alt=\"Holidays\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW STATE CALL TIME")."<form action=$PHP_SELF method=POST name=vicidial_report id=vicidial_report>\n";
 		echo "<input type=hidden name=ADD value=2211111111>\n";
@@ -7334,7 +7335,7 @@ if ($ADD==131111111)
 	if ( ($LOGmodify_call_times==1) or ($LOGmodify_shifts==1) )
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_shifts.png\" alt=\"Shifts\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW SHIFT")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=231111111>\n";
@@ -7389,7 +7390,7 @@ if ($ADD==11111111111)
 		##### END ID override optional section #####
 
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_phones.png\" alt=\"Phones\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD A NEW PHONE")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=21111111111>\n";
@@ -7447,7 +7448,7 @@ if ($ADD==12111111111)
 	if ( ($LOGast_admin_access==1) or ($LOGmodify_phones==1) )
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_phones.png\" alt=\"Phones\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD A NEW PHONE ALIAS")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=22111111111>\n";
@@ -7481,7 +7482,7 @@ if ($ADD==13111111111)
 	if ( ($LOGast_admin_access==1) or ($LOGmodify_phones==1) )
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_phones.png\" alt=\"Phones\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD A NEW GROUP ALIAS")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=23111111111>\n";
@@ -7517,7 +7518,7 @@ if ($ADD==111111111111)
 	if ($LOGmodify_servers==1)
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_servers.png\" alt=\"Servers\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD A NEW SERVER")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=211111111111>\n";
@@ -7550,7 +7551,7 @@ if ($ADD==131111111111)
 	if ($LOGmodify_servers==1)
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_templates.png\" alt=\"Templates\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW CONF TEMPLATE")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=231111111111>\n";
@@ -7582,7 +7583,7 @@ if ($ADD==141111111111)
 	if ( ( ($LOGmodify_servers==1) or ($LOGmodify_carriers==1) ) and ($x_ra_carrier < 1) )
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_carriers.png\" alt=\"Carriers\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW CARRIER")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=241111111111>\n";
@@ -7641,7 +7642,7 @@ if ($ADD==140111111111)
 	if ( ( ($LOGmodify_servers==1) or ($LOGmodify_carriers==1) ) and ($x_ra_carrier < 1) )
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_carriers.png\" alt=\"Carriers\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD COPIED CARRIER")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=240111111111>\n";
@@ -7689,7 +7690,7 @@ if ($ADD==151111111111)
 	if ( ($LOGmodify_servers==1) or ($LOGmodify_tts==1) )
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_texttospeech.png\" alt=\"Text to Speech\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW TTS ENTRY")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=251111111111>\n";
@@ -7722,7 +7723,7 @@ if ($ADD==161111111111)
 	if ( ($LOGmodify_servers==1) or ($LOGmodify_moh==1) )
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_musiconhold.png\" alt=\"Music on Hold\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW MUSIC ON HOLD ENTRY")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=261111111111>\n";
@@ -7755,7 +7756,7 @@ if ($ADD==171111111111)
 	if ( ($LOGmodify_servers==1) or ($LOGmodify_moh==1) )
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_voicemail.png\" alt=\"Voicemail\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW VOICEMAIL BOX")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=271111111111>\n";
@@ -7790,7 +7791,7 @@ if ($ADD==181111111111)
 	if ( ($LOGmodify_servers==1) or ($LOGmodify_labels==1) )
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_screenlabels.png\" alt=\"Screen Labels\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW SCREEN LABEL")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=281111111111>\n";
@@ -7822,7 +7823,7 @@ if ($ADD==191111111111)
 	if ( ($LOGmodify_servers==1) or ($LOGmodify_contacts==1) )
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_contacts.png\" alt=\"Contacts\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW CONTACT")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=291111111111>\n";
@@ -7859,7 +7860,7 @@ if ($ADD==192111111111)
 	if ($LOGmodify_servers==1)
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_settingscontainer.png\" alt=\"Settings Container\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW SETTINGS CONTAINER")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=292111111111>\n";
@@ -7892,7 +7893,7 @@ if ($ADD==193111111111)
 	if ($LOGmodify_statuses==1)
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_statusgroups.png\" alt=\"Status Groups\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD NEW STATUSES GROUP")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=293111111111>\n";
@@ -7924,7 +7925,7 @@ if ($ADD==1111111111111)
 	if ($LOGast_admin_access==1)
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_conferences.png\" alt=\"Conferences\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD A NEW CONFERENCE")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=2111111111111>\n";
@@ -7952,7 +7953,7 @@ if ($ADD==11111111111111)
 	if ($LOGast_admin_access==1)
 		{
 		echo "<TABLE><TR><TD>\n";
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_conferences.png\" alt=\"Conferences\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD A NEW AGENT CONFERENCE")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=21111111111111>\n";
@@ -8007,7 +8008,7 @@ if ($ADD=="2")
 			}
 		##### END ID override optional section #####
 
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_users.png\" alt=\"Users\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 		$stmt="SELECT count(*) from vicidial_users where user='$user';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -8322,7 +8323,7 @@ if ($ADD=="2A")
 			}
 		##### END ID override optional section #####
 
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_users.png\" alt=\"Users\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 		$stmt="SELECT count(*) from vicidial_users where user='$user';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -8641,7 +8642,7 @@ if ($ADD==21)
 			}
 		##### END ID override optional section #####
 
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_campaigns.png\" alt=\"Campaigns\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 		$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -8739,7 +8740,7 @@ if ($ADD==20)
 			}
 		##### END ID override optional section #####
 
-		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		echo "<img src=\"images/icon_black_campaigns.png\" alt=\"Campaigns\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 		$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -23093,10 +23094,10 @@ if ($ADD==32)
 		while ($campaigns_to_print > $o) 
 			{
 			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='class="records_list_x"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
-			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=22&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
+				{$bgcolor='class="records_list_y"';}
+			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=22&campaign_id=$campaigns_id_list[$o]'\"><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=22&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
 			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 			echo "<td><font size=1> ";
 
@@ -23155,10 +23156,10 @@ if ($ADD==33)
 		while ($campaigns_to_print > $o) 
 			{
 			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='class="records_list_x"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
-			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=23&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
+				{$bgcolor='class="records_list_y"';}
+			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=23&campaign_id=$campaigns_id_list[$o]'\"><td><a href=\"$PHP_SELF?ADD=31&SUB=23&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
 			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 			echo "<td><font size=1> ";
 
@@ -23217,10 +23218,10 @@ if ($ADD==35)
 		while ($campaigns_to_print > $o) 
 			{
 			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='class="records_list_x"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
-			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=25&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
+				{$bgcolor='class="records_list_y"';}
+			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=25&campaign_id=$campaigns_id_list[$o]'\"><td><a href=\"$PHP_SELF?ADD=31&SUB=25&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
 			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 			echo "<td><font size=1> ";
 
@@ -23279,10 +23280,10 @@ if ($ADD==36)
 		while ($campaigns_to_print > $o) 
 			{
 			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='class="records_list_x"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
-			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=26&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
+				{$bgcolor='class="records_list_y"';}
+			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=26&campaign_id=$campaigns_id_list[$o]'\"><td><a href=\"$PHP_SELF?ADD=31&SUB=26&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
 			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 			echo "<td><font size=1> ";
 
@@ -23341,10 +23342,10 @@ if ($ADD==37)
 		while ($campaigns_to_print > $o) 
 			{
 			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='class="records_list_x"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
-			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=27&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
+				{$bgcolor='class="records_list_y"';}
+			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=27&campaign_id=$campaigns_id_list[$o]'\"><td><a href=\"$PHP_SELF?ADD=31&SUB=27&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
 			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 			echo "<td><font size=1> ";
 
@@ -23403,10 +23404,10 @@ if ($ADD==39)
 		while ($campaigns_to_print > $o) 
 			{
 			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='class="records_list_x"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
-			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
+				{$bgcolor='class="records_list_y"';}
+			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaigns_id_list[$o]'\"><td><a href=\"$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
 			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 			echo "<td><font size=1> ";
 
@@ -23469,10 +23470,10 @@ if ($ADD==301)
 		if ($enable_xfer_presets_list[$o] == 'ENABLED')
 			{
 			if (preg_match('/1$|3$|5$|7$|9$/i', $k))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='class="records_list_x"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
-			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=201&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
+				{$bgcolor='class="records_list_y"';}
+			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=201&campaign_id=$campaigns_id_list[$o]'\"><td><a href=\"$PHP_SELF?ADD=31&SUB=201&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
 			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 			echo "<td><font size=1> ";
 
@@ -23537,10 +23538,10 @@ if ($ADD==302)
 	while ($campaigns_to_print > $o) 
 		{
 		if (preg_match('/1$|3$|5$|7$|9$/i', $k))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=202&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=202&campaign_id=$campaigns_id_list[$o]'\"><td><a href=\"$PHP_SELF?ADD=31&SUB=202&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
 		echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 		echo "<td><font size=1> $use_custom_cid_list[$o] </td>";
 		echo "<td><font size=1> ";
@@ -27684,10 +27685,10 @@ if ($ADD==1320)
 	while ($dids_to_print > $o) 
 		{
 		if (preg_match('/1$|3$|5$|7$|9$/i', $k))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3321&did_id=$dids_id_list[$o]\">$did_pattern_list[$o]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3321&did_id=$dids_id_list[$o]'\"><td><a href=\"$PHP_SELF?ADD=3321&did_id=$dids_id_list[$o]\"><font size=1 color=black>$did_pattern_list[$o]</a></td>";
 		echo "<td><font size=1> $did_description_list[$o] </td>";
 		echo "<td><font size=1> ";
 
@@ -33307,22 +33308,30 @@ if ($ADD=="0A")
 	echo "<td><a href=\"$PHP_SELF?ADD=0A&status=$status&$LEVELlink\"><font size=1 color=white><B>"._QXZ("LEVEL")."</B></a></td>";
 	echo "<td><a href=\"$PHP_SELF?ADD=0A&status=$status&$GROUPlink\"><font size=1 color=white><B>"._QXZ("GROUP")."</B></a></td>";
 	echo "<td><font size=1 color=white><B>"._QXZ("ACTIVE")."</B></td>";
-	echo "<td align=center><font size=1 color=white><B>"._QXZ("LINKS")."</B></td></tr>\n";
+	echo "<td align=center><font size=1 color=white><B>"._QXZ("MODIFY")."</B></td>";
+	echo "<td align=center><font size=1 color=white><B>"._QXZ("STATS")."</B></td>";
+	echo "<td align=center><font size=1 color=white><B>"._QXZ("STATUS")."</B></td>";
+	echo "<td align=center><font size=1 color=white><B>"._QXZ("TIME")."</B></td>";
+	echo "</tr>\n";
 
 	$o=0;
 	while ($people_to_print > $o) 
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><a href=\"$PHP_SELF?ADD=3&user=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
-		echo "<td><font size=1>$row[1]</td>";
-		echo "<td><font size=1>$row[2]</td>";
-		echo "<td><font size=1>$row[3]</td>";
-		echo "<td><font size=1>$row[4]</td>";
-		echo "<td><font size=1><CENTER><a href=\"$PHP_SELF?ADD=3&user=$row[0]\">"._QXZ("MODIFY")."</a> | <a href=\"./user_stats.php?user=$row[0]\">"._QXZ("STATS")."</a> | <a href=\"./user_status.php?user=$row[0]\">"._QXZ("STATUS")."</a> | <a href=\"./AST_agent_time_sheet.php?agent=$row[0]\">"._QXZ("TIME")."</a></CENTER></td></tr>\n";
+			{$bgcolor='class="records_list_y"';} 
+		echo "<tr $bgcolor><td onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"><a href=\"$PHP_SELF?ADD=3&user=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<td onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"><font size=1>$row[1]</td>";
+		echo "<td onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"><font size=1>$row[2]</td>";
+		echo "<td onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"><font size=1>$row[3]</td>";
+		echo "<td onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"><font size=1>$row[4]</td>";
+		echo "<td align=center onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"><font size=1><a href=\"$PHP_SELF?ADD=3&user=$row[0]\">"._QXZ("MODIFY")."</a></td>";
+		echo "<td align=center onclick=\"window.document.location='./user_stats.php?user=$row[0]'\"><font size=1><a href=\"./user_stats.php?user=$row[0]\">"._QXZ("STATS")."</a></td>";
+		echo "<td align=center onclick=\"window.document.location='./user_status.php?user=$row[0]'\"><font size=1><a href=\"./user_status.php?user=$row[0]\">"._QXZ("STATUS")."</a></td>";
+		echo "<td align=center onclick=\"window.document.location='./AST_agent_time_sheet.php?agent=$row[0]'\"><font size=1><a href=\"./AST_agent_time_sheet.php?agent=$row[0]\">"._QXZ("TIME")."</a></td>\n";
+		echo "</tr>\n";
 		$o++;
 		}
 
@@ -33384,10 +33393,10 @@ if ($ADD==10)
 		else
 			{
 			if (preg_match('/1$|3$|5$|7$|9$/i', $p))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='class="records_list_x"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
-			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=34&campaign_id=$row[0]\">$row[0]</a> &nbsp; </td>";
+				{$bgcolor='class="records_list_y"';}
+			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=34&campaign_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=34&campaign_id=$row[0]\"><font size=1 color=black>$row[0]</a> &nbsp; </td>";
 			echo "<td><font size=1>$row[1] &nbsp; </td>";
 			echo "<td><font size=1>$row[2] &nbsp; </td>";
 			echo "<td><font size=1>$row[7] &nbsp; </td>";
@@ -33465,10 +33474,10 @@ if ($ADD==100)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=311&list_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=311&list_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=311&list_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[7]</td>";
@@ -33496,10 +33505,10 @@ if ($ADD==100)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=311&list_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor><td><a href=\"$PHP_SELF?ADD=311&list_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[7]</td>";
@@ -33581,10 +33590,10 @@ if ($ADD==1000)
 			{$allowed_campaigns_warning='<font color=red><b> &nbsp; NA</b></font>';}
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';}
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3111&group_id=$group_id_ary[$o]\">$group_id_ary[$o]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3111&group_id=$group_id_ary[$o]'\"><td><a href=\"$PHP_SELF?ADD=3111&group_id=$group_id_ary[$o]\"><font size=1 color=black>$group_id_ary[$o]</a></td>";
 		echo "<td><font size=1> $group_name_ary[$o]</td>";
 		echo "<td><font size=1> $group_priority_ary[$o]</td>";
 		echo "<td><font size=1> $group_active_ary[$o] $allowed_campaigns_warning</td>";
@@ -33646,10 +33655,10 @@ if ( ($ADD==1800) and ($SSallow_emails>0) )
 			{$allowed_campaigns_warning='<font color=red><b> &nbsp; NA</b></font>';}
 		
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3811&group_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3811&group_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=3811&group_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3] $allowed_campaigns_warning</td>";
@@ -33705,10 +33714,10 @@ if ( ($ADD==1900) and ($SSallow_chats>0) )
 			{$allowed_campaigns_warning='<font color=red><b> &nbsp; NA</b></font>';}
 		
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3911&group_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3911&group_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=3911&group_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3] $allowed_campaigns_warning</td>";
@@ -33730,9 +33739,6 @@ if ($ADD==1300)
 	{
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-
-
-
 
 	$DIDlink='stage=DIDDOWN';
 	$DESClink='stage=DESCDOWN';
@@ -33781,9 +33787,9 @@ if ($ADD==1300)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
+			{$bgcolor='class="records_list_y"';}
 
 		# truncate description and carrier if they are more than 60 characters
 		if (strlen($row[2])>60)
@@ -33797,7 +33803,7 @@ if ($ADD==1300)
 			$row[3] .= '...';
 			}
 
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3311&did_id=$row[0]\">$row[0]</a></td>";
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3311&did_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=3311&did_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3]</td>";
@@ -33858,10 +33864,10 @@ if ($ADD==1500)
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3511&menu_id=$menu_id[$o]\">$menu_id[$o]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3511&menu_id=$menu_id[$o]'\"><td><a href=\"$PHP_SELF?ADD=3511&menu_id=$menu_id[$o]\"><font size=1 color=black>$menu_id[$o]</a></td>";
 		echo "<td><font size=1> $menu_name[$o]</td>";
 		echo "<td><font size=1> $menu_group[$o]</td>";
 		echo "<td><font size=1> $menu_prompt[$o]</td>";
@@ -33904,10 +33910,10 @@ if ($ADD==1700)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[4]</td>";
@@ -33925,10 +33931,10 @@ if ($ADD==1700)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[4]</td>";
@@ -33991,10 +33997,10 @@ if ($ADD==10000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31111&remote_agent_id=$row[0]\">$row[1]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31111&remote_agent_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=31111&remote_agent_id=$row[0]\"><font size=1 color=black>$row[1]</a></td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3]</td>";
 		echo "<td><font size=1> $row[4]</td>";
@@ -34038,10 +34044,10 @@ if ($ADD==12000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=32111&extension_id=$row[0]\">$row[1]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=32111&extension_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=32111&extension_id=$row[0]\"><font size=1 color=black>$row[1]</a></td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3]</td>";
 		echo "<td><font size=1> $row[4]</td>";
@@ -34081,10 +34087,10 @@ if ($ADD==100000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=311111&user_group=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=311111&user_group=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=311111&user_group=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=311111&user_group=$row[0]\">"._QXZ("MODIFY")."</a></td></tr>\n";
@@ -34122,10 +34128,10 @@ if ($ADD==1000000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3111111&script_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3111111&script_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=3111111&script_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3]</td>";
@@ -34163,10 +34169,10 @@ if ($ADD==10000000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31111111&lead_filter_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31111111&lead_filter_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=31111111&lead_filter_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=31111111&lead_filter_id=$row[0]\">"._QXZ("MODIFY")."</a></td></tr>\n";
@@ -34207,10 +34213,10 @@ if ($ADD==100000000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=311111111&call_time_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=311111111&call_time_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=311111111&call_time_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2] </td>";
 		echo "<td><font size=1> $row[3] </td>";
@@ -34251,10 +34257,10 @@ if ($ADD==1000000000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3111111111&call_time_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3111111111&call_time_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=3111111111&call_time_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3] </td>";
@@ -34297,10 +34303,10 @@ if ($ADD==1200000000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3211111111&holiday_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3211111111&holiday_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=3211111111&holiday_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3] </td>";
@@ -34343,10 +34349,10 @@ if ($ADD==130000000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=331111111&shift_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=331111111&shift_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=331111111&shift_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2] </td>";
 		echo "<td><font size=1> $row[3] </td>";
@@ -34409,10 +34415,10 @@ if ($ADD==10000000000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><a href=\"$PHP_SELF?ADD=31111111111&extension=$row[0]&server_ip=$row[2]\"><font size=1 color=black>$row[0]</font></a></td>
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31111111111&extension=$row[0]&server_ip=$row[2]'\"><td><a href=\"$PHP_SELF?ADD=31111111111&extension=$row[0]&server_ip=$row[2]\"><font size=1 color=black>$row[0]</font></a></td>
 		<td><font size=1>$row[1]</td>
 		<td><font size=1>$row[2]</td>
 		<td><font size=1>$row[3]</td>
@@ -34456,10 +34462,10 @@ if ($ADD==12000000000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><a href=\"$PHP_SELF?ADD=32111111111&alias_id=$row[0]\"><font size=1 color=black>$row[0]</font></a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=32111111111&alias_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=32111111111&alias_id=$row[0]\"><font size=1 color=black>$row[0]</font></a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[3]</td>";
@@ -34499,10 +34505,10 @@ if ($ADD==13000000000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><a href=\"$PHP_SELF?ADD=33111111111&group_alias_id=$row[0]\"><font size=1 color=black>$row[0]</font></a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=33111111111&group_alias_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=33111111111&group_alias_id=$row[0]\"><font size=1 color=black>$row[0]</font></a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[3]</td>";
@@ -34546,10 +34552,10 @@ if ($ADD==100000000000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=311111111111&server_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=311111111111&server_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=311111111111&server_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[3]</td>";
@@ -34590,10 +34596,10 @@ if ($ADD==130000000000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=331111111111&template_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=331111111111&template_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=331111111111&template_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=331111111111&template_id=$row[0]\">"._QXZ("MODIFY")."</a></td></tr>\n";
@@ -34639,10 +34645,10 @@ if ($ADD==140000000000)
 			}
 		if ($row[2] == '0.0.0.0') {$row[2]='ALL SERVERS';}
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=341111111111&carrier_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=341111111111&carrier_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=341111111111&carrier_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[3]</td>";
@@ -34689,10 +34695,10 @@ if ($ADD==150000000000)
 		if(strlen($row[3]) > 47) {$row[3] = "$row[3]...";}
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=351111111111&tts_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=351111111111&tts_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=351111111111&tts_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[4]</td>";
@@ -34737,10 +34743,10 @@ if ($ADD==160000000000)
 		if(strlen($row[3]) > 47) {$row[3] = "$row[3]...";}
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=361111111111&moh_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=361111111111&moh_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=361111111111&moh_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[3]</td>";
@@ -34783,10 +34789,10 @@ if ($ADD==170000000000)
 		$row=mysqli_fetch_row($rslt);
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=371111111111&voicemail_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=371111111111&voicemail_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=371111111111&voicemail_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[3]</td>";
@@ -34828,10 +34834,10 @@ if ($ADD==180000000000)
 		$row=mysqli_fetch_row($rslt);
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=381111111111&label_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=381111111111&label_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=381111111111&label_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[3]</td>";
@@ -34888,10 +34894,10 @@ if ($ADD==190000000000)
 		while (strlen($row[8])>20) {$row[8] = preg_replace("/.$/","",$row[8]);}
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=391111111111&contact_id=$row[0]\">$row[1] $row[2]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=391111111111&contact_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=391111111111&contact_id=$row[0]\"><font size=1 color=black>$row[1] $row[2]</a></td>";
 		echo "<td><font size=1>$row[3]</td>";
 		echo "<td><font size=1>$row[4]</td>";
 		echo "<td><font size=1>$row[5]</td>";
@@ -34934,10 +34940,10 @@ if ($ADD==192000000000)
 		$row=mysqli_fetch_row($rslt);
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=392111111111&container_id=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=392111111111&container_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=392111111111&container_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>".strlen($row[4])."</td>";
@@ -34991,10 +34997,10 @@ if ($ADD==193000000000)
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=393111111111&status_group_id=$status_group_id[$o]\">$status_group_id[$o]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=393111111111&status_group_id=$status_group_id[$o]'\"><td><a href=\"$PHP_SELF?ADD=393111111111&status_group_id=$status_group_id[$o]\"><font size=1 color=black>$status_group_id[$o]</a></td>";
 		echo "<td><font size=1> $status_group_notes[$o]</td>";
 		echo "<td><font size=1> $admin_group[$o]</td>";
 		echo "<td><font size=1> $row[0]</td>";
@@ -35031,10 +35037,10 @@ if ($ADD==1000000000000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3111111111111&conf_exten=$row[0]&server_ip=$row[1]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3111111111111&conf_exten=$row[0]&server_ip=$row[1]'\"><td><a href=\"$PHP_SELF?ADD=3111111111111&conf_exten=$row[0]&server_ip=$row[1]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=3111111111111&conf_exten=$row[0]&server_ip=$row[1]\">"._QXZ("MODIFY")."</a></td></tr>\n";
@@ -35070,10 +35076,10 @@ if ($ADD==10000000000000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31111111111111&conf_exten=$row[0]&server_ip=$row[1]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31111111111111&conf_exten=$row[0]&server_ip=$row[1]'\"><td><a href=\"$PHP_SELF?ADD=31111111111111&conf_exten=$row[0]&server_ip=$row[1]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=31111111111111&conf_exten=$row[0]&server_ip=$row[1]\">"._QXZ("MODIFY")."</a></td></tr>\n";
@@ -35111,13 +35117,13 @@ if (($ADD==100000000000000) && ($qc_auth=='1'))
         $row=mysqli_fetch_row($rslt);
 		if (preg_match("/1$|3$|5$|7$|9$/i", $o))
 			{
-            $bgcolor='bgcolor="#B9CBFD"';
+            $bgcolor='class="records_list_x"';
 			}
         else 
 			{
-            $bgcolor='bgcolor="#9BB9FB"';
+            $bgcolor='class="records_list_y"';
 			}
-        echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=881&campaign_id=$row[0]\">$row[0]</a></td>";
+        echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=881&campaign_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=881&campaign_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
         echo "<td><font size=1> $row[1]</td>";
         echo "<td><font size=1> $row[2]</td>";
         echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=31&campaign_id=$row[0]\">"._QXZ("MODIFY")."</a></td></tr>\n";
@@ -35169,11 +35175,11 @@ if (($ADD==881) && ($qc_auth=='1'))
             $row=mysqli_fetch_row($rslt);
 			if (preg_match("/1$|3$|5$|7$|9$/i", $o))
 				{
-                $bgcolor='bgcolor="#B9CBFD"';
+                $bgcolor='class="records_list_x"';
 			    }
             else
 				{
-                $bgcolor='bgcolor="#9BB9FB"';
+                $bgcolor='class="records_list_y"';
 				}
             echo "<tr $bgcolor><td><font size=1>&nbsp;</td>";
             echo "<td><font size=1> $row[0]</td>";
@@ -35255,10 +35261,10 @@ if ($ADD==700000000000000)
 		if (preg_match('/GROUPALIAS/i', $row[4])) {$record_link = "$PHP_SELF?ADD=33111111111&group_alias_id=$row[6]";}
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=730000000000000&stage=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=730000000000000&stage=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=730000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=710000000000000&stage=$row[2]\">$row[2]</a></td>";
 		echo "<td><font size=1> $row[3]</td>";
@@ -35342,10 +35348,10 @@ if ($ADD==710000000000000)
 		if (preg_match('/GROUPALIAS/i', $row[4])) {$record_link = "$PHP_SELF?ADD=33111111111&group_alias_id=$row[6]";}
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=730000000000000&stage=$row[0]\">$row[0]</a></td>";
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=730000000000000&stage=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=730000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=710000000000000&stage=$row[2]\">$row[2]</a></td>";
 		echo "<td><font size=1> $row[3]</td>";
@@ -35432,10 +35438,10 @@ if ($ADD==720000000000000)
 			if (preg_match('/EMAIL/i',$row[4])) {$record_link = "./admin_email_accounts.php?eact=UPDATE&email_account_id=$row[6]";}
 
 			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='class="records_list_x"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
-			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=730000000000000&stage=$row[0]\">$row[0]</a></td>";
+				{$bgcolor='class="records_list_y"';}
+			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=730000000000000&stage=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=730000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 			echo "<td><font size=1> $row[1]</td>";
 			echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=710000000000000&stage=$row[2]\">$row[2]</a></td>";
 			echo "<td><font size=1> $row[3]</td>";
@@ -35573,16 +35579,16 @@ if ($ADD==800000000000000)
 		$row=mysqli_fetch_row($rslt);
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
+			{$bgcolor='class="records_list_y"';}
 
 		$run_color='color=blue';
 		if ($row[9] > 5) {$run_color='color=black';} 
 		if ($row[9] > 10) {$run_color='color=purple';} 
 		if ($row[9] > 30) {$run_color='color=red';} 
 
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=830000000000000&stage=$row[0]\">$row[0]</a></td>";
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=830000000000000&stage=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=830000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=810000000000000&stage=$row[2]\">$row[2]</a></td>";
 		echo "<td><font size=1> $row[3]</td>";
@@ -35639,16 +35645,16 @@ if ($ADD==810000000000000)
 		$row=mysqli_fetch_row($rslt);
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='class="records_list_x"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
+			{$bgcolor='class="records_list_y"';}
 
 		$run_color='color=blue';
 		if ($row[9] > 5) {$run_color='color=black';} 
 		if ($row[9] > 10) {$run_color='color=purple';} 
 		if ($row[9] > 30) {$run_color='color=red';} 
 
-		echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=830000000000000&stage=$row[0]\">$row[0]</a></td>";
+		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=830000000000000&stage=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=830000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=810000000000000&stage=$row[2]\">$row[2]</a></td>";
 		echo "<td><font size=1> $row[3]</td>";
