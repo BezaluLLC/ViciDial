@@ -26,6 +26,9 @@
 # FLAG FOR NO DATE DIRECTORY ON FTP
 # --NODATEDIR
 #
+# FLAG FOR Y/M/D DATE DIRECTORY ON FTP
+# --YMDdatedir
+#
 # if pinging is not working, try the 'icmp' Ping command in the code instead
 # 
 # make sure that the following directories exist:
@@ -33,7 +36,7 @@
 # 
 # This program assumes that recordings are saved by Asterisk as .wav
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 
 # 80302-1958 - First Build
@@ -50,6 +53,7 @@
 # 111130-1751 - Added Ftp validate option
 # 130116-1536 - Added ftp port CLI flag
 # 150911-2336 - Added GPG encrypted audio file compatibility
+# 160406-2055 - Added YMDdatedir option
 #
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -62,7 +66,7 @@ if ($mon < 10) {$mon = "0$mon";}
 if ($mday < 10) {$mday = "0$mday";}
 $FTPdate = "$year-$mon-$mday";
 
-$GSM=0;   $MP3=0;   $OGG=0;   $WAV=0;   $GSW=0;   $GPG=0;   $NODATEDIR=0;
+$GSM=0;   $MP3=0;   $OGG=0;   $WAV=0;   $GSW=0;   $GPG=0;   $NODATEDIR=0;   $YMDdatedir=0;
 
 # Default variables for FTP
 $VARFTP_host = '10.0.0.4';
@@ -104,6 +108,7 @@ if (length($ARGV[0])>1)
 		print "  [--GSW] = copy GSM with RIFF headers and .wav extension files\n";
 		print "  [--GPG] = copy GPG encrypted files\n";
 		print "  [--nodatedir] = do not put into dated directories\n";
+		print "  [--YMDdatedir] = put into Year/Month/Day dated directories\n";
 		print "  [--run-check] = concurrency check, die if another instance is running\n";
 		print "  [--max-files=x] = maximum number of files to process, defaults to 100000\n";
 		print "  [--ftp-server=XXX] = FTP server\n";
@@ -137,6 +142,11 @@ if (length($ARGV[0])>1)
 			{
 			$NODATEDIR=1;
 			if ($DB) {print "\n----- NO DATE DIRECTORIES -----\n\n";}
+			}
+		if ($args =~ /--YMDdatedir/i)
+			{
+			$YMDdatedir=1;
+			if ($DB) {print "\n----- Y/M/D DATED DIRECTORIES -----\n\n";}
 			}
 		if ($args =~ /--run-check/i)
 			{
@@ -417,6 +427,11 @@ foreach(@FILES)
 				$recording_id =	"$aryA[0]";
 				$start_date =	"$aryA[1]";
 				$start_date =~ s/ .*//gi;
+
+				@filedate = split(/-/,$start_date);
+				$year = $filedate[0];
+				$mon = $filedate[1];
+				$mday = $filedate[2];
 				}
 			$sthA->finish();
 
@@ -452,7 +467,14 @@ foreach(@FILES)
 					if($DBX){print STDERR "FTP PERSISTENT, skipping login\n";}
 					if ($NODATEDIR < 1)
 						{
-						$ftp->cwd("../");
+						if ($YMDdatedir > 0) 
+							{
+							$ftp->cwd("../../../");
+							}
+						else
+							{
+							$ftp->cwd("../");
+							}
 						}
 					}
 				else
@@ -463,9 +485,22 @@ foreach(@FILES)
 					}
 				if ($NODATEDIR < 1)
 					{
-					$ftp->mkdir("$start_date");
-					$ftp->cwd("$start_date");
-					$start_date_PATH = "$start_date/";
+					if ($YMDdatedir > 0) 
+						{
+						$ftp->mkdir("$year");
+						$ftp->cwd("$year");
+						$ftp->mkdir("$mon");
+						$ftp->cwd("$mon");
+						$ftp->mkdir("$mday");
+						$ftp->cwd("$mday");
+						$start_date_PATH = "$year/$mon/$mday/";
+						}
+					else
+						{
+						$ftp->mkdir("$start_date");
+						$ftp->cwd("$start_date");
+						$start_date_PATH = "$start_date/";
+						}
 					}
 				$ftp->binary();
 				$ftp->put("$dir2/$ALLfile", "$ALLfile");
