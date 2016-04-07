@@ -84,6 +84,7 @@
 # 160305-2115 - Added Alt IVR(call menu) DTMF logging
 # 160306-1201 - Added new webphone options and server options
 # 160324-1940 - Added callback_useronly_move_minutes
+# 160407-1931 - Updated Phones Email entry
 #
 
 
@@ -3974,7 +3975,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="phones-email">
 <BR>
-<B><?php echo _QXZ("Phones Email"); ?> -</B><?php echo _QXZ("The email address associated with this phone entry. This is used for voicemail settings."); ?>
+<B><?php echo _QXZ("Phones Email"); ?> -</B><?php echo _QXZ("The email address associated with this phone entry. This is used for voicemail settings. Upon placing an email in this field, you are activating the process to drop voice mails to the email address entered."); ?>
 
 <BR>
 <A NAME="phones-delete_vm_after_email">
