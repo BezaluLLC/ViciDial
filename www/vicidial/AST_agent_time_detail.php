@@ -48,6 +48,7 @@
 # 160121-2037 - Added report title header, default report format, cleaned up formatting
 # 160301-2051 - Expanded full name to 25 characters on text display
 # 160330-0649 - Fixed issue with names and non-latin setting
+# 160411-1958 - Fixed issue with download field order
 #
 
 $startMS = microtime();
@@ -798,7 +799,7 @@ else
 		}
 	else
 		{
-		$file_output .= _QXZ("USER").","._QXZ("ID").","._QXZ("CALLS").","._QXZ("TIME CLOCK").","._QXZ("LOGIN TIME").","._QXZ("WAIT").","._QXZ("WAIT %").","._QXZ("TALK").","._QXZ("TALK TIME %").","._QXZ("DISPO").","._QXZ("DISPOTIME %").","._QXZ("PAUSE").","._QXZ("PAUSETIME %").","._QXZ("DEAD").","._QXZ("DEAD TIME %").","._QXZ("CUSTOMER")."$park_HEADER_CSV$sub_statusesFILE\n";
+		$file_output .= _QXZ("USER").","._QXZ("ID").","._QXZ("CALLS").","._QXZ("TIME CLOCK").","._QXZ("LOGIN TIME")."$park_HEADER_CSV,"._QXZ("WAIT").","._QXZ("WAIT %").","._QXZ("TALK").","._QXZ("TALK TIME %").","._QXZ("DISPO").","._QXZ("DISPOTIME %").","._QXZ("PAUSE").","._QXZ("PAUSETIME %").","._QXZ("DEAD").","._QXZ("DEAD TIME %").","._QXZ("CUSTOMER")."$sub_statusesFILE\n";
 		}
 	##### END print the output to screen or put into file output variable
 
@@ -1031,13 +1032,13 @@ else
 
 			$total_hold_time=sec_convert($total_hold_time,$TIME_agenttimedetail);
 			$avg_hold_time=sec_convert($avg_hold_time,$TIME_agenttimedetail);
+			$park_AGENT_INFO_CSV="$user_holds,$total_hold_time,$avg_hold_time,$user_hpc,";
 
 			$user_holds=	sprintf("%8s", $user_holds); 
 			$total_hold_time=	sprintf("%10s", $total_hold_time); 
 			$avg_hold_time=	sprintf("%10s", $avg_hold_time); 
 			$user_hpc=	sprintf("%10s", $user_hpc); 
 			$park_AGENT_INFO=" $user_holds | $total_hold_time | $avg_hold_time | $user_hpc |";
-			$park_AGENT_INFO_CSV="$user_holds,$total_hold_time,$avg_hold_time,$user_hpc,";
 			}
 
 		if (trim($user_holds)>$max_user_holds) {$max_user_holds=trim($user_holds);}
@@ -1408,7 +1409,7 @@ else
 		}
 	else
 		{
-		$file_output .= _QXZ("TOTALS").",$TOT_AGENTS,$TOTcalls,$TOTtimeTC,$TOTALtime,$park_TOTALS_CSV$TOTwait,$TOTwaitpct %,$TOTtalk,$TOTtalkpct %,$TOTdispo,$TOTpause,$TOTdead,$TOTcustomer$SUMstatusesFILE\n";
+		$file_output .= _QXZ("TOTALS").",$TOT_AGENTS,$TOTcalls,$TOTtimeTC,$TOTALtime,$park_TOTALS_CSV$TOTwait,$TOTwaitpct %,$TOTtalk,$TOTtalkpct %,$TOTdispo,$TOTdispopct %,$TOTpause,$TOTpausepct %,$TOTdead,$TOTdeadpct  %,$TOTcustomer$SUMstatusesFILE\n";
 		}
 	}
 
