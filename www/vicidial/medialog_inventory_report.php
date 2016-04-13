@@ -8,6 +8,7 @@
 #
 # CHANGES
 # 160411-1917 - First build based upon called_counts_multilist_report.php
+# 160412-2022 - Callback bug fixed, modified Total count to use modify_date instead of entry_date
 #
 
 $startMS = microtime();
@@ -686,7 +687,8 @@ if (count($list_ids) > 0 && count($group) > 0)
 
 	# SNAPSHOT FOR TOP AND BOTTOM VALUES?
 	# $stmt="select status, called_count, count(*) from vicidial_list where entry_date>='$query_date 00:00:00' and entry_date<='$end_date 23:59:59' $list_id_SQLand group by status, called_count order by status, called_count";
-	$stmt="select count(*) from vicidial_list where entry_date>='$query_date 00:00:00' and entry_date<='$end_date 23:59:59' $list_id_SQLand";
+	$stmt="select count(*) from vicidial_list where modify_date>='$query_date 00:00:00' and modify_date<='$end_date 23:59:59' $list_id_SQLand";
+	if ($DB) {echo $stmt."<BR>\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	while ($row=mysqli_fetch_row($rslt)) {
 		$total=$row[0];
@@ -700,7 +702,7 @@ if (count($list_ids) > 0 && count($group) > 0)
 
 	$stmt="select lead_id, called_count, status, max(call_date) from ($call_count_stmt) as dt group by lead_id, called_count, status";
 
-#	echo $stmt."<BR>\n";
+	if ($DB) {echo $stmt."<BR>\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 
 #	print_r($afc_statuses);
@@ -784,11 +786,12 @@ if (count($list_ids) > 0 && count($group) > 0)
 
 
 	$callbk_stmt="select recipient, called_count, if(callback_time<'".date("Y-m-d")." 00:00:00', 'CALLED', 'NOT CALLED') from vicidial_callbacks, vicidial_list where vicidial_list.lead_id=vicidial_callbacks.lead_id $callbacks_group_SQLand $callback_listid_SQLand";
+	if ($DB) {echo "<BR>$callbk_stmt";}
 	$callbk_rslt=mysql_to_mysqli($callbk_stmt, $link);
 	while ($callbk_row=mysqli_fetch_row($callbk_rslt)) {
-		$recipient=$row[0];
-		$called_count=$row[1];
-		$callbk_status=$row[2];
+		$recipient=$callbk_row[0];
+		$called_count=$callbk_row[1];
+		$callbk_status=$callbk_row[2];
 
 		if ($called_count>=1 && $called_count<=5) {
 			$ary_index=1;
@@ -802,15 +805,15 @@ if (count($list_ids) > 0 && count($group) > 0)
 
 		if ($callbk_status=="CALLED") {
 			if($recipient=="ANYONE") {
-				$anyone_counts[0]+=$count;
-				$anyone_counts[$ary_index]+=$count;
+				$anyone_counts[0]++;
+				$anyone_counts[$ary_index]++;
 			} else {
-				$useronly_counts[0]+=$count;
-				$useronly_counts[$ary_index]+=$count;
+				$useronly_counts[0]++;
+				$useronly_counts[$ary_index]++;
 			}
 		} else {
-			$uncalled_counts[0]+=$count;
-			$uncalled_counts[$ary_index]+=$count;
+			$uncalled_counts[0]++;
+			$uncalled_counts[$ary_index]++;
 		}
 	}
 	
