@@ -100,10 +100,11 @@
 # 160327-1259 - Added report_display_type option and several design changes
 # 160331-1947 - Fix for non-pausecode display in HTML format
 # 160406-1858 - Added WALL options for report_display_type
+# 160413-2004 - Added WALL_4 option
 #
 
-$version = '2.12-88';
-$build = '160406-1858';
+$version = '2.12-89';
+$build = '160413-2004';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -804,6 +805,9 @@ $select_list .= ">"._QXZ("WALL_2")."</option>";
 $select_list .= "<option value='WALL_3'";
 	if ($report_display_type=='WALL_3') {$select_list .= " selected";} 
 $select_list .= ">"._QXZ("WALL_3")."</option>";
+$select_list .= "<option value='WALL_4'";
+	if ($report_display_type=='WALL_4') {$select_list .= " selected";} 
+$select_list .= ">"._QXZ("WALL_4")."</option>";
 $select_list .= "</SELECT></TD></TR>";
 
 $select_list .= "</TABLE><BR>";
@@ -1670,7 +1674,7 @@ if (preg_match('/O/',$with_inbound))
 	$AVG_ANSWERagent_non_pause_sec = round($AVG_ANSWERagent_non_pause_sec, 2);
 	$AVG_ANSWERagent_non_pause_sec = sprintf("%01.2f", $AVG_ANSWERagent_non_pause_sec);
 
-	if ( ($report_display_type!='WALL_1') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') )
+	if ( ($report_display_type!='WALL_1') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') and ($report_display_type!='WALL_4') )
 		{
 		echo "<BR><table cellpadding=0 cellspacing=0><TR>";
 		echo "<TD ALIGN=RIGHT><font class='top_settings_key'>"._QXZ("CALLS TODAY").":</font></TD><TD ALIGN=LEFT><font class='top_settings_val'>&nbsp; $callsTODAY&nbsp; &nbsp; </TD>";
@@ -1840,7 +1844,7 @@ else
 	$agentsONEMIN = sprintf("%01.2f", $agentsONEMIN);
 	$diffONEMIN = sprintf("%01.2f", $diffONEMIN);
 
-	if ( ($report_display_type!='WALL_1') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') )
+	if ( ($report_display_type!='WALL_1') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') and ($report_display_type!='WALL_4') )
 		{
 		echo "<BR><table cellpadding=0 cellspacing=0><TR>";
 		echo "<TD ALIGN=RIGHT><font class=\"top_settings_key\">"._QXZ("DIAL LEVEL").":</font></TD><TD ALIGN=LEFT><font class=\"top_settings_val\">&nbsp; $DIALlev&nbsp; &nbsp; </TD>";
@@ -1940,7 +1944,7 @@ else
 		{echo "<BR>\n";}
 	}
 
-if ( ($report_display_type!='WALL_1') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') )
+if ( ($report_display_type!='WALL_1') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') and ($report_display_type!='WALL_4') )
 	{
 	echo "<TR>";
 	echo "<TD ALIGN=LEFT COLSPAN=8>";
@@ -2213,7 +2217,7 @@ if ($parked_to_print > 0)
 	if ($out_live > 14) {$F='<FONT class="r4">'; $FG='</FONT>';}
 
 	$D_active_calls=1;
-	if ( ($report_display_type!='HTML') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') )
+	if ( ($report_display_type!='HTML') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') and ($report_display_type!='WALL_4') )
 		{
 		if ($report_display_type=='WALL_1')
 			{
@@ -2242,7 +2246,7 @@ if ($parked_to_print > 0)
 else
 	{
 	$D_active_calls=0;
-	if ( ($report_display_type!='HTML') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') )
+	if ( ($report_display_type!='HTML') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') and ($report_display_type!='WALL_4') )
 		{
 		echo _QXZ(" NO LIVE CALLS WAITING")." \n";
 		}
@@ -2284,7 +2288,7 @@ if ($allow_chats)
 		if ($chats_waiting > 9) {$F='<FONT class="r3">'; $FG='</FONT>';}
 		if ($chats_waiting > 14) {$F='<FONT class="r4">'; $FG='</FONT>';}
 		$D_active_chats=1;
-		if ( ($report_display_type!='HTML') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') )
+		if ( ($report_display_type!='HTML') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') and ($report_display_type!='WALL_4') )
 			{
 			echo " &nbsp; &nbsp; &nbsp; $NFB$F &nbsp;$chats_waiting $FG$NFE "._QXZ("chats waiting for agents")." &nbsp; &nbsp; &nbsp; \n";
 			}
@@ -2292,7 +2296,7 @@ if ($allow_chats)
 	else
 		{
 		$D_active_chats=0;
-		if ( ($report_display_type!='HTML') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') )
+		if ( ($report_display_type!='HTML') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') and ($report_display_type!='WALL_4') )
 			{
 			echo _QXZ(" NO LIVE CHATS WAITING ")." \n";
 			}
@@ -3399,14 +3403,14 @@ if ($talking_to_print > 0)
 	}
 else
 	{
-	if ( ($report_display_type!='HTML') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') )
+	if ( ($report_display_type!='HTML') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') and ($report_display_type!='WALL_4') )
 		{
 		echo " "._QXZ("NO AGENTS ON CALLS")." \n";
 		echo "<PRE>$Cecho";
 		}
 	}
 
-if ( ($report_display_type!='HTML') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') )
+if ( ($report_display_type!='HTML') and ($report_display_type!='WALL_2') and ($report_display_type!='WALL_3') and ($report_display_type!='WALL_4') )
 	{
 	echo "</PRE>";
 	}
@@ -3482,6 +3486,35 @@ if ($report_display_type=='WALL_3')
 	echo "<font style=\"font-size:48; color:black; font-weight: bold;\"> &nbsp; $dropsTODAY / $calls_today</font> $drpctTODAY %<br>\n";
 	}
 ##### END custom WALL_3 display option #####
+
+
+##### BEGIN custom WALL_4 display option #####
+if ($report_display_type=='WALL_4')
+	{
+	echo "<center><table border=0 cellpadding=3 cellspacing=3>\n";
+	echo "<tr>\n";
+	echo "<td><font style=\"font-size:48; color:black; font-weight: bold; background-color:green\">"._QXZ("agents waiting")."</font></td>";
+	echo "<td><font style=\"font-size:72; color:black; font-weight: bold; background-color:green\"> &nbsp; $agent_ready</font></td>\n";
+	echo "</tr>\n";
+	echo "<tr>\n";
+	echo "<td><font style=\"font-size:48; color:black; font-weight: bold; background-color:yellow\">"._QXZ("paused agents")."</font></td>";
+	echo "<td><font style=\"font-size:72; color:black; font-weight: bold; background-color:yellow\"> &nbsp; $agent_paused</font></td>\n";
+	echo "</tr>\n";
+	echo "<tr>\n";
+	echo "<td><font style=\"font-size:48; color:black; font-weight: bold; background-color:green\">"._QXZ("agents in calls")."</font></td>";
+	echo "<td><font style=\"font-size:72; color:black; font-weight: bold; background-color:green\"> &nbsp; $agent_incall</font></td>\n";
+	echo "</tr>\n";
+	echo "<tr>\n";
+	echo "<td><font style=\"font-size:48; color:black; font-weight: bold; background-color:red\">"._QXZ("calls waiting")."</font></td>";
+	echo "<td><font style=\"font-size:72; color:black; font-weight: bold; background-color:red\"> &nbsp; $out_live</font></td>\n";
+	echo "</tr>\n";
+	echo "<tr>\n";
+	echo "<td><font style=\"font-size:36; color:black; font-weight: bold;\">"._QXZ("dropped/total calls")."</font>\n";
+	echo "<font style=\"font-size:48; color:black; font-weight: bold;\"> &nbsp; $dropsTODAY / $calls_today</font> $drpctTODAY %</td>\n";
+	echo "</tr>\n";
+	echo "</table></center>\n";
+	}
+##### END custom WALL_4 display option #####
 
 
 if ($RTajax < 1)

@@ -34,12 +34,13 @@
 # 160227-1157 - Added INGROUPcolorOVERRIDE option
 # 160327-1258 - Added report_display_type option and several design changes
 # 160406-1852 - Added WALL options for report_display_type
+# 160413-2003 - Added WALL_4 option
 #
 
 $startMS = microtime();
 
-$version = '2.12-22';
-$build = '160406-1852';
+$version = '2.12-23';
+$build = '160413-2003';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -887,6 +888,9 @@ $select_list .= ">"._QXZ("WALL_2")."</option>";
 $select_list .= "<option value='WALL_3'";
 	if ($report_display_type=='WALL_3') {$select_list .= " selected";} 
 $select_list .= ">"._QXZ("WALL_3")."</option>";
+$select_list .= "<option value='WALL_4'";
+	if ($report_display_type=='WALL_4') {$select_list .= " selected";} 
+$select_list .= ">"._QXZ("WALL_4")."</option>";
 $select_list .= "</SELECT></TD></TR>";
 
 
