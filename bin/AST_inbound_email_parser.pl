@@ -62,6 +62,7 @@ use MIME::QuotedPrint;
 # 150513-2310 - Added pop3_auth_mode
 # 151030-0557 - Small change to catch more attachments properly
 # 160120-2149 - Added missing entry_date field on vicidial_list insert
+# 160414-0930 - Added missing phone_code field on vicidial_list insert
 #
 
 # default path to astguiclient configuration file:
@@ -212,6 +213,28 @@ $dbhA3 = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$V
 if($min==0) {$min=60;}
 $minutes=($hour*60)+$min;
 # $minutes=0; # Uncomment if you want to TEST ONLY, so you can test this at any time.
+
+##### Get the settings from system_settings #####
+$stmtA = "SELECT allow_emails,default_phone_code FROM system_settings;";
+#	print "$stmtA\n";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$SSallow_emails =			$aryA[0];
+	$SSdefault_phone_code =		$aryA[1];
+	}
+$sthA->finish();
+
+##### exit program if system setting for allow email is not enabled
+if ( ($SSallow_emails < 1) && ($force_check < 1) )
+	{
+	if ($DB) {print "SYSTEM SETTING for allow_email is disabled, exiting...  |$SSallow_emails|$force_check|\n";}
+	exit;
+	}
+
 
 $stmt="SELECT email_account_id,email_account_name,email_account_description,user_group,protocol,email_replyto_address,email_account_server,email_account_user,email_account_pass,pop3_auth_mode,active,email_frequency_check_mins,group_id,default_list_id,call_handle_method,agent_search_method,campaign_id,list_id,email_account_type from vicidial_email_accounts where active='Y'";
 $rslt=$dbhA->prepare($stmt);
@@ -562,7 +585,7 @@ while (@row=$rslt->fetchrow_array) {
 									my @lead_id_row=$vicidial_lead_check_rslt->fetchrow_array;
 									$lead_id=$lead_id_row[0];
 								} else {
-									my $vicidial_list_stmt="insert into vicidial_list(list_id, email, comments, status, entry_date) values('$default_list_id', '$email_from', '".substr($message,0,255)."', '$status', NOW())";
+									my $vicidial_list_stmt="insert into vicidial_list(list_id, email, comments, status, entry_date, phone_code) values('$default_list_id', '$email_from', '".substr($message,0,255)."', '$status', NOW(), '$SSdefault_phone_code')";
 									if ($DBX) {print $vicidial_list_stmt;}
 									my $vicidial_list_rslt=$dbhA->prepare($vicidial_list_stmt);
 									if ($vicidial_list_rslt->execute()) {
@@ -900,7 +923,7 @@ while (@row=$rslt->fetchrow_array) {
 					my @lead_id_row=$vicidial_lead_check_rslt->fetchrow_array;
 					$lead_id=$lead_id_row[0];
 				} else {
-					my $vicidial_list_stmt="insert into vicidial_list(list_id, email, comments, status, entry_date) values('$default_list_id', '$email_from', '".substr($message,0,255)."', '$status', NOW())";
+					my $vicidial_list_stmt="insert into vicidial_list(list_id, email, comments, status, entry_date, phone_code) values('$default_list_id', '$email_from', '".substr($message,0,255)."', '$status', NOW(), '$SSdefault_phone_code')";
 					if ($DBX) {print $vicidial_list_stmt."\n";}
 					my $vicidial_list_rslt=$dbhA->prepare($vicidial_list_stmt);
 					if ($vicidial_list_rslt->execute()) {

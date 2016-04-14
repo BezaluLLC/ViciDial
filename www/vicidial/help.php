@@ -85,6 +85,7 @@
 # 160306-1201 - Added new webphone options and server options
 # 160324-1940 - Added callback_useronly_move_minutes
 # 160407-1931 - Updated Phones Email entry
+# 160414-0916 - Added default_phone_code
 #
 
 
@@ -4965,6 +4966,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-usacan_phone_dialcode_fix">
 <BR>
 <B><?php echo _QXZ("USA-Canada Phone Number Dialcode Fix"); ?> -</B><?php echo _QXZ("This option if set to 1 will trigger a process that will run at the Timeclock End of Day and will check all phone numbers to populate the dial code, or phone code, field with a 1 if it is missing as well as remove a leading 1 from the phone number field if it is present. Default is 0 for inactive."); ?>
+
+<BR>
+<A NAME="settings-default_phone_code">
+<BR>
+<B><?php echo _QXZ("Default Phone Code"); ?> -</B><?php echo _QXZ("This setting will be used to fill in the Phone Code field on manual dial calls from the agent screen, also called Dial Code in some places. Default is 1."); ?>
 
 <BR>
 <A NAME="settings-user_territories_active">

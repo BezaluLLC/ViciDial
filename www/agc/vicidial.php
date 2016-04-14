@@ -520,10 +520,11 @@
 # 160326-0941 - Fixed issue #933, variables
 # 160326-1001 - Fixed issue #934, phone_login
 # 160331-2129 - Fixed missing start and dispo call url variables, issue #938
+# 160414-0922 - Added default_phone_code system settings option
 #
 
-$version = '2.12-489c';
-$build = '160331-2129';
+$version = '2.12-490c';
+$build = '160414-0922';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -622,7 +623,7 @@ if ($sl_ct > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -656,6 +657,7 @@ if ($qm_conf_ct > 0)
 	$active_modules =					$row[23];
 	$chat_enabled =						$row[24];
 	$chat_URL =							$row[25];
+	$default_phone_code =				$row[26];
 	}
 else
 	{
@@ -18136,7 +18138,7 @@ if ($agent_display_dialable_leads > 0)
     <?php echo _QXZ("Note: all new manual dial leads will go into list %1s",0,'',$manual_dial_list_id); ?><br /><br />
     <table><tr>
     <td align="right"><font class="body_text"> <?php echo _QXZ("Dial Code:"); ?> </font></td>
-    <td align="left"><font class="body_text"><input type="text" size="7" maxlength="10" name="MDDiaLCodE" id="MDDiaLCodE" class="cust_form" value="1" />&nbsp; <?php echo _QXZ("(This is usually a 1 in the USA-Canada)"); ?></font></td>
+    <td align="left"><font class="body_text"><input type="text" size="7" maxlength="10" name="MDDiaLCodE" id="MDDiaLCodE" class="cust_form" value="<?php echo $default_phone_code ?>" />&nbsp; <?php echo _QXZ("(This is usually a 1 in the USA-Canada)"); ?></font></td>
 	</tr><tr>
     <td align="right"><font class="body_text"> <?php echo _QXZ("Phone Number:"); ?> </font></td>
     <td align="left"><font class="body_text">

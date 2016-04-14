@@ -404,10 +404,11 @@
 # 160326-0940 - Fixed issue #933, variables
 # 160326-1002 - Fixed issue #934, phone_login
 # 160331-2130 - Fixed missing start and dispo call url variables, issue #938
+# 160414-0944 - Added default_phone_code value instead of hard-coded '1'
 #
 
-$version = '2.12-298';
-$build = '160331-2130';
+$version = '2.12-299';
+$build = '160414-0944';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=654;
@@ -855,7 +856,7 @@ $sip_hangup_cause_dictionary = array(
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,agent_debug_logging,default_language,active_modules,allow_chats FROM system_settings;";
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,agent_debug_logging,default_language,active_modules,allow_chats,default_phone_code FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -880,6 +881,7 @@ if ($qm_conf_ct > 0)
 	$SSdefault_language =					$row[14];
 	$active_modules =						$row[15];
 	$allow_chats =							$row[16];
+	$default_phone_code =					$row[17];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -1974,7 +1976,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$postal_code='';
 				$state='';
 				if (strlen($phone_code)<1)
-					{$phone_code='1';}
+					{$phone_code=$default_phone_code;}
 
 				$local_call_time='24hours';
 				##### gather local call time setting from campaign
