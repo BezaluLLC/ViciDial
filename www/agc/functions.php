@@ -34,7 +34,7 @@
 # $mysql_queries = 20
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
-function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$return_hash)
+function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$return_hash,$api_call)
 	{
 	require("dbconnect_mysqli.php");
 
@@ -201,7 +201,7 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 	#		$auth_key='ERRPHONES';
 	#		$login_problem++;
 	#		}
-		if ( ($vla_total >= $vla_set) and ($vla_on > 0) )
+		if ( ($vla_total >= $vla_set) and ($vla_on > 0) and ($api_call != '1') )
 			{
 			$auth_key='ERRAGENTS';
 			$login_problem++;

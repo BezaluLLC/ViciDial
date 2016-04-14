@@ -393,7 +393,7 @@ else
 	else
 		{
 		$auth=0;
-		$auth_message = user_authorization($user,$pass,'',0,0,0);
+		$auth_message = user_authorization($user,$pass,'',0,0,0,1);
 		if ($auth_message == 'GOOD')
 			{$auth=1;}
 
@@ -409,7 +409,7 @@ else
 			$result = _QXZ("ERROR");
 			$result_reason = _QXZ("Invalid Username/Password");
 			echo "$result: $result_reason: |$user|$pass|$auth|$auth_api|$auth_message|\n";
-			$data = "$user|$pass|$auth";
+			$data = "$user|$pass|$auth|$auth_api|$auth_message|";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 			exit;
 			}
