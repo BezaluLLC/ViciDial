@@ -67,7 +67,7 @@ $JS_onload="onload = function() {\n";
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+# if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -113,7 +113,7 @@ else
 ##### SERVER CARRIER LOGGING LOOKUP #####
 $stmt = "SELECT count(*) FROM servers where carrier_logging_active='Y' and max_vicidial_trunks > 0;";
 $rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+# if ($DB) {echo "$stmt\n";}
 $srv_conf_ct = mysqli_num_rows($rslt);
 if ($srv_conf_ct > 0)
 	{
@@ -134,7 +134,7 @@ else
 $group = preg_replace("/'|\"|\\\\|;/","",$group);
 
 $stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
-if ($DB) {echo "|$stmt|\n";}
+# if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $sl_ct = mysqli_num_rows($rslt);
 if ($sl_ct > 0)
@@ -153,13 +153,13 @@ if ($auth_message == 'GOOD')
 if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports='1';";
-	if ($DB) {echo "|$stmt|\n";}
+	# if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports='1';";
-	if ($DB) {echo "|$stmt|\n";}
+	# if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
@@ -213,7 +213,7 @@ if (strlen($LOGserver_name)<1) {$LOGserver_name='X';}
 
 $stmt="SELECT webserver_id FROM vicidial_webservers where webserver='$LOGserver_name' and hostname='$LOGhostname' LIMIT 1;";
 $rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+# if ($DB) {echo "$stmt\n";}
 $webserver_id_ct = mysqli_num_rows($rslt);
 if ($webserver_id_ct > 0)
 	{
@@ -224,14 +224,14 @@ else
 	{
 	##### insert webserver entry
 	$stmt="INSERT INTO vicidial_webservers (webserver,hostname) values('$LOGserver_name','$LOGhostname');";
-	if ($DB) {echo "$stmt\n";}
+	# if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$affected_rows = mysqli_affected_rows($link);
 	$webserver_id = mysqli_insert_id($link);
 	}
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $file_download, $report_display_type|', url='$LOGfull_url', webserver='$webserver_id';";
-if ($DB) {echo "|$stmt|\n";}
+# if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
@@ -246,13 +246,13 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	}
 
 $stmt="SELECT user_group from vicidial_users where user='$PHP_AUTH_USER';";
-if ($DB) {echo "|$stmt|\n";}
+# if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGuser_group =			$row[0];
 
 $stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
-if ($DB) {echo "|$stmt|\n";}
+# if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns = $row[0];
@@ -301,7 +301,7 @@ $regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 
 $stmt="select distinct vicidial_campaigns.campaign_id,vicidial_campaigns.campaign_name from vicidial_campaigns, vicidial_lists where vicidial_campaigns.active='Y' $LOGallowed_VCcampaignsSQL and vicidial_campaigns.campaign_id=vicidial_lists.campaign_id and vicidial_lists.active='Y' order by campaign_id;";
 $rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {echo "$stmt<BR>\n";}
 $campaigns_to_print = mysqli_num_rows($rslt);
 $i=0;
 while ($i < $campaigns_to_print)
@@ -360,7 +360,7 @@ while($i < $group_ct)
 		{
 		$stmt="select drop_inbound_group from vicidial_campaigns where campaign_id='$group[$i]' $LOGallowed_campaignsSQL and drop_inbound_group NOT LIKE \"%NONE%\" and drop_inbound_group is NOT NULL and drop_inbound_group != '';";
 		$rslt=mysql_to_mysqli($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		# if ($DB) {echo "$stmt\n";}
 		$in_groups_to_print = mysqli_num_rows($rslt);
 		if ($in_groups_to_print > 0)
 			{
@@ -416,7 +416,7 @@ if ( preg_match('/\-\-ALL\-\-/',$list_id_string) )
 	$list_id_SQL="";
 	$list_idQS="";
 	$list_stmt="select list_id from vicidial_lists where active='Y' $group_SQLand";
-	if ($DB) {echo $list_stmt."\n";}
+	if ($DB) {echo $list_stmt."<BR>\n";}
 	$list_rslt=mysql_to_mysqli($list_stmt, $link);
 	while ($list_row=mysqli_fetch_row($list_rslt)) 
 		{
@@ -638,7 +638,7 @@ if (count($list_ids) > 0 && count($group) > 0)
 	$MAIN.="------------------\n";
 	$MAIN.=" Zeitraum:  Datum von $rpt_title_row[1]  --  Datum bis $rpt_title_row[3]\n";
 	$MAIN.=" Kampagnen: ".implode(", ", $group)."\n";
-	$MAIN.=" Listen: ".implode(", ", $list_ids)."</B>\n";
+	$MAIN.=" Listen: ".implode(", ", $list_ids)."\n";
 
 	if ($group_ct>$list_id_ct) {$max_ct=$group_ct;} else {$max_ct=$list_id_ct;}
 	if ($max_ct<4) {$max_ct=4;}
@@ -663,8 +663,8 @@ if (count($list_ids) > 0 && count($group) > 0)
 	while($nixi_row=mysqli_fetch_row($nixi_rslt)) {
 		array_push($nixi_statuses, $nixi_row[0]);
 	}
-
-	$afc_statuses=array("AFC", "AFAX", "DCF", "MT2AAA");
+	
+	$afc_statuses=array("AFC", "AFAX", "DCF", "ADC");
 
 	$sale_stmt="select distinct status from vicidial_statuses where sale='Y' UNION select distinct status from vicidial_campaign_statuses where sale='Y' $group_SQLand";
 	$sale_rslt=mysql_to_mysqli($sale_stmt, $link);
@@ -672,6 +672,11 @@ if (count($list_ids) > 0 && count($group) > 0)
 	while($sale_row=mysqli_fetch_row($sale_rslt)) {
 		array_push($sale_statuses, $sale_row[0]);
 	}
+
+	$MAIN.=" Falsche Tel: ".implode(", ", $afc_statuses)."\n";
+	$MAIN.=" Nixi: ".implode(", ", $nixi_statuses)."\n";
+	$MAIN.=" No: ".implode(", ", $no_statuses)."\n";
+	$MAIN.=" Sales: ".implode(", ", $sale_statuses)."</B>\n\n";
 
 	$all_statuses=array_merge($no_statuses, $nixi_statuses, $afc_statuses, $sale_statuses);
 #	print_r($all_statuses);
@@ -687,7 +692,8 @@ if (count($list_ids) > 0 && count($group) > 0)
 
 	# SNAPSHOT FOR TOP AND BOTTOM VALUES?
 	# $stmt="select status, called_count, count(*) from vicidial_list where entry_date>='$query_date 00:00:00' and entry_date<='$end_date 23:59:59' $list_id_SQLand group by status, called_count order by status, called_count";
-	$stmt="select count(*) from vicidial_list where modify_date>='$query_date 00:00:00' and modify_date<='$end_date 23:59:59' $list_id_SQLand";
+	#$stmt="select count(*) from vicidial_list where entry_date>='$query_date 00:00:00' and entry_date<='$end_date 23:59:59' $list_id_SQLand";
+	$stmt="select count(*) from vicidial_list $list_id_SQLwhere";
 	if ($DB) {echo $stmt."<BR>\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	while ($row=mysqli_fetch_row($rslt)) {
@@ -777,7 +783,7 @@ if (count($list_ids) > 0 && count($group) > 0)
 	# CALLBACKS
 	$anyone_counts=array();
 	$useronly_counts=array();
-	$uncalled_counts=array();
+	$calledback_counts=array();
 
 	$callbacks_group_SQLand = "and vicidial_callbacks.campaign_id in ($group_SQL)";
 	$callbacks_group_SQL = "where vicidial_callbacks.campaign_id in ($group_SQL)";
@@ -785,8 +791,8 @@ if (count($list_ids) > 0 && count($group) > 0)
 	$callback_listid_SQL=" where vicidial_callbacks.list_id in ($list_id_SQL)";
 
 
-	$callbk_stmt="select recipient, called_count, if(callback_time<'".date("Y-m-d")." 00:00:00', 'CALLED', 'NOT CALLED') from vicidial_callbacks, vicidial_list where vicidial_list.lead_id=vicidial_callbacks.lead_id $callbacks_group_SQLand $callback_listid_SQLand";
-	if ($DB) {echo "<BR>$callbk_stmt";}
+	$callbk_stmt="select recipient, called_count, if(callback_time<'".date("Y-m-d H:i:s")."', 'CALLED', 'NOT CALLED') from vicidial_callbacks, vicidial_list where vicidial_list.lead_id=vicidial_callbacks.lead_id $callbacks_group_SQLand $callback_listid_SQLand";
+	if ($DB) {echo "$callbk_stmt<BR>";}
 	$callbk_rslt=mysql_to_mysqli($callbk_stmt, $link);
 	while ($callbk_row=mysqli_fetch_row($callbk_rslt)) {
 		$recipient=$callbk_row[0];
@@ -803,7 +809,7 @@ if (count($list_ids) > 0 && count($group) > 0)
 			$ary_index=4;
 		}
 
-		if ($callbk_status=="CALLED") {
+		if ($callbk_status=="NOT CALLED") {
 			if($recipient=="ANYONE") {
 				$anyone_counts[0]++;
 				$anyone_counts[$ary_index]++;
@@ -812,25 +818,25 @@ if (count($list_ids) > 0 && count($group) > 0)
 				$useronly_counts[$ary_index]++;
 			}
 		} else {
-			$uncalled_counts[0]++;
-			$uncalled_counts[$ary_index]++;
+			$calledback_counts[0]++;
+			$calledback_counts[$ary_index]++;
 		}
 	}
 	
 	for($i=0; $i<=4; $i++) {
 		$anyone_counts[$i]+=0;
 		$useronly_counts[$i]+=0;
-		$uncalled_counts[$i]+=0;
+		$calledback_counts[$i]+=0;
 	}
 
 	$CSV_text.="\"WV Team\",\"$anyone_counts[0]\",\"\",\"\",\"$anyone_counts[1]\",\"$anyone_counts[2]\",\"$anyone_counts[3]\",\"$anyone_counts[4]\"\n";
 	$CSV_text.="\"WV persönlich\",\"$useronly_counts[0]\",\"\",\"\",\"$useronly_counts[1]\",\"$useronly_counts[2]\",\"$useronly_counts[3]\",\"$useronly_counts[4]\"\n";
-	$CSV_text.="\"WV Vergangenheit \",\"$uncalled_counts[0]\",\"\",\"\",\"$uncalled_counts[1]\",\"$uncalled_counts[2]\",\"$uncalled_counts[3]\",\"$uncalled_counts[4]\"\n\n";
+	$CSV_text.="\"WV Vergangenheit \",\"$calledback_counts[0]\",\"\",\"\",\"$calledback_counts[1]\",\"$calledback_counts[2]\",\"$calledback_counts[3]\",\"$calledback_counts[4]\"\n\n";
 	$CSV_text.="\"Zu bearbeiten\",\"$workoff_total\"\n\n\n\n";
 
 	$MAIN.="|          WV Team | ".sprintf("%7s", $anyone_counts[0])." | ".sprintf("%7s", " ")." |   | ".sprintf("%7s", $anyone_counts[1])." | ".sprintf("%7s", $anyone_counts[2])." | ".sprintf("%7s", $anyone_counts[3])." | ".sprintf("%7s", $anyone_counts[4])." |\n";
 	$MAIN.="|    WV pers&ouml;nlich | ".sprintf("%7s", $useronly_counts[0])." | ".sprintf("%7s", " ")." |   | ".sprintf("%7s", $useronly_counts[1])." | ".sprintf("%7s", $useronly_counts[2])." | ".sprintf("%7s", $useronly_counts[3])." | ".sprintf("%7s", $useronly_counts[4])." |\n";
-	$MAIN.="| WV Vergangenheit | ".sprintf("%7s", $uncalled_counts[0])." | ".sprintf("%7s", " ")." |   | ".sprintf("%7s", $uncalled_counts[1])." | ".sprintf("%7s", $uncalled_counts[2])." | ".sprintf("%7s", $uncalled_counts[3])." | ".sprintf("%7s", $uncalled_counts[4])." |\n";
+	$MAIN.="| WV Vergangenheit | ".sprintf("%7s", $calledback_counts[0])." | ".sprintf("%7s", " ")." |   | ".sprintf("%7s", $calledback_counts[1])." | ".sprintf("%7s", $calledback_counts[2])." | ".sprintf("%7s", $calledback_counts[3])." | ".sprintf("%7s", $calledback_counts[4])." |\n";
 	$MAIN.=$head;
 	$MAIN.="|    Zu bearbeiten | ".sprintf("%7s", $workoff_total)." |\n";
 	$MAIN.="+------------------+---------+\n\n\n";
