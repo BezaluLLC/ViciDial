@@ -36,10 +36,11 @@
 # 151007-2001 - Fixed issue with field deletion
 # 160325-1431 - Changes for sidebar update
 # 160404-0938 - design changes
+# 160414-1243 - Fixed translation issue with COPY form
 #
 
-$admin_version = '2.12-28';
-$build = '160404-0938';
+$admin_version = '2.12-29';
+$build = '160414-1243';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -371,9 +372,9 @@ if ($action == "COPY_FIELDS_FORM")
 	echo "$lists_list";
 	echo "</select></td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Copy Option").": </td><td align=left><select size=1 name=copy_option>\n";
-	echo "<option selected>"._QXZ("APPEND")."</option>";
-	echo "<option>"._QXZ("UPDATE")."</option>";
-	echo "<option>"._QXZ("REPLACE")."</option>";
+	echo "<option value=\"APPEND\" selected>"._QXZ("APPEND")."</option>";
+	echo "<option value=\"UPDATE\">"._QXZ("UPDATE")."</option>";
+	echo "<option value=\"REPLACE\">"._QXZ("REPLACE")."</option>";
 	echo "</select> $NWB#lists_fields-copy_option$NWE</td></tr>\n";
 	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
 	echo "</TABLE></center>\n";
