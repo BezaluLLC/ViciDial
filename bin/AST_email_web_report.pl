@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_email_web_report.pl                version: 2.4
+# AST_email_web_report.pl                version: 2.12
 #
 # This script is designed to wget a web report and then email it as an attachment
 # this script should be run from a vicidial web server.
@@ -9,13 +9,14 @@
 #
 # /usr/share/astguiclient/AST_email_web_report.pl --email-list=test@gmail.com --email-sender=test@test.com
 #
-# Copyright (C) 2011  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 90225-1247 - First version
 # 111004-1057 - Added ftp options
 # 111012-2220 - Added optional begin date flag
 # 111214-0922 - Added remove images and links options as well as email subject option
+# 160415-1421 - Fixed minor bug in file to attach to email
 #
 
 $txt = '.txt';
@@ -431,7 +432,7 @@ if ( ($remove_images > 0) || ($remove_links > 0) )
 	close(output);
 	}
 else
-	{`mv /tmp/X$HTMLfile > /tmp/$HTMLfile `;}
+	{`mv /tmp/X$HTMLfile /tmp/$HTMLfile `;}
 
 ###### BEGIN EMAIL SECTION #####
 if (length($email_list) > 3)
