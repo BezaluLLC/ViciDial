@@ -237,7 +237,7 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$lead_id = preg_replace('/[^0-9]/','',$lead_id);
+$lead_id = preg_replace('/[^0-9a-zA-Z]/','',$lead_id);
 
 if ($non_latin < 1)
 	{
