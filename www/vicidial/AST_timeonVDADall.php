@@ -101,10 +101,11 @@
 # 160331-1947 - Fix for non-pausecode display in HTML format
 # 160406-1858 - Added WALL options for report_display_type
 # 160413-2004 - Added WALL_4 option
+# 160418-2141 - Fixed issue with WALL displays
 #
 
-$version = '2.12-89';
-$build = '160413-2004';
+$version = '2.12-90';
+$build = '160418-2141';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -3483,7 +3484,7 @@ if ($report_display_type=='WALL_3')
 	echo "<font style=\"font-size:48; color:black; font-weight: bold; background-color:red\">"._QXZ("calls waiting")."</font>\n";
 	echo "<font style=\"font-size:72; color:black; font-weight: bold; background-color:red\"> &nbsp; $out_live</font><br>\n";
 	echo "<font style=\"font-size:36; color:black; font-weight: bold;\">"._QXZ("dropped/total calls")."</font>\n";
-	echo "<font style=\"font-size:48; color:black; font-weight: bold;\"> &nbsp; $dropsTODAY / $calls_today</font> $drpctTODAY %<br>\n";
+	echo "<font style=\"font-size:48; color:black; font-weight: bold;\"> &nbsp; $dropsTODAY / $callsTODAY</font> $drpctTODAY %<br>\n";
 	}
 ##### END custom WALL_3 display option #####
 
@@ -3510,7 +3511,8 @@ if ($report_display_type=='WALL_4')
 	echo "</tr>\n";
 	echo "<tr>\n";
 	echo "<td><font style=\"font-size:36; color:black; font-weight: bold;\">"._QXZ("dropped/total calls")."</font>\n";
-	echo "<font style=\"font-size:48; color:black; font-weight: bold;\"> &nbsp; $dropsTODAY / $calls_today</font> $drpctTODAY %</td>\n";
+	echo "<font style=\"font-size:48; color:black; font-weight: bold;\"> &nbsp; $dropsTODAY / $callsTODAY</font></td>\n";
+	echo "<td><font style=\"font-size:18; color:black; font-weight: bold;\"> &nbsp;  $drpctTODAY %</td>\n";
 	echo "</tr>\n";
 	echo "</table></center>\n";
 	}
