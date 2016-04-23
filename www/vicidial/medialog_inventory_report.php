@@ -664,7 +664,7 @@ if (count($list_ids) > 0 && count($group) > 0)
 		array_push($nixi_statuses, $nixi_row[0]);
 	}
 	
-	$afc_statuses=array("AFC", "AFAX", "DCF", "ADC");
+	$afc_statuses=array("DC", "AFAX", "DCF", "ADC", "CPDINV");
 
 	$sale_stmt="select distinct status from vicidial_statuses where sale='Y' UNION select distinct status from vicidial_campaign_statuses where sale='Y' $group_SQLand";
 	$sale_rslt=mysql_to_mysqli($sale_stmt, $link);
@@ -706,7 +706,13 @@ if (count($list_ids) > 0 && count($group) > 0)
 
 	$call_count_stmt="select ".$vicidial_log_table.".lead_id,".$vicidial_list_table.".called_count,".$vicidial_log_table.".status,".$vicidial_log_table.".call_date from ".$vicidial_list_table.", ".$vicidial_log_table." where ".$vicidial_log_table.".call_date>='$query_date 00:00:00' and ".$vicidial_log_table.".call_date<='$end_date 23:59:59'  and ".$vicidial_log_table.".status in ('".implode("', '", $all_statuses)."') $group_SQLand $list_id_SQLandVLJOIN UNION select ".$vicidial_closer_log_table.".lead_id,".$vicidial_list_table.".called_count,".$vicidial_closer_log_table.".status,".$vicidial_closer_log_table.".call_date from ".$vicidial_list_table.", ".$vicidial_closer_log_table." where ".$vicidial_closer_log_table.".call_date>='$query_date 00:00:00' and ".$vicidial_closer_log_table.".call_date<='$end_date 23:59:59' and ".$vicidial_closer_log_table.".status in ('".implode("', '", $all_statuses)."') $list_id_SQLandVCLJOIN";
 
-	$stmt="select lead_id, called_count, status, max(call_date) from ($call_count_stmt) as dt group by lead_id, called_count, status";
+	$stmt="select list_id, called_count, status from vicidial_list $list_id_SQLwhere"; # QUERY 1
+	
+	#	$call_count_stmt="select ".$vicidial_log_table.".lead_id,".$vicidial_list_table.".called_count,".$vicidial_log_table.".status,".$vicidial_log_table.".call_date from ".$vicidial_list_table.", ".$vicidial_log_table." where ".$vicidial_log_table.".call_date>='$query_date 00:00:00' and ".$vicidial_log_table.".call_date<='$end_date 23:59:59'  and ".$vicidial_log_table.".status in ('".implode("', '", $all_statuses)."') $group_SQLand $list_id_SQLandVLJOIN UNION select ".$vicidial_closer_log_table.".lead_id,".$vicidial_list_table.".called_count,".$vicidial_closer_log_table.".status,".$vicidial_closer_log_table.".call_date from ".$vicidial_list_table.", ".$vicidial_closer_log_table." where ".$vicidial_closer_log_table.".call_date>='$query_date 00:00:00' and ".$vicidial_closer_log_table.".call_date<='$end_date 23:59:59' and ".$vicidial_closer_log_table.".status in ('".implode("', '", $all_statuses)."') $list_id_SQLandVCLJOIN"; # QUERY 2
+	$call_count_stmt="select ".$vicidial_log_table.".lead_id,".$vicidial_list_table.".called_count,".$vicidial_log_table.".status,".$vicidial_log_table.".call_date from ".$vicidial_list_table.", ".$vicidial_log_table." where ".$vicidial_log_table.".call_date<='$end_date 23:59:59'  and ".$vicidial_log_table.".status in ('".implode("', '", $all_statuses)."') $group_SQLand $list_id_SQLandVLJOIN UNION select ".$vicidial_closer_log_table.".lead_id,".$vicidial_list_table.".called_count,".$vicidial_closer_log_table.".status,".$vicidial_closer_log_table.".call_date from ".$vicidial_list_table.", ".$vicidial_closer_log_table." where ".$vicidial_closer_log_table.".call_date<='$end_date 23:59:59' and ".$vicidial_closer_log_table.".status in ('".implode("', '", $all_statuses)."') $list_id_SQLandVCLJOIN"; # QUERY 3
+	$stmt="select lead_id, called_count, status, max(call_date) from ($call_count_stmt) as dt group by lead_id, called_count, status";  # USED WITH QUERY 2 and 3
+
+
 
 	if ($DB) {echo $stmt."<BR>\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -763,9 +769,9 @@ if (count($list_ids) > 0 && count($group) > 0)
 
 	$CSV_text.="\"Total\",\"$total\",\"\",\"\",\"1 - 5\",\"6 - 10\",\"10 - 15\",\"> 15\"\n";
 	$CSV_text.="\"Falsche Tel.\",\"$afc_counts[0]\",\"".sprintf("%.2f", (100*($afc_counts[0]/$total)))." %\",\"\",\"$afc_counts[1]\",\"$afc_counts[2]\",\"$afc_counts[3]\",\"$afc_counts[4]\"\n";
-	$CSV_text.="\"Nixi\",\"$nixi_counts[0]\",\"".sprintf("%.2f", (100*(($nixi_counts[0]+$no_counts[0]+$sales_counts[0])/$total)))." %\",\"\",\"$nixi_counts[1]\",\"$nixi_counts[2]\",\"$nixi_counts[3]\",\"$nixi_counts[4]\"\n";
+	$CSV_text.="\"Nixi\",\"$nixi_counts[0]\",\"".sprintf("%.2f", (100*($nixi_counts[0]/($nixi_counts[0]+$no_counts[0]+$sales_counts[0]))))." %\",\"\",\"$nixi_counts[1]\",\"$nixi_counts[2]\",\"$nixi_counts[3]\",\"$nixi_counts[4]\"\n";
 	$CSV_text.="\"No\",\"$no_counts[0]\",\"\",\"\",\"$no_counts[1]\",\"$no_counts[2]\",\"$no_counts[3]\",\"$no_counts[4]\"\n";
-	$CSV_text.="\"Sales\",\"$sales_counts[0]\",\"".sprintf("%.2f", (100*(($nixi_counts[0]+$no_counts[0]+$sales_counts[0])/$total)))." %\",\"\",\"$sales_counts[1]\",\"$sales_counts[2]\",\"$sales_counts[3]\",\"$sales_counts[4]\"\n";
+	$CSV_text.="\"Sales\",\"$sales_counts[0]\",\"".sprintf("%.2f", (100*($sales_counts[0]/($nixi_counts[0]+$no_counts[0]+$sales_counts[0]))))." %\",\"\",\"$sales_counts[1]\",\"$sales_counts[2]\",\"$sales_counts[3]\",\"$sales_counts[4]\"\n";
 
 
 	$head ="+------------------+---------+---------+---+---------+---------+---------+---------+\n";
@@ -774,9 +780,9 @@ if (count($list_ids) > 0 && count($group) > 0)
 	$MAIN.=$head;
 	$MAIN.="|            Total | ".sprintf("%7s", $total)." |         |   |  1 - 5  |  6 - 10 | 10 - 15 |    > 15 |\n";
 	$MAIN.="|     Falsche Tel. | ".sprintf("%7s", $afc_counts[0])." | ".sprintf("%6s", sprintf("%.2f", (100*($afc_counts[0]/$total))))."% |   | ".sprintf("%7s", $afc_counts[1])." | ".sprintf("%7s", $afc_counts[2])." | ".sprintf("%7s", $afc_counts[3])." | ".sprintf("%7s", $afc_counts[4])." |\n";
-	$MAIN.="|             Nixi | ".sprintf("%7s", $nixi_counts[0])." | ".sprintf("%6s", sprintf("%.2f", (100*(($nixi_counts[0]+$no_counts[0]+$sales_counts[0])/$total))))."% |   | ".sprintf("%7s", $nixi_counts[1])." | ".sprintf("%7s", $nixi_counts[2])." | ".sprintf("%7s", $nixi_counts[3])." | ".sprintf("%7s", $nixi_counts[4])." |\n";
+	$MAIN.="|             Nixi | ".sprintf("%7s", $nixi_counts[0])." | ".sprintf("%6s", sprintf("%.2f", (100*($nixi_counts[0]/($nixi_counts[0]+$no_counts[0]+$sales_counts[0])))))."% |   | ".sprintf("%7s", $nixi_counts[1])." | ".sprintf("%7s", $nixi_counts[2])." | ".sprintf("%7s", $nixi_counts[3])." | ".sprintf("%7s", $nixi_counts[4])." |\n";
 	$MAIN.="|               No | ".sprintf("%7s", $no_counts[0])." | ".sprintf("%7s", " ")." |   | ".sprintf("%7s", $no_counts[1])." | ".sprintf("%7s", $no_counts[2])." | ".sprintf("%7s", $no_counts[3])." | ".sprintf("%7s", $no_counts[4])." |\n"; # Check percentage output here
-	$MAIN.="|            Sales | ".sprintf("%7s", $sales_counts[0])." | ".sprintf("%6s", sprintf("%.2f", (100*(($nixi_counts[0]+$no_counts[0]+$sales_counts[0])/$total))))."% |   | ".sprintf("%7s", $sales_counts[1])." | ".sprintf("%7s", $sales_counts[2])." | ".sprintf("%7s", $sales_counts[3])." | ".sprintf("%7s", $sales_counts[4])." |\n";
+	$MAIN.="|            Sales | ".sprintf("%7s", $sales_counts[0])." | ".sprintf("%6s", sprintf("%.2f", (100*($sales_counts[0]/($nixi_counts[0]+$no_counts[0]+$sales_counts[0])))))."% |   | ".sprintf("%7s", $sales_counts[1])." | ".sprintf("%7s", $sales_counts[2])." | ".sprintf("%7s", $sales_counts[3])." | ".sprintf("%7s", $sales_counts[4])." |\n";
 	$MAIN.=$head;
 
 
@@ -887,7 +893,7 @@ if (count($list_ids) > 0 && count($group) > 0)
 			# $count=$row[1];
 
 			$date_daily_count++;
-			if(in_array($status, $no_status)) {
+			if(in_array($status, $no_statuses)) {
 				$no_daily_counts++;
 				$contact_daily_count++;
 			} else if (in_array($status, $nixi_statuses)) {
@@ -901,9 +907,9 @@ if (count($list_ids) > 0 && count($group) > 0)
 				$contact_daily_count++;
 			}
 		}
-		$CSV_text.="\"$DEU_date\",\"$afc_daily_counts\",\"".sprintf("%.2f", (100*($afc_daily_counts/$date_daily_count)))." %\",\"$nixi_daily_counts\",\"$no_daily_counts\",\"$sales_daily_counts\",\"".sprintf("%.2f", (100*(($nixi_daily_counts+$no_daily_counts+$sales_daily_counts)/$date_daily_count)))." %\",\"$contact_daily_count\"\n";
+		$CSV_text.="\"$DEU_date\",\"$afc_daily_counts\",\"".sprintf("%.2f", (100*($afc_daily_counts/$total)))." %\",\"$nixi_daily_counts\",\"$no_daily_counts\",\"$sales_daily_counts\",\"".sprintf("%.2f", (100*($sales_daily_counts/($nixi_daily_counts+$no_daily_counts+$sales_daily_counts))))." %\",\"$contact_daily_count\"\n";
 		
-		$MAIN.="| $DEU_date | ".sprintf("%12s", $afc_daily_counts)." | ".sprintf("%6s", sprintf("%.2f", (100*($afc_daily_counts/$date_daily_count))))."% | ".sprintf("%7s", $nixi_daily_counts)." | ".sprintf("%7s", $no_daily_counts)." | ".sprintf("%7s", $sales_daily_counts)." | ".sprintf("%6s", sprintf("%.2f", (100*(($nixi_daily_counts+$no_daily_counts+$sales_daily_counts)/$date_daily_count))))."% | ".sprintf("%7s", $contact_daily_count)." |\n";
+		$MAIN.="| $DEU_date | ".sprintf("%12s", $afc_daily_counts)." | ".sprintf("%6s", sprintf("%.2f", (100*($afc_daily_counts/$total))))."% | ".sprintf("%7s", $nixi_daily_counts)." | ".sprintf("%7s", $no_daily_counts)." | ".sprintf("%7s", $sales_daily_counts)." | ".sprintf("%6s", sprintf("%.2f", (100*($sales_daily_counts/($nixi_daily_counts+$no_daily_counts+$sales_daily_counts)))))."% | ".sprintf("%7s", $contact_daily_count)." |\n";
 		$MAIN.=$foot;
 
 		$total_date_daily_count+=$date_daily_count;
