@@ -3754,12 +3754,13 @@ else
 # 160331-2204 - Made URL form input fields longer
 # 160404-0940 - design changes
 # 160414-1013 - Added default_phone_code to system_settings
+# 160427-1656 - Added more detail on active servers column on reports page
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-550a';
-$build = '160414-1013';
+$admin_version = '2.12-551a';
+$build = '160427-1656';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -35758,7 +35759,7 @@ if ($ADD==999999)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT server_id,server_description,server_ip,active,sysload,channels_total,cpu_idle_percent,disk_usage from servers order by server_id;";
+		$stmt="SELECT server_id,server_description,server_ip,active,sysload,channels_total,cpu_idle_percent,disk_usage,active_agent_login_server,active_asterisk_server from servers order by server_id;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$servers_to_print = mysqli_num_rows($rslt);
@@ -35766,14 +35767,16 @@ if ($ADD==999999)
 		while ($i < $servers_to_print)
 			{
 			$row=mysqli_fetch_row($rslt);
-			$server_id[$i] =			$row[0];
-			$server_description[$i] =	$row[1];
-			$server_ip[$i] =			$row[2];
-			$active[$i] =				$row[3];
-			$sysload[$i] =				$row[4];
-			$channels_total[$i] =		$row[5];
-			$cpu_idle_percent[$i] =		$row[6];
-			$disk_usage[$i] =			$row[7];
+			$server_id[$i] =					$row[0];
+			$server_description[$i] =			$row[1];
+			$server_ip[$i] =					$row[2];
+			$active[$i] =						$row[3];
+			$sysload[$i] =						$row[4];
+			$channels_total[$i] =				$row[5];
+			$cpu_idle_percent[$i] =				$row[6];
+			$disk_usage[$i] =					$row[7];
+			$active_agent_login_server[$i] =	$row[8];
+			$active_asterisk_server[$i] =		$row[9];
 			$i++;
 			}
 
@@ -35994,13 +35997,13 @@ if ($ADD==999999)
 
 			if ($stage == 'TIME')
 				{
-				echo "<TR><TD>"._QXZ("SERVER")." <a href=\"$PHP_SELF?ADD=999999\">-</a></TD>";
-				echo "<TD>"._QXZ("DESCRIPTION")."</TD><TD>"._QXZ("IP")."</TD><TD>"._QXZ("ACT")."</TD><TD>"._QXZ("LOAD")."</TD><TD>"._QXZ("CHAN")."</TD><TD>"._QXZ("AGNT")."</TD><TD>"._QXZ("DISK")."</TD><TD>"._QXZ("TIME")."</TD><TD>"._QXZ("VER")."</TD></TR>\n";
+				echo "<TR><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("SERVER")." <a href=\"$PHP_SELF?ADD=999999\">-</a></TD>";
+				echo "<TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("DESCRIPTION")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("IP")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("ACT")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("LOAD")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("CHAN")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("AGNT")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("DISK")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("TIME")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("VER")."</TD></TR>\n";
 				}
 			else
 				{
-				echo "<TR><TD>"._QXZ("SERVER")." <a href=\"$PHP_SELF?ADD=999999&stage=TIME\">+</a></TD>";
-				echo "<TD>"._QXZ("DESCRIPTION")."</TD><TD>"._QXZ("IP")."</TD><TD>"._QXZ("ACT")."</TD><TD>"._QXZ("LOAD")."</TD><TD>"._QXZ("CHAN")."</TD><TD>"._QXZ("AGNT")."</TD><TD>"._QXZ("DISK")."</TD><TD>"._QXZ("OUTBOUND")."</TD><TD>"._QXZ("INBOUND")."</TD></TR>\n";
+				echo "<TR><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("SERVER")." <a href=\"$PHP_SELF?ADD=999999&stage=TIME\">+</a></TD>";
+				echo "<TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("DESCRIPTION")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("IP")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("ACT")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("LOAD")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("CHAN")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("AGNT")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("DISK")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("OUTBOUND")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("INBOUND")."</TD></TR>\n";
 				}
 
 			$o=0;
@@ -36085,14 +36088,14 @@ if ($ADD==999999)
 						}
 					}
 				echo "<TR$server_bgcolor>\n";
-				echo "<TD NOWRAP><a href=\"$PHP_SELF?ADD=311111111111&server_id=$server_id[$o]\">$server_id[$o]</a></TD>\n";
-				echo "<TD NOWRAP>$server_description[$o]</TD>\n";
-				echo "<TD NOWRAP>$server_ip[$o]</TD>\n";
-				echo "<TD NOWRAP>$active[$o]</TD>\n";
-				echo "<TD NOWRAP>$sysload[$o] - $cpu%</TD>\n";
-				echo "<TD NOWRAP>$channels_total[$o]</TD>\n";
-				echo "<TD NOWRAP>$agnt</TD>\n";
-				echo "<TD ALIGN=RIGHT NOWRAP>$disk</TD>\n";
+				echo "<TD NOWRAP><a href=\"$PHP_SELF?ADD=311111111111&server_id=$server_id[$o]\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>$server_id[$o]</a></TD>\n";
+				echo "<TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>$server_description[$o]</TD>\n";
+				echo "<TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>$server_ip[$o]</TD>\n";
+				echo "<TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=1>$active[$o] / $active_asterisk_server[$o] / $active_agent_login_server[$o]</TD>\n";
+				echo "<TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>$sysload[$o] - $cpu%</TD>\n";
+				echo "<TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>$channels_total[$o]</TD>\n";
+				echo "<TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>$agnt</TD>\n";
+				echo "<TD ALIGN=RIGHT NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>$disk</TD>\n";
 				if ($stage == 'TIME')
 					{
 					$stmt="SELECT svn_revision from servers where server_ip='$server_ip[$o]';";
@@ -36104,29 +36107,29 @@ if ($ADD==999999)
 						$row=mysqli_fetch_row($rslt);
 						$s_ver = $row[0];
 						}
-					echo "<TD NOWRAP>$s_time</TD><TD NOWRAP>$s_ver</TD>";
+					echo "<TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>$s_time</TD><TD NOWRAP>$s_ver</TD>";
 					}
 				else
 					{
 					if ( (preg_match("/Real-Time Main Report/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 						{
-						echo "<TD NOWRAP><a href=\"AST_timeonVDAD.php?server_ip=$server_ip[$o]\">"._QXZ("LINK")."</a></TD>\n";
-						echo "<TD NOWRAP><a href=\"AST_timeonVDAD.php?server_ip=$server_ip[$o]&closer_display=1\">"._QXZ("LINK")."</a></TD>\n";
+						echo "<TD NOWRAP><a href=\"AST_timeonVDAD.php?server_ip=$server_ip[$o]\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("LINK")."</a></TD>\n";
+						echo "<TD NOWRAP><a href=\"AST_timeonVDAD.php?server_ip=$server_ip[$o]&closer_display=1\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("LINK")."</a></TD>\n";
 						}
 					else
 						{
-						echo "<TD NOWRAP> &nbsp; </TD>\n";
-						echo "<TD NOWRAP> &nbsp; </TD>\n";
+						echo "<TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2> &nbsp; </TD>\n";
+						echo "<TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2> &nbsp; </TD>\n";
 						}
 					}
 				echo "</TR>\n";
-				echo "$FROZEN_output";
+				echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>$FROZEN_output</FONT>";
 				$o++;
 				}
 
 			if ($stage == 'TIME')
 				{
-				echo "<TR><TD COLSPAN=2 NOWRAP> &nbsp; </TD><TD NOWRAP>"._QXZ("PHP Time")."</TD><TD COLSPAN=5 NOWRAP> &nbsp; </TD><TD NOWRAP>" . date("Y-m-d H:i:s") . "</TD><TD NOWRAP> &nbsp; </TD></TR>";
+				echo "<TR><TD COLSPAN=2 NOWRAP> &nbsp; </TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("PHP Time")."</TD><TD COLSPAN=5 NOWRAP> &nbsp; </TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>" . date("Y-m-d H:i:s") . "</TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2> &nbsp; </TD></TR>";
 
 				$stmt="SELECT NOW();";
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -36135,7 +36138,7 @@ if ($ADD==999999)
 				if ($dbtime_to_print)
 					{
 					$row=mysqli_fetch_row($rslt);
-					echo "<TR><TD COLSPAN=2 NOWRAP> &nbsp; </TD><TD NOWRAP>"._QXZ("DB Time")."</TD><TD COLSPAN=5 NOWRAP> &nbsp; </TD><TD NOWRAP>$row[0]</TD><TD NOWRAP> &nbsp; </TD></TR>";
+					echo "<TR><TD COLSPAN=2 NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2> &nbsp; </TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("DB Time")."</TD><TD COLSPAN=5 NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2> &nbsp; </TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>$row[0]</TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2> &nbsp; </TD></TR>";
 					}
 				}
 			echo "</TABLE>\n";

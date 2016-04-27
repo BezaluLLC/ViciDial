@@ -9,6 +9,7 @@
 # CHANGES
 # 160411-1917 - First build based upon called_counts_multilist_report.php
 # 160412-2022 - Callback bug fixed, modified Total count to use modify_date instead of entry_date
+# 160427-1655 - Added called count categories
 #
 
 $startMS = microtime();
@@ -707,7 +708,14 @@ if (count($list_ids) > 0 && count($group) > 0)
 	$call_count_stmt="select ".$vicidial_log_table.".lead_id,".$vicidial_list_table.".called_count,".$vicidial_log_table.".status,".$vicidial_log_table.".call_date from ".$vicidial_list_table.", ".$vicidial_log_table." where ".$vicidial_log_table.".call_date>='$query_date 00:00:00' and ".$vicidial_log_table.".call_date<='$end_date 23:59:59'  and ".$vicidial_log_table.".status in ('".implode("', '", $all_statuses)."') $group_SQLand $list_id_SQLandVLJOIN UNION select ".$vicidial_closer_log_table.".lead_id,".$vicidial_list_table.".called_count,".$vicidial_closer_log_table.".status,".$vicidial_closer_log_table.".call_date from ".$vicidial_list_table.", ".$vicidial_closer_log_table." where ".$vicidial_closer_log_table.".call_date>='$query_date 00:00:00' and ".$vicidial_closer_log_table.".call_date<='$end_date 23:59:59' and ".$vicidial_closer_log_table.".status in ('".implode("', '", $all_statuses)."') $list_id_SQLandVCLJOIN";
 
 	$stmt="select list_id, called_count, status from vicidial_list $list_id_SQLwhere"; # QUERY 1
-	
+
+	$zb_counts=array();
+	$cc_stmt="select if(called_count>15, '4', if(called_count>10, '3', if(called_count>5, '2', if(called_count>0, '1', '0')))) as ary_index, count(*) from vicidial_list $list_id_SQLwhere group by ary_index";
+	$cc_rslt=mysql_to_mysqli($cc_stmt, $link);
+	while ($ccrow=mysqli_fetch_row($cc_rslt)) {
+		$zb_counts[$ccrow[0]]=$ccrow[1];
+	}
+
 	#	$call_count_stmt="select ".$vicidial_log_table.".lead_id,".$vicidial_list_table.".called_count,".$vicidial_log_table.".status,".$vicidial_log_table.".call_date from ".$vicidial_list_table.", ".$vicidial_log_table." where ".$vicidial_log_table.".call_date>='$query_date 00:00:00' and ".$vicidial_log_table.".call_date<='$end_date 23:59:59'  and ".$vicidial_log_table.".status in ('".implode("', '", $all_statuses)."') $group_SQLand $list_id_SQLandVLJOIN UNION select ".$vicidial_closer_log_table.".lead_id,".$vicidial_list_table.".called_count,".$vicidial_closer_log_table.".status,".$vicidial_closer_log_table.".call_date from ".$vicidial_list_table.", ".$vicidial_closer_log_table." where ".$vicidial_closer_log_table.".call_date>='$query_date 00:00:00' and ".$vicidial_closer_log_table.".call_date<='$end_date 23:59:59' and ".$vicidial_closer_log_table.".status in ('".implode("', '", $all_statuses)."') $list_id_SQLandVCLJOIN"; # QUERY 2
 	$call_count_stmt="select ".$vicidial_log_table.".lead_id,".$vicidial_list_table.".called_count,".$vicidial_log_table.".status,".$vicidial_log_table.".call_date from ".$vicidial_list_table.", ".$vicidial_log_table." where ".$vicidial_log_table.".call_date<='$end_date 23:59:59'  and ".$vicidial_log_table.".status in ('".implode("', '", $all_statuses)."') $group_SQLand $list_id_SQLandVLJOIN UNION select ".$vicidial_closer_log_table.".lead_id,".$vicidial_list_table.".called_count,".$vicidial_closer_log_table.".status,".$vicidial_closer_log_table.".call_date from ".$vicidial_list_table.", ".$vicidial_closer_log_table." where ".$vicidial_closer_log_table.".call_date<='$end_date 23:59:59' and ".$vicidial_closer_log_table.".status in ('".implode("', '", $all_statuses)."') $list_id_SQLandVCLJOIN"; # QUERY 3
 	$stmt="select lead_id, called_count, status, max(call_date) from ($call_count_stmt) as dt group by lead_id, called_count, status";  # USED WITH QUERY 2 and 3
@@ -741,15 +749,19 @@ if (count($list_ids) > 0 && count($group) > 0)
 			if(in_array($status, $no_statuses)) {
 				$no_counts[0]++;
 				$no_counts[$ary_index]++;
+				$zb_counts[$ary_index]--;
 			} else if (in_array($status, $nixi_statuses)) {
 				$nixi_counts[0]++;
 				$nixi_counts[$ary_index]++;
+				$zb_counts[$ary_index]--;
 			} else if (in_array($status, $afc_statuses)) {
 				$afc_counts[0]++;
 				$afc_counts[$ary_index]++;
+				$zb_counts[$ary_index]--;
 			} else if (in_array($status, $sale_statuses)) {
 				$sales_counts[0]++;
 				$sales_counts[$ary_index]++;
+				$zb_counts[$ary_index]--;
 			} else {
 				$workoff_total++;
 			}
@@ -764,6 +776,7 @@ if (count($list_ids) > 0 && count($group) > 0)
 		$nixi_counts[$i]+=0;
 		$no_counts[$i]+=0;
 		$sales_counts[$i]+=0;
+		$zb_counts[$i]+=0;
 	}
 
 
@@ -838,14 +851,14 @@ if (count($list_ids) > 0 && count($group) > 0)
 	$CSV_text.="\"WV Team\",\"$anyone_counts[0]\",\"\",\"\",\"$anyone_counts[1]\",\"$anyone_counts[2]\",\"$anyone_counts[3]\",\"$anyone_counts[4]\"\n";
 	$CSV_text.="\"WV persönlich\",\"$useronly_counts[0]\",\"\",\"\",\"$useronly_counts[1]\",\"$useronly_counts[2]\",\"$useronly_counts[3]\",\"$useronly_counts[4]\"\n";
 	$CSV_text.="\"WV Vergangenheit \",\"$calledback_counts[0]\",\"\",\"\",\"$calledback_counts[1]\",\"$calledback_counts[2]\",\"$calledback_counts[3]\",\"$calledback_counts[4]\"\n\n";
-	$CSV_text.="\"Zu bearbeiten\",\"$workoff_total\"\n\n\n\n";
+	$CSV_text.="\"Zu bearbeiten\",\"$workoff_total\",\"\",\"\",\"$zb_counts[1]\",\"$zb_counts[2]\",\"$zb_counts[3]\",\"$zb_counts[4]\",\"$zb_counts[0] (undialed)\"\n\n\n\n";
 
 	$MAIN.="|          WV Team | ".sprintf("%7s", $anyone_counts[0])." | ".sprintf("%7s", " ")." |   | ".sprintf("%7s", $anyone_counts[1])." | ".sprintf("%7s", $anyone_counts[2])." | ".sprintf("%7s", $anyone_counts[3])." | ".sprintf("%7s", $anyone_counts[4])." |\n";
 	$MAIN.="|    WV pers&ouml;nlich | ".sprintf("%7s", $useronly_counts[0])." | ".sprintf("%7s", " ")." |   | ".sprintf("%7s", $useronly_counts[1])." | ".sprintf("%7s", $useronly_counts[2])." | ".sprintf("%7s", $useronly_counts[3])." | ".sprintf("%7s", $useronly_counts[4])." |\n";
 	$MAIN.="| WV Vergangenheit | ".sprintf("%7s", $calledback_counts[0])." | ".sprintf("%7s", " ")." |   | ".sprintf("%7s", $calledback_counts[1])." | ".sprintf("%7s", $calledback_counts[2])." | ".sprintf("%7s", $calledback_counts[3])." | ".sprintf("%7s", $calledback_counts[4])." |\n";
 	$MAIN.=$head;
-	$MAIN.="|    Zu bearbeiten | ".sprintf("%7s", $workoff_total)." |\n";
-	$MAIN.="+------------------+---------+\n\n\n";
+	$MAIN.="|    Zu bearbeiten | ".sprintf("%7s", $workoff_total)." | ".sprintf("%7s", " ")." |   | ".sprintf("%7s", $zb_counts[1])." | ".sprintf("%7s", $zb_counts[2])." | ".sprintf("%7s", $zb_counts[3])." | ".sprintf("%7s", $zb_counts[4])." | ".sprintf("%7s", $zb_counts[0])." (undialed)\n";
+	$MAIN.=$head;
 
 	## Lower section
 	$CSV_text.="\"Tagesstatus\"\n";
