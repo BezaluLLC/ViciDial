@@ -148,7 +148,7 @@ if ($match_found > 0)
 	else
 		{
 		$auth=0;
-		$auth_message = user_authorization($user,$pass,'',0,0,0);
+		$auth_message = user_authorization($user,$pass,'',0,0,0,0);
 		if ($auth_message == 'GOOD')
 			{$auth=1;}
 

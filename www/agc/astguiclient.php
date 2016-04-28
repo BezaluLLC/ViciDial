@@ -168,7 +168,7 @@ $month_old = mktime(0, 0, 0, date("m"), date("d")-7,  date("Y"));
 $past_month_date = date("Y-m-d H:i:s",$month_old);
 
 $auth=0;
-$auth_message = user_authorization($user,$pass,'',1,0,1);
+$auth_message = user_authorization($user,$pass,'',1,0,1,0);
 if (preg_match("/^GOOD/",$auth_message))
 	{
 	$auth=1;

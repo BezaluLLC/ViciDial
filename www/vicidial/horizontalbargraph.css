@@ -28,6 +28,9 @@ th.thgraph {
 .grey_graph_cell {
 	background-color:#ddd;
 }
+.selected_grey_graph_cell {
+	background-color:#999;
+}
 .white_graph_cell {
 	background-color:#FFF;
 }

@@ -70,7 +70,7 @@ $VUselected_language = $SSdefault_language;
 ###########################################
 
 $auth=0;
-$auth_message = user_authorization($user,$pass,'',0,0,0);
+$auth_message = user_authorization($user,$pass,'',0,0,0,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 

@@ -310,7 +310,7 @@ if (strlen($meetme_enter_leave3way_filename) > 0)
 	{$threeway_context = 'meetme-enter-leave3way';}
 
 $auth=0;
-$auth_message = user_authorization($user,$pass,'',0,1,0);
+$auth_message = user_authorization($user,$pass,'',0,1,0,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 

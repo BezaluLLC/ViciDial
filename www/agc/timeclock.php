@@ -151,7 +151,7 @@ if ( ($stage == 'login') or ($stage == 'logout') )
 	{
 	### see if user/pass exist for this user in vicidial_users table
 	$valid_user=0;
-	$auth_message = user_authorization($user,$pass,'',1,0,0);
+	$auth_message = user_authorization($user,$pass,'',1,0,0,0);
 	if ($auth_message == 'GOOD')
 		{$valid_user=1;}
 
