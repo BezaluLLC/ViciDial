@@ -64,10 +64,11 @@
 # 150728-0732 - Added state fullname to abbreviation conversion feature (state_conversion)
 # 150810-0750 - Added compatibility for custom fields data option
 # 160102-1039 - Better special characters support
+# 160428-2359 - Fixed custom table bug
 #
 
-$version = '2.12-62';
-$build = '160102-1039';
+$version = '2.12-63';
+$build = '160428-2359';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -1266,7 +1267,13 @@ if (($leadfile) && ($LF_path))
 				$list_id_override=$template_row["list_id"];
 			}
 			$standard_variables=$template_row["standard_variables"];
-			$custom_table=$template_row["custom_table"];
+#			$custom_table=$template_row["custom_table"];
+			if (!$master_list_override) {
+				$custom_table=$template_row["custom_table"];
+			}
+			else {
+				$custom_table= "custom_$list_id_override";
+			}
 			$custom_variables=$template_row["custom_variables"];
 			$template_statuses=$template_row["template_statuses"];
 			if (strlen($template_statuses)>0) {
