@@ -13,10 +13,11 @@
 # 141229-1531 - Added code for on-the-fly language translations display
 # 160330-1553 - navigation changes and fixes
 # 160404-0935 - design changes
+# 160429-1124 - Added admin_row_click option
 #
 
-$admin_version = '2.12-7';
-$build = '160404-0935';
+$admin_version = '2.12-8';
+$build = '160429-1124';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -1466,7 +1467,7 @@ if ($ADD==163000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=363111111111&language_id=$Alanguage_id[$o]&DB=$DB'\"><td><a href=\"$PHP_SELF?ADD=363111111111&language_id=$Alanguage_id[$o]&DB=$DB\"><font size=1 color=black>$Alanguage_id[$o]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=363111111111&language_id=$Alanguage_id[$o]&DB=$DB'\"";} echo "><td><a href=\"$PHP_SELF?ADD=363111111111&language_id=$Alanguage_id[$o]&DB=$DB\"><font size=1 color=black>$Alanguage_id[$o]</a></td>";
 		echo "<td><font size=1>$Alanguage_description[$o]</td>";
 		echo "<td><font size=1>";
 		if (file_exists("../agc/images/$Alanguage_code[$o]$gif"))

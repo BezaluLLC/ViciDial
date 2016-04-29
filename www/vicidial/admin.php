@@ -2060,6 +2060,8 @@ if (isset($_GET["callback_useronly_move_minutes"]))				{$callback_useronly_move_
 	elseif (isset($_POST["callback_useronly_move_minutes"]))	{$callback_useronly_move_minutes=$_POST["callback_useronly_move_minutes"];}
 if (isset($_GET["default_phone_code"]))				{$default_phone_code=$_GET["default_phone_code"];}
 	elseif (isset($_POST["default_phone_code"]))	{$default_phone_code=$_POST["default_phone_code"];}
+if (isset($_GET["admin_row_click"]))				{$admin_row_click=$_GET["admin_row_click"];}
+	elseif (isset($_POST["admin_row_click"]))	{$admin_row_click=$_POST["admin_row_click"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2074,7 +2076,7 @@ if (strlen($dial_status) > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key,pass_hash_enabled,disable_auto_dial,country_code_list_stats,frozen_server_call_clear,active_modules,allow_chats,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,default_language,user_hide_realtime_enabled,log_recording_access,alt_ivr_logging FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key,pass_hash_enabled,disable_auto_dial,country_code_list_stats,frozen_server_call_clear,active_modules,allow_chats,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,default_language,user_hide_realtime_enabled,log_recording_access,alt_ivr_logging,admin_row_click FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -2135,6 +2137,7 @@ if ($qm_conf_ct > 0)
 	$SSuser_hide_realtime_enabled =			$row[51];
 	$SSlog_recording_access =				$row[52];
 	$SSalt_ivr_logging =					$row[53];
+	$SSadmin_row_click =					$row[54];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -2434,6 +2437,7 @@ if ($non_latin < 1)
 	$alt_dtmf_log = preg_replace('/[^0-9]/','',$alt_dtmf_log);
 	$callback_useronly_move_minutes = preg_replace('/[^0-9]/','',$callback_useronly_move_minutes);
 	$default_phone_code = preg_replace('/[^0-9]/','',$default_phone_code);
+	$admin_row_click = preg_replace('/[^0-9]/','',$admin_row_click);
 
 	$drop_call_seconds = preg_replace('/[^-0-9]/','',$drop_call_seconds);
 	$timer_alt_seconds = preg_replace('/[^-0-9]/','',$timer_alt_seconds);
@@ -3755,12 +3759,13 @@ else
 # 160404-0940 - design changes
 # 160414-1013 - Added default_phone_code to system_settings
 # 160427-1656 - Added more detail on active servers column on reports page
+# 160429-0835 - Added admin_row_click system settings option
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-551a';
-$build = '160427-1656';
+$admin_version = '2.12-552a';
+$build = '160429-0835';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -15648,7 +15653,7 @@ if ($ADD==411111111111111)
 			$custom_reports_slave_SQL=",custom_reports_use_slave_db='$custom_reports_slave_SQL'";
 			}
 
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysqli_real_escape_string($link, $webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db'$custom_reports_slave_SQL,webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt',noanswer_log='$noanswer_log',alt_log_server_ip='$alt_log_server_ip',alt_log_dbname='$alt_log_dbname',alt_log_login='$alt_log_login',alt_log_pass='$alt_log_pass',tables_use_alt_log_db='$tables_use_alt_log_db',did_agent_log='$did_agent_log',campaign_cid_areacodes_enabled='$campaign_cid_areacodes_enabled',pllb_grouping_limit='$pllb_grouping_limit',did_ra_extensions_enabled='$did_ra_extensions_enabled',expanded_list_stats='$expanded_list_stats',contacts_enabled='$contacts_enabled',call_menu_qualify_enabled='$call_menu_qualify_enabled',admin_list_counts='$admin_list_counts',allow_voicemail_greeting='$allow_voicemail_greeting',queuemetrics_socket='$queuemetrics_socket',queuemetrics_socket_url='$queuemetrics_socket_url',enhanced_disconnect_logging='$enhanced_disconnect_logging',allow_emails='$allow_emails',level_8_disable_add='$level_8_disable_add',queuemetrics_record_hold='$queuemetrics_record_hold',country_code_list_stats='$country_code_list_stats',queuemetrics_pause_type='$queuemetrics_pause_type',frozen_server_call_clear='$frozen_server_call_clear',callback_time_24hour='$callback_time_24hour',enable_languages='$enable_languages',language_method='$language_method',meetme_enter_login_filename='$meetme_enter_login_filename',meetme_enter_leave3way_filename='$meetme_enter_leave3way_filename',enable_did_entry_list_id='$enable_did_entry_list_id',enable_third_webform='$enable_third_webform',allow_chats='$allow_chats',chat_url='$chat_url',chat_timeout='$chat_timeout',agent_debug_logging='$agent_debug_logging',default_language='$default_language',agent_whisper_enabled='$agent_whisper_enabled',user_hide_realtime_enabled='$user_hide_realtime_enabled',usacan_phone_dialcode_fix='$usacan_phone_dialcode_fix',cache_carrier_stats_realtime='$cache_carrier_stats_realtime',log_recording_access='$log_recording_access',report_default_format='$report_default_format',alt_ivr_logging='$alt_ivr_logging',default_phone_code='$default_phone_code'$custom_dialplanSQL;";
+		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysqli_real_escape_string($link, $webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db'$custom_reports_slave_SQL,webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt',noanswer_log='$noanswer_log',alt_log_server_ip='$alt_log_server_ip',alt_log_dbname='$alt_log_dbname',alt_log_login='$alt_log_login',alt_log_pass='$alt_log_pass',tables_use_alt_log_db='$tables_use_alt_log_db',did_agent_log='$did_agent_log',campaign_cid_areacodes_enabled='$campaign_cid_areacodes_enabled',pllb_grouping_limit='$pllb_grouping_limit',did_ra_extensions_enabled='$did_ra_extensions_enabled',expanded_list_stats='$expanded_list_stats',contacts_enabled='$contacts_enabled',call_menu_qualify_enabled='$call_menu_qualify_enabled',admin_list_counts='$admin_list_counts',allow_voicemail_greeting='$allow_voicemail_greeting',queuemetrics_socket='$queuemetrics_socket',queuemetrics_socket_url='$queuemetrics_socket_url',enhanced_disconnect_logging='$enhanced_disconnect_logging',allow_emails='$allow_emails',level_8_disable_add='$level_8_disable_add',queuemetrics_record_hold='$queuemetrics_record_hold',country_code_list_stats='$country_code_list_stats',queuemetrics_pause_type='$queuemetrics_pause_type',frozen_server_call_clear='$frozen_server_call_clear',callback_time_24hour='$callback_time_24hour',enable_languages='$enable_languages',language_method='$language_method',meetme_enter_login_filename='$meetme_enter_login_filename',meetme_enter_leave3way_filename='$meetme_enter_leave3way_filename',enable_did_entry_list_id='$enable_did_entry_list_id',enable_third_webform='$enable_third_webform',allow_chats='$allow_chats',chat_url='$chat_url',chat_timeout='$chat_timeout',agent_debug_logging='$agent_debug_logging',default_language='$default_language',agent_whisper_enabled='$agent_whisper_enabled',user_hide_realtime_enabled='$user_hide_realtime_enabled',usacan_phone_dialcode_fix='$usacan_phone_dialcode_fix',cache_carrier_stats_realtime='$cache_carrier_stats_realtime',log_recording_access='$log_recording_access',report_default_format='$report_default_format',alt_ivr_logging='$alt_ivr_logging',default_phone_code='$default_phone_code',admin_row_click='$admin_row_click'$custom_dialplanSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 
 		if ( ($meetme_enter_login_filename != $SSmeetme_enter_login_filename) or ($meetme_enter_leave3way_filename != $SSmeetme_enter_leave3way_filename) )
@@ -23102,7 +23107,7 @@ if ($ADD==32)
 				{$bgcolor='class="records_list_x"';} 
 			else
 				{$bgcolor='class="records_list_y"';}
-			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=22&campaign_id=$campaigns_id_list[$o]'\"><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=22&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
+			echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=22&campaign_id=$campaigns_id_list[$o]'\"";} echo "><td><font size=1><a href=\"$PHP_SELF?ADD=31&SUB=22&campaign_id=$campaigns_id_list[$o]\">$campaigns_id_list[$o]</a></td>";
 			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 			echo "<td><font size=1> ";
 
@@ -23164,7 +23169,7 @@ if ($ADD==33)
 				{$bgcolor='class="records_list_x"';} 
 			else
 				{$bgcolor='class="records_list_y"';}
-			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=23&campaign_id=$campaigns_id_list[$o]'\"><td><a href=\"$PHP_SELF?ADD=31&SUB=23&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
+			echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=23&campaign_id=$campaigns_id_list[$o]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=31&SUB=23&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
 			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 			echo "<td><font size=1> ";
 
@@ -23226,7 +23231,7 @@ if ($ADD==35)
 				{$bgcolor='class="records_list_x"';} 
 			else
 				{$bgcolor='class="records_list_y"';}
-			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=25&campaign_id=$campaigns_id_list[$o]'\"><td><a href=\"$PHP_SELF?ADD=31&SUB=25&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
+			echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=25&campaign_id=$campaigns_id_list[$o]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=31&SUB=25&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
 			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 			echo "<td><font size=1> ";
 
@@ -23288,7 +23293,7 @@ if ($ADD==36)
 				{$bgcolor='class="records_list_x"';} 
 			else
 				{$bgcolor='class="records_list_y"';}
-			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=26&campaign_id=$campaigns_id_list[$o]'\"><td><a href=\"$PHP_SELF?ADD=31&SUB=26&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
+			echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=26&campaign_id=$campaigns_id_list[$o]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=31&SUB=26&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
 			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 			echo "<td><font size=1> ";
 
@@ -23350,7 +23355,7 @@ if ($ADD==37)
 				{$bgcolor='class="records_list_x"';} 
 			else
 				{$bgcolor='class="records_list_y"';}
-			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=27&campaign_id=$campaigns_id_list[$o]'\"><td><a href=\"$PHP_SELF?ADD=31&SUB=27&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
+			echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=27&campaign_id=$campaigns_id_list[$o]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=31&SUB=27&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
 			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 			echo "<td><font size=1> ";
 
@@ -23412,7 +23417,7 @@ if ($ADD==39)
 				{$bgcolor='class="records_list_x"';} 
 			else
 				{$bgcolor='class="records_list_y"';}
-			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaigns_id_list[$o]'\"><td><a href=\"$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
+			echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaigns_id_list[$o]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=31&SUB=29&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
 			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 			echo "<td><font size=1> ";
 
@@ -23478,7 +23483,7 @@ if ($ADD==301)
 				{$bgcolor='class="records_list_x"';} 
 			else
 				{$bgcolor='class="records_list_y"';}
-			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=201&campaign_id=$campaigns_id_list[$o]'\"><td><a href=\"$PHP_SELF?ADD=31&SUB=201&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
+			echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=201&campaign_id=$campaigns_id_list[$o]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=31&SUB=201&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
 			echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 			echo "<td><font size=1> ";
 
@@ -23546,7 +23551,7 @@ if ($ADD==302)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=202&campaign_id=$campaigns_id_list[$o]'\"><td><a href=\"$PHP_SELF?ADD=31&SUB=202&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=31&SUB=202&campaign_id=$campaigns_id_list[$o]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=31&SUB=202&campaign_id=$campaigns_id_list[$o]\"><font size=1 color=black>$campaigns_id_list[$o]</a></td>";
 		echo "<td><font size=1> $campaigns_name_list[$o] </td>";
 		echo "<td><font size=1> $use_custom_cid_list[$o] </td>";
 		echo "<td><font size=1> ";
@@ -27693,7 +27698,7 @@ if ($ADD==1320)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3321&did_id=$dids_id_list[$o]'\"><td><a href=\"$PHP_SELF?ADD=3321&did_id=$dids_id_list[$o]\"><font size=1 color=black>$did_pattern_list[$o]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3321&did_id=$dids_id_list[$o]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=3321&did_id=$dids_id_list[$o]\"><font size=1 color=black>$did_pattern_list[$o]</a></td>";
 		echo "<td><font size=1> $did_description_list[$o] </td>";
 		echo "<td><font size=1> ";
 
@@ -32007,7 +32012,7 @@ if ($ADD==311111111111111)
 			$ALLagent_count =		$rowx[2];
 			}
 
-		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,queuemetrics_socket,queuemetrics_socket_url,enhanced_disconnect_logging,allow_emails,level_8_disable_add,pass_hash_enabled,pass_key,pass_cost,disable_auto_dial,queuemetrics_record_hold,country_code_list_stats,reload_timestamp,queuemetrics_pause_type,frozen_server_call_clear,callback_time_24hour,allow_chats,chat_url,chat_timeout,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,agent_debug_logging,default_language,agent_whisper_enabled,user_hide_realtime_enabled,usacan_phone_dialcode_fix,cache_carrier_stats_realtime,oldest_logs_date,log_recording_access,report_default_format,alt_ivr_logging,default_phone_code from system_settings;";
+		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,queuemetrics_socket,queuemetrics_socket_url,enhanced_disconnect_logging,allow_emails,level_8_disable_add,pass_hash_enabled,pass_key,pass_cost,disable_auto_dial,queuemetrics_record_hold,country_code_list_stats,reload_timestamp,queuemetrics_pause_type,frozen_server_call_clear,callback_time_24hour,allow_chats,chat_url,chat_timeout,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,agent_debug_logging,default_language,agent_whisper_enabled,user_hide_realtime_enabled,usacan_phone_dialcode_fix,cache_carrier_stats_realtime,oldest_logs_date,log_recording_access,report_default_format,alt_ivr_logging,default_phone_code,admin_row_click from system_settings;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		$version =						$row[0];
@@ -32154,6 +32159,7 @@ if ($ADD==311111111111111)
 		$report_default_format =		$row[141];
 		$alt_ivr_logging =				$row[142];
 		$default_phone_code =			$row[143];
+		$admin_row_click =				$row[144];
 
 		if ($pass_hash_enabled > 0) {$pass_hash_enabled = 'ENABLED';}
 		else {$pass_hash_enabled = 'DISABLED';}
@@ -32223,6 +32229,7 @@ if ($ADD==311111111111111)
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Admin Home URL").": </td><td align=left><input type=text name=admin_home_url size=50 maxlength=255 value=\"$admin_home_url\">$NWB#settings-admin_home_url$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Admin Modify Auto-Refresh").": </td><td align=left><input type=text name=admin_modify_refresh size=6 maxlength=5 value=\"$admin_modify_refresh\">$NWB#settings-admin_modify_refresh$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Admin No-Cache").": </td><td align=left><select size=1 name=nocache_admin><option>1</option><option>0</option><option selected>$nocache_admin</option></select>$NWB#settings-nocache_admin$NWE</td></tr>\n";
+		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Admin Row Click").": </td><td align=left><select size=1 name=admin_row_click><option>1</option><option>0</option><option selected>$admin_row_click</option></select>$NWB#settings-admin_row_click$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Enable Agent Transfer Logfile").": </td><td align=left><select size=1 name=enable_agc_xfer_log><option>1</option><option>0</option><option selected>$enable_agc_xfer_log</option></select>$NWB#settings-enable_agc_xfer_log$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Enable Agent Disposition Logfile").": </td><td align=left><select size=1 name=enable_agc_dispo_log><option>1</option><option>0</option><option selected>$enable_agc_dispo_log</option></select>$NWB#settings-enable_agc_dispo_log$NWE</td></tr>\n";
 		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Timeclock End Of Day").": </td><td align=left><input type=text name=timeclock_end_of_day size=5 maxlength=4 value=\"$timeclock_end_of_day\">$NWB#settings-timeclock_end_of_day$NWE</td></tr>\n";
@@ -33330,15 +33337,15 @@ if ($ADD=="0A")
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';} 
-		echo "<tr $bgcolor><td onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"><a href=\"$PHP_SELF?ADD=3&user=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
-		echo "<td onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"><font size=1>$row[1]</td>";
-		echo "<td onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"><font size=1>$row[2]</td>";
-		echo "<td onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"><font size=1>$row[3]</td>";
-		echo "<td onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"><font size=1>$row[4]</td>";
-		echo "<td align=center onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"><font size=1><a href=\"$PHP_SELF?ADD=3&user=$row[0]\">"._QXZ("MODIFY")."</a></td>";
-		echo "<td align=center onclick=\"window.document.location='./user_stats.php?user=$row[0]'\"><font size=1><a href=\"./user_stats.php?user=$row[0]\">"._QXZ("STATS")."</a></td>";
-		echo "<td align=center onclick=\"window.document.location='./user_status.php?user=$row[0]'\"><font size=1><a href=\"./user_status.php?user=$row[0]\">"._QXZ("STATUS")."</a></td>";
-		echo "<td align=center onclick=\"window.document.location='./AST_agent_time_sheet.php?agent=$row[0]'\"><font size=1><a href=\"./AST_agent_time_sheet.php?agent=$row[0]\">"._QXZ("TIME")."</a></td>\n";
+		echo "<tr $bgcolor><td"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"";} echo "><a href=\"$PHP_SELF?ADD=3&user=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<td"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"";} echo "><font size=1>$row[1]</td>";
+		echo "<td"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"";} echo "><font size=1>$row[2]</td>";
+		echo "<td"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"";} echo "><font size=1>$row[3]</td>";
+		echo "<td"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"";} echo "><font size=1>$row[4]</td>";
+		echo "<td align=center"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3&user=$row[0]'\"";} echo "><font size=1><a href=\"$PHP_SELF?ADD=3&user=$row[0]\">"._QXZ("MODIFY")."</a></td>";
+		echo "<td align=center"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='./user_stats.php?user=$row[0]'\"";} echo "><font size=1><a href=\"./user_stats.php?user=$row[0]\">"._QXZ("STATS")."</a></td>";
+		echo "<td align=center"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='./user_status.php?user=$row[0]'\"";} echo "><font size=1><a href=\"./user_status.php?user=$row[0]\">"._QXZ("STATUS")."</a></td>";
+		echo "<td align=center"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='./AST_agent_time_sheet.php?agent=$row[0]'\"";} echo "><font size=1><a href=\"./AST_agent_time_sheet.php?agent=$row[0]\">"._QXZ("TIME")."</a></td>\n";
 		echo "</tr>\n";
 		$o++;
 		}
@@ -33404,7 +33411,7 @@ if ($ADD==10)
 				{$bgcolor='class="records_list_x"';} 
 			else
 				{$bgcolor='class="records_list_y"';}
-			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=34&campaign_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=34&campaign_id=$row[0]\"><font size=1 color=black>$row[0]</a> &nbsp; </td>";
+			echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=34&campaign_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=34&campaign_id=$row[0]\"><font size=1 color=black>$row[0]</a> &nbsp; </td>";
 			echo "<td><font size=1>$row[1] &nbsp; </td>";
 			echo "<td><font size=1>$row[2] &nbsp; </td>";
 			echo "<td><font size=1>$row[7] &nbsp; </td>";
@@ -33485,7 +33492,7 @@ if ($ADD==100)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=311&list_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=311&list_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=311&list_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=311&list_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[7]</td>";
@@ -33601,7 +33608,7 @@ if ($ADD==1000)
 			{$bgcolor='class="records_list_x"';}
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3111&group_id=$group_id_ary[$o]'\"><td><a href=\"$PHP_SELF?ADD=3111&group_id=$group_id_ary[$o]\"><font size=1 color=black>$group_id_ary[$o]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3111&group_id=$group_id_ary[$o]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=3111&group_id=$group_id_ary[$o]\"><font size=1 color=black>$group_id_ary[$o]</a></td>";
 		echo "<td><font size=1> $group_name_ary[$o]</td>";
 		echo "<td><font size=1> $group_priority_ary[$o]</td>";
 		echo "<td><font size=1> $group_active_ary[$o] $allowed_campaigns_warning</td>";
@@ -33666,7 +33673,7 @@ if ( ($ADD==1800) and ($SSallow_emails>0) )
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3811&group_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=3811&group_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3811&group_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=3811&group_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3] $allowed_campaigns_warning</td>";
@@ -33725,7 +33732,7 @@ if ( ($ADD==1900) and ($SSallow_chats>0) )
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3911&group_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=3911&group_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3911&group_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=3911&group_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3] $allowed_campaigns_warning</td>";
@@ -33811,7 +33818,7 @@ if ($ADD==1300)
 			$row[3] .= '...';
 			}
 
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3311&did_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=3311&did_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3311&did_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=3311&did_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3]</td>";
@@ -33875,7 +33882,7 @@ if ($ADD==1500)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3511&menu_id=$menu_id[$o]'\"><td><a href=\"$PHP_SELF?ADD=3511&menu_id=$menu_id[$o]\"><font size=1 color=black>$menu_id[$o]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3511&menu_id=$menu_id[$o]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=3511&menu_id=$menu_id[$o]\"><font size=1 color=black>$menu_id[$o]</a></td>";
 		echo "<td><font size=1> $menu_name[$o]</td>";
 		echo "<td><font size=1> $menu_group[$o]</td>";
 		echo "<td><font size=1> $menu_prompt[$o]</td>";
@@ -33921,7 +33928,7 @@ if ($ADD==1700)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[4]</td>";
@@ -33942,7 +33949,7 @@ if ($ADD==1700)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[4]</td>";
@@ -34008,7 +34015,7 @@ if ($ADD==10000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31111&remote_agent_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=31111&remote_agent_id=$row[0]\"><font size=1 color=black>$row[1]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=31111&remote_agent_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=31111&remote_agent_id=$row[0]\"><font size=1 color=black>$row[1]</a></td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3]</td>";
 		echo "<td><font size=1> $row[4]</td>";
@@ -34055,7 +34062,7 @@ if ($ADD==12000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=32111&extension_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=32111&extension_id=$row[0]\"><font size=1 color=black>$row[1]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=32111&extension_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=32111&extension_id=$row[0]\"><font size=1 color=black>$row[1]</a></td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3]</td>";
 		echo "<td><font size=1> $row[4]</td>";
@@ -34098,7 +34105,7 @@ if ($ADD==100000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=311111&user_group=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=311111&user_group=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=311111&user_group=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=311111&user_group=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=311111&user_group=$row[0]\">"._QXZ("MODIFY")."</a></td></tr>\n";
@@ -34139,7 +34146,7 @@ if ($ADD==1000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3111111&script_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=3111111&script_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3111111&script_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=3111111&script_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3]</td>";
@@ -34180,7 +34187,7 @@ if ($ADD==10000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31111111&lead_filter_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=31111111&lead_filter_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=31111111&lead_filter_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=31111111&lead_filter_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=31111111&lead_filter_id=$row[0]\">"._QXZ("MODIFY")."</a></td></tr>\n";
@@ -34224,7 +34231,7 @@ if ($ADD==100000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=311111111&call_time_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=311111111&call_time_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=311111111&call_time_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=311111111&call_time_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2] </td>";
 		echo "<td><font size=1> $row[3] </td>";
@@ -34268,7 +34275,7 @@ if ($ADD==1000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3111111111&call_time_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=3111111111&call_time_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3111111111&call_time_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=3111111111&call_time_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3] </td>";
@@ -34314,7 +34321,7 @@ if ($ADD==1200000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3211111111&holiday_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=3211111111&holiday_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3211111111&holiday_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=3211111111&holiday_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td><font size=1> $row[3] </td>";
@@ -34360,7 +34367,7 @@ if ($ADD==130000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=331111111&shift_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=331111111&shift_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=331111111&shift_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=331111111&shift_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2] </td>";
 		echo "<td><font size=1> $row[3] </td>";
@@ -34426,7 +34433,7 @@ if ($ADD==10000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31111111111&extension=$row[0]&server_ip=$row[2]'\"><td><a href=\"$PHP_SELF?ADD=31111111111&extension=$row[0]&server_ip=$row[2]\"><font size=1 color=black>$row[0]</font></a></td>
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=31111111111&extension=$row[0]&server_ip=$row[2]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=31111111111&extension=$row[0]&server_ip=$row[2]\"><font size=1 color=black>$row[0]</font></a></td>
 		<td><font size=1>$row[1]</td>
 		<td><font size=1>$row[2]</td>
 		<td><font size=1>$row[3]</td>
@@ -34473,7 +34480,7 @@ if ($ADD==12000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=32111111111&alias_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=32111111111&alias_id=$row[0]\"><font size=1 color=black>$row[0]</font></a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=32111111111&alias_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=32111111111&alias_id=$row[0]\"><font size=1 color=black>$row[0]</font></a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[3]</td>";
@@ -34516,7 +34523,7 @@ if ($ADD==13000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=33111111111&group_alias_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=33111111111&group_alias_id=$row[0]\"><font size=1 color=black>$row[0]</font></a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=33111111111&group_alias_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=33111111111&group_alias_id=$row[0]\"><font size=1 color=black>$row[0]</font></a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[3]</td>";
@@ -34563,7 +34570,7 @@ if ($ADD==100000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=311111111111&server_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=311111111111&server_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=311111111111&server_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=311111111111&server_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[3]</td>";
@@ -34607,7 +34614,7 @@ if ($ADD==130000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=331111111111&template_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=331111111111&template_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=331111111111&template_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=331111111111&template_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=331111111111&template_id=$row[0]\">"._QXZ("MODIFY")."</a></td></tr>\n";
@@ -34656,7 +34663,7 @@ if ($ADD==140000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=341111111111&carrier_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=341111111111&carrier_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=341111111111&carrier_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=341111111111&carrier_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[3]</td>";
@@ -34706,7 +34713,7 @@ if ($ADD==150000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=351111111111&tts_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=351111111111&tts_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=351111111111&tts_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=351111111111&tts_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[4]</td>";
@@ -34754,7 +34761,7 @@ if ($ADD==160000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=361111111111&moh_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=361111111111&moh_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=361111111111&moh_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=361111111111&moh_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[3]</td>";
@@ -34800,7 +34807,7 @@ if ($ADD==170000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=371111111111&voicemail_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=371111111111&voicemail_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=371111111111&voicemail_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=371111111111&voicemail_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[3]</td>";
@@ -34845,7 +34852,7 @@ if ($ADD==180000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=381111111111&label_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=381111111111&label_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=381111111111&label_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=381111111111&label_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>$row[3]</td>";
@@ -34905,7 +34912,7 @@ if ($ADD==190000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=391111111111&contact_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=391111111111&contact_id=$row[0]\"><font size=1 color=black>$row[1] $row[2]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=391111111111&contact_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=391111111111&contact_id=$row[0]\"><font size=1 color=black>$row[1] $row[2]</a></td>";
 		echo "<td><font size=1>$row[3]</td>";
 		echo "<td><font size=1>$row[4]</td>";
 		echo "<td><font size=1>$row[5]</td>";
@@ -34951,7 +34958,7 @@ if ($ADD==192000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=392111111111&container_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=392111111111&container_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=392111111111&container_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=392111111111&container_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td><font size=1>".strlen($row[4])."</td>";
@@ -35008,7 +35015,7 @@ if ($ADD==193000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=393111111111&status_group_id=$status_group_id[$o]'\"><td><a href=\"$PHP_SELF?ADD=393111111111&status_group_id=$status_group_id[$o]\"><font size=1 color=black>$status_group_id[$o]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=393111111111&status_group_id=$status_group_id[$o]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=393111111111&status_group_id=$status_group_id[$o]\"><font size=1 color=black>$status_group_id[$o]</a></td>";
 		echo "<td><font size=1> $status_group_notes[$o]</td>";
 		echo "<td><font size=1> $admin_group[$o]</td>";
 		echo "<td><font size=1> $row[0]</td>";
@@ -35048,7 +35055,7 @@ if ($ADD==1000000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=3111111111111&conf_exten=$row[0]&server_ip=$row[1]'\"><td><a href=\"$PHP_SELF?ADD=3111111111111&conf_exten=$row[0]&server_ip=$row[1]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=3111111111111&conf_exten=$row[0]&server_ip=$row[1]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=3111111111111&conf_exten=$row[0]&server_ip=$row[1]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=3111111111111&conf_exten=$row[0]&server_ip=$row[1]\">"._QXZ("MODIFY")."</a></td></tr>\n";
@@ -35087,7 +35094,7 @@ if ($ADD==10000000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=31111111111111&conf_exten=$row[0]&server_ip=$row[1]'\"><td><a href=\"$PHP_SELF?ADD=31111111111111&conf_exten=$row[0]&server_ip=$row[1]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=31111111111111&conf_exten=$row[0]&server_ip=$row[1]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=31111111111111&conf_exten=$row[0]&server_ip=$row[1]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=31111111111111&conf_exten=$row[0]&server_ip=$row[1]\">"._QXZ("MODIFY")."</a></td></tr>\n";
@@ -35131,7 +35138,7 @@ if (($ADD==100000000000000) && ($qc_auth=='1'))
 			{
             $bgcolor='class="records_list_y"';
 			}
-        echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=881&campaign_id=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=881&campaign_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+        echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=881&campaign_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=881&campaign_id=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
         echo "<td><font size=1> $row[1]</td>";
         echo "<td><font size=1> $row[2]</td>";
         echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=31&campaign_id=$row[0]\">"._QXZ("MODIFY")."</a></td></tr>\n";
@@ -35272,7 +35279,7 @@ if ($ADD==700000000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=730000000000000&stage=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=730000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=730000000000000&stage=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=730000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=710000000000000&stage=$row[2]\">$row[2]</a></td>";
 		echo "<td><font size=1> $row[3]</td>";
@@ -35359,7 +35366,7 @@ if ($ADD==710000000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=730000000000000&stage=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=730000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=730000000000000&stage=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=730000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=710000000000000&stage=$row[2]\">$row[2]</a></td>";
 		echo "<td><font size=1> $row[3]</td>";
@@ -35449,7 +35456,7 @@ if ($ADD==720000000000000)
 				{$bgcolor='class="records_list_x"';} 
 			else
 				{$bgcolor='class="records_list_y"';}
-			echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=730000000000000&stage=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=730000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+			echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=730000000000000&stage=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=730000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 			echo "<td><font size=1> $row[1]</td>";
 			echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=710000000000000&stage=$row[2]\">$row[2]</a></td>";
 			echo "<td><font size=1> $row[3]</td>";
@@ -35596,7 +35603,7 @@ if ($ADD==800000000000000)
 		if ($row[9] > 10) {$run_color='color=purple';} 
 		if ($row[9] > 30) {$run_color='color=red';} 
 
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=830000000000000&stage=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=830000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=830000000000000&stage=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=830000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=810000000000000&stage=$row[2]\">$row[2]</a></td>";
 		echo "<td><font size=1> $row[3]</td>";
@@ -35662,7 +35669,7 @@ if ($ADD==810000000000000)
 		if ($row[9] > 10) {$run_color='color=purple';} 
 		if ($row[9] > 30) {$run_color='color=red';} 
 
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?ADD=830000000000000&stage=$row[0]'\"><td><a href=\"$PHP_SELF?ADD=830000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=830000000000000&stage=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=830000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> <a href=\"$PHP_SELF?ADD=810000000000000&stage=$row[2]\">$row[2]</a></td>";
 		echo "<td><font size=1> $row[3]</td>";
@@ -36179,27 +36186,27 @@ if ($ADD==999998)
 	echo "</TD>\n";
 	echo "<TD ALIGN=LEFT VALIGN=TOP WIDTH=220>\n";
 	echo "<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=5 WIDTH=100%>\n";
-	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=100000000';\">\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=100000000';\"";} echo ">\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=100000000\"><img src=\"images/icon_calltimes.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=100000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Call Times")." </SPAN></a></TD>\n";
 	echo "</TR>\n";
-	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=130000000';\">\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=130000000';\"";} echo ">\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=130000000\"><img src=\"images/icon_shifts.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=130000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Shifts")." </SPAN></a></TD>\n";
 	echo "</TR>\n";
-	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=10000000000';\">\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=10000000000';\"";} echo ">\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=10000000000\"><img src=\"images/icon_phones.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=10000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Phones")." </SPAN></a></TD>\n";
 	echo "</TR>\n";
-	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=130000000000';\">\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=130000000000';\"";} echo ">\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=130000000000\"><img src=\"images/icon_templates.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=130000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Templates")." </SPAN></a></TD>\n";
 	echo "</TR>\n";
-	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=140000000000';\">\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=140000000000';\"";} echo ">\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=140000000000\"><img src=\"images/icon_carriers.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=140000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Carriers")." </SPAN></a></TD>\n";
 	echo "</TR>\n";
-	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=100000000000';\">\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=100000000000';\"";} echo ">\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=100000000000\"><img src=\"images/icon_servers.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=100000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Servers")." </SPAN></a></TD>\n";
 	echo "</TR>\n";
@@ -36208,27 +36215,27 @@ if ($ADD==999998)
 
 	echo "<TD ALIGN=LEFT VALIGN=TOP WIDTH=220>\n";
 	echo "<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=5 WIDTH=100%>\n";
-	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=1000000000000';\">\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=1000000000000';\"";} echo ">\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=1000000000000\"><img src=\"images/icon_conferences.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=1000000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Conferences")." </SPAN></a></TD>\n";
 	echo "</TR>\n";
-	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=311111111111111';\">\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=311111111111111';\"";} echo ">\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=311111111111111\"><img src=\"images/icon_settings.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=311111111111111\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("System Settings")." </SPAN></a></TD>\n";
 	echo "</TR>\n";
-	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=180000000000';\">\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=180000000000';\"";} echo ">\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=180000000000\"><img src=\"images/icon_screenlabels.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=180000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Agent Screen Labels")." </SPAN></a></TD>\n";
 	echo "</TR>\n";
-	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=321111111111111';\">\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=321111111111111';\"";} echo ">\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=321111111111111\"><img src=\"images/icon_statuses.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=321111111111111\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("System Statuses")." </SPAN></a></TD>\n";
 	echo "</TR>\n";
-	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=193000000000';\">\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=193000000000';\"";} echo ">\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=193000000000\"><img src=\"images/icon_statusgroups.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=193000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Status Groups")." </SPAN></a></TD>\n";
 	echo "</TR>\n";
-	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=170000000000';\">\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=170000000000';\"";} echo ">\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=170000000000\"><img src=\"images/icon_voicemail.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=170000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Voicemail")." </SPAN></a></TD>\n";
 	echo "</TR>\n";
@@ -36239,39 +36246,39 @@ if ($ADD==999998)
 	echo "<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=5 WIDTH=100%>\n";
 	if ($SSemail_enabled > 0)
 		{
-		echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='admin_email_accounts.php';\">\n";
+		echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='admin_email_accounts.php';\"";} echo ">\n";
 		echo "<TD><a href=\"admin_email_accounts.php\"><img src=\"images/icon_email.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 		echo "<TD><a href=\"admin_email_accounts.php\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Email Accounts")." </SPAN></a></TD>\n";
 		echo "</TR>\n";
 		}
 	if ( ($sounds_central_control_active > 0) or ($SSsounds_central_control_active > 0) )
 		{
-		echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='audio_store.php';\">\n";
+		echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='audio_store.php';\"";} echo ">\n";
 		echo "<TD><a href=\"audio_store.php\"><img src=\"images/icon_audiostore.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 		echo "<TD><a href=\"audio_store.php\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Audio Store")." </SPAN></a></TD>\n";
 		echo "</TR>\n";
-		echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=160000000000';\">\n";
+		echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=160000000000';\"";} echo ">\n";
 		echo "<TD><a href=\"$PHP_SELF?ADD=160000000000\"><img src=\"images/icon_musiconhold.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 		echo "<TD><a href=\"$PHP_SELF?ADD=160000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Music On Hold")." </SPAN></a></TD>\n";
 		echo "</TR>\n";
 		}
 	if ($SSenable_languages > 0)
 		{
-		echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='admin_languages.php?ADD=163000000000';\">\n";
+		echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='admin_languages.php?ADD=163000000000';\"";} echo ">\n";
 		echo "<TD><a href=\"admin_languages.php?ADD=163000000000\"><img src=\"images/icon_languages.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 		echo "<TD><a href=\"admin_languages.php?ADD=163000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Languages")." </SPAN></a></TD>\n";
 		echo "</TR>\n";
 		}
 	if (preg_match("/avatar/",$SSactive_modules) )
 		{
-		echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='admin_avatar.php?ADD=162000000000';\">\n";
+		echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='admin_avatar.php?ADD=162000000000';\"";} echo ">\n";
 		echo "<TD><a href=\"admin_avatar.php?ADD=162000000000\"><img src=\"images/icon_audioavatars.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 		echo "<TD><a href=\"admin_avatar.php?ADD=162000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Audio Avatars")." </SPAN></a></TD>\n";
 		echo "</TR>\n";
 		}
 	if ($SSenable_tts_integration > 0)
 		{
-		echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=150000000000';\">\n";
+		echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=150000000000';\"";} echo ">\n";
 		echo "<TD><a href=\"$PHP_SELF?ADD=150000000000\"><img src=\"images/icon_texttospeech.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 		echo "<TD><a href=\"$PHP_SELF?ADD=150000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Text To Speech")." </SPAN></a></TD>\n";
 		echo "</TR>\n";
@@ -36283,19 +36290,19 @@ if ($ADD==999998)
 	echo "<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=5 WIDTH=100%>\n";
 	if ($SScallcard_enabled > 0)
 		{
-		echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='callcard_admin.php';\">\n";
+		echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='callcard_admin.php';\"";} echo ">\n";
 		echo "<TD><a href=\"callcard_admin.php\"><img src=\"images/icon_callcard.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 		echo "<TD><a href=\"callcard_admin.php\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("CallCard Admin")." </SPAN></a></TD>\n";
 		echo "</TR>\n";
 		}
 	if ($SScontacts_enabled > 0)
 		{
-		echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=190000000000';\">\n";
+		echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=190000000000';\"";} echo ">\n";
 		echo "<TD><a href=\"$PHP_SELF?ADD=190000000000\"><img src=\"images/icon_contacts.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 		echo "<TD><a href=\"$PHP_SELF?ADD=190000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Contacts")." </SPAN></a></TD>\n";
 		echo "</TR>\n";
 		}
-	echo "<TR CLASS=\"adminmenu_style_selected\" onclick=\"window.document.location='$PHP_SELF?ADD=192000000000';\">\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=192000000000';\"";} echo ">\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=192000000000\"><img src=\"images/icon_settingscontainer.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 	echo "<TD><a href=\"$PHP_SELF?ADD=192000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Settings Containers")." </SPAN></a></TD>\n";
 	echo "</TR>\n";
@@ -36890,7 +36897,7 @@ if ($ADD==999990)
 
 		echo "<center>";
 		echo "<TABLE width=$section_width cellpadding=6 cellspacing=0>\n";
-		echo "<tr onclick=\"window.document.location='realtime_report.php?report_display_type=HTML';\">";
+		echo "<tr"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='realtime_report.php?report_display_type=HTML';\"";} echo ">";
 		echo "<td align='center' valign='middle' bgcolor='#015b91' rowspan=2><a href=\"realtime_report.php?report_display_type=HTML\"><img src=\"images/icon_users.png\" width=42 height=42 border=0></a></td>";
 		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:11;color:white;font-weight:bold;\">"._QXZ("Agents Logged In")."</font></td>";
 		echo "<td width=10 rowspan=2> &nbsp; </td>";
@@ -36903,7 +36910,7 @@ if ($ADD==999990)
 		echo "<td align='center' valign='middle' bgcolor='#015b91' rowspan=2><a href=\"realtime_report.php?report_display_type=HTML\"><img src=\"images/icon_ringing.png\" width=42 height=42 border=0></a></td>";
 		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:11;color:white;font-weight:bold;\">"._QXZ("Calls Ringing")."</font></td>";
 		echo "</tr>";
-		echo "<tr onclick=\"window.document.location='realtime_report.php?report_display_type=HTML';\">";
+		echo "<tr"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='realtime_report.php?report_display_type=HTML';\"";} echo ">";
 		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:18;color:white;font-weight:bold;\">$agent_total</font></td>";
 		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:18;color:white;font-weight:bold;\">$agent_incall</font></td>";
 		echo "<td align='center' valign='middle' bgcolor='#015b91'><font style=\"font-family:HELVETICA;font-size:18;color:white;font-weight:bold;\">$agent_incall</font></td>";

@@ -563,3 +563,7 @@ UPDATE system_settings SET db_schema_version='1456',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD callback_useronly_move_minutes MEDIUMINT(5) UNSIGNED default '0';
 
 UPDATE system_settings SET db_schema_version='1457',db_schema_update_date=NOW() where db_schema_version < 1457;
+
+ALTER TABLE system_settings ADD admin_row_click ENUM('0', '1') default '1';
+
+UPDATE system_settings SET db_schema_version='1458',db_schema_update_date=NOW() where db_schema_version < 1458;

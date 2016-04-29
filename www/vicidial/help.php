@@ -86,6 +86,7 @@
 # 160324-1940 - Added callback_useronly_move_minutes
 # 160407-1931 - Updated Phones Email entry
 # 160414-0916 - Added default_phone_code
+# 160429-0834 - Added settings-admin_row_click
 #
 
 
@@ -4803,6 +4804,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="settings-nocache_admin">
 <BR>
 <B><?php echo _QXZ("Admin No-Cache"); ?> -</B><?php echo _QXZ("Setting this to 1 will set all admin pages to web browser no-cache, so every screen has to be reloaded every time it is viewed, even if clicking back on the browser. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="settings-admin_row_click">
+<BR>
+<B><?php echo _QXZ("Admin Row Click"); ?> -</B><?php echo _QXZ("Setting this to 1 will allow you to click on a row to go to a record link in addition to being able to go to the record link by clicking on the text link. Default is 1 for enabled."); ?>
 
 <BR>
 <A NAME="settings-enable_agc_xfer_log">

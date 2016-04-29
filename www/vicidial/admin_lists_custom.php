@@ -37,10 +37,11 @@
 # 160325-1431 - Changes for sidebar update
 # 160404-0938 - design changes
 # 160414-1243 - Fixed translation issue with COPY form
+# 160429-1125 - Added admin_row_click option
 #
 
-$admin_version = '2.12-29';
-$build = '160414-1243';
+$admin_version = '2.12-30';
+$build = '160429-1125';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -1389,7 +1390,7 @@ if ($action == "LIST")
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor align=right onclick=\"window.document.location='$PHP_SELF?action=MODIFY_CUSTOM_FIELDS&list_id=$A_list_id[$o]'\"><td><a href=\"admin.php?ADD=311&list_id=$A_list_id[$o]\"><font size=1 color=black>$A_list_id[$o]</a></td>";
+		echo "<tr $bgcolor align=right"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?action=MODIFY_CUSTOM_FIELDS&list_id=$A_list_id[$o]'\"";} echo "><td><a href=\"admin.php?ADD=311&list_id=$A_list_id[$o]\"><font size=1 color=black>$A_list_id[$o]</a></td>";
 		echo "<td align=right><font size=1> $A_list_name[$o]</td>";
 		echo "<td align=right><font size=1> $A_active[$o]</td>";
 		echo "<td align=right><font size=1> $A_campaign_id[$o]</td>";
@@ -1465,7 +1466,7 @@ if ($action == "ADMIN_LOG")
 				{$bgcolor='class="records_list_x"';} 
 			else
 				{$bgcolor='class="records_list_y"';}
-			echo "<tr $bgcolor onclick=\"window.document.location='admin.php?ADD=730000000000000&stage=$row[0]'\"><td><a href=\"admin.php?ADD=730000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
+			echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='admin.php?ADD=730000000000000&stage=$row[0]'\"";} echo "><td><a href=\"admin.php?ADD=730000000000000&stage=$row[0]\"><font size=1 color=black>$row[0]</a></td>";
 			echo "<td><font size=1> $row[1]</td>";
 			echo "<td><font size=1> <a href=\"admin.php?ADD=710000000000000&stage=$row[2]\">$row[2]</a></td>";
 			echo "<td><font size=1> $row[3]</td>";

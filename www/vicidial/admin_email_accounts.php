@@ -19,10 +19,11 @@
 # 150513-2310 - Added POP3 Auth Mode
 # 160330-1552 - navigation changes and fixes
 # 160404-0936 - design changes
+# 160429-1123 - Added admin_row_click option
 #
 
-$admin_version = '2.12-13';
-$build = '160404-0936';
+$admin_version = '2.12-14';
+$build = '160429-1123';
 
 $sh="emails"; 
 
@@ -868,7 +869,7 @@ else
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?eact=UPDATE&email_account_id=$row[email_account_id]'\"><td><a href=\"$PHP_SELF?eact=UPDATE&email_account_id=$row[email_account_id]\"><font size=1 color=black>$row[email_account_id]</a></font></td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?eact=UPDATE&email_account_id=$row[email_account_id]'\"";} echo "><td><a href=\"$PHP_SELF?eact=UPDATE&email_account_id=$row[email_account_id]\"><font size=1 color=black>$row[email_account_id]</a></font></td>";
 		echo "<td><font size=1> $row[email_account_name]</font></td>";
 		echo "<td><font size=1> $row[email_account_description]</font></td>";
 		echo "<td><font size=1> $row[email_replyto_address]</font></td>";

@@ -20,10 +20,11 @@
 # 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 # 160325-1432 - Changes for sidebar update
 # 160404-0939 - design changes
+# 160429-1126 - Added admin_row_click option
 #
 
-$version = '2.12-12';
-$build = '160404-0939';
+$version = '2.12-13';
+$build = '160429-1126';
 
 $MT[0]='';
 
@@ -1089,7 +1090,7 @@ if ($action == "LIST_ALL_TERRITORIES")
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
-		echo "<tr $bgcolor onclick=\"window.document.location='$PHP_SELF?action=MODIFY_TERRITORY&territory=$Lterritory[$i]'\"><td><font size=1>$i</td>";
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?action=MODIFY_TERRITORY&territory=$Lterritory[$i]'\"";} echo "><td><font size=1>$i</td>";
 		echo "<td><font size=1> $Lterritory_id[$i] </td>";
 		echo "<td> <a href=\"$PHP_SELF?action=MODIFY_TERRITORY&territory=$Lterritory[$i]\"><font size=1 color=black>$Lterritory[$i]</a></td>";
 		echo "<td><font size=1> $Lterritory_description[$i]</td>";

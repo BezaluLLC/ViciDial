@@ -1649,7 +1649,8 @@ cache_carrier_stats_realtime ENUM('0','1') default '0',
 oldest_logs_date DATETIME,
 log_recording_access ENUM('0', '1') default '0',
 report_default_format ENUM('TEXT', 'HTML') default 'TEXT',
-alt_ivr_logging ENUM('0', '1') default '0'
+alt_ivr_logging ENUM('0', '1') default '0',
+admin_row_click ENUM('0', '1') default '1'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3743,4 +3744,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1457',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1458',db_schema_update_date=NOW(),reload_timestamp=NOW();
