@@ -3760,12 +3760,13 @@ else
 # 160414-1013 - Added default_phone_code to system_settings
 # 160427-1656 - Added more detail on active servers column on reports page
 # 160429-0835 - Added admin_row_click system settings option
+# 160506-0644 - Fixed old mysql connector, issue #950
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-552a';
-$build = '160429-0835';
+$admin_version = '2.12-553a';
+$build = '160506-0644';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -32887,7 +32888,7 @@ if ($ADD==241111111111111)
 	{
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	$stmt="SELECT count(*) from vicidial_qc_codes where code='$code';";
-	$rslt=mysql_query($stmt, $link);
+	$rslt=mysql_to_mysqli($stmt, $link);
 	$row=mysqli_fetch_row($rslt);
 	if ($row[0] > 0)
 		{echo "<br>"._QXZ("QC STATUS CODE NOT ADDED - there is already a qc status code in the system with this name").": $row[0]\n";}
@@ -32905,7 +32906,7 @@ if ($ADD==241111111111111)
 			if (isset($_POST["qc_category"])) {$qc_category=$_POST["qc_category"];}
 
 			$stmt="INSERT INTO vicidial_qc_codes (code,code_name,qc_result_type) values('$code','$code_name','$qc_category');";
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|";
@@ -32913,7 +32914,7 @@ if ($ADD==241111111111111)
 			$SQL_log = addslashes($SQL_log);
 			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='QCSTATUSES', event_type='ADD', record_id='$code', event_code='ADMIN ADD QC STATUS', event_sql=\"$SQL_log\", event_notes='';";
 			if ($DB) {echo "|$stmt|\n";}
-			$rslt=mysql_query($stmt, $link);
+			$rslt=mysql_to_mysqli($stmt, $link);
 			}
 		}
 	$ADD=341111111111111;
@@ -32942,13 +32943,13 @@ if ($ADD==341111111111111)
 
 		##### go through each QC status code
 		$stmt="SELECT count(*) from vicidial_qc_codes;";
-		$rslt=mysql_query($stmt, $link);
+		$rslt=mysql_to_mysqli($stmt, $link);
 		$rowx=mysqli_fetch_row($rslt);
 		if ($rowx[0] > 0)
 			{
 			$stmt="SELECT code,code_name,qc_result_type from vicidial_qc_codes order by code;";
-			$rslt=mysql_query($stmt, $link);
-			$statuses_to_print = mysql_num_rows($rslt);
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$statuses_to_print = mysqli_num_rows($rslt);
 			$o=0;
 			while ($statuses_to_print > $o)
 				{
