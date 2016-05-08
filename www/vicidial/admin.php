@@ -3808,12 +3808,13 @@ else
 # 160429-0835 - Added admin_row_click system settings option
 # 160506-0644 - Fixed old mysql connector, issue #950
 # 160508-1155 - Added screen colors admin section
+# 160508-1948 - Changed lists view to default to not show leads counts, with link to click to show counts
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-554a';
-$build = '160508-1155';
+$admin_version = '2.12-555a';
+$build = '160508-1948';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -33869,37 +33870,51 @@ if ($ADD==100)
 	$CALLDATElink='stage=CALLDATEDOWN';
 	$SQLorder='order by list_id';
 	if (preg_match('/LISTIDUP/i', $stage))		{$SQLorder='order by list_id asc';				$LISTlink='stage=LISTIDDOWN';}
-	if (preg_match('/LISTIDDOWN/i', $stage))		{$SQLorder='order by list_id desc';				$LISTlink='stage=LISTIDUP';}
-	if (preg_match('/LISTNAMEUP/i', $stage))		{$SQLorder='order by list_name asc';			$NAMElink='stage=LISTNAMEDOWN';}
+	if (preg_match('/LISTIDDOWN/i', $stage))	{$SQLorder='order by list_id desc';				$LISTlink='stage=LISTIDUP';}
+	if (preg_match('/LISTNAMEUP/i', $stage))	{$SQLorder='order by list_name asc';			$NAMElink='stage=LISTNAMEDOWN';}
 	if (preg_match('/LISTNAMEDOWN/i', $stage))	{$SQLorder='order by list_name desc';			$NAMElink='stage=LISTNAMEUP';}
-	if (preg_match('/CALLTIMEUP/i', $stage))		{$SQLorder='order by local_call_time asc';		$CALLTIMElink='stage=CALLTIMEDOWN';}
-	if (preg_match('/CALLTIMEDOWN/i', $stage))		{$SQLorder='order by local_call_time desc';		$CALLTIMElink='stage=CALLTIMEUP';}	
+	if (preg_match('/CALLTIMEUP/i', $stage))	{$SQLorder='order by local_call_time asc';		$CALLTIMElink='stage=CALLTIMEDOWN';}
+	if (preg_match('/CALLTIMEDOWN/i', $stage))	{$SQLorder='order by local_call_time desc';		$CALLTIMElink='stage=CALLTIMEUP';}	
 	if (preg_match('/TALLYUP/i', $stage))		{$SQLorder='order by tally asc';				$TALLYlink='stage=TALLYDOWN';}
 	if (preg_match('/TALLYDOWN/i', $stage))		{$SQLorder='order by tally desc';				$TALLYlink='stage=TALLYUP';}
 	if (preg_match('/ACTIVEUP/i', $stage))		{$SQLorder='order by active asc';				$ACTIVElink='stage=ACTIVEDOWN';}
-	if (preg_match('/ACTIVEDOWN/i', $stage))		{$SQLorder='order by active desc';				$ACTIVElink='stage=ACTIVEUP';}
+	if (preg_match('/ACTIVEDOWN/i', $stage))	{$SQLorder='order by active desc';				$ACTIVElink='stage=ACTIVEUP';}
 	if (preg_match('/CAMPAIGNUP/i',$stage))		{$SQLorder='order by campaign_id asc';			$CAMPAIGNlink='stage=CAMPAIGNDOWN';}
 	if (preg_match('/CAMPAIGNUP/i', $stage))	{$SQLorder='order by campaign_id desc';			$CAMPAIGNlink='stage=CAMPAIGNUP';}
-	if (preg_match('/CALLDATEUP/i', $stage))		{$SQLorder='order by list_lastcalldate asc';	$CALLDATElink='stage=CALLDATEDOWN';}
+	if (preg_match('/CALLDATEUP/i', $stage))	{$SQLorder='order by list_lastcalldate asc';	$CALLDATElink='stage=CALLDATEDOWN';}
 	if (preg_match('/CALLDATEDOWN/i', $stage))	{$SQLorder='order by list_lastcalldate desc';	$CALLDATElink='stage=CALLDATEUP';}
 	$stmt="SELECT vls.list_id,list_name,list_description,count(*) as tally,active,list_lastcalldate,campaign_id,reset_time,DATE_FORMAT(expiration_date,'%Y%m%d'),local_call_time from vicidial_lists vls,vicidial_list vl where vls.list_id=vl.list_id $LOGallowed_campaignsSQL group by list_id $SQLorder";
-	if ($SSadmin_list_counts < 1)
+	if ( ($SSadmin_list_counts < 1) or ($rank != '999') )
 		{$stmt="SELECT list_id,list_name,list_description,'X' as tally,active,list_lastcalldate,campaign_id,reset_time,DATE_FORMAT(expiration_date,'%Y%m%d'),local_call_time from vicidial_lists $whereLOGallowed_campaignsSQL $SQLorder";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$lists_to_print = mysqli_num_rows($rslt);
 
-	echo "<img src=\"images/icon_black_lists.png\" alt=\"Lists\" width=42 height=42> "._QXZ("LIST LISTINGS").":\n";
+	echo "<img src=\"images/icon_black_lists.png\" alt=\"Lists\" width=42 height=42> "._QXZ("LIST LISTINGS").": \n";
+	$rankLINK="";
+	if ($SSadmin_list_counts > 0)
+		{
+		if ($rank == '999')
+			{
+			$rankLINK="&rank=999";
+			echo " &nbsp; <a href=\"$PHP_SELF?ADD=100\"><font size=1 color=black>"._QXZ("hide list leads counts")."</font></a>\n";
+			}
+		else
+			{
+			$rankLINK="";
+			echo " &nbsp; <a href=\"$PHP_SELF?ADD=100&rank=999\"><font size=1 color=black>"._QXZ("show list leads counts")."</font></a>\n";
+			}
+		}
 	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
 	echo "<TR BGCOLOR=BLACK>";
-	echo "<TD><a href=\"$PHP_SELF?ADD=100&$LISTlink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("LIST ID")."</B></a></TD>";
-	echo "<TD><a href=\"$PHP_SELF?ADD=100&$NAMElink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("LIST NAME")."</B></a></TD>";
+	echo "<TD><a href=\"$PHP_SELF?ADD=100&$LISTlink$rankLINK\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("LIST ID")."</B></a></TD>";
+	echo "<TD><a href=\"$PHP_SELF?ADD=100&$NAMElink$rankLINK\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("LIST NAME")."</B></a></TD>";
 	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("DESCRIPTION")."</B></TD>\n";
 	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("RTIME")."</B></TD>\n";
-	echo "<TD><a href=\"$PHP_SELF?ADD=100&$TALLYlink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("LEADS COUNT")."</B></a></TD>\n";
-	echo "<TD><a href=\"$PHP_SELF?ADD=100&campaign_id=$campaign_id&$CALLTIMElink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("CALL TIME")."</B></a></TD>";
-	echo "<TD><a href=\"$PHP_SELF?ADD=100&$ACTIVElink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("ACTIVE")."</B></a></TD>";
-	echo "<TD><a href=\"$PHP_SELF?ADD=100&$CALLDATElink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("LAST CALL DATE")."</B></a></TD>";
-	echo "<TD><a href=\"$PHP_SELF?ADD=100&$CAMPAIGNlink\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("CAMPAIGN")."</B></a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=100&$TALLYlink$rankLINK\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("LEADS COUNT")."</B></a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=100&campaign_id=$campaign_id&$CALLTIMElink$rankLINK\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("CALL TIME")."</B></a></TD>";
+	echo "<TD><a href=\"$PHP_SELF?ADD=100&$ACTIVElink$rankLINK\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("ACTIVE")."</B></a></TD>";
+	echo "<TD><a href=\"$PHP_SELF?ADD=100&$CALLDATElink$rankLINK\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("LAST CALL DATE")."</B></a></TD>";
+	echo "<TD><a href=\"$PHP_SELF?ADD=100&$CAMPAIGNlink$rankLINK\"><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("CAMPAIGN")."</B></a></TD>\n";
 	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("MODIFY")."</TD>\n";
 	echo "</TR>\n";
 
