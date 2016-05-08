@@ -14,10 +14,11 @@
 # 160330-1553 - navigation changes and fixes
 # 160404-0935 - design changes
 # 160429-1124 - Added admin_row_click option
+# 160508-0210 - Added screen colors feature
 #
 
-$admin_version = '2.12-8';
-$build = '160429-1124';
+$admin_version = '2.12-9';
+$build = '160508-0210';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -79,7 +80,7 @@ $PHP_SELF=$_SERVER['PHP_SELF'];
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled,admin_modify_refresh,nocache_admin,webroot_writable,allow_emails,active_modules,sounds_central_control_active,qc_features_active,contacts_enabled,enable_languages,language_method,admin_web_directory FROM system_settings;";
+$stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled,admin_modify_refresh,nocache_admin,webroot_writable,allow_emails,active_modules,sounds_central_control_active,qc_features_active,contacts_enabled,enable_languages,language_method,admin_web_directory,admin_screen_colors FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -102,6 +103,7 @@ if ($qm_conf_ct > 0)
 	$SSenable_languages =			$row[13];
 	$SSlanguage_method =			$row[14];
 	$SSadmin_web_directory =		$row[15];
+	$SSadmin_screen_colors =		$row[16];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -231,6 +233,42 @@ $LOGallowed_campaigns =			$row[0];
 $LOGallowed_reports =			$row[1];
 $LOGadmin_viewable_groups =		$row[2];
 $LOGadmin_viewable_call_times =	$row[3];
+
+$SSmenu_background='015B91';
+$SSframe_background='D9E6FE';
+$SSstd_row1_background='9BB9FB';
+$SSstd_row2_background='B9CBFD';
+$SSstd_row3_background='8EBCFD';
+$SSstd_row4_background='B6D3FC';
+$SSstd_row5_background='A3C3D6';
+$SSalt_row1_background='BDFFBD';
+$SSalt_row2_background='99FF99';
+$SSalt_row3_background='CCFFCC';
+
+if ($SSadmin_screen_colors != 'default')
+	{
+	$stmt = "SELECT menu_background,frame_background,std_row1_background,std_row2_background,std_row3_background,std_row4_background,std_row5_background,alt_row1_background,alt_row2_background,alt_row3_background FROM vicidial_screen_colors where colors_id='$SSadmin_screen_colors';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$colors_ct = mysqli_num_rows($rslt);
+	if ($colors_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$SSmenu_background =		$row[0];
+		$SSframe_background =		$row[1];
+		$SSstd_row1_background =	$row[2];
+		$SSstd_row2_background =	$row[3];
+		$SSstd_row3_background =	$row[4];
+		$SSstd_row4_background =	$row[5];
+		$SSstd_row5_background =	$row[6];
+		$SSalt_row1_background =	$row[7];
+		$SSalt_row2_background =	$row[8];
+		$SSalt_row3_background =	$row[9];
+		}
+	}
+$Mhead_color =	$SSstd_row5_background;
+$Mmain_bgcolor = $SSmenu_background;
+$Mhead_color =	$SSstd_row5_background;
 
 
 
@@ -600,16 +638,16 @@ if ($ADD==363211111111)
 				$source =					$row[3];
 				$modify_date =				$row[4];
 
-				$ttbgcolor='#B6D3FC';
+				$ttbgcolor='#'.$SSstd_row4_background;
 				if (strlen($translated_text) < 1)
 					{$ttbgcolor='#FFFF99';}
-				echo "<tr bgcolor=#015B91>";
+				echo "<tr bgcolor=#$SSmenu_background>";
 				echo "<td align=left width=100><font color=white><B>$o</B></td>";
 				echo "<td align=left width=100><font color=white>"._QXZ("ID").": $phrase_id</td>";
 				echo "<td align=left width=100><font color=white>"._QXZ("user").": $source</td>";
 				echo "<td align=left width=300><font color=white>"._QXZ("last modified").": $modify_date</td>";
 				echo "<td align=right width=200><a href=\"$PHP_SELF?ADD=463111111111&language_id=$language_id&DB=$DB&action=$action&phrase_id=$phrase_id&stage=PHRASEDELETE\" target=\"_parent\"><font color=white>"._QXZ("delete phrase")."</a></td></tr>\n";
-				echo "<tr bgcolor=#9BB9FB><td align=left colspan=5>$english_text</td></tr>\n";
+				echo "<tr bgcolor=#$SSstd_row1_background><td align=left colspan=5>$english_text</td></tr>\n";
 				echo "<tr bgcolor=$ttbgcolor><td align=left colspan=5><span id=\"TEXT-----$language_id$DS$phrase_id\">$translated_text</span>";
 				echo " &nbsp; <span id=\"LINK-----$language_id$DS$phrase_id\">";
 				echo "<a href=\"#\" onclick=\"edit_translation('TEXT-----$language_id$DS$phrase_id','LINK-----$language_id$DS$phrase_id');return false;\">edit</a></span></td></tr>\n";
@@ -746,24 +784,24 @@ if ($ADD==163111111111)
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Language ID").": </td><td align=left><input type=text name=language_id size=50 maxlength=100>$NWB#languages-language_id$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right nowrap>"._QXZ("Language Description").": </td><td align=left nowrap><input type=text name=language_description size=70 maxlength=255>$NWB#languages-language_description$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Language Code").": </td><td align=left><input type=text name=language_code size=10 maxlength=20>$NWB#languages-language_code$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Language ID").": </td><td align=left><input type=text name=language_id size=50 maxlength=100>$NWB#languages-language_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right nowrap>"._QXZ("Language Description").": </td><td align=left nowrap><input type=text name=language_description size=70 maxlength=255>$NWB#languages-language_description$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Language Code").": </td><td align=left><input type=text name=language_code size=10 maxlength=20>$NWB#languages-language_code$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"---ALL---\">"._QXZ("All Admin User Groups")."</option>\n";
 		echo "</select>$NWB#languages-user_group$NWE</td></tr>\n";
 
 		if ($gathered_phrases_TOTAL > 0)
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Populate Language").": </td><td align=left><select size=1 name=stage><option SELECTED value='NONE'>"._QXZ("Leave Empty")."</option><option value='ALL'>"._QXZ("All Gathered Phrases").": $gathered_phrases_TOTAL</option><option value='AGENT'>"._QXZ("Agent Phrases Only").": $gathered_phrases_AGC</option><option value='ADMIN'>"._QXZ("Admin Phrases Only").": $gathered_phrases_ADMIN</option></select>$NWB#languages-populate$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Populate Language").": </td><td align=left><select size=1 name=stage><option SELECTED value='NONE'>"._QXZ("Leave Empty")."</option><option value='ALL'>"._QXZ("All Gathered Phrases").": $gathered_phrases_TOTAL</option><option value='AGENT'>"._QXZ("Agent Phrases Only").": $gathered_phrases_AGC</option><option value='ADMIN'>"._QXZ("Admin Phrases Only").": $gathered_phrases_ADMIN</option></select>$NWB#languages-populate$NWE</td></tr>\n";
 			}
 		else
 			{
-			echo "<tr bgcolor=#B6D3FC><td align=right><input type=hidden name=stage value=\"NONE\"></td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right><input type=hidden name=stage value=\"NONE\"></td></tr>\n";
 			}
 
-		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE='"._QXZ("SUBMIT")."'></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=submit VALUE='"._QXZ("SUBMIT")."'></td></tr>\n";
 		echo "</TABLE></center>\n";
 		}
 	else
@@ -793,9 +831,9 @@ if ($ADD==163211111111)
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Language ID").": </td><td align=left><input type=text name=language_id size=50 maxlength=100>$NWB#languages-language_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Language ID").": </td><td align=left><input type=text name=language_id size=50 maxlength=100>$NWB#languages-language_id$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Source Language ID").": </td><td align=left><select size=1 name=source_language_id>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Source Language ID").": </td><td align=left><select size=1 name=source_language_id>\n";
 
 		$stmt="SELECT language_id,language_description from vicidial_languages $whereLOGadmin_viewable_groupsSQL order by language_id;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -812,7 +850,7 @@ if ($ADD==163211111111)
 		echo "$groups_list";
 		echo "</select>$NWB#languages-language_id$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE='"._QXZ("SUBMIT")."'></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=submit VALUE='"._QXZ("SUBMIT")."'></td></tr>\n";
 		echo "</TABLE></center>\n";
 		}
 	else
@@ -841,7 +879,7 @@ if ($ADD==163311111111)
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Language ID").": </td><td align=left><select size=1 name=language_id>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Language ID").": </td><td align=left><select size=1 name=language_id>\n";
 
 		$stmt="SELECT language_id,language_description from vicidial_languages $whereLOGadmin_viewable_groupsSQL order by language_id;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -858,11 +896,11 @@ if ($ADD==163311111111)
 		echo "$groups_list";
 		echo "</select>$NWB#languages-language_id$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Import Action").": </td><td align=left><select size=1 name=stage><option SELECTED value='ADD'>"._QXZ("Only Add Missing Phrases")."</option><option value='UPDATE'>"._QXZ("Only Update Existing Phrases")."</option><option value='ADD_UPDATE'>"._QXZ("Add and Update Phrases")."</option></select>$NWB#languages-import_action$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Import Action").": </td><td align=left><select size=1 name=stage><option SELECTED value='ADD'>"._QXZ("Only Add Missing Phrases")."</option><option value='UPDATE'>"._QXZ("Only Update Existing Phrases")."</option><option value='ADD_UPDATE'>"._QXZ("Add and Update Phrases")."</option></select>$NWB#languages-import_action$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Import Data").": </td><td align=left><TEXTAREA name=\"import_data\" id=\"import_data\" ROWS=40 COLS=120></TEXTAREA>$NWB#languages-import_data$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Import Data").": </td><td align=left><TEXTAREA name=\"import_data\" id=\"import_data\" ROWS=40 COLS=120></TEXTAREA>$NWB#languages-import_data$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE='"._QXZ("SUBMIT")."'></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=submit VALUE='"._QXZ("SUBMIT")."'></td></tr>\n";
 		echo "</TABLE></center>\n";
 		}
 	else
@@ -891,7 +929,7 @@ if ($ADD==163411111111)
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Language ID").": </td><td align=left><select size=1 name=language_id>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Language ID").": </td><td align=left><select size=1 name=language_id>\n";
 
 		$stmt="SELECT language_id,language_description from vicidial_languages $whereLOGadmin_viewable_groupsSQL order by language_id;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -908,9 +946,9 @@ if ($ADD==163411111111)
 		echo "$groups_list";
 		echo "</select>$NWB#languages-language_id$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Export Action").": </td><td align=left><select size=1 name=stage><option SELECTED value='ONLY_UNTRANSLATED'>"._QXZ("Only NOT Translated Phrases")."</option><option value='ONLY_TRANSLATED'>"._QXZ("Only Translated Phrases")."</option><option value='ALL_PHRASES'>"._QXZ("All Phrases")."</option></select>$NWB#languages-export_action$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Export Action").": </td><td align=left><select size=1 name=stage><option SELECTED value='ONLY_UNTRANSLATED'>"._QXZ("Only NOT Translated Phrases")."</option><option value='ONLY_TRANSLATED'>"._QXZ("Only Translated Phrases")."</option><option value='ALL_PHRASES'>"._QXZ("All Phrases")."</option></select>$NWB#languages-export_action$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=submit VALUE='"._QXZ("SUBMIT")."'></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=submit VALUE='"._QXZ("SUBMIT")."'></td></tr>\n";
 		echo "</TABLE></center>\n";
 		}
 	else
@@ -1336,20 +1374,20 @@ if ($ADD==363111111111)
 		echo "<input type=hidden name=language_id value=\"$language_id\">\n";
 
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Language ID").": </td><td align=left><B>$language_id</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Last Modified").": </td><td align=left>$modify_date</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right nowrap>"._QXZ("Language Description").": </td><td align=left nowrap><input type=text name=language_description size=70 maxlength=255 value=\"$language_description\">$NWB#languages-language_description$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Language Code").": </td><td align=left><input type=text name=language_code size=10 maxlength=20 value=\"$language_code\">$NWB#languages-language_code$NWE &nbsp; ";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Language ID").": </td><td align=left><B>$language_id</B></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Last Modified").": </td><td align=left>$modify_date</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right nowrap>"._QXZ("Language Description").": </td><td align=left nowrap><input type=text name=language_description size=70 maxlength=255 value=\"$language_description\">$NWB#languages-language_description$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Language Code").": </td><td align=left><input type=text name=language_code size=10 maxlength=20 value=\"$language_code\">$NWB#languages-language_code$NWE &nbsp; ";
 		if (file_exists("../agc/images/$language_code$gif"))
 			{echo "<img src=\"../agc/images/$language_code$gif\" width=30 height=20 alt='"._QXZ("flag")."' border=0>";}
 		else
 			{echo "<img src=\"../agc/images/xx.gif\" width=30 height=20 alt='"._QXZ("unknown code")."' border=0>";}
 		echo "</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
 		echo "</select>$NWB#languages-user_group$NWE</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active>\n";
 		echo "<option value=\"Y\">"._QXZ("Y")."</option><option value=\"N\">"._QXZ("N")."</option>";
 		echo "<option SELECTED value=\"$active\">"._QXZ("$active")."</option>\n";
 		echo "</select>$NWB#languages-active$NWE</td></tr>\n";
@@ -1366,7 +1404,7 @@ if ($ADD==363111111111)
 		$row=mysqli_fetch_row($rslt);
 		$null_phrase_count=$row[0];
 
-		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2>";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>";
 		echo _QXZ("Phrases").": $phrase_count &nbsp; "._QXZ("Not Translated").": $null_phrase_count";
 		echo "<font size=2>";
 		echo " &nbsp; <a href=\"$PHP_SELF?ADD=363111111111&language_id=$language_id&DB=$DB&action=DISPLAYALL\">"._QXZ("display all")."</a> &nbsp; |";
@@ -1374,16 +1412,16 @@ if ($ADD==363111111111)
 		echo " &nbsp; <a href=\"$PHP_SELF?ADD=363111111111&language_id=$language_id&DB=$DB&action=TRANSLATED\">"._QXZ("translated only")."</a> &nbsp;";
 		echo "</font>";
 		echo "</td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=left colspan=2>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=left colspan=2>\n";
 
 		echo "<iframe src=\"$PHP_SELF?ADD=363211111111&language_id=$language_id&DB=$DB&action=$action\" name=\"language_phrases\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" width=\"100%\" height=\"400\">\n</iframe>\n";
 
 
 		echo "</td></tr>\n";
 
-		echo "<tr bgcolor=#B9CBFD><td align=right nowrap>"._QXZ("Add A New Language Phrase").": </td><td nowrap><input type=text size=70 maxlength=10000 name=english_text id=english_text value=\"\">  $NWB#languages-english_text$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row2_background><td align=right nowrap>"._QXZ("Add A New Language Phrase").": </td><td nowrap><input type=text size=70 maxlength=10000 name=english_text id=english_text value=\"\">  $NWB#languages-english_text$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#B6D3FC><td align=center valign=middle colspan=2><input type=submit name=submit VALUE='"._QXZ("SUBMIT CHANGES")."'> &nbsp; <a href=\"$PHP_SELF?ADD=363111111111&language_id=$language_id&DB=$DB&action=$action\">RELOAD PAGE</a></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=center valign=middle colspan=2><input type=submit name=submit VALUE='"._QXZ("SUBMIT CHANGES")."'> &nbsp; <a href=\"$PHP_SELF?ADD=363111111111&language_id=$language_id&DB=$DB&action=$action\">RELOAD PAGE</a></td></tr>\n";
 		echo "</TABLE></center>\n";
 
 		echo "<center><br><br><b>\n";

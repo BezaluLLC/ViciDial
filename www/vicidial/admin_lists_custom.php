@@ -38,10 +38,11 @@
 # 160404-0938 - design changes
 # 160414-1243 - Fixed translation issue with COPY form
 # 160429-1125 - Added admin_row_click option
+# 160508-0219 - Added screen colors feature
 #
 
-$admin_version = '2.12-30';
-$build = '160429-1125';
+$admin_version = '2.12-31';
+$build = '160508-0219';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -366,18 +367,18 @@ if ($action == "COPY_FIELDS_FORM")
 	echo "<input type=hidden name=DB value=\"$DB\">\n";
 	echo "<input type=hidden name=action value=COPY_FIELDS_SUBMIT>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List ID to Copy Fields From").": </td><td align=left><select size=1 name=source_list_id>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("List ID to Copy Fields From").": </td><td align=left><select size=1 name=source_list_id>\n";
 	echo "$lists_list";
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("List ID to Copy Fields to").": </td><td align=left><select size=1 name=list_id>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("List ID to Copy Fields to").": </td><td align=left><select size=1 name=list_id>\n";
 	echo "$lists_list";
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Copy Option").": </td><td align=left><select size=1 name=copy_option>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Copy Option").": </td><td align=left><select size=1 name=copy_option>\n";
 	echo "<option value=\"APPEND\" selected>"._QXZ("APPEND")."</option>";
 	echo "<option value=\"UPDATE\">"._QXZ("UPDATE")."</option>";
 	echo "<option value=\"REPLACE\">"._QXZ("REPLACE")."</option>";
 	echo "</select> $NWB#lists_fields-copy_option$NWE</td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
 	echo "</TABLE></center>\n";
 	echo "</TD></TR></TABLE>\n";
 	}
@@ -1202,9 +1203,9 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 			$LcolorE='</font>';
 			}
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
+			{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 		echo "<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=action value=MODIFY_CUSTOM_FIELD_SUBMIT>\n";
 		echo "<input type=hidden name=list_id value=$list_id>\n";
@@ -1273,7 +1274,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		$o++;
 		}
 
-	$bgcolor = ' bgcolor=#BDFFBD';
+	$bgcolor = ' bgcolor=#'.$SSalt_row1_background;
 
 	echo "<form action=$PHP_SELF method=POST>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3 cellpadding=1>\n";

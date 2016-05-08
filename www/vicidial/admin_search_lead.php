@@ -45,6 +45,7 @@
 # 150602-1207 - Allow for searching by email address
 # 151203-2104 - Added option for called_count as search variable
 # 160325-1427 - Changes for sidebar update
+# 160508-0753 - Added colors features
 #
 
 require("dbconnect_mysqli.php");
@@ -323,7 +324,7 @@ if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_
 	echo "<form method=post name=search action=\"$PHP_SELF\">\n";
 	echo "<input type=hidden name=DB value=\"$DB\">\n";
 	echo "<TABLE CELLPADDING=3 CELLSPACING=3>";
-	echo "<TR bgcolor=#015B91>";
+	echo "<TR bgcolor=#$SSmenu_background>";
 	echo "<TD colspan=3 align=center><font color=#FFFFFF><b>"._QXZ("Lead Search Options").":</b></font></TD>";
 	echo "</TR>";
 
@@ -331,93 +332,93 @@ if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_
 	$archive_rslt=mysql_to_mysqli($archive_stmt, $link);
 	if (mysqli_num_rows($archive_rslt)>0) 
 		{
-		echo "<TR bgcolor=#B9CBFD>";
+		echo "<TR bgcolor=#$SSstd_row2_background>";
 		echo "<TD ALIGN=right>"._QXZ("Archive search").": &nbsp; </TD><TD ALIGN=left><select size=1 name=archive_search><option>"._QXZ("No")."</option><option>"._QXZ("Yes")."</option><option	SELECTED>$archive_search</option></select></TD>";
 		echo "<TD> &nbsp; </TD>\n";
-		echo "</TR><TR bgcolor=#015B91>";
+		echo "</TR><TR bgcolor=#$SSmenu_background>";
 		echo "<TD colspan=3 align=center height=1></TD></TR>";
 		}
 
-	echo "<TR bgcolor=#B9CBFD>";
+	echo "<TR bgcolor=#$SSstd_row2_background>";
 	echo "<TD ALIGN=right>$label_vendor_lead_code("._QXZ("vendor lead code")."): &nbsp; </TD><TD ALIGN=left><input type=text name=vendor_id size=10 maxlength=20></TD>";
 	echo "<TD><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
-	echo "</TR><TR bgcolor=#015B91>";
+	echo "</TR><TR bgcolor=#$SSmenu_background>";
 	echo "<TD colspan=3 align=center height=1></TD>";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 
 	echo "<TD ALIGN=right>$label_phone_number: &nbsp; </TD><TD ALIGN=left><input type=text name=phone size=14 maxlength=18></TD>";
 	echo "<TD rowspan=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 	echo "<TD ALIGN=right>$label_alt_phone "._QXZ("search").": &nbsp; </TD><TD ALIGN=left><select size=1 name=alt_phone_search><option>"._QXZ("No")."</option><option>"._QXZ("Yes")."</option><option SELECTED>$alt_phone_search</option></select></TD>";
 
-	echo "</TR><TR bgcolor=#015B91>";
+	echo "</TR><TR bgcolor=#$SSmenu_background>";
 	echo "<TD colspan=3 align=center height=1></TD>";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 
 	echo "<TD ALIGN=right>"._QXZ("Lead ID").": &nbsp; </TD><TD ALIGN=left><input type=text name=lead_id size=10 maxlength=10></TD>";
 	echo "<TD><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
-	echo "</TR><TR bgcolor=#015B91>";
+	echo "</TR><TR bgcolor=#$SSmenu_background>";
 	echo "<TD colspan=3 align=center height=3></TD>";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 
 	echo "<TD ALIGN=right>"._QXZ("Status").": &nbsp; </TD><TD ALIGN=left><input type=text name=status size=7 maxlength=6></TD>";
 	echo "<TD rowspan=4><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 	echo "<TD ALIGN=right>"._QXZ("List ID").": &nbsp; </TD><TD ALIGN=left><input type=text name=list_id size=15 maxlength=14></TD>";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 	echo "<TD ALIGN=right>"._QXZ("User").": &nbsp; </TD><TD ALIGN=left><input type=text name=user size=15 maxlength=20></TD>";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 	echo "<TD ALIGN=right>"._QXZ("Owner").": &nbsp; </TD><TD ALIGN=left><input type=text name=owner size=15 maxlength=50></TD>";
-	echo "</TR><TR bgcolor=#015B91>";
+	echo "</TR><TR bgcolor=#$SSmenu_background>";
 	echo "<TD colspan=3 align=center height=1></TD>";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 
 	echo "<TD ALIGN=right>$label_first_name: &nbsp; </TD><TD ALIGN=left><input type=text name=first_name size=15 maxlength=30></TD>";
 	echo "<TD rowspan=2><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 	echo "<TD ALIGN=right>$label_last_name: &nbsp; </TD><TD ALIGN=left><input type=text name=last_name size=15 maxlength=30></TD>";
-	echo "</TR><TR bgcolor=#015B91>";
+	echo "</TR><TR bgcolor=#$SSmenu_background>";
 	echo "<TD colspan=3 align=center height=1></TD>";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 	echo "<TD ALIGN=right>$label_email: &nbsp; </TD><TD ALIGN=left><input type=text name=email size=15 maxlength=30></TD>";
 	echo "<TD><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 	echo "</TR>";
 
 
 	### Log search
 	echo "<br><center>\n";
 	echo "<TD colspan=3 align=center> &nbsp; </TD>";
-	echo "</TR><TR bgcolor=#015B91>";
+	echo "</TR><TR bgcolor=#$SSmenu_background>";
 	echo "<TD colspan=3 align=center><font color=#FFFFFF><b>"._QXZ("Log Search Options").":</b></font></TD>";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 
 	echo "<TD ALIGN=right>"._QXZ("Lead ID").": &nbsp; </TD><TD ALIGN=left><input type=text name=log_lead_id size=10 maxlength=10></TD>";
 	echo "<TD><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
-	echo "</TR><TR bgcolor=#015B91>";
+	echo "</TR><TR bgcolor=#$SSmenu_background>";
 	echo "<TD colspan=3 align=cente height=1></TD>";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 
 	echo "<TD ALIGN=right>$label_phone_number "._QXZ("Dialed").": &nbsp; </TD><TD ALIGN=left><input type=text name=log_phone size=18 maxlength=18></TD>";
 	echo "<TD><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
 	echo "</TR><TR>";
 	echo "<TD colspan=3 align=center> &nbsp; </TD>";
 	echo "</TR>";
-	echo "<TR bgcolor=#015B91>";
+	echo "<TR bgcolor=#$SSmenu_background>";
 	echo "<TD colspan=3 align=center><font color=#FFFFFF><b>"._QXZ("Archived Log Search Options").":</b></font></TD>";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 
 	echo "<TD ALIGN=right>"._QXZ("Lead ID").": &nbsp; </TD><TD ALIGN=left><input type=text name=log_lead_id_archive size=10 maxlength=10></TD>";
 	echo "<TD><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
-	echo "</TR><TR bgcolor=#015B91>";
+	echo "</TR><TR bgcolor=#$SSmenu_background>";
 	echo "<TD colspan=3 align=center height=1></TD>";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 
 	echo "<TD ALIGN=right>$label_phone_number "._QXZ("Dialed").": &nbsp; </TD><TD ALIGN=left><input type=text name=log_phone_archive size=18 maxlength=18></TD>";
 	echo "<TD><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
 	echo "</TR><TR>";
 	echo "<TD colspan=3 align=center> &nbsp; </TD>";
-	echo "</TR><TR bgcolor=#B9CBFD>";
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 
 
 	echo "</TABLE>\n";
@@ -499,9 +500,9 @@ else
 				$o++;
 				$search_lead = $row[0];
 				if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-					{$bgcolor='bgcolor="#B9CBFD"';} 
+					{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 				else
-					{$bgcolor='bgcolor="#9BB9FB"';}
+					{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 				echo "<TR $bgcolor>\n";
 				echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
 				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search\" target=\"_blank\">$row[0]</a></FONT></TD>\n";
@@ -564,9 +565,9 @@ else
 				$o++;
 				$search_lead = $row[0];
 				if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-					{$bgcolor='bgcolor="#B9CBFD"';} 
+					{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 				else
-					{$bgcolor='bgcolor="#9BB9FB"';}
+					{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 				echo "<TR $bgcolor>\n";
 				echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
 				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search\" target=\"_blank\">$row[0]</a></FONT></TD>\n";
@@ -626,9 +627,9 @@ else
 					$o++;
 					$search_lead = $row[0];
 					if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-						{$bgcolor='bgcolor="#B9CBFD"';} 
+						{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 					else
-						{$bgcolor='bgcolor="#9BB9FB"';}
+						{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 					echo "<TR $bgcolor>\n";
 					echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
 					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[0]</FONT></TD>\n";
@@ -745,9 +746,9 @@ else
 				$o++;
 				$search_lead = $row[0];
 				if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-					{$bgcolor='bgcolor="#B9CBFD"';}
+					{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';}
 				else
-					{$bgcolor='bgcolor="#9BB9FB"';}
+					{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 				echo "<TR $bgcolor>\n";
 				echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
 				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search&archive_log=$log_archive_link\" target=\"_blank\">$row[0]</a></FONT></TD>\n";
@@ -810,9 +811,9 @@ else
 				$o++;
 				$search_lead = $row[0];
 				if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-					{$bgcolor='bgcolor="#B9CBFD"';}
+					{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';}
 				else
-					{$bgcolor='bgcolor="#9BB9FB"';}
+					{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 				echo "<TR $bgcolor>\n";
 				echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
 				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search&archive_log=$log_archive_link\" target=\"_blank\">$row[0]</a></FONT></TD>\n";
@@ -872,9 +873,9 @@ else
 					$o++;
 					$search_lead = $row[0];
 					if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-						{$bgcolor='bgcolor="#B9CBFD"';}
+						{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';}
 					else
-						{$bgcolor='bgcolor="#9BB9FB"';}
+						{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 					echo "<TR $bgcolor>\n";
 					echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
 					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[0]</FONT></TD>\n";
@@ -1157,9 +1158,9 @@ else
 			$o++;
 			$search_lead = $row[0];
 			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
+				{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 			echo "<TR $bgcolor>\n";
 			echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
 			echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><a href=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search&archive_log=$log_archive_link\" target=\"_blank\">$row[0]</a></FONT></TD>\n";

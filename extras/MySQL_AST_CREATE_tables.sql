@@ -648,7 +648,8 @@ lead_filter_id VARCHAR(20) default 'NONE',
 admin_cf_show_hidden ENUM('1','0') default '0',
 agentcall_chat ENUM('1','0') default '0',
 user_hide_realtime ENUM('1','0') default '0',
-access_recordings ENUM('0', '1') default '0'
+access_recordings ENUM('0', '1') default '0',
+modify_colors ENUM('1','0') default '0'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -1650,7 +1651,8 @@ oldest_logs_date DATETIME,
 log_recording_access ENUM('0', '1') default '0',
 report_default_format ENUM('TEXT', 'HTML') default 'TEXT',
 alt_ivr_logging ENUM('0', '1') default '0',
-admin_row_click ENUM('0', '1') default '1'
+admin_row_click ENUM('0', '1') default '1',
+admin_screen_colors VARCHAR(20) default 'default'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3494,6 +3496,24 @@ KEY question_created (question,uniqueid,campaign,created),
 index(lead_id)
 ) ENGINE=MyISAM AUTO_INCREMENT=1599 DEFAULT CHARSET=utf8;
 
+CREATE TABLE vicidial_screen_colors (
+colors_id VARCHAR(20) PRIMARY KEY NOT NULL,
+colors_name VARCHAR(100),
+active ENUM('Y','N') default 'N',
+menu_background VARCHAR(6) default '015B91',
+frame_background VARCHAR(6) default 'D9E6FE',
+std_row1_background VARCHAR(6) default '9BB9FB',
+std_row2_background VARCHAR(6) default 'B9CBFD',
+std_row3_background VARCHAR(6) default '8EBCFD',
+std_row4_background VARCHAR(6) default 'B6D3FC',
+std_row5_background VARCHAR(6) default 'A3C3D6',
+alt_row1_background VARCHAR(6) default 'BDFFBD',
+alt_row2_background VARCHAR(6) default '99FF99',
+alt_row3_background VARCHAR(6) default 'CCFFCC',
+user_group VARCHAR(20) default '---ALL---',
+web_logo VARCHAR(100) default 'default_new'
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3605,6 +3625,8 @@ INSERT INTO vicidial_call_menu_options SET menu_id='default---agent',option_valu
 INSERT INTO vicidial_scripts (script_id,script_name,script_comments,active,script_text) values('CALLNOTES','Call Notes and Appointment Setting','','Y','<iframe src=\"../agc/vdc_script_notes.php?lead_id=--A--lead_id--B--&vendor_id=--A--vendor_lead_code--B--&list_id=--A--list_id--B--&gmt_offset_now=--A--gmt_offset_now--B--&phone_code=--A--phone_code--B--&phone_number=--A--phone_number--B--&title=--A--title--B--&first_name=--A--first_name--B--&middle_initial=--A--middle_initial--B--&last_name=--A--last_name--B--&address1=--A--address1--B--&address2=--A--address2--B--&address3=--A--address3--B--&city=--A--city--B--&state=--A--state--B--&province=--A--province--B--&postal_code=--A--postal_code--B--&country_code=--A--country_code--B--&gender=--A--gender--B--&date_of_birth=--A--date_of_birth--B--&alt_phone=--A--alt_phone--B--&email=--A--email--B--&security_phrase=--A--security_phrase--B--&comments=--A--comments--B--&user=--A--user--B--&pass=--A--pass--B--&campaign=--A--campaign--B--&phone_login=--A--phone_login--B--&fronter=--A--fronter--B--&closer=--A--user--B--&group=--A--group--B--&channel_group=--A--group--B--&SQLdate=--A--SQLdate--B--&epoch=--A--epoch--B--&uniqueid=--A--uniqueid--B--&rank=--A--rank--B--&owner=--A--owner--B--&customer_zap_channel=--A--customer_zap_channel--B--&server_ip=--A--server_ip--B--&SIPexten=--A--SIPexten--B--&session_id=--A--session_id--B--\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"popupFrame\" name=\"popupFrame\"  width=\"--A--script_width--B--\" height=\"--A--script_height--B--\" STYLE=\"z-index:17\"> </iframe>');
 
 INSERT INTO vicidial_custom_leadloader_templates (template_id, template_name, template_description, list_id, standard_variables, custom_table, custom_variables, template_statuses) values ('SAMPLE_TEMPLATE','Sample template','',999,'phone_number,9|first_name,0|last_name,1|address1,3|address2,4|address3,5|city,6|state,7|postal_code,8|','custom_999','appointment_date,2|appointment_notes,9|nearest_city,2|','');
+
+INSERT INTO vicidial_screen_colors VALUES ('red_rust','dark red rust','Y','804435','E7D0C2','C68C71','D9B39F','D9B49F','C68C72','C68C73','BDFFBD','99FF99','CCFFCC','---ALL---','default_new'),('pale_green','pale green','Y','738035','E0E7C2','B6C572','C4CF8B','B6C572','C4CF8B','C4CF8B','BDFFBD','99FF99','CCFFCC','---ALL---','default_new'),('alt_green','alternate green','Y','333333','D6E3B2','AEC866','BCD180','BCD180','AEC866','AEC866','BDFFBD','99FF99','CCFFCC','---ALL---','default_new'),('default_blue_test','default blue test','Y','015B91','D9E6FE','9BB9FB','B9CBFD','8EBCFD','B6D3FC','A3C3D6','BDFFBD','99FF99','CCFFCC','---ALL---','default_new'),('basic_orange','basic orange','Y','804d00','ffebcc','ffcc80','ffd699','ffcc80','ffd699','ffcc80','BDFFBD','99FF99','CCFFCC','---ALL---','default_new'),('basic_purple','basic purple','Y','660066','ffccff','ff99ff','ffb3ff','ff99ff','ffb3ff','ff99ff','BDFFBD','99FF99','CCFFCC','---ALL---','SAMPLE.png'),('basic_yellow','basic yellow','Y','666600','ffffcc','ffff66','ffff99','ffff66','ffff99','ffff66','BDFFBD','99FF99','CCFFCC','---ALL---','default_new'),('basic_red','basic red','Y','800000','ffe6e6','ff9999','ffb3b3','ff9999','ffb3b3','ff9999','BDFFBD','99FF99','CCFFCC','---ALL---','default_new');
 
 UPDATE system_settings SET qc_last_pull_time=NOW();
 
@@ -3744,4 +3766,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1458',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1459',db_schema_update_date=NOW(),reload_timestamp=NOW();

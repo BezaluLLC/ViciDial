@@ -24,16 +24,18 @@
 # This program assumes that recordings are saved by Asterisk as .wav
 # should be easy to change this code if you use .gsm instead
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 
 # 80302-1958 - First Build
 # 80731-2253 - Changed size comparisons for more efficiency
 # 91105-1353 - Added --MIX option to only check the /var/spool/asterisk/monitor/MIX directory
 # 130805-1450 - Added check for length and gather length of recording for database record
+# 160501-1001 - Added --SPHINX options to check for SPHINX audio files
 #
 
 $MIX=0;
+$SPHINX=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -47,7 +49,13 @@ if (length($ARGV[0])>1)
 
 	if ($args =~ /--help/i)
 		{
-		print "allowed run time options:\n  [--debug] = debug\n  [--debugX] = super debug\n  [-t] = test\n\n";
+		print "allowed run time options:\n";
+		print "  [--debug] = debug\n";
+		print "  [--debugX] = super debug\n";
+		print "  [-t] = test\n";
+		print "  [--MIX] = mix audio files in MIX directory\n";
+		print "  [--SPHINX] = mix audio files in SPHINX/RAW directory\n";
+		print "\n";
 		exit;
 		}
 	else
@@ -71,6 +79,11 @@ if (length($ARGV[0])>1)
 			{
 			$MIX=1;
 			if ($DB) {print "MIX directory audio processing only\n";}
+			}
+		if ($args =~ /--SPHINX/i)
+			{
+			$SPHINX=1;
+			if ($DB) {print "SPHINX directory audio processing only\n";}
 			}
 		}
 	}
@@ -187,6 +200,11 @@ $dir2 = "$PATHDONEmonitor";
 
 if ($MIX > 0)
 	{$dir1 = "$PATHmonitor/MIX";}
+if ($SPHINX > 0)
+	{
+	$dir1 = "$PATHmonitor/SPHINX/RAW";
+	$dir2 = "$PATHDONEmonitor/SPHINX";
+	}
 
 opendir(FILE, "$dir1/");
 @FILES = readdir(FILE);

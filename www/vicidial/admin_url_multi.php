@@ -12,10 +12,11 @@
 # changes:
 # 150709-0612 - First Build
 # 160331-2203 - Made URL form input fields longer
+# 160508-0815 - Added colors features
 #
 
-$admin_version = '2.12-2';
-$build = '160331-2203';
+$admin_version = '2.12-3';
+$build = '160508-0815';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -395,7 +396,7 @@ if ($action == "URL_MULTI_DELETE")
 ##### BEGIN URL multi control form
 if ($action == "BLANK")
 	{
-	$bgcolor='bgcolor="#B9CBFD"';
+	$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	echo "<br>"._QXZ("Alternate URL Form");
@@ -423,9 +424,9 @@ if ($action == "BLANK")
 		$Rurl_address =		$rowx[5];
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
+			{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 		$o++;
 
 		echo "<tr $bgcolor>";

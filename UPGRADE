@@ -252,6 +252,10 @@ OTHER CHANGES:
 	callbacks after X minutes being LIVE without the agent calling them
 	back.
 
+67. Made several changes to the admin web screen and real-time report designs
+
+68. Added options to define color scheme and logo for admin web screens
+
 
 
 

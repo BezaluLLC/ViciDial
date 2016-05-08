@@ -22,10 +22,11 @@
 # 141007-2042 - Finalized adding QXZ translation to all admin files
 # 141229-2052 - Added code for on-the-fly language translations display
 # 160330-1550 - navigation changes and fixes, added force_allow var
+# 160508-0139 - Added screen colors feature
 #
 
-$version = '2.12-16';
-$build = '160330-1550';
+$version = '2.12-17';
+$build = '160508-0209';
 
 $MT[0]='';
 
@@ -375,7 +376,7 @@ require("admin_header.php");
 
 <?php 
 
-echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><img src=\"images/icon_audiostore.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3><B> &nbsp; \n";
+echo "<TR BGCOLOR=\"#$SSframe_background\"><TD ALIGN=LEFT COLSPAN=2><img src=\"images/icon_audiostore.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3><B> &nbsp; \n";
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
@@ -452,7 +453,7 @@ if ($action == "MANUALUPLOAD")
 <form action=<?php echo $PHP_SELF ?> method=post enctype="multipart/form-data">
 <input type=hidden name=action value="MANUALUPLOAD">
 
-<table align=center width="700" border=0 cellpadding=5 cellspacing=0 bgcolor=#D9E6FE>
+<table align=center width="700" border=0 cellpadding=5 cellspacing=0 bgcolor=#<?php echo $SSstd_row1_background; ?>>
   <tr>
 	<td align=right width="35%"><B><font face="arial, helvetica" size=2><?php echo _QXZ("Audio File to Upload"); ?>:</font></B></td>
 	<td align=left width="65%"><input type=file name="audiofile" value=""> <?php echo "$NWB#audio_store$NWE"; ?></td>

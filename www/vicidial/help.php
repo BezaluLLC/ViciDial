@@ -87,6 +87,7 @@
 # 160407-1931 - Updated Phones Email entry
 # 160414-0916 - Added default_phone_code
 # 160429-0834 - Added settings-admin_row_click
+# 160508-0836 - Added screen colors
 #
 
 
@@ -5161,6 +5162,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <B><?php echo _QXZ("Default Field Labels"); ?> -</B><?php echo _QXZ("These 19 fields allow you to set the name as it will appear in the agent interface as well as the administrative modify lead page. Default is empty which will use the hard-coded defaults in the agent interface. You can also set a label to ---HIDE--- to hide both the label and the field."); ?>
 
 <BR>
+<A NAME="settings-admin_screen_colors">
+<BR>
+<B><?php echo _QXZ("Admin Screen Colors"); ?> -</B><?php echo _QXZ("This feature allows you to set different color schemes and logo for the administrative web screens. These can be defined in the Screen Colors section. Default is default, for the standard blue screen colors"); ?>
+
+<BR>
 <A NAME="settings-label_hide_field_logs">
 <BR>
 <B><?php echo _QXZ("Hide Label in Call Logs"); ?> -</B><?php echo _QXZ("If a label is set to ---HIDE--- then the agent call logs, if enabled on the campaign, will still show the field and data unless this option is set to Y. Default is N."); ?>
@@ -5397,6 +5403,57 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="screen_labels-default_field_labels">
 <BR>
 <B><?php echo _QXZ("Default Field Labels"); ?> -</B><?php echo _QXZ("These 19 fields allow you to set the name as it will appear in the agent interface as well as the administrative modify lead page. Default is empty which will use the hard-coded defaults in the agent interface. You can also set a label to ---HIDE--- to hide both the label and the field."); ?>
+
+
+
+
+
+<BR><BR><BR><BR>
+
+<B><FONT SIZE=3>SCREEN_COLORS TABLE</FONT></B><BR><BR>
+<A NAME="screen_colors">
+<BR>
+<B><?php echo _QXZ("Screen colors give you the option of setting a different color scheme and logo for the web interface in the System Settings."); ?></B>
+
+<A NAME="screen_colors-colors_id">
+<BR>
+<B><?php echo _QXZ("Screen Colors ID"); ?> -</B><?php echo _QXZ("This field needs to be at least 2 characters in length and no more than 20 characters in length, no spaces or special characters. This is the ID that will be used to identify the screen colors in the system."); ?>
+
+<BR>
+<A NAME="screen_colors-colors_name">
+<BR>
+<B><?php echo _QXZ("Screen Colors Name"); ?> -</B><?php echo _QXZ("This is the descriptive name of the screen colors entry."); ?>
+
+<BR>
+<A NAME="screen_colors-user_group">
+<BR>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+
+<BR>
+<A NAME="screen_colors-menu_background">
+<BR>
+<B><?php echo _QXZ("Menu Background"); ?> -</B><?php echo _QXZ("This is where you set the hex color value for the sidebar menu background. It must be a darker color since white text will be displayed on top of it. Default is 015B91."); ?>
+
+<BR>
+<A NAME="screen_colors-frame_background">
+<BR>
+<B><?php echo _QXZ("Frame Background"); ?> -</B><?php echo _QXZ("This is where you set the hex color value for the frame main background. It must be a light color since black text will be displayed on top of it. Default is D9E6FE."); ?>
+
+<BR>
+<A NAME="screen_colors-std_row_background">
+<BR>
+<B><?php echo _QXZ("Standard Row Backgrounds"); ?> -</B><?php echo _QXZ("This is where you set the hex color values for the several standard row backgrounds. They should be lighter colors since black text will be displayed on top of them. These are often used to make different sections stand apart or as alternating colors for rows. Defaults are 9BB9FB, B9CBFD, 8EBCFD, B6D3FC, A3C3D6."); ?>
+
+<BR>
+<A NAME="screen_colors-alt_row_background">
+<BR>
+<B><?php echo _QXZ("Alternate Row Backgrounds"); ?> -</B><?php echo _QXZ("This is where you set the hex color values for the several alternate row backgrounds. They should be lighter colors since black text will be displayed on top of them. These are used to differentiate sections from the Standard backgrounds defined above. Defaults are BDFFBD, 99FF99, CCFFCC."); ?>
+
+<BR>
+<A NAME="screen_colors-web_logo">
+<BR>
+<B><?php echo _QXZ("Web Logo"); ?> -</B><?php echo _QXZ("This is where you can select a custom image file for your logo. The standard size for a logo image is 170 pixels wide and 45 pixels high. We suggest using the PNG format, but GIF and JPG will work as well. To have a custom logo image show up in this list, it needs to be uploaded to your webserver in the images directory, and the filename needs to begin with vicidial_admin_web_logo. For example, if you upload the image file vicidial_admin_web_logoSAMPLE.png, it will show up in the select list as SAMPLE.png. Default is default_new for the new PNG logo image file."); ?>
+
 
 
 

@@ -65,10 +65,11 @@
 # 150810-0750 - Added compatibility for custom fields data option
 # 160102-1039 - Better special characters support
 # 160428-2359 - Fixed custom table bug
+# 160508-0757 - Added colors features
 #
 
-$version = '2.12-63';
-$build = '160428-2359';
+$version = '2.12-64';
+$build = '160508-0757';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -188,7 +189,7 @@ $vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,admin_web_directory,custom_fields_enabled,webroot_writable,enable_languages,language_method,active_modules FROM system_settings;";
+$stmt = "SELECT use_non_latin,admin_web_directory,custom_fields_enabled,webroot_writable,enable_languages,language_method,active_modules,admin_screen_colors FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -202,6 +203,7 @@ if ($qm_conf_ct > 0)
 	$SSenable_languages =		$row[4];
 	$SSlanguage_method =		$row[5];
 	$SSactive_modules =			$row[6];
+	$SSadmin_screen_colors =	$row[7];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -361,6 +363,43 @@ while ($stat_num_rows > $snr_count)
 	$dedupe_status_select .= "\t\t\t<option value='$row[0]'>$row[0] - $row[1]</option>\n";
 	$snr_count++;
 	}
+
+
+$SSmenu_background='015B91';
+$SSframe_background='D9E6FE';
+$SSstd_row1_background='9BB9FB';
+$SSstd_row2_background='B9CBFD';
+$SSstd_row3_background='8EBCFD';
+$SSstd_row4_background='B6D3FC';
+$SSstd_row5_background='A3C3D6';
+$SSalt_row1_background='BDFFBD';
+$SSalt_row2_background='99FF99';
+$SSalt_row3_background='CCFFCC';
+
+if ($SSadmin_screen_colors != 'default')
+	{
+	$stmt = "SELECT menu_background,frame_background,std_row1_background,std_row2_background,std_row3_background,std_row4_background,std_row5_background,alt_row1_background,alt_row2_background,alt_row3_background FROM vicidial_screen_colors where colors_id='$SSadmin_screen_colors';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$colors_ct = mysqli_num_rows($rslt);
+	if ($colors_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$SSmenu_background =		$row[0];
+		$SSframe_background =		$row[1];
+		$SSstd_row1_background =	$row[2];
+		$SSstd_row2_background =	$row[3];
+		$SSstd_row3_background =	$row[4];
+		$SSstd_row4_background =	$row[5];
+		$SSstd_row5_background =	$row[6];
+		$SSalt_row1_background =	$row[7];
+		$SSalt_row2_background =	$row[8];
+		$SSalt_row3_background =	$row[9];
+		}
+	}
+$Mhead_color =	$SSstd_row5_background;
+$Mmain_bgcolor = $SSmenu_background;
+$Mhead_color =	$SSstd_row5_background;
 
 #if ($DB) {print "SEED TIME  $secX      :   $year-$mon-$mday $hour:$min:$sec  LOCAL GMT OFFSET NOW: $LOCAL_GMT_OFF\n";}
 
@@ -534,7 +573,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 	if ($file_layout!="custom") 
 		{
 		?>
-		<table align=center width="780" border=0 cellpadding=5 cellspacing=0 bgcolor=#D9E6FE>
+		<table align=center width="780" border=0 cellpadding=5 cellspacing=0 bgcolor=#<?php echo $SSframe_background; ?>>
 		  <tr>
 			<td align=right width="35%"><B><font face="arial, helvetica" size=2><?php echo _QXZ("Load leads from this file"); ?>:</font></B></td>
 			<td align=left width="65%"><input type=file name="leadfile" value="<?php echo $leadfile ?>"> <?php echo "$NWB#list_loader$NWE"; ?></td>
@@ -612,7 +651,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 			<option value="DUPTITLEALTPHONESYS"><?php echo _QXZ("CHECK FOR DUPLICATES BY TITLE/ALT-PHONE IN ENTIRE SYSTEM"); ?></option>
 			</select> <?php echo "$NWB#list_loader-duplicate_check$NWE"; ?></td>
 		  </tr>
-	<tr bgcolor="#D9E6FE">
+	<tr bgcolor="#<?php echo $SSframe_background; ?>">
 		<td width='25%' align="right"><font class="standard"><?php echo _QXZ("Status Duplicate Check"); ?>:</font></td>
 		<td width='75%'>
 		<span id='statuses_display'>
@@ -662,7 +701,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 else
 	{
 	?>
-	<table align=center width="700" border=0 cellpadding=5 cellspacing=0 bgcolor=#D9E6FE>
+	<table align=center width="700" border=0 cellpadding=5 cellspacing=0 bgcolor=#<?php echo $SSframe_background; ?>>
 	<tr>
 	<td align=right width="35%"><B><font face="arial, helvetica" size=2><?php echo _QXZ("Lead file"); ?>:</font></B></td>
 	<td align=left width="75%"><font face="arial, helvetica" size=2><?php echo $leadfile_name ?></font></td>
@@ -2279,7 +2318,7 @@ if (($leadfile) && ($LF_path))
 		print "<script language='JavaScript1.2'>document.forms[0].leadfile.disabled=true; document.forms[0].submit_file.disabled=true; document.forms[0].reload_page.disabled=true;</script><HR>";
 		flush();
 		print "<table border=0 cellpadding=3 cellspacing=0 width=700 align=center>\r\n";
-		print "  <tr bgcolor='#330099'>\r\n";
+		print "  <tr bgcolor='#$SSmenu_background'>\r\n";
 		print "    <th align=right><font class='standard' color='white'>"._QXZ("VICIDIAL Column")."</font></th>\r\n";
 		print "    <th><font class='standard' color='white'>"._QXZ("File data")."</font></th>\r\n";
 		print "  </tr>\r\n";
@@ -2432,7 +2471,7 @@ if (($leadfile) && ($LF_path))
 				}
 			else 
 				{
-				print "  <tr bgcolor=#D9E6FE>\r\n";
+				print "  <tr bgcolor=#$SSframe_background>\r\n";
 				print "    <td align=right><font class=standard>".strtoupper(preg_replace('/_/i', ' ', $rslt_field_name)).": </font></td>\r\n";
 				print "    <td align=center><select name='".$rslt_field_name."_field'>\r\n";
 				print "     <option value='-1'>(none)</option>\r\n";
@@ -2447,7 +2486,7 @@ if (($leadfile) && ($LF_path))
 				print "  </tr>\r\n";
 				}
 			}
-		print "  <tr bgcolor='#330099'>\r\n";
+		print "  <tr bgcolor='#$SSmenu_background'>\r\n";
 		print "  <input type=hidden name=dedupe_statuses_override value=\"$status_dedupe_str\">\r\n";
 		print "  <input type=hidden name=dupcheck value=\"$dupcheck\">\r\n";
 		print "  <input type=hidden name=usacan_check value=\"$usacan_check\">\r\n";

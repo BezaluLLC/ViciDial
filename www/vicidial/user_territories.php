@@ -21,10 +21,11 @@
 # 160325-1432 - Changes for sidebar update
 # 160404-0939 - design changes
 # 160429-1126 - Added admin_row_click option
+# 160508-0211 - Added screen colors feature
 #
 
-$version = '2.12-13';
-$build = '160429-1126';
+$version = '2.12-14';
+$build = '160508-0211';
 
 $MT[0]='';
 
@@ -192,8 +193,8 @@ if ( ($action == "CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_integrati
 	echo "<br>"._QXZ("Vtiger Change Territory Owner")."<form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=action value=PROCESS_CHANGE_TERRITORY_OWNER_ACCOUNT>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Account ID").": </td><td align=left><input type=text name=accountid value=\"$accountid\"></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("New Owner").": </td><td align=left><select size=1 name=user>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Account ID").": </td><td align=left><input type=text name=accountid value=\"$accountid\"></td></tr>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("New Owner").": </td><td align=left><select size=1 name=user>\n";
 
 	$stmt="SELECT user,full_name from vicidial_users where active='Y' order by user";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -210,12 +211,12 @@ if ( ($action == "CHANGE_TERRITORY_OWNER_ACCOUNT") and ($enable_vtiger_integrati
 	echo "$users_list";
 	echo "</select></td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Update ViciDial List Owner").": </td><td align=left><select size=1 name=vl_owner>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Update ViciDial List Owner").": </td><td align=left><select size=1 name=vl_owner>\n";
 	echo "<option value='YES' SELECTED>"._QXZ("YES")."</option>\n";
 	echo "<option value='NO'>"._QXZ("NO")."</option>\n";
 	echo "</select></td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
 	echo "</TABLE></center>\n";
 	exit;
 	}
@@ -350,7 +351,7 @@ if ($enable_vtiger_integration > 0)
 
 <?php 
 
-echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=$colspan><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3><B> &nbsp; \n";
+echo "<TR BGCOLOR=\"#$SSframe_background\"><TD ALIGN=LEFT COLSPAN=$colspan><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3><B> &nbsp; \n";
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
@@ -389,7 +390,7 @@ if ( ($action == "CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integration > 0) 
 	echo "<br>"._QXZ("Vtiger Change Territory Owner")."<form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=action value=PROCESS_CHANGE_TERRITORY_OWNER>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Territory").": </td><td align=left><select size=1 name=territory>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Territory").": </td><td align=left><select size=1 name=territory>\n";
 
 	$stmt="SELECT territory,territory_description from vicidial_territories order by territory";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -406,7 +407,7 @@ if ( ($action == "CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integration > 0) 
 	echo "$territories_list";
 	echo "</select></td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("New Owner").": </td><td align=left><select size=1 name=user>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("New Owner").": </td><td align=left><select size=1 name=user>\n";
 
 	$stmt="SELECT user,full_name from vicidial_users where active='Y' order by user";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -423,12 +424,12 @@ if ( ($action == "CHANGE_TERRITORY_OWNER") and ($enable_vtiger_integration > 0) 
 	echo "$users_list";
 	echo "</select></td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Update ViciDial List Owner").": </td><td align=left><select size=1 name=vl_owner>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Update ViciDial List Owner").": </td><td align=left><select size=1 name=vl_owner>\n";
 	echo "<option value='YES' SELECTED>"._QXZ("YES")."</option>\n";
 	echo "<option value='NO'>"._QXZ("NO")."</option>\n";
 	echo "</select></td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
 	echo "</TABLE></center>\n";
 	}
 ### END change territory owner in the system
@@ -569,7 +570,7 @@ if ($action == "ADD_USER_TERRITORY")
 	echo "<br>"._QXZ("Add User Territory")."<form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=action value=PROCESS_ADD_USER_TERRITORY>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agent").": </td><td align=left><select size=1 name=user>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Agent").": </td><td align=left><select size=1 name=user>\n";
 
 	$stmt="SELECT user,full_name from vicidial_users where active='Y' order by user";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -586,7 +587,7 @@ if ($action == "ADD_USER_TERRITORY")
 	echo "$users_list";
 	echo "</select></td></tr>\n";
 
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Territory").": </td><td align=left><select size=1 name=territory>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Territory").": </td><td align=left><select size=1 name=territory>\n";
 
 	$stmt="SELECT territory,territory_description from vicidial_territories order by territory";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -602,8 +603,8 @@ if ($action == "ADD_USER_TERRITORY")
 		}
 	echo "$territories_list";
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Level").": </td><td align=left><select size=1 name=level><option value='TOP_AGENT'>"._QXZ("TOP_AGENT")."</option><option value='STANDARD_AGENT'>"._QXZ("STANDARD_AGENT")."</option><option value='BOTTOM_AGENT'>"._QXZ("BOTTOM_AGENT")."</option></select></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Level").": </td><td align=left><select size=1 name=level><option value='TOP_AGENT'>"._QXZ("TOP_AGENT")."</option><option value='STANDARD_AGENT'>"._QXZ("STANDARD_AGENT")."</option><option value='BOTTOM_AGENT'>"._QXZ("BOTTOM_AGENT")."</option></select></td></tr>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
 	echo "</TABLE></center>\n";
 	}
 ### END add user territory page
@@ -745,9 +746,9 @@ if ($action == "ADD_TERRITORY")
 	echo "<br>"._QXZ("Add Territory")."<form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=action value=PROCESS_ADD_TERRITORY>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Territory").": </td><td align=left><input type=text name=territory size=30 maxlength=100></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Territory Description").": </td><td align=left><input type=text name=territory_description size=50 maxlength=255></td></tr>\n";
-	echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Territory").": </td><td align=left><input type=text name=territory size=30 maxlength=100></td></tr>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Territory Description").": </td><td align=left><input type=text name=territory_description size=50 maxlength=255></td></tr>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
 	echo "</TABLE></center>\n";
 	}
 ### END add territory page
@@ -881,8 +882,8 @@ if ($action == "MODIFY_TERRITORY")
 		echo "<input type=hidden name=action value=PROCESS_MODIFY_TERRITORY>\n";
 		echo "<input type=hidden name=territory value=\"$territory\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Territory").": </td><td align=left><B>$rowx[0]</B></td></tr>\n";
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Territory Description").": </td><td align=left><input type=text name=territory_description size=50 maxlength=255 value=\"$rowx[1]\"></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Territory").": </td><td align=left><B>$rowx[0]</B></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Territory Description").": </td><td align=left><input type=text name=territory_description size=50 maxlength=255 value=\"$rowx[1]\"></td></tr>\n";
 
 		$stmt = "SELECT count(*) FROM vicidial_user_territories where territory='$territory';";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -893,7 +894,7 @@ if ($action == "MODIFY_TERRITORY")
 			$row=mysqli_fetch_row($rslt);
 			$user_count =			$row[0];
 			}
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Agents").": </td><td align=left><B>$user_count</B></td></tr>";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Agents").": </td><td align=left><B>$user_count</B></td></tr>";
 
 		$owner_count=0;
 		$stmt = "SELECT count(*) FROM vicidial_list where owner='$territory';";
@@ -905,7 +906,7 @@ if ($action == "MODIFY_TERRITORY")
 			$row=mysqli_fetch_row($rslt);
 			$owner_count =			$row[0];
 			}
-		echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Accounts").": </td><td align=left><B>$owner_count</B></td></tr>";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Accounts").": </td><td align=left><B>$owner_count</B></td></tr>";
 
 		if ($enable_vtiger_integration > 0)
 			{
@@ -918,9 +919,9 @@ if ($action == "MODIFY_TERRITORY")
 				$row=mysqli_fetch_row($rsltV);
 				$vtiger_count =			$row[0];
 				}
-			echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Vtiger Accounts").": </td><td align=left><B>$vtiger_count</B></td></tr>";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Vtiger Accounts").": </td><td align=left><B>$vtiger_count</B></td></tr>";
 			}
-		echo "<tr bgcolor=#B6D3FC><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></form></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></form></td></tr>\n";
 		echo "</TABLE></center>\n";
 		echo "<BR><BR>\n";
 
@@ -945,9 +946,9 @@ if ($action == "MODIFY_TERRITORY")
 			$p++;
 
 			if (preg_match("/1$|3$|5$|7$|9$/i", $p))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
+				{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 			echo "<TR $bgcolor><TD><font size=1>$p</TD>";
 			echo "<TD><a href=\"admin.php?ADD=3&user=$Tuser[$o]\">$Tuser[$o]</a></TD>";
 			echo "<TD>$Tfull_name[$o]</TD>";

@@ -51,6 +51,7 @@
 # 160104-1226 - Added call type field to the agent activity table
 # 160112-0759 - Added link to direct to recording logging page
 # 160325-1430 - Changes for sidebar update
+# 160508-0807 - Added colors features
 #
 
 $startMS = microtime();
@@ -98,7 +99,7 @@ if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active,webroot_writable,allow_emails,level_8_disable_add,enable_languages,language_method,log_recording_access FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active,webroot_writable,allow_emails,level_8_disable_add,enable_languages,language_method,log_recording_access,admin_screen_colors FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -116,6 +117,7 @@ if ($qm_conf_ct > 0)
 	$SSenable_languages =			$row[8];
 	$SSlanguage_method =			$row[9];
 	$log_recording_access =			$row[10];
+	$SSadmin_screen_colors =		$row[11];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -266,6 +268,43 @@ $LOGuser_level				=$row[0];
 
 if (($LOGuser_level < 9) and ($SSlevel_8_disable_add > 0))
 	{$add_copy_disabled++;}
+
+
+$SSmenu_background='015B91';
+$SSframe_background='D9E6FE';
+$SSstd_row1_background='9BB9FB';
+$SSstd_row2_background='B9CBFD';
+$SSstd_row3_background='8EBCFD';
+$SSstd_row4_background='B6D3FC';
+$SSstd_row5_background='A3C3D6';
+$SSalt_row1_background='BDFFBD';
+$SSalt_row2_background='99FF99';
+$SSalt_row3_background='CCFFCC';
+
+if ($SSadmin_screen_colors != 'default')
+	{
+	$stmt = "SELECT menu_background,frame_background,std_row1_background,std_row2_background,std_row3_background,std_row4_background,std_row5_background,alt_row1_background,alt_row2_background,alt_row3_background FROM vicidial_screen_colors where colors_id='$SSadmin_screen_colors';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$colors_ct = mysqli_num_rows($rslt);
+	if ($colors_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$SSmenu_background =		$row[0];
+		$SSframe_background =		$row[1];
+		$SSstd_row1_background =	$row[2];
+		$SSstd_row2_background =	$row[3];
+		$SSstd_row3_background =	$row[4];
+		$SSstd_row4_background =	$row[5];
+		$SSstd_row5_background =	$row[6];
+		$SSalt_row1_background =	$row[7];
+		$SSalt_row2_background =	$row[8];
+		$SSalt_row3_background =	$row[9];
+		}
+	}
+$Mhead_color =	$SSstd_row5_background;
+$Mmain_bgcolor = $SSmenu_background;
+$Mhead_color =	$SSstd_row5_background;
 
 
 $date = date("r");
@@ -455,7 +494,7 @@ else
 
 $MAIN.="</TD><TD ALIGN=RIGHT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> &nbsp; </TD></TR>\n";
 
-$MAIN.="<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> &nbsp; \n";
+$MAIN.="<TR BGCOLOR=\"#$SSframe_background\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> &nbsp; \n";
 
 $download_link="$PHP_SELF?DB=$DB&pause_code_rpt=$pause_code_rpt&did_id=$did_id&did=$did&begin_date=$begin_date&end_date=$end_date&user=$user&submit=$submit&search_archived_data=$search_archived_data\n";
 
@@ -542,13 +581,13 @@ if ($pause_code_rpt >= 1)
 	$CSV_text11.="\"\",\""._QXZ("EVENT TIME")."\",\""._QXZ("CAMPAIGN ID")."\",\""._QXZ("USER GROUP")."\",\""._QXZ("PAUSE CODE")."\",\""._QXZ("PAUSE LENGTH (HH:MM:SS)")."\"\n";
 
 	$o=0; $total_pause_time=0;
-	while ($pause_row=mysqli_fetch_array($rslt)) 
+	while ($pause_row=mysqli_fetch_array($rslt))
 		{
 		$total_pause_time+=$pause_row["pause_sec"];
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
+			{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 
 		$MAIN.="<tr $bgcolor><td><font size=2>$pause_row[event_time]</td>";
 		$MAIN.="<td align=right><font size=2> $pause_row[campaign_id]</td>\n";
@@ -633,9 +672,9 @@ else
 		while ($o < $p)
 			{
 			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
+				{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 
 			$call_hours_minutes =		sec_convert($call_sec[$o],'H'); 
 
@@ -681,9 +720,9 @@ else
 			{
 			$row=mysqli_fetch_row($rslt);
 			if (preg_match("/LOGIN/i", $row[0]))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
+				{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 
 			if (preg_match('/LOGIN/', $row[0]))
 				{
@@ -783,9 +822,9 @@ else
 		while ($events_to_print > $o) {
 			$row=mysqli_fetch_row($rslt);
 			if ( ($row[0]=='START') or ($row[0]=='LOGIN') )
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
+				{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 
 			$TC_log_date = date("Y-m-d H:i:s", $row[1]);
 
@@ -866,9 +905,9 @@ else
 			{
 			$row=mysqli_fetch_row($rslt);
 			if (preg_match("/1$|3$|5$|7$|9$/i", $u))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
+				{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 
 			$u++;
 			$MAIN.="<tr $bgcolor>";
@@ -918,9 +957,9 @@ else
 			{
 			$row=mysqli_fetch_row($rslt);
 			if (preg_match("/1$|3$|5$|7$|9$/i", $u))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
+				{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 
 			$u++;
 
@@ -992,9 +1031,9 @@ else
 				{
 				$row=mysqli_fetch_row($rslt);
 				if (preg_match("/1$|3$|5$|7$|9$/i", $u))
-					{$bgcolor='bgcolor="#B9CBFD"';} 
+					{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 				else
-					{$bgcolor='bgcolor="#9BB9FB"';}
+					{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 				if (strlen($row[6])>400) {$row[6]=substr($row[6],0,400)."...";}
 				$row[8]=preg_replace('/\|/', ', ', $row[8]);
 				$row[8]=preg_replace('/,\s+$/', '', $row[8]);
@@ -1066,9 +1105,9 @@ else
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match("/1$|3$|5$|7$|9$/i", $u))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
+			{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 
 		if ($did > 0)
 			{
@@ -1185,9 +1224,9 @@ else
 				{$customer_sec=0;}
 
 			if (preg_match("/1$|3$|5$|7$|9$/i", $u))
-				{$bgcolor='bgcolor="#B9CBFD"';}
+				{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';}
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
+				{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 
 			$TOTALpauseSECONDS = ($TOTALpauseSECONDS + $pause_sec);
 			$TOTALwaitSECONDS = ($TOTALwaitSECONDS + $wait_sec);
@@ -1306,9 +1345,9 @@ else
 		{
 		$row=mysqli_fetch_row($rslt);
 		if (preg_match("/1$|3$|5$|7$|9$/i", $u))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
+			{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 
 		$location = $row[11];
 		$CSV_location=$row[11];
@@ -1388,9 +1427,9 @@ else
 			{
 			$row=mysqli_fetch_row($rslt);
 			if (preg_match("/1$|3$|5$|7$|9$/i", $u))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
+				{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 
 			$C3HU='';
 			if ($row[9]=='BEFORE_CALL') {$row[9]='BC';}
@@ -1470,9 +1509,9 @@ else
 			{
 			$row=mysqli_fetch_row($rslt);
 			if (preg_match("/1$|3$|5$|7$|9$/i", $u))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
+				{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 
 			$row[4] = preg_replace("/SELECT count\(\*\) from vicidial_list where/",'',$row[4]);
 			$row[4] = preg_replace('/SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where /','',$row[4]);
@@ -1511,9 +1550,9 @@ else
 			{
 			$row=mysqli_fetch_row($rslt);
 			if (preg_match("/1$|3$|5$|7$|9$/i", $u))
-				{$bgcolor='bgcolor="#B9CBFD"';} 
+				{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
 			else
-				{$bgcolor='bgcolor="#9BB9FB"';}
+				{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 
 			$u++;
 			$MAIN.="<tr $bgcolor>";
