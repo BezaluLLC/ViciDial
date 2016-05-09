@@ -1,17 +1,18 @@
 <?php
 # reset_campaign_lists.php - VICIDIAL administration page
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 130711-2051 - First build
 # 130830-1800 - Changed to mysqli PHP functions
 # 141007-2058 - Finalized adding QXZ translation to all admin files
 # 141229-2009 - Added code for on-the-fly language translations display
+# 160508-2301 - Added colors features, fixed allowed campaigns bug
 #
 
-$admin_version = '2.10-4';
-$build = '141229-2009';
+$admin_version = '2.12-5';
+$build = '160508-2301';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -20,6 +21,9 @@ $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
 $QUERY_STRING = getenv("QUERY_STRING");
+
+if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
+	elseif (isset($_POST["DB"]))	{$DB=$_POST["DB"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -205,8 +209,8 @@ if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	{
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
-	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
-	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$LOGallowed_campaignsSQL = "and vc.campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where vc.campaign_id IN('$rawLOGallowed_campaignsSQL')";
 	}
 $regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 
@@ -250,16 +254,17 @@ if ( ($LOGuser_level >= 9) and $LOGmodify_campaigns>0 and $LOGmodify_lists>0 and
 
 	$campaign_stmt="select vl.campaign_id, vc.campaign_name, count(*) as ct from vicidial_lists vl, vicidial_campaigns vc where vc.active='Y' and vc.campaign_id=vl.campaign_id $LOGallowed_campaignsSQL group by campaign_id order by campaign_id, campaign_name asc";
 	$campaign_rslt=mysql_to_mysqli($campaign_stmt, $link);
+	if ($DB > 0) {echo $campaign_stmt;}
 
 	echo "<br><B>"._QXZ("Reset Lead-Called-Status for Campaigns").":</B><BR><BR>\n";
 	echo "<form action='$PHP_SELF?ADD=200000000000' method='post'>";
-	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1 BGCOLOR=#D9E6FE>\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1 BGCOLOR=#$SSframe_background>\n";
 	echo "<tr bgcolor=black>";
 	echo "<td><font size=1 color=white align=left><B>"._QXZ("Select campaign").":</B></td>";
 	echo "<td><font size=1 color=white><B>"._QXZ("Reset all/active only")."</B></td>";
 	echo "<td align=center><font size=1 color=white><B>&nbsp;</B></td></tr>\n";
 
-	echo "<tr bgcolor='#B9CBFD'>";
+	echo "<tr bgcolor='#$SSstd_row2_background'>";
 	echo "<td align='left'>";
 	echo "<select name='reset_lead_called_campaigns'>\n";
 	while ($campaign_row=mysqli_fetch_array($campaign_rslt)) {
@@ -284,6 +289,7 @@ if ( ($LOGuser_level >= 9) and $LOGmodify_campaigns>0 and $LOGmodify_lists>0 and
 		if ($all_or_active_only=="Y") {$list_id_clause="and active='Y'";  $verbiage="(active lists only)";}
 				
 		$list_id_stmt="select list_id from vicidial_lists where campaign_id='$reset_lead_called_campaigns' $list_id_clause order by list_id asc";
+		if ($DB > 0) {echo $list_id_stmt;}
 		$list_id_rslt=mysql_to_mysqli($list_id_stmt, $link);
 		if (mysqli_num_rows($list_id_rslt)>0) {
 			echo _QXZ("CAMPAIGN")." <B>$reset_lead_called_campaigns</B> "._QXZ("LISTS RESETTING")." $verbiage:<BR>\n<UL>";
@@ -328,16 +334,16 @@ if ( ($LOGuser_level >= 9) and $LOGmodify_campaigns>0 and $LOGmodify_lists>0 and
 	echo "</TABLE></center>";
 
 	echo "</TD></TR>\n";
-	echo "<TR><TD BGCOLOR=#015B91 ALIGN=CENTER>\n";
+	echo "<TR><TD BGCOLOR=#$SSmenu_background ALIGN=CENTER>\n";
 	echo "<font size=0 color=white><br><br><!-- RUNTIME: $RUNtime seconds<BR> -->";
 	echo _QXZ("VERSION").": $admin_version<BR>";
 	echo _QXZ("BUILD").": $build\n";
 	if (!preg_match("/_BUILD_/",$SShosted_settings))
-		{echo "<BR><a href=\"$PHP_SELF?ADD=999995\"><font color=white>&copy; 2014 "._QXZ("ViciDial Group")."</font></a><BR><img src=\"images/pixel.gif\">";}
+		{echo "<BR><a href=\"$PHP_SELF?ADD=999995\"><font color=white>&copy; 2016 "._QXZ("ViciDial Group")."</font></a><BR><img src=\"images/pixel.gif\">";}
 	echo "</font>\n";
 ?>
 
-</TD><TD BGCOLOR=#D9E6FE>
+</TD><TD BGCOLOR=#<?php echo $SSframe_background; ?>>
 </TD></TR><TABLE>
 </body>
 </html>
