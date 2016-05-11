@@ -29,6 +29,7 @@
 # 150512-0615 - Fix for non-latin customer data
 # 150724-0843 - Added vicidial_ajax_log function
 # 150923-2017 - Added DID custom fields
+# 160510-2151 - Fixed issues with select lists and common contents
 #
 
 # $mysql_queries = 20
@@ -398,9 +399,9 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 							$field_options_value_array = explode(",",$field_options_array[$te]);
 							if ( ($A_field_type[$o]=='SELECT') or ($A_field_type[$o]=='MULTI') )
 								{
-								if (strlen($A_field_value[$o]) > 0) 
+								if (strlen($A_field_value[$o]) > 0)
 									{
-									if (preg_match("/$field_options_value_array[0]/",$A_field_value[$o]))
+									if (preg_match("/^$field_options_value_array[0]$/",$A_field_value[$o]))
 										{$field_selected = 'SELECTED';}
 									}
 								else
@@ -411,11 +412,11 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 								}
 							if ( ($A_field_type[$o]=='RADIO') or ($A_field_type[$o]=='CHECKBOX') )
 								{
-								if ($A_multi_position[$o]=='VERTICAL') 
+								if ($A_multi_position[$o]=='VERTICAL')
 									{$field_HTML .= " &nbsp; ";}
 								if (strlen($A_field_value[$o]) > 0) 
 									{
-									if (preg_match("/$field_options_value_array[0]/",$A_field_value[$o]))
+									if (preg_match("/^$field_options_value_array[0]$/",$A_field_value[$o]))
 										{$field_selected = 'CHECKED';}
 									}
 								else

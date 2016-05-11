@@ -39,10 +39,11 @@
 # 160414-1243 - Fixed translation issue with COPY form
 # 160429-1125 - Added admin_row_click option
 # 160508-0219 - Added screen colors feature
+# 160510-2108 - Fixing issues with using only standard fields
 #
 
-$admin_version = '2.12-31';
-$build = '160508-0219';
+$admin_version = '2.12-32';
+$build = '160510-2108';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -1611,10 +1612,14 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 
 	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or (preg_match("/\|$field_label\|/i",$vicidial_list_fields)) )
 		{
-		if ($DB) {echo "Non-DB $field_type field type, $field_label\n";} 
-		$SQLexecuted++;
+		if ($DB) {echo "Non-DB $field_type field type, $field_label\n";}
+
+		if ($table_exists < 1)
+			{$field_sql = "CREATE TABLE custom_$list_id (lead_id INT(9) UNSIGNED PRIMARY KEY NOT NULL);";}
+		else
+			{$SQLexecuted++;}
 		}
-	else
+	if ($SQLexecuted < 1)
 		{
 		$stmtCUSTOM="$field_sql";
 		$rsltCUSTOM=mysql_to_mysqli($stmtCUSTOM, $linkCUSTOM);
