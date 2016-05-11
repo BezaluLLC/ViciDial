@@ -959,6 +959,8 @@ if ($run_export > 0)
 									$field_temp_val = $row[$t];
 									$row[$t] = preg_replace("/./",'X',$field_temp_val);
 									}
+								### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+								$row[$t]=preg_replace('/\t/', ' -- ', $row[$t]);
 								$custom_data .= "\t$row[$t]";
 								$t++;
 								}

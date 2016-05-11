@@ -16,6 +16,7 @@
 # 150727-2144 - Enabled user features for hiding phone numbers and lead data
 # 150903-1537 - Added compatibility for custom fields data options
 # 150909-0748 - Fixed issues with translated select list values, issue #885
+# 160510-2100 - Added coding to remove tab characters from the data
 #
 
 $startMS = microtime();
@@ -468,6 +469,11 @@ if ($run_export > 0)
 				{
 				$row=mysqli_fetch_row($rslt);
 
+				### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+				for ($t=0; $t<count($row); $t++){
+					$row[$t]=preg_replace('/\t/', ' -- ', $row[$t]);
+				}
+
 				$row[28] = preg_replace("/\n|\r/",'!N',$row[28]);
 
 				$export_status[$k] =		$row[2];
@@ -590,6 +596,11 @@ if ($run_export > 0)
 			while ($i < $inbound_to_print)
 				{
 				$row=mysqli_fetch_row($rslt);
+
+				### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+				for ($t=0; $t<count($row); $t++){
+					$row[$t]=preg_replace('/\t/', ' -- ', $row[$t]);
+				}
 
 				$row[28] = preg_replace("/\n|\r/",'!N',$row[28]);
 
@@ -788,6 +799,12 @@ if ($run_export > 0)
 				while ($recordings_ct > $u)
 					{
 					$row=mysqli_fetch_row($rslt);
+
+					### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+					for ($t=0; $t<count($row); $t++){
+						$row[$t]=preg_replace('/\t/', ' -- ', $row[$t]);
+					}
+					
 					$rec_id .=			"$row[0]|";
 					$rec_filename .=	"$row[1]|";
 					$rec_location .=	"$row[2]|";
@@ -827,6 +844,8 @@ if ($run_export > 0)
 					if ($vle_ct > 0)
 						{
 						$row=mysqli_fetch_row($rslt);
+						### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+						$row[0]=preg_replace('/\t/', ' -- ', $row[0]);
 						$extended_data_a =	"$row[0]";
 						$export_call_id[$i] = $row[0];
 						}
@@ -849,6 +868,12 @@ if ($run_export > 0)
 					if ($vle_ct > 0)
 						{
 						$row=mysqli_fetch_row($rslt);
+
+						### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+						for ($t=0; $t<count($row); $t++){
+							$row[$t]=preg_replace('/\t/', ' -- ', $row[$t]);
+						}
+
 						$extended_data_a =	"\t$row[0]\t$row[1]";
 						$export_call_id[$i] = $row[0];
 						}
@@ -860,6 +885,12 @@ if ($run_export > 0)
 					if ($vcarl_ct > 0)
 						{
 						$row=mysqli_fetch_row($rslt);
+
+						### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+						for ($t=0; $t<count($row); $t++){
+							$row[$t]=preg_replace('/\t/', ' -- ', $row[$t]);
+						}
+
 						$extended_data_b =	"\t$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]";
 						}
 
@@ -870,6 +901,8 @@ if ($run_export > 0)
 					if ($vcpdl_ct > 0)
 						{
 						$row=mysqli_fetch_row($rslt);
+						### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+						$row[0]=preg_replace('/\t/', ' -- ', $row[0]);
 						$extended_data_c =	"\t$row[0]";
 						}
 
@@ -880,6 +913,12 @@ if ($run_export > 0)
 					if ($vcdid_ct > 0)
 						{
 						$row=mysqli_fetch_row($rslt);
+
+						### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+						for ($t=0; $t<count($row); $t++){
+							$row[$t]=preg_replace('/\t/', ' -- ', $row[$t]);
+						}
+
 						$extended_data_d =	"\t$row[0]\t$row[1]";
 
 						$stmt = "SELECT did_description from vicidial_inbound_dids where did_id='$row[1]' LIMIT 1;";
@@ -889,6 +928,8 @@ if ($run_export > 0)
 						if ($vcdidx_ct > 0)
 							{
 							$row=mysqli_fetch_row($rslt);
+							### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+							$row[0]=preg_replace('/\t/', ' -- ', $row[0]);
 							$extended_data_d .=	"\t$row[0]";
 							}
 						else
@@ -902,6 +943,12 @@ if ($run_export > 0)
 					if ($vcval_ct > 0)
 						{
 						$row=mysqli_fetch_row($rslt);
+
+						### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+						for ($t=0; $t<count($row); $t++){
+							$row[$t]=preg_replace('/\t/', ' -- ', $row[$t]);
+						}
+
 						$cust_sec = ($row[0] - $row[1]);
 						if ($cust_sec < 1) {$cust_sec=0;}
 						$total_sec = ($cust_sec + $export_queue_time[$i]);
@@ -936,6 +983,8 @@ if ($run_export > 0)
 					if ($notes_ct > 0)
 						{
 						$row=mysqli_fetch_row($rslt);
+						### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+						$row[0]=preg_replace('/\t/', ' -- ', $row[0]);
 						$notes_data =	$row[0];
 						}
 					$notes_data = preg_replace("/\r\n/",' ',$notes_data);
@@ -962,6 +1011,8 @@ if ($run_export > 0)
 					while ($u < $logs_to_print)
 						{
 						$row=mysqli_fetch_row($rslt);
+						### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+						$row[0]=preg_replace('/\t/', ' -- ', $row[0]);
 						$ivr_path .= "$row[0]$IVRdelimiter";
 						$u++;
 						}
@@ -1092,6 +1143,8 @@ if ($run_export > 0)
 									$field_temp_val = $row[$t];
 									$row[$t] = preg_replace("/./",'X',$field_temp_val);
 									}
+								### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+								$row[$t]=preg_replace('/\t/', ' -- ', $row[$t]);
 								$custom_data .= "\t$row[$t]";
 								$t++;
 								}
