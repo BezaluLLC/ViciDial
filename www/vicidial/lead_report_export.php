@@ -24,6 +24,7 @@
 # 150903-1539 - Added compatibility for custom fields data options
 # 150909-0749 - Fixed issues with translated select list values, issue #885
 # 160420-1407 - Added archive search options
+# 160509-2155 - Added coding to remove tab characters from the data
 #
 
 $startMS = microtime();
@@ -551,6 +552,11 @@ if ($run_export > 0)
 						{$data_temp = $row[28];   $row[28] = preg_replace("/./",'X',$data_temp);}
 					}
 
+				### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+				for ($t=0; $t<count($row); $t++){
+					$row[$t]=preg_replace('/\t/', ' -- ', $row[$t]);
+				}
+
 				$export_fieldsDATA='';
 				if ($export_fields == 'EXTENDED')
 					{$export_fieldsDATA = "$row[39]\t$row[40]\t$row[41]\t$row[42]\t$row[43]\t";}
@@ -724,6 +730,12 @@ if ($run_export > 0)
 				while ($recordings_ct > $u)
 					{
 					$row=mysqli_fetch_row($rslt);
+
+					### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+					for ($t=0; $t<count($row); $t++){
+						$row[$t]=preg_replace('/\t/', ' -- ', $row[$t]);
+					}
+
 					$rec_id .=			"$row[0]|";
 					$rec_filename .=	"$row[1]|";
 					$rec_location .=	"$row[2]|";
@@ -761,6 +773,10 @@ if ($run_export > 0)
 					if ($vle_ct > 0)
 						{
 						$row=mysqli_fetch_row($rslt);
+						### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+						for ($t=0; $t<count($row); $t++){
+							$row[$t]=preg_replace('/\t/', ' -- ', $row[$t]);
+						}
 						$extended_data_a =	"\t$row[0]\t$row[1]";
 						$export_call_id[$i] = $row[0];
 						}
@@ -772,6 +788,10 @@ if ($run_export > 0)
 					if ($vcarl_ct > 0)
 						{
 						$row=mysqli_fetch_row($rslt);
+						### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+						for ($t=0; $t<count($row); $t++){
+							$row[$t]=preg_replace('/\t/', ' -- ', $row[$t]);
+						}
 						$extended_data_b =	"\t$row[0]\t$row[1]\t$row[2]\t$row[3]\t$row[4]";
 						}
 
@@ -782,6 +802,8 @@ if ($run_export > 0)
 					if ($vcpdl_ct > 0)
 						{
 						$row=mysqli_fetch_row($rslt);
+						### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+						$row[0]=preg_replace('/\t/', ' -- ', $row[0]);
 						$extended_data_c =	"\t$row[0]";
 						}
 
@@ -807,6 +829,8 @@ if ($run_export > 0)
 					if ($notes_ct > 0)
 						{
 						$row=mysqli_fetch_row($rslt);
+						### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+						$row[0]=preg_replace('/\t/', ' -- ', $row[0]);
 						$notes_data =	$row[0];
 						}
 					$notes_data = preg_replace("/\r\n/",' ',$notes_data);

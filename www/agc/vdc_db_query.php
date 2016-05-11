@@ -405,10 +405,11 @@
 # 160326-1002 - Fixed issue #934, phone_login
 # 160331-2130 - Fixed missing start and dispo call url variables, issue #938
 # 160414-0944 - Added default_phone_code value instead of hard-coded '1'
+# 160510-0840 - Added callback_lead_status as dispo_call_url variable
 #
 
-$version = '2.12-299';
-$build = '160414-0944';
+$version = '2.12-300';
+$build = '160510-0840';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=654;
@@ -11440,6 +11441,7 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_urlARY[$j] = preg_replace('/--A--did_custom_four--B--/i',urlencode(trim($DID_custom_four)),$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--did_custom_five--B--/i',urlencode(trim($DID_custom_five)),$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--agent_email--B--/i',urlencode(trim($agent_email)),$dispo_call_urlARY[$j]);
+		$dispo_call_urlARY[$j] = preg_replace('/--A--callback_lead_status--B--/i',urlencode(trim($CallBackLeadStatus)),$dispo_call_urlARY[$j]);
 
 		if (strlen($FORMcustom_field_names)>2)
 			{

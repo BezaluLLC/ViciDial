@@ -1902,7 +1902,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="campaigns-dispo_call_url">
 <BR>
-<B><?php echo _QXZ("Dispo Call URL"); ?> -</B><?php echo _QXZ("This web URL address is not seen by the agent, but it is called every time a call is dispositioned by an agent if it is populated. Uses the same variables as the web form fields and scripts. dispo and talk_time are the variables you can use to retrieve the agent-defined disposition for the call and the actual talk time in seconds of the call. This URL can NOT be a relative path. Default is blank.") . " " . _QXZ("If you put ALT into this field and submit this form, you will be able to go to a separate page where you can define multiple URLs for this action as well as specific statuses that will trigger them."); ?>
+<B><?php echo _QXZ("Dispo Call URL"); ?> -</B><?php echo _QXZ("This web URL address is not seen by the agent, but it is called every time a call is dispositioned by an agent if it is populated. Uses the same variables as the web form fields and scripts. dispo, callback_lead_status and talk_time are the variables you can use to retrieve the agent-defined disposition for the call and the actual talk time in seconds of the call. This URL can NOT be a relative path. Default is blank.") . " " . _QXZ("If you put ALT into this field and submit this form, you will be able to go to a separate page where you can define multiple URLs for this action as well as specific statuses that will trigger them."); ?>
 
 <BR>
 <A NAME="campaigns-na_call_url">
