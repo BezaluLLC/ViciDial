@@ -5,7 +5,7 @@
 # DESCRIPTION:
 # Backs-up the asterisk database, conf/agi/sounds/bin files 
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 #
@@ -21,6 +21,7 @@
 # 141124-2309 - Fixed Fhour variable bug
 # 150418-1801 - Added --db_raw_files_copy flag, issue #839
 # 151006-1337 - Added archive_path flag, issue #896
+# 160510-2249 - Added --db-without-archives flag, issue #945
 #
 
 $secT = time();
@@ -54,6 +55,7 @@ if (length($ARGV[0])>1)
 		print "  [--db-only] = only backup the database\n";
 		print "  [--db-settings-only] = only backup the database without leads, logs, servers or phones\n";
 		print "  [--db-without-logs] = do not backup the log tables in the database\n";
+		print "  [--db-without-archives] = do not backup the archive tables in the database\n";
 		print "  [--conf-only] = only backup the asterisk conf files\n";
 		print "  [--without-db] = do not backup the database\n";
 		print "  [--without-conf] = do not backup the conf files\n";
@@ -100,6 +102,11 @@ if (length($ARGV[0])>1)
 			{
 			$db_without_logs=1;
 			print "\n----- Backup Database Without Logs -----\n\n";
+			}
+		if ($args =~ /--db-without-archives/i)
+			{
+			$db_without_archives=1;
+			print "\n----- Backup Database Without Archives -----\n\n";
 			}
 		if ($args =~ /--conf-only/i)
 			{
@@ -284,88 +291,77 @@ if ( ($without_db < 1) && ($conf_only < 1) )
 			}
 
 		### BACKUP THE MYSQL FILES ON THE DB SERVER ###
+
+		### connect to MySQL database defined in the conf file
+		use DBI;
+		$dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
+		or die "Couldn't connect to database: " . DBI->errstr;
+
+		$stmtA = "show tables;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$rec_count=0;
+		$log_tables='';
+		$archive_tables='';
+		$regular_tables='';
+			
+		while ($sthArows > $rec_count)
+			{
+			@aryA = $sthA->fetchrow_array;
+			if ($aryA[0] =~ /_archive/) 
+				{
+				$archive_tables .= " $aryA[0]";
+				}
+			elsif ($aryA[0] =~ /_log|server_performance|vicidial_ivr|vicidial_hopper|vicidial_manager|web_client_sessions|imm_outcomes/) 
+				{
+				$log_tables .= " $aryA[0]";
+				}
+			elsif ($aryA[0] =~ /server|^phones|conferences|stats|vicidial_list$/) 
+				{
+				$regular_tables .= " $aryA[0]";
+				}				
+			else 
+				{
+				$conf_tables .= " $aryA[0]";
+				}
+			$rec_count++;
+			}
+		$sthA->finish();
+
+				
 		if ($db_without_logs)
 			{
-			use DBI;
-				
-			### connect to MySQL database defined in the conf file
-			$dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
-			or die "Couldn't connect to database: " . DBI->errstr;
-
-			$stmtA = "show tables;";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			$sthArows=$sthA->rows;
-			$rec_count=0;
-			$log_tables='';
-			$archive_tables='';
-			while ($sthArows > $rec_count)
-				{
-				@aryA = $sthA->fetchrow_array;
-				if ($aryA[0] =~ /_log|server_performance|vicidial_ivr|vicidial_hopper|vicidial_manager|web_client_sessions|imm_outcomes/) 
-					{
-					$log_tables .= " $aryA[0]";
-					}
-				else 
-					{
-					$archive_tables .= " $aryA[0]";
-					}
-				$rec_count++;
-				}
-			$sthA->finish();
-
-			$dump_non_log_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database $archive_tables | $gzipbin > $ARCHIVEpath/temp/$VARserver_ip$VARDB_database$wday.gz";
-			$dump_log_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs --no-data --no-create-db $VARDB_database $log_tables | $gzipbin > $ARCHIVEpath/temp/LOGS_$VARserver_ip$VARDB_database$wday.gz";
+			$dump_non_log_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database $regular_tables $conf_tables | $gzipbin > $ARCHIVEpath/temp/$VARserver_ip$VARDB_database$wday.gz";
+			$dump_log_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs --no-data --no-create-db $VARDB_database $log_tables $archive_tables | $gzipbin > $ARCHIVEpath/temp/LOGS_$VARserver_ip$VARDB_database$wday.gz";
 
 			if ($DBX) {print "$dump_non_log_command\nDEBUG: LOG EXPORT COMMAND(not run): $dump_log_command\n";}
 			`$dump_non_log_command`;
-		#	`$dump_log_command`;
+			}
+			
+		elsif ($db_without_archives)
+			{
+			$dump_non_archive_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database $regular_tables $conf_tables $log_tables | $gzipbin > $ARCHIVEpath/temp/$VARserver_ip$VARDB_database$wday.gz";
+			$dump_archive_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs --no-data --no-create-db $VARDB_database $archive_tables | $gzipbin > $ARCHIVEpath/temp/ARCHIVES_$VARserver_ip$VARDB_database$wday.gz";
+
+			if ($DBX) {print "$dump_non_archive_command\nDEBUG: ARCHIVE EXPORT COMMAND(not run): $dump_archive_command\n";}
+			`$dump_non_archive_command`;
+			}
+			
+		elsif ($db_settings_only)
+			{
+			$dump_non_log_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database $conf_tables | $gzipbin > $ARCHIVEpath/temp/SETTINGSONLY_$VARserver_ip$VARDB_database$wday.gz";
+			$dump_log_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs --no-data --no-create-db $VARDB_database $log_tables $archive_tables $regular_tables | $gzipbin > $ARCHIVEpath/temp/LOGS_$VARserver_ip$VARDB_database$wday.gz";
+
+			if ($DBX) {print "$dump_non_log_command\nNOT ARCHIVED: $dump_log_command\n";}
+			`$dump_non_log_command`;
 			}
 		else
 			{
-			if ($db_settings_only)
-				{
-				use DBI;
-					
-				### connect to MySQL database defined in the conf file
-				$dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
-				or die "Couldn't connect to database: " . DBI->errstr;
-
-				$stmtA = "show tables;";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				$sthArows=$sthA->rows;
-				$rec_count=0;
-				$log_tables='';
-				$archive_tables='';
-				while ($sthArows > $rec_count)
-					{
-					@aryA = $sthA->fetchrow_array;
-					if ($aryA[0] =~ /_log|server_performance|vicidial_ivr|vicidial_hopper|vicidial_manager|web_client_sessions|imm_outcomes|server|^phones|conferences|stats|vicidial_list$/) 
-						{
-						$log_tables .= " $aryA[0]";
-						}
-					else 
-						{
-						$archive_tables .= " $aryA[0]";
-						}
-					$rec_count++;
-					}
-				$sthA->finish();
-
-				$dump_non_log_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database $archive_tables | $gzipbin > $ARCHIVEpath/temp/SETTINGSONLY_$VARserver_ip$VARDB_database$wday.gz";
-				$dump_log_command = "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs --no-data --no-create-db $VARDB_database $log_tables | $gzipbin > $ARCHIVEpath/temp/LOGS_$VARserver_ip$VARDB_database$wday.gz";
-
-				if ($DBX) {print "$dump_non_log_command\nNOT ARCHIVED: $dump_log_command\n";}
-				`$dump_non_log_command`;
-			#	`$dump_log_command`;
-				}
-			else
-				{
-				if ($DBX) {print "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database | $gzipbin > $ARCHIVEpath/temp/$VARserver_ip$VARDB_database$wday.gz\n";}
-				`$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database | $gzipbin > $ARCHIVEpath/temp/$VARserver_ip$VARDB_database$wday.gz`;
-				}
+			if ($DBX) {print "$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database | $gzipbin > $ARCHIVEpath/temp/$VARserver_ip$VARDB_database$wday.gz\n";}
+			`$mysqldumpbin --user=$VARDB_user --password=$VARDB_pass --lock-tables --flush-logs $VARDB_database | $gzipbin > $ARCHIVEpath/temp/$VARserver_ip$VARDB_database$wday.gz`;
 			}
+		
 		}
 	else
 		{
