@@ -102,10 +102,11 @@
 # 160406-1858 - Added WALL options for report_display_type
 # 160413-2004 - Added WALL_4 option
 # 160418-2141 - Fixed issue with WALL displays
+# 160515-1300 - Added UK OFCOM feature
 #
 
-$version = '2.12-90';
-$build = '160418-2141';
+$version = '2.12-91';
+$build = '160515-1300';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -192,7 +193,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,agent_whisper_enabled,allow_chats,cache_carrier_stats_realtime,report_default_format FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,agent_whisper_enabled,allow_chats,cache_carrier_stats_realtime,report_default_format,ofcom_uk_drop_calc FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -209,6 +210,7 @@ if ($qm_conf_ct > 0)
 	$allow_chats =					$row[7];
 	$cache_carrier_stats_realtime = $row[8];
 	$SSreport_default_format =		$row[9];
+	$SSofcom_uk_drop_calc =			$row[10];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -1721,9 +1723,9 @@ else
 		else
 			{$non_inboundSQL = "and campaign_id IN($group_SQL,$closer_campaignsSQL)";}
 		$multi_drop++;
-		$stmt="SELECT avg(auto_dial_level),min(dial_status_a),min(dial_status_b),min(dial_status_c),min(dial_status_d),min(dial_status_e),min(lead_order),min(lead_filter_id),sum(hopper_level),min(dial_method),avg(adaptive_maximum_level),avg(adaptive_dropped_percentage),avg(adaptive_dl_diff_target),avg(adaptive_intensity),min(available_only_ratio_tally),min(adaptive_latest_server_time),min(local_call_time),avg(dial_timeout),min(dial_statuses),max(agent_pause_codes_active),max(list_order_mix),max(auto_hopper_level) from vicidial_campaigns where active='Y' $group_SQLand;";
+		$stmt="SELECT avg(auto_dial_level),min(dial_status_a),min(dial_status_b),min(dial_status_c),min(dial_status_d),min(dial_status_e),min(lead_order),min(lead_filter_id),sum(hopper_level),min(dial_method),avg(adaptive_maximum_level),avg(adaptive_dropped_percentage),avg(adaptive_dl_diff_target),avg(adaptive_intensity),min(available_only_ratio_tally),min(adaptive_latest_server_time),min(local_call_time),avg(dial_timeout),min(dial_statuses),max(agent_pause_codes_active),max(list_order_mix),max(auto_hopper_level),max(ofcom_uk_drop_calc) from vicidial_campaigns where active='Y' $group_SQLand;";
 
-		$stmtB="SELECT sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),$answersSQL,max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(agent_calls_today),sum(agent_wait_today),sum(agent_custtalk_today),sum(agent_acw_today),sum(agent_pause_today) from vicidial_campaign_stats where calls_today > -1 $non_inboundSQL;";
+		$stmtB="SELECT sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),$answersSQL,max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(agent_calls_today),sum(agent_wait_today),sum(agent_custtalk_today),sum(agent_acw_today),sum(agent_pause_today),sum(agenthandled_today) from vicidial_campaign_stats where calls_today > -1 $non_inboundSQL;";
 
 		$stmtC="SELECT count(*) from vicidial_campaigns where agent_pause_codes_active!='N' and active='Y' $group_SQLand;";
 		}
@@ -1736,17 +1738,17 @@ else
 			$multi_drop++;
 			if ($DB) {echo "with_inbound|$with_inbound|$campaign_allow_inbound\n";}
 
-			$stmt="SELECT auto_dial_level,dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,lead_filter_id,hopper_level,dial_method,adaptive_maximum_level,adaptive_dropped_percentage,adaptive_dl_diff_target,adaptive_intensity,available_only_ratio_tally,adaptive_latest_server_time,local_call_time,dial_timeout,dial_statuses,agent_pause_codes_active,list_order_mix,auto_hopper_level from vicidial_campaigns where campaign_id IN ($group_SQL,$closer_campaignsSQL);";
+			$stmt="SELECT auto_dial_level,dial_status_a,dial_status_b,dial_status_c,dial_status_d,dial_status_e,lead_order,lead_filter_id,hopper_level,dial_method,adaptive_maximum_level,adaptive_dropped_percentage,adaptive_dl_diff_target,adaptive_intensity,available_only_ratio_tally,adaptive_latest_server_time,local_call_time,dial_timeout,dial_statuses,agent_pause_codes_active,list_order_mix,auto_hopper_level,ofcom_uk_drop_calc from vicidial_campaigns where campaign_id IN ($group_SQL,$closer_campaignsSQL);";
 
-			$stmtB="SELECT sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),$answersSQL,max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(agent_calls_today),sum(agent_wait_today),sum(agent_custtalk_today),sum(agent_acw_today),sum(agent_pause_today) from vicidial_campaign_stats where campaign_id IN ($group_SQL,$closer_campaignsSQL);";
+			$stmtB="SELECT sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),$answersSQL,max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(agent_calls_today),sum(agent_wait_today),sum(agent_custtalk_today),sum(agent_acw_today),sum(agent_pause_today),sum(agenthandled_today) from vicidial_campaign_stats where campaign_id IN ($group_SQL,$closer_campaignsSQL);";
 
 			$stmtC="SELECT count(*) from vicidial_campaigns where agent_pause_codes_active!='N' and active='Y' and campaign_id IN ($group_SQL,$closer_campaignsSQL);";
 			}
 		else
 			{
-			$stmt="SELECT avg(auto_dial_level),max(dial_status_a),max(dial_status_b),max(dial_status_c),max(dial_status_d),max(dial_status_e),max(lead_order),max(lead_filter_id),max(hopper_level),max(dial_method),max(adaptive_maximum_level),avg(adaptive_dropped_percentage),avg(adaptive_dl_diff_target),avg(adaptive_intensity),max(available_only_ratio_tally),max(adaptive_latest_server_time),max(local_call_time),max(dial_timeout),max(dial_statuses),max(agent_pause_codes_active),max(list_order_mix),max(auto_hopper_level) from vicidial_campaigns where campaign_id IN($group_SQL);";
+			$stmt="SELECT avg(auto_dial_level),max(dial_status_a),max(dial_status_b),max(dial_status_c),max(dial_status_d),max(dial_status_e),max(lead_order),max(lead_filter_id),max(hopper_level),max(dial_method),max(adaptive_maximum_level),avg(adaptive_dropped_percentage),avg(adaptive_dl_diff_target),avg(adaptive_intensity),max(available_only_ratio_tally),max(adaptive_latest_server_time),max(local_call_time),max(dial_timeout),max(dial_statuses),max(agent_pause_codes_active),max(list_order_mix),max(auto_hopper_level),max(ofcom_uk_drop_calc) from vicidial_campaigns where campaign_id IN($group_SQL);";
 
-			$stmtB="SELECT sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),$answersSQL,max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(agent_calls_today),sum(agent_wait_today),sum(agent_custtalk_today),sum(agent_acw_today),sum(agent_pause_today) from vicidial_campaign_stats where campaign_id IN($group_SQL);";
+			$stmtB="SELECT sum(dialable_leads),sum(calls_today),sum(drops_today),avg(drops_answers_today_pct),avg(differential_onemin),avg(agents_average_onemin),sum(balance_trunk_fill),$answersSQL,max(status_category_1),sum(status_category_count_1),max(status_category_2),sum(status_category_count_2),max(status_category_3),sum(status_category_count_3),max(status_category_4),sum(status_category_count_4),sum(agent_calls_today),sum(agent_wait_today),sum(agent_custtalk_today),sum(agent_acw_today),sum(agent_pause_today),sum(agenthandled_today) from vicidial_campaign_stats where campaign_id IN($group_SQL);";
 
 			$stmtC="SELECT count(*) from vicidial_campaigns where agent_pause_codes_active!='N' and active='Y' and campaign_id IN($group_SQL);";
 			}
@@ -1776,6 +1778,7 @@ else
 	$DIALstatuses =	$row[18];
 	$DIALmix =		$row[20];
 	$AHOPlev =      $row[21];
+	$UKocDROP =		$row[22];
 
 	$rslt=mysql_to_mysqli($stmtC, $link);
 	$row=mysqli_fetch_row($rslt);
@@ -1796,12 +1799,6 @@ else
 	$agentsONEMIN = $row[5];
 	$balanceFILL =	$row[6];
 	$answersTODAY = $row[7];
-	if ($multi_drop > 0)
-		{
-		$drpctTODAY = ( MathZDC($dropsTODAY, $answersTODAY) * 100);
-		$drpctTODAY = round($drpctTODAY, 2);
-		$drpctTODAY = sprintf("%01.2f", $drpctTODAY);
-		}
 	$VSCcat1 =		$row[8];
 	$VSCcat1tally = $row[9];
 	$VSCcat2 =		$row[10];
@@ -1815,6 +1812,23 @@ else
 	$VSCagentcust =		$row[18];
 	$VSCagentacw =		$row[19];
 	$VSCagentpause =	$row[20];
+	$AGNTansTODAY =		$row[21];
+	if ($multi_drop > 0)
+		{
+		if ( ($SSofcom_uk_drop_calc > 0) and ($UKocDROP == 'Y') )
+			{
+			$temp_AGNTansPLUSdrop = ($AGNTansTODAY + $dropsTODAY);
+			$drpctTODAY = ( MathZDC($dropsTODAY, $temp_AGNTansPLUSdrop) * 100);
+			$drpctTODAY = round($drpctTODAY, 2);
+			$drpctTODAY = sprintf("%01.2f", $drpctTODAY);
+			}
+		else
+			{
+			$drpctTODAY = ( MathZDC($dropsTODAY, $answersTODAY) * 100);
+			$drpctTODAY = round($drpctTODAY, 2);
+			$drpctTODAY = sprintf("%01.2f", $drpctTODAY);
+			}
+		}
 
 	$diffpctONEMIN = ( MathZDC($diffONEMIN, $agentsONEMIN) * 100);
 	$diffpctONEMIN = sprintf("%01.2f", $diffpctONEMIN);
@@ -1899,7 +1913,13 @@ else
 			{
 			echo "<TD ALIGN=RIGHT><font class=\"top_settings_key\">"._QXZ("LEADS IN HOPPER").":</font></TD><TD ALIGN=LEFT><font class=\"top_settings_val\">&nbsp; $VDhop &nbsp; &nbsp; </TD>";
 			}
-		echo "<TD ALIGN=RIGHT><font class=\"top_settings_key\">"._QXZ("DROPPED PERCENT").":</font></TD><TD ALIGN=LEFT><font class=\"top_settings_val\">&nbsp; ";
+		echo "<TD ALIGN=RIGHT><font class=\"top_settings_key\">"._QXZ("DROPPED PERCENT");
+
+		if ( ($SSofcom_uk_drop_calc > 0) and ($UKocDROP == 'Y') )
+			{echo "<font color=blue>(uk)</font>";}
+		echo ":</font></TD><TD ALIGN=LEFT><font class=\"top_settings_val\">&nbsp; ";
+
+		
 		if ($drpctTODAY >= $DROPmax)
 			{echo "<font color=red><B>$drpctTODAY%</font>";}
 		else

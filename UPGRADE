@@ -256,6 +256,12 @@ OTHER CHANGES:
 
 68. Added options to define color scheme and logo for admin web screens
 
+69. Added new options to enable the recent changes to the UK OFCOM Drop Rate
+	calculations. There is a new System Setting to enable on the system, 
+	and then each affected campaign must also have the new option enabled 
+	for it as well. Affects the predictive algorithm and the Real-time and
+	Outbound Calling reports.
+
 
 
 

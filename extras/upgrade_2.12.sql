@@ -593,3 +593,27 @@ ALTER TABLE vicidial_users ADD modify_colors ENUM('1','0') default '0';
 ALTER TABLE system_settings ADD admin_screen_colors VARCHAR(20) default 'default';
 
 UPDATE system_settings SET db_schema_version='1459',db_schema_update_date=NOW() where db_schema_version < 1459;
+
+ALTER TABLE system_settings ADD ofcom_uk_drop_calc ENUM('1','0') default '0';
+
+ALTER TABLE vicidial_campaigns ADD ofcom_uk_drop_calc ENUM('Y','N') default 'N';
+
+ALTER TABLE vicidial_statuses ADD answering_machine ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_campaign_statuses ADD answering_machine ENUM('Y','N') default 'N';
+
+UPDATE vicidial_statuses INNER JOIN system_settings ON system_settings.db_schema_version = 1459 SET answering_machine='Y' where status IN('A','AM','AL');
+
+ALTER TABLE vicidial_campaign_stats ADD answering_machines_today INT(9) UNSIGNED default '0';
+ALTER TABLE vicidial_campaign_stats ADD agenthandled_today INT(9) UNSIGNED default '0';
+ALTER TABLE vicidial_campaign_stats MODIFY drops_today DECIMAL(12,3) default '0';
+
+ALTER TABLE vicidial_drop_rate_groups ADD answering_machines_today INT(9) UNSIGNED default '0';
+ALTER TABLE vicidial_drop_rate_groups ADD agenthandled_today INT(9) UNSIGNED default '0';
+ALTER TABLE vicidial_drop_rate_groups MODIFY drops_today DOUBLE(12,3) default '0';
+
+UPDATE system_settings SET db_schema_version='1460',db_schema_update_date=NOW() where db_schema_version < 1460;
+
+
+
+
+

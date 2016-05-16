@@ -88,6 +88,7 @@
 # 160414-0916 - Added default_phone_code
 # 160429-0834 - Added settings-admin_row_click
 # 160508-0836 - Added screen colors
+# 160515-1958 - Added ofcom_uk_drop_calc entry
 #
 
 
@@ -4938,6 +4939,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-outbound_autodial_active">
 <BR>
 <B><?php echo _QXZ("Outbound Auto-Dial Active"); ?> -</B><?php echo _QXZ("This option allows you to enable or disable outbound auto-dialing within the system, setting this field to 0 will remove the LISTS and FILTERS sections and many fields from the Campaign Modification screens. Manual entry dialing will still be allowable from within the agent screen, but no list dialing will be possible. Default is 1 for active."); ?>
+
+<BR>
+<A NAME="settings-ofcom_uk_drop_calc">
+<BR>
+<B><?php echo _QXZ("UK OFCOM Drop Calculation"); ?> -</B><?php echo _QXZ("This option allows you to enable the new UK OFCOM Drop calculation formula for individual campaigns. As of December 2015, OFCOM in the UK changed their method for calculating the drop,or abandon, percentage for an outbound dialing campaign. The new formula includes an estimate of the number of drops that were answering machines. They do this by using the agent-answered percentage of answering machines and subtracting that percentage from the number of drops. Then that new drop number is divided by the total agent-answered human-answered calls PLUS the number of drops. This differs in several ways from the way it had been done, as well as the way the drop percentage has been calculated in the USA and Canada. This new UK drop calculation method can be activated as a system setting AND a campaign option. Both must be enabled for the campaign to use the new method. In order for agent-statused answering machines to be calculated properly, we have added an answering machine status flag that is used to gather those statuses. Default is 0 for inactive."); ?>
 
 <BR>
 <A NAME="settings-disable_auto_dial">

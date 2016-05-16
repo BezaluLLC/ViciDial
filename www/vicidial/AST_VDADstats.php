@@ -47,6 +47,7 @@
 # 150619-0137 - Added option to calculate 'Percent of DROP Calls taken out of Answers' differently
 # 151125-1615 - Added search archive option
 # 160227-1101 - Uniform form format
+# 160515-1412 - Added UK OFCOM feature
 #
 
 $startMS = microtime();
@@ -110,7 +111,7 @@ $JS_onload="onload = function() {\n";
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,ofcom_uk_drop_calc FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -123,6 +124,7 @@ if ($qm_conf_ct > 0)
 	$reports_use_slave_db =			$row[3];
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
+	$SSofcom_uk_drop_calc =			$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -360,6 +362,7 @@ while ($i < $campaigns_to_print)
 	}
 
 $rollover_groups_count=0;
+$ofcom_uk_drop_calc=0;
 $i=0;
 $group_string='|';
 $group_ct = count($group);
@@ -374,7 +377,7 @@ while($i < $group_ct)
 
 	if (preg_match("/YES/i",$include_rollover))
 		{
-		$stmt="select drop_inbound_group from vicidial_campaigns where campaign_id='$group[$i]' $LOGallowed_campaignsSQL and drop_inbound_group NOT LIKE \"%NONE%\" and drop_inbound_group is NOT NULL and drop_inbound_group != '';";
+		$stmt="SELECT drop_inbound_group from vicidial_campaigns where campaign_id='$group[$i]' $LOGallowed_campaignsSQL and drop_inbound_group NOT LIKE \"%NONE%\" and drop_inbound_group is NOT NULL and drop_inbound_group != '';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$in_groups_to_print = mysqli_num_rows($rslt);
@@ -387,6 +390,23 @@ while($i < $group_ct)
 			}
 		}
 
+	### UK OFCOM test
+	if ($SSofcom_uk_drop_calc > 0)
+		{
+		$stmt="SELECT ofcom_uk_drop_calc from vicidial_campaigns where campaign_id='$group[$i]' $LOGallowed_campaignsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$ukofcom_to_print = mysqli_num_rows($rslt);
+		if ($ukofcom_to_print > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$ukofcom_test = $row[0];
+
+			if ($ukofcom_test == 'Y')
+				{$ofcom_uk_drop_calc++;}
+			}
+		}
+	
 	$i++;
 	}
 if (strlen($group_drop_SQL) < 2)
@@ -798,14 +818,30 @@ else
 
 
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- "._QXZ("HUMAN ANSWERS")."\n";
+	$OUToutput .= "---------- "._QXZ("HUMAN ANSWERS");
+	if ( ($SSofcom_uk_drop_calc > 0) and ($ofcom_uk_drop_calc > 0) )
+		{$OUToutput .= "<font color=blue>(uk)</font>";}
+	$OUToutput .= "\n";
 
-	$stmt="select count(*),sum(length_in_sec) from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status IN($customer_interactive_statuses) $group_SQLand $list_id_SQLand;";
-	$rslt=mysql_to_mysqli($stmt, $link);
-	if ($DB) {$OUToutput .= "$stmt\n";}
-	$row=mysqli_fetch_row($rslt);
-	$CIcallsRAW =	$row[0];
-	$CIsec =		$row[1];
+	### UK OFCOM test
+	if ( ($SSofcom_uk_drop_calc > 0) and ($ofcom_uk_drop_calc > 0) )
+		{
+		$stmt="select count(*),sum(length_in_sec) from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and user!='VDAD' and status IN($customer_interactive_statuses) $group_SQLand $list_id_SQLand;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {$OUToutput .= "$stmt\n";}
+		$row=mysqli_fetch_row($rslt);
+		$CIcallsRAW =	$row[0];
+		$CIsec =		$row[1];
+		}
+	else
+		{
+		$stmt="select count(*),sum(length_in_sec) from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and status IN($customer_interactive_statuses) $group_SQLand $list_id_SQLand;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {$OUToutput .= "$stmt\n";}
+		$row=mysqli_fetch_row($rslt);
+		$CIcallsRAW =	$row[0];
+		$CIsec =		$row[1];
+		}
 
 	if (preg_match("/YES/i",$include_rollover))
 		{
@@ -851,20 +887,24 @@ else
 
 
 	$OUToutput .= "\n";
-	$OUToutput .= "---------- "._QXZ("DROPS")."\n";
+	$OUToutput .= "---------- "._QXZ("DROPS");
+	if ( ($SSofcom_uk_drop_calc > 0) and ($ofcom_uk_drop_calc > 0) )
+		{$OUToutput .= "<font color=blue>(uk)</font>";}
+	$OUToutput .= "\n";
 
 	$stmt="select count(*),sum(length_in_sec) from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and status='DROP' and (length_in_sec <= 6000 or length_in_sec is null);";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$OUToutput .= "$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
 	$DROPcalls =	sprintf("%10s", $row[0]);
+	$DROPcallsA =	sprintf("%10s", $row[0]);
 	$DROPcallsRAW =	$row[0];
+	$DROPcallsRAWraw =	$row[0];
 	$DROPseconds =	$row[1];
-
 
 	# GET LIST OF ALL STATUSES and create SQL from human_answered statuses
 	$q=0;
-	$stmt = "SELECT status,status_name,human_answered,category from vicidial_statuses;";
+	$stmt = "SELECT status,status_name,human_answered,category,answering_machine from vicidial_statuses;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$OUToutput .= "$stmt\n";}
 	$statuses_to_print = mysqli_num_rows($rslt);
@@ -876,15 +916,18 @@ else
 		$status_name[$q] =		$row[1];
 		$human_answered[$q] =	$row[2];
 		$category[$q] =			$row[3];
+		$answering_machine[$q]= $row[4];
 		$statname_list["$status[$q]"] = "$status_name[$q]";
 		$statcat_list["$status[$q]"] = "$category[$q]";
 		if ($human_answered[$q]=='Y')
 			{$camp_ANS_STAT_SQL .=	 "'$row[0]',";}
+		if ($answering_machine[$q]=='Y')
+			{$camp_AM_STAT_SQL .=	 "'$row[0]',";}
 		$q++;
 		$p++;
 		}
 
-	$stmt = "SELECT distinct status,status_name,human_answered,category from vicidial_campaign_statuses $group_SQL;";
+	$stmt = "SELECT distinct status,status_name,human_answered,category,answering_machine from vicidial_campaign_statuses $group_SQL;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$OUToutput .= "$stmt\n";}
 	$statuses_to_print = mysqli_num_rows($rslt);
@@ -896,35 +939,78 @@ else
 		$status_name[$q] =		$row[1];
 		$human_answered[$q] =	$row[2];
 		$category[$q] =			$row[3];
+		$answering_machine[$q]= $row[4];
 		$statname_list["$status[$q]"] = "$status_name[$q]";
 		$statcat_list["$status[$q]"] = "$category[$q]";
 		if ($human_answered[$q]=='Y')
 			{$camp_ANS_STAT_SQL .=	 "'$row[0]',";}
+		if ($answering_machine[$q]=='Y')
+			{$camp_AM_STAT_SQL .=	 "'$row[0]',";}
 		$q++;
 		$p++;
 		}
 	$camp_ANS_STAT_SQL = preg_replace('/,$/i', '',$camp_ANS_STAT_SQL);
+	$camp_AM_STAT_SQL = preg_replace('/,$/i', '',$camp_AM_STAT_SQL);
 
 
-	$stmt="select count(*) from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and status IN($camp_ANS_STAT_SQL);";
-	$rslt=mysql_to_mysqli($stmt, $link);
-	if ($DB) {$OUToutput .= "$stmt\n";}
-	$row=mysqli_fetch_row($rslt);
-	$ANSWERcalls =	$row[0];
+	### UK OFCOM test
+	if ( ($SSofcom_uk_drop_calc > 0) and ($ofcom_uk_drop_calc > 0) )
+		{
+		$stmt="select count(*) from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and user!='VDAD' $group_SQLand $list_id_SQLand and status IN($camp_ANS_STAT_SQL);";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {$OUToutput .= "$stmt\n";}
+		$row=mysqli_fetch_row($rslt);
+		$ANSWERcalls =	$row[0];
+
+		$stmt="select count(*) from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and user!='VDAD' $group_SQLand $list_id_SQLand and status IN($camp_AM_STAT_SQL);";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {$OUToutput .= "$stmt\n";}
+		$row=mysqli_fetch_row($rslt);
+		$agntAMcalls =	$row[0];
+
+		if ($agntAMcalls > 0)
+			{
+			$temp_am_pct = ($agntAMcalls / ($ANSWERcalls + $agntAMcalls) );
+			$temp_am_drops = ($DROPcallsRAW * $temp_am_pct);
+			$DROPcallsRAW = ($DROPcallsRAW - $temp_am_drops);
+			}
+		$temp_answers_today = ($ANSWERcalls + $DROPcallsRAW);
+		$DROPcallsA =	sprintf("%10s", $DROPcallsRAW);
+
+		$DROPANSWERpercent = (MathZDC($DROPcallsRAW, $temp_answers_today) * 100);
+		$DROPANSWERpercent = round($DROPANSWERpercent, 2);
+
+		$ukDROPdebug = "($DROPcallsRAWraw - ( ($agntAMcalls / ($ANSWERcalls + $agntAMcalls) ) * $DROPcallsRAWraw)) / ($ANSWERcalls + ($DROPcallsRAWraw - ( ($agntAMcalls / ($ANSWERcalls + $agntAMcalls) ) * $DROPcallsRAWraw)) )";
+		}
+	else
+		{
+		$stmt="select count(*) from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand and status IN($camp_ANS_STAT_SQL);";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {$OUToutput .= "$stmt\n";}
+		$row=mysqli_fetch_row($rslt);
+		$ANSWERcalls =	$row[0];
+
+		# Change $DROPANSWERpercent_adjustment to '1' in options.php if you want to include the drop call count in addition to the answer call count when calculating the DROPANSWERpercent, although you really don't need to
+		$DROPANSWERpercent = (MathZDC($DROPcallsRAW, ($ANSWERcalls+($DROPcallsRAW*$DROPANSWERpercent_adjustment))) * 100);
+		$DROPANSWERpercent = round($DROPANSWERpercent, 2);
+		}
 
 	$DROPpercent = (MathZDC($DROPcallsRAW, $TOTALcalls) * 100);
 	$DROPpercent = round($DROPpercent, 2);
-
-	# Change $DROPANSWERpercent_adjustment to '1' in options.php if you want to include the drop call count in addition to the answer call count when calculating the DROPANSWERpercent, although you really don't need to
-	$DROPANSWERpercent = (MathZDC($DROPcallsRAW, ($ANSWERcalls+($DROPcallsRAW*$DROPANSWERpercent_adjustment))) * 100);
-	$DROPANSWERpercent = round($DROPANSWERpercent, 2);
 
 	$average_hold_seconds = MathZDC($DROPseconds, $DROPcallsRAW);
 	$average_hold_seconds = round($average_hold_seconds, 2);
 	$average_hold_seconds =	sprintf("%10s", $average_hold_seconds);
 
 	$OUToutput .= _QXZ("Total Outbound DROP Calls",44).": $DROPcalls  $DROPpercent%\n";
-	$OUToutput .= _QXZ("Percent of DROP Calls taken out of Answers",44).": $DROPcalls / ".($ANSWERcalls+($DROPcallsRAW*$DROPANSWERpercent_adjustment))."  $DROPANSWERpercent%\n";
+	$OUToutput .= _QXZ("Percent of DROP Calls taken out of Answers",44).": $DROPcallsA / ";
+	if ( ($SSofcom_uk_drop_calc > 0) and ($ofcom_uk_drop_calc > 0) ) {$OUToutput .= "$temp_answers_today";}
+	else {$OUToutput .= ($ANSWERcalls+($DROPcallsRAW*$DROPANSWERpercent_adjustment));}
+	$OUToutput .= "  $DROPANSWERpercent%";
+	if ( ($SSofcom_uk_drop_calc > 0) and ($ofcom_uk_drop_calc > 0) ) {$OUToutput .= "   <font color=blue>(uk)</font>";}
+
+	if ( ($DB > 0) and ($SSofcom_uk_drop_calc > 0) and ($ofcom_uk_drop_calc > 0) ) {$OUToutput .= "     detail: $ukDROPdebug";}
+	$OUToutput .= "\n";
 
 	if (preg_match("/YES/i",$include_rollover))
 		{
@@ -969,9 +1055,9 @@ else
 	$AVG_ANSWERagent_non_pause_sec = sprintf("%10s", $AVG_ANSWERagent_non_pause_sec);
 
 	if ($skip_productivity_calc) {
-		$OUToutput .= _QXZ("Productivity Rating",51).": N/A\n";
+		$OUToutput .= _QXZ("Productivity Rating",44).": N/A\n";
 	} else {
-		$OUToutput .= _QXZ("Productivity Rating",51).": $AVG_ANSWERagent_non_pause_sec\n";
+		$OUToutput .= _QXZ("Productivity Rating",44).": $AVG_ANSWERagent_non_pause_sec\n";
 	}
 
 

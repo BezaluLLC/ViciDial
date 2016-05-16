@@ -6,7 +6,7 @@
 # adjusts the auto_dial_level for vicidial adaptive-predictive campaigns. 
 # gather call stats for campaigns and in-groups
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 60823-1302 - First build from AST_VDhopper.pl
@@ -42,6 +42,7 @@
 # 141109-1957 - Fixed issue #793
 # 141113-1616 - Added concurrency check
 # 151124-1235 - Added function to cache carrier log stats
+# 160515-2016 - Added code for new UK OFCOM drop calculations
 #
 
 # constants
@@ -57,6 +58,7 @@ $run_check=1; # concurrency check
 #	$vicidial_closer_log = 'vicidial_closer_log';
 
 $generate_carrier_stats=1;
+$SSofcom_uk_drop_calc=0;
 
 $i=0;
 $daily_stats=1;
@@ -64,6 +66,7 @@ $drop_count_updater=0;
 $stat_it=15;
 $diff_ratio_updater=0;
 $stat_count=1;
+$ofcom_uk_drop_calc_ANY=0;
 $VCScalls_today[$i]=0;
 $VCSdrops_today[$i]=0;
 $VCSdrops_today_pct[$i]=0;
@@ -299,6 +302,20 @@ $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthA->finish();
 
+##### gather relevent system settings
+$stmtA = "SELECT cache_carrier_stats_realtime,ofcom_uk_drop_calc from system_settings;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$generate_carrier_stats =	$aryA[0];
+	$SSofcom_uk_drop_calc =		$aryA[1];
+	}
+$sthA->finish();
+
+
 &get_time_now;
 
 #############################################
@@ -420,11 +437,11 @@ while ($master_loop < $CLIloops)
 
 	if ($CLIcampaign)
 		{
-		$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,UNIX_TIMESTAMP(campaign_changedate),campaign_stats_refresh,campaign_allow_inbound,drop_rate_group,UNIX_TIMESTAMP(campaign_calldate),realtime_agent_time_stats,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents from vicidial_campaigns where campaign_id='$CLIcampaign'";
+		$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,UNIX_TIMESTAMP(campaign_changedate),campaign_stats_refresh,campaign_allow_inbound,drop_rate_group,UNIX_TIMESTAMP(campaign_calldate),realtime_agent_time_stats,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,ofcom_uk_drop_calc from vicidial_campaigns where campaign_id='$CLIcampaign'";
 		}
 	else
 		{
-		$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,UNIX_TIMESTAMP(campaign_changedate),campaign_stats_refresh,campaign_allow_inbound,drop_rate_group,UNIX_TIMESTAMP(campaign_calldate),realtime_agent_time_stats,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents from vicidial_campaigns where ( (active='Y') or (campaign_stats_refresh='Y') )";
+		$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,adaptive_latest_server_time,adaptive_intensity,adaptive_dl_diff_target,UNIX_TIMESTAMP(campaign_changedate),campaign_stats_refresh,campaign_allow_inbound,drop_rate_group,UNIX_TIMESTAMP(campaign_calldate),realtime_agent_time_stats,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,ofcom_uk_drop_calc from vicidial_campaigns where ( (active='Y') or (campaign_stats_refresh='Y') )";
 		}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -460,6 +477,7 @@ while ($master_loop < $CLIloops)
 		$available_only_tally_threshold_agents[$rec_count] =	$aryA[21];
 		$dial_level_threshold[$rec_count] =			$aryA[22];
 		$dial_level_threshold_agents[$rec_count] =	$aryA[23];
+		$ofcom_uk_drop_calc[$rec_count] =			$aryA[24];
 
 		$rec_count++;
 		}
@@ -624,14 +642,15 @@ while ($master_loop < $CLIloops)
 
 	if ( (($stat_count =~ /00$|50$/) || ($stat_count==1)) )
 		{
-		$stmtA = "SELECT cache_carrier_stats_realtime from system_settings;";
+		$stmtA = "SELECT cache_carrier_stats_realtime,ofcom_uk_drop_calc from system_settings;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$generate_carrier_stats = $aryA[0];
+			$generate_carrier_stats =	$aryA[0];
+			$SSofcom_uk_drop_calc =		$aryA[1];
 			}
 		$sthA->finish();
 		if ($generate_carrier_stats > 0)
@@ -897,6 +916,7 @@ sub count_agents_lines
 
 sub calculate_drops
 	{
+	$ofcom_uk_drop_calc_ANY=0;
 	$camp_ANS_STAT_SQL='';
 	# GET LIST OF HUMAN-ANSWERED STATUSES
 	$stmtA = "SELECT status from vicidial_statuses where human_answered='Y';";
@@ -932,9 +952,47 @@ sub calculate_drops
 	$debug_camp_output .= "     CAMPAIGN ANSWERED STATUSES: $campaign_id[$i]|$camp_ANS_STAT_SQL|\n";
 	if ($DBX) {print "     CAMPAIGN ANSWERED STATUSES: $campaign_id[$i]|$camp_ANS_STAT_SQL|\n";}
 
+
+	$camp_AM_STAT_SQL='';
+	# GET LIST OF HUMAN-ANSWERED STATUSES
+	$stmtA = "SELECT status from vicidial_statuses where answering_machine='Y';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	$rec_count=0;
+	while ($sthArows > $rec_count)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$camp_AM_STAT_SQL .=	 "'$aryA[0]',";
+		$rec_count++;
+		}
+	$sthA->finish();
+
+	$stmtA = "SELECT status from vicidial_campaign_statuses where campaign_id='$campaign_id[$i]' and answering_machine='Y';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	$rec_count=0;
+	while ($sthArows > $rec_count)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$camp_AM_STAT_SQL .=	 "'$aryA[0]',";
+		$rec_count++;
+		}
+	$sthA->finish();
+
+	chop($camp_AM_STAT_SQL);
+	if (length($camp_AM_STAT_SQL)<2) 
+		{$camp_AM_STAT_SQL="'-NONE-'";}
+
+	$debug_camp_output .= "     CAMPAIGN ANSWERING MACHINE STATUSES: $campaign_id[$i]|$camp_AM_STAT_SQL|\n";
+	if ($DBX) {print "     CAMPAIGN ANSWERING MACHINE STATUSES: $campaign_id[$i]|$camp_AM_STAT_SQL|\n";}
+
 	$RESETdrop_count_updater++;
 	$VCScalls_today[$i]=0;
 	$VCSanswers_today[$i]=0;
+	$VCSagenthandled_today[$i]=0;
+	$VCSam_today[$i]=0;
 	$VCSdrops_today[$i]=0;
 	$VCSdrops_today_pct[$i]=0;
 	$VCSdrops_answers_today_pct[$i]=0;
@@ -1033,6 +1091,30 @@ sub calculate_drops
 			}
 		$sthA->finish();
 
+		# TODAY ANSWERING MACHINES CODED BY AGENTS FOR UK OFCOM CALCULATION
+		$stmtA = "SELECT count(*) from $vicidial_log where campaign_id='$campaign_id[$i]' and call_date > '$VDL_date' and status IN($camp_AM_STAT_SQL) and user != 'VDAD';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$VCSam_today[$i] =	$aryA[0];
+			}
+		$sthA->finish();
+
+		# TODAY AGENT HANDLED ANSWERED CALLS FOR UK OFCOM CALCULATION
+		$stmtA = "SELECT count(*) from $vicidial_log where campaign_id='$campaign_id[$i]' and call_date > '$VDL_date' and status IN($camp_ANS_STAT_SQL) and user != 'VDAD';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$VCSagenthandled_today[$i] =	$aryA[0];
+			}
+		$sthA->finish();
+
 		# TODAY DROPS
 		$stmtA = "SELECT count(*) from $vicidial_log where campaign_id='$campaign_id[$i]' and call_date > '$VDL_date' and status IN('DROP','XDROP');";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1043,16 +1125,57 @@ sub calculate_drops
 			{
 			@aryA = $sthA->fetchrow_array;
 			$VCSdrops_today[$i] =	$aryA[0];
+			$temp_raw_drop = $VCSdrops_today[$i];
 			if ($VCSdrops_today[$i] > 0)
 				{
+				if ( ($SSofcom_uk_drop_calc > 0) && ($ofcom_uk_drop_calc[$i] =~ /Y/) ) 
+					{
+					$ofcom_uk_drop_calc_ANY++;
+
+					$debug_camp_output .= "UK OFCOM DROP CALCULATION TRIGGERED FOR THIS CAMPAIGN: ($SSofcom_uk_drop_calc|$ofcom_uk_drop_calc[$i]|$ofcom_uk_drop_calc_ANY)\n";
+					if ($DBX) {print "UK OFCOM DROP CALCULATION TRIGGERED FOR THIS CAMPAIGN: ($SSofcom_uk_drop_calc|$ofcom_uk_drop_calc[$i]|$ofcom_uk_drop_calc_ANY)\n";}
+
+					# As of December 2015, OFCOM in the UK changed their method for calculating 
+					# the drop(or abandon) percentage for an outbound dialing campaign. The new 
+					# formula is to estimate the number of drops that were answering machines. 
+					# They do this by using the agent-answered percentage of answering machines 
+					# and subtracting that percentage from the number of drops. Then that new 
+					# drop number is divided by the total agent-answered human-answered calls 
+					# PLUS the number of drops. This differs in several ways from the way it had 
+					# been done, as well as the way the drop percentage has been calculated in 
+					# the USA and Canada. This new UK drop calculation method is activated as a
+					# system setting AND a campaign option. Both must be enabled for the campaign
+					# to use the new method. You will see code similar to the section below for 
+					# each time period that the drop percentage is calculated. In order for agent-
+					# statused answering machines to be calculated properly, we have added an 
+					# answering machine status flag that is used to gather those statuses.
+
+					if ($VCSam_today[$i] > 0)
+						{
+						$temp_am_pct = ($VCSam_today[$i] / ($VCSagenthandled_today[$i] + $VCSam_today[$i]) );
+						$temp_am_drops = ($VCSdrops_today[$i] * $temp_am_pct);
+						$VCSdrops_today[$i] = ($VCSdrops_today[$i] - $temp_am_drops);
+						}
+					$VCSdrops_today[$i] = sprintf("%.3f", $VCSdrops_today[$i]);
+					$temp_answers_today = ($VCSagenthandled_today[$i] + $VCSdrops_today[$i]);
+					if ($temp_answers_today < 1) {$temp_answers_today = 1;}
+					$VCSdrops_answers_today_pct[$i] = ( ($VCSdrops_today[$i] / $temp_answers_today) * 100 );
+					$VCSdrops_answers_today_pct[$i] = sprintf("%.2f", $VCSdrops_answers_today_pct[$i]);
+					}
+				else
+					{
+					if ($VCSanswers_today[$i] < 1) {$VCSanswers_today[$i] = 1;}
+					$VCSdrops_answers_today_pct[$i] = ( ($VCSdrops_today[$i] / $VCSanswers_today[$i]) * 100 );
+					$VCSdrops_answers_today_pct[$i] = sprintf("%.2f", $VCSdrops_answers_today_pct[$i]);
+					}
 				$VCSdrops_today_pct[$i] = ( ($VCSdrops_today[$i] / $VCScalls_today[$i]) * 100 );
 				$VCSdrops_today_pct[$i] = sprintf("%.2f", $VCSdrops_today_pct[$i]);
-				if ($VCSanswers_today[$i] < 1) {$VCSanswers_today[$i] = 1;}
-				$VCSdrops_answers_today_pct[$i] = ( ($VCSdrops_today[$i] / $VCSanswers_today[$i]) * 100 );
-				$VCSdrops_answers_today_pct[$i] = sprintf("%.2f", $VCSdrops_answers_today_pct[$i]);
 				}
 			}
 		$sthA->finish();
+
+		$debug_camp_output .= "     CALLS: $VCScalls_today[$i]   ANSWERs: $VCSanswers_today[$i]   AGENT-ANS: $VCSagenthandled_today[$i]   AGENT-AMs: $VCSam_today[$i]   DROPs: $VCSdrops_today[$i]($temp_raw_drop)   DROP-TOT PCT: $VCSdrops_today_pct[$i]   DROP-ANS PCT: $VCSdrops_answers_today_pct[$i]\n";
+		if ($DBX) {print "     CALLS: $VCScalls_today[$i]   ANSWERs: $VCSanswers_today[$i]   AGENT-ANS: $VCSagenthandled_today[$i]   AGENT-AMs: $VCSam_today[$i]   DROPs: $VCSdrops_today[$i]($temp_raw_drop)   DROP-TOT PCT: $VCSdrops_today_pct[$i]   DROP-ANS PCT: $VCSdrops_answers_today_pct[$i]\n";}
 		}
 
 	# LAST HOUR CALL AND DROP STATS
@@ -1300,15 +1423,15 @@ sub calculate_drops
 	# If campaign is using a drop rate group, gather its stats
 	if ($drop_rate_group[$i] !~ /DISABLED/)
 		{
-		$stmtA = "SELECT drops_answers_today_pct from vicidial_drop_rate_groups where group_id='$drop_rate_group[$i]';";
+		$stmtA = "SELECT drops_answers_today_pct,calls_today,answers_today,drops_today,answering_machines_today,agenthandled_today from vicidial_drop_rate_groups where group_id='$drop_rate_group[$i]';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
 		if ($sthArows > 0)
 			{
 			@aryA = $sthA->fetchrow_array;
-			$debug_camp_output .= "     DROP RATE GROUP USED: $drop_rate_group[$i]     $aryA[0]|$VCSdrops_answers_today_pct[$i]\n";
-			if ($DBX) {print "     DROP RATE GROUP USED: $drop_rate_group[$i]     $aryA[0]|$VCSdrops_answers_today_pct[$i]\n";}
+			$debug_camp_output .= "     DROP RATE GROUP USED: $drop_rate_group[$i]     $aryA[0]($VCSdrops_answers_today_pct[$i])   calls:$aryA[1]($VCScalls_today[$i])   ans:$aryA[2]($VCSanswers_today[$i])   drops:$aryA[3]($VCSdrops_today[$i])   agnt-am-ans:$aryA[4]($VCSam_today[$i])$aryA[5]($VCSagenthandled_today[$i])\n";
+			if ($DBX) {print "     DROP RATE GROUP USED: $drop_rate_group[$i]     $aryA[0]($VCSdrops_answers_today_pct[$i])   calls:$aryA[1]($VCScalls_today[$i])   ans:$aryA[2]($VCSanswers_today[$i])   drops:$aryA[3]($VCSdrops_today[$i])   agnt-am-ans:$aryA[4]($VCSam_today[$i])$aryA[5]($VCSagenthandled_today[$i])\n";}
 			$VCSdrops_answers_today_pct[$i] =	$aryA[0];
 			}
 		$sthA->finish();
@@ -1347,7 +1470,7 @@ sub calculate_drops
 		$sthA->finish();
 		}
 
-	$stmtA = "UPDATE vicidial_campaign_stats SET calls_today='$VCScalls_today[$i]',answers_today='$VCSanswers_today[$i]',drops_today='$VCSdrops_today[$i]',drops_today_pct='$VCSdrops_today_pct[$i]',drops_answers_today_pct='$VCSdrops_answers_today_pct[$i]',calls_hour='$VCScalls_hour[$i]',answers_hour='$VCSanswers_hour[$i]',drops_hour='$VCSdrops_hour[$i]',drops_hour_pct='$VCSdrops_hour_pct[$i]',calls_halfhour='$VCScalls_halfhour[$i]',answers_halfhour='$VCSanswers_halfhour[$i]',drops_halfhour='$VCSdrops_halfhour[$i]',drops_halfhour_pct='$VCSdrops_halfhour_pct[$i]',calls_fivemin='$VCScalls_five[$i]',answers_fivemin='$VCSanswers_five[$i]',drops_fivemin='$VCSdrops_five[$i]',drops_fivemin_pct='$VCSdrops_five_pct[$i]',calls_onemin='$VCScalls_one[$i]',answers_onemin='$VCSanswers_one[$i]',drops_onemin='$VCSdrops_one[$i]',drops_onemin_pct='$VCSdrops_one_pct[$i]',agent_non_pause_sec='$VCSagent_nonpause_time[$i]',agent_calls_today='$VCSagent_calls_today[$i]',agent_pause_today='$VCSagent_pause_today[$i]',agent_wait_today='$VCSagent_wait_today[$i]',agent_custtalk_today='$VCSagent_custtalk_today[$i]',agent_acw_today='$VCSagent_acw_today[$i]',$VSCupdateSQL where campaign_id='$campaign_id[$i]';";
+	$stmtA = "UPDATE vicidial_campaign_stats SET calls_today='$VCScalls_today[$i]',answers_today='$VCSanswers_today[$i]',drops_today='$VCSdrops_today[$i]',drops_today_pct='$VCSdrops_today_pct[$i]',drops_answers_today_pct='$VCSdrops_answers_today_pct[$i]',calls_hour='$VCScalls_hour[$i]',answers_hour='$VCSanswers_hour[$i]',drops_hour='$VCSdrops_hour[$i]',drops_hour_pct='$VCSdrops_hour_pct[$i]',calls_halfhour='$VCScalls_halfhour[$i]',answers_halfhour='$VCSanswers_halfhour[$i]',drops_halfhour='$VCSdrops_halfhour[$i]',drops_halfhour_pct='$VCSdrops_halfhour_pct[$i]',calls_fivemin='$VCScalls_five[$i]',answers_fivemin='$VCSanswers_five[$i]',drops_fivemin='$VCSdrops_five[$i]',drops_fivemin_pct='$VCSdrops_five_pct[$i]',calls_onemin='$VCScalls_one[$i]',answers_onemin='$VCSanswers_one[$i]',drops_onemin='$VCSdrops_one[$i]',drops_onemin_pct='$VCSdrops_one_pct[$i]',agent_non_pause_sec='$VCSagent_nonpause_time[$i]',agent_calls_today='$VCSagent_calls_today[$i]',agent_pause_today='$VCSagent_pause_today[$i]',agent_wait_today='$VCSagent_wait_today[$i]',agent_custtalk_today='$VCSagent_custtalk_today[$i]',agent_acw_today='$VCSagent_acw_today[$i]',answering_machines_today='$VCSam_today[$i]',agenthandled_today='$VCSagenthandled_today[$i]',$VSCupdateSQL where campaign_id='$campaign_id[$i]';";
 	$affected_rows = $dbhA->do($stmtA);
 	if ($DBX) {print "OUTBOUND $campaign_id[$i]|$affected_rows|$stmtA|\n";}
 
@@ -1411,6 +1534,7 @@ sub drop_rate_group_gather
 	################################################################################
 	#### BEGIN gather drop rate group stats
 	################################################################################
+	if ($DB) {print "\n     STARTING DROP RATE GROUP SECTION:\n";}
 
 	# Gather drop rate groups
 	@DRgroup=@MT;
@@ -1435,7 +1559,9 @@ sub drop_rate_group_gather
 		$DRdrops_today=0;
 		$DRdrops_today_pct=0;
 		$DRdrops_answers_today_pct=0;
-		$stmtA = "SELECT count(*),sum(calls_today),sum(answers_today),sum(drops_today) from vicidial_campaign_stats vcs, vicidial_campaigns vc where vcs.campaign_id=vc.campaign_id and vc.drop_rate_group='$DRgroup[$dr]';";
+		$DRanswering_machines_today=0;
+		$DRagenthandled_today=0;
+		$stmtA = "SELECT count(*),sum(calls_today),sum(answers_today),sum(drops_today),sum(answering_machines_today),sum(agenthandled_today) from vicidial_campaign_stats vcs, vicidial_campaigns vc where vcs.campaign_id=vc.campaign_id and vc.drop_rate_group='$DRgroup[$dr]';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -1444,24 +1570,43 @@ sub drop_rate_group_gather
 			@aryA = $sthA->fetchrow_array;
 			if ($aryA[0] > 0)
 				{
-				$DRcalls_today =	$aryA[1];
-				$DRanswers_today =	$aryA[2];
-				$DRdrops_today =	$aryA[3];
+				$DRcalls_today =				$aryA[1];
+				$DRanswers_today =				$aryA[2];
+				$DRdrops_today =				$aryA[3];
+				$DRanswering_machines_today =	$aryA[4];
+				$DRagenthandled_today =			$aryA[5];
 				}
 			}
 		$sthA->finish();
 		if ($DRdrops_today > 0)
 			{
+			if ($DRanswers_today < 1) {$DRanswers_today = 1;}
+
+			##### UK OFCOM DROP PCT CALCULATION
+			if ($DB) {print "     UK OFCOM DROP RATE CALCULATION CHECK: ($SSofcom_uk_drop_calc|$ofcom_uk_drop_calc_ANY)\n";}
+			if ( ($SSofcom_uk_drop_calc > 0) && ($ofcom_uk_drop_calc_ANY > 0) )
+				{
+				# Keeping in mind that the campaign drop numbers are already adjusted to the OFCOM
+				# number of drops, so we just have to add the drops to answers to generate the new
+				# drop-group drop-answer percentage
+
+				$temp_answers_today = ($DRagenthandled_today + $DRdrops_today);
+				if ($temp_answers_today < 1) {$temp_answers_today = 1;}
+				$DRdrops_answers_today_pct = ( ($DRdrops_today / $temp_answers_today) * 100 );
+				$DRdrops_answers_today_pct = sprintf("%.2f", $DRdrops_answers_today_pct);
+				}
+			else
+				{
+				$DRdrops_answers_today_pct = ( ($DRdrops_today / $DRanswers_today) * 100 );
+				$DRdrops_answers_today_pct = sprintf("%.2f", $DRdrops_answers_today_pct);
+				}
 			$DRdrops_today_pct = ( ($DRdrops_today / $DRcalls_today) * 100 );
 			$DRdrops_today_pct = sprintf("%.2f", $DRdrops_today_pct);
-			if ($DRanswers_today < 1) {$DRanswers_today = 1;}
-			$DRdrops_answers_today_pct = ( ($DRdrops_today / $DRanswers_today) * 100 );
-			$DRdrops_answers_today_pct = sprintf("%.2f", $DRdrops_answers_today_pct);
 			}
 
-		$stmtA = "UPDATE vicidial_drop_rate_groups SET calls_today='$DRcalls_today',answers_today='$DRanswers_today',drops_today='$DRdrops_today',drops_today_pct='$DRdrops_today_pct',drops_answers_today_pct='$DRdrops_answers_today_pct' where group_id='$DRgroup[$dr]';";
+		$stmtA = "UPDATE vicidial_drop_rate_groups SET calls_today='$DRcalls_today',answers_today='$DRanswers_today',drops_today='$DRdrops_today',drops_today_pct='$DRdrops_today_pct',drops_answers_today_pct='$DRdrops_answers_today_pct',answering_machines_today='$DRanswering_machines_today',agenthandled_today='$DRagenthandled_today' where group_id='$DRgroup[$dr]';";
 		$affected_rows = $dbhA->do($stmtA);
-		if ($DBX) {print "$DRgroup[$dr]|$affected_rows|$stmtA|\n";}
+		if ($DB) {print "DROP RATE GROUP UPDATE: $DRgroup[$dr]|$affected_rows|$stmtA|\n";}
 
 		$stmtA = "UPDATE vicidial_campaign_stats vcs, vicidial_campaigns vc SET vcs.drops_answers_today_pct='$DRdrops_answers_today_pct'  where vcs.campaign_id=vc.campaign_id and vc.drop_rate_group='$DRgroup[$dr]';";
 		$affected_rows = $dbhA->do($stmtA);
