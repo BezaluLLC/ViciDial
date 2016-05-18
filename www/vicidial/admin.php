@@ -3817,12 +3817,13 @@ else
 # 160508-1155 - Added screen colors admin section
 # 160508-1948 - Changed lists view to default to not show leads counts, with link to click to show counts
 # 160514-1437 - Added ofcom_uk_drop_calc option
+# 160517-1927 - formatting fixes
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-556a';
-$build = '160514-1437';
+$admin_version = '2.12-557a';
+$build = '160517-1927';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -28386,7 +28387,7 @@ if ($ADD==3511)
 			echo "<input type=text name=question size=10 value=\"$question\">$NWB#call_menu-question$NWE</td></tr>\n";
 			}
 		else
-			{echo "<tr bgcolor=#$SSstd_row4_background><td align=right></td><td align=left><input type=hidden name=alt_dtmf_log value=\"$alt_dtmf_log\"><input type=hidden name=question value=\"$question\"></td></tr>>";}
+			{echo "<tr bgcolor=#$SSstd_row4_background><td align=right></td><td align=left><input type=hidden name=alt_dtmf_log value=\"$alt_dtmf_log\"><input type=hidden name=question value=\"$question\"></td></tr>";}
 
 		echo "<tr><td align=center colspan=2> <input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'> </td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=CENTER colspan=2> "._QXZ("Call Menu Options").": </td></tr>\n";
