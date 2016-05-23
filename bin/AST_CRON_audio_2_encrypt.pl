@@ -21,14 +21,16 @@
 # FLAGS FOR ENCRYPTION OPTIONS
 # --GPG = GnuPG encryption(assumes recipient public keys are loaded on server)
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 
 # 150911-1814 - First Build based upon 110524-1059 AST_CRON_audio_2_compress.pl
+# 160523-0651 - Added --HTTPS option to use https instead of http in local location
 #
 
 $WAV=0;   $GSM=0;   $MP3=0;   $OGG=0;   $GSW=0;
 $GPG=0;
+$HTTPS=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -53,6 +55,7 @@ if (length($ARGV[0])>1)
 		print "  [--MP3] = look for already compressed MPEG-Layer-3 files\n";
 		print "  [--OGG] = look for already compressed OGG Vorbis files\n";
 		print "  [--GSW] = look for already compressed GSM codec with RIFF headers and .wav extension files\n";
+		print "  [--HTTPS] = use https instead of http in local location\n";
 		print "  [--run-check] = concurrency check, die if another instance is running\n";
 		print "  [--max-files=x] = maximum number of files to process, defaults to 100000\n";
 		print "  [--recipients=x\@y.com---z\@a.net] = encryption recipients addresses, REQUIRED\n";
@@ -114,6 +117,11 @@ if (length($ARGV[0])>1)
 			{
 			$GPG=1;
 			if ($DB) {print "Defaulting to use GPG encryption\n";}
+			}
+		if ($args =~ /--HTTPS/i)
+			{
+			$HTTPS=1;
+			if ($DB) {print "HTTPS location option enabled\n";}
 			}
 		if ($args =~ /--WAV/i)
 			{
@@ -325,6 +333,8 @@ foreach(@FILES)
 				}
 			$sthA->finish();
 
+			$HTTP='http';
+			if ($HTTPS > 0) {$HTTP='https';}
 
 			if ($GPG > 0)
 				{
@@ -339,7 +349,7 @@ foreach(@FILES)
 
 				`$gpgbin --trust-model always --output $PATHDONEmonitor/GPG/$GPGfile --encrypt --recipient $CLIrecipient $dir2/$ALLfile`;
 
-				$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/GPG/$GPGfile' where recording_id='$recording_id';";
+				$stmtA = "UPDATE recording_log set location='$HTTP://$server_ip/RECORDINGS/GPG/$GPGfile' where recording_id='$recording_id';";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 				}

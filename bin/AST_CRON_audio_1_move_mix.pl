@@ -32,10 +32,12 @@
 # 91105-1353 - Added --MIX option to only check the /var/spool/asterisk/monitor/MIX directory
 # 130805-1450 - Added check for length and gather length of recording for database record
 # 160501-1001 - Added --SPHINX options to check for SPHINX audio files
+# 160523-0650 - Added --HTTPS option to use https instead of http in local location
 #
 
 $MIX=0;
 $SPHINX=0;
+$HTTPS=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -55,6 +57,7 @@ if (length($ARGV[0])>1)
 		print "  [-t] = test\n";
 		print "  [--MIX] = mix audio files in MIX directory\n";
 		print "  [--SPHINX] = mix audio files in SPHINX/RAW directory\n";
+		print "  [--HTTPS] = use https instead of http in local location\n";
 		print "\n";
 		exit;
 		}
@@ -84,6 +87,11 @@ if (length($ARGV[0])>1)
 			{
 			$SPHINX=1;
 			if ($DB) {print "SPHINX directory audio processing only\n";}
+			}
+		if ($args =~ /--HTTPS/i)
+			{
+			$HTTPS=1;
+			if ($DB) {print "HTTPS location option enabled\n";}
 			}
 		}
 	}
@@ -279,7 +287,9 @@ foreach(@FILES)
 				$lengthSQL = ",length_in_sec='$soxi_sec',length_in_min='$soxi_min'";
 				}
 
-			$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/$ALLfile' $lengthSQL where recording_id='$recording_id';";
+			$HTTP='http';
+			if ($HTTPS > 0) {$HTTP='https';}
+			$stmtA = "UPDATE recording_log set location='$HTTP://$server_ip/RECORDINGS/$ALLfile' $lengthSQL where recording_id='$recording_id';";
 				if($DBX){print STDERR "\n|$stmtA|\n";}
 			$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 

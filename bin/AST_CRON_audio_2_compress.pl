@@ -26,7 +26,7 @@
 # 
 # This program assumes that recordings are saved by Asterisk as .wav
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 
 # 80302-1958 - First Build
@@ -34,9 +34,11 @@
 # 90727-1417 - Added GSW format option
 # 101207-1024 - Change to GSW option because of SoX flag changes in 14.3.0
 # 110524-1059 - Added run-check concurrency check option
+# 160523-0652 - Added --HTTPS option to use https instead of http in local location
 #
 
 $GSM=0;   $MP3=0;   $OGG=0;   $GSW=0;
+$HTTPS=0;
 $maxfiles = 100000;
 
 ### begin parsing run-time options ###
@@ -60,6 +62,7 @@ if (length($ARGV[0])>1)
 		print "  [--MP3] = compress into MPEG-Layer-3 codec\n";
 		print "  [--OGG] = compress into OGG Vorbis codec\n";
 		print "  [--GSW] = compress into GSM codec with RIFF headers and .wav extension\n";
+		print "  [--HTTPS] = use https instead of http in local location\n";
 		print "  [--run-check] = concurrency check, die if another instance is running\n";
 		print "  [--max-files=x] = maximum number of files to process, default is 100000\n";
 		print "\n";
@@ -92,6 +95,11 @@ if (length($ARGV[0])>1)
 			@data_in = split(/--max-files=/,$args);
 			$maxfiles = $data_in[1];
 			$maxfiles =~ s/ .*$//gi;
+			}
+		if ($args =~ /--HTTPS/i)
+			{
+			$HTTPS=1;
+			if ($DB) {print "HTTPS location option enabled\n";}
 			}
 		if ($args =~ /--GSM/i)
 			{
@@ -298,6 +306,8 @@ foreach(@FILES)
 				}
 			$sthA->finish();
 
+			$HTTP='http';
+			if ($HTTPS > 0) {$HTTP='https';}
 
 			if ($GSM > 0)
 				{
@@ -308,7 +318,7 @@ foreach(@FILES)
 
 				`$soxbin "$dir2/$ALLfile" "$dir2/GSM/$GSMfile"`;
 
-				$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/GSM/$GSMfile' where recording_id='$recording_id';";
+				$stmtA = "UPDATE recording_log set location='$HTTP://$server_ip/RECORDINGS/GSM/$GSMfile' where recording_id='$recording_id';";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 				}
@@ -322,7 +332,7 @@ foreach(@FILES)
 
 				`$soxbin "$dir2/$ALLfile" "$dir2/OGG/$OGGfile"`;
 
-				$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/OGG/$OGGfile' where recording_id='$recording_id';";
+				$stmtA = "UPDATE recording_log set location='$HTTP://$server_ip/RECORDINGS/OGG/$OGGfile' where recording_id='$recording_id';";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 				}
@@ -336,7 +346,7 @@ foreach(@FILES)
 
 				`$lamebin -b 16 -m m --silent "$dir2/$ALLfile" "$dir2/MP3/$MP3file"`;
 
-				$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/MP3/$MP3file' where recording_id='$recording_id';";
+				$stmtA = "UPDATE recording_log set location='$HTTP://$server_ip/RECORDINGS/MP3/$MP3file' where recording_id='$recording_id';";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 				}
@@ -352,7 +362,7 @@ foreach(@FILES)
 				# for SoX versions 14.3.0 and after
 				`$soxbin "$dir2/$ALLfile" -e gsm-full-rate "$dir2/GSW/$GSWfile"`;
 
-				$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/GSW/$GSWfile' where recording_id='$recording_id';";
+				$stmtA = "UPDATE recording_log set location='$HTTP://$server_ip/RECORDINGS/GSW/$GSWfile' where recording_id='$recording_id';";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 				}

@@ -25,13 +25,16 @@
 # This program assumes that recordings are saved by Asterisk as .wav
 # should be easy to change this code if you use .gsm instead
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 
 # 80302-1958 - First Build
 # 80731-2253 - Changed size comparisons for more efficiency
 # 130805-1450 - Added check for length and gather length of recording for database record
+# 160523-0654 - Added --HTTPS option to use https instead of http in local location
 #
+
+$HTTPS=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -45,11 +48,22 @@ if (length($ARGV[0])>1)
 
 	if ($args =~ /--help/i)
 		{
-		print "allowed run time options:\n  [--debug] = debug\n  [--debugX] = super debug\n  [-t] = test\n\n";
+		print "allowed run time options:\n";
+		print "  [--help] = this screen\n";
+		print "  [--debug] = debug\n";
+		print "  [--debugX] = super debug\n";
+		print "  [-t] = test\n";
+		print "  [--HTTPS] = use https instead of http in local location\n";
+		print "\n";
 		exit;
 		}
 	else
 		{
+		if ($args =~ /--HTTPS/i)
+			{
+			$HTTPS=1;
+			if ($DB) {print "HTTPS location option enabled\n";}
+			}
 		if ($args =~ /--debug/i)
 			{
 			$DB=1;
@@ -237,7 +251,9 @@ foreach(@FILES)
 				$lengthSQL = ",length_in_sec='$soxi_sec',length_in_min='$soxi_min'";
 				}
 
-			$stmtA = "UPDATE recording_log set location='http://$server_ip/RECORDINGS/$ALLfile' $lengthSQL where recording_id='$recording_id';";
+			$HTTP='http';
+			if ($HTTPS > 0) {$HTTP='https';}
+			$stmtA = "UPDATE recording_log set location='$HTTP://$server_ip/RECORDINGS/$ALLfile' $lengthSQL where recording_id='$recording_id';";
 				if($DBX){print STDERR "\n|$stmtA|\n";}
 			$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 
