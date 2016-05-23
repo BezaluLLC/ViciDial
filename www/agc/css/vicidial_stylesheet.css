@@ -57,13 +57,25 @@ input.tiny_green_btn{
 	border-bottom-color:#003300;
 	filter:progid:DXImageTransform.Microsoft.Gradient
 		(GradientType=0,StartColorStr='#00ffffff',EndColorStr='#FF003300');}
+
+.title {  font-family: Arial, Helvetica, sans-serif; color: black; font-size: 18pt}
+.title_wh {  font-family: Arial, Helvetica, sans-serif; color: white; font-size: 14pt}
+.arial {  font-family: Arial, Helvetica, sans-serif; color: black; font-size: 10pt}
+.arial_bold {  font-family: Arial, Helvetica, sans-serif; color: black; font-size: 10pt; font-weight: bold}
+.arial_bold_white {  font-family: Arial, Helvetica, sans-serif; color: white; font-size: 10pt; font-weight: bold}
+.small_arial {  font-family: Arial, Helvetica, sans-serif; color: black; font-size: 8pt}
+.small_arial_bold {  font-family: Arial, Helvetica, sans-serif; color: black; font-size: 8pt; font-weight: bold}
+.tiny_arial {  font-family: Arial, Helvetica, sans-serif; color: black; font-size: 6pt}
+.arial_header {  font-family: Arial, Helvetica, sans-serif; color: black; font-size: 14pt; font-weight: bold}
+
+/* Manager/agent chat-specific classes */
 div.scrolling {
 	height: 77px;
 	width: 320px;
 	overflow: auto;
 	border: 1px solid #666;
 	background-color: #FFF;
-	padding: 2px;
+	padding: 5px;
 }
 textarea.chat_box {
     font-family: Arial, Sans-Serif;
@@ -72,8 +84,19 @@ textarea.chat_box {
     padding: 2px;
     border: solid 1px #000066;
 }
-.cust_form { 
-	font-family: Sans-Serif; 
-	font-size: 10px; 
-	overflow: hidden; 
+div.scrolling_transcript {
+	height: 204px;
+	width: 370px;
+	overflow: auto;
+	border: 1px solid #666;
+	background-color: #FFF;
+	padding: 5px;
+}
+div.scrolling_chat_display {
+	height: 104px;
+	width: 150px;
+	overflow: auto;
+	border: 1px solid #666;
+	background-color: #FFF;
+	padding: 2px;
 }

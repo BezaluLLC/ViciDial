@@ -11,10 +11,11 @@
 # 151218-1141 - Added missing translation code and user auth, merged js code into file
 # 151231-0842 - Added agent_allowed_chat_groups setting
 # 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
+# 160523-0630 - Fixed vicidial_stylesheet issues
 #
 
-$admin_version = '2.12-5';
-$build = '160108-2300';
+$admin_version = '2.12-6';
+$build = '160523-0630';
 
 $sh="managerchats"; 
 
@@ -182,7 +183,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 </head>
-<link rel="stylesheet" href="vicidial_stylesheet.css">
+<link rel="stylesheet" href="css/vicidial_stylesheet.css">
 <link rel="stylesheet" href="css/simpletree.css">
 <script language="JavaScript">
 
