@@ -1,7 +1,7 @@
 #!/usr/bin/perl
 
 # getAGENTchannel.agi by Omar Rodriguez  www.ItContinental.com
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # This script is able to return the name of the channel that belongs to the agent, 
 # to allow administrators to whisper to the agents
 # Has been made using Vicidial code as Base
@@ -9,6 +9,7 @@
 # CHANGELOG:
 # 150728-1315 - First build
 # 150804-0944 - Rewritten to work on multi-server systems and with different dialplan
+# 160523-2352 - Fixed issue with local channels in session
 #
 
 $script = 'getAGENTchannel.agi';
@@ -119,24 +120,27 @@ if ($AGILOG) {$agi_string = "Agent session: $extension| Channel: $channel| CID: 
 
 #$stmtA = "SELECT channel   FROM vicidial_live_agents  WHERE conf_exten = '$canal' AND ifnull(trim(channel), '') <> ''      and (channel in (select channel from live_channels) or comments='MANUAL')  LIMIT 1";
 
-$stmtA = "SELECT channel FROM live_sip_channels WHERE server_ip='$VARserver_ip' AND extension=right('$extension',7) AND ifnull(trim(channel), '') <> '' limit 1;";
+$stmtA = "SELECT channel FROM live_sip_channels WHERE server_ip='$VARserver_ip' AND extension=right('$extension',7) AND ifnull(trim(channel), '') <> '' limit 10;";
 
 #$AGI->verbose($stmtA); 
 
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
-if ($sthArows > 0)
+$s=0;
+while ($sthArows > $s)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$agent_zap_channel =		$aryA[0];
-	
-	$sthA->finish();
+	# channel priority(highest to lowest): SIP, IAX, Local
+	if ($aryA[0] =~ /^SIP/i) 
+		{$agent_zap_channel =		$aryA[0];}
+	if ( ($aryA[0] =~ /^IAX/i) && ( (length($agent_zap_channel) < 4) || ($agent_zap_channel =~ /^Local/i) ) )
+		{$agent_zap_channel =		$aryA[0];}
+	if ( ($aryA[0] =~ /^Local/i) && (length($agent_zap_channel) < 4) ) 
+		{$agent_zap_channel =		$aryA[0];}
+	$s++;
 	}
-else
-	{
-	$agent_zap_channel =		"101";
-	}
+$sthA->finish();
 if ($AGILOG) {$agi_string = "$sthArows|$agent_zap_channel|$stmtA|";   &agi_output;}
 
 #$AGI->verbose("agent_zap_channel: $agent_zap_channel"); 
