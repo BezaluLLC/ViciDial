@@ -613,7 +613,6 @@ ALTER TABLE vicidial_drop_rate_groups MODIFY drops_today DOUBLE(12,3) default '0
 
 UPDATE system_settings SET db_schema_version='1460',db_schema_update_date=NOW() where db_schema_version < 1460;
 
+ALTER TABLE phones ADD outbound_alt_cid VARCHAR(20) default '';
 
-
-
-
+UPDATE system_settings SET db_schema_version='1461',db_schema_update_date=NOW() where db_schema_version < 1461;

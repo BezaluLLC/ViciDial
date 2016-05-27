@@ -262,6 +262,9 @@ OTHER CHANGES:
 	for it as well. Affects the predictive algorithm and the Real-time and
 	Outbound Calling reports.
 
+70. Added phone outbound alt caller ID to allow for phone-dialed calls to use
+	a separate CID number when dialing through a specific context
+
 
 
 

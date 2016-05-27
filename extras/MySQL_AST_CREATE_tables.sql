@@ -99,6 +99,7 @@ webphone_dialbox ENUM('Y','N') default 'Y',
 webphone_mute ENUM('Y','N') default 'Y',
 webphone_volume ENUM('Y','N') default 'Y',
 webphone_debug ENUM('Y','N') default 'N',
+outbound_alt_cid VARCHAR(20) default '',
 index (server_ip),
 index (voicemail_id),
 index (dialplan_number),
@@ -3774,4 +3775,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1460',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1461',db_schema_update_date=NOW(),reload_timestamp=NOW();

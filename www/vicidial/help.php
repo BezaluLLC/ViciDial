@@ -89,6 +89,7 @@
 # 160429-0834 - Added settings-admin_row_click
 # 160508-0836 - Added screen colors
 # 160515-1958 - Added ofcom_uk_drop_calc entry
+# 160527-1359 - Added phones-outbound_alt_cid entry
 #
 
 
@@ -3851,7 +3852,7 @@ if ($SSoutbound_autodial_active > 0)
 <B><FONT SIZE=3>PHONES TABLE</FONT></B><BR><BR>
 <A NAME="phones-extension">
 <BR>
-<B><?php echo _QXZ("Phone Extension"); ?> -</B><?php echo _QXZ("This field is where you put the phones name as it appears to Asterisk not including the protocol or slash at the beginning. For Example: for the SIP phone SIP/test101 the Phone extension would be test101. Also, for IAX2 phones: IAX2/IAXphone1@IAXphone1 would be IAXphone1. For Zap and Dahdi attached channelbank or FXS phones make sure you put the full channel number without the prefix: Zap/25-1 would be 25-1.  Another note, make sure you set the Protocol field below correctly for your type of phone."); ?>
+<B><?php echo _QXZ("Phone Extension"); ?> -</B><?php echo _QXZ("This field is where you put the phones name as it appears to Asterisk not including the protocol or slash at the beginning. For Example: for the SIP phone SIP/test101 the Phone extension would be test101. Also, for IAX2 phones: IAX2/IAXphone1@IAXphone1 would be IAXphone1. For Zap and Dahdi attached channelbank or FXS phones make sure you put the full channel number without the prefix: Zap/25-1 would be 25-1.  Another note, make sure you set the Protocol field below correctly for your type of phone. For SIP and IAX phones, this field should not contain any dashes."); ?>
 
 <BR>
 <A NAME="phones-dialplan_number">
@@ -3875,6 +3876,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="phones-outbound_cid">
 <BR>
 <B><?php echo _QXZ("Outbound CallerID"); ?> -</B><?php echo _QXZ("This field is where you would enter the callerID number that you would like to appear on outbound calls placed form the astguiclient web-client. This does not work on RBS, non-PRI, T1/E1s."); ?>
+
+<BR>
+<A NAME="phones-outbound_alt_cid">
+<BR>
+<B><?php echo _QXZ("Outbound Alt CallerID"); ?> -</B><?php echo _QXZ("This optional field is where you can enter an alternate callerID number that can be used in certain cases in place of the original Outbound Caller ID number. Using this will require custom dialplan entries for it to work. Default is blank."); ?>
 
 <BR>
 <A NAME="phones-user_group">
