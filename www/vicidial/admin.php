@@ -3821,12 +3821,13 @@ else
 # 160508-1948 - Changed lists view to default to not show leads counts, with link to click to show counts
 # 160514-1437 - Added ofcom_uk_drop_calc option
 # 160517-1927 - formatting fixes
+# 160602-1450 - Hiding email group settings that are not needed
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-557a';
-$build = '160517-1927';
+$admin_version = '2.12-558a';
+$build = '160602-1450';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -26268,10 +26269,12 @@ if ($ADD==3811)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Handling").": </td><td align=left><select size=1 name=group_handling><option  value='PHONE'>"._QXZ("PHONE")."</option>";
 		echo "<option selected value='EMAIL'>"._QXZ("EMAIL")."</option>";
+
 		if ($SSallow_chats > 0)
 			{
 			if ($SSallow_chats>0) {echo "<option value='CHAT'>"._QXZ("CHAT")."</option>";}			
 			}
+
 		echo "</select>$NWB#inbound_groups-group_handling$NWE</td></tr>\n";
 
 		##### get status group listings for dynamic pulldown menu
@@ -26336,7 +26339,8 @@ if ($ADD==3811)
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Dispo Email URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=5000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_email_url$NWE</td></tr>\n";
 			}
 
-		# echo "<tr bgcolor=#$SSstd_row4_background><td align=right>Add Lead URL: </td><td align=left><input type=text name=add_lead_url size=70 maxlength=5000 value=\"$add_lead_url\">$NWB#inbound_groups-add_lead_url$NWE</td></tr>\n";
+/*
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>Add Lead URL: </td><td align=left><input type=text name=add_lead_url size=70 maxlength=5000 value=\"$add_lead_url\">$NWB#inbound_groups-add_lead_url$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("No Agent Email URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=5000 value=\"$na_call_url\">$NWB#inbound_groups-na_email_url$NWE</td></tr>\n";
 
@@ -26345,8 +26349,20 @@ if ($ADD==3811)
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Uniqueid Status Display").": </td><td align=left><select size=1 name=uniqueid_status_display><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='ENABLED'>"._QXZ("ENABLED")."</option><option value='ENABLED_PREFIX'>"._QXZ("ENABLED_PREFIX")."</option><option value='ENABLED_PRESERVE'>"._QXZ("ENABLED_PRESERVE")."</option><option value='$uniqueid_status_display' SELECTED>$uniqueid_status_display</option></select>$NWB#inbound_groups-uniqueid_status_display$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Uniqueid Status Prefix").": </td><td align=left><input type=text name=uniqueid_status_prefix size=10 maxlength=50 value=\"$uniqueid_status_prefix\">$NWB#inbound_groups-uniqueid_status_prefix$NWE</td></tr>\n";
+*/
 
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
+		echo "<input type=hidden name=call_handle_method value=\"$call_handle_method\">\n";
+		echo "<input type=hidden name=agent_search_method value=\"$agent_search_method\">\n";
+		echo "<input type=hidden name=campaign_id value=\"$campaign_id\">\n";
+		echo "<input type=hidden name=add_lead_url value=\"$add_lead_url\">\n";
+		echo "<input type=hidden name=na_call_url value=\"$na_call_url\">\n";
+		echo "<input type=hidden name=extension_appended_cidname value=\"$extension_appended_cidname\">\n";
+		echo "<input type=hidden name=uniqueid_status_display value=\"$uniqueid_status_display\">\n";
+		echo "<input type=hidden name=uniqueid_status_prefix value=\"$uniqueid_status_prefix\">\n";
 		echo "<input type=hidden name=form_end value=\"END\">\n";
+		echo "</td></tr>\n";
+
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
 
 		if ($SSqc_features_active > 0)
