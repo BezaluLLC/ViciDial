@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2015-12-26
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2016-06-03
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -39,6 +39,7 @@ callid_info - information about a call based upon the caller_code or call ID
 server_refresh - forces a conf file refresh on all telco servers in the cluster
 check_phone_number - allows you to check if a phone number is valid and dialable
 logged_in_agents - list of agents that are logged in to the system
+update_campaign - updates campaign settings in the system
 
 
 New scripts:
@@ -110,6 +111,7 @@ Changes:
 150804-0948 - Added WHISPER option for blind_monitor function
 150808-1438 - Added compatibility for custom fields data option
 151226-0954 - Added session_id(conf_exten) field to output of agent_status, and added logged_in_agents function
+160603-1041 - Added update_campaign function
 
 
 API Functions use the 'function' variable
@@ -1217,8 +1219,6 @@ NOTICE: update_list LIST HAS BEEN DELETED - 6666|1101|1
 NOTICE: update_list USER DOES NOT HAVE PERMISSION TO DELETE LEADS - 6666|0
 NOTICE: update_list LEADS IN LIST HAVE BEEN DELETED - 6666|1101|324
 
-ERROR: NO FUNCTION SPECIFIED
-
 
 
 
@@ -1275,9 +1275,6 @@ AREACODE: 1|-6#PHONE: 3125551212|1||||
 AREACODE: 1|-6#POSTAL: 1|-7.0#TZCODE: 0|10#NANPA: 1|-6#PHONE: 3125551212|1|81009||GST|
 
 
-ERROR: NO FUNCTION SPECIFIED
-
-
 
 
 
@@ -1314,3 +1311,54 @@ user,campaign_id,session_id,status,lead_id,callerid,calls_today,full_name,user_g
 4545,TESTCAMP,8600052,PAUSED,0,,0,4545,MIKESGROUP,8,LOGIN,
 
 NOTE: real_time_sub_status field can consist of: DEAD, DISPO, 3-WAY, PARK, RING, PREVIEW or it can be empty
+
+
+
+
+
+--------------------------------------------------------------------------------
+update_campaign - updates campaign information in the vicidial_campaigns table
+
+NOTE: api user for this function must have user_level set to 8 or higher and "modify campaigns" enabled
+
+REQUIRED FIELDS-
+campaign_id -		2-8 characters
+source -		description of what originated the API call (maximum 20 characters)
+
+EDITABLE FIELDS- 
+campaign_name -		6-40 characters
+active -		Must be one of these: 'Y','N'
+auto_dial_level -	2-5 characters, must be within valid range
+adaptive_maximum_level - 3-20 digits
+campaign_vdad_exten -	3-20 characters
+hopper_level -		Must be from 1 to 2000
+reset_hopper -		Must be one of these: 'Y','N', will default to 'N'
+dial_method -		Must be one of these: 'MANUAL','RATIO','INBOUND_MAN','ADAPT_AVERAGE','ADAPT_HARD_LIMIT','ADAPT_TAPERED'
+dial_timeout -		Must be from 1 to 120
+NOTES: 
+ - please use no special characters like apostrophes, quotes or amphersands
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_campaign&campaign_id=TESTOUT&campaign_name=Updated+test+API+campaign&auto_dial_level=3.0
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_campaign&campaign_id=TESTOUT&active=N
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_campaign&campaign_id=TESTOUT&reset_hopper=Y
+
+Example responses:
+ERROR: update_campaign USER DOES NOT HAVE PERMISSION TO UPDATE CAMPAIGNS - 6666
+ERROR: update_campaign YOU MUST USE ALL REQUIRED FIELDS - 6666|1
+ERROR: update_campaign NOT AN ALLOWED CAMPAIGN ID - 98762
+ERROR: update_campaign CAMPAIGN DOES NOT EXIST - 6666|1000
+ERROR: update_campaign AUTO DIAL LEVEL MUST BE FROM 0 TO 18, THIS IS AN OPTIONAL FIELD - 6666|012
+ERROR: update_campaign DIAL METHOD IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|12
+ERROR: update_campaign ADAPT MAXIMUM DIAL LEVEL MUST BE FROM 1 TO 5 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|12
+ERROR: update_campaign ROUTING EXTENSION MUST BE FROM 3 TO 20 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|12
+ERROR: update_campaign HOPPER LEVEL MUST BE FROM 1 TO 2000, THIS IS AN OPTIONAL FIELD - 6666|12345
+ERROR: update_campaign DIAL TIMEOUT MUST BE FROM 1 TO 120, THIS IS AN OPTIONAL FIELD - 6666|123
+ERROR: update_campaign CAMPAIGN NAME MUST BE FROM 6 TO 40 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|test
+ERROR: update_campaign ACTIVE MUST BE Y OR N, THIS IS AN OPTIONAL FIELD - 6666|U
+NOTICE: update_campaign NO UPDATES DEFINED - 6666|
+NOTICE: update_campaign HOPPER HAS BEEN RESET - 6666|1101|324
+SUCCESS: update_campaign CAMPAIGN HAS BEEN UPDATED - 6666|1101
+
+
+ERROR: NO FUNCTION SPECIFIED

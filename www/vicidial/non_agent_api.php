@@ -106,10 +106,11 @@
 # 151226-0954 - Added session_id(conf_exten) field to output of agent_status, and added logged_in_agents function
 # 160104-1229 - Added detection of dead chats to a few functions
 # 160211-1232 - Fixed issue with blind monitoring, Issue #924
+# 160603-1041 - Added update_campaign function
 #
 
-$version = '2.12-82';
-$build = '160211-1232';
+$version = '2.12-83';
+$build = '160603-1041';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -384,6 +385,22 @@ if (isset($_GET["show_sub_status"]))			{$show_sub_status=$_GET["show_sub_status"
 	elseif (isset($_POST["show_sub_status"]))	{$show_sub_status=$_POST["show_sub_status"];}
 if (isset($_GET["campaigns"]))			{$campaigns=$_GET["campaigns"];}
 	elseif (isset($_POST["campaigns"]))	{$campaigns=$_POST["campaigns"];}
+if (isset($_GET["campaign_name"]))			{$campaign_name=$_GET["campaign_name"];}
+	elseif (isset($_POST["campaign_name"]))	{$campaign_name=$_POST["campaign_name"];}
+if (isset($_GET["auto_dial_level"]))			{$auto_dial_level=$_GET["auto_dial_level"];}
+	elseif (isset($_POST["auto_dial_level"]))	{$auto_dial_level=$_POST["auto_dial_level"];}
+if (isset($_GET["adaptive_maximum_level"]))				{$adaptive_maximum_level=$_GET["adaptive_maximum_level"];}
+	elseif (isset($_POST["adaptive_maximum_level"]))	{$adaptive_maximum_level=$_POST["adaptive_maximum_level"];}
+if (isset($_GET["campaign_vdad_exten"]))			{$campaign_vdad_exten=$_GET["campaign_vdad_exten"];}
+	elseif (isset($_POST["campaign_vdad_exten"]))	{$campaign_vdad_exten=$_POST["campaign_vdad_exten"];}
+if (isset($_GET["hopper_level"]))			{$hopper_level=$_GET["hopper_level"];}
+	elseif (isset($_POST["hopper_level"]))	{$hopper_level=$_POST["hopper_level"];}
+if (isset($_GET["reset_hopper"]))			{$reset_hopper=$_GET["reset_hopper"];}
+	elseif (isset($_POST["reset_hopper"]))	{$reset_hopper=$_POST["reset_hopper"];}
+if (isset($_GET["dial_method"]))			{$dial_method=$_GET["dial_method"];}
+	elseif (isset($_POST["dial_method"]))	{$dial_method=$_POST["dial_method"];}
+if (isset($_GET["dial_timeout"]))			{$dial_timeout=$_GET["dial_timeout"];}
+	elseif (isset($_POST["dial_timeout"]))	{$dial_timeout=$_POST["dial_timeout"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -392,7 +409,7 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,custom_fields_enabled,pass_hash_enabled,agent_whisper_enabled,active_modules FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled,pass_hash_enabled,agent_whisper_enabled,active_modules,auto_dial_limit FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
@@ -403,6 +420,9 @@ if ($qm_conf_ct > 0)
 	$SSpass_hash_enabled =		$row[2];
 	$agent_whisper_enabled =	$row[3];
 	$active_modules =			$row[4];
+	$SSauto_dial_limit =		$row[5];
+	# slightly increase limit value, because PHP somehow thinks 2.8 > 2.8
+	$SSauto_dial_limit = ($SSauto_dial_limit + 0.001);
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -551,6 +571,14 @@ if ($non_latin < 1)
 	$wrapup_seconds_override = preg_replace('/[^-0-9]/','',$wrapup_seconds_override);
 	$show_sub_status = preg_replace('/[^A-Z]/','',$show_sub_status);
 	$campaigns = preg_replace('/[^-\|\_0-9a-zA-Z]/','',$campaigns);
+	$campaign_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$campaign_name);
+	$auto_dial_level = preg_replace('/[^\.0-9]/','',$auto_dial_level);
+	$adaptive_maximum_level = preg_replace('/[^\.0-9]/','',$adaptive_maximum_level);
+	$campaign_vdad_exten = preg_replace('/[^0-9]/','',$campaign_vdad_exten);
+	$hopper_level = preg_replace('/[^0-9]/','',$hopper_level);
+	$reset_hopper = preg_replace('/[^NY]/','',$reset_hopper);
+	$dial_method = preg_replace('/[^-_0-9a-zA-Z]/','',$dial_method);
+	$dial_timeout = preg_replace('/[^0-9]/','',$dial_timeout);
 	}
 else
 	{
@@ -4253,6 +4281,277 @@ if ($function == 'add_list')
 	}
 ################################################################################
 ### END add_list
+################################################################################
+
+
+
+
+
+
+################################################################################
+### update_campaign - updates campaign information in the vicidial_campaigns table and other functions
+################################################################################
+if ($function == 'update_campaign')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_campaigns='1' and user_level >= 8 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "update_campaign USER DOES NOT HAVE PERMISSION TO UPDATE CAMPAIGNS";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($campaign_id)<2) or (strlen($campaign_id)>8) )
+				{
+				$result = 'ERROR';
+				$result_reason = "update_campaign YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$campaign_id|$campaign_name|$campaign_id";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+				$LOGadmin_viewable_groups =		$row[1];
+
+				$LOGallowed_campaignsSQL='';
+				$whereLOGallowed_campaignsSQL='';
+				if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
+					{
+					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+					$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					}
+
+				$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$camp_exists=$row[0];
+				if ($camp_exists < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "update_campaign CAMPAIGN DOES NOT EXIST";
+					$data = "$campaign_id";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$dialmethodSQL='';
+					$adaptivemaximumlevelSQL='';
+					$campaignvdadextenSQL='';
+					$hopperlevelSQL='';
+					$dialtimeoutSQL='';
+					$campaignnameSQL='';
+					$activeSQL='';
+					$autodiallevelSQL='';
+
+					if (strlen($auto_dial_level) > 0)
+						{
+						if ( ($auto_dial_level > $SSauto_dial_limit) or ($auto_dial_level < 0) )
+							{
+							$result = 'ERROR';
+							$result_reason = "update_campaign AUTO DIAL LEVEL MUST BE FROM 0 TO $SSauto_dial_limit, THIS IS AN OPTIONAL FIELD";
+							$data = "$auto_dial_level";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$autodiallevelSQL = " ,auto_dial_level='$auto_dial_level'";}
+						}
+					if (strlen($dial_method) > 0)
+						{
+						if (preg_match("/MANUAL|RATIO|INBOUND_MAN|ADAPT_AVERAGE|ADAPT_HARD_LIMIT|ADAPT_TAPERED/",$dial_method))
+							{$dialmethodSQL = " ,dial_method='$dial_method'";}
+						else
+							{
+							$result = 'ERROR';
+							$result_reason = "update_campaign DIAL METHOD IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+							$data = "$dial_method";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						}
+					if (strlen($adaptive_maximum_level) > 0)
+						{
+						if ( (strlen($adaptive_maximum_level) > 5) or (strlen($adaptive_maximum_level) < 1) )
+							{
+							$result = 'ERROR';
+							$result_reason = "update_campaign ADAPT MAXIMUM DIAL LEVEL MUST BE FROM 1 TO 5 CHARACTERS, THIS IS AN OPTIONAL FIELD";
+							$data = "$adaptive_maximum_level";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$adaptivemaximumlevelSQL = " ,adaptive_maximum_level='$adaptive_maximum_level'";}
+						}
+					if (strlen($campaign_vdad_exten) > 0)
+						{
+						if ( (strlen($campaign_vdad_exten) > 20) or (strlen($campaign_vdad_exten) < 3) )
+							{
+							$result = 'ERROR';
+							$result_reason = "update_campaign ROUTING EXTENSION MUST BE FROM 3 TO 20 CHARACTERS, THIS IS AN OPTIONAL FIELD";
+							$data = "$campaign_vdad_exten";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$campaignvdadextenSQL = " ,campaign_vdad_exten='$campaign_vdad_exten'";}
+						}
+					if (strlen($hopper_level) > 0)
+						{
+						if ( ($hopper_level > 2000) or ($hopper_level < 1) )
+							{
+							$result = 'ERROR';
+							$result_reason = "update_campaign HOPPER LEVEL MUST BE FROM 1 TO 2000, THIS IS AN OPTIONAL FIELD";
+							$data = "$hopper_level";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$hopperlevelSQL = " ,hopper_level='$hopper_level'";}
+						}
+					if (strlen($dial_timeout) > 0)
+						{
+						if ( ($dial_timeout > 120) or ($dial_timeout < 1) )
+							{
+							$result = 'ERROR';
+							$result_reason = "update_campaign DIAL TIMEOUT MUST BE FROM 1 TO 120, THIS IS AN OPTIONAL FIELD";
+							$data = "$dial_timeout";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$dialtimeoutSQL = " ,dial_timeout='$dial_timeout'";}
+						}
+					if (strlen($campaign_name) > 0)
+						{
+						if ( (strlen($campaign_name) > 40) or (strlen($campaign_name) < 6) )
+							{
+							$result = 'ERROR';
+							$result_reason = "update_campaign CAMPAIGN NAME MUST BE FROM 6 TO 40 CHARACTERS, THIS IS AN OPTIONAL FIELD";
+							$data = "$campaign_name";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$campaignnameSQL = " ,campaign_name='$campaign_name'";}
+						}
+					if (strlen($active) > 0)
+						{
+						if ( ($active != 'Y') and ($active != 'N') )
+							{
+							$result = 'ERROR';
+							$result_reason = "update_campaign ACTIVE MUST BE Y OR N, THIS IS AN OPTIONAL FIELD";
+							$data = "$active";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$activeSQL = " ,active='$active'";}
+						}
+
+					$updateSQL = "$campaignnameSQL$activeSQL$dialtimeoutSQL$hopperlevelSQL$campaignvdadextenSQL$adaptivemaximumlevelSQL$dialmethodSQL$autodiallevelSQL";
+
+					if (strlen($updateSQL)< 3)
+						{
+						$result = 'NOTICE';
+						$result_reason = "update_campaign NO UPDATES DEFINED";
+						$data = "$updateSQL";
+						echo "$result: $result_reason: |$user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					else
+						{
+						$stmt="UPDATE vicidial_campaigns SET campaign_changedate='$NOW_TIME' $updateSQL WHERE campaign_id='$campaign_id';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($DB) {echo "|$stmt|\n";}
+
+						### LOG INSERTION Admin Log Table ###
+						$SQL_log = "$stmt|";
+						$SQL_log = preg_replace('/;/', '', $SQL_log);
+						$SQL_log = addslashes($SQL_log);
+						$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='CAMPAIGNS', event_type='MODIFY', record_id='$campaign_id', event_code='ADMIN API UPDATE CAMPAIGN', event_sql=\"$SQL_log\", event_notes='campaign: $campaign_id';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+
+						$result = 'SUCCESS';
+						$result_reason = "update_campaign CAMPAIGN HAS BEEN UPDATED";
+						$data = "$campaign_id";
+						echo "$result: $result_reason - $user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+
+					if ($reset_hopper == 'Y')
+						{
+						$stmt="DELETE from vicidial_hopper where campaign_id='$campaign_id' and campaign_id='$campaign_id';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($DB) {echo "|$stmt|\n";}
+
+						### LOG INSERTION Admin Log Table ###
+						$SQL_log = "$stmt|";
+						$SQL_log = preg_replace('/;/', '', $SQL_log);
+						$SQL_log = addslashes($SQL_log);
+						$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='CAMPAIGNS', event_type='RESET', record_id='$campaign_id', event_code='ADMIN API RESET HOPPER', event_sql=\"$SQL_log\", event_notes='campaign: $campaign_id';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+
+						$result = 'NOTICE';
+						$result_reason = "update_campaign HOPPER HAS BEEN RESET";
+						$data = "$campaign_id|$affected_rows";
+						echo "$result: $result_reason - $user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}						
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END update_campaign
 ################################################################################
 
 
