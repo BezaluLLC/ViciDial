@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_conf_update_3way.pl version 2.6
+# AST_conf_update_3way.pl version 2.12
 #
 # This script checks leave 3way vicidial_conferences for participants
 # This is a constantly running script that is in the keepalive_ALL script, to
@@ -11,11 +11,12 @@
 #      script's crontab entry that does some of these functions:
 #      AST_conf_update.pl --no-vc-3way-check
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 100811-2119 - First build, based upon AST_conf_update.pl script
 # 100928-1506 - Changed from hard-coded 60 minute limit to servers.vicidial_recording_limit
 # 130108-1707 - Changes for Asterisk 1.8 compatibility
+# 160608-1549 - Added support for AMI version 1.3
 #
 
 # constants
@@ -242,7 +243,7 @@ while ($loops > $loop_counter)
 		#$fh = $t->dump_log("$telnetlog");  # uncomment for telnet log
 
 		$t->open("$telnet_host"); 
-		$t->waitfor('/[01]\n$/');			# print login
+		$t->waitfor('/[0123]\n$/');			# print login
 		$t->print("Action: Login\nUsername: $telnet_login\nSecret: $ASTmgrSECRET\n\n");
 		$t->waitfor('/Authentication accepted/');		# waitfor auth accepted
 
