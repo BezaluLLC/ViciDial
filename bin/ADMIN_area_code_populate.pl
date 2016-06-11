@@ -2,7 +2,7 @@
 #
 # ADMIN_area_code_populate.pl    version 2.12
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Description:
 # server application that allows load areacodes into to asterisk list database
@@ -13,7 +13,7 @@
 #            - changed to use /etc/astguiclient.conf for configs
 # 61122-1902 - Added GMT_USA_zip.txt data import for USA postal GMT data
 # 80416-1017 - Added download of phone codes from remote host
-# 90129-0932 - Added optional NANP prefix/time date import "--load-NANPA-prefix" flag
+# 90129-0932 - Added optional NANPA prefix/time date import "--load-NANPA-prefix" flag
 # 90131-0933 - Added purge-table option to clear out old records before adding new ones
 # 90204-0806 - Added duplicate check to nanpa list loading
 # 90317-2353 - Added city, state, postal_code, country to nanpa format
@@ -22,13 +22,14 @@
 # 130419-1237 - Added lata_type field to NANPA file format
 # 150203-1751 - code cleanup
 # 151228-1043 - Added ISO-TLD table and import
+# 160611-0933 - Added more documentation
 #
 
 
 # default path to astguiclient configuration file:
 $PATHconf =		"/etc/astguiclient.conf";
 $domain   =		"http://phonecodes.vicidial.com";
-#$URL1     =		"$domain/phone_codes_GMT-latest.txt";
+#$URL1     =	"$domain/phone_codes_GMT-latest.txt";
 $URL1     =		"$domain/phone_codes_GMT-latest-24.txt";
 $URL2     =		"$domain/GMT_USA_zip-latest.txt";
 $URL3     =		"$domain/country_ISO_TLD-latest.txt";
@@ -52,12 +53,21 @@ if (length($ARGV[0])>1)
 		print "  [--debug] = debug output\n";
 		print "  [--use-local-files] = Do not download files, use local copies\n";
 		print "  [--load-NANPA-prefix] = Only loads the special NANPA list into the database\n";
+		print "     NOTE: NANPA data must be purchased from 'http://vicidial.org/store.php'\n";
 		print "  [--purge-table] = Purges the table to be inserted before inserting\n";
-		print "\n     files used by this script are:\n";
+		print "\n";
+		print "       Files used by this script are:\n";
 		print "   phone_codes_GMT-latest-24.txt - Phone codes and country codes with time zone data\n";
 		print "   GMT_USA_zip-latest.txt - USA zip code and time zone data\n";
 		print "   country_ISO_TLD-latest.txt - Country code ISO and TLD data\n";
 		print "   NANPA_prefix-latest.txt - North American areacode, prefix and time zone data\n";
+		print "\n";
+		print "       Update schedules for data files:\n";
+		print "   phone_codes - Usually a few times a year, as areacodes in North America are added\n";
+		print "   GMT_USA_zip - About once per year\n";
+		print "   country_ISO_TLD - Only when country code data changes, not frequently\n";
+		print "   NANPA_prefix - About once per year\n";
+		print "\n";
 
 		exit;
 		}

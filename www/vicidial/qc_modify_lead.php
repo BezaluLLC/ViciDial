@@ -6,7 +6,7 @@
 # qc_modify_lead.php
 # 
 # Copyright (C) 2012  poundteam.com    LICENSE: AGPLv2
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to allow QC review and modification of leads, contributed by poundteam.com
 #
@@ -23,6 +23,7 @@
 # 150808-1437 - Added compatibility for custom fields data options
 # 150908-1531 - Fixed input lengths for several standard fields to match DB
 # 150917-1311 - Added dynamic default field maxlengths based on DB schema
+# 160611-1217 - Fixed for external server IP recording link issue
 #
 
 require("dbconnect_mysqli.php");
@@ -1326,7 +1327,7 @@ else
 
 			if ($rowx[0] > 0)
 				{
-				$stmt="select recording_web_link,alt_server_ip from servers where server_ip='$URLserver_ip';";
+				$stmt="select recording_web_link,alt_server_ip,external_server_ip from servers where server_ip='$URLserver_ip';";
 				$rsltx=mysql_to_mysqli($stmt, $link);
 				$rowx=mysqli_fetch_row($rsltx);
 
