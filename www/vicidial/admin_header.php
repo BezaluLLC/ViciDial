@@ -64,6 +64,7 @@
 # 160404-0934 - design changes
 # 160429-1014 - Added admin_row_click option
 # 160507-2324 - Added screen colors section
+# 160611-2229 - Added style for diff on admin changes
 #
 
 
@@ -1245,6 +1246,54 @@ echo "</script>\n";
 
 <style type="text/css">
 <!--
+
+
+<?php
+
+if ($ADD == '730000000000000')
+{
+?>
+
+.diff table{
+margin          : 1px 1px 1px 1px;
+border-collapse : collapse;
+border-spacing  : 0;
+}
+
+.diff td{
+vertical-align : top;
+font-family    : monospace;
+font-size      : 9;
+}
+.diff span{
+display:block;
+min-height:1pm;
+margin-top:-1px;
+padding:1px 1px 1px 1px;
+}
+
+* html .diff span{
+height:1px;
+}
+
+.diff span:first-child{
+margin-top:1px;
+}
+
+.diffDeleted span{
+border:1px solid rgb(255,51,0);
+background:rgb(255,173,153);
+}
+
+.diffInserted span{
+border:1px solid rgb(51,204,51);
+background:rgb(102,255,51);
+}
+
+<?php
+}
+?>
+
 .auraltext
 	{
 	position: absolute;
@@ -1320,6 +1369,7 @@ echo "</script>\n";
 	{
 
 -->
+
 </style>
 
 <?php

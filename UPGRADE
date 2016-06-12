@@ -265,6 +265,9 @@ OTHER CHANGES:
 70. Added phone outbound alt caller ID to allow for phone-dialed calls to use
 	a separate CID number when dialing through a specific context
 
+71. Added display of admin change differences to last change on the change
+	detail page
+
 
 
 

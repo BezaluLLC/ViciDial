@@ -3822,12 +3822,13 @@ else
 # 160514-1437 - Added ofcom_uk_drop_calc option
 # 160517-1927 - formatting fixes
 # 160602-1450 - Hiding email group settings that are not needed
+# 160611-2230 - Added diff to last change on admin change detail display
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-558a';
-$build = '160602-1450';
+$admin_version = '2.12-559a';
+$build = '160611-2230';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -36097,10 +36098,37 @@ if ($ADD==730000000000000)
 			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>"._QXZ("NOTES").": </B></TD>";
 			echo "<TD ALIGN=LEFT><FONT FACE=\"Arial,Helvetica\" size=1>$row[8]</TD>";
 			echo "</TR><TR>\n";
+			$new_sql = $row[9];
 			$row[9] = preg_replace('/\',/i', '\' ,',$row[9]);
 			$row[9] = preg_replace("/\|/","<BR>",$row[9]);
 			echo "<TD ALIGN=RIGHT><B><FONT FACE=\"Arial,Helvetica\" size=2>"._QXZ("SQL").": </B></TD>";
 			echo "<TD ALIGN=LEFT width=700><p style=\"width: 700; text-wrap: normal; word-wrap: break-word\"><FONT FACE=\"Arial,Helvetica\" size=1>$row[9]</TD>";
+
+			$stmt="SELECT admin_log_id,event_date,val.user,ip_address,event_section,event_type,record_id,event_code,event_notes,event_sql,full_name,val.user_group from vicidial_admin_log val, vicidial_users vu where event_section='$row[4]' and event_type='$row[5]' and record_id='$row[6]' and event_code='$row[7]' and admin_log_id < $row[0] and val.user=vu.user $valLOGadmin_viewable_groupsSQL order by admin_log_id desc;";
+			if ($DB > 0) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$last_to_print = mysqli_num_rows($rslt);
+
+			if ($last_to_print > 0)
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				echo "</TR><TR>\n";
+				echo "<TD ALIGN=CENTER COLSPAN=2><B><FONT FACE=\"Arial,Helvetica\" size=2><BR>"._QXZ("DIFF TO LAST CHANGE")."<BR>"._QXZ("ID").": <a href=\"$PHP_SELF?ADD=730000000000000&stage=$rowx[0]\">$rowx[0]</a> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"._QXZ("DATE TIME").": $rowx[1] &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;"._QXZ("USER").": $rowx[2]</B></TD></TR>";
+				echo "<TR><TD ALIGN=LEFT COLSPAN=2>";
+
+				// include the Diff class
+				require_once './class.Diff.php';
+
+				$new_sql = preg_replace('/\',/i', '\' ,',$new_sql);
+				$new_sql = preg_replace('/ ,/', "\n",$new_sql);
+				$rowx[9] = preg_replace('/\',/i', '\' ,',$rowx[9]);
+				$rowx[9] = preg_replace('/ ,/', "\n",$rowx[9]);
+
+				// output the result of comparing two files as HTML
+				echo Diff::toTable(Diff::compare($rowx[9], $new_sql));
+				}
+
+			echo "</TD>";
 			echo "</TR>\n";
 			echo "</TABLE><BR><BR>\n";
 			echo "\n";
