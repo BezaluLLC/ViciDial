@@ -20,7 +20,7 @@
 # Based on perl scripts in ViciDial from Matt Florell and post: 
 # http://www.vicidial.org/VICIDIALforum/viewtopic.php?p=22506&sid=ca5347cffa6f6382f56ce3db9fb3d068#22506
 #
-# Copyright (C) 2015  I. Taushanov, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  I. Taushanov, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 90615-1701 - First version
@@ -42,10 +42,12 @@
 # 150712-2208 - Added vicidial_dtmf_log
 # 151109-1646 - Added --carrier-daily flag, only active if --daily flag is also used
 # 151124-2252 - Added --vlog-daily flag, only active if --daily flag is also used, Also added system_settings date
+# 160612-0703 - Added --only-trim-archive-... options
 #
 
 $CALC_TEST=0;
 $T=0;   $TEST=0;
+$only_trim_archive=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -67,9 +69,16 @@ if (length($ARGV[0])>1)
 		print "  [--months=XX] = number of months to archive past, default is 24(2 years) If 'days' used then 'months' ignored\n";
 		print "  [--closer-log] = archive vicidial_closer_log records\n";
 		print "  [--queue-log] = archive QM queue_log records\n";
+		print "  [--only-trim-archive-level-one] = will not perform normal archive process, instead this will only delete records\n";
+		print "                                    that are older than XX months from least important log archive tables:\n";
+		print "                               call_log_archive, vicidial_log_extended_archive, vicidial_dial_log_archive\n";
+		print "  [--only-trim-archive-level-two] = same as --only-trim-archive-level-one, except includes tables:\n";
+		print "                               vicidial_carrier_log_archive, vicidial_api_log_archive\n";
+		print "  [--only-trim-archive-level-three] = same as --only-trim-archive-level-two, except includes tables:\n";
+		print "                               vicidial_log_archive, vicidial_agent_log_archive, vicidial_closer_log_archive";
 		print "  [--quiet] = quiet\n";
 		print "  [--calc-test] = date calculation test only\n";
-		print "  [-t] = test\n\n";
+		print "  [--test] = test\n\n";
 		exit;
 		}
 	else
@@ -78,7 +87,7 @@ if (length($ARGV[0])>1)
 			{
 			$q=1;   $Q=1;
 			}
-		if ($args =~ /-t/i)
+		if ($args =~ /--test/i)
 			{
 			$T=1;   $TEST=1;
 			print "\n-----TESTING-----\n\n";
@@ -139,6 +148,24 @@ if (length($ARGV[0])>1)
 			$queue_log=1;
 			if ($Q < 1) 
 				{print "\n----- QUEUE LOG ARCHIVE -----\n\n";}
+			}
+		if ($args =~ /--only-trim-archive-level-one/i)
+			{
+			$only_trim_archive=1;
+			if ($Q < 1) 
+				{print "\n----- ONLY TRIM LOG ARCHIVES LEVEL 1 -----\n\n";}
+			}
+		if ($args =~ /--only-trim-archive-level-two/i)
+			{
+			$only_trim_archive=2;
+			if ($Q < 1) 
+				{print "\n----- ONLY TRIM LOG ARCHIVES LEVEL 2 -----\n\n";}
+			}
+		if ($args =~ /--only-trim-archive-level-three/i)
+			{
+			$only_trim_archive=3;
+			if ($Q < 1) 
+				{print "\n----- ONLY TRIM LOG ARCHIVES LEVEL 3 -----\n\n";}
 			}
 		}
 	}
@@ -246,6 +273,270 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 if (!$T) 
 	{
+	if ($only_trim_archive > 0)
+		{
+		# the "only-trim-archive" process will not perform the normal archive process, 
+		# instead this will only delete records that are older than XX months from 
+		# least important log archive tables. There are three levels:
+		#    LEVEL 1:
+		# call_log_archive, vicidial_log_extended_archive, vicidial_dial_log_archive
+		#    LEVEL 2:
+		# vicidial_carrier_log_archive, vicidial_api_log_archive
+		#    LEVEL 3:
+		# vicidial_log_archive, vicidial_agent_log_archive, vicidial_closer_log_archive
+		# NOTE: script will exit once trim process has completed
+		if (!$Q) {print "\nONLY-TRIM-ARCHIVE PROCESS LAUNCHING, GOING TO LEVEL: $only_trim_archive\n";}
+
+		if (!$Q) {print "Starting 'only-trim-archive' process, level: ONE\n";}
+
+		##### BEGIN call_log_archive trim processing #####
+		$stmtA = "SELECT count(*) from call_log_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$call_log_archive_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if (!$Q) {print "Trimming call_log_archive table...  ($call_log_archive_count)\n";}
+		
+		$rv = $sthA->err();
+		if (!$rv) 
+			{
+			$stmtA = "DELETE FROM call_log_archive WHERE start_time < '$del_time';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows = $sthA->rows;
+			if (!$Q) {print "$sthArows rows deleted from call_log_archive table \n";}
+
+			$stmtA = "optimize table call_log_archive;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			}
+		##### END call_log_archive trim processing #####
+ 
+ 		##### BEGIN vicidial_log_extended_archive trim processing #####
+		$stmtA = "SELECT count(*) from vicidial_log_extended_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vicidial_log_extended_archive_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if (!$Q) {print "Trimming vicidial_log_extended_archive table...  ($vicidial_log_extended_archive_count)\n";}
+		
+		$rv = $sthA->err();
+		if (!$rv) 
+			{
+			$stmtA = "DELETE FROM vicidial_log_extended_archive WHERE call_date < '$del_time';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows = $sthA->rows;
+			if (!$Q) {print "$sthArows rows deleted from vicidial_log_extended_archive table \n";}
+
+			$stmtA = "optimize table vicidial_log_extended_archive;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			}
+		##### END vicidial_log_extended_archive trim processing #####
+
+		##### BEGIN vicidial_dial_log_archive trim processing #####
+		$stmtA = "SELECT count(*) from vicidial_dial_log_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vicidial_dial_log_archive_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if (!$Q) {print "Trimming vicidial_dial_log_archive table...  ($vicidial_dial_log_archive_count)\n";}
+		
+		$rv = $sthA->err();
+		if (!$rv) 
+			{
+			$stmtA = "DELETE FROM vicidial_dial_log_archive WHERE call_date < '$del_time';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows = $sthA->rows;
+			if (!$Q) {print "$sthArows rows deleted from vicidial_dial_log_archive table \n";}
+
+			$stmtA = "optimize table vicidial_dial_log_archive;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			}
+		##### END vicidial_dial_log_archive trim processing #####
+
+
+		if ($only_trim_archive > 1)
+			{
+			if (!$Q) {print "Starting 'only-trim-archive' process, level: TWO\n";}
+
+			##### BEGIN vicidial_carrier_log_archive trim processing #####
+			$stmtA = "SELECT count(*) from vicidial_carrier_log_archive;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$vicidial_carrier_log_archive_count =	$aryA[0];
+				}
+			$sthA->finish();
+
+			if (!$Q) {print "Trimming vicidial_carrier_log_archive table...  ($vicidial_carrier_log_archive_count)\n";}
+			
+			$rv = $sthA->err();
+			if (!$rv) 
+				{
+				$stmtA = "DELETE FROM vicidial_carrier_log_archive WHERE call_date < '$del_time';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows = $sthA->rows;
+				if (!$Q) {print "$sthArows rows deleted from vicidial_carrier_log_archive table \n";}
+
+				$stmtA = "optimize table vicidial_carrier_log_archive;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				}
+			##### END vicidial_carrier_log_archive trim processing #####
+
+			##### BEGIN vicidial_api_log_archive trim processing #####
+			$stmtA = "SELECT count(*) from vicidial_api_log_archive;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$vicidial_api_log_archive_count =	$aryA[0];
+				}
+			$sthA->finish();
+
+			if (!$Q) {print "Trimming vicidial_api_log_archive table...  ($vicidial_api_log_archive_count)\n";}
+			
+			$rv = $sthA->err();
+			if (!$rv) 
+				{
+				$stmtA = "DELETE FROM vicidial_api_log_archive WHERE api_date < '$del_time';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows = $sthA->rows;
+				if (!$Q) {print "$sthArows rows deleted from vicidial_api_log_archive table \n";}
+
+				$stmtA = "optimize table vicidial_api_log_archive;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				}
+			##### END vicidial_api_log_archive trim processing #####
+			}
+
+		if ($only_trim_archive > 2)
+			{
+			if (!$Q) {print "Starting 'only-trim-archive' process, level: THREE\n";}
+
+			##### BEGIN vicidial_log_archive trim processing #####
+			$stmtA = "SELECT count(*) from vicidial_log_archive;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$vicidial_log_archive_count =	$aryA[0];
+				}
+			$sthA->finish();
+
+			if (!$Q) {print "Trimming vicidial_log_archive table...  ($vicidial_log_archive_count)\n";}
+			
+			$rv = $sthA->err();
+			if (!$rv) 
+				{
+				$stmtA = "DELETE FROM vicidial_log_archive WHERE call_date < '$del_time';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows = $sthA->rows;
+				if (!$Q) {print "$sthArows rows deleted from vicidial_log_archive table \n";}
+
+				$stmtA = "optimize table vicidial_log_archive;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				}
+			##### END vicidial_log_archive trim processing #####
+
+			##### BEGIN vicidial_agent_log_archive trim processing #####
+			$stmtA = "SELECT count(*) from vicidial_agent_log_archive;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$vicidial_agent_log_archive_count =	$aryA[0];
+				}
+			$sthA->finish();
+
+			if (!$Q) {print "Trimming vicidial_agent_log_archive table...  ($vicidial_agent_log_archive_count)\n";}
+			
+			$rv = $sthA->err();
+			if (!$rv) 
+				{
+				$stmtA = "DELETE FROM vicidial_agent_log_archive WHERE event_time < '$del_time';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows = $sthA->rows;
+				if (!$Q) {print "$sthArows rows deleted from vicidial_agent_log_archive table \n";}
+
+				$stmtA = "optimize table vicidial_agent_log_archive;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				}
+			##### END vicidial_agent_log_archive trim processing #####
+
+			##### BEGIN vicidial_closer_log_archive trim processing #####
+			$stmtA = "SELECT count(*) from vicidial_closer_log_archive;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$vicidial_closer_log_archive_count =	$aryA[0];
+				}
+			$sthA->finish();
+
+			if (!$Q) {print "Trimming vicidial_closer_log_archive table...  ($vicidial_closer_log_archive_count)\n";}
+			
+			$rv = $sthA->err();
+			if (!$rv) 
+				{
+				$stmtA = "DELETE FROM vicidial_closer_log_archive WHERE call_date < '$del_time';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows = $sthA->rows;
+				if (!$Q) {print "$sthArows rows deleted from vicidial_closer_log_archive table \n";}
+
+				$stmtA = "optimize table vicidial_closer_log_archive;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				}
+			##### END vicidial_closer_log_archive trim processing #####
+			}
+
+		if (!$Q) {print "Trim process complete, exiting...\n";}
+
+		exit;
+		}
+
 	if ($daily > 0)
 		{
 		# The --daily option was added because these tables(call_log, vicidial_dial_log,  
@@ -254,6 +545,7 @@ if (!$T)
 		# this can lead to system delay issues even if the 1-month archive process is
 		# run every weekend. This --daily option will keep only the last 
 		# 24-hours and can improve DB performance greatly
+		if (!$Q) {print "\nStarting daily arcchive process...\n";}
 
 		##### BEGIN call_log DAILY processing #####
 		$stmtA = "SELECT count(*) from call_log;";
