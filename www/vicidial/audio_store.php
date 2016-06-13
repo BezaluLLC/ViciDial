@@ -23,10 +23,11 @@
 # 141229-2052 - Added code for on-the-fly language translations display
 # 160330-1550 - navigation changes and fixes, added force_allow var
 # 160508-0139 - Added screen colors feature
+# 160613-1002 - Added feature to copy recordings to a new filename
 #
 
-$version = '2.12-17';
-$build = '160508-0209';
+$version = '2.12-18';
+$build = '160613-1002';
 
 $MT[0]='';
 
@@ -54,6 +55,10 @@ if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["audiofile_name"]))				{$audiofile_name=$_GET["audiofile_name"];}
 	elseif (isset($_POST["audiofile_name"]))	{$audiofile_name=$_POST["audiofile_name"];}
+if (isset($_GET["master_audiofile"]))			{$master_audiofile=$_GET["master_audiofile"];}
+	elseif (isset($_POST["master_audiofile"]))	{$master_audiofile=$_POST["master_audiofile"];}
+if (isset($_GET["new_audiofile"]))			{$new_audiofile=$_GET["new_audiofile"];}
+	elseif (isset($_POST["new_audiofile"]))	{$new_audiofile=$_POST["new_audiofile"];}
 if (isset($_FILES["audiofile"]))			{$audiofile_name=$_FILES["audiofile"]['name'];}
 if (isset($_GET["lead_file"]))				{$lead_file=$_GET["lead_file"];}
 	elseif (isset($_POST["lead_file"]))		{$lead_file=$_POST["lead_file"];}
@@ -333,6 +338,82 @@ if ($action == "AUTOUPLOAD")
 	}
 
 
+### copy audio file to new name on webserver
+if ($action == "COPYFILE")
+	{
+	if ($DB) {echo "COPYFILE: |$new_audiofile|$master_audiofile|\n";}
+	if ( (strlen($new_audiofile)>0) and (strlen($master_audiofile)>0) )
+		{
+		$master_audiofile = preg_replace("/ /",'\ ',$master_audiofile);
+		$master_audiofile = preg_replace("/@/",'\@',$master_audiofile);
+		$master_audiofile = preg_replace("/\(/",'\(',$master_audiofile);
+		$master_audiofile = preg_replace("/\)/",'\)',$master_audiofile);
+		$master_audiofile = preg_replace("/\#/",'\#',$master_audiofile);
+		$master_audiofile = preg_replace("/\&/",'\&',$master_audiofile);
+		$master_audiofile = preg_replace("/\*/",'\*',$master_audiofile);
+		$master_audiofile = preg_replace("/\!/",'\!',$master_audiofile);
+		$master_audiofile = preg_replace("/\%/",'\%',$master_audiofile);
+		$master_audiofile = preg_replace("/\^/",'\^',$master_audiofile);
+		$master_audiofile = preg_replace("/\"/",'\^',$master_audiofile);
+		$new_audiofile = preg_replace("/ /",'',$new_audiofile);
+		$new_audiofile = preg_replace("/@/",'',$new_audiofile);
+		$new_audiofile = preg_replace("/\(/",'',$new_audiofile);
+		$new_audiofile = preg_replace("/\)/",'',$new_audiofile);
+		$new_audiofile = preg_replace("/\#/",'',$new_audiofile);
+		$new_audiofile = preg_replace("/\&/",'',$new_audiofile);
+		$new_audiofile = preg_replace("/\*/",'',$new_audiofile);
+		$new_audiofile = preg_replace("/\!/",'',$new_audiofile);
+		$new_audiofile = preg_replace("/\%/",'',$new_audiofile);
+		$new_audiofile = preg_replace("/\^/",'',$new_audiofile);
+		$new_audiofile = preg_replace("/\"/",'',$new_audiofile);
+
+		$copied=0;
+		$suffix='.wav';
+		if (file_exists("$WeBServeRRooT/$sounds_web_directory/$master_audiofile$suffix"))
+			{
+			copy("$WeBServeRRooT/$sounds_web_directory/$master_audiofile$suffix", "$WeBServeRRooT/$sounds_web_directory/$new_audiofile$suffix");
+			chmod("$WeBServeRRooT/$sounds_web_directory/$new_audiofile$suffix", 0766);
+
+			$new_filesize = filesize("$WeBServeRRooT/$sounds_web_directory/$new_audiofile$suffix");
+			$copy_message = _QXZ("SUCCESS").": $new_audiofile$suffix "._QXZ("copied")."     "._QXZ("size").": $new_filesize "._QXZ("from")." $master_audiofile$suffix\n";
+			$copied++;
+			}
+
+		$suffix='.gsm';
+		if (file_exists("$WeBServeRRooT/$sounds_web_directory/$master_audiofile$suffix"))
+			{
+			copy("$WeBServeRRooT/$sounds_web_directory/$master_audiofile$suffix", "$WeBServeRRooT/$sounds_web_directory/$new_audiofile$suffix");
+			chmod("$WeBServeRRooT/$sounds_web_directory/$new_audiofile$suffix", 0766);
+
+			$new_filesize = filesize("$WeBServeRRooT/$sounds_web_directory/$new_audiofile$suffix");
+			$copy_message = _QXZ("SUCCESS").": $new_audiofile$suffix "._QXZ("copied")."     "._QXZ("size").": $new_filesize "._QXZ("from")." $master_audiofile$suffix\n";
+			$copied++;
+			}
+
+		if ($copied < 1)
+			{
+			$copy_message = _QXZ("ERROR").": "._QXZ("original file not found").": |$master_audiofile|\n";
+			}
+		else
+			{
+			$stmt="UPDATE servers SET sounds_update='Y';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='AUDIOSTORE', event_type='COPY', record_id='manualupload', event_code='$new_audiofile $new_filesize', event_sql=\"$SQL_log\", event_notes='NEW: $new_audiofile   ORIGINAL: $master_audiofile';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			}
+		}
+	else
+		{
+		$copy_message = _QXZ("ERROR").": "._QXZ("you must define an original and new filename").": |$master_audiofile|$new_audiofile|\n";
+		}
+	}
+
 
 
 ?>
@@ -340,7 +421,7 @@ if ($action == "AUTOUPLOAD")
 <head>
 <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=utf-8">
 <!-- VERSION: <?php echo $version ?>     BUILD: <?php echo $build ?> -->
-<title>ADMINISTRATION: Audio Store
+<title><?php echo _QXZ("ADMINISTRATION"); ?>: <?php echo _QXZ("Audio Store"); ?>
 <?php
 
 
@@ -400,6 +481,7 @@ $secX = date("U");
 $pulldate0 = "$year-$mon-$mday $hour:$min:$sec";
 
 echo "$delete_message";
+echo "$copy_message";
 
 if ($action == "MANUALUPLOAD")
 	{
@@ -452,6 +534,8 @@ if ($action == "MANUALUPLOAD")
 
 <form action=<?php echo $PHP_SELF ?> method=post enctype="multipart/form-data">
 <input type=hidden name=action value="MANUALUPLOAD">
+<input type=hidden name=DB value="<?php echo $DB; ?>">
+<input type=hidden name=force_allow value="<?php echo $force_allow; ?>">
 
 <table align=center width="700" border=0 cellpadding=5 cellspacing=0 bgcolor=#<?php echo $SSstd_row1_background; ?>>
   <tr>
@@ -467,28 +551,44 @@ if ($action == "MANUALUPLOAD")
 <BR><BR>
 <CENTER><B><?php echo _QXZ("We STRONGLY recommend uploading only 16bit Mono 8k PCM WAV audio files"); ?>(.wav)</B>
 <BR><BR><font size=1><?php echo _QXZ("All spaces will be stripped from uploaded audio file names"); ?></font><BR><BR>
-<B><a href="javascript:launch_chooser('delete_file','date',30);"><?php echo _QXZ("audio file list"); ?></a></CENTER>
+<B><a href="javascript:launch_chooser('master_audiofile','date',30);"><?php echo _QXZ("audio file list"); ?></a></CENTER>
 
+<?php
 
+echo "<center><BR><BR>"._QXZ("File to Copy").":<BR>\n";
+echo "<form action=$PHP_SELF method=post>\n";
+echo "<input type=hidden name=action value=\"COPYFILE\">\n";
+echo "<input type=hidden name=DB value=\"$DB\">\n";
+echo "<input type=hidden name=force_allow value=\"$force_allow\">\n";
+echo _QXZ("Original file").": <input type=text size=50 maxlength=100 name=master_audiofile id=master_audiofile value=\"\"><BR>\n";
+echo _QXZ("New file").": <input type=text size=50 maxlength=100 name=new_audiofile id=new_audiofile value=\"\"><BR>\n";
+echo "<input type=hidden name=DB value=\"$DB\">\n";
+echo "<input type=submit name=submit value=submit></form>\n";
+
+?>
+
+<BR><BR><BR>
 
 <?php
 if ($auth_delete > 0)
 	{
-	echo "<center><BR><BR>"._QXZ("File to Delete").":<BR>\n";
+	echo "<center>"._QXZ("File to Delete").": <a href=\"javascript:launch_chooser('delete_file','date',200);\">". _QXZ("select file")."</a><BR>\n";
 	echo "<form action=$PHP_SELF method=post>\n";
-	echo "<input type=hidden name=action value=\""._QXZ("DELETE")."\">\n";
+	echo "<input type=hidden name=action value=\"DELETE\">\n";
+	echo "<input type=hidden name=DB value=\"$DB\">\n";
+	echo "<input type=hidden name=force_allow value=\"$force_allow\">\n";
 	echo "<input type=text size=50 maxlength=100 name=delete_file id=delete_file value=\"\">\n";
 	echo "<input type=hidden name=DB value=\"$DB\">\n";
 	echo "<input type=submit name=submit value=submit>\n";
 	}
 else
 	{
-	echo "<BR>\n";
+	echo "\n";
 	echo "<form action=$PHP_SELF method=post>\n";
-	echo "<input type=hidden name=action value=\""._QXZ("DELETE")."\">\n";
+	echo "<input type=hidden name=action value=\"DELETE\">\n";
 	echo "<input type=hidden name=delete_file id=delete_file value=\"\">\n";
 	}
-echo "</form><BR><BR><BR>\n";
+echo "</form><BR><BR>\n";
 
 
 echo "</B></B><br><br><a href=\"admin.php?ADD=720000000000000&category=AUDIOSTORE&stage=manualupload\">"._QXZ("Click here to see a log of the uploads to the audio store")."</FONT>\n";
