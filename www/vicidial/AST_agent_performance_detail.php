@@ -54,6 +54,7 @@
 # 151112-1338 - Added ability to search archive logs and show defunct users
 # 151229-2015 - Added feature to break down agent stats by day
 # 160121-2212 - Added report title header, default report format, cleaned up formatting
+# 160503-2137 - Bug fix and inclusion of null sub_statuses in counts for "PAUSE CODE BREAKDOWN" section
 #
 
 $startMS = microtime();
@@ -1680,21 +1681,23 @@ $TOTAL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL")." </
 $NONPAUSE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("NONPAUSE")."</th></tr>";
 $PAUSE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("PAUSE")."</th></tr>";
 
-$sub_status_stmt="SELECT distinct sub_status from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec > 0 and pause_sec < 65000 $group_SQL $user_SQL order by sub_status asc limit 10000000;";
+$sub_status_stmt="SELECT distinct if(sub_status is null, '*', sub_status) as all_subs from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and pause_sec >= 0 and pause_sec < 65000 $group_SQL $user_agent_log_SQL order by all_subs asc limit 10000000;";
 	if ($DB) {$ASCII_text.="$sub_status_stmt\n";}
 $sub_status_rslt=mysql_to_mysqli($sub_status_stmt, $link);
 $subs_to_print=0;
 $q=0;
 while($ss_row=mysqli_fetch_row($sub_status_rslt)) {
 	$current_ss=$ss_row[0];
+	# FOR NULL SUB STATUSES
+	if ($current_ss=="*") {$sub_status_clause="and sub_status is null";} else {$sub_status_clause="and sub_status='$current_ss'";}
 
 	if ($show_defunct_users=="checked")
 		{
-		$stmt="SELECT '' as full_name,user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec), '' as user_group from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and sub_status='$current_ss' and pause_sec<65000 $group_SQL $user_group_agent_log_SQL $user_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
+		$stmt="SELECT '' as full_name,user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec), '' as user_group from ".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $sub_status_clause and pause_sec<65000 $group_SQL $user_group_agent_log_SQL $user_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
 		}
 	else
 		{
-		$stmt="SELECT full_name,vicidial_users.user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec), vicidial_users.user_group from vicidial_users,".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' and sub_status='$current_ss' and vicidial_users.user=".$agent_log_table.".user and pause_sec<65000 $group_SQL $user_group_SQL $user_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
+		$stmt="SELECT full_name,vicidial_users.user,sum(pause_sec),sub_status,sum(wait_sec + talk_sec + dispo_sec), vicidial_users.user_group from vicidial_users,".$agent_log_table." where event_time <= '$query_date_END' and event_time >= '$query_date_BEGIN' $sub_status_clause and vicidial_users.user=".$agent_log_table.".user and pause_sec<65000 $group_SQL $user_group_SQL $user_SQL group by user,full_name,sub_status order by user,full_name,sub_status desc limit 100000;";
 		}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$ASCII_text.="$stmt\n";}
