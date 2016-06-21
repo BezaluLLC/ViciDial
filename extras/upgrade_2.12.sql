@@ -616,3 +616,12 @@ UPDATE system_settings SET db_schema_version='1460',db_schema_update_date=NOW() 
 ALTER TABLE phones ADD outbound_alt_cid VARCHAR(20) default '';
 
 UPDATE system_settings SET db_schema_version='1461',db_schema_update_date=NOW() where db_schema_version < 1461;
+
+ALTER TABLE system_settings ADD agent_screen_colors VARCHAR(20) default 'default';
+
+ALTER TABLE vicidial_user_log ADD browser_width SMALLINT(5) UNSIGNED default '0';
+ALTER TABLE vicidial_user_log ADD browser_height SMALLINT(5) UNSIGNED default '0';
+
+ALTER TABLE system_settings ADD script_remove_js ENUM('1','0') default '1';
+
+UPDATE system_settings SET db_schema_version='1462',db_schema_update_date=NOW() where db_schema_version < 1462;

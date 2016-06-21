@@ -65,6 +65,7 @@
 # 160429-1014 - Added admin_row_click option
 # 160507-2324 - Added screen colors section
 # 160611-2229 - Added style for diff on admin changes
+# 160617-1426 - Added link from screen colors to system settings screen color settings
 #
 
 
@@ -2181,7 +2182,7 @@ if ($SSenable_languages == '1')
 	<?php }
 	if (strlen($colors_sh) > 25) { 
 		?>
-	<TR BGCOLOR=<?php echo $colors_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=182000000000"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Screen Colors"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=182111111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Add A Screen Colors"); ?> </a><?php } ?></TD></TR>
+	<TR BGCOLOR=<?php echo $colors_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=182000000000"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Screen Colors"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=182111111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Add A Screen Colors"); ?> </a><?php } ?> &nbsp; | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=311111111111111#screen_colors"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Change Active Screen Colors"); ?> </a></TD></TR>
 	<?php }
 	if (strlen($cts_sh) > 25) { 
 		?>

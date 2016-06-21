@@ -674,6 +674,8 @@ server_phone VARCHAR(15) default '',
 phone_ip VARCHAR(15) default '',
 webserver SMALLINT(5) UNSIGNED default '0',
 login_url INT(9) UNSIGNED default '0',
+browser_width SMALLINT(5) UNSIGNED default '0',
+browser_height SMALLINT(5) UNSIGNED default '0',
 index (user),
 index (event_date),
 index (phone_ip)
@@ -1659,7 +1661,9 @@ report_default_format ENUM('TEXT', 'HTML') default 'TEXT',
 alt_ivr_logging ENUM('0', '1') default '0',
 admin_row_click ENUM('0', '1') default '1',
 admin_screen_colors VARCHAR(20) default 'default',
-ofcom_uk_drop_calc ENUM('1','0') default '0'
+ofcom_uk_drop_calc ENUM('1','0') default '0',
+agent_screen_colors VARCHAR(20) default 'default',
+script_remove_js ENUM('1','0') default '1'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3775,4 +3779,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1461',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1462',db_schema_update_date=NOW(),reload_timestamp=NOW();

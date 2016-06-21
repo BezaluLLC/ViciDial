@@ -90,6 +90,7 @@
 # 160508-0836 - Added screen colors
 # 160515-1958 - Added ofcom_uk_drop_calc entry
 # 160527-1359 - Added phones-outbound_alt_cid entry
+# 160621-1735 - Added agent_screen_colors and script_remove_js entries
 #
 
 
@@ -5098,6 +5099,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <B><?php echo _QXZ("Level 8 Disable Add"); ?> -</B><?php echo _QXZ("This setting if enabled will prevent any level 8 user from adding or copying any record in the system, no matter what their user settings are. Excluded from these restrictions are the ability to add DNC and Filter Phone Groups numbers and the Add a New Lead page. Default is 0 for disabled."); ?>
 
 <BR>
+<A NAME="settings-script_remove_js">
+<BR>
+<B><?php echo _QXZ("Script Text Remove JS"); ?> -</B><?php echo _QXZ("This setting if enabled will remove any javascript that is included in the script text for a script. This is considered a security feature to prevent cross-site scripting, or XSS. Default is 1 for enabed."); ?>
+
+<BR>
 <A NAME="settings-admin_list_counts">
 <BR>
 <B><?php echo _QXZ("Admin List Counts"); ?> -</B><?php echo _QXZ("This setting allows you to disable the list counts that appear on the Lists listing and the Campaign modify screens. Default is 1 for enabled."); ?>
@@ -5177,6 +5183,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-admin_screen_colors">
 <BR>
 <B><?php echo _QXZ("Admin Screen Colors"); ?> -</B><?php echo _QXZ("This feature allows you to set different color schemes and logo for the administrative web screens. These can be defined in the Screen Colors section. Default is default, for the standard blue screen colors"); ?>
+
+<BR>
+<A NAME="settings-agent_screen_colors">
+<BR>
+<B><?php echo _QXZ("Agent Screen Colors"); ?> -</B><?php echo _QXZ("This feature allows you to set different color schemes and logo for the agent screen. These can be defined in the Screen Colors section. Default is default, for the standard blue screen colors"); ?>
 
 <BR>
 <A NAME="settings-label_hide_field_logs">
