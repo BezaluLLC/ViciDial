@@ -1581,7 +1581,6 @@ if ($ADD == "763000000000")
 			if (preg_match('/SYSTEM/i', $row[4])) {$record_link = "$PHP_SELF?ADD=311111111111111";}
 			if (preg_match('/CATEGOR/i', $row[4])) {$record_link = "$PHP_SELF?ADD=331111111111111";}
 			if (preg_match('/GROUPALIAS/i', $row[4])) {$record_link = "$PHP_SELF?ADD=33111111111&group_alias_id=$row[6]";}
-			if (preg_match('/AVATARS/i', $row[4])) {$record_link = "$PHP_SELF?ADD=362111111111&avatar_id=$row[6]&DB=$DB";}
 			if (preg_match('/LANGUAGES/i', $row[4])) {$record_link = "$PHP_SELF?ADD=363111111111&language_id=$row[6]&DB=$DB";}
 
 			if (preg_match('/1$|3$|5$|7$|9$/i', $o))

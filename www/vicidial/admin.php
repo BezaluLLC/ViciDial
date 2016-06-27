@@ -36897,11 +36897,11 @@ if ($ADD==999998)
 		echo "<TD><a href=\"admin_languages.php?ADD=163000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Languages")." </SPAN></a></TD>\n";
 		echo "</TR>\n";
 		}
-	if (preg_match("/avatar/",$SSactive_modules) )
+	if (preg_match("/soundboard/",$SSactive_modules) )
 		{
-		echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='admin_avatar.php?ADD=162000000000';\"";} echo ">\n";
-		echo "<TD><a href=\"admin_avatar.php?ADD=162000000000\"><img src=\"images/icon_audioavatars.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
-		echo "<TD><a href=\"admin_avatar.php?ADD=162000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Audio Avatars")." </SPAN></a></TD>\n";
+		echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='admin_soundboard.php?ADD=162000000000';\"";} echo ">\n";
+		echo "<TD><a href=\"admin_soundboard.php?ADD=162000000000\"><img src=\"images/icon_audiosoundboards.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+		echo "<TD><a href=\"admin_soundboard.php?ADD=162000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Audio Soundboards")." </SPAN></a></TD>\n";
 		echo "</TR>\n";
 		}
 	echo "</TABLE>\n";

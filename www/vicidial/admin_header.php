@@ -1905,7 +1905,7 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 		$audio_sh="CLASS=\"subhead_style\"";
 		$moh_sh="CLASS=\"subhead_style\"";
 		$languages_sh="CLASS=\"subhead_style\"";
-		$avatar_sh="CLASS=\"subhead_style\"";
+		$soundboard_sh="CLASS=\"subhead_style\"";
 		$vm_sh="CLASS=\"subhead_style\"";
 		$tts_sh="CLASS=\"subhead_style\"";
 		$cc_sh="CLASS=\"subhead_style\"";
@@ -1928,7 +1928,7 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 		if ($sh=='audio') {$audio_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='moh') {$moh_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='languages') {$languages_sh="CLASS=\"subhead_style_selected\"";}
-		if ($sh=='avatar') {$avatar_sh="CLASS=\"subhead_style_selected\"";}
+		if ($sh=='soundboard') {$soundboard_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='vm') {$vm_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='tts') {$tts_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='cc') {$cc_sh="CLASS=\"subhead_style_selected\"";}
@@ -1988,11 +1988,11 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 			<a href="admin_languages.php?ADD=163000000000" STYLE="text-decoration:none;"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> &nbsp; <img src="images/icon_languages.png" border=0 alt=\"Users\" width=14 height=14 valign=middle> <?php echo _QXZ("Languages"); ?> </a></TD>
 			</TR>
 			<?php }
-			if (preg_match("/avatar/",$SSactive_modules) )
+			if (preg_match("/soundboard/",$SSactive_modules) )
 				{
 			?>
-			<TR <?php echo $avatar_sh ?><?php if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='admin_avatar.php?ADD=162000000000';\"";} ?>><TD ALIGN=LEFT <?php echo $avatar_sh ?>> &nbsp; 
-			<a href="admin_avatar.php?ADD=162000000000" STYLE="text-decoration:none;"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> &nbsp; <img src="images/icon_audioavatars.png" border=0 alt=\"Users\" width=14 height=14 valign=middle> <?php echo _QXZ("Audio Avatars"); ?> </a></TD>
+			<TR <?php echo $soundboard_sh ?><?php if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='admin_soundboard.php?ADD=162000000000';\"";} ?>><TD ALIGN=LEFT <?php echo $soundboard_sh ?>> &nbsp; 
+			<a href="admin_soundboard.php?ADD=162000000000" STYLE="text-decoration:none;"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> &nbsp; <img src="images/icon_audiosoundboards.png" border=0 alt=\"Users\" width=14 height=14 valign=middle> <?php echo _QXZ("Audio Soundboards"); ?> </a></TD>
 			</TR>
 
 		<?php 
@@ -2160,11 +2160,11 @@ if ($SSenable_languages == '1')
 		?>
 	<TR BGCOLOR=<?php echo $languages_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="admin_languages.php?ADD=163000000000"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Show Languages"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="admin_languages.php?ADD=163111111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Add A New Language"); ?></FONT></a> &nbsp; | &nbsp; <a href="admin_languages.php?ADD=163211111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Copy A Languages Entry"); ?></FONT></a> &nbsp; | &nbsp; <a href="admin_languages.php?ADD=163311111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Import Phrases"); ?></FONT></a> &nbsp; | &nbsp; <a href="admin_languages.php?ADD=163411111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Export Phrases"); ?></FONT></a> &nbsp; <?php } ?></TD></TR>
 	<?php }
-	if (preg_match("/avatar/",$SSactive_modules) )
+	if (preg_match("/soundboard/",$SSactive_modules) )
 		{
-	if ( (strlen($avatar_sh) > 25) and (strlen($admin_hh) > 25) ) { 
+	if ( (strlen($soundboard_sh) > 25) and (strlen($admin_hh) > 25) ) { 
 		?>
-	<TR BGCOLOR=<?php echo $avatar_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="admin_avatar.php?ADD=162000000000"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Show Avatar Entries"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="admin_avatar.php?ADD=162111111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Add A New Avatar Entry"); ?></FONT></a> &nbsp; | &nbsp; <a href="admin_avatar.php?ADD=162211111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Copy An Avatar Entry"); ?></FONT></a> &nbsp; <?php } ?></TD></TR>
+	<TR BGCOLOR=<?php echo $soundboard_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="admin_soundboard.php?ADD=162000000000"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Show Soundboard Entries"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="admin_soundboard.php?ADD=162111111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Add A New Soundboard Entry"); ?></FONT></a> &nbsp; | &nbsp; <a href="admin_soundboard.php?ADD=162211111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Copy A Soundboard Entry"); ?></FONT></a> &nbsp; <?php } ?></TD></TR>
 	<?php
 		}
 	}
