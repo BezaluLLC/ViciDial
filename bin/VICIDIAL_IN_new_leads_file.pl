@@ -10,7 +10,7 @@
 #
 # NOTE: the machine this is run on must have a servers entry in the database
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES
@@ -60,9 +60,10 @@
 # 150312-1458 - Allow single quotes in standard formats
 # 151104-0938 - Added t2r13csv format
 # 160602-1411 - Added t2r25csv format
+# 160628-1435 - Added t2r25xcsv format
 #
 
-$version = '160602-1411';
+$version = '160628-1435';
 
 $secX = time();
 $MT[0]='';
@@ -229,6 +230,8 @@ if (length($ARGV[0])>1)
 		print "t2r25csv:\n";
 		print "1,2,last_name,province,first_name,phone_number,7,address1,city,state,postal_code,12,address2,email,15,16,address3,18,19,20,21,comments,23,24,25\n";
 		print "x,x,Smith,sale,Bob,3125551212,x,1234 Main St.,Chicago,IL,60987,x,mid-block,bob@asdf.com,x,x,2nd floor,x,x,x,x,last purchase,x,x,x\n\n";		
+		print "t2r25xcsv:\n";
+		print "phone_number,x,last_name,x,province,first_name,x,x,address1,city,state,postal_code,address2,email,x,x,x,x,x,x,comments,x,x,x,address3\n\n";		
 		print "twotab:\n";
 		print "UniqueID,PhoneNumber\n";
 		print "110306742,3125556666\n\n";
@@ -1020,6 +1023,54 @@ foreach(@FILES)
 				$email =				$m[13];
 				$security_phrase =		'';		
 				$comments =				$m[21];
+				$rank =					'0';
+				$owner =				'';
+				$called_count =			0;
+				$status =				'NEW';
+
+				$format_set++;
+				}
+
+		# This is the format for the t2r25xcsv lead files
+		# phone_number,x,last_name,x,province,first_name,x,x,address1,city,state,postal_code,address2,email,x,x,x,x,x,x,comments,x,x,x,address3
+
+			if ( ($format =~ /t2r25xcsv/) && ($format_set < 1) )
+				{
+				@name=@MT;
+				$number = $raw_number;
+				chomp($number);
+				$number =~ s/"(.+?[^\\])"/($ret = $1) =~ (s#,##g); $ret/ge;
+				$number =~ s/\t/\|/gi;
+				$number =~ s/&/and/gi;
+				$number =~ s/,/\|/gi;
+				$number =~ s/|\t|\r|\n|\l//gi;
+				@m = split(/\|/, $number);
+
+				$vendor_lead_code =		'';
+				$source_id =			'';
+				$list_id =				'995';
+				$phone_code =			'1';
+				$phone_number =			$m[0];		chomp($phone_number);	$phone_number =~ s/\D//gi;
+					$USarea = 			substr($phone_number, 0, 3);
+				$title =				'';
+				$first_name =			$m[5];		chomp($first_name);
+				$last_name =			$m[2];
+
+				$middle_initial =		'';
+				$address1 =				$m[8];
+				$address2 =				$m[12];
+				$address3 =				$m[24];
+				$city =					$m[9];
+				$state =				$m[10];
+				$province =				$m[4];
+				$postal_code =			$m[11];
+				$country =				'USA';
+				$gender =				'';
+				$date_of_birth =		'';
+				$alt_phone =			'';
+				$email =				$m[13];
+				$security_phrase =		'';		
+				$comments =				$m[20];
 				$rank =					'0';
 				$owner =				'';
 				$called_count =			0;
