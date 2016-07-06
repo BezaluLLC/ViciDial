@@ -270,6 +270,10 @@ OTHER CHANGES:
 
 72. Added the ability to copy audio store files with a new name
 
+73. Started process to redesign the Agent Screen, added Screen Colors 
+	definitions, removed san-serif fonts, changed loading/login/logout 
+	screens, logging of browser width/height.
+
 
 
 

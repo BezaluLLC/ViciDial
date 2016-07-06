@@ -406,10 +406,11 @@
 # 160331-2130 - Fixed missing start and dispo call url variables, issue #938
 # 160414-0944 - Added default_phone_code value instead of hard-coded '1'
 # 160510-0840 - Added callback_lead_status as dispo_call_url variable
+# 160706-1437 - Added font styles to text in many places
 #
 
-$version = '2.12-300';
-$build = '160510-0840';
+$version = '2.12-301';
+$build = '160706-1437';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=654;
@@ -13082,20 +13083,20 @@ if ($ACTION == 'CALLLOGview')
 		$u++;
 		echo "<tr $bgcolor>";
 		echo "<td><font size=1>$u</td>";
-		echo "<td align=right><font size=2>$ALLcall_date[$i]</td>";
-		echo "<td align=right><font size=2> $ALLlength_in_sec[$i]</td>\n";
-		echo "<td align=right><font size=2> $ALLstatus[$i]</td>\n";
-		echo "<td align=right><font size=2> $ALLphone_code[$i] $phone_number_display </td>\n";
-		echo "<td align=right><font size=2> $Allfirst_name[$i] $Alllast_name[$i] </td>\n";
-		echo "<td align=right><font size=2> $ALLcampaign_id[$i] </td>\n";
-		echo "<td align=right><font size=2> $ALLin_out[$i] </td>\n";
-		echo "<td align=right><font size=2> $ALLalt_dial[$i] </td>\n";
-		echo "<td align=right><font size=2> $ALLhangup_reason[$i] </td>\n";
-		echo "<td align=right><font size=2> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i]);return false;\"> "._QXZ("INFO")."</A> </td>\n";
+		echo "<td align=right><font class='sb_text'>$ALLcall_date[$i]</td>";
+		echo "<td align=right><font class='sb_text'> $ALLlength_in_sec[$i]</td>\n";
+		echo "<td align=right><font class='sb_text'> $ALLstatus[$i]</td>\n";
+		echo "<td align=right><font class='sb_text'> $ALLphone_code[$i] $phone_number_display </td>\n";
+		echo "<td align=right><font class='sb_text'> $Allfirst_name[$i] $Alllast_name[$i] </td>\n";
+		echo "<td align=right><font class='sb_text'> $ALLcampaign_id[$i] </td>\n";
+		echo "<td align=right><font class='sb_text'> $ALLin_out[$i] </td>\n";
+		echo "<td align=right><font class='sb_text'> $ALLalt_dial[$i] </td>\n";
+		echo "<td align=right><font class='sb_text'> $ALLhangup_reason[$i] </td>\n";
+		echo "<td align=right><font class='sb_text'> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i]);return false;\"> "._QXZ("INFO")."</A> </td>\n";
 		if ($manual_dial_filter > 0)
-			{echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]','','YES');return false;\"> "._QXZ("DIAL")." </A> </td>\n";}
+			{echo "<td align=right><font class='sb_text'> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]','','YES');return false;\"> "._QXZ("DIAL")." </A> </td>\n";}
 		else
-			{echo "<td align=right><font size=2> "._QXZ("DIAL")." </td>\n";}
+			{echo "<td align=right><font class='sb_text'> "._QXZ("DIAL")." </td>\n";}
 		echo "</tr>\n";
 		}
 
@@ -13395,7 +13396,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 					}
 
 				if ($g < 1)
-					{echo "<tr bgcolor=white><td colspan=10 align=center>"._QXZ("No results found")."</td></tr>";}
+					{echo "<tr bgcolor=white><td colspan=10 align=center><font class='sh_text'>"._QXZ("No results found")."</font></td></tr>";}
 
 				$u=0;
 				while ($g > $u) 
@@ -13411,24 +13412,24 @@ if ($ACTION == 'SEARCHRESULTSview')
 					$u++;
 					echo "<tr $bgcolor>";
 					echo "<td><font size=1>$u</td>";
-					echo "<td align=right><font size=2>$ALLname[$i] </td>\n";
-					echo "<td align=right><font size=2> $ALLphone_code[$i] $ALLphone_number[$i] </td>\n";
-					echo "<td align=right><font size=2> $ALLstatus[$i] </td>\n";
-					echo "<td align=right><font size=2> $ALLcall_date[$i] </td>\n";
-					echo "<td align=right><font size=2> $ALLcity[$i] </td>\n";
-					echo "<td align=right><font size=2> $ALLstate[$i]</td>\n";
-					echo "<td align=right><font size=2> $ALLpostal_code[$i] </td>\n";
-					echo "<td align=right><font size=2> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i],'','$inbound_lead_search');return false;\"> "._QXZ("INFO")." </A> </td>\n";
+					echo "<td align=right><font class=\"sb_text\">$ALLname[$i] </font></td>\n";
+					echo "<td align=right><font class=\"sb_text\"> $ALLphone_code[$i] $ALLphone_number[$i] </font></td>\n";
+					echo "<td align=right><font class=\"sb_text\"> $ALLstatus[$i] </font></td>\n";
+					echo "<td align=right><font class=\"sb_text\"> $ALLcall_date[$i] </font></td>\n";
+					echo "<td align=right><font class=\"sb_text\"> $ALLcity[$i] </font></td>\n";
+					echo "<td align=right><font class=\"sb_text\"> $ALLstate[$i]</font></td>\n";
+					echo "<td align=right><font class=\"sb_text\"> $ALLpostal_code[$i] </font></td>\n";
+					echo "<td align=right><font class=\"sb_text\"> <a href=\"#\" onclick=\"VieWLeaDInfO($ALLlead_id[$i],'','$inbound_lead_search');return false;\"> "._QXZ("INFO")." </A> </font></td>\n";
 					if ($inbound_lead_search < 1)
 						{
 						if ($manual_dial_filter > 0)
-							{echo "<td align=right><font size=2> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('LEADSEARCH','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]','','YES');return false;\"> "._QXZ("DIAL")." </A> </td>\n";}
+							{echo "<td align=right><font class=\"sb_text\"> <a href=\"#\" onclick=\"NeWManuaLDiaLCalL('LEADSEARCH','$ALLphone_code[$i]','$ALLphone_number[$i]','$ALLlead_id[$i]','','YES');return false;\"> "._QXZ("DIAL")." </A> </font></td>\n";}
 						else
-							{echo "<td align=right><font size=2> "._QXZ("DIAL")." </td>\n";}
+							{echo "<td align=right><font class=\"sb_text\"> "._QXZ("DIAL")." </font></td>\n";}
 						}
 					else
 						{
-						echo "<td align=right><font size=2> <a href=\"#\" onclick=\"LeaDSearcHSelecT('$ALLlead_id[$i]');return false;\">"._QXZ("SELECT")."</A> </td>\n";
+						echo "<td align=right><font class=\"sb_text\"> <a href=\"#\" onclick=\"LeaDSearcHSelecT('$ALLlead_id[$i]');return false;\">"._QXZ("SELECT")."</A> </font></td>\n";
 						}
 					echo "</tr>\n";
 					}
@@ -13442,7 +13443,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtL,'00381',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 			else
-				{echo "<tr bgcolor=white><td colspan=10 align=center>"._QXZ("No results found")."</td></tr>";}
+				{echo "<tr bgcolor=white><td colspan=10 align=center><font class='sh_text'>"._QXZ("No results found")."</font></td></tr>";}
 
 			echo "</TABLE>";
 			echo "<BR>";
@@ -13753,16 +13754,16 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 					$u++;
 					echo "<tr $bgcolor>";
 					echo "<td><font size=1>$u </td>";
-					echo "<td align=left> <font size=3>$ALLfirst[$i] </td>\n";
-					echo "<td align=left> <font size=3>$ALLlast[$i] </td>\n";
-					echo "<td align=left> <font size=3> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLoffice_num[$i]','','N','Y');return false;\">$ALLoffice_num[$i]</a> </td>\n";
-					echo "<td align=left> <font size=3> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLcell_num[$i]','','N','Y');return false;\">$ALLcell_num[$i]</a> </td>\n";
-					echo "<td align=left> <font size=3> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLother_num1[$i]','','N','Y');return false;\">$ALLother_num1[$i]</a> </td>\n";
-					echo "<td align=left> <font size=3> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLother_num2[$i]','','N','Y');return false;\">$ALLother_num2[$i]</a> </td>\n";
-					echo "<td align=left> <font size=3>$ALLbu_name[$i] </td>\n";
+					echo "<td align=left> <font size=3 face=\"Arial, Helvetica, sans-serif\">$ALLfirst[$i] </td>\n";
+					echo "<td align=left> <font size=3 face=\"Arial, Helvetica, sans-serif\">$ALLlast[$i] </td>\n";
+					echo "<td align=left> <font size=3 face=\"Arial, Helvetica, sans-serif\"> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLoffice_num[$i]','','N','Y');return false;\">$ALLoffice_num[$i]</a> </td>\n";
+					echo "<td align=left> <font size=3 face=\"Arial, Helvetica, sans-serif\"> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLcell_num[$i]','','N','Y');return false;\">$ALLcell_num[$i]</a> </td>\n";
+					echo "<td align=left> <font size=3 face=\"Arial, Helvetica, sans-serif\"> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLother_num1[$i]','','N','Y');return false;\">$ALLother_num1[$i]</a> </td>\n";
+					echo "<td align=left> <font size=3 face=\"Arial, Helvetica, sans-serif\"> &nbsp; <a href=\"#\" onclick=\"PresetSelect_submit('$ALLfirst[$i] $ALLlast[$i]','$ALLother_num2[$i]','','N','Y');return false;\">$ALLother_num2[$i]</a> </td>\n";
+					echo "<td align=left> <font size=3 face=\"Arial, Helvetica, sans-serif\">$ALLbu_name[$i] </td>\n";
 					echo "</tr>\n";
 					echo "<tr $bgcolor>";
-					echo "<td colspan=8><font size=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <B>"._QXZ("Dept:")."</B> $ALLdepartment[$i] &nbsp; &nbsp; &nbsp; <B>"._QXZ("Group").":</B> $ALLgroup_name[$i] &nbsp; &nbsp; &nbsp; <B>"._QXZ("Job:")."</B> $ALLjob_title[$i] &nbsp; &nbsp; &nbsp; <B>"._QXZ("Location:")."</B> $ALLlocation[$i]</td>";
+					echo "<td colspan=8><font class='sh_text'> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <B>"._QXZ("Dept:")."</B> $ALLdepartment[$i] &nbsp; &nbsp; &nbsp; <B>"._QXZ("Group").":</B> $ALLgroup_name[$i] &nbsp; &nbsp; &nbsp; <B>"._QXZ("Job:")."</B> $ALLjob_title[$i] &nbsp; &nbsp; &nbsp; <B>"._QXZ("Location:")."</B> $ALLlocation[$i]</td>";
 					echo "</tr>\n";
 					}
 
@@ -13837,11 +13838,11 @@ if ($ACTION == 'LEADINFOview')
 				{
 				$row=mysqli_fetch_row($rslt);
 				echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=500>";
-				echo "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Callback Status:")." &nbsp; </td><td ALIGN=left><font size=2>$row[0]</td></tr>";
-				echo "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Callback Lead Status:")." &nbsp; </td><td ALIGN=left><font size=2>$row[7]</td></tr>";
-				echo "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Callback Entry Time:")." &nbsp; </td><td ALIGN=left><font size=2>$row[1]</td></tr>";
-				echo "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Callback Trigger Time:")." &nbsp; </td><td ALIGN=left><font size=2>$row[2]</td></tr>";
-				echo "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Callback Comments:")." &nbsp; </td><td ALIGN=left><font size=2>$row[6]</td></tr>";
+				echo "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Callback Status:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[0]</td></tr>";
+				echo "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Callback Lead Status:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[7]</td></tr>";
+				echo "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Callback Entry Time:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[1]</td></tr>";
+				echo "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Callback Trigger Time:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[2]</td></tr>";
+				echo "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Callback Comments:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[6]</td></tr>";
 				echo "</TABLE>";
 				echo "<BR>";
 				$hide_dial_links++;
@@ -14065,17 +14066,17 @@ if ($ACTION == 'LEADINFOview')
 				}
 			##### END check for postal_code and phone time zones if alert enabled
 
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Status:")." &nbsp; </td><td ALIGN=left><font size=2>$row[0]</td></tr>";
+			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Status:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[0]</td></tr>";
 			if ( ($label_vendor_lead_code!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_vendor_lead_code: &nbsp; </td><td ALIGN=left><font size=2>$row[1]</td></tr>";}
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("List ID:")." &nbsp; </td><td ALIGN=left><font size=2>$row[2]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Timezone:")." &nbsp; </td><td ALIGN=left><font size=2>$row[3]</td></tr>";
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Called Since Last Reset:")." &nbsp; </td><td ALIGN=left><font size=2>$row[4]</td></tr>";
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_vendor_lead_code: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[1]</td></tr>";}
+			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("List ID:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[2]</td></tr>";
+			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Timezone:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[3]</td></tr>";
+			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Called Since Last Reset:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[4]</td></tr>";
 			if ( ($label_phone_code!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_code: &nbsp; </td><td ALIGN=left><font size=2>$row[5]</td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_phone_code: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[5]</td></tr>";}
 			if ( ($label_phone_number!='---HIDE---') or ($label_hide_field_logs=='N') )
 				{
-				$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_phone_number: &nbsp; </td><td ALIGN=left><font size=2>$row[6] - &nbsp; &nbsp; &nbsp; &nbsp; ";
+				$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_phone_number: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[6] - &nbsp; &nbsp; &nbsp; &nbsp; ";
 				if ($hide_dial_links < 1)
 					{
 					if ($manual_dial_filter > 0)
@@ -14087,41 +14088,41 @@ if ($ACTION == 'LEADINFOview')
 			if ( ($label_phone_number=='---HIDE---') and ($hide_dial_links < 1) )
 				{
 				if ($manual_dial_filter > 0)
-					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Dial Link:")." &nbsp; </td><td ALIGN=left><font size=2><a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id,'','YES');return false;\"> "._QXZ("DIAL")." </a>";}
+					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Dial Link:")." &nbsp; </td><td ALIGN=left><font class='sb_text'><a href=\"#\" onclick=\"NeWManuaLDiaLCalL('CALLLOG',$row[5], $row[6], $lead_id,'','YES');return false;\"> "._QXZ("DIAL")." </a>";}
 				else
-					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Dial Link:")." &nbsp; </td><td ALIGN=left><font size=2>"._QXZ(" DIAL ");}
+					{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Dial Link:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>"._QXZ(" DIAL ");}
 				}
 			$INFOout .= "</td></tr>";
 			if ($inbound_lead_search > 0)
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right colspan=2><font size=2><a href=\"#\" onclick=\"LeaDSearcHSelecT('$lead_id');return false;\">"._QXZ("SELECT THIS LEAD")."</a></td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right colspan=2><font class='sb_text'><a href=\"#\" onclick=\"LeaDSearcHSelecT('$lead_id');return false;\">"._QXZ("SELECT THIS LEAD")."</a></td></tr>";}
 			if ( ($label_title!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_title: &nbsp; </td><td ALIGN=left><font size=2>$row[7]</td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_title: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[7]</td></tr>";}
 			if ( ($label_first_name!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_first_name: &nbsp; </td><td ALIGN=left><font size=2>$row[8]</td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_first_name: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[8]</td></tr>";}
 			if ( ($label_middle_initial!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_middle_initial: &nbsp; </td><td ALIGN=left><font size=2>$row[9]</td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_middle_initial: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[9]</td></tr>";}
 			if ( ($label_last_name!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_last_name: &nbsp; </td><td ALIGN=left><font size=2>$row[10]</td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_last_name: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[10]</td></tr>";}
 			if ( ($label_address1!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address1: &nbsp; </td><td ALIGN=left><font size=2>$row[11]</td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_address1: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[11]</td></tr>";}
 			if ( ($label_address2!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address2: &nbsp; </td><td ALIGN=left><font size=2>$row[12]</td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_address2: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[12]</td></tr>";}
 			if ( ($label_address3!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_address3: &nbsp; </td><td ALIGN=left><font size=2>$row[13]</td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_address3: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[13]</td></tr>";}
 			if ( ($label_city!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_city: &nbsp; </td><td ALIGN=left><font size=2>$row[14]</td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_city: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[14]</td></tr>";}
 			if ( ($label_state!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_state: &nbsp; </td><td ALIGN=left><font size=2>$row[15]</td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_state: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[15]</td></tr>";}
 			if ( ($label_province!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_province: &nbsp; </td><td ALIGN=left><font size=2>$row[16]</td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_province: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[16]</td></tr>";}
 			if ( ($label_postal_code!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_postal_code: &nbsp; </td><td ALIGN=left><font size=2>$row[17]</td></tr>";}
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Country: &nbsp; </td><td ALIGN=left><font size=2>$row[18]</td></tr>";
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_postal_code: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[17]</td></tr>";}
+			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>Country: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[18]</td></tr>";
 			if ( ($label_gender!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_gender: &nbsp; </td><td ALIGN=left><font size=2>$row[19]</td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_gender: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[19]</td></tr>";}
 			if ( ($label_alt_phone!='---HIDE---') or ($label_hide_field_logs=='N') )
 				{
-				$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_alt_phone: &nbsp; </td><td ALIGN=left><font size=2>$row[20] - &nbsp; &nbsp; &nbsp; &nbsp; ";
+				$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_alt_phone: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[20] - &nbsp; &nbsp; &nbsp; &nbsp; ";
 				if ($hide_dial_links < 1)
 					{
 					if ($manual_dial_filter > 0)
@@ -14132,17 +14133,17 @@ if ($ACTION == 'LEADINFOview')
 				}
 			$INFOout .= "</td></tr>";
 			if ( ($label_email!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_email: &nbsp; </td><td ALIGN=left><font size=2>$row[21]</td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_email: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[21]</td></tr>";}
 			if ( ($label_security_phrase!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_security_phrase: &nbsp; </td><td ALIGN=left><font size=2>$row[22]</td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_security_phrase: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[22]</td></tr>";}
 			if ( ($label_comments!='---HIDE---') or ($label_hide_field_logs=='N') )
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$label_comments: &nbsp; </td><td ALIGN=left><font size=2>$row[23]</td></tr>";}
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$label_comments: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[23]</td></tr>";}
 			if ($hide_call_log_info=='N')
-				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Called Count:")." &nbsp; </td><td ALIGN=left><font size=2>$row[24]</td></tr>";}
-			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>"._QXZ("Last Local Call Time:")." &nbsp; </td><td ALIGN=left><font size=2>$row[25]</td></tr>";
-	#		$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Rank: &nbsp; </td><td ALIGN=left><font size=2>$row[26]</td></tr>";
-	#		$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Owner: &nbsp; </td><td ALIGN=left><font size=2>$row[27]</td></tr>";
-	#		$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>Entry List ID: &nbsp; </td><td ALIGN=left><font size=2>$row[28]</td></tr>";
+				{$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Called Count:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[24]</td></tr>";}
+			$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Last Local Call Time:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[25]</td></tr>";
+	#		$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>Rank: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[26]</td></tr>";
+	#		$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>Owner: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[27]</td></tr>";
+	#		$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>Entry List ID: &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[28]</td></tr>";
 
 			$entry_list_id = $row[28];
 			$CFoutput='';
@@ -14219,7 +14220,7 @@ if ($ACTION == 'LEADINFOview')
 										}
 									}
 
-								$INFOout .= "<tr bgcolor=white><td ALIGN=right><font size=2>$A_field_name[$o]: &nbsp; </td><td ALIGN=left><font size=2>$A_field_value</td></tr>";
+								$INFOout .= "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>$A_field_name[$o]: &nbsp; </td><td ALIGN=left><font class='sb_text'>$A_field_value</td></tr>";
 								
 								$o++;
 								}
@@ -14387,15 +14388,15 @@ if ($ACTION == 'LEADINFOview')
 				$u++;
 				$NOTESout .= "<tr $bgcolor>";
 				$NOTESout .= "<td><font size=1>$u</td>";
-				$NOTESout .= "<td align=right><font size=2>$ALLcall_date[$i]</td>";
-				$NOTESout .= "<td align=right><font size=2> $ALLuser[$i]</td>\n";
-				$NOTESout .= "<td align=right><font size=2> $ALLlength_in_sec[$i]</td>\n";
-				$NOTESout .= "<td align=right><font size=2> $ALLstatus[$i]</td>\n";
-				$NOTESout .= "<td align=right><font size=2> $ALLphone_code[$i] $phone_number_display </td>\n";
-				$NOTESout .= "<td align=right><font size=2> $ALLcampaign_id[$i] </td>\n";
-				$NOTESout .= "<td align=right><font size=2> $ALLin_out[$i] </td>\n";
-				$NOTESout .= "<td align=right><font size=2> $ALLalt_dial[$i] </td>\n";
-				$NOTESout .= "<td align=right><font size=2> $ALLhangup_reason[$i] </td>\n";
+				$NOTESout .= "<td align=right><font class='sb_text'>$ALLcall_date[$i]</td>";
+				$NOTESout .= "<td align=right><font class='sb_text'> $ALLuser[$i]</td>\n";
+				$NOTESout .= "<td align=right><font class='sb_text'> $ALLlength_in_sec[$i]</td>\n";
+				$NOTESout .= "<td align=right><font class='sb_text'> $ALLstatus[$i]</td>\n";
+				$NOTESout .= "<td align=right><font class='sb_text'> $ALLphone_code[$i] $phone_number_display </td>\n";
+				$NOTESout .= "<td align=right><font class='sb_text'> $ALLcampaign_id[$i] </td>\n";
+				$NOTESout .= "<td align=right><font class='sb_text'> $ALLin_out[$i] </td>\n";
+				$NOTESout .= "<td align=right><font class='sb_text'> $ALLalt_dial[$i] </td>\n";
+				$NOTESout .= "<td align=right><font class='sb_text'> $ALLhangup_reason[$i] </td>\n";
 				$NOTESout .= "</TR><TR>";
 				$NOTESout .= "<td></td>";
 				$NOTESout .= "<TD $bgcolor COLSPAN=9 align=left><font style=\"font-size:11px;font-family:sans-serif;\"> $Allcall_notes[$i] </font></TD>";
@@ -14443,10 +14444,10 @@ if ($ACTION == 'LEADINFOview')
 
 				$NOTESout .= "<tr $bgcolor>";
 				$NOTESout .= "<td><font size=1>$u</td>";
-				$NOTESout .= "<td align=left><font size=2> &nbsp; $row[3]</td>";
-				$NOTESout .= "<td align=left><font size=2> &nbsp; $row[4] </td>\n";
-				$NOTESout .= "<td align=left><font size=2> &nbsp; $row[7]</td>\n";
-				$NOTESout .= "<td align=left><font size=2> &nbsp; $row[5]</td>\n";
+				$NOTESout .= "<td align=left><font class='sb_text'> &nbsp; $row[3]</td>";
+				$NOTESout .= "<td align=left><font class='sb_text'> &nbsp; $row[4] </td>\n";
+				$NOTESout .= "<td align=left><font class='sb_text'> &nbsp; $row[7]</td>\n";
+				$NOTESout .= "<td align=left><font class='sb_text'> &nbsp; $row[5]</td>\n";
 				$NOTESout .= "<td align=left><font size=1> &nbsp; $row[8] </td>\n";
 				$NOTESout .= "</tr>\n";
 				$NOTESout .= "<tr>";
