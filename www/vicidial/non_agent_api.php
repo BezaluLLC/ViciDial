@@ -107,10 +107,11 @@
 # 160104-1229 - Added detection of dead chats to a few functions
 # 160211-1232 - Fixed issue with blind monitoring, Issue #924
 # 160603-1041 - Added update_campaign function
+# 160709-2233 - Added lead_field_info function
 #
 
-$version = '2.12-83';
-$build = '160603-1041';
+$version = '2.12-84';
+$build = '160709-2233';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -401,6 +402,8 @@ if (isset($_GET["dial_method"]))			{$dial_method=$_GET["dial_method"];}
 	elseif (isset($_POST["dial_method"]))	{$dial_method=$_POST["dial_method"];}
 if (isset($_GET["dial_timeout"]))			{$dial_timeout=$_GET["dial_timeout"];}
 	elseif (isset($_POST["dial_timeout"]))	{$dial_timeout=$_POST["dial_timeout"];}
+if (isset($_GET["field_name"]))				{$field_name=$_GET["field_name"];}
+	elseif (isset($_POST["field_name"]))	{$field_name=$_POST["field_name"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -579,6 +582,7 @@ if ($non_latin < 1)
 	$reset_hopper = preg_replace('/[^NY]/','',$reset_hopper);
 	$dial_method = preg_replace('/[^-_0-9a-zA-Z]/','',$dial_method);
 	$dial_timeout = preg_replace('/[^0-9]/','',$dial_timeout);
+	$field_name = preg_replace('/[^-_0-9a-zA-Z]/','',$field_name);
 	}
 else
 	{
@@ -6050,6 +6054,260 @@ if ($function == 'callid_info')
 	}
 ################################################################################
 ### callid_info - outputs information about a call based upon the caller_code(or call ID)
+################################################################################
+
+
+
+
+
+################################################################################
+### lead_field_info - pulls the value of one field of a lead
+################################################################################
+if ($function == 'lead_field_info')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 6 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "lead_field_info USER DOES NOT HAVE PERMISSION TO GET LEAD INFO";
+			echo "$result: $result_reason: |$user|$allowed_user|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$lead_search_SQL='';
+			$search_ready=0;
+
+			if ( (strlen($lead_id)>0) and (strlen($lead_id)<12) and (strlen($field_name)>0) )
+				{
+				$lead_search_SQL .= "where lead_id='$lead_id'";
+				$search_ready++;
+				}
+			if ($search_ready < 1)
+				{
+				$result = 'ERROR';
+				$result_reason = "lead_field_info INVALID SEARCH PARAMETERS";
+				$data = "$user|$lead_id|$field_name";
+				echo "$result: $result_reason: $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB) {$MAIN.="|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+
+				$LOGallowed_campaignsSQL='';
+				$whereLOGallowed_campaignsSQL='';
+				if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
+					{
+					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+					$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					}
+
+				$stmt="SELECT list_id,entry_list_id from vicidial_list $lead_search_SQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$lead_exists = mysqli_num_rows($rslt);
+
+				if ($lead_exists > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$lead_list_id =			$row[0];
+					$lead_entry_list_id =	$row[1];
+	
+					$stmt="SELECT count(*) from vicidial_lists where list_id='$lead_list_id' $LOGallowed_campaignsSQL;";
+					if ($DB) {$MAIN.="|$stmt|\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					$list_exists =	$row[0];
+
+					if ($list_exists > 0)
+						{
+						if ($custom_fields == 'Y')
+							{
+							$stmt="SELECT admin_hide_lead_data,admin_hide_phone_data,admin_cf_show_hidden from vicidial_users where user='$user';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$row=mysqli_fetch_row($rslt);
+							$LOGadmin_hide_lead_data =		$row[0];
+							$LOGadmin_hide_phone_data =		$row[1];
+							$LOGadmin_cf_show_hidden =		$row[2];
+							if ($DB) {echo "CF user: |$LOGadmin_hide_lead_data|$LOGadmin_hide_phone_data|$LOGadmin_cf_show_hidden|\n";}
+
+							if (strlen($list_id)>1)
+								{$lead_entry_list_id = $list_id;}
+
+							if (preg_match("/cf_encrypt/",$active_modules))
+								{
+								$enc_fields=0;
+								$stmt = "SELECT count(*) from vicidial_lists_fields where field_encrypt='Y' and list_id='$lead_entry_list_id';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								if ($DB) {echo "$stmt\n";}
+								$enc_field_ct = mysqli_num_rows($rslt);
+								if ($enc_field_ct > 0)
+									{
+									$row=mysqli_fetch_row($rslt);
+									$enc_fields =	$row[0];
+									}
+								if ($enc_fields > 0)
+									{
+									$stmt = "SELECT field_label from vicidial_lists_fields where field_encrypt='Y' and list_id='$lead_entry_list_id';";
+									$rslt=mysql_to_mysqli($stmt, $link);
+									if ($DB) {echo "$stmt\n";}
+									$enc_field_ct = mysqli_num_rows($rslt);
+									$r=0;
+									while ($enc_field_ct > $r)
+										{
+										$row=mysqli_fetch_row($rslt);
+										$encrypt_list .= "$row[0],";
+										$r++;
+										}
+									$encrypt_list = ",$encrypt_list";
+									}
+								if ($LOGadmin_cf_show_hidden < 1)
+									{
+									$hide_fields=0;
+									$stmt = "SELECT count(*) from vicidial_lists_fields where field_show_hide!='DISABLED' and list_id='$lead_entry_list_id';";
+									$rslt=mysql_to_mysqli($stmt, $link);
+									if ($DB) {echo "$stmt\n";}
+									$hide_field_ct = mysqli_num_rows($rslt);
+									if ($hide_field_ct > 0)
+										{
+										$row=mysqli_fetch_row($rslt);
+										$hide_fields =	$row[0];
+										}
+									if ($hide_fields > 0)
+										{
+										$stmt = "SELECT field_label from vicidial_lists_fields where field_show_hide!='DISABLED' and list_id='$lead_entry_list_id';";
+										$rslt=mysql_to_mysqli($stmt, $link);
+										if ($DB) {echo "$stmt\n";}
+										$hide_field_ct = mysqli_num_rows($rslt);
+										$r=0;
+										while ($hide_field_ct > $r)
+											{
+											$row=mysqli_fetch_row($rslt);
+											$hide_list .= "$row[0],";
+											$r++;
+											}
+										$hide_list = ",$hide_list";
+										}
+									}
+								}
+
+							$stmt="SELECT $field_name from custom_$lead_entry_list_id $lead_search_SQL;";
+							}
+						else
+							{
+							$stmt="SELECT $field_name from vicidial_list $lead_search_SQL;";
+							}
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($DB) {echo "$stmt\n";}
+						$field_exists = mysqli_num_rows($rslt);
+
+						if ($field_exists > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$output =			$row[0];
+
+							if ($enc_fields > 0)
+								{
+								$field_enc='';   $field_enc_all='';
+								if ($DB) {echo "|$field_name|$encrypt_list|$hide_list|\n";}
+								if ( (preg_match("/,$field_name,/",$encrypt_list)) and (strlen($output) > 0) )
+									{
+									if ($DB) {echo "DECRYPTING $field_name\n";}
+									exec("../agc/aes.pl --decrypt --text=$output", $field_enc);
+									$field_enc_ct = count($field_enc);
+									$k=0;
+									while ($field_enc_ct > $k)
+										{
+										$field_enc_all .= $field_enc[$k];
+										$k++;
+										}
+									$field_enc_all = preg_replace("/CRYPT: |\n|\r|\t/",'',$field_enc_all);
+									$output = base64_decode($field_enc_all);
+									}
+								}
+							if ( ( (preg_match("/,$field_name,/",$hide_list)) or ($LOGadmin_hide_lead_data > 0) ) and (strlen($output) > 0) )
+								{
+								$field_temp_val = $output;
+								$output = preg_replace("/./",'X',$field_temp_val);
+								}
+
+							echo "$output";
+
+							$result = 'SUCCESS';
+							$data = "$user|$lead_id|$stage";
+							$result_reason = "lead_field_info $output";
+
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						else
+							{
+							$result = 'ERROR';
+							$result_reason = "lead_field_info LIST FIELD NOT FOUND";
+							$data = "$user|$lead_id";
+							echo "$result: $result_reason: $data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						}
+					else
+						{
+						$result = 'ERROR';
+						$result_reason = "lead_field_info LIST NOT FOUND";
+						$data = "$user|$lead_id";
+						echo "$result: $result_reason: $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				else
+					{
+					$result = 'ERROR';
+					$result_reason = "lead_field_info LEAD NOT FOUND";
+					$data = "$user|$lead_id";
+					echo "$result: $result_reason: $data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### lead_field_info - pulls the value of one field of a lead
 ################################################################################
 
 

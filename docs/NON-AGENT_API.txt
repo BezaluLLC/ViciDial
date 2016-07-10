@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2016-06-03
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2016-07-09
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -36,6 +36,7 @@ user_group_status - real-time status of one or more user groups
 in_group_status - real-time status of one or more in groups
 agent_status - real-time status of one user
 callid_info - information about a call based upon the caller_code or call ID
+lead_field_info - pulls the value of one field of a lead
 server_refresh - forces a conf file refresh on all telco servers in the cluster
 check_phone_number - allows you to check if a phone number is valid and dialable
 logged_in_agents - list of agents that are logged in to the system
@@ -112,6 +113,7 @@ Changes:
 150808-1438 - Added compatibility for custom fields data option
 151226-0954 - Added session_id(conf_exten) field to output of agent_status, and added logged_in_agents function
 160603-1041 - Added update_campaign function
+160709-2219 - Added lead_field_info function
 
 
 API Functions use the 'function' variable
@@ -492,6 +494,37 @@ M4050908070000012345,725
 Setting "detail=YES" will result in the following output:
 call_id,custtime,call_date,campaign_id,list_id,status,user,phone
 M4050908070000012345,725,2014-01-24 09:26:09,TESTCAMP,999,A,6666,3125551212
+
+
+
+
+--------------------------------------------------------------------------------
+lead_field_info - pulls the value of one field of a lead
+
+NOTE: api user for this function must have user_level set to 7 or higher and "modify leads" enabled
+
+REQUIRED FIELDS-
+source -		description of what originated the API call (maximum 20 characters)
+lead_id -		16-40 characters
+field_name -		name of lead field to pull
+
+OPTIONAL FIELDS-
+custom_fields -		Y or N, default is N. If the field you want to pull is a custom field or not
+list_id -		override for the entry_list_id of a custom field
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=lead_field_info&field_name=cc_value&lead_id=1139739&custom_fields=Y&list_id=999888999777
+
+Example responses:
+ERROR: lead_field_info USER DOES NOT HAVE PERMISSION TO GET LEAD INFO - 6666|0
+ERROR: lead_field_info INVALID SEARCH PARAMETERS - 6666||
+ERROR: lead_field_info LIST NOT FOUND - 6666||
+ERROR: lead_field_info LEAD NOT FOUND - 6666||
+ERROR: lead_field_info LEAD FIELD NOT FOUND - 6666||
+
+A SUCCESS response will not show "SUCCESS", but instead will just print the value of the field:
+1234567890
+
 
 
 
