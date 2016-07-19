@@ -16,6 +16,7 @@
 # 160107-2318 - Bug fix for agent ending chat with manager
 # 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 # 160303-0051 - Added code for chat transfers
+# 160719-1043 - Bug fixes for non-owner chats, and other issues
 #
 
 require("dbconnect_mysqli.php");
@@ -657,7 +658,8 @@ if ($action=="agent_leave_chat" && $user && $chat_id) {
 			$ins_stmt="insert ignore into vicidial_chat_archive select * From vicidial_live_chats where chat_id='$chat_id'";
 			$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 
-			$del_stmt="delete from vicidial_live_chats where chat_id='$chat_id' and status='WAITING' and chat_creator='NONE'";
+			# DELETE ONLY IF NO ONE'S LEFT IN THE CHAT AFTER THIS POINT
+			$del_stmt="delete from vicidial_live_chats where chat_id='$chat_id' and status='WAITING' and chat_creator='NONE' and (select count(*) from vicidial_chat_participants where chat_id='$chat_id')=0;";
 			$del_rslt=mysql_to_mysqli($del_stmt, $link);
 		}
 	}
@@ -1019,7 +1021,7 @@ if ($action=="show_live_chats" && $user) {
 			$chat_member_name=$row[2];
 			$chat_creator=$row[3];
 			$vd_agent=$row[4];
-			$active_chats[$chat_id][]=array("$chat_member", "$chat_member_name", "in chat");
+			$active_chats[$chat_id][]=array("$chat_member", "$chat_member_name", "in chat", "$chat_creator");
 			if ($vd_agent=="Y") {
 				array_push($agents_in_chat, "$chat_member");
 			}
@@ -1032,16 +1034,22 @@ if ($action=="show_live_chats" && $user) {
 			$chat_id=$row[0];
 			$chat_member=$row[1];
 			$chat_member_name=$row[2];
+			$empty_chat_creator=$row[3];
 			if (!$active_chats[$chat_id]) {
-				$active_chats[$chat_id][]=array("$chat_member", "$chat_member_name", "absent");
+				$active_chats[$chat_id][]=array("$chat_member", "$chat_member_name", "absent", "$empty_chat_creator");
 			}
 		}
 	}
 	
 	if ($active_chats) {
-		echo "<font class='chat_title bold'>"._QXZ("Available Chats").":</font><BR><BR>";
+		echo "<font class='chat_title bold'>"._QXZ("Live Chats").":</font><BR><BR>";
 		while (list($key, $val)=each($active_chats)) {
-			echo "<li class='submenu' onClick=\"JoinChat('$key', '$chat_creator');\"><font class='chat_message bold'>"._QXZ("Chat ID")." #$key</font>\n";
+			# PREVENT CLICKING ON UNAVAILABLE CHAT ROOMS
+			if ($val[0][3]!="NONE") {
+				echo "<li class='submenu' onClick=\"JoinChat('$key', '$chat_creator');\"><font class='chat_message bold'>"._QXZ("Chat ID")." #$key</font>\n";
+			} else {
+				echo "<li class='submenu' onClick=\"chat_alert_box('Chat room is not available - no agent has been assigned it.')\"><font class='chat_message bold'>"._QXZ("Chat ID")." #$key</font>\n";
+			}
 			echo "\t<ul id=\"chat_members_$key\">\n";
 			while (list($subkey, $subval)=each($val)) {
 				if ($subval[2]=="absent") {
