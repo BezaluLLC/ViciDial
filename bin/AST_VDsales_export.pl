@@ -1,13 +1,13 @@
 #!/usr/bin/perl
 #
-# AST_VDsales_export.pl                version: 2.8
+# AST_VDsales_export.pl                version: 2.12
 #
 # This script is designed to gather sales for a VICIDIAL Outbound-only campaign and
 # post them to a directory
 #
 # /usr/share/astguiclient/AST_VDsales_export.pl --campaign=GOODB-GROUP1-GROUP3-GROUP4-SPECIALS-DNC_BEDS --output-format=fixed-as400 --sale-statuses=SALE --debug --filename=BEDSsaleMMDD.txt --date=yesterday --email-list=test@gmail.com --email-sender=test@test.com
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61219-1118 - First version
@@ -33,6 +33,7 @@
 # 130406-2146 - Added --email-post-audio
 # 130811-0902 - Added wget HTTP auth options and added more debug output
 # 140403-1603 - Added --skip-rec-xtra option to not perform additional recording lookups beyond vicidial_id
+# 160722-1140 - Added --nodatedir option
 #
 
 $txt = '.txt';
@@ -64,6 +65,8 @@ $INtalkmin=0;
 $email_post_audio=0;
 $http_user='';
 $http_pass='';
+$NODATEDIR = 0;	# Don't use dated directories for audio (default)
+$YEARDIR = 1;	# put dated directories in a year directory first
 
 $secX = time();
 $time = $secX;
@@ -182,6 +185,7 @@ if (length($ARGV[0])>1)
 		print "  [--ftp-login=XXXXXXXX] = FTP user\n";
 		print "  [--ftp-pass=XXXXXXXX] = FTP pass\n";
 		print "  [--ftp-dir=XXXXXXXX] = remote FTP server directory to post files to\n";
+		print "  [--nodatedir] = do not put into dated directories\n";
 		print "  [--with-transfer-audio] = Different method for finding audio, also grabs transfer audio filenames\n";
 		print "  [--skip-rec-xtra] = Do not perform additional recording lookups beyond vicidial_id\n";
 		print "  [--temp-dir=XXX] = If running more than one instance at a time, specify a unique temp directory suffix\n";
@@ -454,6 +458,11 @@ if (length($ARGV[0])>1)
 			{
 			$T=1;   $TEST=1;
 			print "\n----- TESTING -----\n\n";
+			}
+		if ($args =~ /--nodatedir/i)
+			{
+			$NODATEDIR=1;
+			if ($DB) {print "\n----- NO DATE DIRECTORIES -----\n\n";}
 			}
 		if ($args =~ /--email-list=/i)
 			{
@@ -879,15 +888,15 @@ if ( (length($Ealert)>5) && (length($email_list) > 3) )
 #	$VARREPORT_pass =	'test';
 #	$VARREPORT_dir =	'';
 
-$NODATEDIR = 0;	# Don't use dated directories for audio
-$YEARDIR = 1;	# put dated directories in a year directory first
-
 if ($ftp_transfer > 0)
 	{
+	$FTPdb=0;
+	if ($DBX>0) {$FTPdb=1;}
+
 	use Net::FTP;
 
-	if (!$Q) {print "Sending File Over FTP: $outfile\n";}
-	$ftp = Net::FTP->new("$VARREPORT_host", Port => $VARREPORT_port);
+	if (!$Q) {print "Sending File Over FTP: $outfile   ($VARREPORT_user @ $VARREPORT_host)\n";}
+	$ftp = Net::FTP->new("$VARREPORT_host", Port => $VARREPORT_port, Debug => "$FTPdb");
 	$ftp->login("$VARREPORT_user","$VARREPORT_pass");
 	$ftp->cwd("$VARREPORT_dir");
 	$ftp->put("$PATHweb/vicidial/server_reports/$outfile", "$outfile");
