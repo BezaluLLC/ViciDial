@@ -10,6 +10,7 @@
 # 160120-1943 - Added show_email variable
 # 160203-1051 - Added display of chat message after ending it
 # 160303-0055 - Added code for chat transfers
+# 160725-1711 - Fixed nested iframe issue
 #
 
 require("dbconnect_mysqli.php");
@@ -192,7 +193,6 @@ if ($action=="update_chat_window" && $chat_id) {
 	$status_rslt=mysql_to_mysqli($status_stmt, $link);
 	if (mysqli_num_rows($status_rslt)==0) {
 		# JCJ - comment out to display in Javascript function that calls this in parent page.
-		# echo "<font class='chat_title alert'>"._QXZ("Chat does not exist or has been closed").": $chat_id</font><BR/><BR/><font class='chat_title'><a href='".$chat_url."?group_id=$group_id&language=$language&available_agents=$available_agents&show_email=$show_email'>"._QXZ("GO BACK TO CHAT FORM")."</a></font>\n";
 		echo "Error|";
 
 		# Create color-coding for archived chat
@@ -263,7 +263,7 @@ if ($action=="update_chat_window" && $chat_id) {
 				echo "<input type='hidden' id='current_message_count' name='current_message_count' value='$current_messages'>\n";
 
 			} else {	
-				echo "<font class='chat_title bold'>"._QXZ("You have left chat").": $chat_id.</font><BR/><BR/><font class='chat_title'><a href='".$chat_url."?group_id=$group_id&language=$language&available_agents=$available_agents&show_email=$show_email'>"._QXZ("GO BACK TO CHAT FORM")."</a></font>\n";
+				echo "<font class='chat_title bold'>"._QXZ("You have left chat").": $chat_id.</font><BR/><BR/><font class='chat_title'><a href='".$chat_url."?group_id=$group_id&language=$language&available_agents=$available_agents&show_email=$show_email' target='_parent'>"._QXZ("GO BACK TO CHAT FORM")."</a></font>\n";
 			}
 		} else {
 			if ($status_row[1]=="NONE") {
