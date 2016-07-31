@@ -20,6 +20,7 @@
 # 150909-1417 - Added $active_only_default_campaigns option for admin.php
 # 160102-1249 - Added htmlconvert option for modify lead pages
 # 160106-1321 - Added disable_user_group_bulk_change option
+# 160715-0752 - Added graph_canvas_size option for HTML reports
 #
 
 # used by the realtime_report.php script
@@ -96,5 +97,8 @@ $htmlconvert=1;
 
 # disable the user_group_bulk_change.php utility
 $disable_user_group_bulk_change=0;
+
+# canvas size in pixels for Chartjs-style graphs (width and height)
+$graph_canvas_size=600;
 
 ?>

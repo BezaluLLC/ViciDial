@@ -15,6 +15,7 @@
 # 150516-1303 - Fixed Javascript element problem, Issue #857
 # 151125-1640 - Added search archive option
 # 160227-1138 - Uniform form format
+# 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 #
 
 $startMS = microtime();
@@ -47,6 +48,7 @@ if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search
 
 $report_name = 'Lists Pass Report';
 $db_source = 'M';
+
 $JS_text="<script language='Javascript'>\n";
 $JS_text.="function openNewWindow(url)\n";
 $JS_text.="  {\n";
@@ -428,6 +430,9 @@ $HEADER.="   .purple {color: white; background-color: purple}\n";
 $HEADER.="-->\n";
 $HEADER.=" </STYLE>\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
+require("chart_button.php");
+$HEADER.="<script src='chart/Chart.js'></script>\n"; 
+$HEADER.="<script language=\"JavaScript\" src=\"vicidial_chart_functions.js\"></script>\n";
 
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -634,187 +639,6 @@ else
 	$graph_stats=array();
 	$graph_stats2=array();
 	$max_stats2=array();
-
-	$GRAPH="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"LIST ID Summary\" class=\"horizontalgraph\">\n";
-	$GRAPH.="<caption align='top'>"._QXZ("LIST ID SUMMARY")."</caption>";
-	$GRAPH.="<tr>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("LIST")."</th>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("LEADS")."</th>\n";
-	$GRAPH.="</tr>\n";
-
-	$GRAPH2="<tr>
-	<th class='column_header grey_graph_cell' id='callstatsgraph1' ><a href='#' onClick=\"DrawGraph('CONTACTS1', '1'); return false;\">"._QXZ("CONTACTS 1st PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph2' ><a href='#' onClick=\"DrawGraph('CONTACTS2', '2'); return false;\">"._QXZ("CONTACTS 2nd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph3' ><a href='#' onClick=\"DrawGraph('CONTACTS3', '3'); return false;\">"._QXZ("CONTACTS 3rd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph4' ><a href='#' onClick=\"DrawGraph('CONTACTS4', '4'); return false;\">"._QXZ("CONTACTS 4th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph5' ><a href='#' onClick=\"DrawGraph('CONTACTS5', '5'); return false;\">"._QXZ("CONTACTS 5th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph6' ><a href='#' onClick=\"DrawGraph('CONTACTSALL', '6'); return false;\">"._QXZ("CONTACTS LIFE")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph7' ><a href='#' onClick=\"DrawGraph('CNTRATE1', '7'); return false;\">"._QXZ("CNT RATE 1st PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph8' ><a href='#' onClick=\"DrawGraph('CNTRATE2', '8'); return false;\">"._QXZ("CNT RATE 2nd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph9' ><a href='#' onClick=\"DrawGraph('CNTRATE3', '9'); return false;\">"._QXZ("CNT RATE 3rd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph10'><a href='#' onClick=\"DrawGraph('CNTRATE4', '10'); return false;\">"._QXZ("CNT RATE 4th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph11'><a href='#' onClick=\"DrawGraph('CNTRATE5', '11'); return false;\">"._QXZ("CNT RATE 5th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph12'><a href='#' onClick=\"DrawGraph('CNTRATEALL', '12'); return false;\">"._QXZ("CNT RATE LIFE")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph13'><a href='#' onClick=\"DrawGraph('SALES1', '13'); return false;\">"._QXZ("SALES 1st PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph14'><a href='#' onClick=\"DrawGraph('SALES2', '14'); return false;\">"._QXZ("SALES 2nd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph15'><a href='#' onClick=\"DrawGraph('SALES3', '15'); return false;\">"._QXZ("SALES 3rd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph16'><a href='#' onClick=\"DrawGraph('SALES4', '16'); return false;\">"._QXZ("SALES 4th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph17'><a href='#' onClick=\"DrawGraph('SALES5', '17'); return false;\">"._QXZ("SALES 5th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph18'><a href='#' onClick=\"DrawGraph('SALESALL', '18'); return false;\">"._QXZ("SALES LIFE")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph19'><a href='#' onClick=\"DrawGraph('CONVRATE1', '19'); return false;\">"._QXZ("CONV RATE 1st PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph20'><a href='#' onClick=\"DrawGraph('CONVRATE2', '20'); return false;\">"._QXZ("CONV RATE 2nd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph21'><a href='#' onClick=\"DrawGraph('CONVRATE3', '21'); return false;\">"._QXZ("CONV RATE 3rd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph22'><a href='#' onClick=\"DrawGraph('CONVRATE4', '22'); return false;\">"._QXZ("CONV RATE 4th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph23'><a href='#' onClick=\"DrawGraph('CONVRATE5', '23'); return false;\">"._QXZ("CONV RATE 5th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph24'><a href='#' onClick=\"DrawGraph('CONVRATEALL', '24'); return false;\">"._QXZ("CONV RATE LIFE")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph25'><a href='#' onClick=\"DrawGraph('DNC1', '25'); return false;\">"._QXZ("DNC 1st PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph26'><a href='#' onClick=\"DrawGraph('DNC2', '26'); return false;\">"._QXZ("DNC 2nd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph27'><a href='#' onClick=\"DrawGraph('DNC3', '27'); return false;\">"._QXZ("DNC 3rd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph28'><a href='#' onClick=\"DrawGraph('DNC4', '28'); return false;\">"._QXZ("DNC 4th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph29'><a href='#' onClick=\"DrawGraph('DNC5', '29'); return false;\">"._QXZ("DNC 5th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph30'><a href='#' onClick=\"DrawGraph('DNCALL', '30'); return false;\">"._QXZ("DNC LIFE")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph31'><a href='#' onClick=\"DrawGraph('DNCRATE1', '31'); return false;\">"._QXZ("DNC RATE 1st PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph32'><a href='#' onClick=\"DrawGraph('DNCRATE2', '32'); return false;\">"._QXZ("DNC RATE 2nd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph33'><a href='#' onClick=\"DrawGraph('DNCRATE3', '33'); return false;\">"._QXZ("DNC RATE 3rd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph34'><a href='#' onClick=\"DrawGraph('DNCRATE4', '34'); return false;\">"._QXZ("DNC RATE 4th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph35'><a href='#' onClick=\"DrawGraph('DNCRATE5', '35'); return false;\">"._QXZ("DNC RATE 5th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph36'><a href='#' onClick=\"DrawGraph('DNCRATEALL', '36'); return false;\">"._QXZ("DNC RATE LIFE")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph37'><a href='#' onClick=\"DrawGraph('CUSTCNT1', '37'); return false;\">"._QXZ("CUST CNT 1st PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph38'><a href='#' onClick=\"DrawGraph('CUSTCNT2', '38'); return false;\">"._QXZ("CUST CNT 2nd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph39'><a href='#' onClick=\"DrawGraph('CUSTCNT3', '39'); return false;\">"._QXZ("CUST CNT 3rd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph40'><a href='#' onClick=\"DrawGraph('CUSTCNT4', '40'); return false;\">"._QXZ("CUST CNT 4th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph41'><a href='#' onClick=\"DrawGraph('CUSTCNT5', '41'); return false;\">"._QXZ("CUST CNT 5th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph42'><a href='#' onClick=\"DrawGraph('CUSTCNTALL', '42'); return false;\">"._QXZ("CUST CNT LIFE")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph43'><a href='#' onClick=\"DrawGraph('CUSTCNTRATE1', '43'); return false;\">"._QXZ("CUST CUSTCNT RATE 1st PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph44'><a href='#' onClick=\"DrawGraph('CUSTCNTRATE2', '44'); return false;\">"._QXZ("CUST CUSTCNT RATE 2nd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph45'><a href='#' onClick=\"DrawGraph('CUSTCNTRATE3', '45'); return false;\">"._QXZ("CUST CUSTCNT RATE 3rd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph46'><a href='#' onClick=\"DrawGraph('CUSTCNTRATE4', '46'); return false;\">"._QXZ("CUST CUSTCNT RATE 4th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph47'><a href='#' onClick=\"DrawGraph('CUSTCNTRATE5', '47'); return false;\">"._QXZ("CUST CUSTCNT RATE 5th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph48'><a href='#' onClick=\"DrawGraph('CUSTCNTRATEALL', '48'); return false;\">"._QXZ("CUST CUSTCNT RATE LIFE")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph49'><a href='#' onClick=\"DrawGraph('UNWRK1', '49'); return false;\">"._QXZ("UNWRK 1st PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph50'><a href='#' onClick=\"DrawGraph('UNWRK2', '50'); return false;\">"._QXZ("UNWRK 2nd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph51'><a href='#' onClick=\"DrawGraph('UNWRK3', '51'); return false;\">"._QXZ("UNWRK 3rd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph52'><a href='#' onClick=\"DrawGraph('UNWRK4', '52'); return false;\">"._QXZ("UNWRK 4th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph53'><a href='#' onClick=\"DrawGraph('UNWRK5', '53'); return false;\">"._QXZ("UNWRK 5th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph54'><a href='#' onClick=\"DrawGraph('UNWRKALL', '54'); return false;\">"._QXZ("UNWRK LIFE")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph55'><a href='#' onClick=\"DrawGraph('UNWRKRATE1', '55'); return false;\">"._QXZ("UNWRK RATE 1st PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph56'><a href='#' onClick=\"DrawGraph('UNWRKRATE2', '56'); return false;\">"._QXZ("UNWRK RATE 2nd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph57'><a href='#' onClick=\"DrawGraph('UNWRKRATE3', '57'); return false;\">"._QXZ("UNWRK RATE 3rd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph58'><a href='#' onClick=\"DrawGraph('UNWRKRATE4', '58'); return false;\">"._QXZ("UNWRK RATE 4th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph59'><a href='#' onClick=\"DrawGraph('UNWRKRATE5', '59'); return false;\">"._QXZ("UNWRK RATE 5th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph60'><a href='#' onClick=\"DrawGraph('UNWRKRATEALL', '60'); return false;\">"._QXZ("UNWRK RATE LIFE")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph61'><a href='#' onClick=\"DrawGraph('SCHDCLBK1', '61'); return false;\">"._QXZ("SCHD CLBK 1st PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph62'><a href='#' onClick=\"DrawGraph('SCHDCLBK2', '62'); return false;\">"._QXZ("SCHD CLBK 2nd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph63'><a href='#' onClick=\"DrawGraph('SCHDCLBK3', '63'); return false;\">"._QXZ("SCHD CLBK 3rd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph64'><a href='#' onClick=\"DrawGraph('SCHDCLBK4', '64'); return false;\">"._QXZ("SCHD CLBK 4th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph65'><a href='#' onClick=\"DrawGraph('SCHDCLBK5', '65'); return false;\">"._QXZ("SCHD CLBK 5th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph66'><a href='#' onClick=\"DrawGraph('SCHDCLBKALL', '66'); return false;\">"._QXZ("SCHD CLBK LIFE")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph67'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATE1', '67'); return false;\">"._QXZ("SCHD CLBK RATE 1st PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph68'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATE2', '68'); return false;\">"._QXZ("SCHD CLBK RATE 2nd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph69'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATE3', '69'); return false;\">"._QXZ("SCHD CLBK RATE 3rd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph70'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATE4', '70'); return false;\">"._QXZ("SCHD CLBK RATE 4th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph71'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATE5', '71'); return false;\">"._QXZ("SCHD CLBK RATE 5th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph72'><a href='#' onClick=\"DrawGraph('SCHDCLBKRATEALL', '72'); return false;\">"._QXZ("SCHD CLBK RATE LIFE")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph73'><a href='#' onClick=\"DrawGraph('COMPLTD1', '73'); return false;\">"._QXZ("COMPLTD 1st PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph74'><a href='#' onClick=\"DrawGraph('COMPLTD2', '74'); return false;\">"._QXZ("COMPLTD 2nd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph75'><a href='#' onClick=\"DrawGraph('COMPLTD3', '75'); return false;\">"._QXZ("COMPLTD 3rd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph76'><a href='#' onClick=\"DrawGraph('COMPLTD4', '76'); return false;\">"._QXZ("COMPLTD 4th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph77'><a href='#' onClick=\"DrawGraph('COMPLTD5', '77'); return false;\">"._QXZ("COMPLTD 5th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph78'><a href='#' onClick=\"DrawGraph('COMPLTDALL', '78'); return false;\">"._QXZ("COMPLTD LIFE")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph79'><a href='#' onClick=\"DrawGraph('COMPLTDRATE1', '79'); return false;\">"._QXZ("COMPLTD RATE 1st PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph80'><a href='#' onClick=\"DrawGraph('COMPLTDRATE2', '80'); return false;\">"._QXZ("COMPLTD RATE 2nd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph81'><a href='#' onClick=\"DrawGraph('COMPLTDRATE3', '81'); return false;\">"._QXZ("COMPLTD RATE 3rd PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph82'><a href='#' onClick=\"DrawGraph('COMPLTDRATE4', '82'); return false;\">"._QXZ("COMPLTD RATE 4th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph83'><a href='#' onClick=\"DrawGraph('COMPLTDRATE5', '83'); return false;\">"._QXZ("COMPLTD RATE 5th PASS")."</a></th>
-	<th class='column_header grey_graph_cell' id='callstatsgraph84'><a href='#' onClick=\"DrawGraph('COMPLTDRATEALL', '84'); return false;\">"._QXZ("COMPLTD RATE LIFE")."</a></th>
-	";
-
-	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("LIST ID SUMMARY")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("LISTS")."</th>";
-	$CONTACTS1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONTACTS 1st PASS")."</th></tr>";
-	$CONTACTS2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONTACTS 2nd PASS")."</th></tr>";
-	$CONTACTS3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONTACTS 3rd PASS")."</th></tr>";
-	$CONTACTS4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONTACTS 4th PASS")."</th></tr>";
-	$CONTACTS5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONTACTS 5th PASS")."</th></tr>";
-	$CONTACTSALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONTACTS LIFE")."</th></tr>";
-	$CNTRATE1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CNT RATE 1st PASS")."</th></tr>";
-	$CNTRATE2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CNT RATE 2nd PASS")."</th></tr>";
-	$CNTRATE3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CNT RATE 3rd PASS")."</th></tr>";
-	$CNTRATE4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CNT RATE 4th PASS")."</th></tr>";
-	$CNTRATE5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CNT RATE 5th PASS")."</th></tr>";
-	$CNTRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CNT RATE LIFE")."</th></tr>";
-	$SALES1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES 1st PASS")."</th></tr>";
-	$SALES2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES 2nd PASS")."</th></tr>";
-	$SALES3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES 3rd PASS")."</th></tr>";
-	$SALES4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES 4th PASS")."</th></tr>";
-	$SALES5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES 5th PASS")."</th></tr>";
-	$SALESALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES LIFE")."</th></tr>";
-	$CONVRATE1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONV RATE 1st PASS")."</th></tr>";
-	$CONVRATE2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONV RATE 2nd PASS")."</th></tr>";
-	$CONVRATE3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONV RATE 3rd PASS")."</th></tr>";
-	$CONVRATE4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONV RATE 4th PASS")."</th></tr>";
-	$CONVRATE5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONV RATE 5th PASS")."</th></tr>";
-	$CONVRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONV RATE LIFE")."</th></tr>";
-	$DNC1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC 1st PASS")."</th></tr>";
-	$DNC2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC 2nd PASS")."</th></tr>";
-	$DNC3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC 3rd PASS")."</th></tr>";
-	$DNC4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC 4th PASS")."</th></tr>";
-	$DNC5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC 5th PASS")."</th></tr>";
-	$DNCALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC LIFE")."</th></tr>";
-	$DNCRATE1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC RATE 1st PASS")."</th></tr>";
-	$DNCRATE2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC RATE 2nd PASS")."</th></tr>";
-	$DNCRATE3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC RATE 3rd PASS")."</th></tr>";
-	$DNCRATE4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC RATE 4th PASS")."</th></tr>";
-	$DNCRATE5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC RATE 5th PASS")."</th></tr>";
-	$DNCRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DNC RATE LIFE")."</th></tr>";
-	$CUSTCNT1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CNT 1st PASS")."</th></tr>";
-	$CUSTCNT2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CNT 2nd PASS")."</th></tr>";
-	$CUSTCNT3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CNT 3rd PASS")."</th></tr>";
-	$CUSTCNT4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CNT 4th PASS")."</th></tr>";
-	$CUSTCNT5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CNT 5th PASS")."</th></tr>";
-	$CUSTCNTALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CNT LIFE")."</th></tr>";
-	$CUSTCNTRATE1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CUSTCNT RATE 1st PASS")."</th></tr>";
-	$CUSTCNTRATE2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CUSTCNT RATE 2nd PASS")."</th></tr>";
-	$CUSTCNTRATE3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CUSTCNT RATE 3rd PASS")."</th></tr>";
-	$CUSTCNTRATE4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CUSTCNT RATE 4th PASS")."</th></tr>";
-	$CUSTCNTRATE5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CUSTCNT RATE 5th PASS")."</th></tr>";
-	$CUSTCNTRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUST CUSTCNT RATE LIFE")."</th></tr>";
-	$UNWRK1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK 1st PASS")."</th></tr>";
-	$UNWRK2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK 2nd PASS")."</th></tr>";
-	$UNWRK3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK 3rd PASS")."</th></tr>";
-	$UNWRK4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK 4th PASS")."</th></tr>";
-	$UNWRK5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK 5th PASS")."</th></tr>";
-	$UNWRKALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK LIFE")."</th></tr>";
-	$UNWRKRATE1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK RATE 1st PASS")."</th></tr>";
-	$UNWRKRATE2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK RATE 2nd PASS")."</th></tr>";
-	$UNWRKRATE3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK RATE 3rd PASS")."</th></tr>";
-	$UNWRKRATE4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK RATE 4th PASS")."</th></tr>";
-	$UNWRKRATE5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK RATE 5th PASS")."</th></tr>";
-	$UNWRKRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("UNWRK RATE LIFE")."</th></tr>";
-	$SCHDCLBK1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK 1st PASS")."</th></tr>";
-	$SCHDCLBK2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK 2nd PASS")."</th></tr>";
-	$SCHDCLBK3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK 3rd PASS")."</th></tr>";
-	$SCHDCLBK4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK 4th PASS")."</th></tr>";
-	$SCHDCLBK5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK 5th PASS")."</th></tr>";
-	$SCHDCLBKALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK LIFE")."</th></tr>";
-	$SCHDCLBKRATE1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK RATE 1st PASS")."</th></tr>";
-	$SCHDCLBKRATE2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK RATE 2nd PASS")."</th></tr>";
-	$SCHDCLBKRATE3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK RATE 3rd PASS")."</th></tr>";
-	$SCHDCLBKRATE4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK RATE 4th PASS")."</th></tr>";
-	$SCHDCLBKRATE5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK RATE 5th PASS")."</th></tr>";
-	$SCHDCLBKRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SCHD CLBK RATE LIFE")."</th></tr>";
-	$COMPLTD1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD 1st PASS")."</th></tr>";
-	$COMPLTD2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD 2nd PASS")."</th></tr>";
-	$COMPLTD3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD 3rd PASS")."</th></tr>";
-	$COMPLTD4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD 4th PASS")."</th></tr>";
-	$COMPLTD5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD 5th PASS")."</th></tr>";
-	$COMPLTDALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD LIFE")."</th></tr>";
-	$COMPLTDRATE1_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD RATE 1st PASS")."</th></tr>";
-	$COMPLTDRATE2_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD RATE 2nd PASS")."</th></tr>";
-	$COMPLTDRATE3_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD RATE 3rd PASS")."</th></tr>";
-	$COMPLTDRATE4_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD RATE 4th PASS")."</th></tr>";
-	$COMPLTDRATE5_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD RATE 5th PASS")."</th></tr>";
-	$COMPLTDRATEALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("COMPLTD RATE LIFE")."</th></tr>";
-
 	$lists_id_str="";
 	$list_stmt="SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand";
 	$list_rslt=mysql_to_mysqli($list_stmt, $link);
@@ -2125,294 +1949,165 @@ else
 	$totals2[83]=$MR_five_count_totS;
 	$totals2[84]=$MR_count_totS;
 
-	for ($d=0; $d<count($graph_stats2); $d++) {
-		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats2)) {$class=" last";} else {$class="";}
-		$CONTACTS1_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='MathZDC(800*".$graph_stats2[$d][1].", $max_stats2[$d])' width='".round(MathZDC(800*$graph_stats2[$d][1], $max_stats2[1]))."' height='16' />".$graph_stats2[$d][1]."</td></tr>";
-		$CONTACTS2_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][2], $max_stats2[2]))."' height='16' />".$graph_stats2[$d][2]."</td></tr>";
-		$CONTACTS3_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][3], $max_stats2[3]))."' height='16' />".$graph_stats2[$d][3]."</td></tr>";
-		$CONTACTS4_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][4], $max_stats2[4]))."' height='16' />".$graph_stats2[$d][4]."</td></tr>";
-		$CONTACTS5_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][5], $max_stats2[5]))."' height='16' />".$graph_stats2[$d][5]."</td></tr>";
-		$CONTACTSALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][6], $max_stats2[6]))."' height='16' />".$graph_stats2[$d][6]."</td></tr>";
-		$CNTRATE1_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][7], $max_stats2[7]))."' height='16' />".$graph_stats2[$d][7]."</td></tr>";
-		$CNTRATE2_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][8], $max_stats2[8]))."' height='16' />".$graph_stats2[$d][8]."</td></tr>";
-		$CNTRATE3_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][9], $max_stats2[9]))."' height='16' />".$graph_stats2[$d][9]."</td></tr>";
-		$CNTRATE4_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][10], $max_stats2[10]))."' height='16' />".$graph_stats2[$d][10]."</td></tr>";
-		$CNTRATE5_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][11], $max_stats2[11]))."' height='16' />".$graph_stats2[$d][11]."</td></tr>";
-		$CNTRATEALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][12], $max_stats2[12]))."' height='16' />".$graph_stats2[$d][12]."</td></tr>";
-		$SALES1_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][13], $max_stats2[13]))."' height='16' />".$graph_stats2[$d][13]."</td></tr>";
-		$SALES2_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][14], $max_stats2[14]))."' height='16' />".$graph_stats2[$d][14]."</td></tr>";
-		$SALES3_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][15], $max_stats2[15]))."' height='16' />".$graph_stats2[$d][15]."</td></tr>";
-		$SALES4_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][16], $max_stats2[16]))."' height='16' />".$graph_stats2[$d][16]."</td></tr>";
-		$SALES5_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][17], $max_stats2[17]))."' height='16' />".$graph_stats2[$d][17]."</td></tr>";
-		$SALESALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][18], $max_stats2[18]))."' height='16' />".$graph_stats2[$d][18]."</td></tr>";
-		$CONVRATE1_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][19], $max_stats2[19]))."' height='16' />".$graph_stats2[$d][19]."</td></tr>";
-		$CONVRATE2_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][20], $max_stats2[20]))."' height='16' />".$graph_stats2[$d][20]."</td></tr>";
-		$CONVRATE3_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][21], $max_stats2[21]))."' height='16' />".$graph_stats2[$d][21]."</td></tr>";
-		$CONVRATE4_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][22], $max_stats2[22]))."' height='16' />".$graph_stats2[$d][22]."</td></tr>";
-		$CONVRATE5_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][23], $max_stats2[23]))."' height='16' />".$graph_stats2[$d][23]."</td></tr>";
-		$CONVRATEALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][24], $max_stats2[24]))."' height='16' />".$graph_stats2[$d][24]."</td></tr>";
-		$DNC1_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][25], $max_stats2[25]))."' height='16' />".$graph_stats2[$d][25]."</td></tr>";
-		$DNC2_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][26], $max_stats2[26]))."' height='16' />".$graph_stats2[$d][26]."</td></tr>";
-		$DNC3_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][27], $max_stats2[27]))."' height='16' />".$graph_stats2[$d][27]."</td></tr>";
-		$DNC4_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][28], $max_stats2[28]))."' height='16' />".$graph_stats2[$d][28]."</td></tr>";
-		$DNC5_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][29], $max_stats2[29]))."' height='16' />".$graph_stats2[$d][29]."</td></tr>";
-		$DNCALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][30], $max_stats2[30]))."' height='16' />".$graph_stats2[$d][30]."</td></tr>";
-		$DNCRATE1_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][31], $max_stats2[31]))."' height='16' />".$graph_stats2[$d][31]."</td></tr>";
-		$DNCRATE2_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][32], $max_stats2[32]))."' height='16' />".$graph_stats2[$d][32]."</td></tr>";
-		$DNCRATE3_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][33], $max_stats2[33]))."' height='16' />".$graph_stats2[$d][33]."</td></tr>";
-		$DNCRATE4_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][34], $max_stats2[34]))."' height='16' />".$graph_stats2[$d][34]."</td></tr>";
-		$DNCRATE5_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][35], $max_stats2[35]))."' height='16' />".$graph_stats2[$d][35]."</td></tr>";
-		$DNCRATEALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][36], $max_stats2[36]))."' height='16' />".$graph_stats2[$d][36]."</td></tr>";
-		$CUSTCNT1_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][37], $max_stats2[37]))."' height='16' />".$graph_stats2[$d][37]."</td></tr>";
-		$CUSTCNT2_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][38], $max_stats2[38]))."' height='16' />".$graph_stats2[$d][38]."</td></tr>";
-		$CUSTCNT3_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][39], $max_stats2[39]))."' height='16' />".$graph_stats2[$d][39]."</td></tr>";
-		$CUSTCNT4_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][40], $max_stats2[40]))."' height='16' />".$graph_stats2[$d][40]."</td></tr>";
-		$CUSTCNT5_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][41], $max_stats2[41]))."' height='16' />".$graph_stats2[$d][41]."</td></tr>";
-		$CUSTCNTALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][42], $max_stats2[42]))."' height='16' />".$graph_stats2[$d][42]."</td></tr>";
-		$CUSTCNTRATE1_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][43], $max_stats2[43]))."' height='16' />".$graph_stats2[$d][43]."</td></tr>";
-		$CUSTCNTRATE2_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][44], $max_stats2[44]))."' height='16' />".$graph_stats2[$d][44]."</td></tr>";
-		$CUSTCNTRATE3_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][45], $max_stats2[45]))."' height='16' />".$graph_stats2[$d][45]."</td></tr>";
-		$CUSTCNTRATE4_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][46], $max_stats2[46]))."' height='16' />".$graph_stats2[$d][46]."</td></tr>";
-		$CUSTCNTRATE5_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][47], $max_stats2[47]))."' height='16' />".$graph_stats2[$d][47]."</td></tr>";
-		$CUSTCNTRATEALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][48], $max_stats2[48]))."' height='16' />".$graph_stats2[$d][48]."</td></tr>";
-		$UNWRK1_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][49], $max_stats2[49]))."' height='16' />".$graph_stats2[$d][49]."</td></tr>";
-		$UNWRK2_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][50], $max_stats2[50]))."' height='16' />".$graph_stats2[$d][50]."</td></tr>";
-		$UNWRK3_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][51], $max_stats2[51]))."' height='16' />".$graph_stats2[$d][51]."</td></tr>";
-		$UNWRK4_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][52], $max_stats2[52]))."' height='16' />".$graph_stats2[$d][52]."</td></tr>";
-		$UNWRK5_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][53], $max_stats2[53]))."' height='16' />".$graph_stats2[$d][53]."</td></tr>";
-		$UNWRKALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][54], $max_stats2[54]))."' height='16' />".$graph_stats2[$d][54]."</td></tr>";
-		$UNWRKRATE1_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][55], $max_stats2[55]))."' height='16' />".$graph_stats2[$d][55]."</td></tr>";
-		$UNWRKRATE2_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][56], $max_stats2[56]))."' height='16' />".$graph_stats2[$d][56]."</td></tr>";
-		$UNWRKRATE3_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][57], $max_stats2[57]))."' height='16' />".$graph_stats2[$d][57]."</td></tr>";
-		$UNWRKRATE4_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][58], $max_stats2[58]))."' height='16' />".$graph_stats2[$d][58]."</td></tr>";
-		$UNWRKRATE5_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][59], $max_stats2[59]))."' height='16' />".$graph_stats2[$d][59]."</td></tr>";
-		$UNWRKRATEALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][60], $max_stats2[60]))."' height='16' />".$graph_stats2[$d][60]."</td></tr>";
-		$SCHDCLBK1_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][61], $max_stats2[61]))."' height='16' />".$graph_stats2[$d][61]."</td></tr>";
-		$SCHDCLBK2_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][62], $max_stats2[62]))."' height='16' />".$graph_stats2[$d][62]."</td></tr>";
-		$SCHDCLBK3_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][63], $max_stats2[63]))."' height='16' />".$graph_stats2[$d][63]."</td></tr>";
-		$SCHDCLBK4_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][64], $max_stats2[64]))."' height='16' />".$graph_stats2[$d][64]."</td></tr>";
-		$SCHDCLBK5_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][65], $max_stats2[65]))."' height='16' />".$graph_stats2[$d][65]."</td></tr>";
-		$SCHDCLBKALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][66], $max_stats2[66]))."' height='16' />".$graph_stats2[$d][66]."</td></tr>";
-		$SCHDCLBKRATE1_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][67], $max_stats2[67]))."' height='16' />".$graph_stats2[$d][67]."</td></tr>";
-		$SCHDCLBKRATE2_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][68], $max_stats2[68]))."' height='16' />".$graph_stats2[$d][68]."</td></tr>";
-		$SCHDCLBKRATE3_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][69], $max_stats2[69]))."' height='16' />".$graph_stats2[$d][69]."</td></tr>";
-		$SCHDCLBKRATE4_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][70], $max_stats2[70]))."' height='16' />".$graph_stats2[$d][70]."</td></tr>";
-		$SCHDCLBKRATE5_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][71], $max_stats2[71]))."' height='16' />".$graph_stats2[$d][71]."</td></tr>";
-		$SCHDCLBKRATEALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][72], $max_stats2[72]))."' height='16' />".$graph_stats2[$d][72]."</td></tr>";
-		$COMPLTD1_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][73], $max_stats2[73]))."' height='16' />".$graph_stats2[$d][73]."</td></tr>";
-		$COMPLTD2_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][74], $max_stats2[74]))."' height='16' />".$graph_stats2[$d][74]."</td></tr>";
-		$COMPLTD3_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][75], $max_stats2[75]))."' height='16' />".$graph_stats2[$d][75]."</td></tr>";
-		$COMPLTD4_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][76], $max_stats2[76]))."' height='16' />".$graph_stats2[$d][76]."</td></tr>";
-		$COMPLTD5_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][77], $max_stats2[77]))."' height='16' />".$graph_stats2[$d][77]."</td></tr>";
-		$COMPLTDALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][78], $max_stats2[78]))."' height='16' />".$graph_stats2[$d][78]."</td></tr>";
-		$COMPLTDRATE1_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][79], $max_stats2[79]))."' height='16' />".$graph_stats2[$d][79]."</td></tr>";
-		$COMPLTDRATE2_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][80], $max_stats2[80]))."' height='16' />".$graph_stats2[$d][80]."</td></tr>";
-		$COMPLTDRATE3_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][81], $max_stats2[81]))."' height='16' />".$graph_stats2[$d][81]."</td></tr>";
-		$COMPLTDRATE4_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][82], $max_stats2[82]))."' height='16' />".$graph_stats2[$d][82]."</td></tr>";
-		$COMPLTDRATE5_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][83], $max_stats2[83]))."' height='16' />".$graph_stats2[$d][83]."</td></tr>";
-		$COMPLTDRATEALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats2[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(800*$graph_stats2[$d][84], $max_stats2[84]))."' height='16' />".$graph_stats2[$d][84]."</td></tr>";
+	# USE THIS FOR multiple graphs, use pipe-delimited array elements, dataset_name|index|link_name
+	$multigraph_text="";
+	$graph_id++;
+	$graph_array=array("LIS_CONTACTS1data|1|CONTACTS 1st PASS|integer|", "LIS_CONTACTS2data|2|CONTACTS 2nd PASS|integer|", "LIS_CONTACTS3data|3|CONTACTS 3rd PASS|integer|", "LIS_CONTACTS4data|4|CONTACTS 4th PASS|integer|", "LIS_CONTACTS5data|5|CONTACTS 5th PASS|integer|", "LIS_CONTACTSLIFEdata|6|CONTACTS LIFE|integer|", "LIS_CNTRATE1data|7|CNT RATE 1st PASS|decimal|", "LIS_CNTRATE2data|8|CNT RATE 2nd PASS|decimal|", "LIS_CNTRATE3data|9|CNT RATE 3rd PASS|decimal|", "LIS_CNTRATE4data|10|CNT RATE 4th PASS|decimal|", "LIS_CNTRATE5data|11|CNT RATE 5th PASS|decimal|", "LIS_CNTRATELIFEdata|12|CNT RATE LIFE|decimal|", "LIS_SALES1data|13|SALES 1st PASS|integer|", "LIS_SALES2data|14|SALES 2nd PASS|integer|", "LIS_SALES3data|15|SALES 3rd PASS|integer|", "LIS_SALES4data|16|SALES 4th PASS|integer|", "LIS_SALES5data|17|SALES 5th PASS|integer|", "LIS_SALESLIFEdata|18|SALES LIFE|integer|", "LIS_CONVRATE1data|19|CONV RATE 1st PASS|decimal|", "LIS_CONVRATE2data|20|CONV RATE 2nd PASS|decimal|", "LIS_CONVRATE3data|21|CONV RATE 3rd PASS|decimal|", "LIS_CONVRATE4data|22|CONV RATE 4th PASS|decimal|", "LIS_CONVRATE5data|23|CONV RATE 5th PASS|decimal|", "LIS_CONVLIFE1data|24|CONV RATE LIFE|decimal|", "LIS_DNC1data|25|DNC 1st PASS|integer|", "LIS_DNC2data|26|DNC 2nd PASS|integer|", "LIS_DNC3data|27|DNC 3rd PASS|integer|", "LIS_DNC4data|28|DNC 4th PASS|integer|", "LIS_DNC5data|29|DNC 5th PASS|integer|", "LIS_DNCLIFEdata|30|DNC LIFE|integer|", "LIS_DNCRATE1data|31|DNC RATE 1st PASS|decimal|", "LIS_DNCRATE2data|32|DNC RATE 2nd PASS|decimal|", "LIS_DNCRATE3data|33|DNC RATE 3rd PASS|decimal|", "LIS_DNCRATE4data|34|DNC RATE 4th PASS|decimal|", "LIS_DNCRATE5data|35|DNC RATE 5th PASS|decimal|", "LIS_DNCRATELIFEdata|36|DNC RATE LIFE|decimal|", "LIS_CUSTCNT1data|37|CUST CNT 1st PASS|integer|", "LIS_CUSTCNT2data|38|CUST CNT 2nd PASS|integer|", "LIS_CUSTCNT3data|39|CUST CNT 3rd PASS|integer|", "LIS_CUSTCNT4data|40|CUST CNT 4th PASS|integer|", "LIS_CUSTCNT5data|41|CUST CNT 5th PASS|integer|", "LIS_CUSTCNTLIFEdata|42|CUST CNT LIFE|integer|", "LIS_CUSCNTRATE1data|43|CUST CUSTCNT RATE 1st PASS|decimal|", "LIS_CUSCNTRATE2data|44|CUST CUSTCNT RATE 2nd PASS|decimal|", "LIS_CUSCNTRATE3data|45|CUST CUSTCNT RATE 3rd PASS|decimal|", "LIS_CUSCNTRATE4data|46|CUST CUSTCNT RATE 4th PASS|decimal|", "LIS_CUSCNTRATE5data|47|CUST CUSTCNT RATE 5th PASS|decimal|", "LIS_CUSCNTRATELIFEdata|48|CUST CUSTCNT RATE LIFE|decimal|", "LIS_UNWRK1data|49|UNWRK 1st PASS|integer|", "LIS_UNWRK2data|50|UNWRK 2nd PASS|integer|", "LIS_UNWRK3data|51|UNWRK 3rd PASS|integer|", "LIS_UNWRK4data|52|UNWRK 4th PASS|integer|", "LIS_UNWRK5data|53|UNWRK 5th PASS|integer|", "LIS_UNWRKLIFEdata|54|UNWRK LIFE|integer|", "LIS_UNWRKRATE1data|55|UNWRK RATE 1st PASS|decimal|", "LIS_UNWRKRATE2data|56|UNWRK RATE 2nd PASS|decimal|", "LIS_UNWRKRATE3data|57|UNWRK RATE 3rd PASS|decimal|", "LIS_UNWRKRATE4data|58|UNWRK RATE 4th PASS|decimal|", "LIS_UNWRKRATE5data|59|UNWRK RATE 5th PASS|decimal|", "LIS_UNWRKRATELIFEdata|60|UNWRK RATE LIFE|decimal|", "LIS_SCHDCLBK1data|61|SCHD CLBK 1st PASS|integer|", "LIS_SCHDCLBK2data|62|SCHD CLBK 2nd PASS|integer|", "LIS_SCHDCLBK3data|63|SCHD CLBK 3rd PASS|integer|", "LIS_SCHDCLBK4data|64|SCHD CLBK 4th PASS|integer|", "LIS_SCHDCLBK5data|65|SCHD CLBK 5th PASS|integer|", "LIS_SCHDCLBKLIFEdata|66|SCHD CLBK LIFE|integer|", "LIS_SCHDCLBKRATE1data|67|SCHD CLBK RATE 1st PASS|decimal|", "LIS_SCHDCLBKRATE2data|68|SCHD CLBK RATE 2nd PASS|decimal|", "LIS_SCHDCLBKRATE3data|69|SCHD CLBK RATE 3rd PASS|decimal|", "LIS_SCHDCLBKRATE4data|70|SCHD CLBK RATE 4th PASS|decimal|", "LIS_SCHDCLBKRATE5data|71|SCHD CLBK RATE 5th PASS|decimal|", "LIS_SCHDCLBKRATELIFEdata|72|SCHD CLBK RATE LIFE|decimal|", "LIS_COMPLTD1data|73|COMPLTD 1st PASS|integer|", "LIS_COMPLTD2data|74|COMPLTD 2nd PASS|integer|", "LIS_COMPLTD3data|75|COMPLTD 3rd PASS|integer|", "LIS_COMPLTD4data|76|COMPLTD 4th PASS|integer|", "LIS_COMPLTD5data|77|COMPLTD 5th PASS|integer|", "LIS_COMPLTDLIFEdata|78|COMPLTD LIFE|integer|", "LIS_COMPLTDRATE1data|79|COMPLTD RATE 1st PASS|decimal|", "LIS_COMPLTDRATE2data|80|COMPLTD RATE 2nd PASS|decimal|", "LIS_COMPLTDRATE3data|81|COMPLTD RATE 3rd PASS|decimal|", "LIS_COMPLTDRATE4data|82|COMPLTD RATE 4th PASS|decimal|", "LIS_COMPLTDRATE5data|83|COMPLTD RATE 5th PASS|decimal|", "LIS_COMPLTDRATELIFEdata|84|COMPLTD RATE LIFE|decimal|");
+	$default_graph="bar"; # Graph that is initally displayed when page loads
+	include("graph_color_schemas.inc"); 
+
+	$graph_totals_array=array();
+	$graph_totals_rawdata=array();
+	for ($q=0; $q<count($graph_array); $q++) {
+		$graph_info=explode("|", $graph_array[$q]); 
+		$current_graph_total=0;
+		$dataset_name=$graph_info[0];
+		$dataset_index=$graph_info[1]; 
+		$dataset_type=$graph_info[3];
+
+		$JS_text.="var $dataset_name = {\n";
+		# $JS_text.="\ttype: \"\",\n";
+		# $JS_text.="\t\tdata: {\n";
+		$datasets="\t\tdatasets: [\n";
+		$datasets.="\t\t\t{\n";
+		$datasets.="\t\t\t\tlabel: \"\",\n";
+		$datasets.="\t\t\t\tfill: false,\n";
+
+		$labels="\t\tlabels:[";
+		$data="\t\t\t\tdata: [";
+		$graphConstantsA="\t\t\t\tbackgroundColor: [";
+		$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+		$graphConstantsC="\t\t\t\thoverBorderColor: [";
+		for ($d=0; $d<count($graph_stats2); $d++) {
+			$labels.="\"".preg_replace('/ +/', ' ', $graph_stats2[$d][0])."\",";
+			$data.="\"".$graph_stats2[$d][$dataset_index]."\",";
+			$current_graph_total+=$graph_stats2[$d][$dataset_index];
+			$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+			$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+			$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+			$graphConstantsA.="\"$bgcolor\",";
+			$graphConstantsB.="\"$hbgcolor\",";
+			$graphConstantsC.="\"$hbcolor\",";
+		}	
+		$graphConstantsA.="],\n";
+		$graphConstantsB.="],\n";
+		$graphConstantsC.="],\n";
+		$labels=preg_replace('/,$/', '', $labels)."],\n";
+		$data=preg_replace('/,$/', '', $data)."],\n";
+		
+		$graph_totals_rawdata[$q]=$current_graph_total;
+		switch($dataset_type) {
+			case "time":
+				$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+				$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+				break;
+			case "percent":
+				$graph_totals_array[$q]="";
+				$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+				break;
+			default:
+				$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+				$chart_options="options: { legend: { display: false }},";
+				break;
+		}
+
+		$datasets.=$data;
+		$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+		$datasets.="\t\t\t}\n";
+		$datasets.="\t\t]\n";
+		$datasets.="\t}\n";
+
+		$JS_text.=$labels.$datasets;
+		# $JS_text.="}\n";
+		# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+		$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+		$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
 	}
 
-	$CONTACTS1_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[1]."</th></tr>";
-	$CONTACTS2_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[2]."</th></tr>";
-	$CONTACTS3_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[3]."</th></tr>";
-	$CONTACTS4_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[4]."</th></tr>";
-	$CONTACTS5_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[5]."</th></tr>";
-	$CONTACTSALL_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[6]."</th></tr>";
-	$CNTRATE1_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[7]."</th></tr>";
-	$CNTRATE2_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[8]."</th></tr>";
-	$CNTRATE3_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[9]."</th></tr>";
-	$CNTRATE4_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[10]."</th></tr>";
-	$CNTRATE5_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[11]."</th></tr>";
-	$CNTRATEALL_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[12]."</th></tr>";
-	$SALES1_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[13]."</th></tr>";
-	$SALES2_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[14]."</th></tr>";
-	$SALES3_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[15]."</th></tr>";
-	$SALES4_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[16]."</th></tr>";
-	$SALES5_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[17]."</th></tr>";
-	$SALESALL_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[18]."</th></tr>";
-	$CONVRATE1_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[19]."</th></tr>";
-	$CONVRATE2_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[20]."</th></tr>";
-	$CONVRATE3_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[21]."</th></tr>";
-	$CONVRATE4_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[22]."</th></tr>";
-	$CONVRATE5_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[23]."</th></tr>";
-	$CONVRATEALL_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[24]."</th></tr>";
-	$DNC1_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[25]."</th></tr>";
-	$DNC2_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[26]."</th></tr>";
-	$DNC3_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[27]."</th></tr>";
-	$DNC4_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[28]."</th></tr>";
-	$DNC5_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[29]."</th></tr>";
-	$DNCALL_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[30]."</th></tr>";
-	$DNCRATE1_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[31]."</th></tr>";
-	$DNCRATE2_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[32]."</th></tr>";
-	$DNCRATE3_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[33]."</th></tr>";
-	$DNCRATE4_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[34]."</th></tr>";
-	$DNCRATE5_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[35]."</th></tr>";
-	$DNCRATEALL_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[36]."</th></tr>";
-	$CUSTCNT1_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[37]."</th></tr>";
-	$CUSTCNT2_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[38]."</th></tr>";
-	$CUSTCNT3_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[39]."</th></tr>";
-	$CUSTCNT4_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[40]."</th></tr>";
-	$CUSTCNT5_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[41]."</th></tr>";
-	$CUSTCNTALL_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[42]."</th></tr>";
-	$CUSTCNTRATE1_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[43]."</th></tr>";
-	$CUSTCNTRATE2_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[44]."</th></tr>";
-	$CUSTCNTRATE3_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[45]."</th></tr>";
-	$CUSTCNTRATE4_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[46]."</th></tr>";
-	$CUSTCNTRATE5_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[47]."</th></tr>";
-	$CUSTCNTRATEALL_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[48]."</th></tr>";
-	$UNWRK1_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[49]."</th></tr>";
-	$UNWRK2_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[50]."</th></tr>";
-	$UNWRK3_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[51]."</th></tr>";
-	$UNWRK4_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[52]."</th></tr>";
-	$UNWRK5_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[53]."</th></tr>";
-	$UNWRKALL_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[54]."</th></tr>";
-	$UNWRKRATE1_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[55]."</th></tr>";
-	$UNWRKRATE2_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[56]."</th></tr>";
-	$UNWRKRATE3_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[57]."</th></tr>";
-	$UNWRKRATE4_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[58]."</th></tr>";
-	$UNWRKRATE5_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[59]."</th></tr>";
-	$UNWRKRATEALL_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[60]."</th></tr>";
-	$SCHDCLBK1_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[61]."</th></tr>";
-	$SCHDCLBK2_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[62]."</th></tr>";
-	$SCHDCLBK3_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[63]."</th></tr>";
-	$SCHDCLBK4_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[64]."</th></tr>";
-	$SCHDCLBK5_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[65]."</th></tr>";
-	$SCHDCLBKALL_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[66]."</th></tr>";
-	$SCHDCLBKRATE1_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[67]."</th></tr>";
-	$SCHDCLBKRATE2_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[68]."</th></tr>";
-	$SCHDCLBKRATE3_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[69]."</th></tr>";
-	$SCHDCLBKRATE4_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[70]."</th></tr>";
-	$SCHDCLBKRATE5_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[71]."</th></tr>";
-	$SCHDCLBKRATEALL_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[72]."</th></tr>";
-	$COMPLTD1_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[73]."</th></tr>";
-	$COMPLTD2_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[74]."</th></tr>";
-	$COMPLTD3_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[75]."</th></tr>";
-	$COMPLTD4_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[76]."</th></tr>";
-	$COMPLTD5_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[77]."</th></tr>";
-	$COMPLTDALL_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[78]."</th></tr>";
-	$COMPLTDRATE1_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[79]."</th></tr>";
-	$COMPLTDRATE2_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[80]."</th></tr>";
-	$COMPLTDRATE3_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[81]."</th></tr>";
-	$COMPLTDRATE4_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[82]."</th></tr>";
-	$COMPLTDRATE5_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[83]."</th></tr>";
-	$COMPLTDRATEALL_graph.="  <tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".$totals2[84]."</th></tr>";
+	$graph_count=count($graph_array);
+	$graph_title=_QXZ("LIST ID SUMMARY");
+	include("graphcanvas.inc");
+	$GRAPH2.=$graphCanvas;
 
+	#########
+	$graph_array=array("ALRdata|||integer|");
+	$graph_id++;
+	$default_graph="bar"; # Graph that is initally displayed when page loads
+	include("graph_color_schemas.inc"); 
 
-	$JS_onload.="\tDrawGraph('CONTACTS1', '1');\n"; 
-	$JS_text.="function DrawGraph(graph, th_id) {\n";
-	$JS_text.="	var graph_CONTACTS1=\"$CONTACTS1_graph\";\n";
-	$JS_text.="	var graph_CONTACTS2=\"$CONTACTS2_graph\";\n";
-	$JS_text.="	var graph_CONTACTS3=\"$CONTACTS3_graph\";\n";
-	$JS_text.="	var graph_CONTACTS4=\"$CONTACTS4_graph\";\n";
-	$JS_text.="	var graph_CONTACTS5=\"$CONTACTS5_graph\";\n";
-	$JS_text.="	var graph_CONTACTSALL=\"$CONTACTSALL_graph\";\n";
-	$JS_text.="	var graph_CNTRATE1=\"$CNTRATE1_graph\";\n";
-	$JS_text.="	var graph_CNTRATE2=\"$CNTRATE2_graph\";\n";
-	$JS_text.="	var graph_CNTRATE3=\"$CNTRATE3_graph\";\n";
-	$JS_text.="	var graph_CNTRATE4=\"$CNTRATE4_graph\";\n";
-	$JS_text.="	var graph_CNTRATE5=\"$CNTRATE5_graph\";\n";
-	$JS_text.="	var graph_CNTRATEALL=\"$CNTRATEALL_graph\";\n";
-	$JS_text.="	var graph_SALES1=\"$SALES1_graph\";\n";
-	$JS_text.="	var graph_SALES2=\"$SALES2_graph\";\n";
-	$JS_text.="	var graph_SALES3=\"$SALES3_graph\";\n";
-	$JS_text.="	var graph_SALES4=\"$SALES4_graph\";\n";
-	$JS_text.="	var graph_SALES5=\"$SALES5_graph\";\n";
-	$JS_text.="	var graph_SALESALL=\"$SALESALL_graph\";\n";
-	$JS_text.="	var graph_CONVRATE1=\"$CONVRATE1_graph\";\n";
-	$JS_text.="	var graph_CONVRATE2=\"$CONVRATE2_graph\";\n";
-	$JS_text.="	var graph_CONVRATE3=\"$CONVRATE3_graph\";\n";
-	$JS_text.="	var graph_CONVRATE4=\"$CONVRATE4_graph\";\n";
-	$JS_text.="	var graph_CONVRATE5=\"$CONVRATE5_graph\";\n";
-	$JS_text.="	var graph_CONVRATEALL=\"$CONVRATEALL_graph\";\n";
-	$JS_text.="	var graph_DNC1=\"$DNC1_graph\";\n";
-	$JS_text.="	var graph_DNC2=\"$DNC2_graph\";\n";
-	$JS_text.="	var graph_DNC3=\"$DNC3_graph\";\n";
-	$JS_text.="	var graph_DNC4=\"$DNC4_graph\";\n";
-	$JS_text.="	var graph_DNC5=\"$DNC5_graph\";\n";
-	$JS_text.="	var graph_DNCALL=\"$DNCALL_graph\";\n";
-	$JS_text.="	var graph_DNCRATE1=\"$DNCRATE1_graph\";\n";
-	$JS_text.="	var graph_DNCRATE2=\"$DNCRATE2_graph\";\n";
-	$JS_text.="	var graph_DNCRATE3=\"$DNCRATE3_graph\";\n";
-	$JS_text.="	var graph_DNCRATE4=\"$DNCRATE4_graph\";\n";
-	$JS_text.="	var graph_DNCRATE5=\"$DNCRATE5_graph\";\n";
-	$JS_text.="	var graph_DNCRATEALL=\"$DNCRATEALL_graph\";\n";
-	$JS_text.="	var graph_CUSTCNT1=\"$CUSTCNT1_graph\";\n";
-	$JS_text.="	var graph_CUSTCNT2=\"$CUSTCNT2_graph\";\n";
-	$JS_text.="	var graph_CUSTCNT3=\"$CUSTCNT3_graph\";\n";
-	$JS_text.="	var graph_CUSTCNT4=\"$CUSTCNT4_graph\";\n";
-	$JS_text.="	var graph_CUSTCNT5=\"$CUSTCNT5_graph\";\n";
-	$JS_text.="	var graph_CUSTCNTALL=\"$CUSTCNTALL_graph\";\n";
-	$JS_text.="	var graph_CUSTCNTRATE1=\"$CUSTCNTRATE1_graph\";\n";
-	$JS_text.="	var graph_CUSTCNTRATE2=\"$CUSTCNTRATE2_graph\";\n";
-	$JS_text.="	var graph_CUSTCNTRATE3=\"$CUSTCNTRATE3_graph\";\n";
-	$JS_text.="	var graph_CUSTCNTRATE4=\"$CUSTCNTRATE4_graph\";\n";
-	$JS_text.="	var graph_CUSTCNTRATE5=\"$CUSTCNTRATE5_graph\";\n";
-	$JS_text.="	var graph_CUSTCNTRATEALL=\"$CUSTCNTRATEALL_graph\";\n";
-	$JS_text.="	var graph_UNWRK1=\"$UNWRK1_graph\";\n";
-	$JS_text.="	var graph_UNWRK2=\"$UNWRK2_graph\";\n";
-	$JS_text.="	var graph_UNWRK3=\"$UNWRK3_graph\";\n";
-	$JS_text.="	var graph_UNWRK4=\"$UNWRK4_graph\";\n";
-	$JS_text.="	var graph_UNWRK5=\"$UNWRK5_graph\";\n";
-	$JS_text.="	var graph_UNWRKALL=\"$UNWRKALL_graph\";\n";
-	$JS_text.="	var graph_UNWRKRATE1=\"$UNWRKRATE1_graph\";\n";
-	$JS_text.="	var graph_UNWRKRATE2=\"$UNWRKRATE2_graph\";\n";
-	$JS_text.="	var graph_UNWRKRATE3=\"$UNWRKRATE3_graph\";\n";
-	$JS_text.="	var graph_UNWRKRATE4=\"$UNWRKRATE4_graph\";\n";
-	$JS_text.="	var graph_UNWRKRATE5=\"$UNWRKRATE5_graph\";\n";
-	$JS_text.="	var graph_UNWRKRATEALL=\"$UNWRKRATEALL_graph\";\n";
-	$JS_text.="	var graph_SCHDCLBK1=\"$SCHDCLBK1_graph\";\n";
-	$JS_text.="	var graph_SCHDCLBK2=\"$SCHDCLBK2_graph\";\n";
-	$JS_text.="	var graph_SCHDCLBK3=\"$SCHDCLBK3_graph\";\n";
-	$JS_text.="	var graph_SCHDCLBK4=\"$SCHDCLBK4_graph\";\n";
-	$JS_text.="	var graph_SCHDCLBK5=\"$SCHDCLBK5_graph\";\n";
-	$JS_text.="	var graph_SCHDCLBKALL=\"$SCHDCLBKALL_graph\";\n";
-	$JS_text.="	var graph_SCHDCLBKRATE1=\"$SCHDCLBKRATE1_graph\";\n";
-	$JS_text.="	var graph_SCHDCLBKRATE2=\"$SCHDCLBKRATE2_graph\";\n";
-	$JS_text.="	var graph_SCHDCLBKRATE3=\"$SCHDCLBKRATE3_graph\";\n";
-	$JS_text.="	var graph_SCHDCLBKRATE4=\"$SCHDCLBKRATE4_graph\";\n";
-	$JS_text.="	var graph_SCHDCLBKRATE5=\"$SCHDCLBKRATE5_graph\";\n";
-	$JS_text.="	var graph_SCHDCLBKRATEALL=\"$SCHDCLBKRATEALL_graph\";\n";
-	$JS_text.="	var graph_COMPLTD1=\"$COMPLTD1_graph\";\n";
-	$JS_text.="	var graph_COMPLTD2=\"$COMPLTD2_graph\";\n";
-	$JS_text.="	var graph_COMPLTD3=\"$COMPLTD3_graph\";\n";
-	$JS_text.="	var graph_COMPLTD4=\"$COMPLTD4_graph\";\n";
-	$JS_text.="	var graph_COMPLTD5=\"$COMPLTD5_graph\";\n";
-	$JS_text.="	var graph_COMPLTDALL=\"$COMPLTDALL_graph\";\n";
-	$JS_text.="	var graph_COMPLTDRATE1=\"$COMPLTDRATE1_graph\";\n";
-	$JS_text.="	var graph_COMPLTDRATE2=\"$COMPLTDRATE2_graph\";\n";
-	$JS_text.="	var graph_COMPLTDRATE3=\"$COMPLTDRATE3_graph\";\n";
-	$JS_text.="	var graph_COMPLTDRATE4=\"$COMPLTDRATE4_graph\";\n";
-	$JS_text.="	var graph_COMPLTDRATE5=\"$COMPLTDRATE5_graph\";\n";
-	$JS_text.="	var graph_COMPLTDRATEALL=\"$COMPLTDRATEALL_graph\";\n";
+	$graph_totals_array=array();
+	$graph_totals_rawdata=array();
+	for ($q=0; $q<count($graph_array); $q++) {
+		$graph_info=explode("|", $graph_array[$q]); 
+		$current_graph_total=0;
+		$dataset_name=$graph_info[0];
+		$dataset_index=$graph_info[1]; 
+		$dataset_type=$graph_info[3];
+		if ($q==0) {$preload_dataset=$dataset_name;}  # Used below to load initial graph
 
-	$JS_text.="	for (var i=1; i<=84; i++) {\n";
-	$JS_text.="		var cellID=\"callstatsgraph\"+i;\n";
-	$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
-	$JS_text.="	}\n";
-	$JS_text.="	var cellID=\"callstatsgraph\"+th_id;\n";
-	$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
-	$JS_text.="\n";
-	$JS_text.="	var graph_to_display=eval(\"graph_\"+graph);\n";
-	$JS_text.="	document.getElementById('call_stats_graph').innerHTML=graph_to_display;\n";
-	$JS_text.="}\n";
+		$JS_text.="var $dataset_name = {\n";
+		# $JS_text.="\ttype: \"\",\n";
+		# $JS_text.="\t\tdata: {\n";
+		$datasets="\t\tdatasets: [\n";
+		$datasets.="\t\t\t{\n";
+		$datasets.="\t\t\t\tlabel: \"\",\n";
+		$datasets.="\t\t\t\tfill: false,\n";
 
-	$GRAPH3="<tr><td colspan='84' class='graph_span_cell'><span id='call_stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
+		$labels="\t\tlabels:[";
+		$data="\t\t\t\tdata: [";
+		$graphConstantsA="\t\t\t\tbackgroundColor: [";
+		$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+		$graphConstantsC="\t\t\t\thoverBorderColor: [";
+		for ($d=0; $d<count($graph_stats); $d++) {
+			$labels.="\"".$graph_stats[$d][1]."\",";
+			$data.="\"".$graph_stats[$d][0]."\","; 
+			$current_graph_total+=$graph_stats[$d][0];
+			$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+			$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+			$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+			$graphConstantsA.="\"$bgcolor\",";
+			$graphConstantsB.="\"$hbgcolor\",";
+			$graphConstantsC.="\"$hbcolor\",";
+		}	
+		$graphConstantsA.="],\n";
+		$graphConstantsB.="],\n";
+		$graphConstantsC.="],\n";
+		$labels=preg_replace('/,$/', '', $labels)."],\n";
+		$data=preg_replace('/,$/', '', $data)."],\n";
+		
+		$graph_totals_rawdata[$q]=$current_graph_total;
+		switch($dataset_type) {
+			case "time":
+				$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+				$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+				break;
+			case "percent":
+				$graph_totals_array[$q]="";
+				$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+				break;
+			default:
+				$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+				$chart_options="options: { legend: { display: false }},";
+				break;
+		}
 
+		$datasets.=$data;
+		$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+		$datasets.="\t\t\t}\n";
+		$datasets.="\t\t]\n";
+		$datasets.="\t}\n";
 
-	for ($d=0; $d<count($graph_stats); $d++) {
-		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-		$GRAPH.="  <tr>\n";
-		$GRAPH.="	<td class=\"chart_td$class\">".$graph_stats[$d][1]."</td>\n";
-		$GRAPH.="	<td nowrap class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$graph_stats[$d][0], $max_calls))."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
-		$GRAPH.="  </tr>\n";
+		$JS_text.=$labels.$datasets;
+		# $JS_text.="}\n";
+		# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+		$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+		$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
 	}
-	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL").":</th>\n";
-	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">".trim($TOTALleads)."</th>\n";
-	$GRAPH.="  </tr>\n";
-	$GRAPH.="</table><PRE>\n";
-	$GRAPH.="<BR><BR><a name='callsgraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
+
+	$graph_count=count($graph_array);
+	$graph_title=_QXZ("LIST ID SUMMARY 1");
+	include("graphcanvas.inc");
+	$GRAPH.=$graphCanvas;
 
 
 	if ($report_display_type=="HTML")
@@ -2462,9 +2157,9 @@ else
 		$JS_text.="</script>\n";
 
 		echo $HEADER;
-		echo $JS_text;
 		require("admin_header.php");
 		echo $MAIN;
+		echo $JS_text;
 	}
 
 

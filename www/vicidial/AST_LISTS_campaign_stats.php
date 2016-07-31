@@ -25,6 +25,7 @@
 # 150516-1302 - Fixed Javascript element problem, Issue #857
 # 151229-2009 - Added archive search option
 # 160227-1043 - Uniform form format
+# 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 #
 
 $startMS = microtime();
@@ -54,6 +55,7 @@ if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search
 
 $report_name = 'Lists Campaign Statuses Report';
 $db_source = 'M';
+
 $JS_text="<script language='Javascript'>\n";
 $JS_text.="function openNewWindow(url)\n";
 $JS_text.="  {\n";
@@ -430,6 +432,9 @@ $HEADER.="   .purple {color: white; background-color: purple}\n";
 $HEADER.="-->\n";
 $HEADER.=" </STYLE>\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
+require("chart_button.php");
+$HEADER.="<script src='chart/Chart.js'></script>\n"; 
+$HEADER.="<script language=\"JavaScript\" src=\"vicidial_chart_functions.js\"></script>\n";
 
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -515,13 +520,6 @@ else
 	$CSV_text1.="\""._QXZ("LIST")."\",\""._QXZ("LEADS")."\",\""._QXZ("ACTIVE")."\"\n";
 
 	$max_calls=1; $graph_stats=array();
-	$GRAPH="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
-	$GRAPH.="<caption align='top'>"._QXZ("LIST ID SUMMARY")."</caption>";
-	$GRAPH.="<tr>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("LIST")."</th>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("LEADS")."</th>\n";
-	$GRAPH.="</tr>\n";
-
 	$lists_id_str="";
 	$list_stmt="SELECT list_id from vicidial_lists where active IN('Y','N') $group_SQLand";
 	$list_rslt=mysql_to_mysqli($list_stmt, $link);
@@ -585,19 +583,85 @@ else
 	$OUToutput .= "+------------------------------------------+------------+\n";
 	$CSV_text1.="\""._QXZ("TOTAL")."\",\"$TOTALleads\"\n";
 
-	for ($d=0; $d<count($graph_stats); $d++) {
-		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-		$GRAPH.="  <tr>\n";
-		$GRAPH.="	<td class=\"chart_td$class\">".$graph_stats[$d][1]."</td>\n";
-		$GRAPH.="	<td nowrap class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$graph_stats[$d][0], $max_calls))."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
-		$GRAPH.="  </tr>\n";
+	#########
+	$graph_array=array("LID_SUMMARYdata|||integer|");
+	$graph_id++;
+	$default_graph="bar"; # Graph that is initally displayed when page loads
+	include("graph_color_schemas.inc"); 
+
+	$graph_totals_array=array();
+	$graph_totals_rawdata=array();
+	for ($q=0; $q<count($graph_array); $q++) {
+		$graph_info=explode("|", $graph_array[$q]); 
+		$current_graph_total=0;
+		$dataset_name=$graph_info[0];
+		$dataset_index=$graph_info[1]; 
+		$dataset_type=$graph_info[3];
+		if ($q==0) {$preload_dataset=$dataset_name;}  # Used below to load initial graph
+
+		$JS_text.="var $dataset_name = {\n";
+		# $JS_text.="\ttype: \"\",\n";
+		# $JS_text.="\t\tdata: {\n";
+		$datasets="\t\tdatasets: [\n";
+		$datasets.="\t\t\t{\n";
+		$datasets.="\t\t\t\tlabel: \"\",\n";
+		$datasets.="\t\t\t\tfill: false,\n";
+
+		$labels="\t\tlabels:[";
+		$data="\t\t\t\tdata: [";
+		$graphConstantsA="\t\t\t\tbackgroundColor: [";
+		$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+		$graphConstantsC="\t\t\t\thoverBorderColor: [";
+		for ($d=0; $d<count($graph_stats); $d++) {
+			$labels.="\"".$graph_stats[$d][1]."\",";
+			$data.="\"".$graph_stats[$d][0]."\",";
+			$current_graph_total+=$graph_stats[$d][0];
+			$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+			$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+			$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+			$graphConstantsA.="\"$bgcolor\",";
+			$graphConstantsB.="\"$hbgcolor\",";
+			$graphConstantsC.="\"$hbcolor\",";
+		}	
+		$graphConstantsA.="],\n";
+		$graphConstantsB.="],\n";
+		$graphConstantsC.="],\n";
+		$labels=preg_replace('/,$/', '', $labels)."],\n";
+		$data=preg_replace('/,$/', '', $data)."],\n";
+		
+		$graph_totals_rawdata[$q]=$current_graph_total;
+		switch($dataset_type) {
+			case "time":
+				$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+				$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+				break;
+			case "percent":
+				$graph_totals_array[$q]="";
+				$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+				break;
+			default:
+				$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+				$chart_options="options: { legend: { display: false }},";
+				break;
+		}
+
+		$datasets.=$data;
+		$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+		$datasets.="\t\t\t}\n";
+		$datasets.="\t\t]\n";
+		$datasets.="\t}\n";
+
+		$JS_text.=$labels.$datasets;
+		# $JS_text.="}\n";
+		# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+		$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+		$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
 	}
-	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL").":</th>\n";
-	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">".trim($TOTALleads)."</th>\n";
-	$GRAPH.="  </tr>\n";
-	$GRAPH.="</table><PRE>\n";
-	# $OUToutput.=$GRAPH;
+
+	$graph_count=count($graph_array);
+	$graph_title=_QXZ("LIST ID SUMMARY");
+	include("graphcanvas.inc");
+	$GRAPH.=$graphCanvas;
 
 
 	##############################
@@ -621,13 +685,6 @@ else
 	$COMP_percent=0;
 
 	$max_calls=1; $graph_stats=array();
-	$GRAPH.="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
-	$GRAPH.="<caption align='top'>"._QXZ("STATUS FLAG SUMMARY")."</caption>";
-	$GRAPH.="<tr>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("STATUS FLAG")."</th>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
-	$GRAPH.="</tr>\n";
-
 	$stmt="select count(*) from ".$vicidial_list_table." where status IN($human_answered_statuses) and list_id IN($list_id_SQL);";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {$MAIN.="$stmt\n";}
@@ -743,6 +800,8 @@ else
 	$SC_count =	sprintf("%10s", "$SC_count"); while(strlen($SC_count)>10) {$SC_count = substr("$SC_count", 0, -1);}
 	$COMP_count =	sprintf("%10s", "$COMP_count"); while(strlen($COMP_count)>10) {$COMP_count = substr("$COMP_count", 0, -1);}
 
+	$graph_stats2=array(array("$HA_count", "Human Answer"), array("$SALE_count", "Sale"), array("$DNC_count", "DNC"), array("$CC_count", "Customer Contact"), array("$NI_count", "Not Interested"), array("$UW_count", "Unworkable"), array("$SC_count", "Scheduled Callbacks"), array("$COMP_count", "Completed"));
+
 	$OUToutput .= "\n";
 	$OUToutput .= "\n";
 	$OUToutput .= "---------- "._QXZ("STATUS FLAGS SUMMARY:",24)." ("._QXZ("and % of leads in selected lists").")     <a href=\"$PHP_SELF?DB=$DB$groupQS&SUBMIT=$SUBMIT&file_download=2&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
@@ -768,43 +827,85 @@ else
 	$CSV_text2 .= "\""._QXZ("Scheduled Callbacks")."\",\"$SC_count\",\"$SC_percent%\"\n";
 	$CSV_text2 .= "\""._QXZ("Completed")."\",\"$COMP_count\",\"$COMP_percent%\"\n";
 
-	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td first\">"._QXZ("Human Answer")."</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value first\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$HA_count, $max_calls))."\" height=\"16\"/>".$HA_count." ($HA_percent%)</td>\n";
-	$GRAPH.="  </tr>\n";
-	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td\">"._QXZ("Sale")."</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$SALE_count, $max_calls))."\" height=\"16\" />".$SALE_count." ($SALE_percent%)</td>\n";
-	$GRAPH.="  </tr>\n";
-	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td\">"._QXZ("DNC")."</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$DNC_count, $max_calls))."\" height=\"16\" />".$DNC_count." ($DNC_percent%)</td>\n";
-	$GRAPH.="  </tr>\n";
-	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td\">"._QXZ("Customer Contact")."</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$CC_count, $max_calls))."\" height=\"16\" />".$CC_count." ($CC_percent%)</td>\n";
-	$GRAPH.="  </tr>\n";
-	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td\">"._QXZ("Not Interested")."</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$NI_count, $max_calls))."\" height=\"16\" />".$NI_count." ($NI_percent%)</td>\n";
-	$GRAPH.="  </tr>\n";
-	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td\">"._QXZ("Unworkable")."</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$UW_count, $max_calls))."\" height=\"16\" />".$UW_count." ($UW_percent%)</td>\n";
-	$GRAPH.="  </tr>\n";
-	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td\">"._QXZ("Scheduled Callbacks")."</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$SC_count, $max_calls))."\" height=\"16\" />".$SC_count." ($SC_percent%)</td>\n";
-	$GRAPH.="  </tr>\n";
-	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<td class=\"chart_td last\">"._QXZ("Completed")."</td>\n";
-	$GRAPH.="	<td nowrap class=\"chart_td value last\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$COMP_count, $max_calls))."\" height=\"16\" />".$COMP_count." ($COMP_percent%)</td>\n";
-	$GRAPH.="  </tr>\n";
-	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL").":</th>\n";
-	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">".trim($flag_count)."</th>\n";
-	$GRAPH.="  </tr>\n";
-	$GRAPH.="</table><PRE>\n";
+		#########
+		$graph_array=array("APDdata|||intpct|");
+		$graph_id++;
+		$default_graph="bar"; # Graph that is initally displayed when page loads
+		include("graph_color_schemas.inc"); 
+
+		$graph_totals_array=array();
+		$graph_totals_rawdata=array();
+		for ($q=0; $q<count($graph_array); $q++) {
+			$graph_info=explode("|", $graph_array[$q]); 
+			$current_graph_total=0;
+			$dataset_name=$graph_info[0];
+			$dataset_index=$graph_info[1]; 
+			$dataset_type=$graph_info[3];
+			if ($q==0) {$preload_dataset=$dataset_name;}  # Used below to load initial graph
+
+			$JS_text.="var $dataset_name = {\n";
+			# $JS_text.="\ttype: \"\",\n";
+			# $JS_text.="\t\tdata: {\n";
+			$datasets="\t\tdatasets: [\n";
+			$datasets.="\t\t\t{\n";
+			$datasets.="\t\t\t\tlabel: \"\",\n";
+			$datasets.="\t\t\t\tfill: false,\n";
+
+			$labels="\t\tlabels:[";
+			$data="\t\t\t\tdata: [";
+			$graphConstantsA="\t\t\t\tbackgroundColor: [";
+			$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+			$graphConstantsC="\t\t\t\thoverBorderColor: [";
+			for ($d=0; $d<count($graph_stats2); $d++) {
+				$labels.="\"".$graph_stats2[$d][1]."\",";
+				$data.="\"".$graph_stats2[$d][0]."\",";
+				$current_graph_total+=$graph_stats2[$d][0];
+				$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+				$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+				$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+				$graphConstantsA.="\"$bgcolor\",";
+				$graphConstantsB.="\"$hbgcolor\",";
+				$graphConstantsC.="\"$hbcolor\",";
+			}	
+			$graphConstantsA.="],\n";
+			$graphConstantsB.="],\n";
+			$graphConstantsC.="],\n";
+			$labels=preg_replace('/,$/', '', $labels)."],\n";
+			$data=preg_replace('/,$/', '', $data)."],\n";
+			
+			$graph_totals_rawdata[$q]=$current_graph_total;
+			switch($dataset_type) {
+				case "time":
+					$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+					$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+					break;
+				case "percent":
+					$graph_totals_array[$q]="";
+					$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+					break;
+				default:
+					$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+					$chart_options="options: { legend: { display: false }},";
+					break;
+			}
+
+			$datasets.=$data;
+			$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+			$datasets.="\t\t\t}\n";
+			$datasets.="\t\t]\n";
+			$datasets.="\t}\n";
+
+			$JS_text.=$labels.$datasets;
+			# $JS_text.="}\n";
+			# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+			$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+			$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
+		}
+
+		$graph_count=count($graph_array);
+		$graph_title=_QXZ("STATUS FLAG SUMMARY");
+		include("graphcanvas.inc");
+		$GRAPH.=$graphCanvas;
 	# $OUToutput.=$GRAPH;
 
 	##############################
@@ -820,12 +921,6 @@ else
 	$CSV_text3.="\""._QXZ("CATEGORY")."\",\""._QXZ("CALLS")."\",\""._QXZ("DESCRIPTION")."\"\n";
 
 	$max_calls=1; $graph_stats=array();
-	$GRAPH.="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
-	$GRAPH.="<caption align='top'>"._QXZ("CUSTOM STATUS CATEGORY STATS")."</caption>";
-	$GRAPH.="<tr>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CATEGORY")."</th>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
-	$GRAPH.="</tr>\n";
 
 	$TOTCATcalls=0;
 	$r=0; $i=0;
@@ -856,18 +951,86 @@ else
 	$OUToutput .= "+----------------------+------------+\n";
 	$CSV_text3.="\""._QXZ("TOTAL")."\",\"$TOTCATcalls\"\n";
 
-	for ($d=0; $d<count($graph_stats); $d++) {
-		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-		$GRAPH.="  <tr>\n";
-		$GRAPH.="	<td class=\"chart_td$class\">".$graph_stats[$d][1]."</td>\n";
-		$GRAPH.="	<td nowrap class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$graph_stats[$d][0], $max_calls))."\" height=\"16\" />".$graph_stats[$d][0]."</td>\n";
-		$GRAPH.="  </tr>\n";
+	#########
+	$graph_array=array("CSCSdata|||integer|");
+	$graph_id++;
+	$default_graph="bar"; # Graph that is initally displayed when page loads
+	include("graph_color_schemas.inc"); 
+
+	$graph_totals_array=array();
+	$graph_totals_rawdata=array();
+	for ($q=0; $q<count($graph_array); $q++) {
+		$graph_info=explode("|", $graph_array[$q]); 
+		$current_graph_total=0;
+		$dataset_name=$graph_info[0];
+		$dataset_index=$graph_info[1]; 
+		$dataset_type=$graph_info[3];
+		if ($q==0) {$preload_dataset=$dataset_name;}  # Used below to load initial graph
+
+		$JS_text.="var $dataset_name = {\n";
+		# $JS_text.="\ttype: \"\",\n";
+		# $JS_text.="\t\tdata: {\n";
+		$datasets="\t\tdatasets: [\n";
+		$datasets.="\t\t\t{\n";
+		$datasets.="\t\t\t\tlabel: \"\",\n";
+		$datasets.="\t\t\t\tfill: false,\n";
+
+		$labels="\t\tlabels:[";
+		$data="\t\t\t\tdata: [";
+		$graphConstantsA="\t\t\t\tbackgroundColor: [";
+		$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+		$graphConstantsC="\t\t\t\thoverBorderColor: [";
+		for ($d=0; $d<count($graph_stats); $d++) {
+			$labels.="\"".$graph_stats[$d][1]."\",";
+			$data.="\"".$graph_stats[$d][0]."\",";
+			$current_graph_total+=$graph_stats[$d][0];
+			$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+			$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+			$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+			$graphConstantsA.="\"$bgcolor\",";
+			$graphConstantsB.="\"$hbgcolor\",";
+			$graphConstantsC.="\"$hbcolor\",";
+		}	
+		$graphConstantsA.="],\n";
+		$graphConstantsB.="],\n";
+		$graphConstantsC.="],\n";
+		$labels=preg_replace('/,$/', '', $labels)."],\n";
+		$data=preg_replace('/,$/', '', $data)."],\n";
+		
+		$graph_totals_rawdata[$q]=$current_graph_total;
+		switch($dataset_type) {
+			case "time":
+				$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+				$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+				break;
+			case "percent":
+				$graph_totals_array[$q]="";
+				$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+				break;
+			default:
+				$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+				$chart_options="options: { legend: { display: false }},";
+				break;
+		}
+
+		$datasets.=$data;
+		$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+		$datasets.="\t\t\t}\n";
+		$datasets.="\t\t]\n";
+		$datasets.="\t}\n";
+
+		$JS_text.=$labels.$datasets;
+		# $JS_text.="}\n";
+		# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+		$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+		$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
 	}
-	$GRAPH.="  <tr>\n";
-	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL").":</th>\n";
-	$GRAPH.="	<th class=\"thgraph\" scope=\"col\">".trim($TOTCATcalls)."</th>\n";
-	$GRAPH.="  </tr>\n";
-	$GRAPH.="</table><PRE>\n";
+
+	$graph_count=count($graph_array);
+	$graph_title=_QXZ("CUSTOM STATUS CATEGORY STATS");
+	include("graphcanvas.inc");
+	$GRAPH.=$graphCanvas;
+
 	#$OUToutput.=$GRAPH;
 
 
@@ -899,14 +1062,6 @@ else
 		$max_flags=1; 
 		$max_status=1;
 		$graph_stats=array();
-		$GRAPH.="<BR><BR><a name='graph".$LISTIDlists[$i]."'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-		$GRAPH.="<tr><th width='50%' class='grey_graph_cell' id='graph".$LISTIDlists[$i]."1'><a href='#' onClick=\"Draw".$LISTIDlists[$i]."Graph('FLAGS', '1'); return false;\">"._QXZ("STATUS FLAG BREAKDOWN")."</a></th><th width='50%' class='grey_graph_cell' id='graph".$LISTIDlists[$i]."2'><a href='#' onClick=\"Draw".$LISTIDlists[$i]."Graph('STATUS', '2'); return false;\">"._QXZ("STATUS BREAKDOWN")."</a></th></tr>";
-		$GRAPH.="<tr><td colspan='4' class='graph_span_cell'><span id='status_".$LISTIDlists[$i]."_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-		$graph_header="<table cellspacing='1' cellpadding='0' bgcolor='white' class='horizontalgraph'>";
-		$graph_header.="<caption align='top'>$LISTIDlists[$i] - $LISTIDlist_names[$i] ($LISTIDlist_active[$i])<br>"._QXZ("TOTAL LEADS").": $LISTIDcalls[$i]</caption>";
-		$FLAGS_graph=$graph_header."<tr><th class='thgraph' scope='col'>"._QXZ("FLAG")."</th><th class='thgraph' scope='col'>"._QXZ("COUNT")." / %</th></tr>";
-		$STATUS_graph=$graph_header."<tr><th class='thgraph' scope='col'>"._QXZ("STATUS")."</th><th class='thgraph' scope='col'>"._QXZ("COUNT")."</th></tr>";
-
 		$CSV_text4.="\""._QXZ("LIST ID").": $LISTIDlists[$i]\",\"$LISTIDlist_names[$i]\",\"$LISTIDlist_active[$i]\"\n";
 		$CSV_text4.="\""._QXZ("TOTAL LEADS").":\",\"$header_list_count\"\n\n";
 
@@ -1016,6 +1171,8 @@ else
 			}
 		if ($COMP_count>$max_flags) {$max_flags=$COMP_count;}
 
+		$graph_stats2=array(array("$HA_count", "Human Answer"), array("$SALE_count", "Sale"), array("$DNC_count", "DNC"), array("$CC_count", "Customer Contact"), array("$NI_count", "Not Interested"), array("$UW_count", "Unworkable"), array("$SC_count", "Scheduled Callbacks"), array("$COMP_count", "Completed"));
+
 		$HA_percent =	sprintf("%6.2f", "$HA_percent"); while(strlen($HA_percent)>6) {$HA_percent = substr("$HA_percent", 0, -1);}
 		$SALE_percent =	sprintf("%6.2f", "$SALE_percent"); while(strlen($SALE_percent)>6) {$SALE_percent = substr("$SALE_percent", 0, -1);}
 		$DNC_percent =	sprintf("%6.2f", "$DNC_percent"); while(strlen($DNC_percent)>6) {$DNC_percent = substr("$DNC_percent", 0, -1);}
@@ -1107,25 +1264,103 @@ else
 
 		$CSV_text4.="\""._QXZ("TOTAL").":\",\"\",\"$TOTALleads\"\n\n\n";
 
-		for ($d=0; $d<count($graph_stats); $d++) {
-			if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-			$STATUS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_status))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
+		# USE THIS FOR COMBINED graphs, use pipe-delimited array elements, dataset_name|index|link_name|graph_override
+		# You have to hard code the graph name in where it is overridden and mind the data indices.  No other way to do it.
+		$multigraph_text="";
+		$graph_id++;
+		$graph_array=array("ALCS_STATUSFLAG$LISTIDlists[$i]data|0|STATUS FLAG BREAKDOWN|intpct|graph_stats2", "ALCS_STATUS$LISTIDlists[$i]data|1|STATUS BREAKDOWN|integer|");
+		$default_graph="bar"; # Graph that is initally displayed when page loads
+		include("graph_color_schemas.inc"); 
+
+		$graph_totals_array=array();
+		$graph_totals_rawdata=array();
+		for ($q=0; $q<count($graph_array); $q++) {
+			$graph_info=explode("|", $graph_array[$q]); 
+			$current_graph_total=0;
+			$dataset_name=$graph_info[0];
+			$dataset_index=$graph_info[1]; 
+			$dataset_type=$graph_info[3];
+			$graph_override=$graph_info[4];
+
+			$JS_text.="var $dataset_name = {\n";
+			# $JS_text.="\ttype: \"\",\n";
+			# $JS_text.="\t\tdata: {\n";
+			$datasets="\t\tdatasets: [\n";
+			$datasets.="\t\t\t{\n";
+			$datasets.="\t\t\t\tlabel: \"\",\n";
+			$datasets.="\t\t\t\tfill: false,\n";
+
+			$labels="\t\tlabels:[";
+			$data="\t\t\t\tdata: [";
+			$graphConstantsA="\t\t\t\tbackgroundColor: [";
+			$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+			$graphConstantsC="\t\t\t\thoverBorderColor: [";
+
+			if ($graph_override) {
+				for ($d=0; $d<count($graph_stats2); $d++) {
+					$labels.="\"".preg_replace('/ +/', ' ', $graph_stats2[$d][1])."\",";
+					$data.="\"".$graph_stats2[$d][$dataset_index]."\",";
+					$current_graph_total+=$graph_stats2[$d][$dataset_index];
+					$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+					$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+					$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+					$graphConstantsA.="\"$bgcolor\",";
+					$graphConstantsB.="\"$hbgcolor\",";
+					$graphConstantsC.="\"$hbcolor\",";
+				}	
+			} else {
+				for ($d=0; $d<count($graph_stats); $d++) {
+					$labels.="\"".preg_replace('/ +/', ' ', $graph_stats[$d][0])."\",";
+					$data.="\"".$graph_stats[$d][$dataset_index]."\","; 
+					$current_graph_total+=$graph_stats[$d][$dataset_index];
+					$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+					$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+					$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+					$graphConstantsA.="\"$bgcolor\",";
+					$graphConstantsB.="\"$hbgcolor\",";
+					$graphConstantsC.="\"$hbcolor\",";
+				}	
+			}
+			$graphConstantsA.="],\n";
+			$graphConstantsB.="],\n";
+			$graphConstantsC.="],\n";
+			$labels=preg_replace('/,$/', '', $labels)."],\n";
+			$data=preg_replace('/,$/', '', $data)."],\n";
+			
+			$graph_totals_rawdata[$q]=$current_graph_total;
+			switch($dataset_type) {
+				case "time":
+					$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+					$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+					break;
+				case "percent":
+					$graph_totals_array[$q]="";
+					$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+					break;
+				default:
+					$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+					$chart_options="options: { legend: { display: false }},";
+					break;
+			}
+
+			$datasets.=$data;
+			$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+			$datasets.="\t\t\t}\n";
+			$datasets.="\t\t]\n";
+			$datasets.="\t}\n";
+
+			$JS_text.=$labels.$datasets;
+			# $JS_text.="}\n";
+			# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+			$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+			$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
 		}
-		$STATUS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTALleads)."</th></tr></table>";
-		$JS_onload.="\tDraw".$LISTIDlists[$i]."Graph('FLAGS', '1');\n"; 
-		$JS_text.="function Draw".$LISTIDlists[$i]."Graph(graph, th_id) {\n";
-		$JS_text.="	var FLAGS_graph=\"$FLAGS_graph\";\n";
-		$JS_text.="	var STATUS_graph=\"$STATUS_graph\";\n";
-		$JS_text.="\n";
-		$JS_text.="	for (var i=1; i<=2; i++) {\n";
-		$JS_text.="		var cellID=\"graph".$LISTIDlists[$i]."\"+i;\n";
-		$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
-		$JS_text.="	}\n";
-		$JS_text.="	var cellID=\"graph".$LISTIDlists[$i]."\"+th_id;\n";
-		$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
-		$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
-		$JS_text.="	document.getElementById('status_".$LISTIDlists[$i]."_graph').innerHTML=graph_to_display;\n";
-		$JS_text.="}\n";
+
+		$graph_count=count($graph_array);
+		$graph_title="$LISTIDlists[$i]  - $LISTIDlist_names[$i] ($LISTIDlist_active[$i])";
+		include("graphcanvas.inc");
+		$GRAPH.=$graphCanvas;
+
 		# $OUToutput.=$GRAPH;
 
 		$i++;
@@ -1181,9 +1416,9 @@ else
 		$JS_text.="</script>\n";
 
 		echo $HEADER;
-		echo $JS_text;
 		require("admin_header.php");
 		echo $MAIN;
+		echo $JS_text;
 	}
 
 

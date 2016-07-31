@@ -26,6 +26,7 @@
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141114-0028 - Finalized adding QXZ translation to all admin files
 # 141230-0948 - Added code for on-the-fly language translations display
+# 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 #
 
 $startMS = microtime();
@@ -318,12 +319,16 @@ $HEADER.="   .header_white {font-size: 14px;  font-family: sans-serif; font-weig
 $HEADER.="   .data_records {font-size: 12px;  font-family: sans-serif; color: black}\n";
 $HEADER.="   .data_records_fix {font-size: 12px;  font-family: monospace; color: black}\n";
 $HEADER.="   .data_records_fix_small {font-size: 9px;  font-family: monospace; color: black}\n";
-$HEADER.="\n";
+$HEADER.="\n"; 
 $HEADER.="-->\n";
 $HEADER.="</style>\n";
 $HEADER.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
+require("chart_button.php");
+$HEADER.="<script src='chart/Chart.js'></script>\n"; 
+$HEADER.="<script language=\"JavaScript\" src=\"vicidial_chart_functions.js\"></script>\n";
+
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HEADER.="<TITLE>\n";
 
@@ -601,24 +606,89 @@ else
 	}
 	if ($high_ct<1) {$high_ct*=10;}
 	$MAIN.="</PRE>\n";
-	$MAIN.="<table cellspacing=\"0\" cellpadding=\"0\" summary=\"CALL HANGUP REASON STATS\" class=\"horizontalgraph\">\n";
-	$MAIN.="  <caption align=\"top\">"._QXZ("USER TIMECLOCK DETAILS")."<br /><font size='-1'>"._QXZ("Time range").": $query_date to $end_date<br/>"._QXZ("These totals do NOT include any active sessions")."</font><br /></caption>\n";
-	$MAIN.="  <tr>\n";
-	$MAIN.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("USER")."  </th>\n";
-	$MAIN.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("HOURS")." </th>\n";
-	$MAIN.="  </tr>\n";
-	for ($i=0; $i<count($ct_ary); $i++) {
-		if ($i==0) {$class=" first";} else if (($i+1)==count($ct_ary)) {$class=" last";} else {$class="";}
-		$MAIN.="  <tr>\n";
-		$MAIN.="	<td class=\"chart_td$class\">".$ct_ary[$i][0]."</td>\n";
-		$MAIN.="	<td class=\"chart_td value$class\"><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(400*$ct_ary[$i][1], $high_ct))."\" height=\"16\" />".$ct_ary[$i][1]."</td>\n";
-		$MAIN.="  </tr>\n";
+
+	$JS_text="<script language='Javascript'>\n";
+	#########
+	$graph_array=array("TCdata|||decimal|");
+	$graph_id++;
+	$default_graph="bar"; # Graph that is initally displayed when page loads
+	include("graph_color_schemas.inc"); 
+
+	$graph_totals_array=array();
+	$graph_totals_rawdata=array();
+	for ($q=0; $q<count($graph_array); $q++) {
+		$graph_info=explode("|", $graph_array[$q]); 
+		$current_graph_total=0;
+		$dataset_name=$graph_info[0];
+		$dataset_index=$graph_info[1]; 
+		$dataset_type=$graph_info[3];
+		if ($q==0) {$preload_dataset=$dataset_name;}  # Used below to load initial graph
+
+		$JS_text.="var $dataset_name = {\n";
+		# $JS_text.="\ttype: \"\",\n";
+		# $JS_text.="\t\tdata: {\n";
+		$datasets="\t\tdatasets: [\n";
+		$datasets.="\t\t\t{\n";
+		$datasets.="\t\t\t\tlabel: \"\",\n";
+		$datasets.="\t\t\t\tfill: false,\n";
+
+		$labels="\t\tlabels:[";
+		$data="\t\t\t\tdata: [";
+		$graphConstantsA="\t\t\t\tbackgroundColor: [";
+		$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+		$graphConstantsC="\t\t\t\thoverBorderColor: [";
+		for ($d=0; $d<count($ct_ary); $d++) {
+			$labels.="\"".$ct_ary[$d][0]."\",";
+			$data.="\"".$ct_ary[$d][1]."\","; 
+			$current_graph_total+=$ct_ary[$d][1];
+			$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+			$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+			$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+			$graphConstantsA.="\"$bgcolor\",";
+			$graphConstantsB.="\"$hbgcolor\",";
+			$graphConstantsC.="\"$hbcolor\",";
+		}	
+		$graphConstantsA.="],\n";
+		$graphConstantsB.="],\n";
+		$graphConstantsC.="],\n";
+		$labels=preg_replace('/,$/', '', $labels)."],\n";
+		$data=preg_replace('/,$/', '', $data)."],\n";
+		
+		$graph_totals_rawdata[$q]=$current_graph_total;
+		switch($dataset_type) {
+			case "time":
+				$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+				$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+				break;
+			case "percent":
+				$graph_totals_array[$q]="";
+				$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+				break;
+			default:
+				$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+				$chart_options="options: { legend: { display: false }},";
+				break;
+		}
+
+		$datasets.=$data;
+		$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+		$datasets.="\t\t\t}\n";
+		$datasets.="\t\t]\n";
+		$datasets.="\t}\n";
+
+		$JS_text.=$labels.$datasets;
+		# $JS_text.="}\n";
+		# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+		$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+		$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
 	}
-	$MAIN.="  <tr>\n";
-	$MAIN.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTAL HOURS").":</th>\n";
-	$MAIN.="	<th class=\"thgraph\" scope=\"col\">".trim($TOThours)."</th>\n";
-	$MAIN.="  </tr>\n";
-	$MAIN.="</table>\n";
+
+	$graph_count=count($graph_array);
+	$graph_title=_QXZ("USER TIMECLOCK DETAILS");
+	include("graphcanvas.inc");
+	$MAIN.=$graphCanvas;
+	$JS_text.="</script>\n";
+
 	$MAIN.="<PRE>\n";
 	###########################
 	}
@@ -650,7 +720,7 @@ $MAIN.="</BODY></HTML>\n";
 	} else {
 		echo $HEADER;
 		require("admin_header.php");
-		echo $MAIN;
+		echo $MAIN.$JS_text;
 	}
 
 if ($db_source == 'S')

@@ -274,6 +274,8 @@ OTHER CHANGES:
 	definitions, removed san-serif fonts, changed loading/login/logout 
 	screens, logging of browser width/height.
 
+74. Changed HTML Reports to use dynamic charting Javascript elements
+
 
 
 

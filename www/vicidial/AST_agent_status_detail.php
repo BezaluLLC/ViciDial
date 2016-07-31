@@ -32,6 +32,7 @@
 # 160301-2051 - Expanded full name to 25 characters on text display
 # 160310-2115 - Fixed bug in HTML display
 # 160330-0648 - Fixed issue with names and non-latin setting
+# 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 #
 
 $startMS = microtime();
@@ -74,6 +75,7 @@ if ($search_archived_data=="checked") {$agent_log_table="vicidial_agent_log_arch
 
 $report_name = 'Agent Status Detail';
 $db_source = 'M';
+
 $JS_text="<script language='Javascript'>\n";
 $JS_onload="onload = function() {\n";
 
@@ -421,6 +423,9 @@ if ($file_download < 1)
 	echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 	echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 	echo "<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
+	require("chart_button.php");
+	echo "<script src='chart/Chart.js'></script>\n"; 
+	echo "<script language=\"JavaScript\" src=\"vicidial_chart_functions.js\"></script>\n";
 
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo "<TITLE>$report_name</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -636,13 +641,6 @@ else
 		$ASCII_text.="| <a href=\"$LINKbase\">USER NAME</a>                 | <a href=\"$LINKbase&stage=ID\">ID</a>       | <a href=\"$LINKbase&stage=LEADS\">CALLS</a>  | <a href=\"$LINKbase&stage=CI\">CIcalls</a>| <a href=\"$LINKbase&stage=DNCCI\">DNC/CI%</a>|$statusesHTML\n";
 		$ASCII_text.="+---------------------------+----------+--------+--------+--------+$statusesHEAD\n";
 
-		for ($i=0; $i<count($sub_statusesARY); $i++) {
-			$Sstatus=$sub_statusesARY[$i];
-			$SstatusTXT=$Sstatus;
-			if ($Sstatus=="") {$SstatusTXT="(blank)";}
-			$GRAPH2.="<th class='column_header grey_graph_cell'><a href='#' onClick=\"DrawGraph('$Sstatus'); return false;\">$SstatusTXT</a></th>";
-		}
-
 		}
 	else
 		{
@@ -659,12 +657,6 @@ else
 	$max_calls=1;
 	$max_cicalls=1;
 	$max_dncci=1;
-	$GRAPH.="<BR><BR><a name='callgraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-	$GRAPH2="<tr><th class='column_header grey_graph_cell' id='callgraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">CALLS</a></th><th class='column_header grey_graph_cell' id='callgraph2'><a href='#' onClick=\"DrawGraph('CICALLS', '2'); return false;\">CI/CALLS</a></th><th class='column_header grey_graph_cell' id='callgraph3'><a href='#' onClick=\"DrawGraph('DNCCI', '3'); return false;\">DNC/CI</a></th>";
-	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>CALL STATS BREAKDOWN</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
-	$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>CALLS </th></tr>";
-	$CICALLS_graph=$graph_header."<th class='thgraph' scope='col'>CI CALLS</th></tr>";
-	$DNCCI_graph=$graph_header."<th class='thgraph' scope='col'>DNC/CI%</th></tr>";
 
 	while ($m < $k)
 		{
@@ -899,64 +891,95 @@ else
 
 		$ASCII_text.="\n\n</PRE>";
 
+		# USE THIS FOR COMBINED graphs, use pipe-delimited array elements, dataset_name|index|link_name|graph_override
+		# You have to hard code the graph name in where it is overridden and mind the data indices.  No other way to do it.
+		$multigraph_text="";
+		$graph_id++;
+		$graph_array=array("ASD_CALLSdata|1|CALLS|integer|", "ASD_CICALLSdata|2|CI/CALLS|integer|", "ASD_DNCCIdata|3|DNC/CI|percent|");
+
 		for ($e=0; $e<count($sub_statusesARY); $e++) {
 			$Sstatus=$sub_statusesARY[$e];
 			$SstatusTXT=$Sstatus;
 			if ($Sstatus=="") {$SstatusTXT="(blank)";}
-			$GRAPH2.="<th class='column_header grey_graph_cell' id='callgraph".($e+4)."'><a href='#' onClick=\"DrawGraph('$Sstatus', '".($e+4)."'); return false;\">$SstatusTXT</a></th>";
+			array_push($graph_array, "ASD_SUBSTATUS".$e."data|".($e+4)."|".$SstatusTXT."|integer|");
 		}
 
-		for ($d=0; $d<count($graph_stats); $d++) {
-			if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-			$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_calls))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-			$CICALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_cicalls))."' height='16' />".$graph_stats[$d][2]."</td></tr>";
-			$DNCCI_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_dncci))."' height='16' />".$graph_stats[$d][3]."%</td></tr>";
+		$default_graph="bar"; # Graph that is initally displayed when page loads
+		include("graph_color_schemas.inc"); 
 
-			for ($e=0; $e<count($sub_statusesARY); $e++) {
-				$Sstatus=$sub_statusesARY[$e];
-				$varname=$Sstatus."_graph";
-				$max_varname="max_".$Sstatus;
-				# $max.= "<!-- $max_varname => ".$$max_varname." //-->\n";
+		$graph_totals_array=array();
+		$graph_totals_rawdata=array();
+		for ($q=0; $q<count($graph_array); $q++) {
+			$graph_info=explode("|", $graph_array[$q]); 
+			$current_graph_total=0;
+			$dataset_name=$graph_info[0];
+			$dataset_index=$graph_info[1]; 
+			$dataset_type=$graph_info[3];
+
+			$JS_text.="var $dataset_name = {\n";
+			# $JS_text.="\ttype: \"\",\n";
+			# $JS_text.="\t\tdata: {\n";
+			$datasets="\t\tdatasets: [\n";
+			$datasets.="\t\t\t{\n";
+			$datasets.="\t\t\t\tlabel: \"\",\n";
+			$datasets.="\t\t\t\tfill: false,\n";
+
+			$labels="\t\tlabels:[";
+			$data="\t\t\t\tdata: [";
+			$graphConstantsA="\t\t\t\tbackgroundColor: [";
+			$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+			$graphConstantsC="\t\t\t\thoverBorderColor: [";
+			for ($d=0; $d<count($graph_stats); $d++) {
+				$labels.="\"".preg_replace('/ +/', ' ', $graph_stats[$d][0])."\",";
+				$data.="\"".$graph_stats[$d][$dataset_index]."\","; 
+				$current_graph_total+=$graph_stats[$d][$dataset_index];
+				$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+				$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+				$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+				$graphConstantsA.="\"$bgcolor\",";
+				$graphConstantsB.="\"$hbgcolor\",";
+				$graphConstantsC.="\"$hbcolor\",";
+			}	
+			$graphConstantsA.="],\n";
+			$graphConstantsB.="],\n";
+			$graphConstantsC.="],\n";
+			$labels=preg_replace('/,$/', '', $labels)."],\n";
+			$data=preg_replace('/,$/', '', $data)."],\n";
 			
-				$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][($e+4)], $$max_varname))."' height='16' />".$graph_stats[$d][($e+4)]."</td></tr>";
+			$graph_totals_rawdata[$q]=$current_graph_total;
+			switch($dataset_type) {
+				case "time":
+					$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+					$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+					break;
+				case "percent":
+					$graph_totals_array[$q]="";
+					$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+					break;
+				default:
+					$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+					$chart_options="options: { legend: { display: false }},";
+					break;
 			}
-		}
-		
-		$CALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($TOTcalls)."</th></tr></table>";
-		$CICALLS_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($CIScountTOT)."</th></tr></table>";
-		$DNCCI_graph.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($DNCcountPCT)."%</th></tr></table>";
-		for ($e=0; $e<count($sub_statusesARY); $e++) {
-			$Sstatus=$sub_statusesARY[$e];
-			$total_var=$Sstatus."_total";
-			$graph_var=$Sstatus."_graph";
-			$$graph_var.="<tr><th class='thgraph' scope='col'>TOTAL:</th><th class='thgraph' scope='col'>".trim($$total_var)."</th></tr></table>";
-		}
-		$JS_onload.="\tDrawGraph('CALLS', '1');\n"; 
-		$JS_text.="function DrawGraph(graph, th_id) {\n";
-		$JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";
-		$JS_text.="	var CICALLS_graph=\"$CICALLS_graph\";\n";
-		$JS_text.="	var DNCCI_graph=\"$DNCCI_graph\";\n";
 
-		for ($e=0; $e<count($sub_statusesARY); $e++) {
-			$Sstatus=$sub_statusesARY[$e];
-			$graph_var=$Sstatus."_graph";
-			$JS_text.="	var ".$Sstatus."_graph=\"".$$graph_var."\";\n";
+			$datasets.=$data;
+			$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+			$datasets.="\t\t\t}\n";
+			$datasets.="\t\t]\n";
+			$datasets.="\t}\n";
+
+			$JS_text.=$labels.$datasets;
+			# $JS_text.="}\n";
+			# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+			$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+			$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
 		}
 
-		$JS_text.="	for (var i=1; i<=".(count($sub_statusesARY)+3)."; i++) {\n";
-		$JS_text.="		var cellID=\"callgraph\"+i;\n";
-		$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
-		$JS_text.="	}\n";
-		$JS_text.="	var cellID=\"callgraph\"+th_id;\n";
-		$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
-		$JS_text.="\n";
-		$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
-		$JS_text.="	document.getElementById('agent_time_detail_graph').innerHTML=graph_to_display;\n";
-		$JS_text.="}\n";
 
-		$GRAPH3="<tr><td colspan='".(3+$sub_status_count)."' class='graph_span_cell'><span id='agent_time_detail_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-		
-		# echo $GRAPH.$GRAPH2.$GRAPH3.$max;
+		$graph_count=count($graph_array);
+		$graph_title=_QXZ("AGENT STATUS DETAIL REPORT");
+		include("graphcanvas.inc");
+		$GRAPH.=$graphCanvas;
 		}
 	else
 		{
@@ -1102,8 +1125,7 @@ echo "</FORM>";
 
 if ($report_display_type=="HTML")
 	{
-	echo $GRAPH.$GRAPH2.$GRAPH3;
-	echo $JS_text;
+	echo $GRAPH.$JS_text;
 	}
 else 
 	{

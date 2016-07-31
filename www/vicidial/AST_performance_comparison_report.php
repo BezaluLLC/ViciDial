@@ -14,6 +14,7 @@
 # 150516-1314 - Fixed Javascript element problem, Issue #857
 # 151227-1746 - Added option for searching archived data
 # 160121-2215 - Added report title header, default report format, cleaned up formatting
+# 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 #
 
 $startMS = microtime();
@@ -448,6 +449,9 @@ $HTML_head.=" </STYLE>\n";
 $HTML_head.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 $HTML_head.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 $HTML_head.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
+require("chart_button.php");
+$HTML_head.="<script src='chart/Chart.js'></script>\n"; 
+$HTML_head.="<script language=\"JavaScript\" src=\"vicidial_chart_functions.js\"></script>\n";
 
 $HTML_head.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HTML_head.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -638,35 +642,27 @@ else
 	$ASCII_header2.="+-----------------+----------+";
 	$ASCII_header3.="| <a href=\"$LINKbase\">"._QXZ("USER NAME",15)."</a> | <a href=\"$LINKbase&stage=ID\">"._QXZ("ID",8)."</a> |";
 
-	$GRAPH="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"LIST ID Summary\" class=\"horizontalgraph\">\n";
-	$GRAPH.="<caption align='top'>"._QXZ("PERFORMANCE SUMMARY")."</caption>";
 
-	$GRAPH2="";
+	$master_graph_array=array();
 	for ($q=0; $q<count($rpt_date_array); $q++) 
 		{
 		$rpt_subtitle=$rpt_subtitle_array[$q];
 		$rpt_date=$rpt_date_array[$q];
 		$rpt_date_numeric=preg_replace('/[^0-9]/', '', $rpt_date_array[$q]);
 		$array_offset=($q*5)+1;
-		$GRAPH2.="<tr><th colspan=5 class='column_header grey_graph_cell'>$rpt_subtitle, $rpt_date</th></tr>";
-		$GRAPH2.="<tr>";
-		$GRAPH2.="<th class='column_header grey_graph_cell' id='callstatsgraph".$array_offset."' nowrap width='20%'><a href='#' onClick=\"DrawGraph('CALLS_".$rpt_date_numeric."', '$array_offset'); return false;\">"._QXZ("CALLS")."</a></th>";
-		$GRAPH2.="<th class='column_header grey_graph_cell' id='callstatsgraph".($array_offset+1)."' nowrap width='20%'><a href='#' onClick=\"DrawGraph('SALES_".$rpt_date_numeric."', '".($array_offset+1)."'); return false;\">"._QXZ("SALES")."</a></th>";
-		$GRAPH2.="<th class='column_header grey_graph_cell' id='callstatsgraph".($array_offset+2)."' nowrap width='20%'><a href='#' onClick=\"DrawGraph('SALECONV_".$rpt_date_numeric."', '".($array_offset+2)."'); return false;\">"._QXZ("SALE CONV")." %</a></th>";
-		$GRAPH2.="<th class='column_header grey_graph_cell' id='callstatsgraph".($array_offset+3)."' nowrap width='20%'><a href='#' onClick=\"DrawGraph('SPH_".$rpt_date_numeric."', '".($array_offset+3)."'); return false;\">"._QXZ("SALES PER HOUR")."</a></th>";
-		$GRAPH2.="<th class='column_header grey_graph_cell' id='callstatsgraph".($array_offset+4)."' nowrap width='20%'><a href='#' onClick=\"DrawGraph('TIME_".$rpt_date_numeric."', '".($array_offset+4)."'); return false;\">"._QXZ("TIME")."</a></th>";
-		$GRAPH2.="</tr>";
+						$master_graph_array[$q]=array("APC_CALLSdata$rpt_date_numeric|1|CALLS|integer|", "APC_SALESdata$rpt_date_numeric|2|SALES|integer|", "APC_SALECONVdata$rpt_date_numeric|3|SALE CONV %|percent|", "APC_SPHdata$rpt_date_numeric|4|SALES PER HOUR|decimal|", "APC_TIMEdata$rpt_date_numeric|5|TIME|time|");
 		}
 
 	$TOTALS_array[0]=_QXZ("TOTALS");
 	$graph_TOTALS_array[0]+=_QXZ("TOTALS");
 
-	for ($q=0; $q<count($rpt_date_array); $q++) 
+	$GRAPH="";
+	for ($y=0; $y<count($rpt_date_array); $y++) 
 		{
-		$rpt_subtitle=$rpt_subtitle_array[$q];
-		$rpt_date=$rpt_date_array[$q];
-		$rpt_date_numeric=preg_replace('/[^0-9]/', '', $rpt_date_array[$q]);
-		$array_offset=($q*5)+1;
+		$rpt_subtitle=$rpt_subtitle_array[$y];
+		$rpt_date=$rpt_date_array[$y];
+		$rpt_date_numeric=preg_replace('/[^0-9]/', '', $rpt_date_array[$y]);
+		$array_offset=($y*5)+1;
 
 		$CSV_header1.="\"$rpt_subtitle\",\"\",\"\",\"\",\"\",";
 		$CSV_header2.='"'._QXZ("CALLS").'","'._QXZ("SALES").'","'._QXZ("CONVERSION RATE TO CALLS").'","'._QXZ("SALES PER HOUR").'","'._QXZ("TIME").'",';
@@ -683,12 +679,6 @@ else
 			$max_stats[$k]=0;
 			}
 
-		$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>$rpt_subtitle "._QXZ("SUMMARY")."</caption><tr><th class='thgraph' scope='col'>USERS</th>";
-		$CALLS_graph[$q]=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS")."</th></tr>";
-		$SALES_graph[$q]=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES")."</th></tr>";
-		$SALECONV_graph[$q]=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALE CONV")." %</th></tr>";
-		$SPH_graph[$q]=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES PER HOUR")."</th></tr>";
-		$TIME_graph[$q]=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TIME")."</th></tr>";
 
 		#########
 
@@ -734,47 +724,87 @@ else
 			}
 		reset($agent_performance_array);
 
-		for ($j=0; $j<count($graph_stats); $j++) 
-			{
-			if ($j==0) {$class=" first";} else if (($j+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-			$CALLS_graph[$q].="  <tr><td class='chart_td$class'>".$graph_stats[$j][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(600*$graph_stats[$j][1], $max_stats[1]))."' height='16' />".$graph_stats[$j][1]."</td></tr>";
-			$SALES_graph[$q].="  <tr><td class='chart_td$class'>".$graph_stats[$j][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(600*$graph_stats[$j][2], $max_stats[2]))."' height='16' />".$graph_stats[$j][2]."</td></tr>";
-			$SALECONV_graph[$q].="  <tr><td class='chart_td$class'>".$graph_stats[$j][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(600*$graph_stats[$j][3], $max_stats[3]))."' height='16' />".$graph_stats[$j][3]."</td></tr>";
-			$SPH_graph[$q].="  <tr><td class='chart_td$class'>".$graph_stats[$j][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(600*$graph_stats[$j][4], $max_stats[4]))."' height='16' />".$graph_stats[$j][4]."</td></tr>";
-			$TIME_graph[$q].="  <tr><td class='chart_td$class'>".$graph_stats[$j][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(600*$graph_stats[$j][5], $max_stats[5]))."' height='16' />".sec_convert($graph_stats[$j][5], 'H')."</td></tr>";
+		$multigraph_text="";
+		$graph_id++;
+		$graph_array=$master_graph_array[$y];
+		$default_graph="bar"; # Graph that is initally displayed when page loads
+		include("graph_color_schemas.inc"); 
+
+		$graph_totals_array=array();
+		$graph_totals_rawdata=array();
+		for ($q=0; $q<count($graph_array); $q++) {
+			$graph_info=explode("|", $graph_array[$q]); 
+			$current_graph_total=0;
+			$dataset_name=$graph_info[0];
+			$dataset_index=$graph_info[1]; 
+			$dataset_type=$graph_info[3];
+
+			$JS_text.="var $dataset_name = {\n";
+			# $JS_text.="\ttype: \"\",\n";
+			# $JS_text.="\t\tdata: {\n";
+			$datasets="\t\tdatasets: [\n";
+			$datasets.="\t\t\t{\n";
+			$datasets.="\t\t\t\tlabel: \"\",\n";
+			$datasets.="\t\t\t\tfill: false,\n";
+
+			$labels="\t\tlabels:[";
+			$data="\t\t\t\tdata: [";
+			$graphConstantsA="\t\t\t\tbackgroundColor: [";
+			$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+			$graphConstantsC="\t\t\t\thoverBorderColor: [";
+			for ($d=0; $d<count($graph_stats); $d++) {
+				$labels.="\"".preg_replace('/ +/', ' ', $graph_stats[$d][0])."\",";
+				$data.="\"".$graph_stats[$d][$dataset_index]."\","; 
+				$current_graph_total+=$graph_stats[$d][$dataset_index];
+				$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+				$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+				$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+				$graphConstantsA.="\"$bgcolor\",";
+				$graphConstantsB.="\"$hbgcolor\",";
+				$graphConstantsC.="\"$hbcolor\",";
+			}	
+			$graphConstantsA.="],\n";
+			$graphConstantsB.="],\n";
+			$graphConstantsC.="],\n";
+			$labels=preg_replace('/,$/', '', $labels)."],\n";
+			$data=preg_replace('/,$/', '', $data)."],\n";
+			
+			$graph_totals_rawdata[$q]=$current_graph_total;
+			switch($dataset_type) {
+				case "time":
+					$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+					$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+					break;
+				case "percent":
+					$graph_totals_array[$q]="";
+					$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+					break;
+				default:
+					$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+					$chart_options="options: { legend: { display: false }},";
+					break;
 			}
 
-		$CALLS_graph[$q].="  <tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".$graph_TOTALS_array[($array_offset)]."</th></tr>";
-		$SALES_graph[$q].="  <tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".$graph_TOTALS_array[($array_offset+1)]."</th></tr>";
-		$SALECONV_graph[$q].="  <tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".$graph_TOTALS_array[($array_offset+2)]."</th></tr>";
-		$SPH_graph[$q].="  <tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".$graph_TOTALS_array[($array_offset+3)]."</th></tr>";
-		$TIME_graph[$q].="  <tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".sec_convert($graph_TOTALS_array[($array_offset+4)], 'H')."</th></tr>";
+			$datasets.=$data;
+			$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+			$datasets.="\t\t\t}\n";
+			$datasets.="\t\t]\n";
+			$datasets.="\t}\n";
+
+			$JS_text.=$labels.$datasets;
+			# $JS_text.="}\n";
+			# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+			$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+			$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
 		}
 
-	$JS_text.="function DrawGraph(graph, th_id) {\n";
-	$JS_onload.="\tDrawGraph('CALLS_".preg_replace('/[^0-9]/', '', $rpt_date_array[0])."', '1');\n"; 
-	for ($q=0; $q<count($rpt_date_array); $q++) 
-		{
-		$rpt_date_numeric=preg_replace('/[^0-9]/', '', $rpt_date_array[$q]);
-		$JS_text.="	var graph_CALLS_".$rpt_date_numeric."=\"".$CALLS_graph[$q]."\";\n";
-		$JS_text.="	var graph_SALES_".$rpt_date_numeric."=\"".$SALES_graph[$q]."\";\n";
-		$JS_text.="	var graph_SALECONV_".$rpt_date_numeric."=\"".$SALECONV_graph[$q]."\";\n";
-		$JS_text.="	var graph_SPH_".$rpt_date_numeric."=\"".$SPH_graph[$q]."\";\n";
-		$JS_text.="	var graph_TIME_".$rpt_date_numeric."=\"".$TIME_graph[$q]."\";\n";
+		$graph_count=count($graph_array);
+		$graph_title="$rpt_subtitle, $rpt_date";
+		include("graphcanvas.inc");
+		$GRAPH.=$graphCanvas;
+
 		}
 
-	$JS_text.="	for (var i=1; i<=35; i++) {\n";
-	$JS_text.="		var cellID=\"callstatsgraph\"+i;\n";
-	$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
-	$JS_text.="	}\n";
-	$JS_text.="	var cellID=\"callstatsgraph\"+th_id;\n";
-	$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
-	$JS_text.="\n";
-	$JS_text.="	var graph_to_display=eval(\"graph_\"+graph);\n";
-	$JS_text.="	document.getElementById('call_stats_graph').innerHTML=graph_to_display;\n";
-	$JS_text.="}\n";
-
-	$GRAPH3="<tr><td colspan='35' class='graph_span_cell'><span id='call_stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
 
 
 	$CSV_header1.="\n";
@@ -846,7 +876,7 @@ else
 
 	$CSV_text.='"","'._QXZ("TOTALS").'",';
 	$ASCII_text.="| ".sprintf("%26s", $TOTALS_array[0])." ||";
-	$GRAPH_text.=$GRAPH.$GRAPH2.$GRAPH3;
+	$GRAPH_text.=$GRAPH;
 
 	for ($i=1; $i<count($TOTALS_array); $i++) 
 		{
@@ -944,11 +974,10 @@ if ($file_download == 0 || !$file_download)
 	$JS_onload.="}\n";
 	if ($report_display_type=='HTML') {$JS_text.=$JS_onload;}
 	$JS_text.="</script>\n";
-	$HTML_head.=$JS_text;
 
 	echo $HTML_head;
 	require("admin_header.php");
-	echo $HTML_text;
+	echo $HTML_text.$JS_text;
 	}
 
 

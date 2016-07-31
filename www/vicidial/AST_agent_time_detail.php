@@ -49,6 +49,7 @@
 # 160301-2051 - Expanded full name to 25 characters on text display
 # 160330-0649 - Fixed issue with names and non-latin setting
 # 160411-1958 - Fixed issue with download field order
+# 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 #
 
 $startMS = microtime();
@@ -476,6 +477,9 @@ if ($file_download < 1)
 	echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 	echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 	echo "<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
+	require("chart_button.php");
+	echo "<script src='chart/Chart.js'></script>\n"; 
+	echo "<script language=\"JavaScript\" src=\"vicidial_chart_functions.js\"></script>\n";
 
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 	echo "<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -573,32 +577,7 @@ else
 	$max_pause=1;
 	$max_dead=1;
 	$max_customer=1;
-	$GRAPH.="<a name='timegraph'/><table border='0' cellpadding='0' cellspacing='2' width='1000'>";
-	$GRAPH2="<tr><th class='column_header grey_graph_cell' id='timegraph1'><a href='#' onClick=\"DrawGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th class='column_header grey_graph_cell' id='timegraph2'><a href='#' onClick=\"DrawGraph('TIMECLOCK', '2'); return false;\">"._QXZ("TIME CLOCK")."</a></th><th class='column_header grey_graph_cell' id='timegraph3'><a href='#' onClick=\"DrawGraph('AGENTTIME', '3'); return false;\">"._QXZ("LOGIN TIME")."</a></th>";
-	if ($show_parks) {
-		$GRAPH2.="<th class='column_header grey_graph_cell' id='timegraph15'><a href='#' onClick=\"DrawGraph('PARKS', '15'); return false;\">"._QXZ("PARKS")."</a></th><th class='column_header grey_graph_cell' id='timegraph16'><a href='#' onClick=\"DrawGraph('PARKTIME', '16'); return false;\">"._QXZ("PARKTIME")."</a></th><th class='column_header grey_graph_cell' id='timegraph17'><a href='#' onClick=\"DrawGraph('AVGPARK', '17'); return false;\">"._QXZ("AVGPARK")."</a></th><th class='column_header grey_graph_cell' id='timegraph18'><a href='#' onClick=\"DrawGraph('PARKSCALL', '18'); return false;\">"._QXZ("PARKS/CALL")."</a></th>";
-	}
-	$GRAPH2.="<th class='column_header grey_graph_cell' id='timegraph4'><a href='#' onClick=\"DrawGraph('WAIT', '4'); return false;\">"._QXZ("WAIT")."</a></th><th class='column_header grey_graph_cell' id='timegraph14'><a href='#' onClick=\"DrawGraph('WAITPCT', '14'); return false;\">"._QXZ("WAIT")." %</a></th><th class='column_header grey_graph_cell' id='timegraph5'><a href='#' onClick=\"DrawGraph('TALK', '5'); return false;\">"._QXZ("TALK")."</a></th><th class='column_header grey_graph_cell' id='timegraph10'><a href='#' onClick=\"DrawGraph('TALKPCT', '10'); return false;\">"._QXZ("TALKTIME")."%</a></th><th class='column_header grey_graph_cell' id='timegraph6'><a href='#' onClick=\"DrawGraph('DISPO', '6'); return false;\">"._QXZ("DISPO")."</a></th><th class='column_header grey_graph_cell' id='timegraph11'><a href='#' onClick=\"DrawGraph('DISPOPCT', '11'); return false;\">"._QXZ("DISPOTIME")."%</a></th><th class='column_header grey_graph_cell' id='timegraph7'><a href='#' onClick=\"DrawGraph('PAUSE', '7'); return false;\">"._QXZ("PAUSE")."</a></th><th class='column_header grey_graph_cell' id='timegraph12'><a href='#' onClick=\"DrawGraph('PAUSEPCT', '12'); return false;\">"._QXZ("PAUSETIME")."%</a></th><th class='column_header grey_graph_cell' id='timegraph8'><a href='#' onClick=\"DrawGraph('DEAD', '8'); return false;\">"._QXZ("DEAD")."</a></th><th class='column_header grey_graph_cell' id='timegraph13'><a href='#' onClick=\"DrawGraph('DEADPCT', '13'); return false;\">"._QXZ("DEADTIME")."%</a></th><th class='column_header grey_graph_cell' id='timegraph9'><a href='#' onClick=\"DrawGraph('CUSTOMER', '9'); return false;\">"._QXZ("CUSTOMER")."</a></th>";
-	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("AGENT TIME BREAKDOWN")."</caption><tr><th class='thgraph' scope='col'>STATUS</th>";
-	$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS")." </th></tr>";
-	$TIMECLOCK_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TIME CLOCK")."</th></tr>";
-	$AGENTTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("LOGIN TIME")."</th></tr>";
-	$WAIT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("WAIT")."</th></tr>";
-	$WAITPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("WAIT")." %</th></tr>";
-	$TALK_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TALK")."</th></tr>";
-	$TALKPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TALK TIME")." %</th></tr>";
-	$DISPO_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DISPO")."</th></tr>";
-	$DISPOPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DISPO TIME")." %</th></tr>";
-	$PAUSE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("PAUSE")."</th></tr>";
-	$PAUSEPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("PAUSE TIME")." %</th></tr>";
-	$DEAD_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DEAD")."</th></tr>";
-	$DEADPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DEAD TIME")." %</th></tr>";
-	$CUSTOMER_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CUSTOMER")."</th></tr>";
-	$PARKS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("PARKS")."</th></tr>";
-	$PARKTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("PARKTIME")."</th></tr>";
-	$AVGPARK_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVGPARK")."</th></tr>";
-	$PARKSCALL_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("PARKSCALL")."</th></tr>";
-	
+
 	while ($i < $users_to_print)
 		{
 		$row=mysqli_fetch_row($rslt);
@@ -951,12 +930,14 @@ else
 
 		### BEGIN loop through each status ###
 		$n=0;
+		$sub_status_array=array();
 		while ($n < $sub_status_count)
 			{
 			$Sstatus=$sub_statusesARY[$n];
 			$SstatusTXT='';
 			$varname=$Sstatus."_graph";
 			$$varname=$graph_header."<th class='thgraph' scope='col'>$Sstatus</th></tr>";
+			array_push($sub_status_array, "ATD_SUBSTATUS".$n."data|$n|$Sstatus|sub_status_array");
 			$max_varname="max_".$Sstatus;
 			### BEGIN loop through each stat line ###
 			$i=0; $status_found=0;
@@ -970,6 +951,9 @@ else
 					
 					if ($PCpause_sec[$i]>$$max_varname) {$$max_varname=$PCpause_sec[$i];}
 					$graph_stats_sub[$m][$n]=$PCpause_sec[$i];					
+
+					$n1=($n+19); # THIS IS FOR THE GRAPHING FURTHER DOWN; COULDN'T THINK OF A BETTER WAY TO DO THIS.
+					$graph_stats[$m][$n1]=$PCpause_sec[$i];					
 
 					$SstatusTXT = sprintf("%10s", $pfUSERcodePAUSE_MS);
 					$SstatusesHTML .= " $SstatusTXT |";
@@ -1296,116 +1280,102 @@ else
 			$Sstatus=$sub_statusesARY[$e];
 			$SstatusTXT=$Sstatus;
 			if ($Sstatus=="") {$SstatusTXT="(blank)";}
-			$GRAPH2.="<th class='column_header grey_graph_cell' id='timegraph".(15+$e)."'><a href='#' onClick=\"DrawGraph('$Sstatus', '".(15+$e)."'); return false;\">$SstatusTXT</a></th>";
 			}
 
-		for ($d=0; $d<count($graph_stats); $d++) 
-			{
-			if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-			if ($atdr_login_logout_user_link > 0)
-				{
-				$CALLS_graph.="  <tr><td class='chart_td$class'><a href=\'./user_stats.php?pause_code_rpt=1&begin_date=$query_date&end_date=$end_date&user=".$user_IDs[$d]."\'>".$graph_stats[$d][0]."</a></td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][1], $max_calls))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-				}
-			else
-				{
-				$CALLS_graph.="  <tr><td class='chart_td$class'><a href=\'./user_stats.php?user=".$user_IDs[$d]."&begin_date=$query_date&end_date\'>".$graph_stats[$d][0]."</a></td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][1], $max_calls))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-				}
-			$TIMECLOCK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][2], $max_timeclock))."' height='16' />".sec_convert($graph_stats[$d][2], 'HF')."</td></tr>";
-			$AGENTTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][3], $max_agenttime))."' height='16' />".sec_convert($graph_stats[$d][3], 'HF')."</td></tr>";
-			$WAIT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][4], $max_wait))."' height='16' />".sec_convert($graph_stats[$d][4], 'HF')."</td></tr>";
-			$TALK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][5], $max_talk))."' height='16' />".sec_convert($graph_stats[$d][5], 'HF')."</td></tr>";
-			$DISPO_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][6], $max_dispo))."' height='16' />".sec_convert($graph_stats[$d][6], 'HF')."</td></tr>";
-			$PAUSE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][7], $max_pause))."' height='16' />".sec_convert($graph_stats[$d][7], 'HF')."</td></tr>";
-			$DEAD_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][8], $max_dead))."' height='16' />".sec_convert($graph_stats[$d][8], 'HF')."</td></tr>";
-			$CUSTOMER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][9], $max_customer))."' height='16' />".sec_convert($graph_stats[$d][9], 'HF')."</td></tr>";
-			$TALKPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][10], $max_talkpct))."' height='16' />".$graph_stats[$d][10]." %</td></tr>";
-			$DISPOPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][11], $max_dispopct))."' height='16' />".$graph_stats[$d][11]." %</td></tr>";
-			$PAUSEPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][12], $max_pausepct))."' height='16' />".$graph_stats[$d][12]." %</td></tr>";
-			$DEADPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][13], $max_deadpct))."' height='16' />".$graph_stats[$d][13]." %</td></tr>";
-			$WAITPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][14], $max_waitpct))."' height='16' />".$graph_stats[$d][14]." %</td></tr>";
-			$PARKS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][15], $max_user_holds))."' height='16' />".$graph_stats[$d][15]."</td></tr>";
-			$PARKTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][16], $max_total_hold_time))."' height='16' />".sec_convert($graph_stats[$d][16],'HF')."</td></tr>";
-			$AVGPARK_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][17], $max_avg_hold_time))."' height='17' />".sec_convert($graph_stats[$d][17],'HF')."</td></tr>";
-			$PARKSCALL_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats[$d][18], $max_user_hpc))."' height='16' />".$graph_stats[$d][18]."</td></tr>";
-			for ($e=0; $e<count($sub_statusesARY); $e++) 
-				{
-				$Sstatus=$sub_statusesARY[$e];
-				$varname=$Sstatus."_graph";
-				$max_varname="max_".$Sstatus;
-				#$max.= "<!-- $max_varname => ".$$max_varname." //-->\n";
+		# USE THIS FOR COMBINED graphs, use pipe-delimited array elements, dataset_name|index|link_name|graph_override
+		# You have to hard code the graph name in where it is overridden and mind the data indices.  No other way to do it.
+		$multigraph_text="";
+		$graph_id++;
+		$graph_array=array("ATD_CALLSdata|1|CALLS|integer|", "ATD_TIMECLOCKdata|2|TIME CLOCK|time|", "ATD_LOGINTIMEdata|3|LOGIN TIME|time|");
+		if ($show_parks) {
+			array_push($graph_array, "ATD_PARKSdata|15|PARKS|integer|", "ATD_PARKTIMEdata|16|PARKTIME|time|", "ATD_AVGPARKdata|17|AVGPARK|time|", "ATD_PARKSCALLdata|18|PARKS/CALL|decimal|");
+		}
+		array_push($graph_array, "ATD_WAITdata|4|WAIT|time|", "ATD_WAITPCTdata|14|WAIT %|percent|", "ATD_TALKdata|5|TALK|time|", "ATD_TALKTIMEPCTdata|10|TALKTIME%|percent|", "ATD_DISPOdata|6|DISPO|time|", "ATD_DISPOTIMEPCTdata|11|DISPOTIME%|percent|", "ATD_PAUSEdata|7|PAUSE|time|", "ATD_PAUSETIMEPCTdata|12|PAUSETIME%|percent|", "ATD_DEADdata|8|DEAD|time|", "ATD_DEADTIMEPCTdata|13|DEADTIME%|percent|", "ATD_CUSTOMERdata|9|CUSTOMER|time|");
+
+		for ($e=0; $e<count($sub_statusesARY); $e++) {
+			$Sstatus=$sub_statusesARY[$e];
+			$SstatusTXT=$Sstatus;
+			if ($Sstatus=="") {$SstatusTXT="(blank)";}
+			array_push($graph_array, "ATD_SUBSTATUS".$e."data|".($e+19)."|".$SstatusTXT."|time|");
+		}
+
+		$default_graph="bar"; # Graph that is initally displayed when page loads
+		include("graph_color_schemas.inc"); 
+
+		$graph_totals_array=array();
+		$graph_totals_rawdata=array();
+		for ($q=0; $q<count($graph_array); $q++) {
+			$graph_info=explode("|", $graph_array[$q]); 
+			$current_graph_total=0;
+			$dataset_name=$graph_info[0];
+			$dataset_index=$graph_info[1]; 
+			$dataset_type=$graph_info[3];
+
+			$JS_text.="var $dataset_name = {\n";
+			# $JS_text.="\ttype: \"\",\n";
+			# $JS_text.="\t\tdata: {\n";
+			$datasets="\t\tdatasets: [\n";
+			$datasets.="\t\t\t{\n";
+			$datasets.="\t\t\t\tlabel: \"\",\n";
+			$datasets.="\t\t\t\tfill: false,\n";
+
+			$labels="\t\tlabels:[";
+			$data="\t\t\t\tdata: [";
+			$graphConstantsA="\t\t\t\tbackgroundColor: [";
+			$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+			$graphConstantsC="\t\t\t\thoverBorderColor: [";
+			for ($d=0; $d<count($graph_stats); $d++) {
+				$labels.="\"".preg_replace('/ +/', ' ', $graph_stats[$d][0])."\",";
+				$data.="\"".$graph_stats[$d][$dataset_index]."\","; 
+				$current_graph_total+=$graph_stats[$d][$dataset_index];
+				$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+				$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+				$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+				$graphConstantsA.="\"$bgcolor\",";
+				$graphConstantsB.="\"$hbgcolor\",";
+				$graphConstantsC.="\"$hbcolor\",";
+			}	
+			$graphConstantsA.="],\n";
+			$graphConstantsB.="],\n";
+			$graphConstantsC.="],\n";
+			$labels=preg_replace('/,$/', '', $labels)."],\n";
+			$data=preg_replace('/,$/', '', $data)."],\n";
 			
-				$$varname.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(1000*$graph_stats_sub[$d][$e], $$max_varname))."' height='16' />".sec_convert($graph_stats_sub[$d][$e], 'HF')."</td></tr>";
-				}
-			}
-		$CALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTcalls)."</th></tr></table>";
-		$TIMECLOCK_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTtimeTC)."</th></tr></table>";
-		$AGENTTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTALtime)."</th></tr></table>";
-		$WAIT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTwait)."</th></tr></table>";
-		$TALK_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTtalk)."</th></tr></table>";
-		$DISPO_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTdispo)."</th></tr></table>";
-		$PAUSE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTpause)."</th></tr></table>";
-		$DEAD_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTdead)."</th></tr></table>";
-		$CUSTOMER_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTcustomer)."</th></tr></table>";
-		$WAITPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("AVERAGE").":</th><th class='thgraph' scope='col'>".trim($hTOTwaitpct)."</th></tr></table>";
-		$TALKPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("AVERAGE").":</th><th class='thgraph' scope='col'>".trim($hTOTtalkpct)."</th></tr></table>";
-		$DISPOPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("AVERAGE").":</th><th class='thgraph' scope='col'>".trim($hTOTdispopct)."</th></tr></table>";
-		$PAUSEPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("AVERAGE").":</th><th class='thgraph' scope='col'>".trim($hTOTpausepct)."</th></tr></table>";
-		$DEADPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("AVERAGE").":</th><th class='thgraph' scope='col'>".trim($hTOTdeadpct)."</th></tr></table>";
-		$PARKS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTuser_holds)."</th></tr></table>";
-		$PARKTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($hTOTtotal_hold_time)."</th></tr></table>";
-		$AVGPARK_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("AVERAGE").":</th><th class='thgraph' scope='col'>".trim($hTOTavg_hold_time)."</th></tr></table>";
-		$PARKSCALL_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("AVERAGE").":</th><th class='thgraph' scope='col'>".trim($hTOTuser_hpc)."</th></tr></table>";
-
-		for ($e=0; $e<count($sub_statusesARY); $e++) 
-			{
-			$Sstatus=$sub_statusesARY[$e];
-			$total_var=$Sstatus."_total";
-			$graph_var=$Sstatus."_graph";
-			$$graph_var.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($$total_var)."</th></tr></table>";
-#			$JS_text.="var ".$Sstatus."_graph=\"".$$graph_var."\";\n";
-			}
-		$JS_onload.="\tDrawGraph('CALLS', '1');\n"; 
-		$JS_text.="function DrawGraph(graph, th_id) {\n";
-		$JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";
-		$JS_text.="	var TIMECLOCK_graph=\"$TIMECLOCK_graph\";\n";
-		$JS_text.="	var AGENTTIME_graph=\"$AGENTTIME_graph\";\n";
-		$JS_text.="	var WAIT_graph=\"$WAIT_graph\";\n";
-		$JS_text.="	var TALK_graph=\"$TALK_graph\";\n";
-		$JS_text.="	var DISPO_graph=\"$DISPO_graph\";\n";
-		$JS_text.="	var PAUSE_graph=\"$PAUSE_graph\";\n";
-		$JS_text.="	var DEAD_graph=\"$DEAD_graph\";\n";
-		$JS_text.="	var CUSTOMER_graph=\"$CUSTOMER_graph\";\n";
-		$JS_text.="	var WAITPCT_graph=\"$WAITPCT_graph\";\n";
-		$JS_text.="	var TALKPCT_graph=\"$TALKPCT_graph\";\n";
-		$JS_text.="	var DISPOPCT_graph=\"$DISPOPCT_graph\";\n";
-		$JS_text.="	var PAUSEPCT_graph=\"$PAUSEPCT_graph\";\n";
-		$JS_text.="	var DEADPCT_graph=\"$DEADPCT_graph\";\n";
-		$JS_text.="	var PARKS_graph=\"$PARKS_graph\";\n";
-		$JS_text.="	var PARKTIME_graph=\"$PARKTIME_graph\";\n";
-		$JS_text.="	var AVGPARK_graph=\"$AVGPARK_graph\";\n";
-		$JS_text.="	var PARKSCALL_graph=\"$PARKSCALL_graph\";\n";
-
-		for ($e=0; $e<count($sub_statusesARY); $e++) 
-			{
-			$Sstatus=$sub_statusesARY[$e];
-			$graph_var=$Sstatus."_graph";
-			$JS_text.="	var graph_".$Sstatus."=\"".$$graph_var."\";\n";
+			$graph_totals_rawdata[$q]=$current_graph_total;
+			switch($dataset_type) {
+				case "time":
+					$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+					$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+					break;
+				case "percent":
+					$graph_totals_array[$q]="";
+					$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+					break;
+				default:
+					$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+					$chart_options="options: { legend: { display: false }},";
+					break;
 			}
 
-		$JS_text.="	for (var i=1; i<=".(14+count($sub_statusesARY))."; i++) {\n";
-		$JS_text.="		var cellID=\"timegraph\"+i;\n";
-		$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
-		$JS_text.="	}\n";
-		$JS_text.="	var cellID=\"timegraph\"+th_id;\n";
-		$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
-		$JS_text.="\n";
-		$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
-		$JS_text.="	document.getElementById('agent_time_detail_graph').innerHTML=graph_to_display;\n";
-		$JS_text.="}\n";
+			$datasets.=$data;
+			$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+			$datasets.="\t\t\t}\n";
+			$datasets.="\t\t]\n";
+			$datasets.="\t}\n";
 
-		$GRAPH3="<tr><td colspan='".(18+$sub_status_count)."' class='graph_span_cell'><span id='agent_time_detail_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-		
-		# echo $GRAPH.$GRAPH2.$GRAPH3.$max;
+			$JS_text.=$labels.$datasets;
+			# $JS_text.="}\n";
+			# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+			$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+			$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
+		}
+
+		$graph_count=count($graph_array);
+		$graph_title=_QXZ("AGENT TIME DETAIL REPORT");
+		include("graphcanvas.inc");
+		$GRAPH.=$graphCanvas;
+
+
 		}
 	else
 		{
@@ -1569,8 +1539,8 @@ echo "</FORM>";
 
 if ($report_display_type=="HTML")
 	{
-	echo $JS_text;
 	echo $GRAPH.$GRAPH2.$GRAPH3.$max;
+	echo $JS_text;
 	}
 else
 	{

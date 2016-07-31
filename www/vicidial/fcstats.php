@@ -33,6 +33,7 @@
 # 151125-1642 - Added search archive option
 # 160211-2249 - Overhauled report calculations and labeling to make the report more accurate and "universal"
 # 160227-1131 - Uniform form format
+# 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 #
 
 $startMS = microtime();
@@ -67,6 +68,7 @@ if (strlen($shift)<2) {$shift='ALL';}
 
 $report_name = 'Fronter - Closer Report';
 $db_source = 'M';
+
 $JS_text="<script language='Javascript'>\n";
 $JS_text.="function openNewWindow(url)\n";
 $JS_text.="  {\n";
@@ -319,6 +321,9 @@ $HTML_head.="\n";
 $HTML_head.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 $HTML_head.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 $HTML_head.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
+require("chart_button.php");
+$HTML_head.="<script src='chart/Chart.js'>Chart.defaults.global.defaultFontSize = 10;</script>\n"; 
+$HTML_head.="<script language=\"JavaScript\" src=\"vicidial_chart_functions.js\"></script>\n";
 
 $HTML_head.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HTML_head.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -476,15 +481,6 @@ $max_success_pct=1;
 $max_sales=1;
 $max_drops=1;
 $max_other=1;
-$GRAPH="<a name='frontergraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-$GRAPH.="<tr><th width='20%' class='grey_graph_cell' id='frontergraph1'><a href='#' onClick=\"DrawFronterGraph('XFERS', '1'); return false;\">"._QXZ("XFERS")."</a></th><th width='20%' class='grey_graph_cell' id='frontergraph2'><a href='#' onClick=\"DrawFronterGraph('SALEPCT', '2'); return false;\">"._QXZ("SALE")." %</a></th><th width='20%' class='grey_graph_cell' id='frontergraph3'><a href='#' onClick=\"DrawFronterGraph('SALE', '3'); return false;\">"._QXZ("SALE")."</a></th><th width='20%' class='grey_graph_cell' id='frontergraph4'><a href='#' onClick=\"DrawFronterGraph('DROP', '4'); return false;\">"._QXZ("DROP")."</a></th><th width='20%' class='grey_graph_cell' id='frontergraph5'><a href='#' onClick=\"DrawFronterGraph('OTHER', '5'); return false;\">"._QXZ("OTHER")."</a></th></tr>";
-$GRAPH.="<tr><td colspan='5' class='graph_span_cell'><span id='fronter_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-$graph_header="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>"._QXZ("FRONTER STATS")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("AGENT")."</th>";
-$XFERS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("XFERS")."</th></tr>";
-$SALEPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALE")." %</th></tr>";
-$SALE_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALE")."</th></tr>";
-$DROP_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DROP")."</th></tr>";
-$OTHER_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("OTHER")."</th></tr>";
 ###########################
 
 $stmt="select user,count(*) from ".$vicidial_xfer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysqli_real_escape_string($link, $group) . "' and user is not null group by user;";
@@ -617,37 +613,87 @@ $ASCII_text.="+--------------------------+--------+--------+------+------+------
 $CSV_fronter_footer.="\""._QXZ("TOTAL FRONTERS").": $TOTagents\",\"$TOTcalls\",\"$totSpct%\",\"$TOTsales\",\"$totDROP\",\"$totOTHER\"\n";
 $CSV_fronter_footer.="\""._QXZ("Average time in Queue for customers").":    $AVGwait\"\n\n\n";
 
-	for ($d=0; $d<count($graph_stats); $d++) {
-		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-		$XFERS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_xfers))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-		$SALEPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_success_pct))."' height='16' />".$graph_stats[$d][2]."</td></tr>";
-		$SALE_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_sales))."' height='16' />".$graph_stats[$d][3]."</td></tr>";
-		$DROP_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][4], $max_drops))."' height='16' />".$graph_stats[$d][4]."</td></tr>";
-		$OTHER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][5] ,$max_other))."' height='16' />".$graph_stats[$d][5]."</td></tr>";
+	# USE THIS FOR multiple graphs, use pipe-delimited array elements, dataset_name|index|link_name
+	$multigraph_text="";
+	$graph_id++;
+	$graph_array=array("FCSF_XFERSdata|1|XFERS|integer|", "FCSF_SALEPCTdata|2|SALE %|percent|", "FCSF_SALESdata|3|SALES|integer|", "FCSF_DROPSdata|4|DROPS|integer|", "FCSF_OTHERdata|5|OTHER|integer|");
+	$default_graph="bar"; # Graph that is initally displayed when page loads
+	include("graph_color_schemas.inc"); 
+
+	$graph_totals_array=array();
+	$graph_totals_rawdata=array();
+	for ($q=0; $q<count($graph_array); $q++) {
+		$graph_info=explode("|", $graph_array[$q]); 
+		$current_graph_total=0;
+		$dataset_name=$graph_info[0];
+		$dataset_index=$graph_info[1]; 
+		$dataset_type=$graph_info[3];
+
+		$JS_text.="var $dataset_name = {\n";
+		# $JS_text.="\ttype: \"\",\n";
+		# $JS_text.="\t\tdata: {\n";
+		$datasets="\t\tdatasets: [\n";
+		$datasets.="\t\t\t{\n";
+		$datasets.="\t\t\t\tlabel: \"\",\n";
+		$datasets.="\t\t\t\tfill: false,\n";
+
+		$labels="\t\tlabels:[";
+		$data="\t\t\t\tdata: [";
+		$graphConstantsA="\t\t\t\tbackgroundColor: [";
+		$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+		$graphConstantsC="\t\t\t\thoverBorderColor: [";
+		for ($d=0; $d<count($graph_stats); $d++) {
+			$labels.="\"".preg_replace('/ +/', ' ', $graph_stats[$d][0])."\",";
+			$data.="\"".$graph_stats[$d][$dataset_index]."\","; 
+			$current_graph_total+=$graph_stats[$d][$dataset_index];
+			$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+			$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+			$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+			$graphConstantsA.="\"$bgcolor\",";
+			$graphConstantsB.="\"$hbgcolor\",";
+			$graphConstantsC.="\"$hbcolor\",";
+		}	
+		$graphConstantsA.="],\n";
+		$graphConstantsB.="],\n";
+		$graphConstantsC.="],\n";
+		$labels=preg_replace('/,$/', '', $labels)."],\n";
+		$data=preg_replace('/,$/', '', $data)."],\n";
+		
+		$graph_totals_rawdata[$q]=$current_graph_total;
+		switch($dataset_type) {
+			case "time":
+				$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+				$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+				break;
+			case "percent":
+				$graph_totals_array[$q]="";
+				$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+				break;
+			default:
+				$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+				$chart_options="options: { legend: { display: false }},";
+				break;
+		}
+
+		$datasets.=$data;
+		$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+		$datasets.="\t\t\t}\n";
+		$datasets.="\t\t]\n";
+		$datasets.="\t}\n";
+
+		$JS_text.=$labels.$datasets;
+		# $JS_text.="}\n";
+		# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+		$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+		$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
 	}
-	$XFERS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTcalls)."</th></tr></table>";
-	$SALEPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($totSpct)."%</th></tr></table>";
-	$SALE_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTsales)."</th></tr></table>";
-	$DROP_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($totDROP)."</th></tr></table>";
-	$OTHER_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($totOTHER)."</th></tr></table>";
-	$JS_onload.="\tDrawFronterGraph('XFERS', '1');\n"; 
-	$JS_text.="function DrawFronterGraph(graph, th_id) {\n";
-	$JS_text.="	var XFERS_graph=\"$XFERS_graph\";\n";
-	$JS_text.="	var SALEPCT_graph=\"$SALEPCT_graph\";\n";
-	$JS_text.="	var SALE_graph=\"$SALE_graph\";\n";
-	$JS_text.="	var DROP_graph=\"$DROP_graph\";\n";
-	$JS_text.="	var OTHER_graph=\"$OTHER_graph\";\n";
-	$JS_text.="\n";
-	$JS_text.="	for (var i=1; i<=5; i++) {\n";
-	$JS_text.="		var cellID=\"frontergraph\"+i;\n";
-	$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
-	$JS_text.="	}\n";
-	$JS_text.="	var cellID=\"frontergraph\"+th_id;\n";
-	$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
-	$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
-	$JS_text.="	document.getElementById('fronter_graph').innerHTML=graph_to_display;\n";
-	$JS_text.="}\n";
-	$GRAPH_text.=$GRAPH;
+
+	$graph_count=count($graph_array);
+	$graph_title=_QXZ("FRONTER STATS");
+	include("graphcanvas.inc");
+	$GRAPH_text.=$graphCanvas;
+
+
 
 ##############################
 #########  CLOSER STATS
@@ -678,15 +724,6 @@ $max_drops=1;
 $max_other=1;
 $max_sales2=1;
 $max_conv_pct=1;
-$GRAPH="<BR><BR><a name='closergraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-$GRAPH.="<tr><th width='20%' class='grey_graph_cell' id='closergraph1'><a href='#' onClick=\"DrawCloserGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th width='20%' class='grey_graph_cell' id='closergraph2'><a href='#' onClick=\"DrawCloserGraph('SALES', '2'); return false;\">"._QXZ("SALE")."S</a></th><th width='20%' class='grey_graph_cell' id='closergraph3'><a href='#' onClick=\"DrawCloserGraph('DROP', '3'); return false;\">"._QXZ("DROP")."</a></th><th width='20%' class='grey_graph_cell' id='closergraph4'><a href='#' onClick=\"DrawCloserGraph('OTHER', '4'); return false;\">"._QXZ("OTHER")."</a></th><th width='20%' class='grey_graph_cell' id='closergraph5'><a href='#' onClick=\"DrawCloserGraph('CONVPCT', '5'); return false;\">"._QXZ("CONV")." %</a></th></tr>";
-$GRAPH.="<tr><td colspan='5' class='graph_span_cell'><span id='closer_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-$graph_header="<table cellspacing='0' cellpadding='0' summary='STATUS' class='horizontalgraph'><caption align='top'>"._QXZ("CLOSER STATS")."</caption><tr><th class='thgraph' scope='col'>"._QXZ("AGENT")."</th>";
-$CALLS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CALLS")." </th></tr>";
-$SALES_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("SALES")."</th></tr>";
-$DROP_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("DROP")."</th></tr>";
-$OTHER_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("OTHER")."</th></tr>";
-$CONVPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("CONV")." %</th></tr>";
 ###########################
 
 $stmt="select user,count(*) from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id='" . mysqli_real_escape_string($link, $group) . "' and user is not null group by user;";
@@ -835,37 +872,85 @@ $ASCII_text.="+--------------------------+--------+------+------+------+-------+
 
 $CSV_closer_footer.="\""._QXZ("TOTAL CLOSERS").":  $TOTagents\",\"$TOTcalls\",\"$totA1\",\"$totDROP\",\"$totOTHER\",\"$TOTsales\",\"$totCpct%\"\n";
 
-	for ($d=0; $d<count($graph_stats); $d++) {
-		if ($d==0) {$class=" first";} else if (($d+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-		$CALLS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][1], $max_calls))."' height='16' />".$graph_stats[$d][1]."</td></tr>";
-		$SALES_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][2], $max_sales))."' height='16' />".$graph_stats[$d][2]."</td></tr>";
-		$DROP_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][3], $max_drops))."' height='16' />".$graph_stats[$d][3]."</td></tr>";
-		$OTHER_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][4], $max_other))."' height='16' />".$graph_stats[$d][4]."</td></tr>";
-		$CONVPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$d][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$d][5], $max_conv_pct))."' height='16' />".$graph_stats[$d][5]."%</td></tr>";
+	# USE THIS FOR multiple graphs, use pipe-delimited array elements, dataset_name|index|link_name
+	$multigraph_text="";
+	$graph_id++;
+	$graph_array=array("FCSC_CALLSdata|1|CALLS|integer|", "FCSC_SALESdata|2|SALES|integer|", "FCSC_DROPSdata|3|DROPS|integer|", "FCSC_OTHERdata|4|OTHER|integer|", "FCSC_CONVPCTdata|5|CONV %|percent|");
+	$default_graph="bar"; # Graph that is initally displayed when page loads
+	include("graph_color_schemas.inc"); 
+
+	$graph_totals_array=array();
+	$graph_totals_rawdata=array();
+	for ($q=0; $q<count($graph_array); $q++) {
+		$graph_info=explode("|", $graph_array[$q]); 
+		$current_graph_total=0;
+		$dataset_name=$graph_info[0];
+		$dataset_index=$graph_info[1]; 
+		$dataset_type=$graph_info[3];
+
+		$JS_text.="var $dataset_name = {\n";
+		# $JS_text.="\ttype: \"\",\n";
+		# $JS_text.="\t\tdata: {\n";
+		$datasets="\t\tdatasets: [\n";
+		$datasets.="\t\t\t{\n";
+		$datasets.="\t\t\t\tlabel: \"\",\n";
+		$datasets.="\t\t\t\tfill: false,\n";
+
+		$labels="\t\tlabels:[";
+		$data="\t\t\t\tdata: [";
+		$graphConstantsA="\t\t\t\tbackgroundColor: [";
+		$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+		$graphConstantsC="\t\t\t\thoverBorderColor: [";
+		for ($d=0; $d<count($graph_stats); $d++) {
+			$labels.="\"".preg_replace('/ +/', ' ', $graph_stats[$d][0])."\",";
+			$data.="\"".$graph_stats[$d][$dataset_index]."\","; 
+			$current_graph_total+=$graph_stats[$d][$dataset_index];
+			$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+			$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+			$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+			$graphConstantsA.="\"$bgcolor\",";
+			$graphConstantsB.="\"$hbgcolor\",";
+			$graphConstantsC.="\"$hbcolor\",";
+		}	
+		$graphConstantsA.="],\n";
+		$graphConstantsB.="],\n";
+		$graphConstantsC.="],\n";
+		$labels=preg_replace('/,$/', '', $labels)."],\n";
+		$data=preg_replace('/,$/', '', $data)."],\n";
+		
+		$graph_totals_rawdata[$q]=$current_graph_total;
+		switch($dataset_type) {
+			case "time":
+				$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+				$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+				break;
+			case "percent":
+				$graph_totals_array[$q]="";
+				$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+				break;
+			default:
+				$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+				$chart_options="options: { legend: { display: false }},";
+				break;
+		}
+
+		$datasets.=$data;
+		$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+		$datasets.="\t\t\t}\n";
+		$datasets.="\t\t]\n";
+		$datasets.="\t}\n";
+
+		$JS_text.=$labels.$datasets;
+		# $JS_text.="}\n";
+		# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+		$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+		$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
 	}
-	$CALLS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTcalls)."</th></tr></table>";
-	$SALES_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($TOTsales)."</th></tr></table>";
-	$DROP_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($totDROP)."</th></tr></table>";
-	$OTHER_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($totOTHER)."</th></tr></table>";
-	$CONVPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($totCpct)."%</th></tr></table>";
-	$JS_onload.="\tDrawCloserGraph('CALLS', '1');\n";
-	$JS_text.="function DrawCloserGraph(graph, th_id) {\n";
-	$JS_text.="	var CALLS_graph=\"$CALLS_graph\";\n";
-	$JS_text.="	var SALES_graph=\"$SALES_graph\";\n";
-	$JS_text.="	var DROP_graph=\"$DROP_graph\";\n";
-	$JS_text.="	var OTHER_graph=\"$OTHER_graph\";\n";
-	$JS_text.="	var CONVPCT_graph=\"$CONVPCT_graph\";\n";
-	$JS_text.="\n";
-	$JS_text.="	for (var i=1; i<=5; i++) {\n";
-	$JS_text.="		var cellID=\"closergraph\"+i;\n";
-	$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
-	$JS_text.="	}\n";
-	$JS_text.="	var cellID=\"closergraph\"+th_id;\n";
-	$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
-	$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
-	$JS_text.="	document.getElementById('closer_graph').innerHTML=graph_to_display;\n";
-	$JS_text.="}\n";
-	$GRAPH_text.=$GRAPH;
+
+	$graph_count=count($graph_array);
+	$graph_title=_QXZ("CLOSER STATS");
+	include("graphcanvas.inc");
+	$GRAPH_text.=$graphCanvas;
 
 
 $ENDtime = date("U");
@@ -912,9 +997,9 @@ else
 	$JS_text.="</script>\n";
 
 	echo $HTML_head;
-	echo $JS_text;
 	require("admin_header.php");
 	echo $HTML_text;
+	echo $JS_text;
 	}
 
 #$CSV_report=fopen("fcstats.csv", "w");

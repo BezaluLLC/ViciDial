@@ -23,6 +23,7 @@
 # 141114-0905 - Finalized adding QXZ translation to all admin files
 # 141230-1520 - Added code for on-the-fly language translations display
 # 160227-1934 - Uniform form format
+# 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 #
 
 $startMS = microtime();
@@ -374,6 +375,10 @@ if ($file_download < 1)
 	<script language="JavaScript" src="calendar_db.js"></script>
 	<link rel="stylesheet" href="calendar.css">
 	<link rel="stylesheet" href="horizontalbargraph.css">
+	<?php require("chart_button.php"); ?>
+	<script src="chart/Chart.js"></script>
+	<script language="JavaScript" src="vicidial_chart_functions.js"></script>
+
 	<script language='Javascript'>
 	function openNewWindow(url)
 		{
@@ -614,14 +619,6 @@ else
 		$ASCII_text.="| <a href=\"$LINKbase&stage=NAME\">"._QXZ("USER NAME",15)."</a> | <a href=\"$LINKbase&stage=ID\">"._QXZ("ID",8)."</a> | <a href=\"$LINKbase&stage=GROUP\">"._QXZ("USER GROUP",20)."</a> | <a href=\"$LINKbase&stage=TCLOCK\">"._QXZ("TIME CLOCK",10)."</a> | "._QXZ("TIME CLOCK PUNCHES",18)."\n";
 		$ASCII_text.="+-----------------+----------+----------------------+------------+--------------------\n";
 
-		$GRAPH.="<table cellspacing=\"0\" cellpadding=\"0\" summary=\"AGENT TIME-CLOCK DETAIL\" class=\"horizontalgraph\">\n";
-		$GRAPH.="  <caption align=\"top\">"._QXZ("AGENT TIME-CLOCK DETAIL")."</caption>\n";
-		$GRAPH.="  <tr>\n";
-		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("USER/USER GROUP")."</th>\n";
-		$GRAPH.="	<th class=\"thgraph\" scope=\"col\" nowrap>"._QXZ("TIME CLOCK")." </th>\n";
-		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TIME CLOCK PUNCHES")."</th>\n";
-		$GRAPH.="  </tr>\n";
-		
 		}
 	else
 		{
@@ -751,7 +748,7 @@ else
 		if ($file_download < 1)
 			{
 			$Toutput = "| $Sname[$m] | <a href=\"./user_stats.php?user=$RAWuser&begin_date=$query_date_D&end_date=$end_date_D\">$Suser[$m]</a> | $Sgroup[$m] | $StimeTC[$m]$TCuserAUTOLOGOUT| $TCdetail\n";
-			$graph_stats[$q][0]="$Sname[$m] - $Suser[$m] / $Sgroup[$m]";
+			$graph_stats[$q][0]=trim($Sname[$m])." - ".trim($Suser[$m])." / ".trim($Sgroup[$m]);
 			$graph_stats[$q][1]="$RAWtimeTCsec";
 			$graph_stats[$q][2]="$TCuserAUTOLOGOUT";
 			$graph_stats[$q][3]="$TCdetail";
@@ -799,14 +796,106 @@ else
 		$m++;
 		}
 	##### END loop through each user formatting data for output
-		for ($i=0; $i<count($graph_stats); $i++) {
-			if ($i==0) {$class=" first";} else if (($i+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-			$GRAPH.="  <tr>\n";
-			$GRAPH.="	<th class=\"thgraph$class\" scope=\"col\">".$graph_stats[$i][0]."</th>\n";
-			$GRAPH.="	<th class=\"thgraph value$class\" scope=\"col\" nowrap><img src=\"images/bar.png\" alt=\"\" width=\"".round(MathZDC(200*$graph_stats[$i][1], $max_time))."\" height=\"16\" />".sec_convert($graph_stats[$i][1], 'H').$graph_stats[$i][2]."</th>\n";
-			$GRAPH.="	<th class=\"thgraph$class\" scope=\"col\">".$graph_stats[$i][3]."</th>\n";
-			$GRAPH.="  </tr>\n";
+
+		$JS_text="<script language='Javascript'>\n";
+		#########
+		$graph_array=array("ATDdata|||time|");
+		$graph_id++;
+		$default_graph="bar"; # Graph that is initally displayed when page loads
+		include("graph_color_schemas.inc"); 
+
+		$graph_totals_array=array();
+		$graph_totals_rawdata=array();
+		for ($q=0; $q<count($graph_array); $q++) {
+			$graph_info=explode("|", $graph_array[$q]); 
+			$current_graph_total=0;
+			$dataset_name=$graph_info[0];
+			$dataset_index=$graph_info[1]; 
+			$dataset_type=$graph_info[3];
+			if ($q==0) {$preload_dataset=$dataset_name;}  # Used below to load initial graph
+
+			$JS_text.="var $dataset_name = {\n";
+			# $JS_text.="\ttype: \"\",\n";
+			# $JS_text.="\t\tdata: {\n";
+			$datasets="\t\tdatasets: [\n";
+			$datasets.="\t\t\t{\n";
+			$datasets.="\t\t\t\tlabel: \"\",\n";
+			$datasets.="\t\t\t\tfill: false,\n";
+
+			$labels="\t\tlabels:[";
+			$data="\t\t\t\tdata: [";
+			$graphConstantsA="\t\t\t\tbackgroundColor: [";
+			$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+			$graphConstantsC="\t\t\t\thoverBorderColor: [";
+			for ($d=0; $d<count($graph_stats); $d++) {
+				$labels.="\"".$graph_stats[$d][0]." ".$graph_stats[$d][2]."\",";
+				$data.="\"".$graph_stats[$d][1]."\","; 
+				$current_graph_total+=$graph_stats[$d][1];
+				$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+				$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+				$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+				$graphConstantsA.="\"$bgcolor\",";
+				$graphConstantsB.="\"$hbgcolor\",";
+				$graphConstantsC.="\"$hbcolor\",";
+			}	
+			$graphConstantsA.="],\n";
+			$graphConstantsB.="],\n";
+			$graphConstantsC.="],\n";
+			$labels=preg_replace('/,$/', '', $labels)."],\n";
+			$data=preg_replace('/,$/', '', $data)."],\n";
+			
+			$graph_totals_rawdata[$q]=$current_graph_total;
+			switch($dataset_type) {
+				case "time":
+					$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+					$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+					break;
+				case "percent":
+					$graph_totals_array[$q]="";
+					$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+					break;
+				default:
+					$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+					$chart_options="options: { legend: { display: false }},";
+					break;
+			}
+
+			$datasets.=$data;
+			$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+			$datasets.="\t\t\t}\n";
+			$datasets.="\t\t]\n";
+			$datasets.="\t}\n";
+
+			$JS_text.=$labels.$datasets;
+			# $JS_text.="}\n";
+			# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+			$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+			$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
 		}
+
+		$graph_count=count($graph_array);
+		$graph_title=_QXZ("AGENT TIME-CLOCK DETAIL");
+		include("graphcanvas.inc");
+		$JS_text.="</script>\n";
+
+	# SPECIAL EXCEPTION FOR THIS GRAPH
+		$graphCanvas.="<table cellspacing=\"0\" cellpadding=\"1\" summary=\""._QXZ("TIME CLOCK PUNCHES")."\" class=\"horizontalgraph\" width=500>\n";
+		$graphCanvas.="  <caption align=\"top\">"._QXZ("TIME CLOCK PUNCHES")."</caption>\n";
+		$graphCanvas.="  <tr>\n";
+		$graphCanvas.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("USER/USER GROUP")."</th>\n";
+		$graphCanvas.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TIME CLOCK PUNCHES")."</th>\n";
+		$graphCanvas.="  </tr>\n";
+		for ($q=0; $q<count($graph_stats); $q++) {
+			if ($q==0) {$class=" first";} else if (($q+1)==count($graph_stats)) {$class=" last";} else {$class="";}
+			$graphCanvas.="  <tr>\n";
+			$graphCanvas.="	<th class=\"thgraph$class\" scope=\"col\">".$graph_stats[$q][0]."</th>\n";
+			$graphCanvas.="	<th class=\"thgraph$class\" scope=\"col\">".$graph_stats[$q][3]."</th>\n";
+			$graphCanvas.="  </tr>\n";
+		}
+		$graphCanvas.="</table>\n";
+		
+		$GRAPH_text.=$graphCanvas;
+
 
 	$TOT_AGENTS = sprintf("%4s", $m);
 	$k=$m;
@@ -865,19 +954,13 @@ else
 		$ASCII_text.="+-----------------+----------+----------------------+------------+--------------------\n";
 		$ASCII_text.="| "._QXZ("TOTALS",7,"r")." "._QXZ("AGENTS",13,"r").":$TOT_AGENTS |                      |$TOTtimeTC |\n";
 		$ASCII_text.="+----------------------------+                      +------------+\n";
-		$GRAPH.="  <tr>\n";
-		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("TOTALS")."</th>\n";
-		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">"._QXZ("AGENTS").": $TOT_AGENTS</th>\n";
-		$GRAPH.="	<th class=\"thgraph\" scope=\"col\">$TOTtimeTC</th>\n";
-		$GRAPH.="  </tr>\n";
-		$GRAPH.="  </table>\n";
 		if ($AUTOLOGOUTflag > 0)
 			{
 			$ASCII_text.="     * "._QXZ("denotes AUTOLOGOUT from timeclock")."\n";
-			$GRAPH.="     * "._QXZ("denotes AUTOLOGOUT from timeclock")."\n";
+			$GRAPH_text.="     * "._QXZ("denotes AUTOLOGOUT from timeclock")."\n";
 			}
 		$ASCII_text.="</PRE>";
-		$GRAPH.="</PRE>";
+		$GRAPH_text.="</PRE>";
 		}
 	else
 		{
@@ -935,7 +1018,7 @@ if ($file_download > 0)
 
 if ($report_display_type=="HTML")
 	{
-	echo $GRAPH;
+	echo $GRAPH_text.$JS_text;
 	}
 else
 	{

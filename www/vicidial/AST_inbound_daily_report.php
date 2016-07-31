@@ -26,6 +26,7 @@
 # 150516-1313 - Fixed Javascript element problem, Issue #857
 # 151125-1629 - Added search archive option
 # 160227-1142 - Uniform form format
+# 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 #
 
 $startMS = microtime();
@@ -370,7 +371,6 @@ $HEADER.="   .red {color: black; background-color: #FF9999}\n";
 $HEADER.="   .orange {color: black; background-color: #FFCC99}\n";
 $HEADER.="-->\n";
 $HEADER.=" </STYLE>\n";
-
 #if (!preg_match("/\|$group\|/i",$groups_string))
 #	{
 #	$HEADER.="<!-- group not found: $group  $groups_string -->\n";
@@ -380,6 +380,9 @@ $HEADER.=" </STYLE>\n";
 $HEADER.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
+require("chart_button.php");
+$HEADER.="<script src='chart/Chart.js'></script>\n"; 
+$HEADER.="<script language=\"JavaScript\" src=\"vicidial_chart_functions.js\"></script>\n";
 
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
@@ -1108,23 +1111,6 @@ else
 	$max_qtd_totaltalktime=1;
 	$max_qtd_totalwraptime=1;
 	$max_qtd_totalcalltime=1;
-	$GRAPH="<a name='multigroup_graph'/><table border='0' cellpadding='0' cellspacing='2' width='800'><tr><th width='10%' class='grey_graph_cell' id='multigroup_graph1'><a href='#' onClick=\"DrawGraph('OFFERED', '1'); return false;\">"._QXZ("TOTAL CALLS OFFERED")."</a></th><th width='10%' class='grey_graph_cell' id='multigroup_graph2'><a href='#' onClick=\"DrawGraph('ANSWERED', '2'); return false;\">"._QXZ("TOTAL CALLS ANSWERED")."</a></th><th width='10%' class='grey_graph_cell' id='multigroup_graph11'><a href='#' onClick=\"DrawGraph('AGENTS', '11'); return false;\">"._QXZ("TOTAL AGENTS ANSWERED")."</a></th><th width='10%' class='grey_graph_cell' id='multigroup_graph3'><a href='#' onClick=\"DrawGraph('ABANDONED', '3'); return false;\">"._QXZ("TOTAL CALLS ABANDONED")."</a></th><th width='10%' class='grey_graph_cell' id='multigroup_graph4'><a href='#' onClick=\"DrawGraph('ABANDONPCT', '4'); return false;\">"._QXZ("TOTAL ABANDON PERCENT")."</a></th><th width='10%' class='grey_graph_cell' id='multigroup_graph5'><a href='#' onClick=\"DrawGraph('AVGABANDONTIME', '5'); return false;\">"._QXZ("AVG ABANDON TIME")."</a></th><th width='10%' class='grey_graph_cell' id='multigroup_graph6'><a href='#' onClick=\"DrawGraph('AVGANSWERSPEED', '6'); return false;\">"._QXZ("AVG ANSWER SPEED")."</a></th><th width='10%' class='grey_graph_cell' id='multigroup_graph7'><a href='#' onClick=\"DrawGraph('AVGTALKTIME', '7'); return false;\">"._QXZ("AVG TALK TIME")."</a></th><th width='10%' class='grey_graph_cell' id='multigroup_graph8'><a href='#' onClick=\"DrawGraph('TOTALTALKTIME', '8'); return false;\">"._QXZ("TOTAL TALK TIME")."</a></th><th width='10%' class='grey_graph_cell' id='multigroup_graph9'><a href='#' onClick=\"DrawGraph('TOTALWRAPTIME', '9'); return false;\">"._QXZ("TOTAL WRAP TIME")."</a></th><th width='10%' class='grey_graph_cell' id='multigroup_graph10'><a href='#' onClick=\"DrawGraph('TOTALCALLTIME', '10'); return false;\">"._QXZ("TOTAL CALL TIME")."</a></th></tr><tr><td colspan='11' class='graph_span_cell' align='center'><span id='stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-	$MTD_GRAPH="<BR><BR><a name='MTD_graph'/><table border='0' cellpadding='0' cellspacing='2' width='800'><tr><th width='10%' class='grey_graph_cell' id='MTD_graph1'><a href='#' onClick=\"DrawMTDGraph('OFFERED', '1'); return false;\">"._QXZ("TOTAL CALLS OFFERED")."</a></th><th width='10%' class='grey_graph_cell' id='MTD_graph2'><a href='#' onClick=\"DrawMTDGraph('ANSWERED', '2'); return false;\">"._QXZ("TOTAL CALLS ANSWERED")."</a></th><th width='10%' class='grey_graph_cell' id='MTD_graph11'><a href='#' onClick=\"DrawMTDGraph('AGENTS', '11'); return false;\">"._QXZ("TOTAL AGENTS ANSWERED")."</a></th><th width='10%' class='grey_graph_cell' id='MTD_graph3'><a href='#' onClick=\"DrawMTDGraph('ABANDONED', '3'); return false;\">"._QXZ("TOTAL CALLS ABANDONED")."</a></th><th width='10%' class='grey_graph_cell' id='MTD_graph4'><a href='#' onClick=\"DrawMTDGraph('ABANDONPCT', '4'); return false;\">"._QXZ("TOTAL ABANDON PERCENT")."</a></th><th width='10%' class='grey_graph_cell' id='MTD_graph5'><a href='#' onClick=\"DrawMTDGraph('AVGABANDONTIME', '5'); return false;\">"._QXZ("AVG ABANDON TIME")."</a></th><th width='10%' class='grey_graph_cell' id='MTD_graph6'><a href='#' onClick=\"DrawMTDGraph('AVGANSWERSPEED', '6'); return false;\">"._QXZ("AVG ANSWER SPEED")."</a></th><th width='10%' class='grey_graph_cell' id='MTD_graph7'><a href='#' onClick=\"DrawMTDGraph('AVGTALKTIME', '7'); return false;\">"._QXZ("AVG TALK TIME")."</a></th><th width='10%' class='grey_graph_cell' id='MTD_graph8'><a href='#' onClick=\"DrawMTDGraph('TOTALTALKTIME', '8'); return false;\">"._QXZ("TOTAL TALK TIME")."</a></th><th width='10%' class='grey_graph_cell' id='MTD_graph9'><a href='#' onClick=\"DrawMTDGraph('TOTALWRAPTIME', '9'); return false;\">"._QXZ("TOTAL WRAP TIME")."</a></th><th width='10%' class='grey_graph_cell' id='MTD_graph10'><a href='#' onClick=\"DrawMTDGraph('TOTALCALLTIME', '10'); return false;\">"._QXZ("TOTAL CALL TIME")."</a></th></tr><tr><td colspan='11' class='graph_span_cell' align='center'><span id='MTD_stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-	$WTD_GRAPH="<BR><BR><a name='WTD_graph'/><table border='0' cellpadding='0' cellspacing='2' width='800'><tr><th width='10%' class='grey_graph_cell' id='WTD_graph1'><a href='#' onClick=\"DrawWTDGraph('OFFERED', '1'); return false;\">"._QXZ("TOTAL CALLS OFFERED")."</a></th><th width='10%' class='grey_graph_cell' id='WTD_graph2'><a href='#' onClick=\"DrawWTDGraph('ANSWERED', '2'); return false;\">"._QXZ("TOTAL CALLS ANSWERED")."</a></th><th width='10%' class='grey_graph_cell' id='WTD_graph11'><a href='#' onClick=\"DrawWTDGraph('AGENTS', '11'); return false;\">"._QXZ("TOTAL AGENTS ANSWERED")."</a></th><th width='10%' class='grey_graph_cell' id='WTD_graph3'><a href='#' onClick=\"DrawWTDGraph('ABANDONED', '3'); return false;\">"._QXZ("TOTAL CALLS ABANDONED")."</a></th><th width='10%' class='grey_graph_cell' id='WTD_graph4'><a href='#' onClick=\"DrawWTDGraph('ABANDONPCT', '4'); return false;\">"._QXZ("TOTAL ABANDON PERCENT")."</a></th><th width='10%' class='grey_graph_cell' id='WTD_graph5'><a href='#' onClick=\"DrawWTDGraph('AVGABANDONTIME', '5'); return false;\">"._QXZ("AVG ABANDON TIME")."</a></th><th width='10%' class='grey_graph_cell' id='WTD_graph6'><a href='#' onClick=\"DrawWTDGraph('AVGANSWERSPEED', '6'); return false;\">"._QXZ("AVG ANSWER SPEED")."</a></th><th width='10%' class='grey_graph_cell' id='WTD_graph7'><a href='#' onClick=\"DrawWTDGraph('AVGTALKTIME', '7'); return false;\">"._QXZ("AVG TALK TIME")."</a></th><th width='10%' class='grey_graph_cell' id='WTD_graph8'><a href='#' onClick=\"DrawWTDGraph('TOTALTALKTIME', '8'); return false;\">"._QXZ("TOTAL TALK TIME")."</a></th><th width='10%' class='grey_graph_cell' id='WTD_graph9'><a href='#' onClick=\"DrawWTDGraph('TOTALWRAPTIME', '9'); return false;\">"._QXZ("TOTAL WRAP TIME")."</a></th><th width='10%' class='grey_graph_cell' id='WTD_graph10'><a href='#' onClick=\"DrawWTDGraph('TOTALCALLTIME', '10'); return false;\">"._QXZ("TOTAL CALL TIME")."</a></th></tr><tr><td colspan='11' class='graph_span_cell' align='center'><span id='WTD_stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-	$QTD_GRAPH="<BR><BR><a name='QTD_graph'/><table border='0' cellpadding='0' cellspacing='2' width='800'><tr><th width='10%' class='grey_graph_cell' id='QTD_graph1'><a href='#' onClick=\"DrawQTDGraph('OFFERED', '1'); return false;\">"._QXZ("TOTAL CALLS OFFERED")."</a></th><th width='10%' class='grey_graph_cell' id='QTD_graph2'><a href='#' onClick=\"DrawQTDGraph('ANSWERED', '2'); return false;\">"._QXZ("TOTAL CALLS ANSWERED")."</a></th><th width='10%' class='grey_graph_cell' id='QTD_graph11'><a href='#' onClick=\"DrawQTDGraph('AGENTS', '11'); return false;\">"._QXZ("TOTAL AGENTS ANSWERED")."</a></th><th width='10%' class='grey_graph_cell' id='QTD_graph3'><a href='#' onClick=\"DrawQTDGraph('ABANDONED', '3'); return false;\">"._QXZ("TOTAL CALLS ABANDONED")."</a></th><th width='10%' class='grey_graph_cell' id='QTD_graph4'><a href='#' onClick=\"DrawQTDGraph('ABANDONPCT', '4'); return false;\">"._QXZ("TOTAL ABANDON PERCENT")."</a></th><th width='10%' class='grey_graph_cell' id='QTD_graph5'><a href='#' onClick=\"DrawQTDGraph('AVGABANDONTIME', '5'); return false;\">"._QXZ("AVG ABANDON TIME")."</a></th><th width='10%' class='grey_graph_cell' id='QTD_graph6'><a href='#' onClick=\"DrawQTDGraph('AVGANSWERSPEED', '6'); return false;\">"._QXZ("AVG ANSWER SPEED")."</a></th><th width='10%' class='grey_graph_cell' id='QTD_graph7'><a href='#' onClick=\"DrawQTDGraph('AVGTALKTIME', '7'); return false;\">"._QXZ("AVG TALK TIME")."</a></th><th width='10%' class='grey_graph_cell' id='QTD_graph8'><a href='#' onClick=\"DrawQTDGraph('TOTALTALKTIME', '8'); return false;\">"._QXZ("TOTAL TALK TIME")."</a></th><th width='10%' class='grey_graph_cell' id='QTD_graph9'><a href='#' onClick=\"DrawQTDGraph('TOTALWRAPTIME', '9'); return false;\">"._QXZ("TOTAL WRAP TIME")."</a></th><th width='10%' class='grey_graph_cell' id='QTD_graph10'><a href='#' onClick=\"DrawQTDGraph('TOTALCALLTIME', '10'); return false;\">"._QXZ("TOTAL CALL TIME")."</a></th></tr><tr><td colspan='11' class='graph_span_cell' align='center'><span id='QTD_stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
-	
-	$graph_header="<table cellspacing='0' cellpadding='0' class='horizontalgraph'><caption align='top'>"._QXZ("DAILY RPT")." - $query_date_BEGIN "._QXZ("to")." $query_date_END</caption><tr><th class='thgraph' scope='col'>"._QXZ("DATE/TIME RANGE")."</th>";
-	$OFFERED_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL CALLS OFFERED")."</th></tr>";
-	$ANSWERED_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL CALLS ANSWERED")." </th></tr>";
-	$AGENTS_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL AGENTS ANSWERED")." </th></tr>";
-	$ABANDONED_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL CALLS ABANDONED")."</th></tr>";
-	$ABANDONPCT_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL ABANDON PERCENT")."</th></tr>";
-	$AVGABANDONTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVG ABANDON TIME")."</th></tr>";
-	$AVGANSWERSPEED_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVG ANSWER SPEED")."</th></tr>";
-	$AVGTALKTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("AVG TALK TIME")."</th></tr>";
-	$TOTALTALKTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL TALK TIME")."</th></tr>";
-	$TOTALWRAPTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL WRAP TIME")."</th></tr>";
-	$TOTALCALLTIME_graph=$graph_header."<th class='thgraph' scope='col'>"._QXZ("TOTAL CALL TIME")."</th></tr>";
 	##########################
 
 	$totCALLSwtd=0;
@@ -1593,31 +1579,86 @@ else
 			$wtd_graph_stats[$wa][9]=trim($totANSWERSwrapTIMEwtd);
 			$wtd_graph_stats[$wa][10]=trim($totANSWERStotTIMEwtd);
 			$wtd_graph_stats[$wa][17]=trim($totAGENTSwtd);
-			$wtd_OFFERED_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"), $OFFERED_graph);
-			$wtd_ANSWERED_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$ANSWERED_graph);
-			$wtd_AGENTS_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"), $AGENTS_graph);
-			$wtd_ABANDONED_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$ABANDONED_graph);
-			$wtd_ABANDONPCT_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$ABANDONPCT_graph);
-			$wtd_AVGABANDONTIME_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$AVGABANDONTIME_graph);
-			$wtd_AVGANSWERSPEED_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$AVGANSWERSPEED_graph);
-			$wtd_AVGTALKTIME_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$AVGTALKTIME_graph);
-			$wtd_TOTALTALKTIME_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$TOTALTALKTIME_graph);
-			$wtd_TOTALWRAPTIME_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$TOTALWRAPTIME_graph);
-			$wtd_TOTALCALLTIME_graph=preg_replace('/DAILY/', _QXZ("WEEK-TO-DATE"),$TOTALCALLTIME_graph);
-			for ($q=0; $q<count($wtd_graph_stats); $q++) {
-				if ($q==0) {$class=" first";} else if (($q+1)==count($wtd_graph_stats)) {$class=" last";} else {$class="";}
-				$wtd_OFFERED_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][1], $max_wtd_offered))."' height='16' />".$wtd_graph_stats[$q][1]."</td></tr>";
-				$wtd_ANSWERED_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][2], $max_wtd_answered))."' height='16' />".$wtd_graph_stats[$q][2]."</td></tr>";
-				$wtd_AGENTS_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][17], $max_wtd_agents))."' height='16' />".$wtd_graph_stats[$q][17]."</td></tr>";
-				$wtd_ABANDONED_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][3], $max_wtd_abandoned))."' height='16' />".$wtd_graph_stats[$q][3]."</td></tr>";
-				$wtd_ABANDONPCT_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][4], $max_wtd_abandonpct))."' height='16' />".$wtd_graph_stats[$q][4]."% </td></tr>";
-				$wtd_AVGABANDONTIME_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][11], $max_wtd_avgabandontime))."' height='16' />".$wtd_graph_stats[$q][5]."</td></tr>";
-				$wtd_AVGANSWERSPEED_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][12], $max_wtd_avganswerspeed))."' height='16' />".$wtd_graph_stats[$q][6]."</td></tr>";
-				$wtd_AVGTALKTIME_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][16], $max_wtd_avgtalktime))."' height='16' />".$wtd_graph_stats[$q][7]."</td></tr>";
-				$wtd_TOTALTALKTIME_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][15], $max_wtd_totaltalktime))."' height='16' />".$wtd_graph_stats[$q][8]."</td></tr>";
-				$wtd_TOTALWRAPTIME_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][13], $max_wtd_totalwraptime))."' height='16' />".$wtd_graph_stats[$q][9]."</td></tr>";
-				$wtd_TOTALCALLTIME_graph.="  <tr><td class='chart_td$class'>".$wtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$wtd_graph_stats[$q][14], $max_wtd_totalcalltime))."' height='16' />".$wtd_graph_stats[$q][10]."</td></tr>";
+
+			# USE THIS FOR multiple graphs, use pipe-delimited array elements, dataset_name|index|link_name
+			$multigraph_text="";
+			$graph_id++;
+			$graph_array=array("IDR_wtd_TOTALCALLSOFFEREDdata|1|TOTAL CALLS OFFERED|integer|", "IDR_wtd_TOTALCALLSANSWEREDdata|2|TOTAL CALLS ANSWERED|integer|", "IDR_wtd_TOTALAGENTSANSWEREDdata|17|TOTAL AGENTS ANSWERED|integer|", "IDR_wtd_TOTALCALLSABANDONEDdata|3|TOTAL CALLS ABANDONED|integer|", "IDR_wtd_TOTALABANDONPERCENTdata|4|TOTAL ABANDON PERCENT|percent|", "IDR_wtd_AVGABANDONTIMEdata|11|AVG ABANDON TIME|time|", "IDR_wtd_AVGANSWERSPEEDdata|12|AVG ANSWER SPEED|time|", "IDR_wtd_AVGTALKTIMEdata|16|AVG TALK TIME|time|", "IDR_wtd_TOTALTALKTIMEdata|15|TOTAL TALK TIME|time|", "IDR_wtd_TOTALWRAPTIMEdata|13|TOTAL WRAP TIME|time|", "IDR_wtd_TOTALCALLTIMEdata|14|TOTAL CALL TIME|time|");
+			$default_graph="bar"; # Graph that is initally displayed when page loads
+			include("graph_color_schemas.inc"); 
+
+			$graph_totals_array=array();
+			$graph_totals_rawdata=array();
+			for ($q=0; $q<count($graph_array); $q++) {
+				$graph_info=explode("|", $graph_array[$q]); 
+				$current_graph_total=0;
+				$dataset_name=$graph_info[0];
+				$dataset_index=$graph_info[1]; 
+				$dataset_type=$graph_info[3];
+
+				$JS_text.="var $dataset_name = {\n";
+				# $JS_text.="\ttype: \"\",\n";
+				# $JS_text.="\t\tdata: {\n";
+				$datasets="\t\tdatasets: [\n";
+				$datasets.="\t\t\t{\n";
+				$datasets.="\t\t\t\tlabel: \"\",\n";
+				$datasets.="\t\t\t\tfill: false,\n";
+
+				$labels="\t\tlabels:[";
+				$data="\t\t\t\tdata: [";
+				$graphConstantsA="\t\t\t\tbackgroundColor: [";
+				$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+				$graphConstantsC="\t\t\t\thoverBorderColor: [";
+				for ($d=0; $d<count($wtd_graph_stats); $d++) {
+					$labels.="\"".preg_replace('/ +/', ' ', $wtd_graph_stats[$d][0])."\",";
+					$data.="\"".$wtd_graph_stats[$d][$dataset_index]."\",";
+					$current_graph_total+=$wtd_graph_stats[$d][$dataset_index];
+					$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+					$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+					$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+					$graphConstantsA.="\"$bgcolor\",";
+					$graphConstantsB.="\"$hbgcolor\",";
+					$graphConstantsC.="\"$hbcolor\",";
+				}	
+				$graphConstantsA=substr($graphConstantsA,0,-1)."],\n";
+				$graphConstantsB=substr($graphConstantsB,0,-1)."],\n";
+				$graphConstantsC=substr($graphConstantsC,0,-1)."],\n";
+				$labels=preg_replace('/,$/', '', $labels)."],\n";
+				$data=preg_replace('/,$/', '', $data)."],\n";
+				
+				$graph_totals_rawdata[$q]=$current_graph_total;
+				switch($dataset_type) {
+					case "time":
+						$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+						$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+						break;
+					case "percent":
+						$graph_totals_array[$q]="";
+						$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+						break;
+					default:
+						$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+						$chart_options="options: { legend: { display: false }},";
+						break;
+				}
+
+				$datasets.=$data;
+				$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+				$datasets.="\t\t\t}\n";
+				$datasets.="\t\t]\n";
+				$datasets.="\t}\n";
+
+				$JS_text.=$labels.$datasets;
+				# $JS_text.="}\n";
+				# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+				$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+				$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
 			}
+
+			$graph_count=count($graph_array);
+			$graph_title=_QXZ("WEEKLY REPORT")." - $query_date_BEGIN "._QXZ("to")." $query_date_END";
+			include("graphcanvas.inc");
+			$WTD_GRAPH=$graphCanvas;			
 
 			$ASCII_text.="$MAINH\n";
 			$ASCII_text.="| "._QXZ("Week to date",41,"r")." | $totCALLSwtd | $totANSWERSwtd | $totAGENTSwtd | $totABANDONSwtd | $totABANDONSpctwtd%| $totABANDONSavgTIMEwtd | $totANSWERSavgspeedTIMEwtd | $totANSWERSavgTIMEwtd | $totANSWERStalkTIMEwtd | $totANSWERSwrapTIMEwtd | $totANSWERStotTIMEwtd |";
@@ -1689,42 +1730,86 @@ else
 			$mtd_graph_stats[$ma][9]=trim($totANSWERSwrapTIMEmtd);
 			$mtd_graph_stats[$ma][10]=trim($totANSWERStotTIMEmtd);
 			$wtd_graph_stats[$ma][17]=trim($totAGENTSmtd);
-			$mtd_OFFERED_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$OFFERED_graph);
-			$mtd_ANSWERED_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$ANSWERED_graph);
-			$mtd_AGENTS_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"), $AGENTS_graph);
-			$mtd_ABANDONED_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$ABANDONED_graph);
-			$mtd_ABANDONPCT_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$ABANDONPCT_graph);
-			$mtd_AVGABANDONTIME_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$AVGABANDONTIME_graph);
-			$mtd_AVGANSWERSPEED_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$AVGANSWERSPEED_graph);
-			$mtd_AVGTALKTIME_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$AVGTALKTIME_graph);
-			$mtd_TOTALTALKTIME_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$TOTALTALKTIME_graph);
-			$mtd_TOTALWRAPTIME_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$TOTALWRAPTIME_graph);
-			$mtd_TOTALCALLTIME_graph=preg_replace('/DAILY/', _QXZ("MONTH-TO-DATE"),$TOTALCALLTIME_graph);
-			for ($q=0; $q<count($mtd_graph_stats); $q++) {
-				if ($q==0) {$class=" first";} else if (($q+1)==count($mtd_graph_stats)) {$class=" last";} else {$class="";}
-				$mtd_OFFERED_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][1], $max_mtd_offered))."' height='16' />".$mtd_graph_stats[$q][1]."</td></tr>";
-				$mtd_ANSWERED_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][2], $max_mtd_answered))."' height='16' />".$mtd_graph_stats[$q][2]."</td></tr>";
-				$mtd_AGENTS_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][17], $max_mtd_agents))."' height='16' />".$mtd_graph_stats[$q][17]."</td></tr>";
-				$mtd_ABANDONED_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][3], $max_mtd_abandoned))."' height='16' />".$mtd_graph_stats[$q][3]."</td></tr>";
-				$mtd_ABANDONPCT_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][4], $max_mtd_abandonpct))."' height='16' />".$mtd_graph_stats[$q][4]."%</td></tr>";
-				$mtd_AVGABANDONTIME_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][11], $max_mtd_avgabandontime))."' height='16' />".$mtd_graph_stats[$q][5]."</td></tr>";
-				$mtd_AVGANSWERSPEED_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][12], $max_mtd_avganswerspeed))."' height='16' />".$mtd_graph_stats[$q][6]."</td></tr>";
-				$mtd_AVGTALKTIME_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][16], $max_mtd_avgtalktime))."' height='16' />".$mtd_graph_stats[$q][7]."</td></tr>";
-				$mtd_TOTALTALKTIME_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][15], $max_mtd_totaltalktime))."' height='16' />".$mtd_graph_stats[$q][8]."</td></tr>";
-				$mtd_TOTALWRAPTIME_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][13], $max_mtd_totalwraptime))."' height='16' />".$mtd_graph_stats[$q][9]."</td></tr>";
-				$mtd_TOTALCALLTIME_graph.="  <tr><td class='chart_td$class'>".$mtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$mtd_graph_stats[$q][14], $max_mtd_totalcalltime))."' height='16' />".$mtd_graph_stats[$q][10]."</td></tr>";
-				$graph_totCALLSmtd+=$mtd_graph_stats[$q][1];
-				$graph_totANSWERSmtd+=$mtd_graph_stats[$q][2];
-				$graph_totAGENTSmtd+=$mtd_graph_stats[$q][17];
-				$graph_totABANDONSmtd+=$mtd_graph_stats[$q][3];
-				$graph_totABANDONSpctmtd+=$mtd_graph_stats[$q][4];
-				$graph_totABANDONSavgTIMEmtd+=$mtd_graph_stats[$q][5];
-				$graph_totANSWERSavgspeedTIMEmtd+=$mtd_graph_stats[$q][6];
-				$graph_totANSWERSavgTIMEmtd+=$mtd_graph_stats[$q][7];
-				$graph_totANSWERStalkTIMEmtd+=$mtd_graph_stats[$q][8];
-				$graph_totANSWERSwrapTIMEmtd+=$mtd_graph_stats[$q][9];
-				$graph_totANSWERStotTIMEmtd+=$mtd_graph_stats[$q][10];
-			}			
+
+			# USE THIS FOR multiple graphs, use pipe-delimited array elements, dataset_name|index|link_name
+			$multigraph_text="";
+			$graph_id++;
+			$graph_array=array("IDR_mtd_TOTALCALLSOFFEREDdata|1|TOTAL CALLS OFFERED|integer|", "IDR_mtd_TOTALCALLSANSWEREDdata|2|TOTAL CALLS ANSWERED|integer|", "IDR_mtd_TOTALAGENTSANSWEREDdata|17|TOTAL AGENTS ANSWERED|integer|", "IDR_mtd_TOTALCALLSABANDONEDdata|3|TOTAL CALLS ABANDONED|integer|", "IDR_mtd_TOTALABANDONPERCENTdata|4|TOTAL ABANDON PERCENT|percent|", "IDR_mtd_AVGABANDONTIMEdata|11|AVG ABANDON TIME|time|", "IDR_mtd_AVGANSWERSPEEDdata|12|AVG ANSWER SPEED|time|", "IDR_mtd_AVGTALKTIMEdata|16|AVG TALK TIME|time|", "IDR_mtd_TOTALTALKTIMEdata|15|TOTAL TALK TIME|time|", "IDR_mtd_TOTALWRAPTIMEdata|13|TOTAL WRAP TIME|time|", "IDR_mtd_TOTALCALLTIMEdata|14|TOTAL CALL TIME|time|");
+			$default_graph="bar"; # Graph that is initally displayed when page loads
+			include("graph_color_schemas.inc"); 
+
+			$graph_totals_array=array();
+			$graph_totals_rawdata=array();
+			for ($q=0; $q<count($graph_array); $q++) {
+				$graph_info=explode("|", $graph_array[$q]); 
+				$current_graph_total=0;
+				$dataset_name=$graph_info[0];
+				$dataset_index=$graph_info[1]; 
+				$dataset_type=$graph_info[3];
+
+				$JS_text.="var $dataset_name = {\n";
+				# $JS_text.="\ttype: \"\",\n";
+				# $JS_text.="\t\tdata: {\n";
+				$datasets="\t\tdatasets: [\n";
+				$datasets.="\t\t\t{\n";
+				$datasets.="\t\t\t\tlabel: \"\",\n";
+				$datasets.="\t\t\t\tfill: false,\n";
+
+				$labels="\t\tlabels:[";
+				$data="\t\t\t\tdata: [";
+				$graphConstantsA="\t\t\t\tbackgroundColor: [";
+				$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+				$graphConstantsC="\t\t\t\thoverBorderColor: [";
+				for ($d=0; $d<count($mtd_graph_stats); $d++) {
+					$labels.="\"".preg_replace('/ +/', ' ', $mtd_graph_stats[$d][0])."\",";
+					$data.="\"".$mtd_graph_stats[$d][$dataset_index]."\",";
+					$current_graph_total+=$mtd_graph_stats[$d][$dataset_index];
+					$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+					$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+					$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+					$graphConstantsA.="\"$bgcolor\",";
+					$graphConstantsB.="\"$hbgcolor\",";
+					$graphConstantsC.="\"$hbcolor\",";
+				}	
+				$graphConstantsA=substr($graphConstantsA,0,-1)."],\n";
+				$graphConstantsB=substr($graphConstantsB,0,-1)."],\n";
+				$graphConstantsC=substr($graphConstantsC,0,-1)."],\n";
+				$labels=preg_replace('/,$/', '', $labels)."],\n";
+				$data=preg_replace('/,$/', '', $data)."],\n";
+				
+				$graph_totals_rawdata[$q]=$current_graph_total;
+				switch($dataset_type) {
+					case "time":
+						$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+						$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+						break;
+					case "percent":
+						$graph_totals_array[$q]="";
+						$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+						break;
+					default:
+						$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+						$chart_options="options: { legend: { display: false }},";
+						break;
+				}
+
+				$datasets.=$data;
+				$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+				$datasets.="\t\t\t}\n";
+				$datasets.="\t\t]\n";
+				$datasets.="\t}\n";
+
+				$JS_text.=$labels.$datasets;
+				# $JS_text.="}\n";
+				# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+				$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+				$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
+			}
+
+			$graph_count=count($graph_array);
+			$graph_title=_QXZ("MONTHLY REPORT")." - $query_date_BEGIN "._QXZ("to")." $query_date_END";
+			include("graphcanvas.inc");
+			$MTD_GRAPH=$graphCanvas;			
 
 			$ASCII_text.="$MAINH\n";
 			$ASCII_text.="| "._QXZ("Month to date",41,"r")." | $totCALLSmtd | $totANSWERSmtd | $totAGENTSmtd | $totABANDONSmtd | $totABANDONSpctmtd%| $totABANDONSavgTIMEmtd | $totANSWERSavgspeedTIMEmtd | $totANSWERSavgTIMEmtd | $totANSWERStalkTIMEmtd | $totANSWERSwrapTIMEmtd | $totANSWERStotTIMEmtd |";
@@ -1808,42 +1893,88 @@ else
 			$qtd_graph_stats[$qa][9]=trim($totANSWERSwrapTIMEqtd);
 			$qtd_graph_stats[$qa][10]=trim($totANSWERStotTIMEqtd);
 			$qtd_graph_stats[$qa][17]=trim($totAGENTSqtd);
-			$qtd_OFFERED_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$OFFERED_graph);
-			$qtd_ANSWERED_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$ANSWERED_graph);
-			$qtd_AGENTS_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$AGENTS_graph);
-			$qtd_ABANDONED_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$ABANDONED_graph);
-			$qtd_ABANDONPCT_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$ABANDONPCT_graph);
-			$qtd_AVGABANDONTIME_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$AVGABANDONTIME_graph);
-			$qtd_AVGANSWERSPEED_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$AVGANSWERSPEED_graph);
-			$qtd_AVGTALKTIME_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$AVGTALKTIME_graph);
-			$qtd_TOTALTALKTIME_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$TOTALTALKTIME_graph);
-			$qtd_TOTALWRAPTIME_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$TOTALWRAPTIME_graph);
-			$qtd_TOTALCALLTIME_graph=preg_replace('/DAILY/', _QXZ("QUARTER-TO-DATE"),$TOTALCALLTIME_graph);
-			for ($q=0; $q<count($qtd_graph_stats); $q++) {
-				if ($q==0) {$class=" first";} else if (($q+1)==count($qtd_graph_stats)) {$class=" last";} else {$class="";}
-				$qtd_OFFERED_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][1], $max_qtd_offered))."' height='16' />".$qtd_graph_stats[$q][1]."</td></tr>";
-				$qtd_ANSWERED_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][2], $max_qtd_answered))."' height='16' />".$qtd_graph_stats[$q][2]."</td></tr>";
-				$qtd_AGENTS_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][17], $max_qtd_agents))."' height='16' />".$qtd_graph_stats[$q][17]."</td></tr>";
-				$qtd_ABANDONED_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][3], $max_qtd_abandoned))."' height='16' />".$qtd_graph_stats[$q][3]."</td></tr>";
-				$qtd_ABANDONPCT_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][4], $max_qtd_abandonpct))."' height='16' />".$qtd_graph_stats[$q][4]."%</td></tr>";
-				$qtd_AVGABANDONTIME_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][11], $max_qtd_avgabandontime))."' height='16' />".$qtd_graph_stats[$q][5]."</td></tr>";
-				$qtd_AVGANSWERSPEED_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][12], $max_qtd_avganswerspeed))."' height='16' />".$qtd_graph_stats[$q][6]."</td></tr>";
-				$qtd_AVGTALKTIME_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][16], $max_qtd_avgtalktime))."' height='16' />".$qtd_graph_stats[$q][7]."</td></tr>";
-				$qtd_TOTALTALKTIME_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][15], $max_qtd_totaltalktime))."' height='16' />".$qtd_graph_stats[$q][8]."</td></tr>";
-				$qtd_TOTALWRAPTIME_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][13], $max_qtd_totalwraptime))."' height='16' />".$qtd_graph_stats[$q][9]."</td></tr>";
-				$qtd_TOTALCALLTIME_graph.="  <tr><td class='chart_td$class'>".$qtd_graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$qtd_graph_stats[$q][14], $max_qtd_totalcalltime))."' height='16' />".$qtd_graph_stats[$q][10]."</td></tr>";
-				$graph_totCALLSqtd+=$qtd_graph_stats[$q][1];
-				$graph_totANSWERSqtd+=$qtd_graph_stats[$q][2];
-				$graph_totAGENTSqtd+=$qtd_graph_stats[$q][17];
-				$graph_totABANDONSqtd+=$qtd_graph_stats[$q][3];
-				$graph_totABANDONSpctqtd+=$qtd_graph_stats[$q][4];
-				$graph_totABANDONSavgTIMEqtd+=$qtd_graph_stats[$q][5];
-				$graph_totANSWERSavgspeedTIMEqtd+=$qtd_graph_stats[$q][6];
-				$graph_totANSWERSavgTIMEqtd+=$qtd_graph_stats[$q][7];
-				$graph_totANSWERStalkTIMEqtd+=$qtd_graph_stats[$q][8];
-				$graph_totANSWERSwrapTIMEqtd+=$qtd_graph_stats[$q][9];
-				$graph_totANSWERStotTIMEqtd+=$qtd_graph_stats[$q][10];
+
+			# USE THIS FOR multiple graphs, use pipe-delimited array elements, dataset_name|index|link_name
+			$multigraph_text="";
+			$graph_id++;
+			$graph_array=array("IDR_qtd_TOTALCALLSOFFEREDdata|1|TOTAL CALLS OFFERED|integer|", "IDR_qtd_TOTALCALLSANSWEREDdata|2|TOTAL CALLS ANSWERED|integer|", "IDR_qtd_TOTALAGENTSANSWEREDdata|17|TOTAL AGENTS ANSWERED|integer|", "IDR_qtd_TOTALCALLSABANDONEDdata|3|TOTAL CALLS ABANDONED|integer|", "IDR_qtd_TOTALABANDONPERCENTdata|4|TOTAL ABANDON PERCENT|percent|", "IDR_qtd_AVGABANDONTIMEdata|11|AVG ABANDON TIME|time|", "IDR_qtd_AVGANSWERSPEEDdata|12|AVG ANSWER SPEED|time|", "IDR_qtd_AVGTALKTIMEdata|16|AVG TALK TIME|time|", "IDR_qtd_TOTALTALKTIMEdata|15|TOTAL TALK TIME|time|", "IDR_qtd_TOTALWRAPTIMEdata|13|TOTAL WRAP TIME|time|", "IDR_qtd_TOTALCALLTIMEdata|14|TOTAL CALL TIME|time|");
+			$default_graph="bar"; # Graph that is initally displayed when page loads
+			include("graph_color_schemas.inc"); 
+
+			$graph_totals_array=array();
+			$graph_totals_rawdata=array();
+			for ($q=0; $q<count($graph_array); $q++) {
+				$graph_info=explode("|", $graph_array[$q]);
+				$current_graph_total=0;
+				$dataset_name=$graph_info[0];
+				$dataset_index=$graph_info[1]; 
+				$dataset_type=$graph_info[3];
+
+				$JS_text.="var $dataset_name = {\n";
+				# $JS_text.="\ttype: \"\",\n";
+				# $JS_text.="\t\tdata: {\n";
+				$datasets="\t\tdatasets: [\n";
+				$datasets.="\t\t\t{\n";
+				$datasets.="\t\t\t\tlabel: \"\",\n";
+				$datasets.="\t\t\t\tfill: false,\n";
+
+				$labels="\t\tlabels:[";
+				$data="\t\t\t\tdata: [";
+				$graphConstantsA="\t\t\t\tbackgroundColor: [";
+				$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+				$graphConstantsC="\t\t\t\thoverBorderColor: [";
+				for ($d=0; $d<count($qtd_graph_stats); $d++) {
+					$labels.="\"".preg_replace('/ +/', ' ', $qtd_graph_stats[$d][0])."\",";
+					$data.="\"".$qtd_graph_stats[$d][$dataset_index]."\",";
+					$current_graph_total+=$qtd_graph_stats[$d][$dataset_index];
+					$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+					$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+					$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+					$graphConstantsA.="\"$bgcolor\",";
+					$graphConstantsB.="\"$hbgcolor\",";
+					$graphConstantsC.="\"$hbcolor\",";
+				}	
+				$graphConstantsA=substr($graphConstantsA,0,-1)."],\n";
+				$graphConstantsB=substr($graphConstantsB,0,-1)."],\n";
+				$graphConstantsC=substr($graphConstantsC,0,-1)."],\n";
+				$labels=preg_replace('/,$/', '', $labels)."],\n";
+				$data=preg_replace('/,$/', '', $data)."],\n";
+				
+				
+				$graph_totals_rawdata[$q]=$current_graph_total;
+				switch($dataset_type) {
+					case "time":
+						$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+						$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+						break;
+					case "percent":
+						$graph_totals_array[$q]="";
+						$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+						break;
+					default:
+						$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+						$chart_options="options: { legend: { display: false }},";
+						break;
+				}
+
+				$datasets.=$data;
+				$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+				$datasets.="\t\t\t}\n";
+				$datasets.="\t\t]\n";
+				$datasets.="\t}\n";
+
+				$JS_text.=$labels.$datasets;
+				# $JS_text.="}\n";
+				# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+				$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+				$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
 			}
+
+			$graph_count=count($graph_array);
+			$graph_title=_QXZ("QUARTERLY REPORT")." - $query_date_BEGIN "._QXZ("to")." $query_date_END";
+			include("graphcanvas.inc");
+			$QTD_GRAPH=$graphCanvas;			
+
 
 			$ASCII_text.="$MAINH\n";
 			$ASCII_text.="| "._QXZ("Quarter to date",41,"r")." | $totCALLSqtd | $totANSWERSqtd | $totAGENTSqtd | $totABANDONSqtd | $totABANDONSpctqtd%| $totABANDONSavgTIMEqtd | $totANSWERSavgspeedTIMEqtd | $totANSWERSavgTIMEqtd | $totANSWERStalkTIMEqtd | $totANSWERSwrapTIMEqtd | $totANSWERStotTIMEqtd |";
@@ -1865,156 +1996,87 @@ else
 	#			}
 		}
 
-			for ($q=0; $q<count($graph_stats); $q++) {
-				if ($q==0) {$class=" first";} else if (($q+1)==count($graph_stats)) {$class=" last";} else {$class="";}
-				$OFFERED_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][1], $max_offered))."' height='16' />".$graph_stats[$q][1]."</td></tr>";
-				$ANSWERED_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][2], $max_answered))."' height='16' />".$graph_stats[$q][2]."</td></tr>";
-				$AGENTS_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][17], $max_agents))."' height='16' />".$graph_stats[$q][17]."</td></tr>";
-				$ABANDONED_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][3], $max_abandoned))."' height='16' />".$graph_stats[$q][3]."</td></tr>";
-				$ABANDONPCT_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][4], $max_abandonpct))."' height='16' />".$graph_stats[$q][4]."%</td></tr>";
-				$AVGABANDONTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][11], $max_avgabandontime))."' height='16' />".$graph_stats[$q][5]."</td></tr>";
-				$AVGANSWERSPEED_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][12], $max_avganswerspeed))."' height='16' />".$graph_stats[$q][6]."</td></tr>";
-				$AVGTALKTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][16], $max_avgtalktime))."' height='16' />".$graph_stats[$q][7]."</td></tr>";
-				$TOTALTALKTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][15], $max_totaltalktime))."' height='16' />".$graph_stats[$q][8]."</td></tr>";
-				$TOTALWRAPTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][13], $max_totalwraptime))."' height='16' />".$graph_stats[$q][9]."</td></tr>";
-				$TOTALCALLTIME_graph.="  <tr><td class='chart_td$class'>".$graph_stats[$q][0]."</td><td nowrap class='chart_td value$class'><img src='images/bar.png' alt='' width='".round(MathZDC(400*$graph_stats[$q][14], $max_totalcalltime))."' height='16' />".$graph_stats[$q][10]."</td></tr>";
+			# USE THIS FOR multiple graphs, use pipe-delimited array elements, dataset_name|index|link_name
+			$multigraph_text="";
+			$graph_id++;
+			$graph_array=array("IDR_TOTALCALLSOFFEREDdata|1|TOTAL CALLS OFFERED|integer|", "IDR_TOTALCALLSANSWEREDdata|2|TOTAL CALLS ANSWERED|integer|", "IDR_TOTALAGENTSANSWEREDdata|17|TOTAL AGENTS ANSWERED|integer|", "IDR_TOTALCALLSABANDONEDdata|3|TOTAL CALLS ABANDONED|integer|", "IDR_TOTALABANDONPERCENTdata|4|TOTAL ABANDON PERCENT|percent|", "IDR_AVGABANDONTIMEdata|11|AVG ABANDON TIME|time|", "IDR_AVGANSWERSPEEDdata|12|AVG ANSWER SPEED|time|", "IDR_AVGTALKTIMEdata|16|AVG TALK TIME|time|", "IDR_TOTALTALKTIMEdata|15|TOTAL TALK TIME|time|", "IDR_TOTALWRAPTIMEdata|13|TOTAL WRAP TIME|time|", "IDR_TOTALCALLTIMEdata|14|TOTAL CALL TIME|time|");
+			$default_graph="bar"; # Graph that is initally displayed when page loads
+			include("graph_color_schemas.inc"); 
+
+			$graph_totals_array=array();
+			$graph_totals_rawdata=array();
+			for ($q=0; $q<count($graph_array); $q++) {
+				$graph_info=explode("|", $graph_array[$q]); 
+				$current_graph_total=0;
+				$dataset_name=$graph_info[0];
+				$dataset_index=$graph_info[1]; 
+				$dataset_type=$graph_info[3];
+
+				$JS_text.="var $dataset_name = {\n";
+				# $JS_text.="\ttype: \"\",\n";
+				# $JS_text.="\t\tdata: {\n";
+				$datasets="\t\tdatasets: [\n";
+				$datasets.="\t\t\t{\n";
+				$datasets.="\t\t\t\tlabel: \"\",\n";
+				$datasets.="\t\t\t\tfill: false,\n";
+
+				$labels="\t\tlabels:[";
+				$data="\t\t\t\tdata: [";
+				$graphConstantsA="\t\t\t\tbackgroundColor: [";
+				$graphConstantsB="\t\t\t\thoverBackgroundColor: [";
+				$graphConstantsC="\t\t\t\thoverBorderColor: [";
+				for ($d=0; $d<count($graph_stats); $d++) {
+					$labels.="\"".preg_replace('/ +/', ' ', $graph_stats[$d][0])."\",";
+					$data.="\"".$graph_stats[$d][$dataset_index]."\","; 
+					$current_graph_total+=$graph_stats[$d][$dataset_index];
+					$bgcolor=$backgroundColor[($d%count($backgroundColor))];
+					$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
+					$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
+					$graphConstantsA.="\"$bgcolor\",";
+					$graphConstantsB.="\"$hbgcolor\",";
+					$graphConstantsC.="\"$hbcolor\",";
+				}	
+				$graphConstantsA=substr($graphConstantsA,0,-1)."],\n";
+				$graphConstantsB=substr($graphConstantsB,0,-1)."],\n";
+				$graphConstantsC=substr($graphConstantsC,0,-1)."],\n";
+				$labels=preg_replace('/,$/', '', $labels)."],\n";
+				$data=preg_replace('/,$/', '', $data)."],\n";
+				
+				
+				$graph_totals_rawdata[$q]=$current_graph_total;
+				switch($dataset_type) {
+					case "time":
+						$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL")." - ".sec_convert($current_graph_total, 'H')." </caption>\n";
+						$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = Math.round(data.datasets[0].data[tooltipItem.index]); return value.toHHMMSS();}}}, legend: { display: false }},";
+						break;
+					case "percent":
+						$graph_totals_array[$q]="";
+						$chart_options="options: {tooltips: {callbacks: {label: function(tooltipItem, data) {var value = data.datasets[0].data[tooltipItem.index]; return value + '%';}}}, legend: { display: false }},";
+						break;
+					default:
+						$graph_totals_array[$q]="  <caption align=\"bottom\">"._QXZ("TOTAL").": $current_graph_total</caption>\n";
+						$chart_options="options: { legend: { display: false }},";
+						break;
+				}
+
+				$datasets.=$data;
+				$datasets.=$graphConstantsA.$graphConstantsB.$graphConstantsC.$graphConstants; # SEE TOP OF SCRIPT
+				$datasets.="\t\t\t}\n";
+				$datasets.="\t\t]\n";
+				$datasets.="\t}\n";
+
+				$JS_text.=$labels.$datasets;
+				# $JS_text.="}\n";
+				# $JS_text.="prepChart('$default_graph', $graph_id, $q, $dataset_name);\n";
+				$JS_text.="var main_ctx = document.getElementById(\"CanvasID".$graph_id."_".$q."\");\n";
+				$JS_text.="var GraphID".$graph_id."_".$q." = new Chart(main_ctx, {type: '$default_graph', $chart_options data: $dataset_name});\n";
 			}
-			$OFFERED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotCALLS)."</th></tr></table>";
-			$ANSWERED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERS)."</th></tr></table>";
-			$AGENTS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotAGENTS)."</th></tr></table>";
-			$ABANDONED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotABANDONS)."</th></tr></table>";
-			$ABANDONPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotABANDONSpct)."%</th></tr></table>";
-			$AVGABANDONTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotABANDONSavgTIME)."</th></tr></table>";
-			$AVGANSWERSPEED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERSavgspeedTIME)."</th></tr></table>";
-			$AVGTALKTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERSavgTIME)."</th></tr></table>";
-			$TOTALTALKTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERStalkTIME)."</th></tr></table>";
-			$TOTALWRAPTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERSwrapTIME)."</th></tr></table>";
-			$TOTALCALLTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERStotTIME)."</th></tr></table>";
-			$JS_onload.="\tDrawGraph('OFFERED', '1');\n"; 
-			$JS_text.="function DrawGraph(graph, th_id) {\n";
-			$JS_text.="	var OFFERED_graph=\"$OFFERED_graph\";\n";
-			$JS_text.="	var ANSWERED_graph=\"$ANSWERED_graph\";\n";
-			$JS_text.="	var AGENTS_graph=\"$AGENTS_graph\";\n";
-			$JS_text.="	var ABANDONED_graph=\"$ABANDONED_graph\";\n";
-			$JS_text.="	var ABANDONPCT_graph=\"$ABANDONPCT_graph\";\n";
-			$JS_text.="	var AVGABANDONTIME_graph=\"$AVGABANDONTIME_graph\";\n";
-			$JS_text.="	var AVGANSWERSPEED_graph=\"$AVGANSWERSPEED_graph\";\n";
-			$JS_text.="	var AVGTALKTIME_graph=\"$AVGTALKTIME_graph\";\n";
-			$JS_text.="	var TOTALTALKTIME_graph=\"$TOTALTALKTIME_graph\";\n";
-			$JS_text.="	var TOTALWRAPTIME_graph=\"$TOTALWRAPTIME_graph\";\n";
-			$JS_text.="	var TOTALCALLTIME_graph=\"$TOTALCALLTIME_graph\";\n";
-			$JS_text.="\n";
-			$JS_text.="	for (var i=1; i<=10; i++) {\n";
-			$JS_text.="		var cellID=\"multigroup_graph\"+i;\n";
-			$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
-			$JS_text.="	}\n";
-			$JS_text.="	var cellID=\"multigroup_graph\"+th_id;\n";
-			$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
-			$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
-			$JS_text.="	document.getElementById('stats_graph').innerHTML=graph_to_display;\n";
-			$JS_text.="}\n";
-			$wtd_OFFERED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotCALLS)."</th></tr></table>";
-			$wtd_ANSWERED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERS)."</th></tr></table>";
-			$wtd_AGENTS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotAGENTS)."</th></tr></table>";
-			$wtd_ABANDONED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotABANDONS)."</th></tr></table>";
-			$wtd_ABANDONPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotABANDONSpct)."%</th></tr></table>";
-			$wtd_AVGABANDONTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotABANDONSavgTIME)."</th></tr></table>";
-			$wtd_AVGANSWERSPEED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERSavgspeedTIME)."</th></tr></table>";
-			$wtd_AVGTALKTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERSavgTIME)."</th></tr></table>";
-			$wtd_TOTALTALKTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERStalkTIME)."</th></tr></table>";
-			$wtd_TOTALWRAPTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERSwrapTIME)."</th></tr></table>";
-			$wtd_TOTALCALLTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERStotTIME)."</th></tr></table>";
-			$JS_onload.="\tDrawWTDGraph('OFFERED', '1');\n"; 
-			$JS_text.="function DrawWTDGraph(graph, th_id) {\n";
-			$JS_text.="	var OFFERED_graph=\"$wtd_OFFERED_graph\";\n";
-			$JS_text.="	var ANSWERED_graph=\"$wtd_ANSWERED_graph\";\n";
-			$JS_text.="	var AGENTS_graph=\"$wtd_AGENTS_graph\";\n";
-			$JS_text.="	var ABANDONED_graph=\"$wtd_ABANDONED_graph\";\n";
-			$JS_text.="	var ABANDONPCT_graph=\"$wtd_ABANDONPCT_graph\";\n";
-			$JS_text.="	var AVGABANDONTIME_graph=\"$wtd_AVGABANDONTIME_graph\";\n";
-			$JS_text.="	var AVGANSWERSPEED_graph=\"$wtd_AVGANSWERSPEED_graph\";\n";
-			$JS_text.="	var AVGTALKTIME_graph=\"$wtd_AVGTALKTIME_graph\";\n";
-			$JS_text.="	var TOTALTALKTIME_graph=\"$wtd_TOTALTALKTIME_graph\";\n";
-			$JS_text.="	var TOTALWRAPTIME_graph=\"$wtd_TOTALWRAPTIME_graph\";\n";
-			$JS_text.="	var TOTALCALLTIME_graph=\"$wtd_TOTALCALLTIME_graph\";\n";
-			$JS_text.="\n";
-			$JS_text.="	for (var i=1; i<=10; i++) {\n";
-			$JS_text.="		var cellID=\"WTD_graph\"+i;\n";
-			$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
-			$JS_text.="	}\n";
-			$JS_text.="	var cellID=\"WTD_graph\"+th_id;\n";
-			$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
-			$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
-			$JS_text.="	document.getElementById('WTD_stats_graph').innerHTML=graph_to_display;\n";
-			$JS_text.="}\n";
-			$mtd_OFFERED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotCALLS)."</th></tr></table>";
-			$mtd_ANSWERED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERS)."</th></tr></table>";
-			$mtd_AGENTS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotAGENTS)."</th></tr></table>";
-			$mtd_ABANDONED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotABANDONS)."</th></tr></table>";
-			$mtd_ABANDONPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotABANDONSpct)."%</th></tr></table>";
-			$mtd_AVGABANDONTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotABANDONSavgTIME)."</th></tr></table>";
-			$mtd_AVGANSWERSPEED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERSavgspeedTIME)."</th></tr></table>";
-			$mtd_AVGTALKTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERSavgTIME)."</th></tr></table>";
-			$mtd_TOTALTALKTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERStalkTIME)."</th></tr></table>";
-			$mtd_TOTALWRAPTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERSwrapTIME)."</th></tr></table>";
-			$mtd_TOTALCALLTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERStotTIME)."</th></tr></table>";
-			$JS_onload.="\tDrawMTDGraph('OFFERED', '1');\n"; 
-			$JS_text.="function DrawMTDGraph(graph, th_id) {\n";
-			$JS_text.="	var OFFERED_graph=\"$mtd_OFFERED_graph\";\n";
-			$JS_text.="	var ANSWERED_graph=\"$mtd_ANSWERED_graph\";\n";
-			$JS_text.="	var AGENTS_graph=\"$mtd_AGENTS_graph\";\n";
-			$JS_text.="	var ABANDONED_graph=\"$mtd_ABANDONED_graph\";\n";
-			$JS_text.="	var ABANDONPCT_graph=\"$mtd_ABANDONPCT_graph\";\n";
-			$JS_text.="	var AVGABANDONTIME_graph=\"$mtd_AVGABANDONTIME_graph\";\n";
-			$JS_text.="	var AVGANSWERSPEED_graph=\"$mtd_AVGANSWERSPEED_graph\";\n";
-			$JS_text.="	var AVGTALKTIME_graph=\"$mtd_AVGTALKTIME_graph\";\n";
-			$JS_text.="	var TOTALTALKTIME_graph=\"$mtd_TOTALTALKTIME_graph\";\n";
-			$JS_text.="	var TOTALWRAPTIME_graph=\"$mtd_TOTALWRAPTIME_graph\";\n";
-			$JS_text.="	var TOTALCALLTIME_graph=\"$mtd_TOTALCALLTIME_graph\";\n";
-			$JS_text.="\n";
-			$JS_text.="	for (var i=1; i<=10; i++) {\n";
-			$JS_text.="		var cellID=\"MTD_graph\"+i;\n";
-			$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
-			$JS_text.="	}\n";
-			$JS_text.="	var cellID=\"MTD_graph\"+th_id;\n";
-			$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
-			$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
-			$JS_text.="	document.getElementById('MTD_stats_graph').innerHTML=graph_to_display;\n";
-			$JS_text.="}\n";
-			$qtd_OFFERED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotCALLS)."</th></tr></table>";
-			$qtd_ANSWERED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERS)."</th></tr></table>";
-			$qtd_AGENTS_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotAGENTS)."</th></tr></table>";
-			$qtd_ABANDONED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotABANDONS)."</th></tr></table>";
-			$qtd_ABANDONPCT_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotABANDONSpct)."%</th></tr></table>";
-			$qtd_AVGABANDONTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotABANDONSavgTIME)."</th></tr></table>";
-			$qtd_AVGANSWERSPEED_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERSavgspeedTIME)."</th></tr></table>";
-			$qtd_AVGTALKTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERSavgTIME)."</th></tr></table>";
-			$qtd_TOTALTALKTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERStalkTIME)."</th></tr></table>";
-			$qtd_TOTALWRAPTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERSwrapTIME)."</th></tr></table>";
-			$qtd_TOTALCALLTIME_graph.="<tr><th class='thgraph' scope='col'>"._QXZ("TOTAL").":</th><th class='thgraph' scope='col'>".trim($FtotANSWERStotTIME)."</th></tr></table>";
-			$JS_onload.="\tDrawQTDGraph('OFFERED', '1');\n"; 
-			$JS_text.="function DrawQTDGraph(graph, th_id) {\n";
-			$JS_text.="	var OFFERED_graph=\"$qtd_OFFERED_graph\";\n";
-			$JS_text.="	var ANSWERED_graph=\"$qtd_ANSWERED_graph\";\n";
-			$JS_text.="	var AGENTS_graph=\"$qtd_AGENTS_graph\";\n";
-			$JS_text.="	var ABANDONED_graph=\"$qtd_ABANDONED_graph\";\n";
-			$JS_text.="	var ABANDONPCT_graph=\"$qtd_ABANDONPCT_graph\";\n";
-			$JS_text.="	var AVGABANDONTIME_graph=\"$qtd_AVGABANDONTIME_graph\";\n";
-			$JS_text.="	var AVGANSWERSPEED_graph=\"$qtd_AVGANSWERSPEED_graph\";\n";
-			$JS_text.="	var AVGTALKTIME_graph=\"$qtd_AVGTALKTIME_graph\";\n";
-			$JS_text.="	var TOTALTALKTIME_graph=\"$qtd_TOTALTALKTIME_graph\";\n";
-			$JS_text.="	var TOTALWRAPTIME_graph=\"$qtd_TOTALWRAPTIME_graph\";\n";
-			$JS_text.="	var TOTALCALLTIME_graph=\"$qtd_TOTALCALLTIME_graph\";\n";
-			$JS_text.="\n";
-			$JS_text.="	for (var i=1; i<=10; i++) {\n";
-			$JS_text.="		var cellID=\"QTD_graph\"+i;\n";
-			$JS_text.="		document.getElementById(cellID).style.backgroundColor='#DDDDDD';\n";
-			$JS_text.="	}\n";
-			$JS_text.="	var cellID=\"QTD_graph\"+th_id;\n";
-			$JS_text.="	document.getElementById(cellID).style.backgroundColor='#999999';\n";
-			$JS_text.="	var graph_to_display=eval(graph+\"_graph\");\n";
-			$JS_text.="	document.getElementById('QTD_stats_graph').innerHTML=graph_to_display;\n";
-			$JS_text.="}\n";
+
+			$graph_count=count($graph_array);
+			$graph_title=_QXZ("DAILY REPORT")." - $query_date_BEGIN "._QXZ("to")." $query_date_END";
+			include("graphcanvas.inc");
+			$GRAPH=$graphCanvas;			
+
 			$FtotAGENTS =	sprintf("%8s", $FtotAGENTS);
 
 	$ASCII_text.="$MAINH\n";
@@ -2079,7 +2141,7 @@ else
 
 	if ($report_display_type=="HTML") 
 		{
-		$MAIN.=$JS_text.$GRAPH.$WTD_GRAPH.$MTD_GRAPH.$QTD_GRAPH;
+		$MAIN.=$GRAPH.$WTD_GRAPH.$MTD_GRAPH.$QTD_GRAPH.$JS_text;
 		}
 	else
 		{
