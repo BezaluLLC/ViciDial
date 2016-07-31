@@ -524,10 +524,11 @@
 # 160420-1342 - Fixed text link overlaps with other languages
 # 160428-1826 - Fixed user_authorization bug
 # 160706-1438 - Redesign for loading, login and logout screens. Added Screen Colors. Logging of browser width/height
+# 160731-1102 - Added option to automatically dial the next number after X seconds in a manual dial mode
 #
 
-$version = '2.12-493c';
-$build = '160706-1438';
+$version = '2.12-494c';
+$build = '160731-1102';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -626,7 +627,7 @@ if ($sl_ct > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -662,6 +663,7 @@ if ($qm_conf_ct > 0)
 	$chat_URL =							$row[25];
 	$default_phone_code =				$row[26];
 	$agent_screen_colors =				$row[27];
+	$SSmanual_auto_next =				$row[28];
 	}
 else
 	{
@@ -1735,7 +1737,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history,show_previous_callback,clear_script,manual_dial_search_filter,web_form_address_three,manual_dial_override_field,status_display_ingroup,customer_gone_seconds,agent_display_fields,manual_dial_timeout FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history,show_previous_callback,clear_script,manual_dial_search_filter,web_form_address_three,manual_dial_override_field,status_display_ingroup,customer_gone_seconds,agent_display_fields,manual_dial_timeout,manual_auto_next,manual_auto_show FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -1872,6 +1874,11 @@ else
 				$customer_gone_seconds =	$row[129];
 				$agent_display_fields =		$row[130];
 				$manual_dial_timeout =		$row[131];
+				$manual_auto_next =			$row[132];
+				$manual_auto_show =			$row[133];
+
+				if ( ($SSmanual_auto_next < 1) or ( ($dial_method != 'INBOUND_MAN') and ($dial_method != 'MANUAL') ) )
+					{$manual_auto_next = 0;}
 
 				if ( ($manual_dial_timeout < 1) or (strlen($manual_dial_timeout) < 1) )
 					{$manual_dial_timeout = $dial_timeout;}
@@ -4136,6 +4143,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var timer_alt_seconds = '<?php echo $timer_alt_seconds ?>';
 	var timer_alt_count=0;
 	var timer_alt_trigger=0;
+	var manual_auto_next = '<?php echo $manual_auto_next ?>';
+	var manual_auto_next_count = '<?php echo $manual_auto_next ?>';
+	var manual_auto_next_trigger=0;
+	var manual_auto_show = '<?php echo $manual_auto_show ?>';
 	var last_mdtype='';
 	var DefaulTAlTDiaL = '<?php echo $DefaulTAlTDiaL ?>';
 	var wrapup_seconds = '<?php echo $wrapup_seconds ?>';
@@ -12615,11 +12626,14 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					timer_alt_trigger=0;
 					last_mdtype='';
 					document.getElementById("timer_alt_display").innerHTML = '';
+					document.getElementById("manual_auto_next_display").innerHTML = '';
 					document.getElementById("RecorDID").innerHTML = '';
 					dial_next_failed=0;
 					xfer_agent_selected=0;
 					source_id='';
 					entry_date='';
+					if (manual_auto_next > 0)
+						{manual_auto_next_trigger=1;   manual_auto_next_count=manual_auto_next;}
 					if (agent_display_fields.match(adfREGentry_date))
 						{document.getElementById("entry_dateDISP").innerHTML = ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';}
 					if (agent_display_fields.match(adfREGsource_id))
@@ -16202,6 +16216,8 @@ function phone_number_format(formatphone) {
 
 				if ( (dispo_max > 0) && (AgentDispoing > dispo_max) )
 					{
+					button_click_log = button_click_log + "" + SQLdate + "-----DispoMax---" + dispo_max + " " + dispo_max_dispo + "|";
+
 					document.vicidial_form.DispoSelectStop.checked=true;
 					document.vicidial_form.DispoSelection.value = dispo_max_dispo;
 					DispoSelect_submit('1',dispo_max_dispo);
@@ -16293,6 +16309,27 @@ function phone_number_format(formatphone) {
 						timer_alt_count--;
 						}
 					}
+				if ( (manual_auto_next > 0) && (manual_auto_next_trigger > 0) && (document.getElementById("WrapupBox").style.visibility != 'visible') && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) && (in_lead_preview_state!=1) )
+					{
+					if (manual_auto_next_count < 1)
+						{
+						manual_auto_next_trigger=0;
+						manual_auto_next_count=manual_auto_next;
+						document.getElementById("manual_auto_next_display").innerHTML = '';
+						
+						button_click_log = button_click_log + "" + SQLdate + "-----ManualAutoNext---" + manual_auto_next + " " + manual_auto_show + "|";
+
+						ManualDialNext('','','','','','0','','','YES');
+						}
+					else
+						{
+						if (manual_auto_show == 'Y')
+							{
+							document.getElementById("manual_auto_next_display").innerHTML = " <?php echo _QXZ("Dial Next Countdown:"); ?> " + manual_auto_next_count + " &nbsp; ";
+							}
+						manual_auto_next_count--;
+						}
+					}				
 				if (VD_live_customer_call==1)
 					{
 					VD_live_call_secondS++;
@@ -16312,6 +16349,8 @@ function phone_number_format(formatphone) {
 								if (test_notesDE.length > 0)
 									{document.vicidial_form.call_notes_dispo.value = document.vicidial_form.call_notes.value}
 								}
+							button_click_log = button_click_log + "" + SQLdate + "-----DeadMax---" + dead_max + " " + dead_max_dispo + "|";
+
 							dead_auto_dispo_count=4;
 							dead_auto_dispo_finish=1;
 							alt_phone_dialing=starting_alt_phone_dialing;
@@ -17292,7 +17331,7 @@ $zi=2;
 		{$alt_phone_selected='CHECKED';}
 	?>	
 	<span id="post_phone_time_diff_span"><b><font color="red"><span id="post_phone_time_diff_span_contents"></span></font></b></span>
-    <font class="body_text"> <?php echo _QXZ("STATUS:"); ?> <span id="MainStatuSSpan"></span><span id=timer_alt_display></span></font></td></tr>
+    <font class="body_text"> <?php echo _QXZ("STATUS:"); ?> <span id="MainStatuSSpan"></span><span id=timer_alt_display></span><span id=manual_auto_next_display></span></font></td></tr>
     <tr><td colspan="3"><span id="busycallsdebug"></span></td></tr>
     <tr><td width="150px" align="left" valign="top">
 	<font class="body_text"><center>
@@ -17990,7 +18029,7 @@ if ($agent_display_dialable_leads > 0)
     </td></tr></table>
 </span>
 
-<span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="CustomerGoneBox">
+<span style="position:absolute;left:0px;top:30px;z-index:<?php $zi++; echo $zi ?>;" id="CustomerGoneBox">
     <table border="0" bgcolor="#CCFFFF" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center"> <font class="sd_text"><?php echo _QXZ("Customer has hung up:"); ?> <span id="CustomerGoneChanneL"></span><br />
 	<a href="#" onclick="CustomerGoneOK();return false;"><?php echo _QXZ("Go Back"); ?></a>
     <br /><br />

@@ -625,3 +625,12 @@ ALTER TABLE vicidial_user_log ADD browser_height SMALLINT(5) UNSIGNED default '0
 ALTER TABLE system_settings ADD script_remove_js ENUM('1','0') default '1';
 
 UPDATE system_settings SET db_schema_version='1462',db_schema_update_date=NOW() where db_schema_version < 1462;
+
+ALTER TABLE vicidial_users ADD user_nickname VARCHAR(50) default '';
+
+ALTER TABLE system_settings ADD manual_auto_next ENUM('1','0') default '0';
+
+ALTER TABLE vicidial_campaigns ADD manual_auto_next SMALLINT(5) UNSIGNED default '0';
+ALTER TABLE vicidial_campaigns ADD manual_auto_show ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1463',db_schema_update_date=NOW() where db_schema_version < 1463;

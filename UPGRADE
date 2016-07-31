@@ -276,6 +276,9 @@ OTHER CHANGES:
 
 74. Changed HTML Reports to use dynamic charting Javascript elements
 
+75. Added campaign option to automatically manual dial next number in agent
+	screen after X seconds. Must be enabled in System Settings.
+
 
 
 

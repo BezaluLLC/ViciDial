@@ -91,6 +91,7 @@
 # 160515-1958 - Added ofcom_uk_drop_calc entry
 # 160527-1359 - Added phones-outbound_alt_cid entry
 # 160621-1735 - Added agent_screen_colors and script_remove_js entries
+# 160731-1030 - Added manual_auto_next, manual_auto_show, user_nickname entries
 #
 
 
@@ -319,6 +320,11 @@ echo "<TABLE WIDTH=98% BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR><TD ALIGN
 <A NAME="users-optional">
 <BR>
 <B><?php echo _QXZ("Email, User Code and Territory"); ?> -</B><?php echo _QXZ("These are optional fields."); ?>
+
+<BR>
+<A NAME="users-user_nickname">
+<BR>
+<B><?php echo _QXZ("User Nickname"); ?> -</B><?php echo _QXZ("Optional alternative name used for agent when chatting with customers. Only used if populated. Not currently enabled."); ?>
 
 <BR>
 <A NAME="users-hotkeys_active">
@@ -1094,6 +1100,16 @@ if ($SSoutbound_autodial_active > 0)
 	<A NAME="campaigns-amd_callmenu">
 	<BR>
 	<B><?php echo _QXZ("AMD Call Menu"); ?> -</B><?php echo _QXZ("If CPD AMD Action is set to CALLMENU, then this is the Call Menu that the call will be sent to if an answering machine is detected."); ?>
+
+	<BR>
+	<A NAME="campaigns-manual_auto_next">
+	<BR>
+	<B><?php echo _QXZ("Manual Auto Next Seconds"); ?> -</B><?php echo _QXZ("If the Dial Method is set to MANUAL or INBOUND_MAN, then this setting will trigger the next lead to be automatically be dialed after this number of seconds. If enabled, it cannot be set lower than 5 seconds. Default is 0 for disabled."); ?>
+
+	<BR>
+	<A NAME="campaigns-manual_auto_show">
+	<BR>
+	<B><?php echo _QXZ("Manual Auto Next Show Timer"); ?> -</B><?php echo _QXZ("If the Manual Auto Next Seconds option above is enabled, this setting will display a countdown timer to the agent if enabled. Default is N for disabled."); ?>
 
 	<BR>
 	<A NAME="campaigns-alt_number_dialing">
@@ -5076,6 +5092,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-user_hide_realtime_enabled">
 <BR>
 <B><?php echo _QXZ("Enable User Hide RealTime"); ?> -</B><?php echo _QXZ("This setting allows a User Modify setting to be changed to allow a user to be hidden from all managers in the Real-Time Report. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="settings-manual_auto_next">
+<BR>
+<B><?php echo _QXZ("Enable Manual Dial Auto Next"); ?> -</B><?php echo _QXZ("This setting allows the campaign setting to be enabled forcing a manual dial after X seconds in a manual or inbound manual dial mode. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="contact_information">

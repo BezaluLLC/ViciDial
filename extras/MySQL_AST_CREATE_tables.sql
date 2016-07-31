@@ -650,7 +650,8 @@ admin_cf_show_hidden ENUM('1','0') default '0',
 agentcall_chat ENUM('1','0') default '0',
 user_hide_realtime ENUM('1','0') default '0',
 access_recordings ENUM('0', '1') default '0',
-modify_colors ENUM('1','0') default '0'
+modify_colors ENUM('1','0') default '0',
+user_nickname VARCHAR(50) default ''
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -960,7 +961,9 @@ manual_dial_timeout VARCHAR(3) default '',
 routing_initiated_recordings ENUM('Y','N') default 'N',
 manual_dial_hopper_check ENUM('Y','N') default 'N',
 callback_useronly_move_minutes MEDIUMINT(5) UNSIGNED default '0',
-ofcom_uk_drop_calc ENUM('Y','N') default 'N'
+ofcom_uk_drop_calc ENUM('Y','N') default 'N',
+manual_auto_next SMALLINT(5) UNSIGNED default '0',
+manual_auto_show ENUM('Y','N') default 'N'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -1663,7 +1666,8 @@ admin_row_click ENUM('0', '1') default '1',
 admin_screen_colors VARCHAR(20) default 'default',
 ofcom_uk_drop_calc ENUM('1','0') default '0',
 agent_screen_colors VARCHAR(20) default 'default',
-script_remove_js ENUM('1','0') default '1'
+script_remove_js ENUM('1','0') default '1',
+manual_auto_next ENUM('1','0') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3779,4 +3783,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1462',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1463',db_schema_update_date=NOW(),reload_timestamp=NOW();
