@@ -315,7 +315,7 @@ foreach(@FILES)
 			##### BEGIN post call variable replacement #####
 			if ($POST > 0) 
 				{
-				if ($ALLfile =~ /POSTVLC|POSTSP|POSTARRD3|POSTSTATUS/)
+				if ($ALLfile =~ /POSTVLC|POSTSP|POSTADDR3|POSTSTATUS/)
 					{
 					$origALLfile = $ALLfile;
 					$origSQLFILE = $SQLFILE;
@@ -420,11 +420,11 @@ foreach(@FILES)
 
 						$ALLfile =~ s/POSTVLC/$vendor_lead_code/gi;
 						$ALLfile =~ s/POSTSP/$security_phrase/gi;
-						$ALLfile =~ s/POSTARRD3/$address3/gi;
+						$ALLfile =~ s/POSTADDR3/$address3/gi;
 						$ALLfile =~ s/POSTSTATUS/$status/gi;
 						$SQLFILE =~ s/POSTVLC/$vendor_lead_code/gi;
 						$SQLFILE =~ s/POSTSP/$security_phrase/gi;
-						$SQLFILE =~ s/POSTARRD3/$address3/gi;
+						$SQLFILE =~ s/POSTADDR3/$address3/gi;
 						$SQLFILE =~ s/POSTSTATUS/$status/gi;
 						$filenameSQL = ",filename='$SQLFILE'";
 
@@ -440,11 +440,11 @@ foreach(@FILES)
 							{
 							$ALLfile =~ s/POSTVLC//gi;
 							$ALLfile =~ s/POSTSP//gi;
-							$ALLfile =~ s/POSTARRD3//gi;
+							$ALLfile =~ s/POSTADDR3//gi;
 							$ALLfile =~ s/POSTSTATUS//gi;
 							$SQLFILE =~ s/POSTVLC//gi;
 							$SQLFILE =~ s/POSTSP//gi;
-							$SQLFILE =~ s/POSTARRD3//gi;
+							$SQLFILE =~ s/POSTADDR3//gi;
 							$SQLFILE =~ s/POSTSTATUS//gi;
 							$filenameSQL = ",filename='$SQLFILE'";
 
