@@ -65,6 +65,7 @@ if (length($ARGV[0])>1)
 		print "  [--CAMP-POST=X] = only run post call variable filename replacement on specific campaigns or ingroups\n";
 		print "                      If multiple campaigns or ingroups, use --- delimiting, i.e.: TESTCAMP---TEST_IN2\n";
 		print "                      For all calls, use ----ALL----\n";
+		print "  [--CLEAR-POST-NO-MATCH] = clear POST filename variables if no match is found\n";
 		print "\n";
 		exit;
 		}
@@ -124,6 +125,11 @@ if (length($ARGV[0])>1)
 				$POST=0;
 				if ($q < 1) {print "\n----- POST disabled, no campaigns set -----\n\n";}
 				}
+			}
+		if ($args =~ /--CLEAR-POST-NO-MATCH/i)
+			{
+			$CLEAR_POST=1;
+			if ($DB) {print "--- CLEAR-POST-NO-MATCH ENABLED ---\n";}
 			}
 		}
 
@@ -309,11 +315,11 @@ foreach(@FILES)
 			##### BEGIN post call variable replacement #####
 			if ($POST > 0) 
 				{
-				if ($ALLfile =~ /POSTVLC|POSTSP|POSTARRD3/)
+				if ($ALLfile =~ /POSTVLC|POSTSP|POSTARRD3|POSTSTATUS/)
 					{
 					$origALLfile = $ALLfile;
 					$origSQLFILE = $SQLFILE;
-					$vendor_lead_code='';   $security_phrase='';   $address3='';
+					$vendor_lead_code='';   $security_phrase='';   $address3='';   $status='';
 					$status_ALL=0;
 					$camp_ALL=0;
 					$camp_status_selected=0;
@@ -390,7 +396,7 @@ foreach(@FILES)
 
 					if ( ( ($camp_ALL > 0) && ($status_ALL > 0) ) || ($camp_status_selected > 0) )
 						{
-						$stmtA = "SELECT vendor_lead_code,security_phrase,address3 from vicidial_list where lead_id='$lead_id' LIMIT 1;";
+						$stmtA = "SELECT vendor_lead_code,security_phrase,address3,status from vicidial_list where lead_id='$lead_id' LIMIT 1;";
 						if($DBX){print STDERR "\n|$stmtA|\n";}
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -401,10 +407,12 @@ foreach(@FILES)
 							$vendor_lead_code =		$aryA[0];
 							$security_phrase =		$aryA[1];
 							$address3 =				$aryA[2];
+							$status =				$aryA[3];
 
 							$vendor_lead_code =~	s/[^a-zA-Z0-9_-]//gi;
 							$security_phrase =~		s/[^a-zA-Z0-9_-]//gi;
 							$address3 =~			s/[^a-zA-Z0-9_-]//gi;
+							$status =~				s/[^a-zA-Z0-9_-]//gi;
 							}
 						else
 							{if ($DB) {print "    POST processing ERROR: lead not found: |$lead_id|$ALLfile|\n";} }
@@ -413,9 +421,11 @@ foreach(@FILES)
 						$ALLfile =~ s/POSTVLC/$vendor_lead_code/gi;
 						$ALLfile =~ s/POSTSP/$security_phrase/gi;
 						$ALLfile =~ s/POSTARRD3/$address3/gi;
+						$ALLfile =~ s/POSTSTATUS/$status/gi;
 						$SQLFILE =~ s/POSTVLC/$vendor_lead_code/gi;
 						$SQLFILE =~ s/POSTSP/$security_phrase/gi;
 						$SQLFILE =~ s/POSTARRD3/$address3/gi;
+						$SQLFILE =~ s/POSTSTATUS/$status/gi;
 						$filenameSQL = ",filename='$SQLFILE'";
 
 						`mv -f "$dir2/$origALLfile" "$dir2/$ALLfile"`;
@@ -425,6 +435,23 @@ foreach(@FILES)
 					else
 						{
 						if ($DB) {print "    POST processing SKIPPED: |$camp_ALL|$status_ALL|$camp_status_selected|$lead_id|$vicidial_id|$ALLfile|\n";}
+
+						if ($CLEAR_POST > 0) 
+							{
+							$ALLfile =~ s/POSTVLC//gi;
+							$ALLfile =~ s/POSTSP//gi;
+							$ALLfile =~ s/POSTARRD3//gi;
+							$ALLfile =~ s/POSTSTATUS//gi;
+							$SQLFILE =~ s/POSTVLC//gi;
+							$SQLFILE =~ s/POSTSP//gi;
+							$SQLFILE =~ s/POSTARRD3//gi;
+							$SQLFILE =~ s/POSTSTATUS//gi;
+							$filenameSQL = ",filename='$SQLFILE'";
+
+							`mv -f "$dir2/$origALLfile" "$dir2/$ALLfile"`;
+
+							if ($DB) {print "    CLEAR POST COMPLETE: old: |$origALLfile| new: |$ALLfile|\n";}
+							}
 						}
 					}
 				else
