@@ -51,6 +51,7 @@ if (length($ARGV[0])>1)
 		{
 		print "allowed run time options:\n";
 		print "  [--help] = this screen\n";
+		print "  [--quiet] = suppress output, if possible\n";
 		print "  [--debug] = debug\n";
 		print "  [--debugX] = super debug\n";
 		print "  [--test] = test\n";
@@ -69,6 +70,10 @@ if (length($ARGV[0])>1)
 		}
 	else
 		{
+		if ($args =~ /--quiet/)
+			{
+			$q=1;
+			}
 		if ($args =~ /--debug/i)
 			{
 			$DB=1;
@@ -82,7 +87,7 @@ if (length($ARGV[0])>1)
 		if ($args =~ /--test/)
 			{
 			$T=1;   $TEST=1;
-			print "\n-----TESTING -----\n\n";
+			if ($q < 1) {print "\n-----TESTING -----\n\n";}
 			}
 		if ($args =~ /--HTTPS/i)
 			{
