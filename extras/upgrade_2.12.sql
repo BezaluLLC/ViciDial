@@ -634,3 +634,7 @@ ALTER TABLE vicidial_campaigns ADD manual_auto_next SMALLINT(5) UNSIGNED default
 ALTER TABLE vicidial_campaigns ADD manual_auto_show ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1463',db_schema_update_date=NOW() where db_schema_version < 1463;
+
+ALTER TABLE vicidial_url_multi ADD url_lists VARCHAR(1000) default '';
+
+UPDATE system_settings SET db_schema_version='1464',db_schema_update_date=NOW() where db_schema_version < 1464;

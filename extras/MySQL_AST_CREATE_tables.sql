@@ -3351,6 +3351,7 @@ url_rank SMALLINT(5) default '1',
 url_statuses VARCHAR(1000) default '',
 url_description VARCHAR(255) default '',
 url_address TEXT,
+url_lists VARCHAR(1000) default '',
 PRIMARY KEY (url_id),
 KEY vicidial_url_multi_campaign_id_key (campaign_id)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -3783,4 +3784,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1463',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1464',db_schema_update_date=NOW(),reload_timestamp=NOW();

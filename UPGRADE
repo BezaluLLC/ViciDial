@@ -282,6 +282,8 @@ OTHER CHANGES:
 76. Added recording filename option to update filename post-call with select
 	variable values, uses options in AST_CRON_audio_1_move_VDonly.pl script
 
+77. Added ALT Multi Dispo URL option to restrict URL sending by list ID.
+
 
 
 

@@ -408,10 +408,11 @@
 # 160510-0840 - Added callback_lead_status as dispo_call_url variable
 # 160706-1437 - Added font styles to text in many places
 # 160714-1503 - Added called_count as a dispo_call_url variable
+# 160801-0717 - Added lists option to ALT dispo call url functions
 #
 
-$version = '2.12-302';
-$build = '160714-1503';
+$version = '2.12-303';
+$build = '160801-0717';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=654;
@@ -11103,7 +11104,7 @@ if ($ACTION == 'updateDISPO')
 		{
 		if ($dispo_call_url == 'ALT')
 			{
-			$stmt="SELECT url_rank,url_statuses,url_address from vicidial_url_multi where campaign_id='$DUcampaign_id' and entry_type='$DUentry_type' and url_type='dispo' and active='Y' order by url_rank limit 1000;";
+			$stmt="SELECT url_rank,url_statuses,url_address,url_lists from vicidial_url_multi where campaign_id='$DUcampaign_id' and entry_type='$DUentry_type' and url_type='dispo' and active='Y' order by url_rank limit 1000;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00634',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -11115,8 +11116,9 @@ if ($ACTION == 'updateDISPO')
 				$url_rank =			$row[0];
 				$url_statuses =		" $row[1] ";
 				$url_address =		$row[2];
+				$url_lists =		" $row[3] ";
 
-				if ( (preg_match("/---ALL---/",$url_statuses)) or ( (strlen($url_statuses)>2) and (preg_match("/ $dispo_choice /",$url_statuses)) ) )
+				if ( ( (preg_match("/---ALL---/",$url_statuses)) or ( (strlen($url_statuses)>2) and (preg_match("/ $dispo_choice /",$url_statuses)) ) ) and ( (strlen($url_lists)<3) or ( (strlen($url_lists)>2) and (preg_match("/ $list_id /",$url_lists)) ) ) )
 					{
 					$dispo_call_urlARY[$dispo_call_url_count] = $url_address;
 					$dispo_call_url_count++;

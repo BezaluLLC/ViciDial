@@ -13,10 +13,11 @@
 # 150709-0612 - First Build
 # 160331-2203 - Made URL form input fields longer
 # 160508-0815 - Added colors features
+# 160801-0657 - Added lists qualifier fields
 #
 
-$admin_version = '2.12-3';
-$build = '160508-0815';
+$admin_version = '2.12-4';
+$build = '160801-0657';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -42,6 +43,8 @@ if (isset($_GET["url_rank"]))					{$url_rank=$_GET["url_rank"];}
 	elseif (isset($_POST["url_rank"]))			{$url_rank=$_POST["url_rank"];}
 if (isset($_GET["url_statuses"]))				{$url_statuses=$_GET["url_statuses"];}
 	elseif (isset($_POST["url_statuses"]))		{$url_statuses=$_POST["url_statuses"];}
+if (isset($_GET["url_lists"]))					{$url_lists=$_GET["url_lists"];}
+	elseif (isset($_POST["url_lists"]))			{$url_lists=$_POST["url_lists"];}
 if (isset($_GET["url_description"]))			{$url_description=$_GET["url_description"];}
 	elseif (isset($_POST["url_description"]))	{$url_description=$_POST["url_description"];}
 if (isset($_GET["url_address"]))				{$url_address=$_GET["url_address"];}
@@ -82,6 +85,7 @@ if ($non_latin < 1)
 	$url_type = preg_replace('/[^_0-9a-zA-Z]/','',$url_type);
 	$url_rank = preg_replace('/[^-0-9]/','',$url_rank);
 	$url_statuses = preg_replace('/[^- _0-9a-zA-Z]/','',$url_statuses);
+	$url_lists = preg_replace('/[^- _0-9]/','',$url_lists);
 	$url_description = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$url_description);
 	}	# end of non_latin
 else
@@ -270,7 +274,7 @@ if ($camp_multi < 1)
 
 if ($DB > 0)
 	{
-	echo "$DB,$action,$campaign_id,$url_id,$entry_type,$active,$url_type,$url_rank,$url_statuses,$url_description\n<BR>";
+	echo "$DB,$action,$campaign_id,$url_id,$entry_type,$active,$url_type,$url_rank,$url_statuses,$url_lists,$url_description\n<BR>";
 	}
 
 
@@ -325,7 +329,7 @@ if ($action == "URL_MULTI_MODIFY")
 		echo _QXZ("ERROR: URL entry does not exist").":  |$url_id|$campaign_id|$entry_type|$url_type|\n<BR>";
 		exit;
 		}
-	$stmt="UPDATE vicidial_url_multi SET active='$active',url_rank='$url_rank',url_statuses='$url_statuses',url_description='$url_description',url_address='" . mysqli_real_escape_string($link, $url_address) . "' where campaign_id='$campaign_id' and entry_type='$entry_type' and url_type='$url_type' and url_id='$url_id';";
+	$stmt="UPDATE vicidial_url_multi SET active='$active',url_rank='$url_rank',url_statuses='$url_statuses',url_lists='$url_lists',url_description='$url_description',url_address='" . mysqli_real_escape_string($link, $url_address) . "' where campaign_id='$campaign_id' and entry_type='$entry_type' and url_type='$url_type' and url_id='$url_id';";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$affected_rows = mysqli_affected_rows($link);
 	if ($DB > 0) {echo "$affected_rows|$stmt\n<BR>";}
@@ -404,10 +408,10 @@ if ($action == "BLANK")
 	echo "<tr><td align=center colspan=2>\n";
 	echo "<br><b>"._QXZ("Alternate %1s URLs for %2s",0,'',$url_type,$entry_type).": <a href=\"./admin.php?$mod_link$campaign_id\">$campaign_id</a></b> &nbsp; $NWB#alt_multi_urls$NWE\n";
 
-	echo "<TABLE width=700 cellspacing=3>\n";
-	echo "<tr><td>#</td><td>"._QXZ("ACTIVE")."</td><td>"._QXZ("RANK")."</td><td>"._QXZ("STATUSES")."</td><td>"._QXZ("DESCRIPTION")."</td><td>"._QXZ("SUBMIT")."</td></tr>\n";
+	echo "<TABLE width=740 cellspacing=3>\n";
+	echo "<tr><td>#</td><td>"._QXZ("ACTIVE")."</td><td>"._QXZ("RANK")."</td><td>"._QXZ("STATUSES")."</td><td>"._QXZ("LISTS")."</td><td>"._QXZ("DESCRIPTION")."</td><td>"._QXZ("SUBMIT")."</td></tr>\n";
 
-	$stmt="SELECT url_id,active,url_rank,url_statuses,url_description,url_address from vicidial_url_multi where campaign_id='$campaign_id' and entry_type='$entry_type' and url_type='$url_type' order by url_rank limit 1000;";
+	$stmt="SELECT url_id,active,url_rank,url_statuses,url_description,url_address,url_lists from vicidial_url_multi where campaign_id='$campaign_id' and entry_type='$entry_type' and url_type='$url_type' order by url_rank limit 1000;";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$types_to_print = mysqli_num_rows($rslt);
@@ -422,6 +426,7 @@ if ($action == "BLANK")
 		$Rurl_statuses =	$rowx[3];
 		$Rurl_description =	$rowx[4];
 		$Rurl_address =		$rowx[5];
+		$Rurl_lists =		$rowx[6];
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
@@ -440,8 +445,9 @@ if ($action == "BLANK")
 		echo "<td><font size=1>$o</td>";
 		echo "<td><font size=1><select size=1 name=active><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED>$Ractive</option></select></td>";
 		echo "<td><font size=1><input type=text size=4 maxlength=3 name=url_rank value=\"$Rurl_rank\"></td>";
-		echo "<td><font size=1><input type=text size=30 maxlength=1000 name=url_statuses value=\"$Rurl_statuses\"></td>";
-		echo "<td><font size=1><input type=text size=30 maxlength=255 name=url_description value=\"$Rurl_description\"></td>";
+		echo "<td><font size=1><input type=text size=24 maxlength=1000 name=url_statuses value=\"$Rurl_statuses\"></td>";
+		echo "<td><font size=1><input type=text size=24 maxlength=1000 name=url_lists value=\"$Rurl_lists\"></td>";
+		echo "<td><font size=1><input type=text size=24 maxlength=255 name=url_description value=\"$Rurl_description\"></td>";
 		echo "<td rowspan=2><font size=1><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'>";
 		echo "<BR><BR>";
 		if ($Ractive == 'N')
@@ -451,7 +457,7 @@ if ($action == "BLANK")
 		echo "</td>";
 		echo "</tr>";
 		echo "<tr $bgcolor>";
-		echo "<td colspan=5><font size=1>"._QXZ("URL").":<input type=text size=80 maxlength=5000 name=url_address value=\"$Rurl_address\"></td>";
+		echo "<td colspan=6><font size=1>"._QXZ("URL").":<input type=text size=100 maxlength=5000 name=url_address value=\"$Rurl_address\"></td>";
 		echo "</form>\n";
 		echo "</tr>\n";
 		}
