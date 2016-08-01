@@ -92,6 +92,7 @@
 # 160527-1359 - Added phones-outbound_alt_cid entry
 # 160621-1735 - Added agent_screen_colors and script_remove_js entries
 # 160731-1030 - Added manual_auto_next, manual_auto_show, user_nickname entries
+# 160731-2053 - Added POSTx description for recording filenames
 #
 
 
@@ -1381,7 +1382,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-campaign_rec_filename">
 <BR>
-<B><?php echo _QXZ("Campaign Rec Filename"); ?> -</B><?php echo _QXZ("This field allows you to customize the name of the recording when Campaign recording is ONDEMAND or ALLCALLS. The allowed variables are CAMPAIGN INGROUP CUSTPHONE FULLDATE TINYDATE EPOCH AGENT VENDORLEADCODE LEADID CALLID RECID. The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this TESTCAMP_51020103108_3125551212. Te resulting filename must be less than 90 characters in length."); ?>
+<B><?php echo _QXZ("Campaign Rec Filename"); ?> -</B><?php echo _QXZ("This field allows you to customize the name of the recording when Campaign recording is ONDEMAND or ALLCALLS. The allowed variables are CAMPAIGN INGROUP CUSTPHONE FULLDATE TINYDATE EPOCH AGENT VENDORLEADCODE LEADID CALLID RECID. If your dialers have --POST recording processing enabled, you can also use POSTVLC POSTSP POSTARRD3. These POST options will alter the recording file name after the call has been finished and will replace the post variable with the value from the default fields. The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this TESTCAMP_51020103108_3125551212. The resulting filename must be less than 90 characters in length."); ?>
 
 <BR>
 <A NAME="campaigns-allcalls_delay">
@@ -2701,7 +2702,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_groups-ingroup_rec_filename">
 <BR>
-<B><?php echo _QXZ("In-Group Recording Filename"); ?> -</B><?php echo _QXZ("This field will override the Campaign Recording Filenaming Scheme unless it is set to NONE. The allowed variables are CAMPAIGN INGROUP CUSTPHONE FULLDATE TINYDATE EPOCH AGENT VENDORLEADCODE LEADID CALLID RECID. The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this TESTCAMP_51020103108_3125551212. Te resulting filename must be less than 90 characters in length. Default is NONE.");
+<B><?php echo _QXZ("In-Group Recording Filename"); ?> -</B><?php echo _QXZ("This field will override the Campaign Recording Filenaming Scheme unless it is set to NONE. The allowed variables are CAMPAIGN INGROUP CUSTPHONE FULLDATE TINYDATE EPOCH AGENT VENDORLEADCODE LEADID CALLID RECID. If your dialers have --POST recording processing enabled, you can also use POSTVLC POSTSP POSTARRD3. These POST options will alter the recording file name after the call has been finished and will replace the post variable with the value from the default fields. The default is FULLDATE_AGENT and would look like this 20051020-103108_6666. Another example is CAMPAIGN_TINYDATE_CUSTPHONE which would look like this TESTCAMP_51020103108_3125551212. The resulting filename must be less than 90 characters in length. Default is NONE.");
 
 if ($SSqc_features_active > 0)
 	{

@@ -279,6 +279,9 @@ OTHER CHANGES:
 75. Added campaign option to automatically manual dial next number in agent
 	screen after X seconds. Must be enabled in System Settings.
 
+76. Added recording filename option to update filename post-call with select
+	variable values, uses options in AST_CRON_audio_1_move_VDonly.pl script
+
 
 
 
