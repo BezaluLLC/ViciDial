@@ -4,7 +4,7 @@
 #
 # functions for administrative scripts and reports
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES:
@@ -25,6 +25,7 @@
 # 150216-1528 - Fixed non-latin problem, issue #828
 # 150514-1522 - Added lookup_gmt function, copied from agc/functions.php
 # 150516-1206 - Added missing TZCODE segment to gmt_lookup function
+# 160802-1149 - Added hex2rgb function
 #
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
@@ -1315,5 +1316,21 @@ function _QXZ($English_text, $sprintf=0, $align="l", $v_one='', $v_two='', $v_th
 		}
 	return $English_text;
 	}
+
+function hex2rgb($hex) {
+	$hex = str_replace("#", "", $hex);
+
+	if(strlen($hex) == 3) {
+		$r = hexdec(substr($hex,0,1).substr($hex,0,1));
+		$g = hexdec(substr($hex,1,1).substr($hex,1,1));
+		$b = hexdec(substr($hex,2,1).substr($hex,2,1));
+	} else {
+		$r = hexdec(substr($hex,0,2));
+		$g = hexdec(substr($hex,2,2));
+		$b = hexdec(substr($hex,4,2));
+	}
+	$rgb = array($r, $g, $b);
+	return $rgb; // returns an array with the rgb values
+}
 
 ?>
