@@ -19,7 +19,7 @@
 # VARhttp://192.168.1.1/agc/dispo_move_list.php?lead_id=--A--lead_id--B--&dispo=--A--dispo--B--&user=--A--user--B--&pass=--A--pass--B--&new_list_id=10411099&sale_status=SALE---SSALE---XSALE&reset_dialed=Y&log_to_file=1
 # 
 # Another example of what to put in the Dispo URL field(using status exclude with talk trigger):
-# VARhttp://192.168.1.1/agc/dispo_move_list.php?lead_id=--A--lead_id--B--&dispo=--A--dispo--B--&talk_time=--A--talk_time--B--&user=--A--user--B--&pass=--A--pass--B--&new_list_id=332&sale_status=DNC---BILLNW---POST&exclude_status=Y&talk_time_trigger=240&log_to_file=1
+# VARhttp://192.168.1.1/agc/dispo_move_list.php?lead_id=--A--lead_id--B--&dispo=--A--dispo--B--&talk_time=--A--talk_time--B--&called_count=--A--called_count--B--&user=--A--user--B--&pass=--A--pass--B--&new_list_id=332&sale_status=DNC---BILLNW---POST&exclude_status=Y&talk_time_trigger=240&called_count_trigger=4&log_to_file=1
 #
 # Example of what to put in the No Agent Call URL field:
 # (user needs to be NOAGENTURL and pass needs to be set to the call_id)
@@ -30,10 +30,11 @@
 # - sale_status -	(SALE---XSALE) a triple-dash "---" delimited list of the statuses that are to be moved
 # - exclude_status -	(Y,N) if set to Y, will trigger for all statuses EXCEPT for those listed in sale_status, default is N
 # - talk_time_trigger -	(0,1,2,3,...) if set to number greater than 0, will only trigger for talk_time at or above set number, default is 0
+# - called_count_trigger -	(1,2,3,...) if set to number greater than 0, will only trigger for called_count at or above set number, default is 0
 # - new_list_id -	(999,etc...) the list_id that you want the matching status leads to be moved to
 # - reset_dialed -	(Y,N) if set to Y, will reset the called_since_last_reset flag on the lead
 #    Multiple sets of statuses:
-# - sale_status_1, new_list_id_1, reset_dialed_1, exclude_status_1 - adding an underscore and number(1-99) will allow for another set of statuses to check for and what to do with them
+# - sale_status_1, new_list_id_1, reset_dialed_1, exclude_status_1, called_count_trigger_1 - adding an underscore and number(1-99) will allow for another set of statuses to check for and what to do with them
 #
 # CHANGES
 # 100915-1600 - First Build
@@ -48,9 +49,10 @@
 # 141216-2110 - Added language settings lookups and user/pass variable standardization
 # 150703-1453 - Added options so it would work with No-Agent Call URL
 # 160309-1239 - Added talk_time_trigger and exclude_status options
+# 160801-1032 - Added called_count_trigger options
 #
 
-$api_script = 'deactivate';
+$api_script = 'movelist';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -81,6 +83,10 @@ if (isset($_GET["talk_time"]))				{$talk_time=$_GET["talk_time"];}
 	elseif (isset($_POST["talk_time"]))		{$talk_time=$_POST["talk_time"];}
 if (isset($_GET["talk_time_trigger"]))			{$talk_time_trigger=$_GET["talk_time_trigger"];}
 	elseif (isset($_POST["talk_time_trigger"]))	{$talk_time_trigger=$_POST["talk_time_trigger"];}
+if (isset($_GET["called_count"]))				{$called_count=$_GET["called_count"];}
+	elseif (isset($_POST["called_count"]))		{$called_count=$_POST["called_count"];}
+if (isset($_GET["called_count_trigger"]))			{$called_count_trigger=$_GET["called_count_trigger"];}
+	elseif (isset($_POST["called_count_trigger"]))	{$called_count_trigger=$_POST["called_count_trigger"];}
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
 	elseif (isset($_POST["user"]))			{$user=$_POST["user"];}
 if (isset($_GET["pass"]))					{$pass=$_GET["pass"];}
@@ -139,14 +145,17 @@ if ($non_latin < 1)
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
 	}
 
-if ($DB>0) {echo "$lead_id|$search_field|$campaign_check|$sale_status|$dispo|$new_status|$user|$pass|$DB|$log_to_file|$talk_time|$talk_time_trigger|$exclude_status|\n";}
+if ($DB>0) {echo "$lead_id|$search_field|$campaign_check|$sale_status|$dispo|$new_status|$user|$pass|$DB|$log_to_file|$talk_time|$talk_time_trigger|$exclude_status|$called_count|$called_count_trigger|\n";}
 
-if ( ( (strlen($talk_time_trigger)>0) and ($talk_time > $talk_time_trigger) ) or (strlen($talk_time_trigger)<1) or ($talk_time_trigger < 1) )
+if ( ( (strlen($called_count_trigger)>0) and ($called_count >= $called_count_trigger) ) or (strlen($called_count_trigger)<1) or ($called_count_trigger < 1) )
 	{
-	if ( ( (preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status!='Y') ) or ( (!preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status=='Y') ) )
-		{$primary_match_found=1;}
+	if ( ( (strlen($talk_time_trigger)>0) and ($talk_time >= $talk_time_trigger) ) or (strlen($talk_time_trigger)<1) or ($talk_time_trigger < 1) )
+		{
+		if ( ( (preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status!='Y') ) or ( (!preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status=='Y') ) )
+			{$primary_match_found=1;}
+		}
 	}
-$first_pass_vars = "$new_list_id|$reset_dialed|$sale_status|$talk_time_trigger|$exclude_status";
+$first_pass_vars = "$new_list_id|$reset_dialed|$sale_status|$talk_time_trigger|$exclude_status$called_count_trigger|";
 if ($primary_match_found > 0)
 	{$match_found=1;}
 else
@@ -154,6 +163,7 @@ else
 	$sale_status='';
 	$exclude_status='';
 	$talk_time_trigger='';
+	$called_count_trigger='';
 	$new_list_id='';
 	$reset_dialed='';
 	while( ($match_found < 1) and ($k < 99) )
@@ -162,33 +172,40 @@ else
 		$sale_status='';
 		$exclude_status='';
 		$talk_time_trigger='';
+		$called_count_trigger='';
 		$statusfield = "sale_status_$k";
 		$excludefield = "exclude_status_$k";
 		$talktriggerfield = "talk_time_trigger_$k";
+		$counttriggerfield = "called_count_trigger_$k";
 		if (isset($_GET["$excludefield"]))			{$exclude_status=$_GET["$excludefield"];}
 			elseif (isset($_POST["$excludefield"]))	{$exclude_status=$_POST["$excludefield"];}
 		if (isset($_GET["$talktriggerfield"]))			{$talk_time_trigger=$_GET["$talktriggerfield"];}
 			elseif (isset($_POST["$talktriggerfield"]))	{$talk_time_trigger=$_POST["$talktriggerfield"];}
+		if (isset($_GET["$counttriggerfield"]))				{$called_count_trigger=$_GET["$counttriggerfield"];}
+			elseif (isset($_POST["$counttriggerfield"]))	{$called_count_trigger=$_POST["$counttriggerfield"];}
 		if (isset($_GET["$statusfield"]))			{$sale_status=$_GET["$statusfield"];}
 			elseif (isset($_POST["$statusfield"]))	{$sale_status=$_POST["$statusfield"];}
 		$sale_status = "$TD$sale_status$TD";
 
-		if ($DB) {echo _QXZ("MULTI_MATCH CHECK:")." $k|$sale_status|$statusfield|$exclude_status|$excludefield|$talk_time_trigger|$talktriggerfield|\n";}
+		if ($DB) {echo _QXZ("MULTI_MATCH CHECK:")." $k|$sale_status|$statusfield|$exclude_status|$excludefield|$talk_time_trigger|$talktriggerfield|$called_count_trigger|$counttriggerfield|\n";}
 
-		if ( ( (strlen($talk_time_trigger)>0) and ($talk_time > $talk_time_trigger) ) or (strlen($talk_time_trigger)<1) or ($talk_time_trigger < 1) )
+		if ( ( (strlen($called_count_trigger)>0) and ($called_count >= $called_count_trigger) ) or (strlen($called_count_trigger)<1) or ($called_count_trigger < 1) )
 			{
-			if (strlen($sale_status)>0)
+			if ( ( (strlen($talk_time_trigger)>0) and ($talk_time >= $talk_time_trigger) ) or (strlen($talk_time_trigger)<1) or ($talk_time_trigger < 1) )
 				{
-				if ( ( (preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status!='Y') ) or ( (!preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status=='Y') ) )
+				if (strlen($sale_status)>0)
 					{
-					$match_found=1;
-					$newlistfield = "new_list_id_$k";
-					$resetfield = "reset_dialed_$k";
-					if (isset($_GET["$newlistfield"]))			{$new_list_id=$_GET["$newlistfield"];}
-						elseif (isset($_POST["$newlistfield"]))	{$new_list_id=$_POST["$newlistfield"];}
-					if (isset($_GET["$resetfield"]))			{$reset_dialed=$_GET["$resetfield"];}
-						elseif (isset($_POST["$resetfield"]))	{$reset_dialed=$_POST["$resetfield"];}
-					if ($DB) {echo _QXZ("MULTI_MATCH:")." $k|$sale_status|$new_list_id|$reset_dialed|$exclude_status|$talk_time_trigger|\n";}
+					if ( ( (preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status!='Y') ) or ( (!preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status=='Y') ) )
+						{
+						$match_found=1;
+						$newlistfield = "new_list_id_$k";
+						$resetfield = "reset_dialed_$k";
+						if (isset($_GET["$newlistfield"]))			{$new_list_id=$_GET["$newlistfield"];}
+							elseif (isset($_POST["$newlistfield"]))	{$new_list_id=$_POST["$newlistfield"];}
+						if (isset($_GET["$resetfield"]))			{$reset_dialed=$_GET["$resetfield"];}
+							elseif (isset($_POST["$resetfield"]))	{$reset_dialed=$_POST["$resetfield"];}
+						if ($DB) {echo _QXZ("MULTI_MATCH:")." $k|$sale_status|$new_list_id|$reset_dialed|$exclude_status|$talk_time_trigger|$called_count_trigger|\n";}
+						}
 					}
 				}
 			}
@@ -318,6 +335,6 @@ else
 if ($log_to_file > 0)
 	{
 	$fp = fopen ("./dispo_move_list.txt", "a");
-	fwrite ($fp, "$NOW_TIME|$k|$lead_id|$dispo|$user|XXXX|$DB|$log_to_file|$talk_time|$first_pass_vars|$new_list_id|$sale_status|$talk_time_trigger|$exclude_status|$MESSAGE|\n");
+	fwrite ($fp, "$NOW_TIME|$k|$lead_id|$dispo|$user|XXXX|$DB|$log_to_file|$talk_time|$called_count|$first_pass_vars|$new_list_id|$sale_status|$talk_time_trigger|$exclude_status|$called_count_trigger|$MESSAGE|\n");
 	fclose($fp);
 	}

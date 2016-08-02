@@ -3848,12 +3848,13 @@ else
 # 160621-1733 - Added agent_screen_colors and script_remove_js settings to system settings
 # 160708-0745 - Added more Automatic Hopper Multiplier options, up to 4
 # 160731-1026 - Added campaign option to automatically manual dial next number in agent	screen after X seconds
+# 160801-2119 - Added Admin Bulk Tools page link from Admin Utilities page
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-562a';
-$build = '160731-1026';
+$admin_version = '2.12-563a';
+$build = '160801-2119';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -37240,7 +37241,7 @@ if ($ADD==999994)
 		echo "<LI><a href=\"AST_recording_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Recording Access Log")."</a></FONT>\n";
 		echo "<LI><a href=\"admin.php?ADD=800000000000000\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Admin Report Log Viewer")."</a></FONT>\n";
 		echo "<BR><BR>\n";
-		echo "<LI><a href=\"admin_phones_bulk_insert.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Bulk Phone Insert Page")."</a></FONT>\n";
+		echo "<LI><a href=\"admin_bulk_tools.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Admin Bulk Tools")."</FONT></a> | <a href=\"admin_phones_bulk_insert.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Bulk Phone Insert Page")."</FONT></a>\n";
 		echo "<LI><a href=\"lead_tools.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Basic Lead Management Tools")."</FONT></a> | <a href=\"lead_tools_advanced.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Advanced Lead Management Tools")."</FONT></a> | <a href=\"list_split.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("List Split")."</FONT></a>\n";
 		echo "<LI><a href=\"reset_campaign_lists.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Reset Campaign Lists")."</a></FONT>\n";
 		echo "<LI><a href=\"callbacks_bulk_change.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Callbacks Transferral Page")."</a></FONT> | <a href=\"callbacks_bulk_move.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Callbacks Bulk Move")."</FONT></a>\n";
