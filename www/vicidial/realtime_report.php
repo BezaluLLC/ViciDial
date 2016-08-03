@@ -35,12 +35,13 @@
 # 160327-1258 - Added report_display_type option and several design changes
 # 160406-1852 - Added WALL options for report_display_type
 # 160413-2003 - Added WALL_4 option
+# 160803-1902 - Fixed issue with ERROR in campaign/ingroup name
 #
 
 $startMS = microtime();
 
-$version = '2.12-23';
-$build = '160413-2003';
+$version = '2.12-24';
+$build = '160803-1902';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -1160,8 +1161,8 @@ function send_monitor(session_id,server_ip,stage)
 			//	alert(xmlhttp.responseText);
 				var Xoutput = null;
 				Xoutput = xmlhttp.responseText;
-				var regXFerr = new RegExp("ERROR","g");
-				var regXFscs = new RegExp("SUCCESS","g");
+				var regXFerr = new RegExp("ERROR:","g");
+				var regXFscs = new RegExp("SUCCESS:","g");
 				if (Xoutput.match(regXFerr))
 					{alert(xmlhttp.responseText);}
 				if (Xoutput.match(regXFscs))
@@ -1236,7 +1237,7 @@ function submit_ingroup_changes(temp_agent_user)
 			//	alert(changeQuery);
 				var Xoutput = null;
 				Xoutput = xmlhttp.responseText;
-				var regXFerr = new RegExp("ERROR","g");
+				var regXFerr = new RegExp("ERROR:","g");
 				if (Xoutput.match(regXFerr))
 					{alert(xmlhttp.responseText);}
 				else
@@ -1290,7 +1291,7 @@ function ingroup_info(agent_user,count)
 			//	alert(xmlhttp.responseText);
 				var Xoutput = null;
 				Xoutput = xmlhttp.responseText;
-				var regXFerr = new RegExp("ERROR","g");
+				var regXFerr = new RegExp("ERROR:","g");
 				if (Xoutput.match(regXFerr))
 					{alert(xmlhttp.responseText);}
 				else

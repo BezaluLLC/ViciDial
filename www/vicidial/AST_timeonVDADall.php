@@ -103,10 +103,11 @@
 # 160413-2004 - Added WALL_4 option
 # 160418-2141 - Fixed issue with WALL displays
 # 160515-1300 - Added UK OFCOM feature
+# 160803-1901 - Fixed issue with ERROR in campaign/ingroup name
 #
 
-$version = '2.12-91';
-$build = '160515-1300';
+$version = '2.12-92';
+$build = '160803-1901';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -919,8 +920,8 @@ else
 				//	alert(xmlhttp.responseText);
 					var Xoutput = null;
 					Xoutput = xmlhttp.responseText;
-					var regXFerr = new RegExp("ERROR","g");
-					var regXFscs = new RegExp("SUCCESS","g");
+					var regXFerr = new RegExp("ERROR:","g");
+					var regXFscs = new RegExp("SUCCESS:","g");
 					if (Xoutput.match(regXFerr))
 						{alert(xmlhttp.responseText);}
 					if (Xoutput.match(regXFscs))
@@ -994,7 +995,7 @@ else
 				//	alert(changeQuery);
 					var Xoutput = null;
 					Xoutput = xmlhttp.responseText;
-					var regXFerr = new RegExp("ERROR","g");
+					var regXFerr = new RegExp("ERROR:","g");
 					if (Xoutput.match(regXFerr))
 						{alert(xmlhttp.responseText);}
 					else
@@ -1047,7 +1048,7 @@ else
 				//	alert(xmlhttp.responseText);
 					var Xoutput = null;
 					Xoutput = xmlhttp.responseText;
-					var regXFerr = new RegExp("ERROR","g");
+					var regXFerr = new RegExp("ERROR:","g");
 					if (Xoutput.match(regXFerr))
 						{alert(xmlhttp.responseText);}
 					else
