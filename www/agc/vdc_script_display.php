@@ -1,7 +1,7 @@
 <?php
 # vdc_script_display.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display the contents of the SCRIPT tab in the agent interface
 #
@@ -32,10 +32,11 @@
 # 150703-2034 - Added option to fully urlencode variables if IFRAME is used in script Issue #864
 # 150725-1622 - Added entry_date variable
 # 150923-2028 - Added DID custom variables
+# 160818-1226 - Added MANUALDIALLINK option
 #
 
-$version = '2.12-26';
-$build = '150923-2028';
+$version = '2.12-27';
+$build = '160818-1226';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -842,6 +843,8 @@ if (preg_match('/--A--TABLEper_call_notes--B--/i',$script_text))
 
 $script_text = preg_replace("/\n/i","<BR>",$script_text);
 $script_text = preg_replace('/--A--TABLEper_call_notes--B--/i',"$NOTESout",$script_text);
+$manual_dial_code = "<a href=\"#\" onclick=\"NeWManuaLDiaLCalL('NO','','','','','YES');return false;\">" . _QXZ("MANUAL DIAL") ."</a>";
+$script_text = preg_replace('/--A--MANUALDIALLINK--B--/i',$manual_dial_code,$script_text);
 $script_text = stripslashes($script_text);
 
 

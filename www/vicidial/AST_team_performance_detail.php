@@ -27,6 +27,7 @@
 # 151219-0139 - Added option for searching archived data
 # 160121-2214 - Added report title header, default report format, cleaned up formatting
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
+# 160718-0054 - Fixed ChartJS bug
 #
 
 $startMS = microtime();
@@ -989,7 +990,8 @@ if ( ($SUBMIT=="SUBMIT") or ($SUBMIT==_QXZ("SUBMIT")) )
 			# You have to hard code the graph name in where it is overridden and mind the data indices.  No other way to do it.
 			$multigraph_text="";
 			$graph_id++;
-			$graph_array=array("ATPD_CALLSdata|1|CALLS|integer|", "ATPD_LEADSdata|2|LEADS|integer|", "ATPD_CONTACTSdata|3|CONTACTS|integer|", "ATPD_CONTACTRATIOdata|4|CONTACT RATIO|percent|", "ATPD_SYSTEMTIMEdata|5|SYSTEM TIME|time|", "ATPD_TALKTIMEdata|6|TALK TIME|time|", "ATPD_SALESdata|7|SALES|integer|", "ATPD_SALESTOLEADSdata|8|SALES TO LEADS RATIO|decimal|", "ATPD_SALESTOCONTACTSdata|9|SALES TO CONTACTS RATIO|decimal|", "ATPD_SALESPERHOURdata|10|SALES PER HOUR|decimal|", "ATPD_INCOMPLETESALESSdata|11|INCOMPLETE SALES|integer|", "ATPD_CANCELLEDSALESdata|12|CANCELLED SALES|integer|", "ATPD_CALLBACKSdata|13|CALLBACKS|integer|", "ATPD_FIRSTCALLSdata|14|FIRST CALLS|decimal|", "ATPD_AVGSALETIMEdata|15|AVG SALE TIME|time|", "ATPD_AVGCONTACTTIMEdata|16|AVG CONTACT TIME|time|");
+			$dataset_ID="_".$user_group[$i]; # VERY IMPORTANT
+			$graph_array=array("ATPD_CALLSdata$dataset_ID|1|CALLS|integer|", "ATPD_LEADSdata$dataset_ID|2|LEADS|integer|", "ATPD_CONTACTSdata$dataset_ID|3|CONTACTS|integer|", "ATPD_CONTACTRATIOdata$dataset_ID|4|CONTACT RATIO|percent|", "ATPD_SYSTEMTIMEdata$dataset_ID|5|SYSTEM TIME|time|", "ATPD_TALKTIMEdata$dataset_ID|6|TALK TIME|time|", "ATPD_SALESdata$dataset_ID|7|SALES|integer|", "ATPD_SALESTOLEADSdata$dataset_ID|8|SALES TO LEADS RATIO|decimal|", "ATPD_SALESTOCONTACTSdata$dataset_ID|9|SALES TO CONTACTS RATIO|decimal|", "ATPD_SALESPERHOURdata$dataset_ID|10|SALES PER HOUR|decimal|", "ATPD_INCOMPLETESALESSdata$dataset_ID|11|INCOMPLETE SALES|integer|", "ATPD_CANCELLEDSALESdata$dataset_ID|12|CANCELLED SALES|integer|", "ATPD_CALLBACKSdata$dataset_ID|13|CALLBACKS|integer|", "ATPD_FIRSTCALLSdata$dataset_ID|14|FIRST CALLS|decimal|", "ATPD_AVGSALETIMEdata$dataset_ID|15|AVG SALE TIME|time|", "ATPD_AVGCONTACTTIMEdata$dataset_ID|16|AVG CONTACT TIME|time|");
 
 			for ($e=0; $e<count($call_status); $e++) {
 				$Sstatus=$call_status[$e];
@@ -1083,6 +1085,7 @@ if ( ($SUBMIT=="SUBMIT") or ($SUBMIT==_QXZ("SUBMIT")) )
 			$ASCII_text.="    **** "._QXZ("NO AGENTS FOUND UNDER THESE REPORT PARAMETERS")." ****\n\n";
 			$CSV_text.="\"\",\"**** "._QXZ("NO AGENTS FOUND UNDER THESE REPORT PARAMETERS")." ****\"\n\n";
 			$GRAPH_text.="    **** "._QXZ("NO AGENTS FOUND UNDER THESE REPORT PARAMETERS")." ****<BR/><BR/>\n\n";
+			$total_graph_stats[$i][0]="$user_group[$i] - $group_name";
 			}
 		}
 

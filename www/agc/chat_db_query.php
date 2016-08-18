@@ -17,13 +17,14 @@
 # 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 # 160303-0051 - Added code for chat transfers
 # 160719-1043 - Bug fixes for non-owner chats, and other issues
+# 160818-1236 - Addec chat colors, usre nickname and scrolling
 #
 
 require("dbconnect_mysqli.php");
 require("functions.php");
 
 $NOW_TIME = date("Y-m-d H:i:s");
-$color_array=array("#FF0000", "#0000FF", "#009900", "#990099", "#009999", "#666600", "#999999");
+$chat_background_array=array(); # Defined further down
 $style_array=array("", "italics", "bold italics");
 
 if (isset($_GET["action"]))	{$action=$_GET["action"];}
@@ -88,6 +89,9 @@ if (isset($_GET["chat_xfer_value"]))					{$chat_xfer_value=$_GET["chat_xfer_valu
 
 $chat_member_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/',"",$chat_member_name);
 if (!$user) {echo "No user, no using."; exit;}
+
+if (file_exists('options.php'))
+	{require('options.php');}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -494,7 +498,7 @@ if ($action=="start_chat" && $user && $server_ip) {
 	if (!$chat_group_id) {
 		echo "NO_GROUP";
 	} else {
-		$user_stmt="select full_name from vicidial_users where user='$user'";
+		$user_stmt="select if(user_nickname!='' and user_nickname is not null, user_nickname, full_name) from vicidial_users where user='$user'";
 		$user_rslt=mysql_to_mysqli($user_stmt, $link);
 		if (mysqli_num_rows($user_rslt)>0) {
 			$live_agent_stmt="select * from vicidial_live_agents where user='$user' and status='PAUSED'";
@@ -684,7 +688,7 @@ if ($action=="update_agent_chat_window" && $chat_id) {
 			$live_stmt="select * from vicidial_live_chats vlc, vicidial_chat_participants vcp where vlc.chat_id='$chat_id' and status='LIVE' and vlc.chat_id=vcp.chat_id and vcp.chat_member='$user'";
 			$live_rslt=mysql_to_mysqli($live_stmt, $link);
 			if (mysqli_num_rows($live_rslt)>0) {
-				echo "<font class='chat_title bold'>"._QXZ("Current chat").": $chat_id</font><BR/>\n";
+				echo "<font class='chat_title bold'>"._QXZ("Current chat").": $chat_id</font><BR/>";
 
 				# Create color-coding for chat
 				$stmt="select * from vicidial_chat_log where chat_id='$chat_id' order by message_time asc";
@@ -697,21 +701,33 @@ if ($action=="update_agent_chat_window" && $chat_id) {
 					}
 				}
 
+				$chat_color_stmt="select menu_background, frame_background, std_row1_background, std_row2_background, std_row3_background, std_row4_background, std_row5_background from system_settings s, vicidial_screen_colors v where s.agent_screen_colors=v.colors_id and length(frame_background)=6 and length(menu_background)=6 limit 1;";
+				$color_rslt=mysql_to_mysqli($chat_color_stmt, $link);
+				if(mysqli_num_rows($color_rslt)>0 && $use_system_colors>0) {
+					$color_row=mysqli_fetch_array($color_rslt);
+					$color_array=array("#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000");
+					$chat_background_array=array("#$color_row[std_row1_background]", "#$color_row[std_row2_background]", "#$color_row[std_row3_background]", "#$color_row[std_row4_background]", "#$color_row[std_row5_background]", "#$color_row[frame_background]", "#$color_row[menu_background]"); 
+				} else {
+					$color_array=array("#FF0000", "#0000FF", "#009900", "#990099", "#009999", "#666600", "#999999");
+					$chat_background_array=array("#FFCCCC", "#CCCCFF", "#CCFFCC", "#FFCCFF", "#CCFFFF", "#CCCC99", "#CCCCCC"); 
+				}
+
 				## GRAB CHAT MESSAGES AND DISPLAY THEM
 				if (!$user_level || $user_level==0) {$user_level_clause=" and chat_level='0' ";} else {$user_level_clause="";}
 
 				$stmt="select * from vicidial_chat_log where chat_id='$chat_id' $user_level_clause order by message_time asc";
-
+	
+				echo "<table border='0' cellpadding='3' width='100%'>";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				while ($row=mysqli_fetch_row($rslt)) {
 					$chat_color_key=array_search("$row[4]", $chat_members);
 					$row[2]=preg_replace('/\n/', '<BR/>', $row[2]);	
-					echo "<li><font color='$color_array[$chat_color_key]' class='chat_message bold'>$row[5]</font> <font class='chat_timestamp bold'>($row[3])</font> - <font class='chat_message ".$style_array[$row[6]]."'>$row[2]</font></li>\n";
+					echo "<tr><td bgcolor='$chat_background_array[$chat_color_key]'><li><font color='$color_array[$chat_color_key]' class='chat_message bold'>$row[5]</font> <font class='chat_timestamp bold'>($row[3])</font> - <font class='chat_message ".$style_array[$row[6]]."'>$row[2]</font></li></td></tr>";
 				}
-
+				echo "</table>";
 				## PLAY AUDIO FILE IF THERE ARE NEW MESSAGES
 				$current_messages=mysqli_num_rows($rslt);
-				echo "<input type='hidden' id='current_message_count' name='current_message_count' value='$current_messages'>\n";
+				echo "<input type='hidden' id='current_message_count' name='current_message_count' value='$current_messages'>\n$current_messages";
 			} else {	
 				echo "<font class='chat_title bold'>"._QXZ("Click on a live chat at right to join it.")."</font><BR/>\n";
 			}
@@ -981,6 +997,13 @@ if ($action=="join_chat" && $user && $chat_id && $chat_member_name) {
 	# REMOVE AGENT FROM OTHER CHATS, JUST IN CASE
 	$del_stmt="delete from vicidial_chat_participants where chat_member='$user'";
 	$del_rslt=mysql_to_mysqli($del_stmt, $link);
+
+	$nickname_stmt="select user_nickname from vicidial_users where user='$user' and user_nickname is not null and user_nickname!=''";
+	$nickname_rslt=mysql_to_mysqli($nickname_stmt, $link);
+	if (mysqli_num_rows($nickname_rslt)>0) {
+		$nickname_row=mysqli_fetch_array($nickname_rslt);
+		$chat_member_name=$nickname_row["user_nickname"];
+	}
 
 	$ins_stmt="insert into vicidial_chat_participants(chat_id, chat_member, chat_member_name, vd_agent) values('$chat_id', '$user', '".mysqli_real_escape_string($link, $chat_member_name)."', 'Y')";
 	$ins_rslt=mysql_to_mysqli($ins_stmt, $link);

@@ -15,6 +15,7 @@
 # 151213-1107 - Added variable filtering
 # 151218-0913 - Added missing translation code and user auth
 # 160303-0051 - Added code for chat transfers
+# 160818-1235 - Added line colors and scrolling
 #
 
 require("dbconnect_mysqli.php");
@@ -243,14 +244,40 @@ function UpdateChatWindow() {
 				{ 
 				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
 					{
-					var fullchatlog = xmlhttp.responseText;
-					document.getElementById('ChatDisplay').innerHTML=fullchatlog;
+					// var fullchatlog = xmlhttp.responseText;
+					var chatlogresponse	= xmlhttp.responseText;
+					var chatlog_array = chatlogresponse.split("\n");
+					var fullchatlog = chatlog_array[0];
+					var live_message_count = chatlog_array[1];
+
+					var last_live_message_count=document.getElementById('live_message_count_field');
+					if (live_message_count!=last_live_message_count.value) {
+						document.getElementById('ChatDisplay').innerHTML=fullchatlog;
+						last_live_message_count.value=live_message_count;
+					}
+
+
+					// document.getElementById('ChatDisplay').innerHTML=fullchatlog;
+					
 					var current_message_field_update = document.getElementById('current_message_count');
 					if (current_message_field_update != null) {var current_message_count_update=current_message_field_update.value;}
-					if (clickMute==0 && current_message_count_update>current_message_count && !document.getElementById("MuteCustomerChatAlert").checked)
-						{document.getElementById("CustomerChatAudioAlertFile").play();}
-					else if (clickMute>0)
-						{clickMute=0;}
+
+					// document.getElementById('ChatDisplay').innerHTML+=current_message_count_update+" > "+current_message_count;
+
+					if (current_message_count_update>current_message_count) 
+						{
+						var myDiv = document.getElementById('ChatDisplay');
+						document.getElementById('ChatDisplay').scrollTop = document.getElementById('ChatDisplay').scrollHeight;
+
+						if (clickMute==0 && !document.getElementById("MuteCustomerChatAlert").checked) 
+							{
+							document.getElementById("CustomerChatAudioAlertFile").play();
+							}
+						else if (clickMute>0) 
+							{
+							clickMute=0;
+							}
+						}
 					}
 				}
 			delete xmlhttp;
@@ -768,7 +795,7 @@ if (!$user) {
 	exit;
 }
 
-$user_stmt="select full_name from vicidial_users where user='$user' limit 1";
+$user_stmt="select if(user_nickname!='' and user_nickname is not null, user_nickname, full_name) from vicidial_users where user='$user' limit 1";
 $user_rslt=mysql_to_mysqli($user_stmt, $link);
 $inchat_html=""; $nochat_html="";
 $autojoin_js_fx="StartRefresh();";
@@ -806,11 +833,12 @@ if($child_window) {
 <table width='100%' border='0'>
 <tr>
 	<td class='chat_window' height='300' width='*'>
-	<span id='ChatDisplay' name='ChatDisplay' style=" overflow-y: auto; overflow-x: none;">
+	<span id='ChatDisplay' name='ChatDisplay' style="display:block;height:300px;overflow-y:auto;overflow-x:none;z-index:0;">
 	</span>
+<!--	<span style="display:block;top:280px;right:25px;z-index:1"><img border="0" src="images/VICIchat_powered_logo.gif" width="123" height="30"></span> //-->
 	</td>
 	<td width='200' valign='top'>
-	<span id='ActiveChats' name='ActiveChats' style=" overflow-y: auto; overflow-x: none;">
+	<span id='ActiveChats' name='ActiveChats' style="overflow-y:auto; overflow-x:none;">
 	</span>
 	</td>
 </tr>
@@ -939,6 +967,7 @@ if($child_window) {
 <input type='hidden' id='chat_id' name='chat_id' value='<?php echo $chat_id; ?>'>
 <input type='hidden' id='chat_group_id' name='chat_group_id' value='<?php echo $chat_group_id; ?>'>
 <input type='hidden' id='chat_creator' name='chat_creator' value='<?php echo $chat_creator; ?>'>
+<input type='hidden' id='live_message_count_field' name='live_message_count_field' value='0'>
 <input type='hidden' id='pass' name='pass' value='<?php echo $pass; ?>'>
 <input type='hidden' id='lead_id' name='lead_id' value='<?php echo $lead_id; ?>'>
 <input type='hidden' id='server_ip' name='server_ip' value='<?php echo $server_ip; ?>'>
