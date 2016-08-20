@@ -638,3 +638,9 @@ UPDATE system_settings SET db_schema_version='1463',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_url_multi ADD url_lists VARCHAR(1000) default '';
 
 UPDATE system_settings SET db_schema_version='1464',db_schema_update_date=NOW() where db_schema_version < 1464;
+
+ALTER TABLE vicidial_inbound_groups ADD customer_chat_screen_colors VARCHAR(20) default 'default';
+ALTER TABLE vicidial_inbound_groups ADD customer_chat_survey_link TEXT;
+ALTER TABLE vicidial_inbound_groups ADD customer_chat_survey_text TEXT;
+
+UPDATE system_settings SET db_schema_version='1465',db_schema_update_date=NOW() where db_schema_version < 1465;
