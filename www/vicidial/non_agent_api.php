@@ -108,10 +108,11 @@
 # 160211-1232 - Fixed issue with blind monitoring, Issue #924
 # 160603-1041 - Added update_campaign function
 # 160709-2233 - Added lead_field_info function
+# 160824-0802 - Fixed issue with allowed lists feature
 #
 
-$version = '2.12-84';
-$build = '160709-2233';
+$version = '2.12-85';
+$build = '160824-0802';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -718,7 +719,7 @@ if ( ($api_list_restrict > 0) and ( ($function == 'add_lead') or ($function == '
 			$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
 			$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
 			}
-		$stmt="SELECT list_id from vicidial_lists $whereLOGadmin_viewable_groupsSQL order by list_id;";
+		$stmt="SELECT list_id from vicidial_lists $whereLOGallowed_campaignsSQL order by list_id;";
 		if ($DB>0) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$lists_to_print = mysqli_num_rows($rslt);
