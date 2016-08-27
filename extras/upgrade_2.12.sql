@@ -644,3 +644,9 @@ ALTER TABLE vicidial_inbound_groups ADD customer_chat_survey_link TEXT;
 ALTER TABLE vicidial_inbound_groups ADD customer_chat_survey_text TEXT;
 
 UPDATE system_settings SET db_schema_version='1465',db_schema_update_date=NOW() where db_schema_version < 1465;
+
+CREATE TABLE recording_log_archive LIKE recording_log;
+ALTER TABLE recording_log_archive MODIFY recording_id INT(10) UNSIGNED UNIQUE NOT NULL;
+ALTER TABLE recording_log_archive DROP PRIMARY KEY;
+
+UPDATE system_settings SET db_schema_version='1466',db_schema_update_date=NOW() where db_schema_version < 1466;

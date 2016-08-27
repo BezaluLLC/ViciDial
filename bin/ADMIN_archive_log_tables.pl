@@ -43,11 +43,13 @@
 # 151109-1646 - Added --carrier-daily flag, only active if --daily flag is also used
 # 151124-2252 - Added --vlog-daily flag, only active if --daily flag is also used, Also added system_settings date
 # 160612-0703 - Added --only-trim-archive-... options
+# 160827-0957 - Added --recording-log-days=X option
 #
 
 $CALC_TEST=0;
 $T=0;   $TEST=0;
 $only_trim_archive=0;
+$recording_log_archive=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -75,7 +77,8 @@ if (length($ARGV[0])>1)
 		print "  [--only-trim-archive-level-two] = same as --only-trim-archive-level-one, except includes tables:\n";
 		print "                               vicidial_carrier_log_archive, vicidial_api_log_archive\n";
 		print "  [--only-trim-archive-level-three] = same as --only-trim-archive-level-two, except includes tables:\n";
-		print "                               vicidial_log_archive, vicidial_agent_log_archive, vicidial_closer_log_archive";
+		print "                               vicidial_log_archive, vicidial_agent_log_archive, vicidial_closer_log_archive\n";
+		print "  [--recording-log-days=XX] = OPTIONAL, number of days to archive recording_log table only past\n";
 		print "  [--quiet] = quiet\n";
 		print "  [--calc-test] = date calculation test only\n";
 		print "  [--test] = test\n\n";
@@ -167,6 +170,18 @@ if (length($ARGV[0])>1)
 			if ($Q < 1) 
 				{print "\n----- ONLY TRIM LOG ARCHIVES LEVEL 3 -----\n\n";}
 			}
+		if ($args =~ /--recording-log-days=/i)
+			{
+			$recording_log_archive++;
+			@data_in = split(/--recording-log-days=/,$args);
+			$RECORDINGdays = $data_in[1];
+			$RECORDINGdays =~ s/ .*$//gi;
+			$RECORDINGdays =~ s/\D//gi;
+			if ($RECORDINGdays > 999999)
+				{$RECORDINGdays=1825;}
+			if ($Q < 1) 
+				{print "\n----- RECORDING LOG ARCHIVE ACTIVE, DAYS: $RECORDINGdays -----\n\n";}
+			}
 		}
 	}
 else
@@ -212,6 +227,19 @@ else
 	if ($RMsec < 10) {$RMsec = "0$RMsec";}
 	$del_time = "$RMyear-$RMmon-$RMmday $RMhour:$RMmin:$RMsec";
 	}
+if ($recording_log_archive > 0) 
+	{
+	$RECdel_epoch = ($secX - (86400 * $RECORDINGdays));   # X days ago
+	($RECsec,$RECmin,$REChour,$RECmday,$RECmon,$RECyear,$RECwday,$RECyday,$RECisdst) = localtime($RECdel_epoch);
+	$RECyear = ($RECyear + 1900);
+	$RECmon++;
+	if ($RECmon < 10) {$RECmon = "0$RECmon";}
+	if ($RECmday < 10) {$RECmday = "0$RECmday";}
+	if ($REChour < 10) {$REChour = "0$REChour";}
+	if ($RECmin < 10) {$RECmin = "0$RECmin";}
+	if ($RECsec < 10) {$RECsec = "0$RECsec";}
+	$RECdel_time = "$RECyear-$RECmon-$RECmday $REChour:$RECmin:$RECsec";
+	}
 
 if (!$Q) {print "\n\n-- ADMIN_archive_log_tables.pl --\n\n";}
 if (!$Q) {print "This program is designed to put all records from  call_log, vicidial_log,\n";}
@@ -219,6 +247,7 @@ if (!$Q) {print "server_performance, vicidial_agent_log, vicidial_carrier_log, \
 if (!$Q) {print "vicidial_call_notes, vicidial_lead_search_log and others into relevant\n";}
 if (!$Q) {print "_archive tables and delete records in original tables older than\n";}
 if (!$Q) {print "$CLIdays days ( $del_time|$del_epoch ) from current date \n\n";}
+if ( (!$Q) && ($recording_log_archive > 0) ) {print "REC $RECORDINGdays days ( $RECdel_time|$RECdel_epoch ) from current date \n\n";}
 
 if ($CALC_TEST > 0)
 	{
@@ -1664,6 +1693,59 @@ if (!$T)
 		$stmtA = "optimize table vicidial_outbound_ivr_log_archive;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		}
+
+
+	if ($recording_log_archive > 0) 
+		{
+		##### recording_log
+		$stmtA = "SELECT count(*) from recording_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$recording_log_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		$stmtA = "SELECT count(*) from recording_log_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$recording_log_archive_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if (!$Q) {print "\nProcessing recording_log table...  ($recording_log_count|$recording_log_archive_count)\n";}
+		$stmtA = "INSERT IGNORE INTO recording_log_archive SELECT * from recording_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		
+		$sthArows = $sthA->rows;
+		if (!$Q) {print "$sthArows rows inserted into recording_log_archive table \n";}
+		
+		$rv = $sthA->err();
+		if (!$rv) 
+			{	
+			$stmtA = "DELETE FROM recording_log WHERE start_time < '$RECdel_time';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows = $sthA->rows;
+			if (!$Q) {print "$sthArows rows deleted from recording_log table \n";}
+
+			$stmtA = "optimize table recording_log;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+
+			$stmtA = "optimize table recording_log_archive;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			}
 		}
 
 

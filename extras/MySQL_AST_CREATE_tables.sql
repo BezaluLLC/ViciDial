@@ -3713,6 +3713,10 @@ ALTER TABLE vicidial_api_log_archive MODIFY api_id INT(9) UNSIGNED NOT NULL;
 CREATE TABLE vicidial_callbacks_archive LIKE vicidial_callbacks;
 ALTER TABLE vicidial_callbacks_archive MODIFY callback_id INT(9) UNSIGNED NOT NULL;
 
+CREATE TABLE recording_log_archive LIKE recording_log;
+ALTER TABLE recording_log_archive MODIFY recording_id INT(10) UNSIGNED UNIQUE NOT NULL;
+ALTER TABLE recording_log_archive DROP PRIMARY KEY;
+
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
 
@@ -3787,4 +3791,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1465',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1466',db_schema_update_date=NOW(),reload_timestamp=NOW();
