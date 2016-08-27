@@ -53,6 +53,7 @@
 # 151125-1633 - Added search archive option
 # 160227-1129 - Uniform form format
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
+# 160819-0054 - Fixed chart bugs
 #
 
 $startMS = microtime();
@@ -1306,7 +1307,7 @@ if ($DID=='Y')
 	$stmt="select count(*),queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status IN('DROP','XDROP') group by queue_seconds;";
 	}
 $rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {$ASCII_text.="$stmt\n";}
+if ($DB) {$ASCII_text.="$stmt\n"; $GRAPH_text.=$stmt."\n";}
 $reasons_to_print = mysqli_num_rows($rslt);
 $i=0;
 $dd_0=0; $dd_5=0; $dd10=0; $dd15=0; $dd20=0; $dd25=0; $dd30=0; $dd35=0; $dd40=0; $dd45=0; $dd50=0; $dd55=0; $dd60=0; $dd90=0; $dd99=0;
@@ -1360,6 +1361,7 @@ $ASCII_text.="+-----------------------------------------------------------------
 $CSV_text2.="\"\",\"$dd_0\",\"$dd_5\",\"$dd10\",\"$dd15\",\"$dd20\",\"$dd25\",\"$dd30\",\"$dd35\",\"$dd40\",\"$dd45\",\"$dd50\",\"$dd55\",\"$dd60\",\"$dd90\",\"$dd99\",\"$BDdropCALLS\"\n";
 
 if ($report_display_type=="HTML") {
+	$graph_stats=array();
 	$stmt="select count(*),round(queue_seconds) as rd_sec from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status IN('DROP','XDROP') group by rd_sec order by rd_sec asc;";
 	$ms_stmt="select queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status IN('DROP','XDROP') order by queue_seconds desc limit 1;"; 
 	$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and status IN('DROP','XDROP') group by queue_seconds order by ct desc limit 1;";
@@ -1369,7 +1371,8 @@ if ($report_display_type=="HTML") {
 		$ms_stmt="select queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status IN('DROP','XDROP') order by queue_seconds desc limit 1;"; 
 		$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) and status IN('DROP','XDROP') group by queue_seconds order by ct desc limit 1;";
 		}
-	if ($DB) {$GRAPH_text.=$stmt."\n";}
+	if ($DB) {$MAIN.="$stmt\n$ms_stmt\n$mc_stmt\n";}
+
 	$ms_rslt=mysql_to_mysqli($ms_stmt, $link);
 	$ms_row=mysqli_fetch_row($ms_rslt);
 	$max_seconds=$ms_row[0];
@@ -1730,6 +1733,7 @@ $CSV_text2.="\""._QXZ("CUM")." %\",\"$pCad_0\",\"$pCad_5\",\"$pCad10\",\"$pCad15
 $CSV_text2.="\""._QXZ("CUM ANS")." %\",\"$ApCad_0\",\"$ApCad_5\",\"$ApCad10\",\"$ApCad15\",\"$ApCad20\",\"$ApCad25\",\"$ApCad30\",\"$ApCad35\",\"$ApCad40\",\"$ApCad45\",\"$ApCad50\",\"$ApCad55\",\"$ApCad60\",\"$ApCad90\",\"$ApCad99\"\n";
 
 if ($report_display_type=="HTML") {
+	$graph_stats=array();
 	$stmt="select count(*),round(queue_seconds) as rd_sec from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by rd_sec order by rd_sec asc;";
 	$ms_stmt="select queue_seconds from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') order by queue_seconds desc limit 1;"; 
 	$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and  campaign_id IN($group_SQL) and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') group by queue_seconds order by ct desc limit 1;";
@@ -2460,6 +2464,7 @@ $CSV_text6.="\"\",\"$qp_1\",\"$qp_2\",\"$qp_3\",\"$qp_4\",\"$qp_5\",\"$qp_6\",\"
 
 if ($report_display_type=="HTML") 
 	{
+	$graph_stats=array();
 	$stmt="select count(*),queue_position as qp from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) group by qp order by qp asc;";
 	$ms_stmt="select queue_position from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) order by queue_position desc limit 1;"; 
 	$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and campaign_id IN($group_SQL) group by queue_position order by ct desc limit 1;";
@@ -2469,22 +2474,24 @@ if ($report_display_type=="HTML")
 		$ms_stmt="select queue_position from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) order by queue_position desc limit 1;"; 
 		$mc_stmt="select count(*) as ct from ".$vicidial_closer_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' and uniqueid IN($unid_SQL) group by queue_position order by ct desc limit 1;";
 		}
-	if ($DB) {$GRAPH_text.=$stmt."\n";}
+	if ($DB) {$MAIN.="$stmt\n$ms_stmt\n$mc_stmt\n";}
 	$ms_rslt=mysql_to_mysqli($ms_stmt, $link);
 	$ms_row=mysqli_fetch_row($ms_rslt);
 	$max_position=$ms_row[0];
-	if ($max_position>25) {$max_position=26;}
-	for ($i=1; $i<=$max_position; $i++) {
-		$sec_ary[$i]=0;
+	$max_position=26;
+	for ($i=0; $i<=$max_position; $i++) {
+		$queue_position[$i]=0;
 	}
 
 	$mc_rslt=mysql_to_mysqli($mc_stmt, $link);
 	$mc_row=mysqli_fetch_row($mc_rslt);
 	$max_calls=$ms_row[0];
-	if ($max_calls<=10) {
+	if ($max_calls<26) {$max_calls=26;}
+#	if ($max_calls<=30) {
 		while ($maxcalls%5!=0) {
 			$maxcalls++;
 		}
+/*
 	} else if ($max_calls<=100) {
 		while ($maxcalls%10!=0) {
 			$maxcalls++;
@@ -2498,16 +2505,27 @@ if ($report_display_type=="HTML")
 			$maxcalls++;
 		}
 	}
+*/
 	$rslt=mysql_to_mysqli($stmt, $link);
-	
-	for ($i=0; $i<=$max_seconds; $i++) {
-		if ($i<=90) {
+
+	$over25=0;
+	while ($row=mysqli_fetch_row($rslt)) {
+		if ($row[1]<=25) {
+			$queue_position[$row[1]]=$row[0];
+		} else {
+			$over25+=$row[0];
+		}
+	}
+	$queue_position[26]=$over25;
+
+	for ($i=0; $i<=$max_calls; $i++) {
+		if ($i<=25) {
 			if ($i%5==0) {$int=$i;} else {$int="";}
-			$graph_stats[$i][0]=$sec_ary[$i];
+			$graph_stats[$i][0]=$queue_position[$i];
 			$graph_stats[$i][1]=$i;
 		} else {
-			$graph_stats[$i][0]=$sec_ary[$i];
-			$graph_stats[$i][1]=91;
+			$graph_stats[$i][0]=$queue_position[$i];
+			$graph_stats[$i][1]=26;
 		}
 	}
 
@@ -2589,7 +2607,7 @@ if ($report_display_type=="HTML")
 	}
 
 	$graph_count=count($graph_array);
-	$graph_title=_QXZ("DID Summary");
+	$graph_title=_QXZ("CALL INITIAL QUEUE POSITION BREAKDOWN");
 	include("graphcanvas.inc");
 	$GRAPH_text.=$graphCanvas."<PRE>";
 
@@ -2879,7 +2897,7 @@ while ($i <= 96)
 
 $hour_multiplier = MathZDC(100, $hi_hour_count);
 
-$ASCII_text.="<!-- HICOUNT: $hi_hour_count|$hour_multiplier -->\n";
+$ASCII_text="<!-- HICOUNT: $hi_hour_count|$hour_multiplier -->\n";
 $ASCII_text.=_QXZ("GRAPH IN 15 MINUTE INCREMENTS OF TOTAL")." $rpt_type_verbiages "._QXZ("TAKEN INTO THIS IN-GROUP")."\n";
 
 

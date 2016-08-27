@@ -33,6 +33,7 @@
 # 151125-1627 - Added search archive option
 # 160227-1153 - Uniform form format
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
+# 160819-0054 - Fixed chart bugs caused by DST
 #
 
 $startMS = microtime();
@@ -1039,7 +1040,7 @@ while ($k <= 22)
 	}
 
 
-$ASCII_text.="+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
+$ASCII_text="+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";
 $ASCII_text.="| "._QXZ("TIME",11)." | "._QXZ("AVG HOLD TIME (sec)",21)." | "._QXZ("(in seconds)",13)." |  | "._QXZ("CALLS HANDLED",21)." |       |       |\n";
 $ASCII_text.="| "._QXZ("15 MIN INT",11)." |$hold_scale| "._QXZ("AVG",5)." | "._QXZ("MAX",5)." |  |$call_scale| "._QXZ("DROPS",5)." | "._QXZ("TOTAL",5)." |\n";
 $ASCII_text.="+-------------+-----------------------+-------+-------+  +-----------------------+-------+-------+\n";

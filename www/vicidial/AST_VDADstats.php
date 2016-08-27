@@ -1235,9 +1235,9 @@ else
 	$ASCII_text .= "+--------+----------------------+----------------------+------------+------------+----------+----------+----------+\n";
 
 	######## GRAPHING #########
-	$GRAPH="<BR><BR><a name='cssgraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
-	$GRAPH.="<tr><th width='20%' class='grey_graph_cell' id='cssgraph1'><a href='#' onClick=\"DrawCSSGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th width=20% class='grey_graph_cell' id='cssgraph2'><a href='#' onClick=\"DrawCSSGraph('TOTALTIME', '2'); return false;\">"._QXZ("TOTAL TIME")."</a></th><th width=20% class='grey_graph_cell' id='cssgraph3'><a href='#' onClick=\"DrawCSSGraph('AVGTIME', '3'); return false;\">"._QXZ("AVG TIME")."</a></th><th width=20% class='grey_graph_cell' id='cssgraph4'><a href='#' onClick=\"DrawCSSGraph('CALLSHOUR', '4'); return false;\">"._QXZ("CALLS/HR")."</a></th><th width=20% class='grey_graph_cell' id='cssgraph5'><a href='#' onClick=\"DrawCSSGraph('CALLSHOUR_agent', '5'); return false;\">"._QXZ("AGENT CALLS/HR")."</a></th></tr>";
-	$GRAPH.="<tr><td colspan='5' class='graph_span_cell'><span id='call_status_stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
+#	$GRAPH="<BR><BR><a name='cssgraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
+#	$GRAPH.="<tr><th width='20%' class='grey_graph_cell' id='cssgraph1'><a href='#' onClick=\"DrawCSSGraph('CALLS', '1'); return false;\">"._QXZ("CALLS")."</a></th><th width=20% class='grey_graph_cell' id='cssgraph2'><a href='#' onClick=\"DrawCSSGraph('TOTALTIME', '2'); return false;\">"._QXZ("TOTAL TIME")."</a></th><th width=20% class='grey_graph_cell' id='cssgraph3'><a href='#' onClick=\"DrawCSSGraph('AVGTIME', '3'); return false;\">"._QXZ("AVG TIME")."</a></th><th width=20% class='grey_graph_cell' id='cssgraph4'><a href='#' onClick=\"DrawCSSGraph('CALLSHOUR', '4'); return false;\">"._QXZ("CALLS/HR")."</a></th><th width=20% class='grey_graph_cell' id='cssgraph5'><a href='#' onClick=\"DrawCSSGraph('CALLSHOUR_agent', '5'); return false;\">"._QXZ("AGENT CALLS/HR")."</a></th></tr>";
+#	$GRAPH.="<tr><td colspan='5' class='graph_span_cell'><span id='call_status_stats_graph'><BR>&nbsp;<BR></span></td></tr></table><BR><BR>";
 	$graph_stats=array();
 	$max_calls=1;
 	$max_total_time=1;
@@ -1512,12 +1512,12 @@ else
 	$ASCII_text .= "| "._QXZ("LIST",40)." | "._QXZ("CALLS",10)." |\n";
 	$ASCII_text .= "+------------------------------------------+------------+\n";
 
-	$GRAPH="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
-	$GRAPH.="<caption align='top'>"._QXZ("LIST ID STATS")."</caption>";
-	$GRAPH.="<tr>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("LIST")."</th>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
-	$GRAPH.="</tr>\n";
+#	$GRAPH="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
+#	$GRAPH.="<caption align='top'>"._QXZ("LIST ID STATS")."</caption>";
+#	$GRAPH.="<tr>\n";
+#	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("LIST")."</th>\n";
+#	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
+#	$GRAPH.="</tr>\n";
 
 	$stmt="select count(*),list_id from ".$vicidial_log_table." where call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $group_SQLand $list_id_SQLand group by list_id;";
 	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
@@ -1708,12 +1708,12 @@ else
 		$ASCII_text .= "| "._QXZ("PRESET NAME",40)." | "._QXZ("CALLS",10)." |\n";
 		$ASCII_text .= "+------------------------------------------+------------+\n";
 
-		$GRAPH="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
-		$GRAPH.="<caption align='top'>"._QXZ("AGENT PRESET DIALS")."</caption>";
-		$GRAPH.="<tr>\n";
-		$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("PRESET NAME")."</th>\n";
-		$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
-		$GRAPH.="</tr>\n";
+		#$GRAPH="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
+		#$GRAPH.="<caption align='top'>"._QXZ("AGENT PRESET DIALS")."</caption>";
+		#$GRAPH.="<tr>\n";
+		#$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("PRESET NAME")."</th>\n";
+		#$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
+		#$GRAPH.="</tr>\n";
 		$max_calls=1; $graph_stats=array();
 
 		## get counts and time totals for all statuses in this campaign
@@ -1837,12 +1837,12 @@ else
 	$ASCII_text .= "| "._QXZ("CATEGORY",20)." | "._QXZ("CALLS",10)." | "._QXZ("DESCRIPTION",30)." |\n";
 	$ASCII_text .= "+----------------------+------------+--------------------------------+\n";
 
-	$GRAPH="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
-	$GRAPH.="<caption align='top'>"._QXZ("CUSTOM STATUS CATEGORY STATS")."</caption>";
-	$GRAPH.="<tr>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CATEGORY")."</th>\n";
-	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
-	$GRAPH.="</tr>\n";
+#	$GRAPH="</PRE><table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"DID Summary\" class=\"horizontalgraph\">\n";
+#	$GRAPH.="<caption align='top'>"._QXZ("CUSTOM STATUS CATEGORY STATS")."</caption>";
+#	$GRAPH.="<tr>\n";
+#	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CATEGORY")."</th>\n";
+#	$GRAPH.="<th class=\"thgraph\" scope=\"col\">"._QXZ("CALLS")."</th>\n";
+#	$GRAPH.="</tr>\n";
 	$max_calls=1; $graph_stats=array();
 
 	$TOTCATcalls=0;
@@ -2176,6 +2176,8 @@ else
 	$graph_title="AGENT STATS";
 	include("graphcanvas.inc");
 	$GRAPH_text.=$graphCanvas;
+
+	$GRAPH_text.="</PRE>";
 
 	if ($costformat > 0)
 		{

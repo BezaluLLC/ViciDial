@@ -27,6 +27,7 @@
 # 151125-1629 - Added search archive option
 # 160227-1142 - Uniform form format
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
+# 160819-0054 - Fixed chart bugs caused by DST
 #
 
 $startMS = microtime();
@@ -1296,7 +1297,8 @@ else
 			if (round(MathZDC($totANSWERSsecmtd, $totANSWERSmtd))>$max_mtd_avgtalktime) {$max_mtd_avgtalktime=round(MathZDC($totANSWERSsecmtd, $totANSWERSmtd));}
 			if (trim($totANSWERSsecmtd)>$max_mtd_totaltalktime) {$max_mtd_totaltalktime=trim($totANSWERSsecmtd);}
 			if (trim($totANSWERSsecmtd+($totANSWERSmtd*15))>$max_mtd_totalcalltime) {$max_mtd_totalcalltime=trim($totANSWERSsecmtd+($totANSWERSmtd*15));}
-			$month=date("F", strtotime($dayEND[$d-1]));
+			# print $dayEND[$d-1]."\n";
+			$month=date("F", strtotime($dayEND[$d-1])-3600);  ## ACCOUNT FOR DST IN LABELING
 			$year=substr($dayEND[$d-1], 0, 4);
 			$mtd_graph_stats[$ma][0]="$month $year";
 			$mtd_graph_stats[$ma][1]=trim($totCALLSmtd);
@@ -1716,8 +1718,11 @@ else
 			if (trim($totANSWERSsecmtd)>$max_mtd_totaltalktime) {$max_mtd_totaltalktime=trim($totANSWERSsecmtd);}
 			if (trim($totANSWERSsecmtd+($totANSWERSmtd*15))>$max_mtd_totalcalltime) {$max_mtd_totalcalltime=trim($totANSWERSsecmtd+($totANSWERSmtd*15));}
 
-			$month=date("F", strtotime($dayEND[$d-1]));
-			$year=substr($dayEND[$d-1], 0, 4);
+			$lastindex=count($dayEND)-1;
+			$month=date("F", strtotime($dayEND[$lastindex]));
+			#print_r($mtd_graph_stats);
+			#echo "$month - $d - ".strtotime($daySTART[$d-1])."\n";
+			$year=substr($dayEND[$lastindex], 0, 4);
 			$mtd_graph_stats[$ma][0]="$month $year";
 			$mtd_graph_stats[$ma][1]=trim($totCALLSmtd);
 			$mtd_graph_stats[$ma][2]=trim($totANSWERSmtd);
@@ -1866,12 +1871,14 @@ else
 			if (trim($totANSWERSsecqtd)>$max_qtd_totaltalktime) {$max_qtd_totaltalktime=trim($totANSWERSsecqtd);}
 			if (trim($totANSWERSsecqtd+($totANSWERSqtd*15))>$max_qtd_totalcalltime) {$max_qtd_totalcalltime=trim($totANSWERSsecqtd+($totANSWERSqtd*15));}
 
-			$month=date("m", strtotime($dayEND[$d-1]));
-			$year=substr($dayEND[$d-1], 0, 4);
-			$qtr1=array(01,02,03);
-			$qtr2=array(04,05,06);
-			$qtr3=array(07,08,09);
-			$qtr4=array(10,11,12);
+			$lastindex=count($dayEND)-1;
+			$month=date("m", strtotime($dayEND[$lastindex])-3600);  ## ACCOUNT FOR DST IN LABELING
+			$year=substr($dayEND[$lastindex], 0, 4);
+
+			$qtr1=array("01","02","03");
+			$qtr2=array("04","05","06");
+			$qtr3=array("07","08","09");
+			$qtr4=array("10","11","12");
 			if(in_array($month,$qtr1)) {
 				$qtr=_QXZ("1st");
 			} else if(in_array($month,$qtr2)) {
@@ -1881,6 +1888,7 @@ else
 			}  else if(in_array($month,$qtr4)) {
 				$qtr=_QXZ("4th");
 			}
+
 			$qtd_graph_stats[$qa][0]="$qtr "._QXZ("quarter").", $year";
 			$qtd_graph_stats[$qa][1]=trim($totCALLSqtd);
 			$qtd_graph_stats[$qa][2]=trim($totANSWERSqtd);

@@ -29,6 +29,7 @@
 # 151125-1614 - Added search archive option
 # 160227-1150 - Uniform form format
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
+# 160819-0054 - Fixed bug causing TEXT report to repeat data
 #
 
 $startMS = microtime();
@@ -1196,7 +1197,7 @@ else
 	#########  HOLD TIME, CALL AND DROP STATS 15-MINUTE INCREMENTS ####
 
 	$MAIN.="\n";
-	$ASCII_text.="---------- "._QXZ("HOLD TIME, CALL AND DROP STATS")."\n";
+	$ASCII_text="---------- "._QXZ("HOLD TIME, CALL AND DROP STATS")."\n";
 
 	$CSV_text1.="\n\""._QXZ("HOLD TIME, CALL AND DROP STATS")."\"\n";
 
