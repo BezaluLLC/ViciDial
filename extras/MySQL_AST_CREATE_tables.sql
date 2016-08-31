@@ -3501,7 +3501,7 @@ ip VARCHAR(15) default '',
 PRIMARY KEY (recording_access_log_id),
 index(recording_id),
 index(lead_id)
-) ENGINE=MyISAM AUTO_INCREMENT=1599 DEFAULT CHARSET=utf8;
+) ENGINE=MyISAM AUTO_INCREMENT=1599 DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 CREATE TABLE vicidial_ivr_response (
 id INT(11) unsigned NOT NULL AUTO_INCREMENT,
@@ -3791,4 +3791,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1466',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1467',db_schema_update_date=NOW(),reload_timestamp=NOW();

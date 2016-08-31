@@ -650,3 +650,7 @@ ALTER TABLE recording_log_archive MODIFY recording_id INT(10) UNSIGNED UNIQUE NO
 ALTER TABLE recording_log_archive DROP PRIMARY KEY;
 
 UPDATE system_settings SET db_schema_version='1466',db_schema_update_date=NOW() where db_schema_version < 1466;
+
+ALTER TABLE vicidial_recording_access_log convert to character set utf8 collate utf8_unicode_ci;
+
+UPDATE system_settings SET db_schema_version='1467',db_schema_update_date=NOW() where db_schema_version < 1467;
