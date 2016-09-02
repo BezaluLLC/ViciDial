@@ -490,7 +490,8 @@ if ($SUBMIT && $query_date && $start_hour && $end_hour) {
 	$ASCII_text .= _QXZ("User groups").": ".implode(', ', $user_group)."\n";
 	$ASCII_text .= _QXZ("Campaigns").": ".implode(', ', $group)."\n\n";
 
-	$stmt="select user_group, substr(event_time, 12,2) as hour, count(distinct user) as ct from ".$vicidial_agent_log_table." where event_time>='$query_date $start_hour:00:00' and event_time<='$query_date $end_hour:59:59' $group_SQL $user_group_SQL group by user_group, hour order by user_group, hour";
+	$stmt="select user_group, substr(event_time, 12,2) as hour, count(distinct user) as ct from ".$vicidial_agent_log_table." where event_time>='$query_date $start_hour:00:00' and event_time<='$query_date $end_hour:59:59' $group_SQL $user_group_SQL group by user_group, hour order by hour, user_group";
+	if ($DB) {$ASCII_text.=$stmt."\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 
 	# select user_group, substr(event_time, 12,2) as hour, count(distinct user) as ct from ".$vicidial_agent_log_table." where ((event_time>='$query_date $start_hour:00:00' and event_time<='$query_date $end_hour:59:59') or  (event_time+INTERVAL (pause_sec+wait_sec+talk_sec+dispo_sec) SECOND>='$query_date $start_hour:00:00' and event_time+INTERVAL (pause_sec+wait_sec+talk_sec+dispo_sec) SECOND<='$query_date $end_hour:59:59')) $group_SQL $user_group_SQL group by user_group, hour order by user_group, hour
