@@ -33,6 +33,8 @@
 # - called_count_trigger -	(1,2,3,...) if set to number greater than 0, will only trigger for called_count at or above set number, default is 0
 # - new_list_id -	(999,etc...) the list_id that you want the matching status leads to be moved to
 # - reset_dialed -	(Y,N) if set to Y, will reset the called_since_last_reset flag on the lead
+# - populate_sp_old_list -	(Y,N) if set to Y, will populate the security_phrase field of the lead with the old list_id
+# - populate_comm_old_date -	(Y,N) if set to Y, will populate the comments field of the lead with the date and time when the lead was last called
 #    Multiple sets of statuses:
 # - sale_status_1, new_list_id_1, reset_dialed_1, exclude_status_1, called_count_trigger_1 - adding an underscore and number(1-99) will allow for another set of statuses to check for and what to do with them
 #
@@ -50,6 +52,7 @@
 # 150703-1453 - Added options so it would work with No-Agent Call URL
 # 160309-1239 - Added talk_time_trigger and exclude_status options
 # 160801-1032 - Added called_count_trigger options
+# 160910-1354 - Added populate_... options
 #
 
 $api_script = 'movelist';
@@ -95,6 +98,10 @@ if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
 if (isset($_GET["log_to_file"]))			{$log_to_file=$_GET["log_to_file"];}
 	elseif (isset($_POST["log_to_file"]))	{$log_to_file=$_POST["log_to_file"];}
+if (isset($_GET["populate_sp_old_list"]))			{$populate_sp_old_list=$_GET["populate_sp_old_list"];}
+	elseif (isset($_POST["populate_sp_old_list"]))	{$populate_sp_old_list=$_POST["populate_sp_old_list"];}
+if (isset($_GET["populate_comm_old_date"]))				{$populate_comm_old_date=$_GET["populate_comm_old_date"];}
+	elseif (isset($_POST["populate_comm_old_date"]))	{$populate_comm_old_date=$_POST["populate_comm_old_date"];}
 
 
 #$DB = '1';	# DEBUG override
@@ -282,9 +289,28 @@ if ($match_found > 0)
 
 		if ($search_count > 0)
 			{
+			$field_editSQL='';
 			$reset_dialedSQL='';
+			if ( ($populate_sp_old_list=='Y') or ($populate_comm_old_date=='Y') )
+				{
+				$stmtA = "SELECT list_id,last_local_call_time,comments FROM vicidial_list where lead_id='$lead_id';";
+				$rslt=mysql_to_mysqli($stmtA, $link);
+				if ($DB) {echo "$stmtA\n";}
+				$vle_ct = mysqli_num_rows($rslt);
+				if ($vle_ct > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$old_list_id = ",security_phrase='$row[0]'";
+					$old_call_time = ",comments='$row[1]'";
+					if ($populate_sp_old_list=='Y')
+						{$field_editSQL .= "$old_list_id";}
+					if ($populate_comm_old_date=='Y')
+						{$field_editSQL .= "$old_call_time";}
+					}
+				}
+
 			if ($reset_dialed=='Y') {$reset_dialedSQL=", called_since_last_reset='N'";}
-			$stmt="UPDATE vicidial_list SET list_id='$new_list_id' $reset_dialedSQL where lead_id='$lead_id' limit 1;";
+			$stmt="UPDATE vicidial_list SET list_id='$new_list_id' $reset_dialedSQL $field_editSQL where lead_id='$lead_id' limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 			$affected_rows = mysqli_affected_rows($link);

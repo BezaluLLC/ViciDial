@@ -17,7 +17,8 @@
 # 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 # 160303-0051 - Added code for chat transfers
 # 160719-1043 - Bug fixes for non-owner chats, and other issues
-# 160818-1236 - Addec chat colors, usre nickname and scrolling
+# 160818-1236 - Added chat colors, usre nickname and scrolling
+# 160831-2225 - Agent-to-agent interface now color-coded using system settings, if desired
 #
 
 require("dbconnect_mysqli.php");
@@ -195,16 +196,40 @@ if ($action=="DisplayMgrAgentChat" && $manager_chat_id && $manager_chat_subid &&
 		$prev_chat_subid="";
 		$backlog_limit=20;
 		$chat_output_text="";
+
+		$chat_color_stmt="select std_row1_background, std_row2_background from system_settings s, vicidial_screen_colors v where s.agent_screen_colors=v.colors_id and length(frame_background)=6 and length(menu_background)=6 limit 1;";
+		$color_rslt=mysql_to_mysqli($chat_color_stmt, $link);
+		if(mysqli_num_rows($color_rslt)>0 && $use_agent_colors>0) {
+			$color_row=mysqli_fetch_array($color_rslt);
+			$color_array=array("#000000", "#000000");
+			$chat_background_array=array("#$color_row[std_row1_background]", "#$color_row[std_row2_background]"); 
+		} else {
+			$color_array=array("#0000FF", "#FF0000");
+			$chat_background_array=array("#CCCCFF", "#FFCCCC"); 
+		}
+
 		while($row=mysqli_fetch_row($rslt)) {
 			if (!$chat_start_date) {$chat_start_date=$row[6];}
 			if (!$manager) {$manager=$row[4];}
 			if ($backlog_limit>0) {
+				
 				# Current agent is always the blue text
-				if ($row[0]!=$user) {$fc="#990000";} else {$fc="#000099";}
-				$chat_output_text="<font color='$fc' FACE=\"ARIAL,HELVETICA\" size='1'>$row[1]</font><BR>".$chat_output_text; 
+				# if ($row[0]!=$user) {$fc="#990000";} else {$fc="#000099";}
+				if ($row[0]!=$user) {
+					$chat_color_key=1;
+				} else {
+					$chat_color_key=0;
+				}
+				$chat_output_text="<tr><td bgcolor='$chat_background_array[$chat_color_key]'><font color='$color_array[$chat_color_key]' FACE=\"ARIAL,HELVETICA\" size='2' class='bold'>$row[1]</font></td></tr>".$chat_output_text;
+
+				
+				# $chat_output_text="<font color='$fc' FACE=\"ARIAL,HELVETICA\" size='1'>$row[1]</font><BR>".$chat_output_text; 
 				$backlog_limit--;
 			}
 		}
+		$chat_output_text="<table border='0' cellpadding='1' cellspacing='1' width='100%'>".$chat_output_text;
+
+		$chat_output_text.="</table>";
 
 		$reply_stmt="select allow_replies from vicidial_manager_chats where manager_chat_id='$manager_chat_id'";
 		$reply_rslt=mysql_to_mysqli($reply_stmt, $link);
@@ -609,38 +634,6 @@ if ($action=="xfer_chat" && $user && $chat_id && $chat_xfer_value && $chat_xfer_
 		echo "</select>";
 		echo "|"; // DO NOT ECHO TOGGLE DIAL CONTROL HERE.  WE DO NOT WANT THE AGENT'S PAUSE BUTTON REACTIVATED YET.
 	}
-/*
-vicidial_live_chats
-+---------+---------------------+--------+--------------+----------+---------+
-| chat_id | chat_start_time     | status | chat_creator | group_id | lead_id |
-+---------+---------------------+--------+--------------+----------+---------+
-|     516 | 2015-12-18 12:04:54 | LIVE   | 6666         | MIKECHAT | 1079414 |
-|     517 | 2015-12-18 12:13:48 | LIVE   | 6666         | MIKECHAT | 1079414 |
-|     510 | 2015-12-18 09:23:09 | LIVE   | 6666         | MIKECHAT | 1079414 |
-+---------+---------------------+--------+--------------+----------+---------+
-
-vicidial_chat_participants
-+---------------------+-----------------+------+-----+---------+----------------+
-| Field               | Type            | Null | Key | Default | Extra          |
-+---------------------+-----------------+------+-----+---------+----------------+
-| chat_participant_id | int(9) unsigned | NO   | PRI | NULL    | auto_increment |
-| chat_id             | int(9) unsigned | YES  | MUL | NULL    |                |
-| chat_member         | varchar(20)     | YES  |     | NULL    |                |
-| chat_member_name    | varchar(100)    | YES  |     | NULL    |                |
-| ping_date           | datetime        | YES  |     | NULL    |                |
-| vd_agent            | enum('Y','N')   | YES  |     | N       |                |
-+---------------------+-----------------+------+-----+---------+----------------+
-
-vicidial_chat_log
-+----------------+---------+----------------------------+---------------------+--------+------------------+------------+
-| message_row_id | chat_id | message                    | message_time        | poster | chat_member_name | chat_level |
-+----------------+---------+----------------------------+---------------------+--------+------------------+------------+
-|            530 | 517     | Harold Smith has left chat | 2015-12-18 12:19:53 | 6666   | Admin            | 1          |
-|            529 | 516     | Harold Smith has left chat | 2015-12-18 12:06:09 | 6666   | Admin            | 1          |
-|            513 | 510     | Harold Smith has left chat | 2015-12-18 09:26:17 | 6666   | Admin            | 1          |
-+----------------+---------+----------------------------+---------------------+--------+------------------+------------+
-
-*/
 }
 
 
@@ -703,7 +696,7 @@ if ($action=="update_agent_chat_window" && $chat_id) {
 
 				$chat_color_stmt="select menu_background, frame_background, std_row1_background, std_row2_background, std_row3_background, std_row4_background, std_row5_background from system_settings s, vicidial_screen_colors v where s.agent_screen_colors=v.colors_id and length(frame_background)=6 and length(menu_background)=6 limit 1;";
 				$color_rslt=mysql_to_mysqli($chat_color_stmt, $link);
-				if(mysqli_num_rows($color_rslt)>0 && $use_system_colors>0) {
+				if(mysqli_num_rows($color_rslt)>0 && $use_agent_colors>0) {
 					$color_row=mysqli_fetch_array($color_rslt);
 					$color_array=array("#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000");
 					$chat_background_array=array("#$color_row[std_row1_background]", "#$color_row[std_row2_background]", "#$color_row[std_row3_background]", "#$color_row[std_row4_background]", "#$color_row[std_row5_background]", "#$color_row[frame_background]", "#$color_row[menu_background]"); 

@@ -409,10 +409,11 @@
 # 160706-1437 - Added font styles to text in many places
 # 160714-1503 - Added called_count as a dispo_call_url variable
 # 160801-0717 - Added lists option to ALT dispo call url functions
+# 160901-1714 - Added last_local_call_time sent to agent screen with lead info
 #
 
-$version = '2.12-303';
-$build = '160801-0717';
+$version = '2.12-304';
+$build = '160901-1714';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=654;
@@ -3433,6 +3434,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$security_phrase		= trim("$row[28]");
 				$comments		= stripslashes(trim("$row[29]"));
 				$called_count	= trim("$row[30]");
+				$call_date		= trim("$row[31]");
 				$rank			= trim("$row[32]");
 				$owner			= trim("$row[33]");
 				$entry_list_id	= trim("$row[34]");
@@ -4288,6 +4290,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$LeaD_InfO .=	$list_description . "\n";
 			$LeaD_InfO .=	$entry_date . "\n";
 			$LeaD_InfO .=	$status_group_gather_data . "\n";
+			$LeaD_InfO .=	$call_date . "\n";
 
 			echo $LeaD_InfO;
 			}
@@ -6716,6 +6719,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$security_phrase	= trim("$row[28]");
 				$comments		= stripslashes(trim("$row[29]"));
 				$called_count	= trim("$row[30]");
+				$call_date		= trim("$row[31]");
 				$rank			= trim("$row[32]");
 				$owner			= trim("$row[33]");
 				$entry_list_id	= trim("$row[34]");
@@ -7531,6 +7535,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 			$LeaD_InfO .=	$DID_custom_four . "\n";
 			$LeaD_InfO .=	$DID_custom_five . "\n";
 			$LeaD_InfO .=	$status_group_gather_data . "\n";
+			$LeaD_InfO .=	$call_date . "\n";
 
 			echo $LeaD_InfO;
 
@@ -8182,6 +8187,7 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 				$security_phrase	= trim("$row[28]");
 				$comments		= stripslashes(trim("$row[29]"));
 				$called_count	= trim("$row[30]");
+				$call_date		= trim("$row[31]");
 				$rank			= trim("$row[32]");
 				$owner			= trim("$row[33]");
 				$entry_list_id	= trim("$row[34]");
@@ -8304,6 +8310,7 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 				$security_phrase	= trim("$row[28]");
 				$comments		= stripslashes(trim("$row[29]"));
 				$called_count	= trim("$row[30]");
+				$call_date		= trim("$row[31]");
 				$rank			= trim("$row[32]");
 				$owner			= trim("$row[33]");
 				$entry_list_id	= trim("$row[34]");
@@ -8760,6 +8767,7 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 			$LeaD_InfO .=	$DID_custom_four . "\n";
 			$LeaD_InfO .=	$DID_custom_five . "\n";
 			$LeaD_InfO .=	$status_group_gather_data . "\n";
+			$LeaD_InfO .=	$call_date . "\n";
 
 			echo $LeaD_InfO;
 
@@ -9296,6 +9304,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 				$security_phrase	= trim("$row[28]");
 				$comments		= stripslashes(trim("$row[29]"));
 				$called_count	= trim("$row[30]");
+				$call_date		= trim("$row[31]");
 				$rank			= trim("$row[32]");
 				$owner			= trim("$row[33]");
 				$entry_list_id	= trim("$row[34]");
@@ -9856,6 +9865,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 			$LeaD_InfO .=	$DID_custom_four . "\n";
 			$LeaD_InfO .=	$DID_custom_five . "\n";
 			$LeaD_InfO .=	$status_group_gather_data . "\n";
+			$LeaD_InfO .=	$call_date . "\n";
 
 			echo $LeaD_InfO;
 
@@ -11339,6 +11349,7 @@ if ($ACTION == 'updateDISPO')
 			$security_phrase	= urlencode(trim($row[28]));
 			$comments		= urlencode(trim($row[29]));
 			$called_count	= urlencode(trim($row[30]));
+			$call_date		= urlencode(trim($row[31]));
 			$rank			= urlencode(trim($row[32]));
 			$owner			= urlencode(trim($row[33]));
 			$entry_list_id	= urlencode(trim($row[34]));

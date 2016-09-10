@@ -525,10 +525,11 @@
 # 160428-1826 - Fixed user_authorization bug
 # 160706-1438 - Redesign for loading, login and logout screens. Added Screen Colors. Logging of browser width/height
 # 160731-1102 - Added option to automatically dial the next number after X seconds in a manual dial mode
+# 160901-1728 - Added last_local_call_time display field
 #
 
-$version = '2.12-494c';
-$build = '160731-1102';
+$version = '2.12-495c';
+$build = '160901-1728';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -3866,6 +3867,7 @@ $CCAL_OUT .= "</table>";
 	VARpreset_hide_numbers = new Array(<?php echo $VARpreset_hide_numbers ?>);
 	var VD_preset_names_ct = '<?php echo $VD_preset_names_ct ?>';
 	var status_group_statuses_data = '';
+	var last_call_date = '';
 	VARstatuses = new Array();
 	VARstatusnames = new Array();
 	VARSELstatuses = new Array();
@@ -4187,6 +4189,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var adfREGdate_of_birth = new RegExp("date_of_birth","g");
 	var adfREGrank = new RegExp("rank","g");
 	var adfREGowner = new RegExp("owner","g");
+	var adfREGlast_local_call_time = new RegExp("last_local_call_time","g");
 	var DispO3waychannel = '';
 	var DispO3wayXtrAchannel = '';
 	var DispO3wayCalLserverip = '';
@@ -7423,6 +7426,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								did_custom_four									= change_array[63];
 								did_custom_five									= change_array[64];
 								status_group_statuses_data						= change_array[65];
+								last_call_date									= change_array[66];
 
 								// build statuses list for disposition screen
 								VARstatuses = [];
@@ -7541,6 +7545,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									{document.getElementById("rankDISP").innerHTML = document.vicidial_form.rank.value;}
 								if (agent_display_fields.match(adfREGowner))
 									{document.getElementById("ownerDISP").innerHTML = document.vicidial_form.owner.value;}
+								if (agent_display_fields.match(adfREGlast_local_call_time))
+									{document.getElementById("last_local_call_timeDISP").innerHTML = last_call_date;}
 
 								if (hide_gender > 0)
 									{
@@ -8734,6 +8740,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								document.vicidial_form.list_description.value	= MDnextResponse_array[56];
 								entry_date										= MDnextResponse_array[57];
 								status_group_statuses_data						= MDnextResponse_array[58];
+								last_call_date									= MDnextResponse_array[59];
 
 								// build statuses list for disposition screen
 								VARstatuses = [];
@@ -8856,6 +8863,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									{document.getElementById("rankDISP").innerHTML = document.vicidial_form.rank.value;}
 								if (agent_display_fields.match(adfREGowner))
 									{document.getElementById("ownerDISP").innerHTML = document.vicidial_form.owner.value;}
+								if (agent_display_fields.match(adfREGlast_local_call_time))
+									{document.getElementById("last_local_call_timeDISP").innerHTML = last_call_date;}
 
 								timer_action = campaign_timer_action;
 								timer_action_message = campaign_timer_action_message;
@@ -9205,6 +9214,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								{document.getElementById("rankDISP").innerHTML = ' &nbsp; &nbsp; ';}
 							if (agent_display_fields.match(adfREGowner))
 								{document.getElementById("ownerDISP").innerHTML = ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';}
+							if (agent_display_fields.match(adfREGlast_local_call_time))
+								{document.getElementById("last_local_call_timeDISP").innerHTML = ' &nbsp; ';}
 
 							if (post_phone_time_diff_alert_message.length > 10)
 								{
@@ -9237,6 +9248,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				xfer_agent_selected=0;
 				RefresHScript('CLEAR');
 				ViewComments('OFF','OFF');
+				last_call_date='';
 			//	document.getElementById('vcFormIFrame').src='./vdc_form_display.php?lead_id=&list_id=&stage=WELCOME';
 				}
 			}
@@ -10000,6 +10012,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							did_custom_four									= check_VDIC_array[63];
 							did_custom_five									= check_VDIC_array[64];
 							status_group_statuses_data						= check_VDIC_array[65];
+							last_call_date									= check_VDIC_array[66];
 
 							// build statuses list for disposition screen
 							VARstatuses = [];
@@ -10118,6 +10131,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								{document.getElementById("rankDISP").innerHTML = document.vicidial_form.rank.value;}
 							if (agent_display_fields.match(adfREGowner))
 								{document.getElementById("ownerDISP").innerHTML = document.vicidial_form.owner.value;}
+							if (agent_display_fields.match(adfREGlast_local_call_time))
+								{document.getElementById("last_local_call_timeDISP").innerHTML = last_call_date;}
 
 							if (CalL_ScripT_color.length > 1)
 								{document.getElementById("ScriptContents").style.backgroundColor = CalL_ScripT_color;}
@@ -10730,6 +10745,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							did_custom_four									= check_VDIC_array[59];
 							did_custom_five									= check_VDIC_array[60];
 							status_group_statuses_data						= check_VDIC_array[61];
+							last_call_date									= check_VDIC_array[62];
 
 							// build statuses list for disposition screen
 							VARstatuses = [];
@@ -10848,6 +10864,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								{document.getElementById("rankDISP").innerHTML = document.vicidial_form.rank.value;}
 							if (agent_display_fields.match(adfREGowner))
 								{document.getElementById("ownerDISP").innerHTML = document.vicidial_form.owner.value;}
+							if (agent_display_fields.match(adfREGlast_local_call_time))
+								{document.getElementById("last_local_call_timeDISP").innerHTML = last_call_date;}
 
 							if (hide_gender > 0)
 								{
@@ -12632,6 +12650,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					xfer_agent_selected=0;
 					source_id='';
 					entry_date='';
+					last_call_date='';
 					if (manual_auto_next > 0)
 						{manual_auto_next_trigger=1;   manual_auto_next_count=manual_auto_next;}
 					if (agent_display_fields.match(adfREGentry_date))
@@ -12644,6 +12663,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						{document.getElementById("rankDISP").innerHTML = ' &nbsp; &nbsp; ';}
 					if (agent_display_fields.match(adfREGowner))
 						{document.getElementById("ownerDISP").innerHTML = ' &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ';}
+					if (agent_display_fields.match(adfREGlast_local_call_time))
+						{document.getElementById("last_local_call_timeDISP").innerHTML = ' &nbsp; ';}
 
 					if ( (manual_dial_search_checkbox == 'SELECTED_RESET') || (manual_dial_search_checkbox == 'SELECTED_LOCK') )
 						{document.vicidial_form.LeadLookuP.checked=true;}
@@ -17592,6 +17613,10 @@ $zi=2;
 		if (preg_match("/owner/",$agent_display_fields))
 			{
 			echo _QXZ("Owner").": &nbsp; <font class=\"body_text\"><span id=\"ownerDISP\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span> &nbsp; </font>";
+			}
+		if (preg_match("/last_local_call_time/",$agent_display_fields))
+			{
+			echo _QXZ("Last Call").": &nbsp; <font class=\"body_text\"><span id=\"last_local_call_timeDISP\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; </span> &nbsp; </font>";
 			}
 		}
 

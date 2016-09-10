@@ -12,6 +12,7 @@
 # 131007-1346 - Added mrglock_ig_select_ct
 # 131121-1719 - Fixed defaults mismatched, HKuser_level and FORM_COLOR
 # 160619-1010 - Added link_to_grey_version option
+# 160910-1317 - Added use_agent_colors option
 #
 
 $conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
@@ -47,6 +48,7 @@ $focus_blur_enabled		= '0';	# set to 1 to enable the focus/blur enter key blocki
 $consult_custom_delay	= '2';	# number of seconds to delay consultative transfers when custom fields are active
 $mrglock_ig_select_ct	= '4';	# number of seconds to leave in-group select screen open if agent select is disabled
 $link_to_grey_version	= '1';	# show link to old grey version of agent screen at login screen, next to timeclock link
+$use_agent_colors		= '1';	# agent chat colors
 
 $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
 

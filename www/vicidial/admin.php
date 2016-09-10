@@ -21082,7 +21082,7 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Status Display In-Group").": </td><td align=left><select size=1 name=status_display_ingroup><option value='ENABLED'>"._QXZ("ENABLED")."</option><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='$status_display_ingroup' SELECTED>"._QXZ("$status_display_ingroup")."</option></select>$NWB#campaigns-status_display_ingroup$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Agent Display Fields").": </td><td align=left><input type=text name=agent_display_fields size=50 maxlength=50 value=\"$agent_display_fields\">$NWB#campaigns-agent_display_fields$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Agent Display Fields").": </td><td align=left><input type=text name=agent_display_fields size=60 maxlength=100 value=\"$agent_display_fields\">$NWB#campaigns-agent_display_fields$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Agent Display Queue Count").": </td><td align=left><select size=1 name=display_queue_count><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$display_queue_count' SELECTED>"._QXZ("$display_queue_count")."</option></select>$NWB#campaigns-display_queue_count$NWE</td></tr>\n";
 

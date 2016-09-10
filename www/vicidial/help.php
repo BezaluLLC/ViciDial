@@ -1648,7 +1648,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-agent_display_fields">
 <BR>
-<B><?php echo _QXZ("Agent Display Fields"); ?> -</B><?php echo _QXZ("This option allows you to display hidden fields as read-only in the agent screen. Available fields are entry_date, source_id, date_of_birth, rank, owner. Default is blank."); ?>
+<B><?php echo _QXZ("Agent Display Fields"); ?> -</B><?php echo _QXZ("This option allows you to display hidden fields as read-only in the agent screen. Available fields are entry_date, source_id, date_of_birth, rank, owner, last_local_call_time. Default is blank."); ?>
 
 <BR>
 <A NAME="campaigns-use_internal_dnc">
