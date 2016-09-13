@@ -129,10 +129,11 @@
 # 150915-2039 - Added option for RECID as variable in recording filename
 # 151230-0910 - Fixed transfer of parked call logging issue #901
 # 160101-1130 - Added code to handle routing initiated recordings
+# 160912-2310 - Fixed StopMonitorConf bug involving agent-invoked commands to stop recording
 #
 
-$version = '2.12-76';
-$build = '160101-1130';
+$version = '2.12-77';
+$build = '160912-2310';
 $php_script = 'manager_send.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=138;
@@ -2187,7 +2188,7 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 	$channel_live=1;
 	$uniqueidSQL='';
 
-	if ( (strlen($exten)<3) or (strlen($channel)<4) or (strlen($filename)<8) )
+	if ( (($ACTION=="MonitorConf") && ((strlen($exten)<3) or (strlen($channel)<4) or (strlen($filename)<8))) || (($ACTION=="StopMonitorConf") && ((strlen($exten)<3) or (strlen($channel)<4) or (strlen($filename)<4))) )
 		{
 		$channel_live=0;
 		echo _QXZ("Channel %1s is not valid or exten %2s is not valid or filename: %3s is not valid, %4s command not inserted",0,'',$channel,$exten,$filename,$ACTION)."\n";
