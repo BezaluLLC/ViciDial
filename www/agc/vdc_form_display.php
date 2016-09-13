@@ -1,7 +1,7 @@
 <?php
 # vdc_form_display.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display the contents of the FORM tab in the agent 
 # interface, as well as take submission of the form submission when the agent 
@@ -35,10 +35,11 @@
 # 150609-1923 - Added list_description variable
 # 150923-2027 - Added DID custom variables
 # 160129-1019 - Added missing pass field to SUBMIT stage form
+# 160912-0805 - Added debug, fixed issue with multi-selected values
 #
 
-$version = '2.12-25';
-$build = '150923-2027';
+$version = '2.12-26';
+$build = '160912-0805';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -188,6 +189,9 @@ if (isset($_GET["did_custom_four"]))			{$did_custom_four=$_GET["did_custom_four"
 	elseif (isset($_POST["did_custom_four"]))	{$did_custom_four=$_POST["did_custom_four"];}
 if (isset($_GET["did_custom_five"]))			{$did_custom_five=$_GET["did_custom_five"];}
 	elseif (isset($_POST["did_custom_five"]))	{$did_custom_five=$_POST["did_custom_five"];}
+if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
+	elseif (isset($_POST["DB"]))	{$DB=$_POST["DB"];}
+
 
 if ($bcrypt == 'OFF')
 	{$bcrypt=0;}
@@ -509,7 +513,7 @@ else
 
 	require_once("functions.php");
 
-	$CFoutput = custom_list_fields_values($lead_id,$list_id,$uniqueid,$user);
+	$CFoutput = custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB);
 
 	echo "$CFoutput";
 

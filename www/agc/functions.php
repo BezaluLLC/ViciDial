@@ -4,7 +4,7 @@
 #
 # functions for agent scripts
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES:
@@ -30,6 +30,7 @@
 # 150724-0843 - Added vicidial_ajax_log function
 # 150923-2017 - Added DID custom fields
 # 160510-2151 - Fixed issues with select lists and common contents
+# 160913-0827 - Fixed issues with multiple selected values in custom fields
 #
 
 # $mysql_queries = 20
@@ -227,7 +228,7 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 
 
 ##### BEGIN custom_list_fields_values - gather values for display of custom list fields for a lead #####
-function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
+function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB)
 	{
 	$STARTtime = date("U");
 	$TODAY = date("Y-m-d");
@@ -391,6 +392,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 					$field_options_array = explode("\n",$A_field_options[$o]);
 					$field_options_count = count($field_options_array);
 					$te=0;
+					if ($DB > 0) {echo "DEBUG: |$A_field_id[$o]|$A_field_label[$o]|$A_field_name[$o]|$A_field_type[$o]|$A_field_options[$o]|$field_options_count|\n";}
 					while ($te < $field_options_count)
 						{
 						if (preg_match("/,/",$field_options_array[$te]))
@@ -401,8 +403,10 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 								{
 								if (strlen($A_field_value[$o]) > 0)
 									{
-									if (preg_match("/^$field_options_value_array[0]$/",$A_field_value[$o]))
+									$temp_opt_val = $field_options_value_array[0];
+									if ( (preg_match("/^$temp_opt_val$/",$A_field_value[$o])) or (preg_match("/,$temp_opt_val$/",$A_field_value[$o])) or (preg_match("/$temp_opt_val,/",$A_field_value[$o])) )
 										{$field_selected = 'SELECTED';}
+									if ($DB > 0) {echo "DEBUG2: |$field_options_value_array[0]|$A_field_value[$o]|$field_selected|\n";}
 									}
 								else
 									{
@@ -416,8 +420,10 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user)
 									{$field_HTML .= " &nbsp; ";}
 								if (strlen($A_field_value[$o]) > 0) 
 									{
-									if (preg_match("/^$field_options_value_array[0]$/",$A_field_value[$o]))
+									$temp_opt_val = $field_options_value_array[0];
+									if ( (preg_match("/^$temp_opt_val$/",$A_field_value[$o])) or (preg_match("/,$temp_opt_val$/",$A_field_value[$o])) or (preg_match("/$temp_opt_val,/",$A_field_value[$o])) )
 										{$field_selected = 'CHECKED';}
+									if ($DB > 0) {echo "DEBUG3: |$temp_options_value|$A_field_value[$o]|$field_selected|\n";}
 									}
 								else
 									{
