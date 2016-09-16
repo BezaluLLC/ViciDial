@@ -94,6 +94,7 @@
 # 160731-1030 - Added manual_auto_next, manual_auto_show, user_nickname entries
 # 160731-2053 - Added POSTx description for recording filenames
 # 160809-1351 - Added customer_chat_screen_colors and customer_chat_survey_link/text entries
+# 160915-0954 - Added ---READONLY--- option for field labels
 #
 
 
@@ -5215,7 +5216,7 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <BR>
 <A NAME="settings-default_field_labels">
 <BR>
-<B><?php echo _QXZ("Default Field Labels"); ?> -</B><?php echo _QXZ("These 19 fields allow you to set the name as it will appear in the agent interface as well as the administrative modify lead page. Default is empty which will use the hard-coded defaults in the agent interface. You can also set a label to ---HIDE--- to hide both the label and the field."); ?>
+<B><?php echo _QXZ("Default Field Labels"); ?> -</B><?php echo _QXZ("These 19 fields allow you to set the name as it will appear in the agent interface as well as the administrative modify lead page. Default is empty which will use the hard-coded defaults in the agent interface. You can also set a label to ---HIDE--- to hide both the label and the field. Another option for most fields is ---READONLY--- which will display but not allow an agent to modify the field."); ?>
 
 <BR>
 <A NAME="settings-admin_screen_colors">
@@ -5463,7 +5464,7 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <BR>
 <A NAME="screen_labels-default_field_labels">
 <BR>
-<B><?php echo _QXZ("Default Field Labels"); ?> -</B><?php echo _QXZ("These 19 fields allow you to set the name as it will appear in the agent interface as well as the administrative modify lead page. Default is empty which will use the hard-coded defaults in the agent interface. You can also set a label to ---HIDE--- to hide both the label and the field."); ?>
+<B><?php echo _QXZ("Default Field Labels"); ?> -</B><?php echo _QXZ("These 19 fields allow you to set the name as it will appear in the agent interface as well as the administrative modify lead page. Default is empty which will use the hard-coded defaults in the agent interface. You can also set a label to ---HIDE--- to hide both the label and the field. Another option for most fields is ---READONLY--- which will display but not allow an agent to modify the field."); ?>
 
 
 
