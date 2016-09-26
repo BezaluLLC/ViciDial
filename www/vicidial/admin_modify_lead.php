@@ -77,6 +77,7 @@
 # 160112-2344 - Added link to direct to recording logging page, access log display
 # 160122-1337 - Added display of gmt-offset, last-local-call and called-since-last-reset
 # 160407-2023 - Design changes, added more variable scrubbing, added more admin logging
+# 160926-1052 - Fix for inbound call notes display
 #
 
 require("dbconnect_mysqli.php");
@@ -1023,7 +1024,7 @@ else
 		$closer_log .= "<td align=right><font size=2> &nbsp; $row[14] </td>\n";
 		$closer_log .= "<td align=right><font size=2> &nbsp; $row[17] </td></tr>\n";
 
-		$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and vicidial_id='$row[0]';";
+		$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and vicidial_id IN('$row[0]','$row[18]');";
 		$rsltA=mysql_to_mysqli($stmtA, $link);
 		$in_notes_to_print = mysqli_num_rows($rslt);
 		if ($in_notes_to_print > 0)
@@ -1160,7 +1161,7 @@ else
 			$closer_log .= "<td align=right><font size=2> &nbsp; $row[14] </td>\n";
 			$closer_log .= "<td align=right><font size=2> &nbsp; $row[17] </td></tr>\n";
 
-			$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and vicidial_id='$row[0]';";
+			$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and vicidial_id IN('$row[0]','$row[18]');";
 			$rsltA=mysql_to_mysqli($stmtA, $link);
 			$in_notes_to_print = mysqli_num_rows($rslt);
 			if ($in_notes_to_print > 0)

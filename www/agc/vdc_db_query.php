@@ -410,10 +410,11 @@
 # 160714-1503 - Added called_count as a dispo_call_url variable
 # 160801-0717 - Added lists option to ALT dispo call url functions
 # 160901-1714 - Added last_local_call_time sent to agent screen with lead info
+# 160926-1053 - Fix for inbound call notes display
 #
 
-$version = '2.12-304';
-$build = '160901-1714';
+$version = '2.12-305';
+$build = '160926-1053';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=654;
@@ -14354,7 +14355,7 @@ if ($ACTION == 'LEADINFOview')
 				$ALLalt_dial[$g] =		"MAIN";
 				$ALLin_out[$g] =		"IN";
 
-				$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='$ALLlead_id[$g]' and vicidial_id='$ALLclosecallid[$g]';";
+				$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='$ALLlead_id[$g]' and vicidial_id IN('$ALLuniqueid[$g]','$ALLclosecallid[$g]');";
 				$rsltA=mysql_to_mysqli($stmtA, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtA,'00584',$user,$server_ip,$session_name,$one_mysql_log);}
 				$in_notes_to_print = mysqli_num_rows($rslt);
