@@ -335,7 +335,7 @@ function SubmitIDValues(id_no) {
 	document.getElementById("updateForm").submit();
 }
 </script>
-<?
+<?php
 	echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
 
 	echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
