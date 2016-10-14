@@ -411,13 +411,14 @@
 # 160801-0717 - Added lists option to ALT dispo call url functions
 # 160901-1714 - Added last_local_call_time sent to agent screen with lead info
 # 160926-1053 - Fix for inbound call notes display
+# 161013-2226 - Added user_new_lead_limit option code
 #
 
-$version = '2.12-305';
-$build = '160926-1053';
+$version = '2.12-306';
+$build = '161013-2226';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=654;
+$mysql_log_count=658;
 $one_mysql_log=0;
 $DB=0;
 $VD_login=0;
@@ -862,7 +863,7 @@ $sip_hangup_cause_dictionary = array(
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,agent_debug_logging,default_language,active_modules,allow_chats,default_phone_code FROM system_settings;";
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,agent_debug_logging,default_language,active_modules,allow_chats,default_phone_code,user_new_lead_limit FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -888,6 +889,7 @@ if ($qm_conf_ct > 0)
 	$active_modules =						$row[15];
 	$allow_chats =							$row[16];
 	$default_phone_code =					$row[17];
+	$SSuser_new_lead_limit =				$row[18];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -2273,7 +2275,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					### figure out what the next lead that should be dialed is
 
 					##########################################################
-					### BEGIN find the next lead to dial without looking in the hopper
+					### BEGIN find the next lead to dial without looking in the hopper (NO HOPPER DIALING)
 					##########################################################
 				#	$DB=1;
 
@@ -2737,6 +2739,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 						#################################								
 						# Camp List
+						$vulnl_SQL='';
 						$stmt="SELECT list_id FROM vicidial_lists where campaign_id='$campaign' and active='Y';";
 						$rslt_list=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00603',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -2775,8 +2778,8 @@ if ($ACTION == 'manDiaLnextCaLL')
 							$cur_list_id = $rowA[0];			
 							$list_local_call_time = "";
 
-							# Pull the call times for the lists
-							$stmt="SELECT local_call_time,list_description FROM vicidial_lists where list_id='$cur_list_id';";
+							# Pull the call times and user_new_lead_limit settings for the lists
+							$stmt="SELECT local_call_time,list_description,user_new_lead_limit FROM vicidial_lists where list_id='$cur_list_id';";
 							$rslt=mysql_to_mysqli($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00604',$user,$server_ip,$session_name,$one_mysql_log);}					
 							$rslt_ct = mysqli_num_rows($rslt);
@@ -2784,8 +2787,36 @@ if ($ACTION == 'manDiaLnextCaLL')
 								{
 								#set Cur call_time
 								$row=mysqli_fetch_row($rslt);
-								$cur_call_time  =	$row[0];
-								$list_description = $row[1];
+								$cur_call_time  =		$row[0];
+								$list_description =		$row[1];
+								$user_new_lead_limit =	$row[2];
+								}
+							
+							# build NEW lead limit SQL, if that setting is enabled
+							if ($SSuser_new_lead_limit > 0)
+								{
+								$vulnl_user_override='-1';
+								$vulnl_new_count=0;
+								$stmt="SELECT user_override,new_count FROM vicidial_user_list_new_lead where user='$user' and list_id='$cur_list_id';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00655',$user,$server_ip,$session_name,$one_mysql_log);}
+								$vulnlag_ct = mysqli_num_rows($rslt);
+								if ($vulnlag_ct > 0)
+									{
+									$row=mysqli_fetch_row($rslt);
+									$vulnl_user_override  =	$row[0];
+									$vulnl_new_count =		$row[1];
+									}
+								if ($vulnl_user_override > -1)
+									{$user_new_lead_limit = $vulnl_user_override;}
+								if ( ($user_new_lead_limit > -1) and ($vulnl_new_count >= $user_new_lead_limit) )
+									{
+									$vulnl_SQL .= "and ( ( (list_id=$cur_list_id) and (status!='NEW') ) or (list_id!=$cur_list_id) )";
+									}
+
+						#		$fp = fopen ("./DNNdebug_log.txt", "a");
+						#		fwrite ($fp, "$NOW_TIME|     |$k|$cur_list_id|$SSuser_new_lead_limit|$user_new_lead_limit|$vulnl_user_override|$vulnl_new_count|$user|$vulnl_SQL|$stmt|\n");
+						#		fclose($fp);  
 								}
 
 							# check that call time exists
@@ -3336,19 +3367,19 @@ if ($ACTION == 'manDiaLnextCaLL')
 						if (preg_match("/UP TIMEZONE/i",$lead_order)){$order_stmt = "order by gmt_offset_now desc, $last_order";}
 						if (preg_match("/DOWN TIMEZONE/i",$lead_order)){$order_stmt = "order by gmt_offset_now, $last_order";}
 
-						$stmt="UPDATE vicidial_list SET user='QUEUE$user' where called_since_last_reset='N' and ( (user NOT LIKE \"QUEUE%\") or (user is NULL) ) and status IN($Dsql) and ($list_id_sql) and ($all_gmtSQL) $CCLsql $DLTsql $fSQL $USERfSQL $adooSQL $order_stmt LIMIT 1;";
+						$stmt="UPDATE vicidial_list SET user='QUEUE$user' where called_since_last_reset='N' and ( (user NOT LIKE \"QUEUE%\") or (user is NULL) ) and status IN($Dsql) and ($list_id_sql) and ($all_gmtSQL) $CCLsql $DLTsql $fSQL $USERfSQL $adooSQL $vulnl_SQL $order_stmt LIMIT 1;";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00242',$user,$server_ip,$session_name,$one_mysql_log);}
 						$affected_rows = mysqli_affected_rows($link);
 
-					#	$fp = fopen ("./DNNdebug_log.txt", "a");
-					#	fwrite ($fp, "$NOW_TIME|$campaign|$lead_id|$agent_dialed_number|$user|M|$MqueryCID||$province|$affected_rows|$stmt|\n");
-					#	fclose($fp);  
+				#		$fp = fopen ("./DNNdebug_log.txt", "a");
+				#		fwrite ($fp, "$NOW_TIME|$campaign|$lead_id|$agent_dialed_number|$user|M|$MqueryCID||$province|$affected_rows|$stmt|\n");
+				#		fclose($fp);  
 
 						if ($affected_rows > 0)
 							{
-							$stmt="SELECT lead_id,list_id,gmt_offset_now,state,entry_list_id,vendor_lead_code FROM vicidial_list where user='QUEUE$user' and called_since_last_reset='N' and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) and (modify_date > CONCAT(DATE_ADD(CURDATE(), INTERVAL -1 HOUR),' ',CURTIME()) ) $CCLsql $DLTsql $fSQL $USERfSQL $adooSQL order by modify_date desc LIMIT 1;";
+							$stmt="SELECT lead_id,list_id,gmt_offset_now,state,entry_list_id,vendor_lead_code,status FROM vicidial_list where user='QUEUE$user' and called_since_last_reset='N' and status IN($Dsql) and list_id IN($camp_lists) and ($all_gmtSQL) and (modify_date > CONCAT(DATE_ADD(CURDATE(), INTERVAL -1 HOUR),' ',CURTIME()) ) $CCLsql $DLTsql $fSQL $USERfSQL $adooSQL order by modify_date desc LIMIT 1;";
 							$rslt=mysql_to_mysqli($stmt, $link);
 								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00243',$user,$server_ip,$session_name,$one_mysql_log);}
 							if ($DB) {echo "$stmt\n";}
@@ -3362,11 +3393,40 @@ if ($ACTION == 'manDiaLnextCaLL')
 								$state =			$row[3];
 								$entry_list_id =	$row[4];
 								$vendor_lead_code = $row[5];
+								$old_status =		$row[6];
 
 								$stmt = "INSERT INTO vicidial_hopper SET lead_id='$lead_id',campaign_id='$campaign',status='QUEUE',list_id='$list_id',gmt_offset_now='$gmt_offset_now',state='$state',alt_dial='MAIN',user='$user',priority='0',source='Q',vendor_lead_code=\"$vendor_lead_code\";";
 								if ($DB) {echo "$stmt\n";}
 								$rslt=mysql_to_mysqli($stmt, $link);
 									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00244',$user,$server_ip,$session_name,$one_mysql_log);}
+
+								### BEGIN user_new_lead_limit logging section ###
+								if ( ($old_status == 'NEW') and ($SSuser_new_lead_limit > 0) )
+									{
+									$stmt="SELECT new_count FROM vicidial_user_list_new_lead WHERE list_id='$list_id' and user='$user';";
+									$rslt=mysql_to_mysqli($stmt, $link);
+										if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00656',$user,$server_ip,$session_name,$one_mysql_log);}
+									if ($DB) {echo "$stmt\n";}
+									$vulnl_ct = mysqli_num_rows($rslt);
+									if ($vulnl_ct > 0)
+										{
+										$row=mysqli_fetch_row($rslt);
+										$new_countUPDATE =			($row[0] + 1);
+
+										$stmt = "UPDATE vicidial_user_list_new_lead SET new_count='$new_countUPDATE' WHERE list_id='$list_id' and user='$user';";
+										if ($DB) {echo "$stmt\n";}
+										$rslt=mysql_to_mysqli($stmt, $link);
+											if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00657',$user,$server_ip,$session_name,$one_mysql_log);}
+										}
+									else
+										{
+										$stmt = "INSERT INTO vicidial_user_list_new_lead SET list_id='$list_id',user='$user',new_count='1';";
+										if ($DB) {echo "$stmt\n";}
+										$rslt=mysql_to_mysqli($stmt, $link);
+											if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00658',$user,$server_ip,$session_name,$one_mysql_log);}
+										}
+									}
+								### END user_new_lead_limit logging section ###
 								}
 							}
 						}

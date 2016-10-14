@@ -18,3 +18,5 @@ CX - Consultative Transfer (CXAR2420160116094751)
 XLvdc - Agent ReQueue Call (XLvdcW13739431946666) [epoch + user...]
 XBvdc - Agent blind transfer (XBvdcW14528875091001100110011001) [epoch + user...]
 AGMON - Remote Agent Monitor (AGMON715224918000001)
+HLvdcW - Hangup of customer call from agent screen (HLvdcW1475524272tluc)
+CH123456 - Hangup of all non-agent channels in meetme session(CH1234614755246080)

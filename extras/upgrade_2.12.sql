@@ -658,3 +658,17 @@ UPDATE system_settings SET db_schema_version='1467',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns MODIFY agent_display_fields VARCHAR(100) default '';
 
 UPDATE system_settings SET db_schema_version='1468',db_schema_update_date=NOW() where db_schema_version < 1468;
+
+ALTER TABLE system_settings ADD user_new_lead_limit ENUM('1','0') default '0';
+
+ALTER TABLE vicidial_lists ADD user_new_lead_limit SMALLINT(5) default '-1';
+
+CREATE TABLE vicidial_user_list_new_lead (
+user VARCHAR(20) NOT NULL,
+list_id BIGINT(14) UNSIGNED default '999',
+user_override SMALLINT(5) default '-1',
+new_count MEDIUMINT(8) UNSIGNED default '0',
+unique index userlistnew (user, list_id)
+) ENGINE=MyISAM;
+
+UPDATE system_settings SET db_schema_version='1469',db_schema_update_date=NOW() where db_schema_version < 1469;

@@ -110,9 +110,10 @@
 #               Limited max-stats process to only run on voicemail server, also added alt-logging flags to cm.agi calls
 # 160306-1040 - Added option for carriers to be defined for all active asterisk servers
 # 160324-1655 - Added callback_useronly_move_minutes option
+# 161014-0839 - Added vicidial_user_list_new_lead daily reset
 #
 
-$build = '160324-1655';
+$build = '161014-0839';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -1152,6 +1153,21 @@ if ($timeclock_end_of_day_NOW > 0)
 		$sthA->finish();
 
 		$stmtA = "optimize table vicidial_auto_calls;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "update vicidial_user_list_new_lead SET new_count=0;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_user_list_new_lead call counts reset|\n";}
+		if ($teodDB) {$event_string = "vicidial_user_list_new_lead records reset: $affected_rows";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_user_list_new_lead;";
 		if($DBX){print STDERR "\n|$stmtA|\n";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;

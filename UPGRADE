@@ -291,6 +291,12 @@ OTHER CHANGES:
 
 80. Added the User Group Hourly Report
 
+81. Added User List NEW Lead Limits, with User overrides. Allows you to set a
+	limit on the number of NEW status leads that an agent can call on a per
+	list basis per day.
+
+82. Added List Merge admin utility
+
 
 
 

@@ -95,6 +95,7 @@
 # 160731-2053 - Added POSTx description for recording filenames
 # 160809-1351 - Added customer_chat_screen_colors and customer_chat_survey_link/text entries
 # 160915-0954 - Added ---READONLY--- option for field labels
+# 160926-1351 - Added user_new_lead_limit entries
 #
 
 
@@ -2096,6 +2097,11 @@ if ($SSqc_features_active > 0)
 <A NAME="lists-xferconf_a_dtmf">
 <BR>
 <B><?php echo _QXZ("Xfer-Conf Number Override"); ?> -</B><?php echo _QXZ("These five fields allow for you to override the Transfer Conference number presets when the lead is from this list. Default is blank."); ?>
+
+<BR>
+<A NAME="lists-user_new_lead_limit">
+<BR>
+<B><?php echo _QXZ("User New Lead Limit"); ?> -</B><?php echo _QXZ("This setting will limit the number of new leads any user can dial in this list per day. This feature will only work properly if the campaign is set to either the MANUAL or INBOUND_MAN Dial Method and No Hopper dialing is enabled. Default is -1 for disabled."); ?>
 
 <BR>
 <A NAME="lists-inventory_report">
@@ -5002,6 +5008,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <B><?php echo _QXZ("Max FILL Calls per Second"); ?> -</B><?php echo _QXZ("This setting determines the maximum number of calls that can be placed by the auto-FILL outbound auto-dialing script on for all servers, per second. Must be from 1 to 200. Default is 40."); ?>
 
 <BR>
+<A NAME="settings-user_new_lead_limit">
+<BR>
+<B><?php echo _QXZ("New Leads Per List Limit"); ?> -</B><?php echo _QXZ("This setting enables the new lead limits per list to be set on the list modify page and the user list new lead limit page. This feature will only work properly if the campaign is set to either the MANUAL or INBOUND_MAN Dial Method and No Hopper dialing is enabled. Default is 0 for disabled."); ?>
+
+<BR>
 <A NAME="settings-allow_custom_dialplan">
 <BR>
 <B><?php echo _QXZ("Allow Custom Dialplan Entries"); ?> -</B><?php echo _QXZ("This option allows you to enter custom dialplan lines into Call Menus, Servers and System Settings. Default is 0 for inactive."); ?>
@@ -6232,6 +6243,14 @@ if ($SSqc_features_active > 0)
 <B><FONT SIZE=3><?php echo _QXZ("AM Message Wildcards"); ?></FONT></B><BR><BR>
 
 <?php echo _QXZ("This page allows you to define Am Message Wildcards that will check lead data from the defined lead fields for matches in the defined order specified on this page. For example, if you add a wildcard with the word -vacation- tied to the vendor_lead_code field, and the lead being played a message has -vacation- in that field, then it will hear the message defined in that AM Message Wildcard record. If you want to delete a wildcard, it must first be set to not active, then you can click on the DELETE link below the SUBMIT button for that wildcard entry."); ?>
+
+
+<BR><BR><BR><BR>
+<A NAME="user_list_new_limits">
+<B><FONT SIZE=3><?php echo _QXZ("User List New Lead Limits"); ?></FONT></B><BR><BR>
+
+<?php echo _QXZ("If the system setting for New Leads Per List Limit is enabled, then this page allows for the setting of per-user per-list new lead limit overrides to those List limits. This feature will only work properly if the campaign is set to either the MANUAL or INBOUND_MAN Dial Method and No Hopper dialing is enabled."); ?>
+
 
 
 <BR><BR><BR><BR>

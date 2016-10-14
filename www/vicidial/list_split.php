@@ -1,17 +1,18 @@
 <?php
 # list_split.php - split one big list into smaller lists. Part of Admin Utilities.
 #
-# Copyright (C) 2015  Matt Florell,Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell,Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 140916-1215 - Initial Build
 # 141114-1330 - formatting changes, code cleanup
 # 141229-1822 - Added code for on-the-fly language translations display
 # 150808-2042 - Added compatibility for custom fields data option
+# 161014-0842 - Added screen colors
 #
 
-$version = '2.12-4';
-$build = '150808-2042';
+$version = '2.12-5';
+$build = '161014-0842';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -52,7 +53,7 @@ $num_leads = preg_replace('/[^0-9]/','',$num_leads);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$sys_settings_stmt = "SELECT use_non_latin,outbound_autodial_active,sounds_central_control_active,enable_languages,language_method,active_modules FROM system_settings;";
+$sys_settings_stmt = "SELECT use_non_latin,outbound_autodial_active,sounds_central_control_active,enable_languages,language_method,active_modules,admin_screen_colors FROM system_settings;";
 $sys_settings_rslt=mysql_to_mysqli($sys_settings_stmt, $link);
 if ($DB) {echo "$sys_settings_stmt\n";}
 $num_rows = mysqli_num_rows($sys_settings_rslt);
@@ -65,6 +66,7 @@ if ($num_rows > 0)
 	$SSenable_languages =				$sys_settings_row[3];
 	$SSlanguage_method =				$sys_settings_row[4];
 	$SSactive_modules =					$sys_settings_row[5];
+	$SSadmin_screen_colors =			$sys_settings_row[6];
 	}
 else
 	{
@@ -177,16 +179,56 @@ $subheader_font_size='2';
 $subcamp_font_size='2';
 $header_selected_bold='<b>';
 $header_nonselected_bold='';
-$admin_color =	  '#FFFF99';
+$SSadmin_color =	  '#FFFF99';
 $admin_font =	   'BLACK';
-$admin_color =	  '#E6E6E6';
+$SSadmin_color =	  '#E6E6E6';
 $subcamp_color =	'#C6C6C6';
+
+$SSmenu_background='015B91';
+$SSframe_background='D9E6FE';
+$SSstd_row1_background='9BB9FB';
+$SSstd_row2_background='F0F5FE';
+$SSstd_row3_background='8EBCFD';
+$SSstd_row4_background='B6D3FC';
+$SSstd_row5_background='A3C3D6';
+$SSalt_row1_background='BDFFBD';
+$SSalt_row2_background='99FF99';
+$SSalt_row3_background='CCFFCC';
+$SSweb_logo='default_old';
+
+if ($SSadmin_screen_colors != 'default')
+	{
+	$stmt = "SELECT menu_background,frame_background,std_row1_background,std_row2_background,std_row3_background,std_row4_background,std_row5_background,alt_row1_background,alt_row2_background,alt_row3_background,web_logo FROM vicidial_screen_colors where colors_id='$SSadmin_screen_colors';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$colors_ct = mysqli_num_rows($rslt);
+	if ($colors_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$SSmenu_background =		$row[0];
+		$SSframe_background =		$row[1];
+		$SSadmin_color =			$row[1];
+		$SSstd_row1_background =	$row[2];
+		$SSstd_row2_background =	$row[3];
+		$SSstd_row3_background =	$row[4];
+		$SSstd_row4_background =	$row[5];
+		$SSstd_row5_background =	$row[6];
+		$SSalt_row1_background =	$row[7];
+		$SSalt_row2_background =	$row[8];
+		$SSalt_row3_background =	$row[9];
+		$SSweb_logo =				$row[10];
+		}
+	}
+
+$Mhead_color =	$SSstd_row5_background;
+$Mmain_bgcolor = $SSmenu_background;
+$Mhead_color =	$SSstd_row5_background;
 ##### END Set variables to make header show properly #####
 
 require("admin_header.php");
 
-echo "<table width=$page_width bgcolor=#E6E6E6 cellpadding=2 cellspacing=0>\n";
-echo "<tr bgcolor='#E6E6E6'>\n";
+echo "<table width=$page_width bgcolor='$SSadmin_color' cellpadding=2 cellspacing=0>\n";
+echo "<tr bgcolor='$SSadmin_color'>\n";
 echo "<td align=left>\n";
 echo "<font face='ARIAL,HELVETICA' size=2>\n";
 echo "<b>"._QXZ("List Split Tool")."</b>\n";
@@ -196,7 +238,7 @@ echo "<td align=right><font face='ARIAL,HELVETICA' size=2><b> &nbsp; </td>\n";
 echo "</tr>\n";
 
 
-echo "<tr bgcolor='#F0F5FE'><td align=left colspan=2><font face='ARIAL,HELVETICA' color=black size=3> &nbsp; \n";
+echo "<tr bgcolor='#$SSframe_background'><td align=left colspan=2><font face='ARIAL,HELVETICA' color=black size=3> &nbsp; \n";
 
 if ($DB>0)
 	{
@@ -546,10 +588,10 @@ if (($submit != "submit" ) && ($confirm != "confirm"))
 	echo "<form action=$PHP_SELF method=POST>\n";
 	echo "<center><table width=$section_width cellspacing=3>\n";
 
-	echo "<tr bgcolor=#015B91><td colspan=2 align=center><font color=white><b>"._QXZ("List Split")."</b></font></td></tr>\n";
+	echo "<tr bgcolor=#$SSmenu_background><td colspan=2 align=center><font color=white><b>"._QXZ("List Split")."</b></font></td></tr>\n";
 
 	# Orginal Lists
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Original List")."</td><td align=left>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Original List")."</td><td align=left>\n";
 	echo "<select size=1 name=orig_list>\n";
 	echo "<option value='-'>"._QXZ("Select A List")."</option>\n";
 	$i = 0;
@@ -562,11 +604,11 @@ if (($submit != "submit" ) && ($confirm != "confirm"))
 	echo "</select></td></tr>\n";
 
 	# Start Destination List ID
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Start Destination List")."</td><td align=left>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Start Destination List")."</td><td align=left>\n";
 	echo "<input type='text' name='start_dest_list_id' value='$max_list_id'> ("._QXZ("must be")." >= $max_list_id)</td></tr>\n";
 
 	# Number of leads per list
-	echo "<tr bgcolor=#B6D3FC><td align=right>"._QXZ("Number of Leads Per List")."</td><td align=left>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Number of Leads Per List")."</td><td align=left>\n";
 	echo "<select size=1 name=num_leads>\n";
 	echo "<option value='10000'>10000</option>\n";
 	echo "<option value='20000'>20000</option>\n";
@@ -583,7 +625,7 @@ if (($submit != "submit" ) && ($confirm != "confirm"))
 	echo "<input type=hidden name=DB value='$DB'>\n";
 	
 	# Submit
-	echo "<tr bgcolor=#B6D3FC><td colspan=2 align=center><input type=submit name=submit value=submit></td></tr>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td colspan=2 align=center><input type=submit name=submit value=submit></td></tr>\n";
 	echo "</table></center>\n";
 	echo "</form>\n";
 

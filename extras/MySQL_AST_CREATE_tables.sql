@@ -992,7 +992,8 @@ expiration_date DATE default '2099-12-31',
 na_call_url TEXT,
 local_call_time VARCHAR(10) NOT NULL DEFAULT 'campaign',
 web_form_address_three TEXT,
-status_group_id VARCHAR(20) default ''
+status_group_id VARCHAR(20) default '',
+user_new_lead_limit SMALLINT(5) default '-1'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_statuses (
@@ -1670,7 +1671,8 @@ admin_screen_colors VARCHAR(20) default 'default',
 ofcom_uk_drop_calc ENUM('1','0') default '0',
 agent_screen_colors VARCHAR(20) default 'default',
 script_remove_js ENUM('1','0') default '1',
-manual_auto_next ENUM('1','0') default '0'
+manual_auto_next ENUM('1','0') default '0',
+user_new_lead_limit ENUM('1','0') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3535,6 +3537,14 @@ user_group VARCHAR(20) default '---ALL---',
 web_logo VARCHAR(100) default 'default_new'
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_user_list_new_lead (
+user VARCHAR(20) NOT NULL,
+list_id BIGINT(14) UNSIGNED default '999',
+user_override SMALLINT(5) default '-1',
+new_count MEDIUMINT(8) UNSIGNED default '0',
+unique index userlistnew (user, list_id)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3791,4 +3801,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1468',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1469',db_schema_update_date=NOW(),reload_timestamp=NOW();

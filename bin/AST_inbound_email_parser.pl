@@ -63,6 +63,7 @@ use MIME::QuotedPrint;
 # 151030-0557 - Small change to catch more attachments properly
 # 160120-2149 - Added missing entry_date field on vicidial_list insert
 # 160414-0930 - Added missing phone_code field on vicidial_list insert
+# 161014-2200 - Bug patch for "&nbsp;" string in email message
 #
 
 # default path to astguiclient configuration file:
@@ -1004,6 +1005,7 @@ sub StripHTML()
 {
 	$message=~s/^\s*(.*?)\s*$/$1/;
 	$message=~s/[\r\n]/ /g;
+	$message=~s/\&nbsp\;/ /gi;
 	if ($message=~/<html.*?<\/html>/i) {
 		$message=$&;
 		my $hs = HTML::Strip->new();
