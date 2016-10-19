@@ -672,3 +672,47 @@ unique index userlistnew (user, list_id)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1469',db_schema_update_date=NOW() where db_schema_version < 1469;
+
+ALTER TABLE vicidial_screen_labels MODIFY label_title VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_first_name VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_middle_initial VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_last_name VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_address1 VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_address2 VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_address3 VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_city VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_state VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_province VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_postal_code VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_vendor_lead_code VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_gender VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_phone_number VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_phone_code VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_alt_phone VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_security_phrase VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_email VARCHAR(60) default '';
+ALTER TABLE vicidial_screen_labels MODIFY label_comments VARCHAR(60) default '';
+
+ALTER TABLE system_settings MODIFY label_title VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_first_name VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_middle_initial VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_last_name VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_address1 VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_address2 VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_address3 VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_city VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_state VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_province VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_postal_code VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_vendor_lead_code VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_gender VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_phone_number VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_phone_code VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_alt_phone VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_security_phrase VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_email VARCHAR(60) default '';
+ALTER TABLE system_settings MODIFY label_comments VARCHAR(60) default '';
+
+ALTER TABLE vicidial_campaigns ADD allow_required_fields ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1470',db_schema_update_date=NOW() where db_schema_version < 1470;

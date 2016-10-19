@@ -96,6 +96,7 @@
 # 160809-1351 - Added customer_chat_screen_colors and customer_chat_survey_link/text entries
 # 160915-0954 - Added ---READONLY--- option for field labels
 # 160926-1351 - Added user_new_lead_limit entries
+# 161018-2245 - Added allow_required_fields
 #
 
 
@@ -1636,6 +1637,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-screen_labels">
 <BR>
 <B><?php echo _QXZ("Agent Screen Labels"); ?> -</B><?php echo _QXZ("You can select a set of agent screen labels to use with this option. Default is --SYSTEM-SETTINGS-- for the default labels."); ?>
+
+<BR>
+<A NAME="campaigns-allow_required_fields">
+<BR>
+<B><?php echo _QXZ("Allow Required Fields"); ?> -</B><?php echo _QXZ("Must be enabled for required fields as defined in screen labels to work. Once a field is designated as required, the agent will not be allowed to hang up a lead until there is something filled in within that field, this will affect all calls the agent receives or places. Default is N for disabled."); ?>
 
 <BR>
 <A NAME="campaigns-status_display_fields">
@@ -5227,7 +5233,7 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <BR>
 <A NAME="settings-default_field_labels">
 <BR>
-<B><?php echo _QXZ("Default Field Labels"); ?> -</B><?php echo _QXZ("These 19 fields allow you to set the name as it will appear in the agent interface as well as the administrative modify lead page. Default is empty which will use the hard-coded defaults in the agent interface. You can also set a label to ---HIDE--- to hide both the label and the field. Another option for most fields is ---READONLY--- which will display but not allow an agent to modify the field."); ?>
+<B><?php echo _QXZ("Default Field Labels"); ?> -</B><?php echo _QXZ("These 19 fields allow you to set the name as it will appear in the agent interface as well as the administrative modify lead page. Default is empty which will use the hard-coded defaults in the agent interface. You can also set a label to ---HIDE--- to hide both the label and the field. Another option for most fields is ---READONLY--- which will display but not allow an agent to modify the field. One more option for most fields is ---REQUIRED--- which will force an agent to populate that field on all calls before being able to hang up and disposition each call. For the REQUIRED option to work, the campaign must have Allow Required Fields enabled."); ?>
 
 <BR>
 <A NAME="settings-admin_screen_colors">
@@ -5475,7 +5481,7 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <BR>
 <A NAME="screen_labels-default_field_labels">
 <BR>
-<B><?php echo _QXZ("Default Field Labels"); ?> -</B><?php echo _QXZ("These 19 fields allow you to set the name as it will appear in the agent interface as well as the administrative modify lead page. Default is empty which will use the hard-coded defaults in the agent interface. You can also set a label to ---HIDE--- to hide both the label and the field. Another option for most fields is ---READONLY--- which will display but not allow an agent to modify the field."); ?>
+<B><?php echo _QXZ("Default Field Labels"); ?> -</B><?php echo _QXZ("These 19 fields allow you to set the name as it will appear in the agent interface as well as the administrative modify lead page. Default is empty which will use the hard-coded defaults in the agent interface. You can also set a label to ---HIDE--- to hide both the label and the field. Another option for most fields is ---READONLY--- which will display but not allow an agent to modify the field. One more option for most fields is ---REQUIRED--- which will force an agent to populate that field on all calls before being able to hang up and disposition each call. For the REQUIRED option to work, the campaign must have Allow Required Fields enabled."); ?>
 
 
 
