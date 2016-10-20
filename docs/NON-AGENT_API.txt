@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2016-07-09
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2016-10-20
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -114,6 +114,7 @@ Changes:
 151226-0954 - Added session_id(conf_exten) field to output of agent_status, and added logged_in_agents function
 160603-1041 - Added update_campaign function
 160709-2219 - Added lead_field_info function
+161020-1042 - Added lookup_state option to add_lead, added 10-digit validation if usacan_areacode_check enabled
 
 
 API Functions use the 'function' variable
@@ -590,7 +591,7 @@ duplicate_check -	Check for duplicate records in the system, can select more tha
 				DUPNAMEPHONECAMP - check for duplicate first_name, last_name and phone_number in all lists for this list's campaign
 				DUPNAMEPHONESYS - check for duplicate first_name, last_name and phone_number in entire system
 usacan_prefix_check -	Y or N, default is N. Check for a valid 4th digit for USA and Canada phone numbers (cannot be 0 or 1)
-usacan_areacode_check -	Y or N, default is N. Check for a valid areacode for USA and Canada phone numbers
+usacan_areacode_check -	Y or N, default is N. Check for a valid areacode for USA and Canada phone numbers(also checks for 10-digit length)
 nanpa_ac_prefix_check -	Y or N, default is N. Check for a valid NANPA areacode and prefix, if optional NANPA data is on the system
 custom_fields -		Y or N, default is N. Defines whether the API will accept custom field data when inserting leads into the vicidial_list table
 			For custom fields to be inserted, just add the field label as a variable to the URL string
@@ -605,6 +606,7 @@ callback_datetime -	YYYY-MM-DD+HH:MM:SS, date and time of scheduled callback. RE
 callback_type -		USERONLY or ANYONE, default is ANYONE
 callback_user -		User ID the USERONLY callback is assigned to
 callback_comments -	Optional comments to appear when the callback is called back
+lookup_state -		Y or N, default is N. Looks up state field from areacode list. Only works if the 'state' field is not populated.
 
 (for fields with spaces in the values, you can replace the space with a plus + sign[address, city, first_name, etc...])
 OPTIONAL FIELDS- 

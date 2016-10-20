@@ -109,10 +109,11 @@
 # 160603-1041 - Added update_campaign function
 # 160709-2233 - Added lead_field_info function
 # 160824-0802 - Fixed issue with allowed lists feature
+# 161020-1042 - Added lookup_state option to add_lead, added 10-digit validation if usacan_areacode_check enabled
 #
 
-$version = '2.12-85';
-$build = '160824-0802';
+$version = '2.12-86';
+$build = '161020-1042';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -405,6 +406,8 @@ if (isset($_GET["dial_timeout"]))			{$dial_timeout=$_GET["dial_timeout"];}
 	elseif (isset($_POST["dial_timeout"]))	{$dial_timeout=$_POST["dial_timeout"];}
 if (isset($_GET["field_name"]))				{$field_name=$_GET["field_name"];}
 	elseif (isset($_POST["field_name"]))	{$field_name=$_POST["field_name"];}
+if (isset($_GET["lookup_state"]))			{$lookup_state=$_GET["lookup_state"];}
+	elseif (isset($_POST["lookup_state"]))	{$lookup_state=$_POST["lookup_state"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -584,6 +587,7 @@ if ($non_latin < 1)
 	$dial_method = preg_replace('/[^-_0-9a-zA-Z]/','',$dial_method);
 	$dial_timeout = preg_replace('/[^0-9]/','',$dial_timeout);
 	$field_name = preg_replace('/[^-_0-9a-zA-Z]/','',$field_name);
+	$lookup_state = preg_replace('/[^A-Z]/','',$lookup_state);
 	}
 else
 	{
@@ -6565,7 +6569,7 @@ if ($function == 'add_lead')
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$row=mysqli_fetch_row($rslt);
 				$valid_number=$row[0];
-				if ($valid_number < 1)
+				if ( ($valid_number < 1) || (strlen($phone_number)>10) || (strlen($phone_number)<10) )
 					{
 					$result_reason = "add_lead INVALID PHONE NUMBER AREACODE";
 					}
@@ -6594,6 +6598,20 @@ if ($function == 'add_lead')
 				}
 			else
 				{
+				### state lookup if enabled
+				if ( ($lookup_state == 'Y') and (strlen($state) < 1) )
+					{
+					$phone_areacode = substr($phone_number, 0, 3);
+					$stmt="SELECT state from vicidial_phone_codes where country_code='$phone_code' and areacode='$phone_areacode';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$vpc_recs = mysqli_num_rows($rslt);
+					if ($vpc_recs > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$state =	$row[0];
+						}
+					}
+
 				### START checking for DNC if defined ###
 				if ( ($dnc_check == 'Y') or ($dnc_check == 'AREACODE') )
 					{
