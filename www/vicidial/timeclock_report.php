@@ -1,7 +1,7 @@
 <?php 
 # timeclock_report.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -27,6 +27,7 @@
 # 141114-0028 - Finalized adding QXZ translation to all admin files
 # 141230-0948 - Added code for on-the-fly language translations display
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
+# 161019-2253 - Added screen colors
 #
 
 $startMS = microtime();
@@ -69,7 +70,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,webroot_writable,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,webroot_writable,enable_languages,language_method,admin_screen_colors FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -83,6 +84,7 @@ if ($qm_conf_ct > 0)
 	$webroot_writable =				$row[4];
 	$SSenable_languages =			$row[5];
 	$SSlanguage_method =			$row[6];
+	$SSadmin_screen_colors =		$row[7];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -287,6 +289,72 @@ while ($i < $user_groups_to_print)
 	$LISTuser_groups[$i] =$row[0];
 	$i++;
 	}
+
+
+$SSmenu_background='015B91';
+$SSframe_background='D9E6FE';
+$SSstd_row1_background='9BB9FB';
+$SSstd_row2_background='B9CBFD';
+$SSstd_row3_background='8EBCFD';
+$SSstd_row4_background='B6D3FC';
+$SSstd_row5_background='A3C3D6';
+$SSalt_row1_background='BDFFBD';
+$SSalt_row2_background='99FF99';
+$SSalt_row3_background='CCFFCC';
+
+if ($SSadmin_screen_colors != 'default')
+	{
+	$stmt = "SELECT menu_background,frame_background,std_row1_background,std_row2_background,std_row3_background,std_row4_background,std_row5_background,alt_row1_background,alt_row2_background,alt_row3_background,web_logo FROM vicidial_screen_colors where colors_id='$SSadmin_screen_colors';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$colors_ct = mysqli_num_rows($rslt);
+	if ($colors_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$SSmenu_background =		$row[0];
+		$SSframe_background =		$row[1];
+		$SSstd_row1_background =	$row[2];
+		$SSstd_row2_background =	$row[3];
+		$SSstd_row3_background =	$row[4];
+		$SSstd_row4_background =	$row[5];
+		$SSstd_row5_background =	$row[6];
+		$SSalt_row1_background =	$row[7];
+		$SSalt_row2_background =	$row[8];
+		$SSalt_row3_background =	$row[9];
+		$SSweb_logo =				$row[10];
+		}
+	}
+$Mhead_color =	$SSstd_row5_background;
+$Mmain_bgcolor = $SSmenu_background;
+$Mhead_color =	$SSstd_row5_background;
+
+$selected_logo = "./images/vicidial_admin_web_logo.png";
+$selected_small_logo = "./images/vicidial_admin_web_logo.png";
+$logo_new=0;
+$logo_old=0;
+$logo_small_old=0;
+if (file_exists('./images/vicidial_admin_web_logo.png')) {$logo_new++;}
+if (file_exists('vicidial_admin_web_logo_small.gif')) {$logo_small_old++;}
+if (file_exists('vicidial_admin_web_logo.gif')) {$logo_old++;}
+if ($SSweb_logo=='default_new')
+	{
+	$selected_logo = "./images/vicidial_admin_web_logo.png";
+	$selected_small_logo = "./images/vicidial_admin_web_logo.png";
+	}
+if ( ($SSweb_logo=='default_old') and ($logo_old > 0) )
+	{
+	$selected_logo = "./vicidial_admin_web_logo.gif";
+	$selected_small_logo = "./vicidial_admin_web_logo_small.gif";
+	}
+if ( ($SSweb_logo!='default_new') and ($SSweb_logo!='default_old') )
+	{
+	if (file_exists("./images/vicidial_admin_web_logo$SSweb_logo")) 
+		{
+		$selected_logo = "./images/vicidial_admin_web_logo$SSweb_logo";
+		$selected_small_logo = "./images/vicidial_admin_web_logo$SSweb_logo";
+		}
+	}
+
 
 ##### START HTML #####
 
@@ -545,9 +613,9 @@ if (!$report_display_type || $report_display_type=="TEXT")
 		$i = $hours_split[1];
 
 		if (preg_match("/1$|3$|5$|7$|9$/i", $j))
-			{$bgcolor='bgcolor="#B9CBFD"';} 
+			{$bgcolor='bgcolor="#'.$SSstd_row3_background.'"';} 
 		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
+			{$bgcolor='bgcolor="#'.$SSstd_row4_background.'"';}
 
 		$MAIN.="<TR $bgcolor>\n";
 		$MAIN.="<TD ALIGN=LEFT><FONT class=\"data_records_fix_small\">$j</TD>\n";

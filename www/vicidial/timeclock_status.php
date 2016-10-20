@@ -1,7 +1,7 @@
 <?php
 # timeclock_status.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -22,6 +22,7 @@
 # 140108-0719 - Added webserver and hostname to report logging
 # 141007-2216 - Finalized adding QXZ translation to all admin files
 # 141229-1853 - Added code for on-the-fly language translations display
+# 161019-2254 - Added screen colors
 #
 
 #header ("Content-type: text/html; charset=utf-8");
@@ -56,7 +57,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,webroot_writable,timeclock_end_of_day,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,webroot_writable,timeclock_end_of_day,enable_languages,language_method,admin_screen_colors FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -71,6 +72,7 @@ if ($qm_conf_ct > 0)
 	$timeclock_end_of_day =			$row[5];
 	$SSenable_languages =			$row[6];
 	$SSlanguage_method =			$row[7];
+	$SSadmin_screen_colors =		$row[8];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -287,6 +289,72 @@ if (strlen($user_group) > 0)
 	$group_name = $row[0];
 	}
 
+
+$SSmenu_background='015B91';
+$SSframe_background='D9E6FE';
+$SSstd_row1_background='9BB9FB';
+$SSstd_row2_background='B9CBFD';
+$SSstd_row3_background='8EBCFD';
+$SSstd_row4_background='B6D3FC';
+$SSstd_row5_background='A3C3D6';
+$SSalt_row1_background='BDFFBD';
+$SSalt_row2_background='99FF99';
+$SSalt_row3_background='CCFFCC';
+
+if ($SSadmin_screen_colors != 'default')
+	{
+	$stmt = "SELECT menu_background,frame_background,std_row1_background,std_row2_background,std_row3_background,std_row4_background,std_row5_background,alt_row1_background,alt_row2_background,alt_row3_background,web_logo FROM vicidial_screen_colors where colors_id='$SSadmin_screen_colors';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$colors_ct = mysqli_num_rows($rslt);
+	if ($colors_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$SSmenu_background =		$row[0];
+		$SSframe_background =		$row[1];
+		$SSstd_row1_background =	$row[2];
+		$SSstd_row2_background =	$row[3];
+		$SSstd_row3_background =	$row[4];
+		$SSstd_row4_background =	$row[5];
+		$SSstd_row5_background =	$row[6];
+		$SSalt_row1_background =	$row[7];
+		$SSalt_row2_background =	$row[8];
+		$SSalt_row3_background =	$row[9];
+		$SSweb_logo =				$row[10];
+		}
+	}
+$Mhead_color =	$SSstd_row5_background;
+$Mmain_bgcolor = $SSmenu_background;
+$Mhead_color =	$SSstd_row5_background;
+
+$selected_logo = "./images/vicidial_admin_web_logo.png";
+$selected_small_logo = "./images/vicidial_admin_web_logo.png";
+$logo_new=0;
+$logo_old=0;
+$logo_small_old=0;
+if (file_exists('./images/vicidial_admin_web_logo.png')) {$logo_new++;}
+if (file_exists('vicidial_admin_web_logo_small.gif')) {$logo_small_old++;}
+if (file_exists('vicidial_admin_web_logo.gif')) {$logo_old++;}
+if ($SSweb_logo=='default_new')
+	{
+	$selected_logo = "./images/vicidial_admin_web_logo.png";
+	$selected_small_logo = "./images/vicidial_admin_web_logo.png";
+	}
+if ( ($SSweb_logo=='default_old') and ($logo_old > 0) )
+	{
+	$selected_logo = "./vicidial_admin_web_logo.gif";
+	$selected_small_logo = "./vicidial_admin_web_logo_small.gif";
+	}
+if ( ($SSweb_logo!='default_new') and ($SSweb_logo!='default_old') )
+	{
+	if (file_exists("./images/vicidial_admin_web_logo$SSweb_logo")) 
+		{
+		$selected_logo = "./images/vicidial_admin_web_logo$SSweb_logo";
+		$selected_small_logo = "./images/vicidial_admin_web_logo$SSweb_logo";
+		}
+	}
+
+
 $HEADER.="<html>\n";
 $HEADER.="<head>\n";
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
@@ -316,13 +384,13 @@ $subcamp_color =	'#C6C6C6';
 
 
 $MAIN.="<CENTER>\n";
-$MAIN.="<TABLE WIDTH=750 BGCOLOR=#D9E6FE cellpadding=2 cellspacing=0><TR BGCOLOR=#015B91><TD ALIGN=LEFT>\n";
+$MAIN.="<TABLE WIDTH=750 BGCOLOR=#". $SSframe_background ." cellpadding=2 cellspacing=0><TR BGCOLOR=#". $SSmenu_background ."><TD ALIGN=LEFT>\n";
 $MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2><B>"._QXZ("Timeclock Status for")." $user_group</TD><TD ALIGN=RIGHT> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
 $MAIN.="<a href=\"./timeclock_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2><B>"._QXZ("TIMECLOCK REPORT")."</a> | ";
 $MAIN.="<a href=\"./admin.php?ADD=311111&user_group=$user_group\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE SIZE=2><B>"._QXZ("USER GROUP")."</a>\n";
 $MAIN.="</TD></TR>\n";
 
-$MAIN.="<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> &nbsp; \n";
+$MAIN.="<TR BGCOLOR=\"#". $SSstd_row3_background ."\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> &nbsp; \n";
 
 $MAIN.="<form action=$PHP_SELF method=GET>\n";
 $MAIN.="<input type=hidden name=DB value=\"$DB\">\n";
@@ -392,7 +460,7 @@ while ($users_to_print > $o)
 	{
 	$total_login_time = 0;
 	##### grab timeclock status record for this user #####
-	$stmt="SELECT event_epoch,event_date,status,ip_address from vicidial_timeclock_status where user='$users[$o]' and event_epoch >= '$EoD';";
+	$stmt="SELECT event_epoch,event_date,status,ip_address from vicidial_timeclock_status where user='$users[$o]' and event_epoch >= '$EoD' limit 1;";
 	if ($DB>0) {$MAIN.="|$stmt|";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$stats_to_print = mysqli_num_rows($rslt);
@@ -405,13 +473,13 @@ while ($users_to_print > $o)
 		$Tip_address[$o] =	$row[3];
 
 		if ( ($row[2]=='START') or ($row[2]=='LOGIN') )
-			{$bgcolor[$o]='bgcolor="#B9CBFD"';} 
+			{$bgcolor[$o]='bgcolor="#'. $SSstd_row3_background .'"';} 
 		else
-			{$bgcolor[$o]='bgcolor="#9BB9FB"';}
+			{$bgcolor[$o]='bgcolor="#'. $SSstd_row3_background .'"';}
 		}
 
 	##### grab timeclock logged-in time for each user #####
-	$stmt="SELECT event,event_epoch,login_sec from vicidial_timeclock_log where user='$users[$o]' and event_epoch >= '$EoD';";
+	$stmt="SELECT event,event_epoch,login_sec from vicidial_timeclock_log where user='$users[$o]' and event_epoch >= '$EoD' order by user;";
 	if ($DB>0) {$MAIN.="|$stmt|";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$logs_to_parse = mysqli_num_rows($rslt);
@@ -622,144 +690,5 @@ if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
-
-
-
-
-
-
-
-
-
-
-
-##### vicidial_timeclock log records for user #####
-
-$SQday_ARY =	explode('-',$begin_date);
-$EQday_ARY =	explode('-',$end_date);
-$SQepoch = mktime(0, 0, 0, $SQday_ARY[1], $SQday_ARY[2], $SQday_ARY[0]);
-$EQepoch = mktime(23, 59, 59, $EQday_ARY[1], $EQday_ARY[2], $EQday_ARY[0]);
-
-$MAIN.="<br><br>\n";
-
-$MAIN.="<center>\n";
-
-$MAIN.="<B>"._QXZ("TIMECLOCK LOGIN/LOGOUT TIME").":</B>\n";
-$MAIN.="<TABLE width=550 cellspacing=0 cellpadding=1>\n";
-$MAIN.="<tr><td><font size=2>"._QXZ("ID")." </td><td><font size=2>"._QXZ("EDIT")." </td><td align=right><font size=2>"._QXZ("EVENT")." </td><td align=right><font size=2> "._QXZ("DATE")."</td><td align=right><font size=2> "._QXZ("IP ADDRESS")."</td><td align=right><font size=2> "._QXZ("GROUP")."</td><td align=right><font size=2>"._QXZ("HOURS:MINUTES")."</td></tr>\n";
-
-	$stmt="SELECT event,event_epoch,user_group,login_sec,ip_address,timeclock_id,manager_user from vicidial_timeclock_log where user='" . mysqli_real_escape_string($link, $user) . "' and event_epoch >= '$SQepoch'  and event_epoch <= '$EQepoch';";
-	if ($DB>0) {$MAIN.="|$stmt|";}
-	$rslt=mysql_to_mysqli($stmt, $link);
-	$events_to_print = mysqli_num_rows($rslt);
-
-	$total_logs=0;
-	$o=0;
-	while ($events_to_print > $o) {
-		$row=mysqli_fetch_row($rslt);
-		if ( ($row[0]=='START') or ($row[0]=='LOGIN') )
-			{$bgcolor='bgcolor="#B9CBFD"';} 
-		else
-			{$bgcolor='bgcolor="#9BB9FB"';}
-
-		$TC_log_date = date("Y-m-d H:i:s", $row[1]);
-
-		$manager_edit='';
-		if (strlen($row[6])>0) {$manager_edit = ' * ';}
-
-		if (preg_match('/LOGIN/', $row[0]))
-			{
-			$login_sec='';
-			$MAIN.="<tr $bgcolor><td><font size=2>$row[5]</td>";
-			$MAIN.="<td align=right><font size=2>$manager_edit</td>";
-			$MAIN.="<td align=right><font size=2>$row[0]</td>";
-			$MAIN.="<td align=right><font size=2> $TC_log_date</td>\n";
-			$MAIN.="<td align=right><font size=2> $row[4]</td>\n";
-			$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
-			$MAIN.="<td align=right><font size=2> </td></tr>\n";
-			}
-		if (preg_match('/LOGOUT/', $row[0]))
-			{
-			$login_sec = $row[3];
-			$total_login_time = ($total_login_time + $login_sec);
-			$event_hours = ($login_sec / 3600);
-			$event_hours_int = round($event_hours, 2);
-			$event_hours_int = intval("$event_hours_int");
-			$event_minutes = ($event_hours - $event_hours_int);
-			$event_minutes = ($event_minutes * 60);
-			$event_minutes_int = round($event_minutes, 0);
-			if ($event_minutes_int < 10) {$event_minutes_int = "0$event_minutes_int";}
-			$MAIN.="<tr $bgcolor><td><font size=2>$row[5]</td>";
-			$MAIN.="<td align=right><font size=2>$manager_edit</td>";
-			$MAIN.="<td align=right><font size=2>$row[0]</td>";
-			$MAIN.="<td align=right><font size=2> $TC_log_date</td>\n";
-			$MAIN.="<td align=right><font size=2> $row[4]</td>\n";
-			$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
-			$MAIN.="<td align=right><font size=2> $event_hours_int:$event_minutes_int</td></tr>\n";
-			}
-		$o++;
-	}
-if (strlen($login_sec)<1)
-	{
-	$login_sec = ($STARTtime - $row[1]);
-	$total_login_time = ($total_login_time + $login_sec);
-	}
-$total_login_hours = ($total_login_time / 3600);
-$total_login_hours_int = round($total_login_hours, 2);
-$total_login_hours_int = intval("$total_login_hours");
-$total_login_minutes = ($total_login_hours - $total_login_hours_int);
-$total_login_minutes = ($total_login_minutes * 60);
-$total_login_minutes_int = round($total_login_minutes, 0);
-if ($total_login_minutes_int < 10) {$total_login_minutes_int = "0$total_login_minutes_int";}
-
-$MAIN.="<tr><td align=right><font size=2> </td>";
-$MAIN.="<td align=right><font size=2> </td>\n";
-$MAIN.="<td align=right><font size=2> </td>\n";
-$MAIN.="<td align=right><font size=2> </td>\n";
-$MAIN.="<td align=right><font size=2><font size=2>"._QXZ("TOTAL")." </td>\n";
-$MAIN.="<td align=right><font size=2> $total_login_hours_int:$total_login_minutes_int  </td></tr>\n";
-
-$MAIN.="</TABLE></center>\n";
-
-
-
-
-
-
-
-$ENDtime = date("U");
-
-$RUNtime = ($ENDtime - $STARTtime);
-
-$MAIN.="\n\n\n<br><br><br>\n\n";
-
-
-$MAIN.="<font size=0>\n\n\n<br><br><br>\n"._QXZ("script runtime").": $RUNtime "._QXZ("seconds")."|$db_source</font>";
-
-$MAIN.="</TD></TR><TABLE>\n";
-$MAIN.="</body>\n";
-$MAIN.="</html>\n";
-
-if ($db_source == 'S')
-	{
-	mysqli_close($link);
-	$use_slave_server=0;
-	$db_source = 'M';
-	require("dbconnect_mysqli.php");
-	}
-
-$endMS = microtime();
-$startMSary = explode(" ",$startMS);
-$endMSary = explode(" ",$endMS);
-$runS = ($endMSary[0] - $startMSary[0]);
-$runM = ($endMSary[1] - $startMSary[1]);
-$TOTALrun = ($runS + $runM);
-
-$stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";
-if ($DB) {echo "|$stmt|\n";}
-$rslt=mysql_to_mysqli($stmt, $link);
-
-exit; 
-
 
 ?>

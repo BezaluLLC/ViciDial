@@ -1859,7 +1859,8 @@ manager_user VARCHAR(20),
 manager_ip VARCHAR(15),
 event_datestamp TIMESTAMP NOT NULL,
 tcid_link INT(9) UNSIGNED,
-index (user)
+index (user),
+index (event_epoch)
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_timeclock_status (
@@ -3802,4 +3803,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1470',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1471',db_schema_update_date=NOW(),reload_timestamp=NOW();

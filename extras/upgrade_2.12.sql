@@ -716,3 +716,7 @@ ALTER TABLE system_settings MODIFY label_comments VARCHAR(60) default '';
 ALTER TABLE vicidial_campaigns ADD allow_required_fields ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1470',db_schema_update_date=NOW() where db_schema_version < 1470;
+
+CREATE INDEX vtl_event_epoch on vicidial_timeclock_log (event_epoch);
+
+UPDATE system_settings SET db_schema_version='1471',db_schema_update_date=NOW() where db_schema_version < 1471;
