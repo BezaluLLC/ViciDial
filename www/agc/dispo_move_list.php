@@ -31,6 +31,7 @@
 # - exclude_status -	(Y,N) if set to Y, will trigger for all statuses EXCEPT for those listed in sale_status, default is N
 # - talk_time_trigger -	(0,1,2,3,...) if set to number greater than 0, will only trigger for talk_time at or above set number, default is 0
 # - called_count_trigger -	(1,2,3,...) if set to number greater than 0, will only trigger for called_count at or above set number, default is 0
+# - lead_age - (1,2,3,...) if set to number greater than 0, will only trigger for a lead entry_date this number of days old or older, default is 0
 # - new_list_id -	(999,etc...) the list_id that you want the matching status leads to be moved to
 # - reset_dialed -	(Y,N) if set to Y, will reset the called_since_last_reset flag on the lead
 # - populate_sp_old_list -	(Y,N) if set to Y, will populate the security_phrase field of the lead with the old list_id
@@ -53,6 +54,7 @@
 # 160309-1239 - Added talk_time_trigger and exclude_status options
 # 160801-1032 - Added called_count_trigger options
 # 160910-1354 - Added populate_... options
+# 161021-1016 - Added lead_age option
 #
 
 $api_script = 'movelist';
@@ -102,6 +104,10 @@ if (isset($_GET["populate_sp_old_list"]))			{$populate_sp_old_list=$_GET["popula
 	elseif (isset($_POST["populate_sp_old_list"]))	{$populate_sp_old_list=$_POST["populate_sp_old_list"];}
 if (isset($_GET["populate_comm_old_date"]))				{$populate_comm_old_date=$_GET["populate_comm_old_date"];}
 	elseif (isset($_POST["populate_comm_old_date"]))	{$populate_comm_old_date=$_POST["populate_comm_old_date"];}
+if (isset($_GET["lead_age"]))				{$lead_age=$_GET["lead_age"];}
+	elseif (isset($_POST["lead_age"]))		{$lead_age=$_POST["lead_age"];}
+if (isset($_GET["entry_date"]))				{$entry_date=$_GET["entry_date"];}
+	elseif (isset($_POST["entry_date"]))	{$entry_date=$_POST["entry_date"];}
 
 
 #$DB = '1';	# DEBUG override
@@ -113,10 +119,12 @@ $sale_status = "$TD$sale_status$TD";
 $search_value='';
 $match_found=0;
 $primary_match_found=0;
+$age_trigger=0;
 $k=0;
 
 $user=preg_replace("/\'|\"|\\\\|;| /","",$user);
 $pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+$lead_age = preg_replace('/[^_0-9]/', '', $lead_age);
 
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
@@ -152,14 +160,34 @@ if ($non_latin < 1)
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
 	}
 
-if ($DB>0) {echo "$lead_id|$search_field|$campaign_check|$sale_status|$dispo|$new_status|$user|$pass|$DB|$log_to_file|$talk_time|$talk_time_trigger|$exclude_status|$called_count|$called_count_trigger|\n";}
-
-if ( ( (strlen($called_count_trigger)>0) and ($called_count >= $called_count_trigger) ) or (strlen($called_count_trigger)<1) or ($called_count_trigger < 1) )
+if ($lead_age > 0)
 	{
-	if ( ( (strlen($talk_time_trigger)>0) and ($talk_time >= $talk_time_trigger) ) or (strlen($talk_time_trigger)<1) or ($talk_time_trigger < 1) )
+	if (strlen($entry_date) < 10)
+		{if ($DB>0) {echo "Entry date not set: |$entry_date|\n";}}
+	else
 		{
-		if ( ( (preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status!='Y') ) or ( (!preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status=='Y') ) )
-			{$primary_match_found=1;}
+		$entry_date_time = explode(' ',$entry_date);
+		$entry_YYYYMMDD = explode('-',$entry_date_time[0]);
+		$entry_HHMMSS = explode(':',$entry_date_time[1]);
+		$entry_epoch = mktime($entry_YYYYMMDD[0], $entry_YYYYMMDD[1], $entry_YYYYMMDD[2], $entry_YYYYMMDD[1], $entry_YYYYMMDD[2]-1, $entry_YYYYMMDD[0]);
+		$entry_age = (($STARTtime - $entry_epoch) / 86400);
+		if ($lead_age < $entry_age)
+			{$age_trigger=1;}
+		if ($DB>0) {echo "Lead age debug: |$entry_date|$lead_age|$entry_age|$entry_YYYYMMDD[0]|$entry_YYYYMMDD[1]|$entry_YYYYMMDD[2]|$entry_HHMMSS[0]|$entry_HHMMSS[1]|$entry_HHMMSS[2]|($entry_epoch <> $STARTtime)|\n";}
+		}
+	}
+
+if ($DB>0) {echo "$lead_id|$search_field|$campaign_check|$sale_status|$dispo|$new_status|$user|$pass|$DB|$log_to_file|$talk_time|$talk_time_trigger|$exclude_status|$called_count|$called_count_trigger|$lead_age|$age_trigger|\n";}
+
+if ( ( ($lead_age > 0) and ($age_trigger > 0) ) or ($lead_age < 1) or (strlen($lead_age) < 1) )
+	{
+	if ( ( (strlen($called_count_trigger)>0) and ($called_count >= $called_count_trigger) ) or (strlen($called_count_trigger)<1) or ($called_count_trigger < 1) )
+		{
+		if ( ( (strlen($talk_time_trigger)>0) and ($talk_time >= $talk_time_trigger) ) or (strlen($talk_time_trigger)<1) or ($talk_time_trigger < 1) )
+			{
+			if ( ( (preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status!='Y') ) or ( (!preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status=='Y') ) )
+				{$primary_match_found=1;}
+			}
 		}
 	}
 $first_pass_vars = "$new_list_id|$reset_dialed|$sale_status|$talk_time_trigger|$exclude_status$called_count_trigger|";
@@ -180,38 +208,62 @@ else
 		$exclude_status='';
 		$talk_time_trigger='';
 		$called_count_trigger='';
+		$lead_age=0;
 		$statusfield = "sale_status_$k";
 		$excludefield = "exclude_status_$k";
 		$talktriggerfield = "talk_time_trigger_$k";
 		$counttriggerfield = "called_count_trigger_$k";
+		$agetriggerfield = "lead_age_$k";
 		if (isset($_GET["$excludefield"]))			{$exclude_status=$_GET["$excludefield"];}
 			elseif (isset($_POST["$excludefield"]))	{$exclude_status=$_POST["$excludefield"];}
 		if (isset($_GET["$talktriggerfield"]))			{$talk_time_trigger=$_GET["$talktriggerfield"];}
 			elseif (isset($_POST["$talktriggerfield"]))	{$talk_time_trigger=$_POST["$talktriggerfield"];}
 		if (isset($_GET["$counttriggerfield"]))				{$called_count_trigger=$_GET["$counttriggerfield"];}
 			elseif (isset($_POST["$counttriggerfield"]))	{$called_count_trigger=$_POST["$counttriggerfield"];}
+		if (isset($_GET["$agetriggerfield"]))			{$lead_age=$_GET["$agetriggerfield"];}
+			elseif (isset($_POST["$agetriggerfield"]))	{$lead_age=$_POST["$agetriggerfield"];}
 		if (isset($_GET["$statusfield"]))			{$sale_status=$_GET["$statusfield"];}
 			elseif (isset($_POST["$statusfield"]))	{$sale_status=$_POST["$statusfield"];}
 		$sale_status = "$TD$sale_status$TD";
 
-		if ($DB) {echo _QXZ("MULTI_MATCH CHECK:")." $k|$sale_status|$statusfield|$exclude_status|$excludefield|$talk_time_trigger|$talktriggerfield|$called_count_trigger|$counttriggerfield|\n";}
-
-		if ( ( (strlen($called_count_trigger)>0) and ($called_count >= $called_count_trigger) ) or (strlen($called_count_trigger)<1) or ($called_count_trigger < 1) )
+		if ($lead_age > 0)
 			{
-			if ( ( (strlen($talk_time_trigger)>0) and ($talk_time >= $talk_time_trigger) ) or (strlen($talk_time_trigger)<1) or ($talk_time_trigger < 1) )
+			if (strlen($entry_date) < 10)
+				{if ($DB>0) {echo "Entry date not set: |$entry_date|\n";}}
+			else
 				{
-				if (strlen($sale_status)>0)
+				$entry_date_time = explode(' ',$entry_date);
+				$entry_YYYYMMDD = explode('-',$entry_date_time[0]);
+				$entry_HHMMSS = explode(':',$entry_date_time[1]);
+				$entry_epoch = mktime($entry_YYYYMMDD[0], $entry_YYYYMMDD[1], $entry_YYYYMMDD[2], $entry_YYYYMMDD[1], $entry_YYYYMMDD[2]-1, $entry_YYYYMMDD[0]);
+				$entry_age = (($STARTtime - $entry_epoch) / 86400);
+				if ($lead_age < $entry_age)
+					{$age_trigger=1;}
+				if ($DB>0) {echo "Lead age debug: |$entry_date|$lead_age|$entry_age|$entry_YYYYMMDD[0]|$entry_YYYYMMDD[1]|$entry_YYYYMMDD[2]|$entry_HHMMSS[0]|$entry_HHMMSS[1]|$entry_HHMMSS[2]|($entry_epoch <> $STARTtime)|\n";}
+				}
+			}
+
+		if ($DB) {echo _QXZ("MULTI_MATCH CHECK:")." $k|$sale_status|$statusfield|$exclude_status|$excludefield|$talk_time_trigger|$talktriggerfield|$called_count_trigger|$counttriggerfield|$lead_age|$agetriggerfield|\n";}
+
+		if ( ( ($lead_age > 0) and ($age_trigger > 0) ) or ($lead_age < 1) or (strlen($lead_age) < 1) )
+			{
+			if ( ( (strlen($called_count_trigger)>0) and ($called_count >= $called_count_trigger) ) or (strlen($called_count_trigger)<1) or ($called_count_trigger < 1) )
+				{
+				if ( ( (strlen($talk_time_trigger)>0) and ($talk_time >= $talk_time_trigger) ) or (strlen($talk_time_trigger)<1) or ($talk_time_trigger < 1) )
 					{
-					if ( ( (preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status!='Y') ) or ( (!preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status=='Y') ) )
+					if (strlen($sale_status)>0)
 						{
-						$match_found=1;
-						$newlistfield = "new_list_id_$k";
-						$resetfield = "reset_dialed_$k";
-						if (isset($_GET["$newlistfield"]))			{$new_list_id=$_GET["$newlistfield"];}
-							elseif (isset($_POST["$newlistfield"]))	{$new_list_id=$_POST["$newlistfield"];}
-						if (isset($_GET["$resetfield"]))			{$reset_dialed=$_GET["$resetfield"];}
-							elseif (isset($_POST["$resetfield"]))	{$reset_dialed=$_POST["$resetfield"];}
-						if ($DB) {echo _QXZ("MULTI_MATCH:")." $k|$sale_status|$new_list_id|$reset_dialed|$exclude_status|$talk_time_trigger|$called_count_trigger|\n";}
+						if ( ( (preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status!='Y') ) or ( (!preg_match("/$TD$dispo$TD/",$sale_status)) and ($exclude_status=='Y') ) )
+							{
+							$match_found=1;
+							$newlistfield = "new_list_id_$k";
+							$resetfield = "reset_dialed_$k";
+							if (isset($_GET["$newlistfield"]))			{$new_list_id=$_GET["$newlistfield"];}
+								elseif (isset($_POST["$newlistfield"]))	{$new_list_id=$_POST["$newlistfield"];}
+							if (isset($_GET["$resetfield"]))			{$reset_dialed=$_GET["$resetfield"];}
+								elseif (isset($_POST["$resetfield"]))	{$reset_dialed=$_POST["$resetfield"];}
+							if ($DB) {echo _QXZ("MULTI_MATCH:")." $k|$sale_status|$new_list_id|$reset_dialed|$exclude_status|$talk_time_trigger|$called_count_trigger|\n";}
+							}
 						}
 					}
 				}
