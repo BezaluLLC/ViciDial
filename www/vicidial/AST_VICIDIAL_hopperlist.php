@@ -1,7 +1,7 @@
 <?php 
 # AST_VICIDIAL_hopperlist.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -23,6 +23,7 @@
 # 140108-0729 - Added webserver and hostname to report logging
 # 141114-0700 - Finalized adding QXZ translation to all admin files
 # 141230-0048 - Added code for on-the-fly language translations display
+# 161026-0931 - Added links to leads and lists, added phone code, age, last call columns
 #
 
 $startMS = microtime();
@@ -202,6 +203,27 @@ $STARTtime = date("U");
 if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($server_ip)) {$server_ip = '10.10.10.15';}
+$isdst = date("I");
+
+### Grab Server GMT value from the database
+$SERVER_GMT=-5;
+$stmt="SELECT local_gmt FROM servers where active='Y' limit 1;";
+$rslt=mysql_to_mysqli($stmt, $link);
+$gmt_recs = mysqli_num_rows($rslt);
+if ($gmt_recs > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$DBSERVER_GMT		=		$row[0];
+	if (strlen($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
+	if ($isdst) {$SERVER_GMT++;} 
+	}
+else
+	{
+	$SERVER_GMT = date("O");
+	$SERVER_GMT = preg_replace("/\+/i","",$SERVER_GMT);
+	$SERVER_GMT = ($SERVER_GMT + 0);
+	$SERVER_GMT = ($SERVER_GMT / 100);
+	}
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {$HTML_text.="|$stmt|\n";}
@@ -303,11 +325,11 @@ else
 
 	echo "\n";
 	echo "---------- "._QXZ("LEADS IN HOPPER")."\n";
-	echo "+------+--------+-----------+------------+------------+-------+--------+-------+--------+-------+-------+----------------------+\n";
-	echo "|"._QXZ("ORDER",5)." |"._QXZ("PRIORITY",8)."| "._QXZ("LEAD ID",9)." | "._QXZ("LIST ID",10)." | "._QXZ("PHONE NUM",10)." | "._QXZ("STATE",5)." | "._QXZ("STATUS",6)." | "._QXZ("COUNT",5)." | "._QXZ("GMT",6)." | "._QXZ("ALT",5)." | "._QXZ("SOURCE",6)."| "._QXZ("VENDOR LEAD CODE",20)." |\n";
-	echo "+------+--------+-----------+------------+------------+-------+--------+-------+--------+-------+-------+----------------------+\n";
+	echo "+------+--------+-----------+------------+-------------+---------+-------+--------+-------+--------+-------+-------+----------------------+----------+-----------+\n";
+	echo "|"._QXZ("ORDER",5)." |"._QXZ("PRIORITY",8)."| "._QXZ("LEAD ID",9)." | "._QXZ("LIST ID",10)." | "._QXZ("PHONE NUM",11)." | "._QXZ("PH CODE",7)." | "._QXZ("STATE",5)." | "._QXZ("STATUS",6)." | "._QXZ("COUNT",5)." | "._QXZ("GMT",6)." | "._QXZ("ALT",5)." | "._QXZ("SOURCE",6)."| "._QXZ("VENDOR LEAD CODE",20)." | "._QXZ("AGE DAYS",8)." | "._QXZ("LAST CALL",9)." |\n";
+	echo "+------+--------+-----------+------------+-------------+---------+-------+--------+-------+--------+-------+-------+----------------------+----------+-----------+\n";
 
-	$stmt="select vicidial_hopper.lead_id,phone_number,vicidial_hopper.state,vicidial_list.status,called_count,vicidial_hopper.gmt_offset_now,hopper_id,alt_dial,vicidial_hopper.list_id,vicidial_hopper.priority,vicidial_hopper.source,vicidial_hopper.vendor_lead_code from vicidial_hopper,vicidial_list where vicidial_hopper.campaign_id='" . mysqli_real_escape_string($link, $group) . "' and vicidial_hopper.status='READY' and vicidial_hopper.lead_id=vicidial_list.lead_id $LOGallowed_campaignsSQL order by priority desc,hopper_id limit 5000;";
+	$stmt="select vicidial_hopper.lead_id,phone_number,vicidial_hopper.state,vicidial_list.status,called_count,vicidial_hopper.gmt_offset_now,hopper_id,alt_dial,vicidial_hopper.list_id,vicidial_hopper.priority,vicidial_hopper.source,vicidial_hopper.vendor_lead_code, phone_code,UNIX_TIMESTAMP(entry_date),UNIX_TIMESTAMP(last_local_call_time) from vicidial_hopper,vicidial_list where vicidial_hopper.campaign_id='" . mysqli_real_escape_string($link, $group) . "' and vicidial_hopper.status='READY' and vicidial_hopper.lead_id=vicidial_list.lead_id $LOGallowed_campaignsSQL order by priority desc,hopper_id limit 5000;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$users_to_print = mysqli_num_rows($rslt);
@@ -343,7 +365,8 @@ else
 
 		$FMT_i =		sprintf("%-4s", $i);
 		$lead_id =		sprintf("%-9s", $row[0]);
-		$phone_number =	sprintf("%-10s", $row[1]);
+		$lead_id_ns = 		$row[0];
+		$phone_number =	sprintf("%-11s", $row[1]);
 		$state =		sprintf("%-5s", $row[2]);
 		$status =		sprintf("%-6s", $row[3]);
 		$count =		sprintf("%-5s", $row[4]);
@@ -351,18 +374,60 @@ else
 		$hopper_id =	sprintf("%-6s", $row[6]);
 		$alt_dial =		sprintf("%-5s", $row[7]);
 		$list_id =		sprintf("%-10s", $row[8]);
+		$list_id_ns =		$row[8];
 		$priority =		sprintf("%-6s", $row[9]);
 		$source =		sprintf("%-5s", $row[10]);
 		$vendor_lead_code =	sprintf("%-20s", $row[11]);
+		$phone_code =		sprintf("%-7s", $row[12]);
+		$entry_epoch =		$row[13];
+		$last_call_epoch =	$row[14];
 
-		if ($DB) {echo "| $FMT_i | $priority | $lead_id | $list_id | $phone_number | $state | $status | $count | $gmt | $hopper_id |\n";}
-		else {echo "| $FMT_i | $priority | $lead_id | $list_id | $phone_number | $state | $status | $count | $gmt | $alt_dial | $source | $vendor_lead_code |\n";}
+		$lead_age = intval(($STARTtime - $entry_epoch) / 86400);
+		$lead_age =		sprintf("%-8s", $lead_age);
+
+		$lead_offset = ($gmt - $SERVER_GMT);
+		if (($lead_offset > 0) or ($lead_offset < 0))
+			{$lead_offset = ($lead_offset * 3600);}
+		$last_call_epoch = ($last_call_epoch + $lead_offset);
+		$last_call_age = intval(($STARTtime - $last_call_epoch) / 3600);
+		if ($DB > 0) {echo "GMT: $lead_offset($gmt|$SERVER_GMT)|LC: $last_call_epoch($row[14])|$last_call_age|\n";}
+		if ($last_call_age < 24)
+			{
+			$last_call_age_TEXT = $last_call_age." "._QXZ("HOURS",6);
+			$last_call_age_TEXT = sprintf("%-9s", $last_call_age_TEXT);
+			}
+		else
+			{
+			$last_call_age = intval(($last_call_age) / 24);
+			if ($last_call_age < 365)
+				{
+				$last_call_age_TEXT = $last_call_age." "._QXZ("DAYS",6);
+				$last_call_age_TEXT = sprintf("%-9s", $last_call_age_TEXT);
+				}
+			else
+				{
+				$last_call_age = intval(($last_call_age) / 365);
+				if ($last_call_age < 30)
+					{
+					$last_call_age_TEXT = $last_call_age." "._QXZ("YEARS",6);
+					$last_call_age_TEXT = sprintf("%-9s", $last_call_age_TEXT);
+					}
+				else
+					{
+					$last_call_age_TEXT = _QXZ("NEVER",9);
+					$last_call_age_TEXT = sprintf("%-9s", $last_call_age_TEXT);
+					}
+				}
+			}
+
+
+		if ($DB) {echo "| $FMT_i | $priority | <a href='./admin_modify_lead.php?lead_id=$lead_id_ns&archive_search=No&archive_log=0'>$lead_id</a> | <a href='./admin.php?ADD=311&list_id=$list_id_ns'>$list_id</a> | $phone_number  $phone_code || $state | $status | $count | $gmt | $alt_dial | $source | $vendor_lead_code | $lead_age | $last_call_age_TEXT | $hopper_id |\n";}
+		else {echo "| $FMT_i | $priority | <a href='./admin_modify_lead.php?lead_id=$lead_id_ns&archive_search=No&archive_log=0'>$lead_id</a> | <a href='./admin.php?ADD=311&list_id=$list_id_ns'>$list_id</a> | $phone_number | $phone_code | $state | $status | $count | $gmt | $alt_dial | $source | $vendor_lead_code | $lead_age | $last_call_age_TEXT |\n";}
 
 		$i++;
 		}
 
-	echo "+------+--------+-----------+------------+------------+-------+--------+-------+--------+-------+-------+----------------------+\n";
-
+	echo "+------+--------+-----------+------------+-------------+---------+-------+--------+-------+--------+-------+-------+----------------------+----------+-----------+\n";
 	}
 
 if ($db_source == 'S')
