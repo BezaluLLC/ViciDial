@@ -12,6 +12,7 @@
 # 160303-0055 - Added code for chat transfers
 # 160725-1711 - Fixed nested iframe issue
 # 160805-2315 - Added coding to show logos in customer display
+# 161026-2230 - Added translation QXZ to untranslated text
 #
 
 require("dbconnect_mysqli.php");
@@ -460,7 +461,7 @@ if ($action=="update_chat_window" && $chat_id) {
 
 #				echo "<font class='chat_title bold'>"._QXZ("Waiting for next available agent...")."</font><BR/>\n";
 
-				$chat_status="<font color='#990'>WAITING</font>";
+				$chat_status="<font color='#990'>"._QXZ("WAITING")."</font>";
 				echo "$chat_status|";
 
 				$chat_count_stmt="SELECT chat_id from vicidial_live_chats vlc, vicidial_inbound_groups vig where vlc.status='WAITING' and (vlc.group_id='$group_id' or (vlc.group_id='AGENTDIRECT_CHAT')) and (transferring_agent is null or transferring_agent!='$user') and vlc.group_id=vig.group_id order by queue_priority desc, chat_id asc";
@@ -474,9 +475,9 @@ if ($action=="update_chat_window" && $chat_id) {
 					}
 				}
 				if ($people_ahead_of_you>0) {
-					echo "<font class='chat_title bold'>There are <font color='#FF0000'>$people_ahead_of_you</font> customer(s) in chat queue ahead of you</font>";
+					echo "<font class='chat_title bold'>"._QXZ("There are")." <font color='#FF0000'>$people_ahead_of_you</font> "._QXZ("customer(s) in chat queue ahead of you")."</font>";
 				} else {
-					echo "<font class='chat_title bold' color='#FF0000'>You are the next customer in line</font>";
+					echo "<font class='chat_title bold' color='#FF0000'>"._QXZ("You are the next customer in line")."</font>";
 				}		
 				
 #				echo "</td>\n";
