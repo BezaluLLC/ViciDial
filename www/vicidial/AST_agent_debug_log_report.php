@@ -373,9 +373,9 @@ if ($SUBMIT) {
 		if ($lower_limit+999>=mysqli_num_rows($rpt_rslt)) {$upper_limit=($lower_limit+mysqli_num_rows($rpt_rslt)%1000)-1;} else {$upper_limit=$lower_limit+999;}
 		
 		$MAIN.="--- "._QXZ("AGENT SCREEN DEBUG LOG RECORDS FOR")." $query_date, $query_date_D "._QXZ("TO")." $query_date_T $server_rpt_string, "._QXZ("RECORDS")." #$lower_limit-$upper_limit               <a href=\"$PHP_SELF?SUBMIT=$SUBMIT&DB=$DB&type=$type&query_date=$query_date&query_date_D=$query_date_D&query_date_T=$query_date_T&agent_user=$agent_user&lower_limit=$lower_limit&upper_limit=$upper_limit&file_download=1\">["._QXZ("DOWNLOAD")."]</a>\n";
-		$agntdb_rpt.="+----------------------+---------------------+---------------------+------------+----------------------+------------------------------------------+------------+------------------------------------------+\n";
-		$agntdb_rpt.="| "._QXZ("USER",20)." | "._QXZ("SCREEN DATE",19)." | "._QXZ("DB DATE",19)." | "._QXZ("RUN TIME",10)." | "._QXZ("SCRIPT",20)." | "._QXZ("ACTION",40)." | "._QXZ("LEAD_ID",10)." | "._QXZ("STAGE",40)." |\n";
-		$agntdb_rpt.="+----------------------+---------------------+---------------------+------------+----------------------+------------------------------------------+------------+------------------------------------------+\n";
+		$agntdb_rpt.="+----------------------+---------------------+---------------------+------------+----------------------+------------------------------------------+------------+----------------------------------------------------+\n";
+		$agntdb_rpt.="| "._QXZ("USER",20)." | "._QXZ("SCREEN DATE",19)." | "._QXZ("DB DATE",19)." | "._QXZ("RUN TIME",10)." | "._QXZ("SCRIPT",20)." | "._QXZ("ACTION",40)." | "._QXZ("LEAD_ID",10)." | "._QXZ("STAGE",50)." |\n";
+		$agntdb_rpt.="+----------------------+---------------------+---------------------+------------+----------------------+------------------------------------------+------------+----------------------------------------------------+\n";
 		$CSV_text="\""._QXZ("USER")."\",\""._QXZ("SCREEN DATE")."\",\""._QXZ("DB DATE")."\",\""._QXZ("RUN TIME")."\",\""._QXZ("SCRIPT")."\",\""._QXZ("ACTION")."\",\""._QXZ("LEAD_ID")."\",\""._QXZ("STAGE")."\"\n";
 
 		for ($i=1; $i<=mysqli_num_rows($rpt_rslt); $i++) 
@@ -398,11 +398,11 @@ if ($SUBMIT) {
 				if (strlen($row["action"])>37) {$row["action"]=substr($row["action"],0,37)."...";}
 				$agntdb_rpt.=" | ".sprintf("%-40s", $row["action"]); 
 				$agntdb_rpt.=" | ".sprintf("%-10s", $row["lead_id"]); 
-				if (strlen($row["stage"])>37) {$row["stage"]=substr($row["stage"],0,37)."...";}
-				$agntdb_rpt.=" | ".sprintf("%-40s", $row["stage"])." |\n"; 
+				if (strlen($row["stage"])>47) {$row["stage"]=substr($row["stage"],0,47)."...";}
+				$agntdb_rpt.=" | ".sprintf("%-50s", $row["stage"])." |\n"; 
 				}
 			}
-		$agntdb_rpt.="+----------------------+---------------------+---------------------+------------+----------------------+------------------------------------------+------------+------------------------------------------+\n";
+		$agntdb_rpt.="+----------------------+---------------------+---------------------+------------+----------------------+------------------------------------------+------------+----------------------------------------------------+\n";
 
 		$agntdb_rpt_hf="";
 		$ll=$lower_limit-1000;

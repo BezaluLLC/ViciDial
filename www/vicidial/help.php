@@ -97,6 +97,7 @@
 # 160915-0954 - Added ---READONLY--- option for field labels
 # 160926-1351 - Added user_new_lead_limit entries
 # 161018-2245 - Added allow_required_fields
+# 161028-1548 - Added agent_xfer_park_3way entry for system_settings
 #
 
 
@@ -4937,6 +4938,11 @@ UK_DASH 00 0000-0000 - <?php echo _QXZ("UK dash separated phone number with spac
 AU_SPAC 000 000 000 - <?php echo _QXZ("Australia space separated phone number"); ?><BR>
 IT_DASH 0000-000-000 - <?php echo _QXZ("Italy dash separated phone number"); ?><BR>
 FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number"); ?><BR>
+
+<BR>
+<A NAME="settings-agent_xfer_park_3way">
+<BR>
+<B><?php echo _QXZ("Agent Screen Park Xfer Button"); ?> -</B><?php echo _QXZ("This option defines whether the agent screen can have a button in the Transfer Conference frame that will allow the agent to park a 3way call. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="settings-agentonly_callback_campaign_lock">

@@ -708,7 +708,8 @@ webphone_dialpad_override ENUM('DISABLED','Y','N','TOGGLE','TOGGLE_OFF') default
 admin_viewable_groups TEXT,
 admin_viewable_call_times TEXT,
 allowed_custom_reports VARCHAR(2000) default '',
-agent_allowed_chat_groups TEXT
+agent_allowed_chat_groups TEXT,
+agent_xfer_park_3way ENUM('Y','N') default 'Y'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns (
@@ -1673,7 +1674,8 @@ ofcom_uk_drop_calc ENUM('1','0') default '0',
 agent_screen_colors VARCHAR(20) default 'default',
 script_remove_js ENUM('1','0') default '1',
 manual_auto_next ENUM('1','0') default '0',
-user_new_lead_limit ENUM('1','0') default '0'
+user_new_lead_limit ENUM('1','0') default '0',
+agent_xfer_park_3way ENUM('1','0') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3803,4 +3805,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1471',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1472',db_schema_update_date=NOW(),reload_timestamp=NOW();

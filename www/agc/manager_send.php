@@ -130,13 +130,14 @@
 # 151230-0910 - Fixed transfer of parked call logging issue #901
 # 160101-1130 - Added code to handle routing initiated recordings
 # 160912-2310 - Fixed StopMonitorConf bug involving agent-invoked commands to stop recording
+# 161029-0845 - Added RedirectToParkXfer and RedirectFromParkXfer functions
 #
 
-$version = '2.12-77';
-$build = '160912-2310';
+$version = '2.12-78';
+$build = '161029-0845';
 $php_script = 'manager_send.php';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=138;
+$mysql_log_count=142;
 $one_mysql_log=0;
 $SSagent_debug_logging=0;
 $startMS = microtime();
@@ -883,6 +884,7 @@ if ($ACTION=="Hangup")
 # ACTION=Redirect, RedirectName, RedirectNameVmail, RedirectToPark, RedirectFromPark, RedirectVD, RedirectXtra, RedirectXtraCX
 # - insert Redirect Manager statement using extensions name
 ######################
+if (strlen($stage)<1) {$stage=$ACTION;}
 if ($ACTION=="RedirectVD")
 	{
 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($campaign)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($uniqueid)<2) or (strlen($lead_id)<1) )
@@ -1458,6 +1460,67 @@ if ($ACTION=="RedirectFromParkIVR")
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02091',$user,$server_ip,$session_name,$one_mysql_log);}
+	}
+
+
+if ($ACTION=="RedirectToParkXfer")
+	{
+	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($extenName)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($parkedby)<1) )
+		{
+		$channel_live=0;
+		echo _QXZ("One of these variables is not valid:")."\n";
+		echo _QXZ("Channel %1s must be greater than 2 characters",0,'',$channel)."\n";
+		echo _QXZ("queryCID %1s must be greater than 14 characters",0,'',$queryCID)."\n";
+		echo _QXZ("exten %1s must be set",0,'',$exten)."\n";
+		echo _QXZ("extenName %1s must be set",0,'',$extenName)."\n";
+		echo _QXZ("ext_context %1s must be set",0,'',$ext_context)."\n";
+		echo _QXZ("ext_priority %1s must be set",0,'',$ext_priority)."\n";
+		echo _QXZ("parkedby %1s must be set",0,'',$parkedby)."\n";
+		echo _QXZ("RedirectToParkXfer Action not sent")."\n";
+		}
+	else
+		{
+		if ($stage!="2NDXfeR")
+			{
+			if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
+			$stmt = "INSERT INTO parked_channels values('$channel','$server_ip','$CalLCID','$extenName','$parkedby','$NOW_TIME');";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02141',$user,$server_ip,$session_name,$one_mysql_log);}
+			$ACTION="Redirect";
+
+		#	$fp = fopen ("./vicidial_debug.txt", "a");
+		#	fwrite ($fp, "$NOW_TIME|MS_LOG_0|$queryCID|$stmt|\n");
+		#	fclose($fp);
+			}
+		}
+	}
+
+if ($ACTION=="RedirectFromParkXfer")
+	{
+	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($exten)<1) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) )
+		{
+		$channel_live=0;
+		echo _QXZ("One of these variables is not valid:")."\n";
+		echo _QXZ("Channel %1s must be greater than 2 characters",0,'',$channel)."\n";
+		echo _QXZ("queryCID %1s must be greater than 14 characters",0,'',$queryCID)."\n";
+		echo _QXZ("exten %1s must be set",0,'',$exten)."\n";
+		echo _QXZ("ext_context %1s must be set",0,'',$ext_context)."\n";
+		echo _QXZ("ext_priority %1s must be set",0,'',$ext_priority)."\n\n";
+		echo _QXZ("RedirectFromParkXfer Action not sent")."\n";
+		}
+	else
+		{
+		if ($stage!="2NDXfeR")
+			{
+			if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
+			$stmt = "DELETE FROM parked_channels where server_ip='$server_ip' and channel='$channel';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02142',$user,$server_ip,$session_name,$one_mysql_log);}
+			$ACTION="Redirect";
+			}
+		}
 	}
 
 
@@ -2201,7 +2264,7 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 			{
 			$stmt="SELECT recording_id,filename FROM routing_initiated_recordings where user='$user' and processed='0' order by launch_time desc limit 1;";
 			$rslt=mysql_to_mysqli($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02139',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
 			$rir_ct = mysqli_num_rows($rslt);
 			if ($rir_ct > 0)
@@ -2213,7 +2276,7 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 				$stmt = "UPDATE routing_initiated_recordings SET processed='1' where recording_id='$recording_id';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_to_mysqli($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02140',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 			else
 				{

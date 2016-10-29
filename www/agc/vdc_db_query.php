@@ -412,10 +412,11 @@
 # 160901-1714 - Added last_local_call_time sent to agent screen with lead info
 # 160926-1053 - Fix for inbound call notes display
 # 161013-2226 - Added user_new_lead_limit option code
+# 161029-1026 - Added more agent debug logging details
 #
 
-$version = '2.12-306';
-$build = '161013-2226';
+$version = '2.12-307';
+$build = '161029-1026';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=658;
@@ -6650,6 +6651,7 @@ if ($ACTION == 'VDADREcheckINCOMING')
 			$call_server_ip	=$row[4];
 				if (strlen($call_server_ip)<7) {$call_server_ip = $server_ip;}
 			echo "1\n" . $lead_id . '|' . $uniqueid . '|' . $callerid . '|' . $channel . '|' . $call_server_ip . "|\n";
+			$stage = $callerid . '|' . $channel . '|' . $call_server_ip . '|' . $uniqueid;
 			}
 		}
 	}
@@ -7985,8 +7987,9 @@ if ($ACTION == 'VDADcheckINCOMING')
 					}
 				##### END special filtering and response for Vtiger account balance function #####
 				}
+			$stage = $VDADchannel_group . '|' . $call_type . '|' . $uniqueid . '|' . $callerid . '|' . $channel . '|' . $call_server_ip;
 			}
-			else
+		else
 			{
 			echo "0\n";
 		#	echo "No calls in QUEUE for $user on $server_ip\n";
@@ -7995,6 +7998,8 @@ if ($ACTION == 'VDADcheckINCOMING')
 			}
 		}
 	}
+
+
 #######################################################################################
 ### XFERemail - for auto-dial VICIDiaL dialing this will check for emails
 ###                          in the vicidial_email_list table in NEW status, then
@@ -8043,6 +8048,7 @@ if ($ACTION == 'ManagerChatsCheck')
 	$upd_row=mysqli_fetch_row($upd_rslt);
 	$message_alert=$upd_row[0];
 	echo "$active_chats|$unread_messages|$message_alert";
+	$stage = "$active_chats|$unread_messages|$message_alert";
 	}
 
 #######################################################################################
@@ -11718,6 +11724,7 @@ if ($ACTION == 'updateDISPO')
 	############################################
 	### END Issue Dispo Call URL if defined
 	############################################
+	$stage .= "|$call_type|$dispo_choice|";
 	}
 
 
@@ -11898,6 +11905,7 @@ if ($ACTION == 'updateLEAD')
 
 		}
 	echo _QXZ("Lead %1s information has%2s been updated",0,'',$lead_id,$DO_NOT_UPDATE_text)."\n";
+	$stage = "$DO_NOT_UPDATE|$DO_NOT_UPDATEphone|$random";
 	}
 
 
@@ -14767,6 +14775,7 @@ if ($ACTION == 'CalLBacKCounT')
 	$cbcount_live=$row[0];
 
 	echo "$cbcount|$cbcount_live";
+	$stage = "$campaign|$cbcount|$cbcount_live";
 	}
 
 
@@ -14805,6 +14814,7 @@ if ($ACTION == 'DiaLableLeaDsCounT')
 		}
 
 	echo "$DLcount";
+	$stage = $DLcount;
 	}
 
 

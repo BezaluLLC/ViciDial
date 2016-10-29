@@ -528,10 +528,11 @@
 # 160901-1728 - Added last_local_call_time display field
 # 160915-0955 - Added ---READONLY--- option for most screen labels
 # 161019-0031 - Added ---REQUIRED--- option for most screen labels
+# 161029-0858 - Added option to park xfer channel
 #
 
-$version = '2.12-497c';
-$build = '161019-0031';
+$version = '2.12-498c';
+$build = '161029-0858';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -630,7 +631,7 @@ if ($sl_ct > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -667,6 +668,7 @@ if ($qm_conf_ct > 0)
 	$default_phone_code =				$row[26];
 	$agent_screen_colors =				$row[27];
 	$SSmanual_auto_next =				$row[28];
+	$SSagent_xfer_park_3way =			$row[29];
 	}
 else
 	{
@@ -1310,7 +1312,7 @@ else
 			$AgentAlert_allowed = $VU_allow_alerts;
 
 			### Gather timeclock and shift enforcement restriction settings
-			$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial,agent_fullscreen,webphone_url_override,webphone_dialpad_override,webphone_systemkey_override,admin_viewable_groups from vicidial_user_groups where user_group='$VU_user_group';";
+			$stmt="SELECT forced_timeclock_login,shift_enforcement,group_shifts,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial,agent_fullscreen,webphone_url_override,webphone_dialpad_override,webphone_systemkey_override,admin_viewable_groups,agent_xfer_park_3way from vicidial_user_groups where user_group='$VU_user_group';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01052',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysqli_fetch_row($rslt);
@@ -1343,6 +1345,8 @@ else
 				{$agent_xfer_dial_with_customer=1;}
 			if ($row[11] == 'Y')
 				{$agent_xfer_park_customer_dial=1;}
+			if ( ($row[17] == 'Y') and ($SSagent_xfer_park_3way > 0) )
+				{$agent_xfer_park_3way=1;}
 			if ($VU_agent_call_log_view_override == 'Y')
 				{$agent_call_log_view=1;}
 			if ($VU_agent_call_log_view_override == 'N')
@@ -4307,6 +4311,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var agent_xfer_blind_transfer='<?php echo $agent_xfer_blind_transfer ?>';
 	var agent_xfer_dial_with_customer='<?php echo $agent_xfer_dial_with_customer ?>';
 	var agent_xfer_park_customer_dial='<?php echo $agent_xfer_park_customer_dial ?>';
+	var agent_xfer_park_3way='<?php echo $agent_xfer_park_3way ?>';
 	var EAphone_code='';
 	var EAphone_number='';
 	var EAalt_phone_notes='';
@@ -4528,6 +4533,12 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		image_LB_ivrgrabparkedcall.src="./images/<?php echo _QXZ("vdc_LB_grabivrparkcall.gif") ?>";
 	var image_LB_ivrparkcall = new Image();
 		image_LB_ivrparkcall.src="./images/<?php echo _QXZ("vdc_LB_ivrparkcall.gif") ?>";
+	var image_XB_parkxferline_ON = new Image();
+		image_XB_parkxferline_ON.src="./images/<?php echo _QXZ("vdc_XB_parkxferline_ON.gif") ?>";
+	var image_XB_parkxferline_OFF = new Image();
+		image_XB_parkxferline_OFF.src="./images/<?php echo _QXZ("vdc_XB_parkxferline_OFF.gif") ?>";
+	var image_XB_parkxferline_GRAB = new Image();
+		image_XB_parkxferline_GRAB.src="./images/<?php echo _QXZ("vdc_XB_parkxferline_GRAB.gif") ?>";
 	var image_internal_chat_OFF = new Image();
 		image_internal_chat_OFF.src="./images/<?php echo _QXZ("vdc_tab_chat_internal.gif") ?>";
 	var image_internal_chat_ON = new Image();
@@ -4850,8 +4861,6 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 // filter manual dialstring and pass on to originate call
 	function SendManualDial(taskFromConf,SMDclick)
 		{
-		if (SMDclick=='YES')
-			{button_click_log = button_click_log + "" + SQLdate + "-----SendManualDial---" + taskFromConf + "|";}
 		conf_dialed=1;
 		var sending_group_alias = 0;
 		// Dial With Customer button
@@ -4893,6 +4902,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				if (active_group_alias.length > 1)
 					{var sending_group_alias = 1;}
 				}
+			if (SMDclick=='YES')
+				{button_click_log = button_click_log + "" + SQLdate + "-----SendManualDial---" + taskFromConf + "|" + agent_dialed_type + "|" + manual_string + "|" + three_way_call_cid + "|" + threeway_cid + "|";}
 			}
 		else
 			{
@@ -4904,7 +4915,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				cid_lock=1;
 				threeway_cid = outbound_cid;
 				}
+			if (SMDclick=='YES')
+				{button_click_log = button_click_log + "" + SQLdate + "-----SendManualDial---" + taskFromConf + "|" + agent_dialed_type + "|" + manual_string + "|" + manual_dial_cid + "|" + threeway_cid + "|";}
 			}
+
 		var regXFvars = new RegExp("XFER","g");
 		if (manual_string.match(regXFvars))
 			{
@@ -6408,6 +6422,39 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							}
 						customerparked=0;
 						customerparkedcounter=0;
+						}
+
+					if (taskvar == 'ParKXfeR')
+						{
+						blind_transfer=0;
+						var queryCID = "LXvdcW" + epoch_sec + user_abb;
+						var redirectdestination = taskxferconf;
+						var redirectdestserverip = taskserverip;
+						var parkedby = protocol + "/" + extension;
+						xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectToParkXfer&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + park_on_extension + "&ext_context=" + ext_context + "&ext_priority=1&extenName=park&parkedby=" + parkedby + "&session_id=" + session_id + "&CalLCID=" + XDnextCID + "&uniqueid=" + XDuniqueid + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign;
+
+						document.getElementById("ParkXferLine").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('FROMParKXfeR','" + lastxferchannel + "','" + server_ip + "','','','','YES');return false;\"><img src=\"./images/<?php echo _QXZ("vdc_XB_parkxferline_GRAB.gif"); ?>\" border=\"0\" alt=\"Grab Parked Xfer Line\" style=\"vertical-align:middle\" /></a>";
+						}
+					if (taskvar == 'FROMParKXfeR')
+						{
+						blind_transfer=0;
+						var queryCID = "FXvdcW" + epoch_sec + user_abb;
+						var redirectdestination = taskxferconf;
+						var redirectdestserverip = taskserverip;
+
+						if( (server_ip == taskserverip) && (taskserverip.length > 6) )
+							{var dest_dialstring = session_id;}
+						else
+							{
+							if(taskserverip.length > 6)
+								{var dest_dialstring = server_ip_dialstring + "" + session_id;}
+							else
+								{var dest_dialstring = session_id;}
+							}
+
+						xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=RedirectFromParkXfer&format=text&channel=" + redirectdestination + "&call_server_ip=" + redirectdestserverip + "&queryCID=" + queryCID + "&exten=" + dest_dialstring + "&ext_context=" + ext_context + "&ext_priority=1" + "&session_id=" + session_id + "&CalLCID=" + XDnextCID + "&uniqueid=" + XDuniqueid + "&lead_id=" + document.vicidial_form.lead_id.value + "&campaign=" + campaign;
+
+                        document.getElementById("ParkXferLine").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParKXfeR','" + lastxferchannel + "','" + server_ip + "','','','','YES');return false;\"><img src=\"./images/<?php echo _QXZ("vdc_XB_parkxferline_ON.gif"); ?>\" border=\"0\" alt=\"Park Xfer Line\" style=\"vertical-align:middle\" /></a>";
 						}
 
 					var XFRDop = '';
@@ -8051,6 +8098,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
                                 document.getElementById("ParkCustomerDial").innerHTML ="<img src=\"./images/<?php echo _QXZ("vdc_XB_parkcustomerdial_OFF.gif"); ?>\" border=\"0\" alt=\"Park Customer Dial\" style=\"vertical-align:middle\" />";
 
                                 document.getElementById("HangupXferLine").innerHTML ="<a href=\"#\" onclick=\"xfercall_send_hangup('YES');return false;\"><img src=\"./images/<?php echo _QXZ("vdc_XB_hangupxferline.gif"); ?>\" border=\"0\" alt=\"Hangup Xfer Line\" style=\"vertical-align:middle\" /></a>";
+
+                                document.getElementById("ParkXferLine").innerHTML ="<a href=\"#\" onclick=\"mainxfer_send_redirect('ParKXfeR','" + lastxferchannel + "','" + server_ip + "','','','','YES');return false;\"><img src=\"./images/<?php echo _QXZ("vdc_XB_parkxferline_ON.gif"); ?>\" border=\"0\" alt=\"Park Xfer Line\" style=\"vertical-align:middle\" /></a>";
 
                                 document.getElementById("HangupBothLines").innerHTML ="<a href=\"#\" onclick=\"bothcall_send_hangup('YES');return false;\"><img src=\"./images/<?php echo _QXZ("vdc_XB_hangupbothlines.gif"); ?>\" border=\"0\" alt=\"Hangup Both Lines\" style=\"vertical-align:middle\" /></a>";
 
@@ -11544,8 +11593,6 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			}
 		else
 			{
-			if (DSHclick=='YES')
-				{button_click_log = button_click_log + "" + SQLdate + "-----dialedcall_send_hangup---|";}
 			if (VDCL_group_id.length > 1)
 				{var group = VDCL_group_id;}
 			else
@@ -11563,11 +11610,14 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				{customer_sec = VD_live_call_secondS;}
 			var process_post_hangup=0;
 
+			if (DSHclick=='YES')
+				{button_click_log = button_click_log + "" + SQLdate + "-----dialedcall_send_hangup---" + group + "|" + form_cust_channel + "|" + CalLCID + "|" + VD_live_call_secondS + "|";}
+
 			// Force chat to end, if exists.  Uses hangup_override value in EndChat function to end if chat does not exist.
 			if (document.getElementById('CustomerChatIFrame') && typeof document.getElementById('CustomerChatIFrame').contentWindow.EndChat=='function')
-			{
+				{
 				document.getElementById('CustomerChatIFrame').contentWindow.EndChat('Hangup');
-			}
+				}
 
 			if ( (RedirecTxFEr < 1) && ( (MD_channel_look==1) || (auto_dial_level == 0) ) )
 				{
@@ -11829,12 +11879,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 // Send Hangup command for 3rd party call connected to the conference now to Manager
 	function xfercall_send_hangup(HANclick) 
 		{
-		if (HANclick=='YES')
-			{button_click_log = button_click_log + "" + SQLdate + "-----xfercall_send_hangup---|";}
 		var xferchannel = document.vicidial_form.xferchannel.value;
 		var xfer_channel = lastxferchannel;
 		var process_post_hangup=0;
 		xfer_in_call=0;
+		if (HANclick=='YES')
+			{button_click_log = button_click_log + "" + SQLdate + "-----xfercall_send_hangup---" + xferchannel + "|";}
 		if ( (MD_channel_look==1) && (leaving_threeway < 1) )
 			{
 			MD_channel_look=0;
@@ -11909,6 +11959,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
             document.getElementById("ParkCustomerDial").innerHTML ="<a href=\"#\" onclick=\"xfer_park_dial('YES');return false;\"><img src=\"./images/<?php echo _QXZ("vdc_XB_parkcustomerdial.gif"); ?>\" border=\"0\" alt=\"Park Customer Dial\" style=\"vertical-align:middle\" /></a>";
 
             document.getElementById("HangupXferLine").innerHTML ="<img src=\"./images/<?php echo _QXZ("vdc_XB_hangupxferline_OFF.gif"); ?>\" border=\"0\" alt=\"Hangup Xfer Line\" style=\"vertical-align:middle\" />";
+
+            document.getElementById("ParkXferLine").innerHTML ="<img src=\"./images/<?php echo _QXZ("vdc_XB_parkxferline_OFF.gif"); ?>\" border=\"0\" alt=\"Park Xfer Line\" style=\"vertical-align:middle\" />";
 
             document.getElementById("HangupBothLines").innerHTML ="<a href=\"#\" onclick=\"bothcall_send_hangup('YES');return false;\"><img src=\"./images/<?php echo _QXZ("vdc_XB_hangupbothlines.gif"); ?>\" border=\"0\" alt=\"Hangup Both Lines\" style=\"vertical-align:middle\" /></a>";
 			}
@@ -16175,6 +16227,8 @@ function phone_number_format(formatphone) {
 				{hideDiv('DialWithCustomer');}
 			if (agent_xfer_park_customer_dial < 1)
 				{hideDiv('ParkCustomerDial');}
+			if (agent_xfer_park_3way < 1)
+				{hideDiv('ParkXferLine');}
 			if (AllowManualQueueCallsChoice == '1')
                 {document.getElementById("ManualQueueChoice").innerHTML = "<a href=\"#\" onclick=\"ManualQueueChoiceChange('1');return false;\"><?php echo _QXZ("Manual Queue is Off"); ?></a><br />";}
 			if (qc_enabled < 1)
@@ -18200,6 +18254,8 @@ if ($agent_display_dialable_leads > 0)
  </td>
     <td align="left">
     <span style="background-color: <?php echo $MAIN_COLOR ?>" id="HangupXferLine"><img src="./images/<?php echo _QXZ("vdc_XB_hangupxferline_OFF.gif"); ?>" border="0" alt="Hangup Xfer Line" style="vertical-align:middle" /></span>
+	&nbsp; 
+	<span style="background-color: <?php echo $MAIN_COLOR ?>" id="ParkXferLine"><img src="./images/<?php echo _QXZ("vdc_XB_parkxferline_OFF.gif"); ?>" border="0" alt="Park Xfer Line" style="vertical-align:middle" /></span>
  </td>
  </tr>
 

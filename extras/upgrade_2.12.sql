@@ -720,3 +720,9 @@ UPDATE system_settings SET db_schema_version='1470',db_schema_update_date=NOW() 
 CREATE INDEX vtl_event_epoch on vicidial_timeclock_log (event_epoch);
 
 UPDATE system_settings SET db_schema_version='1471',db_schema_update_date=NOW() where db_schema_version < 1471;
+
+ALTER TABLE vicidial_user_groups ADD agent_xfer_park_3way ENUM('Y','N') default 'Y';
+
+ALTER TABLE system_settings ADD agent_xfer_park_3way ENUM('1','0') default '0';
+
+UPDATE system_settings SET db_schema_version='1472',db_schema_update_date=NOW() where db_schema_version < 1472;
