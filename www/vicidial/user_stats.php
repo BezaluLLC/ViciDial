@@ -52,6 +52,7 @@
 # 160112-0759 - Added link to direct to recording logging page
 # 160325-1430 - Changes for sidebar update
 # 160508-0807 - Added colors features
+# 161030-0829 - Fixed excess load Issue #963
 #
 
 $startMS = microtime();
@@ -1516,8 +1517,9 @@ else
 			$row[4] = preg_replace("/SELECT count\(\*\) from vicidial_list where/",'',$row[4]);
 			$row[4] = preg_replace('/SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner from vicidial_list where /','',$row[4]);
 
-			while (strlen($row[4]) > 100)
-				{$row[4] = preg_replace("/.$/",'',$row[4]);}
+			if (strlen($row[4]) > 100)
+				{$row[4] = substr($row[4], 0, 100);}
+
 			$u++;
 			$MAIN.="<tr $bgcolor>";
 			$MAIN.="<td><font size=1>$u</td>";
