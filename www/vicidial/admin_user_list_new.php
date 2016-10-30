@@ -39,7 +39,7 @@ if (strlen($DB) < 1)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,enable_languages,language_method,qc_features_active FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $ss_conf_ct = mysqli_num_rows($rslt);
@@ -50,6 +50,7 @@ if ($ss_conf_ct > 0)
 	$webroot_writable =				$row[1];
 	$SSenable_languages =			$row[2];
 	$SSlanguage_method =			$row[3];
+	$SSqc_features_active =			$row[4];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -79,7 +80,7 @@ $US='_';
 $NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
-$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+$stmt="SELECT selected_language,qc_enabled from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $sl_ct = mysqli_num_rows($rslt);
@@ -87,6 +88,7 @@ if ($sl_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
 	$VUselected_language =		$row[0];
+	$qc_auth =					$row[1];
 	}
 
 $auth=0;

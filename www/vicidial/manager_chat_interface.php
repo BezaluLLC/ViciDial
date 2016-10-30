@@ -11,10 +11,11 @@
 # 151219-0718 - Added vicidial_chat.js code, translation code where missing
 # 160107-2241 - Added realtime check to see whether sub chats are still running
 # 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
+# 161029-2127 - Fixed menu displays
 #
 
-$admin_version = '2.12-5';
-$build = '160108-2300';
+$admin_version = '2.12-6';
+$build = '161029-2127';
 
 $sh="managerchats"; 
 
@@ -144,7 +145,7 @@ if ($auth < 1)
 	exit;
 	}
 
-$user_stmt="select full_name,user_level,selected_language from vicidial_users where user='$PHP_AUTH_USER'";
+$user_stmt="select full_name,user_level,selected_language,qc_enabled from vicidial_users where user='$PHP_AUTH_USER'";
 $user_level=0;
 $user_rslt=mysql_to_mysqli($user_stmt, $link);
 if (mysqli_num_rows($user_rslt)>0) 
@@ -153,6 +154,7 @@ if (mysqli_num_rows($user_rslt)>0)
 	$full_name =			$user_row[0];
 	$user_level =			$user_row[1];
 	$VUselected_language =	$user_row[2];
+	$qc_auth =				$user_row[3];
 	}
 if ($SSallow_chats < 1)
 	{
@@ -677,9 +679,9 @@ function EndAgentChat(manager_chat_id, chat_sub_id) {
 <?php 
 
 ##### BEGIN Set variables to make header show properly #####
-$ADD =					'0';
+$ADD =					'3';
 $hh =					'managerchats';
-$sh =					'emails';
+$sh =					'users';
 $LOGast_admin_access =	'1';
 $ADMIN =				'admin.php';
 $page_width='770';
