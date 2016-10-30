@@ -73,10 +73,11 @@
 # 160227-1007 - Fixed XSS security issue, issue #929
 # 160303-2354 - Added code for chat transfers
 # 160326-0942 - Fixed issue #933, variables
+# 161029-2216 - Formatting and additional agent debug logging
 #
 
-$version = '2.12-48';
-$build = '160326-0942';
+$version = '2.12-49';
+$build = '161029-2216';
 $php_script = 'conf_exten_check.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=44;
@@ -247,6 +248,10 @@ if ($format=='debug')
 	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 	}
 
+
+################################################################################
+### refresh - sends agent session data to agent screen every second
+################################################################################
 if ($ACTION == 'refresh')
 	{
 	$MT[0]='';
@@ -882,8 +887,13 @@ if ($ACTION == 'refresh')
 		}
 
 	echo "$countecho\n";
+	$stage = "$Astatus|$Aagent_log_id";
 	}
 
+
+################################################################################
+### register - registers a conference to a phone
+################################################################################
 if ($ACTION == 'register')
 	{
 	$MT[0]='';
@@ -907,6 +917,9 @@ if ($ACTION == 'register')
 
 
 
+################################################################################
+### DEBUG OUTPUT AND LOGGING
+################################################################################
 if ($format=='debug') 
 	{
 	$ENDtime = date("U");

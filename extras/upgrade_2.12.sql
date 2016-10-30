@@ -726,3 +726,7 @@ ALTER TABLE vicidial_user_groups ADD agent_xfer_park_3way ENUM('Y','N') default 
 ALTER TABLE system_settings ADD agent_xfer_park_3way ENUM('1','0') default '0';
 
 UPDATE system_settings SET db_schema_version='1472',db_schema_update_date=NOW() where db_schema_version < 1472;
+
+ALTER TABLE system_settings ADD rec_prompt_count INT(9) UNSIGNED default '0';
+
+UPDATE system_settings SET db_schema_version='1473',db_schema_update_date=NOW() where db_schema_version < 1473;

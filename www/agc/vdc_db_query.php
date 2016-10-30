@@ -1490,6 +1490,7 @@ if ($ACTION == 'regCLOSER')
 
 		}
 	echo _QXZ("Closer In Group Choice %1s has been registered to user %2s",0,'',$closer_choice,$user)."\n";
+	$stage = "$vla_autodial|$closer_choice";
 	}
 
 
@@ -1549,6 +1550,7 @@ if ($ACTION == 'regTERRITORY')
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00256',$user,$server_ip,$session_name,$one_mysql_log);}
 		}
 	echo _QXZ("Territory Choice %1s has been registered to user %2s",0,'',$agent_territories,$user)."\n";
+	$stage = $agent_territories;
 	}
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-record_prompts.agi      version 2.6
+# agi-record_prompts.agi      version 2.12
 #
 # for recording prompts to GSM file over the phone
 # Saves recordings with 8-digit filenames to be played when exten is dialed
@@ -29,18 +29,86 @@
 #	- vm-msgsaved
 #	- vm-goodbye
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 71226-1303 - Added option to change format GSM/WAV and timeout through flags
 # 90519-1019 - Changed formatting to conform to other scripts
 # 130108-1815 - Changes for Asterisk 1.8 compatibility
+# 161029-2239 - Changed to database storage for prompt count
 #
 
+$script = 'agi-record_prompts.agi';
+&get_time_now;
 $US='_';
 
+
+# default path to astguiclient configuration file:
+$PATHconf =		'/etc/astguiclient.conf';
+
+open(conf, "$PATHconf") || die "can't open $PATHconf: $!\n";
+@conf = <conf>;
+close(conf);
+$i=0;
+foreach(@conf)
+	{
+	$line = $conf[$i];
+	$line =~ s/ |>|\n|\r|\t|\#.*|;.*//gi;
+	if ( ($line =~ /^PATHhome/) && ($CLIhome < 1) )
+		{$PATHhome = $line;   $PATHhome =~ s/.*=//gi;}
+	if ( ($line =~ /^PATHlogs/) && ($CLIlogs < 1) )
+		{$PATHlogs = $line;   $PATHlogs =~ s/.*=//gi;}
+	if ( ($line =~ /^PATHagi/) && ($CLIagi < 1) )
+		{$PATHagi = $line;   $PATHagi =~ s/.*=//gi;}
+	if ( ($line =~ /^PATHweb/) && ($CLIweb < 1) )
+		{$PATHweb = $line;   $PATHweb =~ s/.*=//gi;}
+	if ( ($line =~ /^PATHsounds/) && ($CLIsounds < 1) )
+		{$PATHsounds = $line;   $PATHsounds =~ s/.*=//gi;}
+	if ( ($line =~ /^PATHmonitor/) && ($CLImonitor < 1) )
+		{$PATHmonitor = $line;   $PATHmonitor =~ s/.*=//gi;}
+	if ( ($line =~ /^VARserver_ip/) && ($CLIserver_ip < 1) )
+		{$VARserver_ip = $line;   $VARserver_ip =~ s/.*=//gi;}
+	if ( ($line =~ /^VARDB_server/) && ($CLIDB_server < 1) )
+		{$VARDB_server = $line;   $VARDB_server =~ s/.*=//gi;}
+	if ( ($line =~ /^VARDB_database/) && ($CLIDB_database < 1) )
+		{$VARDB_database = $line;   $VARDB_database =~ s/.*=//gi;}
+	if ( ($line =~ /^VARDB_user/) && ($CLIDB_user < 1) )
+		{$VARDB_user = $line;   $VARDB_user =~ s/.*=//gi;}
+	if ( ($line =~ /^VARDB_pass/) && ($CLIDB_pass < 1) )
+		{$VARDB_pass = $line;   $VARDB_pass =~ s/.*=//gi;}
+	if ( ($line =~ /^VARDB_port/) && ($CLIDB_port < 1) )
+		{$VARDB_port = $line;   $VARDB_port =~ s/.*=//gi;}
+	$i++;
+	}
+
+if (!$VARDB_port) {$VARDB_port='3306';}
+if (!$AGILOGfile) {$AGILOGfile = "$PATHlogs/agiout.$year-$mon-$mday";}
+
+use DBI;
 use Asterisk::AGI;
 $AGI = new Asterisk::AGI;
+
+$dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
+    or die "Couldn't connect to database: " . DBI->errstr;
+
+### Grab Server values from the database
+$stmtA = "SELECT agi_output FROM servers where server_ip = '$VARserver_ip';";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+$rec_count=0;
+while ($sthArows > $rec_count)
+	{
+	$AGILOG = '0';
+	@aryA = $sthA->fetchrow_array;
+	$DBagi_output =	$aryA[0];
+	if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
+	if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
+	if ($DBagi_output =~ /BOTH/)	{$AGILOG = '3';}
+	$rec_count++;
+	}
+$sthA->finish();
+
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -90,6 +158,22 @@ $quit_program=0;
 $loop_counter=0;
 $REC_id = 85100000;
 $REC_next = 0;
+$rec_prompt_count=1;
+$rec_prompt_count_next=0;
+
+### Gather current rec_prompt_count from system_settings ###
+$stmtA= "SELECT rec_prompt_count from system_settings;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+	if ($AGILOG) {$agi_string = "$sthArows|$stmtA|";   &agi_output;}
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$rec_prompt_count = $aryA[0];
+	$rec_prompt_count_next = ($rec_prompt_count + 1);
+	}
+$sthA->finish();
 
 if (-e "/prompt_count.txt")
 	{
@@ -97,19 +181,26 @@ if (-e "/prompt_count.txt")
 	@test = <test>;
 	close(test);
 
+	$test[0] = ($test[0] + 0);
+	if ($rec_prompt_count > $test[0]) 
+		{$test[0] = $rec_prompt_count;}
+	if ($rec_prompt_count < $test[0]) 
+		{
+		$rec_prompt_count = $test[0];
+		### update the rec_prompt_count in system_settings
+		$stmtA = "UPDATE system_settings SET rec_prompt_count='$rec_prompt_count';";
+		$affected_rows = $dbhA->do($stmtA);
+			if ($AGILOG) {$agi_string = "$affected_rows|$stmtA|";   &agi_output;}
+		}
 	$REC_next = ($test[0] + 1);
 	$REC_id = ($REC_id + $REC_next);
-
-	open(test, ">/prompt_count.txt") || die "can't open /prompt_count.txt: $!\n";
-	print test "$REC_next";
-	close(test);
 	}
 else
 	{
 	open(test, ">/prompt_count.txt") || die "can't open /prompt_count.txt: $!\n";
-	print test "1";
+	print test "$rec_prompt_count";
 	close(test);
-	$REC_id = ($REC_id + 1);
+	$REC_id = ($REC_id + $rec_prompt_count);
 	}
 
 $session_recording = "$REC_id";
@@ -168,6 +259,15 @@ sub welcome_1
 			checkresult($result);
 		exit;
 		}
+
+	### update the rec_prompt_count in system_settings
+	$stmtA = "UPDATE system_settings SET rec_prompt_count='$REC_next';";
+	$affected_rows = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "$affected_rows|$stmtA|";   &agi_output;}
+
+	open(test, ">/prompt_count.txt") || die "can't open /prompt_count.txt: $!\n";
+	print test "$REC_next";
+	close(test);
 
 	&record_prompts;
 	}
@@ -278,11 +378,12 @@ sub verify_recording
 		{
 		if ($pin == '1')
 			{
-			$AGI->stream_file('auth-thankyou');   
+			$AGI->stream_file('auth-thankyou');
 			$AGI->say_digits("$REC_id");
-			$AGI->stream_file('beep');   
+			$AGI->stream_file('beep');
 			$AGI->say_digits("$REC_id");
-			$AGI->stream_file('vm-goodbye');   
+			$AGI->stream_file('vm-goodbye');
+			$AGI->stream_file('silence');
 			exit;
 			}
 		if ($pin == '2')
@@ -294,7 +395,6 @@ sub verify_recording
 			{
 			&record_prompts;
 			}
-
 		}
 	}
 
@@ -341,6 +441,10 @@ sub get_time_now	#get the current date and time and epoch for logging call lengt
 sub enter_pin_number
 	{
 	# please enter the pin number followed by the pound key
+
+	$AGI->stream_file('sip-silence');
+	$AGI->stream_file('sip-silence');
+	$AGI->stream_file('sip-silence');
 
 	$interrupt_digit='';
 
@@ -417,3 +521,19 @@ sub checkresult
 		$fail++;
 		}
 	}
+
+sub agi_output
+{
+if ($AGILOG >=2)
+	{
+	### open the log file for writing ###
+	open(Lout, ">>$AGILOGfile")
+			|| die "Can't open $AGILOGfile: $!\n";
+	print Lout "$now_date|$script|$agi_string\n";
+	close(Lout);
+	}
+	### send to STDERR writing ###
+if ( ($AGILOG == '1') || ($AGILOG == '3') )
+	{print STDERR "$now_date|$script|$agi_string\n";}
+$agi_string='';
+}
