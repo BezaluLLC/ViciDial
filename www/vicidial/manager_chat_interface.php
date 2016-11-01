@@ -11,7 +11,7 @@
 # 151219-0718 - Added vicidial_chat.js code, translation code where missing
 # 160107-2241 - Added realtime check to see whether sub chats are still running
 # 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
-# 161029-2127 - Fixed menu displays
+# 161029-2127 - Fixed menu displays, text sizes
 #
 
 $admin_version = '2.12-6';
@@ -323,9 +323,6 @@ while ($UUgroups_to_print > $o)
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
 header ("Pragma: no-cache");                          // HTTP/1.0
-echo '<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-';
 ?>
 <html>
 <head>
@@ -679,7 +676,7 @@ function EndAgentChat(manager_chat_id, chat_sub_id) {
 <?php 
 
 ##### BEGIN Set variables to make header show properly #####
-$ADD =					'3';
+# $ADD =					'3';
 $hh =					'managerchats';
 $sh =					'users';
 $LOGast_admin_access =	'1';
@@ -734,7 +731,7 @@ $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIG
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><BR>";
 		if ($message) {echo "<B>$message</B><BR>";}
 		echo "<span id='ManagerChatAvailabilityDisplay'><TABLE width=750 cellspacing=1 cellpadding=1>\n";
-		echo "<TR><TD align='left' class='arial'>"._QXZ("VICIDIAL Manager Chat Interface").":</TD><TD align='right' class='arial_bold'><a link='#FFFF00' vlink='#FFFF00' href='manager_chat_interface.php'>["._QXZ("RELOAD")."]</a></TD></TR>";
+		echo "<TR><TD align='left'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("VICIDIAL Manager Chat Interface").":</font></TD><TD align='right'><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><a link='#FFFF00' vlink='#FFFF00' href='manager_chat_interface.php'>["._QXZ("RELOAD")."]</a></font></TD></TR>";
 		echo "<TR BGCOLOR=BLACK>\n";
 		echo "<TD><font size=1 color=white width='50%'>"._QXZ("CURRENT LIVE AGENTS")."</TD>\n";
 		echo "<TD><font size=1 color=white width='50%'>"._QXZ("CURRENT LIVE CAMPAIGNS")."</TD></tr>\n";
