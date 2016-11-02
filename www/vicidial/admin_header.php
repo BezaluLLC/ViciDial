@@ -66,10 +66,11 @@
 # 160507-2324 - Added screen colors section
 # 160611-2229 - Added style for diff on admin changes
 # 160617-1426 - Added link from screen colors to system settings screen color settings
+# 161101-2129 - Added user_new_lead_limit Users subhead
 #
 
 
-$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add,allow_chats,enable_languages,admin_row_click,admin_screen_colors from system_settings;";
+$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add,allow_chats,enable_languages,admin_row_click,admin_screen_colors,user_new_lead_limit,user_territories_active,qc_features_active from system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $admin_home_url_LU =		$row[0];
@@ -82,6 +83,9 @@ $SSchat_enabled =			$row[6];
 $SSenable_languages =		$row[7];
 $SSadmin_row_click =		$row[8];
 $SSadmin_screen_colors =	$row[9];
+$SSuser_new_lead_limit =	$row[10];
+$SSuser_territories_active = $row[11];
+$SSqc_features_active =		$row[12];
 
 $SSmenu_background='015B91';
 $SSframe_background='D9E6FE';
@@ -1431,6 +1435,7 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 		$status_sh="CLASS=\"subhead_style\"";
 		$sheet_sh="CLASS=\"subhead_style\"";
 		$territory_sh="CLASS=\"subhead_style\"";
+		$newlimit_sh="CLASS=\"subhead_style\"";
 
 		if ($sh=='list') {$list_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='new') {$new_sh="CLASS=\"subhead_style_selected\"";}
@@ -1440,6 +1445,7 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 		if ($sh=='status') {$status_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='sheet') {$sheet_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='territory') {$territory_sh="CLASS=\"subhead_style_selected\"";}
+		if ($sh=='newlimit') {$newlimit_sh="CLASS=\"subhead_style_selected\"";}
 
 		?>
 	<TR <?php echo $list_sh ?><?php if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$ADMIN?ADD=0A';\"";} ?>><TD ALIGN=LEFT>
@@ -1465,8 +1471,16 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 	</TR><TR <?php echo $territory_sh ?><?php if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='./user_territories.php?agent=$user';\"";} ?>><TD ALIGN=LEFT>
 	 &nbsp; <a href="./user_territories.php?agent=<?php echo $user ?>" STYLE="text-decoration:none;"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subheader_font_size ?>;color:BLACK"><?php echo _QXZ("User Territories"); ?> </a> </TD></TR>
 
+	 <?php
+		}
+	if ($SSuser_new_lead_limit > 0)
+		{ ?>
+
+	</TR><TR <?php echo $newlimit_sh ?><?php if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='./admin_user_list_new.php?user=---ALL---&list_id=NONE&stage=overall';\"";} ?>><TD ALIGN=LEFT>
+	 &nbsp; <a href="./admin_user_list_new.php?user=---ALL---&list_id=NONE&stage=overall" STYLE="text-decoration:none;"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subheader_font_size ?>;color:BLACK"><?php echo _QXZ("Overall New Lead Limits"); ?> </a> </TD></TR>
+
 	<?php }
-	  } 
+	  }
 	?>
 	<!-- CAMPAIGNS NAVIGATION -->
 	<TR WIDTH=160><TD><DIV CLASS="horiz_line"></DIV></TD></TR>

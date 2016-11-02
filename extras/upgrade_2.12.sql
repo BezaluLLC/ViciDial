@@ -730,3 +730,7 @@ UPDATE system_settings SET db_schema_version='1472',db_schema_update_date=NOW() 
 ALTER TABLE system_settings ADD rec_prompt_count INT(9) UNSIGNED default '0';
 
 UPDATE system_settings SET db_schema_version='1473',db_schema_update_date=NOW() where db_schema_version < 1473;
+
+ALTER TABLE vicidial_users ADD user_new_lead_limit SMALLINT(5) default '-1';
+
+UPDATE system_settings SET db_schema_version='1474',db_schema_update_date=NOW() where db_schema_version < 1474;

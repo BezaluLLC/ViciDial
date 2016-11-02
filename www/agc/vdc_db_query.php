@@ -413,10 +413,11 @@
 # 160926-1053 - Fix for inbound call notes display
 # 161013-2226 - Added user_new_lead_limit option code
 # 161029-1026 - Added more agent debug logging details
+# 161101-2103 - Added user overall new lead limit
 #
 
-$version = '2.12-307';
-$build = '161029-1026';
+$version = '2.12-308';
+$build = '161101-2103';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=658;
@@ -930,7 +931,8 @@ if (strlen($SSagent_debug_logging) > 1)
 	}
 
 $VUselected_language = $SSdefault_language;
-$stmt="SELECT selected_language from vicidial_users where user='$user';";
+$VUuser_new_lead_limit='-1';
+$stmt="SELECT selected_language,user_new_lead_limit from vicidial_users where user='$user';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00598',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -939,6 +941,7 @@ if ($sl_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
 	$VUselected_language =		$row[0];
+	$VUuser_new_lead_limit =	$row[1];
 	}
 
 if ($ACTION == 'LogiNCamPaigns')
@@ -2743,6 +2746,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						#################################								
 						# Camp List
 						$vulnl_SQL='';
+						$vulnlOVERALL_SQL='';
 						$stmt="SELECT list_id FROM vicidial_lists where campaign_id='$campaign' and active='Y';";
 						$rslt_list=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00603',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -2798,6 +2802,22 @@ if ($ACTION == 'manDiaLnextCaLL')
 							# build NEW lead limit SQL, if that setting is enabled
 							if ($SSuser_new_lead_limit > 0)
 								{
+								$vulnl_new_sum=0;
+								$stmt="SELECT sum(new_count) from vicidial_user_list_new_lead where user='$user';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+								$vulnlags_ct = mysqli_num_rows($rslt);
+								if ($vulnlags_ct > 0)
+									{
+									$row=mysqli_fetch_row($rslt);
+									$vulnl_new_sum  =	$row[0];
+									if (strlen($vulnl_new_sum)<1) {$vulnl_new_sum=0;}
+									}
+								if ( ($VUuser_new_lead_limit > -1) and ($vulnl_new_sum >= $VUuser_new_lead_limit) )
+									{
+									$vulnlOVERALL_SQL .= "and (status!='NEW')";
+									}
+
 								$vulnl_user_override='-1';
 								$vulnl_new_count=0;
 								$stmt="SELECT user_override,new_count FROM vicidial_user_list_new_lead where user='$user' and list_id='$cur_list_id';";
@@ -3370,7 +3390,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						if (preg_match("/UP TIMEZONE/i",$lead_order)){$order_stmt = "order by gmt_offset_now desc, $last_order";}
 						if (preg_match("/DOWN TIMEZONE/i",$lead_order)){$order_stmt = "order by gmt_offset_now, $last_order";}
 
-						$stmt="UPDATE vicidial_list SET user='QUEUE$user' where called_since_last_reset='N' and ( (user NOT LIKE \"QUEUE%\") or (user is NULL) ) and status IN($Dsql) and ($list_id_sql) and ($all_gmtSQL) $CCLsql $DLTsql $fSQL $USERfSQL $adooSQL $vulnl_SQL $order_stmt LIMIT 1;";
+						$stmt="UPDATE vicidial_list SET user='QUEUE$user' where called_since_last_reset='N' and ( (user NOT LIKE \"QUEUE%\") or (user is NULL) ) and status IN($Dsql) and ($list_id_sql) and ($all_gmtSQL) $CCLsql $DLTsql $fSQL $USERfSQL $adooSQL $vulnl_SQL $vulnlOVERALL_SQL $order_stmt LIMIT 1;";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00242',$user,$server_ip,$session_name,$one_mysql_log);}

@@ -651,7 +651,8 @@ agentcall_chat ENUM('1','0') default '0',
 user_hide_realtime ENUM('1','0') default '0',
 access_recordings ENUM('0', '1') default '0',
 modify_colors ENUM('1','0') default '0',
-user_nickname VARCHAR(50) default ''
+user_nickname VARCHAR(50) default '',
+user_new_lead_limit SMALLINT(5) default '-1'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -3806,4 +3807,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1473',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1474',db_schema_update_date=NOW(),reload_timestamp=NOW();

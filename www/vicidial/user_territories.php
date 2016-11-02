@@ -22,10 +22,11 @@
 # 160404-0939 - design changes
 # 160429-1126 - Added admin_row_click option
 # 160508-0211 - Added screen colors feature
+# 161101-2126 - Fixed missing menu items
 #
 
-$version = '2.12-14';
-$build = '160508-0211';
+$version = '2.12-15';
+$build = '161101-2126';
 
 $MT[0]='';
 
@@ -60,7 +61,7 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,user_territories_active,enable_vtiger_integration,outbound_autodial_active,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,user_territories_active,enable_vtiger_integration,outbound_autodial_active,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,enable_languages,language_method,qc_features_active,user_new_lead_limit FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $ss_conf_ct = mysqli_num_rows($rslt);
@@ -78,6 +79,8 @@ if ($ss_conf_ct > 0)
 	$vtiger_url =						$row[8];
 	$SSenable_languages =				$row[9];
 	$SSlanguage_method =				$row[10];
+	$SSqc_features_active =				$row[11];
+	$SSuser_new_lead_limit =			$row[12];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -126,7 +129,7 @@ else
 	$PASS = preg_replace('/[^-_0-9a-zA-Z]/','',$PASS);
 	}
 
-$stmt="SELECT selected_language from vicidial_users where user='$USER';";
+$stmt="SELECT selected_language,qc_enabled from vicidial_users where user='$USER';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $sl_ct = mysqli_num_rows($rslt);
@@ -134,6 +137,7 @@ if ($sl_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
 	$VUselected_language =		$row[0];
+	$qc_auth =					$row[1];
 	}
 
 $auth=0;

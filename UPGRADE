@@ -293,7 +293,8 @@ OTHER CHANGES:
 
 81. Added User List NEW Lead Limits, with User overrides. Allows you to set a
 	limit on the number of NEW status leads that an agent can call on a per
-	list basis per day.
+	list basis per day. Also allows overall NEW limits across all lists for
+	a user per day
 
 82. Added List Merge admin utility
 

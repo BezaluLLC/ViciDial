@@ -8,10 +8,11 @@
 #
 # changes:
 # 161012-1327 - First Build
+# 161031-1500 - Added overall user option
 #
 
-$admin_version = '2.12-1';
-$build = '161012-1327';
+$admin_version = '2.12-2';
+$build = '161031-1500';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -23,6 +24,8 @@ if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))			{$DB=$_POST["DB"];}
 if (isset($_GET["action"]))					{$action=$_GET["action"];}
 	elseif (isset($_POST["action"]))		{$action=$_POST["action"];}
+if (isset($_GET["stage"]))					{$stage=$_GET["stage"];}
+	elseif (isset($_POST["stage"]))			{$stage=$_POST["stage"];}
 if (isset($_GET["user"]))					{$user=$_GET["user"];}
 	elseif (isset($_POST["user"]))			{$user=$_POST["user"];}
 if (isset($_GET["list_id"]))				{$list_id=$_GET["list_id"];}
@@ -39,7 +42,7 @@ if (strlen($DB) < 1)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,enable_languages,language_method,qc_features_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,enable_languages,language_method,qc_features_active,user_territories_active,user_new_lead_limit FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $ss_conf_ct = mysqli_num_rows($rslt);
@@ -51,6 +54,8 @@ if ($ss_conf_ct > 0)
 	$SSenable_languages =			$row[2];
 	$SSlanguage_method =			$row[3];
 	$SSqc_features_active =			$row[4];
+	$SSuser_territories_active =	$row[5];
+	$SSuser_new_lead_limit =		$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -166,7 +171,7 @@ if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGa
 $ADD =					'311';
 $SUB =					'1';
 $hh =					'lists';
-$sh =					'detail';
+$sh =					'newlimit';
 $LOGast_admin_access =	'1';
 $SSoutbound_autodial_active = '1';
 $ADMIN =				'admin.php';
@@ -186,6 +191,12 @@ $ingroups_color =	'#E6E6E6';
 $lists_font =		'BLACK';
 $lists_color =		'#E6E6E6';
 ##### END Set variables to make header show properly #####
+if ( ($stage == 'overall') and ($list_id == 'NONE') )
+	{
+	$ADD =					'3';
+	$SUB =					'1';
+	$hh =					'users';
+	}
 
 if (strlen($list_id) < 1)
 	{
@@ -198,8 +209,6 @@ if (strlen($user) < 1)
 	exit;
 	}
 
-$ADD =					'311';
-$hh =					'lists';
 $stmt_name="SELECT list_name from vicidial_lists where list_id='$list_id';";
 $mod_link = "ADD=$ADD&list_id=";
 $event_section = 'LISTS';
@@ -231,39 +240,6 @@ if ($DB > 0)
 	}
 
 
-################################################################################
-##### BEGIN USER LIST NEW ADD section
-if ($action == "USER_LIST_NEW_ADD")
-	{
-	if ( (strlen($user)<1) or (strlen($list_id)<1) or (strlen($user_override)<1) )
-		{
-		echo _QXZ("ERROR: You must fill in all fields").":  |$user|$list_id|$user_override|\n<BR>";
-		exit;
-		}
-	$stmt="INSERT INTO vicidial_user_list_new_lead SET list_id='$list_id',user_override='$user_override',user='$user';";
-	$rslt=mysql_to_mysqli($stmt, $link);
-	$affected_rows = mysqli_affected_rows($link);
-	if ($DB > 0) {echo "$affected_rows|$stmt\n<BR>";}
-	if ($affected_rows > 0)
-		{
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='$event_section', event_type='ADD', record_id='$list_id', event_code='ADD USER LIST NEW ENTRY', event_sql=\"$SQL_log\", event_notes='$user|$list_id|$user_override';";
-		$rslt=mysql_to_mysqli($stmt, $link);
-		if ($DB > 0) {echo "$list_id|$stmt\n<BR>";}
-
-		echo "<BR><b>$affected_rows "._QXZ("USER LIST NEW ENTRY ADDED")."</b><BR><BR>";
-		}
-	else
-		{echo _QXZ("ERROR: Problem adding USER LIST NEW ENTRY").":  $affected_rows|$stmt\n<BR>";}
-	$action='BLANK';
-	}
-##### END USER LIST NEW NEW section
-
-
-
 
 ################################################################################
 ##### BEGIN USER LIST NEW control form
@@ -280,29 +256,41 @@ echo "<center><TABLE width=$section_width cellspacing=3>\n";
 echo "<tr><td align=center colspan=2>\n";
 $FORM_list_id='';
 $FORM_user='';
-if ($list_id != '---ALL---') 
+if ( ($stage == 'overall') and ($list_id == 'NONE') )
 	{
-	$FORM_list_id = $list_id;
-	echo "<br><b>"._QXZ("User List New Limit Entries LIST",0,'').": <a href=\"./admin.php?$mod_link$list_id\">$list_id</a></b> &nbsp; $NWB#user_list_new_limits$NWE\n";
+	echo "<br><b>"._QXZ("User Overall New Limit Entries ALL USERS",0,'')."</b> &nbsp; $NWB#user_list_new_limits$NWE\n";
 	}
-if ($user != '---ALL---') 
+else
 	{
-	$FORM_user = $user;
-	echo "<br><b>"._QXZ("User List New Limit Entries USER",0,'').": <a href=\"./admin.php?ADD=3&user=$user\">$user</a></b> &nbsp; $NWB#user_list_new_limits$NWE\n";
+	if ($list_id != '---ALL---') 
+		{
+		$FORM_list_id = $list_id;
+		echo "<br><b>"._QXZ("User List New Limit Entries LIST",0,'').": <a href=\"./admin.php?$mod_link$list_id\">$list_id</a></b> &nbsp; $NWB#user_list_new_limits$NWE\n";
+		}
+	if ($user != '---ALL---') 
+		{
+		$FORM_user = $user;
+		echo "<br><b>"._QXZ("User List New Limit Entries USER",0,'').": <a href=\"./admin.php?ADD=3&user=$user\">$user</a></b> &nbsp; $NWB#user_list_new_limits$NWE\n";
+		}
 	}
-
 echo "<form action=$PHP_SELF method=POST>\n";
 echo "<input type=hidden name=DB value=\"$DB\">\n";
 echo "<input type=hidden name=action value=USER_LIST_NEW_MODIFY>\n";
 echo "<input type=hidden name=user value=\"$user\">\n";
 echo "<input type=hidden name=list_id value=\"$list_id\">\n";
+if ($stage == 'overall')
+	{echo "<input type=hidden name=stage value=\"overall\">\n";}
 echo "<TABLE width=740 cellspacing=3>\n";
-echo "<tr><td>#</td><td>"._QXZ("USER")."</td><td>"._QXZ("LIST")."</td><td>"._QXZ("ACTIVE")."</td><td>"._QXZ("CAMPAIGN")."</td><td>"._QXZ("NEW LIMIT")."</td><td>"._QXZ("TODAY")."</td></tr>\n";
+if ($stage == 'overall')
+	{echo "<tr><td>#</td><td>"._QXZ("USER")."</td><td>"._QXZ("NEW LIMIT")."</td><td>"._QXZ("TODAY")."</td></tr>\n";}
+else
+	{echo "<tr><td>#</td><td>"._QXZ("USER")."</td><td>"._QXZ("LIST")."</td><td>"._QXZ("ACTIVE")."</td><td>"._QXZ("CAMPAIGN")."</td><td>"._QXZ("NEW LIMIT")."</td><td>"._QXZ("TODAY")."</td></tr>\n";}
 
 $list_idSQL = "list_id='$list_id'";
-if ($list_id == '---ALL---') {$list_idSQL = "list_id != 0";}
+if ( ($list_id == '---ALL---') or ($list_id == 'NONE') ) {$list_idSQL = "list_id != 0";}
 $userSQL = "user='$user'";
 if ($user == '---ALL---') {$userSQL = "user!=''";}
+
 ###############################################################################
 ##### BEGIN run for one user, all lists #####
 ###############################################################################
@@ -457,7 +445,7 @@ else
 ###############################################################################
 ##### BEGIN run for one list, all users #####
 ###############################################################################
-if ($list_id != '---ALL---')
+if ( ($list_id != '---ALL---') and ($list_id != 'NONE') )
 	{
 	$changesLINK="admin.php?ADD=720000000000000&category=LISTS&stage=$list_id";
 
@@ -601,6 +589,138 @@ if ($list_id != '---ALL---')
 ##### END run for one list, all users #####
 ###############################################################################
 
+
+
+
+
+###############################################################################
+##### BEGIN run for all users overall limits #####
+###############################################################################
+if ($list_id == 'NONE')
+	{
+	$changesLINK="admin.php?ADD=720000000000000&category=LISTS&stage=$list_id";
+
+	$stmt="SELECT user,full_name,user_group from vicidial_users where active='Y' $LOGadmin_viewable_groupsSQL order by user limit 10000;";
+	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$users_to_print = mysqli_num_rows($rslt);
+	$o=0;
+	while ($users_to_print > $o) 
+		{
+		$rowx=mysqli_fetch_row($rslt);			
+		$Ruser[$o] =			$rowx[0];
+		$Rfull_name[$o] =		$rowx[1];
+		$Ruser_group[$o] =		$rowx[2];
+
+		$o++;
+		}
+	$rollingSQL_log='';
+	$vulnl_updates=0;
+	$vulnl_inserts=0;
+	$vulnl_nochng=0;
+	$o=0;
+	while ($users_to_print > $o) 
+		{
+		### BEGIN modification of vicidial_users record ###
+		if ($action == "USER_LIST_NEW_MODIFY")
+			{
+			$Ruser_override='-1';
+			$vulnl_found=0;
+			$stmt="SELECT user_new_lead_limit from vicidial_users where user='$Ruser[$o]';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$entries_to_print = mysqli_num_rows($rslt);
+			if ($entries_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$Ruser_override =	$rowx[0];
+				$vulnl_found++;;
+				}
+			if (isset($_GET["$Ruser[$o]$US$Rlist_id"]))						{$Ruser_overrideNEW=$_GET["$Ruser[$o]$US$Rlist_id"];}
+				elseif (isset($_POST["$Ruser[$o]$US$Rlist_id"]))			{$Ruser_overrideNEW=$_POST["$Ruser[$o]$US$Rlist_id"];}
+			if ( ($Ruser_overrideNEW == $Ruser_override) or (strlen($Ruser_overrideNEW) < 1) )
+				{
+				$vulnl_nochng++;
+				if ($DB) {echo "NO CHANGE: |$Ruser[$o]$US$Rlist_id|$Ruser_overrideNEW|$Ruser_override|\n";}
+				}
+			else
+				{
+				if ($vulnl_found > 0)
+					{
+					$stmt="UPDATE vicidial_users SET user_new_lead_limit='$Ruser_overrideNEW' where user='$Ruser[$o]';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$affected_rows = mysqli_affected_rows($link);
+					if ($DB > 0) {echo "$affected_rows|$stmt\n<BR>";}
+					if ($affected_rows > 0)
+						{
+						$rollingSQL_log .= "$stmt|";
+						$vulnl_updates++;
+						}
+					else
+						{echo _QXZ("ERROR: Problem modifying USER OVERALL NEW LIMIT").":  $affected_rows|$stmt\n<BR>";}
+					}
+				else
+					{
+					echo _QXZ("ERROR: Problem modifying USER OVERALL NEW LIMIT").":  $vulnl_found|$stmt\n<BR>";
+					}
+				}
+			}
+		### END modification of vicidial_user_list_new_lead record ###
+
+		$Ruser_override='-1';
+		$Rnew_count=0;
+		$stmt="SELECT sum(new_count) from vicidial_user_list_new_lead where user='$Ruser[$o]';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$entries_to_print = mysqli_num_rows($rslt);
+		if ($entries_to_print > 0) 
+			{
+			$rowx=mysqli_fetch_row($rslt);
+			$Rnew_count =		$rowx[0];
+			if (strlen($Rnew_count)<1) {$Rnew_count=0;}
+			}
+		$stmt="SELECT user_new_lead_limit from vicidial_users where user='$Ruser[$o]';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$entries_to_print = mysqli_num_rows($rslt);
+		if ($entries_to_print > 0) 
+			{
+			$rowx=mysqli_fetch_row($rslt);
+			$Ruser_override =	$rowx[0];
+			}
+
+		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
+			{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
+		else
+			{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
+
+		$ct = ($o + 1);
+		echo "<tr $bgcolor>";
+		echo "<td><font size=1>$ct</td>";
+		echo "<td><font size=1><a href=\"admin.php?ADD=3&user=$Ruser[$o]\">$Ruser[$o]</a> - $Rfull_name[$o]</td>";
+		echo "<td><font size=1><input type=text size=4 maxlength=4 name=$Ruser[$o]$US$Rlist_id value=\"$Ruser_override\"></td>";
+		echo "<td><font size=1>$Rnew_count</td>";
+		echo "</tr>\n";
+
+		$o++;
+		}
+
+	if ($action == "USER_LIST_NEW_MODIFY")
+		{
+		### LOG INSERTION Admin Log Table ###
+		$SQL_log = "$rollingSQL_log|";
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
+		$SQL_log = addslashes($SQL_log);
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='MODIFY', record_id='$list_id', event_code='MODIFY USER LIST NEW LIMIT ENTRIES', event_sql=\"$SQL_log\", event_notes='$list_id|$o|NOCHANGE: $vulnl_nochng|UPDATES: $vulnl_updates|INSERTS: $vulnl_inserts|';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB > 0) {echo "$user|$o|$stmt\n<BR>";}
+
+		echo "<BR><b>$o "._QXZ("USER OVERALL NEW LIMIT ENTRIES MODIFIED")." (ID: $list_id) $o</b><BR><BR>";
+		}
+	}
+###############################################################################
+##### END run for all users overall limits #####
+###############################################################################
 
 
 

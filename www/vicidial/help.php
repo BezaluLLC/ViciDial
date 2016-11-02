@@ -98,6 +98,7 @@
 # 160926-1351 - Added user_new_lead_limit entries
 # 161018-2245 - Added allow_required_fields
 # 161028-1548 - Added agent_xfer_park_3way entry for system_settings
+# 161031-1410 - Added users-user_new_lead_limit entry
 #
 
 
@@ -331,6 +332,11 @@ echo "<TABLE WIDTH=98% BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR><TD ALIGN
 <A NAME="users-user_nickname">
 <BR>
 <B><?php echo _QXZ("User Nickname"); ?> -</B><?php echo _QXZ("Optional alternative name used for agent when chatting with customers. Only used if populated. Not currently enabled."); ?>
+
+<BR>
+<A NAME="users-user_new_lead_limit">
+<BR>
+<B><?php echo _QXZ("User New Lead Limit"); ?> -</B><?php echo _QXZ("This Overall Limit setting will limit the number of new leads this user can dial across all lists per day. This feature will only work properly if the campaign is set to either the MANUAL or INBOUND_MAN Dial Method and No Hopper dialing is enabled. Default is -1 for disabled."); ?>
 
 <BR>
 <A NAME="users-hotkeys_active">
