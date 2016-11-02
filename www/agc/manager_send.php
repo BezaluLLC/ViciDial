@@ -131,10 +131,11 @@
 # 160101-1130 - Added code to handle routing initiated recordings
 # 160912-2310 - Fixed StopMonitorConf bug involving agent-invoked commands to stop recording
 # 161029-0845 - Added RedirectToParkXfer and RedirectFromParkXfer functions
+# 161102-1043 - Fixed QM partition problem
 #
 
-$version = '2.12-78';
-$build = '161029-0845';
+$version = '2.12-79';
+$build = '161102-1043';
 $php_script = 'manager_send.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=142;
@@ -813,7 +814,7 @@ if ($ACTION=="Hangup")
 									}
 
 								if ($format=='debug') {echo "\n<!-- $caller_complete|$stmt -->";}
-								$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$CLcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$secondS',data3='$CLqueue_position',serverid='$queuemetrics_log_id' $data4SQL;";
+								$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$CLcampaign_id',agent='Agent/$user',verb='COMPLETEAGENT',data1='$CLstage',data2='$secondS',data3='$CLqueue_position',serverid='$queuemetrics_log_id' $data4SQL;";
 								$rslt=mysql_to_mysqli($stmt, $linkB);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02019',$user,$server_ip,$session_name,$one_mysql_log);}
 								$affected_rows = mysqli_affected_rows($linkB);
@@ -1059,7 +1060,7 @@ if ($ACTION=="RedirectToPark")
 
 				if ($VAC_eq_ct > 0)
 					{
-					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLERONHOLD',data1='PARK',serverid='$queuemetrics_log_id';";
+					$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLERONHOLD',data1='PARK',serverid='$queuemetrics_log_id';";
 					$rslt=mysql_to_mysqli($stmt, $linkB);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02101',$user,$server_ip,$session_name,$one_mysql_log);}
 					$affected_rows = mysqli_affected_rows($linkB);
@@ -1173,7 +1174,7 @@ if ($ACTION=="RedirectFromPark")
 
 					if ($VAC_eq_ct > 0)
 						{
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLEROFFHOLD',data1='$parked_sec',data2='PARK',serverid='$queuemetrics_log_id';";
+						$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLEROFFHOLD',data1='$parked_sec',data2='PARK',serverid='$queuemetrics_log_id';";
 						$rslt=mysql_to_mysqli($stmt, $linkB);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02106',$user,$server_ip,$session_name,$one_mysql_log);}
 						$affected_rows = mysqli_affected_rows($linkB);
@@ -1300,7 +1301,7 @@ if ($ACTION=="RedirectToParkIVR")
 
 				if ($VAC_eq_ct > 0)
 					{
-					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLERONHOLD',data1='IVRPARK',serverid='$queuemetrics_log_id';";
+					$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLERONHOLD',data1='IVRPARK',serverid='$queuemetrics_log_id';";
 					$rslt=mysql_to_mysqli($stmt, $linkB);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02110',$user,$server_ip,$session_name,$one_mysql_log);}
 					$affected_rows = mysqli_affected_rows($linkB);
@@ -1418,7 +1419,7 @@ if ($ACTION=="RedirectFromParkIVR")
 
 					if ($VAC_eq_ct > 0)
 						{
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLEROFFHOLD',data1='$parked_sec',data2='IVRPARK',serverid='$queuemetrics_log_id';";
+						$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$StarTtime',call_id='$CalLCID',queue='$queue',agent='Agent/$user',verb='CALLEROFFHOLD',data1='$parked_sec',data2='IVRPARK',serverid='$queuemetrics_log_id';";
 						$rslt=mysql_to_mysqli($stmt, $linkB);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'02115',$user,$server_ip,$session_name,$one_mysql_log);}
 						$affected_rows = mysqli_affected_rows($linkB);

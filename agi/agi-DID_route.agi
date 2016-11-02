@@ -41,6 +41,7 @@
 # 150708-2252 - Added max_queue_ingroup_ DID options
 # 150806-1316 - Added Filter URL logging to url log, and added variables for uniqueid, channel and server_ip
 # 160106-0719 - Added filter option for GROUP_AREACODE
+# 161102-1035 - Fixed QM partition problem
 #
 
 
@@ -860,7 +861,7 @@ if ( ($did_route =~ /EXTEN|CALLMENU/) && ($enable_queuemetrics_logging > 0) )
 
 	if ($DBX) {print "CONNECTED TO QueueMetrics DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-	$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='DID',data2='$extension',serverid='$queuemetrics_log_id';";
+	$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='DID',data2='$extension',serverid='$queuemetrics_log_id';";
 	$Baffected_rows = $dbhB->do($stmtB);
 	$dbhB->disconnect();
 	}
@@ -913,7 +914,7 @@ if ($did_route =~ /CALLMENU/)
 
 		if ($DBX) {print "CONNECTED TO QM DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-		$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$callerid',data3='$extension',serverid='$queuemetrics_log_id';";
+		$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$callerid',data3='$extension',serverid='$queuemetrics_log_id';";
 		$Baffected_rows = $dbhB->do($stmtB);
 		$dbhB->disconnect();
 		}

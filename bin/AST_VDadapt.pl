@@ -43,6 +43,7 @@
 # 141113-1616 - Added concurrency check
 # 151124-1235 - Added function to cache carrier log stats
 # 160515-2016 - Added code for new UK OFCOM drop calculations
+# 161102-1029 - Fixed QM partition problem
 #
 
 # constants
@@ -346,7 +347,7 @@ $sthA->finish();
 #
 #	if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 #
-#	$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secT',call_id='NONE',queue='NONE',agent='NONE',verb='QUEUESTART',serverid='$queuemetrics_log_id';";
+#	$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$secT',call_id='NONE',queue='NONE',agent='NONE',verb='QUEUESTART',serverid='$queuemetrics_log_id';";
 #	$Baffected_rows = $dbhB->do($stmtB);
 #
 #	$dbhB->disconnect();

@@ -30,6 +30,7 @@
 # 130925-1822 - Added variable filter to prevent DID SQL injection attack
 # 130926-1547 - Added new queue_log IVR entries for QM
 # 160305-2244 - Added Alt IVR Logging options
+# 161102-1039 - Fixed QM partition problem
 #
 
 $script = 'cm.agi';
@@ -341,7 +342,7 @@ if ($enable_queuemetrics_logging > 0)
 	if ($outboundIVR > 0)
 		{$uniqueid = $caller_id;}
 
-	$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVRAPPEND',data2='$dtmf',data3='$context',serverid='$queuemetrics_log_id';";
+	$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVRAPPEND',data2='$dtmf',data3='$context',serverid='$queuemetrics_log_id';";
 		if ($AGILOG) {$agi_string = "|$stmtB|";   &agi_output;}
 	$Baffected_rows = $dbhB->do($stmtB);
 	$dbhB->disconnect();

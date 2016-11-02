@@ -529,10 +529,11 @@
 # 160915-0955 - Added ---READONLY--- option for most screen labels
 # 161019-0031 - Added ---REQUIRED--- option for most screen labels
 # 161029-0858 - Added option to park xfer channel
+# 161102-1121 - Fixed QM partition problem
 #
 
-$version = '2.12-498c';
-$build = '161029-0858';
+$version = '2.12-499c';
+$build = '161102-1121';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -3269,7 +3270,7 @@ else
 
 					if ($queuemetrics_loginout!='NONE')
 						{
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='$QM_LOGIN',data1='$QM_PHONE',serverid='$queuemetrics_log_id',data4='$qm_phone_environment';";
+						$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='$QM_LOGIN',data1='$QM_PHONE',serverid='$queuemetrics_log_id',data4='$qm_phone_environment';";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $linkB);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01045',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -3280,7 +3281,7 @@ else
 					$pause_typeSQL='';
 					if ($queuemetrics_pause_type > 0)
 						{$pause_typeSQL=",data5='AGENT'";}
-					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id',data4='$qm_phone_environment' $pause_typeSQL;";
+					$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id',data4='$qm_phone_environment' $pause_typeSQL;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01046',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -3289,7 +3290,7 @@ else
 
 					if ($queuemetrics_addmember_enabled > 0)
 						{
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='$VD_campaign',agent='Agent/$VD_login',verb='ADDMEMBER2',data1='$QM_PHONE',serverid='$queuemetrics_log_id',data4='$qm_phone_environment';";
+						$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$StarTtimE',call_id='NONE',queue='$VD_campaign',agent='Agent/$VD_login',verb='ADDMEMBER2',data1='$QM_PHONE',serverid='$queuemetrics_log_id',data4='$qm_phone_environment';";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $linkB);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01069',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -3333,7 +3334,7 @@ else
 
 					if ($queuemetrics_loginout!='NONE')
 						{
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='$VD_campaign',agent='Agent/$VD_login',verb='$QM_LOGIN',data1='$QM_PHONE',serverid='$queuemetrics_log_id',data4='$qm_phone_environment';";
+						$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$StarTtimE',call_id='NONE',queue='$VD_campaign',agent='Agent/$VD_login',verb='$QM_LOGIN',data1='$QM_PHONE',serverid='$queuemetrics_log_id',data4='$qm_phone_environment';";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $linkB);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01048',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -3344,7 +3345,7 @@ else
 					$pause_typeSQL='';
 					if ($queuemetrics_pause_type > 0)
 						{$pause_typeSQL=",data5='AGENT'";}
-					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id',data4='$qm_phone_environment' $pause_typeSQL;";
+					$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$StarTtimE',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEALL',serverid='$queuemetrics_log_id',data4='$qm_phone_environment' $pause_typeSQL;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $linkB);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01049',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -3353,7 +3354,7 @@ else
 
 					if ($queuemetrics_addmember_enabled > 0)
 						{
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimE',call_id='NONE',queue='$VD_campaign',agent='Agent/$VD_login',verb='ADDMEMBER2',data1='$QM_PHONE',serverid='$queuemetrics_log_id',data4='$qm_phone_environment';";
+						$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$StarTtimE',call_id='NONE',queue='$VD_campaign',agent='Agent/$VD_login',verb='ADDMEMBER2',data1='$QM_PHONE',serverid='$queuemetrics_log_id',data4='$qm_phone_environment';";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $linkB);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01072',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -3462,7 +3463,7 @@ else
 			if ($queuemetrics_pause_type > 0)
 				{$pause_typeSQL=",data5='AGENT'";}
 
-			$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtimEpause',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEREASON',data1='LOGIN',data3='$QM_PHONE',serverid='$queuemetrics_log_id'$pause_typeSQL;";
+			$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$StarTtimEpause',call_id='NONE',queue='NONE',agent='Agent/$VD_login',verb='PAUSEREASON',data1='LOGIN',data3='$QM_PHONE',serverid='$queuemetrics_log_id'$pause_typeSQL;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $linkB);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'01063',$VD_login,$server_ip,$session_name,$one_mysql_log);}

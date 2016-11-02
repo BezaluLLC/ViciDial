@@ -1,4 +1,4 @@
-VICIDIAL and QueueMetrics
+VICIDIAL and QueueMetrics				UPDATED: 2016-11-02
 
 queue_log logging was added to VICIDIAL outbound auto calling as an option in the 2.0.3 release, and for inbound in the 2.0.4 release.
 
@@ -92,12 +92,11 @@ If it did, then you want to add the following lines to your /etc/rc.d/rc.local f
 
 cd /usr/local
 *** download QueueMetrics and place it in /usr/local ***
-	http://downloads.loway.ch/qm/QueueMetrics-15.10.3-trial.tar.gz
-gunzip QueueMetrics-1.1.tar.gz
-tar xvf QueueMetrics-1.1.tar
-mv queuemetrics-1.1 /usr/local/tomcat/webapps/qm
+	http//downloads.loway.ch/qm/QueueMetrics-16.09.2.tar.gz
+tar xvfz QueueMetrics-16.09.2.tar.gz
+mv queuemetrics-16.09.2 /usr/local/tomcat/webapps/qm
 cd /usr/local/tomcat/webapps/qm/WEB_INF
-wget http://mysql.mirrors.pair.com/Downloads/Connector-J/mysql-connector-java-3.0.10-stable.tar.gz
+wget ftp://mirrors.easynews.com/mysql/Downloads/Connector-J/mysql-connector-java-3.0.10-stable.tar.gz
 gunzip mysql-connector-java-3.0.10-stable.tar.gz
 tar xvf mysql-connector-java-3.0.10-stable.tar
 cp mysql-connector-java-3.0.10-stable/mysql-connector-java-3.0.10-stable-bin.jar ./lib/
@@ -121,6 +120,27 @@ GRANT ALL PRIVILEGES ON queuemetrics.* TO qm@'%' IDENTIFIED BY 'qm';
 
 Second, the queue_log table:
 
+(September 2016 version)
+mysql> describe queue_log;
++------------------+------------------+------+-----+---------+----------------+
+| Field            | Type             | Null | Key | Default | Extra          |
++------------------+------------------+------+-----+---------+----------------+
+| partition        | varchar(20)      | NO   | MUL |         |                |
+| time_id          | int(11) unsigned | NO   | MUL | 0       |                |
+| call_id          | varchar(200)     | NO   | MUL | NULL    |                |
+| queue            | varchar(50)      | NO   |     | NULL    |                |
+| agent            | varchar(30)      | NO   |     |         |                |
+| verb             | varchar(30)      | NO   | MUL |         |                |
+| data1            | varchar(200)     | NO   |     |         |                |
+| data2            | varchar(200)     | NO   |     |         |                |
+| data3            | varchar(200)     | NO   |     |         |                |
+| data4            | varchar(200)     | NO   |     |         |                |
+| serverid         | varchar(10)      | NO   |     |         |                |
+| unique_row_count | int(10) unsigned | NO   |     | NULL    | auto_increment |
+| data5            | varchar(200)     | NO   |     |         |                |
++------------------+------------------+------+-----+---------+----------------+
+
+(September 2013 version)
 mysql> describe queue_log;
 +------------------+------------------+------+-----+---------+-------+
 | Field            | Type             | Null | Key | Default | Extra |

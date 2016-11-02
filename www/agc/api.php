@@ -85,10 +85,11 @@
 # 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 # 150928-1157 - Fix allowing for * and # in phone_number field
 # 160113-0921 - Fix for numeric audio files in playback function
+# 161102-1042 - Fixed QM partition problem
 #
 
-$version = '2.12-51';
-$build = '160113-0921';
+$version = '2.12-52';
+$build = '161102-1042';
 
 $startMS = microtime();
 
@@ -3203,22 +3204,22 @@ if ($function == 'ra_call_control')
 							$data4SS = "&data4=$row[0]$pe_append";
 							}
 
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$value',queue='$campaign_id',agent='Agent/$ra_user',verb='COMPLETEAGENT',data1='$ra_stage',data2='$ra_length',data3='$queue_position',serverid='$queuemetrics_log_id' $data4SQL;";
+						$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$StarTtime',call_id='$value',queue='$campaign_id',agent='Agent/$ra_user',verb='COMPLETEAGENT',data1='$ra_stage',data2='$ra_length',data3='$queue_position',serverid='$queuemetrics_log_id' $data4SQL;";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_to_mysqli($stmt, $linkB);
 
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='$value',queue='$campaign_id',agent='Agent/$ra_user',verb='CALLSTATUS',data1='$status',serverid='$queuemetrics_log_id';";
+						$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$StarTtime',call_id='$value',queue='$campaign_id',agent='Agent/$ra_user',verb='CALLSTATUS',data1='$status',serverid='$queuemetrics_log_id';";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_to_mysqli($stmt, $linkB);
 
 						$pause_typeSQL='';
 						if ($queuemetrics_pause_type > 0)
 							{$pause_typeSQL=",data5='API'";}
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$ra_user',verb='PAUSEALL',serverid='$queuemetrics_log_id' $data4SQL $pause_typeSQL;";
+						$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$ra_user',verb='PAUSEALL',serverid='$queuemetrics_log_id' $data4SQL $pause_typeSQL;";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_to_mysqli($stmt, $linkB);
 
-						$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$ra_user',verb='UNPAUSEALL',serverid='$queuemetrics_log_id' $data4SQL  $pause_typeSQL;";
+						$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$StarTtime',call_id='NONE',queue='NONE',agent='Agent/$ra_user',verb='UNPAUSEALL',serverid='$queuemetrics_log_id' $data4SQL  $pause_typeSQL;";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_to_mysqli($stmt, $linkB);
 

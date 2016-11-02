@@ -25,7 +25,7 @@
 # It is good practice to keep this program running by placing the associated 
 # KEEPALIVE script running every minute to ensure this program is always running
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50125-1201 - Changed dial timeout to 120 seconds from 180 seconds
@@ -120,6 +120,7 @@
 # 141113-1556 - Added concurrency check
 # 141211-2134 - Added na_call_url list_id override option
 # 151006-0936 - Changed campaign_cid_areacodes to operate with 2-5 digit areacodes
+# 161102-1031 - Fixed QM partition problem
 #
 
 ### begin parsing run-time options ###
@@ -1641,7 +1642,7 @@ while($one_day_interval > 0)
 					#						$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
 					#						 or die "Couldn't connect to database: " . DBI->errstr;
 					#						if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
-					#						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='NONE',agent='Agent/$MLAGuser[$lagged_ids]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LAGGED';";
+					#						$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$secX',call_id='NONE',queue='NONE',agent='Agent/$MLAGuser[$lagged_ids]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LAGGED';";
 					#						$Baffected_rows = $dbhB->do($stmtB);
 					#						$dbhB->disconnect();
 					#						}
@@ -1698,7 +1699,7 @@ while($one_day_interval > 0)
 									}
 								$sthA->finish();
 
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$KLcallerid[$kill_vac]',queue='$CLcampaign_id',agent='NONE',verb='ABANDON',data1='$current_position',data2='$queue_position',data3='$CLstage',serverid='$queuemetrics_log_id';";
+								$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$secX',call_id='$KLcallerid[$kill_vac]',queue='$CLcampaign_id',agent='NONE',verb='ABANDON',data1='$current_position',data2='$queue_position',data3='$CLstage',serverid='$queuemetrics_log_id';";
 								$Baffected_rows = $dbhB->do($stmtB);
 
 								$dbhB->disconnect();
@@ -2122,7 +2123,7 @@ while($one_day_interval > 0)
 
 					if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='NONE',queue='NONE',agent='Agent/$LAGuser[$lagged_ids]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LAGGED'$pause_typeSQL;";
+					$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$secX',call_id='NONE',queue='NONE',agent='Agent/$LAGuser[$lagged_ids]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LAGGED'$pause_typeSQL;";
 					$Baffected_rows = $dbhB->do($stmtB);
 
 					$dbhB->disconnect();
@@ -2213,7 +2214,7 @@ while($one_day_interval > 0)
 							if ($time_logged_in > 1000000) {$time_logged_in=1;}
 							$LOGOFFtime = ($secX + 1);
 
-							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='NONE',agent='Agent/$VALOuser[$logrun]',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in',data4='$data4';";
+							$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$LOGOFFtime',call_id='NONE',queue='NONE',agent='Agent/$VALOuser[$logrun]',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in',data4='$data4';";
 							$Baffected_rows = $dbhB->do($stmtB);
 							}
 
@@ -2244,7 +2245,7 @@ while($one_day_interval > 0)
 								$pause_typeSQL='';
 								if ($queuemetrics_pause_type > 0)
 									{$pause_typeSQL=",data5='SYSTEM'";}
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='NONE',agent='Agent/$VALOuser[$logrun]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF'$pause_typeSQL;";
+								$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$LOGOFFtime',call_id='NONE',queue='NONE',agent='Agent/$VALOuser[$logrun]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF'$pause_typeSQL;";
 								$Baffected_rows = $dbhB->do($stmtB);
 								}
 							$stmtB = "SELECT distinct queue FROM queue_log where time_id >= $RAWtime_logged_in and agent='Agent/$VALOuser[$logrun]' and verb IN('ADDMEMBER','ADDMEMBER2') and queue != '$VALOcampaign[$logrun]' order by time_id desc;";
@@ -2267,7 +2268,7 @@ while($one_day_interval > 0)
 							$rec_count=0;
 							while ($sthBrows > $rec_count)
 								{
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$LOGOFFtime',call_id='NONE',queue='$AM_queue[$rec_count]',agent='Agent/$VALOuser[$logrun]',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id',data4='$data4';";
+								$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$LOGOFFtime',call_id='NONE',queue='$AM_queue[$rec_count]',agent='Agent/$VALOuser[$logrun]',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id',data4='$data4';";
 								$Baffected_rows = $dbhB->do($stmtB);
 								$rec_count++;
 								}
@@ -2446,7 +2447,7 @@ while($one_day_interval > 0)
 						}
 					$sthA->finish();
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$CLcallerid',queue='$CLcampaign_id',agent='NONE',verb='ABANDON',data1='$current_position',data2='$queue_position',data3='$CLstage',serverid='$queuemetrics_log_id';";
+					$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$secX',call_id='$CLcallerid',queue='$CLcampaign_id',agent='NONE',verb='ABANDON',data1='$current_position',data2='$queue_position',data3='$CLstage',serverid='$queuemetrics_log_id';";
 					$Baffected_rows = $dbhB->do($stmtB);
 
 					$dbhB->disconnect();

@@ -3879,12 +3879,13 @@ else
 # 161028-1539 - Added agent_xfer_park_3way option to system settings and user groups
 # 161029-2304 - Added rec_prompt_count display to system settings
 # 161031-1415 - Added User Overall user_new_lead_limit
+# 161102-1040 - Fixed QM partition problem
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-571a';
-$build = '161031-1415';
+$admin_version = '2.12-572a';
+$build = '161102-1040';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -17307,7 +17308,7 @@ if ($ADD==62)
 							$pause_typeSQL='';
 							if ($queuemetrics_pause_type > 0)
 								{$pause_typeSQL=",data5='ADMIN'";}
-							$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='Agent/$VLA_user[$k]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF'$pause_typeSQL;";
+							$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='Agent/$VLA_user[$k]',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF'$pause_typeSQL;";
 							if ($DB) {echo "$stmt\n";}
 							$rslt=mysql_to_mysqli($stmt, $linkB);
 							$affected_rows = mysqli_affected_rows($linkB);
@@ -17369,7 +17370,7 @@ if ($ADD==62)
 									$qm_extension = explode('/',$phone_logged_in);
 									$pe_append = "-$qm_extension[1]";
 									}
-								$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='$AMqueue[$i]',agent='$agent_logged_in',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment$pe_append';";
+								$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='NONE',queue='$AMqueue[$i]',agent='$agent_logged_in',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment$pe_append';";
 								$rslt=mysql_to_mysqli($stmt, $linkB);
 								$affected_rows = mysqli_affected_rows($linkB);
 								$i++;
@@ -17378,7 +17379,7 @@ if ($ADD==62)
 
 						if ($queuemetrics_loginout != 'NONE')
 							{
-							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
+							$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
 							if ($DB) {echo "<BR>$stmtB\n";}
 							$rsltB=mysql_to_mysqli($stmtB, $linkB);
 							}

@@ -25,7 +25,7 @@
 # exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
 # 
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 61010-1007 - First test build
@@ -71,6 +71,7 @@
 # 131209-1559 - Added called_count logging
 # 140215-2118 - Added several variable options for QM socket URL
 # 150804-1740 - Added code to support in-group drop_lead_reset feature
+# 161102-1034 - Fixed QM partition problem
 #
 
 # defaults for PreFork
@@ -1173,12 +1174,12 @@ sub process_request
 										}
 									$sthA->finish();
 
-									$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$VD_callerid',queue='$VD_campaign_id',agent='$VD_agent',verb='ABANDON',data1='$current_position',data2='$queue_position',data3='$VD_stage',serverid='$queuemetrics_log_id',data4='$data_four';";
+									$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$secX',call_id='$VD_callerid',queue='$VD_campaign_id',agent='$VD_agent',verb='ABANDON',data1='$current_position',data2='$queue_position',data3='$VD_stage',serverid='$queuemetrics_log_id',data4='$data_four';";
 									$Baffected_rows = $dbhB->do($stmtB);
 									}
 								else
 									{
-									$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$secX',call_id='$VD_callerid',queue='$VD_campaign_id',agent='$VD_agent',verb='COMPLETECALLER',data1='$VD_stage',data2='$VD_call_length',data3='$queue_position',serverid='$queuemetrics_log_id',data4='$data_four';";
+									$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$secX',call_id='$VD_callerid',queue='$VD_campaign_id',agent='$VD_agent',verb='COMPLETECALLER',data1='$VD_stage',data2='$VD_call_length',data3='$queue_position',serverid='$queuemetrics_log_id',data4='$data_four';";
 									$Baffected_rows = $dbhB->do($stmtB);
 
 									if ( ($queuemetrics_socket =~ /CONNECT_COMPLETE/) and (length($queuemetrics_socket_url) > 10) )

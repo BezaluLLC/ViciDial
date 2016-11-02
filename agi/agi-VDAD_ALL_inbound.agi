@@ -202,6 +202,7 @@
 # 151004-0815 - Fixed issue with recording vicidial_id for remote agent calls, now set to closecallid
 # 160101-1525 - Added routing_initiated_recordings
 # 160517-0330 - Added code for state/postal_code channel variables new lead insertion if populated
+# 161102-1036 - Fixed QM partition problem
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -1528,7 +1529,7 @@ if ( ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $c
 
 				if ($DBX) {print "CONNECTED TO QM DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
+				$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
 				$Baffected_rows = $dbhB->do($stmtB);
 					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02197';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 				}
@@ -1806,7 +1807,7 @@ if ( ( ($no_agent_no_queue =~ /Y|NO_PAUSED/) || ($MCnanque_override > 0) ) && ($
 
 					if ($DBX) {print "CONNECTED TO QM DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
+					$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
 					$Baffected_rows = $dbhB->do($stmtB);
 						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02198';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 					}
@@ -2032,7 +2033,7 @@ if ($enable_queuemetrics_logging > 0)
 
 	if ($DBX) {print "CONNECTED TO DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-	$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='ENTERQUEUE',data2='$data2',serverid='$queuemetrics_log_id';";
+	$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='ENTERQUEUE',data2='$data2',serverid='$queuemetrics_log_id';";
 	$Baffected_rows = $dbhB->do($stmtB);
 		$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02028';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 	}
@@ -3127,7 +3128,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					$sthA->finish();
 						if ($AGILOG) {$agi_string = "$sthArowsCQPE|$dataSQL|$stmtA|";   &agi_output;}
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='Agent/$VDADuser',verb='CONNECT',data1='$drop_timer',serverid='$queuemetrics_log_id' $dataSQL;";
+					$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='Agent/$VDADuser',verb='CONNECT',data1='$drop_timer',serverid='$queuemetrics_log_id' $dataSQL;";
 					$Baffected_rows = $dbhB->do($stmtB);
 						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02065';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
@@ -3779,11 +3780,11 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 				if ($rec_countWAITrem > 0) {$place = $rec_countWAITrem;}
 				$place++;
 
-				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='EXITWITHKEY',data1='2',data2='$place',serverid='$queuemetrics_log_id';";
+				$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='EXITWITHKEY',data1='2',data2='$place',serverid='$queuemetrics_log_id';";
 				$Baffected_rows = $dbhB->do($stmtB);
 					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02078';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
-				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='HXFER',serverid='$queuemetrics_log_id';";
+				$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='HXFER',serverid='$queuemetrics_log_id';";
 				$Baffected_rows = $dbhB->do($stmtB);
 					$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02079';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
@@ -4305,11 +4306,11 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						if ($rec_countWAITrem > 0) {$place = $rec_countWAITrem;}
 						$place++;
 
-						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='EXITWITHKEY',data1='1',data2='$place',serverid='$queuemetrics_log_id';";
+						$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='EXITWITHKEY',data1='1',data2='$place',serverid='$queuemetrics_log_id';";
 						$Baffected_rows = $dbhB->do($stmtB);
 							$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02087';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
-						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='QVMAIL',serverid='$queuemetrics_log_id';";
+						$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='QVMAIL',serverid='$queuemetrics_log_id';";
 						$Baffected_rows = $dbhB->do($stmtB);
 							$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02088';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
@@ -4406,7 +4407,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 
 					if ($DBX) {print "CONNECTED TO QM DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
+					$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
 					$Baffected_rows = $dbhB->do($stmtB);
 						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02205';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 					}
@@ -4536,11 +4537,11 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					if ($rec_countWAITrem > 0) {$place = $rec_countWAITrem;}
 					$place++;
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='EXITWITHKEY',data1='2',data2='$place',serverid='$queuemetrics_log_id';";
+					$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='EXITWITHKEY',data1='2',data2='$place',serverid='$queuemetrics_log_id';";
 					$Baffected_rows = $dbhB->do($stmtB);
 						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02093';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
-					$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='WAITTO',serverid='$queuemetrics_log_id';";
+					$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='WAITTO',serverid='$queuemetrics_log_id';";
 					$Baffected_rows = $dbhB->do($stmtB);
 						$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02094';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
@@ -4748,11 +4749,11 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 								if ($rec_countWAITrem > 0) {$place = $rec_countWAITrem;}
 								$place++;
 
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='EXITWITHKEY',data1='1',data2='$place',serverid='$queuemetrics_log_id';";
+								$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='EXITWITHKEY',data1='1',data2='$place',serverid='$queuemetrics_log_id';";
 								$Baffected_rows = $dbhB->do($stmtB);
 									$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02087';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='QVMAIL',serverid='$queuemetrics_log_id';";
+								$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='QVMAIL',serverid='$queuemetrics_log_id';";
 								$Baffected_rows = $dbhB->do($stmtB);
 									$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02088';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
@@ -4850,7 +4851,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 
 							if ($DBX) {print "CONNECTED TO QM DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
+							$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
 							$Baffected_rows = $dbhB->do($stmtB);
 								$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02206';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 							}
@@ -4979,11 +4980,11 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 							if ($rec_countWAITrem > 0) {$place = $rec_countWAITrem;}
 							$place++;
 
-							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='EXITWITHKEY',data1='2',data2='$place',serverid='$queuemetrics_log_id';";
+							$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='EXITWITHKEY',data1='2',data2='$place',serverid='$queuemetrics_log_id';";
 							$Baffected_rows = $dbhB->do($stmtB);
 								$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02093';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
-							$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='HOLDTO',serverid='$queuemetrics_log_id';";
+							$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='HOLDTO',serverid='$queuemetrics_log_id';";
 							$Baffected_rows = $dbhB->do($stmtB);
 								$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02094';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
@@ -5161,11 +5162,11 @@ if ( ($drop_timer > $DROP_TIME) || ($MCdrop_override > 0) )
 		if ($rec_countWAITrem > 0) {$place = $rec_countWAITrem;}
 		$place++;
 
-		$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='EXITWITHTIMEOUT',data1='$place',serverid='$queuemetrics_log_id';";
+		$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='EXITWITHTIMEOUT',data1='$place',serverid='$queuemetrics_log_id';";
 		$Baffected_rows = $dbhB->do($stmtB);
 			$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02097';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
-		$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='$DRstatus',serverid='$queuemetrics_log_id';";
+		$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='$channel_group',agent='NONE',verb='CALLSTATUS',data1='$DRstatus',serverid='$queuemetrics_log_id';";
 		$Baffected_rows = $dbhB->do($stmtB);
 			$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02098';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 
@@ -5273,7 +5274,7 @@ if ( ($drop_timer > $DROP_TIME) || ($MCdrop_override > 0) )
 
 			if ($DBX) {print "CONNECTED TO QM DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
+			$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$YqueryCID',queue='NONE',agent='NONE',verb='INFO',data1='IVRSTART',data2='$phone_number',data3='$channel_group',serverid='$queuemetrics_log_id';";
 			$Baffected_rows = $dbhB->do($stmtB);
 				$dbhP=$dbhB;   $stmtA=$stmtB;   $mysql_count='02207';   $MEL_aff_rows=$Baffected_rows;   &mysql_error_logging;
 			}

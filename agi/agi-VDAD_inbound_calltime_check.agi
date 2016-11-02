@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_inbound_calltime_check.agi   version 2.8
+# agi-VDAD_inbound_calltime_check.agi   version 2.12
 # 
 # Runs when a call comes in from an inbound call. This script will check the
 # settings of the defined calltime scheme in VICIDIAL and either send the call
@@ -31,7 +31,7 @@
 #exten => 1234,2,AGI(agi-VDAD_inbound_calltime_check.agi,INBOUND-----YES-----START-----24hours-----EXTENSION-----101-----default-----NO)
 #exten => 1234,3,Hangup
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 80525-0144 - First Build
@@ -52,6 +52,7 @@
 # 130108-1807 - Changes for Asterisk 1.8 compatibility
 # 130925-1826 - Added variable filter to prevent DID SQL injection attack
 # 140126-1141 - Added VMAIL_NO_INST options
+# 161102-1038 - Fixed QM partition problem
 #
 
 $script = 'agi-VDAD_inbound_calltime_check.agi';
@@ -558,7 +559,7 @@ if ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_st
 
 		if ($DBX) {print "CONNECTED TO QueueMetrics DATABASE:  $queuemetrics_server_ip|$queuemetrics_dbname\n";}
 
-		$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVR',data2='$context',serverid='$queuemetrics_log_id';";
+		$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVR',data2='$context',serverid='$queuemetrics_log_id';";
 			if ($AGILOG) {$agi_string = "|$stmtB|";   &agi_output;}
 		$Baffected_rows = $dbhB->do($stmtB);
 		$dbhB->disconnect();
@@ -750,7 +751,7 @@ if ($enable_queuemetrics_logging > 0)
 	if ($outboundIVR > 0)
 		{$uniqueid = $caller_id;}
 
-	$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVR',data2='$context',serverid='$queuemetrics_log_id';";
+	$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='$uniqueid',queue='NONE',agent='NONE',verb='INFO',data1='IVR',data2='$context',serverid='$queuemetrics_log_id';";
 		if ($AGILOG) {$agi_string = "|$stmtB|";   &agi_output;}
 	$Baffected_rows = $dbhB->do($stmtB);
 	$dbhB->disconnect();

@@ -36,6 +36,7 @@
 # 150701-1250 - Modified mysqli_error() to mysqli_connect_error() where appropriate
 # 151211-1458 - Added chat visibility
 # 160325-1433 - Changes for sidebar update
+# 161102-1041 - Fixed QM partition problem
 #
 
 $startMS = microtime();
@@ -546,7 +547,7 @@ if ($stage == "log_agent_out")
 				$pause_typeSQL='';
 				if ($queuemetrics_pause_type > 0)
 					{$pause_typeSQL=",data5='ADMIN'";}
-				$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='Agent/" . mysqli_real_escape_string($link, $user) . "',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF'$pause_typeSQL;";
+				$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='Agent/" . mysqli_real_escape_string($link, $user) . "',verb='PAUSEREASON',serverid='$queuemetrics_log_id',data1='LOGOFF'$pause_typeSQL;";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $linkB);
 				$affected_rows = mysqli_affected_rows($linkB);
@@ -608,7 +609,7 @@ if ($stage == "log_agent_out")
 						$qm_extension = explode('/',$phone_logged_in);
 						$pe_append = "-$qm_extension[1]";
 						}
-					$stmt = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='$AMqueue[$i]',agent='$agent_logged_in',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment$pe_append';";
+					$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='NONE',queue='$AMqueue[$i]',agent='$agent_logged_in',verb='REMOVEMEMBER',data1='$phone_logged_in',serverid='$queuemetrics_log_id',data4='$queuemetrics_phone_environment$pe_append';";
 					$rslt=mysql_to_mysqli($stmt, $linkB);
 					$affected_rows = mysqli_affected_rows($linkB);
 					$i++;
@@ -617,7 +618,7 @@ if ($stage == "log_agent_out")
 
 			if ($queuemetrics_loginout != 'NONE')
 				{
-				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
+				$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$now_date_epoch',call_id='NONE',queue='NONE',agent='$agent_logged_in',verb='$QM_LOGOFF',serverid='$queuemetrics_log_id',data1='$phone_logged_in',data2='$time_logged_in';";
 				if ($DB) {echo "<BR>$stmtB\n";}
 				$rsltB=mysql_to_mysqli($stmtB, $linkB);
 				}

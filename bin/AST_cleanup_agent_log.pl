@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_cleanup_agent_log.pl version 2.8
+# AST_cleanup_agent_log.pl version 2.12
 #
 # DESCRIPTION:
 # to be run frequently to clean up the vicidial_agent_log to fix erroneous time 
@@ -10,7 +10,7 @@
 #
 # This program only needs to be run by one server
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60711-0945 - Changed to DBI by Marin Blu
@@ -39,6 +39,7 @@
 # 120426-1622 - Added agent log park fix
 # 121115-0624 - Added buffer time for agent log validation of LOGIN between record and next record
 # 140426-2000 - Added pause_type
+# 161102-1033 - Fixed QM partition problem
 #
 
 # constants
@@ -774,7 +775,7 @@ if ($enable_queuemetrics_logging > 0)
 
 				$newtimeABANDON = ($time_id[$h] + 1);
 				##### insert an ABANDON record for this call into the queue_log
-				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$newtimeABANDON',call_id='$call_id[$h]',queue='$queue[$h]',agent='NONE',verb='ABANDON',data1='1',data2='$queue_position',data3='$queue_seconds',serverid='$serverid[$h]';";
+				$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$newtimeABANDON',call_id='$call_id[$h]',queue='$queue[$h]',agent='NONE',verb='ABANDON',data1='1',data2='$queue_position',data3='$queue_seconds',serverid='$serverid[$h]';";
 				if ($TEST < 1)
 					{
 					$Baffected_rows = $dbhB->do($stmtB);
@@ -1035,7 +1036,7 @@ if ( ($enable_queuemetrics_logging > 0) && ($login_lagged_check > 0) )
 			$pause_typeSQL='';
 			if ($queuemetrics_pause_type > 0)
 				{$pause_typeSQL=",data5='SYSTEM'";}
-			$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$PRtimecheck',call_id='NONE',queue='NONE',agent='$agent[$h]',verb='PAUSEREASON',data1='LOGIN',serverid='$serverid[$h]'$pause_typeSQL;";
+			$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$PRtimecheck',call_id='NONE',queue='NONE',agent='$agent[$h]',verb='PAUSEREASON',data1='LOGIN',serverid='$serverid[$h]'$pause_typeSQL;";
 			if ($TEST < 1)
 				{
 				$Baffected_rows = $dbhB->do($stmtB);
@@ -1726,7 +1727,7 @@ if ($enable_queuemetrics_logging > 0)
 
 						##### insert a COMPLETEAGENT record for this call into the queue_log
 						$CALLtime[$h] = ($Stime_id[$h] - $time_id[$h]);
-						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$Stime_id[$h]',call_id='$Scall_id[$h]',queue='$Squeue[$h]',agent='$Sagent[$h]',verb='COMPLETEAGENT',data1='$Cdata1[$h]',data2='$CALLtime[$h]',data3='$queue_position',serverid='$Sserverid[$h]',data4='$Sdata4[$h]';";
+						$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$Stime_id[$h]',call_id='$Scall_id[$h]',queue='$Squeue[$h]',agent='$Sagent[$h]',verb='COMPLETEAGENT',data1='$Cdata1[$h]',data2='$CALLtime[$h]',data3='$queue_position',serverid='$Sserverid[$h]',data4='$Sdata4[$h]';";
 						if ($TEST < 1)
 							{
 							$Baffected_rows = $dbhB->do($stmtB);
@@ -1761,7 +1762,7 @@ if ($enable_queuemetrics_logging > 0)
 						{
 						##### insert a CALLSTATUS record for this call into the queue_log
 						$CALLtime[$h] = ($Stime_id[$h] - $time_id[$h]);
-						$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$Stime_id[$h]',call_id='$Scall_id[$h]',queue='$Cqueue[$h]',agent='$Sagent[$h]',verb='CALLSTATUS',data1='PU',serverid='$Sserverid[$h]';";
+						$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$Stime_id[$h]',call_id='$Scall_id[$h]',queue='$Cqueue[$h]',agent='$Sagent[$h]',verb='CALLSTATUS',data1='PU',serverid='$Sserverid[$h]';";
 						if ($TEST < 1)
 							{
 							$Baffected_rows = $dbhB->do($stmtB);
@@ -1841,7 +1842,7 @@ if ($enable_queuemetrics_logging > 0)
 
 								##### insert a COMPLETEAGENT record for this call into the queue_log
 								$CALLtime[$h] = ($Stime_id[$h] - $time_id[$h]);
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$Stime_id[$h]',call_id='$Ccall_id[$h]',queue='$Cqueue[$h]',agent='$Cagent[$h]',verb='COMPLETEAGENT',data1='$Cdata1[$h]',data2='$CALLtime[$h]',data3='$queue_position',serverid='$Cserverid[$h]',data4='$Sdata4[$h]';";
+								$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$Stime_id[$h]',call_id='$Ccall_id[$h]',queue='$Cqueue[$h]',agent='$Cagent[$h]',verb='COMPLETEAGENT',data1='$Cdata1[$h]',data2='$CALLtime[$h]',data3='$queue_position',serverid='$Cserverid[$h]',data4='$Sdata4[$h]';";
 								if ($TEST < 1)
 									{
 									$Baffected_rows = $dbhB->do($stmtB) or die "ERROR: $stmtB" . DBI->errstr;
@@ -1850,7 +1851,7 @@ if ($enable_queuemetrics_logging > 0)
 
 								##### insert a CALLSTATUS record for this call into the queue_log
 								$CALLtime[$h] = ($Stime_id[$h] - $time_id[$h]);
-								$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$Stime_id[$h]',call_id='$Ccall_id[$h]',queue='$Cqueue[$h]',agent='$Cagent[$h]',verb='CALLSTATUS',data1='$VALstatus',serverid='$Cserverid[$h]';";
+								$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$Stime_id[$h]',call_id='$Ccall_id[$h]',queue='$Cqueue[$h]',agent='$Cagent[$h]',verb='CALLSTATUS',data1='$VALstatus',serverid='$Cserverid[$h]';";
 								if ($TEST < 1)
 									{
 									$Baffected_rows = $dbhB->do($stmtB) or die "ERROR: $stmtB" . DBI->errstr;
@@ -2106,7 +2107,7 @@ if ($enable_queuemetrics_logging > 0)
 				if ($queuemetrics_pause_type > 0)
 					{$pause_typeSQL=",data5='SYSTEM'";}
 				##### add new PAUSEREASON record
-				$stmtB = "INSERT INTO queue_log SET partition='P01',time_id='$time_id[$h]',call_id='$call_id[$h]',queue='NONE',agent='$agent[$h]',verb='PAUSEREASON',data1='$queuemetrics_dispo_pause',serverid='$Cserverid[$h]'$pause_typeSQL;";
+				$stmtB = "INSERT INTO queue_log SET `partition`='P01',time_id='$time_id[$h]',call_id='$call_id[$h]',queue='NONE',agent='$agent[$h]',verb='PAUSEREASON',data1='$queuemetrics_dispo_pause',serverid='$Cserverid[$h]'$pause_typeSQL;";
 				if ($TEST < 1)	
 					{
 					$Baffected_rows = $dbhB->do($stmtB);
