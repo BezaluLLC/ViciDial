@@ -26,6 +26,7 @@
 # 150514-1522 - Added lookup_gmt function, copied from agc/functions.php
 # 150516-1206 - Added missing TZCODE segment to gmt_lookup function
 # 160802-1149 - Added hex2rgb function
+# 161102-0039 - Patched sec_convert function to display hours 
 #
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
@@ -145,7 +146,7 @@ function sec_convert($sec,$precision)
 
 	if ($sec < 1)
 		{
-		if ($precision == 'HF')
+		if ($precision == 'HF' || $precision == 'H')
 			{return "0:00:00";}
 		else
 			{
@@ -162,7 +163,7 @@ function sec_convert($sec,$precision)
 			{$precision='H';}
 		else
 			{
-			if ( ($sec < 3600) and ($precision != 'S') ) {$precision='M';}
+			# if ( ($sec < 3600) and ($precision != 'S') ) {$precision='M';}
 			}
 
 		if ($precision == 'H')
