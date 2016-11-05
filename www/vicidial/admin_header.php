@@ -67,10 +67,11 @@
 # 160611-2229 - Added style for diff on admin changes
 # 160617-1426 - Added link from screen colors to system settings screen color settings
 # 161101-2129 - Added user_new_lead_limit Users subhead
+# 161103-2136 - Added agent_soundboards option
 #
 
 
-$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add,allow_chats,enable_languages,admin_row_click,admin_screen_colors,user_new_lead_limit,user_territories_active,qc_features_active from system_settings;";
+$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add,allow_chats,enable_languages,admin_row_click,admin_screen_colors,user_new_lead_limit,user_territories_active,qc_features_active,agent_soundboards from system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $admin_home_url_LU =		$row[0];
@@ -86,6 +87,7 @@ $SSadmin_screen_colors =	$row[9];
 $SSuser_new_lead_limit =	$row[10];
 $SSuser_territories_active = $row[11];
 $SSqc_features_active =		$row[12];
+$SSagent_soundboards =		$row[13];
 
 $SSmenu_background='015B91';
 $SSframe_background='D9E6FE';
@@ -2002,7 +2004,7 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 			<a href="admin_languages.php?ADD=163000000000" STYLE="text-decoration:none;"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> &nbsp; <img src="images/icon_languages.png" border=0 alt=\"Users\" width=14 height=14 valign=middle> <?php echo _QXZ("Languages"); ?> </a></TD>
 			</TR>
 			<?php }
-			if (preg_match("/soundboard/",$SSactive_modules) )
+			if ( (preg_match("/soundboard/",$SSactive_modules) ) or ($SSagent_soundboards > 0) )
 				{
 			?>
 			<TR <?php echo $soundboard_sh ?><?php if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='admin_soundboard.php?ADD=162000000000';\"";} ?>><TD ALIGN=LEFT <?php echo $soundboard_sh ?>> &nbsp; 
@@ -2174,7 +2176,7 @@ if ($SSenable_languages == '1')
 		?>
 	<TR BGCOLOR=<?php echo $languages_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="admin_languages.php?ADD=163000000000"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Show Languages"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="admin_languages.php?ADD=163111111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Add A New Language"); ?></FONT></a> &nbsp; | &nbsp; <a href="admin_languages.php?ADD=163211111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Copy A Languages Entry"); ?></FONT></a> &nbsp; | &nbsp; <a href="admin_languages.php?ADD=163311111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Import Phrases"); ?></FONT></a> &nbsp; | &nbsp; <a href="admin_languages.php?ADD=163411111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Export Phrases"); ?></FONT></a> &nbsp; <?php } ?></TD></TR>
 	<?php }
-	if (preg_match("/soundboard/",$SSactive_modules) )
+	if ( (preg_match("/soundboard/",$SSactive_modules) ) or ($SSagent_soundboards > 0) )
 		{
 	if ( (strlen($soundboard_sh) > 25) and (strlen($admin_hh) > 25) ) { 
 		?>

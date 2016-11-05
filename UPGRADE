@@ -302,7 +302,11 @@ OTHER CHANGES:
 
 84. Added option to allow agents to park 3way calls in the agent screen
 
+85. Added option to web lead loader to restrict leads to only those with a 
+	phone number of a specified length. Options for forced system-wide and
+	per-list-load
 
+86. Added more options to the Callback moving utilites in Admin Utilities page
 
 
 

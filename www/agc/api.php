@@ -86,10 +86,11 @@
 # 150928-1157 - Fix allowing for * and # in phone_number field
 # 160113-0921 - Fix for numeric audio files in playback function
 # 161102-1042 - Fixed QM partition problem
+# 161103-1729 - Added agent_debug to audio playing
 #
 
-$version = '2.12-52';
-$build = '161102-1042';
+$version = '2.12-53';
+$build = '161103-1729';
 
 $startMS = microtime();
 
@@ -215,6 +216,8 @@ if (isset($_GET["callback_comments"]))			{$callback_comments=$_GET["callback_com
 	elseif (isset($_POST["callback_comments"]))	{$callback_comments=$_POST["callback_comments"];}
 if (isset($_GET["qm_dispo_code"]))			{$qm_dispo_code=$_GET["qm_dispo_code"];}
 	elseif (isset($_POST["qm_dispo_code"]))	{$qm_dispo_code=$_POST["qm_dispo_code"];}
+if (isset($_GET["agent_debug"]))			{$agent_debug=$_GET["agent_debug"];}
+	elseif (isset($_POST["agent_debug"]))	{$agent_debug=$_POST["agent_debug"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -241,7 +244,7 @@ if ($sl_ct > 0)
 	$VUuser_group =				$row[3];
 	}
 
-$stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_languages,language_method,agent_debug_logging FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -252,6 +255,7 @@ if ($qm_conf_ct > 0)
 	$non_latin =				$row[0];
 	$SSenable_languages =		$row[1];
 	$SSlanguage_method =		$row[2];
+	$SSagent_debug_logging =	$row[3];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -333,6 +337,7 @@ if ($non_latin < 1)
 	$qm_dispo_code = preg_replace("/[^-\.\_0-9a-zA-Z]/","",$qm_dispo_code);
 	$alt_user = preg_replace("/[^0-9a-zA-Z]/","",$alt_user);
 	$postal_code = preg_replace("/[^- \.\_0-9a-zA-Z]/","",$postal_code);
+	$agent_debug = preg_replace("/[^- \.\:\|\_0-9a-zA-Z]/","",$agent_debug);
 	}
 else
 	{
@@ -1447,6 +1452,37 @@ if ($function == 'audio_playback')
 			$result_reason = _QXZ("agent_user is not logged in");
 			echo "$result: $result_reason - $data|$agent_user\n";
 			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+
+	if ($source == 'soundboard')
+		{
+		### log any events that are sent from agent sub-screens
+		if ( (strlen($agent_debug) > 1) and ($SSagent_debug_logging > 0) )
+			{
+			$endMS = microtime();
+			$startMSary = explode(" ",$startMS);
+			$endMSary = explode(" ",$endMS);
+			$runS = ($endMSary[0] - $startMSary[0]);
+			$runM = ($endMSary[1] - $startMSary[1]);
+			$TOTALrun = ($runS + $runM);
+			$cd=0;
+			$agent_debug = preg_replace("/\|$/",'',$agent_debug);
+			$debug_details = explode('|',$agent_debug);
+			$debug_details_ct = count($debug_details);
+			while($cd < $debug_details_ct)
+				{
+				$debug_data = explode('-----',$debug_details[$cd]);
+				$debug_time = $debug_data[0];
+				$debug_function_data = explode('---',$debug_data[1]);
+				$debug_function = $debug_function_data[0];
+				$debug_options = $debug_function_data[1];
+
+				$stmtA="INSERT INTO vicidial_ajax_log set user='$agent_user',start_time='$debug_time',db_time=NOW(),run_time='$TOTALrun',php_script='api.php',action='$debug_function',stage='$cd|$debug_options',last_sql='';";
+				$rslt=mysql_to_mysqli($stmtA, $link);
+
+				$cd++;
+				}
 			}
 		}
 	}

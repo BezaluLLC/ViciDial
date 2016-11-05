@@ -734,3 +734,8 @@ UPDATE system_settings SET db_schema_version='1473',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_users ADD user_new_lead_limit SMALLINT(5) default '-1';
 
 UPDATE system_settings SET db_schema_version='1474',db_schema_update_date=NOW() where db_schema_version < 1474;
+
+ALTER TABLE system_settings ADD agent_soundboards ENUM('1','0') default '0';
+ALTER TABLE system_settings ADD web_loader_phone_length VARCHAR(10) default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1475',db_schema_update_date=NOW() where db_schema_version < 1475;

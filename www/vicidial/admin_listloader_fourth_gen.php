@@ -66,10 +66,11 @@
 # 160102-1039 - Better special characters support
 # 160428-2359 - Fixed custom table bug
 # 160508-0757 - Added colors features
+# 161103-2224 - Added web_loader_phone_length option
 #
 
-$version = '2.12-64';
-$build = '160508-0757';
+$version = '2.12-65';
+$build = '161103-2224';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -172,6 +173,9 @@ if (isset($_GET["usacan_check"]))			{$usacan_check=$_GET["usacan_check"];}
 	elseif (isset($_POST["usacan_check"]))	{$usacan_check=$_POST["usacan_check"];}
 if (isset($_GET["state_conversion"]))			{$state_conversion=$_GET["state_conversion"];}
 	elseif (isset($_POST["state_conversion"]))	{$state_conversion=$_POST["state_conversion"];}
+if (isset($_GET["web_loader_phone_length"]))			{$web_loader_phone_length=$_GET["web_loader_phone_length"];}
+	elseif (isset($_POST["web_loader_phone_length"]))	{$web_loader_phone_length=$_POST["web_loader_phone_length"];}
+
 
 if (strlen($dedupe_statuses_override)>0) {
 	$dedupe_statuses=explode(",", $dedupe_statuses_override);
@@ -189,21 +193,22 @@ $vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,admin_web_directory,custom_fields_enabled,webroot_writable,enable_languages,language_method,active_modules,admin_screen_colors FROM system_settings;";
+$stmt = "SELECT use_non_latin,admin_web_directory,custom_fields_enabled,webroot_writable,enable_languages,language_method,active_modules,admin_screen_colors,web_loader_phone_length FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$non_latin =				$row[0];
-	$admin_web_directory =		$row[1];
-	$custom_fields_enabled =	$row[2];
-	$webroot_writable =			$row[3];
-	$SSenable_languages =		$row[4];
-	$SSlanguage_method =		$row[5];
-	$SSactive_modules =			$row[6];
-	$SSadmin_screen_colors =	$row[7];
+	$non_latin =					$row[0];
+	$admin_web_directory =			$row[1];
+	$custom_fields_enabled =		$row[2];
+	$webroot_writable =				$row[3];
+	$SSenable_languages =			$row[4];
+	$SSlanguage_method =			$row[5];
+	$SSactive_modules =				$row[6];
+	$SSadmin_screen_colors =		$row[7];
+	$SSweb_loader_phone_length =	$row[8];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -219,6 +224,7 @@ else
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
 $list_id_override = preg_replace('/[^0-9]/','',$list_id_override);
+$web_loader_phone_length = preg_replace('/[^0-9]/','',$web_loader_phone_length);
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
@@ -688,6 +694,21 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 			<option value="STATELOOKUP"><?php echo _QXZ("FULL STATE NAME TO ABBREVIATION"); ?></option>
 			</select></td>
 		  </tr>
+		  <tr>
+			<td align=right width="25%"><font face="arial, helvetica" size=2><?php echo _QXZ("Required Phone Number Length"); ?>: </font></td>
+			<td align=left width="75%"><font face="arial, helvetica" size=1><select size=1 name=web_loader_phone_length>
+			<?php if ($SSweb_loader_phone_length == 'DISABLED') { ?>
+			<option selected value=""><?php echo _QXZ("DISABLED"); ?>
+			<?php } 
+			 if ($SSweb_loader_phone_length == 'CHOOSE') { ?>
+			<option selected value=""><?php echo _QXZ("DISABLED"); ?></option>
+			<option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option>
+			<?php } 
+			 if ( (strlen($SSweb_loader_phone_length) > 0) and (strlen($SSweb_loader_phone_length) < 3) and ($SSweb_loader_phone_length > 4) and ($SSweb_loader_phone_length < 19) ) { ?>
+			<option selected value="<?php echo $SSweb_loader_phone_length ?>"><?php echo $SSweb_loader_phone_length ?></option>
+			<?php } ?>
+			</select></td>
+		  </tr>
 
 		<tr>
 			<td align=center colspan=2><input type=submit value="<?php echo _QXZ("SUBMIT"); ?>" name='submit_file'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input type=button onClick="javascript:document.location='admin_listloader_fourth_gen.php'" value="<?php echo _QXZ("START OVER"); ?>" name='reload_page'></td>
@@ -730,6 +751,11 @@ else
 	<td align=right width="35%"><B><font face="arial, helvetica" size=2><?php echo _QXZ("State Abbreviation Lookup"); ?>:</font></B></td>
 	<td align=left width="75%"><font face="arial, helvetica" size=2><?php echo $state_conversion ?></font></td>
 	</tr>
+	<tr>
+	<td align=right width="35%"><B><font face="arial, helvetica" size=2><?php echo _QXZ("Required Phone Number Length"); ?>:</font></B></td>
+	<td align=left width="75%"><font face="arial, helvetica" size=2><?php echo $web_loader_phone_length ?></font></td>
+	</tr>
+
 
 
 	<tr>
@@ -804,6 +830,10 @@ if ($OK_to_process)
 		if (strlen($state_conversion)>9)
 			{
 			print "<BR>"._QXZ("CONVERSION OF STATE NAMES TO ABBREVIATIONS ENABLED").": $state_conversion<BR>\n";
+			}
+		if ( (strlen($web_loader_phone_length)>0) and (strlen($web_loader_phone_length)< 3) )
+			{
+			print "<BR>"._QXZ("REQUIRED PHONE NUMBER LENGTH").": $web_loader_phone_length<BR>\n";
 			}
 
 		if ($custom_fields_enabled > 0)
@@ -1135,10 +1165,15 @@ if ($OK_to_process)
 
 				$valid_number=1;
 				$invalid_reason='';
-				if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )
+				if ( (strlen($phone_number)<5) || (strlen($phone_number)>18) )
 					{
 					$valid_number=0;
 					$invalid_reason = _QXZ("INVALID PHONE NUMBER LENGTH");
+					}
+				if ( (strlen($web_loader_phone_length)>0) and (strlen($web_loader_phone_length)< 3) and ( (strlen($phone_number) > $web_loader_phone_length) or (strlen($phone_number) < $web_loader_phone_length) ) )
+					{
+					$valid_number=0;
+					$invalid_reason = _QXZ("INVALID REQUIRED PHONE NUMBER LENGTH");
 					}
 				if ( (preg_match("/PREFIX/",$usacan_check)) and ($valid_number > 0) )
 					{
@@ -1263,7 +1298,7 @@ if ($OK_to_process)
 			}
 
 		### LOG INSERTION Admin Log Table ###
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST CUSTOM', event_sql='', event_notes='File Name: $leadfile_name, GOOD: $good, BAD: $bad, TOTAL: $total, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check| state_conversion:$state_conversion|';";
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST CUSTOM', event_sql='', event_notes='File Name: $leadfile_name, GOOD: $good, BAD: $bad, TOTAL: $total, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check| state_conversion:$state_conversion| web_loader_phone_length:$web_loader_phone_length|';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -1281,7 +1316,7 @@ if (($leadfile) && ($LF_path))
 	$total=0; $good=0; $bad=0; $dup=0; $post=0; $phone_list='';
 
 	### LOG INSERTION Admin Log Table ###
-	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST', event_sql='', event_notes='File Name: $leadfile_name, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check| state_conversion:$state_conversion|';";
+	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST', event_sql='', event_notes='File Name: $leadfile_name, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check| state_conversion:$state_conversion| web_loader_phone_length:$web_loader_phone_length|';";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -1417,6 +1452,10 @@ if (($leadfile) && ($LF_path))
 			if (strlen($state_conversion)>9)
 				{
 				print "<BR>"._QXZ("CONVERSION OF STATE NAMES TO ABBREVIATIONS ENABLED").": $state_conversion<BR>\n";
+				}
+			if ( (strlen($web_loader_phone_length)>0) and (strlen($web_loader_phone_length)< 3) )
+				{
+				print "<BR>"._QXZ("REQUIRED PHONE NUMBER LENGTH").": $web_loader_phone_length<BR>\n";
 				}
 
 			while (!feof($file)) 
@@ -1653,10 +1692,15 @@ if (($leadfile) && ($LF_path))
 
 					$valid_number=1;
 					$invalid_reason='';
-					if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )
+					if ( (strlen($phone_number)<5) || (strlen($phone_number)>18) )
 						{
 						$valid_number=0;
 						$invalid_reason = _QXZ("INVALID PHONE NUMBER LENGTH");
+						}
+					if ( (strlen($web_loader_phone_length)>0) and (strlen($web_loader_phone_length)< 3) and ( (strlen($phone_number) > $web_loader_phone_length) or (strlen($phone_number) < $web_loader_phone_length) ) )
+						{
+						$valid_number=0;
+						$invalid_reason = _QXZ("INVALID REQUIRED PHONE NUMBER LENGTH");
 						}
 					if ( (preg_match("/PREFIX/",$usacan_check)) and ($valid_number > 0) )
 						{
@@ -1854,7 +1898,7 @@ if (($leadfile) && ($LF_path))
 					{fwrite($stmt_file, $custom_ins_stmt."\r\n");}
 				}
 			### LOG INSERTION Admin Log Table ###
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST STANDARD', event_sql='', event_notes='File Name: $leadfile_name, GOOD: $good, BAD: $bad, TOTAL: $total, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check| state_conversion:$state_conversion|';";
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST STANDARD', event_sql='', event_notes='File Name: $leadfile_name, GOOD: $good, BAD: $bad, TOTAL: $total, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check| state_conversion:$state_conversion| web_loader_phone_length:$web_loader_phone_length|';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -1959,6 +2003,10 @@ if (($leadfile) && ($LF_path))
 			if (strlen($state_conversion)>9)
 				{
 				print "<BR>"._QXZ("CONVERSION OF STATE NAMES TO ABBREVIATIONS ENABLED").": $state_conversion<BR>\n";
+				}
+			if ( (strlen($web_loader_phone_length)>0) and (strlen($web_loader_phone_length)< 3) )
+				{
+				print "<BR>"._QXZ("REQUIRED PHONE NUMBER LENGTH").": $web_loader_phone_length<BR>\n";
 				}
 
 			while (!feof($file)) 
@@ -2190,10 +2238,15 @@ if (($leadfile) && ($LF_path))
 
 					$valid_number=1;
 					$invalid_reason='';
-					if ( (strlen($phone_number)<6) || (strlen($phone_number)>16) )
+					if ( (strlen($phone_number)<5) || (strlen($phone_number)>18) )
 						{
 						$valid_number=0;
 						$invalid_reason = _QXZ("INVALID PHONE NUMBER LENGTH");
+						}
+					if ( (strlen($web_loader_phone_length)>0) and (strlen($web_loader_phone_length)< 3) and ( (strlen($phone_number) > $web_loader_phone_length) or (strlen($phone_number) < $web_loader_phone_length) ) )
+						{
+						$valid_number=0;
+						$invalid_reason = _QXZ("INVALID REQUIRED PHONE NUMBER LENGTH");
 						}
 					if ( (preg_match("/PREFIX/",$usacan_check)) and ($valid_number > 0) )
 						{
@@ -2298,7 +2351,7 @@ if (($leadfile) && ($LF_path))
 					{fwrite($stmt_file, $stmtZ."\r\n");}
 				}
 			### LOG INSERTION Admin Log Table ###
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST STANDARD', event_sql='', event_notes='File Name: $leadfile_name, GOOD: $good, BAD: $bad, TOTAL: $total, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check| state_conversion:$state_conversion|';";
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST STANDARD', event_sql='', event_notes='File Name: $leadfile_name, GOOD: $good, BAD: $bad, TOTAL: $total, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check| state_conversion:$state_conversion| web_loader_phone_length:$web_loader_phone_length|';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -2457,6 +2510,10 @@ if (($leadfile) && ($LF_path))
 			{
 			print "<BR>"._QXZ("CONVERSION OF STATE NAMES TO ABBREVIATIONS ENABLED").": $state_conversion<BR>\n";
 			}
+		if ( (strlen($web_loader_phone_length)>0) and (strlen($web_loader_phone_length)< 3) )
+			{
+			print "<BR>"._QXZ("REQUIRED PHONE NUMBER LENGTH").": $web_loader_phone_length<BR>\n";
+			}
 
 		$buffer=rtrim(fgets($file, 4096));
 		$buffer=stripslashes($buffer);
@@ -2491,6 +2548,7 @@ if (($leadfile) && ($LF_path))
 		print "  <input type=hidden name=dupcheck value=\"$dupcheck\">\r\n";
 		print "  <input type=hidden name=usacan_check value=\"$usacan_check\">\r\n";
 		print "  <input type=hidden name=state_conversion value=\"$state_conversion\">\r\n";
+		print "  <input type=hidden name=web_loader_phone_length value=\"$web_loader_phone_length\">\r\n";
 		print "  <input type=hidden name=postalgmt value=\"$postalgmt\">\r\n";
 		print "  <input type=hidden name=lead_file value=\"$lead_file\">\r\n";
 		print "  <input type=hidden name=list_id_override value=\"$list_id_override\">\r\n";

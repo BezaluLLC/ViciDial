@@ -1677,7 +1677,9 @@ script_remove_js ENUM('1','0') default '1',
 manual_auto_next ENUM('1','0') default '0',
 user_new_lead_limit ENUM('1','0') default '0',
 agent_xfer_park_3way ENUM('1','0') default '0',
-rec_prompt_count INT(9) UNSIGNED default '0'
+rec_prompt_count INT(9) UNSIGNED default '0',
+agent_soundboards ENUM('1','0') default '0',
+web_loader_phone_length VARCHAR(10) default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3807,4 +3809,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1474',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1475',db_schema_update_date=NOW(),reload_timestamp=NOW();

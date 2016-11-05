@@ -1,7 +1,7 @@
 <?php
 # callbacks_bulk_change.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 120819-0119 - First build
@@ -11,6 +11,7 @@
 # 130901-1940 - Changed to mysqli PHP functions
 # 141007-2207 - Finalized adding QXZ translation to all admin files
 # 141229-2050 - Added code for on-the-fly language translations display
+# 161104-0702 - Added option to change callbacks to ANYONE callbacks
 #
 
 require("dbconnect_mysqli.php");
@@ -35,6 +36,8 @@ if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))	{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
+if (isset($_GET["convert_to_anyone"]))			{$convert_to_anyone=$_GET["convert_to_anyone"];}
+	elseif (isset($_POST["convert_to_anyone"]))	{$convert_to_anyone=$_POST["convert_to_anyone"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -162,7 +165,11 @@ while ($i < $groups_to_print)
 	}
 
 if ($SUBMIT && $old_user && $new_user && $confirm_transfer) {
-	$upd_stmt="UPDATE vicidial_callbacks set user='$new_user' where recipient='USERONLY' and status!='INACTIVE' and user='$old_user' $LOGadmin_viewable_groupsSQL";
+	if ($new_user=="ANYONE") {
+		$upd_stmt="UPDATE vicidial_callbacks set recipient='ANYONE' where recipient='USERONLY' and status!='INACTIVE' and user='$old_user' $LOGadmin_viewable_groupsSQL";
+	} else {
+		$upd_stmt="UPDATE vicidial_callbacks set user='$new_user' where recipient='USERONLY' and status!='INACTIVE' and user='$old_user' $LOGadmin_viewable_groupsSQL";
+	}
 	$upd_rslt=mysql_to_mysqli($upd_stmt, $link);
 	if ($DB) {echo "$upd_stmt\n";}
 
@@ -237,7 +244,7 @@ if ($SUBMIT && $old_user && $new_user && !$confirm_transfer)
 	echo "<input type=hidden name=new_user value=\"$new_user\">\n";
 	echo _QXZ("You are about to transfer")." $callback_ct "._QXZ("callbacks")."<BR>\n";
 	echo _QXZ("from user")." $old_user - $old_user_name<BR>\n";
-	echo _QXZ("to user")." $new_user - $new_user_name<BR><BR><BR>\n";
+	echo _QXZ("to user")." $new_user".($new_user_name!="" ? " - $new_user_name" : "")."<BR><BR><BR>\n";
 	echo "<a href='$PHP_SELF?DB=$DB&old_user=$old_user&new_user=$new_user&confirm_transfer=1&SUBMIT=1'>"._QXZ("CLICK TO CONFIRM")."</a><BR><BR>";
 	echo "<a href='$PHP_SELF?DB=$DB'>"._QXZ("CLICK TO CANCEL")."</a><BR><BR>";
 	} 
@@ -272,6 +279,7 @@ else
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	echo "<select name='new_user' size=5>\n";
+	echo "\t<option value='ANYONE'>Anyone - available to all agents in campaign</option>\n";
 	while ($row=mysqli_fetch_array($rslt)) 
 		{
 		echo "\t<option value='$row[user]'>$row[user] - $row[full_name]</option>\n";

@@ -99,6 +99,7 @@
 # 161018-2245 - Added allow_required_fields
 # 161028-1548 - Added agent_xfer_park_3way entry for system_settings
 # 161031-1410 - Added users-user_new_lead_limit entry
+# 161105-0246 - Added web_loader_phone_length, agent soundboards and purge uncalled records
 #
 
 
@@ -4951,6 +4952,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <B><?php echo _QXZ("Agent Screen Park Xfer Button"); ?> -</B><?php echo _QXZ("This option defines whether the agent screen can have a button in the Transfer Conference frame that will allow the agent to park a 3way call. Default is 0 for disabled."); ?>
 
 <BR>
+<A NAME="settings-agent_soundboards">
+<BR>
+<B><?php echo _QXZ("Agent Soundboards"); ?> -</B><?php echo _QXZ("This option allows you to create agent soundboards that allow an agent in the user screen to click on audio files to have them play in their session. Default is 0 for disabled."); ?>
+
+<BR>
 <A NAME="settings-agentonly_callback_campaign_lock">
 <BR>
 <B><?php echo _QXZ("Agent Only Callback Campaign Lock"); ?> -</B><?php echo _QXZ("This option defines whether AGENTONLY callbacks are locked to the campaign that the agent originally created them under. Setting this to 1 means that the agent can only dial them from the campaign they were set under, 0 means that the agent can access them no matter what campaign they are logged into. Default is 1."); ?>
@@ -5029,6 +5035,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-user_new_lead_limit">
 <BR>
 <B><?php echo _QXZ("New Leads Per List Limit"); ?> -</B><?php echo _QXZ("This setting enables the new lead limits per list to be set on the list modify page and the user list new lead limit page. This feature will only work properly if the campaign is set to either the MANUAL or INBOUND_MAN Dial Method and No Hopper dialing is enabled. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="settings-web_loader_phone_length">
+<BR>
+<B><?php echo _QXZ("Web Lead Loader Phone Length"); ?> -</B><?php echo _QXZ("This setting allows you to only allow phone numbers of a specific length into the system when loading leads with the web lead loader. The CHOOSE option allows a manager to optionally select a number of phone number digits to check the length by when loading leads one file at a time. Selecting a number option will not allow a manager to choose while loading leads, the check will be used every time the web lead loader is used. Default is DISABLED."); ?>
 
 <BR>
 <A NAME="settings-allow_custom_dialplan">
@@ -6231,6 +6242,9 @@ if ($SSqc_features_active > 0)
 <A NAME="cb-bulk-purge">
 <BR>
 <B><?php echo _QXZ("Purge called records"); ?> -</B><?php echo _QXZ("If this box is checked, before the leads meeting the selected criteria are moved, the callbacks table will purge itself of all inactive records in the table.  This includes records that have a status of INACTIVE, OR any record still in the callback table that is LIVE but whose status in the vicidial_list table is NOT listed as a callback, i.e. it has been called, lead has called in, lead dispo has been modified.  The page will notify you how many leads will be purged before you confirm that you would like to proceed."); ?>
+<BR>
+<B><?php echo _QXZ("Purge uncalled records"); ?> - </B><?php echo _QXZ("If this box is checked, before the leads meeting the selected criteria are moved, the callbacks table will purge itself of all uncalled records in the table.  This includes records that have a status of ACTIVE, OR any record still in the callback table that is LIVE but whose status in the vicidial_list table is still listed as a callback, i.e. it has not been called, has not called in, and has not had the lead dispo modified.  The page will notify you how many leads will be purged before you confirm that you would like to proceed."); ?>
+
 
 <BR>
 <A NAME="cb-bulk-liveanduncalled">

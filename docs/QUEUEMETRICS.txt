@@ -92,7 +92,7 @@ If it did, then you want to add the following lines to your /etc/rc.d/rc.local f
 
 cd /usr/local
 *** download QueueMetrics and place it in /usr/local ***
-	http//downloads.loway.ch/qm/QueueMetrics-16.09.2.tar.gz
+wget http://downloads.loway.ch/qm/QueueMetrics-16.09.2.tar.gz
 tar xvfz QueueMetrics-16.09.2.tar.gz
 mv queuemetrics-16.09.2 /usr/local/tomcat/webapps/qm
 cd /usr/local/tomcat/webapps/qm/WEB_INF
