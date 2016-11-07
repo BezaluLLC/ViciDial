@@ -739,3 +739,9 @@ ALTER TABLE system_settings ADD agent_soundboards ENUM('1','0') default '0';
 ALTER TABLE system_settings ADD web_loader_phone_length VARCHAR(10) default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1475',db_schema_update_date=NOW() where db_schema_version < 1475;
+
+ALTER TABLE system_settings ADD agent_script VARCHAR(50) default 'vicidial.php';
+
+INSERT INTO vicidial_screen_colors VALUES ('default_grey_agent','default grey agent','Y','FFFFFF','cccccc','E6E6E6','E6E6E6','E6E6E6','E6E6E6','E6E6E6','E6E6E6','E6E6E6','E6E6E6','---ALL---','DEFAULTAGENT.png');
+
+UPDATE system_settings SET db_schema_version='1476',db_schema_update_date=NOW() where db_schema_version < 1476;

@@ -530,10 +530,11 @@
 # 161019-0031 - Added ---REQUIRED--- option for most screen labels
 # 161029-0858 - Added option to park xfer channel
 # 161102-1121 - Fixed QM partition problem
+# 161106-2221 - Changed to screen colors for main tab logo, other small style changes
 #
 
-$version = '2.12-499c';
-$build = '161102-1121';
+$version = '2.12-500c';
+$build = '161106-2221';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -632,7 +633,7 @@ if ($sl_ct > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -670,6 +671,8 @@ if ($qm_conf_ct > 0)
 	$agent_screen_colors =				$row[27];
 	$SSmanual_auto_next =				$row[28];
 	$SSagent_xfer_park_3way =			$row[29];
+	$admin_web_directory =				$row[30];
+	$SSagent_script =					$row[31];
 	}
 else
 	{
@@ -796,7 +799,7 @@ $Mhead_color =	$SSstd_row5_background;
 $selected_logo = "./images/vicidial_admin_web_logo.png";
 $logo_new=0;
 $logo_old=0;
-if (file_exists('../vicidial/images/vicidial_admin_web_logo.png')) {$logo_new++;}
+if (file_exists('../$admin_web_directory/images/vicidial_admin_web_logo.png')) {$logo_new++;}
 if (file_exists('vicidial_admin_web_logo.gif')) {$logo_old++;}
 if ($SSweb_logo=='default_new')
 	{
@@ -804,13 +807,13 @@ if ($SSweb_logo=='default_new')
 	}
 if ( ($SSweb_logo=='default_old') and ($logo_old > 0) )
 	{
-	$selected_logo = "../vicidial/vicidial_admin_web_logo.gif";
+	$selected_logo = "../$admin_web_directory/vicidial_admin_web_logo.gif";
 	}
 if ( ($SSweb_logo!='default_new') and ($SSweb_logo!='default_old') )
 	{
-	if (file_exists("../vicidial/images/vicidial_admin_web_logo$SSweb_logo")) 
+	if (file_exists("../$admin_web_directory/images/vicidial_admin_web_logo$SSweb_logo")) 
 		{
-		$selected_logo = "../vicidial/images/vicidial_admin_web_logo$SSweb_logo";
+		$selected_logo = "../$admin_web_directory/images/vicidial_admin_web_logo$SSweb_logo";
 		}
 	}
 ##### END Define colors and logo #####
@@ -832,6 +835,7 @@ if (($server_port == '80') or ($server_port == '443') ) {$server_port='';}
 else {$server_port = "$CL$server_port";}
 $agcPAGE = "$HTTPprotocol$server_name$server_port$script_name";
 $agcDIR = preg_replace('/vicidial\.php/i','',$agcPAGE);
+$agcDIR = preg_replace("/$SSagent_script/i",'',$agcDIR);
 if (strlen($static_agent_url) > 5)
 	{$agcPAGE = $static_agent_url;}
 if (strlen($VUselected_language) < 1)
@@ -17482,7 +17486,7 @@ $zi=2;
 <span style="position:absolute;left:0px;top:13px;z-index:<?php $zi++; echo $zi ?>;" id="Tabs">
     <table border="0" bgcolor="#FFFFFF" width="<?php echo $MNwidth ?>px" height="30px">
     <tr valign="top" align="left">
-    <td align="left" width="115px"><a href="#" onclick="MainPanelToFront('NO','YES');"><img src="./images/<?php echo _QXZ("vdc_tab_vicidial.gif"); ?>" alt="MAIN" width="115px" height="30px" border="0" /></a></td>
+    <td align="left" width="115px" bgcolor="#<?php echo $SSmenu_background ?>"><a href="#" onclick="MainPanelToFront('NO','YES');"><img src="<?php echo $selected_logo ?>" alt="MAIN" width="115px" height="30px" border="0" /></a></td>
     <td align="left" width="67px"><a href="#" onclick="ScriptPanelToFront('YES');"><img src="./images/<?php echo _QXZ("vdc_tab_script.gif"); ?>" alt="SCRIPT" width="67px" height="30px" border="0" /></a></td>
 	<?php if ($custom_fields_enabled > 0)
     {echo "<td align=\"left\" width=\"67px\"><a href=\"#\" onclick=\"FormPanelToFront('YES');\"><img src=\"./images/"._QXZ("vdc_tab_form.gif")."\" alt=\"FORM\" width=\"67px\" height=\"30px\" border=\"0\" /></a></td>\n";}

@@ -100,6 +100,7 @@
 # 161028-1548 - Added agent_xfer_park_3way entry for system_settings
 # 161031-1410 - Added users-user_new_lead_limit entry
 # 161105-0246 - Added web_loader_phone_length, agent soundboards and purge uncalled records
+# 161106-2102 - Added agent_script
 #
 
 
@@ -4854,11 +4855,6 @@ if ($SSoutbound_autodial_active > 0)
 <B><?php echo _QXZ("Agent API Active"); ?> -</B><?php echo _QXZ("If set to 1, this will allow the Agent API interface to function. Default is 0. "); ?>
 
 <BR>
-<A NAME="settings-admin_home_url">
-<BR>
-<B><?php echo _QXZ("Admin Home URL"); ?> -</B><?php echo _QXZ("This is the URL or web site address that you will go to if you click on the HOME link at the top of the admin.php page."); ?>
-
-<BR>
 <A NAME="settings-admin_modify_refresh">
 <BR>
 <B><?php echo _QXZ("Admin Modify Auto-Refresh"); ?> -</B><?php echo _QXZ("This is the refresh interval in seconds of the modify screens in this admin interface. Setting this to 0 will disable it, setting it below 5 will mostly make the modify screens unusable because they will refresh too quickly to change fields. This option is useful in situations where more than one manager is controlling settings on an active campaign or in-group so that the settings are refreshed frequently. Default is 0."); ?>
@@ -4992,9 +4988,19 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <B><?php echo _QXZ("Custom Agent Leave 3way Sound"); ?> -</B><?php echo _QXZ("This is a systemwide feature that only works on Asterisk 1.8 servers or higher. This allows you to set an audio file for your agents to hear after they have left a 3way conferencce in the agent screen. If you want to have this audio prompt be the only prompt that the agent hears, then you will need to copy the sip-silence audio files over the only-person audio files. If you want the agent to hear no prompt after they leave a 3way call then also set this field to sip-silence. Default is EMPTY."); ?>
 
 <BR>
+<A NAME="settings-admin_home_url">
+<BR>
+<B><?php echo _QXZ("Admin Home URL"); ?> -</B><?php echo _QXZ("This is the URL or web site address that you will go to if you click on the HOME link at the top of the admin.php page."); ?>
+
+<BR>
 <A NAME="settings-admin_web_directory">
 <BR>
 <B><?php echo _QXZ("Admin Web Directory"); ?> -</B><?php echo _QXZ("This is the web directory that your administation web content, like admin.php, are in. To figure out your Admin web directory, it is everything that is between the domain name and the admin.php in the URL on this page, without the beginning and ending slashes."); ?>
+
+<BR>
+<A NAME="settings-agent_script">
+<BR>
+<B><?php echo _QXZ("Agent Screen Script"); ?> -</B><?php echo _QXZ("This is the PHP script page of the agent screen."); ?>
 
 <BR>
 <A NAME="settings-active_voicemail_server">
