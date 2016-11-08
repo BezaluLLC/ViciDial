@@ -102,9 +102,13 @@ if ( ($SSweb_logo!='default_new') and ($SSweb_logo!='default_old') )
 	}
 ##### END Define colors and logo #####
 
-
+echo"<HTML><HEAD>\n";
+echo"<TITLE>"._QXZ("Welcome Screen")."</TITLE>\n";
+echo"<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"../agc/css/style.css\" />\n";
 echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"../agc/css/custom.css\" />\n";
+echo"</HEAD>\n";
+echo "<BODY BGCOLOR=WHITE MARGINHEIGHT=0 MARGINWIDTH=0>\n";
 echo "<table width=\"100%\"><tr><td></td>\n";
 echo "</tr></table>\n";
 echo "<br /><br /><br /><center><table width=\"460px\" cellpadding=\"3\" cellspacing=\"0\" bgcolor=\"#$SSframe_background\"><tr bgcolor=\"white\">";
@@ -124,7 +128,7 @@ echo "<TR><TD ALIGN=CENTER COLSPAN=2><font size=1> &nbsp; </TD></TR>\n";
 
 echo "</table></center>\n";
 echo "</form>\n\n";
-echo "</body>\n\n";
-echo "</html>\n\n";
+echo "</BODY>\n\n";
+echo "</HTML>\n\n";
 exit;
 ?>
