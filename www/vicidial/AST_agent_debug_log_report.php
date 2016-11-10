@@ -394,6 +394,7 @@ if ($SUBMIT) {
 				if ($row["run_time"] > 2) {$run_color='color=purple';} 
 				if ($row["run_time"] > 3) {$run_color='color=red';} 
 				$agntdb_rpt.=" | <font size=2 $run_color>".sprintf("%-10s", $row["run_time"])."</font>"; 
+				if (strlen($row["php_script"])>20) {$row["php_script"]=substr($row["php_script"],-20)."";}
 				$agntdb_rpt.=" | ".sprintf("%-20s", $row["php_script"]); 
 				if (strlen($row["action"])>37) {$row["action"]=substr($row["action"],0,37)."...";}
 				$agntdb_rpt.=" | ".sprintf("%-40s", $row["action"]); 

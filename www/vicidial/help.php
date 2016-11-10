@@ -5191,7 +5191,7 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <BR>
 <A NAME="settings-admin_list_counts">
 <BR>
-<B><?php echo _QXZ("Admin List Counts"); ?> -</B><?php echo _QXZ("This setting allows you to disable the list counts that appear on the Lists listing and the Campaign modify screens. Default is 1 for enabled."); ?>
+<B><?php echo _QXZ("Admin List Counts Link"); ?> -</B><?php echo _QXZ("This setting gives you the option to display list counts by clicking on the -show lists leads counts- link at the top of the Lists listing and the Campaign modify screens. Default is 1 for enabled."); ?>
 
 <BR>
 <A NAME="settings-allow_emails">
