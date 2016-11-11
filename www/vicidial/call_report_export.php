@@ -50,6 +50,7 @@
 # 160510-2100 - Added coding to remove tab characters from the data
 # 160914-2200 - Added option to grab reports by either call date or entry date
 # 161017-1242 - Added DID custom variables to EXTENDED_3 output option
+# 161111-1232 - Fixed debug output to work with export
 #
 
 $startMS = microtime();
@@ -104,12 +105,13 @@ if (strlen($shift)<2) {$shift='ALL';}
 $report_name = 'Export Calls Report';
 $db_source = 'M';
 $file_exported=0;
+$DBout='';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,custom_fields_enabled,enable_languages,language_method,active_modules FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$DBout .= "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -174,7 +176,7 @@ else
 	}
 
 $stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$DBout .= "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $sl_ct = mysqli_num_rows($rslt);
 if ($sl_ct > 0)
@@ -193,13 +195,13 @@ if ($auth_message == 'GOOD')
 if ($auth > 0)
 	{
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports='1';";
-	if ($DB) {echo "|$stmt|\n";}
+	if ($DB) {$DBout .= "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
 	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 6 and view_reports='1';";
-	if ($DB) {echo "|$stmt|\n";}
+	if ($DB) {$DBout .= "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$row=mysqli_fetch_row($rslt);
 	$reports_auth=$row[0];
@@ -269,7 +271,7 @@ if (strlen($LOGserver_name)<1) {$LOGserver_name='X';}
 
 $stmt="SELECT webserver_id FROM vicidial_webservers where webserver='$LOGserver_name' and hostname='$LOGhostname' LIMIT 1;";
 $rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+if ($DB) {$DBout .= "$stmt\n";}
 $webserver_id_ct = mysqli_num_rows($rslt);
 if ($webserver_id_ct > 0)
 	{
@@ -280,14 +282,14 @@ else
 	{
 	##### insert webserver entry
 	$stmt="INSERT INTO vicidial_webservers (webserver,hostname) values('$LOGserver_name','$LOGhostname');";
-	if ($DB) {echo "$stmt\n";}
+	if ($DB) {$DBout .= "$stmt\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$affected_rows = mysqli_affected_rows($link);
 	$webserver_id = mysqli_insert_id($link);
 	}
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$campaign[0], $query_date, $end_date|', url='$LOGfull_url', webserver='$webserver_id';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$DBout .= "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $report_log_id = mysqli_insert_id($link);
 ##### END log visit to the vicidial_report_log table #####
@@ -302,7 +304,7 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	}
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {$DBout .= "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
@@ -499,17 +501,17 @@ if ($run_export > 0)
 
 	if ($DB > 0)
 		{
-		echo "<BR>\n";
-		echo "$campaign_ct|$campaign_string|$campaign_SQL\n";
-		echo "<BR>\n";
-		echo "$group_ct|$group_string|$group_SQL\n";
-		echo "<BR>\n";
-		echo "$user_group_ct|$user_group_string|$user_group_SQL\n";
-		echo "<BR>\n";
-		echo "$list_ct|$list_string|$list_SQL\n";
-		echo "<BR>\n";
-		echo "$status_ct|$status_string|$status_SQL\n";
-		echo "<BR>\n";
+		$DBout .= "<BR>\n";
+		$DBout .= "$campaign_ct|$campaign_string|$campaign_SQL\n";
+		$DBout .= "<BR>\n";
+		$DBout .= "$group_ct|$group_string|$group_SQL\n";
+		$DBout .= "<BR>\n";
+		$DBout .= "$user_group_ct|$user_group_string|$user_group_SQL\n";
+		$DBout .= "<BR>\n";
+		$DBout .= "$list_ct|$list_string|$list_SQL\n";
+		$DBout .= "<BR>\n";
+		$DBout .= "$status_ct|$status_string|$status_SQL\n";
+		$DBout .= "<BR>\n";
 		}
 
 	$outbound_calls=0;
@@ -526,7 +528,7 @@ if ($run_export > 0)
 			$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid,vi.entry_list_id$export_fields_SQL from vicidial_users vu,".$vicidial_log_table." vl,vicidial_list vi where ".$date_field." >= '$query_date 00:00:00' and ".$date_field." <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_group_SQL $status_SQL order by ".$date_field." limit 100000;";
 			}
 		$rslt=mysql_to_mysqli($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$DBout .= "$stmt\n";}
 		$outbound_to_print = mysqli_num_rows($rslt);
 		if ( ($outbound_to_print < 1) and ($RUNgroup < 1) )
 			{
@@ -553,7 +555,7 @@ if ($run_export > 0)
 
 				if ($LOGadmin_hide_phone_data != '0')
 					{
-					if ($DB > 0) {echo "HIDEPHONEDATA|$row[1]|$LOGadmin_hide_phone_data|\n";}
+					if ($DB > 0) {$DBout .= "HIDEPHONEDATA|$row[1]|$LOGadmin_hide_phone_data|\n";}
 					$phone_temp = $row[1];
 					if (strlen($phone_temp) > 0)
 						{
@@ -569,7 +571,7 @@ if ($run_export > 0)
 					}
 				if ($LOGadmin_hide_lead_data != '0')
 					{
-					if ($DB > 0) {echo "HIDELEADDATA|$row[6]|$row[7]|$row[12]|$row[13]|$row[14]|$row[15]|$row[16]|$row[17]|$row[18]|$row[19]|$row[20]|$row[21]|$row[22]|$row[26]|$row[27]|$row[28]|$LOGadmin_hide_lead_data|\n";}
+					if ($DB > 0) {$DBout .= "HIDELEADDATA|$row[6]|$row[7]|$row[12]|$row[13]|$row[14]|$row[15]|$row[16]|$row[17]|$row[18]|$row[19]|$row[20]|$row[21]|$row[22]|$row[26]|$row[27]|$row[28]|$LOGadmin_hide_lead_data|\n";}
 					if (strlen($row[6]) > 0)
 						{$data_temp = $row[6];   $row[6] = preg_replace("/./",'X',$data_temp);}
 					if (strlen($row[7]) > 0)
@@ -635,6 +637,8 @@ if ($run_export > 0)
 				}
 			}
 		}
+	else
+		{if ($DB) {$DBout .= "NO OUTBOUND CALLS: $RUNcampaign|$campaign_string|$campaign_ct\n";}}
 
 	if ($RUNgroup > 0)
 		{
@@ -647,7 +651,7 @@ if ($run_export > 0)
 			$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid$export_fields_SQL from vicidial_users vu,".$vicidial_closer_log_table." vl,vicidial_list vi where ".$date_field." >= '$query_date 00:00:00' and ".$date_field." <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by ".$date_field." limit 100000;";
 			}
 		$rslt=mysql_to_mysqli($stmtA, $link);
-		if ($DB) {echo "$stmt\n";}
+		if ($DB) {$DBout .= "$stmt\n";}
 		$inbound_to_print = mysqli_num_rows($rslt);
 		if ( ($inbound_to_print < 1) and ($outbound_calls < 1) )
 			{
@@ -674,7 +678,7 @@ if ($run_export > 0)
 
 				if ($LOGadmin_hide_phone_data != '0')
 					{
-					if ($DB > 0) {echo "HIDEPHONEDATA|$row[1]|$LOGadmin_hide_phone_data|\n";}
+					if ($DB > 0) {$DBout .= "HIDEPHONEDATA|$row[1]|$LOGadmin_hide_phone_data|\n";}
 					$phone_temp = $row[1];
 					if (strlen($phone_temp) > 0)
 						{
@@ -690,7 +694,7 @@ if ($run_export > 0)
 					}
 				if ($LOGadmin_hide_lead_data != '0')
 					{
-					if ($DB > 0) {echo "HIDELEADDATA|$row[6]|$row[7]|$row[12]|$row[13]|$row[14]|$row[15]|$row[16]|$row[17]|$row[18]|$row[19]|$row[20]|$row[21]|$row[22]|$row[26]|$row[27]|$row[28]|$LOGadmin_hide_lead_data|\n";}
+					if ($DB > 0) {$DBout .= "HIDELEADDATA|$row[6]|$row[7]|$row[12]|$row[13]|$row[14]|$row[15]|$row[16]|$row[17]|$row[18]|$row[19]|$row[20]|$row[21]|$row[22]|$row[26]|$row[27]|$row[28]|$LOGadmin_hide_lead_data|\n";}
 					if (strlen($row[6]) > 0)
 						{$data_temp = $row[6];   $row[6] = preg_replace("/./",'X',$data_temp);}
 					if (strlen($row[7]) > 0)
@@ -1233,12 +1237,14 @@ if ($run_export > 0)
 		echo _QXZ("There are no calls during this time period for these parameters")."\n";
 		exit;
 		}
+	echo "$DBout";
 	}
 ##### END RUN THE EXPORT AND OUTPUT FLAT DATA FILE #####
 
 
 else
 	{
+	echo "$DBout";
 	$NOW_DATE = date("Y-m-d");
 	$NOW_TIME = date("Y-m-d H:i:s");
 	$STARTtime = date("U");
