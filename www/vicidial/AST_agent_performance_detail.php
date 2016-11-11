@@ -57,6 +57,7 @@
 # 160503-2137 - Bug fix and inclusion of null sub_statuses in counts for "PAUSE CODE BREAKDOWN" section
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 # 161013-2142 - Added option to display live agents only
+# 161110-1830 - Fixed display issue for total averages
 #
 
 $startMS = microtime();
@@ -1439,11 +1440,11 @@ $TOTtotPAUSE_MS_pct =	sprintf("%0.2f", MathZDC(100*$TOTtotPAUSE, $TOTtime));
 $TOTtotWAIT_MS_pct =	sprintf("%0.2f", MathZDC(100*$TOTtotWAIT, $TOTtime));
 $TOTtotCUSTOMER_MS_pct =sprintf("%0.2f", MathZDC(100*$TOTtotCUSTOMER, $TOTtime));
 $TOTavgTALK_MS =	sec_convert($TOTavgTALK,$TIME_M_agentperfdetail); 
-$TOTavgDISPO_MS =	sec_convert($TOTavgDISPO,$TIME_H_agentperfdetail); 
-$TOTavgDEAD_MS =	sec_convert($TOTavgDEAD,$TIME_H_agentperfdetail); 
-$TOTavgPAUSE_MS =	sec_convert($TOTavgPAUSE,$TIME_H_agentperfdetail); 
-$TOTavgWAIT_MS =	sec_convert($TOTavgWAIT,$TIME_H_agentperfdetail); 
-$TOTavgCUSTOMER_MS =	sec_convert($TOTavgCUSTOMER,$TIME_H_agentperfdetail); 
+$TOTavgDISPO_MS =	sec_convert($TOTavgDISPO,$TIME_M_agentperfdetail); 
+$TOTavgDEAD_MS =	sec_convert($TOTavgDEAD,$TIME_M_agentperfdetail); 
+$TOTavgPAUSE_MS =	sec_convert($TOTavgPAUSE,$TIME_M_agentperfdetail); 
+$TOTavgWAIT_MS =	sec_convert($TOTavgWAIT,$TIME_M_agentperfdetail); 
+$TOTavgCUSTOMER_MS =	sec_convert($TOTavgCUSTOMER,$TIME_M_agentperfdetail); 
 
 $TOTtime_MS =		sprintf("%10s", $TOTtime_MS);
 $TOTtotTALK_MS =	sprintf("%10s", $TOTtotTALK_MS);
