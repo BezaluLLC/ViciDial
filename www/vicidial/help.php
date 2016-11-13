@@ -3527,7 +3527,7 @@ if ($SSqc_features_active > 0)
 <B><FONT SIZE=3>SCRIPTS TABLE</FONT></B><BR><BR>
 <A NAME="scripts-script_id">
 <BR>
-<B><?php echo _QXZ("Script ID"); ?> -</B><?php echo _QXZ("This is the short name of a Script. This needs to be a unique identifier. Try not to use any spaces or punctuation for this field. max 10 characters, minimum of 2 characters."); ?>
+<B><?php echo _QXZ("Script ID"); ?> -</B><?php echo _QXZ("This is the short name of a Script. This needs to be a unique identifier. Try not to use any spaces or punctuation for this field. max 20 characters, minimum of 2 characters."); ?>
 
 <BR>
 <A NAME="scripts-script_name">

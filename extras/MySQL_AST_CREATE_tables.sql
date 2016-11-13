@@ -739,7 +739,7 @@ campaign_vdad_exten VARCHAR(20) default '8368',
 campaign_rec_exten VARCHAR(20) default '8309',
 campaign_recording ENUM('NEVER','ONDEMAND','ALLCALLS','ALLFORCE') default 'ONDEMAND',
 campaign_rec_filename VARCHAR(50) default 'FULLDATE_CUSTPHONE',
-campaign_script VARCHAR(10),
+campaign_script VARCHAR(20),
 get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','WEBFORMTHREE','FORM') default 'NONE',
 am_message_exten VARCHAR(100) default 'vm-goodbye',
 amd_send_to_vmx ENUM('Y','N') default 'N',
@@ -792,7 +792,7 @@ qc_shift_id VARCHAR(20) default '24HRMIDNIGHT',
 qc_get_record_launch ENUM('NONE','SCRIPT','WEBFORM','QCSCRIPT','QCWEBFORM') default 'NONE',
 qc_show_recording ENUM('Y','N') default 'Y',
 qc_web_form_address VARCHAR(255),
-qc_script VARCHAR(10),
+qc_script VARCHAR(20),
 survey_first_audio_file VARCHAR(50) default 'US_pol_survey_hello',
 survey_dtmf_digits VARCHAR(16) default '1238',
 survey_ni_digit VARCHAR(1) default '8',
@@ -978,7 +978,7 @@ list_description VARCHAR(255),
 list_changedate DATETIME,
 list_lastcalldate DATETIME,
 reset_time VARCHAR(100) default '',
-agent_script_override VARCHAR(10) default '',
+agent_script_override VARCHAR(20) default '',
 campaign_cid_override VARCHAR(20) default '',
 am_message_exten_override VARCHAR(100) default '',
 drop_inbound_group_override VARCHAR(20) default '',
@@ -1077,7 +1077,7 @@ web_form_address TEXT,
 voicemail_ext VARCHAR(10),
 next_agent_call VARCHAR(30) default 'longest_wait_time',
 fronter_display ENUM('Y','N') default 'Y',
-ingroup_script VARCHAR(10),
+ingroup_script VARCHAR(20),
 get_call_launch ENUM('NONE','SCRIPT','WEBFORM','WEBFORMTWO','WEBFORMTHREE','FORM','EMAIL') default 'NONE',
 xferconf_a_dtmf VARCHAR(50),
 xferconf_a_number VARCHAR(50),
@@ -1109,7 +1109,7 @@ qc_shift_id VARCHAR(20) default '24HRMIDNIGHT',
 qc_get_record_launch ENUM('NONE','SCRIPT','WEBFORM','QCSCRIPT','QCWEBFORM') default 'NONE',
 qc_show_recording ENUM('Y','N') default 'Y',
 qc_web_form_address VARCHAR(255),
-qc_script VARCHAR(10),
+qc_script VARCHAR(20),
 play_place_in_line ENUM('Y','N') default 'N',
 play_estimate_hold_time ENUM('Y','N') default 'N',
 hold_time_option VARCHAR(30) default 'NONE',
@@ -1302,7 +1302,7 @@ index (event_time)
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_scripts (
-script_id VARCHAR(10) PRIMARY KEY NOT NULL,
+script_id VARCHAR(20) PRIMARY KEY NOT NULL,
 script_name VARCHAR(50),
 script_comments VARCHAR(255),
 script_text TEXT,
@@ -3178,7 +3178,9 @@ avatar_api_pass VARCHAR(20) default '',
 active ENUM('Y','N') default 'Y',
 audio_functions VARCHAR(100) default 'PLAY-STOP-RESTART',
 audio_display VARCHAR(100) default 'FILE-NAME',
-user_group VARCHAR(20) default '---ALL---'
+user_group VARCHAR(20) default '---ALL---',
+soundboard_layout VARCHAR(40) default 'default',
+columns_limit SMALLINT(5) default '5'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_avatar_audio (
@@ -3190,6 +3192,8 @@ h_ord SMALLINT(5) default '1',
 level SMALLINT(5) default '1',
 parent_audio_filename VARCHAR(255) default '',
 parent_rank VARCHAR(2) default '',
+button_type VARCHAR(40) default 'button',
+font_size VARCHAR(3) default '2',
 index (avatar_id)
 ) ENGINE=MyISAM;
 
@@ -3811,4 +3815,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1476',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1477',db_schema_update_date=NOW(),reload_timestamp=NOW();

@@ -11,10 +11,11 @@
 # 141216-2135 - Added language settings lookups and user/pass variable standardization
 # 160428-1848 - Fix for user_authorization
 # 161103-1656 - Added Agent Debug Logging
+# 161111-1647 - Added HIDENUMBERS display option, Font size, button type and layout options
 #
 
-$version = '2.12-5';
-$build = '161103-1656';
+$version = '2.12-6';
+$build = '161111-1647';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -109,12 +110,15 @@ if ($qm_conf_ct > 0)
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
+	$pass=preg_replace("/[^-_0-9a-zA-Z]/","",$pass);
 	$soundboard_id=preg_replace("/[^-_0-9a-zA-Z]/","",$soundboard_id);
 	$avatar_id=preg_replace("/[^-_0-9a-zA-Z]/","",$avatar_id);
 	$session_name=preg_replace("/[^-_0-9a-zA-Z]/","",$session_name);
 	}
 else
 	{
+	$user=preg_replace("/\'|\"|\\\\|;| /","",$user);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	$soundboard_id=preg_replace("/\'|\"|\\\\|;| /","",$soundboard_id);
 	$avatar_id=preg_replace("/\'|\"|\\\\|;| /","",$avatar_id);
 	$session_name=preg_replace("/[^-_0-9a-zA-Z]/","",$session_name);
@@ -167,7 +171,7 @@ else
 	# do nothing for now
 	}
 
-$stmt="SELECT avatar_id,avatar_name,avatar_notes,avatar_api_user,avatar_api_pass,active,audio_functions,user_group,audio_display from vicidial_avatars where avatar_id='$soundboard_id' and active='Y';";
+$stmt="SELECT avatar_id,avatar_name,avatar_notes,avatar_api_user,avatar_api_pass,active,audio_functions,user_group,audio_display,soundboard_layout,columns_limit from vicidial_avatars where avatar_id='$soundboard_id' and active='Y';";
 if ($DB) {echo "$stmt\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $soundboard_ct = mysqli_num_rows($rslt);
@@ -183,6 +187,8 @@ if ($soundboard_ct > 0)
 	$audio_functions =	$row[6];
 	$user_group =		$row[7];
 	$audio_display =	$row[8];
+	$soundboard_layout = $row[9];
+	$columns_limit =	$row[10];
 	}
 else
 	{
@@ -508,9 +514,10 @@ echo "\n";
 echo "<!-- Soundboard: $soundboard_id --><form action=$PHP_SELF method=POST name=soundboard_form id=soundboard_form>\n";
 echo "<input type=hidden name=last_played id=last_played value=\"\">\n";
 echo "<input type=hidden name=soundboard_id id=soundboard_id value=\"$soundboard_id\">\n";
+echo "<input type=hidden name=soundboard_layout id=soundboard_layout value=\"$soundboard_layout\">\n";
 
 ##### get files listing for display
-$stmt="SELECT audio_filename,audio_name,rank,level,parent_audio_filename,parent_rank,h_ord from vicidial_avatar_audio where avatar_id='$soundboard_id' and level='1' order by rank,h_ord;";
+$stmt="SELECT audio_filename,audio_name,rank,level,parent_audio_filename,parent_rank,h_ord,button_type,font_size from vicidial_avatar_audio where avatar_id='$soundboard_id' and level='1' order by rank,h_ord;";
 if ($DB) {echo "$stmt\n";}
 $rsltx=mysql_to_mysqli($stmt, $link);
 $soundboardfiles_to_print = mysqli_num_rows($rsltx);
@@ -528,6 +535,14 @@ while ($soundboardfiles_to_print > $o)
 	$Aparent_audio_filename[$o] = 	$rowx[4];
 	$Aparent_rank[$o] = 			$rowx[5];
 	$Ah_ord[$o] = 					$rowx[6];
+	$Abutton_type[$o] = 			$rowx[7];
+	$Afont_size[$o] = 				$rowx[8];
+	$Abold_start[$o]='';	$Abold_end[$o]='';
+	if (preg_match("/B/",$Afont_size[$o]))
+		{$Abold_start[$o]='<B>';	$Abold_end[$o]='</B>';	$Afont_size[$o] = preg_replace("/B/",'',$Afont_size[$o]);}
+	$Aitalic_start[$o]='';	$Aitalic_end[$o]='';
+	if (preg_match("/I/",$Afont_size[$o]))
+		{$Aitalic_start[$o]='<I>';	$Aitalic_end[$o]='</I>';	$Afont_size[$o] = preg_replace("/I/",'',$Afont_size[$o]);}
 	if ($o == 0)
 		{
 		$Uranks[$ranks] = $Arank[$o];  
@@ -583,216 +598,562 @@ while($o < $ranks)
 if ($DB > 0) {echo _QXZ("Max rank count").": $rank_max_count<br>\n";}
 
 
-echo "<center><table width=99% cellspacing=1 bgcolor=white>\n";
-echo "<tr bgcolor=white>";
-echo "<td rowspan=2 align=center colspan=2><b>$avatar_name</b></td>";
-if (preg_match("/STOP/",$audio_functions))
-	{echo "<td width=300 align=center id=\"stop_td\" onMouseOver=\"this.bgColor='#FF0000'\" onMouseOut=\"this.bgColor='#FF9999'\" bgColor=\"#FF9999\" onClick=\"stop_audio()\"><b>"._QXZ("stop audio")." &nbsp; &nbsp; &nbsp; &nbsp; <span id=countdown_audio></span></b></td>";}
-else
-	{echo "<td width=300 align=center id=\"stop_td\" bgColor=\"white\"> &nbsp; <span id=countdown_audio></span></td>";}
-echo "</tr><tr><td width=300 height=5 align=center id=\"stop_td\" bgColor=\"white\"><span id=stop_progress></span></td>";
-echo "</tr></table>\n";
-echo "<table width=99% cellspacing=3 bgcolor=white>\n";
 
-### generate display tables
-$o=0;
-while ($soundboardfiles_to_print > $o)
+
+
+
+
+
+
+
+if ($soundboard_layout == 'columns01')
 	{
-	$ro = ($o + 1);
-	$display_button='';
-	if (preg_match("/FILE/",$audio_display))
-		{$display_button .= " $Aaudio_filename[$o]";}
-	if (preg_match("/NAME/",$audio_display))
-		{
-		if (strlen($display_button) > 1)
-			{$display_button .= " - ";}
-		$display_button .= " $Aaudio_name[$o]";
-		}
+	##### BEGIN columns01 layout #####
+	echo "<center><table width=99% cellspacing=1 bgcolor=white>\n";
+	echo "<tr bgcolor=white>";
+	echo "<td rowspan=2 align=center colspan=2><b><font face=\"Arial,Helvetica\">$avatar_name</font></b></td>";
+	if (preg_match("/STOP/",$audio_functions))
+		{echo "<td width=300 align=center id=\"stop_td\" onMouseOver=\"this.bgColor='#FF0000'\" onMouseOut=\"this.bgColor='#FF9999'\" bgColor=\"#FF9999\" onClick=\"stop_audio()\"><b><font face=\"Arial,Helvetica\">"._QXZ("stop audio")." &nbsp; &nbsp; &nbsp; &nbsp; </font><span id=countdown_audio></span></b></td>";}
+	else
+		{echo "<td width=300 align=center id=\"stop_td\" bgColor=\"white\"> &nbsp; <span id=countdown_audio></span></td>";}
+	echo "</tr><tr><td width=300 height=5 align=center id=\"stop_td\" bgColor=\"white\"><span id=stop_progress></span></td>";
+	echo "</tr></table>\n";
+	echo "<table width=99% cellspacing=3 bgcolor=white>\n";
+	echo "<tr valign=top>\n";
 
-	$rc=0;
-	$rc_found=0;
-	$Rcolspan=1;
-	$tr_begin='';
-	$tr_end='';
-
-	while($rc < $ranks)
+	### generate display tables
+	$o=0; $columns=0; $row_count=0; $head_span_count=0;
+	while ($soundboardfiles_to_print > $o)
 		{
-		if ($Arank[$o] == $Uranks[$rc])
+		$temp_col_limit = ($columns_limit - $head_span_count);
+		if ( ( ($columns >= $columns_limit) and ($row_count < 1) ) or ( ($row_count > 0) and ($columns >= $temp_col_limit) ) )
 			{
-			if ($Rtally[$rc] == '0')
+			echo "</td></tr><tr valign=top><td colspan=$columns_limit valign=top> &nbsp; </td></tr><tr valign=top>\n";
+			if ($row_count > 0) {$head_span_count=0;}
+			$columns=0;
+			$row_count++;
+			}
+		$head_span='';
+		if ($Abutton_type[$o] == 'head2r')
+			{$head_span = " rowspan=3"; $head_span_count++;}
+		echo "<td valign=top$head_span><table cellspacing=3 bgcolor=white>\n";
+		$ro = ($o + 1);
+		$display_button='';
+		if (preg_match("/FILE/",$audio_display))
+			{$display_button .= " $Aaudio_filename[$o]";}
+		if (preg_match("/NAME/",$audio_display))
+			{
+			if (strlen($display_button) > 1)
+				{$display_button .= " - ";}
+			$display_button .= " $Aaudio_name[$o]";
+			}
+		$count_display="$ro. ";
+		if (preg_match("/HIDENUMBERS/",$audio_display))
+			{$count_display = '';}
+
+		$rc=0;
+		$rc_found=0;
+		$Rcolspan=1;
+		$tr_begin='';
+		$tr_end='';
+
+		while($rc < $ranks)
+			{
+			if ($Arank[$o] == $Uranks[$rc])
 				{
-				$tr_begin='<tr>';
-				}
-			if ($Rcount[$rc] == '1')
-				{
-				$Rcolspan = ($rank_max_count + 1);
-				$tr_end='</tr>';
-				}
-			else
-				{
-				$Rtally[$rc]++;
-				if ($Rtally[$rc] == 1)
-					{$Rcolspan=2;}
-				else
-					{$Rcolspan=1;}
-				if ($Rcount[$rc] == $Rtally[$rc])
+				if ($Rtally[$rc] == '0')
 					{
-					$Rdiff = ($rank_max_count - $Rtally[$rc]);
-					$Rcolspan = ($Rcolspan + $Rdiff);
+					$tr_begin='<tr>';
+					}
+				if ($Rcount[$rc] == '1')
+					{
+					$Rcolspan = ($rank_max_count + 1);
 					$tr_end='</tr>';
 					}
+				else
+					{
+					$Rtally[$rc]++;
+					if ($Rtally[$rc] == 1)
+						{$Rcolspan=2;}
+					else
+						{$Rcolspan=1;}
+					if ($Rcount[$rc] == $Rtally[$rc])
+						{
+						$Rdiff = ($rank_max_count - $Rtally[$rc]);
+						$Rcolspan = ($Rcolspan + $Rdiff);
+						$tr_end='</tr>';
+						}
+					}
 				}
+			$rc++;
 			}
-		$rc++;
-		}
 
-	$audio_length=0;
-	$stmt="SELECT audio_length from audio_store_details where audio_filename IN('$Aaudio_filename[$o]$wav','$Aaudio_filename[$o]$gsm') order by audio_length desc limit 1;";
-	if ($DB) {echo "$stmt\n";}
-	$rslty=mysql_to_mysqli($stmt, $link);
-	$al_ct = mysqli_num_rows($rslty);
-	if ($al_ct > 0)
-		{
-		$rowD=mysqli_fetch_row($rslty);
-		$audio_length =			$rowD[0];
-		if ($audio_length < 1)
-			{$audio_length = '1';}
-		}
-
-	echo "$tr_begin<td onClick=\"click_cell('TOP---$Aaudio_filename[$o]---$Arank[$o]---$Alevel[$o]---$Ah_ord[$o]---$audio_length')\" onMouseOver=\"over_cell('TOP---$Aaudio_filename[$o]---$Arank[$o]---$Alevel[$o]---$Ah_ord[$o]---$audio_length')\" onMouseOut=\"out_cell('TOP---$Aaudio_filename[$o]---$Arank[$o]---$Alevel[$o]---$Ah_ord[$o]---$audio_length')\" id=\"TOP---$Aaudio_filename[$o]---$Arank[$o]---$Alevel[$o]---$Ah_ord[$o]---$audio_length\" align=\"left\" bgColor=\"#d6d6d6\" colspan=$Rcolspan nowrap>$ro. $display_button</td>";
-	echo "$tr_end\n";
-
-	if (strlen($tr_end)>4)
-		{
-		$stmt="SELECT audio_filename,audio_name,rank,level,parent_audio_filename,parent_rank,h_ord from vicidial_avatar_audio where avatar_id='$soundboard_id' and level='2' and parent_rank='$Arank[$o]' order by parent_audio_filename,rank,h_ord;";
-		# and parent_audio_filename='$Aaudio_filename[$o]' removed for multi-entries per line
+		$audio_length=0;
+		$stmt="SELECT audio_length from audio_store_details where audio_filename IN('$Aaudio_filename[$o]$wav','$Aaudio_filename[$o]$gsm') order by audio_length desc limit 1;";
 		if ($DB) {echo "$stmt\n";}
 		$rslty=mysql_to_mysqli($stmt, $link);
-		$Csoundboardfiles_to_print = mysqli_num_rows($rslty);
-		$Clevels = 2;
-		$Cranks=0;
-		$Crank_max_count=0;
-		$Co=0;
-		while ($Csoundboardfiles_to_print > $Co)
+		$al_ct = mysqli_num_rows($rslty);
+		if ($al_ct > 0)
 			{
-			$rowC=mysqli_fetch_row($rslty);
-			$Caudio_filename[$Co] =			$rowC[0];
-			$Caudio_name[$Co] = 			$rowC[1];
-			$Crank[$Co] = 					$rowC[2];
-			$Clevel[$Co] = 					$rowC[3];
-			$Cparent_audio_filename[$Co] = 	$rowC[4];
-			$Cparent_rank[$Co] = 			$rowC[5];
-			$Ch_ord[$Co] = 					$rowC[6];
-			if ($Co == 0)
+			$rowD=mysqli_fetch_row($rslty);
+			$audio_length =			$rowD[0];
+			if ($audio_length < 1)
+				{$audio_length = '1';}
+			}
+
+		if ( ($Abutton_type[$o] == 'header') or ($Abutton_type[$o] == 'head2r') )
+			{
+			echo "$tr_begin<td id=\"TOP---$Aaudio_filename[$o]---$Arank[$o]---$Alevel[$o]---$Ah_ord[$o]---$audio_length\" align=\"center\" bgColor=\"#000000\" colspan=$Rcolspan nowrap><font size=\"$Afont_size[$o]\" color=\"white\" face=\"Arial,Helvetica\">$Abold_start[$o]$Aitalic_start[$o] &nbsp; $count_display$Aaudio_name[$o] &nbsp; $Aitalic_end[$o]$Abold_end[$o]</font></td>";
+			echo "$tr_end\n";
+			}
+		else
+			{
+			if ($Abutton_type[$o] == 'space')
 				{
-				$CUranks[$Cranks] = $Crank[$Co];  
-				$CRcount[$Cranks]=1;
-				$Crank_max_count=1;
-				$Cranks++;
+				echo "$tr_begin<td id=\"TOP---$Aaudio_filename[$o]---$Arank[$o]---$Alevel[$o]---$Ah_ord[$o]---$audio_length\" align=\"center\" colspan=$Rcolspan nowrap><font size=\"$Afont_size[$o]\" color=\"white\" face=\"Arial,Helvetica\">$Abold_start[$o]$Aitalic_start[$o] &nbsp; $Aitalic_end[$o]$Abold_end[$o]</font></td>";
+				echo "$tr_end\n";
 				}
 			else
 				{
+				echo "$tr_begin<td onClick=\"click_cell('TOP---$Aaudio_filename[$o]---$Arank[$o]---$Alevel[$o]---$Ah_ord[$o]---$audio_length')\" onMouseOver=\"over_cell('TOP---$Aaudio_filename[$o]---$Arank[$o]---$Alevel[$o]---$Ah_ord[$o]---$audio_length')\" onMouseOut=\"out_cell('TOP---$Aaudio_filename[$o]---$Arank[$o]---$Alevel[$o]---$Ah_ord[$o]---$audio_length')\" id=\"TOP---$Aaudio_filename[$o]---$Arank[$o]---$Alevel[$o]---$Ah_ord[$o]---$audio_length\" align=\"left\" bgColor=\"#d6d6d6\" colspan=$Rcolspan nowrap><font size=\"$Afont_size[$o]\" face=\"Arial,Helvetica\">$Abold_start[$o]$Aitalic_start[$o] &nbsp; $count_display$display_button &nbsp; $Aitalic_end[$o]$Abold_end[$o]</font></td>";
+				echo "$tr_end\n";
+				}
+			}
+
+		if (strlen($tr_end)>4)
+			{
+			$stmt="SELECT audio_filename,audio_name,rank,level,parent_audio_filename,parent_rank,h_ord,button_type,font_size from vicidial_avatar_audio where avatar_id='$soundboard_id' and level='2' and parent_rank='$Arank[$o]' order by parent_audio_filename,rank,h_ord;";
+			# and parent_audio_filename='$Aaudio_filename[$o]' removed for multi-entries per line
+			if ($DB) {echo "$stmt\n";}
+			$rslty=mysql_to_mysqli($stmt, $link);
+			$Csoundboardfiles_to_print = mysqli_num_rows($rslty);
+			$Clevels = 2;
+			$Cranks=0;
+			$Crank_max_count=0;
+			$Co=0;
+			while ($Csoundboardfiles_to_print > $Co)
+				{
+				$rowC=mysqli_fetch_row($rslty);
+				$Caudio_filename[$Co] =			$rowC[0];
+				$Caudio_name[$Co] = 			$rowC[1];
+				$Crank[$Co] = 					$rowC[2];
+				$Clevel[$Co] = 					$rowC[3];
+				$Cparent_audio_filename[$Co] = 	$rowC[4];
+				$Cparent_rank[$Co] = 			$rowC[5];
+				$Ch_ord[$Co] = 					$rowC[6];
+				$Cbutton_type[$Co] = 			$rowC[7];
+				$Cfont_size[$Co] = 				$rowC[8];
+				$Cbold_start[$Co]='';	$Cbold_end[$Co]='';
+				if (preg_match("/B/",$Cfont_size[$Co]))
+					{$Cbold_start[$Co]='<B>';	$Cbold_end[$Co]='</B>';	$Cfont_size[$Co] = preg_replace("/B/",'',$Cfont_size[$Co]);}
+				$Citalic_start[$Co]='';	$Citalic_end[$Co]='';
+				if (preg_match("/I/",$Cfont_size[$Co]))
+					{$Citalic_start[$Co]='<I>';	$Citalic_end[$Co]='</I>';	$Cfont_size[$Co] = preg_replace("/B/",'',$Cfont_size[$Co]);}
+				if ($Co == 0)
+					{
+					$CUranks[$Cranks] = $Crank[$Co];  
+					$CRcount[$Cranks]=1;
+					$Crank_max_count=1;
+					$Cranks++;
+					}
+				else
+					{
+					$rc=0;
+					$rc_found=0;
+					while($rc < $Cranks)
+						{
+						if ($Crank[$Co] == $CUranks[$rc])
+							{
+							$CRcount[$rc]++;
+							if ($Crank_max_count < $CRcount[$rc])
+								{$Crank_max_count = $CRcount[$rc];}
+							$rc_found++;
+							}
+						$rc++;
+						}
+					if ($rc_found < 1)
+						{
+						$CUranks[$Cranks] = $Crank[$Co];  
+						$CRcount[$Cranks]=1;
+						$Cranks++;
+						}
+					}
+				$Co++;
+				}
+
+			### count number of entries for each unique rank
+			$Co=0;
+			while($Co < $Cranks)
+				{
+				$CRtally[$Co]=0;
+				if ($DB > 0) {echo "$CUranks[$Co] - $CRcount[$Co] - $Cranks - $Crank_max_count<BR>\n";}
+				$Co++;
+				}
+			if ($DB > 0) {echo _QXZ("Max rank count").": $Crank_max_count<br>\n";}
+
+			$Co=0;
+			while ($Csoundboardfiles_to_print > $Co)
+				{
+				$ro = ($Co + 1);
+				$display_button='';
+				if (preg_match("/FILE/",$audio_display))
+					{$display_button .= " $Caudio_filename[$Co]";}
+				if (preg_match("/NAME/",$audio_display))
+					{
+					if (strlen($display_button) > 1)
+						{$display_button .= " - ";}
+					$display_button .= " $Caudio_name[$Co]";
+					}
+				$count_display="$ro. ";
+				if (preg_match("/HIDENUMBERS/",$audio_display))
+					{$count_display = '';}
+
 				$rc=0;
 				$rc_found=0;
+				$CRcolspan=1;
+				$tr_begin='';
+				$tr_end='';
+
 				while($rc < $Cranks)
 					{
 					if ($Crank[$Co] == $CUranks[$rc])
 						{
-						$CRcount[$rc]++;
-						if ($Crank_max_count < $CRcount[$rc])
-							{$Crank_max_count = $CRcount[$rc];}
-						$rc_found++;
+						if ($CRtally[$rc] == '0')
+							{
+							$tr_begin='<tr><td nowrap width=10> &nbsp; </td>';
+							}
+						if ($CRcount[$rc] == '1')
+							{
+							$CRcolspan = $rank_max_count;
+							$tr_end='</tr>';
+							}
+						else
+							{
+							$CRtally[$rc]++;
+							$CRcolspan=1;
+							if ($CRcount[$rc] == $CRtally[$rc])
+								{
+								$CRdiff = ($rank_max_count - $CRtally[$rc]);
+								$CRcolspan = ($CRcolspan + $CRdiff);
+								$tr_end='</tr>';
+								}
+							}
 						}
 					$rc++;
 					}
-				if ($rc_found < 1)
+
+				$audio_length=0;
+				$stmt="SELECT audio_length from audio_store_details where audio_filename IN('$Caudio_filename[$Co]$wav','$Caudio_filename[$Co]$gsm') order by audio_length desc limit 1;";
+				if ($DB) {echo "$stmt\n";}
+				$rslty=mysql_to_mysqli($stmt, $link);
+				$al_ct = mysqli_num_rows($rslty);
+				if ($al_ct > 0)
 					{
-					$CUranks[$Cranks] = $Crank[$Co];  
-					$CRcount[$Cranks]=1;
-					$Cranks++;
+					$rowD=mysqli_fetch_row($rslty);
+					$audio_length =			$rowD[0];
+					if ($audio_length < 1)
+						{$audio_length = '1';}
 					}
-				}
-			$Co++;
-			}
 
-		### count number of entries for each unique rank
-		$Co=0;
-		while($Co < $Cranks)
-			{
-			$CRtally[$Co]=0;
-			if ($DB > 0) {echo "$CUranks[$Co] - $CRcount[$Co] - $Cranks - $Crank_max_count<BR>\n";}
-			$Co++;
-			}
-		if ($DB > 0) {echo _QXZ("Max rank count").": $Crank_max_count<br>\n";}
-
-		$Co=0;
-		while ($Csoundboardfiles_to_print > $Co)
-			{
-			$ro = ($Co + 1);
-			$display_button='';
-			if (preg_match("/FILE/",$audio_display))
-				{$display_button .= " $Caudio_filename[$Co]";}
-			if (preg_match("/NAME/",$audio_display))
-				{
-				if (strlen($display_button) > 1)
-					{$display_button .= " - ";}
-				$display_button .= " $Caudio_name[$Co]";
-				}
-
-			$rc=0;
-			$rc_found=0;
-			$CRcolspan=1;
-			$tr_begin='';
-			$tr_end='';
-
-			while($rc < $Cranks)
-				{
-				if ($Crank[$Co] == $CUranks[$rc])
+				if ( ($Cbutton_type[$Co] == 'header') or ($Cbutton_type[$Co] == 'head2r') )
 					{
-					if ($CRtally[$rc] == '0')
+					echo "$tr_begin<td id=\"MID---$Caudio_filename[$Co]---$Crank[$Co]---$Clevel[$Co]---$Cparent_audio_filename[$Co]---$Cparent_rank[$Co]---$Ch_ord[$Co]---$audio_length\" align=\"center\" bgColor=\"#000000\" colspan=$CRcolspan nowrap><font size=\"$Cfont_size[$Co]\" color=\"white\" face=\"Arial,Helvetica\">$Cbold_start[$Co]$Citalic_start[$Co] &nbsp; $count_display$Caudio_name[$Co] &nbsp; $Citalic_end[$Co]$Cbold_end[$Co]</font></td>";
+					echo "$tr_end\n";
+					}
+				else
+					{
+					if ($Cbutton_type[$Co] == 'space')
 						{
-						$tr_begin='<tr><td nowrap width=10> &nbsp; </td>';
-						}
-					if ($CRcount[$rc] == '1')
-						{
-						$CRcolspan = $rank_max_count;
-						$tr_end='</tr>';
+						echo "$tr_begin<td id=\"MID---$Caudio_filename[$Co]---$Crank[$Co]---$Clevel[$Co]---$Cparent_audio_filename[$Co]---$Cparent_rank[$Co]---$Ch_ord[$Co]---$audio_length\" align=\"center\" colspan=$CRcolspan nowrap><font size=\"$Cfont_size[$Co]\" color=\"white\" face=\"Arial,Helvetica\">$Cbold_start[$Co]$Citalic_start[$Co]$count_display &nbsp; $Citalic_end[$Co]$Cbold_end[$Co]</font></td>";
+						echo "$tr_end\n";
 						}
 					else
 						{
-						$CRtally[$rc]++;
-						$CRcolspan=1;
-						if ($CRcount[$rc] == $CRtally[$rc])
-							{
-							$CRdiff = ($rank_max_count - $CRtally[$rc]);
-							$CRcolspan = ($CRcolspan + $CRdiff);
-							$tr_end='</tr>';
-							}
+						echo "$tr_begin<td onClick=\"click_cell('MID---$Caudio_filename[$Co]---$Crank[$Co]---$Clevel[$Co]---$Cparent_audio_filename[$Co]---$Cparent_rank[$Co]---$Ch_ord[$Co]---$audio_length')\" onMouseOver=\"over_cell('MID---$Caudio_filename[$Co]---$Crank[$Co]---$Clevel[$Co]---$Cparent_audio_filename[$Co]---$Cparent_rank[$Co]---$Ch_ord[$Co]---$audio_length')\" onMouseOut=\"out_cell('MID---$Caudio_filename[$Co]---$Crank[$Co]---$Clevel[$Co]---$Cparent_audio_filename[$Co]---$Cparent_rank[$Co]---$Ch_ord[$Co]---$audio_length')\" id=\"MID---$Caudio_filename[$Co]---$Crank[$Co]---$Clevel[$Co]---$Cparent_audio_filename[$Co]---$Cparent_rank[$Co]---$Ch_ord[$Co]---$audio_length\" align=\"left\" bgColor=\"#e5e5e5\" colspan=$CRcolspan nowrap><font size=\"$Cfont_size[$Co]\" face=\"Arial,Helvetica\">$Cbold_start[$Co]$Citalic_start[$Co] &nbsp; $count_display$display_button &nbsp; $Citalic_end[$Co]$Cbold_end[$Co]</font></td>";
+						echo "$tr_end\n";
 						}
 					}
-				$rc++;
+				$Co++;
 				}
+			}
+		echo "</table></td>\n";
+		$o++;
+		$columns++;
+		}
+	echo "</tr>\n";
+	##### END columns01 layout #####
+	}
 
-			$audio_length=0;
-			$stmt="SELECT audio_length from audio_store_details where audio_filename IN('$Caudio_filename[$Co]$wav','$Caudio_filename[$Co]$gsm') order by audio_length desc limit 1;";
+
+
+
+
+
+
+
+
+
+
+else
+	{
+	##### BEGIN default layout #####
+	echo "<center><table width=99% cellspacing=1 bgcolor=white>\n";
+	echo "<tr bgcolor=white>";
+	echo "<td rowspan=2 align=center colspan=2><b><font face=\"Arial,Helvetica\">$avatar_name</font></b></td>";
+	if (preg_match("/STOP/",$audio_functions))
+		{echo "<td width=300 align=center id=\"stop_td\" onMouseOver=\"this.bgColor='#FF0000'\" onMouseOut=\"this.bgColor='#FF9999'\" bgColor=\"#FF9999\" onClick=\"stop_audio()\"><b><font face=\"Arial,Helvetica\">"._QXZ("stop audio")." &nbsp; &nbsp; &nbsp; &nbsp; </font><span id=countdown_audio></span></b></td>";}
+	else
+		{echo "<td width=300 align=center id=\"stop_td\" bgColor=\"white\"> &nbsp; <span id=countdown_audio></span></td>";}
+	echo "</tr><tr><td width=300 height=5 align=center id=\"stop_td\" bgColor=\"white\"><span id=stop_progress></span></td>";
+	echo "</tr></table>\n";
+	echo "<table width=99% cellspacing=3 bgcolor=white>\n";
+
+	### generate display tables
+	$o=0;
+	while ($soundboardfiles_to_print > $o)
+		{
+		$ro = ($o + 1);
+		$display_button='';
+		if (preg_match("/FILE/",$audio_display))
+			{$display_button .= " $Aaudio_filename[$o]";}
+		if (preg_match("/NAME/",$audio_display))
+			{
+			if (strlen($display_button) > 1)
+				{$display_button .= " - ";}
+			$display_button .= " $Aaudio_name[$o]";
+			}
+		$count_display="$ro. ";
+		if (preg_match("/HIDENUMBERS/",$audio_display))
+			{$count_display = '';}
+
+		$rc=0;
+		$rc_found=0;
+		$Rcolspan=1;
+		$tr_begin='';
+		$tr_end='';
+
+		while($rc < $ranks)
+			{
+			if ($Arank[$o] == $Uranks[$rc])
+				{
+				if ($Rtally[$rc] == '0')
+					{
+					$tr_begin='<tr>';
+					}
+				if ($Rcount[$rc] == '1')
+					{
+					$Rcolspan = ($rank_max_count + 1);
+					$tr_end='</tr>';
+					}
+				else
+					{
+					$Rtally[$rc]++;
+					if ($Rtally[$rc] == 1)
+						{$Rcolspan=2;}
+					else
+						{$Rcolspan=1;}
+					if ($Rcount[$rc] == $Rtally[$rc])
+						{
+						$Rdiff = ($rank_max_count - $Rtally[$rc]);
+						$Rcolspan = ($Rcolspan + $Rdiff);
+						$tr_end='</tr>';
+						}
+					}
+				}
+			$rc++;
+			}
+
+		$audio_length=0;
+		$stmt="SELECT audio_length from audio_store_details where audio_filename IN('$Aaudio_filename[$o]$wav','$Aaudio_filename[$o]$gsm') order by audio_length desc limit 1;";
+		if ($DB) {echo "$stmt\n";}
+		$rslty=mysql_to_mysqli($stmt, $link);
+		$al_ct = mysqli_num_rows($rslty);
+		if ($al_ct > 0)
+			{
+			$rowD=mysqli_fetch_row($rslty);
+			$audio_length =			$rowD[0];
+			if ($audio_length < 1)
+				{$audio_length = '1';}
+			}
+
+		if ( ($Abutton_type[$o] == 'header') or ($Abutton_type[$o] == 'head2r') )
+			{
+			echo "$tr_begin<td id=\"TOP---$Aaudio_filename[$o]---$Arank[$o]---$Alevel[$o]---$Ah_ord[$o]---$audio_length\" align=\"center\" bgColor=\"#000000\" colspan=$Rcolspan nowrap><font size=\"$Afont_size[$o]\" color=\"white\" face=\"Arial,Helvetica\">$Abold_start[$o]$Aitalic_start[$o]$count_display$Aaudio_name[$o]$Aitalic_end[$o]$Abold_end[$o]</font></td>";
+			echo "$tr_end\n";
+			}
+		else
+			{
+			if ($Abutton_type[$o] == 'space')
+				{
+				echo "$tr_begin<td id=\"TOP---$Aaudio_filename[$o]---$Arank[$o]---$Alevel[$o]---$Ah_ord[$o]---$audio_length\" align=\"center\" colspan=$Rcolspan nowrap><font size=\"$Afont_size[$o]\" color=\"white\" face=\"Arial,Helvetica\">$Abold_start[$o]$Aitalic_start[$o] &nbsp; $Aitalic_end[$o]$Abold_end[$o]</font></td>";
+				echo "$tr_end\n";
+				}
+			else
+				{
+				echo "$tr_begin<td onClick=\"click_cell('TOP---$Aaudio_filename[$o]---$Arank[$o]---$Alevel[$o]---$Ah_ord[$o]---$audio_length')\" onMouseOver=\"over_cell('TOP---$Aaudio_filename[$o]---$Arank[$o]---$Alevel[$o]---$Ah_ord[$o]---$audio_length')\" onMouseOut=\"out_cell('TOP---$Aaudio_filename[$o]---$Arank[$o]---$Alevel[$o]---$Ah_ord[$o]---$audio_length')\" id=\"TOP---$Aaudio_filename[$o]---$Arank[$o]---$Alevel[$o]---$Ah_ord[$o]---$audio_length\" align=\"left\" bgColor=\"#d6d6d6\" colspan=$Rcolspan nowrap><font size=\"$Afont_size[$o]\" face=\"Arial,Helvetica\">$Abold_start[$o]$Aitalic_start[$o]$count_display$display_button$Aitalic_end[$o]$Abold_end[$o]</font></td>";
+				echo "$tr_end\n";
+				}
+			}
+
+		if (strlen($tr_end)>4)
+			{
+			$stmt="SELECT audio_filename,audio_name,rank,level,parent_audio_filename,parent_rank,h_ord,button_type,font_size from vicidial_avatar_audio where avatar_id='$soundboard_id' and level='2' and parent_rank='$Arank[$o]' order by parent_audio_filename,rank,h_ord;";
+			# and parent_audio_filename='$Aaudio_filename[$o]' removed for multi-entries per line
 			if ($DB) {echo "$stmt\n";}
 			$rslty=mysql_to_mysqli($stmt, $link);
-			$al_ct = mysqli_num_rows($rslty);
-			if ($al_ct > 0)
+			$Csoundboardfiles_to_print = mysqli_num_rows($rslty);
+			$Clevels = 2;
+			$Cranks=0;
+			$Crank_max_count=0;
+			$Co=0;
+			while ($Csoundboardfiles_to_print > $Co)
 				{
-				$rowD=mysqli_fetch_row($rslty);
-				$audio_length =			$rowD[0];
-				if ($audio_length < 1)
-					{$audio_length = '1';}
+				$rowC=mysqli_fetch_row($rslty);
+				$Caudio_filename[$Co] =			$rowC[0];
+				$Caudio_name[$Co] = 			$rowC[1];
+				$Crank[$Co] = 					$rowC[2];
+				$Clevel[$Co] = 					$rowC[3];
+				$Cparent_audio_filename[$Co] = 	$rowC[4];
+				$Cparent_rank[$Co] = 			$rowC[5];
+				$Ch_ord[$Co] = 					$rowC[6];
+				$Cbutton_type[$Co] = 			$rowC[7];
+				$Cfont_size[$Co] = 				$rowC[8];
+				$Cbold_start[$Co]='';	$Cbold_end[$Co]='';
+				if (preg_match("/B/",$Cfont_size[$Co]))
+					{$Cbold_start[$Co]='<B>';	$Cbold_end[$Co]='</B>';	$Cfont_size[$Co] = preg_replace("/B/",'',$Cfont_size[$Co]);}
+				$Citalic_start[$Co]='';	$Citalic_end[$Co]='';
+				if (preg_match("/I/",$Cfont_size[$Co]))
+					{$Citalic_start[$Co]='<I>';	$Citalic_end[$Co]='</I>';	$Cfont_size[$Co] = preg_replace("/B/",'',$Cfont_size[$Co]);}
+				if ($Co == 0)
+					{
+					$CUranks[$Cranks] = $Crank[$Co];  
+					$CRcount[$Cranks]=1;
+					$Crank_max_count=1;
+					$Cranks++;
+					}
+				else
+					{
+					$rc=0;
+					$rc_found=0;
+					while($rc < $Cranks)
+						{
+						if ($Crank[$Co] == $CUranks[$rc])
+							{
+							$CRcount[$rc]++;
+							if ($Crank_max_count < $CRcount[$rc])
+								{$Crank_max_count = $CRcount[$rc];}
+							$rc_found++;
+							}
+						$rc++;
+						}
+					if ($rc_found < 1)
+						{
+						$CUranks[$Cranks] = $Crank[$Co];  
+						$CRcount[$Cranks]=1;
+						$Cranks++;
+						}
+					}
+				$Co++;
 				}
 
-			echo "$tr_begin<td onClick=\"click_cell('MID---$Caudio_filename[$Co]---$Crank[$Co]---$Clevel[$Co]---$Cparent_audio_filename[$Co]---$Cparent_rank[$Co]---$Ch_ord[$Co]---$audio_length')\" onMouseOver=\"over_cell('MID---$Caudio_filename[$Co]---$Crank[$Co]---$Clevel[$Co]---$Cparent_audio_filename[$Co]---$Cparent_rank[$Co]---$Ch_ord[$Co]---$audio_length')\" onMouseOut=\"out_cell('MID---$Caudio_filename[$Co]---$Crank[$Co]---$Clevel[$Co]---$Cparent_audio_filename[$Co]---$Cparent_rank[$Co]---$Ch_ord[$Co]---$audio_length')\" id=\"MID---$Caudio_filename[$Co]---$Crank[$Co]---$Clevel[$Co]---$Cparent_audio_filename[$Co]---$Cparent_rank[$Co]---$Ch_ord[$Co]---$audio_length\" align=\"left\" bgColor=\"#e5e5e5\" colspan=$CRcolspan nowrap>$ro. $display_button</td>";
-			echo "$tr_end\n";
+			### count number of entries for each unique rank
+			$Co=0;
+			while($Co < $Cranks)
+				{
+				$CRtally[$Co]=0;
+				if ($DB > 0) {echo "$CUranks[$Co] - $CRcount[$Co] - $Cranks - $Crank_max_count<BR>\n";}
+				$Co++;
+				}
+			if ($DB > 0) {echo _QXZ("Max rank count").": $Crank_max_count<br>\n";}
 
-			$Co++;
+			$Co=0;
+			while ($Csoundboardfiles_to_print > $Co)
+				{
+				$ro = ($Co + 1);
+				$display_button='';
+				if (preg_match("/FILE/",$audio_display))
+					{$display_button .= " $Caudio_filename[$Co]";}
+				if (preg_match("/NAME/",$audio_display))
+					{
+					if (strlen($display_button) > 1)
+						{$display_button .= " - ";}
+					$display_button .= " $Caudio_name[$Co]";
+					}
+				$count_display="$ro. ";
+				if (preg_match("/HIDENUMBERS/",$audio_display))
+					{$count_display = '';}
+
+				$rc=0;
+				$rc_found=0;
+				$CRcolspan=1;
+				$tr_begin='';
+				$tr_end='';
+
+				while($rc < $Cranks)
+					{
+					if ($Crank[$Co] == $CUranks[$rc])
+						{
+						if ($CRtally[$rc] == '0')
+							{
+							$tr_begin='<tr><td nowrap width=10> &nbsp; </td>';
+							}
+						if ($CRcount[$rc] == '1')
+							{
+							$CRcolspan = $rank_max_count;
+							$tr_end='</tr>';
+							}
+						else
+							{
+							$CRtally[$rc]++;
+							$CRcolspan=1;
+							if ($CRcount[$rc] == $CRtally[$rc])
+								{
+								$CRdiff = ($rank_max_count - $CRtally[$rc]);
+								$CRcolspan = ($CRcolspan + $CRdiff);
+								$tr_end='</tr>';
+								}
+							}
+						}
+					$rc++;
+					}
+
+				$audio_length=0;
+				$stmt="SELECT audio_length from audio_store_details where audio_filename IN('$Caudio_filename[$Co]$wav','$Caudio_filename[$Co]$gsm') order by audio_length desc limit 1;";
+				if ($DB) {echo "$stmt\n";}
+				$rslty=mysql_to_mysqli($stmt, $link);
+				$al_ct = mysqli_num_rows($rslty);
+				if ($al_ct > 0)
+					{
+					$rowD=mysqli_fetch_row($rslty);
+					$audio_length =			$rowD[0];
+					if ($audio_length < 1)
+						{$audio_length = '1';}
+					}
+
+				if ( ($Cbutton_type[$Co] == 'header') or ($Cbutton_type[$Co] == 'head2r') )
+					{
+					echo "$tr_begin<td id=\"MID---$Caudio_filename[$Co]---$Crank[$Co]---$Clevel[$Co]---$Cparent_audio_filename[$Co]---$Cparent_rank[$Co]---$Ch_ord[$Co]---$audio_length\" align=\"center\" bgColor=\"#000000\" colspan=$CRcolspan nowrap><font size=\"$Cfont_size[$Co]\" color=\"white\" face=\"Arial,Helvetica\">$Cbold_start[$Co]$Citalic_start[$Co]$count_display$Caudio_name[$Co]$Citalic_end[$Co]$Cbold_end[$Co]</font></td>";
+					echo "$tr_end\n";
+					}
+				else
+					{
+					if ($Cbutton_type[$Co] == 'space')
+						{
+						echo "$tr_begin<td id=\"MID---$Caudio_filename[$Co]---$Crank[$Co]---$Clevel[$Co]---$Cparent_audio_filename[$Co]---$Cparent_rank[$Co]---$Ch_ord[$Co]---$audio_length\" align=\"center\" colspan=$CRcolspan nowrap><font size=\"$Cfont_size[$Co]\" color=\"white\" face=\"Arial,Helvetica\">$Cbold_start[$Co]$Citalic_start[$Co]$count_display &nbsp; $Citalic_end[$Co]$Cbold_end[$Co]</font></td>";
+						echo "$tr_end\n";
+						}
+					else
+						{
+						echo "$tr_begin<td onClick=\"click_cell('MID---$Caudio_filename[$Co]---$Crank[$Co]---$Clevel[$Co]---$Cparent_audio_filename[$Co]---$Cparent_rank[$Co]---$Ch_ord[$Co]---$audio_length')\" onMouseOver=\"over_cell('MID---$Caudio_filename[$Co]---$Crank[$Co]---$Clevel[$Co]---$Cparent_audio_filename[$Co]---$Cparent_rank[$Co]---$Ch_ord[$Co]---$audio_length')\" onMouseOut=\"out_cell('MID---$Caudio_filename[$Co]---$Crank[$Co]---$Clevel[$Co]---$Cparent_audio_filename[$Co]---$Cparent_rank[$Co]---$Ch_ord[$Co]---$audio_length')\" id=\"MID---$Caudio_filename[$Co]---$Crank[$Co]---$Clevel[$Co]---$Cparent_audio_filename[$Co]---$Cparent_rank[$Co]---$Ch_ord[$Co]---$audio_length\" align=\"left\" bgColor=\"#e5e5e5\" colspan=$CRcolspan nowrap><font size=\"$Cfont_size[$Co]\" face=\"Arial,Helvetica\">$Cbold_start[$Co]$Citalic_start[$Co]$count_display$display_button$Citalic_end[$Co]$Cbold_end[$Co]</font></td>";
+						echo "$tr_end\n";
+						}
+					}
+				$Co++;
+				}
 			}
+		$o++;
 		}
-	$o++;
+	##### END default layout #####
 	}
 
 echo "</table><br>\n";

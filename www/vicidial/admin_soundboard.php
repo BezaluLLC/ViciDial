@@ -16,10 +16,11 @@
 # 160404-0937 - design changes
 # 160429-1122 - Added admin_row_click option
 # 161103-1605 - Updated code for new admin links
+# 161111-1646 - Added HIDENUMBERS display option, Font size, button type and layout options
 #
 
-$admin_version = '2.12-10';
-$build = '161103-1605';
+$admin_version = '2.12-11';
+$build = '161111-1646';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -71,6 +72,10 @@ if (isset($_GET["source_avatar_id"]))			{$source_avatar_id=$_GET["source_avatar_
 	elseif (isset($_POST["source_avatar_id"]))	{$source_avatar_id=$_POST["source_avatar_id"];}
 if (isset($_GET["copy_option"]))				{$copy_option=$_GET["copy_option"];}
 	elseif (isset($_POST["copy_option"]))		{$copy_option=$_POST["copy_option"];}
+if (isset($_GET["soundboard_layout"]))			{$soundboard_layout=$_GET["soundboard_layout"];}
+	elseif (isset($_POST["soundboard_layout"]))	{$soundboard_layout=$_POST["soundboard_layout"];}
+if (isset($_GET["columns_limit"]))				{$columns_limit=$_GET["columns_limit"];}
+	elseif (isset($_POST["columns_limit"]))		{$columns_limit=$_POST["columns_limit"];}
 if (isset($_GET["ConFiRm"]))					{$ConFiRm=$_GET["ConFiRm"];}
 	elseif (isset($_POST["ConFiRm"]))			{$ConFiRm=$_POST["ConFiRm"];}
 if (isset($_GET["SUBMIT"]))						{$SUBMIT=$_GET["SUBMIT"];}
@@ -119,6 +124,7 @@ if ($non_latin < 1)
 	$rank = preg_replace('/[^0-9]/','',$rank);
 	$level = preg_replace('/[^0-9]/','',$level);
 	$parent_rank = preg_replace('/[^0-9]/','',$parent_rank);
+	$columns_limit = preg_replace('/[^0-9]/','',$columns_limit);
 
 	$active = preg_replace('/[^NY]/','',$active);
 
@@ -134,6 +140,7 @@ if ($non_latin < 1)
 	$audio_display = preg_replace('/[^-_0-9a-zA-Z]/', '',$audio_display);
 	$stage = preg_replace('/[^-_0-9a-zA-Z]/', '',$stage);
 	$user_group = preg_replace('/[^-_0-9a-zA-Z]/', '',$user_group);
+	$soundboard_layout = preg_replace('/[^-_0-9a-zA-Z]/', '',$soundboard_layout);
 
 	$avatar_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$avatar_name);
 	$avatar_notes = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$avatar_notes);
@@ -268,7 +275,7 @@ if ($action == "HELP")
 	</head>
 	<body bgcolor=white>
 	<center>
-	<TABLE WIDTH=98% BGCOLOR="#E6E6E6" cellpadding=2 cellspacing=4><TR><TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>
+	<TABLE WIDTH=98% BGCOLOR="#E6E6E6" cellpadding=2 cellspacing=4><TR><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" COLOR=BLACK SIZE=2>
 
 
 	<BR>
@@ -307,9 +314,14 @@ if ($action == "HELP")
 	<B><?php echo _QXZ("Audio Functions"); ?> -</B> <?php echo _QXZ("The list of audio functions that you want the soundboard to allow the agents to perform, separated by dashes. Currently non-functional. Default is PLAY-STOP-RESTART."); ?>
 
 	<BR>
-	<A NAME="soundboard-audio_functions">
+	<A NAME="soundboard-audio_display">
 	<BR>
-	<B><?php echo _QXZ("Audio Display"); ?> -</B> <?php echo _QXZ("What you want to show up to the agents on the buttons to play the audio, separated by dashes. FILE will display the filename of the audio file. NAME will display the Soundboard Name. You can choose either of these or both together. Default is FILE-NAME."); ?>
+	<B><?php echo _QXZ("Audio Display"); ?> -</B> <?php echo _QXZ("What you want to show up to the agents on the buttons to play the audio, separated by dashes. FILE will display the filename of the audio file. NAME will display the Soundboard Name. HIDENUMBERS will not show the number of each button on the agent screen. You can choose any of these or all together. Default is FILE-NAME."); ?>
+
+	<BR>
+	<A NAME="soundboard-soundboard_layout">
+	<BR>
+	<B><?php echo _QXZ("Layout"); ?> -</B> <?php echo _QXZ("The layout of the agent soundboard. The -default- layout is designed to build from the top down, filling the agent script frame. The -columns- layout is designed to use separated columns of buttons. Default is default. If you are using a -columns- layout, you can also set the maximum number of columns per row section with the Columns Limit setting"); ?>
 
 	<BR>
 	<A NAME="soundboard-user_group">
@@ -337,6 +349,16 @@ if ($action == "HELP")
 	<B><?php echo _QXZ("Horz"); ?> -</B> <?php echo _QXZ("The horizontal order in which the audio file will be displayed to the agent."); ?>
 
 	<BR>
+	<A NAME="soundboard-type">
+	<BR>
+	<B><?php echo _QXZ("Type"); ?> -</B> <?php echo _QXZ("Either a clickable button that will play a sound, a header that will not be clickable and will only show the NAME of the entry or a space that will leave a blank spacer with no text. The header will also have white text on a black background. The -head2r- option is a header that will extend into the second row of columns below it."); ?>
+
+	<BR>
+	<A NAME="soundboard-font">
+	<BR>
+	<B><?php echo _QXZ("Font"); ?> -</B> <?php echo _QXZ("The font the button will be displayed with, the bigger the number, the bigger the font. A -B- in the option will bold the text. An -I- in the option will italicize the text."); ?>
+
+	<BR>
 	<A NAME="soundboard-level">
 	<BR>
 	<B><?php echo _QXZ("Level"); ?> -</B> <?php echo _QXZ("Primary or secondary level of the audio. Level 2 audio files are always below a level 1 audio file."); ?>
@@ -345,6 +367,17 @@ if ($action == "HELP")
 	<A NAME="soundboard-add">
 	<BR>
 	<B><?php echo _QXZ("Add"); ?> -</B> <?php echo _QXZ("Put a new audio file on the primary level 1 or underneath a level 1 in the secondary level 2 position."); ?>
+
+	<BR>
+	<A NAME="soundboard-script_example">
+	<BR>
+	<B><?php echo _QXZ("Script Example"); ?> -</B>
+	<BR>
+	<DIV style="height:120px;width:550px;background:white;overflow:scroll;font-size:12px;font-family:sans-serif;" id=iframe_example>
+	&#60;iframe src="./vdc_soundboard_display.php?user=--A--user--B--&#38;pass=--A--pass--B--&#38;bcrypt=OFF&#38;soundboard_id=<?php echo $soundboard_id ?>" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" width="100%" height="500"&#62;
+	&#60;/iframe&#62;
+	</DIV>
+	<BR>
 
 	</TD></TR></TABLE>
 	</BODY>
@@ -407,7 +440,7 @@ if ( (!preg_match("/soundboard/i",$SSactive_modules)) and ($SSagent_soundboards 
 	}
 
 
-$NWB = " &nbsp; <a href=\"javascript:openNewWindow('$PHP_SELF?action=HELP";
+$NWB = " &nbsp; <a href=\"javascript:openNewWindow('$PHP_SELF?soundboard_id=$soundboard_id&action=HELP";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 
 
@@ -446,7 +479,15 @@ while ($UUgroups_to_print > $o)
 	$o++;
 	}
 
-
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
 
 
 ######################
@@ -628,12 +669,12 @@ if ($ADD==262211111111)
 					{
 					echo "<br>"._QXZ("SOUNDBOARD ENTRY COPIED")."\n";
 
-					$stmt="INSERT INTO vicidial_avatars (avatar_id,avatar_name,avatar_notes,user_group,avatar_api_user,avatar_api_pass,audio_display,audio_functions,active) SELECT '$soundboard_id','$avatar_name',avatar_notes,user_group,avatar_api_user,avatar_api_pass,audio_display,audio_functions,active from vicidial_avatars where avatar_id='$source_avatar_id';";
+					$stmt="INSERT INTO vicidial_avatars (avatar_id,avatar_name,avatar_notes,user_group,avatar_api_user,avatar_api_pass,audio_display,audio_functions,active,soundboard_layout,columns_limit) SELECT '$soundboard_id','$avatar_name',avatar_notes,user_group,avatar_api_user,avatar_api_pass,audio_display,audio_functions,active,soundboard_layout,columns_limit from vicidial_avatars where avatar_id='$source_avatar_id';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$affected_rows = mysqli_affected_rows($link);
 
-					$stmtA="INSERT INTO vicidial_avatar_audio (avatar_id,audio_filename,audio_name,rank,h_ord,level,parent_audio_filename,parent_rank) SELECT '$soundboard_id',audio_filename,audio_name,rank,h_ord,level,parent_audio_filename,parent_rank from vicidial_avatar_audio where avatar_id='$source_avatar_id';";
+					$stmtA="INSERT INTO vicidial_avatar_audio (avatar_id,audio_filename,audio_name,rank,h_ord,level,parent_audio_filename,parent_rank,button_type,font_size) SELECT '$soundboard_id',audio_filename,audio_name,rank,h_ord,level,parent_audio_filename,parent_rank,button_type,font_size from vicidial_avatar_audio where avatar_id='$source_avatar_id';";
 					if ($DB) {echo "$stmtA\n";}
 					$rslt=mysql_to_mysqli($stmtA, $link);
 					$affected_rowsA = mysqli_affected_rows($link);
@@ -669,7 +710,7 @@ if ($ADD==462111111111)
 				{echo "<br>"._QXZ("SOUNDBOARD ENTRY NOT MODIFIED - Please go back and look at the data you entered")."\n";}
 			else
 				{
-				$stmt="DELETE FROM vicidial_avatar_audio where avatar_id='$soundboard_id' and audio_filename='$audio_filename' and rank='$rank';";
+				$stmt="DELETE FROM vicidial_avatar_audio where avatar_id='$soundboard_id' and audio_filename='$audio_filename' and rank='$rank' and parent_audio_filename='$parent_filename';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -690,12 +731,12 @@ if ($ADD==462111111111)
 				{echo "<br>"._QXZ("SOUNDBOARD ENTRY NOT MODIFIED - Please go back and look at the data you entered")."\n";}
 			else
 				{
-				$stmt="UPDATE vicidial_avatars set avatar_name='$avatar_name',avatar_notes='$avatar_notes',avatar_api_user='$avatar_api_user',avatar_api_pass='$avatar_api_pass',active='$active',audio_functions='$audio_functions',audio_display='$audio_display',user_group='$user_group' where avatar_id='$soundboard_id';";
+				$stmt="UPDATE vicidial_avatars set avatar_name='$avatar_name',avatar_notes='$avatar_notes',avatar_api_user='$avatar_api_user',avatar_api_pass='$avatar_api_pass',active='$active',audio_functions='$audio_functions',audio_display='$audio_display',user_group='$user_group',soundboard_layout='$soundboard_layout',columns_limit='$columns_limit' where avatar_id='$soundboard_id';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$stmtLIST = $stmt;
 
-				$stmt="SELECT audio_filename,rank,audio_name,level from vicidial_avatar_audio where avatar_id='$soundboard_id' order by rank;";
+				$stmt="SELECT audio_filename,rank,audio_name,level,parent_audio_filename from vicidial_avatar_audio where avatar_id='$soundboard_id' order by rank;";
 				if ($DB) {echo "$stmt\n";}
 				$rsltx=mysql_to_mysqli($stmt, $link);
 				$soundboardfiles_to_print = mysqli_num_rows($rsltx);
@@ -708,6 +749,7 @@ if ($ADD==462111111111)
 					$avatarranks[$o] = $rowx[1];
 					$avatarnames[$o] = $rowx[2];
 					$avatarlevel[$o] = $rowx[3];
+					$avatarparent[$o] = $rowx[4];
 					$o++;
 					}
 
@@ -715,23 +757,48 @@ if ($ADD==462111111111)
 				while ($soundboardfiles_to_print > $o)
 					{
 					$new_rank=0;
-					$Ffilename = $avatarfiles[$o];
-					$NAMEfilename = '--NAME--' . $avatarfiles[$o];
-					$LEVELfilename = '--LEVEL--' . $avatarfiles[$o];
-					$OLDRANKfilename = '--OLDRANK--' . $avatarfiles[$o];
-					$HORDfilename = '--HORD--' . $avatarfiles[$o];
-					if (isset($_GET[$Ffilename]))			{$new_rank=$_GET[$Ffilename];}
-						elseif (isset($_POST[$Ffilename]))	{$new_rank=$_POST[$Ffilename];}
-					if (isset($_GET[$NAMEfilename]))			{$new_name=$_GET[$NAMEfilename];}
-						elseif (isset($_POST[$NAMEfilename]))	{$new_name=$_POST[$NAMEfilename];}
-					if (isset($_GET[$LEVELfilename]))			{$new_level=$_GET[$LEVELfilename];}
-						elseif (isset($_POST[$LEVELfilename]))	{$new_level=$_POST[$LEVELfilename];}
-					if (isset($_GET[$OLDRANKfilename]))				{$old_rank=$_GET[$OLDRANKfilename];}
-						elseif (isset($_POST[$OLDRANKfilename]))	{$old_rank=$_POST[$OLDRANKfilename];}
-					if (isset($_GET[$HORDfilename]))			{$new_h_ord=$_GET[$HORDfilename];}
-						elseif (isset($_POST[$HORDfilename]))	{$new_h_ord=$_POST[$HORDfilename];}
+					$new_name='';
+					$new_level='';
+					$old_rank='';
+					$new_h_ord='';
+					$new_button_type='';
+					$new_font_size='';
+					$Ffilename = $avatarfiles[$o] . '--' . $avatarlevel[$o] . '--' . $avatarranks[$o] . '--' . $avatarparent[$o];
+					$NAMEfilename = '--NAME--' . $avatarfiles[$o] . '--' . $avatarlevel[$o] . '--' . $avatarranks[$o] . '--' . $avatarparent[$o];
+					$LEVELfilename = '--LEVEL--' . $avatarfiles[$o] . '--' . $avatarlevel[$o] . '--' . $avatarranks[$o] . '--' . $avatarparent[$o];
+					$OLDRANKfilename = '--OLDRANK--' . $avatarfiles[$o] . '--' . $avatarlevel[$o] . '--' . $avatarranks[$o] . '--' . $avatarparent[$o];
+					$HORDfilename = '--HORD--' . $avatarfiles[$o] . '--' . $avatarlevel[$o] . '--' . $avatarranks[$o] . '--' . $avatarparent[$o];
+					$TYPEfilename = '--TYPE--' . $avatarfiles[$o] . '--' . $avatarlevel[$o] . '--' . $avatarranks[$o] . '--' . $avatarparent[$o];
+					$FONTfilename = '--FONT--' . $avatarfiles[$o] . '--' . $avatarlevel[$o] . '--' . $avatarranks[$o] . '--' . $avatarparent[$o];
+					if (isset($_GET["$Ffilename"]))			{$new_rank=$_GET["$Ffilename"];}
+						elseif (isset($_POST["$Ffilename"]))	{$new_rank=$_POST["$Ffilename"];}
+					if (isset($_GET["$NAMEfilename"]))			{$new_name=$_GET["$NAMEfilename"];}
+						elseif (isset($_POST["$NAMEfilename"]))	{$new_name=$_POST["$NAMEfilename"];}
+					if (isset($_GET["$LEVELfilename"]))			{$new_level=$_GET["$LEVELfilename"];}
+						elseif (isset($_POST["$LEVELfilename"]))	{$new_level=$_POST["$LEVELfilename"];}
+					if (isset($_GET["$OLDRANKfilename"]))				{$old_rank=$_GET["$OLDRANKfilename"];}
+						elseif (isset($_POST["$OLDRANKfilename"]))	{$old_rank=$_POST["$OLDRANKfilename"];}
+					if (isset($_GET["$HORDfilename"]))			{$new_h_ord=$_GET["$HORDfilename"];}
+						elseif (isset($_POST["$HORDfilename"]))	{$new_h_ord=$_POST["$HORDfilename"];}
+					if (isset($_GET["$TYPEfilename"]))			{$new_button_type=$_GET["$TYPEfilename"];}
+						elseif (isset($_POST["$TYPEfilename"]))	{$new_button_type=$_POST["$TYPEfilename"];}
+					if (isset($_GET["$FONTfilename"]))			{$new_font_size=$_GET["$FONTfilename"];}
+						elseif (isset($_POST["$FONTfilename"]))	{$new_font_size=$_POST["$FONTfilename"];}
+	
+					if ($DB)
+						{
+						echo "update variable debug: ($avatarfiles[$o])\n";
+						echo "RANK: $Ffilename($new_rank)\n";
+						echo "NAME: $NAMEfilename($new_name)\n";
+						echo "LEVEL: $LEVELfilename($new_level)\n";
+						echo "OLDRANK: $OLDRANKfilename($old_rank)\n";
+						echo "HORD: $HORDfilename($new_h_ord)\n";
+						echo "TYPE: $TYPEfilename($new_button_type)\n";
+						echo "FONT: $FONTfilename($new_font_size)\n";
 
-					$stmt="UPDATE vicidial_avatar_audio set rank='$new_rank',audio_name='$new_name',h_ord='$new_h_ord' where avatar_id='$soundboard_id' and audio_filename='$avatarfiles[$o]' and rank='$old_rank' and level='$new_level';";
+						}
+
+					$stmt="UPDATE vicidial_avatar_audio set rank='$new_rank',audio_name='$new_name',h_ord='$new_h_ord',button_type='$new_button_type',font_size='$new_font_size' where avatar_id='$soundboard_id' and audio_filename='$avatarfiles[$o]' and rank='$old_rank' and level='$new_level' and parent_audio_filename='$avatarparent[$o]';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$stmtLIST .= "|$stmt";
@@ -748,43 +815,48 @@ if ($ADD==462111111111)
 
 				if (strlen($audio_filename) > 0)
 					{
-					if (preg_match("/--PARENT----NEW-------X/i",$parent_filename[0]))
+					if (preg_match("/^\./",$audio_filename))
+						{echo "<br>"._QXZ("ERROR, Soundbords cannot use files that begin with a period").": $audio_filename";}
+					else
 						{
-						$stmt="SELECT count(*) from vicidial_avatar_audio where avatar_id='$soundboard_id' and level='1' and audio_filename='$audio_filename' and parent_audio_filename='';";
-						if ($DB) {echo "$stmt\n";}
-						$rslt=mysql_to_mysqli($stmt, $link);
-						$row=mysqli_fetch_row($rslt);
-						$duplicate_first = $row[0];
+						if (preg_match("/--PARENT----NEW-------X/i",$parent_filename[0]))
+							{
+							$stmt="SELECT count(*) from vicidial_avatar_audio where avatar_id='$soundboard_id' and level='1' and audio_filename='$audio_filename' and parent_audio_filename='';";
+							if ($DB) {echo "$stmt\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$row=mysqli_fetch_row($rslt);
+							$duplicate_first = $row[0];
 
-						if ($duplicate_first > 0)
-							{echo "<br>"._QXZ("ERROR, Level One Audio File Duplicate, not added").": $audio_filename";}
+							if ($duplicate_first > 0)
+								{echo "<br>"._QXZ("ERROR, Level One Audio File Duplicate, not added").": $audio_filename";}
+							else
+								{
+								$stmt="SELECT count(*) from vicidial_avatar_audio where avatar_id='$soundboard_id' and level='1';";
+								if ($DB) {echo "$stmt\n";}
+								$rslt=mysql_to_mysqli($stmt, $link);
+								$row=mysqli_fetch_row($rslt);
+								$new_rank = ($row[0] + 1);
+
+								$stmt="INSERT INTO vicidial_avatar_audio set audio_filename='$audio_filename',rank='$new_rank',avatar_id='$soundboard_id';";
+								}
+							}
 						else
 							{
-							$stmt="SELECT count(*) from vicidial_avatar_audio where avatar_id='$soundboard_id' and level='1';";
+							$parent_filename[0] = preg_replace("/--PARENT--/i",'',$parent_filename[0]);
+							$parent_array = explode('-----',$parent_filename[0]);
+
+							$stmt="SELECT count(*) from vicidial_avatar_audio where avatar_id='$soundboard_id' and parent_audio_filename='$parent_array[0]' and parent_rank='$parent_array[1]';";
 							if ($DB) {echo "$stmt\n";}
 							$rslt=mysql_to_mysqli($stmt, $link);
 							$row=mysqli_fetch_row($rslt);
 							$new_rank = ($row[0] + 1);
 
-							$stmt="INSERT INTO vicidial_avatar_audio set audio_filename='$audio_filename',rank='$new_rank',avatar_id='$soundboard_id';";
+							$stmt="INSERT INTO vicidial_avatar_audio set audio_filename='$audio_filename',rank='$new_rank',parent_audio_filename='$parent_array[0]',parent_rank='$parent_array[1]',level='2',avatar_id='$soundboard_id';";
 							}
-						}
-					else
-						{
-						$parent_filename[0] = preg_replace("/--PARENT--/i",'',$parent_filename[0]);
-						$parent_array = explode('-----',$parent_filename[0]);
-
-						$stmt="SELECT count(*) from vicidial_avatar_audio where avatar_id='$soundboard_id' and parent_audio_filename='$parent_array[0]' and parent_rank='$parent_array[1]';";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $link);
-						$row=mysqli_fetch_row($rslt);
-						$new_rank = ($row[0] + 1);
-
-						$stmt="INSERT INTO vicidial_avatar_audio set audio_filename='$audio_filename',rank='$new_rank',parent_audio_filename='$parent_array[0]',parent_rank='$parent_array[1]',level='2',avatar_id='$soundboard_id';";
+						$stmtLIST .= "|$stmt";
 						}
-					if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_to_mysqli($stmt, $link);
-					$stmtLIST .= "|$stmt";
 					}
 
 				echo "<br>"._QXZ("SOUNDBOARD ENTRY MODIFIED").": $soundboard_id\n";
@@ -886,7 +958,7 @@ if ($ADD==362111111111)
 		echo "<TABLE WIDTH=850><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT avatar_id,avatar_name,avatar_notes,avatar_api_user,avatar_api_pass,active,audio_functions,user_group,audio_display from vicidial_avatars where avatar_id='$soundboard_id' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT avatar_id,avatar_name,avatar_notes,avatar_api_user,avatar_api_pass,active,audio_functions,user_group,audio_display,soundboard_layout,columns_limit from vicidial_avatars where avatar_id='$soundboard_id' $LOGadmin_viewable_groupsSQL;";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -899,6 +971,8 @@ if ($ADD==362111111111)
 		$audio_functions =	$row[6];
 		$user_group =		$row[7];
 		$audio_display =	$row[8];
+		$soundboard_layout = $row[9];
+		$columns_limit =	$row[10];
 
 		echo "<br>"._QXZ("MODIFY A SOUNDBOARDS RECORD").": $soundboard_id<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=462111111111>\n";
@@ -914,6 +988,7 @@ if ($ADD==362111111111)
 		echo "<tr bgcolor=#". $SSstd_row2_background ."><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active><option value='N'>"._QXZ("N")."</option><option value='Y'>"._QXZ("Y")."</option><option value='$active' SELECTED>"._QXZ("$active")."</option></select>$NWB#soundboard-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#". $SSstd_row2_background ."><td align=right>"._QXZ("Audio Functions").": </td><td align=left><input type=text name=audio_functions size=70 maxlength=100 value=\"$audio_functions\">$NWB#soundboard-audio_functions$NWE</td></tr>\n";
 		echo "<tr bgcolor=#". $SSstd_row2_background ."><td align=right>"._QXZ("Audio Display").": </td><td align=left><input type=text name=audio_display size=70 maxlength=100 value=\"$audio_display\">$NWB#soundboard-audio_display$NWE</td></tr>\n";
+		echo "<tr bgcolor=#". $SSstd_row2_background ."><td align=right>"._QXZ("Layout").": </td><td align=left><select size=1 name=soundboard_layout><option value='default'>"._QXZ("default")."</option><option value='columns01'>"._QXZ("columns01")."</option><option value='$soundboard_layout' SELECTED>$soundboard_layout</option></select>$NWB#soundboard-soundboard_layout$NWE &nbsp; "._QXZ("Columns Limit").": <input type=text name=columns_limit size=3 maxlength=2 value=\"$columns_limit\"></td></tr>\n";
 		echo "<tr bgcolor=#". $SSstd_row2_background ."><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
@@ -922,10 +997,10 @@ if ($ADD==362111111111)
 		echo "<tr bgcolor=#". $SSstd_row2_background ."><td align=center colspan=2>"._QXZ("Audio Files").": </td></tr>\n";
 		echo "<tr bgcolor=#". $SSstd_row2_background ."><td align=left colspan=2>\n";
 		echo "<table>\n";
-		echo "<tr><td nowrap align=center><B>"._QXZ("FILENAME")."</B></td><td nowrap align=center>"._QXZ("RANK")."</td><td nowrap align=center>"._QXZ("HORZ")."</td><td nowrap align=center>"._QXZ("level")."</td><td nowrap align=center>"._QXZ("add")."</td><td nowrap align=center>"._QXZ("name")."</td><td nowrap align=center><B> &nbsp; </B></td>";
+		echo "<tr><td nowrap align=center><B>"._QXZ("FILENAME")."</B></td><td nowrap align=center>"._QXZ("RANK")."</td><td nowrap align=center>"._QXZ("HORZ")."</td><td nowrap align=center>"._QXZ("type")."</td><td nowrap align=center>"._QXZ("FONT")."</td><td nowrap align=center>"._QXZ("level")."</td><td nowrap align=center>"._QXZ("add")."</td><td nowrap align=center>"._QXZ("name")."</td><td nowrap align=center><B> &nbsp; </B></td>";
 
 		##### get files listing for rank/delete options
-		$stmt="SELECT audio_filename,audio_name,rank,level,parent_audio_filename,parent_rank,h_ord from vicidial_avatar_audio where avatar_id='$soundboard_id' and level='1' order by rank,h_ord;";
+		$stmt="SELECT audio_filename,audio_name,rank,level,parent_audio_filename,parent_rank,h_ord,button_type,font_size from vicidial_avatar_audio where avatar_id='$soundboard_id' and level='1' order by rank,h_ord;";
 		if ($DB) {echo "$stmt\n";}
 		$rsltx=mysql_to_mysqli($stmt, $link);
 		$soundboardfiles_to_print = mysqli_num_rows($rsltx);
@@ -937,7 +1012,7 @@ if ($ADD==362111111111)
 			$ro = ($o + 1);
 			$rowx=mysqli_fetch_row($rsltx);
 			echo "<tr bgcolor=#". $SSstd_row1_background ."><td nowrap><B>$ro. $rowx[0]</B> &nbsp; </td>";
-			echo "<td nowrap><select size=1 name=$rowx[0]>";
+			echo "<td nowrap><select size=1 name=\"$rowx[0]--$rowx[3]--$rowx[2]--\">";
 			echo "<option SELECTED>$rowx[2]</option>\n";
 			$k=1;
 			while ($ranks > $k)
@@ -946,7 +1021,7 @@ if ($ADD==362111111111)
 				$k++;
 				}
 			echo "</select></td>\n";
-			echo "<td nowrap><select size=1 name=\"--HORD--$rowx[0]\">";
+			echo "<td nowrap><select size=1 name=\"--HORD--$rowx[0]--$rowx[3]--$rowx[2]--\">";
 			echo "<option SELECTED>$rowx[6]</option>\n";
 			$k=1;
 			while ($ranks > $k)
@@ -955,15 +1030,49 @@ if ($ADD==362111111111)
 				$k++;
 				}
 			echo "</select></td>\n";
+			echo "<td nowrap><select size=1 name=\"--TYPE--$rowx[0]--$rowx[3]--$rowx[2]--\">";
+			echo "<option SELECTED>$rowx[7]</option>\n";
+			echo "<option>button</option>\n";
+			echo "<option>header</option>\n";
+			echo "<option>head2r</option>\n";
+			echo "<option>space</option>\n";
+			echo "</select></td>\n";
+			echo "<td nowrap><select size=1 name=\"--FONT--$rowx[0]--$rowx[3]--$rowx[2]--\">";
+			echo "<option SELECTED>$rowx[8]</option>\n";
+			echo "<option>1</option>\n";
+			echo "<option>2</option>\n";
+			echo "<option>3</option>\n";
+			echo "<option>4</option>\n";
+			echo "<option>5</option>\n";
+			echo "<option>6</option>\n";
+			echo "<option>1B</option>\n";
+			echo "<option>2B</option>\n";
+			echo "<option>3B</option>\n";
+			echo "<option>4B</option>\n";
+			echo "<option>5B</option>\n";
+			echo "<option>6B</option>\n";
+			echo "<option>1I</option>\n";
+			echo "<option>2I</option>\n";
+			echo "<option>3I</option>\n";
+			echo "<option>4I</option>\n";
+			echo "<option>5I</option>\n";
+			echo "<option>6I</option>\n";
+			echo "<option>1BI</option>\n";
+			echo "<option>2BI</option>\n";
+			echo "<option>3BI</option>\n";
+			echo "<option>4BI</option>\n";
+			echo "<option>5BI</option>\n";
+			echo "<option>6BI</option>\n";
+			echo "</select></td>\n";
 			echo "<td nowrap><font size=2> $rowx[3] </td>";
-			echo "<td nowrap><input type=hidden name=\"--LEVEL--$rowx[0]\" id=\"--LEVEL--$rowx[0]\" value=\"$rowx[3]\">";
-			echo "<input type=hidden name=\"--OLDRANK--$rowx[0]\" id=\"--OLDRANK--$rowx[0]\" value=\"$rowx[2]\">";
+			echo "<td nowrap><input type=hidden name=\"--LEVEL--$rowx[0]--$rowx[3]--$rowx[2]--\" id=\"--LEVEL--$rowx[0]--$rowx[3]--$rowx[2]--\" value=\"$rowx[3]\">";
+			echo "<input type=hidden name=\"--OLDRANK--$rowx[0]--$rowx[3]--$rowx[2]--\" id=\"--OLDRANK--$rowx[0]--$rowx[3]--$rowx[2]--\" value=\"$rowx[2]\">";
 			echo " <input type=RADIO name=parent_filename[] id=parent_filename[] value=\"--PARENT--$rowx[0]-----$rowx[2]\"> </td>";
-			echo "<td nowrap> "._QXZ("Name").": <input type=text name=\"--NAME--$rowx[0]\" size=20 maxlength=100 value=\"$rowx[1]\"></td>";
+			echo "<td nowrap> "._QXZ("Name").": <input type=text name=\"--NAME--$rowx[0]--$rowx[3]--$rowx[2]--\" size=20 maxlength=100 value=\"$rowx[1]\"></td>";
 
-			echo "<td nowrap> - <a href=\"$PHP_SELF?ADD=462111111111&soundboard_id=$soundboard_id&stage=FILEDELETE&audio_filename=$rowx[0]&rank=$rowx[2]\">"._QXZ("DELETE")."</a></td></tr>\n";
+			echo "<td nowrap> - <a href=\"$PHP_SELF?ADD=462111111111&soundboard_id=$soundboard_id&stage=FILEDELETE&audio_filename=$rowx[0]&rank=$rowx[2]&level=$rowx[3]\">"._QXZ("DELETE")."</a></td></tr>\n";
 
-			$stmt="SELECT audio_filename,audio_name,rank,level,parent_audio_filename,parent_rank,h_ord from vicidial_avatar_audio where avatar_id='$soundboard_id' and level='2' and parent_audio_filename='$rowx[0]' and parent_rank='$rowx[2]' order by rank,h_ord;";
+			$stmt="SELECT audio_filename,audio_name,rank,level,parent_audio_filename,parent_rank,h_ord,button_type,font_size from vicidial_avatar_audio where avatar_id='$soundboard_id' and level='2' and parent_audio_filename='$rowx[0]' and parent_rank='$rowx[2]' order by rank,h_ord;";
 			if ($DB) {echo "$stmt\n";}
 			$rslty=mysql_to_mysqli($stmt, $link);
 			$Csoundboardfiles_to_print = mysqli_num_rows($rslty);
@@ -975,7 +1084,7 @@ if ($ADD==362111111111)
 				$ro = ($Co + 1);
 				$rowC=mysqli_fetch_row($rslty);
 				echo "<tr><td nowrap> &nbsp; &nbsp; $ro. $rowC[0] &nbsp; </td>";
-				echo "<td nowrap><font size=2> &nbsp; &nbsp; </font><select size=1 name=$rowC[0]>\n";
+				echo "<td nowrap><font size=2> &nbsp; &nbsp; </font><select size=1 name=\"$rowC[0]--$rowC[3]--$rowC[2]--$rowx[0]\">\n";
 				echo "<option SELECTED>$rowC[2]</option>\n";
 				$k=1;
 				while ($Cranks > $k)
@@ -984,7 +1093,7 @@ if ($ADD==362111111111)
 					$k++;
 					}
 				echo "</select></td>\n";
-				echo "<td nowrap><font size=2> &nbsp; &nbsp; </font><select size=1 name=\"--HORD--$rowC[0]\">\n";
+				echo "<td nowrap><font size=2> &nbsp; &nbsp; </font><select size=1 name=\"--HORD--$rowC[0]--$rowC[3]--$rowC[2]--$rowx[0]\">\n";
 				echo "<option SELECTED>$rowC[6]</option>\n";
 				$k=1;
 				while ($Cranks > $k)
@@ -993,13 +1102,46 @@ if ($ADD==362111111111)
 					$k++;
 					}
 				echo "</select></td>\n";
+				echo "<td nowrap><select size=1 name=\"--TYPE--$rowC[0]--$rowC[3]--$rowC[2]--$rowx[0]\">";
+				echo "<option SELECTED>$rowC[7]</option>\n";
+				echo "<option>button</option>\n";
+				echo "<option>header</option>\n";
+				echo "<option>space</option>\n";
+				echo "</select></td>\n";
+				echo "<td nowrap><select size=1 name=\"--FONT--$rowC[0]--$rowC[3]--$rowC[2]--$rowx[0]\">";
+				echo "<option SELECTED>$rowC[8]</option>\n";
+				echo "<option>1</option>\n";
+				echo "<option>2</option>\n";
+				echo "<option>3</option>\n";
+				echo "<option>4</option>\n";
+				echo "<option>5</option>\n";
+				echo "<option>6</option>\n";
+				echo "<option>1B</option>\n";
+				echo "<option>2B</option>\n";
+				echo "<option>3B</option>\n";
+				echo "<option>4B</option>\n";
+				echo "<option>5B</option>\n";
+				echo "<option>6B</option>\n";
+				echo "<option>1I</option>\n";
+				echo "<option>2I</option>\n";
+				echo "<option>3I</option>\n";
+				echo "<option>4I</option>\n";
+				echo "<option>5I</option>\n";
+				echo "<option>6I</option>\n";
+				echo "<option>1BI</option>\n";
+				echo "<option>2BI</option>\n";
+				echo "<option>3BI</option>\n";
+				echo "<option>4BI</option>\n";
+				echo "<option>5BI</option>\n";
+				echo "<option>6BI</option>\n";
+				echo "</select></td>\n";
 				echo "<td nowrap><font size=2> &nbsp;  $rowC[3] </td>";
-				echo "<td nowrap><input type=hidden name=\"--LEVEL--$rowC[0]\" id=\"--LEVEL--$rowC[0]\" value=\"$rowC[3]\">";
-				echo "<input type=hidden name=\"--OLDRANK--$rowC[0]\" id=\"--OLDRANK--$rowC[0]\" value=\"$rowC[2]\">";
+				echo "<td nowrap><input type=hidden name=\"--LEVEL--$rowC[0]--$rowC[3]--$rowC[2]--$rowx[0]\" id=\"--LEVEL--$rowC[0]--$rowC[3]--$rowC[2]--$rowx[0]\" value=\"$rowC[3]\">";
+				echo "<input type=hidden name=\"--OLDRANK--$rowC[0]--$rowC[3]--$rowC[2]--$rowx[0]\" id=\"--OLDRANK--$rowC[0]--$rowC[3]--$rowC[2]--$rowx[0]\" value=\"$rowC[2]\">";
 				echo " &nbsp; </td>";
-				echo "<td nowrap> &nbsp; "._QXZ("Name").": <input type=text name=\"--NAME--$rowC[0]\" size=20 maxlength=100 value=\"$rowC[1]\"></td>\n";
+				echo "<td nowrap> &nbsp; "._QXZ("Name").": <input type=text name=\"--NAME--$rowC[0]--$rowC[3]--$rowC[2]--$rowx[0]\" size=20 maxlength=100 value=\"$rowC[1]\"></td>\n";
 
-				echo "<td nowrap> &nbsp; - <a href=\"$PHP_SELF?ADD=462111111111&soundboard_id=$soundboard_id&stage=FILEDELETE&audio_filename=$rowC[0]&rank=$rowC[2]\">"._QXZ("DELETE")."</a></td></tr>\n";
+				echo "<td nowrap> &nbsp; - <a href=\"$PHP_SELF?ADD=462111111111&soundboard_id=$soundboard_id&stage=FILEDELETE&audio_filename=$rowC[0]&rank=$rowC[2]&level=$rowC[3]&parent_filename=$rowx[0]\">"._QXZ("DELETE")."</a></td></tr>\n";
 				$Co++;
 				}
 			$o++;
@@ -1023,6 +1165,62 @@ if ($ADD==362111111111)
 		echo _QXZ("Sample Soundboard View").": $soundboard_id<BR><BR>\n";
 
 		echo "<iframe src=\"/agc/vdc_soundboard_display.php?user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bcrypt=OFF&soundboard_id=$soundboard_id&DB=$DB\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" width=\"100%\" height=\"500\">\n</iframe>\n";
+
+		echo "<BR><BR><B>"._QXZ("SCRIPTS USING THIS SOUNDBOARD").":</B><BR>\n";
+		echo "<TABLE>\n";
+
+		$scripts_SQL='';
+		$stmt="SELECT script_id,script_name from vicidial_scripts where script_text LIKE \"%$soundboard_id%\" and script_text LIKE \"%vdc_soundboard_display%\" $LOGadmin_viewable_groupsSQL;";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$scripts_to_print = mysqli_num_rows($rslt);
+		$o=0;
+		while ($scripts_to_print > $o) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			echo "<TR><TD><a href=\"admin.php?ADD=3111111&script_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			$scripts_SQL .= "'$row[0]',";
+			$o++;
+			}
+		$scripts_SQL = preg_replace("/,$/",'',$scripts_SQL);
+
+		echo "</TABLE><BR><BR>\n";
+
+		echo "<B>"._QXZ("CAMPAIGNS USING SCRIPTS THAT USE THIS SOUNDBOARD").":</B><BR>\n";
+		echo "<TABLE>\n";
+
+		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where campaign_script IN($scripts_SQL) $LOGallowed_campaignsSQL;";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$camps_to_print = mysqli_num_rows($rslt);
+		$o=0;
+		while ($camps_to_print > $o) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			echo "<TR><TD><a href=\"admin.php?ADD=31&campaign_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			$o++;
+			}
+
+		echo "</TABLE><BR><BR>\n";
+
+
+		echo "<B>"._QXZ("INGROUPS USING SCRIPTS THAT USE THIS SOUNDBOARD").":</B><BR>\n";
+		echo "<TABLE>\n";
+
+		$stmt="SELECT group_id,group_name from vicidial_inbound_groups where ingroup_script IN($scripts_SQL) $LOGadmin_viewable_groupsSQL;";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$igs_to_print = mysqli_num_rows($rslt);
+		$o=0;
+		while ($igs_to_print > $o) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			echo "<TR><TD><a href=\"admin.php?ADD=3111&group_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			$o++;
+			}
+
+		echo "</TABLE><BR><BR>\n";
+
 
 		if ($modify_audiostore > 0)
 			{
@@ -1050,7 +1248,7 @@ if ($ADD==162000000000)
 	echo "<TABLE><TR><TD>\n";
 	echo "<img src=\"images/icon_audiosoundboards.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT avatar_id,avatar_name,active,avatar_api_user,user_group from vicidial_avatars where active IN('N','Y') $LOGadmin_viewable_groupsSQL order by avatar_id";
+	$stmt="SELECT avatar_id,avatar_name,active,avatar_api_user,user_group,soundboard_layout from vicidial_avatars where active IN('N','Y') $LOGadmin_viewable_groupsSQL order by avatar_id";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$soundboard_to_print = mysqli_num_rows($rslt);
@@ -1061,6 +1259,7 @@ if ($ADD==162000000000)
 	echo "<td><font size=1 color=white align=left><B>"._QXZ("Soundboard ID")."</B></td>";
 	echo "<td><font size=1 color=white><B>"._QXZ("Soundboard Name")."</B></td>";
 	echo "<td><font size=1 color=white><B>"._QXZ("Active")."</B></td>";
+	echo "<td><font size=1 color=white><B>"._QXZ("Layout")."</B></td>";
 	echo "<td><font size=1 color=white><B>"._QXZ("API User")."</B></td>";
 	echo "<td><font size=1 color=white><B>"._QXZ("ADMIN GROUP")."</B></td>";
 	echo "<td align=center><font size=1 color=white><B>"._QXZ("MODIFY")."</B></td></tr>\n";
@@ -1080,6 +1279,7 @@ if ($ADD==162000000000)
 		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=362111111111&soundboard_id=$row[0]&DB=$DB'\"";} echo "><td><a href=\"$PHP_SELF?ADD=362111111111&soundboard_id=$row[0]&DB=$DB\"><font size=1 color=black>$row[0]</a></td>";
 		echo "<td><font size=1>$row[1]</td>";
 		echo "<td><font size=1>$row[2]</td>";
+		echo "<td><font size=1>$row[5]</td>";
 		echo "<td><font size=1>$row[3]</td>";
 		echo "<td><font size=1>$row[4]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=362111111111&soundboard_id=$row[0]&DB=$DB\">"._QXZ("MODIFY")."</a></td></tr>\n";

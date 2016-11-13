@@ -745,3 +745,21 @@ ALTER TABLE system_settings ADD agent_script VARCHAR(50) default 'vicidial.php';
 INSERT INTO vicidial_screen_colors VALUES ('default_grey_agent','default grey agent','Y','FFFFFF','cccccc','E6E6E6','E6E6E6','E6E6E6','E6E6E6','E6E6E6','E6E6E6','E6E6E6','E6E6E6','---ALL---','DEFAULTAGENT.png');
 
 UPDATE system_settings SET db_schema_version='1476',db_schema_update_date=NOW() where db_schema_version < 1476;
+
+ALTER TABLE vicidial_avatars ADD soundboard_layout VARCHAR(40) default 'default';
+ALTER TABLE vicidial_avatars ADD columns_limit SMALLINT(5) default '5';
+
+ALTER TABLE vicidial_avatar_audio ADD button_type VARCHAR(40) default 'button';
+ALTER TABLE vicidial_avatar_audio ADD font_size VARCHAR(3) default '2';
+
+ALTER TABLE vicidial_scripts MODIFY script_id VARCHAR(20) NOT NULL;
+
+ALTER TABLE vicidial_campaigns MODIFY campaign_script VARCHAR(20);
+ALTER TABLE vicidial_campaigns MODIFY qc_script VARCHAR(20);
+
+ALTER TABLE vicidial_lists MODIFY agent_script_override VARCHAR(20) default '';
+
+ALTER TABLE vicidial_inbound_groups MODIFY ingroup_script VARCHAR(20);
+ALTER TABLE vicidial_inbound_groups MODIFY qc_script VARCHAR(20);
+
+UPDATE system_settings SET db_schema_version='1477',db_schema_update_date=NOW() where db_schema_version < 1477;

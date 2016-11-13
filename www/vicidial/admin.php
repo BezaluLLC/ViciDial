@@ -3894,12 +3894,13 @@ else
 # 161102-1040 - Fixed QM partition problem
 # 161103-2204 - Added web_loader_phone_length and agent soundboards
 # 161106-2058 - Added agent_script
+# 161113-0900 - Changed script_id to 20 characters max, other small script changes
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-574a';
-$build = '161106-2058';
+$admin_version = '2.12-575a';
+$build = '161113-0900';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -7256,7 +7257,7 @@ if ($ADD==1111111)
 			}
 		else
 			{
-			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Script ID").": </td><td align=left><input type=text name=script_id size=12 maxlength=10> ("._QXZ("no spaces or punctuation").")$NWB#scripts-script_id$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Script ID").": </td><td align=left><input type=text name=script_id size=22 maxlength=20> ("._QXZ("no spaces or punctuation").")$NWB#scripts-script_id$NWE</td></tr>\n";
 			}
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Script Name").": </td><td align=left><input type=text name=script_name size=40 maxlength=50> ("._QXZ("title of the script").")$NWB#scripts-script_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Script Comments").": </td><td align=left><input type=text name=script_comments size=50 maxlength=255> $NWB#scripts-script_comments$NWE</td></tr>\n";
@@ -29656,7 +29657,7 @@ if ($ADD==3111111)
 
 
 		echo "</TABLE><BR><BR>\n";
-		echo "<B> "._QXZ("CAMPAIGNS USING THIS SCRIPT").":</B><BR>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> "._QXZ("CAMPAIGNS USING THIS SCRIPT").":</B><BR>\n";
 		echo "<TABLE>\n";
 
 		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where campaign_script='$script_id' $LOGallowed_campaignsSQL;";
@@ -29666,12 +29667,12 @@ if ($ADD==3111111)
 		while ($camps_to_print > $o) 
 			{
 			$row=mysqli_fetch_row($rslt);
-			echo "<TR><TD><a href=\"$PHP_SELF?ADD=31&campaign_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			echo "<TR><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><a href=\"$PHP_SELF?ADD=31&campaign_id=$row[0]\">$row[0] </a></TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> $row[1]<BR></TD></TR>\n";
 			$o++;
 			}
 
 		echo "</TABLE><BR><BR>\n";
-		echo "<B> "._QXZ("IN-GROUPS USING THIS SCRIPT").":</B><BR>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> "._QXZ("IN-GROUPS USING THIS SCRIPT").":</B><BR>\n";
 		echo "<TABLE>\n";
 
 		$stmt="SELECT group_id,group_name from vicidial_inbound_groups where ingroup_script='$script_id' $LOGadmin_viewable_groupsSQL;";
@@ -29681,12 +29682,12 @@ if ($ADD==3111111)
 		while ($camps_to_print > $o) 
 			{
 			$row=mysqli_fetch_row($rslt);
-			echo "<TR><TD><a href=\"$PHP_SELF?ADD=3111&group_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			echo "<TR><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><a href=\"$PHP_SELF?ADD=3111&group_id=$row[0]\">$row[0] </a></TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> $row[1]<BR></TD></TR>\n";
 			$o++;
 			}
 
 		echo "</TABLE><BR><BR>\n";
-		echo "<B> "._QXZ("LIST OVERRIDES USING THIS SCRIPT").":</B><BR>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> "._QXZ("LIST OVERRIDES USING THIS SCRIPT").":</B><BR>\n";
 		echo "<TABLE>\n";
 
 		$stmt="SELECT list_id,list_name from vicidial_lists where agent_script_override='$script_id' $LOGallowed_campaignsSQL;";
@@ -29696,9 +29697,36 @@ if ($ADD==3111111)
 		while ($camps_to_print > $o) 
 			{
 			$row=mysqli_fetch_row($rslt);
-			echo "<TR><TD><a href=\"$PHP_SELF?ADD=311&list_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			echo "<TR><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><a href=\"$PHP_SELF?ADD=311&list_id=$row[0]\">$row[0] </a></TD><TD> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>$row[1]<BR></TD></TR>\n";
 			$o++;
 			}
+
+
+		if ( ($SSagent_soundboards > 0) and (preg_match("/vdc_soundboard_display/",$script_text)) )
+			{
+			$sb_check = preg_replace('~[\r\n]+~', '', $script_text);
+			$sb_lines = explode("vdc_soundboard_display",$sb_check);
+			$sb_content = explode('"',$sb_lines[1]);
+			$sb_id = explode('soundboard_id=',$sb_content[0]);
+			if ($DB) {echo "|$sb_check|\n|$sb_lines[1]|\n|$sb_content[0]|\n|$sb_id[1]|\n";}
+			echo "</TABLE><BR><BR>\n";
+			echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> "._QXZ("AGENT SOUNDBOARD USED WITHIN THIS SCRIPT").":</B><BR>\n";
+			echo "<TABLE>\n";
+
+			$stmt="SELECT avatar_id,avatar_name from vicidial_avatars where avatar_id='$sb_id[1]' $LOGadmin_viewable_groupsSQL;";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$sb_to_print = mysqli_num_rows($rslt);
+			$o=0;
+			while ($sb_to_print > $o) 
+				{
+				$row=mysqli_fetch_row($rslt);
+				echo "<TR><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><a href=\"admin_soundboard.php?ADD=362111111111&soundboard_id=$row[0]\">$row[0] </a></TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> $row[1]<BR></TD></TR>\n";
+				$o++;
+				}
+			}
+
+		echo "</TABLE><TABLE><TR><TD><BR><BR><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>\n";
 
 		if ($LOGdelete_scripts > 0)
 			{
