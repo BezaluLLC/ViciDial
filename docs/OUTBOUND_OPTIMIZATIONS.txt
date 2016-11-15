@@ -1,0 +1,149 @@
+OUTBOUND DIALING OPTIMIZATIONS DOC	Started: 2016-11-15	Updated: 2016-11-15
+
+
+This document is a work in progress and is meant for reference only, to go over approaches to optimizing and speeding up the outbound auto-dialing processes
+
+
+
+Places to look at for speeding up outbound auto-dialing call routing speed:
+1. Checking for Local/ channel resolution
+2. Database load and query speed
+3. AGI script compilation and execution time
+
+
+
+
+
+SECTION 1.  LOCAL/ CHANNEL RESOLUTION
+
+First, and explanation of what exatly the "Local/ channel resolution" issue is. Auto-dial calls are placed from VICIdial to Asterisk using a Local/ channel, which goes to the dialplan and places the calls out through a carrier. When the call is placed, there is no audio stream yet, only signalling, and it stays that way until after the Answer signal is received from the carrier. At that point, the Local/ channel will resolve to it's proper channel pointer(usually SIP/... if using a sip carrier). Where the issues come in, is how long it takes for the audio to begin being received so that the channel pointer can resolve. This is extremely variable, and depends on the end customer carrier, as well as all of the carrier equipment in-between. We ahve seen Local/ channels resolve anywhere from 0.1 seconds up to 2 seconds, and in a small percentage of cases, the channel never resolves because no audio stream is received.
+
+Currently, the outbound call agent routing process will immediately attempt to route the call if the Local/ channel has been resolved, and if it isn't, it will wait 1 second before trying again, then if it is still not resolved, giving up and logging the call as LRERR status. The optimization we are trying in the BETA script is to try multiple attempts at much faster intervals to check for Local/ channel resolution. The compilation of the AGI script can take anywhere from 0.1 to 0.3 seconds, depending on the server hardware and system load, then if the AGI script detects a Local/ channel, it quits and is tried again immediately. This also allows for a longer amount of time to wait for the channel to resolve because the number of loops is adjustable.
+
+
+
+
+
+
+
+SECTION 2. DATABASE LOAD AND QUERY SPEED
+
+Basic my.cnf and proper hardware optimizations. Nothing further yet.
+
+
+
+
+
+
+SECTION 3. AGI SCRIPT COMPILATION AND EXECUTION TIME
+
+This section goes over the option of stripping down the AGI routing process(agi-VDAD_ALL_outbound.agi) as much as possible to improve the speed of routing outbound auto-dialed calls.
+
+The following features could safely be removed and still allow for basic outbound call routing functions within the AGI:
+	"LO" agent search method(try to route to agent on dialed server first, not used in default configs)
+	CPD AMD, Sangoma call progress, answering machine detection
+	QueueMetrics logging
+	concurrent transfers if set to AUTO
+	extension append CIDname
+	grade random next-agent-call routing
+	reminder message, play only
+	remote-agent call routing
+	routing initiated recordings
+	survey recording
+	survey, play message and wait for dtmf response
+	text-to-speech survey
+	inactive trigger process
+
+Removing these features will result in the removal of over 65% of the code in the AGI script. This should greatly improve both perl interpretation time and reduce RAM usage, but might not have a very significant effect on execution time due to all of these removed code segments being enclosed inside of "if" statements that aren't run unless those features are activated anyway.
+
+Testing this change will require either NOT removing the "remote-agent call routing", or testing on a production system that does not use remote-agents.
+
+
+Possible outbound AGI optimizations(sections to consider removing):
+688	747		survey recording
+750	988		text-to-speech
+1026	1097		QueueMetrics logging
+1101	1176		reminder message, play only
+1182	2052		survey, play message and wait for dtmf response
+2081	2126		CPD AMD, Sangoma call progress
+2155	2176		concurrent transfers if set to AUTO
+2298	2352		grade random next-agent-call routing
+2419	2580		remote agent call routing
+2583	2691		routing initiated recordings
+2691	2712		extension append CIDname
+2725	2811		more QueueMetrics logging
+2149	2850		*LO agent search method
+2856	2877		concurrent transfers if set to AUTO
+2999	3053		grade random next-agent-call routing
+3133	3294		remote agent call routing
+3297	3405		routing initiated recordings
+3407	3427		extension append CIDname
+3442	3528		more QueueMetrics logging
+3689	3705		more QueueMetrics logging
+3721	3737		more QueueMetrics logging
+3847	3908		DTMF detection for survey feature
+3993	4146		CPD AMD, Sangoma call progress
+4192	4211		text-to-speech
+4214	4233		commented-out trigger process
+
+
+
+
+
+
+
+
+
+
+
+NOTES:
+
+The new script we will be testing changes on will be named "agi-VDAD_ALL_outboundBETA.agi".
+
+
+To be added to dialplan
+; BETA VICIDIAL_auto_dialer transfer script Load Balanced:
+exten => 8377,1,Playback(sip-silence)
+exten => 8377,n,AGI(agi://127.0.0.1:4577/call_log)
+exten => 8377,n,Set(LRct=1)
+exten => 8377,n,While($[${LRct} < 100])
+exten => 8377,n,AGI(agi-VDAD_ALL_outboundBETA.agi,NORMAL-----LB)
+exten => 8377,n,Set(LRct=$[${LRct} + 1])
+exten => 8377,n,EndWhile()
+exten => 8377,n,AGI(agi-VDAD_ALL_outboundBETA.agi,NORMAL-----LB)
+exten => 8377,n,Hangup()
+
+
+
+Added vicidial_vdad_log table to store debug and timestamp data(examples below). To enabled this level of logging in the BETA script, you must run the following SQL statement:
+
+update system_settings set vdad_debug_logging='1';
+
+
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:17 | 1479215657.011447 | 2016-11-15 08:14:15 | 0.004011 | agi-VDAD_ALL_outbound.agi |  849778 | end-drop-1.25          |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:15 | 1479215656.778370 | 2016-11-15 08:14:15 | 0.233063 | agi-VDAD_ALL_outbound.agi |  849778 | waiting-for-agent-1.25 |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:15 | 1479215656.545376 | 2016-11-15 08:14:15 | 0.232980 | agi-VDAD_ALL_outbound.agi |  849778 | waiting-for-agent-1    |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:15 | 1479215656.312302 | 2016-11-15 08:14:15 | 0.233063 | agi-VDAD_ALL_outbound.agi |  849778 | waiting-for-agent-0.75 |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:15 | 1479215656.079066 | 2016-11-15 08:14:15 | 0.233225 | agi-VDAD_ALL_outbound.agi |  849778 | waiting-for-agent-0.5  |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:15 | 1479215655.844731 | 2016-11-15 08:14:14 | 0.234320 | agi-VDAD_ALL_outbound.agi |  849778 | waiting-for-agent-0.25 |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:15 | 1479215655.841086 | 2016-11-15 08:14:14 | 0.003636 | agi-VDAD_ALL_outbound.agi |  849778 | prerouteQM             |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:15 | 1479215655.820757 | 2016-11-15 08:14:14 | 0.020319 | agi-VDAD_ALL_outbound.agi |  849778 | preroute               |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:15 | 1479215655.623380 | 2016-11-15 08:14:14 | 0.014294 | agi-VDAD_ALL_outbound.agi |  849778 | LocalEXIT-5 11         |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:15 | 1479215655.426731 | 2016-11-15 08:14:14 | 0.016263 | agi-VDAD_ALL_outbound.agi |  849778 | LocalEXIT-5 10         |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:15 | 1479215655.232397 | 2016-11-15 08:14:14 | 0.014853 | agi-VDAD_ALL_outbound.agi |  849778 | LocalEXIT-5 9          |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:15 | 1479215655.037638 | 2016-11-15 08:14:13 | 0.014383 | agi-VDAD_ALL_outbound.agi |  849778 | LocalEXIT-5 8          |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:14 | 1479215654.843460 | 2016-11-15 08:14:13 | 0.014945 | agi-VDAD_ALL_outbound.agi |  849778 | LocalEXIT-5 7          |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:14 | 1479215654.651362 | 2016-11-15 08:14:13 | 0.014983 | agi-VDAD_ALL_outbound.agi |  849778 | LocalEXIT-5 6          |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:14 | 1479215654.457621 | 2016-11-15 08:14:13 | 0.014685 | agi-VDAD_ALL_outbound.agi |  849778 | LocalEXIT-5 5          |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:14 | 1479215654.262349 | 2016-11-15 08:14:13 | 0.014732 | agi-VDAD_ALL_outbound.agi |  849778 | LocalEXIT-5 4          |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:14 | 1479215654.066875 | 2016-11-15 08:14:12 | 0.014224 | agi-VDAD_ALL_outbound.agi |  849778 | LocalEXIT-5 3          |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:13 | 1479215653.873137 | 2016-11-15 08:14:12 | 0.014942 | agi-VDAD_ALL_outbound.agi |  849778 | LocalEXIT-5 2          |
+| V1150814130000849778 | 192.168.198.5 | 2016-11-15 08:14:13 | 1479215653.677652 | 2016-11-15 08:14:12 | 0.015336 | agi-VDAD_ALL_outbound.agi |  849778 | LocalEXIT-5 1          |
+
+
+
+| V1150818290000833387 | 192.168.198.5 | 2016-11-15 08:18:35 | 1479215915.585579 | 2016-11-15 08:18:34 | 0.233213 | agi-VDAD_ALL_outbound.agi |  833387 | waiting-for-agent-0.5  |
+| V1150818290000833387 | 192.168.198.5 | 2016-11-15 08:18:35 | 1479215915.351982 | 2016-11-15 08:18:34 | 0.233585 | agi-VDAD_ALL_outbound.agi |  833387 | waiting-for-agent-0.25 |
+| V1150818290000833387 | 192.168.198.5 | 2016-11-15 08:18:35 | 1479215915.348672 | 2016-11-15 08:18:34 | 0.003301 | agi-VDAD_ALL_outbound.agi |  833387 | prerouteQM             |
+| V1150818290000833387 | 192.168.198.5 | 2016-11-15 08:18:35 | 1479215915.329398 | 2016-11-15 08:18:34 | 0.019263 | agi-VDAD_ALL_outbound.agi |  833387 | preroute               |
+| V1150818290000833387 | 192.168.198.5 | 2016-11-15 08:18:35 | 1479215915.133643 | 2016-11-15 08:18:33 | 0.014761 | agi-VDAD_ALL_outbound.agi |  833387 | LocalEXIT-5 1          |

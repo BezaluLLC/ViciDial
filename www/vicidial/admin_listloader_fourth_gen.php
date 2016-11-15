@@ -67,10 +67,11 @@
 # 160428-2359 - Fixed custom table bug
 # 160508-0757 - Added colors features
 # 161103-2224 - Added web_loader_phone_length option
+# 161114-2315 - Added file upload error checking
 #
 
-$version = '2.12-65';
-$build = '161103-2224';
+$version = '2.12-66';
+$build = '161114-2315';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -285,8 +286,43 @@ if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig))
 	exit;
 	}
 
+$upload_error = $_FILES['leadfile']['error'];
+if ($upload_error != UPLOAD_ERR_OK)
+	{
+	if ($upload_error == UPLOAD_ERR_INI_SIZE)
+		{
+		$max_upload = ini_get("upload_max_filesize");
+		echo "ERROR: The uploaded file exceeds the maximum upload size of $max_upload set for your system.";
+		}
+	if ($upload_error == UPLOAD_ERR_FORM_SIZE)
+		{
+		echo "ERROR: The uploaded file exceeds the MAX_FILE_SIZE directive for this HTML form.";
+		}
+	if ($upload_error == UPLOAD_ERR_PARTIAL)
+		{
+		echo "ERROR: The uploaded file was only partially uploaded.";
+		}
+	if ($upload_error == UPLOAD_ERR_NO_FILE)
+		{
+		echo "ERROR: No file was uploaded.";
+		}
+	if ($upload_error == UPLOAD_ERR_NO_TMP_DIR)
+		{
+		echo "ERROR: A temporary directory is missing. Review your system configuration.";
+		}
+	if ($upload_error == UPLOAD_ERR_CANT_WRITE)
+		{
+		echo "ERROR: Failed to write the uploaded file to disk.";
+		}
+	if ($upload_error == UPLOAD_ERR_EXTENSION)
+		{
+		echo "ERROR: An unknow php extension has stopped the file upload. Review your system configuration.";
+		}
+	exit;
+	}
+
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
-if ($DB) {echo "|$stmt|\n";}
+if ($DB) {echo "|$upload_error|<BR>\n|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];

@@ -547,6 +547,16 @@ exten => 8375,n,AGI(agi-VDAD_ALL_outbound.agi,SURVEYCAMPCEP-----LB)
 exten => 8375,n,AGI(agi-VDAD_ALL_outbound.agi,SURVEYCAMPCEP-----LB)
 exten => 8375,n,Hangup()
 
+; BETA VICIDIAL_auto_dialer transfer script Load Balanced:
+exten => 8377,1,Playback(sip-silence)
+exten => 8377,n,AGI(agi://127.0.0.1:4577/call_log)
+exten => 8377,n,Set(LRct=1)
+exten => 8377,n,While($[${LRct} < 100])
+exten => 8377,n,AGI(agi-VDAD_ALL_outboundBETA.agi,NORMAL-----LB)
+exten => 8377,n,Set(LRct=$[${LRct} + 1])
+exten => 8377,n,EndWhile()
+exten => 8377,n,AGI(agi-VDAD_ALL_outboundBETA.agi,NORMAL-----LB)
+exten => 8377,n,Hangup()
 
 
 ; PERFORMANCE TESTING

@@ -763,3 +763,22 @@ ALTER TABLE vicidial_inbound_groups MODIFY ingroup_script VARCHAR(20);
 ALTER TABLE vicidial_inbound_groups MODIFY qc_script VARCHAR(20);
 
 UPDATE system_settings SET db_schema_version='1477',db_schema_update_date=NOW() where db_schema_version < 1477;
+
+ALTER TABLE system_settings ADD vdad_debug_logging ENUM('1','0') default '0';
+
+CREATE TABLE vicidial_vdad_log (
+caller_code VARCHAR(30) NOT NULL,
+server_ip VARCHAR(15),
+call_date DATETIME,
+epoch_micro VARCHAR(20) default '',
+db_time DATETIME NOT NULL,
+run_time VARCHAR(20) default '0',
+vdad_script VARCHAR(40) NOT NULL,
+lead_id INT(10) UNSIGNED default '0',
+stage VARCHAR(100) default '',
+step SMALLINT(5) UNSIGNED default '0',
+index (caller_code),
+KEY vdad_dbtime_key (db_time)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+UPDATE system_settings SET db_schema_version='1478',db_schema_update_date=NOW() where db_schema_version < 1478;
