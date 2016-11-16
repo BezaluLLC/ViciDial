@@ -111,9 +111,10 @@
 # 160306-1040 - Added option for carriers to be defined for all active asterisk servers
 # 160324-1655 - Added callback_useronly_move_minutes option
 # 161014-0839 - Added vicidial_user_list_new_lead daily reset
+# 161116-0658 - Added purge of vicidial_ajax_log records older than 7 days to end of day process
 #
 
-$build = '161014-0839';
+$build = '161116-0658';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -1424,6 +1425,24 @@ if ($timeclock_end_of_day_NOW > 0)
 		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
 		$sthA->finish();
 		##### END vicidial_ajax_log end of day process removing records older than 7 days #####
+
+
+		##### BEGIN vicidial_vdad_log end of day process removing records older than 7 days #####
+		$stmtA = "DELETE from vicidial_vdad_log where db_time < \"$SDSQLdate\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_vdad_log records older than 7 days purged|\n";}
+		if ($teodDB) {$event_string = "vicidial_vdad_log records older than 7 days purged: |$stmtA|$affected_rows|";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_vdad_log;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+		##### END vicidial_vdad_log end of day process removing records older than 7 days #####
 
 
 		##### BEGIN usacan_phone_dialcode_fix funciton #####
