@@ -531,10 +531,11 @@
 # 161029-0858 - Added option to park xfer channel
 # 161102-1121 - Fixed QM partition problem
 # 161106-2221 - Changed to screen colors for main tab logo, other small style changes
+# 161117-1532 - Changed default main screen logo background color to white(screen color standard row 5)
 #
 
-$version = '2.12-500c';
-$build = '161106-2221';
+$version = '2.12-501c';
+$build = '161117-1532';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -764,7 +765,7 @@ $SSstd_row1_background='9BB9FB';
 $SSstd_row2_background='B9CBFD';
 $SSstd_row3_background='8EBCFD';
 $SSstd_row4_background='B6D3FC';
-$SSstd_row5_background='A3C3D6';
+$SSstd_row5_background='FFFFFF';
 $SSalt_row1_background='BDFFBD';
 $SSalt_row2_background='99FF99';
 $SSalt_row3_background='CCFFCC';
@@ -794,7 +795,6 @@ if ($agent_screen_colors != 'default')
 	}
 $Mhead_color =	$SSstd_row5_background;
 $Mmain_bgcolor = $SSmenu_background;
-$Mhead_color =	$SSstd_row5_background;
 
 $selected_logo = "./images/vicidial_admin_web_logo.png";
 $logo_new=0;
@@ -17486,7 +17486,7 @@ $zi=2;
 <span style="position:absolute;left:0px;top:13px;z-index:<?php $zi++; echo $zi ?>;" id="Tabs">
     <table border="0" bgcolor="#FFFFFF" width="<?php echo $MNwidth ?>px" height="30px">
     <tr valign="top" align="left">
-    <td align="left" width="115px" bgcolor="#<?php echo $SSmenu_background ?>"><a href="#" onclick="MainPanelToFront('NO','YES');"><img src="<?php echo $selected_logo ?>" alt="MAIN" width="115px" height="30px" border="0" /></a></td>
+    <td align="left" width="115px" bgcolor="#<?php echo $SSstd_row5_background ?>"><a href="#" onclick="MainPanelToFront('NO','YES');"><img src="<?php echo $selected_logo ?>" alt="MAIN" width="115px" height="30px" border="0" /></a></td>
     <td align="left" width="67px"><a href="#" onclick="ScriptPanelToFront('YES');"><img src="./images/<?php echo _QXZ("vdc_tab_script.gif"); ?>" alt="SCRIPT" width="67px" height="30px" border="0" /></a></td>
 	<?php if ($custom_fields_enabled > 0)
     {echo "<td align=\"left\" width=\"67px\"><a href=\"#\" onclick=\"FormPanelToFront('YES');\"><img src=\"./images/"._QXZ("vdc_tab_form.gif")."\" alt=\"FORM\" width=\"67px\" height=\"30px\" border=\"0\" /></a></td>\n";}
