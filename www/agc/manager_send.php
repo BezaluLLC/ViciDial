@@ -132,10 +132,11 @@
 # 160912-2310 - Fixed StopMonitorConf bug involving agent-invoked commands to stop recording
 # 161029-0845 - Added RedirectToParkXfer and RedirectFromParkXfer functions
 # 161102-1043 - Fixed QM partition problem
+# 161117-0622 - Fixes for recording_log issue where filename is non-unique
 #
 
-$version = '2.12-79';
-$build = '161102-1043';
+$version = '2.12-80';
+$build = '161117-0622';
 $php_script = 'manager_send.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=142;
@@ -2203,7 +2204,7 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02068',$user,$server_ip,$session_name,$one_mysql_log);}
 
-					$stmt="SELECT recording_id FROM recording_log where filename='$filename'";
+					$stmt="SELECT recording_id FROM recording_log where filename='$filename' order by start_epoch desc;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02069',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
@@ -2212,7 +2213,7 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 					}
 				else
 					{
-					$stmt="SELECT recording_id,start_epoch FROM recording_log where filename='$filename'";
+					$stmt="SELECT recording_id,start_epoch FROM recording_log where filename='$filename' order by start_epoch desc;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02070',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
@@ -2226,7 +2227,7 @@ if ( ($ACTION=="Monitor") || ($ACTION=="StopMonitor") )
 						$length_in_min = ($length_in_sec / 60);
 						$length_in_min = sprintf("%8.2f", $length_in_min);
 
-						$stmt = "UPDATE recording_log set end_time='$NOW_TIME',end_epoch='$StarTtime',length_in_sec=$length_in_sec,length_in_min='$length_in_min' where filename='$filename'";
+						$stmt = "UPDATE recording_log set end_time='$NOW_TIME',end_epoch='$StarTtime',length_in_sec=$length_in_sec,length_in_min='$length_in_min' where filename='$filename' order by start_epoch desc;";
 							if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02071',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -2412,7 +2413,7 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 				$rec_searchSQL = "recording_id='$recording_id'";
 				}
 
-			$stmt="SELECT recording_id,start_epoch,filename FROM recording_log where $rec_searchSQL;";
+			$stmt="SELECT recording_id,start_epoch,filename FROM recording_log where $rec_searchSQL order by start_epoch desc;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02078',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -2427,7 +2428,7 @@ if ( ($ACTION=="MonitorConf") || ($ACTION=="StopMonitorConf") )
 				$length_in_min = ($length_in_sec / 60);
 				$length_in_min = sprintf("%8.2f", $length_in_min);
 
-				$stmt = "UPDATE recording_log set end_time='$NOW_TIME',end_epoch='$StarTtime',length_in_sec=$length_in_sec,length_in_min='$length_in_min' $uniqueidSQL where $rec_searchSQL;";
+				$stmt = "UPDATE recording_log set end_time='$NOW_TIME',end_epoch='$StarTtime',length_in_sec=$length_in_sec,length_in_min='$length_in_min' $uniqueidSQL where $rec_searchSQL order by start_epoch desc;";
 					if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02079',$user,$server_ip,$session_name,$one_mysql_log);}

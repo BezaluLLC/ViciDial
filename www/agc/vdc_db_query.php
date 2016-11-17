@@ -415,10 +415,11 @@
 # 161029-1026 - Added more agent debug logging details
 # 161101-2103 - Added user overall new lead limit
 # 161102-1044 - Fixed QM partition problem
+# 161117-0622 - Fixes for rare vicidial_log and recording_log issues
 #
 
-$version = '2.12-309';
-$build = '161102-1044';
+$version = '2.12-310';
+$build = '161117-0622';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=658;
@@ -6181,8 +6182,8 @@ if ($stage == "end")
 
 			if ($manualVLexists < 1)
 				{
-				##### insert log into vicidial_log for manual VICIDiaL call
-				$stmtVL="INSERT INTO vicidial_log (uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,comments,processed,user_group,alt_dial,called_count) values('$uniqueid','$lead_id','$list_id','$campaign','$NOW_TIME','$StarTtime','DONEM','$phone_code','$number_dialed','$user','MANUAL','N','$user_group','$alt_dial','$called_count');";
+				##### insert log into vicidial_log for manual VICIDiaL call if not already there
+				$stmtVL="INSERT INTO vicidial_log SET $SQLterm end_epoch='$StarTtime',length_in_sec='$length_in_sec',uniqueid='$uniqueid',lead_id='$lead_id',list_id='$list_id',campaign_id='$campaign',call_date='$NOW_TIME',start_epoch='$StarTtime',status='DONEM',phone_code='$phone_code',phone_number='$number_dialed',user='$user',comments='MANUAL',processed='N',user_group='$user_group',alt_dial='$alt_dial',called_count='$called_count';";
 				if ($DB) {echo "$stmtVL\n";}
 				$rslt=mysql_to_mysqli($stmtVL, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtVL,'00280',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -6200,7 +6201,8 @@ if ($stage == "end")
 				}
 			else
 				{
-				$stmtVL="UPDATE vicidial_log SET uniqueid='$uniqueid',alt_dial='$alt_dial',user='$user' where lead_id='$lead_id' and user IN('$user','VDAD') and phone_number='$number_dialed' and uniqueid LIKE \"$beginUNIQUEID%\" and called_count='$called_count';";
+				##### update vicidial_log record with end time, duration and other fields
+				$stmtVL="UPDATE vicidial_log SET $SQLterm end_epoch='$StarTtime',length_in_sec='$length_in_sec',uniqueid='$uniqueid',alt_dial='$alt_dial',user='$user' where lead_id='$lead_id' and user IN('$user','VDAD') and phone_number='$number_dialed' and uniqueid LIKE \"$beginUNIQUEID%\" and called_count='$called_count';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmtVL, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtVL,'00057',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -6214,15 +6216,17 @@ if ($stage == "end")
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00401',$user,$server_ip,$session_name,$one_mysql_log);}
 			$affected_rowsX = mysqli_affected_rows($link);
 
-			##### update the duration and end time in the vicidial_log table
-			if ($VDstatus == 'INCALL') {$vl_statusSQL = ",status='$status_dispo'";}
-			$stmt="UPDATE vicidial_log set $SQLterm end_epoch='$StarTtime', length_in_sec='$length_in_sec',alt_dial='$alt_dial' $vl_statusSQL where uniqueid='$uniqueid' and lead_id='$lead_id' and user='$user' and called_count='$called_count' order by call_date desc limit 1;";
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_to_mysqli($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00090',$user,$server_ip,$session_name,$one_mysql_log);}
-			$affected_rows = mysqli_affected_rows($link);
+			##### if status of call in vicidial_log is INCALL update to DISPO
+			if ($VDstatus == 'INCALL') 
+				{
+				$stmt="UPDATE vicidial_log set status='$status_dispo' where uniqueid='$uniqueid' and lead_id='$lead_id' and user='$user' and called_count='$called_count' and status='INCALL' order by call_date desc limit 1;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00090',$user,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rows = mysqli_affected_rows($link);
+				}
 
-			if ($affected_rows > 0)
+			if ($affected_rowsVL > 0)
 				{
 				echo "$uniqueid\n$channel\n";
 				}
@@ -6501,7 +6505,7 @@ if ($stage == "end")
 				echo "REC_STOP|$rec_channels[$loop_count]|$filename[$loop_count]|";
 				if (strlen($filename[$loop_count])>2)
 					{
-					$stmt="SELECT recording_id,start_epoch,vicidial_id,lead_id FROM recording_log where filename='$filename[$loop_count]'";
+					$stmt="SELECT recording_id,start_epoch,vicidial_id,lead_id FROM recording_log where filename='$filename[$loop_count]' order by start_epoch desc;";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00099',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -6537,7 +6541,7 @@ if ($stage == "end")
 						$length_in_min = ($length_in_sec / 60);
 						$length_in_min = sprintf("%8.2f", $length_in_min);
 
-						$stmt="UPDATE recording_log set end_time='$NOW_TIME',end_epoch='$StarTtime',length_in_sec=$length_in_sec,length_in_min='$length_in_min' $vidSQL $lidSQL where filename='$filename[$loop_count]' and end_epoch is NULL;";
+						$stmt="UPDATE recording_log set end_time='$NOW_TIME',end_epoch='$StarTtime',length_in_sec=$length_in_sec,length_in_min='$length_in_min' $vidSQL $lidSQL where filename='$filename[$loop_count]' and end_epoch is NULL order by start_epoch desc;";
 							if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						$rslt=mysql_to_mysqli($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00100',$user,$server_ip,$session_name,$one_mysql_log);}
