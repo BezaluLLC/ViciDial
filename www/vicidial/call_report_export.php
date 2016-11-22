@@ -51,6 +51,7 @@
 # 160914-2200 - Added option to grab reports by either call date or entry date
 # 161017-1242 - Added DID custom variables to EXTENDED_3 output option
 # 161111-1232 - Fixed debug output to work with export
+# 161122-1136 - Added code to check for recordings in archived/non-archived tables if none found
 #
 
 $startMS = microtime();
@@ -883,6 +884,33 @@ if ($run_export > 0)
 					$rec_location .=	"$row[2]|";
 
 					$u++;
+					}
+				if ($recordings_ct < 1)
+					{
+					if (preg_match("/_archive/",$recording_log_table))
+						{$TEMPrecording_log_table = 'recording_log';}
+					else
+						{$TEMPrecording_log_table = 'recording_log_archive';}
+					$stmt = "SELECT recording_id,filename,location from ".$TEMPrecording_log_table." where vicidial_id='$export_vicidial_id[$i]' order by recording_id desc LIMIT 10;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($DB) {echo "CHECKING FOR RECORDINGS IN OTHER TABLE:$stmt\n";}
+					$recordings_ct = mysqli_num_rows($rslt);
+					$u=0;
+					while ($recordings_ct > $u)
+						{
+						$row=mysqli_fetch_row($rslt);
+
+						### PARSE TAB CHARACTERS FROM THE DATA ITSELF
+						for ($t=0; $t<count($row); $t++){
+							$row[$t]=preg_replace('/\t/', ' -- ', $row[$t]);
+						}
+
+						$rec_id .=			"$row[0]|";
+						$rec_filename .=	"$row[1]|";
+						$rec_location .=	"$row[2]|";
+
+						$u++;
+						}
 					}
 				$rec_id = preg_replace("/.$/",'',$rec_id);
 				$rec_filename = preg_replace("/.$/",'',$rec_filename);
