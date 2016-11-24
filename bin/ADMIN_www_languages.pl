@@ -63,7 +63,7 @@ if (length($ARGV[0])>1)
 
 	if ($args =~ /--help/i)
 		{
-		print "QXZanalyzer.pl - analyze php scripts for QXZ functions and contents\n";
+		print "ADMIN_www_languages.pl - analyze php scripts for QXZ functions and contents\n";
 		print "\n";
 		print "options:\n";
 		print "  [--help] = this help screen\n";

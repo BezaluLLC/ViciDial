@@ -245,7 +245,7 @@ if ($form_to_run == "help")
 	echo "<BR><BR>";
 	
 	echo "<A NAME=\"DIDDELETE\"><BR>";
-	echo "<B>"._QXZ("DID Bulk Delete")." -</B> "._QXZ("This will delete the selected DIDs from your system. You cannot delete the 'default' DID. Doing so will break several parts of the system.");
+	echo "<B>"._QXZ("DID Bulk Delete")." -</B> "._QXZ("This will delete the selected DIDs from your system. You cannot delete the -default- DID. Doing so will break several parts of the system.");
 	echo "<BR><BR>";
 	
 	echo "<A NAME=\"USERADD\"><BR>";
@@ -257,7 +257,7 @@ if ($form_to_run == "help")
 	echo "<BR><BR>";
 	
 	echo "<A NAME=\"ACCIDADD\"><BR>";
-	echo "<B>"._QXZ("AC-CID Bulk Add")." -</B> "._QXZ("This will take a list of CIDs and insert them as Area Code Caller IDs into the selected campaign. The area code lookup is designed to work only with numbers in the North American Numbering Plan. The description will automatically be filled with the appropriate US state abbreviation corresponding to the given CID's 3-digit area code. CIDs must be between 6 and 20 digits in length and only digits 0-9 are allowed. Optionally, you can have the AC-CIDs set to active upon insertion.");
+	echo "<B>"._QXZ("AC-CID Bulk Add")." -</B> "._QXZ("This will take a list of CIDs and insert them as Area Code Caller IDs into the selected campaign. The area code lookup is designed to work only with numbers in the North American Numbering Plan. The description will automatically be filled with the appropriate US state abbreviation corresponding to the given CIDs 3-digit area code. CIDs must be between 6 and 20 digits in length and only digits 0-9 are allowed. Optionally, you can have the AC-CIDs set to active upon insertion.");
 	echo "<BR><BR>";
 	
 	echo "<A NAME=\"ACCIDDELETE\"><BR>";
@@ -376,7 +376,7 @@ if ($form_to_run == "ACCID")
 		}
 	else
 		{
-		echo _QXZ("ATTENTION: You are about to add the following AC-CIDs to campaign $ACCIDcampaign")." :";
+		echo _QXZ("ATTENTION, You are about to add the following AC-CIDs to this campaign").": $ACCIDcampaign";
 		$i = 0;
 		while ($i < count($ACCIDto_insert))
 			{

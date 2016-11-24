@@ -15,10 +15,11 @@
 # 160404-0935 - design changes
 # 160429-1124 - Added admin_row_click option
 # 160508-0210 - Added screen colors feature
+# 161120-0919 - Added CHAT option
 #
 
-$admin_version = '2.12-9';
-$build = '160508-0210';
+$admin_version = '2.12-10';
+$build = '161120-0919';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -774,7 +775,14 @@ if ($ADD==163111111111)
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		$gathered_phrases_AGC = $row[0];
-		$gathered_phrases_ADMIN = ($gathered_phrases_TOTAL - $gathered_phrases_AGC);
+
+		$stmt="SELECT count(*) from www_phrases where php_directory LIKE \"%chat_customer%\";";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$gathered_phrases_CHAT = $row[0];
+
+		$gathered_phrases_ADMIN = ( ($gathered_phrases_TOTAL - $gathered_phrases_AGC) - $gathered_phrases_CHAT);
 
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
@@ -794,7 +802,7 @@ if ($ADD==163111111111)
 
 		if ($gathered_phrases_TOTAL > 0)
 			{
-			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Populate Language").": </td><td align=left><select size=1 name=stage><option SELECTED value='NONE'>"._QXZ("Leave Empty")."</option><option value='ALL'>"._QXZ("All Gathered Phrases").": $gathered_phrases_TOTAL</option><option value='AGENT'>"._QXZ("Agent Phrases Only").": $gathered_phrases_AGC</option><option value='ADMIN'>"._QXZ("Admin Phrases Only").": $gathered_phrases_ADMIN</option></select>$NWB#languages-populate$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Populate Language").": </td><td align=left><select size=1 name=stage><option SELECTED value='NONE'>"._QXZ("Leave Empty")."</option><option value='ALL'>"._QXZ("All Gathered Phrases").": $gathered_phrases_TOTAL</option><option value='AGENT'>"._QXZ("Agent Phrases Only").": $gathered_phrases_AGC</option><option value='CHAT'>"._QXZ("Chat Phrases Only").": $gathered_phrases_CHAT</option><option value='ADMIN'>"._QXZ("Admin Phrases Only").": $gathered_phrases_ADMIN</option></select>$NWB#languages-populate$NWE</td></tr>\n";
 			}
 		else
 			{
@@ -994,13 +1002,15 @@ if ($ADD==263111111111)
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$affected_rows = mysqli_affected_rows($link);
 
-				if (preg_match("/ALL|AGENT|ADMIN/",$stage))
+				if (preg_match("/ALL|AGENT|CHAT|ADMIN/",$stage))
 					{
 					$www_phraseSQL='';
 					if ($stage == 'AGENT')
 						{$www_phraseSQL='where php_directory LIKE "%agc%"';}
+					if ($stage == 'CHAT')
+						{$www_phraseSQL='where php_directory LIKE "%chat_customer%"';}
 					if ($stage == 'ADMIN')
-						{$www_phraseSQL='where php_directory NOT LIKE "%agc%"';}
+						{$www_phraseSQL='where ( (php_directory NOT LIKE "%agc%") and (php_directory NOT LIKE "%chat_customer%") )';}
 					$stmtA="INSERT INTO vicidial_language_phrases (language_id,english_text) SELECT '$language_id',phrase_text from www_phrases $www_phraseSQL;";
 					if ($DB) {echo "$stmtA\n";}
 					$rslt=mysql_to_mysqli($stmtA, $link);

@@ -343,7 +343,7 @@ if ($submit == "submit" )
 			$active=$list_row[4];
 
 			if (!preg_match("/ $campaign_id /", $allowed_campaigns)) {
-				echo "<p>"._QXZ("Cannot move leads - access is denied to the specified list ID $new_list_id.")."</p>\n";
+				echo "<p>"._QXZ("Cannot move leads - access is denied to the specified list ID:")." $new_list_id</p>\n";
 				echo "<p><a href='$PHP_SELF?new_list_id=$new_list_id&destination_list_id=$destination_list_id&new_campaign_id=$new_campaign_id&new_list_name=".urlencode($new_list_name)."&new_list_description=".urlencode($new_list_description)."&active=$active&retain_original_list=$retain_original_list&available_lists[]=".implode("&available_lists[]=", $available_lists)."'>"._QXZ("Click here to start over.")."</a></p>\n";
 				exit;
 			}
@@ -537,12 +537,12 @@ if (($submit != "submit" ) && ($confirm != "CONFIRM"))
 	echo "<font size='1'>(Lists selected above will automatically populate here)</font></td></tr>\n";
 
 	# Destination List ID
-	echo "<tr bgcolor=#$SSmenu_background><td colspan=2 align=center><font color=white><b>"._QXZ("Alternate list information - only required if 'ALTERNATE LIST' is selected above")."</b></font></td></tr>\n";
+	echo "<tr bgcolor=#$SSmenu_background><td colspan=2 align=center><font color=white><b>"._QXZ("Alternate list information - only required if -ALTERNATE LIST- is selected above")."</b></font></td></tr>\n";
 	echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Alternate list ID:")."</td><td align=left>\n";
 	echo "<input type='text' name='new_list_id' id='new_list_id' size='19' maxlength='19' value='".$new_list_id."'> (digits only)\n";
 	echo "</td></tr>\n";
 	
-	echo "<tr bgcolor=#$SSstd_row1_background><td colspan=2 align=center><b>"._QXZ("Below fields are required ONLY if \"Alternate list ID\" is filled out and not an already-existing list")."</b></td></tr>\n";
+	echo "<tr bgcolor=#$SSstd_row1_background><td colspan=2 align=center><b>"._QXZ("Below fields are required ONLY if -Alternate list ID- is filled out and not an already-existing list")."</b></td></tr>\n";
 	echo "<tr bgcolor=#$SSstd_row1_background><td align=right>"._QXZ("List Name").": </td><td align=left><input type=text name='new_list_name' size=30 maxlength=30 value='".$new_list_name."'>$NWB#lists-list_name$NWE</td></tr>\n";
 	echo "<tr bgcolor=#$SSstd_row1_background><td align=right>"._QXZ("List Description").": </td><td align=left><input type=text name='new_list_description' size=30 maxlength=255 value='".$new_list_description."'>$NWB#lists-list_description$NWE</td></tr>\n";
 	echo "<tr bgcolor=#$SSstd_row1_background><td align=right>"._QXZ("Campaign").": </td><td align=left><select size=1 name='campaign_id'>\n";

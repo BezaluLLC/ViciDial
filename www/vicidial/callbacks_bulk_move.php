@@ -1000,7 +1000,7 @@ else
 
 	echo "<tr>";
 	echo "<td align='right' colspan='2'>";
-	echo "<B><input type='checkbox' name='revert_status' value='checked' $revert_status>&nbsp;"._QXZ("Revert to last status")."<BR><font size='1'>("._QXZ("overrides 'New Status'").")</font></B>";
+	echo "<B><input type='checkbox' name='revert_status' value='checked' $revert_status>&nbsp;"._QXZ("Revert to last status")."<BR><font size='1'>("._QXZ("overrides -New Status-").")</font></B>";
 	echo "</td>";
 	echo "</tr>";
 
