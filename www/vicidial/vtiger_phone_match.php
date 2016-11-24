@@ -15,11 +15,13 @@
 # 130610-1124 - Finalized changing of all ereg instances to preg
 # 130902-0756 - Changed to mysqli PHP functions
 # 150626-2120 - Modified mysqli_error() to mysqli_connect_error() where appropriate
+# 161124-1458 - Fixed issue #981
 #
 
 header ("Content-type: text/html; charset=utf-8");
 
 require("dbconnect_mysqli.php");
+require("functions.php");
 
 if (isset($_GET["phone"]))				{$phone=$_GET["phone"];}
 	elseif (isset($_POST["phone"]))		{$phone=$_POST["phone"];}

@@ -23,11 +23,13 @@
 # 130610-1123 - Finalized changing of all ereg instances to preg
 # 130615-2334 - Added filtering of input to prevent SQL injection attacks
 # 130901-0830 - Changed to mysqli PHP functions
+# 161124-1458 - Fixed issue #981
 #
 
 header ("Content-type: text/html; charset=utf-8");
 
 require("dbconnect_mysqli.php");
+require("functions.php");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
