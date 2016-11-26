@@ -101,6 +101,7 @@
 # 161031-1410 - Added users-user_new_lead_limit entry
 # 161105-0246 - Added web_loader_phone_length, agent soundboards and purge uncalled records
 # 161106-2102 - Added agent_script
+# 161126-1815 - Fixed several spelling errors
 #
 
 
@@ -1009,7 +1010,7 @@ if ($SSoutbound_autodial_active > 0)
 	<BR>
 	<A NAME="campaigns-adaptive_maximum_level">
 	<BR>
-	<B><?php echo _QXZ("Maximum Adapt Dial Level"); ?> -</B><?php echo _QXZ("This field is where you set the limit of the limit to the numbr of lines you would like dialed per agent while using an adaptive-predictive dial method, not MANUAL or RATIO. This number can be higher than the Auto Dial Level if your hardware will support it. Value must be a positive number greater than one and can have decimal places Default 3.0."); ?>
+	<B><?php echo _QXZ("Maximum Adapt Dial Level"); ?> -</B><?php echo _QXZ("This field is where you set the limit of the limit to the number of lines you would like dialed per agent while using an adaptive-predictive dial method, not MANUAL or RATIO. This number can be higher than the Auto Dial Level if your hardware will support it. Value must be a positive number greater than one and can have decimal places Default 3.0."); ?>
 
 	<BR>
 	<A NAME="campaigns-adaptive_latest_server_time">
@@ -1201,7 +1202,7 @@ if ($SSoutbound_autodial_active > 0)
 		<BR>
 		<A NAME="campaigns-agent_select_territories">
 		<BR>
-		<B><?php echo _QXZ("Agent Select Territories"); ?> -</B><?php echo _QXZ("If this option is enabled and the agent belongs to at least one territory, the agent will have the option of selecting territories to dial leads from. The agent will see a list of available territories upon login and they will have the ability to go back to that territory list when paused to change their territories. For this function to work the Owner Only Dialing option must be set to TERRITORY and User Terriories must be enabled in the System Settings.");
+		<B><?php echo _QXZ("Agent Select Territories"); ?> -</B><?php echo _QXZ("If this option is enabled and the agent belongs to at least one territory, the agent will have the option of selecting territories to dial leads from. The agent will see a list of available territories upon login and they will have the ability to go back to that territory list when paused to change their territories. For this function to work the Owner Only Dialing option must be set to TERRITORY and User Territories must be enabled in the System Settings.");
 		}
 	?>
 
@@ -1465,7 +1466,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-xferconf_a_dtmf">
 <BR>
-<B><?php echo _QXZ("Xfer-Conf DTMF"); ?> -</B><?php echo _QXZ("These fields allow for you to have two sets of Transfer Conference and DTMF presets. When the call or campaign is loaded, the agent screen will show two buttons on the transfer-conference frame and auto-populate the number-to-dial and the send-dtmf fields when pressed. If you want to allow Consultative Transfers, a fronter to a closer, have the agent use the CONSULTATIVE checkbox, which does not work for third party non-agent consultative calls. For those just have the agent click the Dial With Customer button. Then the agent can just LEAVE-3WAY-CALL and move on to their next call. If you want to allow Blind transfers of customers to an AGI script for logging or an IVR, then place AXFER in the number-to-dial field. You can also specify an custom extension after the AXFER, for instance if you want to do a call to a special IVR you have set to extension 83900 you would put AXFER83900 in the number-to-dial field."); ?>
+<B><?php echo _QXZ("Xfer-Conf DTMF"); ?> -</B><?php echo _QXZ("These fields allow for you to have two sets of Transfer Conference and DTMF presets. When the call or campaign is loaded, the agent screen will show two buttons on the transfer-conference frame and auto-populate the number-to-dial and the send-dtmf fields when pressed. If you want to allow Consultative Transfers, a fronter to a closer, have the agent use the CONSULTATIVE checkbox, which does not work for third party non-agent consultative calls. For those just have the agent click the Dial With Customer button. Then the agent can just LEAVE-3WAY-CALL and move on to their next call. If you want to allow Blind transfers of customers to an AGI script for logging or an IVR, then place AXFER in the number-to-dial field. You can also specify a custom extension after the AXFER, for instance if you want to do a call to a special IVR you have set to extension 83900 you would put AXFER83900 in the number-to-dial field."); ?>
 
 <BR>
 <A NAME="campaigns-quick_transfer_button">
@@ -1815,7 +1816,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-customer_3way_hangup_logging">
 <BR>
-<B><?php echo _QXZ("Customer 3-Way Hangup Logging"); ?> -</B><?php echo _QXZ("If this option is ENABLED the user_call_log will log when a customer hangup up if they hang up during a 3-way call. Also, this can allow for the Customer 3-way hangup action if one is defineed below. Default is ENABLED."); ?>
+<B><?php echo _QXZ("Customer 3-Way Hangup Logging"); ?> -</B><?php echo _QXZ("If this option is ENABLED the user_call_log will log when a customer hangup up if they hang up during a 3-way call. Also, this can allow for the Customer 3-way hangup action if one is defined below. Default is ENABLED."); ?>
 
 <BR>
 <A NAME="campaigns-customer_3way_hangup_seconds">
@@ -1990,7 +1991,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="campaigns-blind_monitor_warning">
 <BR>
-<B><?php echo _QXZ("Blind Monitor Warning"); ?> -</B><?php echo _QXZ("This option if enabled will let the agent know in various optional ways if they are being blind monitored by someone. DISABLED means this feature is not active, ALERT will only pop an alert up on the agent screen, NOTICE will post a note that stays up on the agent screen as long as theya re being monitored, AUDIO will play the filename defined below when an agent is starting to be monitored and the other options are combibnations of the above options. Default is DISABLED."); ?>
+<B><?php echo _QXZ("Blind Monitor Warning"); ?> -</B><?php echo _QXZ("This option if enabled will let the agent know in various optional ways if they are being blind monitored by someone. DISABLED means this feature is not active, ALERT will only pop an alert up on the agent screen, NOTICE will post a note that stays up on the agent screen as long as they are being monitored, AUDIO will play the filename defined below when an agent is starting to be monitored and the other options are combinations of the above options. Default is DISABLED."); ?>
 
 <BR>
 <A NAME="campaigns-blind_monitor_message">
@@ -2126,7 +2127,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="lists-time_zone_setting">
 <BR>
-<B><?php echo _QXZ("Time Zone Setting"); ?> -</B><?php echo _QXZ("This option allows you to set the method of maintaining the current time zone lookup for the leads within this list. This process is only done at night so any changes you make will not be immediate. COUNTRY_AND_AREA_CODE is the default, and will use the country code and area code of the phone number to determine the time zone of the lead. POSTAL_CODE will use the postal code if available to determine the time zone of the lead. NANPA_PREFIX works only in the USA and will use the area code and prefix of the phone number to determine the time zone of the lead, but this is not enabled by default in the system, so please be sure you have the NANPA prefix data loaded onto your system before selecting this option. OWNER_TIME_ZONE_CODE will use the standard time zone abbraviation loaded into the owner field of the lead to determine the time zone, in the USA examples are AST, EST, CST, MST, PST, AKST, HST. This feature must be enabled by your system administrator to go into effect."); ?>
+<B><?php echo _QXZ("Time Zone Setting"); ?> -</B><?php echo _QXZ("This option allows you to set the method of maintaining the current time zone lookup for the leads within this list. This process is only done at night so any changes you make will not be immediate. COUNTRY_AND_AREA_CODE is the default, and will use the country code and area code of the phone number to determine the time zone of the lead. POSTAL_CODE will use the postal code if available to determine the time zone of the lead. NANPA_PREFIX works only in the USA and will use the area code and prefix of the phone number to determine the time zone of the lead, but this is not enabled by default in the system, so please be sure you have the NANPA prefix data loaded onto your system before selecting this option. OWNER_TIME_ZONE_CODE will use the standard time zone abbreviation loaded into the owner field of the lead to determine the time zone, in the USA examples are AST, EST, CST, MST, PST, AKST, HST. This feature must be enabled by your system administrator to go into effect."); ?>
 
 <BR>
 <A NAME="internal_list-dnc">
@@ -2143,7 +2144,7 @@ if ($SSqc_features_active > 0)
 
 <A NAME="lists_fields-field_label">
 <BR>
-<B><?php echo _QXZ("Field Label"); ?> -</B><?php echo _QXZ("This is the database field identifier for this field. This needs to be a unique identifier within the custom fields for this list. Do not use any spaces or punctuation for this field. max 50 characters, minimum of 2 characters. You can also include the default fields in a custom field setup, and you will see them in red in the list. These fields will not be added to the custom list database table, the agent interface will instead reference the list table directly. The labels that you can use to include the default fieds are -  vendor_lead_code, source_id, list_id, gmt_offset_now, called_since_last_reset, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, called_count, last_local_call_time, rank, owner"); ?>
+<B><?php echo _QXZ("Field Label"); ?> -</B><?php echo _QXZ("This is the database field identifier for this field. This needs to be a unique identifier within the custom fields for this list. Do not use any spaces or punctuation for this field. max 50 characters, minimum of 2 characters. You can also include the default fields in a custom field setup, and you will see them in red in the list. These fields will not be added to the custom list database table, the agent interface will instead reference the list table directly. The labels that you can use to include the default fields are -  vendor_lead_code, source_id, list_id, gmt_offset_now, called_since_last_reset, phone_code, phone_number, title, first_name, middle_initial, last_name, address1, address2, address3, city, state, province, postal_code, country_code, gender, date_of_birth, alt_phone, email, security_phrase, comments, called_count, last_local_call_time, rank, owner"); ?>
 <BR><BR>
 
 <A NAME="lists_fields-field_name">
@@ -2213,7 +2214,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="lists_fields-field_show_hide">
 <BR>
-<B><?php echo _QXZ("Field Show Hide"); ?> -</B><?php echo _QXZ("On the ViciHost.com platform, this option allows you to display only set characters from a READONLY or TEXT field. If a TEXT field, the value and a blank field with be displayed, if the blenk field is populated by the agent, then the previous value will be overwritten when the agent completes their call. Default is N."); ?>
+<B><?php echo _QXZ("Field Show Hide"); ?> -</B><?php echo _QXZ("On the ViciHost.com platform, this option allows you to display only set characters from a READONLY or TEXT field. If a TEXT field, the value and a blank field with be displayed, if the blank field is populated by the agent, then the previous value will be overwritten when the agent completes their call. Default is N."); ?>
 
 <BR>
 <A NAME="lists_fields-field_required">
@@ -2244,7 +2245,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_groups-group_name">
 <BR>
-<B><?php echo _QXZ("Group Name"); ?> -</B><?php echo _QXZ("This is the description of the group, it must be between 2 and 30 characters in length. Cannot include dashes, plusses or spaces ."); ?>
+<B><?php echo _QXZ("Group Name"); ?> -</B><?php echo _QXZ("This is the description of the group, it must be between 2 and 30 characters in length. Cannot include dashes, pluses or spaces ."); ?>
 
 <BR>
 <A NAME="inbound_groups-group_color">
@@ -2345,7 +2346,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_groups-xferconf_a_dtmf">
 <BR>
-<B><?php echo _QXZ("Xfer-Conf DTMF"); ?> -</B><?php echo _QXZ("These four fields allow for you to have two sets of Transfer Conference and DTMF presets. When the call or campaign is loaded, the agent screen will show two buttons on the transfer-conference frame and auto-populate the number-to-dial and the send-dtmf fields when pressed. If you want to allow Consultative Transfers, a fronter to a closer, have the agent use the CONSULTATIVE checkbox, which does not work for third party agent screen consultative calls. For those just have the agent click the Dial With Customer button. Then the agent can just LEAVE-3WAY-CALL and move on to their next call. If you want to allow Blind transfers of customers to an AGI script for logging or an IVR, then place AXFER in the number-to-dial field. You can also specify an custom extension after the AXFER, for instance if you want to do a call to a special IVR you have set to extension 83900 you would put AXFER83900 in the number-to-dial field."); ?>
+<B><?php echo _QXZ("Xfer-Conf DTMF"); ?> -</B><?php echo _QXZ("These four fields allow for you to have two sets of Transfer Conference and DTMF presets. When the call or campaign is loaded, the agent screen will show two buttons on the transfer-conference frame and auto-populate the number-to-dial and the send-dtmf fields when pressed. If you want to allow Consultative Transfers, a fronter to a closer, have the agent use the CONSULTATIVE checkbox, which does not work for third party agent screen consultative calls. For those just have the agent click the Dial With Customer button. Then the agent can just LEAVE-3WAY-CALL and move on to their next call. If you want to allow Blind transfers of customers to an AGI script for logging or an IVR, then place AXFER in the number-to-dial field. You can also specify a custom extension after the AXFER, for instance if you want to do a call to a special IVR you have set to extension 83900 you would put AXFER83900 in the number-to-dial field."); ?>
 
 <BR>
 <A NAME="inbound_groups-timer_action">
@@ -2415,7 +2416,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_groups-after_hours_action">
 <BR>
-<B><?php echo _QXZ("After Hours Action"); ?> -</B><?php echo _QXZ("The action to perform if it is after hours as defined in the call time for this inbound group. HANGUP will immediately hangup the call, MESSASGE will play the file in the After Hours Message Filenam field, EXTENSION will send the call to the After Hours Extension in the dialplan and VOICEMAIL will send the call to the voicemail box listed in the After Hours Voicemail field, IN_GROUP will send the call to the inbound group selected in the After Hours Transfer Group select list. Default is MESSAGE. VMAIL_NO_INST will send the call to the voicemail box that you have defined below and will not play instructions after the voicemail message."); ?>
+<B><?php echo _QXZ("After Hours Action"); ?> -</B><?php echo _QXZ("The action to perform if it is after hours as defined in the call time for this inbound group. HANGUP will immediately hangup the call, MESSAGE will play the file in the After Hours Message Filename field, EXTENSION will send the call to the After Hours Extension in the dialplan and VOICEMAIL will send the call to the voicemail box listed in the After Hours Voicemail field, IN_GROUP will send the call to the inbound group selected in the After Hours Transfer Group select list. Default is MESSAGE. VMAIL_NO_INST will send the call to the voicemail box that you have defined below and will not play instructions after the voicemail message."); ?>
 
 <BR>
 <A NAME="inbound_groups-after_hours_lead_reset">
@@ -2520,7 +2521,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_groups-play_place_in_line">
 <BR>
-<B><?php echo _QXZ("Play Place in Line"); ?> -</B><?php echo _QXZ("This defines whether the caller will hear their place in line when they enter the queue as well as when they hear the announcemend. Default is N."); ?>
+<B><?php echo _QXZ("Play Place in Line"); ?> -</B><?php echo _QXZ("This defines whether the caller will hear their place in line when they enter the queue as well as when they hear the announcement. Default is N."); ?>
 
 <BR>
 <A NAME="inbound_groups-play_estimate_hold_time">
@@ -2862,7 +2863,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_dids-did_pattern">
 <BR>
-<B><?php echo _QXZ("DID Extension"); ?> -</B><?php echo _QXZ("This is the number, extension or DID that will trigger this entry and that you will route within the system using this function. There is a reserved default DID that you can use which is just the word -default- without the dashes, that will allos you to send any call that does not match any other existing patterns to the default DID."); ?>
+<B><?php echo _QXZ("DID Extension"); ?> -</B><?php echo _QXZ("This is the number, extension or DID that will trigger this entry and that you will route within the system using this function. There is a reserved default DID that you can use which is just the word -default- without the dashes, that will allows you to send any call that does not match any other existing patterns to the default DID."); ?>
 
 <BR>
 <A NAME="inbound_dids-did_description">
@@ -3042,7 +3043,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_dids-filter_url_did_redirect">
 <BR>
-<B><?php echo _QXZ("Filter URL DID Redirect"); ?> -</B><?php echo _QXZ("If the Filter Inbound Number field is set to URL then this setting allows the URL response to specify a system DID to redirect the call to insead of using the default action. If a 0 is returned then the default action is used. If anything other than a 0 is returned then the call will be redirected to the resulting URL response value."); ?>
+<B><?php echo _QXZ("Filter URL DID Redirect"); ?> -</B><?php echo _QXZ("If the Filter Inbound Number field is set to URL then this setting allows the URL response to specify a system DID to redirect the call to instead of using the default action. If a 0 is returned then the default action is used. If anything other than a 0 is returned then the call will be redirected to the resulting URL response value."); ?>
 
 <BR>
 <A NAME="inbound_dids-filter_dnc_campaign">
@@ -3085,7 +3086,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="call_menu-menu_prompt">
 <BR>
-<B><?php echo _QXZ("Menu Prompt"); ?> -</B><?php echo _QXZ("This field contains the file name of the audio prompt to play at the beginning of this menu. You can enter multiple propmts in this field and the other prompt fields by separating them with a pipe character. You can add NOINT directly in front of an audio file name to make it so the playback cannot be interrupted with a key press by the caller, the NOINT should not be a part of the filename, it is a special flag for the system. You may also use special purpose .agi scripts in this field as well like the cm_date.agi script, discuss with your administrator for more details."); ?>
+<B><?php echo _QXZ("Menu Prompt"); ?> -</B><?php echo _QXZ("This field contains the file name of the audio prompt to play at the beginning of this menu. You can enter multiple prompts in this field and the other prompt fields by separating them with a pipe character. You can add NOINT directly in front of an audio file name to make it so the playback cannot be interrupted with a key press by the caller, the NOINT should not be a part of the filename, it is a special flag for the system. You may also use special purpose .agi scripts in this field as well like the cm_date.agi script, discuss with your administrator for more details."); ?>
 
 <BR>
 <A NAME="call_menu-user_group">
@@ -3165,7 +3166,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="call_menu-option_route">
 <BR>
-<B><?php echo _QXZ("Option Route"); ?> -</B><?php echo _QXZ("This menu contains the options for where to send the call if this option is selected: CALLMENU,INGROUP,DID,HANGUP,EXTENSION,PHONE. For CALLMENU, the Route Value should be the Menu ID of the Call Menu that you want the call sent to. For INGROUP, the In-Group that you want the call to be sent to needs to be selected as well as the other 5 options that need to be set to properly route a call to an Inbound Group. For DID, the Route Value needs to be the DID pattern that you want to send the call to. For HANGUP, the Route Value can be the name of an audio file to play before hanging up the call. For EXTENSION, the Route Value needs to be the dialplan extension you want to send the call to, and the Route Value Context is the context that extension is located in, if left blank the context will default to default. For PHONE, the Route Value needs to be the phone login value for the phones entry that you want to send the call to. For VOICEMAIL, the Route Value needs to be the voicemail box number, the unavailable mesage will be played. For AGI, the Route Value needs to be the agi script and any values taht need to be passed to it. VMAIL_NO_INST will send the call to the voicemail box that you have defined below and will not play instructions after the voicemail message."); ?>
+<B><?php echo _QXZ("Option Route"); ?> -</B><?php echo _QXZ("This menu contains the options for where to send the call if this option is selected: CALLMENU,INGROUP,DID,HANGUP,EXTENSION,PHONE. For CALLMENU, the Route Value should be the Menu ID of the Call Menu that you want the call sent to. For INGROUP, the In-Group that you want the call to be sent to needs to be selected as well as the other 5 options that need to be set to properly route a call to an Inbound Group. For DID, the Route Value needs to be the DID pattern that you want to send the call to. For HANGUP, the Route Value can be the name of an audio file to play before hanging up the call. For EXTENSION, the Route Value needs to be the dialplan extension you want to send the call to, and the Route Value Context is the context that extension is located in, if left blank the context will default to default. For PHONE, the Route Value needs to be the phone login value for the phones entry that you want to send the call to. For VOICEMAIL, the Route Value needs to be the voicemail box number, the unavailable message will be played. For AGI, the Route Value needs to be the agi script and any values that need to be passed to it. VMAIL_NO_INST will send the call to the voicemail box that you have defined below and will not play instructions after the voicemail message."); ?>
 
 <BR>
 <A NAME="call_menu-option_route_value">
@@ -3321,7 +3322,7 @@ if ($SSqc_features_active > 0)
 <B><FONT SIZE=3>CAMPAIGN_STATUSES TABLE</FONT></B><BR><BR>
 <A NAME="campaign_statuses">
 <BR>
-<B><?php echo _QXZ("Through the use of custom campaign statuses, you can have statuses that only exist for a specific campaign. The Status must be 1-8 characters in length, the description must be 2-30 characters in length and Selectable defines whether it shows up in the system as a disposition. The human_answered field is used when calculating the drop percentage, or abandon rate. Setting human_answered to Y will use this status when counting the human-answered calls. The Category option allows you to group several statuses into a catagory that can be used for statistical analysis. There are also 7 additional settings that will define the kind of status: sale, dnc, customer contact, not interested, unworkable, scheduled callback, completed. The MIN SEC and MAX SEC fields for each status will determine whether an agent can select that status at the end of their call based upon the length of the call. If the call is 10 seconds and the MIN SEC for a status is set to 20 seconds, then the agent will not be able to select that status. Also, if a call is 40 seconds and the MAX SEC for a status is set to 30 seconds, then the agent will not be able to select that status.")."</B>";
+<B><?php echo _QXZ("Through the use of custom campaign statuses, you can have statuses that only exist for a specific campaign. The Status must be 1-8 characters in length, the description must be 2-30 characters in length and Selectable defines whether it shows up in the system as a disposition. The human_answered field is used when calculating the drop percentage, or abandon rate. Setting human_answered to Y will use this status when counting the human-answered calls. The Category option allows you to group several statuses into a category that can be used for statistical analysis. There are also 7 additional settings that will define the kind of status: sale, dnc, customer contact, not interested, unworkable, scheduled callback, completed. The MIN SEC and MAX SEC fields for each status will determine whether an agent can select that status at the end of their call based upon the length of the call. If the call is 10 seconds and the MIN SEC for a status is set to 20 seconds, then the agent will not be able to select that status. Also, if a call is 40 seconds and the MAX SEC for a status is set to 30 seconds, then the agent will not be able to select that status.")."</B>";
 
 
 
@@ -3433,7 +3434,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="user_groups-agent_status_viewable_groups">
 <BR>
-<B><?php echo _QXZ("Agent Status Viewable Groups"); ?> -</B><?php echo _QXZ("This is a selectable list of User Groups and user functions to which members of this user group can view the status of as well as transfer calls to inside of the agent screen. The ALL-GROUPS option allows the users in this group to see and transfer calls to any user on the system. The CAMPAIGN-AGENTS option allows users in this group to see and transfer calls to any user in the campaign that they are logged into. The NOT-LOGGED-IN-AGENTS option allows all users in the system to be displayed, even if they are not logged-in curently."); ?>
+<B><?php echo _QXZ("Agent Status Viewable Groups"); ?> -</B><?php echo _QXZ("This is a selectable list of User Groups and user functions to which members of this user group can view the status of as well as transfer calls to inside of the agent screen. The ALL-GROUPS option allows the users in this group to see and transfer calls to any user on the system. The CAMPAIGN-AGENTS option allows users in this group to see and transfer calls to any user in the campaign that they are logged into. The NOT-LOGGED-IN-AGENTS option allows all users in the system to be displayed, even if they are not logged-in currently."); ?>
 
 <BR>
 <A NAME="user_groups-agent_status_view_time">
@@ -3531,7 +3532,7 @@ if ($SSqc_features_active > 0)
 
 <BR>
 <A NAME="scripts-script_name">
-<B><?php echo _QXZ("Script Name"); ?> -</B><?php echo _QXZ("This is the title of a Script. This is a short summary of the script. max 50 characters, minimum of 2 characters. There should be no spaces or punctuation of any kind in theis field."); ?>
+<B><?php echo _QXZ("Script Name"); ?> -</B><?php echo _QXZ("This is the title of a Script. This is a short summary of the script. max 50 characters, minimum of 2 characters. There should be no spaces or punctuation of any kind in this field."); ?>
 
 <BR>
 <A NAME="scripts-script_comments">
@@ -3887,7 +3888,7 @@ if ($SSoutbound_autodial_active > 0)
 	<BR>
 	<A NAME="list_loader-template_id">
 	<BR>
-	<B><?php echo _QXZ("Template ID"); ?> -</B><?php echo _QXZ("If the user has selected Custom layout from the File layout options, then this the the template the lead loader will use.  It will also override the selected list ID with the list ID that was assigned to the selected template when it was created."); ?>
+	<B><?php echo _QXZ("Template ID"); ?> -</B><?php echo _QXZ("If the user has selected Custom layout from the File layout options, then this the template the lead loader will use.  It will also override the selected list ID with the list ID that was assigned to the selected template when it was created."); ?>
 
 	<BR>
 	<A NAME="list_loader-state_conversion">
@@ -4176,7 +4177,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="phones-phone_context">
 <BR>
-<B><?php echo _QXZ("Phone Context"); ?> -</B><?php echo _QXZ("This is the dial plan context that this phone will use to dial out. If you are running a call center and you do not want your agents to be able to dial out outside of the agent screen applicaiton for example, then you would set this field to a dialplan context that does not exist, something like agent-nodial. default is default."); ?>
+<B><?php echo _QXZ("Phone Context"); ?> -</B><?php echo _QXZ("This is the dial plan context that this phone will use to dial out. If you are running a call center and you do not want your agents to be able to dial out outside of the agent screen application for example, then you would set this field to a dialplan context that does not exist, something like agent-nodial. default is default."); ?>
 
 <BR>
 <A NAME="phones-codecs_list">
@@ -4226,7 +4227,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="phones-nva_search_method">
 <BR>
-<B><?php echo _QXZ("NVA Search Method"); ?> -</B><?php echo _QXZ("If this phone dials through the NVA agi script in a Call Menu, and the NVA agi option is set to use the phone NVA Seach Method, this is where that is defined."); ?>
+<B><?php echo _QXZ("NVA Search Method"); ?> -</B><?php echo _QXZ("If this phone dials through the NVA agi script in a Call Menu, and the NVA agi option is set to use the phone NVA Search Method, this is where that is defined."); ?>
 
 <BR>
 <A NAME="phones-nva_error_filename">
@@ -4251,7 +4252,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="phones-AGI_call_logging_enabled">
 <BR>
-<B><?php echo _QXZ("Call Logging"); ?> -</B><?php echo _QXZ("This is set to true if the call_log step is in place in the extensions.conf file for all outbound and hang up h extensions to log all calls. This should always be 1 because it is manditory for many of the system features to work properly."); ?>
+<B><?php echo _QXZ("Call Logging"); ?> -</B><?php echo _QXZ("This is set to true if the call_log step is in place in the extensions.conf file for all outbound and hang up h extensions to log all calls. This should always be 1 because it is mandatory for many of the system features to work properly."); ?>
 
 <BR>
 <A NAME="phones-user_switching_enabled">
@@ -4442,7 +4443,7 @@ if ($SSoutbound_autodial_active > 0)
 <B><FONT SIZE=3>SERVERS TABLE</FONT></B><BR><BR>
 <A NAME="servers-server_id">
 <BR>
-<B><?php echo _QXZ("Server ID"); ?> -</B><?php echo _QXZ("This field is where you put the Asterisk servers name, doesnt have to be an official domain sub, just a nickname to identify the server to Admin users."); ?>
+<B><?php echo _QXZ("Server ID"); ?> -</B><?php echo _QXZ("This field is where you put the Asterisk servers name, does not have to be an official domain sub, just a nickname to identify the server to Admin users."); ?>
 
 <BR>
 <A NAME="servers-server_description">
@@ -4985,7 +4986,7 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <BR>
 <A NAME="settings-meetme_enter_leave3way_filename">
 <BR>
-<B><?php echo _QXZ("Custom Agent Leave 3way Sound"); ?> -</B><?php echo _QXZ("This is a systemwide feature that only works on Asterisk 1.8 servers or higher. This allows you to set an audio file for your agents to hear after they have left a 3way conferencce in the agent screen. If you want to have this audio prompt be the only prompt that the agent hears, then you will need to copy the sip-silence audio files over the only-person audio files. If you want the agent to hear no prompt after they leave a 3way call then also set this field to sip-silence. Default is EMPTY."); ?>
+<B><?php echo _QXZ("Custom Agent Leave 3way Sound"); ?> -</B><?php echo _QXZ("This is a systemwide feature that only works on Asterisk 1.8 servers or higher. This allows you to set an audio file for your agents to hear after they have left a 3way conference in the agent screen. If you want to have this audio prompt be the only prompt that the agent hears, then you will need to copy the sip-silence audio files over the only-person audio files. If you want the agent to hear no prompt after they leave a 3way call then also set this field to sip-silence. Default is EMPTY."); ?>
 
 <BR>
 <A NAME="settings-admin_home_url">
@@ -4995,7 +4996,7 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <BR>
 <A NAME="settings-admin_web_directory">
 <BR>
-<B><?php echo _QXZ("Admin Web Directory"); ?> -</B><?php echo _QXZ("This is the web directory that your administation web content, like admin.php, are in. To figure out your Admin web directory, it is everything that is between the domain name and the admin.php in the URL on this page, without the beginning and ending slashes."); ?>
+<B><?php echo _QXZ("Admin Web Directory"); ?> -</B><?php echo _QXZ("This is the web directory that your administration web content, like admin.php, are in. To figure out your Admin web directory, it is everything that is between the domain name and the admin.php in the URL on this page, without the beginning and ending slashes."); ?>
 
 <BR>
 <A NAME="settings-agent_script">
@@ -5186,7 +5187,7 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <BR>
 <A NAME="settings-script_remove_js">
 <BR>
-<B><?php echo _QXZ("Script Text Remove JS"); ?> -</B><?php echo _QXZ("This setting if enabled will remove any javascript that is included in the script text for a script. This is considered a security feature to prevent cross-site scripting, or XSS. Default is 1 for enabed."); ?>
+<B><?php echo _QXZ("Script Text Remove JS"); ?> -</B><?php echo _QXZ("This setting if enabled will remove any javascript that is included in the script text for a script. This is considered a security feature to prevent cross-site scripting, or XSS. Default is 1 for enabled."); ?>
 
 <BR>
 <A NAME="settings-admin_list_counts">
