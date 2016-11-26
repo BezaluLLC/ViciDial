@@ -333,7 +333,7 @@ echo "<TABLE WIDTH=98% BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR><TD ALIGN
 <BR>
 <A NAME="users-user_nickname">
 <BR>
-<B><?php echo _QXZ("User Nickname"); ?> -</B><?php echo _QXZ("Optional alternative name used for agent when chatting with customers. Only used if populated. Not currently enabled."); ?>
+<B><?php echo _QXZ("User Nickname"); ?> -</B><?php echo _QXZ("Optional alternative name used for agent when chatting with customers in the customer website chat feature. Only used if populated."); ?>
 
 <BR>
 <A NAME="users-user_new_lead_limit">
@@ -3090,7 +3090,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="call_menu-user_group">
 <BR>
-<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
 
 <BR>
 <A NAME="call_menu-menu_timeout">
@@ -3211,7 +3211,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="filter_phone_groups-user_group">
 <BR>
-<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
 
 <BR>
 <A NAME="filter_phone_groups-filter_phone_group_description">
@@ -3540,7 +3540,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="scripts-user_group">
 <BR>
-<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
 
 <BR>
 <A NAME="scripts-script_text">
@@ -3588,7 +3588,7 @@ if ($SSoutbound_autodial_active > 0)
 	<BR>
 	<A NAME="lead_filters-user_group">
 	<BR>
-	<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+	<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
 
 	<BR>
 	<A NAME="lead_filters-lead_filter_sql">
@@ -3617,7 +3617,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="call_times-user_group">
 <BR>
-<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
 
 <BR>
 <A NAME="call_times-ct_default_start">
@@ -3678,7 +3678,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="shifts-user_group">
 <BR>
-<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
 
 <BR>
 <A NAME="shifts-shift_start_time">
@@ -3730,7 +3730,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="music_on_hold-user_group">
 <BR>
-<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
 
 <BR>
 <A NAME="music_on_hold-random">
@@ -3762,7 +3762,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="tts_prompts-user_group">
 <BR>
-<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
 
 <BR>
 <A NAME="tts_prompts-tts_voice">
@@ -3806,7 +3806,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="voicemail-user_group">
 <BR>
-<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
 
 <BR>
 <A NAME="voicemail-delete_vm_after_email">
@@ -3941,7 +3941,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="phones-user_group">
 <BR>
-<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
 
 <BR>
 <A NAME="phones-phone_ip">
@@ -4462,7 +4462,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="servers-user_group">
 <BR>
-<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
 
 <BR>
 <A NAME="servers-sysload">
@@ -4699,7 +4699,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="conf_templates-user_group">
 <BR>
-<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
 
 <BR>
 <A NAME="conf_templates-template_contents">
@@ -4730,7 +4730,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="server_carriers-user_group">
 <BR>
-<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
 
 <BR>
 <A NAME="server_carriers-registration_string">
@@ -5500,7 +5500,7 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <BR>
 <A NAME="screen_labels-user_group">
 <BR>
-<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
 
 <BR>
 <A NAME="screen_labels-label_hide_field_logs">
@@ -5535,7 +5535,7 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <BR>
 <A NAME="screen_colors-user_group">
 <BR>
-<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
 
 <BR>
 <A NAME="screen_colors-menu_background">
@@ -5550,7 +5550,7 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <BR>
 <A NAME="screen_colors-std_row_background">
 <BR>
-<B><?php echo _QXZ("Standard Row Backgrounds"); ?> -</B><?php echo _QXZ("This is where you set the hex color values for the several standard row backgrounds. They should be lighter colors since black text will be displayed on top of them. These are often used to make different sections stand apart or as alternating colors for rows. Defaults are 9BB9FB, B9CBFD, 8EBCFD, B6D3FC, A3C3D6."); ?>
+<B><?php echo _QXZ("Standard Row Backgrounds"); ?> -</B><?php echo _QXZ("This is where you set the hex color values for the several standard row backgrounds. They should be lighter colors since black text will be displayed on top of them. These are often used to make different sections stand apart or as alternating colors for rows. Defaults are 9BB9FB, B9CBFD, 8EBCFD, B6D3FC, A3C3D6. The Standard Row 5 Background is used in the Agent screen for the background color behind the logo after the agent has logged in."); ?>
 
 <BR>
 <A NAME="screen_colors-alt_row_background">
@@ -5591,7 +5591,7 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <BR>
 <A NAME="settings_containers-user_group">
 <BR>
-<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this recoird restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user to view this record."); ?>
 
 <BR>
 <A NAME="settings_containers-container_entry">

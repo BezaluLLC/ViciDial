@@ -406,6 +406,7 @@ $subcamp_font_size='2';
 $header_selected_bold='<b>';
 $header_nonselected_bold='';
 $admin_color =		'#E6E6E6';
+$soundboard_color =	'#E6E6E6';
 $avatar_color =		'#C6C6C6';
 $avatar_font =		'BLACK';
 $subcamp_color =	'#C6C6C6';

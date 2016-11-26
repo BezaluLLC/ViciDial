@@ -20829,7 +20829,7 @@ if ($ADD==31)
 			$ct_state_call_times =	$rowx[0];
 			$state_rules = explode('|',$ct_state_call_times);
 			$ct_srs = ((count($state_rules)) - 2);
-			if ($ct_srs < 0) {$ct_hrs=0;}
+			if ($ct_srs < 0) {$ct_srs=0;}
 			echo _QXZ("State rules defined for this call time").": $ct_srs\n";
 			}
 		else
