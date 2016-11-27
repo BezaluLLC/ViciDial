@@ -532,10 +532,11 @@
 # 161102-1121 - Fixed QM partition problem
 # 161106-2221 - Changed to screen colors for main tab logo, other small style changes
 # 161117-1532 - Changed default main screen logo background color to white(screen color standard row 5)
+# 161126-2152 - Release of 2.13 stable branch and raising trunk to 2.14
 #
 
-$version = '2.12-501c';
-$build = '161117-1532';
+$version = '2.14-503c';
+$build = '161126-2152';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;

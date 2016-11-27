@@ -1,5 +1,6 @@
 ################ UPGRADE
 
+NOTE: Upgrading from 2.11 to 2.13 is below the first section
 NOTE: Upgrading from 2.9 to 2.11 is below the first section
 NOTE: Upgrading from 2.7 to 2.9 is below the first section
 NOTE: Upgrading from 2.4 to 2.7 is below the first section
@@ -11,7 +12,57 @@ NOTE: Upgrading from 2.0.2 to 2.0.3 is below the fifth section
 NOTE: Upgrading from 2.0.1 to 2.0.2 is in the next section
 NOTE: Upgrading from 1.1.12-3 to 2.0.1 is at the bottom
 
-########## UPGRADING FROM 2.11 TO 2.12 ##########
+########## UPGRADING FROM 2.13 TO 2.14 ##########
+
+OPTIONAL STEPS(But highly recommended) - Backup existing system:
+
+1.  Run this for a 1-server system or server with database on it:  
+  (this may take hours on large system)
+   /usr/share/astguiclient/ADMIN_backup.pl --debugX
+
+2. Run this on dialer/Asterisk-only servers:
+  (do not run this if you only have one server):
+   /usr/share/astguiclient/ADMIN_backup.pl --debugX --without-db --without-web
+
+
+REQUIRED STEPS!!!
+
+1. Check system_settings, make sure you are at DB Schema Version 1478 or higher
+	If not, run the instructions for 2.11 to 2.13 before this section.
+
+2. upgrade the MySQL asterisk database(you have two options):
+    A. Running the upgrade file directly from Linux:
+	mysql -f --database=asterisk < /path/from/root/extras/upgrade_2.14.sql
+
+    B. Going into mysql and executing the upgrade sql file:
+	mysql
+	use asterisk
+	\. /path/from/root/extras/upgrade_2.14.sql
+	quit
+
+3. install new files:
+	perl ./install.pl
+	NOTES: If you have customized any scripts in the bin or agi folders, 
+	then make sure you back them up before running the install.pl script. 
+	This script will replace existing files in the astguiclient installation.
+
+4. For each of your ViciDial servers, go the Admin -> Servers -> Modify Server
+	page and set each one to "Rebuild conf files = Y" and click submit.
+	This will rebuild the conf files to ensure any changes are updated.
+
+5. On one server only, update your phone codes data:
+       /usr/share/astguiclient/ADMIN_area_code_populate.pl --purge-table --debug
+
+
+OTHER CHANGES:
+
+1. Nothing new here yet, just branched!
+
+
+
+
+
+########## UPGRADING FROM 2.11 TO 2.13 ##########
 
 OPTIONAL STEPS(But highly recommended) - Backup existing system:
 
@@ -314,7 +365,7 @@ OTHER CHANGES:
 
 
 
-########## UPGRADING FROM 2.9 TO 2.10 ##########
+########## UPGRADING FROM 2.9 TO 2.11 ##########
 
 OPTIONAL STEPS(But highly recommended) - Backup existing system:
 

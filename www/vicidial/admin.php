@@ -3895,12 +3895,13 @@ else
 # 161103-2204 - Added web_loader_phone_length and agent soundboards
 # 161106-2058 - Added agent_script
 # 161113-0900 - Changed script_id to 20 characters max, other small script changes
+# 161126-2157 - Release of 2.13 stable branch and raising trunk to 2.14
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.12-575a';
-$build = '161113-0900';
+$admin_version = '2.14-577a';
+$build = '161126-2157';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
