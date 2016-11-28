@@ -3897,12 +3897,13 @@ else
 # 161113-0900 - Changed script_id to 20 characters max, other small script changes
 # 161126-2157 - Release of 2.13 stable branch and raising trunk to 2.14
 # 161128-1552 - Small fix for link on DID modify page with plus sign'+' in did pattern
+# 161128-1746 - Updated 3 INSERT SQL queries to specify fields
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-578a';
-$build = '161128-1552';
+$admin_version = '2.14-579a';
+$build = '161128-1746';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -9152,7 +9153,7 @@ if ($ADD==23)
 				{
 				echo "<br><B>"._QXZ("CAMPAIGN HOT KEY ADDED").": $campaign_id - $status - $hotkey</B>\n";
 
-				$stmt="INSERT INTO vicidial_campaign_hotkeys values('$status','$hotkey','$status_name','$selectable','$campaign_id');";
+				$stmt="INSERT INTO vicidial_campaign_hotkeys(status,hotkey,status_name,selectable,campaign_id) values('$status','$hotkey','$status_name','$selectable','$campaign_id');";
 				$rslt=mysql_to_mysqli($stmt, $link);
 
 				### LOG INSERTION Admin Log Table ###
@@ -10697,7 +10698,7 @@ if ($ADD==2111111)
 				}
 			else
 				{
-				$stmt="INSERT INTO vicidial_scripts values('$script_id','$script_name','$script_comments','" . mysqli_real_escape_string($link, $script_text) . "','$active','$user_group','');";
+				$stmt="INSERT INTO vicidial_scripts(script_id, script_name, script_comments, script_text, active, user_group, script_color) values('$script_id','$script_name','$script_comments','" . mysqli_real_escape_string($link, $script_text) . "','$active','$user_group','');";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($DB > 0) {echo "|$stmt|";}
 				echo "<br><B>"._QXZ("SCRIPT ADDED").": $script_id</B>\n";
@@ -12906,7 +12907,7 @@ if ($ADD==41)
 					else {$CIDstring = "$VqueryCID";}
 
 					### insert a NEW record to the vicidial_manager table to be processed
-					$stmtB = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$old_server_ip','','Originate','$VqueryCID','Exten: $VDAD_dial_exten','Context: $ext_context','Channel: $local_DEF$Ndialstring$local_AMP$ext_context','Priority: 1','Callerid: $CIDstring','Timeout: $Local_dial_timeout','','','','VDACnote: $campaign_id|$lead_id|$phone_code|$phone_number|OUT|MAIN|99')";
+					$stmtB = "INSERT INTO vicidial_manager(uniqueid,entry_date,status,response,server_ip,channel,action,callerid,cmd_line_b,cmd_line_c,cmd_line_d,cmd_line_e,cmd_line_f,cmd_line_g,cmd_line_h,cmd_line_i,cmd_line_j,cmd_line_k) values('','$SQLdate','NEW','N','$old_server_ip','','Originate','$VqueryCID','Exten: $VDAD_dial_exten','Context: $ext_context','Channel: $local_DEF$Ndialstring$local_AMP$ext_context','Priority: 1','Callerid: $CIDstring','Timeout: $Local_dial_timeout','','','','VDACnote: $campaign_id|$lead_id|$phone_code|$phone_number|OUT|MAIN|99')";
 					$rslt=mysql_to_mysqli($stmtB, $link);
 
 					### insert a SENT record to the vicidial_auto_calls table 
