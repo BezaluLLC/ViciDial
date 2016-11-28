@@ -6030,7 +6030,7 @@ if ($SSqc_features_active > 0)
 <?php echo _QXZ("<U>Call Inv One-off</U> = Total leads currently dialable in list based on the campaign settings that are at least one dial attempt below the call count limit."); ?><BR>
 <?php echo _QXZ("<U>Call Inv Inactive</U> = Total leads currently in list that belong to INCOMPLETE statuses that are NOT currently selected as dialable for the campaign."); ?><BR>
 <?php echo _QXZ("<U>Dial Avg</U> = Total calls made on the list divided by the <U>Start Inv</U> of that list."); ?><BR>
-<?php echo _QXZ("<U>Pen. %</U> = Percentage of leads in the list that are no longer dialable (<B>Start Inv</B> - <B>Call Inv Total</B> / <B>Start Inv</B>."); ?><BR>
+<?php echo _QXZ("<U>Pen. pct</U> = Percentage of leads in the list that are no longer dialable, Start Inv - Call Inv Total divided-by Start Inv."); ?><BR>
 
 <A NAME="DIDstats">
 <BR>

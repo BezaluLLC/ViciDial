@@ -84,7 +84,7 @@ if (isset($_GET["SUBMIT"]))						{$SUBMIT=$_GET["SUBMIT"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled,admin_modify_refresh,nocache_admin,webroot_writable,allow_emails,active_modules,sounds_central_control_active,qc_features_active,contacts_enabled,enable_languages,active_modules,agent_soundboards FROM system_settings;";
+$stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled,admin_modify_refresh,nocache_admin,webroot_writable,allow_emails,active_modules,sounds_central_control_active,qc_features_active,contacts_enabled,enable_languages,active_modules,agent_soundboards,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -107,6 +107,7 @@ if ($qm_conf_ct > 0)
 	$SSenable_languages =			$row[13];
 	$SSactive_modules =				$row[14];
 	$SSagent_soundboards =			$row[15];
+	$SSlanguage_method =			$row[16];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -191,11 +192,12 @@ if ($auth < 1)
 	exit;
 	}
 
-$rights_stmt = "SELECT modify_audiostore from vicidial_users where user='$PHP_AUTH_USER';";
+$rights_stmt = "SELECT modify_audiostore,selected_language from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
 $rights_rslt=mysql_to_mysqli($rights_stmt, $link);
 $rights_row=mysqli_fetch_row($rights_rslt);
 $modify_audiostore =		$rights_row[0];
+$VUselected_language =		$rights_row[1];
 
 # check their permissions
 if ( $modify_audiostore < 1 )
