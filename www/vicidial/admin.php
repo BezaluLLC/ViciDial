@@ -3896,12 +3896,13 @@ else
 # 161106-2058 - Added agent_script
 # 161113-0900 - Changed script_id to 20 characters max, other small script changes
 # 161126-2157 - Release of 2.13 stable branch and raising trunk to 2.14
+# 161128-1552 - Small fix for link on DID modify page with plus sign'+' in did pattern
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-577a';
-$build = '161126-2157';
+$admin_version = '2.14-578a';
+$build = '161128-1552';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -28096,7 +28097,10 @@ if ($ADD==3311)
 
 
 		echo "<br><a href=\"./AST_DIDstats.php?group[0]=$did_id\">"._QXZ("Click here to see a traffic report for this DID")."</FONT><br>\n";
-		echo "<br><a href=\"./user_stats.php?user=$did_pattern&did=1&did_id=$did_id\">"._QXZ("Click here to see a list of recordings and calls for this DID")."</FONT><br>\n";
+
+		$temp_did_pattern = $did_pattern;
+		$temp_did_pattern = preg_replace("/\+/",'%2B',$temp_did_pattern);
+		echo "<br><a href=\"./user_stats.php?user=$temp_did_pattern&did=1&did_id=$did_id\">"._QXZ("Click here to see a list of recordings and calls for this DID")."</FONT><br>\n";
 
 		if ($SSdid_ra_extensions_enabled > 0)
 			{
