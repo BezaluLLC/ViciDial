@@ -6070,7 +6070,7 @@ if ($SSqc_features_active > 0)
 
 <A NAME="LISTS_campaign_stats">
 <BR>
-<B><?php echo _QXZ("Lists Campaign Statuses Report"); ?> -</B><?php echo _QXZ(""); ?><BR>
+<B><?php echo _QXZ("Lists Campaign Statuses Report"); ?> -</B><BR>
 <?php echo _QXZ("<U>LIST ID SUMMARY</U> = Shows each list in the campaign(s) selected by the user, the count of leads in each list, and whether the list is active or inactive."); ?><BR>
 <?php echo _QXZ("<U>STATUS FLAGS SUMMARY</U> = Shows a breakdown of the status flags for all the selected lists in all the selected campaigns combined. Status flags are set in the -Statuses- section of a campaign or the -System Statuses-."); ?><BR>
 <?php echo _QXZ("<U>CUSTOM STATUS CATEGORY STATS</U> = Shows a breakdown of the custom status categories for all the selected lists in all the selected campaigns combined.  Categories can be defined under the -System Statuses- in the admin section."); ?><BR>

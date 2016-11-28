@@ -427,13 +427,21 @@ foreach(@FILEparse)
 
 						if ($phrase_match < 1)
 							{
-							$stmtA="INSERT INTO www_phrases SET phrase_text='$temp_QXZval_strSQL',php_filename='$FILEparseNAME[$f]',php_directory='$FILEparseDIR[$f]',source='www_languages_script',insert_date=NOW();";
-							$affected_rows = $dbhA->do($stmtA);
-							$QXZinserts++;
+							if (length($temp_QXZval_strSQL)<1)
+								{
+								if ($DB > 0) 
+									{print "EMPTY INSERT SKIPPED: |$temp_QXZval_strSQL|$FILEparseNAME[$f]|$FILEparseDIR[$f]|\n";}
+								}
+							else
+								{
+								$stmtA="INSERT INTO www_phrases SET phrase_text='$temp_QXZval_strSQL',php_filename='$FILEparseNAME[$f]',php_directory='$FILEparseDIR[$f]',source='www_languages_script',insert_date=NOW();";
+								$affected_rows = $dbhA->do($stmtA);
+								$QXZinserts++;
 
-							$event_string = "     $affected_rows|$stmtA|";
-							if ($DBX > 0) {print "$event_string\n";}
-							&event_logger;
+								$event_string = "     $affected_rows|$stmtA|";
+								if ($DBX > 0) {print "$event_string\n";}
+								&event_logger;
+								}
 							}
 						else
 							{$QXZdups++;}
