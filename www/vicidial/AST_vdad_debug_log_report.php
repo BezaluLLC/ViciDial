@@ -5,6 +5,7 @@
 #
 # CHANGES
 # 161124-0737 - First build
+# 161201-0815 - Added more statistics and options
 #
 
 $startMS = microtime();
@@ -37,10 +38,15 @@ if (isset($_GET["DBX"]))					{$DBX=$_GET["DBX"];}
 	elseif (isset($_POST["DBX"]))			{$DBX=$_POST["DBX"];}
 if (isset($_GET["archive"]))				{$archive=$_GET["archive"];}
 	elseif (isset($_POST["archive"]))		{$archive=$_POST["archive"];}
+if (isset($_GET["lrerr_statuses"]))				{$lrerr_statuses=$_GET["lrerr_statuses"];}
+	elseif (isset($_POST["lrerr_statuses"]))	{$lrerr_statuses=$_POST["lrerr_statuses"];}
+if (isset($_GET["uncounted_statuses"]))				{$uncounted_statuses=$_GET["uncounted_statuses"];}
+	elseif (isset($_POST["uncounted_statuses"]))	{$uncounted_statuses=$_POST["uncounted_statuses"];}
 if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
+
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -194,8 +200,11 @@ if (strlen($query_date_D) < 6) {$query_date_D = "00:00:00";}
 if (strlen($query_date_T) < 6) {$query_date_T = "23:59:59";}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (strlen($stage) < 2) {$stage = 'SUMMARY';}
+if (strlen($lrerr_statuses) < 1) {$lrerr_statuses = 0;}
+if (strlen($uncounted_statuses) < 1) {$uncounted_statuses = 0;}
 $vicidial_vdad_log = 'vicidial_vdad_log';
 if ($archive > 0) {$vicidial_vdad_log = 'vicidial_vdad_log_archive';}
+$vicidial_log = 'vicidial_log';
 
 /*
 $server_ip_string='|';
@@ -384,12 +393,26 @@ if ($SUBMIT) {
 	##### BEGIN SUMMARY SECTION #####
 	if ($stage == 'SUMMARY')
 		{
+		$uncounted=0;
 		$server_ct=0;
 		$server_array[0]='';
 		$server_calls[0]=0;
 		$server_LRERR[0]=0;
+		$server_LRERR_total[0]=0;
 		$server_preroute[0]=0;
 		$server_preroute_time[0]=0;
+		$server_LRcount[0]=0;
+		$server_LRcount_total[0]=0;
+		$server_LRpreroute[0]=0;
+		$server_LRpreroute_time[0]=0;
+		$server_nLRpreroute[0]=0;
+		$server_nLRpreroute_time[0]=0;
+		$status_ct=0;
+		$status_array[0]='';
+		$status_calls[0]=0;
+		$ucstatus_ct=0;
+		$ucstatus_array[0]='';
+		$ucstatus_calls[0]=0;
 		$MAIN.="<PRE><font size=2>\n";
 
 		$stmt = "SELECT caller_code,server_ip,count(*) FROM $vicidial_vdad_log where db_time >= '$query_date $query_date_D' and db_time <= '$query_date $query_date_T' group by caller_code,server_ip order by caller_code limit 100000;";
@@ -443,9 +466,17 @@ if ($SUBMIT) {
 			}
 
 		$i=0;
+		$m=0;
 		$LRERR=0;
+		$LRERR_total=0;
 		$preroute=0;
 		$preroute_total=0;
+		$LRcount=0;
+		$LRcount_total=0;
+		$LRpreroute=0;
+		$LRpreroute_total=0;
+		$nLRpreroute=0;
+		$nLRpreroute_total=0;
 		while ($cc_ct > $i)
 			{
 			if ($DBX > 0)
@@ -456,6 +487,8 @@ if ($SUBMIT) {
 			$last_runtime=0;
 			$preroute_time=0;
 			$found_preroute=0;
+			$this_call_LR=0;
+			$call_counted=0;
 
 			$stmt = "SELECT stage,step,epoch_micro,run_time FROM $vicidial_vdad_log where caller_code='$Acaller_code[$i]' and db_time >= '$query_date $query_date_D' and db_time <= '$query_date $query_date_T' order by epoch_micro;";
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -469,24 +502,85 @@ if ($SUBMIT) {
 				$Astep[$j] =		$row[1];
 				$Aepoch_micro[$j] =	$row[2];
 				$Arun_time[$j] =	$row[3];
+				$j++;
+				}
+			$j=0;
+			while ($cd_ct > $j)
+				{
+				if ($j < 1) {$start_epoch=$Aepoch_micro[$j];}
+				$last_epoch=$Aepoch_micro[$j];
+				$last_runtime=$Arun_time[$j];
+				if ($Astage[$j] == 'LocalEXIT-5') 
+					{
+					$this_call_LR++;
+					}
 				if ($Astage[$j] == 'LocalEXIT-8') 
 					{
+					$call_counted++;
 					$LRERR++;
+					$LRERR_time = ( ($last_epoch - $start_epoch) + $last_runtime);
+					$LRERR_total = ($LRERR_total + $LRERR_time);
 					$k=0;
 					while ($k < $server_ct)
 						{
 						if ($Aserver_ip[$i] == $server_array[$k])
 							{
 							$server_LRERR[$k]++;
+							$server_LRERR_time[$k] = ($server_LRERR_time[$k] + $LRERR_time);
 							}
 						$k++;
 						}
+					
+					if ($lrerr_statuses > 0)
+						{
+						$start_epoch = $Aepoch_micro[$j];
+						$start_epochA = explode('.',$start_epoch);
+						$start_epoch = ($start_epochA[0] - 240);
+						$start_date = date("Y-m-d H:i:s",$start_epoch);
+						$CIDlead_id = $Acaller_code[$i];
+						$CIDlead_id = substr($CIDlead_id, 10, 10);
+						$CIDlead_id = ($CIDlead_id + 0);
+						$stmt = "SELECT status,uniqueid FROM $vicidial_log where lead_id='$CIDlead_id' and call_date > \"$start_date\" order by call_date limit 1;";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($DB) {$MAIN.="$stmt\n";}
+						$status_row_ct = mysqli_num_rows($rslt);
+						if ($status_row_ct > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+
+							if ($m==0) 
+								{
+								$status_ct++;
+								$status_array[0]=$row[0];
+								$status_calls[0]++;
+								}
+							else
+								{
+								$k=0;
+								$status_found=0;
+								while ($k < $status_ct)
+									{
+									if ($row[0] == $status_array[$k])
+										{
+										$status_calls[$k]++;
+										$status_found=1;
+										}
+									$k++;
+									}
+								if ($status_found < 1)
+									{
+									$status_array[$status_ct]=$row[0];
+									$status_calls[$status_ct]++;
+									$status_ct++;
+									}
+								}
+							}
+						}
+					$m++;
 					}
-				if ($j < 1) {$start_epoch=$row[2];}
-				$last_epoch=$row[2];
-				$last_runtime=$row[3];
 				if ($Astage[$j] == 'preroute')
 					{
+					$call_counted++;
 					$found_preroute=1;
 					$preroute++;
 					$preroute_time = ( ($last_epoch - $start_epoch) + $last_runtime);
@@ -501,10 +595,96 @@ if ($SUBMIT) {
 							}
 						$k++;
 						}
+					if ($this_call_LR > 0)
+						{
+						$LRcount++;
+						$LRcount_total = ($LRcount_total + $this_call_LR);
+
+						$LRpreroute++;
+						$LRpreroute_time = ( ($last_epoch - $start_epoch) + $last_runtime);
+						$LRpreroute_total = ($LRpreroute_total + $LRpreroute_time);
+
+						$k=0;
+						while ($k < $server_ct)
+							{
+							if ($Aserver_ip[$i] == $server_array[$k])
+								{
+								$server_LRpreroute[$k]++;
+								$server_LRpreroute_time[$k] = ($server_LRpreroute_time[$k] + $LRpreroute_time);
+								}
+							$k++;
+							}
+						}
+					else
+						{
+						$nLRpreroute++;
+						$nLRpreroute_time = ( ($last_epoch - $start_epoch) + $last_runtime);
+						$nLRpreroute_total = ($nLRpreroute_total + $nLRpreroute_time);
+
+						$k=0;
+						while ($k < $server_ct)
+							{
+							if ($Aserver_ip[$i] == $server_array[$k])
+								{
+								$server_nLRpreroute[$k]++;
+								$server_nLRpreroute_time[$k] = ($server_nLRpreroute_time[$k] + $nLRpreroute_time);
+								}
+							$k++;
+							}
+						}
 					}
 				if ($DBX > 0)
 					{$MAIN.= "          $j  $Aepoch_micro[$j]  $Arun_time[$j]  $Astep[$j]  $Astage[$j]\n";}
 				$j++;
+				}
+			if ($call_counted < 1)
+				{
+				$uncounted++;
+				if ($uncounted_statuses > 0)
+					{
+					$start_epoch = $Aepoch_micro[$j];
+					$start_epochA = explode('.',$start_epoch);
+					$start_epoch = ($start_epochA[0] - 240);
+					$start_date = date("Y-m-d H:i:s",$start_epoch);
+					$CIDlead_id = $Acaller_code[$i];
+					$CIDlead_id = substr($CIDlead_id, 10, 10);
+					$CIDlead_id = ($CIDlead_id + 0);
+					$stmt = "SELECT status,uniqueid FROM $vicidial_log where lead_id='$CIDlead_id' and call_date > \"$start_date\" order by call_date limit 1;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($DB) {$MAIN.="$stmt\n";}
+					$ucstatus_row_ct = mysqli_num_rows($rslt);
+					if ($ucstatus_row_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+
+						if ($m==0) 
+							{
+							$ucstatus_ct++;
+							$ucstatus_array[0]=$row[0];
+							$ucstatus_calls[0]++;
+							}
+						else
+							{
+							$k=0;
+							$ucstatus_found=0;
+							while ($k < $ucstatus_ct)
+								{
+								if ($row[0] == $ucstatus_array[$k])
+									{
+									$ucstatus_calls[$k]++;
+									$ucstatus_found=1;
+									}
+								$k++;
+								}
+							if ($ucstatus_found < 1)
+								{
+								$ucstatus_array[$ucstatus_ct]=$row[0];
+								$ucstatus_calls[$ucstatus_ct]++;
+								$ucstatus_ct++;
+								}
+							}
+						}
+					}
 				}
 			$processing_time = ($last_epoch - $start_epoch);
 			$routing_time = ($processing_time + $last_runtime);
@@ -516,14 +696,48 @@ if ($SUBMIT) {
 
 		$LRERR_pct=( ($LRERR / $i) * 100);
 		$LRERR_pct = sprintf("%01.2f", $LRERR_pct);
+		$LRERR_avg = ($LRERR_total / $LRERR);
+		$LRERR_avg = sprintf("%01.6f", $LRERR_avg);
 
 		$preroute_avg = ($preroute_total / $preroute);
 		$preroute_avg = sprintf("%01.6f", $preroute_avg);
+		$LRpreroute_avg = ($LRpreroute_total / $LRpreroute);
+		$LRpreroute_avg = sprintf("%01.6f", $LRpreroute_avg);
+		$nLRpreroute_avg = ($nLRpreroute_total / $nLRpreroute);
+		$nLRpreroute_avg = sprintf("%01.6f", $nLRpreroute_avg);
 
 		$MAIN.= "\nFINISHED - \n";
 		$MAIN.= "TOTAL ANSWERED CALLS:  $i\n";
-		$MAIN.= "LRERR:                 $LRERR  ($LRERR_pct%)\n";
+		$MAIN.= "LRERR:                 $LRERR  ($LRERR_pct%)   average $LRERR_avg sec\n";
 		$MAIN.= "preroute:              $preroute  (average $preroute_avg sec)\n";
+		$MAIN.= "LRpreroute:            $LRpreroute  (average $LRpreroute_avg sec)\n";
+		$MAIN.= "nLRpreroute:           $nLRpreroute  (average $nLRpreroute_avg sec)\n";
+		$MAIN.= "uncounted:             $uncounted\n";
+
+		if ($uncounted_statuses > 0)
+			{
+			$MAIN.= "UNCOUNTED STATUS SUMMARY - \n";
+			$k=0;
+			while ($k < $ucstatus_ct)
+				{
+				$ucstatus_array[$k] = sprintf("%6s", $ucstatus_array[$k]);
+				$ucstatus_calls[$k] = sprintf("%6s", $ucstatus_calls[$k]);
+				$MAIN.= "     $ucstatus_array[$k]:    $ucstatus_calls[$k]\n";
+				$k++;
+				}
+			}
+		if ($lrerr_statuses > 0)
+			{
+			$MAIN.= "LRERR STATUS SUMMARY - \n";
+			$k=0;
+			while ($k < $status_ct)
+				{
+				$status_array[$k] = sprintf("%6s", $status_array[$k]);
+				$status_calls[$k] = sprintf("%6s", $status_calls[$k]);
+				$MAIN.= "     $status_array[$k]:    $status_calls[$k]\n";
+				$k++;
+				}
+			}
 		$MAIN.= "SERVER SUMMARY - \n";
 
 		$k=0;
@@ -544,14 +758,22 @@ if ($SUBMIT) {
 
 			$LRERR_pct=( ($server_LRERR[$k] / $server_calls[$k]) * 100);
 			$LRERR_pct = sprintf("%01.2f", $LRERR_pct);
+			$LRERR_avg = ($server_LRERR_time[$k] / $server_LRERR[$k]);
+			$LRERR_avg = sprintf("%01.6f", $LRERR_avg);
 
 			$preroute_avg = ($server_preroute_time[$k] / $server_preroute[$k]);
 			$preroute_avg = sprintf("%01.6f", $preroute_avg);
+			$LRpreroute_avg = ($server_LRpreroute_time[$k] / $server_LRpreroute[$k]);
+			$LRpreroute_avg = sprintf("%01.6f", $LRpreroute_avg);
+			$nLRpreroute_avg = ($server_nLRpreroute_time[$k] / $server_nLRpreroute[$k]);
+			$nLRpreroute_avg = sprintf("%01.6f", $nLRpreroute_avg);
 
 			$MAIN.= "     $server_array[$k] - $server_description - $asterisk_version\n";
-			$MAIN.= "          TOTAL:      $server_calls[$k]\n";
-			$MAIN.= "          LRERR:      $server_LRERR[$k]  ($LRERR_pct%)\n";
-			$MAIN.= "          preroute:   $server_preroute[$k]  (average $preroute_avg sec)\n";
+			$MAIN.= "          TOTAL:        $server_calls[$k]\n";
+			$MAIN.= "          LRERR:        $server_LRERR[$k]  ($LRERR_pct%)    average $LRERR_avg sec\n";
+			$MAIN.= "          preroute:     $server_preroute[$k]  (average $preroute_avg sec)\n";
+			$MAIN.= "          LRpreroute:   $server_LRpreroute[$k]  (average $LRpreroute_avg sec)\n";
+			$MAIN.= "          nLRpreroute:  $server_nLRpreroute[$k]  (average $nLRpreroute_avg sec)\n";
 			$k++;
 			}
 

@@ -1,4 +1,4 @@
-OUTBOUND DIALING OPTIMIZATIONS DOC	Started: 2016-11-15	Updated: 2016-11-15
+OUTBOUND DIALING OPTIMIZATIONS DOC	Started: 2016-11-15	Updated: 2016-12-01
 
 
 This document is a work in progress and is meant for reference only, to go over approaches to optimizing and speeding up the outbound auto-dialing processes
@@ -16,9 +16,22 @@ Places to look at for speeding up outbound auto-dialing call routing speed:
 
 SECTION 1.  LOCAL/ CHANNEL RESOLUTION
 
-First, and explanation of what exatly the "Local/ channel resolution" issue is. Auto-dial calls are placed from VICIdial to Asterisk using a Local/ channel, which goes to the dialplan and places the calls out through a carrier. When the call is placed, there is no audio stream yet, only signalling, and it stays that way until after the Answer signal is received from the carrier. At that point, the Local/ channel will resolve to it's proper channel pointer(usually SIP/... if using a sip carrier). Where the issues come in, is how long it takes for the audio to begin being received so that the channel pointer can resolve. This is extremely variable, and depends on the end customer carrier, as well as all of the carrier equipment in-between. We ahve seen Local/ channels resolve anywhere from 0.1 seconds up to 2 seconds, and in a small percentage of cases, the channel never resolves because no audio stream is received.
+First, and explanation of what exatly the "Local/ channel resolution" issue is. Auto-dial calls are placed from VICIdial to Asterisk using a Local/ channel, which goes to the dialplan and places the calls out through a carrier. When the call is placed, there is no audio stream yet, only signalling, and it stays that way until after the Answer signal is received from the carrier. At that point, the Local/ channel will resolve to it's proper channel pointer(usually SIP/... if using a sip carrier) and the pseudo channels that were created go away. Where the issues come in, is how long it takes for the audio to begin being received so that the channel pointer can resolve. This is extremely variable, and depends on the end customer carrier, as well as all of the carrier equipment in-between. We have seen Local/ channels resolve anywhere from 0.01 seconds up to 2 seconds, and in a small percentage of cases, the channel never resolves because no audio stream is ever received, even after 30 seconds of waiting post-Answer-signal. Another thing to remember related to this, Asterisk isn't perfect, and sometimes those pseudo channels will register as Answered for a split second before disappearing, which is another reason why it is important for the AGI routing script to not run on Local/ channels.
 
 Currently, the outbound call agent routing process will immediately attempt to route the call if the Local/ channel has been resolved, and if it isn't, it will wait 1 second before trying again, then if it is still not resolved, giving up and logging the call as LRERR status. The optimization we are trying in the BETA script is to try multiple attempts at much faster intervals to check for Local/ channel resolution. The compilation of the AGI script can take anywhere from 0.1 to 0.3 seconds, depending on the server hardware and system load, then if the AGI script detects a Local/ channel, it quits and is tried again immediately. This also allows for a longer amount of time to wait for the channel to resolve because the number of loops is adjustable.
+
+The AST_vdad_debug_log_report.php report was created to help evaluate the log entries from the BETA AGI scripts.
+
+In our first round of live testing, we have seen the following results:
+- Calls that had no resolution delay routed in 0.1 seconds on average post-Answer-signal (85% of Answered calls)
+- Calls that had a resolution delay routed in 1.5 seconds on average post-Answer-signal (5% of Answered calls)
+- Calls that never resolved in over 30 seconds made up less than 10% of total Answered calls
+- The Asterisk 11 server had a lower rate of LRERR calls, and faster overall routing compared to 1.4 and 1.8 servers
+
+Some conclusions based upon the first round of live testing:
+- Allowing more than 1 second for channel resolution increased delayed resolution calls being routed by about 30%, although this is still only 2% of total Answered calls
+- If a call does not resolve within 3 seconds post-Answer, there is very little chance it will ever resolve, although we did have a few calls resolve at 25+ seconds
+- Asterisk 11 appears to be more successful at forcing resolutions, and routing calls faster, when compared to earlier branches of Asterisk
 
 
 
@@ -28,8 +41,11 @@ Currently, the outbound call agent routing process will immediately attempt to r
 
 SECTION 2. DATABASE LOAD AND QUERY SPEED
 
-Basic my.cnf and proper hardware optimizations. Nothing further yet.
+Basic my.cnf and proper hardware optimizations.
 
+Faster DB = Faster call routing
+
+Use LSI Logic MegaRAID controllers in RAID-10 configuration with fast SSD drives with database data on separate partition from the OS and applications.
 
 
 
@@ -123,6 +139,18 @@ exten => 8377,n,Set(LRct=$[${LRct} + 1])
 exten => 8377,n,EndWhile()
 exten => 8377,n,AGI(agi-VDAD_ALL_outboundBETA.agi,NORMAL-----LB)
 exten => 8377,n,Hangup()
+
+
+; BETA VICIDIAL_auto_dialer transfer script Load Balanced:
+exten => 8387,1,Playback(sip-silence)
+exten => 8387,n,AGI(agi://127.0.0.1:4577/call_log)
+exten => 8387,n,Set(LRct=1)
+exten => 8387,n,While($[${LRct} < 100])
+exten => 8387,n,AGI(agi-VDAD_ALL_outboundBETA2.agi,NORMAL-----LB)
+exten => 8387,n,Set(LRct=$[${LRct} + 1])
+exten => 8387,n,EndWhile()
+exten => 8387,n,AGI(agi-VDAD_ALL_outboundBETA2.agi,NORMAL-----LB)
+exten => 8387,n,Hangup()
 
 
 

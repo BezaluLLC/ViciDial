@@ -116,12 +116,13 @@
 # 160101-1528 - Added routing_initiated_recordings
 # 161102-1037 - Fixed QM partition problem
 # 161115-1359 - Forked to BETA script, added vdad_debug_logging option
+# 161201-1003 - Fixed LRERR logging issue
 #
 
 $script = 'agi-VDAD_ALL_outboundBETA.agi';
 $AGILOG = '0';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=119;
+$mysql_log_count=151;
 $one_mysql_log=0;
 
 use Time::HiRes ('gettimeofday','usleep','sleep');  # necessary to have perl sleep command of less than one second
@@ -269,7 +270,7 @@ $stmtA = "SELECT vdad_debug_logging FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
-	$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+	$dbhP=$dbhA;   $mysql_count='01151';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
@@ -391,7 +392,7 @@ if ( ($channel =~ /Local/i) && ($AST_ver !~ /^1\.0\.8|^1\.0\.9/) )
 		&duration_calc;
 		$stmtA = "INSERT INTO vicidial_vdad_log set caller_code='$callerid',server_ip='$VARserver_ip',call_date='$SQLdate',epoch_micro='$ORIG_time',db_time=NOW(),run_time='$net_duration',vdad_script='$script',stage='LocalEXIT-$priority',lead_id='$CIDlead_id',step='$LRct';";
 		$affected_rows = $dbhA->do($stmtA);
-			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='01120';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		$ORIG_time = $START_s_hires.'.'.sprintf("%06d", $START_usec);
 		}
 
@@ -426,7 +427,7 @@ if ( ($channel =~ /Local/i) && ($AST_ver !~ /^1\.0\.8|^1\.0\.9/) )
 
 		$xCLlist_id=0;
 		$called_count=0;
-		$stmtA = "SELECT list_id,security_phrase,called_count from vicidial_list where lead_id='$CIDlead_id' limit 1;";
+		$stmtA = "SELECT list_id,security_phrase,called_count,phone_number,phone_code from vicidial_list where lead_id='$CIDlead_id' limit 1;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArowsLI=$sthA->rows;
@@ -437,6 +438,8 @@ if ( ($channel =~ /Local/i) && ($AST_ver !~ /^1\.0\.8|^1\.0\.9/) )
 			$xCLlist_id =		$aryA[0];
 			$security_phrase =	$aryA[1];
 			$called_count =		$aryA[2];
+			$VDADphone	=		$aryA[3];
+			$VDADphone_code	=	$aryA[4];
 			}
 		$sthA->finish();
 
@@ -457,6 +460,20 @@ if ( ($channel =~ /Local/i) && ($AST_ver !~ /^1\.0\.8|^1\.0\.9/) )
 			$VDADqueue_priority =	$aryA[6];
 			}
 		$sthA->finish();
+		if ($sthArows < 1)
+			{
+			$stmtA = "SELECT campaign_id FROM vicidial_lists where list_id='$xCLlist_id' limit 1;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+				$dbhP=$dbhA;   $mysql_count='01121';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$VDADcampaign =			$aryA[0];
+				}
+			$sthA->finish();
+			}
 
 		$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,alt_dial,list_id,called_count) values('$uniqueid','$CIDlead_id','$VDADcampaign','$SQLdate','$now_date_epoch','LRERR','$VDADphone_code','$VDADphone','VDAD','N','$VDADalt_dial','$xCLlist_id','$called_count')";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
@@ -1060,7 +1077,7 @@ if ($VDACaffected_rows > 0)
 
 	$stmtA = "INSERT INTO vicidial_vdad_log set caller_code='$callerid',server_ip='$VARserver_ip',call_date='$SQLdate',epoch_micro='$ORIG_time',db_time=NOW(),run_time='$net_duration',vdad_script='$script',stage='preroute',lead_id='$CIDlead_id';";
 	$affected_rows = $dbhA->do($stmtA);
-		$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+		$dbhP=$dbhA;   $mysql_count='01122';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	$ORIG_time = $START_s_hires.'.'.sprintf("%06d", $START_usec);
 
 
@@ -1141,7 +1158,7 @@ if ($VDACaffected_rows > 0)
 			&duration_calc;
 			$stmtA = "INSERT INTO vicidial_vdad_log set caller_code='$callerid',server_ip='$VARserver_ip',call_date='$SQLdate',epoch_micro='$ORIG_time',db_time=NOW(),run_time='$net_duration',vdad_script='$script',stage='prerouteQM',lead_id='$CIDlead_id';";
 			$affected_rows = $dbhA->do($stmtA);
-				$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				$dbhP=$dbhA;   $mysql_count='01123';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			$ORIG_time = $START_s_hires.'.'.sprintf("%06d", $START_usec);
 			}
 		}
@@ -1456,7 +1473,7 @@ if ($call_handle_method =~ /SURVEY/)
 			&duration_calc;
 			$stmtA = "INSERT INTO vicidial_vdad_log set caller_code='$callerid',server_ip='$VARserver_ip',call_date='$SQLdate',epoch_micro='$ORIG_time',db_time=NOW(),run_time='$net_duration',vdad_script='$script',stage='post-route-SURVEY-NI',lead_id='$CIDlead_id';";
 			$affected_rows = $dbhA->do($stmtA);
-				$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				$dbhP=$dbhA;   $mysql_count='01124';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			$ORIG_time = $START_s_hires.'.'.sprintf("%06d", $START_usec);
 			}
 		$AGI->hangup();
@@ -1572,7 +1589,7 @@ if ($call_handle_method =~ /SURVEY/)
 			&duration_calc;
 			$stmtA = "INSERT INTO vicidial_vdad_log set caller_code='$callerid',server_ip='$VARserver_ip',call_date='$SQLdate',epoch_micro='$ORIG_time',db_time=NOW(),run_time='$net_duration',vdad_script='$script',stage='post-route-SURVEY-3rd',lead_id='$CIDlead_id';";
 			$affected_rows = $dbhA->do($stmtA);
-				$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				$dbhP=$dbhA;   $mysql_count='01125';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			$ORIG_time = $START_s_hires.'.'.sprintf("%06d", $START_usec);
 			}
 
@@ -1704,7 +1721,7 @@ if ($call_handle_method =~ /SURVEY/)
 			&duration_calc;
 			$stmtA = "INSERT INTO vicidial_vdad_log set caller_code='$callerid',server_ip='$VARserver_ip',call_date='$SQLdate',epoch_micro='$ORIG_time',db_time=NOW(),run_time='$net_duration',vdad_script='$script',stage='post-route-SURVEY-4th',lead_id='$CIDlead_id';";
 			$affected_rows = $dbhA->do($stmtA);
-				$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				$dbhP=$dbhA;   $mysql_count='01126';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			$ORIG_time = $START_s_hires.'.'.sprintf("%06d", $START_usec);
 			}
 		if (length($survey_fourth_exten) > 0)
@@ -1982,7 +1999,7 @@ if ($call_handle_method =~ /SURVEY/)
 					&duration_calc;
 					$stmtA = "INSERT INTO vicidial_vdad_log set caller_code='$callerid',server_ip='$VARserver_ip',call_date='$SQLdate',epoch_micro='$ORIG_time',db_time=NOW(),run_time='$net_duration',vdad_script='$script',stage='post-route-SURVEY-exten',lead_id='$CIDlead_id';";
 					$affected_rows = $dbhA->do($stmtA);
-						$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+						$dbhP=$dbhA;   $mysql_count='01127';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 					$ORIG_time = $START_s_hires.'.'.sprintf("%06d", $START_usec);
 					}
 
@@ -2016,7 +2033,7 @@ if ($call_handle_method =~ /SURVEY/)
 					&duration_calc;
 					$stmtA = "INSERT INTO vicidial_vdad_log set caller_code='$callerid',server_ip='$VARserver_ip',call_date='$SQLdate',epoch_micro='$ORIG_time',db_time=NOW(),run_time='$net_duration',vdad_script='$script',stage='post-route-SURVEY-Hangup',lead_id='$CIDlead_id';";
 					$affected_rows = $dbhA->do($stmtA);
-						$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+						$dbhP=$dbhA;   $mysql_count='01128';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 					$ORIG_time = $START_s_hires.'.'.sprintf("%06d", $START_usec);
 					}
 				$AGI->hangup();
@@ -2100,7 +2117,7 @@ if ($call_handle_method =~ /SURVEY/)
 				&duration_calc;
 				$stmtA = "INSERT INTO vicidial_vdad_log set caller_code='$callerid',server_ip='$VARserver_ip',call_date='$SQLdate',epoch_micro='$ORIG_time',db_time=NOW(),run_time='$net_duration',vdad_script='$script',stage='post-route-SURVEY-REC',lead_id='$CIDlead_id';";
 				$affected_rows = $dbhA->do($stmtA);
-					$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+					$dbhP=$dbhA;   $mysql_count='01129';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				$ORIG_time = $START_s_hires.'.'.sprintf("%06d", $START_usec);
 				}
 
@@ -2141,7 +2158,7 @@ if ($call_handle_method =~ /SURVEY/)
 				&duration_calc;
 				$stmtA = "INSERT INTO vicidial_vdad_log set caller_code='$callerid',server_ip='$VARserver_ip',call_date='$SQLdate',epoch_micro='$ORIG_time',db_time=NOW(),run_time='$net_duration',vdad_script='$script',stage='post-route-SURVEY-DROP',lead_id='$CIDlead_id';";
 				$affected_rows = $dbhA->do($stmtA);
-					$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+					$dbhP=$dbhA;   $mysql_count='01130';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				$ORIG_time = $START_s_hires.'.'.sprintf("%06d", $START_usec);
 				}
 			$AGI->hangup();
@@ -2700,7 +2717,7 @@ while ($drop_timer <= $DROP_TIME)
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArowsVUrec=$sthA->rows;
-								$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArowsVUrec;   &mysql_error_logging;
+								$dbhP=$dbhA;   $mysql_count='01131';   $MEL_aff_rows=$sthArowsVUrec;   &mysql_error_logging;
 							if ($sthArowsVUrec > 0)
 								{
 								@aryA = $sthA->fetchrow_array;
@@ -2719,7 +2736,7 @@ while ($drop_timer <= $DROP_TIME)
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
-								$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+								$dbhP=$dbhA;   $mysql_count='01132';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 							if ($sthArows > 0)
 								{
 								@aryA = $sthA->fetchrow_array;
@@ -2760,12 +2777,12 @@ while ($drop_timer <= $DROP_TIME)
 							### insert a record into the recording_log table 
 							$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename,lead_id,user,vicidial_id) values('$channelrec','$VDADserver_ip','$campaign_rec_exten','$now_date','$now_date_epoch','$campaign_rec_filename','$CIDlead_id','$VDADuser','$uniqueid')";
 							$affected_rows = $dbhA->do($stmtA);
-								$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+								$dbhP=$dbhA;   $mysql_count='02133';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 							$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
 							$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
-								$dbhP=$dbhA;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+								$dbhP=$dbhA;   $stmtA=$stmtB;   $mysql_count='02134';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 							if ($sthArows > 0)
 								{
 								@aryA = $sthA->fetchrow_array;
@@ -2779,20 +2796,20 @@ while ($drop_timer <= $DROP_TIME)
 
 								$stmtA = "UPDATE recording_log SET filename='$campaign_rec_filename' where recording_id='$recording_id';";
 								$affected_rows = $dbhA->do($stmtA);
-									$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+									$dbhP=$dbhA;   $mysql_count='02135';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 								}
 
 							$stmtA="INSERT INTO vicidial_manager values('','','$now_date','NEW','N','$VDADserver_ip','','Originate','$campaign_rec_filename','Channel: $channelrec','Context: $ext_context','Exten: $campaign_rec_exten','Priority: 1','Callerid: $campaign_rec_filename','','','','','');";
 							$affected_rows = $dbhA->do($stmtA);
-								$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+								$dbhP=$dbhA;   $mysql_count='02136';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 
 							$stmtB = "INSERT INTO routing_initiated_recordings (recording_id,filename,launch_time,lead_id,vicidial_id,user,processed) values('$recording_id','$campaign_rec_filename','$now_date','$CIDlead_id','$uniqueid','$VDADuser','0')";
 							$affected_rowsB = $dbhA->do($stmtB);
-								$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rowsB;   &mysql_error_logging;
+								$dbhP=$dbhA;   $mysql_count='02137';   $MEL_aff_rows=$affected_rowsB;   &mysql_error_logging;
 
 							$stmtC = "UPDATE vicidial_live_agents SET external_recording='$recording_id' where user='$VDADuser';";
 							$affected_rowsC = $dbhA->do($stmtC);
-								$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rowsC;   &mysql_error_logging;
+								$dbhP=$dbhA;   $mysql_count='02138';   $MEL_aff_rows=$affected_rowsC;   &mysql_error_logging;
 
 							if ($AGILOG) {$agi_string = "--    ROUTING INITIATED RECORDING STARTED : |$affected_rows|$recording_id|$campaign_rec_filename|$stmtA|   |$affected_rowsB|$stmtB|   |$affected_rowsC|$stmtC|";   &agi_output;}
 							}
@@ -2924,7 +2941,7 @@ while ($drop_timer <= $DROP_TIME)
 					&duration_calc;
 					$stmtA = "INSERT INTO vicidial_vdad_log set caller_code='$callerid',server_ip='$VARserver_ip',call_date='$SQLdate',epoch_micro='$ORIG_time',db_time=NOW(),run_time='$net_duration',vdad_script='$script',stage='post-route-AGENT-1',lead_id='$CIDlead_id';";
 					$affected_rows = $dbhA->do($stmtA);
-						$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+						$dbhP=$dbhA;   $mysql_count='01139';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 					$ORIG_time = $START_s_hires.'.'.sprintf("%06d", $START_usec);
 					}
 
@@ -3423,7 +3440,7 @@ while ($drop_timer <= $DROP_TIME)
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArowsVUrec=$sthA->rows;
-								$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArowsVUrec;   &mysql_error_logging;
+								$dbhP=$dbhA;   $mysql_count='01140';   $MEL_aff_rows=$sthArowsVUrec;   &mysql_error_logging;
 							if ($sthArowsVUrec > 0)
 								{
 								@aryA = $sthA->fetchrow_array;
@@ -3442,7 +3459,7 @@ while ($drop_timer <= $DROP_TIME)
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
-								$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+								$dbhP=$dbhA;   $mysql_count='01141';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 							if ($sthArows > 0)
 								{
 								@aryA = $sthA->fetchrow_array;
@@ -3483,12 +3500,12 @@ while ($drop_timer <= $DROP_TIME)
 							### insert a record into the recording_log table 
 							$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename,lead_id,user,vicidial_id) values('$channelrec','$VDADserver_ip','$campaign_rec_exten','$now_date','$now_date_epoch','$campaign_rec_filename','$CIDlead_id','$VDADuser','$uniqueid')";
 							$affected_rows = $dbhA->do($stmtA);
-								$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+								$dbhP=$dbhA;   $mysql_count='02142';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 							$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
 							$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
-								$dbhP=$dbhA;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+								$dbhP=$dbhA;   $stmtA=$stmtB;   $mysql_count='02143';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 							if ($sthArows > 0)
 								{
 								@aryA = $sthA->fetchrow_array;
@@ -3502,20 +3519,20 @@ while ($drop_timer <= $DROP_TIME)
 
 								$stmtA = "UPDATE recording_log SET filename='$campaign_rec_filename' where recording_id='$recording_id';";
 								$affected_rows = $dbhA->do($stmtA);
-									$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+									$dbhP=$dbhA;   $mysql_count='02144';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 								}
 
 							$stmtA="INSERT INTO vicidial_manager values('','','$now_date','NEW','N','$VDADserver_ip','','Originate','$campaign_rec_filename','Channel: $channelrec','Context: $ext_context','Exten: $campaign_rec_exten','Priority: 1','Callerid: $campaign_rec_filename','','','','','');";
 							$affected_rows = $dbhA->do($stmtA);
-								$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+								$dbhP=$dbhA;   $mysql_count='02145';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 
 							$stmtB = "INSERT INTO routing_initiated_recordings (recording_id,filename,launch_time,lead_id,vicidial_id,user,processed) values('$recording_id','$campaign_rec_filename','$now_date','$CIDlead_id','$uniqueid','$VDADuser','0')";
 							$affected_rowsB = $dbhA->do($stmtB);
-								$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rowsB;   &mysql_error_logging;
+								$dbhP=$dbhA;   $mysql_count='02146';   $MEL_aff_rows=$affected_rowsB;   &mysql_error_logging;
 
 							$stmtC = "UPDATE vicidial_live_agents SET external_recording='$recording_id' where user='$VDADuser';";
 							$affected_rowsC = $dbhA->do($stmtC);
-								$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rowsC;   &mysql_error_logging;
+								$dbhP=$dbhA;   $mysql_count='02147';   $MEL_aff_rows=$affected_rowsC;   &mysql_error_logging;
 
 							if ($AGILOG) {$agi_string = "--    ROUTING INITIATED RECORDING STARTED : |$affected_rows|$recording_id|$campaign_rec_filename|$stmtA|   |$affected_rowsB|$stmtB|   |$affected_rowsC|$stmtC|";   &agi_output;}
 							}
@@ -3650,7 +3667,7 @@ while ($drop_timer <= $DROP_TIME)
 					&duration_calc;
 					$stmtA = "INSERT INTO vicidial_vdad_log set caller_code='$callerid',server_ip='$VARserver_ip',call_date='$SQLdate',epoch_micro='$ORIG_time',db_time=NOW(),run_time='$net_duration',vdad_script='$script',stage='post-route-AGENT-2',lead_id='$CIDlead_id';";
 					$affected_rows = $dbhA->do($stmtA);
-						$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+						$dbhP=$dbhA;   $mysql_count='01148';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 					$ORIG_time = $START_s_hires.'.'.sprintf("%06d", $START_usec);
 					}
 
@@ -3726,7 +3743,7 @@ while ($drop_timer <= $DROP_TIME)
 		&duration_calc;
 		$stmtA = "INSERT INTO vicidial_vdad_log set caller_code='$callerid',server_ip='$VARserver_ip',call_date='$SQLdate',epoch_micro='$ORIG_time',db_time=NOW(),run_time='$net_duration',vdad_script='$script',stage='waiting-for-agent-$drop_timer',lead_id='$CIDlead_id';";
 		$affected_rows = $dbhA->do($stmtA);
-			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='01149';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		$ORIG_time = $START_s_hires.'.'.sprintf("%06d", $START_usec);
 		}
 
@@ -3944,7 +3961,7 @@ if ($drop_timer > $DROP_TIME)
 		&duration_calc;
 		$stmtA = "INSERT INTO vicidial_vdad_log set caller_code='$callerid',server_ip='$VARserver_ip',call_date='$SQLdate',epoch_micro='$ORIG_time',db_time=NOW(),run_time='$net_duration',vdad_script='$script',stage='end-drop-$drop_timer',lead_id='$CIDlead_id';";
 		$affected_rows = $dbhA->do($stmtA);
-			$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+			$dbhP=$dbhA;   $mysql_count='01150';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		$ORIG_time = $START_s_hires.'.'.sprintf("%06d", $START_usec);
 		}
 
