@@ -137,11 +137,11 @@ $auth_message = user_authorization($user,$pass,'',0,$bcrypt,0,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
-$stmt="SELECT count(*) from vicidial_users where user='$user' and ( (modify_audiostore='1') or (modify_scripts='1') );";
+$stmt="SELECT count(*) from vicidial_users where user='$user' and active='Y';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
-$VUmodify=$row[0];
+$VUexists=$row[0];
 
 $stmt="SELECT count(*) from vicidial_live_agents where user='$user';";
 if ($DB) {echo "|$stmt|\n";}
@@ -161,9 +161,9 @@ if ( (!preg_match("/soundboard/i",$active_modules)) and ($SSagent_soundboards < 
 	exit;
 	}
 
-if ( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) or ( ( ($LVAactive < 1) or ($WCSactive < 1) ) and ($VUmodify < 1) ) )
+if ( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0) or ( ( ($LVAactive < 1) or ($WCSactive < 1) ) and ($VUexists < 1) ) )
 	{
-	echo _QXZ("Invalid Username/Password").": |$user|$pass|$auth_message|$LVAactive|$WCSactive|$VUmodify|\n";
+	echo _QXZ("Invalid Username/Password").": |$user|$pass|$auth_message|$LVAactive|$WCSactive|$VUexists|\n";
 	exit;
 	}
 else
