@@ -3405,7 +3405,7 @@ KEY ajax_dbtime_key (db_time)
 CREATE TABLE vicidial_settings_containers (
 container_id VARCHAR(40) PRIMARY KEY NOT NULL,
 container_notes VARCHAR(255) default '',
-container_type ENUM('OTHER','PERL_CLI','EMAIL_TEMPLATE') default 'OTHER',
+container_type ENUM('OTHER','PERL_CLI','EMAIL_TEMPLATE','AGI') default 'OTHER',
 user_group VARCHAR(20) default '---ALL---',
 container_entry MEDIUMTEXT
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -3831,4 +3831,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1480',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1481',db_schema_update_date=NOW(),reload_timestamp=NOW();
