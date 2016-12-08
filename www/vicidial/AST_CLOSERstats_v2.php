@@ -57,6 +57,7 @@
 # 160227-1101 - Uniform form format
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 # 160819-0054 - Fixed chart bugs
+# 161207-2037 - Fix for issue #982, formatting
 #
 
 $startMS = microtime();
@@ -2971,9 +2972,9 @@ $TOTavg=0;
 
 $ASCII_text="\n";
 $ASCII_text.="---------- "._QXZ("AGENT STATS",17)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=7&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
-$ASCII_text.="+--------------------------+------------+------------+--------+\n";
-$ASCII_text.="| "._QXZ("AGENT",24)." | $rpt_type_verbiages     | "._QXZ("TIME H:M:S",10)." |"._QXZ("AVERAGE",8)."|\n";
-$ASCII_text.="+--------------------------+------------+------------+--------+\n";
+$ASCII_text.="+--------------------------+------------+------------+---------+\n";
+$ASCII_text.="| "._QXZ("AGENT",24)." | $rpt_type_verbiages     | "._QXZ("TIME H:M:S",10)." | "._QXZ("AVERAGE",8)."|\n";
+$ASCII_text.="+--------------------------+------------+------------+---------+\n";
 
 $CSV_text7.="\n\""._QXZ("AGENT STATS")."\"\n";
 $CSV_text7.="\""._QXZ("AGENT")."\",\"$rpt_type_verbiages\",\""._QXZ("TIME H:M:S")."\",\""._QXZ("AVERAGE")."\"\n";
@@ -3026,7 +3027,9 @@ while ($i < $users_to_print)
 	$USERtotTALK_MS =	sprintf("%9s", $USERtotTALK_MS);
 	$USERavgTALK_MS =	sprintf("%6s", $USERavgTALK_MS);
 
-	$ASCII_text.="| $user - $full_name | $USERcalls |  $USERtotTALK_MS | $USERavgTALK_MS |\n";
+#	$ASCII_text.="| $user - $full_name | $USERcalls |  $USERtotTALK_MS | $USERavgTALK_MS |\n";
+	$str_full_name = substr(($user . " - " . $full_name), 0, 24);
+	$ASCII_text.="| ".substr(($user . " - " . $full_name), 0, 24)." | $USERcalls |  $USERtotTALK_MS | $USERavgTALK_MS |\n";
 	$CSV_text7.="\"$user - $full_name\",\"$USERcalls\",\"$USERtotTALK_MS\",\"$USERavgTALK_MS\"\n";
 
 	$i++;
@@ -3044,9 +3047,9 @@ $TOTcalls =			sprintf("%10s", $TOTcalls);
 $TOTtime =			sprintf("%8s", $TOTtime);
 $TOTavg =			sprintf("%6s", $TOTavg);
 
-$ASCII_text.="+--------------------------+------------+------------+--------+\n";
+$ASCII_text.="+--------------------------+------------+------------+---------+\n";
 $ASCII_text.="| "._QXZ("TOTAL Agents:",13)." $TOTagents | $TOTcalls | $TOTtime | $TOTavg |\n";
-$ASCII_text.="+--------------------------+------------+------------+--------+\n";
+$ASCII_text.="+--------------------------+------------+------------+---------+\n";
 
 $GRAPH_text="";	
 # USE THIS FOR multiple graphs, use pipe-delimited array elements, dataset_name|index|link_name

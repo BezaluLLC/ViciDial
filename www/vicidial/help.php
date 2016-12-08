@@ -102,6 +102,7 @@
 # 161105-0246 - Added web_loader_phone_length, agent soundboards and purge uncalled records
 # 161106-2102 - Added agent_script
 # 161126-1815 - Fixed several spelling errors
+# 161207-1958 - Added Agent DID Stats report entry
 #
 
 
@@ -6037,6 +6038,11 @@ if ($SSqc_features_active > 0)
 <B><?php echo _QXZ("Inbound DID Report"); ?> -</B><?php echo _QXZ("This report breaks down activity for a DID or a list of DIDs over a given time interval."); ?><BR>
 <?php echo _QXZ("<U>ROUTE</U> = Where the DID is currently directed when a call reaches it."); ?><BR>
 <?php echo _QXZ("<U>CALLS</U> = Number of calls the DIDs/servers/time frames (depending on which sub-report you are viewing) received during the specific date range."); ?><BR>
+
+<A NAME="agentDIDstats">
+<BR>
+<B><?php echo _QXZ("Agent DID Report"); ?> -</B><?php echo _QXZ("This report breaks down agent call handling activity for a DID or a group of DIDs over a given time interval. The results will show the number of calls handled for each agent per day and per week, with column breakdowns for each DID using the DID name for the column header."); ?><BR>
+<BR>
 
 <A NAME="email_log_report">
 <BR>
