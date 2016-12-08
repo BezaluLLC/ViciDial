@@ -2446,7 +2446,7 @@ while ($i < $statuses_to_print)
 	$status =	sprintf("%-6s", $row[1]);while(strlen($status)>6) {$status = substr("$status", 0, -1);}
 	$STATUShours =	sprintf("%10s", $STATUShours);while(strlen($STATUShours)>10) {$STATUShours = substr("$STATUShours", 0, -1);}
 	$STATUSavg =	sprintf("%8s", $STATUSavg);while(strlen($STATUSavg)>8) {$STATUSavg = substr("$STATUSavg", 0, -1);}
-	$STATUSrate =	sprintf("%8s", $STATUSrate);while(strlen($STATUSrate)>8) {$STATUSrate = substr("$STATUSrate", 0, -1);}
+	$STATUSrate =	sprintf("%9s", $STATUSrate);while(strlen($STATUSrate)>9) {$STATUSrate = substr("$STATUSrate", 0, -1);}
 
 	if ($non_latin < 1)
 		{
