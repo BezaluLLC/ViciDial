@@ -39,10 +39,11 @@
 # 
 # This program assumes that recordings are saved by Asterisk as .wav
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES:
 # 130730-1849 - First Build based upon AST_CRON_audio_4_ftp2.pl script
+# 161212-1650 - Changed to use hard-coded encryption flag for module
 #
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -407,7 +408,15 @@ foreach(@FILES)
 				else
 					{
 					# Some versions of the FTPSSL perl module require you to hard code the encryption value: IMP_CRYPT or EXP_CRYPT
-					$ftps = Net::FTPSSL->new("$VARFTP_host", Port => $VARFTP_port, Encryption => $VARFTP_encrypt, Debug => $FTPdb);
+					# $ftps = Net::FTPSSL->new("$VARFTP_host", Port => $VARFTP_port, Encryption => $VARFTP_encrypt, Debug => $FTPdb);
+					if ( $VARFTP_encrypt eq "IMP_CRYPT" ) 
+						{
+						$ftps = Net::FTPSSL->new("$VARFTP_host", Port => $VARFTP_port, Encryption => IMP_CRYPT, Debug => $FTPdb);
+						}
+					else 
+						{
+						$ftps = Net::FTPSSL->new("$VARFTP_host", Port => $VARFTP_port, Encryption => EXP_CRYPT, Debug => $FTPdb);
+						}
 					$ftps->login("$VARFTP_user","$VARFTP_pass");
 					$ftps->cwd("$VARFTP_dir");
 					}

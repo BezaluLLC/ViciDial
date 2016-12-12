@@ -44,6 +44,7 @@
 # 151124-2252 - Added --vlog-daily flag, only active if --daily flag is also used, Also added system_settings date
 # 160612-0703 - Added --only-trim-archive-... options
 # 160827-0957 - Added --recording-log-days=X option
+# 161212-1659 - Added --cpd-log-purge-days=XX option
 #
 
 $CALC_TEST=0;
@@ -79,6 +80,7 @@ if (length($ARGV[0])>1)
 		print "  [--only-trim-archive-level-three] = same as --only-trim-archive-level-two, except includes tables:\n";
 		print "                               vicidial_log_archive, vicidial_agent_log_archive, vicidial_closer_log_archive\n";
 		print "  [--recording-log-days=XX] = OPTIONAL, number of days to archive recording_log table only past\n";
+		print "  [--cpd-log-purge-days=XX] = OPTIONAL, number of days to purge vicidial_cpd_log table only past\n";
 		print "  [--quiet] = quiet\n";
 		print "  [--calc-test] = date calculation test only\n";
 		print "  [--test] = test\n\n";
@@ -182,6 +184,18 @@ if (length($ARGV[0])>1)
 			if ($Q < 1) 
 				{print "\n----- RECORDING LOG ARCHIVE ACTIVE, DAYS: $RECORDINGdays -----\n\n";}
 			}
+		if ($args =~ /--cpd-log-purge-days=/i)
+			{
+			$cpd_log_purge++;
+			@data_in = split(/--cpd-log-purge-days=/,$args);
+			$CPDdays = $data_in[1];
+			$CPDdays =~ s/ .*$//gi;
+			$CPDdays =~ s/\D//gi;
+			if ($CPDdays > 999999)
+				{$CPDdays=1825;}
+			if ($Q < 1) 
+				{print "\n----- CPD LOG PURGE ACTIVE, DAYS: $CPDdays -----\n\n";}
+			}
 		}
 	}
 else
@@ -240,6 +254,20 @@ if ($recording_log_archive > 0)
 	if ($RECsec < 10) {$RECsec = "0$RECsec";}
 	$RECdel_time = "$RECyear-$RECmon-$RECmday $REChour:$RECmin:$RECsec";
 	}
+if ($cpd_log_purge > 0) 
+	{
+	$CPDdel_epoch = ($secX - (86400 * $CPDdays));   # X days ago
+	($CPDsec,$CPDmin,$CPDhour,$CPDmday,$CPDmon,$CPDyear,$CPDwday,$CPDyday,$CPDisdst) = localtime($CPDdel_epoch);
+	$CPDyear = ($CPDyear + 1900);
+	$CPDmon++;
+	if ($CPDmon < 10) {$CPDmon = "0$CPDmon";}
+	if ($CPDmday < 10) {$CPDmday = "0$CPDmday";}
+	if ($CPDhour < 10) {$CPDhour = "0$CPDhour";}
+	if ($CPDmin < 10) {$CPDmin = "0$CPDmin";}
+	if ($CPDsec < 10) {$CPDsec = "0$CPDsec";}
+	$CPDdel_time = "$CPDyear-$CPDmon-$CPDmday $CPDhour:$CPDmin:$CPDsec";
+	}
+
 
 if (!$Q) {print "\n\n-- ADMIN_archive_log_tables.pl --\n\n";}
 if (!$Q) {print "This program is designed to put all records from  call_log, vicidial_log,\n";}
@@ -248,6 +276,7 @@ if (!$Q) {print "vicidial_call_notes, vicidial_lead_search_log and others into r
 if (!$Q) {print "_archive tables and delete records in original tables older than\n";}
 if (!$Q) {print "$CLIdays days ( $del_time|$del_epoch ) from current date \n\n";}
 if ( (!$Q) && ($recording_log_archive > 0) ) {print "REC $RECORDINGdays days ( $RECdel_time|$RECdel_epoch ) from current date \n\n";}
+if ( (!$Q) && ($cpd_log_purge > 0) ) {print "CPD $CPDdays days ( $CPDdel_time|$CPDdel_epoch ) from current date \n\n";}
 
 if ($CALC_TEST > 0)
 	{
@@ -1746,6 +1775,34 @@ if (!$T)
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			}
+		}
+
+
+	if ($cpd_log_purge > 0) 
+		{
+		##### vicidial_cpd_log
+		$stmtA = "SELECT count(*) from vicidial_cpd_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vicidial_cpd_log_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if (!$Q) {print "\nProcessing vicidial_cpd_log table...  ($vicidial_cpd_log_count)\n";}
+
+		$stmtA = "DELETE FROM vicidial_cpd_log WHERE event_date < '$CPDdel_time';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows = $sthA->rows;
+		if (!$Q) {print "$sthArows rows deleted from vicidial_cpd_log table \n";}
+
+		$stmtA = "optimize table vicidial_cpd_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		}
 
 
