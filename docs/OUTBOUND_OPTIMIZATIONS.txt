@@ -28,12 +28,14 @@ In our first three rounds of live testing, we have seen the following results:
 - Calls that never resolved in over 30 seconds made up from 5-10% of total Answered calls
 - The Asterisk 11 server had a lower rate of LRERR calls, and faster overall routing compared to 1.4 and 1.8 servers
 
-Some conclusions based upon these round of live testing:
+Some conclusions based upon more rounds of live testing:
 - Allowing more than 1 second for channel resolution increased delayed resolution calls being routed by about 30%, although this is still only 1-2% of total Answered calls
+- Using different carriers at different times can greatly affect the rate of LRERRs, from less than 1% to over 30%
 - If a call does not resolve within 3 seconds post-Answer, there is very little chance it will ever resolve, although we did have some calls resolve at 25+ seconds
 - Asterisk 11 appears to be more successful at forcing resolutions, and routing calls faster, when compared to earlier branches of Asterisk
 - The quality of your telco carrier, and the state of that telco network, is a big factor in the LRERR rate for post-answer calls
 - The speed of your database is a much larger factor in the speed of the routing of outbound VDAD calls post-Answer
+- The loadavg of the dialer will be LARGELY affected by use of the BETA AGI script(loadavg over 20.00 on quad-core), although it does not seem to affect functionality
 
 
 

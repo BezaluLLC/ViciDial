@@ -11,10 +11,11 @@
 # 151218-0739 - Added translation where missing
 # 160107-2315 - Bug fix to prevent sending messages on dead chats
 # 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
+# 161217-0821 - Added chat-type to allow for multi-user internal chat sessions
 #
 
-$admin_version = '2.12-5';
-$build = '160108-2300';
+$admin_version = '2.14-6';
+$build = '161217-0821';
 
 $sh="managerchats"; 
 
@@ -213,7 +214,9 @@ if ($action=="SendChatMessage" && $chat_message) {
 		$chat_message = preg_replace("/\r/i",'',$chat_message);
 		$chat_message = preg_replace("/\n/i",' ',$chat_message);
 
-		$ins_chat_stmt="insert into vicidial_manager_chat_log(manager_chat_id, manager_chat_subid, manager, user, message, message_date, message_posted_by) VALUES('$manager_chat_id', '$chat_sub_id', '$PHP_AUTH_USER', '$user', '".mysqli_real_escape_string($link, $chat_message)."', now(), '$PHP_AUTH_USER')";
+		$message_id=date("U").".".rand(10000000,99999999);
+
+		$ins_chat_stmt="insert into vicidial_manager_chat_log(manager_chat_id, manager_chat_subid, manager, user, message, message_id, message_date, message_posted_by) VALUES('$manager_chat_id', '$chat_sub_id', '$PHP_AUTH_USER', '$user', '".mysqli_real_escape_string($link, $chat_message)."', '$message_id', now(), '$PHP_AUTH_USER')";
 		$ins_chat_rslt=mysql_to_mysqli($ins_chat_stmt, $link);
 		if (mysqli_insert_id($link)>0) {
 			$reload_chat_span=1;

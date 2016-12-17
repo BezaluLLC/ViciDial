@@ -11,6 +11,7 @@
 #
 # 150608-0647 First build
 # 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
+# 161217-0820 - Added chat-type to allow for multi-user internal chat sessions
 #
 
 $startMS = microtime();
@@ -701,8 +702,8 @@ else
 			$ASCII_text.="$ASCII_rpt_header\n";
 			if ($DB) {$ASCII_text.=$stmt."\n";}
 			if ($DB) {$GRAPH_text.=$stmt."\n";}
-			$ASCII_border="+---------+---------------------+------------+---------+$ASCII_border_header\n";
-			$ASCII_header="| "._QXZ("CHAT ID",7)." | "._QXZ("CHAT START DATE",19)." | "._QXZ("MANAGER",10)." | "._QXZ("REPLIES",7)." |$ASCII_header\n";
+			$ASCII_border="+---------+---------------------+-----------+------------+---------+$ASCII_border_header\n";
+			$ASCII_header="| "._QXZ("CHAT ID",7)." | "._QXZ("CHAT START DATE",19)." | "._QXZ("CHAT TYPE",9)." | "._QXZ("STARTED BY",10)." | "._QXZ("REPLIES",7)." |$ASCII_header\n";
 			$ASCII_text.=$ASCII_border.$ASCII_header.$ASCII_border;
 
 			$GRAPH_text.="<BR><BR><a name='callstatsgraph'/><table border='0' cellpadding='0' cellspacing='2' width='800'>";
@@ -713,6 +714,7 @@ else
 				$colspan='6';
 				$ASCII_text.="| ".sprintf("%7s", $row["manager_chat_id"])." ";
 				$ASCII_text.="| ".$row["chat_start_date"]." ";
+				$ASCII_text.="| ".sprintf("%9s", $row["internal_chat_type"])." ";
 				$ASCII_text.="| ".sprintf("%-10s", $row["manager"])." ";
 				$ASCII_text.="|    ".$row["allow_replies"]."    ";
 				$selected_agents=preg_replace('/^\|$/', "ALL", $row["selected_agents"]);
@@ -746,24 +748,24 @@ else
 
 				$GRAPH_text.="<th class='thgraph' scope='col' nowrap><a href='$LINKbase&file_download=1&chat_log_type=".$chat_log_type."&download_chat_id=".$row["manager_chat_id"]."&download_manager=".$row["manager"]."'>["._QXZ("DOWNLOAD FULL LOG")."]</a></th><th class='thgraph' scope='col' nowrap> <a href='#rpt_anchor' onclick=\"ToggleSpan('ChatReport".$row["manager_chat_id"]."')\">["._QXZ("SHOW INDIVIDUAL CHATS")."]</a></th></tr>";
 
-				$sub_stmt="select manager_chat_subid, v.user, vu.full_name, count(*) from vicidial_manager_chat_log_archive v, vicidial_users vu where manager_chat_id='".$row["manager_chat_id"]."' and v.user=vu.user $matching_text_subid_SQL group by manager_chat_subid, user, full_name order by manager_chat_subid asc";
+				$sub_stmt="select manager_chat_subid, v.user, vu.full_name, count(*) from vicidial_manager_chat_log_archive v, vicidial_users vu where manager_chat_id='".$row["manager_chat_id"]."' and v.user!=v.manager and v.user=vu.user $matching_text_subid_SQL group by manager_chat_subid, user, full_name order by manager_chat_subid asc";
 				if ($DB) {echo "$sub_stmt<BR>\n";}
 				$sub_rslt=mysql_to_mysqli($sub_stmt, $link);
 
 				$ASCII_text.="<span id='ChatReport".$row["manager_chat_id"]."' style='display: none;'>";
-				$ASCII_text.="+---------+-------------+------------------------------+\n";
-				$ASCII_text.="          | "._QXZ("CHAT SUB-ID",11)." | "._QXZ("AGENT",28)." |\n";
-				$ASCII_text.="          +-------------+------------------------------+\n";
+				$ASCII_text.="+---------+-------------+------------------------------------------+\n";
+				$ASCII_text.="          | "._QXZ("CHAT SUB-ID",11)." | "._QXZ("AGENT",40)." |\n";
+				$ASCII_text.="          +-------------+------------------------------------------+\n";
 
 				$GRAPH_text.="<tr><td align='center' colspan='$colspan'><span id='ChatReport".$row["manager_chat_id"]."' style='display: none;'><table width='600'>";
 				$GRAPH_text.="  <tr><th class='column_header grey_graph_cell'>"._QXZ("CHAT SUB-ID")."</th><th class='column_header grey_graph_cell'>"._QXZ("AGENT")."</th><th class='thgraph'>&nbsp;</th><th class='thgraph'>&nbsp;</th></tr>";
 				while ($sub_row=mysqli_fetch_array($sub_rslt)) 
 					{
 					$ASCII_text.="          | ".sprintf("%-11s", $sub_row["manager_chat_subid"])." ";
-					$ASCII_text.="| ".sprintf("%-28s", substr("$sub_row[manager_chat_subid] - $sub_row[full_name]", 0, 28))." | <a href='$LINKbase&file_download=1&chat_log_type=".$chat_log_type."&download_chat_id=".$row["manager_chat_id"]."&download_chat_subid=".$sub_row["manager_chat_subid"]."&download_manager=".$row["manager"]."&download_user=".$row["user"]."'>["._QXZ("DOWNLOAD CHAT LOG")."]</a>\n";
+					$ASCII_text.="| ".sprintf("%-40s", substr("$sub_row[manager_chat_subid] - $sub_row[full_name]", 0, 40))." | <a href='$LINKbase&file_download=1&chat_log_type=".$chat_log_type."&download_chat_id=".$row["manager_chat_id"]."&download_chat_subid=".$sub_row["manager_chat_subid"]."&download_manager=".$row["manager"]."&download_user=".$row["user"]."'>["._QXZ("DOWNLOAD CHAT LOG")."]</a>\n";
 					$GRAPH_text.="  <tr><th class='thgraph' scope='col'>".$sub_row["manager_chat_subid"]."</th><th class='thgraph' scope='col'>$sub_row[manager_chat_subid] - $sub_row[full_name]</th><th class='thgraph'><a href='$LINKbase&file_download=1&chat_log_type=".$chat_log_type."&download_chat_id=".$row["manager_chat_id"]."&download_chat_subid=".$sub_row["manager_chat_subid"]."&download_manager=".$row["manager"]."&download_user=".$row["user"]."'>["._QXZ("DOWNLOAD CHAT LOG")."]</a></tr>";
 					}
-				$ASCII_text.="          +-------------+------------------------------+\n";
+				$ASCII_text.="          +-------------+------------------------------------------+\n";
 				$ASCII_text.="\n</span>";
 
 				$GRAPH_text.="</table></span></td></tr>";
@@ -884,7 +886,7 @@ else
 				$user_name["$user_row[0]"]=$user_row[1];
 			}
 
-			$csv_stmt="select * from vicidial_manager_chat_log_archive where manager_chat_id='$download_chat_id' ";
+			$csv_stmt="select distinct message_date, message_posted_by, message from vicidial_manager_chat_log_archive where manager_chat_id='$download_chat_id' ";
 			if ($download_chat_subid) {$csv_stmt.=" and manager_chat_subid='$download_chat_subid' ";}
 			$csv_stmt.=" order by message_date asc";
 			$csv_rslt=mysql_to_mysqli($csv_stmt, $link);

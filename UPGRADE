@@ -56,7 +56,15 @@ REQUIRED STEPS!!!
 
 OTHER CHANGES:
 
-1. Nothing new here yet, just branched!
+1. Added AST_inbound_export.pl script for in-group call data exports
+
+2. Added cm_sc_areacode.agi script that allows you to use a Settings Container
+	with the script in a Call Menu to define different destinations for 
+	customers from each state to go to: DID, CALLMENU, EXTEN
+
+3. Added Agent DID Report
+
+4. Added the ability for internal chats to have more than one agent participant
 
 
 

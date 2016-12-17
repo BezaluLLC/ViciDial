@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# FastAGI_log.pl version 2.12
+# FastAGI_log.pl version 2.14
 # 
 # Experimental Deamon using perl Net::Server that runs as FastAGI to reduce load
 # replaces the following AGI scripts:
@@ -72,6 +72,7 @@
 # 140215-2118 - Added several variable options for QM socket URL
 # 150804-1740 - Added code to support in-group drop_lead_reset feature
 # 161102-1034 - Fixed QM partition problem
+# 161214-1717 - Fix for rare multi-server grab from IVR park issue
 #
 
 # defaults for PreFork
@@ -1009,7 +1010,7 @@ sub process_request
 					{
 					########## FIND AND DELETE vicidial_auto_calls ##########
 					$VD_alt_dial = 'NONE';
-					$stmtA = "SELECT lead_id,callerid,campaign_id,alt_dial,stage,UNIX_TIMESTAMP(call_time),uniqueid,status,call_time,phone_code,phone_number,queue_position FROM vicidial_auto_calls where uniqueid = '$uniqueid' or callerid = '$callerid' limit 1;";
+					$stmtA = "SELECT lead_id,callerid,campaign_id,alt_dial,stage,UNIX_TIMESTAMP(call_time),uniqueid,status,call_time,phone_code,phone_number,queue_position,server_ip FROM vicidial_auto_calls where uniqueid = '$uniqueid' or callerid = '$callerid' limit 1;";
 						if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1030,6 +1031,7 @@ sub process_request
 						$VD_phone_code =		$aryA[9];
 						$VD_phone_number =		$aryA[10];
 						$VD_queue_position =	$aryA[11];
+						$VD_server_ip =			$aryA[12];
 						$rec_countCUSTDATA++;
 						}
 					$sthA->finish();
@@ -1040,8 +1042,10 @@ sub process_request
 						}
 					else
 						{
-						$PC_count=0;
+						$PC_count_rows=0;
 						$PLC_count=0;
+						$PCR_count=0;
+						$PC_channel='';
 						$stmtA = "SELECT channel from parked_channels where channel_group='$callerid';";
 							if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1053,6 +1057,49 @@ sub process_request
 							$PC_channel = $aryA[0];
 							}
 						$sthA->finish();
+
+						if ($PC_count_rows < 1)
+							{
+							$PC_server_ip='';
+							# check parked_channels_recent table
+							$secX = time();
+							$Ptarget = ($secX - 7200);	# look back 2 hours
+							($Psec,$Pmin,$Phour,$Pmday,$Pmon,$Pyear,$Pwday,$Pyday,$Pisdst) = localtime($Ptarget);
+							$Pyear = ($Pyear + 1900);
+							$Pmon++;
+							if ($Pmon < 10) {$Pmon = "0$Pmon";}
+							if ($Pmday < 10) {$Pmday = "0$Pmday";}
+							if ($Phour < 10) {$Phour = "0$Phour";}
+							if ($Pmin < 10) {$Pmin = "0$Pmin";}
+							if ($Psec < 10) {$Psec = "0$Psec";}
+								$PSQLdate = "$Pyear-$Pmon-$Pmday $Phour:$Pmin:$Psec";
+
+							$stmtA = "SELECT channel,server_ip from parked_channels_recent where channel_group='$callerid' and park_end_time > \"$PSQLdate\" order by park_end_time desc limit 1;";
+								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$PC_count_rows=$sthA->rows;
+							if ($PC_count_rows > 0)
+								{
+								$PCR_count++;
+								@aryA = $sthA->fetchrow_array;
+								$PC_channel =	$aryA[0];
+								$PC_server_ip = $aryA[1];
+								}
+							$sthA->finish();
+
+							if ($PC_server_ip ne $VARserver_ip) 
+								{
+								$PC_count_rows=0;
+								$PLC_count=1;
+								if ($AGILOG) {$agi_string = "VD hangup: VDAC record found with park record OTHER SERVER: $channel($PC_count_rows|$PCR_count) $PC_channel $uniqueid $calleridname $VARserver_ip|$PC_server_ip";   &agi_output;}
+								}
+							else
+								{
+								$PC_count_rows=0;
+								$PC_channel='';
+								}
+							}
 
 						if ($PC_count_rows > 0)
 							{
@@ -1072,13 +1119,13 @@ sub process_request
 							}
 						if ($PLC_count > 0)
 							{
-							if ($AGILOG) {$agi_string = "VD hangup: VDAC record found with park record: $channel $PC_channel $uniqueid $calleridname";   &agi_output;}
+							if ($AGILOG) {$agi_string = "VD hangup: VDAC record found with park record: $channel($PC_count_rows|$PCR_count) $PC_channel $uniqueid $calleridname $VD_server_ip";   &agi_output;}
 							}
 						else
 							{
 							$stmtA = "DELETE FROM vicidial_auto_calls where ( ( (status!='IVR') and (uniqueid='$uniqueid' or callerid = '$callerid') ) or ( (status='IVR') and (uniqueid='$uniqueid') ) ) order by call_time desc limit 1;";
 							$VACaffected_rows = $dbhA->do($stmtA);
-							if ($AGILOG) {$agi_string = "--    VDAC record deleted: |$VACaffected_rows|   |$VD_lead_id|$uniqueid|$VD_uniqueid|$VD_callerid|$VARserver_ip|$VD_status|";   &agi_output;}
+							if ($AGILOG) {$agi_string = "--    VDAC record deleted: |$VACaffected_rows|   |$VD_lead_id|$uniqueid|$VD_uniqueid|$VD_callerid|$callerid|$VD_status|$channel($VARserver_ip)|$PC_channel($VD_server_ip)|($PC_count_rows|$PCR_count)|";   &agi_output;}
 
 							$stmtA = "UPDATE vicidial_live_agents SET ring_callerid='' where ring_callerid='$callerid';";
 							$VLACaffected_rows = $dbhA->do($stmtA);

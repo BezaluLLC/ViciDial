@@ -101,3 +101,11 @@ PREFIX_SFTP_server => sftp.dncscrub.com
 PREFIX_SFTP_user => DEMOVICIDIAL
 PREFIX_SFTP_pass => sampLepass
 PREFIX_SFTP_port => 22
+
+
+
+Changing DB schema back to allow auto-dialing:
+
+UPDATE system_settings SET disable_auto_dial='0';
+ALTER TABLE vicidial_campaigns MODIFY dial_method ENUM('MANUAL','RATIO','ADAPT_HARD_LIMIT','ADAPT_TAPERED','ADAPT_AVERAGE','INBOUND_MAN') default 'MANUAL';
+ALTER TABLE vicidial_campaigns MODIFY auto_dial_level VARCHAR(6) default '0';

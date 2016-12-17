@@ -12,10 +12,11 @@
 # 160107-2241 - Added realtime check to see whether sub chats are still running
 # 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 # 161029-2127 - Fixed menu displays, text sizes
+# 161217-0819 - Added chat-type to allow for multi-user internal chat sessions
 #
 
-$admin_version = '2.12-6';
-$build = '161029-2127';
+$admin_version = '2.14-7';
+$build = '161217-0819';
 
 $sh="managerchats"; 
 
@@ -253,7 +254,7 @@ if ($active_chats<1 && $manager_message && ($submit_chat== _QXZ("ALL LIVE AGENTS
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if (mysqli_num_rows($rslt)>0) 
 		{
-		$ins_stmt="insert into vicidial_manager_chats(chat_start_date, manager, selected_agents, selected_user_groups, selected_campaigns, allow_replies) VALUES(now(), '$PHP_AUTH_USER', '$available_chat_agents_string', '$available_chat_groups_string', '$available_chat_campaigns_string', '$allow_replies')";
+		$ins_stmt="insert into vicidial_manager_chats(chat_start_date, manager, selected_agents, selected_user_groups, selected_campaigns, allow_replies, internal_chat_type) VALUES(now(), '$PHP_AUTH_USER', '$available_chat_agents_string', '$available_chat_groups_string', '$available_chat_campaigns_string', '$allow_replies', 'MANAGER')";
 		$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 		$manager_chat_id=mysqli_insert_id($link);
 
@@ -271,7 +272,9 @@ if ($active_chats<1 && $manager_message && ($submit_chat== _QXZ("ALL LIVE AGENTS
 			$manager_message = preg_replace("/\n/i",' ',$manager_message);
 			# $manager_message=addslashes(trim("$manager_message"));
 			
-			$ins_chat_stmt="insert into vicidial_manager_chat_log(manager_chat_id, manager_chat_subid, manager, user, message, message_date, message_posted_by) VALUES('$manager_chat_id', '$subid', '".$PHP_AUTH_USER."', '$user', '".mysqli_real_escape_string($link, $manager_message)."', now(), '".$PHP_AUTH_USER."')";
+			$message_id=date("U").".".rand(10000000,99999999);
+
+			$ins_chat_stmt="insert into vicidial_manager_chat_log(manager_chat_id, manager_chat_subid, manager, user, message, message_id, message_date, message_posted_by) VALUES('$manager_chat_id', '$subid', '".$PHP_AUTH_USER."', '$user', '".mysqli_real_escape_string($link, $manager_message)."', '$message_id', now(), '".$PHP_AUTH_USER."')";
 			$ins_chat_rslt=mysql_to_mysqli($ins_chat_stmt, $link);
 			$subid++;
 			}
@@ -850,7 +853,7 @@ $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIG
 				echo $chat_output_footer[$chat_subid];
 				}
 			# $reload_function="setInterval(\"CheckNewMessages($manager_chat_id, $chat_subids_array)\", 3000);\n";
-			$reload_function="setInterval(\"CheckNewMessages($manager_chat_id)\", 2000);\n";
+			$reload_function="setInterval(\"CheckNewMessages($manager_chat_id)\", 500);\n";
 			} 
 		else 
 			{

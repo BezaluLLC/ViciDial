@@ -1,5 +1,5 @@
 <?php
-# manager_send.php    version 2.12
+# manager_send.php    version 2.14
 # 
 # Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -133,10 +133,11 @@
 # 161029-0845 - Added RedirectToParkXfer and RedirectFromParkXfer functions
 # 161102-1043 - Fixed QM partition problem
 # 161117-0622 - Fixes for recording_log issue where filename is non-unique
+# 161217-0823 - Added parked_calls_recent table entries for better handling of parked calls
 #
 
-$version = '2.12-80';
-$build = '161117-0622';
+$version = '2.14-81';
+$build = '161217-0823';
 $php_script = 'manager_send.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=142;
@@ -1107,6 +1108,11 @@ if ($ACTION=="RedirectFromPark")
 		if ($stage!="2NDXfeR")
 			{
 			if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
+			$stmt = "INSERT INTO parked_channels_recent SET server_ip='$server_ip', channel='$channel', channel_group='$CalLCID', park_end_time=NOW();";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
 			$stmt = "DELETE FROM parked_channels where server_ip='$server_ip' and channel='$channel';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -1348,6 +1354,11 @@ if ($ACTION=="RedirectFromParkIVR")
 		if ($stage!="2NDXfeR")
 			{
 			if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
+			$stmt = "INSERT INTO parked_channels_recent SET server_ip='$server_ip', channel='$channel', channel_group='$CalLCID', park_end_time=NOW();";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
 			$stmt = "DELETE FROM parked_channels where server_ip='$server_ip' and channel='$channel';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -1516,6 +1527,11 @@ if ($ACTION=="RedirectFromParkXfer")
 		if ($stage!="2NDXfeR")
 			{
 			if (strlen($call_server_ip)>6) {$server_ip = $call_server_ip;}
+			$stmt = "INSERT INTO parked_channels_recent SET server_ip='$server_ip', channel='$channel', channel_group='$CalLCID', park_end_time=NOW();";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
 			$stmt = "DELETE FROM parked_channels where server_ip='$server_ip' and channel='$channel';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);

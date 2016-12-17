@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_flush_DBqueue.pl    version 2.12
+# AST_flush_DBqueue.pl    version 2.14
 #
 # DESCRIPTION:
 # - clears out mysql records for this server for the ACQS vicidial_manager table
@@ -21,6 +21,7 @@
 # 120411-1637 - Added --seconds option
 # 150710-0907 - Added flush of vicidial_dtmf_log table
 # 160101-1124 - Added flush of routing_initiated_recordings table
+# 161214-1039 - Added flush of parked_channels_recent table
 #
 
 ### begin parsing run-time options ###
@@ -209,6 +210,11 @@ if($DB){print STDERR "\n|$stmtA|\n";}
 if (!$T) {      $affected_rows = $dbhA->do($stmtA);}
 if (!$Q) {print " - routing_initiated_recordings flush: $affected_rows rows\n";}
 
+$stmtA = "DELETE from parked_channels_recent where park_end_time < '$flush_time';";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) {      $affected_rows = $dbhA->do($stmtA);}
+if (!$Q) {print " - parked_channels_recent flush: $affected_rows rows\n";}
+
 $stmtA = "OPTIMIZE table vicidial_manager;";
 if($DB){print STDERR "\n|$stmtA|\n";}
 if (!$T) 
@@ -249,6 +255,20 @@ if (!$T)
         $sthA->finish();
         }
 if (!$Q) {print " - OPTIMIZE routing_initiated_recordings          \n";}
+
+
+$stmtA = "OPTIMIZE table parked_channels_recent;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T)
+        {
+        $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+        $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+        $sthArows=$sthA->rows;
+        @aryA = $sthA->fetchrow_array;
+        if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+        $sthA->finish();
+        }
+if (!$Q) {print " - OPTIMIZE parked_channels_recent          \n";}
 
 
 $stmtA = "OPTIMIZE table vicidial_live_agents;";

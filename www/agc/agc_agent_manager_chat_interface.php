@@ -12,10 +12,11 @@
 # 151231-0842 - Added agent_allowed_chat_groups setting
 # 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 # 160523-0630 - Fixed vicidial_stylesheet issues
+# 161217-0827 - Added code for multi-user internal chat sessions
 #
 
-$admin_version = '2.12-6';
-$build = '160523-0630';
+$admin_version = '2.14-7';
+$build = '161217-0827';
 
 $sh="managerchats"; 
 
@@ -101,7 +102,7 @@ if ($SSallow_chats < 1)
 
 # Get a count on unread messages where the user is involved but not the chat manager/initiator in order to create the ChatReloadIDNumber variable
 $chat_reload_id_number_array=array();
-$unread_stmt="select manager_chat_id, manager_chat_subid, sum(if(message_viewed_date is not null, 0, 1)) as unread_count from vicidial_manager_chat_log where vicidial_manager_chat_log.user='$user' group by manager_chat_id, manager_chat_subid order by manager_chat_id, manager_chat_subid";
+$unread_stmt="select manager_chat_id, manager_chat_subid, sum(if(message_viewed_date is not null and vicidial_manager_chat_log.user='$user', 0, 1)) as unread_count from vicidial_manager_chat_log where vicidial_manager_chat_log.user='$user' group by manager_chat_id, manager_chat_subid order by manager_chat_id, manager_chat_subid";
 $unread_rslt=mysql_to_mysqli($unread_stmt, $link);
 while ($unread_row=mysqli_fetch_array($unread_rslt)) {
 	$IDNumber=$unread_row["manager_chat_id"]."-".$unread_row["manager_chat_subid"]."-".$unread_row["unread_count"];
@@ -109,7 +110,7 @@ while ($unread_row=mysqli_fetch_array($unread_rslt)) {
 }
 
 # Pull the most recently posted-to chat that has not been viewed, then the most recent period, and display that as the default window
-$stmt="select distinct vicidial_manager_chat_log.manager_chat_id, vicidial_manager_chat_log.manager_chat_subid, vicidial_users.full_name, vicidial_manager_chats.chat_start_date, sum(if(vicidial_manager_chat_log.message_viewed_date is null, 1, 0)),vicidial_manager_chat_log.user from vicidial_manager_chat_log, vicidial_manager_chats, vicidial_users where vicidial_manager_chat_log.user='$user' and vicidial_manager_chat_log.manager_chat_id=vicidial_manager_chats.manager_chat_id and vicidial_manager_chats.manager=vicidial_users.user group by manager_chat_id, manager_chat_subid order by message_viewed_date asc, message_date desc";
+$stmt="select distinct vicidial_manager_chat_log.manager_chat_id, vicidial_manager_chat_log.manager_chat_subid, vicidial_users.full_name, vicidial_manager_chats.chat_start_date, sum(if(vicidial_manager_chat_log.message_viewed_date is null and vicidial_manager_chat_log.user='$user', 1, 0)),vicidial_manager_chat_log.user from vicidial_manager_chat_log, vicidial_manager_chats, vicidial_users where vicidial_manager_chat_log.user='$user' and vicidial_manager_chat_log.manager_chat_id=vicidial_manager_chats.manager_chat_id and vicidial_manager_chats.manager=vicidial_users.user group by manager_chat_id, manager_chat_subid order by message_viewed_date asc, message_date desc";
 $rslt=mysql_to_mysqli($stmt, $link);
 
 $active_chats_array=array();
@@ -135,7 +136,7 @@ while ($row=mysqli_fetch_row($rslt)) {
 }
 
 	# Get a count on unread messages where the user is the chat manager/initiator in order to create the ChatReloadIDNumber variable
-	$unread_stmt="select manager_chat_id, manager_chat_subid, sum(if(message_viewed_date is not null, 0, 1)) as unread_count from vicidial_manager_chat_log where vicidial_manager_chat_log.manager='$user' group by manager_chat_id, manager_chat_subid order by manager_chat_id, manager_chat_subid";
+	$unread_stmt="select manager_chat_id, manager_chat_subid, sum(if(message_viewed_date is not null and vicidial_manager_chat_log.user='$user', 0, 1)) as unread_count from vicidial_manager_chat_log where vicidial_manager_chat_log.manager='$user' group by manager_chat_id, manager_chat_subid order by manager_chat_id, manager_chat_subid";
 	$unread_rslt=mysql_to_mysqli($unread_stmt, $link);
 	while ($unread_row=mysqli_fetch_array($unread_rslt)) {
 		$IDNumber=$unread_row["manager_chat_id"]."-".$unread_row["manager_chat_subid"]."-".$unread_row["unread_count"];
@@ -146,7 +147,7 @@ while ($row=mysqli_fetch_row($rslt)) {
 	### This was added for agent to agent chats since there needs to be a list of open chats where the agent viewing this is also the manager,
 	### which will now happen because agents can now start their own chats.  Added vicidial_manager_chat_log.user to this query on 2/4/15 for
 	### manager override
-	$stmt="select distinct vicidial_manager_chat_log.manager_chat_id, vicidial_manager_chat_log.manager_chat_subid, vicidial_users.full_name, vicidial_manager_chats.chat_start_date, sum(if(vicidial_manager_chat_log.message_viewed_date is null, 1, 0)),vicidial_manager_chat_log.user from vicidial_manager_chat_log, vicidial_manager_chats, vicidial_users where vicidial_manager_chat_log.manager='$user' and vicidial_manager_chat_log.manager_chat_id=vicidial_manager_chats.manager_chat_id and vicidial_manager_chat_log.user=vicidial_users.user group by manager_chat_id, manager_chat_subid order by message_viewed_date asc, message_date desc";
+	$stmt="select distinct vicidial_manager_chat_log.manager_chat_id, vicidial_manager_chat_log.manager_chat_subid, vicidial_users.full_name, vicidial_manager_chats.chat_start_date, sum(if(vicidial_manager_chat_log.message_viewed_date is null and vicidial_manager_chat_log.user='$user', 1, 0)),vicidial_manager_chat_log.user from vicidial_manager_chat_log, vicidial_manager_chats, vicidial_users where vicidial_manager_chat_log.manager='$user' and vicidial_manager_chat_log.manager_chat_id=vicidial_manager_chats.manager_chat_id and vicidial_manager_chat_log.user=vicidial_users.user group by manager_chat_id, manager_chat_subid order by message_viewed_date asc, message_date desc";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	while ($row=mysqli_fetch_row($rslt)) {
 		if ($row[0]!="") {
@@ -339,6 +340,7 @@ function DisplayMgrAgentChat(manager_chat_id, manager_chat_subid) {
 
 				var allow_agent_replies=ChatText_array[0];
 				var new_messages=ChatText_array[4];
+				var internal_chat_type=ChatText_array[5];
 
 				if (allow_agent_replies=="Y")
 					{
@@ -347,6 +349,23 @@ function DisplayMgrAgentChat(manager_chat_id, manager_chat_subid) {
 				else 
 					{
 					document.getElementById("AllowAgentReplies").style.display = 'none';
+					}
+
+				if (ChatText_array[1].match(/^CHAT ENDED/)) 
+					{
+					document.getElementById("AgentAddChatSpan").style.display = 'none';
+					document.getElementById("AllLiveNonChatAgents").style.display = 'none';
+					}
+				else 
+					{
+						if (internal_chat_type=="AGENT")
+							{
+							document.getElementById("AgentAddChatSpan").style.display = 'block';
+							}
+						else 
+							{
+							document.getElementById("AgentAddChatSpan").style.display = 'none';
+							}
 					}
 
 				document.getElementById("ActiveManagerChatTranscript").innerHTML=ChatText_array[1];
@@ -471,6 +490,7 @@ function RefreshActiveChatView() {
 
 function ReloadAgentNewChatSpan(user) {
 	var xmlhttp=false;
+	var pass='<?php echo $pass ?>';
 	/*@cc_on @*/
 	/*@if (@_jscript_version >= 5)
 	// JScript gives us Conditional compilation, we can cope with old IE versions.
@@ -573,8 +593,117 @@ function SendMgrChatMessage(manager_chat_id, manager_chat_subid) {
 		}
 }
 
+function LoadAvailableAgentsForChat(destinationId, field_name) {
+	var user=document.getElementById("user").value;
+	var manager_chat_id=document.getElementById("CurrentActiveChat").value;
+	var manager_chat_subid=document.getElementById("CurrentActiveChatSubID").value;
+	var pass='<?php echo $pass ?>';
+	var xmlhttp=false;
+	/*@cc_on @*/
+	/*@if (@_jscript_version >= 5)
+	// JScript gives us Conditional compilation, we can cope with old IE versions.
+	// and security blocked creation of the objects.
+	 try {
+	  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+	 } catch (e) {
+	  try {
+	   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	  } catch (E) {
+	   xmlhttp = false;
+	  }
+	 }
+	@end @*/
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+		{
+		xmlhttp = new XMLHttpRequest();
+		}
+	if (xmlhttp) 
+		{ 
+		var chat_SQL_query = "action=load_available_agents_for_chat&user="+user+"&pass="+pass+"&manager_chat_id="+manager_chat_id+"&manager_chat_subid="+manager_chat_subid+"&field_name="+field_name;
+		xmlhttp.open('POST', 'chat_db_query.php'); 
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(chat_SQL_query); 
+		xmlhttp.onreadystatechange = function() 
+			{ 
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+				{
+				var ChatText = null;
+				ChatText = xmlhttp.responseText;
+
+				if (ChatText.length>0 && ChatText.match(/^Error/)) 
+					{
+					chat_alert_box(ChatText);
+					}
+				else 
+					{
+					document.getElementById(destinationId).innerHTML=ChatText;
+					}
+				}
+			}
+		delete xmlhttp;
+		}
+}
+
+function AddAgentToExistingChat() {
+	var agent_to_add=document.getElementById("agent_to_add").value;
+	var user=document.getElementById("user").value;
+	var manager_chat_id=document.getElementById("CurrentActiveChat").value;
+	var manager_chat_subid=document.getElementById("CurrentActiveChatSubID").value;
+	var pass='<?php echo $pass ?>';
+	var xmlhttp=false;
+	/*@cc_on @*/
+	/*@if (@_jscript_version >= 5)
+	// JScript gives us Conditional compilation, we can cope with old IE versions.
+	// and security blocked creation of the objects.
+	 try {
+	  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+	 } catch (e) {
+	  try {
+	   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+	  } catch (E) {
+	   xmlhttp = false;
+	  }
+	 }
+	@end @*/
+	if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+		{
+		xmlhttp = new XMLHttpRequest();
+		}
+	if (xmlhttp) 
+		{ 
+		var chat_SQL_query = "action=add_agent_to_existing_chat&user="+user+"&pass="+pass+"&manager_chat_id="+manager_chat_id+"&manager_chat_subid="+manager_chat_subid+"&agent_to_add="+agent_to_add;
+		xmlhttp.open('POST', 'chat_db_query.php'); 
+		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+		xmlhttp.send(chat_SQL_query); 
+		xmlhttp.onreadystatechange = function() 
+			{ 
+			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+				{
+				var ChatText = null;
+				ChatText = xmlhttp.responseText;
+
+				if (ChatText.length>0 && ChatText.match(/^Error/)) 
+					{
+					chat_alert_box(ChatText);
+					}
+				else 
+					{
+					// document.getElementById(destinationId).innerHTML=ChatText;
+					}
+				LoadAvailableAgentsForChat('AllLiveNonChatAgents', 'agent_to_add');
+				}
+			}
+		delete xmlhttp;
+		}
+}
+
+function ToggleSpan(span_name) {
+	var span_vis = document.getElementById(span_name).style;
+	if (span_vis.display=='none') { span_vis.display = 'block'; } else { span_vis.display = 'none'; }
+}
+
 function MgrAgentAutoRefresh() {
-	rInt=window.setInterval(function() {DisplayMgrAgentChat()}, 1000);
+	rInt=window.setInterval(function() {DisplayMgrAgentChat()}, 500);
 }
 
 
@@ -607,7 +736,18 @@ echo "<div class='scrolling_chat_display' id='AllActiveChats'>\n";
 		while (list($manager_chat_id, $text) = each($chat_managers_array)) {
 			$manager_chat_subid=$chat_subid_array[$manager_chat_id];
 			if (!empty($unread_chats_array) && in_array($manager_chat_id, $unread_chats_array)) {$cclass="unreadchat";} else {$cclass="viewedchat";}
-			echo "\t<li class='".$cclass."'><a onClick=\"document.getElementById('CurrentActiveChat').value='$manager_chat_id'; document.getElementById('CurrentActiveChatSubID').value='$manager_chat_subid'; document.getElementById('AgentManagerOverride').value='".$agents_managers_array[$manager_chat_id]."'; \">".$chat_managers_array[$manager_chat_id]."</a></li>\n";
+			echo "\t<li class='".$cclass."'><a onClick=\"document.getElementById('CurrentActiveChat').value='$manager_chat_id'; document.getElementById('CurrentActiveChatSubID').value='$manager_chat_subid'; document.getElementById('AgentManagerOverride').value='".$agents_managers_array[$manager_chat_id]."'; LoadAvailableAgentsForChat('AllLiveNonChatAgents', 'agent_to_add');\">Chat #".$manager_chat_id."</a></li>\n"; # $chat_managers_array[$manager_chat_id]
+
+				$additional_agents_stmt="select concat(manager, selected_agents) as participants from vicidial_manager_chats where manager_chat_id='$manager_chat_id'";
+				$additional_agents_rslt=mysql_to_mysqli($additional_agents_stmt, $link);
+				$aa_row=mysqli_fetch_row($additional_agents_rslt);
+				$additional_agents=preg_replace("/^\||\|$/", "", $aa_row[0]);
+				$additional_agents=preg_replace("/\|/", "','", $additional_agents);
+				$full_name_stmt="select full_name from vicidial_users where user in ('$additional_agents') and user!='$user' order by full_name asc";
+				$full_name_rslt=mysql_to_mysqli($full_name_stmt, $link);
+				while ($fname_row=mysqli_fetch_row($full_name_rslt)) {
+					echo "\t<li class='additional_agents'><a onClick=\"document.getElementById('CurrentActiveChat').value='$manager_chat_id'; document.getElementById('CurrentActiveChatSubID').value='$manager_chat_subid'; document.getElementById('AgentManagerOverride').value='".$agents_managers_array[$manager_chat_id]."'; LoadAvailableAgentsForChat('AllLiveNonChatAgents', 'agent_to_add');\">".$fname_row[0]."</a></li>\n";
+				}
 
 			$sid++;
 		}
@@ -615,8 +755,11 @@ echo "<div class='scrolling_chat_display' id='AllActiveChats'>\n";
 	echo "</ul>\n";
 echo "\t</div>\n";
 echo "<font class='small_arial_bold'>(bolded chats = unread messages)<BR><input type='checkbox' id='MuteChatAlert' name='MuteChatAlert'>"._QXZ("Mute alert sound")."</font>\n";
-echo "\t<BR><BR><input class='green_btn' type='button' style='width:200px' value='"._QXZ("CHAT WITH LIVE AGENT")."' onClick=\"document.getElementById('AgentChatSpan').style.display='none'; document.getElementById('AgentNewChatSpan').style.display='block'; ReloadAgentNewChatSpan('$user');\">\n";
-echo "\t<BR><BR><span id='AgentEndChatSpan' style='display: none;'><div align='left'><input class='red_btn' type='button' style='width:200px' value='"._QXZ("END CHAT")."' onClick='EndAgentToAgentChat()'></div></span>";
+echo "\t<BR><input class='green_btn' type='button' style='width:200px' value='"._QXZ("CHAT WITH LIVE AGENT")."' onClick=\"document.getElementById('AgentChatSpan').style.display='none'; document.getElementById('AgentNewChatSpan').style.display='block'; ReloadAgentNewChatSpan('$user');\">\n";
+echo "\t<span id='AgentEndChatSpan' style='display: none;'><div align='left'><BR><input class='red_btn' type='button' style='width:200px' value='"._QXZ("END CHAT")."' onClick='EndAgentToAgentChat()'></div></span>";
+echo "\t<span id='AgentAddChatSpan' style='display: none;'><BR><input class='blue_btn' type='button' style='width:200px' value='"._QXZ("ADD AGENT TO CURRENT CHAT")."' onClick=\"LoadAvailableAgentsForChat('AllLiveNonChatAgents', 'agent_to_add'); ToggleSpan('AllLiveNonChatAgents');\"></span>\n";
+echo "<BR><div id='AllLiveNonChatAgents' align='center' style='display: none;'></div></span>";
+
 echo "</TD>\n";
 echo "</TR>\n";
 
@@ -685,6 +828,7 @@ $stmt="SELECT vla.user,vu.full_name from vicidial_live_agents vla,vicidial_users
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($rslt) {$agents_count = mysqli_num_rows($rslt);}
 $loop_count=0;
+echo "<div id='AllLiveAgents'>"; # TEST
 echo "<select name='agent' id='agent'>\n";
 echo "<option value=''>Available agents</option>\n";
 while ($agents_count > $loop_count)
@@ -694,6 +838,7 @@ while ($agents_count > $loop_count)
 	$loop_count++;
 	}
 echo "</select>";
+echo "</div>"; # TEST
 
 echo "</td>\n";
 echo "<td width='200'><font class='arial'>"._QXZ("Message").":</font><BR>\n";

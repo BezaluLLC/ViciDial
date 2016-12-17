@@ -1,5 +1,5 @@
 <?php
-# conf_exten_check.php    version 2.12
+# conf_exten_check.php    version 2.14
 # 
 # Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
@@ -74,10 +74,11 @@
 # 160303-2354 - Added code for chat transfers
 # 160326-0942 - Fixed issue #933, variables
 # 161029-2216 - Formatting and additional agent debug logging
+# 161217-0822 - Addded agent debug logging of dead call trigger
 #
 
-$version = '2.12-49';
-$build = '161029-2216';
+$version = '2.14-50';
+$build = '161217-0822';
 $php_script = 'conf_exten_check.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=44;
@@ -257,6 +258,7 @@ if ($ACTION == 'refresh')
 	$MT[0]='';
 	$row='';   $rowx='';
 	$channel_live=1;
+	$DEADlog='';
 	if (strlen($conf_exten)<1)
 		{
 		$channel_live=0;
@@ -499,6 +501,7 @@ if ($ACTION == 'refresh')
 					if ( ($AcalleridCOUNT < 1) and (preg_match("/INCALL/i",$Astatus)) and (strlen($Aagent_log_id) > 0) )
 						{
 						$DEADcustomer++;
+						$DEADlog = "|   DEAD:$Acallerid|$Alead_id|$AcalleridCOUNT";
 						### find whether the agent log record has already logged DEAD
 						$stmt="SELECT count(*) from vicidial_agent_log where agent_log_id='$Aagent_log_id' and ( (dead_epoch IS NOT NULL) or (dead_epoch > 10000) );";
 						if ($DB) {echo "|$stmt|\n";}
@@ -565,6 +568,7 @@ if ($ACTION == 'refresh')
 					if ( ($AcalleridCOUNT < 1) and (preg_match("/INCALL/i",$Astatus)) and (strlen($Aagent_log_id) > 0) )
 						{
 						$DEADcustomer++;
+						$DEADlog = "|   DEAD:$Acallerid|$Alead_id|$AcalleridCOUNT";
 						### find whether the agent log record has already logged DEAD
 						$stmt="SELECT count(*) from vicidial_agent_log where agent_log_id='$Aagent_log_id' and ( (dead_epoch IS NOT NULL) or (dead_epoch > 10000) );";
 						if ($DB) {echo "|$stmt|\n";}
@@ -887,7 +891,7 @@ if ($ACTION == 'refresh')
 		}
 
 	echo "$countecho\n";
-	$stage = "$Astatus|$Aagent_log_id";
+	$stage = "$Astatus|$Aagent_log_id$DEADlog";
 	}
 
 

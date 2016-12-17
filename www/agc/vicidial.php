@@ -533,10 +533,11 @@
 # 161106-2221 - Changed to screen colors for main tab logo, other small style changes
 # 161117-1532 - Changed default main screen logo background color to white(screen color standard row 5)
 # 161126-2152 - Release of 2.13 stable branch and raising trunk to 2.14
+# 161217-0826 - Added debug logging of dead call trigger
 #
 
-$version = '2.14-503c';
-$build = '161126-2152';
+$version = '2.14-504c';
+$build = '161217-0826';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -5741,6 +5742,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								CheckDEADcallON=1;
 								CheckDEADcallCOUNT++;
 								customer_sec = VD_live_call_secondS;
+								button_click_log = button_click_log + "" + SQLdate + "-----dead_call---" + customer_sec + " " + lastcustchannel + " " + lastcustserverip + " " + CalLCID + "|";
 
 								if ( (xfer_in_call > 0) && (customer_3way_hangup_logging=='ENABLED') )
 									{
@@ -5762,6 +5764,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								CheckDEADcallON=1;
 								CheckDEADcallCOUNT++;
 								customer_sec = VD_live_call_secondS;
+								button_click_log = button_click_log + "" + SQLdate + "-----dead_call---" + customer_sec + " " + lastcustchannel + " " + lastcustserverip + " " + CalLCID + "|";
 								}
 							}
 						if (InGroupChange > 0)

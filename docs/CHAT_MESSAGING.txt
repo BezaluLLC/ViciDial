@@ -1,4 +1,4 @@
-CHAT MESSAGING			Started 2014-05-01	Updated 2016-03-05
+CHAT MESSAGING			Started 2014-05-01	Updated 2016-12-17
 
 
 After over 18 months of development, the Chat Messaging system for Vicidial was added to svn/trunk on December 13th, 2015(svn revision 2428). Our Chat messaging allows for customers to chat with agents from websites, as well as allowing managers to chat with agents and agents to chat with other agents all within their existing agent screen.
@@ -9,6 +9,8 @@ The Chat Messaging built into Vicidial is entirely web-based and uses it's own p
 UPDATE 2015-12-19: We added several security enhancements related to the chat functionality. We strongly recommend that you update your system to svn/trunk revision 2435 or higher if you are running revision between 2428 and 2434. We also added dynamic language capability throughout the chat screens.
 
 UPDATE 2016-03-05: We added the ability to transfer a customer chat to another chat group or agent.
+
+UPDATE 2016-12-17: We added the ability for agents to add more agents to their internal chat sessions, so multiple agents can be chatting together in the same session at one time.
 
 
 

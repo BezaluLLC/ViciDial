@@ -3311,6 +3311,7 @@ manager_chat_subid TINYINT(3) UNSIGNED DEFAULT NULL,
 manager VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
 user VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
 message MEDIUMTEXT COLLATE utf8_unicode_ci,
+message_id VARCHAR(20),
 message_date DATETIME DEFAULT NULL,
 message_viewed_date DATETIME DEFAULT NULL,
 message_posted_by VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
@@ -3329,6 +3330,7 @@ manager_chat_subid TINYINT(3) UNSIGNED DEFAULT NULL,
 manager VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
 user VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
 message MEDIUMTEXT COLLATE utf8_unicode_ci,
+message_id VARCHAR(20),
 message_date DATETIME DEFAULT NULL,
 message_viewed_date DATETIME DEFAULT NULL,
 message_posted_by VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
@@ -3340,6 +3342,7 @@ KEY manager_chat_subid_archive_key (manager_chat_subid)
 
 CREATE TABLE vicidial_manager_chats (
 manager_chat_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+internal_chat_type ENUM('AGENT', 'MANAGER') default 'MANAGER',
 chat_start_date DATETIME DEFAULT NULL,
 manager VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
 selected_agents MEDIUMTEXT COLLATE utf8_unicode_ci,
@@ -3351,6 +3354,7 @@ PRIMARY KEY (manager_chat_id)
 
 CREATE TABLE vicidial_manager_chats_archive (
 manager_chat_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+internal_chat_type ENUM('AGENT', 'MANAGER') default 'MANAGER',
 chat_start_date DATETIME DEFAULT NULL,
 manager VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
 selected_agents MEDIUMTEXT COLLATE utf8_unicode_ci,
@@ -3573,6 +3577,15 @@ step SMALLINT(5) UNSIGNED default '0',
 index (caller_code),
 KEY vdad_dbtime_key (db_time)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE parked_channels_recent (
+channel VARCHAR(100) NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+channel_group VARCHAR(30),
+park_end_time DATETIME,
+index (channel_group),
+index (park_end_time)
+) ENGINE=MyISAM;
 
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
@@ -3831,4 +3844,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1481',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1482',db_schema_update_date=NOW(),reload_timestamp=NOW();
