@@ -16,13 +16,15 @@
 # 160617-1727 - Modified SQL insertions to be done in groups instead of all at once, added runtime output to insertions
 # 160618-0029 - Added bulk AC-CID delete
 # 160801-1208 - Added colors features and added missing QXZ text output
+# 161218-1819 - Added CSV method to AC-CID 
+# 161218-2144 - Added STATE FILL method to AC-CID and upped the max insertion limit to 5K 'cause why not?'
 #
 
 require("dbconnect_mysqli.php");
 require("functions.php");
 
-$version = '2.12-11';
-$build = '160801-1208';
+$version = '2.14-13';
+$build = '161218-2144';
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
@@ -32,7 +34,7 @@ $NWB = " &nbsp; <a href=\"javascript:openNewWindow('$PHP_SELF?form_to_run=help";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
 $form_to_run = "NONE";
 $DB=0; 						# Debug flag
-$INSERTmax_limit = 1000; 	# Maximum number of items allowed to insert
+$INSERTmax_limit = 5000; 	# Maximum number of items allowed to insert
 $INSERTgroup_limit = 20;	# Number of items per group to be inserted
 $STARTtime = date("U");
 
@@ -42,12 +44,14 @@ if (isset($_POST["ACCIDcampaign"]))					{$ACCIDcampaign=$_POST["ACCIDcampaign"];
 if (isset($_POST["ACCIDareacode"]))					{$ACCIDareacode=$_POST["ACCIDareacode"];}
 if (isset($_POST["ACCIDdids"]))						{$ACCIDto_insert_raw=$_POST["ACCIDdids"];}
 if (isset($_POST["ACCIDto_insert"]))				{$ACCIDto_insert_CONFIRMED=$_POST["ACCIDto_insert"];}
+if (isset($_POST["ACCIDdescription"]))				{$ACCIDdescription=$_POST["ACCIDdescription"];}
 if (isset($_POST["ACCIDactive"]))					{$ACCIDactive=$_POST["ACCIDactive"];}
 if (isset($_POST["ACCIDdelete_campaign"]))			{$ACCIDdelete_campaign=$_POST["ACCIDdelete_campaign"];}
 if (isset($_POST["ACCIDdelete_from"]))				{$ACCIDdelete_from=$_POST["ACCIDdelete_from"];}
 if (isset($_POST["ACCIDdelete_from_CONFIRMED"]))	{$ACCIDdelete_from_CONFIRMED=$_POST["ACCIDdelete_from_CONFIRMED"];}
 if (isset($_POST["ACCIDclear_all"]))				{$ACCIDclear_all=$_POST["ACCIDclear_all"];}
 if (isset($_POST["ACCIDclear_all_CONFIRMED"]))		{$ACCIDclear_all_CONFIRMED=$_POST["ACCIDclear_all_CONFIRMED"];}
+if (isset($_POST["ACCIDmethod"]))					{$ACCIDmethod=$_POST["ACCIDmethod"];}
 if (isset($_POST["DIDcopy_from"]))					{$DIDcopy_from=$_POST["DIDcopy_from"];}
 if (isset($_POST["DIDto_insert"]))					{$DIDto_insert_raw=$_POST["DIDto_insert"];}
 if (isset($_POST["DIDto_insert_CONFIRMED"]))		{$DIDto_insert_CONFIRMED=$_POST["DIDto_insert_CONFIRMED"];}
@@ -63,10 +67,28 @@ if (isset($_POST["USERdelete_from_CONFIRMED"]))		{$USERdelete_from_CONFIRMED=$_P
 
 if ($DB) {echo "$form_to_run|";}
 
-#Sanitize and set checks
 $ACCIDto_insert_raw = explode("\n", $ACCIDto_insert_raw);
+if ($ACCIDmethod == "CSV") 
+	{
+	$i=0;
+	while ($i < count($ACCIDto_insert_raw))
+		{
+		$ACCIDrow = explode(",", $ACCIDto_insert_raw[$i]);
+		$ACCIDareacode_raw[$i] = $ACCIDrow[0];
+		$ACCIDto_insert_raw[$i] = $ACCIDrow[1];
+		$ACCIDdescription_raw[$i] = $ACCIDrow[2];
+		$i++;
+		}
+	$ACCIDareacode_raw = preg_replace('/[^0-9]/','',$ACCIDareacode_raw);
+	$ACCIDto_insert_raw = preg_replace('/[^0-9]/','',$ACCIDto_insert_raw);
+	$ACCIDto_insert_raw_ArFilter = array_filter($ACCIDto_insert_raw);
+	$ACCIDdescription_raw = preg_replace('/[^-_.0-9a-zA-Z ]/','',$ACCIDdescription_raw);
+	}
+else 
+	{
 $ACCIDto_insert_raw = preg_replace('/[^0-9]/','',$ACCIDto_insert_raw);
 $ACCIDto_insert_raw_ArFilter = array_filter($ACCIDto_insert_raw);
+	}
 $DIDto_insert_raw = explode("\n", $DIDto_insert_raw);
 $DIDto_insert_raw = preg_replace('/[^0-9]/','',$DIDto_insert_raw);
 $DIDto_insert_raw_ArFilter = array_filter($DIDto_insert_raw);
@@ -257,7 +279,7 @@ if ($form_to_run == "help")
 	echo "<BR><BR>";
 	
 	echo "<A NAME=\"ACCIDADD\"><BR>";
-	echo "<B>"._QXZ("AC-CID Bulk Add")." -</B> "._QXZ("This will take a list of CIDs and insert them as Area Code Caller IDs into the selected campaign. The area code lookup is designed to work only with numbers in the North American Numbering Plan. The description will automatically be filled with the appropriate US state abbreviation corresponding to the given CIDs 3-digit area code. CIDs must be between 6 and 20 digits in length and only digits 0-9 are allowed. Optionally, you can have the AC-CIDs set to active upon insertion.");
+	echo "<B>"._QXZ("AC-CID Bulk Add")." -</B> "._QXZ("This allows you to paste in a listing of CIDs to insert into a campaign AC-CID list. There are two methods to choose from: <ul> <li><b>STATE LOOKUP</b> - This will take a list of CIDs and insert them as Area Code Caller IDs into the selected campaign. The area code lookup is designed to work only with numbers in the North American Numbering Plan as it uses the first three digits of each CID. The description will automatically be filled with the appropriate US state abbreviation corresponding to the given CIDs 3-digit area code. <li><b>CSV</b> - This will take a comma separated list in the format of  NPA,CID,DESCRIPTION  and insert each line into the specified campaigns AC-CID list using the supplied values. For example, given a listing of  813,7271234567,Florida  will result in an AC-CID entry for area code 813 using the CID 7271234567 and a description of -Florida-. Descriptions are limited to 50 characters.<li><b>STATE FILL</b> - Similar to the STATE LOOKUP method above, this will take a list of CIDs and insert them as AC-CIDs in the specified campaign but will also make an entry for each area code in a state based off the state the CID is in. For example, if given the CID 7271234567, 19 CID entries will be created with the same CID, one each for every area code in Florida.</ul> CIDs must be between 6 and 20 digits in length and only digits 0-9 are allowed. Optionally, you can have the AC-CIDs set to active upon insertion.");
 	echo "<BR><BR>";
 	
 	echo "<A NAME=\"ACCIDDELETE\"><BR>";
@@ -318,19 +340,59 @@ if ($form_to_run == "ACCID")
 		echo _QXZ("This tool has a limit of ")."$INSERTmax_limit"._QXZ(" items. You are trying to insert ") . count($ACCIDto_insert_raw) ._QXZ(". Please go back and make adjustments.")."\n";
 		exit;
 		}
-				
+	
+	$areacode = array();
+	# If using the STATE FILL method, build out the array of ACs and CIDs for each represented state.
+	if ($ACCIDmethod == "STATEFILL") 
+	{
+	$STATEFILLcids = array();
+	$STATEFILLareacodes = array();
+	$i=0;
+	$j=0; # Counts total ACCID to be inserted
+	while ($i < count($ACCIDto_insert_raw))
+		{
+		$STATEFILLareacode[$i] = substr($ACCIDto_insert_raw[$i], 0, 3);
+		$SQL = "SELECT state FROM vicidial_phone_codes WHERE country='USA' AND areacode=$STATEFILLareacode[$i];";
+		if ($DB) {echo "$SQL|";}
+		$SQL_rslt = mysql_to_mysqli($SQL, $link);
+		$state = mysqli_fetch_row($SQL_rslt);
+		
+		$SQL = "SELECT areacode FROM vicidial_phone_codes WHERE country='USA' AND state='$state[0]';";
+		if ($DB) {echo "$SQL|";}
+		$SQL_rslt = mysql_to_mysqli($SQL, $link);
+		$areacode_count = mysqli_num_rows($SQL_rslt);
+		 
+		$k = 0;
+		while ($k < $areacode_count)
+			{
+			$row = mysqli_fetch_row($SQL_rslt);
+			$areacode[$j] = $row[0];
+			$STATEFILLcids[$j] = $ACCIDto_insert_raw[$i];
+			$j++;
+			$k++;		
+			}
+		$i++;
+		}
+	$i=0;	
+	while ($i < count($STATEFILLcids))
+		{
+		$ACCIDto_insert_raw[$i] = $STATEFILLcids[$i];
+		$i++;
+		}
+	}
+
 	#Check for duplicates
 	$ACCIDduplicate = array();
 	$ACCIDinserted = array();
 	$ACCIDareacode = array();
-	$areacode = array();
 	$i=0; #loop counter
 	$j=0; #duplicate counter
 	$k=0; #insert counter
 	$l=0; #bad length counter
 	while ($i < count($ACCIDto_insert_raw))
 		{
-		$areacode[$i] = substr($ACCIDto_insert_raw[$i], 0, 3);
+		if ($ACCIDmethod == "CID") {$areacode[$i] = substr($ACCIDto_insert_raw[$i], 0, 3);}
+		if ($ACCIDmethod == "CSV") {$areacode[$i] = $ACCIDareacode_raw[$i];}	
 		$SQL= "SELECT outbound_cid FROM vicidial_campaign_cid_areacodes WHERE outbound_cid=$ACCIDto_insert_raw[$i] AND areacode=$areacode[$i] AND campaign_id='$ACCIDcampaign';";
 		if ($DB) {echo "$SQL|";}
 		$SQL_rslt=mysql_to_mysqli($SQL, $link);
@@ -402,12 +464,15 @@ if ($form_to_run == "ACCID")
 		}
 	$ACCIDto_insert = serialize($ACCIDto_insert);
 	$ACCIDareacode = serialize($ACCIDareacode);
+	if ($ACCIDmethod=="CSV") {$ACCIDdescription_raw = serialize($ACCIDdescription_raw);}
 	echo "<html><form action=$PHP_SELF method=POST>";
 	echo "<input type=hidden name=form_to_run value='ACCIDconfirmed'>";
 	echo "<input type=hidden name=ACCIDto_insert value='$ACCIDto_insert'>";
 	echo "<input type=hidden name=ACCIDcampaign value='$ACCIDcampaign'>";
 	echo "<input type=hidden name=ACCIDareacode value='$ACCIDareacode'>";
+	echo "<input type=hidden name=ACCIDdescription value='$ACCIDdescription_raw'>";
 	echo "<input type=hidden name=ACCIDactive value='$ACCIDactive'>";
+	echo "<input type=hidden name=ACCIDmethod value='$ACCIDmethod'>";
 	echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input type=submit name=did_submit value='CONFIRM'></td></tr>\n";
 	echo "</table></center></form>\n";
 	echo "</html>";
@@ -420,22 +485,29 @@ elseif ($form_to_run == "ACCIDconfirmed")
 	{		
 	$ACCIDto_insert_CONFIRMED = unserialize($ACCIDto_insert_CONFIRMED);
 	$ACCIDareacode = unserialize($ACCIDareacode);	
-	$description = array();
-	$i = 0;
-	while ($i < count($ACCIDto_insert_CONFIRMED))
+	if ($ACCIDmethod=="CSV") 
 		{
-		$SQL="SELECT state FROM vicidial_phone_codes WHERE areacode=$ACCIDareacode[$i];";
-		$SQL_rslt = mysql_to_mysqli($SQL, $link);
-		$row = mysqli_fetch_row($SQL_rslt);
-		if ( $row[0] == null ) #Put something in if NULL because areacode.vicidial_campaign_cid_areacodes cannot be NULL		
+		$ACCIDdescription = unserialize($ACCIDdescription);
+		}
+	else
+		{
+		$description = array();
+		$i = 0;
+		while ($i < count($ACCIDto_insert_CONFIRMED))
 			{
-			$ACCIDdescription[$i] = " ";
+			$SQL="SELECT state FROM vicidial_phone_codes WHERE areacode=$ACCIDareacode[$i];";
+			$SQL_rslt = mysql_to_mysqli($SQL, $link);
+			$row = mysqli_fetch_row($SQL_rslt);
+			if ( $row[0] == null ) #Put something in if NULL because areacode.vicidial_campaign_cid_areacodes cannot be NULL		
+				{
+				$ACCIDdescription[$i] = " ";
+				}
+			else
+				{
+				$ACCIDdescription[$i] = $row[0];
+				}
+			$i++;
 			}
-		else
-			{
-			$ACCIDdescription[$i] = $row[0];
-			}
-		$i++;
 		}
 		
 	### Divide total AC-CIDs into groups
@@ -475,6 +547,7 @@ elseif ($form_to_run == "ACCIDconfirmed")
 	### Loop through AC-CIDs and insert in groups
 	$INSERTindex = 0;
 	$INSERTloopflag = "TRUE";
+	$INSERTsqlLOG='';
 	while ($INSERTloopflag == "TRUE")
 		{
 		$SQL = "INSERT INTO vicidial_campaign_cid_areacodes (campaign_id,areacode,outbound_cid,active,cid_description) VALUES ('$ACCIDcampaign','$ACCIDareacode[$INSERTindex]','$ACCIDto_insert_CONFIRMED[$INSERTindex]','$ACCIDactive','$ACCIDdescription[$INSERTindex]')";
@@ -485,7 +558,7 @@ elseif ($form_to_run == "ACCIDconfirmed")
 			while ($i < $INSERTgroup_limit)
 				{
 				$SQL.= ",('" . $ACCIDcampaign . "','" . $ACCIDareacode[$INSERTindex] . "','" . $ACCIDto_insert_CONFIRMED[$INSERTindex] . "','" . $ACCIDactive . "','" . $ACCIDdescription[$INSERTindex] . "')";
-				$SQL_sentence.= " |$ACCIDareacode[$INSERTindex]|$ACCIDto_insert_CONFIRMED[$INSERTindex]";
+				$SQL_sentence.= " |$ACCIDareacode[$INSERTindex]|$ACCIDto_insert_CONFIRMED[$INSERTindex]|$ACCIDdescription[$INSERTindex]";
 				$i++;
 				$INSERTindex++;
 				}	
@@ -497,7 +570,7 @@ elseif ($form_to_run == "ACCIDconfirmed")
 			while ($i < $INSERTremainder)
 				{
 				$SQL.= ",('" . $ACCIDcampaign . "','" . $ACCIDareacode[$INSERTindex] . "','" . $ACCIDto_insert_CONFIRMED[$INSERTindex] . "','" . $ACCIDactive . "','" . $ACCIDdescription[$INSERTindex] . "')";
-				$SQL_sentence.= " |$ACCIDareacode[$INSERTindex]|$ACCIDto_insert_CONFIRMED[$INSERTindex]";
+				$SQL_sentence.= " |$ACCIDareacode[$INSERTindex]|$ACCIDto_insert_CONFIRMED[$INSERTindex]|$ACCIDdescription[$INSERTindex]";
 				$i++;
 				$INSERTindex++;
 				}
@@ -505,11 +578,12 @@ elseif ($form_to_run == "ACCIDconfirmed")
 			}
 		if ($DB) {echo "$SQL|";}
 		$SQL_rslt = mysql_to_mysqli($SQL, $link);
+		$INSERTsqlLOG.="$SQL|";
 		}
-			
+
 	### Log our stuff
-	$SQL_sentence = "AC-CIDs inserted into campaign $ACCIDcampaign: " . $SQL_sentence;
-	$SQL_log = "INSERT INTO vicidial_campaign_cid_areacodes (campaign_id,areacode,outbound_cid,active,cid_description) VALUES ('$ACCIDcampaign','$ACCIDareacode[0]','$ACCIDto_insert_CONFIRMED[0]','$ACCIDactive','$ACCIDdescription[0]')";
+	$SQL_sentence = "Method: $ACCIDmethod. AC-CIDs inserted into campaign $ACCIDcampaign: " . $SQL_sentence;
+	$SQL_log = $INSERTsqlLOG;
 	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_AC-CID', event_type='ADD', record_id='$ACCIDcampaign', event_code='ADMIN ADD BULK CAMPAIGN AC-CID', event_sql=\"$SQL_log\", event_notes='$SQL_sentence';";
@@ -649,6 +723,7 @@ elseif ($form_to_run == "ACCIDDELETEconfirmed")
 		}
 	else
 		{
+		$DELETEsqlLOG='';
 		$ACCIDdelete_from_CONFIRMED = unserialize($ACCIDdelete_from_CONFIRMED); # Go through the data and make a new array then break off the AC and CID
 		$ACCIDdelete_from_CONFIRMED = implode("x",$ACCIDdelete_from_CONFIRMED);
 		$ACCIDdelete_from_CONFIRMED = explode("x",$ACCIDdelete_from_CONFIRMED);
@@ -683,12 +758,13 @@ elseif ($form_to_run == "ACCIDDELETEconfirmed")
 			$i++;
 			if ($DB) {echo "$SQL|";}
 			$SQL_rslt = mysql_to_mysqli($SQL, $link);
+			$DELETEsqlLOG .= "$SQL|";
 			}				
 		
 		#Log our stuff
 		$SQL_sentence = "ACCID entries removed from campaign $ACCIDdelete_campaign: " . $SQL_sentence;
 		$SQL = "DELETE FROM vicidial_campaign_cid_areacodes WHERE campaign_id='$ACCIDdelete_campaign' AND outbound_cid='$ACCIDdelete_cid[0]' AND areacode='$ACCIDdelete_areacode[0]';";
-		$SQL_log = "$SQL|";
+		$SQL_log = "$DELETEsqlLOG";
 		$SQL_log = preg_replace('/;/', '', $SQL_log);
 		$SQL_log = addslashes($SQL_log);
 		$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGN_AC-CID', event_type='DELETE', record_id='0', event_code='ADMIN DELETE BULK ACCID', event_sql=\"$SQL_log\", event_notes='$SQL_sentence';";
@@ -916,6 +992,7 @@ elseif ($form_to_run == "DIDADDconfirmed")
 	### Loop through DIDs and insert in groups
 	$INSERTindex = 0;
 	$INSERTloopflag = "TRUE";
+	$INSERTsqlLOG='';
 	while ($INSERTloopflag == "TRUE")
 		{
 		$SQL = "INSERT INTO vicidial_inbound_dids (did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension,did_carrier_description) VALUES ('$DIDto_insert_CONFIRMED[$INSERTindex]','$did_description','$did_active','$did_route','$extension','$exten_context','$voicemail_ext','$phone','$server_ip','$user','$user_unavailable_action','$user_route_settings_ingroup','$group_id','$call_handle_method','$agent_search_method','$list_id','$ACCIDcampaign_id','$phone_code','$menu_id','$record_call','$filter_inbound_number','$filter_phone_group_id','$filter_url','$filter_action','$filter_extension','$filter_exten_context','$filter_voicemail_ext','$filter_phone','$filter_server_ip','$filter_user','$filter_user_unavailable_action','$filter_user_route_settings_ingroup','$filter_group_id','$filter_call_handle_method','$filter_agent_search_method','$filter_list_id','$filter_campaign_id','$filter_phone_code','$filter_menu_id','$filter_clean_cid_number','$custom_one','$custom_two','$custom_three','$custom_four','$custom_five','$user_group','$filter_dnc_campaign','$filter_url_did_redirect','$no_agent_ingroup_redirect','$no_agent_ingroup_id','$no_agent_ingroup_extension','$pre_filter_phone_group_id','$pre_filter_extension','$entry_list_id','$filter_entry_list_id','$max_queue_ingroup_calls','$max_queue_ingroup_id','$max_queue_ingroup_extension','$did_carrier_description')";
@@ -946,11 +1023,12 @@ elseif ($form_to_run == "DIDADDconfirmed")
 			}
 		if ($DB) {echo "$SQL|";}
 		$SQL_rslt = mysql_to_mysqli($SQL, $link);
+		$INSERTsqlLOG .= "$SQL|";
 		}
 			
 	### Log our stuff
 	$SQL_sentence = "DIDs copied from inbound DID #$did_id - $did_pattern:" . $SQL_sentence;
-	$SQL_log = "INSERT INTO vicidial_inbound_dids (did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension,did_carrier_description) VALUES ('$DIDto_insert_CONFIRMED[0]','$did_description','$did_active','$did_route','$extension','$exten_context','$voicemail_ext','$phone','$server_ip','$user','$user_unavailable_action','$user_route_settings_ingroup','$group_id','$call_handle_method','$agent_search_method','$list_id','$ACCIDcampaign_id','$phone_code','$menu_id','$record_call','$filter_inbound_number','$filter_phone_group_id','$filter_url','$filter_action','$filter_extension','$filter_exten_context','$filter_voicemail_ext','$filter_phone','$filter_server_ip','$filter_user','$filter_user_unavailable_action','$filter_user_route_settings_ingroup','$filter_group_id','$filter_call_handle_method','$filter_agent_search_method','$filter_list_id','$filter_campaign_id','$filter_phone_code','$filter_menu_id','$filter_clean_cid_number','$custom_one','$custom_two','$custom_three','$custom_four','$custom_five','$user_group','$filter_dnc_campaign','$filter_url_did_redirect','$no_agent_ingroup_redirect','$no_agent_ingroup_id','$no_agent_ingroup_extension','$pre_filter_phone_group_id','$pre_filter_extension','$entry_list_id','$filter_entry_list_id','$max_queue_ingroup_calls','$max_queue_ingroup_id','$max_queue_ingroup_extension','$did_carrier_description')";
+	$SQL_log = $INSERTsqlLOG;
 	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='DIDS', event_type='COPY', record_id='$did_id', event_code='ADMIN COPY BULK DID', event_sql=\"$SQL_log\", event_notes='$SQL_sentence';";
@@ -1313,6 +1391,7 @@ elseif ($form_to_run == "BULKUSERSconfirmed")
 	### Loop through users and insert in groups
 	$INSERTindex = 0;
 	$INSERTloopflag = "TRUE";
+	$INSERTsqlLOG='';
 	while ($INSERTloopflag == "TRUE")
 		{
 		$SQL = "INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,modify_email_accounts,failed_login_count,last_login_date,last_ip,pass_hash,alter_admin_interface_options,max_inbound_calls,modify_custom_dialplans,wrapup_seconds_override,modify_languages,selected_language,user_choose_language,ignore_group_on_search,api_list_restrict,api_allowed_functions,lead_filter_id,admin_cf_show_hidden,agentcall_chat,user_hide_realtime,access_recordings) VALUES ('$USERto_insert[$INSERTindex]','$USERto_insert[$INSERTindex]','$USERto_insert[$INSERTindex]','$user_level','$user_group','$phone_login','$phone_pass','$delete_users','$delete_user_groups','$delete_lists','$delete_campaigns','$delete_ingroups','$delete_remote_agents','$load_leads','$ACCIDcampaign_detail','$ast_admin_access','$ast_delete_phones','$delete_scripts','$modify_leads','$hotkeys_active','$change_agent_campaign','$agent_choose_ingroups','$closer_campaigns','$scheduled_callbacks','$agentonly_callbacks','$agentcall_manual','$vicidial_recording','$vicidial_transfers','$delete_filters','$alter_agent_interface_options','$closer_default_blended','$delete_call_times','$modify_call_times','$modify_users','$modify_campaigns','$modify_lists','$modify_scripts','$modify_filters','$modify_ingroups','$modify_usergroups','$modify_remoteagents','$modify_servers','$view_reports','$vicidial_recording_override','$alter_custdata_override','$qc_enabled','$qc_user_level','$qc_pass','$qc_finish','$qc_commit','$add_timeclock_log','$modify_timeclock_log','$delete_timeclock_log','$alter_custphone_override','$vdc_agent_api_access','$modify_inbound_dids','$delete_inbound_dids','$user_active','$alert_enabled','$download_lists','$agent_shift_enforcement_override','$manager_shift_enforcement_override','$shift_override_flag','$export_reports','$delete_from_dnc','$email','$user_code','$territory','$allow_alerts','$agent_choose_territories','$custom_one','$custom_two','$custom_three','$custom_four','$custom_five','$voicemail_id','$agent_call_log_view_override','$callcard_admin','$agent_choose_blended','$realtime_block_user_info','$custom_fields_modify','$USERforce_pw','$agent_lead_search_override','$modify_shifts','$modify_phones','$modify_carriers','$modify_labels','$modify_statuses','$modify_voicemail','$modify_audiostore','$modify_moh','$modify_tts','$preset_contact_search','$modify_contacts','$modify_same_user_level','$admin_hide_lead_data','$admin_hide_phone_data','$agentcall_email','$modify_email_accounts','$failed_login_count','$last_login_date','$last_ip','$pass_hash','$alter_admin_interface_options','$max_inbound_calls','$modify_custom_dialplans','$wrapup_seconds_override','$modify_languages','$selected_language','$user_choose_language','$ignore_group_on_search','$api_list_restrict','$api_allowed_functions','$lead_filter_id','$admin_cf_show_hidden','$agentcall_chat','$user_hide_realtime','$access_recordings')";
@@ -1343,11 +1422,12 @@ elseif ($form_to_run == "BULKUSERSconfirmed")
 			}
 		if ($DB) {echo "$SQL|";}
 		$SQL_rslt = mysql_to_mysqli($SQL, $link);
+		$INSERTsqlLOG .= "$SQL|";
 		}
 	
 	#Log our stuff
 	$SQL_sentence = "Users copied from user ID#$user: " . $SQL_sentence;
-	$SQL_log = "INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,modify_email_accounts,failed_login_count,last_login_date,last_ip,pass_hash,alter_admin_interface_options,max_inbound_calls,modify_custom_dialplans,wrapup_seconds_override,modify_languages,selected_language,user_choose_language,ignore_group_on_search,api_list_restrict,api_allowed_functions,lead_filter_id,admin_cf_show_hidden,agentcall_chat,user_hide_realtime,access_recordings) VALUES ('$USERto_insert[0]','$USERto_insert[0]','$USERto_insert[0]','$user_level','$user_group','$phone_login','$phone_pass','$delete_users','$delete_user_groups','$delete_lists','$delete_campaigns','$delete_ingroups','$delete_remote_agents','$load_leads','$ACCIDcampaign_detail','$ast_admin_access','$ast_delete_phones','$delete_scripts','$modify_leads','$hotkeys_active','$change_agent_campaign','$agent_choose_ingroups','$closer_campaigns','$scheduled_callbacks','$agentonly_callbacks','$agentcall_manual','$vicidial_recording','$vicidial_transfers','$delete_filters','$alter_agent_interface_options','$closer_default_blended','$delete_call_times','$modify_call_times','$modify_users','$modify_campaigns','$modify_lists','$modify_scripts','$modify_filters','$modify_ingroups','$modify_usergroups','$modify_remoteagents','$modify_servers','$view_reports','$vicidial_recording_override','$alter_custdata_override','$qc_enabled','$qc_user_level','$qc_pass','$qc_finish','$qc_commit','$add_timeclock_log','$modify_timeclock_log','$delete_timeclock_log','$alter_custphone_override','$vdc_agent_api_access','$modify_inbound_dids','$delete_inbound_dids','$user_active','$alert_enabled','$download_lists','$agent_shift_enforcement_override','$manager_shift_enforcement_override','$shift_override_flag','$export_reports','$delete_from_dnc','$email','$user_code','$territory','$allow_alerts','$agent_choose_territories','$custom_one','$custom_two','$custom_three','$custom_four','$custom_five','$voicemail_id','$agent_call_log_view_override','$callcard_admin','$agent_choose_blended','$realtime_block_user_info','$custom_fields_modify','$USERforce_pw','$agent_lead_search_override','$modify_shifts','$modify_phones','$modify_carriers','$modify_labels','$modify_statuses','$modify_voicemail','$modify_audiostore','$modify_moh','$modify_tts','$preset_contact_search','$modify_contacts','$modify_same_user_level','$admin_hide_lead_data','$admin_hide_phone_data','$agentcall_email','$modify_email_accounts','$failed_login_count','$last_login_date','$last_ip','$pass_hash','$alter_admin_interface_options','$max_inbound_calls','$modify_custom_dialplans','$wrapup_seconds_override','$modify_languages','$selected_language','$user_choose_language','$ignore_group_on_search','$api_list_restrict','$api_allowed_functions','$lead_filter_id','$admin_cf_show_hidden','$agentcall_chat','$user_hide_realtime','$access_recordings')";
+	$SQL_log = "$INSERTsqlLOG";
 	$SQL_log = preg_replace('/;/', '', $SQL_log);
 	$SQL_log = addslashes($SQL_log);
 	$admin_log_stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='COPY', record_id='$USERcopy_from', event_code='ADMIN COPY BULK USERS', event_sql=\"$SQL_log\", event_notes='$SQL_sentence';";
@@ -1530,8 +1610,13 @@ else
 		echo "<center><table width=$section_width cellspacing='3'>";
 		echo "<col width=50%><col width=50%>";
 		echo "<tr bgcolor=#". $SSmenu_background ."><td colspan=2 align=center><font color=white><b>"._QXZ("AC-CID Bulk Add")."</b>$NWB#ACCIDADD$NWE</font></td></tr>\n";
+		echo "<tr bgcolor=#". $SSstd_row1_background ."><td align=right>"._QXZ("Method").": </td><td align=left><select size=1 name=ACCIDmethod>\n";	
+		echo "<option value='CID'>"._QXZ("STATE LOOKUP")."</option>\n";
+		echo "<option value='CSV'>"._QXZ("CSV")."</option>\n";
+		echo "<option value='STATEFILL'>"._QXZ("STATE FILL")."</option>\n";
+		echo "</select></td></tr>\n";
 		echo "<tr bgcolor=#". $SSstd_row1_background ."><td align=right>"._QXZ("Campaign").":</td><td align=left>\n";
-		
+				
 		$ACCIDcampaigns_to_copy = array();
 		$SQL="SELECT campaign_id,campaign_name FROM vicidial_campaigns WHERE $allowed_campaignsSQL AND $admin_viewable_groupsSQL ORDER BY campaign_id ASC;";
 		if ($DB) {echo "$SQL|";}
@@ -1561,7 +1646,7 @@ else
 		echo "<option value='N'>No</option>\n";
 		echo "<option value='Y'>Yes</option>\n";
 		echo "</select></td></tr>\n";	
-		echo "<tr bgcolor=#". $SSstd_row1_background ."><td align=right>"._QXZ("AC-CIDs").":</td><td align=left><textarea name='ACCIDdids' cols='11' rows='10'></textarea></td>\n";	
+		echo "<tr bgcolor=#". $SSstd_row1_background ."><td align=right>"._QXZ("AC-CIDs").":</td><td align=left><textarea name='ACCIDdids' cols='70' rows='10'></textarea></td>\n";	
 		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input type=submit name=accid_submit value='Submit'></td></tr>\n";
 		echo "</table></center></form>\n";
 		echo "</html>";
