@@ -13,10 +13,11 @@
 # 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 # 160523-0630 - Fixed vicidial_stylesheet issues
 # 161217-0827 - Added code for multi-user internal chat sessions
+# 161221-0801 - Added color-coding for users in internal chat sessions
 #
 
-$admin_version = '2.14-7';
-$build = '161217-0827';
+$admin_version = '2.14-8';
+$build = '161221-0801';
 
 $sh="managerchats"; 
 
@@ -445,6 +446,8 @@ function RefreshActiveChatView() {
 	var user=document.getElementById("user").value;
 	var pass='<?php echo $pass ?>';
 	var ChatReloadIDNumber=document.getElementById("ChatReloadIDNumber").value;
+	var manager_chat_id=document.getElementById("CurrentActiveChat").value;
+	var manager_chat_subid=document.getElementById("CurrentActiveChatSubID").value;
 	var xmlhttp=false;
 	/*@cc_on @*/
 	/*@if (@_jscript_version >= 5)
@@ -466,7 +469,7 @@ function RefreshActiveChatView() {
 		}
 	if (xmlhttp) 
 		{ 
-		var chat_SQL_query = "action=RefreshActiveChatView&user="+user+"&pass="+pass+"&ChatReloadIDNumber="+ChatReloadIDNumber;
+		var chat_SQL_query = "action=RefreshActiveChatView&user="+user+"&pass="+pass+"&ChatReloadIDNumber="+ChatReloadIDNumber+"&manager_chat_id="+manager_chat_id+"&manager_chat_subid="+manager_chat_subid;
 		xmlhttp.open('POST', 'chat_db_query.php'); 
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		xmlhttp.send(chat_SQL_query); 

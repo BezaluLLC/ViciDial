@@ -1681,7 +1681,8 @@ rec_prompt_count INT(9) UNSIGNED default '0',
 agent_soundboards ENUM('1','0') default '0',
 web_loader_phone_length VARCHAR(10) default 'DISABLED',
 agent_script VARCHAR(50) default 'vicidial.php',
-vdad_debug_logging ENUM('1','0') default '0'
+vdad_debug_logging ENUM('1','0') default '0',
+agent_chat_screen_colors VARCHAR(20) default 'default'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3844,4 +3845,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1482',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1483',db_schema_update_date=NOW(),reload_timestamp=NOW();

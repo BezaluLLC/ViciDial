@@ -103,6 +103,7 @@
 # 161106-2102 - Added agent_script
 # 161126-1815 - Fixed several spelling errors
 # 161207-1958 - Added Agent DID Stats report entry
+# 161222-0843 - Added agent_chat_screen_colors entry
 #
 
 
@@ -5275,6 +5276,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-agent_screen_colors">
 <BR>
 <B><?php echo _QXZ("Agent Screen Colors"); ?> -</B><?php echo _QXZ("This feature allows you to set different color schemes and logo for the agent screen. These can be defined in the Screen Colors section. Default is default, for the standard blue screen colors"); ?>
+
+<BR>
+<A NAME="settings-agent_chat_screen_colors">
+<BR>
+<B><?php echo _QXZ("Agent Chat Screen Colors"); ?> -</B><?php echo _QXZ("This feature allows you to set the different colors that are used for the users chatting within the internal chat window in the agent screen. These can be defined in the Screen Colors section, and only the five standard and three alternate colors are used. Default is default, for a standard set of eight colors"); ?>
 
 <BR>
 <A NAME="settings-label_hide_field_logs">

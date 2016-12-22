@@ -20,6 +20,7 @@
 # 160818-1236 - Added chat colors, usre nickname and scrolling
 # 160831-2225 - Agent-to-agent interface now color-coded using system settings, if desired
 # 161217-0824 - Added code for multi-user internal chat sessions
+# 161221-0800 - Added color-coding for users in internal chat sessions
 #
 
 require("dbconnect_mysqli.php");
@@ -244,16 +245,19 @@ if ($action=="DisplayMgrAgentChat" && $manager_chat_id && $manager_chat_subid &&
 			}
 		}
 
-		$chat_color_stmt="select menu_background, frame_background, std_row1_background, std_row2_background, std_row3_background, std_row4_background, std_row5_background from system_settings s, vicidial_screen_colors v where s.agent_screen_colors=v.colors_id and length(frame_background)=6 and length(menu_background)=6 limit 1;";
+		$chat_color_stmt="select std_row1_background, std_row2_background, std_row3_background, std_row4_background, std_row5_background, alt_row1_background, alt_row2_background, alt_row3_background from system_settings s, vicidial_screen_colors v where s.agent_chat_screen_colors=v.colors_id and length(std_row1_background)=6 and length(std_row2_background)=6 and s.agent_chat_screen_colors!='default' limit 1;";
 		$color_rslt=mysql_to_mysqli($chat_color_stmt, $link);
-		if(mysqli_num_rows($color_rslt)>0 && $use_agent_colors>0) {
+		if(mysqli_num_rows($color_rslt)>0 && $use_agent_colors>0) 
+			{
 			$color_row=mysqli_fetch_array($color_rslt);
-			$color_array=array("#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000");
-			$chat_background_array=array("#$color_row[std_row1_background]", "#$color_row[std_row2_background]", "#$color_row[std_row3_background]", "#$color_row[std_row4_background]", "#$color_row[std_row5_background]", "#$color_row[frame_background]", "#$color_row[menu_background]"); 
-		} else {
-			$color_array=array("#FF0000", "#0000FF", "#009900", "#990099", "#009999", "#666600", "#999999");
-			$chat_background_array=array("#FFCCCC", "#CCCCFF", "#CCFFCC", "#FFCCFF", "#CCFFFF", "#CCCC99", "#CCCCCC"); 
-		}
+			$color_array=array("#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000");
+			$chat_background_array=array("#$color_row[std_row1_background]", "#$color_row[std_row2_background]", "#$color_row[std_row3_background]", "#$color_row[std_row4_background]", "#$color_row[std_row5_background]", "#$color_row[alt_row1_background]", "#$color_row[alt_row2_background]", "#$color_row[alt_row3_background]"); 
+			}
+		else
+			{
+			$color_array=array("#CC0000", "#009900", "#000099", "#999900", "#993300", "#330066", "#009999", "#660033");
+			$chat_background_array=array("#FFCCCC", "#CCFFCC", "#CCCCFF", "#FFFFCC", "#FFCC99", "#CC99FF", "#CCFFFF", "#FF99CC"); 
+			}
 
 		while($row=mysqli_fetch_row($rslt)) {
 			if (!$chat_start_date) {$chat_start_date=$row[6];}
@@ -420,30 +424,59 @@ if ($action=="RefreshActiveChatView" && $user) {
 	sort($active_chats_array);
 	asort($chat_managers_array);
 
-#	Removed this on 2016-12-09, because a) the active chat display should be refreshing when an agent is added to a chat, and the agent already in the chat isn't seeing the change, and b) the below section isn't querying the database anyway, so it won't affect page performance.
-#	if ($new_ChatReloadIDNumber!=$ChatReloadIDNumber) {
-		echo "$new_ChatReloadIDNumber|";
-		echo "<ul class='chatview'>";
-		if (empty($chat_managers_array)) {
-			echo "\t<li class='arial_bold'>"._QXZ("NO OPEN CHATS")."</li>\n";
-		} else {
-			while (list($manager_chat_id, $text) = each($chat_managers_array)) {
-				$manager_chat_subid=$chat_subid_array[$manager_chat_id];
-				if (!empty($unread_chats_array) && in_array($manager_chat_id, $unread_chats_array)) {$cclass="unreadchat";} else {$cclass="viewedchat";}
-				echo "\t<li class='".$cclass."'><a onClick=\"document.getElementById('CurrentActiveChat').value='$manager_chat_id'; document.getElementById('CurrentActiveChatSubID').value='$manager_chat_subid'; document.getElementById('AgentManagerOverride').value='".$agents_managers_array[$manager_chat_id]."'; LoadAvailableAgentsForChat('AllLiveNonChatAgents', 'agent_to_add');\">Chat #".$manager_chat_id."</a></li>\n"; # $chat_managers_array[$manager_chat_id] 
-				$additional_agents_stmt="select concat(manager, selected_agents) as participants from vicidial_manager_chats where manager_chat_id='$manager_chat_id'";
-				$additional_agents_rslt=mysql_to_mysqli($additional_agents_stmt, $link);
-				$aa_row=mysqli_fetch_row($additional_agents_rslt);
-				$additional_agents=preg_replace("/^\||\|$/", "", $aa_row[0]);
-				$additional_agents=preg_replace("/\|/", "','", $additional_agents);
-				$full_name_stmt="select full_name from vicidial_users where user in ('$additional_agents') and user!='$user' order by full_name asc";
-				$full_name_rslt=mysql_to_mysqli($full_name_stmt, $link);
-				while ($fname_row=mysqli_fetch_row($full_name_rslt)) {
-					echo "\t<li class='additional_agents'><a onClick=\"document.getElementById('CurrentActiveChat').value='$manager_chat_id'; document.getElementById('CurrentActiveChatSubID').value='$manager_chat_subid'; document.getElementById('AgentManagerOverride').value='".$agents_managers_array[$manager_chat_id]."'; LoadAvailableAgentsForChat('AllLiveNonChatAgents', 'agent_to_add');\">".$fname_row[0]."</a></li>\n";
-				}
+		# Create color-coding for internal chat
+		$cc_stmt="select * from vicidial_manager_chat_log where manager_chat_id='$manager_chat_id' and manager_chat_subid='$manager_chat_subid' order by message_date asc";
+		$cc_rslt=mysql_to_mysqli($cc_stmt, $link);
+		$chat_members=array();
+		while ($cc_row=mysqli_fetch_row($cc_rslt)) {
+			if (!in_array("$cc_row[9]", $chat_members)) {
+				array_push($chat_members, "$cc_row[9]");
 			}
 		}
-		echo "</ul>\n";
+
+		$chat_color_stmt="select std_row1_background, std_row2_background, std_row3_background, std_row4_background, std_row5_background, alt_row1_background, alt_row2_background, alt_row3_background from system_settings s, vicidial_screen_colors v where s.agent_chat_screen_colors=v.colors_id and length(std_row1_background)=6 and length(std_row2_background)=6 and s.agent_chat_screen_colors!='default' limit 1;";
+		$color_rslt=mysql_to_mysqli($chat_color_stmt, $link);
+		if(mysqli_num_rows($color_rslt)>0 && $use_agent_colors>0) 
+			{
+			$color_row=mysqli_fetch_array($color_rslt);
+			$color_array=array("#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000");
+			$chat_background_array=array("#$color_row[std_row1_background]", "#$color_row[std_row2_background]", "#$color_row[std_row3_background]", "#$color_row[std_row4_background]", "#$color_row[std_row5_background]", "#$color_row[alt_row1_background]", "#$color_row[alt_row2_background]", "#$color_row[alt_row3_background]"); 
+			}
+		else
+			{
+			$color_array=array("#CC0000", "#009900", "#000099", "#999900", "#993300", "#330066", "#009999", "#660033");
+			$chat_background_array=array("#FFCCCC", "#CCFFCC", "#CCCCFF", "#FFFFCC", "#FFCC99", "#CC99FF", "#CCFFFF", "#FF99CC"); 
+			}
+
+
+#	Removed this on 2016-12-09, because a) the active chat display should be refreshing when an agent is added to a chat, and the agent already in the chat isn't seeing the change, and b) the below section isn't querying the database anyway, so it won't affect page performance.
+#	if ($new_ChatReloadIDNumber!=$ChatReloadIDNumber) {
+	echo "$new_ChatReloadIDNumber|";
+	echo "<ul class='chatview'>";
+	if (empty($chat_managers_array)) {
+		echo "\t<li class='arial_bold'>"._QXZ("NO OPEN CHATS")."</li>\n";
+	} else {
+		while (list($manager_chat_id, $text) = each($chat_managers_array)) {
+			$manager_chat_subid=$chat_subid_array[$manager_chat_id];
+			if (!empty($unread_chats_array) && in_array($manager_chat_id, $unread_chats_array)) {$cclass="unreadchat";} else {$cclass="viewedchat";}
+			echo "\t<li class='".$cclass."'><a onClick=\"document.getElementById('CurrentActiveChat').value='$manager_chat_id'; document.getElementById('CurrentActiveChatSubID').value='$manager_chat_subid'; document.getElementById('AgentManagerOverride').value='".$agents_managers_array[$manager_chat_id]."'; LoadAvailableAgentsForChat('AllLiveNonChatAgents', 'agent_to_add');\">Chat #".$manager_chat_id."</a></li>\n"; # $chat_managers_array[$manager_chat_id] 
+			$additional_agents_stmt="select concat(manager, selected_agents) as participants from vicidial_manager_chats where manager_chat_id='$manager_chat_id'";
+			$additional_agents_rslt=mysql_to_mysqli($additional_agents_stmt, $link);
+			$aa_row=mysqli_fetch_row($additional_agents_rslt);
+			$additional_agents=preg_replace("/^\||\|$/", "", $aa_row[0]);
+			$additional_agents=preg_replace("/\|/", "','", $additional_agents);
+			$full_name_stmt="select full_name, user from vicidial_users where user in ('$additional_agents') and user!='$user' order by full_name asc";
+			$full_name_rslt=mysql_to_mysqli($full_name_stmt, $link);
+			while ($fname_row=mysqli_fetch_row($full_name_rslt)) {
+
+				$chat_color_key=array_search("$fname_row[1]", $chat_members);
+				# $chat_output_text="<tr><td bgcolor='$chat_background_array[$chat_color_key]'><font color='$color_array[$chat_color_key]' FACE=\"ARIAL,HELVETICA\" size='2' class='bold'>$row[1]</font></td></tr>".$chat_output_text;
+
+				echo "\t<li class='additional_agents' style='background-color:".$chat_background_array[$chat_color_key].";'><a onClick=\"document.getElementById('CurrentActiveChat').value='$manager_chat_id'; document.getElementById('CurrentActiveChatSubID').value='$manager_chat_subid'; document.getElementById('AgentManagerOverride').value='".$agents_managers_array[$manager_chat_id]."'; LoadAvailableAgentsForChat('AllLiveNonChatAgents', 'agent_to_add');\">".$fname_row[0]."</a></li>\n";
+			}
+		}
+	}
+	echo "</ul>\n";
 #	}
 }
 
@@ -888,16 +921,19 @@ if ($action=="update_agent_chat_window" && $chat_id) {
 					}
 				}
 
-				$chat_color_stmt="select menu_background, frame_background, std_row1_background, std_row2_background, std_row3_background, std_row4_background, std_row5_background from system_settings s, vicidial_screen_colors v where s.agent_screen_colors=v.colors_id and length(frame_background)=6 and length(menu_background)=6 limit 1;";
+				$chat_color_stmt="select std_row1_background, std_row2_background, std_row3_background, std_row4_background, std_row5_background, alt_row1_background, alt_row2_background, alt_row3_background from system_settings s, vicidial_screen_colors v where s.agent_chat_screen_colors=v.colors_id and length(std_row1_background)=6 and length(std_row2_background)=6 and s.agent_chat_screen_colors!='default' limit 1;";
 				$color_rslt=mysql_to_mysqli($chat_color_stmt, $link);
-				if(mysqli_num_rows($color_rslt)>0 && $use_agent_colors>0) {
+				if(mysqli_num_rows($color_rslt)>0 && $use_agent_colors>0) 
+					{
 					$color_row=mysqli_fetch_array($color_rslt);
-					$color_array=array("#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000");
-					$chat_background_array=array("#$color_row[std_row1_background]", "#$color_row[std_row2_background]", "#$color_row[std_row3_background]", "#$color_row[std_row4_background]", "#$color_row[std_row5_background]", "#$color_row[frame_background]", "#$color_row[menu_background]"); 
-				} else {
-					$color_array=array("#FF0000", "#0000FF", "#009900", "#990099", "#009999", "#666600", "#999999");
-					$chat_background_array=array("#FFCCCC", "#CCCCFF", "#CCFFCC", "#FFCCFF", "#CCFFFF", "#CCCC99", "#CCCCCC"); 
-				}
+					$color_array=array("#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000", "#000000");
+					$chat_background_array=array("#$color_row[std_row1_background]", "#$color_row[std_row2_background]", "#$color_row[std_row3_background]", "#$color_row[std_row4_background]", "#$color_row[std_row5_background]", "#$color_row[alt_row1_background]", "#$color_row[alt_row2_background]", "#$color_row[alt_row3_background]"); 
+					}
+				else
+					{
+					$color_array=array("#CC0000", "#009900", "#000099", "#999900", "#993300", "#330066", "#009999", "#660033");
+					$chat_background_array=array("#FFCCCC", "#CCFFCC", "#CCCCFF", "#FFFFCC", "#FFCC99", "#CC99FF", "#CCFFFF", "#FF99CC"); 
+					}
 
 				## GRAB CHAT MESSAGES AND DISPLAY THEM
 				if (!$user_level || $user_level==0) {$user_level_clause=" and chat_level='0' ";} else {$user_level_clause="";}

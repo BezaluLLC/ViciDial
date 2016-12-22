@@ -22,3 +22,7 @@ ALTER TABLE vicidial_manager_chat_log ADD column message_id VARCHAR(20) after me
 ALTER TABLE vicidial_manager_chat_log_archive ADD column message_id VARCHAR(20) after message;
 
 UPDATE system_settings SET db_schema_version='1482',db_schema_update_date=NOW() where db_schema_version < 1482;
+
+ALTER TABLE system_settings ADD agent_chat_screen_colors VARCHAR(20) default 'default';
+
+UPDATE system_settings SET db_schema_version='1483',db_schema_update_date=NOW() where db_schema_version < 1483;
