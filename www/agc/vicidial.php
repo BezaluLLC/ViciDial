@@ -535,10 +535,11 @@
 # 161126-2152 - Release of 2.13 stable branch and raising trunk to 2.14
 # 161217-0826 - Added debug logging of dead call trigger
 # 161222-0727 - Fixed issue with Scheduled Callbacks with tilde'~' in text fields
+# 161222-1111 - Added more debug logging of events
 #
 
-$version = '2.14-505c';
-$build = '161222-0727';
+$version = '2.14-506c';
+$build = '161222-1111';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -5365,25 +5366,30 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								}
 							if ( (AGLogiN == 'DEAD_VLA') && ( (vicidial_agent_disable == 'LIVE_AGENT') || (vicidial_agent_disable == 'ALL') ) )
 								{
+								button_click_log = button_click_log + "" + SQLdate + "-----agent_disabled---" + AGLogiN + " " + vicidial_agent_disable + "|";
 								showDiv('AgenTDisablEBoX');
 								refresh_interval = 7300000;
 								}
 							if ( (AGLogiN == 'DEAD_EXTERNAL') && ( (vicidial_agent_disable == 'EXTERNAL') || (vicidial_agent_disable == 'ALL') ) )
 								{
+								button_click_log = button_click_log + "" + SQLdate + "-----agent_disabled---" + AGLogiN + " " + vicidial_agent_disable + "|";
 								showDiv('AgenTDisablEBoX');
 								refresh_interval = 7300000;
 								}
 							if ( (AGLogiN == 'TIME_SYNC') && (vicidial_agent_disable == 'ALL') )
 								{
+								button_click_log = button_click_log + "" + SQLdate + "-----system_disabled---" + AGLogiN + " " + vicidial_agent_disable + "|";
 								showDiv('SysteMDisablEBoX');
 								}
 							if (AGLogiN == 'SHIFT_LOGOUT')
 								{
+								button_click_log = button_click_log + "" + SQLdate + "-----shift_logout---" + AGLogiN + "|";
 								shift_logout_flag=1;
 								}
 							if (AGLogiN == 'API_LOGOUT')
 								{
 								api_logout_flag=1;
+								button_click_log = button_click_log + "" + SQLdate + "-----api_logout---" + AGLogiN + " " + api_logout_flag + "|";
 								if ( (MD_channel_look < 1) && (VD_live_customer_call < 1) && (alt_dial_status_display < 1) )
 									{LogouT('API','');}
 								}
@@ -5394,6 +5400,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 							if (PausENotifYCounTer > 10)
 								{
+								button_click_log = button_click_log + "" + SQLdate + "-----session_paused---" + VLAStatuS + " " + AutoDialWaiting + "|";
 								alert_box("<?php echo _QXZ("Your session has been paused"); ?>");
 								AutoDial_ReSume_PauSe('VDADpause');
 								PausENotifYCounTer=0;
@@ -5538,6 +5545,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 										}
 									external_transferconf_count=3;
 									}
+								button_click_log = button_click_log + "" + SQLdate + "-----api_transferconf---" + api_transferconf_function + "|";
 								Clear_API_Field('external_transferconf');
 								}
 							}
@@ -5571,6 +5579,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							}
 						if ( (APIHanguP==1) && ( (VD_live_customer_call==1) || (MD_channel_look==1) ) )
 							{
+							button_click_log = button_click_log + "" + SQLdate + "-----api_hangup---" + APIHanguP + "|";
 							hideDiv('CustomerGoneBox');
 							WaitingForNextStep=0;
 							custchannellive=0;
@@ -5579,6 +5588,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							}
 						if ( (APIStatuS.length < 1000) && (APIStatuS.length > 0) && (AgentDispoing > 1) && (APIStatuS != '::::::::::') )
 							{
+							button_click_log = button_click_log + "" + SQLdate + "-----api_status---" + APIStatuS + "|";
 							var regCBmatch = new RegExp('!',"g");
 							if (APIStatuS.match(regCBmatch))
 								{
@@ -5616,6 +5626,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							}
 						if (APIPausE.length > 4)
 							{
+							button_click_log = button_click_log + "" + SQLdate + "-----api_pause---" + APIPausE + "|";
 							var APIPausE_array = APIPausE.split("!");
 							if (APIPausE_ID == APIPausE_array[1])
 								{
@@ -5663,6 +5674,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							}
 						if ( (APIDiaL.length > 9) && (WaitingForNextStep == '0') && (AllowManualQueueCalls == '1') && (check_n > 2) )
 							{
+							button_click_log = button_click_log + "" + SQLdate + "-----api_dial---" + APIDiaL + "|";
 							var APIDiaL_array_detail = APIDiaL.split("!");
 							if (APIDiaL_ID == APIDiaL_array_detail[6])
 								{
@@ -5770,6 +5782,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							}
 						if (InGroupChange > 0)
 							{
+							button_click_log = button_click_log + "" + SQLdate + "-----api_ingroup_change---" + InGroupChange + " " + InGroupChangeBlend + "|";
 							var external_blended = InGroupChangeBlend;
 							var external_igb_set_user = InGroupChangeUser;
 							external_igb_set_name = InGroupChangeName;
