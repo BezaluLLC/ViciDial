@@ -534,10 +534,11 @@
 # 161117-1532 - Changed default main screen logo background color to white(screen color standard row 5)
 # 161126-2152 - Release of 2.13 stable branch and raising trunk to 2.14
 # 161217-0826 - Added debug logging of dead call trigger
+# 161222-0727 - Fixed issue with Scheduled Callbacks with tilde'~' in text fields
 #
 
-$version = '2.14-504c';
-$build = '161217-0826';
+$version = '2.14-505c';
+$build = '161222-0727';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -6984,7 +6985,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							else
 								{var row_color = '#CCCCFF';}
 							var conv_ct = (loop_ct + conv_start);
-							var call_array = all_CBs_array[conv_ct].split(" ~");
+							var call_array = all_CBs_array[conv_ct].split("-!T-");
 							var CB_name = call_array[0] + " " + call_array[1];
 							var CB_phone = call_array[2];
 							var CB_id = call_array[3];

@@ -416,10 +416,11 @@
 # 161101-2103 - Added user overall new lead limit
 # 161102-1044 - Fixed QM partition problem
 # 161117-0622 - Fixes for rare vicidial_log and recording_log issues
+# 161222-0728 - Fixed issue with Scheduled Callbacks with tilde'~' in text fields
 #
 
-$version = '2.12-310';
-$build = '161117-0622';
+$version = '2.14-311';
+$build = '161222-0728';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=658;
@@ -14756,7 +14757,8 @@ if ($ACTION == 'CalLBacKLisT')
 				$PHONEdialable = dialable_gmt($DB,$link,$local_call_time,$row[3],$row[4]);
 				}
 			}
-		echo "$row[0] ~$row[1] ~$row[2] ~$callback_id[$loop_count] ~$lead_id[$loop_count] ~$campaign_id[$loop_count] ~$status[$loop_count] ~$entry_time[$loop_count] ~$callback_time[$loop_count] ~$comments[$loop_count] ~$PHONEdialable\n";
+		$CBoutput = "$row[0]-!T-$row[1]-!T-$row[2]-!T-$callback_id[$loop_count]-!T-$lead_id[$loop_count]-!T-$campaign_id[$loop_count]-!T-$status[$loop_count]-!T-$entry_time[$loop_count]-!T-$callback_time[$loop_count]-!T-$comments[$loop_count]-!T-$PHONEdialable";
+		echo "$CBoutput\n";
 		$loop_count++;
 		}
 
