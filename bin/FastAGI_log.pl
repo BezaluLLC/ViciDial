@@ -74,6 +74,7 @@
 # 161102-1034 - Fixed QM partition problem
 # 161214-1717 - Fix for rare multi-server grab from IVR park issue
 # 161226-1135 - rolled back previous fix
+# 161226-1211 - Fix for previous rolled-back code
 #
 
 # defaults for PreFork
@@ -1059,48 +1060,48 @@ sub process_request
 							}
 						$sthA->finish();
 
-#						if ($PC_count_rows < 1)
-#							{
-#							$PC_server_ip='';
-#							# check parked_channels_recent table
-#							$secX = time();
-#							$Ptarget = ($secX - 7200);	# look back 2 hours
-#							($Psec,$Pmin,$Phour,$Pmday,$Pmon,$Pyear,$Pwday,$Pyday,$Pisdst) = localtime($Ptarget);
-#							$Pyear = ($Pyear + 1900);
-#							$Pmon++;
-#							if ($Pmon < 10) {$Pmon = "0$Pmon";}
-#							if ($Pmday < 10) {$Pmday = "0$Pmday";}
-#							if ($Phour < 10) {$Phour = "0$Phour";}
-#							if ($Pmin < 10) {$Pmin = "0$Pmin";}
-#							if ($Psec < 10) {$Psec = "0$Psec";}
-#								$PSQLdate = "$Pyear-$Pmon-$Pmday $Phour:$Pmin:$Psec";
-#
-#							$stmtA = "SELECT channel,server_ip from parked_channels_recent where channel_group='$callerid' and park_end_time > \"$PSQLdate\" order by park_end_time desc limit 1;";
-#								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-#							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-#							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-#							$PC_count_rows=$sthA->rows;
-#							if ($PC_count_rows > 0)
-#								{
-#								$PCR_count++;
-#								@aryA = $sthA->fetchrow_array;
-#								$PC_channel =	$aryA[0];
-#								$PC_server_ip = $aryA[1];
-#								}
-#							$sthA->finish();
-#
-#							if ($PC_server_ip ne $VARserver_ip) 
-#								{
-#								$PC_count_rows=0;
-#								$PLC_count=1;
-#								if ($AGILOG) {$agi_string = "VD hangup: VDAC record found with park record OTHER SERVER: $channel($PC_count_rows|$PCR_count) $PC_channel $uniqueid $calleridname $VARserver_ip|$PC_server_ip";   &agi_output;}
-#								}
-#							else
-#								{
-#								$PC_count_rows=0;
-#								$PC_channel='';
-#								}
-#							}
+						if ($PC_count_rows < 1)
+							{
+							$PC_server_ip='';
+							# check parked_channels_recent table
+							$secX = time();
+							$Ptarget = ($secX - 7200);	# look back 2 hours
+							($Psec,$Pmin,$Phour,$Pmday,$Pmon,$Pyear,$Pwday,$Pyday,$Pisdst) = localtime($Ptarget);
+							$Pyear = ($Pyear + 1900);
+							$Pmon++;
+							if ($Pmon < 10) {$Pmon = "0$Pmon";}
+							if ($Pmday < 10) {$Pmday = "0$Pmday";}
+							if ($Phour < 10) {$Phour = "0$Phour";}
+							if ($Pmin < 10) {$Pmin = "0$Pmin";}
+							if ($Psec < 10) {$Psec = "0$Psec";}
+								$PSQLdate = "$Pyear-$Pmon-$Pmday $Phour:$Pmin:$Psec";
+
+							$stmtA = "SELECT channel,server_ip from parked_channels_recent where channel_group='$callerid' and park_end_time > \"$PSQLdate\" order by park_end_time desc limit 1;";
+								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$PC_count_rows=$sthA->rows;
+							if ($PC_count_rows > 0)
+								{
+								$PCR_count++;
+								@aryA = $sthA->fetchrow_array;
+								$PC_channel =	$aryA[0];
+								$PC_server_ip = $aryA[1];
+								}
+							$sthA->finish();
+
+							if ( (length($PC_server_ip) > 5) && ($PC_server_ip ne $VARserver_ip) )
+								{
+								$PC_count_rows=0;
+								$PLC_count=1;
+								if ($AGILOG) {$agi_string = "VD hangup: VDAC record found with park record OTHER SERVER: $channel($PC_count_rows|$PCR_count) $PC_channel $uniqueid $calleridname $VARserver_ip|$PC_server_ip";   &agi_output;}
+								}
+							else
+								{
+								$PC_count_rows=0;
+								$PC_channel='';
+								}
+							}
 
 						if ($PC_count_rows > 0)
 							{
