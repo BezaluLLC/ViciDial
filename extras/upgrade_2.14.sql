@@ -26,3 +26,7 @@ UPDATE system_settings SET db_schema_version='1482',db_schema_update_date=NOW() 
 ALTER TABLE system_settings ADD agent_chat_screen_colors VARCHAR(20) default 'default';
 
 UPDATE system_settings SET db_schema_version='1483',db_schema_update_date=NOW() where db_schema_version < 1483;
+
+ALTER TABLE servers ADD conf_qualify ENUM('Y','N') default 'Y';
+
+UPDATE system_settings SET db_schema_version='1484',db_schema_update_date=NOW() where db_schema_version < 1484;

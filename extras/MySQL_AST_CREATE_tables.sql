@@ -158,7 +158,8 @@ auto_restart_asterisk ENUM('Y','N') default 'N',
 asterisk_temp_no_restart ENUM('Y','N') default 'N',
 voicemail_dump_exten_no_inst VARCHAR(20) default '85026666666667',
 gather_asterisk_output ENUM('Y','N') default 'N',
-web_socket_url VARCHAR(255) default ''
+web_socket_url VARCHAR(255) default '',
+conf_qualify ENUM('Y','N') default 'Y'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -3845,4 +3846,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1483',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1484',db_schema_update_date=NOW(),reload_timestamp=NOW();

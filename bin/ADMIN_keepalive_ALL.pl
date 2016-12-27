@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# ADMIN_keepalive_ALL.pl   version  2.12
+# ADMIN_keepalive_ALL.pl   version  2.14
 #
 # Designed to keep the astGUIclient processes alive and check every minute
 # Replaces all other ADMIN_keepalive scripts
@@ -112,9 +112,10 @@
 # 160324-1655 - Added callback_useronly_move_minutes option
 # 161014-0839 - Added vicidial_user_list_new_lead daily reset
 # 161116-0658 - Added purge of vicidial_ajax_log records older than 7 days to end of day process
+# 161226-2218 - Added conf_qualify option
 #
 
-$build = '161116-0658';
+$build = '161226-2218';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -860,7 +861,7 @@ if ($sthArows > 0)
 $sthA->finish();
 
 ##### Get the settings for this server's server_ip #####
-$stmtA = "SELECT active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,asterisk_version,sounds_update,conf_secret,custom_dialplan_entry,auto_restart_asterisk,asterisk_temp_no_restart,gather_asterisk_output FROM servers where server_ip='$server_ip';";
+$stmtA = "SELECT active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,asterisk_version,sounds_update,conf_secret,custom_dialplan_entry,auto_restart_asterisk,asterisk_temp_no_restart,gather_asterisk_output,conf_qualify FROM servers where server_ip='$server_ip';";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -878,6 +879,7 @@ if ($sthArows > 0)
 	$auto_restart_asterisk =		$aryA[7];
 	$asterisk_temp_no_restart =		$aryA[8];
 	$gather_asterisk_output =		$aryA[9];
+	$conf_qualify =					$aryA[10];
 	}
 $sthA->finish();
 
@@ -1955,7 +1957,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	$Liax .= "permit=0.0.0.0/0.0.0.0\n";
 	$Liax .= "disallow=all\n";
 	$Liax .= "allow=ulaw\n";
-	$Liax .= "qualify=yes\n";
+	if ($conf_qualify =~ /Y/) 
+		{$Liax .= "qualify=yes\n";}
 
 	$Liax .= "\n";
 	$Liax .= "[ASTblind]\n";
@@ -1969,7 +1972,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	$Liax .= "permit=0.0.0.0/0.0.0.0\n";
 	$Liax .= "disallow=all\n";
 	$Liax .= "allow=ulaw\n";
-	$Liax .= "qualify=yes\n";
+	if ($conf_qualify =~ /Y/) 
+		{$Liax .= "qualify=yes\n";}
 
 	$Liax .= "\n";
 	$Liax .= "[ASTplay]\n";
@@ -1983,7 +1987,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	$Liax .= "permit=0.0.0.0/0.0.0.0\n";
 	$Liax .= "disallow=all\n";
 	$Liax .= "allow=ulaw\n";
-	$Liax .= "qualify=yes\n";
+	if ($conf_qualify =~ /Y/) 
+		{$Liax .= "qualify=yes\n";}
 
 
 	##### Get the server_id for this server's server_ip #####
@@ -2052,7 +2057,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Liax .= "permit=0.0.0.0/0.0.0.0\n";
 		$Liax .= "disallow=all\n";
 		$Liax .= "allow=ulaw\n";
-		$Liax .= "qualify=yes\n";
+		if ($conf_qualify =~ /Y/) 
+			{$Liax .= "qualify=yes\n";}
 
 		$i++;
 		}

@@ -104,6 +104,7 @@
 # 161126-1815 - Fixed several spelling errors
 # 161207-1958 - Added Agent DID Stats report entry
 # 161222-0843 - Added agent_chat_screen_colors entry
+# 161226-2214 - Added conf_qualify entry
 #
 
 
@@ -4676,6 +4677,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="servers-gather_asterisk_output">
 <BR>
 <B><?php echo _QXZ("Gather Asterisk Output"); ?> -</B><?php echo _QXZ("This setting allows you to activate a process that can run every 5 minutes on an active asterisk server and log the SIP/IAX peers and registry output along with the last 1000 lines of Asterisk CLI output. This output is then available to be displayed in the Asterisk Output Report on the Admin Utilities page. Default is N for inactive."); ?>
+
+<BR>
+<A NAME="servers-conf_qualify">
+<BR>
+<B><?php echo _QXZ("Conf Qualify"); ?> -</B><?php echo _QXZ("This setting allows you to add or remove the qualify entries in the Asterisk conf files. Default is Y for active."); ?>
 
 <BR>
 <A NAME="servers-custom_dialplan_entry">
