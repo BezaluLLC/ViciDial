@@ -417,10 +417,11 @@
 # 161102-1044 - Fixed QM partition problem
 # 161117-0622 - Fixes for rare vicidial_log and recording_log issues
 # 161222-0728 - Fixed issue with Scheduled Callbacks with tilde'~' in text fields
+# 161231-1250 - Fixed issue #985, inbound dispo call url
 #
 
-$version = '2.14-311';
-$build = '161222-0728';
+$version = '2.14-312';
+$build = '161231-1250';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=658;
@@ -10133,9 +10134,12 @@ if ($ACTION == 'updateDISPO')
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00286',$user,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysqli_fetch_row($rslt);
-			$dispo_call_url = $row[0];
-			$DUcampaign_id = $stage;
-			$DUentry_type = 'ingroup';
+			if ($row[0] != 'CAMP')
+				{
+				$dispo_call_url = $row[0];
+				$DUcampaign_id = $stage;
+				$DUentry_type = 'ingroup';
+				}
 			}
 		else
 			{
