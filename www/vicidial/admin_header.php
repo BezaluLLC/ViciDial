@@ -1,7 +1,7 @@
 <?php
 # admin_header.php - VICIDIAL administration header
 #
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 # CHANGES
@@ -68,8 +68,8 @@
 # 160617-1426 - Added link from screen colors to system settings screen color settings
 # 161101-2129 - Added user_new_lead_limit Users subhead
 # 161103-2136 - Added agent_soundboards option
+# 170113-1633 - Added dynamic call menu in-group option DYNAMIC_INGROUP_VAR for use with cm_phonesearch.agi
 #
-
 
 $stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add,allow_chats,enable_languages,admin_row_click,admin_screen_colors,user_new_lead_limit,user_territories_active,qc_features_active,agent_soundboards from system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -980,7 +980,7 @@ if ( ($ADD==3511) or ($ADD==2511) or ($ADD==2611) or ($ADD==4511) or ($ADD==5511
 			new_content = new_content + '<span name=option_route_link_' + option + 'id=option_route_link_' + option + '>';
 			new_content = new_content + "<a href=\"admin.php?ADD=3111&group_id=" + value + "\"><?php echo _QXZ("In-Group"); ?>:</a> </span>";
 			new_content = new_content + '<select size=1 name=option_route_value_' + option + ' id=option_route_value_' + option + ' onChange="call_menu_link("' + option + '","INGROUP");">';
-			new_content = new_content + '' + ingroup_list + "\n" + selected_value + '</select>';
+			new_content = new_content + '' + ingroup_list + "\n" + selected_value + '<option>DYNAMIC_INGROUP_VAR</option></select>';
 			new_content = new_content + " &nbsp; <?php echo _QXZ("Handle Method"); ?>: <select size=1 name=IGhandle_method_" + option + ' id=IGhandle_method_' + option + '>';
 			new_content = new_content + '' + IGhandle_method_list + "\n" + '<option SELECTED>' + IGhandle_method + '</select>';
 			new_content = new_content + ' &nbsp; <a href="javascript:openNewWindow(\'admin.php?ADD=99999#vicidial_call_menu-ingroup_settings\')"><IMG SRC="help.gif" WIDTH=20 HEIGHT=20 BORDER=0 ALT="HELP" ALIGN=TOP></a>';

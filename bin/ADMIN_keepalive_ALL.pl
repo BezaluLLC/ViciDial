@@ -15,7 +15,7 @@
 #  - Auto reset lists at defined times
 #  - Auto restarts Asterisk process if enabled in servers settings
 #
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61011-1348 - First build
@@ -113,9 +113,10 @@
 # 161014-0839 - Added vicidial_user_list_new_lead daily reset
 # 161116-0658 - Added purge of vicidial_ajax_log records older than 7 days to end of day process
 # 161226-2218 - Added conf_qualify option
+# 170113-1645 - Added call menu in-group option DYNAMIC_INGROUP_VAR for use with cm_phonesearch.agi
 #
 
-$build = '161226-2218';
+$build = '170113-1645';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -2863,7 +2864,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 					if ($dtmf_log[$i] > 0) 
 						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i]-----$alt_dtmf_log[$i]-----$question[$i])\n";   $PRI++;}
-					$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(agi-VDAD_ALL_inbound.agi,$IGhandle_method-----$IGsearch_method-----$option_route_value[$j]-----$menu_id[$i]--------------------$IGlist_id-----$IGphone_code-----$IGcampaign_id---------------$IGvid_enter_filename-----$IGvid_id_number_filename-----$IGvid_confirm_filename-----$IGvid_validate_digits)\n";   $PRI++;
+					if ($option_route_value[$j] =~ /DYNAMIC_INGROUP_VAR/) 
+						{
+						$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(agi-VDAD_ALL_inbound.agi,$IGhandle_method-----$IGsearch_method-----\$\{ingroupvar\}-----$menu_id[$i]--------------------$IGlist_id-----$IGphone_code-----$IGcampaign_id---------------$IGvid_enter_filename-----$IGvid_id_number_filename-----$IGvid_confirm_filename-----$IGvid_validate_digits)\n";   $PRI++;
+						}
+					else
+						{
+						$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(agi-VDAD_ALL_inbound.agi,$IGhandle_method-----$IGsearch_method-----$option_route_value[$j]-----$menu_id[$i]--------------------$IGlist_id-----$IGphone_code-----$IGcampaign_id---------------$IGvid_enter_filename-----$IGvid_id_number_filename-----$IGvid_confirm_filename-----$IGvid_validate_digits)\n";   $PRI++;
+						}
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 					}
 				if ($option_route[$j] =~ /EXTENSION/)

@@ -1,7 +1,7 @@
 <?php
 # admin.php - VICIDIAL administration page
 #
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 $startMS = microtime();
@@ -3908,12 +3908,13 @@ else
 # 161207-1953 - Added Agent DID Report
 # 161222-0841 - Added agent_chat_screen_colors
 # 161226-2224 - Added conf_qualify servers option
+# 170113-1637 - Added call menu in-group option DYNAMIC_INGROUP_VAR for use with cm_phonesearch.agi, and updated for 2017
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-583a';
-$build = '161226-2224';
+$admin_version = '2.14-584a';
+$build = '170113-1637';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4380,7 +4381,7 @@ echo "<html>\n";
 echo "<head>\n";
 echo "<!-- VERSION: $admin_version   BUILD: $build   ADD: $ADD   PHP_SELF: $PHP_SELF-->\n";
 echo "<META NAME=\"ROBOTS\" CONTENT=\"NONE\">\n";
-echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2016 ViciDial Group\">\n";
+echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2017 ViciDial Group\">\n";
 echo "<META NAME=\"AUTHOR\" CONTENT=\"ViciDial Group\">\n";
 echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
@@ -28661,7 +28662,7 @@ if ($ADD==3511)
 				echo "</span>";
 				echo " <input type=hidden name=option_route_value_context_$j id=option_route_value_context_$j value=\"$option_route_value_context\">";
 				echo " <select size=1 name=option_route_value_$j id=option_route_value_$j onChange=\"call_menu_link('$j','INGROUP');\">";
-				echo "$ingroup_list<option SELECTED>$option_route_value</option></select>";
+				echo "$ingroup_list<option SELECTED>$option_route_value</option><option>DYNAMIC_INGROUP_VAR</option></select>";
 				echo " &nbsp; "._QXZ("Handle Method").": <select size=1 name=IGhandle_method_$j id=IGhandle_method_$j>";
 				echo "$IGhandle_method_list<option SELECTED>$IGhandle_method</option></select> $NWB#call_menu-ingroup_settings$NWE\n";
 				echo "<BR>"._QXZ("Search Method").": <select size=1 name=IGsearch_method_$j id=IGsearch_method_$j>";
@@ -37385,7 +37386,7 @@ if ($ADD==999995)
 	echo "<br><B> "._QXZ("Welcome to ViciDial: copyright, trademark and license page")."</B><BR><BR>\n";
 	echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
 
-	echo "<tr bgcolor=#$SSstd_row4_background><td align=right valign=top><B><font size=3>"._QXZ("Copyright").": </B></td><td align=left> &nbsp; "._QXZ("The ViciDial Contact Center Suite is maintained by the")." <a href=\"http://www.vicidial.com/\" target=\"_blank\">ViciDial Group</a>, &copy; 2016</td></tr>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right valign=top><B><font size=3>"._QXZ("Copyright").": </B></td><td align=left> &nbsp; "._QXZ("The ViciDial Contact Center Suite is maintained by the")." <a href=\"http://www.vicidial.com/\" target=\"_blank\">ViciDial Group</a>, &copy; 2017</td></tr>\n";
 
 	echo "<tr bgcolor=#$SSstd_row4_background><td align=right valign=top><B><font size=3>"._QXZ("Trademark").": </B></td><td align=left> &nbsp; \"VICIDIAL\" "._QXZ("is a registered trademark of the")." <a href=\"http://www.vicidial.com/\" target=\"_blank\">ViciDial Group</a>. Here is our <a href=\"http://www.vicidial.com/?page_id=262\" target=\"_blank\">"._QXZ("trademark use policy")."</a></td></tr>\n";
 
@@ -38192,7 +38193,7 @@ echo "<FONT STYLE=\"font-family:HELVETICA;font-size:9;color:white;\"><br><br><!-
 echo _QXZ("VERSION").": $admin_version<BR>";
 echo _QXZ("BUILD").": $build\n";
 if (!preg_match("/_BUILD_/",$SShosted_settings))
-	{echo "<BR><a href=\"$PHP_SELF?ADD=999995\"><font color=white>&copy; 2016 ViciDial Group</font></a><BR><img src=\"images/pixel.gif\">";}
+	{echo "<BR><a href=\"$PHP_SELF?ADD=999995\"><font color=white>&copy; 2017 ViciDial Group</font></a><BR><img src=\"images/pixel.gif\">";}
 echo "</FONT>\n";
 ?>
 

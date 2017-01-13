@@ -1,4 +1,4 @@
-CROSS-CLUSTER COMMUNICATION					2011-05-27
+CROSS-CLUSTER COMMUNICATION	Started: 2011-05-27	Updated: 2017-01-01
 
 
 !!!!! THIS FEATURE DOES NOT EXIST, THIS IS FOR PLANNING PURPOSES ONLY !!!!!
@@ -100,3 +100,16 @@ cluster_server_status:
 
 - IAX/SIP crossover trunks would be added between every server on every active cluster(depending on direction settings)
 - dialplan context would be added for each foreign cluster to route calls with proper cluster_id flag allowing for lookups of lead information
+
+
+
+--------------------------------
+ SIMPLER ALTERNATIVE OPTION:
+--------------------------------
+Below is a description of a more simple option, which is to send lead data from one cluster to another as the lead is sent over.
+- A call to be sent from one cluster to another should leave its callerIDname as the Caller Code, the 20-character code that includes the lead_id
+- This call will go into an internal DID on the other cluster through an IAX trunk between the two
+- At the DID, the call will get sent to a Call Menu where the call will go through an AGI script
+- That AGI script will look up the lead_id on the originating system using the Non-Agent API and credentials set in a Settings Container
+- If there is a match, then the AGI script will gather the default lead information, insert the information into the new system and change the callerIDname with the new system's lead_id included
+- The call will then go to an In-Group with that lead_id set so it can then go on to an agent

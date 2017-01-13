@@ -1,7 +1,7 @@
 <?php
 # help.php - VICIDIAL administration page
 #
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 # CHANGELOG:
@@ -105,6 +105,7 @@
 # 161207-1958 - Added Agent DID Stats report entry
 # 161222-0843 - Added agent_chat_screen_colors entry
 # 161226-2214 - Added conf_qualify entry
+# 170113-1647 - Added call menu in-group option DYNAMIC_INGROUP_VAR for use with cm_phonesearch.agi
 #
 
 
@@ -3184,7 +3185,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="call_menu-ingroup_settings">
 <BR>
-<B><?php echo _QXZ("Call Menu In-Group Settings"); ?> -</B><?php echo _QXZ("If the route is set to INGROUP then there are many options that you can set to define how the call is sent to into the queue. In-Group is the inbound group that you want the call to go to. Handle Method is the way you want the call to be handled,"); ?> <a href="#inbound_dids-call_handle_method"><?php echo _QXZ("Click here to see a list of the available handle methods"); ?></a>. <?php echo _QXZ("Search Method defines how the queue will find the next agent, recommend leave this on LB. List ID is the list that the new lead is inserted into, also if the Method is not a LOOKUP method and the lead is not found. Campaign ID is the campaign to search lists through if one of the RC methods is used. Phone Code is the phone_code field entry for the lead that is inserted with. VID Enter Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played to ask the customer to enter their ID. VID ID Number Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played after customer enters their ID, something like YOU HAVE ENTERED. VID Confirm Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played to confirm their ID, something like PRESS 1 TO CONFIRM AND 2 TO REENTER. VID Digits is used if the Method is set to one of the VIDPROMPT methods, if it is set to a number it is the number of digits that must be entered by the customer when prompted for their ID, if set to empty or X then the customer will have to press pound or hash to finish their entry of their ID."); ?>
+<B><?php echo _QXZ("Call Menu In-Group Settings"); ?> -</B><?php echo _QXZ("If the route is set to INGROUP then there are many options that you can set to define how the call is sent to into the queue. In-Group is the inbound group that you want the call to go to. Handle Method is the way you want the call to be handled,"); ?> <a href="#inbound_dids-call_handle_method"><?php echo _QXZ("Click here to see a list of the available handle methods"); ?></a>. <?php echo _QXZ("Search Method defines how the queue will find the next agent, recommend leave this on LB. List ID is the list that the new lead is inserted into, also if the Method is not a LOOKUP method and the lead is not found. Campaign ID is the campaign to search lists through if one of the RC methods is used. Phone Code is the phone_code field entry for the lead that is inserted with. VID Enter Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played to ask the customer to enter their ID. VID ID Number Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played after customer enters their ID, something like YOU HAVE ENTERED. VID Confirm Filename is used if the Method is set to one of the VIDPROMPT methods, it is the audio prompt played to confirm their ID, something like PRESS 1 TO CONFIRM AND 2 TO REENTER. VID Digits is used if the Method is set to one of the VIDPROMPT methods, if it is set to a number it is the number of digits that must be entered by the customer when prompted for their ID, if set to empty or X then the customer will have to press pound or hash to finish their entry of their ID.") . ' ' . _QXZ("If you are using the cm_phonesearch.agi in this Call Menu, you can set the B option to use the special DYNAMIC_INGROUP_VAR in-group for that script to work properly."); ?>
 
 <BR>
 <A NAME="call_menu-custom_dialplan_entry">

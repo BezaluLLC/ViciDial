@@ -66,6 +66,11 @@ OTHER CHANGES:
 
 4. Added the ability for internal chats to have more than one agent participant
 
+5. Added cm_phonesearch.agi script that can search for a phone number within the
+	system and redirect a call to an in-group that is defined as the Default
+	Transfer Group in a campaign that the lead belongs to. This must be 
+	configured in a Call Menu
+
 
 
 

@@ -1,4 +1,4 @@
-LIME SURVEY and ViciDial
+LIME SURVEY and ViciDial				Started: 2009-09-08
 
 We've been asked about Lime Survey(http://www.limesurvey.org) integration with ViciDial several times so here is a little summary of how you install it as well as how you can get it to work with Vicidial.
 
