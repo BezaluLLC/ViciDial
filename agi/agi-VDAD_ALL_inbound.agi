@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-VDAD_ALL_inbound.agi version 2.12
+# agi-VDAD_ALL_inbound.agi version 2.14
 # 
 # runs when a call comes in from an inbound call. This script will 
 # send the calls out to the closers that are logged in.
@@ -82,7 +82,7 @@
 #exten => _99909*.,2,AGI(agi-VDAD_ALL_inbound.agi)
 #exten => _99909*.,3,Hangup
 #
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 70828-0924 - First Build
@@ -203,6 +203,7 @@
 # 160101-1525 - Added routing_initiated_recordings
 # 160517-0330 - Added code for state/postal_code channel variables new lead insertion if populated
 # 161102-1036 - Fixed QM partition problem
+# 170114-1405 - Added populate_lead_province in-group option
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -214,7 +215,7 @@ $wait_prompt_runs=0;
 $at='@';
 $S='*';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=208;
+$mysql_log_count=219;
 $one_mysql_log=0;
 $dial_ingroup_flag=0;
 $called_count=1;
@@ -727,7 +728,7 @@ $affected_rows = $dbhA->do($stmtA);
 
 ### Grab inbound groups values from the database
 $cbc=0;
-$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,ingroup_recording_override,ingroup_rec_filename,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,max_calls_method,max_calls_count,max_calls_action,populate_lead_ingroup,na_call_url,drop_lead_reset,after_hours_lead_reset,nanq_lead_reset,wait_time_lead_reset,hold_time_lead_reset,routing_initiated_recordings,on_hook_cid_number FROM vicidial_inbound_groups where group_id = '$channel_group';";
+$stmtA = "SELECT call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,drop_call_seconds,drop_action,drop_exten,next_agent_call,voicemail_ext,queue_priority,drop_inbound_group,afterhours_xfer_group,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,no_agent_no_queue,no_agent_action,no_agent_action_value,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,active,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,ingroup_recording_override,ingroup_rec_filename,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,max_calls_method,max_calls_count,max_calls_action,populate_lead_ingroup,na_call_url,drop_lead_reset,after_hours_lead_reset,nanq_lead_reset,wait_time_lead_reset,hold_time_lead_reset,routing_initiated_recordings,on_hook_cid_number,populate_lead_province FROM vicidial_inbound_groups where group_id = '$channel_group';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -827,6 +828,7 @@ if ($sthArows > 0)
 	$hold_time_lead_reset =				$aryA[82];
 	$routing_initiated_recordings =		$aryA[83];
 	$on_hook_cid_number =				$aryA[84];
+	$populate_lead_province =			$aryA[85];
 
 	$custom_call_id='';
 	if ($uniqueid_status_display =~ /ENABLED/)
@@ -1027,8 +1029,11 @@ if ($call_handle_method =~ /LOOKUP/)
 			}
 		$ingroup_insert = $channel_group;
 		if ($populate_lead_ingroup =~ /DISABLED/) {$ingroup_insert='';}
+		$populate_provinceA='';   $populate_provinceB='';
+		if ($populate_lead_province =~ /did/) 
+			{&populate_lead_province_process;}
 		### insert a record into the vicidial_list table 
-		$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa$INSERTstateSQLa$INSERTpostal_codeSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$ingroup_insert','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb$INSERTstateSQLb$INSERTpostal_codeSQLb);";
+		$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa$INSERTstateSQLa$INSERTpostal_codeSQLa$populate_provinceA) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$ingroup_insert','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb$INSERTstateSQLb$INSERTpostal_codeSQLb$populate_provinceB);";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02007';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		$cbc=0;
@@ -1179,8 +1184,11 @@ if ($call_handle_method =~ /LOOKUP/)
 					}
 				$ingroup_insert = $channel_group;
 				if ($populate_lead_ingroup =~ /DISABLED/) {$ingroup_insert='';}
+				$populate_provinceA='';   $populate_provinceB='';
+				if ($populate_lead_province =~ /did/i) 
+					{&populate_lead_province_process;}
 				### insert a record into the vicidial_list table 
-				$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa$INSERTstateSQLa$INSERTpostal_codeSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$ingroup_insert','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb$INSERTstateSQLb$INSERTpostal_codeSQLb);";
+				$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa$INSERTstateSQLa$INSERTpostal_codeSQLa$populate_provinceA) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$ingroup_insert','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb$INSERTstateSQLb$INSERTpostal_codeSQLb$populate_provinceB);";
 				$affected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02011';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				$cbc=0;
@@ -1265,8 +1273,11 @@ else
 			}
 		$ingroup_insert = $channel_group;
 		if ($populate_lead_ingroup =~ /DISABLED/) {$ingroup_insert='';}
+		$populate_provinceA='';   $populate_provinceB='';
+		if ($populate_lead_province =~ /did/i) 
+			{&populate_lead_province_process;}
  		### insert a record into the vicidial_list table if no record was found above
-		$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa$INSERTstateSQLa$INSERTpostal_codeSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$ingroup_insert','$called_count','-5.00','$VLcomments'$entry_list_idSQLb$INSERTstateSQLb$INSERTpostal_codeSQLb);";
+		$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa$INSERTstateSQLa$INSERTpostal_codeSQLa$populate_provinceA) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$list_id','Y','$phone_code','$phone_number','$ingroup_insert','$called_count','-5.00','$VLcomments'$entry_list_idSQLb$INSERTstateSQLb$INSERTpostal_codeSQLb$populate_provinceB);";
  		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02014';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		$cbc=0;
@@ -2679,7 +2690,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
-							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='02209';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 						if ($sthArows > 0)
 							{
 							@aryA = $sthA->fetchrow_array;
@@ -2700,7 +2711,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArowsVUrec=$sthA->rows;
-							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArowsVUrec;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='02210';   $MEL_aff_rows=$sthArowsVUrec;   &mysql_error_logging;
 						if ($sthArowsVUrec > 0)
 							{
 							@aryA = $sthA->fetchrow_array;
@@ -2719,7 +2730,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
-							$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='02211';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 						if ($sthArows > 0)
 							{
 							@aryA = $sthA->fetchrow_array;
@@ -2761,12 +2772,12 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						### insert a record into the recording_log table 
 						$stmtA = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename,lead_id,user,vicidial_id) values('$channelrec','$VDADserver_ip','$recording_exten','$now_date','$now_date_epoch','$campaign_rec_filename','$insert_lead_id','$VDADuser','$insert_close_id')";
 						$affected_rows = $dbhA->do($stmtA);
-							$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='02212';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 						$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
 						$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 						$sthArows=$sthA->rows;
-							$dbhP=$dbhA;   $stmtA=$stmtB;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+							$dbhP=$dbhA;   $stmtA=$stmtB;   $mysql_count='02213';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 						if ($sthArows > 0)
 							{
 							@aryA = $sthA->fetchrow_array;
@@ -2780,20 +2791,20 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 
 							$stmtA = "UPDATE recording_log SET filename='$campaign_rec_filename' where recording_id='$recording_id';";
 							$affected_rows = $dbhA->do($stmtA);
-								$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+								$dbhP=$dbhA;   $mysql_count='02214';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 							}
 
 						$stmtA="INSERT INTO vicidial_manager values('','','$now_date','NEW','N','$VDADserver_ip','','Originate','$campaign_rec_filename','Channel: $channelrec','Context: $ext_context','Exten: $recording_exten','Priority: 1','Callerid: $campaign_rec_filename','','','','','');";
 						$affected_rows = $dbhA->do($stmtA);
-							$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='02215';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 
 						$stmtB = "INSERT INTO routing_initiated_recordings (recording_id,filename,launch_time,lead_id,vicidial_id,user,processed) values('$recording_id','$campaign_rec_filename','$now_date','$insert_lead_id','$insert_close_id','$VDADuser','0')";
 						$affected_rowsB = $dbhA->do($stmtB);
-							$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rowsB;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='02216';   $MEL_aff_rows=$affected_rowsB;   &mysql_error_logging;
 
 						$stmtC = "UPDATE vicidial_live_agents SET external_recording='$recording_id' where user='$VDADuser';";
 						$affected_rowsC = $dbhA->do($stmtC);
-							$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rowsC;   &mysql_error_logging;
+							$dbhP=$dbhA;   $mysql_count='02217';   $MEL_aff_rows=$affected_rowsC;   &mysql_error_logging;
 
 						if ($AGILOG) {$agi_string = "--    ROUTING INITIATED RECORDING STARTED : |$affected_rows|$recording_id|$campaign_rec_filename|$stmtA|   |$affected_rowsB|$stmtB|   |$affected_rowsC|$stmtC|";   &agi_output;}
 						}
@@ -4432,8 +4443,11 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					}
 				$ingroup_insert = $channel_group;
 				if ($populate_lead_ingroup =~ /DISABLED/) {$ingroup_insert='';}
+				$populate_provinceA='';   $populate_provinceB='';
+				if ($populate_lead_province =~ /did/i) 
+					{&populate_lead_province_process;}
 				### insert a record into the vicidial_list table 
-				$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa$INSERTstateSQLa$INSERTpostal_codeSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$wait_time_option_callback_list_id','N','$phone_code','$phone_number','$ingroup_insert','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb$INSERTstateSQLb$INSERTpostal_codeSQLb);";
+				$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa$INSERTstateSQLa$INSERTpostal_codeSQLa$populate_provinceA) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$wait_time_option_callback_list_id','N','$phone_code','$phone_number','$ingroup_insert','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb$INSERTstateSQLb$INSERTpostal_codeSQLb$populate_provinceB);";
 				$affected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02089';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
@@ -4876,8 +4890,11 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 							}
 						$ingroup_insert = $channel_group;
 						if ($populate_lead_ingroup =~ /DISABLED/) {$ingroup_insert='';}
+						$populate_provinceA='';   $populate_provinceB='';
+						if ($populate_lead_province =~ /did/i) 
+							{&populate_lead_province_process;}
 						### insert a record into the vicidial_list table 
-						$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa$INSERTstateSQLa$INSERTpostal_codeSQLa) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$hold_time_option_callback_list_id','N','$phone_code','$phone_number','$ingroup_insert','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb$INSERTstateSQLb$INSERTpostal_codeSQLb);";
+						$stmtA = "INSERT INTO vicidial_list (entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,called_since_last_reset,phone_code,phone_number,security_phrase,called_count,gmt_offset_now,comments$entry_list_idSQLa$INSERTstateSQLa$INSERTpostal_codeSQLa$populate_provinceA) values('$SQLdate','$tsSQLdate','INBND','$fronter','$vendor_id','VDCL','$hold_time_option_callback_list_id','N','$phone_code','$phone_number','$ingroup_insert','$called_count','$local_gmt','$VLcomments'$entry_list_idSQLb$INSERTstateSQLb$INSERTpostal_codeSQLb$populate_provinceB);";
 						$affected_rows = $dbhA->do($stmtA);
 							$dbhP=$dbhA;   $mysql_count='02089';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 						$stmtB = "SELECT LAST_INSERT_ID() LIMIT 1;";
@@ -5666,6 +5683,55 @@ sub press_one_hold_time_option_prompt
 	}
 
 
+
+sub populate_lead_province_process
+	{
+	$stmtA = "SELECT did_id FROM vicidial_did_log where uniqueid='$uniqueid' order by call_date desc limit 1;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+		$dbhP=$dbhA;   $mysql_count='02218';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$DRAE_did_id =	$aryA[0];
+		$sthA->finish();
+		if ($AGILOG) {$agi_string = "--    ORIGINAL DID FOUND : |$DRAE_did_id|$uniqueid|";   &agi_output;}
+
+		$stmtA = "SELECT did_pattern,did_description,did_carrier_description,custom_one,custom_two,custom_three,custom_four,custom_five FROM vicidial_inbound_dids where did_id = '$DRAE_did_id';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$DIDs_in_system=$sthA->rows;
+			$dbhP=$dbhA;   $mysql_count='02219';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+		if ($DIDs_in_system > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$did_pattern =				$aryA[0];
+			$did_description =			$aryA[1];
+			$did_carrier_description =	$aryA[2];
+			$custom_one =				$aryA[3];
+			$custom_two =				$aryA[4];
+			$custom_three =				$aryA[5];
+			$custom_four =				$aryA[6];
+			$custom_five =				$aryA[7];
+
+			$populate_provinceA=',province';
+			$populate_provinceB=",''";
+			if ($populate_lead_province =~ /did_pattern/)			{$populate_provinceB=",'$did_pattern'";}
+			if ($populate_lead_province =~ /did_description/)		{$populate_provinceB=",'$did_description'";}
+			if ($populate_lead_province =~ /did_carrier/)			{$populate_provinceB=",'$did_carrier_description'";}
+			if ($populate_lead_province =~ /did_custom_one/)		{$populate_provinceB=",'$custom_one'";}
+			if ($populate_lead_province =~ /did_custom_two/)		{$populate_provinceB=",'$custom_two'";}
+			if ($populate_lead_province =~ /did_custom_three/)		{$populate_provinceB=",'$custom_three'";}
+			if ($populate_lead_province =~ /did_custom_four/)		{$populate_provinceB=",'$custom_four'";}
+			if ($populate_lead_province =~ /did_custom_five/)		{$populate_provinceB=",'$custom_five'";}
+			}
+		$sthA->finish();
+		if ($AGILOG) {$agi_string = "DID record found($uniqueid $DRAE_did_id|$populate_provinceA|$populate_provinceB)|";   &agi_output;}
+		}
+	else
+		{if ($AGILOG) {$agi_string = "No DID record found($uniqueid)|";   &agi_output;}}
+	}
 
 sub checkresult 
 	{

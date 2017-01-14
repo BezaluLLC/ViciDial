@@ -30,3 +30,7 @@ UPDATE system_settings SET db_schema_version='1483',db_schema_update_date=NOW() 
 ALTER TABLE servers ADD conf_qualify ENUM('Y','N') default 'Y';
 
 UPDATE system_settings SET db_schema_version='1484',db_schema_update_date=NOW() where db_schema_version < 1484;
+
+ALTER TABLE vicidial_inbound_groups ADD populate_lead_province VARCHAR(20) default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1485',db_schema_update_date=NOW() where db_schema_version < 1485;

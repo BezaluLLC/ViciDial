@@ -1196,7 +1196,8 @@ routing_initiated_recordings ENUM('Y','N') default 'N',
 on_hook_cid_number VARCHAR(18) default '',
 customer_chat_screen_colors VARCHAR(20) default 'default',
 customer_chat_survey_link TEXT,
-customer_chat_survey_text TEXT
+customer_chat_survey_text TEXT,
+populate_lead_province VARCHAR(20) default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -3846,4 +3847,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1484',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1485',db_schema_update_date=NOW(),reload_timestamp=NOW();

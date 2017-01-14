@@ -106,6 +106,7 @@
 # 161222-0843 - Added agent_chat_screen_colors entry
 # 161226-2214 - Added conf_qualify entry
 # 170113-1647 - Added call menu in-group option DYNAMIC_INGROUP_VAR for use with cm_phonesearch.agi
+# 170114-1404 - Added inbound_groups-populate_lead_province entry
 #
 
 
@@ -2851,6 +2852,11 @@ if ($SSqc_features_active > 0)
 <A NAME="inbound_groups-populate_lead_ingroup">
 <BR>
 <B><?php echo _QXZ("Populate Lead In-Group"); ?> -</B><?php echo _QXZ("If this option is ENABLED, then when a new lead is created when going into an In-Group, the security_phrase or Show field will be populated with the Group ID of the In-Group. Default is ENABLED."); ?>
+
+<BR>
+<A NAME="inbound_groups-populate_lead_province">
+<BR>
+<B><?php echo _QXZ("Populate Lead Province"); ?> -</B><?php echo _QXZ("If this option is not DISABLED, then the system will look up the original DID that the inbound call came in on and populate one of the listed DID fields in the province field on the customer lead. Default is DISABLED."); ?>
 
 <BR>
 <A NAME="inbound_groups-customer_chat_link">

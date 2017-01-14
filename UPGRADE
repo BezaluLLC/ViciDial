@@ -71,6 +71,9 @@ OTHER CHANGES:
 	Transfer Group in a campaign that the lead belongs to. This must be 
 	configured in a Call Menu
 
+6. Added In-Group option to populate new leads with a DID descriptive value in 
+	the province field of the new lead.
+
 
 
 
