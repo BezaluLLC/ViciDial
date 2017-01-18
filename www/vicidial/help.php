@@ -2856,7 +2856,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_groups-populate_lead_province">
 <BR>
-<B><?php echo _QXZ("Populate Lead Province"); ?> -</B><?php echo _QXZ("If this option is not DISABLED, then the system will look up the original DID that the inbound call came in on and populate one of the listed DID fields in the province field on the customer lead. Default is DISABLED."); ?>
+<B><?php echo _QXZ("Populate Lead Province"); ?> -</B><?php echo _QXZ("If this option is not DISABLED, then the system will look up the original DID that the inbound call came in on and populate one of the listed DID fields in the province field on the customer lead. The OW options will overwrite the province field every time the call enters this In-Group. Default is DISABLED."); ?>
 
 <BR>
 <A NAME="inbound_groups-customer_chat_link">

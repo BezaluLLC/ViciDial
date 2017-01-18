@@ -204,6 +204,7 @@
 # 160517-0330 - Added code for state/postal_code channel variables new lead insertion if populated
 # 161102-1036 - Fixed QM partition problem
 # 170114-1405 - Added populate_lead_province in-group option
+# 170118-0107 - Added OW options to populate_lead_province in-group option
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -1508,7 +1509,10 @@ if ( ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $c
 	if ( ($after_hours_action =~ /VOICEMAIL|HANGUP|MESSAGE|VMAIL_NO_INST/) && ($after_hours_lead_reset =~ /Y/) )
 		{$called_since_last_resetSQL = ",called_since_last_reset='N'";}
 	
-	$stmtA = "UPDATE vicidial_list set status='$AHstatus' $called_since_last_resetSQL where lead_id = '$insert_lead_id';";
+	$populate_provinceUPDATE='';
+	if ($populate_lead_province =~ /OW_did/i) 
+		{&populate_lead_province_process;}
+	$stmtA = "UPDATE vicidial_list set status='$AHstatus' $populate_provinceUPDATE $called_since_last_resetSQL where lead_id = '$insert_lead_id';";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02018';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	if ($AGILOG) {$agi_string = "--  AH VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
@@ -1745,7 +1749,10 @@ if ( ( ($no_agent_no_queue =~ /Y|NO_PAUSED/) || ($MCnanque_override > 0) ) && ($
 		if ( ($no_agent_action =~ /VOICEMAIL|HANGUP|MESSAGE|VMAIL_NO_INST/) && ($nanq_lead_reset =~ /Y/) )
 			{$called_since_last_resetSQL = ",called_since_last_reset='N'";}
 		
-		$stmtA = "UPDATE vicidial_list set status='$NQstatus' $called_since_last_resetSQL where lead_id = '$insert_lead_id';";
+		$populate_provinceUPDATE='';
+		if ($populate_lead_province =~ /OW_did/i) 
+			{&populate_lead_province_process;}
+		$stmtA = "UPDATE vicidial_list set status='$NQstatus'  $populate_provinceUPDATE $called_since_last_resetSQL where lead_id = '$insert_lead_id';";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='02106';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		if ($AGILOG) {$agi_string = "--  NA VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
@@ -2272,6 +2279,21 @@ if ( ($CLchannel_group =~ /DID_INBOUND/) && (length($CLend_epoch) < 5) )
 		$sthA->finish();
 		}
 	}
+
+
+##### BEGIN update province if option set #####
+$populate_provinceUPDATE='';
+if ($populate_lead_province =~ /OW_did/i) 
+	{
+	&populate_lead_province_process;
+
+	$stmtA = "UPDATE vicidial_list set modify_date=NOW() $populate_provinceUPDATE where lead_id = '$insert_lead_id';";
+	$affected_rows = $dbhA->do($stmtA);
+		$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+	if ($AGILOG) {$agi_string = "--    PROVINCE update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
+	}
+
+##### END update province if option set #####
 
 
 ############################################
@@ -3774,7 +3796,10 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 				$dbhP=$dbhA;   $mysql_count='02076';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			if ($AGILOG) {$agi_string = "--    VDCL vcl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
 
-			$stmtA = "UPDATE vicidial_list set status='HXFER' where lead_id = '$insert_lead_id';";
+			$populate_provinceUPDATE='';
+			if ($populate_lead_province =~ /OW_did/i) 
+				{&populate_lead_province_process;}
+			$stmtA = "UPDATE vicidial_list set status='HXFER' $populate_provinceUPDATE where lead_id = '$insert_lead_id';";
 			$affected_rows = $dbhA->do($stmtA);
 				$dbhP=$dbhA;   $mysql_count='02077';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			if ($AGILOG) {$agi_string = "--    VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
@@ -4526,7 +4551,10 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 				if ( ($wait_time_option =~ /VOICEMAIL|HANGUP|MESSAGE|VMAIL_NO_INST/) && ($wait_time_lead_reset =~ /Y/) )
 					{$called_since_last_resetSQL = ",called_since_last_reset='N'";}
 				
-				$stmtA = "UPDATE vicidial_list set status='WAITTO' $called_since_last_resetSQL where lead_id = '$insert_lead_id';";
+				$populate_provinceUPDATE='';
+				if ($populate_lead_province =~ /OW_did/i) 
+					{&populate_lead_province_process;}
+				$stmtA = "UPDATE vicidial_list set status='WAITTO' $populate_provinceUPDATE $called_since_last_resetSQL where lead_id = '$insert_lead_id';";
 				$affected_rows = $dbhA->do($stmtA);
 					$dbhP=$dbhA;   $mysql_count='02092';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				if ($AGILOG) {$agi_string = "--    VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
@@ -4972,7 +5000,10 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						if ( ($hold_time_option =~ /VOICEMAIL|HANGUP|MESSAGE|VMAIL_NO_INST/) && ($hold_time_lead_reset =~ /Y/) )
 							{$called_since_last_resetSQL = ",called_since_last_reset='N'";}
 						
-						$stmtA = "UPDATE vicidial_list set status='HOLDTO' $called_since_last_resetSQL where lead_id = '$insert_lead_id';";
+						$populate_provinceUPDATE='';
+						if ($populate_lead_province =~ /OW_did/i) 
+							{&populate_lead_province_process;}
+						$stmtA = "UPDATE vicidial_list set status='HOLDTO' $populate_provinceUPDATE $called_since_last_resetSQL where lead_id = '$insert_lead_id';";
 						$affected_rows = $dbhA->do($stmtA);
 							$dbhP=$dbhA;   $mysql_count='02092';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 						if ($AGILOG) {$agi_string = "--    VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
@@ -5348,7 +5379,10 @@ if ( ($drop_timer > $DROP_TIME) || ($MCdrop_override > 0) )
 	if ( ($drop_action =~ /VOICEMAIL|HANGUP|MESSAGE|VMAIL_NO_INST/) && ($drop_lead_reset =~ /Y/) )
 		{$called_since_last_resetSQL = ",called_since_last_reset='N'";}
 	
-	$stmtA = "UPDATE vicidial_list set status='$DRstatus' $called_since_last_resetSQL where lead_id = '$insert_lead_id';";
+	$populate_provinceUPDATE='';
+	if ($populate_lead_province =~ /OW_did/i) 
+		{&populate_lead_province_process;}
+	$stmtA = "UPDATE vicidial_list set status='$DRstatus' $populate_provinceUPDATE $called_since_last_resetSQL where lead_id = '$insert_lead_id';";
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02101';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	if ($AGILOG) {$agi_string = "--    VDCL vl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
@@ -5716,15 +5750,17 @@ sub populate_lead_province_process
 			$custom_five =				$aryA[7];
 
 			$populate_provinceA=',province';
-			$populate_provinceB=",''";
-			if ($populate_lead_province =~ /did_pattern/)			{$populate_provinceB=",'$did_pattern'";}
-			if ($populate_lead_province =~ /did_description/)		{$populate_provinceB=",'$did_description'";}
-			if ($populate_lead_province =~ /did_carrier/)			{$populate_provinceB=",'$did_carrier_description'";}
-			if ($populate_lead_province =~ /did_custom_one/)		{$populate_provinceB=",'$custom_one'";}
-			if ($populate_lead_province =~ /did_custom_two/)		{$populate_provinceB=",'$custom_two'";}
-			if ($populate_lead_province =~ /did_custom_three/)		{$populate_provinceB=",'$custom_three'";}
-			if ($populate_lead_province =~ /did_custom_four/)		{$populate_provinceB=",'$custom_four'";}
-			if ($populate_lead_province =~ /did_custom_five/)		{$populate_provinceB=",'$custom_five'";}
+			$populate_provinceB="''";
+			if ($populate_lead_province =~ /did_pattern/)			{$populate_provinceB="'$did_pattern'";}
+			if ($populate_lead_province =~ /did_description/)		{$populate_provinceB="'$did_description'";}
+			if ($populate_lead_province =~ /did_carrier/)			{$populate_provinceB="'$did_carrier_description'";}
+			if ($populate_lead_province =~ /did_custom_one/)		{$populate_provinceB="'$custom_one'";}
+			if ($populate_lead_province =~ /did_custom_two/)		{$populate_provinceB="'$custom_two'";}
+			if ($populate_lead_province =~ /did_custom_three/)		{$populate_provinceB="'$custom_three'";}
+			if ($populate_lead_province =~ /did_custom_four/)		{$populate_provinceB="'$custom_four'";}
+			if ($populate_lead_province =~ /did_custom_five/)		{$populate_provinceB="'$custom_five'";}
+			$populate_provinceUPDATE=",province=$populate_provinceB";
+			$populate_provinceB = ",$populate_provinceB";
 			}
 		$sthA->finish();
 		if ($AGILOG) {$agi_string = "DID record found($uniqueid $DRAE_did_id|$populate_provinceA|$populate_provinceB)|";   &agi_output;}

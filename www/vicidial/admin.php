@@ -3913,6 +3913,7 @@ else
 # 161226-2224 - Added conf_qualify servers option
 # 170113-1637 - Added call menu in-group option DYNAMIC_INGROUP_VAR for use with cm_phonesearch.agi, and updated for 2017
 # 170114-1356 - Added populate_lead_province in-group option
+# 170118-0106 - Added OW options to populate_lead_province in-group option
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
@@ -25697,7 +25698,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Populate Lead In-Group").": </td><td align=left><select size=1 name=populate_lead_ingroup><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='ENABLED'>"._QXZ("ENABLED")."</option><option value='$populate_lead_ingroup' SELECTED>"._QXZ("$populate_lead_ingroup")."</option></select>$NWB#inbound_groups-populate_lead_ingroup$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Populate Lead Province").": </td><td align=left><select size=1 name=populate_lead_province><option value='DISABLED'>"._QXZ("DISABLED")."</option><option>did_pattern</option><option>did_description</option><option>did_carrier</option><option>did_custom_one</option><option>did_custom_two</option><option>did_custom_three</option><option>did_custom_four</option><option>did_custom_five</option><option value='$populate_lead_province' SELECTED>"._QXZ("$populate_lead_province")."</option></select>$NWB#inbound_groups-populate_lead_province$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Populate Lead Province").": </td><td align=left><select size=1 name=populate_lead_province><option value='DISABLED'>"._QXZ("DISABLED")."</option><option>did_pattern</option><option>did_description</option><option>did_carrier</option><option>did_custom_one</option><option>did_custom_two</option><option>did_custom_three</option><option>did_custom_four</option><option>did_custom_five</option><option>OW_did_pattern</option><option>OW_did_description</option><option>OW_did_carrier</option><option>OW_did_custom_one</option><option>OW_did_custom_two</option><option>OW_did_custom_three</option><option>OW_did_custom_four</option><option>OW_did_custom_five</option><option value='$populate_lead_province' SELECTED>"._QXZ("$populate_lead_province")."</option></select>$NWB#inbound_groups-populate_lead_province$NWE</td></tr>\n";
 
 		echo "<input type=hidden name=form_end value=\"END\">\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
