@@ -1,7 +1,7 @@
 <?php
 # vdc_db_query.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to exchange information between vicidial.php and the database server for various actions
 # 
@@ -418,10 +418,11 @@
 # 161117-0622 - Fixes for rare vicidial_log and recording_log issues
 # 161222-0728 - Fixed issue with Scheduled Callbacks with tilde'~' in text fields
 # 161231-1250 - Fixed issue #985, inbound dispo call url
+# 170201-2214 - Fix for receiving call just after a pause
 #
 
-$version = '2.14-312';
-$build = '161231-1250';
+$version = '2.14-313';
+$build = '170201-2214';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=658;
@@ -695,6 +696,10 @@ if (isset($_GET["customer_server_ip"]))	{$customer_server_ip=$_GET["customer_ser
 	elseif (isset($_POST["customer_server_ip"]))	{$customer_server_ip=$_POST["customer_server_ip"];}
 if (isset($_GET["phone_pass"]))	{$phone_pass=$_GET["phone_pass"];}
 	elseif (isset($_POST["phone_pass"]))	{$phone_pass=$_POST["phone_pass"];}
+if (isset($_GET["VDRP_stage"]))	{$VDRP_stage=$_GET["VDRP_stage"];}
+	elseif (isset($_POST["VDRP_stage"]))	{$VDRP_stage=$_POST["VDRP_stage"];}
+if (isset($_GET["previous_agent_log_id"]))	{$previous_agent_log_id=$_GET["previous_agent_log_id"];}
+	elseif (isset($_POST["previous_agent_log_id"]))	{$previous_agent_log_id=$_POST["previous_agent_log_id"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -7632,7 +7637,6 @@ if ($ACTION == 'VDADcheckINCOMING')
 			echo $LeaD_InfO;
 
 
-
 			$wait_sec=0;
 			$StarTtime = date("U");
 			$stmt = "SELECT wait_epoch,wait_sec from vicidial_agent_log where agent_log_id='$agent_log_id';";
@@ -11961,35 +11965,22 @@ if ( ($ACTION == 'VDADpause') or ($ACTION == 'VDADready') or ($pause_trigger == 
 		}
 	else
 		{
-		$vla_autodialSQL='';
-		$vla_pausecodeSQL='';
-		if (preg_match('/INBOUND_MAN/',$dial_method))
-			{$vla_autodialSQL = ",outbound_autodial='N'";}
-		if ($ACTION == 'VDADready')
-			{$vla_pausecodeSQL = ",pause_code='',external_pause_code=''";}
-		$random = (rand(1000000, 9999999) + 10000000);
-		$stmt="UPDATE vicidial_live_agents set uniqueid=0,callerid='',channel='', random_id='$random',comments='',last_state_change='$NOW_TIME' $vla_autodialSQL $vla_pausecodeSQL where user='$user' and server_ip='$server_ip';";
-			if ($format=='debug') {echo "\n<!-- $stmt -->";}
-		$rslt=mysql_to_mysqli($stmt, $link);
-			if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00165',$user,$server_ip,$session_name,$one_mysql_log);}
-		$retry_count=0;
-		while ( ($errno > 0) and ($retry_count < 9) )
-			{
-			$rslt=mysql_to_mysqli($stmt, $link);
-			$one_mysql_log=1;
-			$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,"9165$retry_count",$user,$server_ip,$session_name,$one_mysql_log);
-			$one_mysql_log=0;
-			$retry_count++;
-			}
-
 		if ($comments != 'NO_STATUS_CHANGE')
 			{
+			$VLAaffected_rows=0;
 			$vla_lead_wipeSQL='';
+			$vla_where_SQL='';
 			if ($ACTION == 'VDADready')
-				{$vla_lead_wipeSQL = ",lead_id=0";}
+				{
+				$vla_lead_wipeSQL = ",lead_id=0";
+				$vla_where_SQL = "and status NOT IN('QUEUE','INCALL')";
+				}
 			if ( ($ACTION == 'VDADpause') or ($pause_trigger == 'PAUSE') )
-				{$vla_ring_resetSQL = ",ring_callerid=''";}
-			$stmt="UPDATE vicidial_live_agents set status='$vla_status' $vla_lead_wipeSQL $vla_ring_resetSQL where user='$user' and server_ip='$server_ip';";
+				{
+				$vla_ring_resetSQL = ",ring_callerid=''";
+				$vla_where_SQL = "and status NOT IN('QUEUE','INCALL')";
+				}
+			$stmt="UPDATE vicidial_live_agents set status='$vla_status' $vla_lead_wipeSQL $vla_ring_resetSQL where user='$user' and server_ip='$server_ip' $vla_where_SQL;";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00166',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -12002,10 +11993,32 @@ if ( ($ACTION == 'VDADpause') or ($ACTION == 'VDADready') or ($pause_trigger == 
 				$one_mysql_log=0;
 				$retry_count++;
 				}
-			$affected_rows = mysqli_affected_rows($link);
+			$VLAaffected_rows = mysqli_affected_rows($link);
 			}
-		if ( ($affected_rows > 0) or ($comments == 'NO_STATUS_CHANGE') )
+
+		if ( ($VLAaffected_rows > 0) or ($comments == 'NO_STATUS_CHANGE') )
 			{
+			$vla_autodialSQL='';
+			$vla_pausecodeSQL='';
+			if (preg_match('/INBOUND_MAN/',$dial_method))
+				{$vla_autodialSQL = ",outbound_autodial='N'";}
+			if ($ACTION == 'VDADready')
+				{$vla_pausecodeSQL = ",pause_code='',external_pause_code=''";}
+			$random = (rand(1000000, 9999999) + 10000000);
+			$stmt="UPDATE vicidial_live_agents set uniqueid=0,callerid='',channel='', random_id='$random',comments='',last_state_change='$NOW_TIME' $vla_autodialSQL $vla_pausecodeSQL where user='$user' and server_ip='$server_ip';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00165',$user,$server_ip,$session_name,$one_mysql_log);}
+			$retry_count=0;
+			while ( ($errno > 0) and ($retry_count < 9) )
+				{
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$one_mysql_log=1;
+				$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,"9165$retry_count",$user,$server_ip,$session_name,$one_mysql_log);
+				$one_mysql_log=0;
+				$retry_count++;
+				}
+
 			#############################################
 			##### START QUEUEMETRICS LOGGING LOOKUP #####
 			$stmt = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_pe_phone_append,queuemetrics_pause_type FROM system_settings;";
@@ -12117,8 +12130,8 @@ if ( ($ACTION == 'VDADpause') or ($ACTION == 'VDADready') or ($pause_trigger == 
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00171',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
-			
-			$agent_log = 'NEW_ID';
+			if ($VLAaffected_rows > 0)
+				{$agent_log = 'NEW_ID';}
 			}
 
 		if ($wrapup == 'WRAPUP')

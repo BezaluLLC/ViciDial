@@ -74,6 +74,9 @@ OTHER CHANGES:
 6. Added In-Group option to populate new leads with a DID descriptive value in 
 	the province field of the new lead.
 
+7. Added cm_sc_send_url.agi script for Call Menus on calls tied to a lead_id to
+	send a URL defined in a Settings Container.
+
 
 
 

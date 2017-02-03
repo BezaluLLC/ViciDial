@@ -11,6 +11,7 @@
 # If phone number is not found, call will go to the 'D' option in the call menu
 # If default in-group is not found, call will go to the 'C' option in the call menu
 # If default in-group is found, call will go to the 'B' option in the call menu
+#    (NOTE: you MUST set the In-Group to DYNAMIC_INGROUP_VAR for 'B' option)
 #
 # Flag Options:
 # 1- Country code to search the areacode within, default 1

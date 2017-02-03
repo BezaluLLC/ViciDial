@@ -1,7 +1,7 @@
 <?php
 # vicidial.php - the web-based version of the astVICIDIAL client application
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Other scripts that this application depends on:
 # - vdc_db_query.php: Updates information in the database
@@ -536,10 +536,11 @@
 # 161217-0826 - Added debug logging of dead call trigger
 # 161222-0727 - Fixed issue with Scheduled Callbacks with tilde'~' in text fields
 # 161222-1111 - Added more debug logging of events
+# 170201-2215 - Fixes for pause-while-call-coming-in issues
 #
 
-$version = '2.14-506c';
-$build = '161222-1111';
+$version = '2.14-507c';
+$build = '170201-2215';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -4473,6 +4474,11 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var agent_display_fields='<?php echo $agent_display_fields ?>';
 	var customer_sec='0';
 	var allow_required_fields='<?php echo $allow_required_fields ?>';
+	var safe_pause_counter=0;
+	var CFAI_sent=0;
+	var pause_resume_click_epoch=0;
+	var previous_agent_log_id='<?php echo $agent_log_id ?>';
+	var alert_box_close_counter=0;
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -7114,6 +7120,16 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 // closes callback list screen
 	function alert_box(temp_message)
 		{
+		var ABtop='200px';
+		var ABleft='200px';
+		if (alert_box_close_counter > 0)
+			{
+			var ABtop='50px';
+			var ABleft='5px';
+			}
+		document.getElementById("AlertBox").style.top = ABtop;
+		document.getElementById("AlertBox").style.left = ABleft;
+
 		document.getElementById("AlertBoxContent").innerHTML = temp_message;
 
 		showDiv('AlertBox');
@@ -9457,6 +9473,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					var MDOnextResponse_array=MDOnextResponse.split("\n");
 					MDnextCID =		MDOnextResponse_array[0];
 					LastCallCID =	MDOnextResponse_array[0];
+					if (agent_log_id.length > 0) {previous_agent_log_id = agent_log_id;}
 					agent_log_id =	MDOnextResponse_array[1];
 					if (MDnextCID == " CALL NOT PLACED")
 						{
@@ -9575,103 +9592,128 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		{
 		if (APRclick=='YES')
 			{button_click_log = button_click_log + "" + SQLdate + "-----AutoDial_ReSume_PauSe---" + taskaction + " " + taskagentlog + " " + taskstatuschange + " " + temp_reason + " " + temp_auto + " " + temp_auto_code + "|";}
-		var add_pause_code='';
-		if (taskaction == 'VDADready')
+		if (VD_live_customer_call==1)
 			{
-			VDRP_stage = 'READY';
-			VDRP_stage_seconds=0;
-			if (INgroupCOUNT > 0)
-				{
-				if (VICIDiaL_closer_blended == 0)
-					{VDRP_stage = 'CLOSER';}
-				else 
-					{VDRP_stage = 'READY';}
-				}
-			AutoDialReady = 1;
-			AutoDialWaiting = 1;
-			if (dial_method == "INBOUND_MAN")
-				{
-				auto_dial_level=starting_dial_level;
-
-                document.getElementById("DiaLControl").innerHTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif"); ?>\" border=\"0\" alt=\"You are active\" /></a><br /><a href=\"#\" onclick=\"ManualDialNext('','','','','','0','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_dialnextnumber.gif"); ?>\" border=\"0\" alt=\"Dial Next Number\" /></a>";
-				}
-			else
-				{
-				document.getElementById("DiaLControl").innerHTML = DiaLControl_auto_HTML_ready;
-				}
+			alert_box("<?php echo _QXZ("STILL A LIVE CALL! You must hang it up first."); ?>\n" + VD_live_customer_call + "\n" + VDRP_stage);
+			button_click_log = button_click_log + "" + SQLdate + "-----ON_CALL_pause_resume_stopped---" + VD_live_customer_call + " " + VDRP_stage + "|";
 			}
 		else
 			{
-			VDRP_stage = 'PAUSED';
-			VDRP_stage_seconds=0;
-			AutoDialReady = 0;
-			AutoDialWaiting = 0;
-			pause_code_counter = 0;
-			dial_next_failed=0;
-			if (dial_method == "INBOUND_MAN")
+			if ( (CFAI_sent > 0) && (APRclick=='YES') )
 				{
-				auto_dial_level=starting_dial_level;
-
-                document.getElementById("DiaLControl").innerHTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif"); ?>\" border=\"0\" alt=\"You are paused\" /></a><br /><a href=\"#\" onclick=\"ManualDialNext('','','','','','0','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_dialnextnumber.gif"); ?>\" border=\"0\" alt=\"Dial Next Number\" /></a>";
+				alert_box_close_counter=10;
+				alert_box("<?php echo _QXZ("CHECK-FOR-CALL RUNNING, PLEASE WAIT");?>: " + CFAI_sent);
+				button_click_log = button_click_log + "" + SQLdate + "-----CFAI_stopped_pause_click---" + CFAI_sent + " " + taskaction + " " + agent_log_id + "|";
 				}
 			else
 				{
-				document.getElementById("DiaLControl").innerHTML = DiaLControl_auto_HTML;
-				}
-
-			if ( (agent_pause_codes_active=='FORCE') && (temp_reason != 'LOGOUT') && (temp_reason != 'REQUEUE') && (temp_reason != 'DIALNEXT') && (temp_auto != '1') )
-				{
-				PauseCodeSelectContent_create();
- 				}
-			if (temp_auto == '1')
-				{
-				add_pause_code = "&sub_status=" + temp_auto_code;
-				}
-			}
-
-		var xmlhttp=false;
-		/*@cc_on @*/
-		/*@if (@_jscript_version >= 5)
-		// JScript gives us Conditional compilation, we can cope with old IE versions.
-		// and security blocked creation of the objects.
-		 try {
-		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
-		 } catch (e) {
-		  try {
-		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-		  } catch (E) {
-		   xmlhttp = false;
-		  }
-		 }
-		@end @*/
-		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
-			{
-			xmlhttp = new XMLHttpRequest();
-			}
-		if (xmlhttp) 
-			{ 
-			autoDiaLready_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=" + taskaction + "&user=" + user + "&pass=" + pass + "&stage=" + VDRP_stage + "&agent_log_id=" + agent_log_id + "&agent_log=" + taskagentlog + "&wrapup=" + taskwrapup + "&campaign=" + campaign + "&dial_method=" + dial_method + "&comments=" + taskstatuschange + add_pause_code + "&qm_extension=" + qm_extension;
-			xmlhttp.open('POST', 'vdc_db_query.php'); 
-			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-			xmlhttp.send(autoDiaLready_query); 
-			xmlhttp.onreadystatechange = function()
-				{ 
-				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+				var add_pause_code='';
+				if (taskaction == 'VDADready')
 					{
-					var check_dispo = null;
-					check_dispo = xmlhttp.responseText;
-					var check_DS_array=check_dispo.split("\n");
-				//	alert(xmlhttp.responseText + "\n|" + check_DS_array[1] + "\n|" + check_DS_array[2] + "|");
-					if (check_DS_array[1] == 'Next agent_log_id:')
-						{agent_log_id = check_DS_array[2];}
+					VDRP_stage = 'READY';
+					VDRP_stage_seconds=0;
+					safe_pause_counter=0;
+					if (INgroupCOUNT > 0)
+						{
+						if (VICIDiaL_closer_blended == 0)
+							{VDRP_stage = 'CLOSER';}
+						else 
+							{VDRP_stage = 'READY';}
+						}
+					AutoDialReady = 1;
+					AutoDialWaiting = 1;
+					if (dial_method == "INBOUND_MAN")
+						{
+						auto_dial_level=starting_dial_level;
+
+						document.getElementById("DiaLControl").innerHTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif"); ?>\" border=\"0\" alt=\"You are active\" /></a><br /><a href=\"#\" onclick=\"ManualDialNext('','','','','','0','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_dialnextnumber.gif"); ?>\" border=\"0\" alt=\"Dial Next Number\" /></a>";
+						}
+					else
+						{
+						document.getElementById("DiaLControl").innerHTML = DiaLControl_auto_HTML_ready;
+						}
 					}
+				else
+					{
+					VDRP_stage = 'PAUSED';
+					VDRP_stage_seconds=0;
+					AutoDialReady = 0;
+					AutoDialWaiting = 0;
+					pause_code_counter = 0;
+					dial_next_failed=0;
+					safe_pause_counter=5;
+					if (dial_method == "INBOUND_MAN")
+						{
+						auto_dial_level=starting_dial_level;
+
+						document.getElementById("DiaLControl").innerHTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif"); ?>\" border=\"0\" alt=\"You are paused\" /></a><br /><a href=\"#\" onclick=\"ManualDialNext('','','','','','0','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_dialnextnumber.gif"); ?>\" border=\"0\" alt=\"Dial Next Number\" /></a>";
+						}
+					else
+						{
+						document.getElementById("DiaLControl").innerHTML = DiaLControl_auto_HTML;
+						}
+
+					if ( (agent_pause_codes_active=='FORCE') && (temp_reason != 'LOGOUT') && (temp_reason != 'REQUEUE') && (temp_reason != 'DIALNEXT') && (temp_auto != '1') )
+						{
+						PauseCodeSelectContent_create();
+						}
+					if (temp_auto == '1')
+						{
+						add_pause_code = "&sub_status=" + temp_auto_code;
+						}
+					}
+
+				var xmlhttp=false;
+				/*@cc_on @*/
+				/*@if (@_jscript_version >= 5)
+				// JScript gives us Conditional compilation, we can cope with old IE versions.
+				// and security blocked creation of the objects.
+				 try {
+				  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+				 } catch (e) {
+				  try {
+				   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+				  } catch (E) {
+				   xmlhttp = false;
+				  }
+				 }
+				@end @*/
+				if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+					{
+					xmlhttp = new XMLHttpRequest();
+					}
+				if (xmlhttp) 
+					{ 
+					autoDiaLready_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=" + taskaction + "&user=" + user + "&pass=" + pass + "&stage=" + VDRP_stage + "&agent_log_id=" + agent_log_id + "&agent_log=" + taskagentlog + "&wrapup=" + taskwrapup + "&campaign=" + campaign + "&dial_method=" + dial_method + "&comments=" + taskstatuschange + add_pause_code + "&qm_extension=" + qm_extension;
+					xmlhttp.open('POST', 'vdc_db_query.php'); 
+					xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+					xmlhttp.send(autoDiaLready_query); 
+					xmlhttp.onreadystatechange = function()
+						{ 
+						if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+							{
+							var check_dispo = null;
+							check_dispo = xmlhttp.responseText;
+							var check_DS_array=check_dispo.split("\n");
+						//	alert(xmlhttp.responseText + "\n|" + check_DS_array[1] + "\n|" + check_DS_array[2] + "|");
+							if (check_DS_array[1] == 'Next agent_log_id:')
+								{
+								if (agent_log_id.length > 0) {previous_agent_log_id = agent_log_id;}
+								var temp_agent_log_id = check_DS_array[2];
+								if (temp_agent_log_id === undefined)
+									{button_click_log = button_click_log + "" + SQLdate + "-----AJAX_pause_resume_undefined---" + temp_agent_log_id + " " + taskaction + " " + agent_log_id + "|";}
+								else
+									{agent_log_id = temp_agent_log_id;}
+								}
+							}
+						}
+					delete xmlhttp;
+					}
+				waiting_on_dispo=0;
 				}
-			delete xmlhttp;
 			}
-		waiting_on_dispo=0;
 		return agent_log_id;
 		}
-
 
 
 // ################################################################################
@@ -9835,6 +9877,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		{
 		if (typeof(xmlhttprequestcheckauto) == "undefined") 
 			{
+			CFAI_sent=1;
+			if (safe_pause_counter > 0)
+				{button_click_log = button_click_log + "" + SQLdate + "-----safe_pause_CFAI---" + safe_pause_counter + " " + VDRP_stage + "|";}
 			all_record = 'NO';
 			all_record_count=0;
 		//	document.vicidial_form.lead_id.value = '';
@@ -9857,17 +9902,18 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				{
 				xmlhttprequestcheckauto = new XMLHttpRequest();
 				}
-			if (xmlhttprequestcheckauto) 
-				{ 
-				checkVDAI_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&orig_pass=" + orig_pass + "&campaign=" + campaign + "&ACTION=VDADcheckINCOMING" + "&agent_log_id=" + agent_log_id + "&phone_login=" + phone_login + "&agent_email=" + LOGemail + "&conf_exten=" + session_id + "&camp_script=" + campaign_script + '' + "&in_script=" + CalL_ScripT_id + "&customer_server_ip=" + lastcustserverip + "&exten=" + extension + "&original_phone_login=" + original_phone_login + "&phone_pass=" + phone_pass;
-				xmlhttprequestcheckauto.open('POST', 'vdc_db_query.php'); 
+			if (xmlhttprequestcheckauto)
+				{
+				checkVDAI_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&orig_pass=" + orig_pass + "&campaign=" + campaign + "&ACTION=VDADcheckINCOMING" + "&agent_log_id=" + agent_log_id + "&phone_login=" + phone_login + "&agent_email=" + LOGemail + "&conf_exten=" + session_id + "&camp_script=" + campaign_script + '' + "&in_script=" + CalL_ScripT_id + "&customer_server_ip=" + lastcustserverip + "&exten=" + extension + "&original_phone_login=" + original_phone_login + "&phone_pass=" + phone_pass + "&VDRP_stage=" + VDRP_stage + "&previous_agent_log_id=" + previous_agent_log_id;
+				xmlhttprequestcheckauto.open('POST', 'vdc_db_query.php');
 				xmlhttprequestcheckauto.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-				xmlhttprequestcheckauto.send(checkVDAI_query); 
-				xmlhttprequestcheckauto.onreadystatechange = function() 
+				xmlhttprequestcheckauto.send(checkVDAI_query);
+				xmlhttprequestcheckauto.onreadystatechange = function()
 					{ 
 					if (xmlhttprequestcheckauto.readyState == 4 && xmlhttprequestcheckauto.status == 200) 
 						{
 						var check_incoming = null;
+						CFAI_sent=0;
 						check_incoming = xmlhttprequestcheckauto.responseText;
 					//	alert(checkVDAI_query);
 					//	alert(xmlhttprequestcheckauto.responseText);
@@ -9878,6 +9924,17 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							AutoDialWaiting = 0;
 							QUEUEpadding = 0;
 							UpdatESettingSChecK = 1;
+							safe_pause_counter=0;
+							// fix for receiving a call just after a pause
+							if (VDRP_stage == 'PAUSED')
+								{
+								button_click_log = button_click_log + "" + SQLdate + "-----paused_CFAI_caught---" + VDRP_stage + " " + agent_log_id + " " + previous_agent_log_id + "|";
+								agent_log_id = previous_agent_log_id;
+								}
+
+							VD_live_customer_call = 1;
+							VD_live_call_secondS = 0;
+							customer_sec = 0;
 
 							var VDIC_data_VDAC=check_VDIC_array[1].split("|");
 							VDIC_web_form_address = VICIDiaL_web_form_address;
@@ -9991,10 +10048,6 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								{custom_call_id			= " Call ID " + uniqueid_status_prefix + "" + VDIC_data_VDAC[1];}
 							if (uniqueid_status_display=='ENABLED_PRESERVE')
 								{custom_call_id			= " Call ID " + VDIC_data_VDIG[25];}
-
-							VD_live_customer_call = 1;
-							VD_live_call_secondS = 0;
-							customer_sec = 0;
 
 							// INSERT VICIDIAL_LOG ENTRY FOR THIS CALL PROCESS
 						//	DialLog("start");
@@ -10556,6 +10609,17 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							}
 							xmlhttprequestcheckauto = undefined;
 							delete xmlhttprequestcheckauto;
+
+						if (alert_box_close_counter > 0)
+							{
+							if (VDRP_stage != 'PAUSED')
+								{
+								agent_log_id = AutoDial_ReSume_PauSe("VDADpause",'','','','','1','');
+								}
+							button_click_log = button_click_log + "" + SQLdate + "-----CFAI_close_pause_alert---" + previous_agent_log_id + " " + agent_log_id + "|";
+							alert_box_close_counter=0;
+							hideDiv('AlertBox');
+							}
 						}
 					}
 				}
@@ -12680,6 +12744,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									{
 									if (check_DS_array[1] == 'Next agent_log_id:')
 										{
+										if (agent_log_id.length > 0) {previous_agent_log_id = agent_log_id;}
 										agent_log_id = check_DS_array[2];
 										}
 									}
@@ -13073,7 +13138,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					var check_pause_code = xmlhttp.responseText;
 					var check_PC_array=check_pause_code.split("\n");
 					if (check_PC_array[1] == 'Next agent_log_id:')
-						{agent_log_id = check_PC_array[2];}
+						{
+						if (agent_log_id.length > 0) {previous_agent_log_id = agent_log_id;}
+						agent_log_id = check_PC_array[2];
+						}
 				//	alert(VMCpausecode_query);
 				//	alert(xmlhttp.responseText + "\n|" + check_PC_array[1] + "\n|" + check_PC_array[2] + "|" + agent_log_id + "|" + pause_code_counter);
 					}
@@ -16484,9 +16552,10 @@ function phone_number_format(formatphone) {
 				if (agentonly_callbacks == '1')
 					{CB_count_check++;}
 
-				if (AutoDialWaiting == 1)
+				if ( (AutoDialWaiting == 1) || (safe_pause_counter > 0) )
 					{
 					check_for_auto_incoming();
+					safe_pause_counter=(safe_pause_counter - 1);
 					}
 				// look for a channel name for the manually dialed call
 				if (MD_channel_look==1)
@@ -16757,6 +16826,14 @@ function phone_number_format(formatphone) {
 						}
 					}
 				}
+			else
+				{
+				if (safe_pause_counter > 0)
+					{
+					check_for_auto_incoming();
+					safe_pause_counter=(safe_pause_counter - 1);
+					}
+				}
 			if (consult_custom_wait > 0)
 				{
 				if (consult_custom_wait == '1')
@@ -16798,6 +16875,12 @@ function phone_number_format(formatphone) {
 					{
 				//	document.getElementById("debugbottomspan").innerHTML = "waiting on dispo response to resume: " + waiting_on_dispo + "|" + updatedispo_resume_trigger;
 					}
+				}
+			if (alert_box_close_counter > 0)
+				{
+				alert_box_close_counter = (alert_box_close_counter - 1);
+				if (alert_box_close_counter < 1)
+					{hideDiv('AlertBox');}
 				}
 			}
 		setTimeout("all_refresh()", refresh_interval);

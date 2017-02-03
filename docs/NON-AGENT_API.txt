@@ -659,7 +659,7 @@ http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&functio
 
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=add_lead&phone_number=7275551111&campaign_id=TESTCAMP&callback=Y&callback_status=CALLBK&callback_datetime=NOW&callback_type=USERONLY&callback_user=6666&callback_comments=Comments+go+here
 
-Example responses:
+Example responses: (The "data" values for a successful add_lead request are: phone_number, list_id, lead_id, gmt_offset_now)
 SUCCESS: add_lead LEAD HAS BEEN ADDED - 7275551111|6666|999|193715|-4
 NOTICE: add_lead ADDED TO HOPPER - 7275551111|6666|193715|1677922
 
