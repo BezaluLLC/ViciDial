@@ -77,6 +77,11 @@ OTHER CHANGES:
 7. Added cm_sc_send_url.agi script for Call Menus on calls tied to a lead_id to
 	send a URL defined in a Settings Container.
 
+8. Added phone_number_log Non-Agent API export function
+
+9. Added api_only_user User option to prevent access to admin and agent screens
+	by an API-only user account.
+
 
 
 

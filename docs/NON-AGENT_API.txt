@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2016-10-20
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2017-02-04
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -41,6 +41,7 @@ server_refresh - forces a conf file refresh on all telco servers in the cluster
 check_phone_number - allows you to check if a phone number is valid and dialable
 logged_in_agents - list of agents that are logged in to the system
 update_campaign - updates campaign settings in the system
+phone_number_log - exports list of calls placed to one of more phone numbers
 
 
 New scripts:
@@ -115,6 +116,7 @@ Changes:
 160603-1041 - Added update_campaign function
 160709-2219 - Added lead_field_info function
 161020-1042 - Added lookup_state option to add_lead, added 10-digit validation if usacan_areacode_check enabled
+170204-0947 - Added phone_number_log function
 
 
 API Functions use the 'function' variable
@@ -329,6 +331,40 @@ ERROR: did_log_export NO RECORDS FOUND - 1255|3125551212|2010-12-03
 A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
 did_number|call_date|caller_id_number|length_in_sec
 3125551212|2010-12-03 12:00:01|7275551212|123
+
+
+
+
+
+--------------------------------------------------------------------------------
+phone_number_log - exports list of calls placed to one of more phone numbers
+
+NOTE: api user for this function must have user_level set to 7 or higher and "view reports" enabled
+
+REQUIRED FIELDS-
+phone_number -		the phone number(s) that you want to pull logs for. allows more than one, separated by commas
+
+SETTINGS FIELDS-
+stage -			the format of the exported data: csv, tab, pipe(default)
+header -		include a header(YES) or not(NO). This is optional, default is not to include a header
+detail -		(ALL) calls or only (LAST) call. default is (ALL)
+type -			(IN)inbound, (OUT)outbound or (ALL) calls. defauls is (OUT) calls
+
+NOTES- 
+There is a hard limit of 100000 results
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&function=phone_number_log&stage=pipe&user=6666&pass=1234&phone_number=3125551212,9998887112
+
+Example responses:
+ERROR: phone_number_log USER DOES NOT HAVE PERMISSION TO GET CALL LOG INFO - 6666|0
+ERROR: phone_number_log NO VALID PHONE NUMBERS DEFINED - 6666|312|2010-12-03
+ERROR: phone_number_log NO RECORDS FOUND - 1255|3125551212|2010-12-03
+
+A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
+phone_number|call_date|list_id|length_in_sec|lead_status|hangup_reason|call_status|source_id|user
+9998887112|2017-01-06 08:11:01|82106|25|TD|AGENT|SALE|mail098|6666
+
 
 
 

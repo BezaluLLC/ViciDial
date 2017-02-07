@@ -1,7 +1,7 @@
 <?php
 # non_agent_api.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with all non-agent-screen VICIDIAL functions
@@ -110,10 +110,11 @@
 # 160709-2233 - Added lead_field_info function
 # 160824-0802 - Fixed issue with allowed lists feature
 # 161020-1042 - Added lookup_state option to add_lead, added 10-digit validation if usacan_areacode_check enabled
+# 170205-2022 - Added phone_number_log function
 #
 
-$version = '2.12-86';
-$build = '161020-1042';
+$version = '2.14-87';
+$build = '170205-2022';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -408,6 +409,8 @@ if (isset($_GET["field_name"]))				{$field_name=$_GET["field_name"];}
 	elseif (isset($_POST["field_name"]))	{$field_name=$_POST["field_name"];}
 if (isset($_GET["lookup_state"]))			{$lookup_state=$_GET["lookup_state"];}
 	elseif (isset($_POST["lookup_state"]))	{$lookup_state=$_POST["lookup_state"];}
+if (isset($_GET["type"]))				{$type=$_GET["type"];}
+	elseif (isset($_POST["type"]))		{$type=$_POST["type"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -445,7 +448,7 @@ if ($non_latin < 1)
 	$entry_list_id = preg_replace('/[^0-9]/','',$entry_list_id);
 	$phone_code = preg_replace('/[^0-9]/','',$phone_code);
 	$update_phone_number=preg_replace('/[^A-Z]/','',$update_phone_number);
-	$phone_number = preg_replace('/[^0-9]/','',$phone_number);
+	$phone_number = preg_replace('/[^\,0-9]/','',$phone_number);
 	$vendor_lead_code = preg_replace('/;|#/','',$vendor_lead_code);
 		$vendor_lead_code = preg_replace('/\+/',' ',$vendor_lead_code);
 	$source_id = preg_replace('/;|#/','',$source_id);
@@ -588,6 +591,8 @@ if ($non_latin < 1)
 	$dial_timeout = preg_replace('/[^0-9]/','',$dial_timeout);
 	$field_name = preg_replace('/[^-_0-9a-zA-Z]/','',$field_name);
 	$lookup_state = preg_replace('/[^A-Z]/','',$lookup_state);
+	$detail = preg_replace('/[^A-Z]/','',$detail);
+	$type = preg_replace('/[^A-Z]/','',$type);
 	}
 else
 	{
@@ -4891,6 +4896,240 @@ if ($function == 'did_log_export')
 ################################################################################
 ### END did_log_export
 ################################################################################
+
+
+
+
+
+################################################################################
+### phone_number_log - exports list of calls placed to one of more phone numbers
+################################################################################
+if ($function == 'phone_number_log')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "phone_number_log USER DOES NOT HAVE PERMISSION TO GET CALL LOG INFO";
+			echo "$result: $result_reason: |$user|$allowed_user|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$output='';
+			$header_out=0;
+			$phones_count=0;
+			$phones_ready[0]='';
+			$search_SQL='';
+			$limit_SQL='';
+			$search_ready=0;
+			if (strlen($phone_number)>3)
+				{
+				if (preg_match("/,/",$phone_number))
+					{
+					$phones_ary = explode(",",$phone_number);
+					$phones_ary_ct = count($phones_ary);
+					$k=0;   $phones_in='';
+					while($phones_ary_ct > $k)
+						{
+						if (strlen($phones_ary[$k])>3)
+							{
+							$phones_ready[$phones_count] = "$phones_ary[$k]";
+							$phones_count++;
+							}
+						$k++;
+						}
+					}
+				else
+					{
+					$phones_ready[$phones_count] = "$phone_number";
+					$phones_count++;
+					}
+				}
+			if ($phones_count < 1)
+				{
+				$result = 'ERROR';
+				$result_reason = "phone_number_log NO VALID PHONE NUMBERS DEFINED";
+				$data = "$user|$phone_number|$date";
+				echo "$result: $result_reason: $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$m=0;
+				$k=0;
+				$number_found=0;
+				if ($detail == 'LAST')
+					{$limit_SQL = "order by call_date desc limit 1";}
+				else
+					{$limit_SQL = "order by call_date desc limit 100000";}
+				if ( ($type!='IN') and ($type!='OUT') and ($type!='ALL') ) {$type='OUT';}
+
+				$DLset=0;
+				if ($stage == 'csv')
+					{$DL = ',';   $DLset++;}
+				if ($stage == 'tab')
+					{$DL = "\t";   $DLset++;}
+				if ($stage == 'pipe')
+					{$DL = '|';   $DLset++;}
+				if ($DLset < 1)
+					{$DL='|';   $stage='pipe';}
+
+				while($phones_count > $m)
+					{
+					$search_SQL = "phone_number='$phones_ready[$m]'";
+
+					if ($DB>0) {echo "DEBUG: $m|$phones_count|$phones_ready[$m]\n";}
+
+					##### FIND ALL OUTBOUND CALLS #####
+					if ( ($type == 'OUT') or ($type == 'ALL') )
+						{
+						$s=0;
+						$stmt="SELECT call_date,list_id,lead_id,length_in_sec,status,term_reason,user from vicidial_log where $search_SQL $limit_SQL;";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$rec_recs = mysqli_num_rows($rslt);
+						if ($DB>0) {echo "DEBUG: phone_number_log outbound query - $rec_recs|$stmt\n";}
+						if ($rec_recs > 0)
+							{
+							$number_found++;
+							if ( ($header == 'YES') and ($header_out < 1) )
+								{
+								$output .= 'phone_number' . $DL . 'call_date' . $DL . 'list_id' . $DL . 'length_in_sec' . $DL . 'lead_status' . $DL . 'hangup_reason' . $DL . 'call_status' . $DL . 'source_id' . $DL . "user\n";
+								$header_out++;
+								}
+
+							while ($rec_recs > $s)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$DLphone_number[$k] =		$phones_ready[$m];
+								$DLcall_date[$k] =			$row[0];
+								$DLlist_id[$k] =			$row[1];
+								$DLlead_id[$k] =			$row[2];
+								$DLlength_in_sec[$k] =		$row[3];
+								$DLdispo_status[$k] =		$row[4];	
+								$DLhangup_reason[$k] =		$row[5];	
+								$DLlead_status[$k] =		$row[4];	
+								$DLsource_id[$k] =			'';	
+								$DLuser[$k] =				$row[6];	
+								$k++;
+								$s++;
+								}
+							}
+						}
+					##### FIND ALL INBOUND CALLS #####
+					if ( ($type == 'IN') or ($type == 'ALL') )
+						{
+						$s=0;
+						$stmt="SELECT call_date,list_id,lead_id,length_in_sec,status,term_reason,user from vicidial_closer_log where $search_SQL $limit_SQL;";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$rec_recs = mysqli_num_rows($rslt);
+						if ($DB>0) {echo "DEBUG: phone_number_log inbound query - $rec_recs|$stmt\n";}
+						if ($rec_recs > 0)
+							{
+							$number_found++;
+							if ( ($header == 'YES') and ($header_out < 1) )
+								{
+								$output .= 'phone_number' . $DL . 'call_date' . $DL . 'list_id' . $DL . 'length_in_sec' . $DL . 'lead_status' . $DL . 'hangup_reason' . $DL . 'call_status' . $DL . 'source_id' . $DL . "user\n";
+								$header_out++;
+								}
+
+							while ($rec_recs > $s)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$DLphone_number[$k] =		$phones_ready[$m];
+								$DLcall_date[$k] =			$row[0];
+								$DLlist_id[$k] =			$row[1];
+								$DLlead_id[$k] =			$row[2];
+								$DLlength_in_sec[$k] =		$row[3];
+								$DLdispo_status[$k] =		$row[4];	
+								$DLhangup_reason[$k] =		$row[5];	
+								$DLstatus[$k] =				$row[4];	
+								$DLsource_id[$k] =			'';	
+								$DLuser[$k] =				$row[6];	
+								$k++;
+								$s++;
+								}
+							}
+						}
+					$m++;
+					}
+
+				$p=0;
+				while ($k > $p)
+					{
+					$DLlength_in_sec[$k]=0;
+					$DLcloser_epoch[$k]=$DLepoch[$k];
+					$stmt="SELECT status,source_id from vicidial_list where lead_id='$DLlead_id[$p]';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$vcl_recs = mysqli_num_rows($rslt);
+					if ($DB>0) {echo "DEBUG: phone_number_log list query - $vcl_recs|$stmt\n";}
+					if ($vcl_recs > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$DLlead_status[$p] =		$row[0];
+						$DLsource_id[$p] =			$row[1];
+						}
+					$output .= "$DLphone_number[$p]$DL$DLcall_date[$p]$DL$DLlist_id[$p]$DL$DLlength_in_sec[$p]$DL$DLlead_status[$p]$DL$DLhangup_reason[$p]$DL$DLdispo_status[$p]$DL$DLsource_id[$p]$DL$DLuser[$p]\n";
+
+					$p++;
+					}
+
+				if ($number_found < 1)
+					{
+					$result = 'NOTICE';
+					$result_reason = "phone_number_log NO RECORDS FOUND FOR THIS PHONE NUMBER";
+					$data = "$user|$phone_number|$lead_id|$date";
+					echo "$result: $result_reason - $data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				else
+					{
+					echo "$output";
+
+					$result = 'SUCCESS';
+					$data = "$user|$agent_user|$lead_id|$date|$stage";
+					$result_reason = "phone_number_log RECORDS FOUND: $rec_recs";
+
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END phone_number_log
+################################################################################
+
+
+
+
 
 
 

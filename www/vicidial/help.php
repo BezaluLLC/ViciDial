@@ -107,6 +107,7 @@
 # 161226-2214 - Added conf_qualify entry
 # 170113-1647 - Added call menu in-group option DYNAMIC_INGROUP_VAR for use with cm_phonesearch.agi
 # 170114-1404 - Added inbound_groups-populate_lead_province entry
+# 170207-1331 - Added api_only_user entry
 #
 
 
@@ -704,9 +705,14 @@ if ($SSqc_features_active > 0)
 <B><?php echo _QXZ("Agent API Access"); ?> -</B><?php echo _QXZ("This option allows the account to be used with the agent and non-agent API commands."); ?>
 
 <BR>
-<A NAME="users-api_list_restrict">
+<A NAME="users-vdc_agent_api_access">
 <BR>
-<B><?php echo _QXZ("API List Restrict"); ?> -</B><?php echo _QXZ("This option will restrict any API actions used by this user to be restricted only within the lists included within the user group allowable campaigns for this user. Default is 0 for disabled."); ?>
+<B><?php echo _QXZ("Agent API Access"); ?> -</B><?php echo _QXZ("This option allows the account to be used with the agent and non-agent API commands."); ?>
+
+<BR>
+<A NAME="users-api_only_user">
+<BR>
+<B><?php echo _QXZ("API Only User"); ?> -</B><?php echo _QXZ("This option if enabled will prevent a user from being able to log in to the admin web screen and the agent screen. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="users-api_allowed_functions">

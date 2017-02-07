@@ -34,3 +34,7 @@ UPDATE system_settings SET db_schema_version='1484',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_inbound_groups ADD populate_lead_province VARCHAR(20) default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1485',db_schema_update_date=NOW() where db_schema_version < 1485;
+
+ALTER TABLE vicidial_users ADD api_only_user ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1486',db_schema_update_date=NOW() where db_schema_version < 1486;

@@ -419,10 +419,11 @@
 # 161222-0728 - Fixed issue with Scheduled Callbacks with tilde'~' in text fields
 # 161231-1250 - Fixed issue #985, inbound dispo call url
 # 170201-2214 - Fix for receiving call just after a pause
+# 170207-1315 - Added user option api_only_user
 #
 
-$version = '2.14-313';
-$build = '170201-2214';
+$version = '2.14-314';
+$build = '170207-1315';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=658;
@@ -1026,7 +1027,7 @@ if ($ACTION == 'LogiNCamPaigns')
 		}
 	else
 		{
-		$stmt="SELECT user_group,user_level,agent_shift_enforcement_override,shift_override_flag,user_choose_language from vicidial_users where user='$user';";
+		$stmt="SELECT user_group,user_level,agent_shift_enforcement_override,shift_override_flag,user_choose_language from vicidial_users where user='$user' and api_only_user != '1';";
 		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00004',$user,$server_ip,$session_name,$one_mysql_log);}
