@@ -11512,7 +11512,7 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_urlARY[$j] = preg_replace('/--A--closer--B--/i',"$user",$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--group--B--/i',"$VDADchannel_group",$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--channel_group--B--/i',"$VDADchannel_group",$dispo_call_urlARY[$j]);
-		$dispo_call_urlARY[$j] = preg_replace('/--A--SQLdate--B--/i',"$SQLdate",$dispo_call_urlARY[$j]);
+		$dispo_call_urlARY[$j] = preg_replace('/--A--SQLdate--B--/i',urlencode(trim($SQLdate)),$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--epoch--B--/i',"$epoch",$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--uniqueid--B--/i',"$uniqueid",$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--customer_zap_channel--B--/i',urlencode(trim($customer_zap_channel)),$dispo_call_urlARY[$j]);
