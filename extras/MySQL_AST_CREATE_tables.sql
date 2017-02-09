@@ -3591,6 +3591,13 @@ index (channel_group),
 index (park_end_time)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_api_urls (
+api_id INT(9) UNSIGNED PRIMARY KEY NOT NULL,
+api_date DATETIME,
+remote_ip VARCHAR(50),
+url MEDIUMTEXT
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3766,6 +3773,7 @@ CREATE UNIQUE INDEX vddla on vicidial_dial_log_archive (caller_code,call_date);
 
 CREATE TABLE vicidial_api_log_archive LIKE vicidial_api_log;
 ALTER TABLE vicidial_api_log_archive MODIFY api_id INT(9) UNSIGNED NOT NULL;
+CREATE TABLE vicidial_api_urls_archive LIKE vicidial_api_urls;
 
 CREATE TABLE vicidial_callbacks_archive LIKE vicidial_callbacks;
 ALTER TABLE vicidial_callbacks_archive MODIFY callback_id INT(9) UNSIGNED NOT NULL;
@@ -3848,4 +3856,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1486',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1487',db_schema_update_date=NOW(),reload_timestamp=NOW();

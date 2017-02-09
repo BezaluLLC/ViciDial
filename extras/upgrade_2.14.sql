@@ -38,3 +38,14 @@ UPDATE system_settings SET db_schema_version='1485',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_users ADD api_only_user ENUM('0','1') default '0';
 
 UPDATE system_settings SET db_schema_version='1486',db_schema_update_date=NOW() where db_schema_version < 1486;
+
+CREATE TABLE vicidial_api_urls (
+api_id INT(9) UNSIGNED PRIMARY KEY NOT NULL,
+api_date DATETIME,
+remote_ip VARCHAR(50),
+url MEDIUMTEXT
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_api_urls_archive LIKE vicidial_api_urls;
+
+UPDATE system_settings SET db_schema_version='1487',db_schema_update_date=NOW() where db_schema_version < 1487;

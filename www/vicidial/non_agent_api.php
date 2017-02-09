@@ -111,10 +111,11 @@
 # 160824-0802 - Fixed issue with allowed lists feature
 # 161020-1042 - Added lookup_state option to add_lead, added 10-digit validation if usacan_areacode_check enabled
 # 170205-2022 - Added phone_number_log function
+# 170209-1149 - Added URL and IP logging
 #
 
-$version = '2.14-87';
-$build = '170205-2022';
+$version = '2.14-88';
+$build = '170209-1149';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -613,6 +614,18 @@ $NOW_TIME = date("Y-m-d H:i:s");
 $CIDdate = date("mdHis");
 $ENTRYdate = date("YmdHis");
 $ip = getenv("REMOTE_ADDR");
+$query_string = getenv("QUERY_STRING");
+$REQUEST_URI = getenv("REQUEST_URI");
+$POST_URI = '';
+foreach($_POST as $key=>$value)
+	{$POST_URI .= '&'.$key.'='.$value;}
+if (strlen($POST_URI)>1)
+	{$POST_URI = preg_replace("/^&/",'',$POST_URI);}
+$REQUEST_URI = preg_replace("/'|\"|\\\\|;/","",$REQUEST_URI);
+$POST_URI = preg_replace("/'|\"|\\\\|;/","",$POST_URI);
+if ( (strlen($query_string) < 3) and (strlen($POST_URI) > 2) )
+	{$query_string = $POST_URI;}
+
 $MT[0]='';
 $api_script = 'non-agent';
 $api_logging = 1;
@@ -9900,7 +9913,7 @@ function api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$val
 	{
 	if ($api_logging > 0)
 		{
-		global $startMS;
+		global $startMS, $query_string, $ip;
 
 		$CL=':';
 		$script_name = getenv("SCRIPT_NAME");
@@ -9911,6 +9924,7 @@ function api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$val
 		if (($server_port == '80') or ($server_port == '443') ) {$server_port='';}
 		else {$server_port = "$CL$server_port";}
 		$apiPAGE = "$HTTPprotocol$server_name$server_port$script_name";
+		$apiURL = $apiPAGE . '?' . $query_string;
 
 		$endMS = microtime();
 		$startMSary = explode(" ",$startMS);
@@ -9965,6 +9979,14 @@ function api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$val
 		$NOW_TIME = date("Y-m-d H:i:s");
 		$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$agent_user',function='$function',value='$value',result='$result',result_reason='$result_reason',source='$source',data='$data',api_date='$NOW_TIME',api_script='$api_script',run_time='$TOTALrun',webserver='$webserver_id',api_url='$url_id';";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$ALaffected_rows = mysqli_affected_rows($link);
+		$api_id = mysqli_insert_id($link);
+
+		if ($ALaffected_rows > 0)
+			{
+			$stmt="INSERT INTO vicidial_api_urls set api_id='$api_id',api_date=NOW(),remote_ip='$ip',url='$apiURL';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			}
 		}
 	return 1;
 	}

@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2017-02-04
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2017-02-09
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -117,6 +117,7 @@ Changes:
 160709-2219 - Added lead_field_info function
 161020-1042 - Added lookup_state option to add_lead, added 10-digit validation if usacan_areacode_check enabled
 170204-0947 - Added phone_number_log function
+170209-1149 - Added URL and IP logging
 
 
 API Functions use the 'function' variable

@@ -3,11 +3,12 @@
 #
 # This report is for viewing the a report of API activity to the vicidial_api_log table
 #
-# Copyright (C) 2016  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
 # 160305-0842 - First build
+# 170209-1237 - Added URL and IP display
 #
 
 $startMS = microtime();
@@ -45,6 +46,8 @@ if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_d
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
 	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
+if (isset($_GET["show_urls"]))			{$show_urls=$_GET["show_urls"];}
+	elseif (isset($_POST["show_urls"]))	{$show_urls=$_POST["show_urls"];}
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 
@@ -100,10 +103,12 @@ for ($t=0; $t<count($log_tables_array); $t++)
 if ($search_archived_data) 
 	{
 	$vicidial_api_log_table=use_archive_table("vicidial_api_log");
+	$vicidial_api_log_table=use_archive_table("vicidial_api_urls");
 	}
 else
 	{
 	$vicidial_api_log_table="vicidial_api_log";
+	$vicidial_api_urls_table="vicidial_api_urls";
 	}
 #############
 
@@ -118,7 +123,7 @@ else
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
 
-$stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
+$stmt="SELECT selected_language,modify_same_user_level,user_level,modify_users from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $sl_ct = mysqli_num_rows($rslt);
@@ -126,6 +131,9 @@ if ($sl_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
 	$VUselected_language =		$row[0];
+	$VUmodify_same_user_level =	$row[1];
+	$VUuser_level =				$row[2];
+	$VUmodify_users =			$row[3];
 	}
 
 $auth=0;
@@ -472,7 +480,7 @@ while ($row=mysqli_fetch_array($rslt)) {
 
 if ($DB) {echo "$user_group_string|$user_group_ct|$user_groupQS|$i<BR>\n";}
 
-$LINKbase = "$PHP_SELF?DB=$DB&api_date_D=$api_date_D&api_date_T=$api_date_T&api_date_end_D=$api_date_end_D&api_date_end_T=$api_date_end_T$resultQS$functionQS$agent_userQS$userQS&shift=$shift&DB=$DB&show_percentages=$show_percentages&SUBMIT=1";
+$LINKbase = "$PHP_SELF?DB=$DB&api_date_D=$api_date_D&api_date_T=$api_date_T&api_date_end_D=$api_date_end_D&api_date_end_T=$api_date_end_T$resultQS$functionQS$agent_userQS$userQS&shift=$shift&DB=$DB&show_percentages=$show_percentages&show_urls=$show_urls&search_archived_data=$search_archived_data&SUBMIT=1";
 
 $NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
@@ -604,10 +612,12 @@ $HTML_text.="</TD>\n";
 
 $HTML_text.="<TD VALIGN='TOP'><BR><BR>";
 $HTML_text.="<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
+$HTML_text.="<BR><BR><input type='checkbox' name='show_urls' value='checked' $show_urls>"._QXZ("Show URLs, slower")."\n";
 if ($archives_available=="Y") 
 	{
-	$HTML_text.="<BR><BR><input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."\n";
+	$HTML_text.="<BR><input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."\n";
 	}
+
 $HTML_text.="</TD>";
 $HTML_text.="</TR></TABLE>";
 $HTML_text.="</FORM>\n\n";
@@ -616,20 +626,37 @@ $HTML_text.="<PRE><FONT SIZE=2>\n";
 
 if ($SUBMIT && $api_date_D && $api_date_T && $api_date_end_D && $api_date_end_T) 
 	{
-	$stmt="select * from $vicidial_api_log_table where api_date>='$api_date_D $api_date_T' and api_date<='$api_date_end_D $api_date_end_T' $result_SQL $function_SQL $agent_user_SQL $user_SQL order by $order_by asc";
+	$stmt="select api_id,user,api_date,api_script,function,agent_user,value,result,result_reason,source,data,run_time,webserver,api_url from $vicidial_api_log_table where api_date>='$api_date_D $api_date_T' and api_date<='$api_date_end_D $api_date_end_T' $result_SQL $function_SQL $agent_user_SQL $user_SQL order by $order_by asc";
+	if ($show_urls)
+		{
+		$stmt="select A.api_id,user,A.api_date,api_script,function,agent_user,value,result,result_reason,source,data,run_time,webserver,api_url,remote_ip,url from $vicidial_api_log_table A, $vicidial_api_urls_table B where A.api_date>='$api_date_D $api_date_T' and A.api_date<='$api_date_end_D $api_date_end_T' and A.api_id=B.api_id $result_SQL $function_SQL $agent_user_SQL $user_SQL order by $order_by asc";
+		}
 	if ($DB) {print $stmt."\n";}
 	# print $stmt."\n";
 
+	$URL_header='';
 	$ASCII_border="+---------------------+--------------------------------+------------+----------------------+--------------------------------+------------+----------------------+----------+-----------+-----------+\n";
+	if ($show_urls)
+		{
+		$ASCII_border="+---------------------+--------------------------------+------------+----------------------+--------------------------------+------------+----------------------+----------+-----------+-----------+----------------------+----------\n";
+		$URL_header="  REMOTE IP           |    URL";
+		}
 	$HTML_text.=$ASCII_rpt_header;
 	$HTML_text.=sprintf("%110s", " ");
-	$HTML_text.="<a href=\"$PHP_SELF?api_date_D=$api_date_D&api_date_T=$api_date_T&api_date_end_D=$api_date_end_D&api_date_end_T=$api_date_end_T$resultQS$functionQS$agent_userQS$userQS&file_download=1&SUBMIT=$SUBMIT\">"._QXZ("DOWNLOAD")."</a>\n";
+	$HTML_text.="<a href=\"$PHP_SELF?api_date_D=$api_date_D&api_date_T=$api_date_T&api_date_end_D=$api_date_end_D&api_date_end_T=$api_date_end_T$resultQS$functionQS$agent_userQS$userQS&file_download=1&show_urls=$show_urls&search_archived_data=$search_archived_data&SUBMIT=$SUBMIT\">"._QXZ("DOWNLOAD")."</a>\n";
 
 	$HTML_text.=$ASCII_border;
-	$HTML_text.="| <a href='$LINKbase&order_by=api_date'>API DATE</a>            | <a href='$LINKbase&order_by=user'>USER</a>                           | <a href='$LINKbase&order_by=api_script'>API SCRIPT</a> | <a href='$LINKbase&order_by=function'>FUNCTION</a>             | <a href='$LINKbase&order_by=agent_user'>AGENT USER</a>                     | <a href='$LINKbase&order_by=result'>RESULT</a>     | <a href='$LINKbase&order_by=source'>SOURCE</a>               | <a href='$LINKbase&order_by=run_time'>RUN TIME</a> | <a href='$LINKbase&order_by=webserver'>WEBSERVER</a> | <a href='$LINKbase&order_by=api_url'>API URL</a>   |\n";
+	$HTML_text.="| <a href='$LINKbase&order_by=api_date'>API DATE</a>            | <a href='$LINKbase&order_by=user'>USER</a>                           | <a href='$LINKbase&order_by=api_script'>API SCRIPT</a> | <a href='$LINKbase&order_by=function'>FUNCTION</a>             | <a href='$LINKbase&order_by=agent_user'>AGENT USER</a>                     | <a href='$LINKbase&order_by=result'>RESULT</a>     | <a href='$LINKbase&order_by=source'>SOURCE</a>               | <a href='$LINKbase&order_by=run_time'>RUN TIME</a> | <a href='$LINKbase&order_by=webserver'>WEBSERVER</a> | <a href='$LINKbase&order_by=api_url'>API URL</a>   |$URL_header\n";
 	$HTML_text.=$ASCII_border;
 
-	$CSV_text.="\n\"API DATE\",\"USER\",\"API SCRIPT\",\"FUNCTION\",\"AGENT USER\",\"VALUE\",\"RESULT\",\"RESULT REASON\",\"SOURCE\",\"DATA\",\"RUN TIME\",\"WEBSERVER\",\"API URL\"\n";
+	if ($show_urls)
+		{
+		$CSV_text.="\n\"API DATE\",\"USER\",\"API SCRIPT\",\"FUNCTION\",\"AGENT USER\",\"VALUE\",\"RESULT\",\"RESULT REASON\",\"SOURCE\",\"DATA\",\"RUN TIME\",\"WEBSERVER\",\"API URL\",\"REMOTE IP\",\"FULL URL STRING\"\n";
+		}
+	else
+		{
+		$CSV_text.="\n\"API DATE\",\"USER\",\"API SCRIPT\",\"FUNCTION\",\"AGENT USER\",\"VALUE\",\"RESULT\",\"RESULT REASON\",\"SOURCE\",\"DATA\",\"RUN TIME\",\"WEBSERVER\",\"API URL\"\n";
+		}
 
 	$rslt=mysql_to_mysqli($stmt, $link);
 	while ($row=mysqli_fetch_array($rslt)) 
@@ -646,8 +673,21 @@ if ($SUBMIT && $api_date_D && $api_date_T && $api_date_end_D && $api_date_end_T)
 		$HTML_text.=sprintf("%-20s", $row["source"])." | ";
 		$HTML_text.=sprintf("%-8s", substr($row["run_time"],0,8))." | ";
 		$HTML_text.=sprintf("%-9s", $row["webserver"])." | ";
-		$HTML_text.=sprintf("%-9s", $row["api_url"])." |\n";
-		$CSV_text.="\"$row[api_date]\",\"$full_user\",\"$row[api_script]\",\"$row[function]\",\"$full_agent_user\",\"$row[value]\",\"$row[result]\",\"$row[result_reason]\",\"$row[source]\",\"$row[data]\",\"$row[run_time]\",\"$row[webserver]\",\"$row[api_url]\"\n";
+		$HTML_text.=sprintf("%-9s", $row["api_url"])." | ";
+		if ($show_urls)
+			{
+			$full_url = $row["url"];
+			if ( ($VUmodify_same_user_level < 1) or ($VUuser_level < 9) or ($VUmodify_users < 1) )
+				{$full_url = preg_replace("/&pass=[\s\S]+?&/",'&pass=XXXX&',$full_url);}
+			$HTML_text.=sprintf("%-20s", $row["remote_ip"])." | ";
+			$HTML_text.=sprintf("%-2000s", $full_url)." | ";
+			$CSV_text.="\"$row[api_date]\",\"$full_user\",\"$row[api_script]\",\"$row[function]\",\"$full_agent_user\",\"$row[value]\",\"$row[result]\",\"$row[result_reason]\",\"$row[source]\",\"$row[data]\",\"$row[run_time]\",\"$row[webserver]\",\"$row[api_url]\",\"$row[remote_ip]\",\"$full_url\"\n";
+			}
+		else
+			{
+			$CSV_text.="\"$row[api_date]\",\"$full_user\",\"$row[api_script]\",\"$row[function]\",\"$full_agent_user\",\"$row[value]\",\"$row[result]\",\"$row[result_reason]\",\"$row[source]\",\"$row[data]\",\"$row[run_time]\",\"$row[webserver]\",\"$row[api_url]\"\n";
+			}
+		$HTML_text.="\n";
 		}
 	$HTML_text.=$ASCII_border;
 	}

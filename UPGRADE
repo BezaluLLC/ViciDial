@@ -82,6 +82,8 @@ OTHER CHANGES:
 9. Added api_only_user User option to prevent access to admin and agent screens
 	by an API-only user account.
 
+10. Added logging of API request URLs
+
 
 
 

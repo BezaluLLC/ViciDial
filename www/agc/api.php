@@ -1,7 +1,7 @@
 <?php
 # api.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with the VICIDIAL Agent screen
@@ -87,17 +87,29 @@
 # 160113-0921 - Fix for numeric audio files in playback function
 # 161102-1042 - Fixed QM partition problem
 # 161103-1729 - Added agent_debug to audio playing
+# 170209-1222 - Added URL and IP logging
 #
 
-$version = '2.12-53';
-$build = '161103-1729';
+$version = '2.14-54';
+$build = '170209-1222';
 
 $startMS = microtime();
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
 
+$ip = getenv("REMOTE_ADDR");
 $query_string = getenv("QUERY_STRING");
+$REQUEST_URI = getenv("REQUEST_URI");
+$POST_URI = '';
+foreach($_POST as $key=>$value)
+	{$POST_URI .= '&'.$key.'='.$value;}
+if (strlen($POST_URI)>1)
+	{$POST_URI = preg_replace("/^&/",'',$POST_URI);}
+$REQUEST_URI = preg_replace("/'|\"|\\\\|;/","",$REQUEST_URI);
+$POST_URI = preg_replace("/'|\"|\\\\|;/","",$POST_URI);
+if ( (strlen($query_string) < 3) and (strlen($POST_URI) > 2) )
+	{$query_string = $POST_URI;}
 
 ### If you have globals turned off uncomment these lines
 if (isset($_GET["user"]))						{$user=$_GET["user"];}
@@ -3900,7 +3912,7 @@ function api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$val
 	{
 	if ($api_logging > 0)
 		{
-		global $startMS;
+		global $startMS, $query_string, $ip;
 
 		$CL=':';
 		$script_name = getenv("SCRIPT_NAME");
@@ -3911,6 +3923,7 @@ function api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$val
 		if (($server_port == '80') or ($server_port == '443') ) {$server_port='';}
 		else {$server_port = "$CL$server_port";}
 		$apiPAGE = "$HTTPprotocol$server_name$server_port$script_name";
+		$apiURL = $apiPAGE . '?' . $query_string;
 
 		$endMS = microtime();
 		$startMSary = explode(" ",$startMS);
@@ -3965,6 +3978,14 @@ function api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$val
 		$NOW_TIME = date("Y-m-d H:i:s");
 		$stmt="INSERT INTO vicidial_api_log set user='$user',agent_user='$agent_user',function='$function',value='$value',result='$result',result_reason='$result_reason',source='$source',data='$data',api_date='$NOW_TIME',api_script='$api_script',run_time='$TOTALrun',webserver='$webserver_id',api_url='$url_id';";
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$ALaffected_rows = mysqli_affected_rows($link);
+		$api_id = mysqli_insert_id($link);
+
+		if ($ALaffected_rows > 0)
+			{
+			$stmt="INSERT INTO vicidial_api_urls set api_id='$api_id',api_date=NOW(),remote_ip='$ip',url='$apiURL';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			}
 		}
 	return 1;
 	}
