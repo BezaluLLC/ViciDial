@@ -9,6 +9,7 @@
 #
 # 160305-0842 - First build
 # 170209-1237 - Added URL and IP display
+# 170210-0700 - Reworked Show URLs code to be faster
 #
 
 $startMS = microtime();
@@ -627,10 +628,6 @@ $HTML_text.="<PRE><FONT SIZE=2>\n";
 if ($SUBMIT && $api_date_D && $api_date_T && $api_date_end_D && $api_date_end_T) 
 	{
 	$stmt="select api_id,user,api_date,api_script,function,agent_user,value,result,result_reason,source,data,run_time,webserver,api_url from $vicidial_api_log_table where api_date>='$api_date_D $api_date_T' and api_date<='$api_date_end_D $api_date_end_T' $result_SQL $function_SQL $agent_user_SQL $user_SQL order by $order_by asc";
-	if ($show_urls)
-		{
-		$stmt="select A.api_id,user,A.api_date,api_script,function,agent_user,value,result,result_reason,source,data,run_time,webserver,api_url,remote_ip,url from $vicidial_api_log_table A, $vicidial_api_urls_table B where A.api_date>='$api_date_D $api_date_T' and A.api_date<='$api_date_end_D $api_date_end_T' and A.api_id=B.api_id $result_SQL $function_SQL $agent_user_SQL $user_SQL order by $order_by asc";
-		}
 	if ($DB) {print $stmt."\n";}
 	# print $stmt."\n";
 
@@ -659,36 +656,64 @@ if ($SUBMIT && $api_date_D && $api_date_T && $api_date_end_D && $api_date_end_T)
 		}
 
 	$rslt=mysql_to_mysqli($stmt, $link);
+	$g=0;
 	while ($row=mysqli_fetch_array($rslt)) 
 		{
-		$full_user=substr($row["user"].$user_directory[$row["user"]], 0, 30);
-		$full_agent_user=substr($row["agent_user"].$user_directory[$row["agent_user"]], 0, 30);
+		$full_user[$g] =		substr($row["user"].$user_directory[$row["user"]], 0, 30);
+		$full_agent_user[$g] =	substr($row["agent_user"].$user_directory[$row["agent_user"]], 0, 30);
+		$api_id[$g] =			$row["api_id"];
+		$api_date[$g] =			sprintf("%-19s", $row["api_date"]);
+		$api_script[$g] =		sprintf("%-10s", $row["api_script"]);
+		$function[$g] =			sprintf("%-20s", $row["function"]);
+		$result[$g] =			sprintf("%-10s", $row["result"]);
+		$source[$g] =			sprintf("%-20s", $row["source"]);
+		$run_time[$g] =			sprintf("%-8s", substr($row["run_time"],0,8));
+		$webserver[$g] =		sprintf("%-9s", $row["webserver"]);
+		$api_url[$g] =			sprintf("%-9s", $row["api_url"]);
+		$value[$g] =			$row["value"];
+		$result_reason[$g] =	$row["result_reason"];
+		$data[$g] =				$row["data"];
+		$g++;
+		}
+
+	$h=0;
+	while ($h < $g) 
+		{
 		$HTML_text.="| ";
-		$HTML_text.=sprintf("%-19s", $row["api_date"])." | ";
-		$HTML_text.=sprintf("%-30s", $full_user)." | ";
-		$HTML_text.=sprintf("%-10s", $row["api_script"])." | ";
-		$HTML_text.=sprintf("%-20s", $row["function"])." | ";
-		$HTML_text.=sprintf("%-30s", $full_agent_user)." | ";
-		$HTML_text.=sprintf("%-10s", $row["result"])." | ";
-		$HTML_text.=sprintf("%-20s", $row["source"])." | ";
-		$HTML_text.=sprintf("%-8s", substr($row["run_time"],0,8))." | ";
-		$HTML_text.=sprintf("%-9s", $row["webserver"])." | ";
-		$HTML_text.=sprintf("%-9s", $row["api_url"])." | ";
+		$HTML_text.=sprintf("%-19s", $api_date[$h])." | ";
+		$HTML_text.=sprintf("%-30s", $full_user[$h])." | ";
+		$HTML_text.=sprintf("%-10s", $api_script[$h])." | ";
+		$HTML_text.=sprintf("%-20s", $function[$h])." | ";
+		$HTML_text.=sprintf("%-30s", $full_agent_user[$h])." | ";
+		$HTML_text.=sprintf("%-10s", $result[$h])." | ";
+		$HTML_text.=sprintf("%-20s", $source[$h])." | ";
+		$HTML_text.=sprintf("%-8s", $run_time[$h])." | ";
+		$HTML_text.=sprintf("%-9s", $webserver[$h])." | ";
+		$HTML_text.=sprintf("%-9s", $api_url[$h])." | ";
 		if ($show_urls)
 			{
-			$full_url = $row["url"];
-			if ( ($VUmodify_same_user_level < 1) or ($VUuser_level < 9) or ($VUmodify_users < 1) )
-				{$full_url = preg_replace("/&pass=[\s\S]+?&/",'&pass=XXXX&',$full_url);}
-			$HTML_text.=sprintf("%-20s", $row["remote_ip"])." | ";
-			$HTML_text.=sprintf("%-2000s", $full_url)." | ";
-			$CSV_text.="\"$row[api_date]\",\"$full_user\",\"$row[api_script]\",\"$row[function]\",\"$full_agent_user\",\"$row[value]\",\"$row[result]\",\"$row[result_reason]\",\"$row[source]\",\"$row[data]\",\"$row[run_time]\",\"$row[webserver]\",\"$row[api_url]\",\"$row[remote_ip]\",\"$full_url\"\n";
+			$stmt="select remote_ip,url from $vicidial_api_urls_table where api_id='$api_id[$h]';";
+			if ($DB) {print $stmt."\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			while ($row=mysqli_fetch_array($rslt)) 
+				{
+				$full_url = $row["url"];
+				$remote_ip = $row["remote_ip"];
+				if ( ($VUmodify_same_user_level < 1) or ($VUuser_level < 9) or ($VUmodify_users < 1) )
+					{$full_url = preg_replace("/&pass=[\s\S]+?&/",'&pass=XXXX&',$full_url);}
+				$HTML_text.=sprintf("%-20s", $row["remote_ip"])." | ";
+				$HTML_text.=sprintf("%-2000s", $full_url)." | ";
+				$CSV_text.="\"$api_date[$h]\",\"$full_user[$h]\",\"$api_script[$h]\",\"$function[$h]\",\"$full_agent_user[$h]\",\"$value[$h]\",\"$result[$h]\",\"$result_reason[$h]\",\"$source[$h]\",\"$data[$h]\",\"$run_time[$h]\",\"$webserver[$h]\",\"$api_url[$h]\",\"$remote_ip\",\"$full_url\"\n";
+				}
 			}
 		else
 			{
-			$CSV_text.="\"$row[api_date]\",\"$full_user\",\"$row[api_script]\",\"$row[function]\",\"$full_agent_user\",\"$row[value]\",\"$row[result]\",\"$row[result_reason]\",\"$row[source]\",\"$row[data]\",\"$row[run_time]\",\"$row[webserver]\",\"$row[api_url]\"\n";
+			$CSV_text.="\"$api_date[$h]\",\"$full_user[$h]\",\"$api_script[$h]\",\"$function[$h]\",\"$full_agent_user[$h]\",\"$value[$h]\",\"$result[$h]\",\"$result_reason[$h]\",\"$source[$h]\",\"$data[$h]\",\"$run_time[$h]\",\"$webserver[$h]\",\"$api_url[$h]\"\n";
 			}
 		$HTML_text.="\n";
+		$h++;
 		}
+
 	$HTML_text.=$ASCII_border;
 	}
 $HTML_text.="</FONT></PRE></BODY></HTML>";
