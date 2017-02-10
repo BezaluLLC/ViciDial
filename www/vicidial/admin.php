@@ -3918,12 +3918,13 @@ else
 # 170114-1356 - Added populate_lead_province in-group option
 # 170118-0106 - Added OW options to populate_lead_province in-group option
 # 170207-1317 - Added phone_number_log API function, added api_only_user User option
+# 170211-1041 - Moved api_only_user option in User Modify screen
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-587a';
-$build = '170207-1317';
+$admin_version = '2.14-588a';
+$build = '170211-1041';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -19684,9 +19685,12 @@ if ($ADD==3)
 
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Manager Shift Enforcement Override").": </td><td align=left><select size=1 name=manager_shift_enforcement_override><option>0</option><option>1</option><option SELECTED>$manager_shift_enforcement_override</option></select>$NWB#users-manager_shift_enforcement_override$NWE</td></tr>\n";
 
-				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Agent API Access").": </td><td align=left><select size=1 name=vdc_agent_api_access><option>0</option><option>1</option><option SELECTED>$vdc_agent_api_access</option></select>$NWB#users-vdc_agent_api_access$NWE</td></tr>\n";
+				if (preg_match("/cf_encrypt/",$SSactive_modules))
+					{echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Admin Custom Fields Show Hidden").": </td><td align=left><select size=1 name=admin_cf_show_hidden><option>0</option><option>1</option><option SELECTED>$admin_cf_show_hidden</option></select>$NWB#users-admin_cf_show_hidden$NWE</td></tr>\n";}
+				else
+					{echo "<tr bgcolor=#$SSstd_row2_background><td colspan=2><input type=hidden name=admin_cf_show_hidden value=\"$admin_cf_show_hidden\"></td></tr>\n";}
 
-				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("API Only User").": </td><td align=left><select size=1 name=api_only_user><option>0</option><option>1</option><option SELECTED>$api_only_user</option></select>$NWB#users-api_only_user$NWE</td></tr>\n";
+				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Agent API Access").": </td><td align=left><select size=1 name=vdc_agent_api_access><option>0</option><option>1</option><option SELECTED>$vdc_agent_api_access</option></select>$NWB#users-vdc_agent_api_access$NWE</td></tr>\n";
 
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("API List Restrict").": </td><td align=left><select size=1 name=api_list_restrict><option>0</option><option>1</option><option SELECTED>$api_list_restrict</option></select>$NWB#users-api_list_restrict$NWE</td></tr>\n";
 
@@ -19705,10 +19709,9 @@ if ($ADD==3)
 					}
 				echo "</select>$NWB#users-api_allowed_functions$NWE</td></tr>\n";
 
-				if (preg_match("/cf_encrypt/",$SSactive_modules))
-					{echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Admin Custom Fields Show Hidden").": </td><td align=left><select size=1 name=admin_cf_show_hidden><option>0</option><option>1</option><option SELECTED>$admin_cf_show_hidden</option></select>$NWB#users-admin_cf_show_hidden$NWE</td></tr>\n";}
-				else
-					{echo "<tr bgcolor=#$SSstd_row2_background><td colspan=2><input type=hidden name=admin_cf_show_hidden value=\"$admin_cf_show_hidden\"></td></tr>\n";}
+				echo "<tr bgcolor=#$SSmenu_background><td colspan=2 align=center><font color=white><B>"._QXZ("DISABLE ADMIN AND AGENT SCREEN OPTIONS").":</td></tr>\n";
+
+				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("API Only User").": </td><td align=left><select size=1 name=api_only_user><option>0</option><option>1</option><option SELECTED>$api_only_user</option></select>$NWB#users-api_only_user$NWE</td></tr>\n";
 
 				if ( ( ($LOGmodify_same_user_level > 0) or ($LOGalter_admin_interface > 0) ) and ($LOGuser_level > 8) )
 					{
