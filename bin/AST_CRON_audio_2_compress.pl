@@ -24,9 +24,11 @@
 # make sure that the following directories exist:
 # /var/spool/asterisk/monitorDONE	# where the mixed -all files are put
 # 
+# NOTE: If the "--file-sorting" flag is use, the step 3 FTP archiving scripts cannot be used.
+#
 # This program assumes that recordings are saved by Asterisk as .wav
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 
 # 80302-1958 - First Build
@@ -35,11 +37,13 @@
 # 101207-1024 - Change to GSW option because of SoX flag changes in 14.3.0
 # 110524-1059 - Added run-check concurrency check option
 # 160523-0652 - Added --HTTPS option to use https instead of http in local location
+# 170212-0732 - Added --file-sorting option to put files into dated directories (THIS WILL NOT ALLOW FTP ARCHIVING)
 #
 
 $GSM=0;   $MP3=0;   $OGG=0;   $GSW=0;
 $HTTPS=0;
 $maxfiles = 100000;
+$location='';
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -65,6 +69,7 @@ if (length($ARGV[0])>1)
 		print "  [--HTTPS] = use https instead of http in local location\n";
 		print "  [--run-check] = concurrency check, die if another instance is running\n";
 		print "  [--max-files=x] = maximum number of files to process, default is 100000\n";
+		print "  [--file-sorting] = sort files into subfolders in YYYY-MM-DD format (THIS WILL NOT ALLOW FTP ARCHIVING)\n";
 		print "\n";
 		exit;
 		}
@@ -95,6 +100,11 @@ if (length($ARGV[0])>1)
 			@data_in = split(/--max-files=/,$args);
 			$maxfiles = $data_in[1];
 			$maxfiles =~ s/ .*$//gi;
+			}
+		if ($args =~ /--file-sorting/i)
+			{
+			$FILESORT=1;
+			if ($DB) {print "Dated file sorting option enabled\n";}
 			}
 		if ($args =~ /--HTTPS/i)
 			{
@@ -294,7 +304,7 @@ foreach(@FILES)
 			$SQLFILE = $FILES[$i];
 			$SQLFILE =~ s/-all\.wav|-all\.gsm//gi;
 
-			$stmtA = "select recording_id from recording_log where filename='$SQLFILE' order by recording_id desc LIMIT 1;";
+			$stmtA = "select recording_id, LEFT(start_time,10) AS file_date from recording_log where filename='$SQLFILE' order by recording_id desc LIMIT 1;";
 			if($DBX){print STDERR "\n|$stmtA|\n";}
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -303,22 +313,38 @@ foreach(@FILES)
 				{
 				@aryA = $sthA->fetchrow_array;
 				$recording_id =	"$aryA[0]";
+				$file_date =	"$aryA[1]";
 				}
 			$sthA->finish();
 
 			$HTTP='http';
 			if ($HTTPS > 0) {$HTTP='https';}
 
+			### In case --file-sorting is ON, we check if we need to create the location
+			if ($MP3 > 0)
+				{$location = "MP3/";}
+			if ($GSM > 0)
+				{$location = "GSM/";}
+			if ($OGG > 0)
+				{$location = "OGG/";}
+			if ($GSW > 0)
+				{$location = "GSW/";}
+			### We try to create the destination folder (in case it doesn't exist). If we fail, we die
+			if ($FILESORT) {$location = "$location$file_date/";}
+			if (! -d "$dir2/$location") {mkdir "$dir2/$location";}
+			if (! -d "$dir2/$location") {die("Cannot create $dir2/$location");}
+				
+			
 			if ($GSM > 0)
 				{
 				$GSMfile = $FILES[$i];
 				$GSMfile =~ s/-all\.wav/-all.gsm/gi;
 
-				if ($DB) {print "|$recording_id|$ALLfile|$GSMfile|     |$SQLfile|\n";}
+				if ($DB) {print "|$recording_id|$ALLfile|$dir2/$location$GSMfile|     |$SQLfile|\n";}
 
-				`$soxbin "$dir2/$ALLfile" "$dir2/GSM/$GSMfile"`;
+				`$soxbin "$dir2/$ALLfile" "$dir2/$location$GSMfile"`;
 
-				$stmtA = "UPDATE recording_log set location='$HTTP://$server_ip/RECORDINGS/GSM/$GSMfile' where recording_id='$recording_id';";
+				$stmtA = "UPDATE recording_log set location='$HTTP://$server_ip/RECORDINGS/$location$GSMfile' where recording_id='$recording_id';";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 				}
@@ -328,11 +354,11 @@ foreach(@FILES)
 				$OGGfile = $FILES[$i];
 				$OGGfile =~ s/-all\.wav/-all.ogg/gi;
 
-				if ($DB) {print "|$recording_id|$ALLfile|$OGGfile|     |$SQLfile|\n";}
+				if ($DB) {print "|$recording_id|$ALLfile|$dir2/$location$OGGfile|     |$SQLfile|\n";}
 
-				`$soxbin "$dir2/$ALLfile" "$dir2/OGG/$OGGfile"`;
+				`$soxbin "$dir2/$ALLfile" "$dir2/$location$OGGfile"`;
 
-				$stmtA = "UPDATE recording_log set location='$HTTP://$server_ip/RECORDINGS/OGG/$OGGfile' where recording_id='$recording_id';";
+				$stmtA = "UPDATE recording_log set location='$HTTP://$server_ip/RECORDINGS/$location$OGGfile' where recording_id='$recording_id';";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 				}
@@ -342,11 +368,11 @@ foreach(@FILES)
 				$MP3file = $FILES[$i];
 				$MP3file =~ s/-all\.wav/-all.mp3/gi;
 
-				if ($DB) {print "|$recording_id|$ALLfile|$MP3file|     |$SQLfile|\n";}
+				if ($DB) {print "|$recording_id|$ALLfile|$dir2/$location$MP3file|     |$SQLfile|\n";}
 
-				`$lamebin -b 16 -m m --silent "$dir2/$ALLfile" "$dir2/MP3/$MP3file"`;
+				`$lamebin -b 16 -m m --silent "$dir2/$ALLfile" "$dir2/$location$MP3file"`;
 
-				$stmtA = "UPDATE recording_log set location='$HTTP://$server_ip/RECORDINGS/MP3/$MP3file' where recording_id='$recording_id';";
+				$stmtA = "UPDATE recording_log set location='$HTTP://$server_ip/RECORDINGS/$location$MP3file' where recording_id='$recording_id';";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 				}
@@ -355,14 +381,14 @@ foreach(@FILES)
 				{
 				$GSWfile = $FILES[$i];
 
-				if ($DB) {print "|$recording_id|$ALLfile|$GSWfile|     |$SQLfile|$soxbin \"$dir2/$ALLfile\" -e gsm-full-rate \"$dir2/GSW/$GSWfile\"|\n";}
+				if ($DB) {print "|$recording_id|$ALLfile|$GSWfile|     |$SQLfile|$soxbin \"$dir2/$ALLfile\" -e gsm-full-rate \"$dir2/$location$GSWfile\"|\n";}
 
 				# for SoX versions before 14.3.X
 			#	`$soxbin "$dir2/$ALLfile" -g -b "$dir2/GSW/$GSWfile"`;
 				# for SoX versions 14.3.0 and after
-				`$soxbin "$dir2/$ALLfile" -e gsm-full-rate "$dir2/GSW/$GSWfile"`;
+				`$soxbin "$dir2/$ALLfile" -e gsm-full-rate "$dir2/$location$GSWfile"`;
 
-				$stmtA = "UPDATE recording_log set location='$HTTP://$server_ip/RECORDINGS/GSW/$GSWfile' where recording_id='$recording_id';";
+				$stmtA = "UPDATE recording_log set location='$HTTP://$server_ip/RECORDINGS/$location$GSWfile' where recording_id='$recording_id';";
 					if($DBX){print STDERR "\n|$stmtA|\n";}
 				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
 				}
@@ -370,7 +396,9 @@ foreach(@FILES)
 
 			if (!$T)
 				{
-				`mv -f "$dir2/$ALLfile" "$dir2/ORIG/$ALLfile"`;
+				if (! -d "$dir2/ORIG/$file_date") {mkdir "$dir2/ORIG/$file_date";}
+				if (! -d "$dir2/ORIG/$file_date") {die("Cannot create $dir2/ORIG/$file_date");}
+				`mv -f "$dir2/$ALLfile" "$dir2/ORIG/$file_date/$ALLfile"`;
 				}
 
 			### sleep for twenty hundredths of a second to not flood the server with disk activity
