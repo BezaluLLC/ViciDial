@@ -19690,6 +19690,8 @@ if ($ADD==3)
 				else
 					{echo "<tr bgcolor=#$SSstd_row2_background><td colspan=2><input type=hidden name=admin_cf_show_hidden value=\"$admin_cf_show_hidden\"></td></tr>\n";}
 
+				echo "<tr bgcolor=#$SSmenu_background><td colspan=2 align=center><font color=white><B>"._QXZ("API USER OPTIONS, Only enable if needed").":</td></tr>\n";
+
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Agent API Access").": </td><td align=left><select size=1 name=vdc_agent_api_access><option>0</option><option>1</option><option SELECTED>$vdc_agent_api_access</option></select>$NWB#users-vdc_agent_api_access$NWE</td></tr>\n";
 
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("API List Restrict").": </td><td align=left><select size=1 name=api_list_restrict><option>0</option><option>1</option><option SELECTED>$api_list_restrict</option></select>$NWB#users-api_list_restrict$NWE</td></tr>\n";
