@@ -1,7 +1,7 @@
 <?php
 # user_group_bulk_change.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 81119-0918 - First build
@@ -18,6 +18,7 @@
 # 160105-1232 - Fixed SQL errors
 # 160106-1318 - Added options.php option to disable this utility
 # 160325-1429 - Changes for sidebar update
+# 170217-1213 - Fixed non-latin auth issue #995
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -59,8 +60,16 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+if ($non_latin < 1)
+	{
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
 $old_group = preg_replace("/'|\"|\\\\|;/","",$old_group);
 $group = preg_replace("/'|\"|\\\\|;/","",$group);
 $stage = preg_replace("/'|\"|\\\\|;/","",$stage);

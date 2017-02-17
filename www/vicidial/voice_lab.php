@@ -4,7 +4,7 @@
 # This script is designed to broadcast a recorded message or allow a person to
 # speak to all agents logged into a VICIDIAL campaign.
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES
@@ -19,6 +19,7 @@
 # 130901-0831 - Changed to mysqli PHP functions
 # 141007-2143 - Finalized adding QXZ translation to all admin files
 # 141229-1817 - Added code for on-the-fly language translations display
+# 170217-1213 - Fixed non-latin auth issue #995
 #
 
 $startMS = microtime();
@@ -50,8 +51,6 @@ if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 
-$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 $campaign_id = preg_replace('/[^0-9a-zA-Z]/', '', $campaign_id);
 $server_ip = preg_replace('/[^\.0-9a-zA-Z]/', '', $server_ip);
 $session_id = preg_replace('/[^0-9a-zA-Z]/', '', $session_id);
@@ -86,6 +85,17 @@ if ($qm_conf_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+if ($non_latin < 1)
+	{
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
 
 $stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}

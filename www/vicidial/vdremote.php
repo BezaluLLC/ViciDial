@@ -4,7 +4,7 @@
 # make sure you have added a user to the vicidial_users MySQL table with at 
 # least user_level 4 to access this page the first time
 #
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Changes
 # 50307-1721 - First version
@@ -20,10 +20,11 @@
 # 140328-0005 - Converted division calculations to use MathZDC function
 # 141007-2123 - Finalized adding QXZ translation to all admin files
 # 141229-1847 - Added code for on-the-fly language translations display
+# 170217-1213 - Fixed non-latin auth issue #995
 #
 
-$version = '2.10-12';
-$build = '141229-1847';
+$version = '2.14-13';
+$build = '170217-1213';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -96,8 +97,16 @@ if ($qm_conf_ct > 0)
 ###########################################
 
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
-$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+if ($non_latin < 1)
+	{
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	}
+else
+	{
+	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	}
 $remote_agent_id = preg_replace('/[^-_0-9a-zA-Z]/', '', $remote_agent_id);
 $query_date = preg_replace('/[^-_0-9a-zA-Z]/', '', $query_date);
 
