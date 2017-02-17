@@ -108,6 +108,7 @@
 # 170113-1647 - Added call menu in-group option DYNAMIC_INGROUP_VAR for use with cm_phonesearch.agi
 # 170114-1404 - Added inbound_groups-populate_lead_province entry
 # 170207-1331 - Added api_only_user entry
+# 170217-1353 - Added dead_to_dispo entry
 #
 
 
@@ -1633,6 +1634,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-dead_max_dispo">
 <BR>
 <B><?php echo _QXZ("Dead Call Max Status"); ?> -</B><?php echo _QXZ("If Dead Call Max Seconds is enabled, this is the status set for the call when the agent dead call is not hung up past the number of seconds set above. Default is DCMX."); ?>
+
+<BR>
+<A NAME="campaigns-dead_to_dispo">
+<BR>
+<B><?php echo _QXZ("Dead Call to Dispo Only"); ?> -</B><?php echo _QXZ("If Dead Call Max Seconds is set greater than 0, this option can be enabled if you want to send the agent to the dispo screen after a dead call without automatically dispositioning it. Default is DISABLED."); ?>
 
 <BR>
 <A NAME="campaigns-dispo_max">

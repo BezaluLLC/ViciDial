@@ -968,7 +968,8 @@ callback_useronly_move_minutes MEDIUMINT(5) UNSIGNED default '0',
 ofcom_uk_drop_calc ENUM('Y','N') default 'N',
 manual_auto_next SMALLINT(5) UNSIGNED default '0',
 manual_auto_show ENUM('Y','N') default 'N',
-allow_required_fields ENUM('Y','N') default 'N'
+allow_required_fields ENUM('Y','N') default 'N',
+dead_to_dispo ENUM('ENABLED','DISABLED') default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -3856,4 +3857,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1487',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1488',db_schema_update_date=NOW(),reload_timestamp=NOW();

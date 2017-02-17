@@ -49,3 +49,7 @@ url MEDIUMTEXT
 CREATE TABLE vicidial_api_urls_archive LIKE vicidial_api_urls;
 
 UPDATE system_settings SET db_schema_version='1487',db_schema_update_date=NOW() where db_schema_version < 1487;
+
+ALTER TABLE vicidial_campaigns ADD dead_to_dispo ENUM('ENABLED','DISABLED') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1488',db_schema_update_date=NOW() where db_schema_version < 1488;
