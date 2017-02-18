@@ -87,6 +87,9 @@ OTHER CHANGES:
 11. Added campaign setting for Dead Call to Dispo Only, to allow the Dead Call
 	Max Seconds setting to send the agent to the dispo screen
 
+12. Added web lead loader duplicate check options to check for leads loaded only
+	within the last 90-days. Also added to Non-Agent API add_lead function.
+
 
 
 

@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2017-02-09
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2017-02-19
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -118,6 +118,7 @@ Changes:
 161020-1042 - Added lookup_state option to add_lead, added 10-digit validation if usacan_areacode_check enabled
 170204-0947 - Added phone_number_log function
 170209-1149 - Added URL and IP logging
+170219-1520 - Added 90-day duplicate check option
 
 
 API Functions use the 'function' variable
@@ -627,6 +628,7 @@ duplicate_check -	Check for duplicate records in the system, can select more tha
 				DUPNAMEPHONELIST - check for duplicate first_name, last_name and phone_number in same list
 				DUPNAMEPHONECAMP - check for duplicate first_name, last_name and phone_number in all lists for this list's campaign
 				DUPNAMEPHONESYS - check for duplicate first_name, last_name and phone_number in entire system
+				 "  90DAY - Added to one of the above duplicate checks(i.e. "DUPSYS90DAY"), only checks leads loaded in last 90 days
 usacan_prefix_check -	Y or N, default is N. Check for a valid 4th digit for USA and Canada phone numbers (cannot be 0 or 1)
 usacan_areacode_check -	Y or N, default is N. Check for a valid areacode for USA and Canada phone numbers(also checks for 10-digit length)
 nanpa_ac_prefix_check -	Y or N, default is N. Check for a valid NANPA areacode and prefix, if optional NANPA data is on the system
@@ -857,7 +859,8 @@ SUCCESS: update_lead LEAD HAS BEEN ADDED - 7275551111|6666|999|193716|-4
 SUCCESS: update_lead LEAD HAS BEEN DELETED - 7275551111|6666|999|193716|-4
 NOTICE: update_lead CUSTOM FIELDS ENTRY DELETED 1 - 7275551111|6666|999|193716|-4
 
-NOTICE: update_lead LEADS FOUND IN THE SYSTEM - 6666|4567|897654327|7275551212|101|101
+NOTICE: update_lead LEADS FOUND IN THE SYSTEM: |6666|1010542|12345678901234|9998887112|3333444|0
+					       (user|lead_id|vendorleadcode|phone     |list_id|entry_list_id)
 
 ERROR: update_lead INVALID DATA FOR LEAD INSERTION - 6666|||
 ERROR: update_lead NO MATCHES FOUND IN THE SYSTEM - 6666|||

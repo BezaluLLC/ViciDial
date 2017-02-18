@@ -1,8 +1,8 @@
 <?php
-# admin_listloader_fourth_gen.php - version 2.12
+# admin_listloader_fourth_gen.php - version 2.14
 #  (based upon - new_listloader_superL.php script)
 # 
-# Copyright (C) 2016  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # ViciDial web-based lead loader from formatted file
 # 
@@ -68,10 +68,11 @@
 # 160508-0757 - Added colors features
 # 161103-2224 - Added web_loader_phone_length option
 # 161114-2315 - Added file upload error checking
+# 170219-1427 - Added last-90-day duplicate check options
 #
 
-$version = '2.12-66';
-$build = '161114-2315';
+$version = '2.14-67';
+$build = '170219-1427';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -615,14 +616,14 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 	if ($file_layout!="custom") 
 		{
 		?>
-		<table align=center width="780" border=0 cellpadding=5 cellspacing=0 bgcolor=#<?php echo $SSframe_background; ?>>
+		<table align=center width="880" border=0 cellpadding=5 cellspacing=0 bgcolor=#<?php echo $SSframe_background; ?>>
 		  <tr>
-			<td align=right width="35%"><B><font face="arial, helvetica" size=2><?php echo _QXZ("Load leads from this file"); ?>:</font></B></td>
-			<td align=left width="65%"><input type=file name="leadfile" value="<?php echo $leadfile ?>"> <?php echo "$NWB#list_loader$NWE"; ?></td>
+			<td align=right width="20%"><B><font face="arial, helvetica" size=2><?php echo _QXZ("Load leads from this file"); ?>:</font></B></td>
+			<td align=left width="80%"><input type=file name="leadfile" value="<?php echo $leadfile ?>"> <?php echo "$NWB#list_loader$NWE"; ?></td>
 		  </tr>
 		  <tr>
-			<td align=right width="25%"><font face="arial, helvetica" size=2><?php echo _QXZ("List ID Override"); ?>: </font></td>
-			<td align=left width="75%"><font face="arial, helvetica" size=1>
+			<td align=right width="20%"><font face="arial, helvetica" size=2><?php echo _QXZ("List ID Override"); ?>: </font></td>
+			<td align=left width="80%"><font face="arial, helvetica" size=1>
 			<select name='list_id_override' onchange="PopulateStatuses(this.value)">
 			<option value='in_file' selected='yes'><?php echo _QXZ("Load from Lead File"); ?></option>
 			<?php
@@ -642,8 +643,8 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 			</font></td>
 		  </tr>
 		  <tr>
-			<td align=right width="25%"><font face="arial, helvetica" size=2><?php echo _QXZ("Phone Code Override"); ?>: </font></td>
-			<td align=left width="75%"><font face="arial, helvetica" size=1>
+			<td align=right width="20%"><font face="arial, helvetica" size=2><?php echo _QXZ("Phone Code Override"); ?>: </font></td>
+			<td align=left width="80%"><font face="arial, helvetica" size=1>
 			<select name='phone_code_override'>
                         <option value='in_file' selected='yes'><?php echo _QXZ("Load from Lead File"); ?></option>
 			<?php
@@ -667,7 +668,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 			<td align=left><font face="arial, helvetica" size=2><input type=radio name="file_layout" value="standard" checked><?php echo _QXZ("Standard Format"); ?>&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="custom"><?php echo _QXZ("Custom layout"); ?>&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="template"><?php echo _QXZ("Custom Template"); ?> <?php echo "$NWB#list_loader-file_layout$NWE"; ?></td>
 		  </tr>
 		  <tr>
-			<td align=right width="25%"><font face="arial, helvetica" size=2><?php echo _QXZ("Custom Layout to Use"); ?>: </font></td>
+			<td align=right width="20%"><font face="arial, helvetica" size=2><?php echo _QXZ("Custom Layout to Use"); ?>: </font></td>
 			<td align=left><select name="template_id" id="template_id">
 <?php
 				$template_stmt="SELECT template_id, template_name from vicidial_custom_leadloader_templates order by template_id asc";
@@ -683,19 +684,22 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 ?>
 			</select> <a href='AST_admin_template_maker.php'><font face="arial, helvetica" size=1><?php echo _QXZ("template builder"); ?></font></a><?php echo "$NWB#list_loader-template_id$NWE"; ?><BR><a href='#' onClick="TemplateSpecs()"><font face="arial, helvetica" size=1><?php echo _QXZ("View template info"); ?></font></a></td>
 		  <tr>
-			<td align=right width="25%"><font face="arial, helvetica" size=2><?php echo _QXZ("Lead Duplicate Check"); ?>: </font></td>
-			<td align=left width="75%"><font face="arial, helvetica" size=1><select size=1 name=dupcheck>
+			<td align=right width="20%"><font face="arial, helvetica" size=2><?php echo _QXZ("Lead Duplicate Check"); ?>: </font></td>
+			<td align=left width="80%" nowrap><font face="arial, helvetica" size=1><select size=1 name=dupcheck>
 			<option selected value="NONE"><?php echo _QXZ("NO DUPLICATE CHECK"); ?></option>
 			<option value="DUPLIST"><?php echo _QXZ("CHECK FOR DUPLICATES BY PHONE IN LIST ID"); ?></option>
 			<option value="DUPCAMP"><?php echo _QXZ("CHECK FOR DUPLICATES BY PHONE IN ALL CAMPAIGN LISTS"); ?></option>
 			<option value="DUPSYS"><?php echo _QXZ("CHECK FOR DUPLICATES BY PHONE IN ENTIRE SYSTEM"); ?></option>
+			<option value="DUPLIST90DAY"><?php echo _QXZ("CHECK FOR DUPLICATES LOADED IN LAST 90 DAYS BY PHONE IN LIST ID"); ?></option>
+			<option value="DUPCAMP90DAY"><?php echo _QXZ("CHECK FOR DUPLICATES LOADED IN LAST 90 DAYS BY PHONE IN ALL CAMPAIGN LISTS"); ?></option>
+			<option value="DUPSYS90DAY"><?php echo _QXZ("CHECK FOR DUPLICATES LOADED IN LAST 90 DAYS BY PHONE IN ENTIRE SYSTEM"); ?></option>
 			<option value="DUPTITLEALTPHONELIST"><?php echo _QXZ("CHECK FOR DUPLICATES BY TITLE/ALT-PHONE IN LIST ID"); ?></option>
 			<option value="DUPTITLEALTPHONESYS"><?php echo _QXZ("CHECK FOR DUPLICATES BY TITLE/ALT-PHONE IN ENTIRE SYSTEM"); ?></option>
 			</select> <?php echo "$NWB#list_loader-duplicate_check$NWE"; ?></td>
 		  </tr>
 	<tr bgcolor="#<?php echo $SSframe_background; ?>">
-		<td width='25%' align="right"><font class="standard"><?php echo _QXZ("Status Duplicate Check"); ?>:</font></td>
-		<td width='75%'>
+		<td width='20%' align="right"><font class="standard"><?php echo _QXZ("Status Duplicate Check"); ?>:</font></td>
+		<td width='80%'>
 		<span id='statuses_display'>
 			<select id='dedupe_statuses' name='dedupe_statuses[]' size=5 multiple>
 			<option value='--ALL--' selected>--<?php echo _QXZ("ALL DISPOSITIONS"); ?>--</option>
@@ -833,22 +837,25 @@ if ($OK_to_process)
 		$file=fopen("$lead_file", "r");
 		print "<center><font face='arial, helvetica' size=3 color='#009900'><B>"._QXZ("Processing file")."...\n";
 
-		if (count($dedupe_statuses)>0) {
+		if (count($dedupe_statuses)>0) 
+			{
 			$statuses_clause=" and status in (";
 			$status_dedupe_str="";
-			for($ds=0; $ds<count($dedupe_statuses); $ds++) {
+			for($ds=0; $ds<count($dedupe_statuses); $ds++) 
+				{
 				$statuses_clause.="'$dedupe_statuses[$ds]',";
 				$status_dedupe_str.="$dedupe_statuses[$ds], ";
-				if (preg_match('/\-\-ALL\-\-/', $dedupe_statuses[$ds])) {
+				if (preg_match('/\-\-ALL\-\-/', $dedupe_statuses[$ds])) 
+					{
 					$statuses_clause="";
 					$status_dedupe_str="";
 					break;
+					}
 				}
-			}
 			$statuses_clause=preg_replace('/,$/', "", $statuses_clause);
 			$status_dedupe_str=preg_replace('/,\s$/', "", $status_dedupe_str);
 			if ($statuses_clause!="") {$statuses_clause.=")";}
-		} 
+			}
 
 		if (strlen($list_id_override)>0) 
 			{
@@ -871,6 +878,14 @@ if ($OK_to_process)
 			{
 			print "<BR>"._QXZ("REQUIRED PHONE NUMBER LENGTH").": $web_loader_phone_length<BR>\n";
 			}
+		$ninetydaySQL='';
+		if (preg_match("/90DAY/i",$dupcheck))
+			{
+			$ninetyday = date("Y-m-d H:i:s", mktime(date("H"),date("i"),date("s"),date("m"),date("d")-90,date("Y")));
+			$ninetydaySQL = "and entry_date > \"$ninetyday\"";
+			if ($DB > 0) {echo "DEBUG: 90day SQL: |$ninetydaySQL|";}
+			}
+
 
 		if ($custom_fields_enabled > 0)
 			{
@@ -1101,7 +1116,7 @@ if ($OK_to_process)
 								}
 							$dup_lists = preg_replace('/,$/i', '',$dup_lists);
 
-							$stmt="SELECT list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) $statuses_clause limit 1;";
+							$stmt="SELECT list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) $ninetydaySQL $statuses_clause limit 1;";
 							$rslt=mysql_to_mysqli($stmt, $link);
 							$pc_recs = mysqli_num_rows($rslt);
 							if ($pc_recs > 0)
@@ -1123,7 +1138,7 @@ if ($OK_to_process)
 				if (preg_match("/DUPSYS/i",$dupcheck))
 					{
 					$dup_lead=0;
-					$stmt="SELECT list_id from vicidial_list where phone_number='$phone_number' $statuses_clause;";
+					$stmt="SELECT list_id from vicidial_list where phone_number='$phone_number' $ninetydaySQL $statuses_clause;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -1143,7 +1158,7 @@ if ($OK_to_process)
 				if (preg_match("/DUPLIST/i",$dupcheck))
 					{
 					$dup_lead=0;
-					$stmt="SELECT count(*) from vicidial_list where phone_number='$phone_number' and list_id='$list_id' $statuses_clause;";
+					$stmt="SELECT count(*) from vicidial_list where phone_number='$phone_number' and list_id='$list_id' $ninetydaySQL $statuses_clause;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -1163,7 +1178,7 @@ if ($OK_to_process)
 				if (preg_match("/DUPTITLEALTPHONELIST/i",$dupcheck))
 					{
 					$dup_lead=0;
-					$stmt="SELECT count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' $statuses_clause;";
+					$stmt="SELECT count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' $ninetydaySQL $statuses_clause;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -1183,7 +1198,7 @@ if ($OK_to_process)
 				if (preg_match("/DUPTITLEALTPHONESYS/i",$dupcheck))
 					{
 					$dup_lead=0;
-					$stmt="SELECT list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' $statuses_clause;";
+					$stmt="SELECT list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' $ninetydaySQL $statuses_clause;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -1493,6 +1508,13 @@ if (($leadfile) && ($LF_path))
 				{
 				print "<BR>"._QXZ("REQUIRED PHONE NUMBER LENGTH").": $web_loader_phone_length<BR>\n";
 				}
+			$ninetydaySQL='';
+			if (preg_match("/90DAY/i",$dupcheck))
+				{
+				$ninetyday = date("Y-m-d H:i:s", mktime(date("H"),date("i"),date("s"),date("m"),date("d")-90,date("Y")));
+				$ninetydaySQL = "and entry_date > \"$ninetyday\"";
+				if ($DB > 0) {echo "DEBUG: 90day SQL: |$ninetydaySQL|";}
+				}
 
 			while (!feof($file)) 
 				{
@@ -1629,7 +1651,7 @@ if (($leadfile) && ($LF_path))
 									}
 								$dup_lists = preg_replace('/,$/i', '',$dup_lists);
 
-								$stmt="SELECT list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) $statuses_clause limit 1;";
+								$stmt="SELECT list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) $ninetydaySQL $statuses_clause limit 1;";
 								$rslt=mysql_to_mysqli($stmt, $link);
 								$pc_recs = mysqli_num_rows($rslt);
 								if ($pc_recs > 0)
@@ -1651,7 +1673,7 @@ if (($leadfile) && ($LF_path))
 					if (preg_match("/DUPSYS/i",$dupcheck))
 						{
 						$dup_lead=0;
-						$stmt="SELECT list_id from vicidial_list where phone_number='$phone_number' $statuses_clause;";
+						$stmt="SELECT list_id from vicidial_list where phone_number='$phone_number' $ninetydaySQL $statuses_clause;";
 						$rslt=mysql_to_mysqli($stmt, $link);
 						$pc_recs = mysqli_num_rows($rslt);
 						if ($pc_recs > 0)
@@ -1671,7 +1693,7 @@ if (($leadfile) && ($LF_path))
 					if (preg_match("/DUPLIST/i",$dupcheck))
 						{
 						$dup_lead=0;
-						$stmt="SELECT count(*) from vicidial_list where phone_number='$phone_number' and list_id='$list_id' $statuses_clause;";
+						$stmt="SELECT count(*) from vicidial_list where phone_number='$phone_number' and list_id='$list_id' $ninetydaySQL $statuses_clause;";
 						$rslt=mysql_to_mysqli($stmt, $link);
 						$pc_recs = mysqli_num_rows($rslt);
 						if ($pc_recs > 0)
@@ -1690,7 +1712,7 @@ if (($leadfile) && ($LF_path))
 					if (preg_match("/DUPTITLEALTPHONELIST/i",$dupcheck))
 						{
 						$dup_lead=0;
-						$stmt="SELECT count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' $statuses_clause;";
+						$stmt="SELECT count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' $ninetydaySQL $statuses_clause;";
 						$rslt=mysql_to_mysqli($stmt, $link);
 						$pc_recs = mysqli_num_rows($rslt);
 						if ($pc_recs > 0)
@@ -1710,7 +1732,7 @@ if (($leadfile) && ($LF_path))
 					if (preg_match("/DUPTITLEALTPHONESYS/i",$dupcheck))
 						{
 						$dup_lead=0;
-						$stmt="SELECT list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' $statuses_clause;";
+						$stmt="SELECT list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' $ninetydaySQL $statuses_clause;";
 						$rslt=mysql_to_mysqli($stmt, $link);
 						$pc_recs = mysqli_num_rows($rslt);
 						if ($pc_recs > 0)
@@ -2044,6 +2066,13 @@ if (($leadfile) && ($LF_path))
 				{
 				print "<BR>"._QXZ("REQUIRED PHONE NUMBER LENGTH").": $web_loader_phone_length<BR>\n";
 				}
+			$ninetydaySQL='';
+			if (preg_match("/90DAY/i",$dupcheck))
+				{
+				$ninetyday = date("Y-m-d H:i:s", mktime(date("H"),date("i"),date("s"),date("m"),date("d")-90,date("Y")));
+				$ninetydaySQL = "and entry_date > \"$ninetyday\"";
+				if ($DB > 0) {echo "DEBUG: 90day SQL: |$ninetydaySQL|";}
+				}
 
 			while (!feof($file)) 
 				{
@@ -2175,7 +2204,7 @@ if (($leadfile) && ($LF_path))
 									}
 								$dup_lists = preg_replace('/,$/i', '',$dup_lists);
 
-								$stmt="SELECT list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) $statuses_clause limit 1;";
+								$stmt="SELECT list_id from vicidial_list where phone_number='$phone_number' and list_id IN($dup_lists) $ninetydaySQL $statuses_clause limit 1;";
 								$rslt=mysql_to_mysqli($stmt, $link);
 								$pc_recs = mysqli_num_rows($rslt);
 								if ($pc_recs > 0)
@@ -2197,7 +2226,7 @@ if (($leadfile) && ($LF_path))
 					if (preg_match("/DUPSYS/i",$dupcheck))
 						{
 						$dup_lead=0;
-						$stmt="SELECT list_id from vicidial_list where phone_number='$phone_number' $statuses_clause;";
+						$stmt="SELECT list_id from vicidial_list where phone_number='$phone_number' $ninetydaySQL $statuses_clause;";
 						$rslt=mysql_to_mysqli($stmt, $link);
 						$pc_recs = mysqli_num_rows($rslt);
 						if ($pc_recs > 0)
@@ -2217,7 +2246,7 @@ if (($leadfile) && ($LF_path))
 					if (preg_match("/DUPLIST/i",$dupcheck))
 						{
 						$dup_lead=0;
-						$stmt="SELECT count(*) from vicidial_list where phone_number='$phone_number' and list_id='$list_id' $statuses_clause;";
+						$stmt="SELECT count(*) from vicidial_list where phone_number='$phone_number' and list_id='$list_id' $ninetydaySQL $statuses_clause;";
 						$rslt=mysql_to_mysqli($stmt, $link);
 						$pc_recs = mysqli_num_rows($rslt);
 						if ($pc_recs > 0)
@@ -2236,7 +2265,7 @@ if (($leadfile) && ($LF_path))
 					if (preg_match("/DUPTITLEALTPHONELIST/i",$dupcheck))
 						{
 						$dup_lead=0;
-						$stmt="SELECT count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' $statuses_clause;";
+						$stmt="SELECT count(*) from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' $ninetydaySQL $statuses_clause;";
 						$rslt=mysql_to_mysqli($stmt, $link);
 						$pc_recs = mysqli_num_rows($rslt);
 						if ($pc_recs > 0)
@@ -2256,7 +2285,7 @@ if (($leadfile) && ($LF_path))
 					if (preg_match("/DUPTITLEALTPHONESYS/i",$dupcheck))
 						{
 						$dup_lead=0;
-						$stmt="SELECT list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' $statuses_clause;";
+						$stmt="SELECT list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' $ninetydaySQL $statuses_clause;";
 						$rslt=mysql_to_mysqli($stmt, $link);
 						$pc_recs = mysqli_num_rows($rslt);
 						if ($pc_recs > 0)

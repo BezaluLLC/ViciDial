@@ -112,10 +112,11 @@
 # 161020-1042 - Added lookup_state option to add_lead, added 10-digit validation if usacan_areacode_check enabled
 # 170205-2022 - Added phone_number_log function
 # 170209-1149 - Added URL and IP logging
+# 170219-1520 - Added 90-day duplicate check option
 #
 
-$version = '2.14-88';
-$build = '170209-1149';
+$version = '2.14-89';
+$build = '170219-1520';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -6928,6 +6929,14 @@ if ($function == 'add_lead')
 				### END checking for DNC if defined ###
 
 				### START checking for duplicate if defined ###
+				$ninetydaySQL='';
+				if (preg_match("/90DAY/i",$duplicate_check))
+					{
+					$ninetyday = date("Y-m-d H:i:s", mktime(date("H"),date("i"),date("s"),date("m"),date("d")-90,date("Y")));
+					$ninetydaySQL = "and entry_date > \"$ninetyday\"";
+					if ($DB > 0) {echo "DEBUG: 90day SQL: |$ninetydaySQL|";}
+					}
+
 				if (preg_match("/CAMP/i",$duplicate_check)) # find lists within campaign
 					{
 					$stmt="SELECT campaign_id from vicidial_lists where list_id='$list_id';";
@@ -6959,7 +6968,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPLIST\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where phone_number='$phone_number' and list_id='$list_id' limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where phone_number='$phone_number' and list_id='$list_id' $ninetydaySQL limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -6984,7 +6993,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPCAMP - $duplicate_lists\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where phone_number='$phone_number' and list_id IN($duplicate_lists) limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where phone_number='$phone_number' and list_id IN($duplicate_lists) $ninetydaySQL limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -7009,7 +7018,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPSYS\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where phone_number='$phone_number' limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where phone_number='$phone_number' $ninetydaySQL limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -7034,7 +7043,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPTITLEALTPHONELIST\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' $ninetydaySQL limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -7059,7 +7068,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPTITLEALTPHONECAMP\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id IN($duplicate_lists) limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id IN($duplicate_lists) $ninetydaySQL limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -7084,7 +7093,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPTITLEALTPHONESYS\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' $ninetydaySQL limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -7109,7 +7118,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPNAMEPHONELIST\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where first_name='$first_name' and last_name='$last_name' and phone_number='$phone_number' and list_id='$list_id' limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where first_name='$first_name' and last_name='$last_name' and phone_number='$phone_number' $ninetydaySQL and list_id='$list_id' limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -7134,7 +7143,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPNAMEPHONECAMP\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where first_name='$first_name' and last_name='$last_name' and phone_number='$phone_number' and list_id IN($duplicate_lists) limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where first_name='$first_name' and last_name='$last_name' and phone_number='$phone_number' and list_id IN($duplicate_lists) $ninetydaySQL limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -7159,7 +7168,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPNAMEPHONESYS\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where first_name='$first_name' and last_name='$last_name' and phone_number='$phone_number' limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where first_name='$first_name' and last_name='$last_name' and phone_number='$phone_number' $ninetydaySQL limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -7707,6 +7716,7 @@ if ($function == 'update_lead')
 					{
 					if ($search_found > 0)
 						{
+						if (strlen($lead_id)<1) {$lead_id=$search_lead_id[0];}
 						$result = 'NOTICE';
 						$result_reason = "update_lead LEADS FOUND IN THE SYSTEM";
 						$data = "$lead_id|$vendor_lead_code|$phone_number|$search_lead_list[0]|$search_entry_list[0]";
