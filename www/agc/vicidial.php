@@ -539,10 +539,11 @@
 # 170201-2215 - Fixes for pause-while-call-coming-in issues
 # 170207-1314 - Added user option api_only_user
 # 170217-1359 - Added dead_to_dispo campaign option
+# 170220-1306 - Added external_lead_id trigger for switch_lead API function
 #
 
-$version = '2.14-509c';
-$build = '170217-1359';
+$version = '2.14-510c';
+$build = '170220-1306';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -4488,6 +4489,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var pause_resume_click_epoch=0;
 	var previous_agent_log_id='<?php echo $agent_log_id ?>';
 	var alert_box_close_counter=0;
+	var api_switch_lead_triggered=0;
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -5457,6 +5459,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						var api_recording = APIRecording_array[1];
 						var APIPauseCode_array = check_time_array[26].split("APIPaUseCodE: ");
 						var api_pause_code = APIPauseCode_array[1];
+						var APILeadSwitch_array = check_time_array[30].split("LeadIDSwitch: ");
+						var api_switch_lead = APILeadSwitch_array[1];
 						var APIdtmf_array = check_time_array[20].split("APIdtmf: ");
 						api_dtmf = APIdtmf_array[1];
 						var APItransfercond_array = check_time_array[21].split("APItransferconf: ");
@@ -5471,6 +5475,14 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						var APIpark_array = check_time_array[22].split("APIpark: ");
 						api_parkcustomer = APIpark_array[1];
 
+						if ( (api_switch_lead.length > 0) && (api_switch_lead > 0) )
+							{
+							if (api_switch_lead_triggered < 1)
+								{
+								api_switch_lead_triggered++;
+								LeaDSearcHSelecT(api_switch_lead);
+								}
+							}
 						if (api_pause_code.length > 0)
 							{
 							if (VDRP_stage == 'PAUSED')
@@ -7846,6 +7858,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									{
 									window.open(TEMP_VDIC_web_form_address_three, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 									}
+								api_switch_lead_triggered=0;
 
 								if (useIE > 0)
 									{

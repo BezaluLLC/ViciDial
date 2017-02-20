@@ -53,3 +53,7 @@ UPDATE system_settings SET db_schema_version='1487',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD dead_to_dispo ENUM('ENABLED','DISABLED') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1488',db_schema_update_date=NOW() where db_schema_version < 1488;
+
+ALTER TABLE vicidial_live_agents ADD external_lead_id INT(9) UNSIGNED default '0';
+
+UPDATE system_settings SET db_schema_version='1489',db_schema_update_date=NOW() where db_schema_version < 1489;

@@ -431,6 +431,7 @@ external_recording VARCHAR(20) default '',
 external_pause_code VARCHAR(6) default '',
 pause_code VARCHAR(6) default '',
 preview_lead_id INT(9) UNSIGNED default '0',
+external_lead_id INT(9) UNSIGNED default '0',
 index (random_id),
 index (last_call_time),
 index (last_update_time),
@@ -3857,4 +3858,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1488',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1489',db_schema_update_date=NOW(),reload_timestamp=NOW();

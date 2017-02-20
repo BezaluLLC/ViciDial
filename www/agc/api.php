@@ -88,10 +88,11 @@
 # 161102-1042 - Fixed QM partition problem
 # 161103-1729 - Added agent_debug to audio playing
 # 170209-1222 - Added URL and IP logging
+# 170220-1303 - Added switch_lead function
 #
 
-$version = '2.14-54';
-$build = '170209-1222';
+$version = '2.14-55';
+$build = '170220-1303';
 
 $startMS = microtime();
 
@@ -3778,6 +3779,161 @@ if ($function == 'transfer_conference')
 ### END - transfer_conference
 ################################################################################
 
+
+
+
+
+
+
+################################################################################
+### BEGIN - switch_lead - for inbound calls, switches lead_id of live inbound call on agent screen
+################################################################################
+if ($function == 'switch_lead')
+	{
+	if ( ( ( (strlen($lead_id)<1) or ($lead_id < 1) ) and (strlen($vendor_lead_code)<1) ) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
+		{
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("switch_lead not valid");
+		echo "$result: $result_reason - $lead_id|$vendor_lead_code|$agent_user\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $lead_id|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$processed=0;
+		$SUCCESS=0;
+		if (strlen($alt_user)>1)
+			{
+			$stmt = "select count(*) from vicidial_users where custom_three='$alt_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			if ($row[0] > 0)
+				{
+				$stmt = "select user from vicidial_users where custom_three='$alt_user' order by user;";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$agent_user = $row[0];
+				}
+			else
+				{
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no user found");
+				echo "$result: $result_reason - $alt_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$stmt = "select lead_id,callerid,campaign_id from vicidial_live_agents where user='$agent_user';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			$current_lead_id =		$row[0];
+			$callerid =				$row[1];
+			$campaign_id =			$row[2];
+
+			if ( ($current_lead_id > 0) and (strlen($callerid)>15) )
+				{
+				if (preg_match("/^Y/",$callerid))
+					{
+					$stmt = "SELECT agent_lead_search from vicidial_campaigns where campaign_id='$campaign_id';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$camp_ct = mysqli_num_rows($rslt);
+					if ($camp_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$agent_lead_search =	$row[0];
+
+						if ( ($agent_lead_search == 'LIVE_CALL_INBOUND') or ($agent_lead_search == 'LIVE_CALL_INBOUND_AND_MANUAL') )
+							{
+							### search for defined lead ###
+							$searchSQL = "lead_id='$lead_id'";
+							if (strlen($vendor_lead_code)>0) {$searchSQL = "vendor_lead_code='$vendor_lead_code' order by lead_id desc limit 1";}
+							$stmt = "SELECT lead_id,vendor_lead_code from vicidial_list where $searchSQL;";
+							if ($DB) {echo "$stmt\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$sl_ct = mysqli_num_rows($rslt);
+							if ($sl_ct > 0)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$new_lead_id =	$row[0];
+								$new_vendor_lead_code = $row[1];
+
+								$stmt="UPDATE vicidial_live_agents set external_lead_id='$new_lead_id' where user='$agent_user';";
+									if ($format=='debug') {echo "\n<!-- $stmt -->";}
+								$rslt=mysql_to_mysqli($stmt, $link);
+								$result = _QXZ("SUCCESS");
+								$result_reason = _QXZ("switch_lead function set");
+								$data = "$new_lead_id|$new_vendor_lead_code|$campaign_id|$current_lead_id";
+								echo "$result: $result_reason - $agent_user|$data|\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								}
+							else
+								{
+								$result = _QXZ("ERROR");
+								$result_reason = _QXZ("switch-to lead not found");
+								echo "$result: $result_reason - $agent_user|$lead_id|$vendor_lead_code\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								}
+							}
+						else
+							{
+							$result = _QXZ("ERROR");
+							$result_reason = _QXZ("campaign does not allow inbound lead search");
+							echo "$result: $result_reason - $agent_user|$campaign_id\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						}
+					else
+						{
+						$result = _QXZ("ERROR");
+						$result_reason = _QXZ("campaign not found");
+						echo "$result: $result_reason - $agent_user|$campaign_id\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					}
+				else
+					{
+					$result = _QXZ("ERROR");
+					$result_reason = _QXZ("agent call is not inbound");
+					echo "$result: $result_reason - $agent_user|$callerid";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			else
+				{
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("agent_user does not have a live call");
+				echo "$result: $result_reason - $agent_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		else
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - switch_lead
+################################################################################
 
 
 

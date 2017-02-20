@@ -9323,7 +9323,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 			$original_phone_number = $phone_number;
 
 			### update the agent lead_id to the new lead_id in vicidial_live_agents
-			$stmt = "UPDATE vicidial_live_agents set lead_id='$lead_id' where user='$user' and server_ip='$server_ip';";
+			$stmt = "UPDATE vicidial_live_agents set lead_id='$lead_id',external_lead_id=0 where user='$user' and server_ip='$server_ip';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00448',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -10018,6 +10018,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 			exit;
 			}
 		}
+	$stage .= "|$lead_id|$agent_log_id|";
 	}
 
 

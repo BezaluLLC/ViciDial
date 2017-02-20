@@ -1732,7 +1732,8 @@ if ($ACTION=="RedirectXtraCXNeW")
 
 				echo "NeWSessioN|$exten|\n";
 				echo "|$stmtG|\n";
-				
+
+				$stage .= "|OLD $session_id|NEW $exten|";
 				if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 				exit;
 				}
@@ -1741,6 +1742,7 @@ if ($ACTION=="RedirectXtraCXNeW")
 				$channel_liveX=0;
 				echo _QXZ("Cannot find empty vicidial_conference on %1s, Redirect command not inserted",0,'',$server_ip)."\n|$stmt|";
 				if (preg_match("/SECOND|FIRST|DEBUG/",$filename)) {$DBout .= "Cannot find empty conference on $server_ip";}
+				$stage .= "|ERROR $server_ip|";
 				}
 			}
 
@@ -1948,6 +1950,7 @@ if ($ACTION=="RedirectXtraNeW")
 					echo "NeWSessioN|$exten|\n";
 					echo "|$stmtB|\n";
 					
+					$stage .= "|OLD $session_id|NEW $exten|";
 					if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 					exit;
 					}
@@ -1956,6 +1959,7 @@ if ($ACTION=="RedirectXtraNeW")
 					$channel_liveX=0;
 					echo "Cannot find empty vicidial_conference on $server_ip, Redirect command not inserted\n|$stmt|";
 					if (preg_match("/SECOND|FIRST|DEBUG/",$filename)) {$DBout .= "Cannot find empty conference on $server_ip";}
+					$stage .= "|ERROR $server_ip|";
 					}
 				}
 

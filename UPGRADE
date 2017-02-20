@@ -90,6 +90,9 @@ OTHER CHANGES:
 12. Added web lead loader duplicate check options to check for leads loaded only
 	within the last 90-days. Also added to Non-Agent API add_lead function.
 
+13. Added Agent API function switch_lead to switch the active call lead_id while
+	the agent is on a live inbound phone call.
+
 
 
 

@@ -1,4 +1,4 @@
-AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2017-02-09
+AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2017-02-20
 
 This document describes the functions of an API(Application Programming Interface)
 for the VICIDIAL Agent screen. This functionality will be rather limited at first
@@ -33,6 +33,7 @@ webphone_url - display the webphone url for the current agent's session
 call_agent - send a call to connect the agent to their session
 pause_code - set a pause code if the agent is paused
 audio_playback - basic play/pause/resume/stop/restart audio in agent session
+switch_lead - for inbound calls, switches lead_id of live inbound call on agent screen
 
 
 New scripts:
@@ -828,6 +829,37 @@ SUCCESS: audio_playback function sent - ss-noservice|PLAY|6666
 
 
 --------------------------------------------------------------------------------
+switch_lead - 
+
+DESCRIPTION:
+For agents on a live inbound call, switches lead_id of live inbound call on agent screen including associated logs. You can define a lead_id or a vendor_lead_code to switch to. Works like the SELECT function of the LEAD SEARCH feature in the agent screen.
+
+VALUES:
+lead_id -
+ Any valid lead_id from the system(either lead_id or vendor_lead_code are required) if both are defined, lead_id will override vendor_lead_code
+vendor_lead_code -
+ OPTIONAL, any valid Vendor lead code
+
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=switch_lead&lead_id=12345
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=switch_lead&vendor_lead_code=1234567890
+
+RESPONSES:
+ERROR: switch_lead not valid - ||6666
+ERROR: no user found - 6666
+ERROR: agent_user is not logged in - 6666
+ERROR: agent_user does not have a live call - 6666
+ERROR: agent call is not inbound - 6666|V2012367890123456789
+ERROR: campaign not found - 6666|TESTCAMP
+ERROR: campaign does not allow inbound lead search - 6666|TESTCAMP
+ERROR: switch-to lead not found - 6666|12345|123456789
+SUCCESS: switch_lead function set - 6666|12345|1234567890|TESTCAMP|12346
+
+
+
+
+
+--------------------------------------------------------------------------------
 pause_code - 
 
 DESCRIPTION:
@@ -848,7 +880,6 @@ ERROR: agent_user is not logged in - 6666
 ERROR: pause_code not valid - 6666|JUMPING
 ERROR: pause_code error - agent is not paused - 6666
 SUCCESS: pause_code function sent - 6666
-
 
 
 
