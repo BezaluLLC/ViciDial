@@ -27,6 +27,7 @@
 # 151125-1632 - Added search archive option
 # 160227-1136 - Uniform form format
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
+# 170220-2040 - Fixed bug causing sale/dncs to be counted multiple times when dispos repeated between campaigns
 #
 
 $startMS = microtime();
@@ -463,7 +464,6 @@ while ($i < $statsale_to_print)
 	{
 	$row=mysqli_fetch_row($rslt);
 	$sale_statusesLIST[$sale_ct] = $row[0];
-	$sale_ct++;
 	$i++;
 	}
 $stmt="select status from vicidial_campaign_statuses where sale='Y';";
@@ -475,9 +475,10 @@ while ($i < $statsale_to_print)
 	{
 	$row=mysqli_fetch_row($rslt);
 	$sale_statusesLIST[$sale_ct] = $row[0];
-	$sale_ct++;
 	$i++;
 	}
+$sale_statusesLIST=array_values(array_unique($sale_statusesLIST));
+$sale_ct=count($sale_statusesLIST);
 
 $stmt="select status from vicidial_statuses where dnc='Y';";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -489,7 +490,6 @@ while ($i < $statdnc_to_print)
 	{
 	$row=mysqli_fetch_row($rslt);
 	$dnc_statusesLIST[$dnc_ct] = $row[0];
-	$dnc_ct++;
 	$i++;
 	}
 $stmt="select status from vicidial_campaign_statuses where dnc='Y';";
@@ -501,9 +501,10 @@ while ($i < $statdnc_to_print)
 	{
 	$row=mysqli_fetch_row($rslt);
 	$dnc_statusesLIST[$dnc_ct] = $row[0];
-	$dnc_ct++;
 	$i++;
 	}
+$dnc_statusesLIST=array_values(array_unique($dnc_statusesLIST));
+$dnc_ct=count($dnc_statusesLIST);
 
 $NWB = " &nbsp; <a href=\"javascript:openNewWindow('help.php?ADD=99999";
 $NWE = "')\"><IMG SRC=\"help.gif\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP></A>";
