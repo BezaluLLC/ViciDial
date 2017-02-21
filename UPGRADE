@@ -93,6 +93,10 @@ OTHER CHANGES:
 13. Added Agent API function switch_lead to switch the active call lead_id while
 	the agent is on a live inbound phone call.
 
+14. Added In-group areacode_filter feature, allowing you to drop calls after a 
+	set number of seconds in queue that either match or do not match a list
+	of areacodes defined per in-group.
+
 
 
 

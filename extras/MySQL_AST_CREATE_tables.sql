@@ -507,7 +507,7 @@ processed ENUM('Y','N'),
 queue_seconds DECIMAL(7,2) default '0',
 user_group VARCHAR(20),
 xfercallid INT(9) UNSIGNED,
-term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','HOLDRECALLXFER','HOLDTIME','NOAGENT','NONE','MAXCALLS') default 'NONE',
+term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','HOLDRECALLXFER','HOLDTIME','NOAGENT','NONE','MAXCALLS','ACFILTER') default 'NONE',
 uniqueid VARCHAR(20) NOT NULL default '',
 agent_only VARCHAR(20) default '',
 queue_position SMALLINT(4) UNSIGNED default '1',
@@ -1184,7 +1184,7 @@ after_hours_callmenu VARCHAR(50) default '',
 user_group VARCHAR(20) default '---ALL---',
 max_calls_method ENUM('TOTAL','IN_QUEUE','DISABLED') default 'DISABLED',
 max_calls_count SMALLINT(5) default '0',
-max_calls_action ENUM('DROP','AFTERHOURS','NO_AGENT_NO_QUEUE') default 'NO_AGENT_NO_QUEUE',
+max_calls_action ENUM('DROP','AFTERHOURS','NO_AGENT_NO_QUEUE','AREACODE_FILTER') default 'NO_AGENT_NO_QUEUE',
 dial_ingroup_cid VARCHAR(20) default '',
 group_handling ENUM('PHONE','EMAIL','CHAT') default 'PHONE',
 web_form_address_three TEXT,
@@ -1200,7 +1200,11 @@ on_hook_cid_number VARCHAR(18) default '',
 customer_chat_screen_colors VARCHAR(20) default 'default',
 customer_chat_survey_link TEXT,
 customer_chat_survey_text TEXT,
-populate_lead_province VARCHAR(20) default 'DISABLED'
+populate_lead_province VARCHAR(20) default 'DISABLED',
+areacode_filter ENUM('DISABLED','ALLOW_ONLY','DROP_ONLY') default 'DISABLED',
+areacode_filter_seconds SMALLINT(5) default '10',
+areacode_filter_action ENUM('CALLMENU','INGROUP','DID','MESSAGE','EXTENSION','VOICEMAIL','VMAIL_NO_INST') default 'MESSAGE',
+areacode_filter_action_value VARCHAR(255) default 'nbdy-avail-to-take-call|vm-goodbye'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -2335,9 +2339,11 @@ processed ENUM('Y','N'),
 queue_seconds DECIMAL(7,2) default '0',
 user_group VARCHAR(20),
 xfercallid INT(9) UNSIGNED,
-term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','HOLDRECALLXFER','HOLDTIME','NOAGENT','NONE') default 'NONE',
+term_reason  ENUM('CALLER','AGENT','QUEUETIMEOUT','ABANDON','AFTERHOURS','HOLDRECALLXFER','HOLDTIME','NOAGENT','NONE','MAXCALLS','ACFILTER') default 'NONE',
 uniqueid VARCHAR(20) NOT NULL default '',
 agent_only VARCHAR(20) default '',
+queue_position SMALLINT(4) UNSIGNED default '1',
+called_count SMALLINT(5) UNSIGNED default '0',
 index (lead_id),
 index (call_date),
 index (campaign_id),
@@ -3600,6 +3606,12 @@ remote_ip VARCHAR(50),
 url MEDIUMTEXT
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_areacode_filters (
+group_id VARCHAR(20) NOT NULL,
+areacode VARCHAR(6) NOT NULL,
+index(group_id)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3858,4 +3870,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1489',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1490',db_schema_update_date=NOW(),reload_timestamp=NOW();

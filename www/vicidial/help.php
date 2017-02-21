@@ -109,6 +109,7 @@
 # 170114-1404 - Added inbound_groups-populate_lead_province entry
 # 170207-1331 - Added api_only_user entry
 # 170217-1353 - Added dead_to_dispo entry
+# 170220-1811 - Added areacode_filter entries
 #
 
 
@@ -2499,6 +2500,21 @@ if ($SSqc_features_active > 0)
 <A NAME="inbound_groups-max_calls_action">
 <BR>
 <B><?php echo _QXZ("Max Calls Action"); ?> -</B><?php echo _QXZ("This is the action to be taken if the Max Calls Method is enabled and the number of calls exceeds what is set above in the Max Calls Count setting. The calls above that amount will be sent to either the DROP action, the AFTERHOURS action or the NO_AGENT_NO_QUEUE action and will be logged as a MAXCAL status with a MAXCALLS hangup reason. Default is NO_AGENT_NO_QUEUE."); ?>
+
+<BR>
+<A NAME="inbound_groups-areacode_filter">
+<BR>
+<B><?php echo _QXZ("Areacode Filter"); ?> -</B><?php echo _QXZ("This feature allows you to filter calls that have been waiting in queue by the areacode of the customer phone number. The areacodes are defined on a per In-Group basis using the Areacode List modification page that you can get to by clicking on the areacode filter list link to the right. The ALLOW_ONLY option will only allow those customer phone numbers that begin with the areacodes included in the areacode filter list to continue waiting in the queue. The DROP_ONLY option will only drop those customer phone numbers that begin with the areacodes included in the areacode filter list. Areacodes in the filter list can be from 1 to 6 digits in length. Default is DISABLED."); ?>
+
+<BR>
+<A NAME="inbound_groups-areacode_filter_seconds">
+<BR>
+<B><?php echo _QXZ("Areacode Filter Seconds"); ?> -</B><?php echo _QXZ("If the Areacode Filter feature above is enabled, then this field is where you set the number of seconds waiting in the queue that the feature is excuted. Default is 10 seconds."); ?>
+
+<BR>
+<A NAME="inbound_groups-areacode_filter_action">
+<BR>
+<B><?php echo _QXZ("Areacode Filter Action"); ?> -</B><?php echo _QXZ("If the Areacode Filter feature above is enabled, this is the action taken on the phone call as it is dropped out of this in-group. Default is MESSAGE."); ?>
 
 <BR>
 <A NAME="inbound_groups-welcome_message_filename">
