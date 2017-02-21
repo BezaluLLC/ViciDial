@@ -12506,6 +12506,7 @@ if ($ACTION == 'userLOGout')
 
 		echo "$vul_insert|$vc_remove|$vla_delete|$wcs_delete|$agent_channel|$vlia_delete\n";
 		}
+	$stage .= " $version $build";
 	}
 
 
