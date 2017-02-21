@@ -420,10 +420,11 @@
 # 161231-1250 - Fixed issue #985, inbound dispo call url
 # 170201-2214 - Fix for receiving call just after a pause
 # 170207-1315 - Added user option api_only_user
+# 170221-0143 - Fix for rare missed agent log insert trigger
 #
 
-$version = '2.14-314';
-$build = '170207-1315';
+$version = '2.14-315';
+$build = '170221-0143';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=658;
@@ -11967,6 +11968,7 @@ if ( ($ACTION == 'VDADpause') or ($ACTION == 'VDADready') or ($pause_trigger == 
 		}
 	else
 		{
+		$random = (rand(1000000, 9999999) + 10000000);
 		if ($comments != 'NO_STATUS_CHANGE')
 			{
 			$VLAaffected_rows=0;
@@ -11979,7 +11981,7 @@ if ( ($ACTION == 'VDADpause') or ($ACTION == 'VDADready') or ($pause_trigger == 
 				}
 			if ( ($ACTION == 'VDADpause') or ($pause_trigger == 'PAUSE') )
 				{
-				$vla_ring_resetSQL = ",ring_callerid=''";
+				$vla_ring_resetSQL = ",ring_callerid='',random_id='$random'";
 				$vla_where_SQL = "and status NOT IN('QUEUE','INCALL')";
 				}
 			$stmt="UPDATE vicidial_live_agents set status='$vla_status' $vla_lead_wipeSQL $vla_ring_resetSQL where user='$user' and server_ip='$server_ip' $vla_where_SQL;";
@@ -12006,7 +12008,6 @@ if ( ($ACTION == 'VDADpause') or ($ACTION == 'VDADready') or ($pause_trigger == 
 				{$vla_autodialSQL = ",outbound_autodial='N'";}
 			if ($ACTION == 'VDADready')
 				{$vla_pausecodeSQL = ",pause_code='',external_pause_code=''";}
-			$random = (rand(1000000, 9999999) + 10000000);
 			$stmt="UPDATE vicidial_live_agents set uniqueid=0,callerid='',channel='', random_id='$random',comments='',last_state_change='$NOW_TIME' $vla_autodialSQL $vla_pausecodeSQL where user='$user' and server_ip='$server_ip';";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -12190,6 +12191,7 @@ if ( ($ACTION == 'VDADpause') or ($ACTION == 'VDADready') or ($pause_trigger == 
 		}
 	else
 		{
+		$stage .= "|$agent_log|$agent_log_id|";
 		echo _QXZ("Agent %1s is now in status %2s",0,'',$user,$vla_status)."\nNext agent_log_id:\n$agent_log_id\n";
 		}
 	}
@@ -12678,6 +12680,7 @@ if ($ACTION == 'PauseCodeSubmit')
 			}
 		}
 	echo _QXZ(" Pause Code %1s has been recorded",0,'',$status)."\nNext agent_log_id:\n" . $agent_log_id . "\n";
+	$stage .= "|$agent_log|$agent_log_id|";
 	}
 
 
