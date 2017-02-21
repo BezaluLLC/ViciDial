@@ -1759,7 +1759,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-manual_dial_filter">
 <BR>
-<B><?php echo _QXZ("Manual Dial Filter"); ?> -</B><?php echo _QXZ("This allows you to filter the calls that agents make in manual dial mode for this campaign by any combination of the following: DNC - to kick out, CAMPAIGNLISTS - the number must be within the lists for the campaign, NONE - no filter on manual dial or fast dial lists. CAMPLISTS_ALL - will include inactive lists in the search for the number. WITH_ALT will also search the Alt Phone field for the phone number. WITH_ALT_ADDR3 will also search the Alt Phone field and the Address 3 field for the phone number."); ?>
+<B><?php echo _QXZ("Manual Dial Filter"); ?> -</B><?php echo _QXZ("This allows you to filter the calls that agents make in manual dial mode for this campaign by any combination of the following: DNC - to kick out, CAMPAIGNLISTS - the number must be within the lists for the campaign, NONE - no filter on manual dial or fast dial lists. CAMPLISTS_ALL - will include inactive lists in the search for the number. WITH_ALT will also search the Alt Phone field for the phone number. WITH_ALT_ADDR3 will also search the Alt Phone field and the Address 3 field for the phone number. As for the DNC options, DNC will use the campaign settings for DNC filtering, CAMPDNC will ignore the campaign DNC settings and will use the this campaign DNC list, INTERNALDNC will ignore the campaign DNC settings and will use the internal DNC list"); ?>
 
 <BR>
 <A NAME="campaigns-manual_dial_search_checkbox">

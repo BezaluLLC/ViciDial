@@ -421,10 +421,11 @@
 # 170201-2214 - Fix for receiving call just after a pause
 # 170207-1315 - Added user option api_only_user
 # 170221-0143 - Fix for rare missed agent log insert trigger
+# 170221-1314 - Added more DNC options for campaign setting, manual dial filter
 #
 
-$version = '2.14-315';
-$build = '170221-0143';
+$version = '2.14-316';
+$build = '170221-1314';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=658;
@@ -2090,7 +2091,11 @@ if ($ACTION == 'manDiaLnextCaLL')
 					exit;
 					}
 				}
-			if (preg_match("/DNC/",$manual_dial_filter))
+
+			### BEGIN DNC manual dial filtering ###
+			# legacy, use campaign DNC settings(internal and campaign DNC lists)
+
+			if ( (preg_match("/DNC/",$manual_dial_filter)) and (!preg_match("/CAMPDNC_ONLY/",$manual_dial_filter)) and (!preg_match("/INTERNALDNC_ONLY/",$manual_dial_filter)) )
 				{
 				if (preg_match("/AREACODE/",$use_internal_dnc))
 					{
@@ -2166,6 +2171,81 @@ if ($ACTION == 'manDiaLnextCaLL')
 						}
 					}
 				}
+
+			# ignore campaign DNC settings use only campaign DNC lists
+			if (preg_match("/CAMPDNC/",$manual_dial_filter))
+				{
+				$temp_campaign_id = $campaign;
+				if (preg_match("/AREACODE/",$use_campaign_dnc))
+					{
+					$phone_number_areacode = substr($phone_number, 0, 3);
+					$phone_number_areacode .= "XXXXXXX";
+					$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number IN('$phone_number','$phone_number_areacode') and campaign_id='$temp_campaign_id';";
+					}
+				else
+					{$stmt="SELECT count(*) FROM vicidial_campaign_dnc where phone_number='$phone_number' and campaign_id='$temp_campaign_id';";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00018',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$row=mysqli_fetch_row($rslt);
+				if ($row[0] > 0)
+					{
+					### purge from the dial queue and api
+					$stmt = "DELETE from vicidial_manual_dial_queue where phone_number='$phone_number' and user='$user';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00358',$user,$server_ip,$session_name,$one_mysql_log);}
+					$VMDQaffected_rows = mysqli_affected_rows($link);
+
+					$stmt = "UPDATE vicidial_live_agents set external_dial='' where user='$user';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00359',$user,$server_ip,$session_name,$one_mysql_log);}
+					$VLAEDaffected_rows = mysqli_affected_rows($link);
+
+					echo "DNC NUMBER\n";
+					if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
+					exit;
+					}
+				}
+
+			# ignore campaign DNC settings use only internal DNC list
+			if (preg_match("/INTERNALDNC/",$manual_dial_filter))
+				{
+				if (preg_match("/AREACODE/",$use_internal_dnc))
+					{
+					$phone_number_areacode = substr($phone_number, 0, 3);
+					$phone_number_areacode .= "XXXXXXX";
+					$stmt="SELECT count(*) from vicidial_dnc where phone_number IN('$phone_number','$phone_number_areacode');";
+					}
+				else
+					{$stmt="SELECT count(*) FROM vicidial_dnc where phone_number='$phone_number';";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00017',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$row=mysqli_fetch_row($rslt);
+				if ($row[0] > 0)
+					{
+					### purge from the dial queue and api
+					$stmt = "DELETE from vicidial_manual_dial_queue where phone_number='$phone_number' and user='$user';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00356',$user,$server_ip,$session_name,$one_mysql_log);}
+					$VMDQaffected_rows = mysqli_affected_rows($link);
+
+					$stmt = "UPDATE vicidial_live_agents set external_dial='' where user='$user';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00357',$user,$server_ip,$session_name,$one_mysql_log);}
+					$VLAEDaffected_rows = mysqli_affected_rows($link);
+
+					echo "DNC NUMBER\n";
+					if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
+					exit;
+					}
+				}
+			### END DNC manual dial filtering ###
+
 			if (preg_match("/CAMPLISTS/",$manual_dial_filter))
 				{
 				$stmt="SELECT list_id,active from vicidial_lists where campaign_id='$campaign'";

@@ -3942,12 +3942,13 @@ else
 # 170217-1350 - Added dead_to_dispo campaign setting
 # 170220-1209 - Added switch_lead Agent API function
 # 170220-1632 - Added In-group areacode_filter feature
+# 170221-1542 - Added more DNC options for campaign setting 'manual dial filter', added counts to DNC add/delete page
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-591a';
-$build = '170220-1632';
+$admin_version = '2.14-592a';
+$build = '170221-1542';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6261,7 +6262,7 @@ if ($ADD==121)
 		{
 		$PN = explode("\n",$phone_numbers);
 		$PNct = count($PN);
-		$p=0;
+		$p=0;   $DNCadded=0;   $DNCnotadded=0;   $DNCdeleted=0;   $DNCnotdeleted=0;
 		while ($p < $PNct)
 			{
 			if ( (preg_match('/delete/',$stage)) and ($LOGdelete_from_dnc > 0) )
@@ -6273,13 +6274,17 @@ if ($ADD==121)
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$row=mysqli_fetch_row($rslt);
 					if ($row[0] < 1)
-						{echo "<br>"._QXZ("DNC NOT DELETED - This phone number is not in the Do Not Call List").": $PN[$p]\n";}
+						{
+						echo "<br>"._QXZ("DNC NOT DELETED - This phone number is not in the Do Not Call List").": $PN[$p]\n";
+						$DNCnotdeleted++;
+						}
 					else
 						{
 						$stmt="DELETE FROM vicidial_dnc where phone_number='$PN[$p]';";
 						$rslt=mysql_to_mysqli($stmt, $link);
 
 						echo "<br><B>"._QXZ("DNC DELETED").": $PN[$p]</B>\n";
+						$DNCdeleted++;
 
 						### LOG INSERTION Admin Log Table ###
 						$SQL_log = "$stmt|";
@@ -6299,13 +6304,17 @@ if ($ADD==121)
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$row=mysqli_fetch_row($rslt);
 					if ($row[0] < 1)
-						{echo "<br>"._QXZ("DNC NOT DELETED - This phone number is not in the Do Not Call List").": $PN[$p] $campaign_id\n";}
+						{
+						echo "<br>"._QXZ("DNC NOT DELETED - This phone number is not in the Do Not Call List").": $PN[$p] $campaign_id\n";
+						$DNCnotdeleted++;
+						}
 					else
 						{
 						$stmt="DELETE FROM vicidial_campaign_dnc where phone_number='$PN[$p]' and campaign_id='$campaign_id';";
 						$rslt=mysql_to_mysqli($stmt, $link);
 
 						echo "<br><B>"._QXZ("DNC DELETED").": $PN[$p] $campaign_id</B>\n";
+						$DNCdeleted++;
 
 						### LOG INSERTION Admin Log Table ###
 						$SQL_log = "$stmt|";
@@ -6330,13 +6339,17 @@ if ($ADD==121)
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$row=mysqli_fetch_row($rslt);
 					if ($row[0] > 0)
-						{echo "<br>"._QXZ("DNC NOT ADDED - This phone number is already in the Do Not Call List").": $PN[$p]\n";}
+						{
+						echo "<br>"._QXZ("DNC NOT ADDED - This phone number is already in the Do Not Call List").": $PN[$p]\n";
+						$DNCnotadded++;
+						}
 					else
 						{
 						$stmt="INSERT INTO vicidial_dnc (phone_number) values('$PN[$p]');";
 						$rslt=mysql_to_mysqli($stmt, $link);
 
 						echo "<br><B>"._QXZ("DNC ADDED").": $PN[$p]</B>\n";
+						$DNCadded++;
 
 						### LOG INSERTION Admin Log Table ###
 						$SQL_log = "$stmt|";
@@ -6356,13 +6369,17 @@ if ($ADD==121)
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$row=mysqli_fetch_row($rslt);
 					if ($row[0] > 0)
-						{echo "<br>"._QXZ("DNC NOT ADDED - This phone number is already in the Do Not Call List").": $PN[$p] $campaign_id\n";}
+						{
+						echo "<br>"._QXZ("DNC NOT ADDED - This phone number is already in the Do Not Call List").": $PN[$p] $campaign_id\n";
+						$DNCnotadded++;
+						}
 					else
 						{
 						$stmt="INSERT INTO vicidial_campaign_dnc (phone_number,campaign_id) values('$PN[$p]','$campaign_id');";
 						$rslt=mysql_to_mysqli($stmt, $link);
 
 						echo "<br><B>"._QXZ("DNC ADDED").": $PN[$p] $campaign_id</B>\n";
+						$DNCadded++;
 
 						### LOG INSERTION Admin Log Table ###
 						$SQL_log = "$stmt|";
@@ -6379,6 +6396,21 @@ if ($ADD==121)
 				##### END ADD TO DNC #####
 				}
 			$p++;
+			}
+		
+		if ( ($DNCadded > 0) or ($DNCnotadded > 0) )
+			{
+			echo "<br>\n";
+			echo "<br><B>"._QXZ("TOTAL NUMBERS ADDED TO DNC LIST").": $DNCadded</B>\n";
+			echo "<br><B>"._QXZ("TOTAL NUMBERS NOT ADDED TO DNC LIST").": $DNCnotadded</B>\n";
+			echo "<br>\n";
+			}
+		if ( ($DNCdeleted > 0) or ($DNCnotdeleted > 0) )
+			{
+			echo "<br>\n";
+			echo "<br><B>"._QXZ("TOTAL NUMBERS DELETED FROM DNC LIST").": $DNCdeleted</B>\n";
+			echo "<br><B>"._QXZ("TOTAL NUMBERS NOT DELETED FROM DNC LIST").": $DNCnotdeleted</B>\n";
+			echo "<br>\n";
 			}
 		}
 
@@ -21408,7 +21440,7 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Manual Dial List ID").": </td><td align=left><input type=text name=manual_dial_list_id size=19 maxlength=19 value=\"$manual_dial_list_id\">$NWB#campaigns-manual_dial_list_id$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Manual Dial Filter").": </td><td align=left><select size=1 name=manual_dial_filter><option value='NONE'>"._QXZ("NONE")."</option><option value='DNC_ONLY'>"._QXZ("DNC_ONLY")."</option><option value='CAMPLISTS_ONLY'>"._QXZ("CAMPLISTS_ONLY")."</option><option value='CAMPLISTS_ALL'>"._QXZ("CAMPLISTS_ALL")."</option><option value='DNC_AND_CAMPLISTS'>"._QXZ("DNC_AND_CAMPLISTS")."</option><option value='DNC_AND_CAMPLISTS_ALL'>"._QXZ("DNC_AND_CAMPLISTS_ALL")."</option><option value='DNC_ONLY_WITH_ALT'>"._QXZ("DNC_ONLY_WITH_ALT")."</option><option value='CAMPLISTS_ONLY_WITH_ALT'>"._QXZ("CAMPLISTS_ONLY_WITH_ALT")."</option><option value='CAMPLISTS_ALL_WITH_ALT'>"._QXZ("CAMPLISTS_ALL_WITH_ALT")."</option><option value='DNC_AND_CAMPLISTS_WITH_ALT'>"._QXZ("DNC_AND_CAMPLISTS_WITH_ALT")."</option><option value='DNC_AND_CAMPLISTS_ALL_WITH_ALT'>"._QXZ("DNC_AND_CAMPLISTS_ALL_WITH_ALT")."</option><option value='DNC_ONLY_WITH_ALT_ADDR3'>"._QXZ("DNC_ONLY_WITH_ALT_ADDR3")."</option><option value='CAMPLISTS_ONLY_WITH_ALT_ADDR3'>"._QXZ("CAMPLISTS_ONLY_WITH_ALT_ADDR3")."</option><option value='CAMPLISTS_ALL_WITH_ALT_ADDR3'>"._QXZ("CAMPLISTS_ALL_WITH_ALT_ADDR3")."</option><option value='DNC_AND_CAMPLISTS_WITH_ALT_ADDR3'>"._QXZ("DNC_AND_CAMPLISTS_WITH_ALT_ADDR3")."</option><option value='DNC_AND_CAMPLISTS_ALL_WITH_ALT_ADDR3'>"._QXZ("DNC_AND_CAMPLISTS_ALL_WITH_ALT_ADDR3")."</option><option value='$manual_dial_filter' SELECTED>"._QXZ("$manual_dial_filter")."</option></select>$NWB#campaigns-manual_dial_filter$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Manual Dial Filter").": </td><td align=left><select size=1 name=manual_dial_filter><option value='NONE'>"._QXZ("NONE")."</option><option value='DNC_ONLY'>"._QXZ("DNC_ONLY")."</option><option value='CAMPDNC_ONLY'>"._QXZ("CAMPDNC_ONLY")."</option><option value='INTERNALDNC_ONLY'>"._QXZ("INTERNALDNC_ONLY")."</option><option value='DNC_AND_CAMPDNC'>"._QXZ("DNC_AND_CAMPDNC")."</option><option value='CAMPLISTS_ONLY'>"._QXZ("CAMPLISTS_ONLY")."</option><option value='CAMPLISTS_ALL'>"._QXZ("CAMPLISTS_ALL")."</option><option value='DNC_AND_CAMPLISTS'>"._QXZ("DNC_AND_CAMPLISTS")."</option><option value='CAMPDNC_ONLY_AND_CAMPLISTS'>"._QXZ("CAMPDNC_ONLY_AND_CAMPLISTS")."</option><option value='INTERNALDNC_ONLY_AND_CAMPLISTS'>"._QXZ("INTERNALDNC_ONLY_AND_CAMPLISTS")."</option><option value='DNC_AND_CAMPDNC_AND_CAMPLISTS'>"._QXZ("DNC_AND_CAMPDNC_AND_CAMPLISTS")."</option><option value='DNC_AND_CAMPLISTS_ALL'>"._QXZ("DNC_AND_CAMPLISTS_ALL")."</option><option value='CAMPDNC_ONLY_AND_CAMPLISTS_ALL'>"._QXZ("CAMPDNC_ONLY_AND_CAMPLISTS_ALL")."</option><option value='INTERNALDNC_ONLY_AND_CAMPLISTS_ALL'>"._QXZ("INTERNALDNC_ONLY_AND_CAMPLISTS_ALL")."</option><option value='DNC_AND_CAMPDNC_AND_CAMPLISTS_ALL'>"._QXZ("DNC_AND_CAMPDNC_AND_CAMPLISTS_ALL")."</option><option value='DNC_ONLY_WITH_ALT'>"._QXZ("DNC_ONLY_WITH_ALT")."</option><option value='CAMPDNC_ONLY_WITH_ALT'>"._QXZ("CAMPDNC_ONLY_WITH_ALT")."</option><option value='INTERNALDNC_ONLY_WITH_ALT'>"._QXZ("INTERNALDNC_ONLY_WITH_ALT")."</option><option value='DNC_AND_CAMPDNC_WITH_ALT'>"._QXZ("DNC_AND_CAMPDNC_WITH_ALT")."</option><option value='CAMPLISTS_ONLY_WITH_ALT'>"._QXZ("CAMPLISTS_ONLY_WITH_ALT")."</option><option value='CAMPLISTS_ALL_WITH_ALT'>"._QXZ("CAMPLISTS_ALL_WITH_ALT")."</option><option value='DNC_AND_CAMPLISTS_WITH_ALT'>"._QXZ("DNC_AND_CAMPLISTS_WITH_ALT")."</option><option value='CAMPDNC_ONLY_AND_CAMPLISTS_WITH_ALT'>"._QXZ("CAMPDNC_ONLY_AND_CAMPLISTS_WITH_ALT")."</option><option value='INTERNALDNC_ONLY_AND_CAMPLISTS_WITH_ALT'>"._QXZ("INTERNALDNC_ONLY_AND_CAMPLISTS_WITH_ALT")."</option><option value='DNC_AND_CAMPDNC_AND_CAMPLISTS_WITH_ALT'>"._QXZ("DNC_AND_CAMPDNC_AND_CAMPLISTS_WITH_ALT")."</option><option value='DNC_AND_CAMPLISTS_ALL_WITH_ALT'>"._QXZ("DNC_AND_CAMPLISTS_ALL_WITH_ALT")."</option><option value='CAMPDNC_ONLY_AND_CAMPLISTS_ALL_WITH_ALT'>"._QXZ("CAMPDNC_ONLY_AND_CAMPLISTS_ALL_WITH_ALT")."</option><option value='INTERNALDNC_ONLY_AND_CAMPLISTS_ALL_WITH_ALT'>"._QXZ("INTERNALDNC_ONLY_AND_CAMPLISTS_ALL_WITH_ALT")."</option><option value='DNC_AND_CAMPDNC_AND_CAMPLISTS_ALL_WITH_ALT'>"._QXZ("DNC_AND_CAMPDNC_AND_CAMPLISTS_ALL_WITH_ALT")."</option><option value='DNC_ONLY_WITH_ALT_ADDR3'>"._QXZ("DNC_ONLY_WITH_ALT_ADDR3")."</option><option value='CAMPDNC_ONLY_WITH_ALT_ADDR3'>"._QXZ("CAMPDNC_ONLY_WITH_ALT_ADDR3")."</option><option value='INTERNALDNC_ONLY_WITH_ALT_ADDR3'>"._QXZ("INTERNALDNC_ONLY_WITH_ALT_ADDR3")."</option><option value='DNC_AND_CAMPDNC_WITH_ALT_ADDR3'>"._QXZ("DNC_AND_CAMPDNC_WITH_ALT_ADDR3")."</option><option value='CAMPLISTS_ONLY_WITH_ALT_ADDR3'>"._QXZ("CAMPLISTS_ONLY_WITH_ALT_ADDR3")."</option><option value='CAMPLISTS_ALL_WITH_ALT_ADDR3'>"._QXZ("CAMPLISTS_ALL_WITH_ALT_ADDR3")."</option><option value='DNC_AND_CAMPLISTS_WITH_ALT_ADDR3'>"._QXZ("DNC_AND_CAMPLISTS_WITH_ALT_ADDR3")."</option><option value='CAMPDNC_ONLY_AND_CAMPLISTS_WITH_ALT_ADDR3'>"._QXZ("CAMPDNC_ONLY_AND_CAMPLISTS_WITH_ALT_ADDR3")."</option><option value='INTERNALDNC_ONLY_AND_CAMPLISTS_WITH_ALT_ADDR3'>"._QXZ("INTERNALDNC_ONLY_AND_CAMPLISTS_WITH_ALT_ADDR3")."</option><option value='DNC_AND_CAMPDNC_AND_CAMPLISTS_WITH_ALT_ADDR3'>"._QXZ("DNC_AND_CAMPDNC_AND_CAMPLISTS_WITH_ALT_ADDR3")."</option><option value='DNC_AND_CAMPLISTS_ALL_WITH_ALT_ADDR3'>"._QXZ("DNC_AND_CAMPLISTS_ALL_WITH_ALT_ADDR3")."</option><option value='CAMPDNC_ONLY_AND_CAMPLISTS_ALL_WITH_ALT_ADDR3'>"._QXZ("CAMPDNC_ONLY_AND_CAMPLISTS_ALL_WITH_ALT_ADDR3")."</option><option value='INTERNALDNC_ONLY_AND_CAMPLISTS_ALL_WITH_ALT_ADDR3'>"._QXZ("INTERNALDNC_ONLY_AND_CAMPLISTS_ALL_WITH_ALT_ADDR3")."</option><option value='DNC_AND_CAMPDNC_AND_CAMPLISTS_ALL_WITH_ALT_ADDR3'>"._QXZ("DNC_AND_CAMPDNC_AND_CAMPLISTS_ALL_WITH_ALT_ADDR3")."</option><option value='$manual_dial_filter' SELECTED>"._QXZ("$manual_dial_filter")."</option></select>$NWB#campaigns-manual_dial_filter$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Manual Preview Dial").": </td><td align=left><select size=1 name=manual_preview_dial><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='PREVIEW_AND_SKIP'>"._QXZ("PREVIEW_AND_SKIP")."</option><option value='PREVIEW_ONLY'>"._QXZ("PREVIEW_ONLY")."</option><option value='$manual_preview_dial' SELECTED>"._QXZ("$manual_preview_dial")."</option></select>$NWB#campaigns-manual_preview_dial$NWE</td></tr>\n";
 

@@ -97,6 +97,9 @@ OTHER CHANGES:
 	set number of seconds in queue that either match or do not match a list
 	of areacodes defined per in-group.
 
+15. Added new DNC options to Manual Dial Filter campaign feature that are not
+	tied to the campaign DNC settings.
+
 
 
 
