@@ -459,11 +459,11 @@ $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $statsale_to_print = mysqli_num_rows($rslt);
 $i=0;
-$sale_ct=0;
+$sale_statusesLIST=array();
 while ($i < $statsale_to_print)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$sale_statusesLIST[$sale_ct] = $row[0];
+	array_push($sale_statusesLIST, "$row[0]");
 	$i++;
 	}
 $stmt="select status from vicidial_campaign_statuses where sale='Y';";
@@ -474,7 +474,7 @@ $i=0;
 while ($i < $statsale_to_print)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$sale_statusesLIST[$sale_ct] = $row[0];
+	array_push($sale_statusesLIST, "$row[0]");
 	$i++;
 	}
 $sale_statusesLIST=array_values(array_unique($sale_statusesLIST));
@@ -485,11 +485,11 @@ $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $statdnc_to_print = mysqli_num_rows($rslt);
 $i=0;
-$dnc_ct=0;
+$dnc_statusesLIST=array();
 while ($i < $statdnc_to_print)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$dnc_statusesLIST[$dnc_ct] = $row[0];
+	array_push($dnc_statusesLIST, "$row[0]");
 	$i++;
 	}
 $stmt="select status from vicidial_campaign_statuses where dnc='Y';";
@@ -500,7 +500,7 @@ $i=0;
 while ($i < $statdnc_to_print)
 	{
 	$row=mysqli_fetch_row($rslt);
-	$dnc_statusesLIST[$dnc_ct] = $row[0];
+	array_push($dnc_statusesLIST, "$row[0]");
 	$i++;
 	}
 $dnc_statusesLIST=array_values(array_unique($dnc_statusesLIST));
