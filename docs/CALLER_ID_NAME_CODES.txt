@@ -1,4 +1,4 @@
-CALLER ID NAME CODES DOC	Started: 2013-07-15	Updated: 2016-10-29
+CALLER ID NAME CODES DOC	Started: 2013-07-15	Updated: 2017-02-22
 
 
 This document is meant for reference only, and it does not contain all CID name codes possible, but more will be added over time.
@@ -22,3 +22,4 @@ XBvdc - Agent blind transfer (XBvdcW14528875091001100110011001) [epoch + user...
 AGMON - Remote Agent Monitor (AGMON715224918000001)
 HLvdcW - Hangup of customer call from agent screen (HLvdcW1475524272tluc)
 CH123456 - Hangup of all non-agent channels in meetme session(CH1234614755246080)
+ULGC - Hangup of lone channel in left 3way session (ULGC3620170222100923)

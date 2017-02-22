@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_conf_update_3way.pl version 2.12
+# AST_conf_update_3way.pl version 2.14
 #
 # This script checks leave 3way vicidial_conferences for participants
 # This is a constantly running script that is in the keepalive_ALL script, to
@@ -11,12 +11,13 @@
 #      script's crontab entry that does some of these functions:
 #      AST_conf_update.pl --no-vc-3way-check
 #
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 100811-2119 - First build, based upon AST_conf_update.pl script
 # 100928-1506 - Changed from hard-coded 60 minute limit to servers.vicidial_recording_limit
 # 130108-1707 - Changes for Asterisk 1.8 compatibility
 # 160608-1549 - Added support for AMI version 1.3
+# 170222-0939 - Changed to file logging using server settings
 #
 
 # constants
@@ -140,7 +141,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
  or die "Couldn't connect to database: " . DBI->errstr;
 
 ### Grab Server values from the database
-$stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context,vicidial_recording_limit,asterisk_version FROM servers where server_ip = '$server_ip';";
+$stmtA = "SELECT telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,max_vicidial_trunks,answer_transfer_agent,local_gmt,ext_context,vicidial_recording_limit,asterisk_version,vd_server_logs FROM servers where server_ip = '$server_ip';";
 if ($DB) {print "|$stmtA|\n";}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -162,6 +163,7 @@ if ($sthArows > 0)
 	$DBext_context	=			$aryA[10];
 	$vicidial_recording_limit = $aryA[11];
 	$asterisk_version	=		$aryA[12];
+	$DBvd_server_logs =			$aryA[13];
 	if ($DBtelnet_host)				{$telnet_host = $DBtelnet_host;}
 	if ($DBtelnet_port)				{$telnet_port = $DBtelnet_port;}
 	if ($DBASTmgrUSERNAME)			{$ASTmgrUSERNAME = $DBASTmgrUSERNAME;}
@@ -174,6 +176,8 @@ if ($sthArows > 0)
 	if ($DBSERVER_GMT)				{$SERVER_GMT = $DBSERVER_GMT;}
 	if ($DBext_context)				{$ext_context = $DBext_context;}
 	if ($vicidial_recording_limit < 60) {$vicidial_recording_limit=60;}
+	if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
+	else {$SYSLOG = '0';}
 	}
  $sthA->finish(); 
 
@@ -181,6 +185,19 @@ if (!$telnet_port) {$telnet_port = '5038';}
 if (length($ASTmgrUSERNAMEsend) > 3) {$telnet_login = $ASTmgrUSERNAMEsend;}
 else {$telnet_login = $ASTmgrUSERNAME;}
 
+($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
+$year = ($year + 1900);
+$mon++;
+if ($mon < 10) {$mon = "0$mon";}
+if ($mday < 10) {$mday = "0$mday";}
+if ($hour < 10) {$hour = "0$hour";}
+if ($min < 10) {$min = "0$min";}
+if ($sec < 10) {$sec = "0$sec";}
+
+if (!$CONFLOGfile) {$CONFLOGfile = "$PATHlogs/3way_conf.$year-$mon-$mday";}
+
+$event_string = "AST_conf_update_3way.pl script starting: $year-$mon-$mday $hour:$min:$sec";
+ &event_logger;
 
 $loop_counter=0;
 
@@ -222,14 +239,16 @@ while ($loops > $loop_counter)
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
-	if ($DB) {print "$now_date|$loop_counter|$sthArows|$stmtA|\n";}
+	$event_string = "$loop_counter|$sthArows|$stmtA";
+	 &event_logger;
 	$rec_count=0;
 	while ($sthArows > $rec_count)
 		{
 		@aryA = $sthA->fetchrow_array;
 		$PTextensions[$rec_count] =		 $aryA[0];
 		$PT_conf_extens[$rec_count] =	 $aryA[1];
-			if ($DB) {print "$PT_conf_extens[$rec_count]|$PTextensions[$rec_count]|\n";}
+		$event_string = "$PT_conf_extens[$rec_count]|$PTextensions[$rec_count]|";
+		 &event_logger;
 		$rec_count++;
 		}
 	$sthA->finish(); 
@@ -254,7 +273,8 @@ while ($loops > $loop_counter)
 			@list_channels=@MT;
 			$t->buffer_empty;
 			$COMMAND = "Action: Command\nCommand: Meetme list $PT_conf_extens[$i]\n\nAction: Ping\n\n";
-			if ($DBX) {print "|$PT_conf_extens[$i]|$COMMAND|\n";}
+			$event_string = "|$PT_conf_extens[$i]|$COMMAND|";
+			 &event_logger;
 			%ast_ver_str = parse_asterisk_version($asterisk_version);
 			if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
 				{
@@ -270,7 +290,8 @@ while ($loops > $loop_counter)
 			$conf_users[$i]='';
 			foreach(@list_channels)
 				{
-				if($DBX){print "|$list_channels[$j]|\n";}
+				$event_string = "|$list_channels[$j]|";
+				 &event_logger;
 				### mark all empty conferences and conferences with only one channel as empty
 				if ($list_channels[$j] =~ /No active conferences|No active MeetMe conferences|No such conference/i)
 					{$conf_empty[$i]++;}
@@ -279,16 +300,19 @@ while ($loops > $loop_counter)
 				$j++;
 				}
 
-			if($DB){print "Meetme list $PT_conf_extens[$i]-  Exten:|$PTextensions[$i]| Empty:|$conf_empty[$i]|    ";}
+			$event_string = "Meetme list $PT_conf_extens[$i]-  Exten:|$PTextensions[$i]| Empty:|$conf_empty[$i]|";
+			 &event_logger;
 			if (!$conf_empty[$i])
 				{
-				if($DB){print "CONFERENCE STILL HAS PARTICIPANTS, DOING NOTHING FOR THIS CONFERENCE\n";}
+				$event_string = "CONFERENCE STILL HAS PARTICIPANTS, DOING NOTHING FOR THIS CONFERENCE";
+				 &event_logger;
 				if ($PTextensions[$i] =~ /Xtimeout\d$/i) 
 					{
 					$PTextensions[$i] =~ s/Xtimeout\d$//gi;
 					$stmtA = "UPDATE vicidial_conferences set extension='$PTextensions[$i]' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
 					$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
-					if($DB){print STDERR "\n|$affected_rows|$stmtA|\n";}
+					$event_string = "|$affected_rows|$stmtA|";
+					 &event_logger;
 					}
 				}
 			else
@@ -309,12 +333,14 @@ while ($loops > $loop_counter)
 
 					$stmtA="INSERT INTO vicidial_manager values('','','$now_date','NEW','N','$server_ip','','Originate','$queryCID','Channel: $kick_local_channel','Context: $ext_context','Exten: 8300','Priority: 1','Callerid: $queryCID','','','','','');";
 						$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
-					if($DB){print STDERR "\n|$affected_rows|$stmtA|\n";}
+					$event_string = "|$affected_rows|$stmtA|";
+					 &event_logger;
 					}
 
 				$stmtA = "UPDATE vicidial_conferences set extension='$NEWexten[$i]',leave_3way='$leave_3waySQL' where server_ip='$server_ip' and conf_exten='$PT_conf_extens[$i]';";
 				$affected_rows = $dbhA->do($stmtA); #  or die  "Couldn't execute query:|$stmtA|\n";
-				if($DB){print STDERR "\n|$affected_rows|$stmtA|\n";}
+				$event_string = "|$affected_rows|$stmtA|";
+				 &event_logger;
 
 				### sleep for 10 hundredths of a second
 				usleep(1*100*1000);
@@ -338,7 +364,8 @@ while ($loops > $loop_counter)
 	$timeclock_end_of_day_NOW=0;
 	### Grab system_settings values from the database
 	$stmtA = "SELECT count(*) from system_settings where timeclock_end_of_day LIKE \"%$current_hourmin%\";";
-	if ($DBX) {print "|$stmtA|\n";}
+	$event_string = "|$stmtA|";
+	 &event_logger;
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -352,7 +379,8 @@ while ($loops > $loop_counter)
 	if ($timeclock_end_of_day_NOW > 0)
 		{
 		$event_string = "End of Day, shutting down this script in 10 seconds, script will resume in 60 seconds...";
-			if ($DB) {print "\n$event_string\n\n\n";}
+		$event_string = "$event_string\n\n";
+		 &event_logger;
 		sleep(10);
 		$loop_counter=9999999;
 		}
@@ -361,7 +389,8 @@ while ($loops > $loop_counter)
 
 $dbhA->disconnect();
 
-if($DB){print "DONE... Exiting... Goodbye... See you later... \n";}
+$event_string = "DONE... Exiting... Goodbye... See you later... \n";
+ &event_logger;
 
 exit;
 
@@ -408,3 +437,17 @@ sub parse_asterisk_version
 
 	return ( %ast_ver_hash );
 }
+
+sub event_logger
+	{
+	if ($DB) {print "$now_date|$event_string|\n";}
+	if ($SYSLOG)
+		{
+		### open the log file for writing ###
+		open(Lout, ">>$CONFLOGfile")
+				|| die "Can't open $CONFLOGfile: $!\n";
+		print Lout "$now_date|$event_string|\n";
+		close(Lout);
+		}
+	$event_string='';
+	}
