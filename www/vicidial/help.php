@@ -2534,7 +2534,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_groups-onhold_prompt_filename">
 <BR>
-<B><?php echo _QXZ("On Hold Prompt Filename"); ?> -</B><?php echo _QXZ("The audio file located on the server to be played at a regular interval when the customer is on hold. Default is generic_hold. This audio file MUST be 9 seconds or less in length."); ?>
+<B><?php echo _QXZ("On Hold Prompt Filename"); ?> -</B><?php echo _QXZ("The audio file located on the server to be played at a regular interval when the customer is on hold. Default is generic_hold. This audio file MUST be 9 seconds or less in length. If this prompt is too long, it can cause calls to not be routed properly. We usually recommend not using this feature, and instead putting a periodic audio message within the Music on Hold plan that you have defined for this in-group."); ?>
 
 <BR>
 <A NAME="inbound_groups-prompt_interval">

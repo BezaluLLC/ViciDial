@@ -113,10 +113,11 @@
 # 170205-2022 - Added phone_number_log function
 # 170209-1149 - Added URL and IP logging
 # 170219-1520 - Added 90-day duplicate check option
+# 170223-0743 - Added QXZ translation to admin web user functions text
 #
 
-$version = '2.14-89';
-$build = '170219-1520';
+$version = '2.14-90';
+$build = '170223-0743';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -421,7 +422,7 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,custom_fields_enabled,pass_hash_enabled,agent_whisper_enabled,active_modules,auto_dial_limit FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled,pass_hash_enabled,agent_whisper_enabled,active_modules,auto_dial_limit,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
@@ -435,6 +436,8 @@ if ($qm_conf_ct > 0)
 	$SSauto_dial_limit =		$row[5];
 	# slightly increase limit value, because PHP somehow thinks 2.8 > 2.8
 	$SSauto_dial_limit = ($SSauto_dial_limit + 0.001);
+	$SSenable_languages =		$row[6];
+	$SSlanguage_method =		$row[7];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -716,13 +719,14 @@ if ($auth < 1)
 	exit;
 	}
 
-$stmt="SELECT api_list_restrict,api_allowed_functions,user_group from vicidial_users where user='$user' and active='Y';";
+$stmt="SELECT api_list_restrict,api_allowed_functions,user_group,selected_language from vicidial_users where user='$user' and active='Y';";
 if ($DB>0) {echo "DEBUG: auth query - $stmt\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $api_list_restrict =		$row[0];
 $api_allowed_functions =	$row[1];
 $LOGuser_group =			$row[2];
+$VUselected_language =		$row[3];
 if ( ($api_list_restrict > 0) and ( ($function == 'add_lead') or ($function == 'update_lead') or ($function == 'update_list') ) )
 	{
 	$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$LOGuser_group';";
@@ -912,14 +916,14 @@ if ($function == 'sounds_list')
 							echo "</head>\n\n";
 
 							echo "<body>\n";
-							echo "<a href=\"javascript:close_file();\"><font size=1 face=\"Arial,Helvetica\">close frame</font></a>\n";
+							echo "<a href=\"javascript:close_file();\"><font size=1 face=\"Arial,Helvetica\">"._QXZ("close frame")."</font></a>\n";
 							echo "<div id='selectframe' style=\"height:400px;width:710px;overflow:scroll;\">\n";
 							echo "<table border=0 cellpadding=1 cellspacing=2 width=690 bgcolor=white><tr>\n";
 							echo "<td>#</td>\n";
-							echo "<td><a href=\"$PHP_SELF?source=admin&function=sounds_list&user=$user&pass=$pass&format=selectframe&comments=$comments&stage=name\"><font color=black>FILENAME</td>\n";
-							echo "<td><a href=\"$PHP_SELF?source=admin&function=sounds_list&user=$user&pass=$pass&format=selectframe&comments=$comments&stage=date\"><font color=black>DATE</td>\n";
-							echo "<td><a href=\"$PHP_SELF?source=admin&function=sounds_list&user=$user&pass=$pass&format=selectframe&comments=$comments&stage=size\"><font color=black>SIZE</td>\n";
-							echo "<td>PLAY</td>\n";
+							echo "<td><a href=\"$PHP_SELF?source=admin&function=sounds_list&user=$user&pass=$pass&format=selectframe&comments=$comments&stage=name\"><font color=black>"._QXZ("FILENAME")."</td>\n";
+							echo "<td><a href=\"$PHP_SELF?source=admin&function=sounds_list&user=$user&pass=$pass&format=selectframe&comments=$comments&stage=date\"><font color=black>"._QXZ("DATE")."</td>\n";
+							echo "<td><a href=\"$PHP_SELF?source=admin&function=sounds_list&user=$user&pass=$pass&format=selectframe&comments=$comments&stage=size\"><font color=black>"._QXZ("SIZE")."</td>\n";
+							echo "<td>"._QXZ("PLAY")."</td>\n";
 							echo "</tr>\n";
 							}
 						$sf++;
@@ -927,7 +931,7 @@ if ($function == 'sounds_list')
 						echo "<td><a href=\"javascript:choose_file('$file_namesPROMPT[$m]','$comments');\"><font size=1 face=\"Arial,Helvetica\">$file_names[$m]</a></td>\n";
 						echo "<td><font size=1 face=\"Arial,Helvetica\">$file_dates[$m]</td>\n";
 						echo "<td><font size=1 face=\"Arial,Helvetica\">$file_sizes[$m]</td>\n";
-						echo "<td><a href=\"$admDIR/$admin_web_dir$sounds_web_directory/$file_names[$m]\" target=\"_blank\"><font size=1 face=\"Arial,Helvetica\">PLAY</a></td></tr>\n";
+						echo "<td><a href=\"$admDIR/$admin_web_dir$sounds_web_directory/$file_names[$m]\" target=\"_blank\"><font size=1 face=\"Arial,Helvetica\">"._QXZ("PLAY")."</a></td></tr>\n";
 						}
 					}
 				$k++;
@@ -1050,13 +1054,13 @@ if ($function == 'moh_list')
 			echo "</head>\n\n";
 
 			echo "<body>\n";
-			echo "<a href=\"javascript:close_file();\"><font size=1 face=\"Arial,Helvetica\">close frame</font></a>\n";
+			echo "<a href=\"javascript:close_file();\"><font size=1 face=\"Arial,Helvetica\">"._QXZ("close frame")."</font></a>\n";
 			echo "<div id='selectframe' style=\"height:400px;width:710px;overflow:scroll;\">\n";
 			echo "<table border=0 cellpadding=1 cellspacing=2 width=690 bgcolor=white><tr>\n";
 			echo "<td width=30>#</td>\n";
-			echo "<td colspan=2>Music On Hold Class</td>\n";
-			echo "<td>Name</td>\n";
-			echo "<td>Random</td>\n";
+			echo "<td colspan=2>"._QXZ("Music On Hold Class")."</td>\n";
+			echo "<td>"._QXZ("Name")."</td>\n";
+			echo "<td>"._QXZ("Random")."</td>\n";
 			echo "</tr>\n";
 
 			$stmt="SELECT moh_id,moh_name,random from vicidial_music_on_hold where active='Y' $LOGadmin_viewable_groupsSQL order by moh_id";
@@ -1192,13 +1196,13 @@ if ($function == 'vm_list')
 		echo "</head>\n\n";
 
 		echo "<body>\n";
-		echo "<a href=\"javascript:close_file();\"><font size=1 face=\"Arial,Helvetica\">close frame</font></a>\n";
+		echo "<a href=\"javascript:close_file();\"><font size=1 face=\"Arial,Helvetica\">"._QXZ("close frame")."</font></a>\n";
 		echo "<div id='selectframe' style=\"height:400px;width:710px;overflow:scroll;\">\n";
 		echo "<table border=0 cellpadding=1 cellspacing=2 width=690 bgcolor=white><tr>\n";
 		echo "<td width=30>#</td>\n";
-		echo "<td colspan=2>Voicemail Boxes</td>\n";
-		echo "<td>Name</td>\n";
-		echo "<td>Email</td>\n";
+		echo "<td colspan=2>"._QXZ("Voicemail Boxes")."</td>\n";
+		echo "<td>"._QXZ("Name")."</td>\n";
+		echo "<td>"._QXZ("Email")."</td>\n";
 		echo "</tr>\n";
 
 		$stmt="SELECT voicemail_id,fullname,email from vicidial_voicemail where active='Y' $LOGadmin_viewable_groupsSQL order by voicemail_id";
@@ -1403,9 +1407,9 @@ if ($function == 'agent_ingroup_info')
 						{
 						$output  = '';
 						$output .= "<TABLE WIDTH=680 CELLPADDING=0 CELLSPACING=5 BGCOLOR=\"#D9E6FE\"><TR><TD ALIGN=LEFT>\n";
-						$output .= "Agent: $agent_user - $full_name </TD><TD>\n";
-						$output .= " &nbsp; Campaign: $campaign_id</TD><TD>\n";
-						$output .= "<a href=\"#\" onclick=\"hide_ingroup_info();\">Close</a></TD></TR><TR><TD COLSPAN=3 BGCOLOR=\"#CCCCFF\">\n";
+						$output .= ""._QXZ("Agent").": $agent_user - $full_name </TD><TD>\n";
+						$output .= " &nbsp; "._QXZ("Campaign").": $campaign_id</TD><TD>\n";
+						$output .= "<a href=\"#\" onclick=\"hide_ingroup_info();\">"._QXZ("Close")."</a></TD></TR><TR><TD COLSPAN=3 BGCOLOR=\"#CCCCFF\">\n";
 
 						$stmt="SELECT closer_campaigns from vicidial_campaigns where campaign_id='$campaign_id';";
 						$rslt=mysql_to_mysqli($stmt, $link);
@@ -1444,9 +1448,9 @@ if ($function == 'agent_ingroup_info')
 							$output .= "<TABLE CELLPADDING=0 CELLSPACING=3 BORDER=0>\n";
 							if ($on_hook_agent == 'Y')
 								{
-								$output .= "<TR><TD ALIGN=CENTER VALIGN=TOP COLSPAN=2><B>This is a Phone On-Hook Agent</B> &nbsp; Maximum Ring Time:  $on_hook_ring_time</TD></TR>\n";
+								$output .= "<TR><TD ALIGN=CENTER VALIGN=TOP COLSPAN=2><B>"._QXZ("This is a Phone On-Hook Agent")."</B> &nbsp; "._QXZ("Maximum Ring Time").":  $on_hook_ring_time</TD></TR>\n";
 								}
-							$output .= "<TR><TD ALIGN=RIGHT VALIGN=TOP>Selected In-Groups: </TD><TD ALIGN=LEFT>\n";
+							$output .= "<TR><TD ALIGN=RIGHT VALIGN=TOP>"._QXZ("Selected In-Groups").": </TD><TD ALIGN=LEFT>\n";
 							$output .= "<INPUT TYPE=HIDDEN NAME=agent_user ID=agent_user value=\"$agent_user\">\n";
 							$output .= "<SELECT SIZE=10 NAME=ingroup_new_selections ID=ingroup_new_selections multiple>\n";
 							
@@ -1471,20 +1475,20 @@ if ($function == 'agent_ingroup_info')
 								}
 
 							if ($m_printed < 1)
-								{$output .= "<option value=\"\">No In-Groups Allowed</option>\n";}
+								{$output .= "<option value=\"\">"._QXZ("No In-Groups Allowed")."</option>\n";}
 
 							$output .= "</SELECT><BR></TD></TR>\n";
 
-							$output .= "<TR><TD ALIGN=RIGHT>Change, Add, Remove:\n";
+							$output .= "<TR><TD ALIGN=RIGHT>"._QXZ("Change, Add, Remove").":\n";
 							$output .= "</TD><TD ALIGN=LEFT>\n";
 							$output .= "<SELECT SIZE=1 NAME=ingroup_add_remove_change ID=ingroup_add_remove_change>\n";
-							$output .= "<option value=\"CHANGE\">CHANGE - Set in-groups to those selected above</option>\n";
-							$output .= "<option value=\"ADD\">ADD - Add in-groups selected above to agent selected</option>\n";
-							$output .= "<option value=\"REMOVE\">REMOVE - Remove in-groups selected above from agent selected</option>\n";
+							$output .= "<option value=\"CHANGE\">"._QXZ("CHANGE - Set in-groups to those selected above")."</option>\n";
+							$output .= "<option value=\"ADD\">"._QXZ("ADD - Add in-groups selected above to agent selected")."</option>\n";
+							$output .= "<option value=\"REMOVE\">"._QXZ("REMOVE - Remove in-groups selected above from agent selected")."</option>\n";
 							$output .= "</SELECT>\n";
 							$output .= "</TD></TR>\n";
 
-							$output .= "<TR><TD ALIGN=RIGHT>Blended Outbound Autodial:\n";
+							$output .= "<TR><TD ALIGN=RIGHT>"._QXZ("Blended Outbound Autodial").":\n";
 							$output .= "</TD><TD ALIGN=LEFT>\n";
 							$output .= "<SELECT SIZE=1 NAME=blended ID=blended";
 							if ($allowed_campaign_autodial < 1)
@@ -1496,22 +1500,22 @@ if ($function == 'agent_ingroup_info')
 							$output .= "<option value=\"YES\"";
 							if ($blended == 'Y')
 								{$output .= " SELECTED";}
-							$output .= ">Yes</option>\n";
+							$output .= ">"._QXZ("Yes")."</option>\n";
 							$output .= "<option value=\"NO\"";
 							if ($blended == 'N')
 								{$output .= " SELECTED";}
-							$output .= ">No</option>\n";
+							$output .= ">"._QXZ("No")."</option>\n";
 							$output .= "</SELECT>\n";
 							$output .= "</TD></TR>\n";
 
-							$output .= "<TR><TD ALIGN=RIGHT>Set As User Default:\n";
+							$output .= "<TR><TD ALIGN=RIGHT>"._QXZ("Set As User Default").":\n";
 							$output .= "</TD><TD ALIGN=LEFT>\n";
 							$output .= "<SELECT SIZE=1 NAME=set_as_default ID=set_as_default";
 							if ($allowed_user_modify_user < 1)
 								{$output .= " DISABLED";}
 							$output .= ">\n";
-							$output .= "<option value=\"YES\">Yes</option>\n";
-							$output .= "<option value=\"NO\" SELECTED>No</option>\n";
+							$output .= "<option value=\"YES\">"._QXZ("Yes")."</option>\n";
+							$output .= "<option value=\"NO\" SELECTED>"._QXZ("No")."</option>\n";
 							$output .= "</SELECT>\n";
 							$output .= "</TD></TR>\n";
 
@@ -1522,14 +1526,14 @@ if ($function == 'agent_ingroup_info')
 								$row=mysqli_fetch_row($rslt);
 								$Mfull_name =				$row[0];
 
-								$output .= "<TR><TD ALIGN=RIGHT>Manager In-Group Override:\n";
+								$output .= "<TR><TD ALIGN=RIGHT>"._QXZ("Manager In-Group Override").":\n";
 								$output .= "</TD><TD ALIGN=LEFT>\n";
 								$output .= "$manager_ingroup_set - $external_igb_set_user - $Mfull_name\n";
 								$output .= "</TD></TR>\n";
 								}
 
 							$output .= "<TR><TD ALIGN=CENTER COLSPAN=2>\n";
-							$output .= "<INPUT TYPE=BUTTON NAME=SUBMIT ID=SUBMIT VALUE=\"Submit Changes\" onclick=\"submit_ingroup_changes('$agent_user')\">\n";
+							$output .= "<INPUT TYPE=BUTTON NAME=SUBMIT ID=SUBMIT VALUE=\""._QXZ("Submit Changes")."\" onclick=\"submit_ingroup_changes('$agent_user')\">\n";
 							$output .= "</TD></TR>\n";
 
 							$output .= "</TABLE>\n";
@@ -1560,14 +1564,14 @@ if ($function == 'agent_ingroup_info')
 								}
 
 							if ($m_printed < 1)
-								{$output .= "<TR><TD>No In-Groups Allowed</TD></TR>\n";}
+								{$output .= "<TR><TD>"._QXZ("No In-Groups Allowed")."</TD></TR>\n";}
 
 							$output .= "</TABLE><BR>\n";
 
-							$output .= "SELECTED INGROUPS: $closer_campaigns<BR>\n";
-							$output .= "OUTBOUND AUTODIAL: $blended<BR>\n";
-							$output .= "MANAGER OVERRIDE: $manager_ingroup_set<BR>\n";
-							$output .= "MANAGER: $external_igb_set_user<BR>\n";
+							$output .= ""._QXZ("SELECTED INGROUPS").": $closer_campaigns<BR>\n";
+							$output .= ""._QXZ("OUTBOUND AUTODIAL").": $blended<BR>\n";
+							$output .= ""._QXZ("MANAGER OVERRIDE").": $manager_ingroup_set<BR>\n";
+							$output .= ""._QXZ("MANAGER").": $external_igb_set_user<BR>\n";
 							$output .= "\n";
 							$output .= "</TD></TR></TABLE>\n";
 							}

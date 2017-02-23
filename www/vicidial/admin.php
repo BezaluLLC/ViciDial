@@ -3943,12 +3943,13 @@ else
 # 170220-1209 - Added switch_lead Agent API function
 # 170220-1632 - Added In-group areacode_filter feature
 # 170221-1542 - Added more DNC options for campaign setting 'manual dial filter', added counts to DNC add/delete page
+# 170223-0657 - Added warning for On Hold Message if too long, adjusted chooser placements
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-592a';
-$build = '170221-1542';
+$admin_version = '2.14-593a';
+$build = '170223-0657';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5955,7 +5956,7 @@ if ($ADD==11)
 		echo "<option SELECTED value=\"---ALL---\">"._QXZ("All Admin User Groups")."</option>\n";
 		echo "</select>$NWB#campaigns-user_group$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option></select>$NWB#campaigns-active$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Park Music-on-Hold").": </td><td align=left><input type=text name=park_file_name id=park_file_name size=20 maxlength=100> <a href=\"javascript:launch_moh_chooser('park_file_name','moh',400);\">"._QXZ("moh chooser")."</a> $NWB#campaigns-park_ext$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Park Music-on-Hold").": </td><td align=left><input type=text name=park_file_name id=park_file_name size=20 maxlength=100> <a href=\"javascript:launch_moh_chooser('park_file_name','moh',300);\">"._QXZ("moh chooser")."</a> $NWB#campaigns-park_ext$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Web Form").": </td><td align=left><input type=text name=web_form_address size=70 maxlength=9999>$NWB#campaigns-web_form_address$NWE</td></tr>\n";
 		if ($SSoutbound_autodial_active > 0)
 			{
@@ -20660,7 +20661,7 @@ if ($ADD==31)
 		echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
 		echo "</select>$NWB#campaigns-user_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Park Music-on-Hold").": </td><td align=left><input type=text name=park_file_name id=park_file_name size=20 maxlength=100 value=\"$park_file_name\"> <a href=\"javascript:launch_moh_chooser('park_file_name','moh',400);\">"._QXZ("moh chooser")."</a> $NWB#campaigns-park_ext$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Park Music-on-Hold").": </td><td align=left><input type=text name=park_file_name id=park_file_name size=20 maxlength=100 value=\"$park_file_name\"> <a href=\"javascript:launch_moh_chooser('park_file_name','moh',300);\">"._QXZ("moh chooser")."</a> $NWB#campaigns-park_ext$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Web Form").": </td><td align=left><input type=text name=web_form_address size=70 maxlength=9999 value=\"$web_form_address\">$NWB#campaigns-web_form_address$NWE</td></tr>\n";
 		if ($SSenable_second_webform > 0)
 			{
@@ -21214,7 +21215,7 @@ if ($ADD==31)
 			{$achHTML = '<option value="CHAT">'._QXZ("CHAT").'</option>';}
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Get Call Launch").": </td><td align=left><select size=1 name=get_call_launch><option value='NONE' selected>"._QXZ("NONE")."</option><option value='SCRIPT'>"._QXZ("SCRIPT")."</option><option value='WEBFORM'>"._QXZ("WEBFORM")."</option>$eswHTML$cfwHTML$aemHTML$achHTML<option value='$get_call_launch' selected>"._QXZ("$get_call_launch")."</option></select>$NWB#campaigns-get_call_launch$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Answering Machine Message").": </td><td><input type=text size=50 maxlength=100 name=am_message_exten id=am_message_exten value=\"$am_message_exten\"> <a href=\"javascript:launch_chooser('am_message_exten','date',2300);\">"._QXZ("audio chooser")."</a>  $NWB#campaigns-am_message_exten$NWE\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Answering Machine Message").": </td><td><input type=text size=50 maxlength=100 name=am_message_exten id=am_message_exten value=\"$am_message_exten\"> <a href=\"javascript:launch_chooser('am_message_exten','date',2100);\">"._QXZ("audio chooser")."</a>  $NWB#campaigns-am_message_exten$NWE\n";
 		$stmt="SELECT count(*) from vicidial_lists where campaign_id='$campaign_id' and am_message_exten_override != '' and active='Y' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$rowx=mysqli_fetch_row($rslt);
@@ -21608,7 +21609,7 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Blind Monitor Notice").": </td><td align=left><input type=text name=blind_monitor_message size=70 maxlength=255 value=\"$blind_monitor_message\">$NWB#campaigns-blind_monitor_message$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Blind Monitor Filename").": </td><td align=left><input type=text name=blind_monitor_filename id=blind_monitor_filename size=40 maxlength=100 value=\"$blind_monitor_filename\"> <a href=\"javascript:launch_chooser('blind_monitor_filename','date',5000);\">"._QXZ("audio chooser")."</a> $NWB#campaigns-blind_monitor_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Blind Monitor Filename").": </td><td align=left><input type=text name=blind_monitor_filename id=blind_monitor_filename size=40 maxlength=100 value=\"$blind_monitor_filename\"> <a href=\"javascript:launch_chooser('blind_monitor_filename','date',5300);\">"._QXZ("audio chooser")."</a> $NWB#campaigns-blind_monitor_filename$NWE</td></tr>\n";
 
 		if ($campaign_allow_inbound == 'Y')
 			{
@@ -25652,7 +25653,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Drop Exten").": </td><td align=left><input type=text name=drop_exten size=10 maxlength=20 value=\"$drop_exten\">$NWB#inbound_groups-drop_exten$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Voicemail").": </td><td align=left><input type=text name=voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',900);\">"._QXZ("voicemail chooser")."</a>$NWB#inbound_groups-voicemail_ext$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Voicemail").": </td><td align=left><input type=text name=voicemail_ext id=voicemail_ext size=12 maxlength=10 value=\"$voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('voicemail_ext','vm',1000);\">"._QXZ("voicemail chooser")."</a>$NWB#inbound_groups-voicemail_ext$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right><a href=\"$PHP_SELF?ADD=3111&group_id=$drop_inbound_group\">"._QXZ("Drop Transfer Group").":</a> </td><td align=left><select size=1 name=drop_inbound_group>";
 		echo "$Dgroups_menu";
@@ -25688,11 +25689,11 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("After Hours Lead Reset").": </td><td align=left><select size=1 name=after_hours_lead_reset><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$after_hours_lead_reset' SELECTED>"._QXZ("$after_hours_lead_reset")."</option></select>$NWB#inbound_groups-after_hours_lead_reset$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("After Hours Message Filename").": </td><td align=left><input type=text name=after_hours_message_filename id=after_hours_message_filename size=50 maxlength=255 value=\"$after_hours_message_filename\"> <a href=\"javascript:launch_chooser('after_hours_message_filename','date',1000);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-after_hours_message_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("After Hours Message Filename").": </td><td align=left><input type=text name=after_hours_message_filename id=after_hours_message_filename size=50 maxlength=255 value=\"$after_hours_message_filename\"> <a href=\"javascript:launch_chooser('after_hours_message_filename','date',1100);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-after_hours_message_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("After Hours Extension").": </td><td align=left><input type=text name=after_hours_exten size=10 maxlength=20 value=\"$after_hours_exten\">$NWB#inbound_groups-after_hours_exten$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("After Hours Voicemail").": </td><td align=left><input type=text name=after_hours_voicemail id=after_hours_voicemail size=12 maxlength=10 value=\"$after_hours_voicemail\"> <a href=\"javascript:launch_vm_chooser('after_hours_voicemail','vm',1100);\">"._QXZ("voicemail chooser")."</a>$NWB#inbound_groups-after_hours_voicemail$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("After Hours Voicemail").": </td><td align=left><input type=text name=after_hours_voicemail id=after_hours_voicemail size=12 maxlength=10 value=\"$after_hours_voicemail\"> <a href=\"javascript:launch_vm_chooser('after_hours_voicemail','vm',1200);\">"._QXZ("voicemail chooser")."</a>$NWB#inbound_groups-after_hours_voicemail$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3111&group_id=$afterhours_xfer_group\">"._QXZ("After Hours Transfer Group").":</a> </td><td align=left><select size=1 name=afterhours_xfer_group>";
 		echo "$Agroups_menu";
@@ -25757,7 +25758,7 @@ if ($ADD==3111)
 			{
 			if (strlen($no_agent_action_value) < 3)
 				{$no_agent_action_value = 'nbdy-avail-to-take-call|vm-goodbye';}
-			echo _QXZ("Audio File").": <input type=text name=no_agent_action_value id=no_agent_action_value size=50 maxlength=255 value=\"$no_agent_action_value\"> <a href=\"javascript:launch_chooser('no_agent_action_value','date',1200);\">"._QXZ("audio chooser")."</a>\n";
+			echo _QXZ("Audio File").": <input type=text name=no_agent_action_value id=no_agent_action_value size=50 maxlength=255 value=\"$no_agent_action_value\"> <a href=\"javascript:launch_chooser('no_agent_action_value','date',1300);\">"._QXZ("audio chooser")."</a>\n";
 			}
 		if ($no_agent_action=='EXTENSION')
 			{
@@ -25770,7 +25771,7 @@ if ($ADD==3111)
 			}
 		if ( ($no_agent_action=='VOICEMAIL') or  ($no_agent_action=='VMAIL_NO_INST') )
 			{
-			echo _QXZ("Voicemail Box").": <input type=text name=no_agent_action_value id=no_agent_action_value size=12 maxlength=10 value=\"$no_agent_action_value\"> <a href=\"javascript:launch_vm_chooser('no_agent_action_value','vm',1200);\">"._QXZ("voicemail chooser")."</a>\n";
+			echo _QXZ("Voicemail Box").": <input type=text name=no_agent_action_value id=no_agent_action_value size=12 maxlength=10 value=\"$no_agent_action_value\"> <a href=\"javascript:launch_vm_chooser('no_agent_action_value','vm',1300);\">"._QXZ("voicemail chooser")."</a>\n";
 			}
 
 		echo "</span>
@@ -25838,7 +25839,7 @@ if ($ADD==3111)
 			{
 			if (strlen($areacode_filter_action_value) < 3)
 				{$areacode_filter_action_value = 'nbdy-avail-to-take-call|vm-goodbye';}
-			echo _QXZ("Audio File").": <input type=text name=areacode_filter_action_value id=areacode_filter_action_value size=50 maxlength=255 value=\"$areacode_filter_action_value\"> <a href=\"javascript:launch_chooser('areacode_filter_action_value','date',1200);\">"._QXZ("audio chooser")."</a>\n";
+			echo _QXZ("Audio File").": <input type=text name=areacode_filter_action_value id=areacode_filter_action_value size=50 maxlength=255 value=\"$areacode_filter_action_value\"> <a href=\"javascript:launch_chooser('areacode_filter_action_value','date',1300);\">"._QXZ("audio chooser")."</a>\n";
 			}
 		if ($areacode_filter_action=='EXTENSION')
 			{
@@ -25851,7 +25852,7 @@ if ($ADD==3111)
 			}
 		if ( ($areacode_filter_action=='VOICEMAIL') or  ($areacode_filter_action=='VMAIL_NO_INST') )
 			{
-			echo _QXZ("Voicemail Box").": <input type=text name=areacode_filter_action_value id=areacode_filter_action_value size=12 maxlength=10 value=\"$areacode_filter_action_value\"> <a href=\"javascript:launch_vm_chooser('areacode_filter_action_value','vm',1300);\">"._QXZ("voicemail chooser")."</a>\n";
+			echo _QXZ("Voicemail Box").": <input type=text name=areacode_filter_action_value id=areacode_filter_action_value size=12 maxlength=10 value=\"$areacode_filter_action_value\"> <a href=\"javascript:launch_vm_chooser('areacode_filter_action_value','vm',1400);\">"._QXZ("voicemail chooser")."</a>\n";
 			}
 
 		echo "</span>
@@ -25863,13 +25864,26 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Max Calls Action").": </td><td align=left><select size=1 name=max_calls_action><option value='DROP'>"._QXZ("DROP")."</option><option value='AFTERHOURS'>"._QXZ("AFTERHOURS")."</option><option value='NO_AGENT_NO_QUEUE'>"._QXZ("NO_AGENT_NO_QUEUE")."</option><option value='AREACODE_FILTER'>"._QXZ("AREACODE_FILTER")."</option><option value='$max_calls_action' SELECTED>"._QXZ("$max_calls_action")."</option></select>$NWB#inbound_groups-max_calls_action$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Welcome Message Filename").": </td><td align=left><input type=text name=welcome_message_filename id=welcome_message_filename size=50 maxlength=255 value=\"$welcome_message_filename\"> <a href=\"javascript:launch_chooser('welcome_message_filename','date',1300);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-welcome_message_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Welcome Message Filename").": </td><td align=left><input type=text name=welcome_message_filename id=welcome_message_filename size=50 maxlength=255 value=\"$welcome_message_filename\"> <a href=\"javascript:launch_chooser('welcome_message_filename','date',1400);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-welcome_message_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Play Welcome Message").": </td><td align=left><select size=1 name=play_welcome_message><option value='ALWAYS'>"._QXZ("ALWAYS")."</option><option value='NEVER'>"._QXZ("NEVER")."</option><option value='IF_WAIT_ONLY'>"._QXZ("IF_WAIT_ONLY")."</option><option value='YES_UNLESS_NODELAY'>"._QXZ("YES_UNLESS_NODELAY")."</option><option value='$play_welcome_message' SELECTED>"._QXZ("$play_welcome_message")."</option></select>$NWB#inbound_groups-play_welcome_message$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Music On Hold Context").": </td><td align=left><input type=text name=moh_context id=moh_context size=50 maxlength=50 value=\"$moh_context\"> <a href=\"javascript:launch_moh_chooser('moh_context','moh',1400);\">"._QXZ("moh chooser")."</a> $NWB#inbound_groups-moh_context$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Music On Hold Context").": </td><td align=left><input type=text name=moh_context id=moh_context size=50 maxlength=50 value=\"$moh_context\"> <a href=\"javascript:launch_moh_chooser('moh_context','moh',1500);\">"._QXZ("moh chooser")."</a> $NWB#inbound_groups-moh_context$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("On Hold Prompt Filename").": </td><td align=left><input type=text name=onhold_prompt_filename id=onhold_prompt_filename size=50 maxlength=255 value=\"$onhold_prompt_filename\"> <a href=\"javascript:launch_chooser('onhold_prompt_filename','date',1450);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-onhold_prompt_filename$NWE</td></tr>\n";
+		$wav='.wav';
+		$gsm='.gsm';
+		$ohpf_message='';
+		$stmt="SELECT audio_length from audio_store_details where audio_filename IN('$onhold_prompt_filename$wav','$onhold_prompt_filename$gsm') order by audio_length desc limit 1;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$audio_to_print = mysqli_num_rows($rslt);
+		if ($audio_to_print > 0) 
+			{
+			$rowx=mysqli_fetch_row($rslt);
+			$audio_length =	$rowx[0];
+			if ($audio_length > 9) {$ohpf_message="<tr bgcolor=#$SSstd_row4_background><td colspan=2 align=center><B><font color=red>"._QXZ("The On Hold Prompt Filename you have selected above is too long, please select one that is 9 seconds or less.")." &nbsp; </font></B><font size=0>($audio_length "._QXZ("seconds").")</font></td></tr>\n";}
+			}
+
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("On Hold Prompt Filename").": </td><td align=left><input type=text name=onhold_prompt_filename id=onhold_prompt_filename size=50 maxlength=255 value=\"$onhold_prompt_filename\"> <a href=\"javascript:launch_chooser('onhold_prompt_filename','date',1650);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-onhold_prompt_filename$NWE</td></tr>\n$ohpf_message";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("On Hold Prompt Interval").": </td><td align=left><input type=text name=prompt_interval size=5 maxlength=5 value=\"$prompt_interval\">$NWB#inbound_groups-prompt_interval$NWE</td></tr>\n";
 
@@ -25883,7 +25897,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Calculate Estimated Hold Seconds").": </td><td align=left><input type=text name=calculate_estimated_hold_seconds size=5 maxlength=5 value=\"$calculate_estimated_hold_seconds\">$NWB#inbound_groups-calculate_estimated_hold_seconds$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Estimated Hold Time Minimum Filename").": </td><td align=left><input type=text name=eht_minimum_prompt_filename id=eht_minimum_prompt_filename size=50 maxlength=255 value=\"$eht_minimum_prompt_filename\"> <a href=\"javascript:launch_chooser('eht_minimum_prompt_filename','date',1600);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-eht_minimum_prompt_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Estimated Hold Time Minimum Filename").": </td><td align=left><input type=text name=eht_minimum_prompt_filename id=eht_minimum_prompt_filename size=50 maxlength=255 value=\"$eht_minimum_prompt_filename\"> <a href=\"javascript:launch_chooser('eht_minimum_prompt_filename','date',1700);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-eht_minimum_prompt_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Estimated Hold Time Minimum Prompt No Block").": </td><td align=left><select size=1 name=eht_minimum_prompt_no_block><option value='N'>"._QXZ("N")."</option><option value='Y'>"._QXZ("Y")."</option><option value='$eht_minimum_prompt_no_block' SELECTED>"._QXZ("$eht_minimum_prompt_no_block")."</option></select>$NWB#inbound_groups-eht_minimum_prompt_no_block$NWE</td></tr>\n";
 
@@ -25905,19 +25919,19 @@ if ($ADD==3111)
 		echo "$Wmenuslist";
 		echo "</select>$NWB#inbound_groups-wait_time_option_callmenu$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Wait Time Option Voicemail").": </td><td align=left><input type=text name=wait_time_option_voicemail id=wait_time_option_voicemail size=12 maxlength=10 value=\"$wait_time_option_voicemail\"> <a href=\"javascript:launch_vm_chooser('wait_time_option_voicemail','vm',1900);\">"._QXZ("voicemail chooser")."</a> $NWB#inbound_groups-wait_time_option_voicemail$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Wait Time Option Voicemail").": </td><td align=left><input type=text name=wait_time_option_voicemail id=wait_time_option_voicemail size=12 maxlength=10 value=\"$wait_time_option_voicemail\"> <a href=\"javascript:launch_vm_chooser('wait_time_option_voicemail','vm',2000);\">"._QXZ("voicemail chooser")."</a> $NWB#inbound_groups-wait_time_option_voicemail$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Wait Time Option Transfer In-Group").": </td><td align=left><select size=1 name=wait_time_option_xfer_group>";
 		echo "$Wgroups_menu";
 		echo "</select>$NWB#inbound_groups-wait_time_option_xfer_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Wait Time Option Press Filename").": </td><td align=left><input type=text name=wait_time_option_press_filename id=wait_time_option_press_filename size=50 maxlength=255 value=\"$wait_time_option_press_filename\"> <a href=\"javascript:launch_chooser('wait_time_option_press_filename','date',1950);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-wait_time_option_press_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Wait Time Option Press Filename").": </td><td align=left><input type=text name=wait_time_option_press_filename id=wait_time_option_press_filename size=50 maxlength=255 value=\"$wait_time_option_press_filename\"> <a href=\"javascript:launch_chooser('wait_time_option_press_filename','date',2050);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-wait_time_option_press_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Wait Time Option Press No Block").": </td><td align=left><select size=1 name=wait_time_option_no_block><option value='N'>"._QXZ("N")."</option><option value='Y'>"._QXZ("Y")."</option><option value='$wait_time_option_no_block' SELECTED>"._QXZ("$wait_time_option_no_block")."</option></select>$NWB#inbound_groups-wait_time_option_no_block$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Wait Time Option Press Filename Seconds").": </td><td align=left><input type=text name=wait_time_option_prompt_seconds size=5 maxlength=5 value=\"$wait_time_option_prompt_seconds\">$NWB#inbound_groups-wait_time_option_prompt_seconds$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Wait Time Option After Press Filename").": </td><td align=left><input type=text name=wait_time_option_callback_filename id=wait_time_option_callback_filename size=50 maxlength=255 value=\"$wait_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('wait_time_option_callback_filename','date',2050);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-wait_time_option_callback_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Wait Time Option After Press Filename").": </td><td align=left><input type=text name=wait_time_option_callback_filename id=wait_time_option_callback_filename size=50 maxlength=255 value=\"$wait_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('wait_time_option_callback_filename','date',2150);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-wait_time_option_callback_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Wait Time Option Callback List ID").": </td><td align=left><input type=text name=wait_time_option_callback_list_id size=19 maxlength=19 value=\"$wait_time_option_callback_list_id\">$NWB#inbound_groups-wait_time_option_callback_list_id$NWE</td></tr>\n";
 
@@ -25941,23 +25955,23 @@ if ($ADD==3111)
 		echo "$Xmenuslist";
 		echo "</select>$NWB#inbound_groups-hold_time_option_callmenu$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Hold Time Option Voicemail").": </td><td align=left><input type=text name=hold_time_option_voicemail id=hold_time_option_voicemail size=12 maxlength=10 value=\"$hold_time_option_voicemail\"> <a href=\"javascript:launch_vm_chooser('hold_time_option_voicemail','vm',2300);\">"._QXZ("voicemail chooser")."</a> $NWB#inbound_groups-hold_time_option_voicemail$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Hold Time Option Voicemail").": </td><td align=left><input type=text name=hold_time_option_voicemail id=hold_time_option_voicemail size=12 maxlength=10 value=\"$hold_time_option_voicemail\"> <a href=\"javascript:launch_vm_chooser('hold_time_option_voicemail','vm',2500);\">"._QXZ("voicemail chooser")."</a> $NWB#inbound_groups-hold_time_option_voicemail$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Hold Time Option Transfer In-Group").": </td><td align=left><select size=1 name=hold_time_option_xfer_group>";
 		echo "$Tgroups_menu";
 		echo "</select>$NWB#inbound_groups-hold_time_option_xfer_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Hold Time Option Press Filename").": </td><td align=left><input type=text name=hold_time_option_press_filename id=hold_time_option_press_filename size=50 maxlength=255 value=\"$hold_time_option_press_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_press_filename','date',2350);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-hold_time_option_press_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Hold Time Option Press Filename").": </td><td align=left><input type=text name=hold_time_option_press_filename id=hold_time_option_press_filename size=50 maxlength=255 value=\"$hold_time_option_press_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_press_filename','date',2550);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-hold_time_option_press_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Hold Time Option Press No Block").": </td><td align=left><select size=1 name=hold_time_option_no_block><option value='N'>"._QXZ("N")."</option><option value='Y'>"._QXZ("Y")."</option><option value='$hold_time_option_no_block' SELECTED>$hold_time_option_no_block</option></select>$NWB#inbound_groups-hold_time_option_no_block$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Hold Time Option Press Filename Seconds").": </td><td align=left><input type=text name=hold_time_option_prompt_seconds size=5 maxlength=5 value=\"$hold_time_option_prompt_seconds\">$NWB#inbound_groups-hold_time_option_prompt_seconds$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Hold Time Option After Press Filename").": </td><td align=left><input type=text name=hold_time_option_callback_filename id=hold_time_option_callback_filename size=50 maxlength=255 value=\"$hold_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_callback_filename','date',2400);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-hold_time_option_callback_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Hold Time Option After Press Filename").": </td><td align=left><input type=text name=hold_time_option_callback_filename id=hold_time_option_callback_filename size=50 maxlength=255 value=\"$hold_time_option_callback_filename\"> <a href=\"javascript:launch_chooser('hold_time_option_callback_filename','date',2600);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-hold_time_option_callback_filename$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Hold Time Option Callback List ID").": </td><td align=left><input type=text name=hold_time_option_callback_list_id size=19 maxlength=19 value=\"$hold_time_option_callback_list_id\">$NWB#inbound_groups-hold_time_option_callback_list_id$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Agent Alert Filename").": </td><td align=left><input type=text name=agent_alert_exten id=agent_alert_exten size=40 maxlength=100 value=\"$agent_alert_exten\"> <a href=\"javascript:launch_chooser('agent_alert_exten','date',2500);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-agent_alert_exten$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Agent Alert Filename").": </td><td align=left><input type=text name=agent_alert_exten id=agent_alert_exten size=40 maxlength=100 value=\"$agent_alert_exten\"> <a href=\"javascript:launch_chooser('agent_alert_exten','date',2800);\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-agent_alert_exten$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Agent Alert Delay").": </td><td align=left><input type=text name=agent_alert_delay size=6 maxlength=6 value=\"$agent_alert_delay\">$NWB#inbound_groups-agent_alert_delay$NWE</td></tr>\n";
 
@@ -28343,7 +28357,7 @@ if ($ADD==3311)
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter Extension").": </td><td align=left><input type=text name=filter_extension size=40 maxlength=50 value=\"$filter_extension\">$NWB#inbound_dids-extension$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter Extension Context").": </td><td align=left><input type=text name=filter_exten_context size=40 maxlength=50 value=\"$filter_exten_context\">$NWB#inbound_dids-exten_context$NWE</td></tr>\n";
-		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter Voicemail Box").": </td><td align=left><input type=text name=filter_voicemail_ext id=filter_voicemail_ext size=12 maxlength=10 value=\"$filter_voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('filter_voicemail_ext','vm',1400);\">"._QXZ("voicemail chooser")."</a>$NWB#inbound_dids-voicemail_ext$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter Voicemail Box").": </td><td align=left><input type=text name=filter_voicemail_ext id=filter_voicemail_ext size=12 maxlength=10 value=\"$filter_voicemail_ext\"> <a href=\"javascript:launch_vm_chooser('filter_voicemail_ext','vm',1700);\">"._QXZ("voicemail chooser")."</a>$NWB#inbound_dids-voicemail_ext$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter Phone Extension").": </td><td align=left><input type=text name=filter_phone size=20 maxlength=100 value=\"$filter_phone\">$NWB#inbound_dids-phone$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter Server IP").": </td><td align=left><select size=1 name=filter_server_ip>\n";
 		echo "$servers_list";
@@ -28956,7 +28970,7 @@ if ($ADD==3511)
 		$j=0;
 		while ($menus_to_print > $j)
 			{
-			$choose_height = (($j * 80) + 550);
+			$choose_height = (($j * 100) + 550);
 			$option_value =					$Aoption_value[$j];
 			$option_description =			$Aoption_description[$j];
 			$option_route =					$Aoption_route[$j];
@@ -29080,7 +29094,7 @@ if ($ADD==3511)
 
 		while ($j <= 20)
 			{
-			$choose_height = (($j * 80) + 550);
+			$choose_height = (($j * 100) + 550);
 			$dtmf_list = "<select size=1 name=option_value_$j><option value=\"\"></option>";
 			$h=0;
 			while ($h <= 20)
@@ -31194,7 +31208,7 @@ if ($ADD==31111111111)
 
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("NVA Call URL").": </td><td align=left><input type=text name=nva_call_url size=40 maxlength=2000 value=\"$row[90]\">$NWB#phones-nva_call_url$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("NVA Search Method").": </td><td align=left><input type=text name=nva_search_method size=20 maxlength=40 value=\"$row[91]\">$NWB#phones-nva_search_method$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("NVA Error Filename").": </td><td align=left colspan=3><input type=text name=nva_error_filename id=nva_error_filename size=40 maxlength=255 value=\"$row[92]\"> <a href=\"javascript:launch_chooser('nva_error_filename','date',1200);\">"._QXZ("audio chooser")."</a> $NWB#phones-nva_error_filename$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("NVA Error Filename").": </td><td align=left colspan=3><input type=text name=nva_error_filename id=nva_error_filename size=40 maxlength=255 value=\"$row[92]\"> <a href=\"javascript:launch_chooser('nva_error_filename','date',1500);\">"._QXZ("audio chooser")."</a> $NWB#phones-nva_error_filename$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("NVA New List ID").": </td><td align=left><input type=text name=nva_new_list_id size=15 maxlength=14 value=\"$row[93]\">$NWB#phones-nva_new_list_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("NVA New Phone Code").": </td><td align=left><input type=text name=nva_new_phone_code size=11 maxlength=10 value=\"$row[94]\">$NWB#phones-nva_new_phone_code$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("NVA New Status").": </td><td align=left><input type=text name=nva_new_status size=7 maxlength=6 value=\"$row[95]\">$NWB#phones-nva_new_status$NWE</td></tr>\n";
