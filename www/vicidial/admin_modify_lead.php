@@ -1,5 +1,5 @@
 <?php
-# admin_modify_lead.php   version 2.12
+# admin_modify_lead.php   version 2.14
 # 
 # ViciDial database administration modify lead in vicidial_list
 # admin_modify_lead.php
@@ -8,7 +8,7 @@
 # just needs to enter the leadID and then they can view and modify the 
 # information in the record for that lead
 #
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -78,6 +78,7 @@
 # 160122-1337 - Added display of gmt-offset, last-local-call and called-since-last-reset
 # 160407-2023 - Design changes, added more variable scrubbing, added more admin logging
 # 160926-1052 - Fix for inbound call notes display
+# 170224-1639 - Added ability to display archived recordings
 #
 
 require("dbconnect_mysqli.php");
@@ -1860,7 +1861,7 @@ else
 		$logs_to_print = mysqli_num_rows($rslt);
 		if ($DB) {echo "$logs_to_print|$stmt|\n";}
 
-		$u=0;
+		$u=0;   $rec_ids="''";
 		while ($logs_to_print > $u) 
 			{
 			$row=mysqli_fetch_row($rslt);
@@ -1920,8 +1921,77 @@ else
 			echo "<td align=left><font size=2> $location </td>\n";
 			echo "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[13]\" target=\"_blank\">$row[13]</A> </td>";
 			echo "</tr>\n";
-
+			$rec_ids .= ",'$row[0]'";
 			}
+
+		$stmt="SELECT recording_id,channel,server_ip,extension,start_time,start_epoch,end_time,end_epoch,length_in_sec,length_in_min,filename,location,lead_id,user,vicidial_id from recording_log_archive where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and recording_id NOT IN($rec_ids) order by recording_id desc limit 500;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$logs_to_print = mysqli_num_rows($rslt);
+		if ($DB) {echo "$logs_to_print|$stmt|\n";}
+
+		$v=0;
+		while ($logs_to_print > $v) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			if (preg_match("/1$|3$|5$|7$|9$/i", $u))
+				{$bgcolor='bgcolor="#B9CBFD"';} 
+			else
+				{$bgcolor='bgcolor="#9BB9FB"';}
+
+			$location = $row[11];
+
+			if (strlen($location)>2)
+				{
+				$URLserver_ip = $location;
+				$URLserver_ip = preg_replace('/http:\/\//i', '',$URLserver_ip);
+				$URLserver_ip = preg_replace('/https:\/\//i', '',$URLserver_ip);
+				$URLserver_ip = preg_replace('/\/.*/i', '',$URLserver_ip);
+				$stmt="SELECT count(*) from servers where server_ip='$URLserver_ip';";
+				$rsltx=mysql_to_mysqli($stmt, $link);
+				$rowx=mysqli_fetch_row($rsltx);
+				
+				if ($rowx[0] > 0)
+					{
+					$stmt="SELECT recording_web_link,alt_server_ip,external_server_ip from servers where server_ip='$URLserver_ip';";
+					$rsltx=mysql_to_mysqli($stmt, $link);
+					$rowx=mysqli_fetch_row($rsltx);
+					
+					if (preg_match("/ALT_IP/i",$rowx[0]))
+						{
+						$location = preg_replace("/$URLserver_ip/i", "$rowx[1]", $location);
+						}
+					if (preg_match("/EXTERNAL_IP/i",$rowx[0]))
+						{
+						$location = preg_replace("/$URLserver_ip/i", "$rowx[2]", $location);
+						}
+					}
+				}
+
+			if (strlen($location)>30)
+				{$locat = substr($location,0,27);  $locat = "$locat...";}
+			else
+				{$locat = $location;}
+			if ( (preg_match('/ftp/i',$location)) or (preg_match('/http/i',$location)) )
+				if ($log_recording_access<1) 
+					{$location = "<a href=\"$location\">$locat</a>";}
+				else
+					{$location = "<a href=\"recording_log_redirect.php?recording_id=$row[0]&lead_id=$row[12]&search_archived_data=1\">$locat</a>";}
+			else
+				{$location = $locat;}
+			$u++;
+			$v++;
+			echo "<tr $bgcolor>";
+			echo "<td><font size=1>$u</td>";
+			echo "<td align=left><font size=2> $row[12] </td>";
+			echo "<td align=left><font size=1> $row[4] </td>\n";
+			echo "<td align=left><font size=2> $row[8] </td>\n";
+			echo "<td align=left><font size=2> $row[0] &nbsp;</td>\n";
+			echo "<td align=center><font size=1> $row[10] </td>\n";
+			echo "<td align=left><font size=2> $location *</td>\n";
+			echo "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[13]\" target=\"_blank\">$row[13]</A> </td>";
+			echo "</tr>\n";
+			}
+
 
 		echo "</TABLE><BR><BR>\n";
 
