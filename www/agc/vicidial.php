@@ -540,10 +540,11 @@
 # 170207-1314 - Added user option api_only_user
 # 170217-1359 - Added dead_to_dispo campaign option
 # 170220-1306 - Added external_lead_id trigger for switch_lead API function
+# 170223-2122 - Fixed rare recording issue
 #
 
-$version = '2.14-510c';
-$build = '170220-1306';
+$version = '2.14-511c';
+$build = '170223-2122';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -6036,6 +6037,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		{
 		if (CSRclick=='YES')
 			{button_click_log = button_click_log + "" + SQLdate + "-----conf_send_recording---" + taskconfrectype + " " + taskconfrec + " " + taskconffile + " " + taskfromapi + " " + taskapiappend + "|";}
+		else
+			{button_click_log = button_click_log + "" + SQLdate + "-----conf_send_recordingAUTO---" + taskconfrectype + " " + taskconfrec + " " + taskconffile + " " + taskfromapi + " " + taskapiappend + " " + all_record + "|";}
 		if (inOUT == 'OUT')
 			{
 			tmp_vicidial_id = document.vicidial_form.uniqueid.value;
@@ -8555,7 +8558,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 	function ManualDialNext(mdnCBid,mdnBDleadid,mdnDiaLCodE,mdnPhonENumbeR,mdnStagE,mdVendorid,mdgroupalias,mdtype,MDNclick)
 		{
 		if (MDNclick=='YES')
-			{button_click_log = button_click_log + "" + SQLdate + "-----ManualDialNext---" + mdnCBid + " " + mdnBDleadid + " " + mdnDiaLCodE + " " + mdnPhonENumbeR + " " + mdnStagE + " " + mdVendorid + " " + mdgroupalias + " " + mdtype + "|";}
+			{button_click_log = button_click_log + "" + SQLdate + "-----ManualDialNext---" + mdnCBid + " " + mdnBDleadid + " " + mdnDiaLCodE + " " + mdnPhonENumbeR + " " + mdnStagE + " " + mdVendorid + " " + mdgroupalias + " " + mdtype + " " + LIVE_campaign_recording + "|";}
 		UpdatESettingS();
 		if (waiting_on_dispo > 0)
 			{
@@ -9902,8 +9905,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			CFAI_sent=1;
 			if (safe_pause_counter > 0)
 				{button_click_log = button_click_log + "" + SQLdate + "-----safe_pause_CFAI---" + safe_pause_counter + " " + VDRP_stage + "|";}
-			all_record = 'NO';
-			all_record_count=0;
+			else
+				{
+				all_record = 'NO';
+				all_record_count=0;
+				}
 		//	document.vicidial_form.lead_id.value = '';
 			var xmlhttprequestcheckauto=false;
 			/*@cc_on @*/
