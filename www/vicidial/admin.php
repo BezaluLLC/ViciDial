@@ -3944,12 +3944,13 @@ else
 # 170220-1632 - Added In-group areacode_filter feature
 # 170221-1542 - Added more DNC options for campaign setting 'manual dial filter', added counts to DNC add/delete page
 # 170223-0657 - Added warning for On Hold Message if too long, adjusted chooser placements
+# 170226-0850 - Added recording override options to chat and email groups to disable recordings for those, issue #992
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-593a';
-$build = '170223-0657';
+$admin_version = '2.14-594a';
+$build = '170226-0850';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -26823,6 +26824,10 @@ if ($ADD==3811)
 		echo "$status_groups_menu";
 		echo "</select>$NWB#inbound_groups-status_group_id$NWE</td></tr>\n";
 
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("In-Group Recording Override").": </td><td align=left><select size=1 name=ingroup_recording_override><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='NEVER'>"._QXZ("NEVER")."</option><option value='ONDEMAND'>"._QXZ("ONDEMAND")."</option><option value='ALLCALLS'>"._QXZ("ALLCALLS")."</option><option value='ALLFORCE'>"._QXZ("ALLFORCE")."</option><option value='$ingroup_recording_override' SELECTED>"._QXZ("$ingroup_recording_override")."</option></select>$NWB#inbound_groups-ingroup_recording_override$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("In-Group Recording Filename").": </td><td align=left><input type=text name=ingroup_rec_filename size=50 maxlength=50 value=\"$ingroup_rec_filename\">$NWB#inbound_groups-ingroup_rec_filename$NWE</td></tr>\n";
+
 /* Commenting this out because it is handled by the Email Account section and is redundant here
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>In-Group Call Handle Method: </td><td align=left><select size=1 name=call_handle_method><option>CID</option><option>CIDLOOKUP</option><option>CIDLOOKUPRL</option><option>CIDLOOKUPRC</option><option>CIDLOOKUPALT</option><option>CIDLOOKUPRLALT</option><option>CIDLOOKUPRCALT</option><option>CIDLOOKUPADDR3</option><option>CIDLOOKUPRLADDR3</option><option>CIDLOOKUPRCADDR3</option><option>CIDLOOKUPALTADDR3</option><option>CIDLOOKUPRLALTADDR3</option><option>CIDLOOKUPRCALTADDR3</option><option>ANI</option><option>ANILOOKUP</option><option>ANILOOKUPRL</option><option>VIDPROMPT</option><option>VIDPROMPTLOOKUP</option><option>VIDPROMPTLOOKUPRL</option><option>VIDPROMPTLOOKUPRC</option><option>CLOSER</option><option>3DIGITID</option><option>4DIGITID</option><option>5DIGITID</option><option>10DIGITID</option><option SELECTED>$call_handle_method</option></select>$NWB#inbound_dids-call_handle_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>In-Group Agent Search Method: </td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - Load Balanced</option><option value=\"LO\">LO - Load Balanced Overflow</option><option value=\"SO\">SO - Server Only</option><option SELECTED>$agent_search_method</option></select>$NWB#inbound_dids-agent_search_method$NWE</td></tr>\n";
@@ -27619,6 +27624,10 @@ if ($ADD==3911)
 		echo "<option value=\"\">"._QXZ("NONE")."</option>";
 		echo "$status_groups_menu";
 		echo "</select>$NWB#inbound_groups-status_group_id$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("In-Group Recording Override").": </td><td align=left><select size=1 name=ingroup_recording_override><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='NEVER'>"._QXZ("NEVER")."</option><option value='ONDEMAND'>"._QXZ("ONDEMAND")."</option><option value='ALLCALLS'>"._QXZ("ALLCALLS")."</option><option value='ALLFORCE'>"._QXZ("ALLFORCE")."</option><option value='$ingroup_recording_override' SELECTED>"._QXZ("$ingroup_recording_override")."</option></select>$NWB#inbound_groups-ingroup_recording_override$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("In-Group Recording Filename").": </td><td align=left><input type=text name=ingroup_rec_filename size=50 maxlength=50 value=\"$ingroup_rec_filename\">$NWB#inbound_groups-ingroup_rec_filename$NWE</td></tr>\n";
 
 /* Commenting this out because it is handled by the Email Account section and is redundant here
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>In-Group Call Handle Method: </td><td align=left><select size=1 name=call_handle_method><option>CID</option><option>CIDLOOKUP</option><option>CIDLOOKUPRL</option><option>CIDLOOKUPRC</option><option>CIDLOOKUPALT</option><option>CIDLOOKUPRLALT</option><option>CIDLOOKUPRCALT</option><option>CIDLOOKUPADDR3</option><option>CIDLOOKUPRLADDR3</option><option>CIDLOOKUPRCADDR3</option><option>CIDLOOKUPALTADDR3</option><option>CIDLOOKUPRLALTADDR3</option><option>CIDLOOKUPRCALTADDR3</option><option>ANI</option><option>ANILOOKUP</option><option>ANILOOKUPRL</option><option>VIDPROMPT</option><option>VIDPROMPTLOOKUP</option><option>VIDPROMPTLOOKUPRL</option><option>VIDPROMPTLOOKUPRC</option><option>CLOSER</option><option>3DIGITID</option><option>4DIGITID</option><option>5DIGITID</option><option>10DIGITID</option><option SELECTED>$call_handle_method</option></select>$NWB#inbound_dids-call_handle_method$NWE</td></tr>\n";
