@@ -1,7 +1,7 @@
 <?php 
 # AST_CLOSERstats_v2.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES:
 # 60619-1714 - Added variable filtering to eliminate SQL injection attack threat
@@ -58,6 +58,7 @@
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 # 160819-0054 - Fixed chart bugs
 # 161207-2037 - Fix for issue #982, formatting
+# 170227-1708 - Fix for default HTML report format, issue #997
 #
 
 $startMS = microtime();
@@ -88,9 +89,9 @@ if (isset($_GET["CHAT"]))				{$CHAT=$_GET["CHAT"];}
 	elseif (isset($_POST["CHAT"]))		{$CHAT=$_POST["CHAT"];}
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
-if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
+if (isset($_GET["file_download"]))			{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
-if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
 	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
@@ -106,7 +107,7 @@ if ($DID=='Y')
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,report_default_format FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -119,9 +120,11 @@ if ($qm_conf_ct > 0)
 	$reports_use_slave_db =			$row[3];
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
+	$SSreport_default_format =		$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+if (strlen($report_display_type)<2) {$report_display_type = $SSreport_default_format;}
 
 ### ARCHIVED DATA CHECK CONFIGURATION
 $archives_available="N";
@@ -551,7 +554,7 @@ if (mysqli_num_rows($call_time_rslt)>0) {
 }
 
 $MAIN.="</SELECT>\n";
-$MAIN.="<BR>"._QXZ("Display as").":&nbsp; ";
+$MAIN.="<BR> &nbsp; &nbsp; &nbsp; "._QXZ("Display as").":&nbsp; ";
 $MAIN.="<select name='report_display_type'>";
 if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
 $MAIN.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR>";
@@ -2872,7 +2875,7 @@ if ($report_display_type=="HTML")
 		}
 	}
 
-print_r($graph_stats);
+#print_r($graph_stats);
 	$GRAPH_text="";	
 	#########
 	$graph_array=array("ACS_CATBdata||CALL INITIAL QUEUE POSITION BREAKDOWN|integer|");

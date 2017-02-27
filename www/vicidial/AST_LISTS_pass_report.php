@@ -1,7 +1,7 @@
 <?php 
 # AST_LISTS_pass_report.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This is a list inventory report, not a calling report. This report will show
 # statistics for all of the lists in the selected campaigns
@@ -16,6 +16,7 @@
 # 151125-1640 - Added search archive option
 # 160227-1138 - Uniform form format
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
+# 170227-1711 - Fix for default HTML report format, issue #997
 #
 
 $startMS = microtime();
@@ -38,7 +39,7 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
-if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 if (isset($_GET["use_lists"]))			{$use_lists=$_GET["use_lists"];}
 	elseif (isset($_POST["use_lists"]))	{$use_lists=$_POST["use_lists"];}
@@ -58,7 +59,7 @@ $JS_onload="onload = function() {\n";
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,report_default_format FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -71,9 +72,11 @@ if ($qm_conf_ct > 0)
 	$reports_use_slave_db =			$row[3];
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
+	$SSreport_default_format =		$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+if (strlen($report_display_type)<2) {$report_display_type = $SSreport_default_format;}
 
 ### ARCHIVED DATA CHECK CONFIGURATION
 $archives_available="N";

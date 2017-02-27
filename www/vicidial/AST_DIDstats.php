@@ -1,7 +1,7 @@
 <?php 
 # AST_DIDstats.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -30,6 +30,8 @@
 # 160227-1150 - Uniform form format
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 # 160819-0054 - Fixed bug causing TEXT report to repeat data
+# 170217-2115 - Added time entry option for date ranges
+# 170227-1717 - Fix for default HTML report format, issue #997
 #
 
 $startMS = microtime();
@@ -44,8 +46,12 @@ if (isset($_GET["group"]))					{$group=$_GET["group"];}
 	elseif (isset($_POST["group"]))			{$group=$_POST["group"];}
 if (isset($_GET["query_date"]))				{$query_date=$_GET["query_date"];}
 	elseif (isset($_POST["query_date"]))	{$query_date=$_POST["query_date"];}
+if (isset($_GET["time_BEGIN"]))				{$time_BEGIN=$_GET["time_BEGIN"];}
+	elseif (isset($_POST["time_BEGIN"]))	{$time_BEGIN=$_POST["time_BEGIN"];}
 if (isset($_GET["end_date"]))				{$end_date=$_GET["end_date"];}
 	elseif (isset($_POST["end_date"]))		{$end_date=$_POST["end_date"];}
+if (isset($_GET["time_END"]))				{$time_END=$_GET["time_END"];}
+	elseif (isset($_POST["time_END"]))		{$time_END=$_POST["time_END"];}
 if (isset($_GET["shift"]))					{$shift=$_GET["shift"];}
 	elseif (isset($_POST["shift"]))			{$shift=$_POST["shift"];}
 if (isset($_GET["submit"]))					{$submit=$_GET["submit"];}
@@ -61,14 +67,14 @@ if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_d
 if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
 	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
-if (strlen($shift)<2) {$shift='ALL';}
+if (strlen($shift)<2) {$shift='--';}
 
 $report_name = 'Inbound DID Report';
 $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,report_default_format FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -81,9 +87,11 @@ if ($qm_conf_ct > 0)
 	$reports_use_slave_db =			$row[3];
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
+	$SSreport_default_format =		$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+if (strlen($report_display_type)<2) {$report_display_type = $SSreport_default_format;}
 
 ### ARCHIVED DATA CHECK CONFIGURATION
 $archives_available="N";
@@ -222,6 +230,8 @@ $STARTtime = date("U");
 if (!isset($group)) {$group = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
+if (!isset($time_BEGIN)) {$time_BEGIN = "00:00:00";}
+if (!isset($time_END)) {$time_END = "23:59:59";}
 
 $stmt="select did_id,did_pattern,did_description from vicidial_inbound_dids $whereLOGadmin_viewable_groupsSQL order by did_pattern;";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -370,7 +380,7 @@ $MAIN.="<b>"._QXZ("$report_name")."</b> $NWB#DIDstats$NWE\n";
 $MAIN.="<TABLE CELLPADDING=3 CELLSPACING=0><TR><TD>";
 
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=POST name=vicidial_report id=vicidial_report>\n";
-$MAIN.="<TABLE BORDER=0 CELLPADDING=3 CELLSPACING=0 BGCOLOR=\"#e3e3ff\"><TR><TD align=center valign=top>\n";
+$MAIN.="<TABLE BORDER=0 CELLPADDING=3 CELLSPACING=0 BGCOLOR=\"#e3e3ff\"><TR><TD align=left valign=top>\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
 $MAIN.="<script language=\"JavaScript\">\n";
@@ -387,9 +397,10 @@ $MAIN.="});\n";
 $MAIN.="o_cal.a_tpl.yearscroll = false;\n";
 $MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $MAIN.="</script>\n";
+$MAIN.="<BR><INPUT TYPE=TEXT NAME=time_BEGIN SIZE=10 MAXLENGTH=8 VALUE=\"$time_BEGIN\">";
 
 
-$MAIN.="<BR> "._QXZ("to")." <BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+$MAIN.="<BR><div align='center'> "._QXZ("to")." </div><BR><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
 
 $MAIN.="<script language=\"JavaScript\">\n";
 $MAIN.="var o_cal = new tcal ({\n";
@@ -401,6 +412,7 @@ $MAIN.="});\n";
 $MAIN.="o_cal.a_tpl.yearscroll = false;\n";
 $MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 $MAIN.="</script>\n";
+$MAIN.="<BR><INPUT TYPE=TEXT NAME=time_END SIZE=10 MAXLENGTH=8 VALUE=\"$time_END\">";
 
 $MAIN.="</TD><TD align=center valign=top>\n";
 $MAIN.="<SELECT SIZE=5 NAME=group[] multiple>\n";
@@ -414,7 +426,7 @@ while ($groups_to_print > $o)
 	$o++;
 	}
 $MAIN.="</SELECT>\n";
-$MAIN.="</TD><TD align=left valign=top><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>\n";
+$MAIN.="</TD><TD align=left valign=top><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Shift").":<BR>\n";
 $MAIN.="<SELECT SIZE=1 NAME=shift>\n";
 $MAIN.="<option selected value=\"$shift\">$shift</option>\n";
 $MAIN.="<option value=\"\">--</option>\n";
@@ -461,23 +473,64 @@ else
 	{
 	### FOR SHIFTS IT IS BEST TO STICK TO 15-MINUTE INCREMENTS FOR START TIMES ###
 
+	$suffix=" SHIFT: $shift ";
+	switch($shift) {
+		case "AM":
+			$time_BEGIN = "00:00:00";
+			$time_END = "11:59:59";
+			break;
+		case "PM":
+			$time_BEGIN = "12:00:00";
+			$time_END = "23:59:59";
+			break;
+		case "ALL":
+			$time_BEGIN = "00:00:00";
+			$time_END = "23:59:59";
+			break;
+		case "DAYTIME":
+			$time_BEGIN = "08:45:00";
+			$time_END = "00:59:59";
+			break;
+		case "10AM-5PM":
+			$time_BEGIN = "10:00:00";
+			$time_END = "16:59:59";
+			break;
+		case "10AM-6PM":
+			$time_BEGIN = "10:00:00";
+			$time_END = "17:59:59";
+			break;
+		case "9AM-11PM":
+			$time_BEGIN = "09:00:00";
+			$time_END = "22:59:59";
+			break;
+		case "9AM-10PM":
+			$time_BEGIN = "09:00:00";
+			$time_END = "21:59:59";
+			break;
+		case "9AM-1AM":
+			$time_BEGIN = "09:00:00";
+			$time_END = "00:59:59";
+			break;
+		case "845-1745":
+			$time_BEGIN = "08:45:00";
+			$time_END = "17:44:59";
+			break;
+		case "1745-100":
+			$time_BEGIN = "17:45:00";
+			$time_END = "00:59:59";
+			break;
+		default:
+			$suffix="";
+			break;
+	}
+/*
 	if ($shift == 'AM') 
 		{
-	#	$time_BEGIN=$AM_shift_BEGIN;
-	#	$time_END=$AM_shift_END;
-	#	if (strlen($time_BEGIN) < 6) {$time_BEGIN = "03:45:00";}   
-	#	if (strlen($time_END) < 6) {$time_END = "15:15:00";}
 		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "00:00:00";}   
 		if (strlen($time_END) < 6) {$time_END = "11:59:59";}
-	#	if (strlen($time_BEGIN) < 6) {$time_BEGIN = "12:00:00";}   
-	#	if (strlen($time_END) < 6) {$time_END = "11:59:59";}
 		}
 	if ($shift == 'PM') 
 		{
-	#	$time_BEGIN=$PM_shift_BEGIN;
-	#	$time_END=$PM_shift_END;
-	#	if (strlen($time_BEGIN) < 6) {$time_BEGIN = "15:15:00";}
-	#	if (strlen($time_END) < 6) {$time_END = "23:15:00";}
 		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "12:00:00";}
 		if (strlen($time_END) < 6) {$time_END = "23:59:59";}
 		}
@@ -526,7 +579,7 @@ else
 		if (strlen($time_BEGIN) < 6) {$time_BEGIN = "17:45:00";}
 		if (strlen($time_END) < 6) {$time_END = "00:59:59";}
 		}
-
+*/
 	$query_date_BEGIN = "$query_date $time_BEGIN";   
 	$query_date_END = "$end_date $time_END";
 
@@ -556,11 +609,11 @@ else
 
 	$MAIN.=_QXZ("Inbound DID Report",40)." $NOW_TIME\n";
 	$MAIN.="\n";
-	$MAIN.=_QXZ("Time range")." $DURATIONday "._QXZ("days").": $query_date_BEGIN "._QXZ("to")." $query_date_END\n\n";
+	$MAIN.=_QXZ("Time range")." $DURATIONday "._QXZ("days").": $query_date_BEGIN "._QXZ("to")." $query_date_END   $suffix\n\n";
 	#$MAIN.="Time range day sec: $SQsec - $EQsec   Day range in epoch: $SQepoch - $EQepoch   Start: $SQepochDAY\n";
 
 	$CSV_text1.="\""._QXZ("Inbound DID Report")."\",\"$NOW_TIME\"\n\n";
-	$CSV_text1.="\""._QXZ("Time range")." $DURATIONday "._QXZ("days").":\",\"$query_date_BEGIN "._QXZ("to")." $query_date_END\"\n\n";
+	$CSV_text1.="\""._QXZ("Time range")." $DURATIONday "._QXZ("days").":\",\"$query_date_BEGIN "._QXZ("to")." $query_date_END\",\"$suffix\"\n\n";
 
 	$d=0;
 	while ($d < $DURATIONday)

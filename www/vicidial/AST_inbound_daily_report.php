@@ -1,7 +1,7 @@
 <?php 
 # AST_inbound_daily_report.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -28,6 +28,7 @@
 # 160227-1142 - Uniform form format
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 # 160819-0054 - Fixed chart bugs caused by DST
+# 170227-1710 - Fix for default HTML report format, issue #997
 #
 
 $startMS = microtime();
@@ -65,7 +66,7 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))	{$DB=$_POST["DB"];}
-if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}
+if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_display_type"];}
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
 	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
@@ -79,7 +80,7 @@ if ($ignore_afterhours=="checked") {$status_clause=" and status!='AFTHRS'";}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,report_default_format FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -92,9 +93,11 @@ if ($qm_conf_ct > 0)
 	$reports_use_slave_db =			$row[3];
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
+	$SSreport_default_format =		$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+if (strlen($report_display_type)<2) {$report_display_type = $SSreport_default_format;}
 
 ### ARCHIVED DATA CHECK CONFIGURATION
 $archives_available="N";

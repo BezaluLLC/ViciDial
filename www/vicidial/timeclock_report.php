@@ -1,7 +1,7 @@
 <?php 
 # timeclock_report.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -28,6 +28,7 @@
 # 141230-0948 - Added code for on-the-fly language translations display
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 # 161019-2253 - Added screen colors
+# 170227-1723 - Fix for default HTML report format, issue #997
 #
 
 $startMS = microtime();
@@ -70,7 +71,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,webroot_writable,enable_languages,language_method,admin_screen_colors FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,webroot_writable,enable_languages,language_method,admin_screen_colors,report_default_format FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -85,9 +86,11 @@ if ($qm_conf_ct > 0)
 	$SSenable_languages =			$row[5];
 	$SSlanguage_method =			$row[6];
 	$SSadmin_screen_colors =		$row[7];
+	$SSreport_default_format =		$row[8];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+if (strlen($report_display_type)<2) {$report_display_type = $SSreport_default_format;}
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");

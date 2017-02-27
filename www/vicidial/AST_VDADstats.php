@@ -1,7 +1,7 @@
 <?php 
 # AST_VDADstats.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60619-1718 - Added variable filtering to eliminate SQL injection attack threat
@@ -49,6 +49,7 @@
 # 160227-1101 - Uniform form format
 # 160515-1412 - Added UK OFCOM feature
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
+# 170227-1716 - Fix for default HTML report format, issue #997
 #
 
 $startMS = microtime();
@@ -112,7 +113,7 @@ $JS_onload="onload = function() {\n";
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,ofcom_uk_drop_calc FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,ofcom_uk_drop_calc,report_default_format FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -126,9 +127,11 @@ if ($qm_conf_ct > 0)
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
 	$SSofcom_uk_drop_calc =			$row[6];
+	$SSreport_default_format =		$row[7];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+if (strlen($report_display_type)<2) {$report_display_type = $SSreport_default_format;}
 
 $DROPANSWERpercent_adjustment=0;
 if (file_exists('options.php'))

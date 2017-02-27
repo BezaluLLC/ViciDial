@@ -4,7 +4,7 @@
 # This report is designed to show the breakdown by list_id of the calls and 
 # their statuses for all lists within a campaign for a set time period
 #
-# Copyright (C) 2016  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -23,6 +23,7 @@
 # 151219-0107 - Added option for searching archived data
 # 160227-1059 - Uniform form format
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
+# 170227-1720 - Fix for default HTML report format, issue #997
 #
 
 $startMS = microtime();
@@ -65,7 +66,7 @@ if (!isset($end_date_T)) {$end_date_T="23:59:59";}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,report_default_format FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -78,9 +79,11 @@ if ($qm_conf_ct > 0)
 	$reports_use_slave_db =			$row[3];
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
+	$SSreport_default_format =		$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+if (strlen($report_display_type)<2) {$report_display_type = $SSreport_default_format;}
 
 ### ARCHIVED DATA CHECK CONFIGURATION
 $archives_available="N";

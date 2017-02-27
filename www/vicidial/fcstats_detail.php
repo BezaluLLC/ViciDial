@@ -1,7 +1,7 @@
 <?php 
 # fcstats_detail.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -35,6 +35,7 @@
 # 160227-1131 - Uniform form format
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 # 161021-1326 - Rewrote most of this report to show detail records
+# 170227-1718 - Fix for default HTML report format, issue #997
 #
 
 $startMS = microtime();
@@ -89,7 +90,7 @@ $JS_onload="onload = function() {\n";
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,report_default_format FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {$HTML_text.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -102,9 +103,11 @@ if ($qm_conf_ct > 0)
 	$reports_use_slave_db =			$row[3];
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
+	$SSreport_default_format =		$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+if (strlen($report_display_type)<2) {$report_display_type = $SSreport_default_format;}
 
 ### ARCHIVED DATA CHECK CONFIGURATION
 $archives_available="N";
@@ -533,7 +536,7 @@ $HTML_text.="</SELECT>\n";
 
 $HTML_text.="<BR><BR>";
 $HTML_text.="Display: <select name='report_display_type'>";
-if ($report_display_type) {$MAIN.="<option value='$report_display_type' selected>$report_display_type</option>";}
+if ($report_display_type) {$HTML_text.="<option value='$report_display_type' selected>$report_display_type</option>";}
 $HTML_text.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select><BR><BR>\n";
 $HTML_text.="Shift: <SELECT SIZE=1 NAME=shift>\n";
 $HTML_text.="<option selected value=\"$shift\">$shift</option>\n";
