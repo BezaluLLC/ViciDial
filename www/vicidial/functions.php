@@ -1,10 +1,10 @@
 <?php
 # 
-# functions.php    version 2.12
+# functions.php    version 2.14
 #
 # functions for administrative scripts and reports
 #
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES:
@@ -27,6 +27,7 @@
 # 150516-1206 - Added missing TZCODE segment to gmt_lookup function
 # 160802-1149 - Added hex2rgb function
 # 161102-0039 - Patched sec_convert function to display hours 
+# 170227-2230 - Change to allow horizontal_bar_chart header to be translated, issue #991
 #
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
@@ -234,7 +235,7 @@ function array_group_count($array, $sort = false)
 
 
 ##### BEGIN bar chart using max stats data #####
-function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$metric_name,$more_link,$END_DATE,$download_link)
+function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$metric_name,$more_link,$END_DATE,$download_link,$chart_title)
 	{
 	$stats_start_time = time();
 	if ($END_DATE) 
@@ -305,9 +306,10 @@ function horizontal_bar_chart($campaign_id,$days_graph,$title,$link,$metric,$met
 		{
 		if ($title=='campaign') {$out_in_type=' outbound';}
 		if ($title=='in-group') {$out_in_type=' inbound';}
+		if (strlen($chart_title)<4) {$chart_title = "$days_graph Day $out_in_type $metric_name for this $title";}
 		if ($more_link > 0) {$link_text = "<a href=\"$PHP_SELF?ADD=999993&campaign_id=$campaign_id&stage=$title\"><font size=1>more summary stats...</font></a>";}
 		echo "<table cellspacing=\"1\" cellpadding=\"0\" bgcolor=\"white\" summary=\"Multiple day $metric_name.\" style=\"background-image:url(images/bg_fade.png); background-repeat:repeat-x; background-position:left top; width: 33em;\">\n";
-		echo "<caption align=\"top\">$days_graph Day $out_in_type $metric_name for this $title &nbsp; $link_text  &nbsp; $NWB#max_stats$NWE<br /></caption>\n";
+		echo "<caption align=\"top\">$chart_title &nbsp; $link_text  &nbsp; $NWB#max_stats$NWE<br /></caption>\n";
 		echo "<tr>\n";
 		echo "<th scope=\"col\" style=\"text-align: left; vertical-align:top;\"><span class=\"auraltext\">date</span> </th>\n";
 		echo "<th scope=\"col\" style=\"text-align: left; vertical-align:top;\"><span class=\"auraltext\">$metric_name</span> </th>\n";

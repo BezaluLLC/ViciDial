@@ -3945,12 +3945,13 @@ else
 # 170221-1542 - Added more DNC options for campaign setting 'manual dial filter', added counts to DNC add/delete page
 # 170223-0657 - Added warning for On Hold Message if too long, adjusted chooser placements
 # 170226-0850 - Added recording override options to chat and email groups to disable recordings for those, issue #992
+# 170227-2231 - Change to allow horizontal_bar_chart header to be translated, issue #991
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-594a';
-$build = '170226-0850';
+$admin_version = '2.14-595a';
+$build = '170227-2231';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -20653,7 +20654,8 @@ if ($ADD==31)
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Campaign Call Date").": </td><td align=left>$campaign_calldate &nbsp; $NWB#campaigns-campaign_calldate$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
-			horizontal_bar_chart($campaign_id,'8','campaign',$link,'total_calls','call count',1,'','');
+			$temp_chart_title = _QXZ("8 Day outbound call count for this campaign");
+			horizontal_bar_chart($campaign_id,'8','campaign',$link,'total_calls','call count',1,'','',$temp_chart_title);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED>$campaign_active</option></select>$NWB#campaigns-active$NWE</td></tr>\n";
@@ -25522,7 +25524,8 @@ if ($ADD==3111)
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("In-Group Calldate").": </td><td align=left>$group_calldate$NWB#inbound_groups-group_calldate$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
-			horizontal_bar_chart($group_id,'8','in-group',$link,'total_calls','call count',1,'','');
+			$temp_chart_title = _QXZ("8 Day inbound call count for this in-group");
+			horizontal_bar_chart($group_id,'8','in-group',$link,'total_calls','call count',1,'','',$temp_chart_title);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
@@ -26748,7 +26751,8 @@ if ($ADD==3811)
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("In-Group Email Date").": </td><td align=left>$group_calldate$NWB#inbound_groups-group_emaildate$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
-			horizontal_bar_chart($group_id,'8','in-group',$link,'total_calls','call count',1,'','');
+			$temp_chart_title = _QXZ("8 Day inbound call count for this in-group");
+			horizontal_bar_chart($group_id,'8','in-group',$link,'total_calls','call count',1,'','',$temp_chart_title);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
@@ -27551,7 +27555,8 @@ if ($ADD==3911)
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Default List ID").": </td><td align=left><input type=text name=hold_time_option_callback_list_id size=19 maxlength=19 value='$hold_time_option_callback_list_id'></td></tr>";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
-			horizontal_bar_chart($group_id,'8','in-group',$link,'total_calls','call count',1,'','');
+			$temp_chart_title = _QXZ("8 Day inbound call count for this in-group");
+			horizontal_bar_chart($group_id,'8','in-group',$link,'total_calls','call count',1,'','',$temp_chart_title);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
@@ -29321,7 +29326,8 @@ if ($ADD==31111)
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("On-Hook Ring Time").": </td><td align=left><input type=text name=on_hook_ring_time size=5 maxlength=4 value=\"$on_hook_ring_time\"> $NWB#remote_agents-on_hook_ring_time$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
-				horizontal_bar_chart($user_start,'8','remote-agent',$link,'ra_total_calls','call count',1,'','');
+				$temp_chart_title = _QXZ("8 Day call count for this remote-agent");
+				horizontal_bar_chart($user_start,'8','remote-agent',$link,'ra_total_calls','call count',1,'','',$temp_chart_title);
 			echo "</td></tr>\n";
 
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Inbound Groups").": </td><td align=left>\n";
@@ -37918,25 +37924,33 @@ if ($ADD==999993)
 		if ($stage == 'remote-agent')
 			{
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
-				horizontal_bar_chart($campaign_id,$day_count,$stage,$link,'ra_total_calls','call count',0,'','');
+				$temp_chart_title = "$day_count " . _QXZ("Day call count for this remote-agent");
+				horizontal_bar_chart($campaign_id,$day_count,$stage,$link,'ra_total_calls','call count',0,'','',$temp_chart_title);
 			echo "</td></tr>\n";
 
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
-				horizontal_bar_chart($campaign_id,$day_count,$stage,$link,'ra_concurrent_calls','most concurrent calls',0,'','');
+				$temp_chart_title = "$day_count " . _QXZ("Day most concurrent calls for this remote-agent");
+				horizontal_bar_chart($campaign_id,$day_count,$stage,$link,'ra_concurrent_calls','most concurrent calls',0,'','',$temp_chart_title);
 			echo "</td></tr>\n";
 			}
 		else
 			{
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
-				horizontal_bar_chart($campaign_id,$day_count,$in_out,$link,'total_calls','call count',0,'','');
+				$temp_chart_title = "$day_count " . _QXZ("Day inbound call count for this in-group");
+				if ($in_out=='campaign') {$temp_chart_title = "$day_count " . _QXZ("Day outbound call count for this campaign");}
+				horizontal_bar_chart($campaign_id,$day_count,$in_out,$link,'total_calls','call count',0,'','',$temp_chart_title);
 			echo "</td></tr>\n";
 
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
-				horizontal_bar_chart($campaign_id,$day_count,$in_out,$link,$max_type,'most concurrent calls',0,'','');
+				$temp_chart_title = "$day_count " . _QXZ("Day inbound most concurrent calls for this in-group");
+				if ($in_out=='campaign') {$temp_chart_title = "$day_count " . _QXZ("Day outbound most concurrent calls for this campaign");}
+				horizontal_bar_chart($campaign_id,$day_count,$in_out,$link,$max_type,'most concurrent calls',0,'','',$temp_chart_title);
 			echo "</td></tr>\n";
 
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
-				horizontal_bar_chart($campaign_id,$day_count,$in_out,$link,'max_agents','most concurrent agents',0,'','');
+				$temp_chart_title = "$day_count " . _QXZ("Day inbound most concurrent agents for this in-group");
+				if ($in_out=='campaign') {$temp_chart_title = "$day_count " . _QXZ("Day outbound most concurrent agents for this campaign");}
+				horizontal_bar_chart($campaign_id,$day_count,$in_out,$link,'max_agents','most concurrent agents',0,'','',$temp_chart_title);
 			echo "</td></tr>\n";
 			}
 		}
@@ -38011,37 +38025,44 @@ if ($ADD==999992)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
 			$download_link="<font size='-2'><a href='$PHP_SELF?query_date=$query_date&end_date=$end_date&max_system_stats_submit=$max_system_stats_submit&ADD=$ADD&stage=$stage&download_max_system_stats_metric_name=total+call+count+in+and+out'>["._QXZ("DOWNLOAD")."]</a></font>";
-			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'total_calls','total call count in and out',0,$end_date,$download_link);
+			$temp_chart_title = "$num_graph_days " . _QXZ("Day total call count in and out for this system");
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'total_calls','total call count in and out',0,$end_date,$download_link,$temp_chart_title);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
 			$download_link="<font size='-2'><a href='$PHP_SELF?query_date=$query_date&end_date=$end_date&max_system_stats_submit=$max_system_stats_submit&ADD=$ADD&stage=$stage&download_max_system_stats_metric_name=total+inbound+call+count'>["._QXZ("DOWNLOAD")."]</a></font>";
-			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'total_calls_inbound_all','total inbound call count',0,$end_date,$download_link);
+			$temp_chart_title = "$num_graph_days " . _QXZ("Day total inbound call count for this system");
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'total_calls_inbound_all','total inbound call count',0,$end_date,$download_link,$temp_chart_title);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
 			$download_link="<font size='-2'><a href='$PHP_SELF?query_date=$query_date&end_date=$end_date&max_system_stats_submit=$max_system_stats_submit&ADD=$ADD&stage=$stage&download_max_system_stats_metric_name=total+outbound+call+count'>["._QXZ("DOWNLOAD")."]</a></font>";
-			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'total_calls_outbound_all','total outbound call count',0,$end_date,$download_link);
+			$temp_chart_title = "$num_graph_days " . _QXZ("Day total outbound call count for this system");
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'total_calls_outbound_all','total outbound call count',0,$end_date,$download_link,$temp_chart_title);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
 			$download_link="<font size='-2'><a href='$PHP_SELF?query_date=$query_date&end_date=$end_date&max_system_stats_submit=$max_system_stats_submit&ADD=$ADD&stage=$stage&download_max_system_stats_metric_name=most+concurrent+calls+in+and+out'>["._QXZ("DOWNLOAD")."]</a></font>";
-			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'(max_inbound + max_outbound)','most concurrent calls in and out',0,$end_date,$download_link);
+			$temp_chart_title = "$num_graph_days " . _QXZ("Day most concurrent calls in and out for this system");
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'(max_inbound + max_outbound)','most concurrent calls in and out',0,$end_date,$download_link,$temp_chart_title);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
 			$download_link="<font size='-2'><a href='$PHP_SELF?query_date=$query_date&end_date=$end_date&max_system_stats_submit=$max_system_stats_submit&ADD=$ADD&stage=$stage&download_max_system_stats_metric_name=most+concurrent+calls+inbound+total'>["._QXZ("DOWNLOAD")."]</a></font>";
-			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'max_inbound','most concurrent calls inbound total',0,$end_date,$download_link);
+			$temp_chart_title = "$num_graph_days " . _QXZ("Day most concurrent calls inbound total for this system");
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'max_inbound','most concurrent calls inbound total',0,$end_date,$download_link,$temp_chart_title);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
 			$download_link="<font size='-2'><a href='$PHP_SELF?query_date=$query_date&end_date=$end_date&max_system_stats_submit=$max_system_stats_submit&ADD=$ADD&stage=$stage&download_max_system_stats_metric_name=most+concurrent+calls+outbound+total'>["._QXZ("DOWNLOAD")."]</a></font>";
-			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'max_outbound','most concurrent calls outbound total',0,$end_date,$download_link);
+			$temp_chart_title = "$num_graph_days " . _QXZ("Day most concurrent calls outbound total for this system");
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'max_outbound','most concurrent calls outbound total',0,$end_date,$download_link,$temp_chart_title);
 		echo "</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
 			$download_link="<font size='-2'><a href='$PHP_SELF?query_date=$query_date&end_date=$end_date&max_system_stats_submit=$max_system_stats_submit&ADD=$ADD&stage=$stage&download_max_system_stats_metric_name=most+concurrent+agents'>["._QXZ("DOWNLOAD")."]</a></font>";
-			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'max_agents','most concurrent agents',0,$end_date,$download_link);
+			$temp_chart_title = "$num_graph_days " . _QXZ("Day most concurrent agents for this system");
+			horizontal_bar_chart($campaign_id,$num_graph_days,'system',$link,'max_agents','most concurrent agents',0,$end_date,$download_link,$temp_chart_title);
 		echo "</td></tr>\n";
 		}
 	else
