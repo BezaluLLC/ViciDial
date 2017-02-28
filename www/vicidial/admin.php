@@ -3946,12 +3946,13 @@ else
 # 170223-0657 - Added warning for On Hold Message if too long, adjusted chooser placements
 # 170226-0850 - Added recording override options to chat and email groups to disable recordings for those, issue #992
 # 170227-2231 - Change to allow horizontal_bar_chart header to be translated, issue #991
+# 170228-1621 - Changed emergency logout to hangup all agent session calls, and more logging
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-595a';
-$build = '170227-2231';
+$admin_version = '2.14-596a';
+$build = '170228-1621';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -17414,6 +17415,7 @@ if ($ADD==62)
 		else
 			{
 			$stmtLOG='';
+			$usersLOG='';
 			$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			$row=mysqli_fetch_row($rslt);
@@ -17423,7 +17425,7 @@ if ($ADD==62)
 				{
 				$now_date_epoch = date('U');
 				$inactive_epoch = ($now_date_epoch - 60);
-				$stmt = "SELECT user,campaign_id,UNIX_TIMESTAMP(last_update_time),extension from vicidial_live_agents where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+				$stmt = "SELECT user,campaign_id,UNIX_TIMESTAMP(last_update_time),extension,status,conf_exten,server_ip from vicidial_live_agents where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($DB) {echo "<BR>$stmt\n";}
 				$vla_ct = mysqli_num_rows($rslt);
@@ -17435,6 +17437,9 @@ if ($ADD==62)
 					$VLA_campaign_id[$k] =	$row[1];
 					$VLA_update_time[$k] =	$row[2];
 					$VLA_extension[$k] =	$row[3];
+					$VLA_status[$k] =		$row[4];
+					$VLA_conf_exten[$k] =	$row[5];
+					$VLA_server_ip[$k] =	$row[6];
 					$k++;
 					}
 
@@ -17541,10 +17546,21 @@ if ($ADD==62)
 							}
 						}
 
-					$stmt = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$VLA_user[$k]','LOGOUT','$VLA_campaign_id[$k]','$SQLdate','$now_date_epoch','$VAL_user_group');";
+					$local_DEF = 'Local/5555';
+					$local_AMP = '@';
+					$ext_context = 'default';
+					$kick_local_channel = "$local_DEF$VLA_conf_exten[$k]$local_AMP$ext_context";
+					$queryCID = "ULGH3457$StarTtimE";
+
+					$stmtC="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$VLA_server_ip[$k]','','Originate','$queryCID','Channel: $kick_local_channel','Context: $ext_context','Exten: 8300','Priority: 1','Callerid: $queryCID','','','','$channel','$exten');";
+					if ($DB) {echo "<BR>$stmtC\n";}
+					$rslt=mysql_to_mysqli($stmtC, $link);
+
+					$stmt = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group,extension) values('$VLA_user[$k]','LOGOUT','$VLA_campaign_id[$k]','$SQLdate','$now_date_epoch','$VAL_user_group','MGR LOGOUT: $PHP_AUTH_USER');";
 					if ($DB) {echo "<BR>$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$stmtLOG .= "$stmt|";
+					$usersLOG .= "$VLA_user[$k]|";
 
 
 					#############################################
@@ -17692,7 +17708,7 @@ if ($ADD==62)
 				$SQL_log = "$stmtLOG";
 				$SQL_log = preg_replace('/;/', '', $SQL_log);
 				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGNS', event_type='LOGOUT', record_id='$campaign_id', event_code='ADMIN LOGOUT CAMPAIGN AGENTS', event_sql=\"$SQL_log\", event_notes='';";
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CAMPAIGNS', event_type='LOGOUT', record_id='$campaign_id', event_code='ADMIN LOGOUT CAMPAIGN AGENTS', event_sql=\"$SQL_log\", event_notes='Users logged out: $usersLOG';";
 				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -36447,7 +36463,7 @@ if ($ADD==700000000000000)
 	$logs_to_print = mysqli_num_rows($rslt);
 
 	echo "<br>"._QXZ("ADMIN CHANGE LOG").": ("._QXZ("Last 5000 records").")\n";
-	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<center><TABLE width=980 cellspacing=0 cellpadding=1>\n";
 	echo "<TR BGCOLOR=BLACK>";
 	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("ID")."</B></TD>";
 	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("DATE TIME")."</B></TD>";
@@ -36533,7 +36549,7 @@ if ($ADD==710000000000000)
 	$logs_to_print = mysqli_num_rows($rslt);
 
 	echo "<br>"._QXZ("ADMIN CHANGE LOG: Changes made by")." $stage - $user_name\n";
-	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<center><TABLE width=980 cellspacing=0 cellpadding=1>\n";
 	echo "<TR BGCOLOR=BLACK>";
 	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("ID")."</B></TD>";
 	echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("DATE TIME")."</B></TD>";
@@ -36619,7 +36635,7 @@ if ($ADD==720000000000000)
 		$logs_to_print = mysqli_num_rows($rslt);
 
 		echo "<br>"._QXZ("ADMIN CHANGE LOG: Section Records")." - $category - $stage\n";
-		echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+		echo "<center><TABLE width=980 cellspacing=0 cellpadding=1>\n";
 		echo "<TR BGCOLOR=BLACK>";
 		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("ID")."</B></TD>";
 		echo "<TD><B><FONT FACE=\"Arial,Helvetica\" size=1 color=white>"._QXZ("DATE TIME")."</B></TD>";

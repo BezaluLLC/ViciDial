@@ -422,10 +422,11 @@
 # 170207-1315 - Added user option api_only_user
 # 170221-0143 - Fix for rare missed agent log insert trigger
 # 170221-1314 - Added more DNC options for campaign setting, manual dial filter
+# 170228-1625 - Fix to prevent double-logging when emergency logout happens
 #
 
-$version = '2.14-316';
-$build = '170221-1314';
+$version = '2.14-317';
+$build = '170228-1625';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=658;
@@ -12306,13 +12307,31 @@ if ($ACTION == 'userLOGout')
 			$user_group =		trim("$row[0]");
 			}
 		##### Insert a LOGOUT record into the user log
+		$insert_user_log=1;
+		if ($stage=='DISABLED')
+			{
+			$stmt="SELECT event FROM vicidial_user_log where user='$user' order by user_log_id desc LIMIT 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$ul_record_ct = mysqli_num_rows($rslt);
+			if ($ul_record_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$last_event =		trim("$row[0]");
+				if ($last_event == 'LOGOUT') {$insert_user_log=0;}
+				}
+			}
 		$user_log_event = "LOGOUT";
 		if ($stage=='TIMEOUT') {$user_log_event = "TIMEOUTLOGOUT";}
-		$stmt="INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$user','$user_log_event','$campaign','$NOW_TIME','$StarTtime','$user_group');";
-		if ($DB) {echo "$stmt\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
-			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00128',$user,$server_ip,$session_name,$one_mysql_log);}
-		$vul_insert = mysqli_affected_rows($link);
+		if ($insert_user_log > 0)
+			{
+			$stmt="INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$user','$user_log_event','$campaign','$NOW_TIME','$StarTtime','$user_group');";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00128',$user,$server_ip,$session_name,$one_mysql_log);}
+			$vul_insert = mysqli_affected_rows($link);
+			}
 
 		if ($no_delete_sessions < 1)
 			{

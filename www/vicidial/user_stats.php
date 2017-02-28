@@ -1,7 +1,7 @@
 <?php
 # user_stats.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -53,6 +53,7 @@
 # 160325-1430 - Changes for sidebar update
 # 160508-0807 - Added colors features
 # 161030-0829 - Fixed excess load Issue #963
+# 170228-1626 - Change to display emergency manager logout note
 #
 
 $startMS = microtime();
@@ -757,8 +758,9 @@ else
 					$MAIN.="<td align=right><font size=2> $row[2]</td>\n";
 					$MAIN.="<td align=right><font size=2> $row[3]</td>\n";
 					$MAIN.="<td align=right><font size=2> $row[4]</td>\n";
-					$MAIN.="<td align=right><font size=2> $event_hours_minutes</td>\n";
-					$MAIN.="<td align=right colspan=5><font size=2> &nbsp;</td></tr>\n";
+					$MAIN.="<td align=right><font size=2> $event_hours_minutes &nbsp;</td>\n";
+					$MAIN.="<td align=center colspan=2><font size=2>&nbsp; $row[7]</td>\n";
+					$MAIN.="<td align=right colspan=3><font size=2> &nbsp;</td></tr>\n";
 					$event_start_seconds='';
 					$event_stop_seconds='';
 					$CSV_text2.="\"\",\"$row[0]\",\"$row[2]\",\"$row[3]\",\"$row[4]\",\"$event_hours_minutes\"\n";

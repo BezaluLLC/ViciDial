@@ -38,6 +38,7 @@
 # 160325-1433 - Changes for sidebar update
 # 161102-1041 - Fixed QM partition problem
 # 170217-1213 - Fixed non-latin auth issue #995
+# 170228-1623 - Changed emergency logout to hangup all agent session calls, and more logging
 #
 
 $startMS = microtime();
@@ -73,7 +74,7 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,level_8_disable_add,enable_languages,language_method,allow_chats FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,level_8_disable_add,enable_languages,language_method,allow_chats,admin_screen_colors FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -88,6 +89,7 @@ if ($qm_conf_ct > 0)
 	$SSenable_languages =				$row[5];
 	$SSlanguage_method =				$row[6];
 	$SSallow_chats =					$row[7];
+	$SSadmin_screen_colors =			$row[8];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -110,6 +112,44 @@ $group = preg_replace("/'|\"|\\\\|;/","",$group);
 $stage = preg_replace("/'|\"|\\\\|;/","",$stage);
 $begin_date = preg_replace("/'|\"|\\\\|;/","",$begin_date);
 $end_date = preg_replace("/'|\"|\\\\|;/","",$end_date);
+
+
+$SSmenu_background='015B91';
+$SSframe_background='D9E6FE';
+$SSstd_row1_background='9BB9FB';
+$SSstd_row2_background='B9CBFD';
+$SSstd_row3_background='8EBCFD';
+$SSstd_row4_background='B6D3FC';
+$SSstd_row5_background='A3C3D6';
+$SSalt_row1_background='BDFFBD';
+$SSalt_row2_background='99FF99';
+$SSalt_row3_background='CCFFCC';
+
+if ($SSadmin_screen_colors != 'default')
+	{
+	$stmt = "SELECT menu_background,frame_background,std_row1_background,std_row2_background,std_row3_background,std_row4_background,std_row5_background,alt_row1_background,alt_row2_background,alt_row3_background FROM vicidial_screen_colors where colors_id='$SSadmin_screen_colors';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$colors_ct = mysqli_num_rows($rslt);
+	if ($colors_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$SSmenu_background =		$row[0];
+		$SSframe_background =		$row[1];
+		$SSstd_row1_background =	$row[2];
+		$SSstd_row2_background =	$row[3];
+		$SSstd_row3_background =	$row[4];
+		$SSstd_row4_background =	$row[5];
+		$SSstd_row5_background =	$row[6];
+		$SSalt_row1_background =	$row[7];
+		$SSalt_row2_background =	$row[8];
+		$SSalt_row3_background =	$row[9];
+		}
+	}
+$Mhead_color =	$SSstd_row5_background;
+$Mmain_bgcolor = $SSmenu_background;
+$Mhead_color =	$SSstd_row5_background;
+
 
 $StarTtimE = date("U");
 $TODAY = date("Y-m-d");
@@ -376,14 +416,14 @@ require("admin_header.php");
 
 
 ?>
-<TABLE WIDTH=<?php echo $page_width ?> BGCOLOR=#E6E6E6 cellpadding=2 cellspacing=0><TR BGCOLOR=#E6E6E6><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; <?php echo _QXZ("User Status for"); ?> <?php echo $user ?></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; </TD></TR>
+<TABLE WIDTH=<?php echo $page_width ?> BGCOLOR=#<?php echo $SSframe_background; ?> cellpadding=2 cellspacing=0><TR BGCOLOR=#<?php echo $SSframe_background; ?>><TD ALIGN=LEFT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; <?php echo _QXZ("User Status for"); ?> <?php echo $user ?></TD><TD ALIGN=RIGHT><FONT FACE="ARIAL,HELVETICA" SIZE=2><B> &nbsp; </TD></TR>
 
 
 
 
 <?php 
 
-echo "<TR BGCOLOR=\"#F0F5FE\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3><B> &nbsp; \n";
+echo "<TR BGCOLOR=\"#$SSstd_row2_background\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3><B> &nbsp; \n";
 
 ##### EMERGENCY CAMPAIGN CHANGE FOR AN AGENT #####
 if ($stage == "live_campaign_change")
@@ -401,7 +441,7 @@ if ($stage == "log_agent_out")
 	{
 	$now_date_epoch = date('U');
 	$inactive_epoch = ($now_date_epoch - 60);
-	$stmt = "SELECT user,campaign_id,UNIX_TIMESTAMP(last_update_time),status from vicidial_live_agents where user='" . mysqli_real_escape_string($link, $user) . "';";
+	$stmt = "SELECT user,campaign_id,UNIX_TIMESTAMP(last_update_time),status,conf_exten,server_ip from vicidial_live_agents where user='" . mysqli_real_escape_string($link, $user) . "';";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "<BR>$stmt\n";}
 	$vla_ct = mysqli_num_rows($rslt);
@@ -412,6 +452,8 @@ if ($stage == "log_agent_out")
 		$VLA_campaign_id =			$row[1];
 		$VLA_update_time =			$row[2];
 		$VLA_status =				$row[3];
+		$VLA_conf_exten =			$row[4];
+		$VLA_server_ip =			$row[5];
 
 		if ($VLA_update_time > $inactive_epoch)
 			{
@@ -507,9 +549,29 @@ if ($stage == "log_agent_out")
 				}
 			}
 
-		$stmt = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group) values('$VLA_user','LOGOUT','$VLA_campaign_id','$NOW_TIME','$now_date_epoch','$VAL_user_group');";
-		if ($DB) {echo "<BR>$stmt\n";}
+		$local_DEF = 'Local/5555';
+		$local_AMP = '@';
+		$ext_context = 'default';
+		$kick_local_channel = "$local_DEF$VLA_conf_exten$local_AMP$ext_context";
+		$queryCID = "ULGH3457$StarTtimE";
+
+		$stmtC="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$VLA_server_ip','','Originate','$queryCID','Channel: $kick_local_channel','Context: $ext_context','Exten: 8300','Priority: 1','Callerid: $queryCID','','','','$channel','$exten');";
+		if ($DB) {echo "<BR>$stmtC\n";}
+		$rslt=mysql_to_mysqli($stmtC, $link);
+
+		$stmtB = "INSERT INTO vicidial_user_log (user,event,campaign_id,event_date,event_epoch,user_group,extension) values('$VLA_user','LOGOUT','$VLA_campaign_id','$NOW_TIME','$now_date_epoch','$VAL_user_group','MGR LOGOUT: $PHP_AUTH_USER');";
+		if ($DB) {echo "<BR>$stmtB\n";}
+		$rslt=mysql_to_mysqli($stmtB, $link);
+
+		### Add a record to the vicidial_admin_log
+		$SQL_log = "$stmt|$stmtB|$stmtC|";
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
+		$SQL_log = addslashes($SQL_log);
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='LOGOUT', record_id='$user', event_code='EMERGENCY LOGOUT FROM STATUS PAGE', event_sql=\"$SQL_log\", event_notes='agent_log_id: $VAL_agent_log_id';";
+		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
+		$affected_rows = mysqli_affected_rows($link);
+		print "<!-- NEW vicidial_admin_log record inserted for $PHP_AUTH_USER:   |$affected_rows| -->\n";
 
 
 		#############################################
@@ -633,7 +695,7 @@ if ($stage == "log_agent_out")
 				}
 			}
 
-		echo _QXZ("Agent")." $user - $full_name "._QXZ("has been emergency logged out, make sure they close their web browser")."<BR>\n";
+		echo _QXZ("Agent")." $user - $full_name "._QXZ("has been emergency logged out, all calls in their session have been hung up, make sure they close their web browser")."<BR>\n";
 		}
 	else
 		{
@@ -891,7 +953,7 @@ if ($agents_to_print > 0)
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<input type=hidden name=user value=\"$user\">\n";
 		echo "<input type=hidden name=stage value=\"log_agent_out\">\n";
-		echo "<input type=submit name=submit value=\""._QXZ("EMERGENCY LOG AGENT OUT")."\"><BR></form>\n";
+		echo "<input type=submit name=submit value=\""._QXZ("EMERGENCY LOG AGENT OUT")."\"> &nbsp; "._QXZ("NOTE: this will hang up all calls in the agent session")."<BR></form>\n";
 		}
 	}
 
