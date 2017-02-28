@@ -116,3 +116,9 @@ caption {
 	white-space:nowrap;
 	font-weight: bold;
 }
+.overlap_barGraph li.p3{
+	background: #666 url(images/bar_green.png) repeat-x top right;
+	color: #FFF;
+	white-space:nowrap;
+	font-weight: bold;
+}

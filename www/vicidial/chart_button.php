@@ -8,11 +8,8 @@ if (file_exists('options.php'))
 	require('options.php');
 	$init_height=$graph_canvas_size;  # Chart has a minimum height/width of 600 by default
 	}
-else
-	{
-	$init_height=600;
-	}
-
+if (strlen($init_height)<2)
+	{$init_height=600;}
 
 if(mysqli_num_rows($color_rslt) > 0) {
 	$color_row=mysqli_fetch_array($color_rslt);
