@@ -1,7 +1,7 @@
 <?php
 # admin_lists_custom.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen manages the custom lists fields in ViciDial
 #
@@ -40,10 +40,11 @@
 # 160429-1125 - Added admin_row_click option
 # 160508-0219 - Added screen colors feature
 # 160510-2108 - Fixing issues with using only standard fields
+# 170228-2254 - Changes to allow URLs in SCRIPT field types
 #
 
-$admin_version = '2.12-32';
-$build = '160510-2108';
+$admin_version = '2.14-33';
+$build = '170228-2254';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -156,7 +157,9 @@ if ($non_latin < 1)
 
 	$field_name = preg_replace('/[^ \.\,-\_0-9a-zA-Z]/','',$field_name);
 	$field_description = preg_replace('/[^ \.\,-\_0-9a-zA-Z]/','',$field_description);
-	$field_options = preg_replace('/[^ \.\n\,-\_0-9a-zA-Z]/', '',$field_options);
+	$field_options = preg_replace('/[^ \'\&\.\n\,-\_0-9a-zA-Z]/', '',$field_options);
+	if ($field_type != 'SCRIPT')
+		{$field_options = preg_replace('/[^ \.\n\,-\_0-9a-zA-Z]/', '',$field_options);}
 	$field_default = preg_replace('/[^ \.\n\,-\_0-9a-zA-Z]/', '',$field_default);
 	}	# end of non_latin
 else
@@ -1643,7 +1646,7 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 
 	if ($SQLexecuted > 0)
 		{
-		$stmt="INSERT INTO vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',list_id='$list_id',multi_position='$multi_position',name_position='$name_position',field_order='$field_order';";
+		$stmt="INSERT INTO vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options=\"$field_options\",field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',list_id='$list_id',multi_position='$multi_position',name_position='$name_position',field_order='$field_order';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$field_update = mysqli_affected_rows($link);
 		if ($DB) {echo "$field_update|$stmt\n";}
@@ -1783,7 +1786,7 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 
 	if ($SQLexecuted > 0)
 		{
-		$stmt="UPDATE vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options='$field_options',field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',multi_position='$multi_position',name_position='$name_position',field_order='$field_order' where list_id='$list_id' and field_id='$field_id';";
+		$stmt="UPDATE vicidial_lists_fields set field_label='$field_label',field_name='$field_name',field_description='$field_description',field_rank='$field_rank',field_help='$field_help',field_type='$field_type',field_options=\"$field_options\",field_size='$field_size',field_max='$field_max',field_default='$field_default',field_required='$field_required',field_cost='$field_cost',multi_position='$multi_position',name_position='$name_position',field_order='$field_order' where list_id='$list_id' and field_id='$field_id';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$field_update = mysqli_affected_rows($link);
 		if ($DB) {echo "$field_update|$stmt\n";}

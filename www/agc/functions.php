@@ -1,10 +1,10 @@
 <?php
 # 
-# functions.php    version 2.12
+# functions.php    version 2.14
 #
 # functions for agent scripts
 #
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES:
@@ -31,6 +31,7 @@
 # 150923-2017 - Added DID custom fields
 # 160510-2151 - Fixed issues with select lists and common contents
 # 160913-0827 - Fixed issues with multiple selected values in custom fields
+# 170228-2258 - Changes to allow URLs in SCRIPT field types
 #
 
 # $mysql_queries = 20
@@ -571,9 +572,9 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB)
 
 	##### BEGIN parsing for vicidial variables #####
 	$NOTESout='';
-	if (preg_match("/--A--/",$CFoutput))
+	if (preg_match("/--A--|--U--/",$CFoutput))
 		{
-		if ( (preg_match('/--A--user_custom_/i',$CFoutput)) or (preg_match('/--A--fullname/i',$CFoutput)) )
+		if ( (preg_match('/--A--user_custom_|--U--user_custom_/i',$CFoutput)) or (preg_match('/--A--fullname|--U--fullname/i',$CFoutput)) )
 			{
 			$stmt = "select custom_one,custom_two,custom_three,custom_four,custom_five,full_name from vicidial_users where user='$user';";
 			if ($DB) {echo "$stmt\n";}
@@ -592,7 +593,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB)
 				}
 			}
 
-		if (preg_match('/--A--dialed_/i',$CFoutput))
+		if (preg_match('/--A--dialed_|--U--dialed_/i',$CFoutput))
 			{
 			$dialed_number =	$phone_number;
 			$dialed_label =		_QXZ("NONE");
@@ -827,6 +828,70 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB)
 			$owner				= trim($row[33]);
 			}
 
+		$CFoutput = preg_replace('/--U--lead_id--V--/i',urlencode($lead_id),$CFoutput);
+		$CFoutput = preg_replace('/--U--vendor_id--V--/i',urlencode($vendor_id),$CFoutput);
+		$CFoutput = preg_replace('/--U--vendor_lead_code--V--/i',urlencode($vendor_lead_code),$CFoutput);
+		$CFoutput = preg_replace('/--U--list_id--V--/i',urlencode($list_id),$CFoutput);
+		$CFoutput = preg_replace('/--U--gmt_offset_now--V--/i',urlencode($gmt_offset_now),$CFoutput);
+		$CFoutput = preg_replace('/--U--phone_code--V--/i',urlencode($phone_code),$CFoutput);
+		$CFoutput = preg_replace('/--U--phone_number--V--/i',urlencode($phone_number),$CFoutput);
+		$CFoutput = preg_replace('/--U--title--V--/i',urlencode($title),$CFoutput);
+		$CFoutput = preg_replace('/--U--first_name--V--/i',urlencode($first_name),$CFoutput);
+		$CFoutput = preg_replace('/--U--middle_initial--V--/i',urlencode($middle_initial),$CFoutput);
+		$CFoutput = preg_replace('/--U--last_name--V--/i',urlencode($last_name),$CFoutput);
+		$CFoutput = preg_replace('/--U--address1--V--/i',urlencode($address1),$CFoutput);
+		$CFoutput = preg_replace('/--U--address2--V--/i',urlencode($address2),$CFoutput);
+		$CFoutput = preg_replace('/--U--address3--V--/i',urlencode($address3),$CFoutput);
+		$CFoutput = preg_replace('/--U--city--V--/i',urlencode($city),$CFoutput);
+		$CFoutput = preg_replace('/--U--state--V--/i',urlencode($state),$CFoutput);
+		$CFoutput = preg_replace('/--U--province--V--/i',urlencode($province),$CFoutput);
+		$CFoutput = preg_replace('/--U--postal_code--V--/i',urlencode($postal_code),$CFoutput);
+		$CFoutput = preg_replace('/--U--country_code--V--/i',urlencode($country_code),$CFoutput);
+		$CFoutput = preg_replace('/--U--gender--V--/i',urlencode($gender),$CFoutput);
+		$CFoutput = preg_replace('/--U--date_of_birth--V--/i',urlencode($date_of_birth),$CFoutput);
+		$CFoutput = preg_replace('/--U--alt_phone--V--/i',urlencode($alt_phone),$CFoutput);
+		$CFoutput = preg_replace('/--U--email--V--/i',urlencode($email),$CFoutput);
+		$CFoutput = preg_replace('/--U--security_phrase--V--/i',urlencode($security_phrase),$CFoutput);
+		$CFoutput = preg_replace('/--U--comments--V--/i',urlencode($comments),$CFoutput);
+		$CFoutput = preg_replace('/--U--user--V--/i',urlencode($user),$CFoutput);
+		$CFoutput = preg_replace('/--U--pass--V--/i',urlencode($pass),$CFoutput);
+		$CFoutput = preg_replace('/--U--campaign--V--/i',urlencode($campaign),$CFoutput);
+		$CFoutput = preg_replace('/--U--server_ip--V--/i',urlencode($server_ip),$CFoutput);
+		$CFoutput = preg_replace('/--U--session_id--V--/i',urlencode($session_id),$CFoutput);
+		$CFoutput = preg_replace('/--U--dialed_number--V--/i',urlencode($dialed_number),$CFoutput);
+		$CFoutput = preg_replace('/--U--dialed_label--V--/i',urlencode($dialed_label),$CFoutput);
+		$CFoutput = preg_replace('/--U--source_id--V--/i',urlencode($source_id),$CFoutput);
+		$CFoutput = preg_replace('/--U--rank--V--/i',urlencode($rank),$CFoutput);
+		$CFoutput = preg_replace('/--U--owner--V--/i',urlencode($owner),$CFoutput);
+		$CFoutput = preg_replace('/--U--fullname--V--/i',urlencode($fullname),$CFoutput);
+		$CFoutput = preg_replace('/--U--uniqueid--V--/i',urlencode($uniqueid),$CFoutput);
+		$CFoutput = preg_replace('/--U--user_custom_one--V--/i',urlencode($user_custom_one),$CFoutput);
+		$CFoutput = preg_replace('/--U--user_custom_two--V--/i',urlencode($user_custom_two),$CFoutput);
+		$CFoutput = preg_replace('/--U--user_custom_three--V--/i',urlencode($user_custom_three),$CFoutput);
+		$CFoutput = preg_replace('/--U--user_custom_four--V--/i',urlencode($user_custom_four),$CFoutput);
+		$CFoutput = preg_replace('/--U--user_custom_five--V--/i',urlencode($user_custom_five),$CFoutput);
+		$CFoutput = preg_replace('/--U--preset_number_a--V--/i',urlencode($preset_number_a),$CFoutput);
+		$CFoutput = preg_replace('/--U--preset_number_b--V--/i',urlencode($preset_number_b),$CFoutput);
+		$CFoutput = preg_replace('/--U--preset_number_c--V--/i',urlencode($preset_number_c),$CFoutput);
+		$CFoutput = preg_replace('/--U--preset_number_d--V--/i',urlencode($preset_number_d),$CFoutput);
+		$CFoutput = preg_replace('/--U--preset_number_e--V--/i',urlencode($preset_number_e),$CFoutput);
+		$CFoutput = preg_replace('/--U--preset_dtmf_a--V--/i',urlencode($preset_dtmf_a),$CFoutput);
+		$CFoutput = preg_replace('/--U--preset_dtmf_b--V--/i',urlencode($preset_dtmf_b),$CFoutput);
+		$CFoutput = preg_replace('/--U--did_id--V--/i',urlencode($did_id),$CFoutput);
+		$CFoutput = preg_replace('/--U--did_extension--V--/i',urlencode($did_extension),$CFoutput);
+		$CFoutput = preg_replace('/--U--did_pattern--V--/i',urlencode($did_pattern),$CFoutput);
+		$CFoutput = preg_replace('/--U--did_description--V--/i',urlencode($did_description),$CFoutput);
+		$CFoutput = preg_replace('/--U--closecallid--V--/i',urlencode($closecallid),$CFoutput);
+		$CFoutput = preg_replace('/--U--xfercallid--V--/i',urlencode($xfercallid),$CFoutput);
+		$CFoutput = preg_replace('/--U--agent_log_id--V--/i',urlencode($agent_log_id),$CFoutput);
+		$CFoutput = preg_replace('/--U--call_id--V--/i',urlencode($call_id),$CFoutput);
+		$CFoutput = preg_replace('/--U--called_count--V--/i',urlencode($called_count),$CFoutput);
+		$CFoutput = preg_replace('/--U--did_custom_one--V--/i',urlencode($did_custom_one),$CFoutput);
+		$CFoutput = preg_replace('/--U--did_custom_two--V--/i',urlencode($did_custom_two),$CFoutput);
+		$CFoutput = preg_replace('/--U--did_custom_three--V--/i',urlencode($did_custom_three),$CFoutput);
+		$CFoutput = preg_replace('/--U--did_custom_four--V--/i',urlencode($did_custom_four),$CFoutput);
+		$CFoutput = preg_replace('/--U--did_custom_five--V--/i',urlencode($did_custom_five),$CFoutput);
+
 		$CFoutput = preg_replace('/--A--lead_id--B--/i',"$lead_id",$CFoutput);
 		$CFoutput = preg_replace('/--A--vendor_id--B--/i',"$vendor_id",$CFoutput);
 		$CFoutput = preg_replace('/--A--vendor_lead_code--B--/i',"$vendor_lead_code",$CFoutput);
@@ -897,6 +962,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB)
 		$o=0;
 		while ($fields_to_print > $o) 
 			{
+			$CFoutput = preg_replace("/--U--$A_field_label[$o]--V--/i",urlencode($A_field_value[$o]),$CFoutput);
 			$CFoutput = preg_replace("/--A--$A_field_label[$o]--B--/i","$A_field_value[$o]",$CFoutput);
 			$o++;
 			}

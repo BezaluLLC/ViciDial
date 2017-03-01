@@ -103,6 +103,9 @@ OTHER CHANGES:
 16. Changed Emergency Logout processes to hangup all agent session calls, and
 	added better logging
 
+17. Changed Custom Fields of SCRIPT type to allow URLs and urlencoded variables
+	when using --U-- and --V-- to declare variables
+
 
 
 

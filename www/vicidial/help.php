@@ -2197,7 +2197,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="lists_fields-field_options">
 <BR>
-<B><?php echo _QXZ("Field Options"); ?> -</B><?php echo _QXZ("For the SELECT, MULTI, RADIO and CHECKBOX field types, you must define the option values in this box. You must put a list of comma separated option label and option text here with each option one its own line. The first value should have no spaces in it, and neither values should have any punctuation. For example - electric_meter, Electric Meter"); ?>
+<B><?php echo _QXZ("Field Options"); ?> -</B><?php echo _QXZ("For the SELECT, MULTI, RADIO and CHECKBOX field types, you must define the option values in this box. You must put a list of comma separated option label and option text here with each option one its own line. The first value should have no spaces in it, and neither values should have any punctuation. For example - electric_meter, Electric Meter") . ". " . _QXZ("For the SCRIPT field types, this field is where you put your script contents. You can use single quote and amphersand characters as well so that you can create links and iframe elements. If you want to put urlencoded fields in this area, make sure you use the --U-- and --V-- flags for your variables instead of using A and B, for example --U--test_field--V--."); ?>
 
 <BR>
 <A NAME="lists_fields-multi_position">
