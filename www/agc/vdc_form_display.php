@@ -1,7 +1,7 @@
 <?php
 # vdc_form_display.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display the contents of the FORM tab in the agent 
 # interface, as well as take submission of the form submission when the agent 
@@ -36,10 +36,11 @@
 # 150923-2027 - Added DID custom variables
 # 160129-1019 - Added missing pass field to SUBMIT stage form
 # 160912-0805 - Added debug, fixed issue with multi-selected values
+# 170301-0834 - Added call_id field for custom fields
 #
 
-$version = '2.12-26';
-$build = '160912-0805';
+$version = '2.14-27';
+$build = '170301-0834';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -508,12 +509,13 @@ else
 	echo "<input type=hidden name=list_id id=list_id value=\"$list_id\">\n";
 	echo "<input type=hidden name=user id=user value=\"$user\">\n";
 	echo "<input type=hidden name=pass id=pass value=\"$pass\">\n";
+	echo "<input type=hidden name=call_id id=call_id value=\"$call_id\">\n";
 	echo "\n";
 
 
 	require_once("functions.php");
 
-	$CFoutput = custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB);
+	$CFoutput = custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_id);
 
 	echo "$CFoutput";
 

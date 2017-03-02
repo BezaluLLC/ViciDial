@@ -32,6 +32,7 @@
 # 160510-2151 - Fixed issues with select lists and common contents
 # 160913-0827 - Fixed issues with multiple selected values in custom fields
 # 170228-2258 - Changes to allow URLs in SCRIPT field types
+# 170301-0837 - Added functionality for required custom fields
 #
 
 # $mysql_queries = 20
@@ -229,13 +230,14 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 
 
 ##### BEGIN custom_list_fields_values - gather values for display of custom list fields for a lead #####
-function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB)
+function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_id)
 	{
 	$STARTtime = date("U");
 	$TODAY = date("Y-m-d");
 	$NOW_TIME = date("Y-m-d H:i:s");
 
 	$vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|';
+	$custom_required_fields='|';
 
 	require("dbconnect_mysqli.php");
 
@@ -447,12 +449,16 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB)
 					if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
 					if (strlen($A_field_value[$o]) < 1) {$A_field_value[$o] = $A_field_default[$o];}
 					$field_HTML .= "<input type=text size=$A_field_size[$o] maxlength=$A_field_max[$o] name=$A_field_label[$o] id=$A_field_label[$o] value=\""._QXZ("$A_field_value[$o]")."\">\n";
+					if ( ($A_field_required[$o] == 'Y') or ( ($A_field_required[$o] == 'INBOUND_ONLY') and (preg_match("/^Y\d\d\d\d\d\d\d/",$call_id)) ) )
+						{$custom_required_fields .= "$A_field_label[$o]|";}
 					}
 				if ($A_field_type[$o]=='AREA') 
 					{
 					if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
 					if (strlen($A_field_value[$o]) < 1) {$A_field_value[$o] = $A_field_default[$o];}
 					$field_HTML .= "<textarea name=$A_field_label[$o] id=$A_field_label[$o] ROWS=$A_field_max[$o] COLS=$A_field_size[$o]>$A_field_value[$o]</textarea>";
+					if ( ($A_field_required[$o] == 'Y') or ( ($A_field_required[$o] == 'INBOUND_ONLY') and (preg_match("/^Y\d\d\d\d\d\d\d/",$call_id)) ) )
+						{$custom_required_fields .= "$A_field_label[$o]|";}
 					}
 				if ($A_field_type[$o]=='DISPLAY')
 					{
@@ -490,6 +496,8 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB)
 					$field_HTML .= "	'controlname': '$A_field_label[$o]'});\n";
 					$field_HTML .= "o_cal.a_tpl.yearscroll = false;\n";
 					$field_HTML .= "</script>\n";
+					if ( ($A_field_required[$o] == 'Y') or ( ($A_field_required[$o] == 'INBOUND_ONLY') and (preg_match("/^Y\d\d\d\d\d\d\d/",$call_id)) ) )
+						{$custom_required_fields .= "$A_field_label[$o]|";}
 					}
 				if ($A_field_type[$o]=='TIME') 
 					{
@@ -749,7 +757,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB)
 					{$NOTESout .= "<tr bgcolor=white><td colspan=11 align=center>"._QXZ("No calls found")."</td></tr>";}
 
 				$u=0;
-				while ($g > $u) 
+				while ($g > $u)
 					{
 					$sort_split = explode("-----",$ALLsort[$u]);
 					$i = $sort_split[1];
@@ -970,6 +978,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB)
 		if ($DB > 0) {echo "$CFoutput<BR>\n";}
 		}
 	##### END parsing for vicidial variables #####
+	echo "<input type=hidden name=custom_required id=custom_required value=\"$custom_required_fields\">\n";
 
 
 	return $CFoutput;

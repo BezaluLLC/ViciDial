@@ -114,10 +114,11 @@
 # 170209-1149 - Added URL and IP logging
 # 170219-1520 - Added 90-day duplicate check option
 # 170223-0743 - Added QXZ translation to admin web user functions text
+# 170301-1649 - Added validation that sounds web dir exists to sounds_list function
 #
 
-$version = '2.14-90';
-$build = '170223-0743';
+$version = '2.14-91';
+$build = '170301-1649';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -844,6 +845,16 @@ if ($function == 'sounds_list')
 			$i=0;
 			$filename_sort=$MT;
 			$dirpath = "$WeBServeRRooT/$sounds_web_directory";
+			if (!file_exists("$WeBServeRRooT/$sounds_web_directory")) 
+				{
+				$result = 'ERROR';
+				$result_reason = "audio store web directory does not exist";
+				echo "$result: $result_reason: |$user|$function|$WeBServeRRooT/$sounds_web_directory|\n";
+				$data = "$allowed_user";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+
 			$dh = opendir($dirpath);
 			if ($DB>0) {echo "DEBUG: sounds_list variables - $dirpath|$stage|$format\n";}
 			while (false !== ($file = readdir($dh))) 

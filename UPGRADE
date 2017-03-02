@@ -106,6 +106,11 @@ OTHER CHANGES:
 17. Changed Custom Fields of SCRIPT type to allow URLs and urlencoded variables
 	when using --U-- and --V-- to declare variables
 
+18. Added option for custom list fields to be required for all calls or only 
+	inbound calls. Will prevent agent hanging up call if field is not filled
+	in. Must also have campaign option enabled for it to work. Will work for
+	the following custom field types: TEXT, AREA, DATE
+
 
 
 

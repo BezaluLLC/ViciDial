@@ -41,10 +41,11 @@
 # 160508-0219 - Added screen colors feature
 # 160510-2108 - Fixing issues with using only standard fields
 # 170228-2254 - Changes to allow URLs in SCRIPT field types
+# 170301-0827 - Enabled required custom fields with INBOUND_ONLY option
 #
 
-$admin_version = '2.14-33';
-$build = '170228-2254';
+$admin_version = '2.14-34';
+$build = '170301-0827';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -145,7 +146,7 @@ if ($non_latin < 1)
 	$field_order = preg_replace('/[^0-9]/','',$field_order);
 	$source_list_id = preg_replace('/[^0-9]/','',$source_list_id);
 
-	$field_required = preg_replace('/[^NY]/','',$field_required);
+	$field_required = preg_replace('/[^_A-Z]/','',$field_required);
 
 	$field_type = preg_replace('/[^0-9a-zA-Z]/','',$field_type);
 	$ConFiRm = preg_replace('/[^0-9a-zA-Z]/','',$ConFiRm);
@@ -1216,7 +1217,6 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<input type=hidden name=DB value=$DB>\n";
 		echo "<input type=hidden name=field_id value=\"$A_field_id[$o]\">\n";
 		echo "<input type=hidden name=field_label value=\"$A_field_label[$o]\">\n";
-		echo "<input type=hidden name=field_required value=\"$A_field_required[$o]\">\n";
 		echo "<a name=\"ANCHOR_$A_field_label[$o]\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3 cellpadding=1>\n";
 		echo "<tr $bgcolor><td align=right>"._QXZ("Field Label")." $A_field_rank[$o]: </td><td align=left> $LcolorB<B>$A_field_label[$o]</B>$LcolorE $NWB#lists_fields-field_label$NWE </td></tr>\n";
@@ -1265,11 +1265,12 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<tr $bgcolor><td align=right>"._QXZ("Field Size")." $A_field_rank[$o]: </td><td align=left><input type=text name=field_size size=5 maxlength=3 value=\"$A_field_size[$o]\">  $NWB#lists_fields-field_size$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>"._QXZ("Field Max")." $A_field_rank[$o]: </td><td align=left><input type=text name=field_max size=5 maxlength=3 value=\"$A_field_max[$o]\">  $NWB#lists_fields-field_max$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>"._QXZ("Field Default")." $A_field_rank[$o]: </td><td align=left><input type=text name=field_default size=50 maxlength=255 value=\"$A_field_default[$o]\">  $NWB#lists_fields-field_default$NWE </td></tr>\n";
-	//	echo "<tr $bgcolor><td align=right>Field Required $A_field_rank[$o]: </td><td align=left><select size=1 name=field_required>\n";
-	//	echo "<option value=\"Y\">YES</option>\n";
-	//	echo "<option value=\"N\">NO</option>\n";
-	//	echo "<option selected>$A_field_required[$o]</option>\n";
-	//	echo "</select>  $NWB#lists_fields-field_required$NWE </td></tr>\n";
+		echo "<tr $bgcolor><td align=right>"._QXZ("Field Required")." $A_field_rank[$o]: </td><td align=left><select size=1 name=field_required>\n";
+		echo "<option value=\"N\">"._QXZ("NO")."</option>\n";
+		echo "<option value=\"Y\">"._QXZ("YES")."</option>\n";
+		echo "<option value=\"INBOUND_ONLY\">"._QXZ("INBOUND_ONLY")."</option>\n";
+		echo "<option selected>$A_field_required[$o]</option>\n";
+		echo "</select>  $NWB#lists_fields-field_required$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=center colspan=2><input type=submit name=submit value=\""._QXZ("SUBMIT")."\"> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;\n";
 		echo "<B><a href=\"$PHP_SELF?action=DELETE_CUSTOM_FIELD_CONFIRMATION&list_id=$list_id&field_id=$A_field_id[$o]&field_label=$A_field_label[$o]&field_type=$A_field_type[$o]&DB=$DB\">"._QXZ("DELETE THIS CUSTOM FIELD")."</a></B>";
 		echo "</td></tr>\n";
@@ -1287,7 +1288,6 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "<input type=hidden name=action value=ADD_CUSTOM_FIELD>\n";
 	echo "<input type=hidden name=list_id value=$list_id>\n";
 	echo "<input type=hidden name=DB value=$DB>\n";
-	echo "<input type=hidden name=field_required value=\"N\">\n";
 	echo "<tr $bgcolor><td align=right>"._QXZ("New Field Rank").": </td><td align=left><select size=1 name=field_rank>\n";
 	echo "$rank_select\n";
 	echo "<option selected>$last_rank</option>\n";
@@ -1331,10 +1331,11 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "<tr $bgcolor><td align=right>"._QXZ("Field Size").": </td><td align=left><input type=text name=field_size size=5 maxlength=3>  $NWB#lists_fields-field_size$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>"._QXZ("Field Max").": </td><td align=left><input type=text name=field_max size=5 maxlength=3>  $NWB#lists_fields-field_max$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>"._QXZ("Field Default").": </td><td align=left><input type=text name=field_default size=50 maxlength=255 value=\"NULL\">  $NWB#lists_fields-field_default$NWE </td></tr>\n";
-//	echo "<tr $bgcolor><td align=right>Field Required: </td><td align=left><select size=1 name=field_required>\n";
-//	echo "<option value=\"Y\">YES</option>\n";
-//	echo "<option value=\"N\" SELECTED>NO</option>\n";
-//	echo "</select>  $NWB#lists_fields-field_required$NWE </td></tr>\n";
+	echo "<tr $bgcolor><td align=right>"._QXZ("Field Required").": </td><td align=left><select size=1 name=field_required>\n";
+	echo "<option value=\"N\" SELECTED>"._QXZ("NO")."</option>\n";
+	echo "<option value=\"Y\">"._QXZ("YES")."</option>\n";
+	echo "<option value=\"INBOUND_ONLY\">"._QXZ("INBOUND_ONLY")."</option>\n";
+	echo "</select>  $NWB#lists_fields-field_required$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=center colspan=2><input type=submit name=submit value=\""._QXZ("Submit")."\"></td></tr>\n";
 	echo "</table></center></form><BR><BR>\n";
 	echo "</table></center><BR><BR>\n";

@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2017-02-19
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2017-03-01
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -119,6 +119,8 @@ Changes:
 170204-0947 - Added phone_number_log function
 170209-1149 - Added URL and IP logging
 170219-1520 - Added 90-day duplicate check option
+170223-0743 - Added QXZ translation to admin web user functions text
+170301-1649 - Added validation that sounds web dir exists to sounds_list function
 
 
 API Functions use the 'function' variable
@@ -162,7 +164,7 @@ Example responses:
 <success is inferred by output of audio files list>
 
 ERROR: sounds_list USER DOES NOT HAVE PERMISSION TO VIEW SOUNDS LIST
-
+ERROR: audio store web directory does not exist: |6666|sounds_list|/srv/www/htdocs/1234|
 ERROR: sounds_list CENTRAL SOUND CONTROL IS NOT ACTIVE
 
 

@@ -1,7 +1,7 @@
 <?php
 # audio_store.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Central Audio Storage script
 # 
@@ -24,10 +24,11 @@
 # 160330-1550 - navigation changes and fixes, added force_allow var
 # 160508-0139 - Added screen colors feature
 # 160613-1002 - Added feature to copy recordings to a new filename
+# 170301-1650 - Added validation that sounds web dir exists
 #
 
-$version = '2.12-18';
-$build = '160613-1002';
+$version = '2.14-19';
+$build = '170301-1650';
 
 $MT[0]='';
 
@@ -130,6 +131,11 @@ if (strlen($sounds_web_directory) < 30)
 	echo _QXZ("NOTICE").": "._QXZ("new web directory created")."\n";
 	}
 
+if (!file_exists("$WeBServeRRooT/$sounds_web_directory")) 
+	{
+	echo _QXZ("ERROR").": "._QXZ("audio store web directory does not exist").": $WeBServeRRooT/$sounds_web_directory\n";
+	exit;
+	}
 
 ### get list of all servers, if not one of them, then force authentication check
 $stmt = "SELECT server_ip FROM servers;";
