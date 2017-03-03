@@ -542,10 +542,11 @@
 # 170220-1306 - Added external_lead_id trigger for switch_lead API function
 # 170223-2122 - Fixed rare recording issue
 # 170301-0839 - Added functionality for required custom fields
+# 170303-1206 - Expanded required custom fields types
 #
 
-$version = '2.14-512c';
-$build = '170301-0839';
+$version = '2.14-513c';
+$build = '170303-1206';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -11705,8 +11706,13 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			if (custom_fields_enabled > 0)
 				{
 				var temp_custom_required = vcFormIFrame.document.form_custom_fields.custom_required.value;
-			//	alert_box("checking for required custom fields: " + temp_custom_required);
+				var temp_custom_required_check = vcFormIFrame.document.form_custom_fields.custom_required_check.value;
+				var temp_custom_required_radio = vcFormIFrame.document.form_custom_fields.custom_required_radio.value;
+				var temp_custom_required_select = vcFormIFrame.document.form_custom_fields.custom_required_select.value;
+				var temp_custom_required_multi = vcFormIFrame.document.form_custom_fields.custom_required_multi.value;
+			//	alert_box("checking for required custom fields: " + temp_custom_required + "-" + temp_custom_required_check + "-" + temp_custom_required_radio + "-" + temp_custom_required_select + "-" + temp_custom_required_multi + "-");
 
+				// check TEXT, AREA and DATE required custom fields
 				if (temp_custom_required.length > 2)
 					{
 					var CFR_array=temp_custom_required.split('|');
@@ -11719,6 +11725,99 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 							var temp_field_check = vcFormIFrame.document.getElementById(CFR_field).value;
 							if (temp_field_check.length < 1){required_fail++;  error_field_list = error_field_list + " CF: " + CFR_field;}
+							}
+						CFR_tick++;
+						}
+					}
+				// check CHECKBOX required custom fields
+				if (temp_custom_required_check.length > 2)
+					{
+					var CFR_arrayC = temp_custom_required_check.split('|');
+					var CFR_countC = CFR_arrayC.length;
+					var CFR_tick=0;
+					while (CFR_tick < CFR_countC)
+						{
+						var CFR_field = CFR_arrayC[CFR_tick] + '[]';
+						if (CFR_field.length > 2)
+							{
+							var CFR_field_boxes = vcFormIFrame.document.getElementsByName(CFR_field);
+							if (CFR_field_boxes.length > 0)
+								{
+								var CFR_len = CFR_field_boxes.length;
+								var CFR_checked=0;
+								for (var i=0; i < CFR_len; i++) 
+									{
+									if (CFR_field_boxes[i].checked) {CFR_checked++;};
+									}
+								if (CFR_checked < 1){required_fail++;  error_field_list = error_field_list + " CHECKBOX: " + CFR_arrayC[CFR_tick];}
+								}
+							}
+						CFR_tick++;
+						}
+					}
+				// check RADIO required custom fields
+				if (temp_custom_required_radio.length > 2)
+					{
+					var CFR_arrayR = temp_custom_required_radio.split('|');
+					var CFR_countR = CFR_arrayR.length;
+					var CFR_tick=0;
+					while (CFR_tick < CFR_countR)
+						{
+						var CFR_field = CFR_arrayR[CFR_tick] + '[]';
+						if (CFR_field.length > 2)
+							{
+							var CFR_field_boxes = vcFormIFrame.document.getElementsByName(CFR_field);
+							if (CFR_field_boxes.length > 0)
+								{
+								var CFR_len = CFR_field_boxes.length;
+								var CFR_checked=0;
+								for (var i=0; i < CFR_len; i++) 
+									{
+									if (CFR_field_boxes[i].checked) {CFR_checked++;};
+									}
+								if (CFR_checked < 1){required_fail++;  error_field_list = error_field_list + " RADIO: " + CFR_arrayR[CFR_tick];}
+								}
+							}
+						CFR_tick++;
+						}
+					}
+				// check SELECT required custom fields
+				if (temp_custom_required_select.length > 2)
+					{
+					var CFR_arrayS = temp_custom_required_select.split('|');
+					var CFR_countS = CFR_arrayS.length;
+					var CFR_tick=0;
+					while (CFR_tick < CFR_countS)
+						{
+						var CFR_field = CFR_arrayS[CFR_tick];
+						if (CFR_field.length > 0)
+							{
+							var temp_field_check = vcFormIFrame.document.getElementById(CFR_field);
+							var temp_field_check_value = temp_field_check.options[temp_field_check.selectedIndex].value;
+							if (temp_field_check_value.length < 1){required_fail++;  error_field_list = error_field_list + " SELECT: " + CFR_field;}
+							}
+						CFR_tick++;
+						}
+					}
+				// check MULTI required custom fields
+				if (temp_custom_required_multi.length > 2)
+					{
+					var CFR_arrayM = temp_custom_required_multi.split('|');
+					var CFR_countM = CFR_arrayM.length;
+					var CFR_tick=0;
+					while (CFR_tick < CFR_countM)
+						{
+						var CFR_field = CFR_arrayM[CFR_tick] + '[]';
+						if (CFR_field.length > 2)
+							{
+							var CFR_field_box = vcFormIFrame.document.getElementById(CFR_field);
+							var CFR_len = CFR_field_box.options.length;
+							var CFR_selected=0;
+							for (var i=0; i < CFR_len; i++) 
+								{
+								if (CFR_field_box.options[i].selected ==true) {CFR_selected++;};
+								}
+							if (CFR_selected < 1){required_fail++;  error_field_list = error_field_list + " MULTI: " + CFR_arrayM[CFR_tick];}
 							}
 						CFR_tick++;
 						}

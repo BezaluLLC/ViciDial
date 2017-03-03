@@ -109,7 +109,8 @@ OTHER CHANGES:
 18. Added option for custom list fields to be required for all calls or only 
 	inbound calls. Will prevent agent hanging up call if field is not filled
 	in. Must also have campaign option enabled for it to work. Will work for
-	the following custom field types: TEXT, AREA, DATE
+	the following custom field types: 
+		TEXT, AREA, DATE, SELECT, MULTI, RADIO, CHECKBOX
 
 
 

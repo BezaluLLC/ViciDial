@@ -2238,7 +2238,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="lists_fields-field_required">
 <BR>
-<B><?php echo _QXZ("Field Required"); ?> -</B><?php echo _QXZ("If the campaign option allowing required fields is also enabled, this field allows you to force an agent to fill in this field before they can hang up the call. Y will affect all calls, INBOUND_ONLY will only affect calls received by the agent through an In-Group. This option will only work for the following custom field types: TEXT, AREA, DATE. Default is N."); ?>
+<B><?php echo _QXZ("Field Required"); ?> -</B><?php echo _QXZ("If the campaign option allowing required fields is also enabled, this field allows you to force an agent to fill in this field before they can hang up the call. Y will affect all calls, INBOUND_ONLY will only affect calls received by the agent through an In-Group. This option will only work for the following custom field types: TEXT, AREA, DATE, SELECT, MULTI, RADIO, CHECKBOX. Default is N."); ?>
 
 <BR>
 <A NAME="lists_fields-name_position">

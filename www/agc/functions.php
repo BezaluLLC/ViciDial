@@ -33,6 +33,7 @@
 # 160913-0827 - Fixed issues with multiple selected values in custom fields
 # 170228-2258 - Changes to allow URLs in SCRIPT field types
 # 170301-0837 - Added functionality for required custom fields
+# 170303-1207 - Expanded required custom fields types
 #
 
 # $mysql_queries = 20
@@ -238,6 +239,10 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 
 	$vicidial_list_fields = '|lead_id|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|';
 	$custom_required_fields='|';
+	$custom_required_fields_check='|';
+	$custom_required_fields_radio='|';
+	$custom_required_fields_select='|';
+	$custom_required_fields_multi='|';
 
 	require("dbconnect_mysqli.php");
 
@@ -394,7 +399,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 					{
 					$field_options_array = explode("\n",$A_field_options[$o]);
 					$field_options_count = count($field_options_array);
-					$te=0;
+					$te=0;   $te_printed=0;
 					if ($DB > 0) {echo "DEBUG: |$A_field_id[$o]|$A_field_label[$o]|$A_field_name[$o]|$A_field_type[$o]|$A_field_options[$o]|$field_options_count|\n";}
 					while ($te < $field_options_count)
 						{
@@ -416,6 +421,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 									if ($A_field_default[$o] == "$field_options_value_array[0]") {$field_selected = 'SELECTED';}
 									}
 								$field_HTML .= "<option value=\"$field_options_value_array[0]\" $field_selected>"._QXZ("$field_options_value_array[1]")."</option>\n";
+								$te_printed++;
 								}
 							if ( ($A_field_type[$o]=='RADIO') or ($A_field_type[$o]=='CHECKBOX') )
 								{
@@ -435,6 +441,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 								$field_HTML .= "<input type=$A_field_type[$o] name=$A_field_label[$o][] id=$A_field_label[$o][] value=\"$field_options_value_array[0]\" $field_selected> "._QXZ("$field_options_value_array[1]")."\n";
 								if ($A_multi_position[$o]=='VERTICAL') 
 									{$field_HTML .= "<BR>\n";}
+								$te_printed++;
 								}
 							}
 						$te++;
@@ -444,6 +451,32 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 					{
 					$field_HTML .= "</select>\n";
 					}
+
+				# If options were printed for SELECT, MULTI, RADIO or CHECKBOX and required is set, mark as a required field
+				if ($te_printed > 0)
+					{
+					if ($A_field_type[$o]=='SELECT')
+						{
+						if ( ($A_field_required[$o] == 'Y') or ( ($A_field_required[$o] == 'INBOUND_ONLY') and (preg_match("/^Y\d\d\d\d\d\d\d/",$call_id)) ) )
+							{$custom_required_fields_select .= "$A_field_label[$o]|";}
+						}
+					if ($A_field_type[$o]=='MULTI')
+						{
+						if ( ($A_field_required[$o] == 'Y') or ( ($A_field_required[$o] == 'INBOUND_ONLY') and (preg_match("/^Y\d\d\d\d\d\d\d/",$call_id)) ) )
+							{$custom_required_fields_multi .= "$A_field_label[$o]|";}
+						}
+					if ($A_field_type[$o]=='RADIO')
+						{
+						if ( ($A_field_required[$o] == 'Y') or ( ($A_field_required[$o] == 'INBOUND_ONLY') and (preg_match("/^Y\d\d\d\d\d\d\d/",$call_id)) ) )
+							{$custom_required_fields_radio .= "$A_field_label[$o]|";}
+						}
+					if ($A_field_type[$o]=='CHECKBOX')
+						{
+						if ( ($A_field_required[$o] == 'Y') or ( ($A_field_required[$o] == 'INBOUND_ONLY') and (preg_match("/^Y\d\d\d\d\d\d\d/",$call_id)) ) )
+							{$custom_required_fields_check .= "$A_field_label[$o]|";}
+						}
+					}
+				
 				if ($A_field_type[$o]=='TEXT') 
 					{
 					if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
@@ -979,7 +1012,10 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 		}
 	##### END parsing for vicidial variables #####
 	echo "<input type=hidden name=custom_required id=custom_required value=\"$custom_required_fields\">\n";
-
+	echo "<input type=hidden name=custom_required_check id=custom_required_check value=\"$custom_required_fields_check\">\n";
+	echo "<input type=hidden name=custom_required_radio id=custom_required_radio value=\"$custom_required_fields_radio\">\n";
+	echo "<input type=hidden name=custom_required_select id=custom_required_select value=\"$custom_required_fields_select\">\n";
+	echo "<input type=hidden name=custom_required_multi id=custom_required_multi value=\"$custom_required_fields_multi\">\n";
 
 	return $CFoutput;
 	}
