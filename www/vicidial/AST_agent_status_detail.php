@@ -437,7 +437,7 @@ if ($file_download < 1)
 
 	echo "</span>\n";
 	echo "<span style=\"position:absolute;left:3px;top:30px;z-index:19;\" id=agent_status_stats>\n";
-	echo "<b>"._QXZ("$report_name")."</b> $NWB#agent_status_detail$NWE";
+	echo "<b>"._QXZ("$report_name")."</b> $NWB#agent_status_detail$NWE\n";
 	echo "<PRE><FONT SIZE=2>";
 	}
 

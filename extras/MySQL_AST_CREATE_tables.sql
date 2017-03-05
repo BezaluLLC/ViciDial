@@ -655,7 +655,8 @@ access_recordings ENUM('0', '1') default '0',
 modify_colors ENUM('1','0') default '0',
 user_nickname VARCHAR(50) default '',
 user_new_lead_limit SMALLINT(5) default '-1',
-api_only_user ENUM('0','1') default '0'
+api_only_user ENUM('0','1') default '0',
+modify_auto_reports ENUM('1','0') default '0'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -1691,7 +1692,8 @@ agent_soundboards ENUM('1','0') default '0',
 web_loader_phone_length VARCHAR(10) default 'DISABLED',
 agent_script VARCHAR(50) default 'vicidial.php',
 vdad_debug_logging ENUM('1','0') default '0',
-agent_chat_screen_colors VARCHAR(20) default 'default'
+agent_chat_screen_colors VARCHAR(20) default 'default',
+enable_auto_reports ENUM('1','0') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3612,6 +3614,31 @@ areacode VARCHAR(6) NOT NULL,
 index(group_id)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_automated_reports (
+report_id VARCHAR(30) UNIQUE NOT NULL,
+report_name VARCHAR(100),
+report_last_run DATETIME,
+report_last_length SMALLINT(5) default '0',
+report_server VARCHAR(30) default 'active_voicemail_server',
+report_times VARCHAR(100) default '',
+report_weekdays VARCHAR(7) default '',
+report_monthdays VARCHAR(100) default '',
+report_destination ENUM('EMAIL','FTP') default 'EMAIL',
+email_from VARCHAR(255) default '',
+email_to VARCHAR(255) default '',
+email_subject VARCHAR(255) default '',
+ftp_server VARCHAR(255) default '',
+ftp_user VARCHAR(255) default '',
+ftp_pass VARCHAR(255) default '',
+ftp_directory VARCHAR(255) default '',
+report_url TEXT,
+run_now_trigger ENUM('N','Y') default 'N',
+active ENUM('N','Y') default 'N',
+user_group VARCHAR(20) default '---ALL---',
+index (report_times),
+index (run_now_trigger)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3870,4 +3897,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1491',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1492',db_schema_update_date=NOW(),reload_timestamp=NOW();

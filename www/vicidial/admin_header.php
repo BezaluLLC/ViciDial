@@ -69,6 +69,7 @@
 # 161101-2129 - Added user_new_lead_limit Users subhead
 # 161103-2136 - Added agent_soundboards option
 # 170113-1633 - Added dynamic call menu in-group option DYNAMIC_INGROUP_VAR for use with cm_phonesearch.agi
+# 170304-1354 - Added Automated Reports section to Admin
 #
 
 $stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add,allow_chats,enable_languages,admin_row_click,admin_screen_colors,user_new_lead_limit,user_territories_active,qc_features_active,agent_soundboards from system_settings;";
@@ -1929,6 +1930,7 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 		$sc_sh="CLASS=\"subhead_style\"";
 		$sg_sh="CLASS=\"subhead_style\"";
 		$emails_sh="CLASS=\"subhead_style\"";
+		$ar_sh="CLASS=\"subhead_style\"";
 
 		if ($sh=='times') {$times_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='shifts') {$shifts_sh="CLASS=\"subhead_style_selected\"";}
@@ -1952,6 +1954,7 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 		if ($sh=='sc') {$sc_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='sg') {$sg_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='emails') {$emails_sh="CLASS=\"subhead_style_selected\"";}
+		if ($sh=='ar') {$ar_sh="CLASS=\"subhead_style_selected\"";}
 
 		?>
 		<TR <?php echo $times_sh ?><?php if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$ADMIN?ADD=100000000';\"";} ?>>
@@ -2040,6 +2043,13 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 		<a href="<?php echo $ADMIN ?>?ADD=192000000000" STYLE="text-decoration:none;"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> &nbsp; <img src="images/icon_settingscontainer.png" border=0 alt=\"Users\" width=14 height=14 valign=middle> <?php echo _QXZ("Settings Containers"); ?> </a></TD>
 		</TR>
 		<?php
+		if ($SSenable_auto_reports > 0)
+			{ ?>
+			<TR <?php echo $ar_sh ?><?php if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$ADMIN?ADD=194000000000';\"";} ?>><TD ALIGN=LEFT <?php echo $ar_sh ?>> &nbsp; 
+			<a href="<?php echo $ADMIN ?>?ADD=194000000000" STYLE="text-decoration:none;"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> &nbsp; <img src="images/icon_autoreports.png" border=0 alt=\"Users\" width=14 height=14 valign=middle> <?php echo _QXZ("Automated Reports"); ?> </a></TD>
+			</TR>
+
+		<?php }
 			}
 		}
 	else
@@ -2207,6 +2217,10 @@ if ($SSenable_languages == '1')
 	if (strlen($sc_sh) > 25) { 
 		?>
 	<TR BGCOLOR=<?php echo $sc_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=192000000000"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Settings Containers"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=192111111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Add A Settings Container"); ?> </a><?php } ?></TD></TR>
+	<?php }
+	if (strlen($ar_sh) > 25) { 
+		?>
+	<TR BGCOLOR=<?php echo $ar_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=194000000000"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Automated Reports"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=194111111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Add An Automated Report"); ?> </a><?php } ?></TD></TR>
 	<?php }
 	if (strlen($sg_sh) > 25) { 
 		?>

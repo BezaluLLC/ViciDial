@@ -111,6 +111,7 @@
 # 170217-1353 - Added dead_to_dispo entry
 # 170220-1811 - Added areacode_filter entries
 # 170301-1337 - Updated entry for custom fields required setting
+# 170304-1346 - Added auto_reports section
 #
 
 
@@ -5264,6 +5265,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <B><?php echo _QXZ("Log Recording Access"); ?> -</B><?php echo _QXZ("This option if enabled allows the logging of user access to call recordings. It also requires the User setting Access Recordings to be set to 1 to allow a user to access call recordings. Default is 0 for disabled."); ?>
 
 <BR>
+<A NAME="settings-enable_auto_reports">
+<BR>
+<B><?php echo _QXZ("Enable Automated Reports"); ?> -</B><?php echo _QXZ("This option if enabled allows you access to the Automated Reports section where you can set up reports to run at scheduled times and be delivered by email or FTP. Default is 0 for disabled."); ?>
+
+<BR>
 <A NAME="settings-first_login_trigger">
 <BR>
 <B><?php echo _QXZ("First Login Trigger"); ?> -</B><?php echo _QXZ("This setting allows for the initial configuration of the server screen to be shown to the administrator when they first log into the system."); ?>
@@ -5647,6 +5653,112 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings_containers-container_entry">
 <BR>
 <B><?php echo _QXZ("Container Entry"); ?> -</B><?php echo _QXZ("This is where you put the contents of the settings that you want in this container."); ?>
+
+
+
+
+
+
+<BR><BR><BR><BR>
+
+<B><FONT SIZE=3>AUTOMATED REPORTS TABLE</FONT></B><BR><BR>
+<A NAME="auto_reports">
+<BR>
+<B><?php echo _QXZ("Automated Reports allow for a simplified way of configuring reports to be run on a scheduled and recurring basis, and to have the results sent by email or uploaded to an FTP server."); ?></B>
+
+<A NAME="auto_reports-report_id">
+<BR>
+<B><?php echo _QXZ("Report ID"); ?> -</B><?php echo _QXZ("This field needs to be at least 2 characters in length and no more than 30 characters in length, no spaces or special characters. This is the ID that will be used to identify the Automated Report throughout the system."); ?>
+
+<BR>
+<A NAME="auto_reports-report_name">
+<BR>
+<B><?php echo _QXZ("Report Name"); ?> -</B><?php echo _QXZ("This is the descriptive name of the Automated Report entry."); ?>
+
+<BR>
+<A NAME="auto_reports-user_group">
+<BR>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user with Modify Automated Reports permissions to view this record."); ?>
+
+<BR>
+<A NAME="auto_reports-report_last_run">
+<BR>
+<B><?php echo _QXZ("Last Run Time"); ?> -</B><?php echo _QXZ("This is the date and time of the last run of this automated report process. Also included is the number of seconds it took for this process to run the last time."); ?>
+
+<BR>
+<A NAME="auto_reports-report_server">
+<BR>
+<B><?php echo _QXZ("Report Server"); ?> -</B><?php echo _QXZ("This is the machine that you want to use to run this automated report. You must choose a server that runs the keepalive process every minute in the crontab. The default is to use the active voicemail server as defined in System Settings."); ?>
+
+<BR>
+<A NAME="auto_reports-report_times">
+<BR>
+<B><?php echo _QXZ("Report Times"); ?> -</B><?php echo _QXZ("This is the list of times in HHMM format when you want the automated report to run. You can specify multiple times by separating them with a dash, like how the List Reset Times feature works."); ?>
+
+<BR>
+<A NAME="auto_reports-report_weekdays">
+<BR>
+<B><?php echo _QXZ("Report Weekdays"); ?> -</B><?php echo _QXZ("This is the list of days of the week when you want the automated report to run. Either this option or the Month Days field below must be set for the report to run automatically."); ?>
+
+<BR>
+<A NAME="auto_reports-report_monthdays">
+<BR>
+<B><?php echo _QXZ("Report Month Days"); ?> -</B><?php echo _QXZ("This is the list of days of the month in DD format when you want the automated report to run. You can specify multiple month days by separating them with a dash. Either this option or the Weekdays field above must be set for the report to run automatically."); ?>
+
+<BR>
+<A NAME="auto_reports-report_destination">
+<BR>
+<B><?php echo _QXZ("Report Destination"); ?> -</B><?php echo _QXZ("This option will determine how you want the automated report to be delivered, by EMAIL or FTP. Depending on the destination you choose, you must fill in the configuration fields below for it to work properly. Default is EMAIL."); ?>
+
+<BR>
+<A NAME="auto_reports-email_from">
+<BR>
+<B><?php echo _QXZ("Email From"); ?> -</B><?php echo _QXZ("If the EMAIL destination is chosen above, then this field must be filled in with the email address that you want the automated report email to come from. Note: some email servers may require certain registered email address to be used for delivery to be accepted by them. You may also have to set up a reverse domain name lookup with your network provider for the server you have chosen to send emails from."); ?>
+
+<BR>
+<A NAME="auto_reports-email_to">
+<BR>
+<B><?php echo _QXZ("Email To"); ?> -</B><?php echo _QXZ("If the EMAIL destination is chosen above, then this field must be filled in with the email address that you want to receive the automated report email. You can define more than one email address by separating them with a colon."); ?>
+
+<BR>
+<A NAME="auto_reports-email_subject">
+<BR>
+<B><?php echo _QXZ("Email Subject"); ?> -</B><?php echo _QXZ("If the EMAIL destination is chosen above, then this field must be filled in with the subject of the email. As an option, you can use the --A--date--B-- or --A--datetime--B-- flag in this field to populate the current date or date-time."); ?>
+
+<BR>
+<A NAME="auto_reports-ftp_server">
+<BR>
+<B><?php echo _QXZ("FTP Server"); ?> -</B><?php echo _QXZ("If the FTP destination is chosen above, then this field must be filled in with the FTP server address. Note: this works only for standard FTP servers, not SFTP or FTP over SSL."); ?>
+
+<BR>
+<A NAME="auto_reports-ftp_user">
+<BR>
+<B><?php echo _QXZ("FTP User"); ?> -</B><?php echo _QXZ("If the FTP destination is chosen above, then this field must be filled in with the FTP login user."); ?>
+
+<BR>
+<A NAME="auto_reports-ftp_pass">
+<BR>
+<B><?php echo _QXZ("FTP Pass"); ?> -</B><?php echo _QXZ("If the FTP destination is chosen above, then this field must be filled in with the FTP login password."); ?>
+
+<BR>
+<A NAME="auto_reports-ftp_directory">
+<BR>
+<B><?php echo _QXZ("FTP Directory"); ?> -</B><?php echo _QXZ("If the FTP destination is chosen above, then this field can be filled in with the FTP folder directory that you want the automated reports to be uploaded into. Note: the folder must already exist, this process will not try to create the folder."); ?>
+
+<BR>
+<A NAME="auto_reports-active">
+<BR>
+<B><?php echo _QXZ("Active"); ?> -</B><?php echo _QXZ("The automated report will only run on the set schedule above if active is set to Y. Default is N."); ?>
+
+<BR>
+<A NAME="auto_reports-run_now_trigger">
+<BR>
+<B><?php echo _QXZ("Run Now Trigger"); ?> -</B><?php echo _QXZ("This option offers a way to test this automated report process before setting it to active. It can take up to one minute for the process to start running after submitting this page with this field set to Y. Default is N."); ?>
+
+<BR>
+<A NAME="auto_reports-report_url">
+<BR>
+<B><?php echo _QXZ("Report URL"); ?> -</B><?php echo _QXZ("This is the field where you will put the full web address, or URL, for the report that you want to run. The easiest way to figure out what address to use is to run the report normally, then go to the Reports, Admin Utilities, Admin Report Log Viewer to see the full URL that was used to run that report. Once you have copied that URL, you can replace the dates that you see with one of these variables in the standard format that is used within this system, for example, --A--today--B--. You can use: today, yesterday, 6days, 7days, 13days, 14days, 15days, 30days. Note: some networks may require that you use a local server address in this URL if that is the only way that a server on your network can access the webserver used for reporting. Related to this, you may also have to use a local IP address if a full domain name is not accessible from within your system network. Also, it is recommended that you run reports in TEXT format for best display results."); ?>
 
 
 

@@ -78,3 +78,34 @@ UPDATE system_settings SET db_schema_version='1490',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_lists_fields MODIFY field_required ENUM('Y','N','INBOUND_ONLY') default 'N';
 
 UPDATE system_settings SET db_schema_version='1491',db_schema_update_date=NOW() where db_schema_version < 1491;
+
+ALTER TABLE system_settings ADD enable_auto_reports ENUM('1','0') default '0';
+
+ALTER TABLE vicidial_users ADD modify_auto_reports ENUM('1','0') default '0';
+
+CREATE TABLE vicidial_automated_reports (
+report_id VARCHAR(30) UNIQUE NOT NULL,
+report_name VARCHAR(100),
+report_last_run DATETIME,
+report_last_length SMALLINT(5) default '0',
+report_server VARCHAR(30) default 'active_voicemail_server',
+report_times VARCHAR(100) default '',
+report_weekdays VARCHAR(7) default '',
+report_monthdays VARCHAR(100) default '',
+report_destination ENUM('EMAIL','FTP') default 'EMAIL',
+email_from VARCHAR(255) default '',
+email_to VARCHAR(255) default '',
+email_subject VARCHAR(255) default '',
+ftp_server VARCHAR(255) default '',
+ftp_user VARCHAR(255) default '',
+ftp_pass VARCHAR(255) default '',
+ftp_directory VARCHAR(255) default '',
+report_url TEXT,
+run_now_trigger ENUM('N','Y') default 'N',
+active ENUM('N','Y') default 'N',
+user_group VARCHAR(20) default '---ALL---',
+index (report_times),
+index (run_now_trigger)
+) ENGINE=MyISAM;
+
+UPDATE system_settings SET db_schema_version='1492',db_schema_update_date=NOW() where db_schema_version < 1492;

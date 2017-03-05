@@ -112,6 +112,9 @@ OTHER CHANGES:
 	the following custom field types: 
 		TEXT, AREA, DATE, SELECT, MULTI, RADIO, CHECKBOX
 
+19. Added admin Automated Reports section, allowing easier web configuration of 
+	scheduled reports being sent by Email or FTP.
+
 
 
 
