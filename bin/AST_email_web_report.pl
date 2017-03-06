@@ -18,6 +18,7 @@
 # 111214-0922 - Added remove images and links options as well as email subject option
 # 160415-1421 - Fixed minor bug in file to attach to email
 # 170304-1400 - Added options for running a defined Automated Report, and admin logging
+# 170306-0915 - Fixed proper file extensions for different download report types
 #
 
 $txt = '.txt';
@@ -529,7 +530,15 @@ if (length($report_id) > 1)
 		}
 	$sthA->finish();
 
-	$HTMLfile = $report_id . "_" . $start_date . "_" . $hms . '' . $html;
+	$file_extension = $html;
+	if ($location =~ /call_report_export|lead_report_export|call_report_export_carrier|list_download/) 
+		{$file_extension = '.txt'}
+	else
+		{
+		if ($location =~ /&file_download=\d/) 
+			{$file_extension = '.csv'}
+		}
+	$HTMLfile = $report_id . "_" . $start_date . "_" . $hms . '' . $file_extension;
 	$HTMLfileLOG = $report_id . "_" . $start_date . "_" . $hms . '' . $txt;
 	$shipdate='';
 	}
@@ -538,8 +547,9 @@ else
 	######################################################
 	##### CHANGE REPORT NAME AND URL HERE!!!!!!!!!
 	######################################################
+	$file_extension = $html;
 	#$HTMLfile = "Outbound_Report_ALL_$shipdate$html";
-	$HTMLfile = "DISCH_SURVEY_$start_date$html";
+	$HTMLfile = "DISCH_SURVEY_$start_date$file_extension";
 	$HTMLfileLOG = "DISCH_SURVEY_$start_date$txt";
 
 	#$location = "http://6666:1234\@127.0.0.1/vicidial/fcstats.php?db_log=1\\&query_date=$shipdate\\&group=$group\\&shift=$shift\\&archive=1";

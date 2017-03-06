@@ -4,7 +4,7 @@
 # downloads the entire contents of a vicidial list ID to a flat text file
 # that is tab delimited
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -32,6 +32,7 @@
 # 141229-1840 - Added code for on-the-fly language translations display
 # 150727-2158 - Enabled user features for hiding phone numbers and lead data
 # 150903-1538 - Added compatibility for custom fields data options
+# 170306-0858 - Added proper report URL logging
 #
 
 $startMS = microtime();
@@ -176,6 +177,9 @@ else
 	$affected_rows = mysqli_affected_rows($link);
 	$webserver_id = mysqli_insert_id($link);
 	}
+
+if (!preg_match("/\?/",$LOGfull_url))
+	{$LOGfull_url .= "?download_type=$download_type&group_id=$group_id&list_id=$list_id";}
 
 $stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$list_id, $group_id, $download_type|', url='$LOGfull_url', webserver='$webserver_id';";
 if ($DB) {echo "|$stmt|\n";}
