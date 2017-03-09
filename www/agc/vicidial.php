@@ -543,10 +543,11 @@
 # 170223-2122 - Fixed rare recording issue
 # 170301-0839 - Added functionality for required custom fields
 # 170303-1206 - Expanded required custom fields types
+# 170309-0705 - Small fix for INBOUND_MAN agent logging issue
 #
 
-$version = '2.14-513c';
-$build = '170303-1206';
+$version = '2.14-514c';
+$build = '170309-0705';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -8599,6 +8600,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			inOUT = 'OUT';
 			all_record = 'NO';
 			all_record_count=0;
+			var last_VDRP_stage=VDRP_stage;
 			if (dial_method == "INBOUND_MAN")
 				{
 				auto_dial_level=0;
@@ -8606,8 +8608,6 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				if (VDRP_stage != 'PAUSED')
 					{
 					agent_log_id = AutoDial_ReSume_PauSe("VDADpause",'','','',"DIALNEXT",'1','NXDIAL');
-
-				//	PauseCodeSelect_submit("NXDIAL");
 					}
 				else
 					{auto_dial_level=starting_dial_level;}
@@ -8698,7 +8698,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				else
 					{var call_prefix = manual_dial_prefix;}
 
-				manDiaLnext_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLnextCaLL&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + manual_dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&preview=" + man_preview + "&agent_log_id=" + agent_log_id + "&callback_id=" + mdnCBid + "&lead_id=" + mdnBDleadid + "&phone_code=" + mdnDiaLCodE + "&phone_number=" + mdnPhonENumbeR + "&list_id=" + mdnLisT_id + "&stage=" + mdnStagE  + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&omit_phone_code=" + omit_phone_code + "&manual_dial_filter=" + manual_dial_filter + "&manual_dial_search_filter=" + manual_dial_search_filter + "&vendor_lead_code=" + mdVendorid + "&usegroupalias=" + mdgroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&vtiger_callback_id=" + vtiger_callback_id + "&dial_method=" + dial_method + "&manual_dial_call_time_check=" + manual_dial_call_time_check + "&qm_extension=" + qm_extension + "&dial_ingroup=" + active_ingroup_dial + "&nocall_dial_flag=" + nocall_dial_flag + "&cid_lock=" + cid_lock;
+				manDiaLnext_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLnextCaLL&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + manual_dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&preview=" + man_preview + "&agent_log_id=" + agent_log_id + "&callback_id=" + mdnCBid + "&lead_id=" + mdnBDleadid + "&phone_code=" + mdnDiaLCodE + "&phone_number=" + mdnPhonENumbeR + "&list_id=" + mdnLisT_id + "&stage=" + mdnStagE  + "&use_internal_dnc=" + use_internal_dnc + "&use_campaign_dnc=" + use_campaign_dnc + "&omit_phone_code=" + omit_phone_code + "&manual_dial_filter=" + manual_dial_filter + "&manual_dial_search_filter=" + manual_dial_search_filter + "&vendor_lead_code=" + mdVendorid + "&usegroupalias=" + mdgroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + agent_dialed_number + "&agent_dialed_type=" + agent_dialed_type + "&vtiger_callback_id=" + vtiger_callback_id + "&dial_method=" + dial_method + "&manual_dial_call_time_check=" + manual_dial_call_time_check + "&qm_extension=" + qm_extension + "&dial_ingroup=" + active_ingroup_dial + "&nocall_dial_flag=" + nocall_dial_flag + "&cid_lock=" + cid_lock + "&last_VDRP_stage=" + last_VDRP_stage;
 				//		alert(manual_dial_filter + "\n" +manDiaLnext_query);
 				xmlhttp.open('POST', 'vdc_db_query.php');
 				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');

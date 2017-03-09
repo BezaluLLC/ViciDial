@@ -423,10 +423,11 @@
 # 170221-0143 - Fix for rare missed agent log insert trigger
 # 170221-1314 - Added more DNC options for campaign setting, manual dial filter
 # 170228-1625 - Fix to prevent double-logging when emergency logout happens
+# 170309-0704 - Small fix for INBOUND_MAN agent logging issue
 #
 
-$version = '2.14-317';
-$build = '170228-1625';
+$version = '2.14-318';
+$build = '170309-0704';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=658;
@@ -434,6 +435,7 @@ $one_mysql_log=0;
 $DB=0;
 $VD_login=0;
 $SSagent_debug_logging=0;
+$pause_to_code_jump=0;
 $startMS = microtime();
 
 require_once("dbconnect_mysqli.php");
@@ -704,6 +706,8 @@ if (isset($_GET["VDRP_stage"]))	{$VDRP_stage=$_GET["VDRP_stage"];}
 	elseif (isset($_POST["VDRP_stage"]))	{$VDRP_stage=$_POST["VDRP_stage"];}
 if (isset($_GET["previous_agent_log_id"]))	{$previous_agent_log_id=$_GET["previous_agent_log_id"];}
 	elseif (isset($_POST["previous_agent_log_id"]))	{$previous_agent_log_id=$_POST["previous_agent_log_id"];}
+if (isset($_GET["last_VDRP_stage"]))	{$last_VDRP_stage=$_GET["last_VDRP_stage"];}
+	elseif (isset($_POST["last_VDRP_stage"]))	{$last_VDRP_stage=$_POST["last_VDRP_stage"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -1804,7 +1808,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 		{
 		##### grab number of calls today in this campaign and increment
 		$eac_phone='';
-		$stmt="SELECT calls_today,extension,external_dial FROM vicidial_live_agents WHERE user='$user' and campaign_id='$campaign';";
+		$stmt="SELECT calls_today,extension,external_dial,status FROM vicidial_live_agents WHERE user='$user' and campaign_id='$campaign';";
 		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00015',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -1816,6 +1820,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$calls_today =	$row[0];
 			$eac_phone =	$row[1];
 			$ed_vla =		$row[2];
+			$vla_status =	$row[3];
 			}
 		else
 			{$calls_today ='0';}
@@ -4107,7 +4112,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					{
 					$val_pause_epoch=0;
 					$val_pause_sec=0;
-					$stmt = "SELECT pause_epoch FROM vicidial_agent_log where agent_log_id='$agent_log_id';";
+					$stmt = "SELECT pause_epoch,pause_sec,wait_epoch,wait_sec FROM vicidial_agent_log where agent_log_id='$agent_log_id';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00323',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
@@ -4115,11 +4120,21 @@ if ($ACTION == 'manDiaLnextCaLL')
 					if ($vald_ct > 0)
 						{
 						$row=mysqli_fetch_row($rslt);
-						$val_pause_epoch =	$row[0];
-						$val_pause_sec = ($StarTtime - $val_pause_epoch);
+						if ($last_VDRP_stage == 'PAUSED')
+							{
+							$val_pause_epoch =	$row[0];
+							$val_pause_sec = ($StarTtime - $val_pause_epoch);
+							$val_SQL = "set pause_sec='$val_pause_sec',wait_epoch='$StarTtime'";
+							}
+						else
+							{
+							$val_wait_epoch =	$row[2];
+							$val_wait_sec = ($StarTtime - $val_wait_epoch);
+							$val_SQL = "set wait_sec='$val_wait_sec'";
+							}
 						}
 
-					$stmt="UPDATE vicidial_agent_log set pause_sec='$val_pause_sec',wait_epoch='$StarTtime' where agent_log_id='$agent_log_id';";
+					$stmt="UPDATE vicidial_agent_log $val_SQL where agent_log_id='$agent_log_id';";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00324',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4475,6 +4490,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			echo "HOPPER EMPTY\n";
 			}
 		}
+	$stage .= "|$agent_log_id|$vla_status|";
 	}
 
 
@@ -12266,8 +12282,10 @@ if ( ($ACTION == 'VDADpause') or ($ACTION == 'VDADready') or ($pause_trigger == 
 	if (strlen($sub_status) > 0)
 		{
 		### if a pause code(sub_status) is sent with this pause request, continue on to that action without printing output
-		$stage = 0;
+		# $stage = 0;   # yes I know this is overriden below
+		$pause_to_code_jump=1;
 		$status = $sub_status;
+		$stage .= "|$ACTION|$agent_log_id|";
 		$ACTION = 'PauseCodeSubmit';
 		}
 	else
@@ -12670,7 +12688,7 @@ if ($ACTION == 'PauseCodeSubmit')
 		$VLAPCaffected_rows_update = mysqli_affected_rows($link);
 
 		### if this is the first pause code entry in a pause session, simply update and log to queue_log
-		if ($stage < 1)
+		if ( ($stage < 1) or ($pause_to_code_jump > 0) )
 			{
 			$stmt="UPDATE vicidial_agent_log set sub_status=\"$status\",pause_type='AGENT' where agent_log_id >= '$agent_log_id' and user='$user' and ( (sub_status is NULL) or (sub_status='') )order by agent_log_id limit 2;";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
@@ -12780,7 +12798,7 @@ if ($ACTION == 'PauseCodeSubmit')
 			}
 		}
 	echo _QXZ(" Pause Code %1s has been recorded",0,'',$status)."\nNext agent_log_id:\n" . $agent_log_id . "\n";
-	$stage .= "|$agent_log|$agent_log_id|";
+	$stage .= "|$pause_to_code_jump|$agent_log|$agent_log_id|$status|";
 	}
 
 
