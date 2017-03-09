@@ -115,6 +115,12 @@ OTHER CHANGES:
 19. Added admin Automated Reports section, allowing easier web configuration of 
 	scheduled reports being sent by Email or FTP.
 
+20. Added campaign option to validate transfer agent list based upon which
+	AGENTDIRECT in-groups those agents had selected.
+
+21. Added In-Group option to look up the state based upon the areacode of the
+	caller ID phone number of the person calling in.
+
 
 
 

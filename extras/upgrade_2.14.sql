@@ -109,3 +109,9 @@ index (run_now_trigger)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1492',db_schema_update_date=NOW() where db_schema_version < 1492;
+
+ALTER TABLE vicidial_campaigns ADD agent_xfer_validation ENUM('N','Y') default 'N';
+
+ALTER TABLE vicidial_inbound_groups ADD populate_state_areacode ENUM('DISABLED','NEW_LEAD_ONLY','OVERWRITE_ALWAYS') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1493',db_schema_update_date=NOW() where db_schema_version < 1493;

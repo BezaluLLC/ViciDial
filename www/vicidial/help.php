@@ -112,6 +112,7 @@
 # 170220-1811 - Added areacode_filter entries
 # 170301-1337 - Updated entry for custom fields required setting
 # 170304-1346 - Added auto_reports section
+# 170309-1212 - Added agent_xfer_validation and populate_state_areacode entries
 #
 
 
@@ -1497,6 +1498,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-prepopulate_transfer_preset">
 <BR>
 <B><?php echo _QXZ("PrePopulate Transfer Preset"); ?> -</B><?php echo _QXZ("This option will fill in the Number to Dial field in the Transfer Conference frame of the agent screen if defined. Default is N for disabled."); ?>
+
+<BR>
+<A NAME="campaigns-agent_xfer_validation">
+<BR>
+<B><?php echo _QXZ("Agent Transfer In-Group Validation"); ?> -</B><?php echo _QXZ("This option involves the agents that show up in the agent selection screen when an agent is transferring a call to another agent using an AGENTDIRECT in-group. Enabling this option will ensure that the agents listed as available to transfer to have selected the AGENTDIRECT in-group that was chosen by the agent originating the transfer. For example, if the originating agent has selected the AGENTDIRECT_2 in-group, then when that agent clicks on the AGENTS link to select another agent to transfer the call to, only agents that have selected to take calls from the AGENTDIRECT_2 in-group will be shown."); ?>
 
 <BR>
 <A NAME="campaigns-enable_xfer_presets">
@@ -2887,6 +2893,11 @@ if ($SSqc_features_active > 0)
 <A NAME="inbound_groups-populate_lead_province">
 <BR>
 <B><?php echo _QXZ("Populate Lead Province"); ?> -</B><?php echo _QXZ("If this option is not DISABLED, then the system will look up the original DID that the inbound call came in on and populate one of the listed DID fields in the province field on the customer lead. The OW options will overwrite the province field every time the call enters this In-Group. Default is DISABLED."); ?>
+
+<BR>
+<A NAME="inbound_groups-populate_state_areacode">
+<BR>
+<B><?php echo _QXZ("Populate Lead State Areacode"); ?> -</B><?php echo _QXZ("If this option is not DISABLED, then the system will look up the state that the areacode of the phone number is from and populate the state field with that value. If the OVERWRITE_ALWAYS option is selected, then every time that lead goes through this in-group, the state field will be looked up and populated again. Default is DISABLED."); ?>
 
 <BR>
 <A NAME="inbound_groups-customer_chat_link">

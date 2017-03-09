@@ -971,7 +971,8 @@ ofcom_uk_drop_calc ENUM('Y','N') default 'N',
 manual_auto_next SMALLINT(5) UNSIGNED default '0',
 manual_auto_show ENUM('Y','N') default 'N',
 allow_required_fields ENUM('Y','N') default 'N',
-dead_to_dispo ENUM('ENABLED','DISABLED') default 'DISABLED'
+dead_to_dispo ENUM('ENABLED','DISABLED') default 'DISABLED',
+agent_xfer_validation ENUM('N','Y') default 'N'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -1205,7 +1206,8 @@ populate_lead_province VARCHAR(20) default 'DISABLED',
 areacode_filter ENUM('DISABLED','ALLOW_ONLY','DROP_ONLY') default 'DISABLED',
 areacode_filter_seconds SMALLINT(5) default '10',
 areacode_filter_action ENUM('CALLMENU','INGROUP','DID','MESSAGE','EXTENSION','VOICEMAIL','VMAIL_NO_INST') default 'MESSAGE',
-areacode_filter_action_value VARCHAR(255) default 'nbdy-avail-to-take-call|vm-goodbye'
+areacode_filter_action_value VARCHAR(255) default 'nbdy-avail-to-take-call|vm-goodbye',
+populate_state_areacode ENUM('DISABLED','NEW_LEAD_ONLY','OVERWRITE_ALWAYS') default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -3897,4 +3899,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1492',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1493',db_schema_update_date=NOW(),reload_timestamp=NOW();

@@ -424,10 +424,11 @@
 # 170221-1314 - Added more DNC options for campaign setting, manual dial filter
 # 170228-1625 - Fix to prevent double-logging when emergency logout happens
 # 170309-0704 - Small fix for INBOUND_MAN agent logging issue
+# 170309-1550 - Added campaign agent_xfer_validation option
 #
 
-$version = '2.14-318';
-$build = '170309-0704';
+$version = '2.14-319';
+$build = '170309-1550';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=658;
@@ -12842,7 +12843,16 @@ if ($ACTION == 'AGENTSview')
 		$AGENTviewSQL = "and $AGENTviewSQL";
 		}
 	if ($comments=='AgentXferViewSelect') 
-		{$AGENTviewSQL .= " and (vla.closer_campaigns LIKE \"%AGENTDIRECT%\")";}
+		{
+		if ($status == 'Y')
+			{
+			$AGENTviewSQL .= " and (vla.closer_campaigns LIKE \"% $group_name %\")";
+			}
+		else
+			{
+			$AGENTviewSQL .= " and (vla.closer_campaigns LIKE \"%AGENTDIRECT%\")";
+			}
+		}
 
 
 	echo "<TABLE CELLPADDING=0 CELLSPACING=1>";
