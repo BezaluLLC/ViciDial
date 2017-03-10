@@ -34,9 +34,10 @@
 # 170228-2258 - Changes to allow URLs in SCRIPT field types
 # 170301-0837 - Added functionality for required custom fields
 # 170303-1207 - Expanded required custom fields types
+# 170309-0857 - Added list_name and list_description display variables
 #
 
-# $mysql_queries = 20
+# $mysql_queries = 21
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
 function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$return_hash,$api_call)
@@ -869,6 +870,24 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 			$owner				= trim($row[33]);
 			}
 
+		if (preg_match('/--A--list_|--U--list_/i',$CFoutput))
+			{
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			### find the dialed number and label for this call
+			$stmt="SELECT list_name,list_description from vicidial_lists where list_id='$list_id';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05021',$user,$server_ip,$session_name,$one_mysql_log);}
+			$li_ct = mysqli_num_rows($rslt);
+			if ($li_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$list_name =			$row[0];
+				$list_description =		$row[1];
+				}
+			}
+
 		$CFoutput = preg_replace('/--U--lead_id--V--/i',urlencode($lead_id),$CFoutput);
 		$CFoutput = preg_replace('/--U--vendor_id--V--/i',urlencode($vendor_id),$CFoutput);
 		$CFoutput = preg_replace('/--U--vendor_lead_code--V--/i',urlencode($vendor_lead_code),$CFoutput);
@@ -932,6 +951,8 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 		$CFoutput = preg_replace('/--U--did_custom_three--V--/i',urlencode($did_custom_three),$CFoutput);
 		$CFoutput = preg_replace('/--U--did_custom_four--V--/i',urlencode($did_custom_four),$CFoutput);
 		$CFoutput = preg_replace('/--U--did_custom_five--V--/i',urlencode($did_custom_five),$CFoutput);
+		$CFoutput = preg_replace('/--U--list_name--V--/i',urlencode($list_name),$CFoutput);
+		$CFoutput = preg_replace('/--U--list_description--V--/i',urlencode($list_description),$CFoutput);
 
 		$CFoutput = preg_replace('/--A--lead_id--B--/i',"$lead_id",$CFoutput);
 		$CFoutput = preg_replace('/--A--vendor_id--B--/i',"$vendor_id",$CFoutput);
@@ -996,6 +1017,8 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 		$CFoutput = preg_replace('/--A--did_custom_three--B--/i',"$did_custom_three",$CFoutput);
 		$CFoutput = preg_replace('/--A--did_custom_four--B--/i',"$did_custom_four",$CFoutput);
 		$CFoutput = preg_replace('/--A--did_custom_five--B--/i',"$did_custom_five",$CFoutput);
+		$CFoutput = preg_replace('/--A--list_name--B--/i',"$list_name",$CFoutput);
+		$CFoutput = preg_replace('/--A--list_description--B--/i',"$list_description",$CFoutput);
 
 		$CFoutput = preg_replace('/--A--TABLEper_call_notes--B--/i',"$NOTESout",$CFoutput);
 
