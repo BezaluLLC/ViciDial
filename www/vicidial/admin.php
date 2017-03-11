@@ -4015,12 +4015,13 @@ else
 # 170228-1621 - Changed emergency logout to hangup all agent session calls, and more logging
 # 170304-1355 - Added Automated Reports section to Admin
 # 170309-1209 - Added campaign agent_xfer_validation option and ingroup populate_state_areacode option
+# 170311-0928 - Fixes for QC allowed campaign permissions, issue #1003
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-598a';
-$build = '170309-1209';
+$admin_version = '2.14-599a';
+$build = '170311-0928';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4277,13 +4278,15 @@ $LOGmodify_colors			=$row[88];
 $LOGapi_only_user			=$row[89];
 $LOGmodify_auto_reports		=$row[90];
 
-$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times,qc_allowed_campaigns,qc_allowed_inbound_groups from vicidial_user_groups where user_group='$LOGuser_group';";
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 $LOGallowed_reports =			$row[1];
 $LOGadmin_viewable_groups =		$row[2];
 $LOGadmin_viewable_call_times =	$row[3];
+$LOGqc_allowed_campaigns =		$row[4];
+$LOGqc_allowed_inbound_groups =	$row[5];
 
 $LOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
@@ -4341,6 +4344,27 @@ while ($UUgroups_to_print > $o)
 	$UUgroups_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 	$o++;
 	}
+
+$LOGqc_allowed_campaignsSQL='';
+$whereLOGqc_allowed_campaignsSQL='';
+if ( (!preg_match('/\-ALL/i', $LOGqc_allowed_campaigns)) )
+	{
+	$rawLOGqc_allowed_campaignsSQL = preg_replace("/ -/",'',$LOGqc_allowed_campaigns);
+	$rawLOGqc_allowed_campaignsSQL = preg_replace("/ /","','",$rawLOGqc_allowed_campaignsSQL);
+	$LOGqc_allowed_campaignsSQL = "and campaign_id IN('$rawLOGqc_allowed_campaignsSQL')";
+	$whereLOGqc_allowed_campaignsSQL = "where campaign_id IN('$rawLOGqc_allowed_campaignsSQL')";
+	}
+
+$LOGqc_allowed_inbound_groupsSQL='';
+$whereLOGqc_allowed_inbound_groupsSQL='';
+if ( (!preg_match('/\-ALL/i', $LOGqc_allowed_inbound_groups)) )
+	{
+	$rawLOGqc_allowed_inbound_groupsSQL = preg_replace("/ -/",'',$LOGqc_allowed_inbound_groups);
+	$rawLOGqc_allowed_inbound_groupsSQL = preg_replace("/ /","','",$rawLOGqc_allowed_inbound_groupsSQL);
+	$LOGqc_allowed_inbound_groupsSQL = "and group_id IN('$rawLOGqc_allowed_inbound_groupsSQL')";
+	$whereLOGqc_allowed_inbound_groupsSQL = "where group_id IN('$rawLOGqc_allowed_inbound_groupsSQL')";
+	}
+
 
 $first_login_link=0;
 
@@ -36816,13 +36840,12 @@ if ($ADD==10000000000000)
 ######################
 # ADD=100000000000000 display all qc campaigns
 ######################
-if (($ADD==100000000000000) && ($qc_auth=='1')) 
+if (($ADD==100000000000000) && ($qc_auth=='1'))
 	{
     echo "<TABLE><TR><TD>\n";
     echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-//SELECT campaign_id,campaign_name  from vicidial_campaigns where active = 'Y' and qc_enabled='Y' order by campaign_name
-    $stmt="SELECT campaign_id,campaign_name, qc_statuses from vicidial_campaigns where active = 'Y' and qc_enabled='Y' order by campaign_name";
-//	echo $stmt="SELECT conf_exten,server_ip,extension from vicidial_conferences order by conf_exten";
+
+    $stmt="SELECT campaign_id,campaign_name,qc_statuses from vicidial_campaigns where active = 'Y' and qc_enabled='Y' $LOGqc_allowed_campaignsSQL order by campaign_name";
     $rslt=mysql_to_mysqli($stmt, $link);
     $vicidialconf_to_print = mysqli_num_rows($rslt);
 
@@ -36863,58 +36886,61 @@ if (($ADD==881) && ($qc_auth=='1'))
 	{
     echo "<TABLE><TR><TD>\n";
     echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-    $stmt="SELECT campaign_id,campaign_name, qc_statuses from vicidial_campaigns where active = 'Y' and qc_enabled='Y' and campaign_id='$campaign_id' limit 1";
+    $stmt="SELECT campaign_id,campaign_name, qc_statuses from vicidial_campaigns where active = 'Y' and qc_enabled='Y' and campaign_id='$campaign_id' $LOGqc_allowed_campaignsSQL limit 1";
     $rslt=mysql_to_mysqli($stmt, $link);
     $vicidialconf_to_print = mysqli_num_rows($rslt);
-    $o=0;
-    while ($vicidialconf_to_print > $o) 
+    if ($vicidialconf_to_print > 0) 
 		{
         $row=mysqli_fetch_row($rslt);
-		$o++;
-		}
-    $qc_status_list=substr($row[2],0,strlen($row[2])-2);
+		$qc_status_list=substr($row[2],0,strlen($row[2])-2);
 
-    echo "<br>$campaign_id - {$row[1]} - "._QXZ("Quality Control Queue")."<br>"._QXZ("QC statuses").": $qc_status_list\n";
+		echo "<br>$campaign_id - {$row[1]} - "._QXZ("Quality Control Queue")."<br>"._QXZ("QC statuses").": $qc_status_list\n";
 
-    $qc_statuses=explode(' ',$qc_status_list);
-        echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
-    foreach ( $qc_statuses as $qc_status ) 
-		{
-        $stmt="SELECT lead_id,first_name,last_name,modify_date,user from vicidial_list inner join vicidial_lists on vicidial_list.list_id=vicidial_lists.list_id where campaign_id='$campaign_id' and status='$qc_status' order by status, modify_date";
-        $rslt=mysql_to_mysqli($stmt, $link);
-        $vicidialconf_to_print = mysqli_num_rows($rslt);
-        $o=0;
-        while ($vicidialconf_to_print > $o) 
+		$qc_statuses=explode(' ',$qc_status_list);
+			echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+		foreach ( $qc_statuses as $qc_status ) 
 			{
-            if($o==0)
+			$stmt="SELECT lead_id,first_name,last_name,modify_date,user from vicidial_list inner join vicidial_lists on vicidial_list.list_id=vicidial_lists.list_id where campaign_id='$campaign_id' and status='$qc_status' order by status, modify_date";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vicidialconf_to_print = mysqli_num_rows($rslt);
+			$o=0;
+			while ($vicidialconf_to_print > $o) 
 				{
-                echo "<tr bgcolor=black>";
-                echo "<td><font size=1 color=white align=left><B>$qc_status ($vicidialconf_to_print)</B></td>";
-                echo "<td><font size=1 color=white align=left><B>"._QXZ("LEAD ID")."</B></td>";
-                echo "<td><font size=1 color=white><B>"._QXZ("NAME")."</B></td>";
-                echo "<td><font size=1 color=white><B>"._QXZ("Last Modified")."</B></td>";
-                echo "<td align=center><font size=1 color=white><B>"._QXZ("UserID")."</B></td></tr>\n";
+				if($o==0)
+					{
+					echo "<tr bgcolor=black>";
+					echo "<td><font size=1 color=white align=left><B>$qc_status ($vicidialconf_to_print)</B></td>";
+					echo "<td><font size=1 color=white align=left><B>"._QXZ("LEAD ID")."</B></td>";
+					echo "<td><font size=1 color=white><B>"._QXZ("NAME")."</B></td>";
+					echo "<td><font size=1 color=white><B>"._QXZ("Last Modified")."</B></td>";
+					echo "<td align=center><font size=1 color=white><B>"._QXZ("UserID")."</B></td></tr>\n";
+					}
+				$row=mysqli_fetch_row($rslt);
+				if (preg_match("/1$|3$|5$|7$|9$/i", $o))
+					{
+					$bgcolor='class="records_list_x"';
+					}
+				else
+					{
+					$bgcolor='class="records_list_y"';
+					}
+				echo "<tr $bgcolor><td><font size=1>&nbsp;</td>";
+				echo "<td><font size=1> $row[0]</td>";
+				$lead_name=trim($row[1].' '.$row[2]);
+				$lead_nameENC=urlencode($lead_name);
+				if (strlen($lead_name)<1) $lead_name='No Name';
+				echo "<td><font size=1><a href=\"qc_modify_lead.php?lead_id=$row[0]&campaign_id=$campaign_id&lead_name=$lead_nameENC\">$lead_name</a></td>";
+				echo "<td><font size=1> $row[3]</td>";
+				echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=3&user=$row[4]\">$row[4]</a></td></tr>\n";
+				$o++;
 				}
-            $row=mysqli_fetch_row($rslt);
-			if (preg_match("/1$|3$|5$|7$|9$/i", $o))
-				{
-                $bgcolor='class="records_list_x"';
-			    }
-            else
-				{
-                $bgcolor='class="records_list_y"';
-				}
-            echo "<tr $bgcolor><td><font size=1>&nbsp;</td>";
-            echo "<td><font size=1> $row[0]</td>";
-            $lead_name=trim($row[1].' '.$row[2]);
-            $lead_nameENC=urlencode($lead_name);
-            if (strlen($lead_name)<1) $lead_name='No Name';
-            echo "<td><font size=1><a href=\"qc_modify_lead.php?lead_id=$row[0]&campaign_id=$campaign_id&lead_name=$lead_nameENC\">$lead_name</a></td>";
-            echo "<td><font size=1> $row[3]</td>";
-            echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=3&user=$row[4]\">$row[4]</a></td></tr>\n";
-            $o++;
 			}
 		}
+	else
+		{
+		echo _QXZ("ERROR: No QC campaign available:")."$campaign_id\n";
+		}
+
 	echo "</TABLE></center>\n";
 	}
 
