@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# cm_dnc.agi version 2.12
+# cm_dnc.agi version 2.14
 # 
 # Designed to work with Cell Menus to allow setting of a number as DNC or NI
 # This script is meant as a replacecment for the agi-VDADinbound_NI_DNC_CIDlookup.agi
@@ -17,13 +17,14 @@
 # example of what to put in the AGI entry for a Call Menu AGI route:
 # cm_dnc.agi,DNC---YES---TESTCAMP---B---CAMP
 #
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 121109-1623 - First draft
 # 130108-1817 - Changes for Asterisk 1.8 compatibility
 # 130925-1825 - Added variable filter to prevent DID SQL injection attack
 # 150928-1822 - Added dnc logging
+# 170313-1610 - Fixed issue with DNC not logging if no campaign defined
 #
 
 $script = 'cm_dnc.agi';
@@ -304,6 +305,10 @@ if ($new_status =~ /DNC/)	# set the phone_number to DNC
 			{
 			### add the number to the vicidial_dnc table
 			$stmtA = "INSERT INTO vicidial_dnc SET phone_number='$phone_number';";
+			$affected_rows = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "$affected_rows|$stmtA|";   &agi_output;}
+
+			$stmtA="INSERT INTO vicidial_dnc_log SET phone_number='$phone_number', campaign_id='-SYSINT-', action='add', action_date=NOW(), user='CMAGI';";
 			$affected_rows = $dbhA->do($stmtA);
 				if ($AGILOG) {$agi_string = "$affected_rows|$stmtA|";   &agi_output;}
 			}
