@@ -4016,12 +4016,13 @@ else
 # 170304-1355 - Added Automated Reports section to Admin
 # 170309-1209 - Added campaign agent_xfer_validation option and ingroup populate_state_areacode option
 # 170311-0928 - Fixes for QC allowed campaign permissions, issue #1003
+# 170313-1041 - Added CHAT options to inbound_queue_no_dial
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-599a';
-$build = '170311-0928';
+$admin_version = '2.14-600a';
+$build = '170313-1041';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -21407,7 +21408,7 @@ if ($ADD==31)
 				}
 			echo "$DRgroups_list<option SELECTED>$drop_rate_group</option></select>$NWB#campaigns-drop_rate_group$NWE</td></tr>\n";
 
-			echo "<tr bgcolor=#$SSalt_row1_background><td align=right>"._QXZ("Inbound Queue No Dial").": </td><td align=left><select size=1 name=inbound_queue_no_dial><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='ENABLED'>"._QXZ("ENABLED")."</option><option value='ALL_SERVERS'>"._QXZ("ALL_SERVERS")."</option><option value='$inbound_queue_no_dial' SELECTED>"._QXZ("$inbound_queue_no_dial")."</option></select>$NWB#campaigns-inbound_queue_no_dial$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSalt_row1_background><td align=right>"._QXZ("Inbound Queue No Dial").": </td><td align=left><select size=1 name=inbound_queue_no_dial><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='ENABLED'>"._QXZ("ENABLED")."</option><option value='ALL_SERVERS'>"._QXZ("ALL_SERVERS")."</option><option value='ENABLED_WITH_CHAT'>"._QXZ("ENABLED_WITH_CHAT")."</option><option value='ALL_SERVERS_WITH_CHAT'>"._QXZ("ALL_SERVERS_WITH_CHAT")."</option><option value='$inbound_queue_no_dial' SELECTED>"._QXZ("$inbound_queue_no_dial")."</option></select>$NWB#campaigns-inbound_queue_no_dial$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Auto Alt-Number Dialing").": </td><td align=left><select size=1 name=auto_alt_dial><option value='NONE'>"._QXZ("NONE")."</option><option value='ALT_ONLY'>"._QXZ("ALT_ONLY")."</option><option value='ADDR3_ONLY'>"._QXZ("ADDR3_ONLY")."</option><option value='ALT_AND_ADDR3'>"._QXZ("ALT_AND_ADDR3")."</option><option value='ALT_AND_EXTENDED'>"._QXZ("ALT_AND_EXTENDED")."</option><option value='ALT_AND_ADDR3_AND_EXTENDED'>"._QXZ("ALT_AND_ADDR3_AND_EXTENDED")."</option><option value='EXTENDED_ONLY'>"._QXZ("EXTENDED_ONLY")."</option><option value='MULTI_LEAD'>"._QXZ("MULTI_LEAD")."</option><option value='$auto_alt_dial' SELECTED>"._QXZ("$auto_alt_dial")."</option></select>$NWB#campaigns-auto_alt_dial$NWE $ALTmultiLINK</td></tr>\n";
 			}

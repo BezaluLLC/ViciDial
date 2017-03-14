@@ -113,6 +113,7 @@
 # 170301-1337 - Updated entry for custom fields required setting
 # 170304-1346 - Added auto_reports section
 # 170309-1212 - Added agent_xfer_validation and populate_state_areacode entries
+# 170313-2012 - Added CHAT option to inbound_queue_no_dial entry
 #
 
 
@@ -1066,7 +1067,7 @@ if ($SSoutbound_autodial_active > 0)
 	<BR>
 	<A NAME="campaigns-inbound_queue_no_dial">
 	<BR>
-	<B><?php echo _QXZ("Inbound Queue No Dial"); ?> -</B><?php echo _QXZ("This feature if set to ENABLED allows you to prevent outbound auto-dialing of this campaign if there are any inbound calls waiting in queue that are part of the allowed inbound groups set in this campaign. Setting this to ALL_SERVERS will change the algorithm to calculate all inbound calls as active calls on this server even if they are on another server which will reduce the chance of placing unnecessary outbound calls if you have calls coming in on another server. Default is DISABLED."); ?>
+	<B><?php echo _QXZ("Inbound Queue No Dial"); ?> -</B><?php echo _QXZ("This feature if set to ENABLED allows you to prevent outbound auto-dialing of this campaign if there are any inbound calls waiting in queue that are part of the allowed inbound groups set in this campaign. Setting this to ALL_SERVERS will change the algorithm to calculate all inbound calls as active calls on this server even if they are on another server which will reduce the chance of placing unnecessary outbound calls if you have calls coming in on another server. Default is DISABLED.") . ' ' . _QXZ("If the selected option includes CHAT, then no outbound auto-dialing will take place while an inbound customer chat is waiting."); ?>
 
 	<BR>
 	<A NAME="campaigns-auto_alt_dial">

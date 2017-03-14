@@ -869,7 +869,7 @@ manual_dial_override ENUM('NONE','ALLOW_ALL','DISABLE_ALL') default 'NONE',
 blind_monitor_warning ENUM('DISABLED','ALERT','NOTICE','AUDIO','ALERT_NOTICE','ALERT_AUDIO','NOTICE_AUDIO','ALL') default 'DISABLED',
 blind_monitor_message VARCHAR(255) default 'Someone is blind monitoring your session',
 blind_monitor_filename VARCHAR(100) default '',
-inbound_queue_no_dial ENUM('DISABLED','ENABLED','ALL_SERVERS') default 'DISABLED',
+inbound_queue_no_dial ENUM('DISABLED','ENABLED','ALL_SERVERS','ENABLED_WITH_CHAT','ALL_SERVERS_WITH_CHAT') default 'DISABLED',
 timer_action_destination VARCHAR(30) default '',
 enable_xfer_presets ENUM('DISABLED','ENABLED','CONTACTS') default 'DISABLED',
 hide_xfer_number_to_dial ENUM('DISABLED','ENABLED') default 'DISABLED',
@@ -3899,4 +3899,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1493',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1494',db_schema_update_date=NOW(),reload_timestamp=NOW();

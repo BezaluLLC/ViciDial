@@ -121,6 +121,9 @@ OTHER CHANGES:
 21. Added In-Group option to look up the state based upon the areacode of the
 	caller ID phone number of the person calling in.
 
+22. Added CHAT option to Inbound Queue No Dial campaign setting to prevent
+	outbound auto-dialing if a chat is waiting for an agent
+
 
 
 

@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_VDauto_dial.pl version 2.12
+# AST_VDauto_dial.pl version 2.14
 #
 # DESCRIPTION:
 # Places auto_dial calls on the VICIDIAL dialer system 
@@ -25,7 +25,7 @@
 # It is good practice to keep this program running by placing the associated 
 # KEEPALIVE script running every minute to ensure this program is always running
 #
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50125-1201 - Changed dial timeout to 120 seconds from 180 seconds
@@ -121,6 +121,7 @@
 # 141211-2134 - Added na_call_url list_id override option
 # 151006-0936 - Changed campaign_cid_areacodes to operate with 2-5 digit areacodes
 # 161102-1031 - Fixed QM partition problem
+# 170313-1041 - Added CHAT option to inbound_queue_no_dial
 #
 
 ### begin parsing run-time options ###
@@ -356,6 +357,7 @@ while($one_day_interval > 0)
 		@DBIPexistcalls=@MT;
 		@DBIPexistcalls_IN=@MT;
 		@DBIPexistcalls_IN_ALL=@MT;
+		@DBIPexistchats_IN_LIVE=@MT;
 		@DBIPexistcalls_IN_LIVE=@MT;
 		@DBIPexistcalls_OUT=@MT;
 		@DBIPgoalcalls=@MT;
@@ -788,6 +790,17 @@ while($one_day_interval > 0)
 					$DBIPexistcalls_IN_LIVE[$user_CIPct] = $aryA[0];
 					}
 				$sthA->finish();
+
+				$stmtA = "SELECT count(*) FROM vicidial_live_chats where group_id IN($DBIPclosercamp[$user_CIPct]) and status IN('WAITING');";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$DBIPexistchats_IN_LIVE[$user_CIPct] = $aryA[0];
+					}
+				$sthA->finish();
 				}
 			else 
 				{$DBIPexistcalls_IN[$user_CIPct]=0;}
@@ -806,6 +819,8 @@ while($one_day_interval > 0)
 			$DBIPexistcalls[$user_CIPct] = ($DBIPexistcalls_IN[$user_CIPct] + $DBIPexistcalls_OUT[$user_CIPct]);
 			if ($DBIPinbound_queue_no_dial[$user_CIPct] =~ /ALL_SERVERS/) 
 				{$DBIPexistcalls[$user_CIPct] = ($DBIPexistcalls_IN_ALL[$user_CIPct] + $DBIPexistcalls_OUT[$user_CIPct]);}
+			if ($DBIPinbound_queue_no_dial[$user_CIPct] =~ /CHAT/) 
+				{$DBIPexistcalls[$user_CIPct] = ($DBIPexistcalls[$user_CIPct] + $DBIPexistchats_IN_LIVE[$user_CIPct]);}
 
 			if ( ($DBIPcampaign_ready_agents[$user_CIPct] > 0) && ($DBIPexistcalls_IN[$user_CIPct] > 0) )
 				{
@@ -1013,9 +1028,9 @@ while($one_day_interval > 0)
 				}
 			else
 				{
-				if ( ($DBIPinbound_queue_no_dial[$user_CIPct] =~ /ENABLED/) && ($DBIPexistcalls_IN_LIVE[$user_CIPct] > 0) )
+				if ( ( ($DBIPinbound_queue_no_dial[$user_CIPct] =~ /ENABLED/) && ($DBIPexistcalls_IN_LIVE[$user_CIPct] > 0) ) || ( ($DBIPinbound_queue_no_dial[$user_CIPct] =~ /CHAT/) && ($DBIPexistchats_IN_LIVE[$user_CIPct] > 0) ) )
 					{
-					$event_string="$DBIPcampaign[$user_CIPct] $DBIPexistcalls_IN_LIVE[$user_CIPct]: INBOUND QUEUE NO DIAL, NO DIALING";
+					$event_string="$DBIPcampaign[$user_CIPct] $DBIPexistcalls_IN_LIVE[$user_CIPct] $DBIPexistchats_IN_LIVE[$user_CIPct]: INBOUND QUEUE NO DIAL, NO DIALING ($DBIPinbound_queue_no_dial[$user_CIPct])";
 					&event_logger;
 					}
 				else
