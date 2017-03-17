@@ -35,6 +35,7 @@
 # 170301-0837 - Added functionality for required custom fields
 # 170303-1207 - Expanded required custom fields types
 # 170309-0857 - Added list_name and list_description display variables
+# 170317-0753 - Added more missing display variables
 #
 
 # $mysql_queries = 21
@@ -232,7 +233,7 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 
 
 ##### BEGIN custom_list_fields_values - gather values for display of custom list fields for a lead #####
-function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_id)
+function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_id,$did_id,$did_extension,$did_pattern,$did_description,$dialed_number,$dialed_label)
 	{
 	$STARTtime = date("U");
 	$TODAY = date("Y-m-d");
@@ -637,20 +638,23 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 
 		if (preg_match('/--A--dialed_|--U--dialed_/i',$CFoutput))
 			{
-			$dialed_number =	$phone_number;
-			$dialed_label =		_QXZ("NONE");
-
-			### find the dialed number and label for this call
-			$stmt = "SELECT phone_number,alt_dial from vicidial_log where uniqueid='$uniqueid';";
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_to_mysqli($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05008',$user,$server_ip,$session_name,$one_mysql_log);}
-			$vl_dialed_ct = mysqli_num_rows($rslt);
-			if ($vl_dialed_ct > 0)
+			if (strlen($dialed_number) < 1)
 				{
-				$row=mysqli_fetch_row($rslt);
-				$dialed_number =	$row[0];
-				$dialed_label =		$row[1];
+				$dialed_number =	$phone_number;
+				$dialed_label =		_QXZ("NONE");
+
+				### find the dialed number and label for this call
+				$stmt = "SELECT phone_number,alt_dial from vicidial_log where uniqueid='$uniqueid';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05008',$user,$server_ip,$session_name,$one_mysql_log);}
+				$vl_dialed_ct = mysqli_num_rows($rslt);
+				if ($vl_dialed_ct > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$dialed_number =	$row[0];
+					$dialed_label =		$row[1];
+					}
 				}
 			}
 

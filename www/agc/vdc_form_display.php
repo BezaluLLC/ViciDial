@@ -37,10 +37,11 @@
 # 160129-1019 - Added missing pass field to SUBMIT stage form
 # 160912-0805 - Added debug, fixed issue with multi-selected values
 # 170301-0834 - Added call_id field for custom fields
+# 170317-0755 - Added more missing display variables
 #
 
-$version = '2.14-27';
-$build = '170301-0834';
+$version = '2.14-28';
+$build = '170317-0755';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -515,7 +516,7 @@ else
 
 	require_once("functions.php");
 
-	$CFoutput = custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_id);
+	$CFoutput = custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_id,$did_id,$did_extension,$did_pattern,$did_description,$dialed_number,$dialed_label);
 
 	echo "$CFoutput";
 
