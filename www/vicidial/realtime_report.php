@@ -1,7 +1,7 @@
 <?php 
 # realtime_report.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -36,12 +36,13 @@
 # 160406-1852 - Added WALL options for report_display_type
 # 160413-2003 - Added WALL_4 option
 # 160803-1902 - Fixed issue with ERROR in campaign/ingroup name
+# 170318-0942 - Added websocket variable for embedded webphone
 #
 
 $startMS = microtime();
 
-$version = '2.12-24';
-$build = '160803-1902';
+$version = '2.14-25';
+$build = '170318-0942';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -910,8 +911,7 @@ $open_list = '<TABLE WIDTH=250 CELLPADDING=0 CELLSPACING=0 BGCOLOR=\'#D9E6FE\'><
 
 
 
-
-
+##### BEGIN code for embedded webphone for monitoring #####
 if (strlen($monitor_phone)>1)
 	{
 	$stmt="SELECT extension,dialplan_number,server_ip,login,pass,protocol,conf_secret,is_webphone,use_external_server_ip,codecs_list,webphone_dialpad,outbound_cid,webphone_auto_answer from phones where login='$monitor_phone' and active = 'Y';";
@@ -942,18 +942,24 @@ if (strlen($monitor_phone)>1)
 			$codecs_list = preg_replace("/-/",'',$codecs_list);
 			$codecs_list = preg_replace("/&/",'',$codecs_list);
 
+			$stmt="SELECT asterisk_version,web_socket_url from servers where server_ip='$webphone_server_ip' LIMIT 1;";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			$asterisk_version =		$row[0];
+			$web_socket_url =		$row[1];
+
 			if ($use_external_server_ip=='Y')
 				{
 				##### find external_server_ip if enabled for this phone account
 				$stmt="SELECT external_server_ip FROM servers where server_ip='$webphone_server_ip' LIMIT 1;";
 				$rslt=mysql_to_mysqli($stmt, $link);
-					if ($mel > 0) {mysqli_error_logging($NOW_TIME,$link,$mel,$stmt,'01065',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$exip_ct = mysqli_num_rows($rslt);
 				if ($exip_ct > 0)
 					{
 					$row=mysqli_fetch_row($rslt);
-					$webphone_server_ip =$row[0];
+					$webphone_server_ip = $row[0];
 					}
 				}
 			if (strlen($webphone_url) < 6)
@@ -961,13 +967,12 @@ if (strlen($monitor_phone)>1)
 				##### find webphone_url in system_settings and generate IFRAME code for it #####
 				$stmt="SELECT webphone_url FROM system_settings LIMIT 1;";
 				$rslt=mysql_to_mysqli($stmt, $link);
-					if ($mel > 0) {mysqli_error_logging($NOW_TIME,$link,$mel,$stmt,'01066',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$wu_ct = mysqli_num_rows($rslt);
 				if ($wu_ct > 0)
 					{
 					$row=mysqli_fetch_row($rslt);
-					$webphone_url =$row[0];
+					$webphone_url = $row[0];
 					}
 				}
 			if (strlen($system_key) < 1)
@@ -975,13 +980,12 @@ if (strlen($monitor_phone)>1)
 				##### find system_key in system_settings if populated #####
 				$stmt="SELECT webphone_systemkey FROM system_settings LIMIT 1;";
 				$rslt=mysql_to_mysqli($stmt, $link);
-					if ($mel > 0) {mysqli_error_logging($NOW_TIME,$link,$mel,$stmt,'01068',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$wsk_ct = mysqli_num_rows($rslt);
 				if ($wsk_ct > 0)
 					{
 					$row=mysqli_fetch_row($rslt);
-					$system_key =$row[0];
+					$system_key = $row[0];
 					}
 				}
 		#	echo "<!-- debug: $webphone_dialpad|$webphone_dialpad_override|$monitor_phone|$extension -->";
@@ -994,6 +998,8 @@ if (strlen($monitor_phone)>1)
 			if ($webphone_dialpad == 'TOGGLE_OFF') {$webphone_options .= "--DIALPAD_OFF_TOGGLE";}
 			if ($webphone_auto_answer == 'Y') {$webphone_options .= "--AUTOANSWER_Y";}
 			if ($webphone_auto_answer == 'N') {$webphone_options .= "--AUTOANSWER_N";}
+			if (strlen($web_socket_url) > 5) {$webphone_options .= "--WEBSOCKETURL$web_socket_url";}
+			if ($DB > 0) {echo "<!-- debug: SOCKET:$web_socket_url|VERSION:$asterisk_version| -->";}
 
 			$session_name='RTS01234561234567890';
 
@@ -1013,6 +1019,7 @@ if (strlen($monitor_phone)>1)
 			}
 		}
 	}
+##### END code for embedded webphone for monitoring #####
 
 
 
