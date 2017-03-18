@@ -545,10 +545,11 @@
 # 170303-1206 - Expanded required custom fields types
 # 170309-0705 - Small fix for INBOUND_MAN agent logging issue
 # 170309-1215 - Added agent_xfer_validation option
+# 170317-2342 - Fix for script tab ignore list script override
 #
 
-$version = '2.14-515c';
-$build = '170309-1215';
+$version = '2.14-516c';
+$build = '170317-2342';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -7764,9 +7765,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								document.getElementById("XfeRGrouPLisT").innerHTML = "<select size=\"1\" name=\"XfeRGrouP\" class=\"cust_form\" id=\"XfeRGrouP\" onChange=\"XferAgentSelectLink();return false;\">" + live_XfeR_HTML + "</select>";
 
 								if (VDCL_group_id.length > 1)
-									{var group = VDCL_group_id;}
+									{group = VDCL_group_id;}
 								else
-									{var group = campaign;}
+									{group = campaign;}
 								if ( (dialed_label.length < 2) || (dialed_label=='NONE') ) {dialed_label='MAIN';}
 
 								if (hide_gender < 1)
@@ -9834,7 +9835,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			}
 		if (xmlhttp) 
 			{ 
-			NeWscript_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&called_count=" + document.vicidial_form.called_count.value + "&script_override=" + script_override + "&ScrollDIV=1&" + web_form_vars;
+			NeWscript_query = "server_ip=" + server_ip + "&inOUT=" + inOUT + "&camp_script=" + campaign_script + '' + "&in_script=" + CalL_ScripT_id + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&called_count=" + document.vicidial_form.called_count.value + "&script_override=" + script_override + "&ScrollDIV=1&" + web_form_vars;
+		//	alert(NeWscript_query);
 			xmlhttp.open('POST', 'vdc_script_display.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(NeWscript_query);
@@ -10488,9 +10490,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								}
 
 							if (VDCL_group_id.length > 1)
-								{var group = VDCL_group_id;}
+								{group = VDCL_group_id;}
 							else
-								{var group = campaign;}
+								{group = campaign;}
 							if ( (dialed_label.length < 2) || (dialed_label=='NONE') ) {dialed_label='MAIN';}
 
 							if (hide_gender < 1)
@@ -11230,9 +11232,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								}
 
 							if (VDCL_group_id.length > 1)
-								{var group = VDCL_group_id;}
+								{group = VDCL_group_id;}
 							else
-								{var group = campaign;}
+								{group = campaign;}
 							if ( (dialed_label.length < 2) || (dialed_label=='NONE') ) {dialed_label='MAIN';}
 
 							if (hide_gender < 1)
@@ -11414,9 +11416,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		var webvars_refresh=0;
 
 		if (VDCL_group_id.length > 1)
-			{var group = VDCL_group_id;}
+			{group = VDCL_group_id;}
 		else
-			{var group = campaign;}
+			{group = campaign;}
 		if ( (dialed_label.length < 2) || (dialed_label=='NONE') ) {dialed_label='MAIN';}
 
 		if (submittask != 'YES')
@@ -11459,9 +11461,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 	function WebFormTwoRefresH(taskrefresh,submittask) 
 		{
 		if (VDCL_group_id.length > 1)
-			{var group = VDCL_group_id;}
+			{group = VDCL_group_id;}
 		else
-			{var group = campaign;}
+			{group = campaign;}
 		if ( (dialed_label.length < 2) || (dialed_label=='NONE') ) {dialed_label='MAIN';}
 
 		if (submittask != 'YES')
@@ -11504,9 +11506,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 	function WebFormThreeRefresH(taskrefresh,submittask) 
 		{
 		if (VDCL_group_id.length > 1)
-			{var group = VDCL_group_id;}
+			{group = VDCL_group_id;}
 		else
-			{var group = campaign;}
+			{group = campaign;}
 		if ( (dialed_label.length < 2) || (dialed_label=='NONE') ) {dialed_label='MAIN';}
 
 		if (submittask != 'YES')
@@ -11836,9 +11838,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		else
 			{
 			if (VDCL_group_id.length > 1)
-				{var group = VDCL_group_id;}
+				{group = VDCL_group_id;}
 			else
-				{var group = campaign;}
+				{group = campaign;}
 			var form_cust_channel = document.getElementById("callchannel").innerHTML;
 			var form_cust_serverip = document.vicidial_form.callserverip.value;
 			var customer_channel = lastcustchannel;
@@ -12781,9 +12783,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if (DSPclick=='YES')
 			{button_click_log = button_click_log + "" + SQLdate + "-----DispoSelect_submit---|";}
 		if (VDCL_group_id.length > 1)
-			{var group = VDCL_group_id;}
+			{group = VDCL_group_id;}
 		else
-			{var group = campaign;}
+			{group = campaign;}
 		leaving_threeway=0;
 		blind_transfer=0;
 		CheckDEADcallON=0;

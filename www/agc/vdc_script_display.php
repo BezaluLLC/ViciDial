@@ -1,7 +1,7 @@
 <?php
 # vdc_script_display.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display the contents of the SCRIPT tab in the agent interface
 #
@@ -33,10 +33,11 @@
 # 150725-1622 - Added entry_date variable
 # 150923-2028 - Added DID custom variables
 # 160818-1226 - Added MANUALDIALLINK option
+# 170317-2315 - Fixed in-group list script override issue, added debug
 #
 
-$version = '2.12-27';
-$build = '160818-1226';
+$version = '2.14-28';
+$build = '170317-2315';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -232,6 +233,10 @@ if (isset($_GET["did_custom_four"]))			{$did_custom_four=$_GET["did_custom_four"
 	elseif (isset($_POST["did_custom_four"]))	{$did_custom_four=$_POST["did_custom_four"];}
 if (isset($_GET["did_custom_five"]))			{$did_custom_five=$_GET["did_custom_five"];}
 	elseif (isset($_POST["did_custom_five"]))	{$did_custom_five=$_POST["did_custom_five"];}
+if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
+	elseif (isset($_POST["DB"]))	{$DB=$_POST["DB"];}
+if (isset($_GET["inOUT"]))			{$inOUT=$_GET["inOUT"];}
+	elseif (isset($_POST["inOUT"]))	{$inOUT=$_POST["inOUT"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -332,17 +337,20 @@ else
 	{$call_script = $in_script;}
 
 $ignore_list_script_override='N';
-$stmt = "SELECT ignore_list_script_override FROM vicidial_inbound_groups where group_id='$group';";
-$rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {echo "$stmt\n";}
-$ilso_ct = mysqli_num_rows($rslt);
-if ($ilso_ct > 0)
+if ($inOUT == 'IN')
 	{
-	$row=mysqli_fetch_row($rslt);
-	$ignore_list_script_override =		$row[0];
+	$stmt = "SELECT ignore_list_script_override FROM vicidial_inbound_groups where group_id='$group';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$ilso_ct = mysqli_num_rows($rslt);
+	if ($ilso_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$ignore_list_script_override =		$row[0];
+		}
+	if ($ignore_list_script_override=='Y')
+		{$ignore_list_script=1;}
 	}
-if ($ignore_list_script_override=='Y')
-	{$ignore_list_script=1;}
 
 if ($ignore_list_script < 1)
 	{

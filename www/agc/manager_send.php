@@ -1,7 +1,7 @@
 <?php
 # manager_send.php    version 2.14
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to insert records into the vicidial_manager table to signal Actions to an asterisk server
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -134,10 +134,11 @@
 # 161102-1043 - Fixed QM partition problem
 # 161117-0622 - Fixes for recording_log issue where filename is non-unique
 # 161217-0823 - Added parked_calls_recent table entries for better handling of parked calls
+# 170317-2214 - Added more debugging output
 #
 
-$version = '2.14-81';
-$build = '161217-0823';
+$version = '2.14-82';
+$build = '170317-2214';
 $php_script = 'manager_send.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=142;
@@ -997,6 +998,7 @@ if ($ACTION=="RedirectToPark")
 		echo _QXZ("ext_priority %1s must be set",0,'',$ext_priority)."\n";
 		echo _QXZ("parkedby %1s must be set",0,'',$parkedby)."\n\n";
 		echo _QXZ("RedirectToPark Action not sent")."\n";
+		$stage .= " ERROR $channel $queryCID $exten $ext_context $extenName $ext_priority $parkedby";
 		}
 	else
 		{
@@ -1102,6 +1104,7 @@ if ($ACTION=="RedirectFromPark")
 		echo _QXZ("ext_context %1s must be set",0,'',$ext_context)."\n";
 		echo _QXZ("ext_priority %1s must be set",0,'',$ext_priority)."\n\n";
 		echo _QXZ("RedirectFromPark Action not sent")."\n";
+		$stage .= " ERROR $channel $queryCID $exten $ext_context $ext_priority";
 		}
 	else
 		{
@@ -1239,6 +1242,7 @@ if ($ACTION=="RedirectToParkIVR")
 		echo _QXZ("ext_priority %1s must be set",0,'',$ext_priority)."\n";
 		echo _QXZ("parkedby %1s must be set",0,'',$parkedby)."\n";
 		echo _QXZ("RedirectToPark Action not sent")."\n";
+		$stage .= " ERROR $channel $queryCID $exten $ext_context $extenName $ext_priority $parkedby";
 		}
 	else
 		{
@@ -1348,6 +1352,7 @@ if ($ACTION=="RedirectFromParkIVR")
 		echo _QXZ("ext_context %1s must be set",0,'',$ext_context)."\n";
 		echo _QXZ("ext_priority %1s must be set",0,'',$ext_priority)."\n\n";
 		echo _QXZ("RedirectFromPark Action not sent")."\n";
+		$stage .= " ERROR $channel $queryCID $exten $ext_context $ext_priority";
 		}
 	else
 		{
@@ -1490,6 +1495,7 @@ if ($ACTION=="RedirectToParkXfer")
 		echo _QXZ("ext_priority %1s must be set",0,'',$ext_priority)."\n";
 		echo _QXZ("parkedby %1s must be set",0,'',$parkedby)."\n";
 		echo _QXZ("RedirectToParkXfer Action not sent")."\n";
+		$stage .= " ERROR $channel $queryCID $exten $ext_context $extenName $ext_priority $parkedby";
 		}
 	else
 		{
@@ -1521,6 +1527,7 @@ if ($ACTION=="RedirectFromParkXfer")
 		echo _QXZ("ext_context %1s must be set",0,'',$ext_context)."\n";
 		echo _QXZ("ext_priority %1s must be set",0,'',$ext_priority)."\n\n";
 		echo _QXZ("RedirectFromParkXfer Action not sent")."\n";
+		$stage .= " ERROR $channel $queryCID $exten $ext_context $ext_priority";
 		}
 	else
 		{
