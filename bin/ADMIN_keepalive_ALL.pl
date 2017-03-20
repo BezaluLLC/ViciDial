@@ -115,9 +115,10 @@
 # 161226-2218 - Added conf_qualify option
 # 170113-1645 - Added call menu in-group option DYNAMIC_INGROUP_VAR for use with cm_phonesearch.agi
 # 170304-2039 - Added automated reports triggering code
+# 170320-1338 - Added conf_qualify phones option for IAX
 #
 
-$build = '170304-2039';
+$build = '170320-1338';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -2275,7 +2276,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 
 	##### BEGIN Generate the IAX phone entries #####
-	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,codecs_list,codecs_with_template,voicemail_timezone,voicemail_options,voicemail_instructions,unavail_dialplan_fwd_exten,unavail_dialplan_fwd_context FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
+	$stmtA = "SELECT extension,dialplan_number,voicemail_id,pass,template_id,conf_override,email,template_id,conf_override,outbound_cid,fullname,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,codecs_list,codecs_with_template,voicemail_timezone,voicemail_options,voicemail_instructions,unavail_dialplan_fwd_exten,unavail_dialplan_fwd_context,conf_qualify FROM phones where server_ip='$server_ip' and protocol='IAX2' and active='Y' order by extension;";
 	#	print "$stmtA\n";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2306,6 +2307,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$voicemail_instructions[$i] =	$aryA[19];
 		$unavail_dialplan_fwd_exten[$i] =	$aryA[20];
 		$unavail_dialplan_fwd_context[$i] =	$aryA[21];
+		$conf_qualify[$i] =				$aryA[22];
 		if ( (length($SSdefault_codecs) > 2) && (length($codecs_list[$i]) < 3) )
 			{$codecs_list[$i] = $SSdefault_codecs;}
 		$active_dialplan_numbers .= "'$aryA[1]',";
@@ -2355,6 +2357,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				$Piax .= "accountcode=$extension[$i]\n";
 				$Piax .= "callerid=\"$fullname[$i]\" <$outbound_cid[$i]>\n";
 				$Piax .= "mailbox=$voicemail[$i]\n";
+				if ($conf_qualify[$i] =~ /Y/) 
+					{$Piax .= "qualify=yes\n";}
 				if ($codecs_with_template[$i] > 0) 
 					{$Piax .= "$Pcodec";}
 				$Piax .= "$template_contents[$i]\n";
@@ -2384,6 +2388,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			$Piax .= "type=friend\n";
 			$Piax .= "auth=md5\n";
 			$Piax .= "host=dynamic\n";
+			if ($conf_qualify[$i] =~ /Y/) 
+				{$Piax .= "qualify=yes\n";}
 			}
 		%ast_ver_str = parse_asterisk_version($asterisk_version);
 		if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))

@@ -114,6 +114,7 @@
 # 170304-1346 - Added auto_reports section
 # 170309-1212 - Added agent_xfer_validation and populate_state_areacode entries
 # 170313-2012 - Added CHAT option to inbound_queue_no_dial entry
+# 170320-1346 - Added phones conf_qualify entry
 #
 
 
@@ -4240,6 +4241,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="phones-codecs_with_template">
 <BR>
 <B><?php echo _QXZ("Allowed Codecs With Template"); ?> -</B><?php echo _QXZ("Setting this option to 1 will include the codecs defined above even if a conf file template is used. Default is 0."); ?>
+
+<BR>
+<A NAME="phones-conf_qualify">
+<BR>
+<B><?php echo _QXZ("Conf Qualify"); ?> -</B><?php echo _QXZ("This setting allows you to add or remove the qualify entry in the Asterisk conf file for this phone if it is IAX type. Default is Y for active."); ?>
 
 <BR>
 <A NAME="phones-dtmf_send_extension">

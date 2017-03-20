@@ -119,3 +119,7 @@ UPDATE system_settings SET db_schema_version='1493',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns MODIFY inbound_queue_no_dial ENUM('DISABLED','ENABLED','ALL_SERVERS','ENABLED_WITH_CHAT','ALL_SERVERS_WITH_CHAT') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1494',db_schema_update_date=NOW() where db_schema_version < 1494;
+
+ALTER TABLE phones ADD conf_qualify ENUM('Y','N') default 'Y';
+
+UPDATE system_settings SET db_schema_version='1495',db_schema_update_date=NOW() where db_schema_version < 1495;
