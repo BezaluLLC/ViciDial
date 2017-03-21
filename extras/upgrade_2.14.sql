@@ -123,3 +123,9 @@ UPDATE system_settings SET db_schema_version='1494',db_schema_update_date=NOW() 
 ALTER TABLE phones ADD conf_qualify ENUM('Y','N') default 'Y';
 
 UPDATE system_settings SET db_schema_version='1495',db_schema_update_date=NOW() where db_schema_version < 1495;
+
+ALTER TABLE system_settings ADD enable_pause_code_limits ENUM('1','0') default '0';
+
+ALTER TABLE vicidial_pause_codes ADD time_limit SMALLINT(5) UNSIGNED default '65000';
+
+UPDATE system_settings SET db_schema_version='1496',db_schema_update_date=NOW() where db_schema_version < 1496;

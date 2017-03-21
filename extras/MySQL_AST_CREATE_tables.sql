@@ -1527,6 +1527,7 @@ pause_code VARCHAR(6) NOT NULL,
 pause_code_name VARCHAR(30),
 billable ENUM('NO','YES','HALF') default 'NO',
 campaign_id VARCHAR(8),
+time_limit SMALLINT(5) UNSIGNED default '65000',
 index (campaign_id)
 ) ENGINE=MyISAM;
 
@@ -1696,7 +1697,8 @@ web_loader_phone_length VARCHAR(10) default 'DISABLED',
 agent_script VARCHAR(50) default 'vicidial.php',
 vdad_debug_logging ENUM('1','0') default '0',
 agent_chat_screen_colors VARCHAR(20) default 'default',
-enable_auto_reports ENUM('1','0') default '0'
+enable_auto_reports ENUM('1','0') default '0',
+enable_pause_code_limits ENUM('1','0') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3900,4 +3902,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1495',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1496',db_schema_update_date=NOW(),reload_timestamp=NOW();

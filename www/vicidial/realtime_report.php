@@ -37,12 +37,13 @@
 # 160413-2003 - Added WALL_4 option
 # 160803-1902 - Fixed issue with ERROR in campaign/ingroup name
 # 170318-0942 - Added websocket variable for embedded webphone
+# 170321-1145 - Added pause code time limits colors
 #
 
 $startMS = microtime();
 
-$version = '2.14-25';
-$build = '170318-0942';
+$version = '2.14-26';
+$build = '170321-1145';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -122,7 +123,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,agent_whisper_enabled,report_default_format FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,agent_whisper_enabled,report_default_format,enable_pause_code_limits FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -137,6 +138,7 @@ if ($qm_conf_ct > 0)
 	$SSlanguage_method =			$row[5];
 	$agent_whisper_enabled =		$row[6];
 	$SSreport_default_format =		$row[7];
+	$SSenable_pause_code_limits =	$row[8];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -1580,6 +1582,7 @@ function update_variables(task_option,task_choice,force_reload)
 	.orange {color: black; background-color: orange;}
 	.black {color: white; background-color: black;}
 	.salmon {color: white; background-color: #FA8072;}
+	.darkred {color: white; background-color: #990000}
 
 	.Hblank {color: black; background-color: white; font-size: 11;}
 	.Hgreen {color: white; background-color: green; font-size: 11;}
@@ -1597,6 +1600,7 @@ function update_variables(task_option,task_choice,force_reload)
 	.Horange {color: black; background-color: orange; font-size: 11;}
 	.Hblack {color: white; background-color: black; font-size: 11;}
 	.Hsalmon {color: white; background-color: #FA8072; font-size: 11;}
+	.Hdarkred {color: white; background-color: #990000}
 
 	tr.TRblank {background-color: white}
 	tr.TRgreen {background-color: green}
@@ -1614,6 +1618,7 @@ function update_variables(task_option,task_choice,force_reload)
 	tr.TRorange {background-color: orange}
 	tr.TRblack {background-color: black}
 	tr.TRsalmon {background-color: #FA8072}
+	tr.TRdarkred {color: white; background-color: #990000}
 
 	.r1 {color: black; background-color: #FFCCCC}
 	.r2 {color: black; background-color: #FF9999}

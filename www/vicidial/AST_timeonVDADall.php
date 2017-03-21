@@ -1,7 +1,7 @@
 <?php 
 # AST_timeonVDADall.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -104,10 +104,11 @@
 # 160418-2141 - Fixed issue with WALL displays
 # 160515-1300 - Added UK OFCOM feature
 # 160803-1901 - Fixed issue with ERROR in campaign/ingroup name
+# 170321-1145 - Added pause code time limits colors
 #
 
-$version = '2.12-92';
-$build = '160803-1901';
+$version = '2.14-93';
+$build = '170321-1145';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -194,7 +195,7 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,agent_whisper_enabled,allow_chats,cache_carrier_stats_realtime,report_default_format,ofcom_uk_drop_calc FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,agent_whisper_enabled,allow_chats,cache_carrier_stats_realtime,report_default_format,ofcom_uk_drop_calc,enable_pause_code_limits FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -212,6 +213,7 @@ if ($qm_conf_ct > 0)
 	$cache_carrier_stats_realtime = $row[8];
 	$SSreport_default_format =		$row[9];
 	$SSofcom_uk_drop_calc =			$row[10];
+	$SSenable_pause_code_limits =	$row[11];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -1090,6 +1092,7 @@ else
 		.orange {color: black; background-color: orange}
 		.black {color: white; background-color: black}
 		.salmon {color: white; background-color: #FA8072}
+		.darkred {color: white; background-color: #990000}
 
 		.r1 {color: black; background-color: #FFCCCC}
 		.r2 {color: black; background-color: #FF9999}
@@ -3200,9 +3203,25 @@ if ($talking_to_print > 0)
 				$rowC=mysqli_fetch_row($rsltC);
 				$pausecode = sprintf("%-6s", $rowC[0]);
 				$pausecode="$pausecode ";
+				if ($SSenable_pause_code_limits > 0)
+					{
+					$pause_limit_stmt="SELECT time_limit from vicidial_pause_codes where campaign_id='$Acampaign_id[$i]' and pause_code='$rowC[0]'";
+					$pause_limit_rslt=mysql_to_mysqli($pause_limit_stmt, $link);
+					if (mysqli_num_rows($pause_limit_rslt)>0) 
+						{
+						$pause_limit_row=mysqli_fetch_row($pause_limit_rslt);
+						$pause_limit=$pause_limit_row[0];
+						}
+					else
+						{
+						$pause_limit="999999";
+						}
+					}
+				else
+					{$pause_limit="999999";}
 				}
 			else
-				{$pausecode='';}
+				{$pausecode=''; $pause_limit="999999";}
 
 			if ($call_time_S >= 21600) 
 				{$j++; continue;} 
@@ -3213,6 +3232,7 @@ if ($talking_to_print > 0)
 				if ($call_time_S >= 10) {$G='<SPAN class="khaki"><B>'; $EG='</B></SPAN>'; $tr_class='TRkhaki';}
 				if ($call_time_S >= 60) {$G='<SPAN class="yellow"><B>'; $EG='</B></SPAN>'; $tr_class='TRyellow';}
 				if ($call_time_S >= 300) {$G='<SPAN class="olive"><B>'; $EG='</B></SPAN>'; $tr_class='TRolive';}
+				if ($call_time_S >= $pause_limit) {$G='<SPAN class="darkred"><B>'; $EG='</B></SPAN>'; $tr_class='TRdarkred';}
 				}
 			}
 #		if ( (strlen($Acall_server_ip[$i])> 4) and ($Acall_server_ip[$i] != "$Aserver_ip[$i]") )
@@ -3391,6 +3411,10 @@ if ($talking_to_print > 0)
 	$Aecho .= "  <SPAN class=\"olive\"><B>          </SPAN> - "._QXZ("Agent Paused > 5 minutes")."</B>\n";
 	$Aecho .= "  <SPAN class=\"lime\"><B>          </SPAN> - "._QXZ("Agent in 3-WAY > 10 seconds")."</B>\n";
 	$Aecho .= "  <SPAN class=\"black\"><B>          </SPAN> - "._QXZ("Agent on a dead call")."</B>\n";
+	if ($SSenable_pause_code_limits > 0)
+		{
+		$Aecho .= "  <SPAN class=\"darkred\"><B>          </SPAN> - "._QXZ("Agent over pause limit")."</B>\n";
+		}
 
 	if ($ring_agents > 0)
 		{

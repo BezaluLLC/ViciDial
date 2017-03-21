@@ -115,6 +115,7 @@
 # 170309-1212 - Added agent_xfer_validation and populate_state_areacode entries
 # 170313-2012 - Added CHAT option to inbound_queue_no_dial entry
 # 170320-1346 - Added phones conf_qualify entry
+# 170321-1130 - Added pause code limits entries
 #
 
 
@@ -3424,7 +3425,7 @@ if ($SSoutbound_autodial_active > 0)
 <B><FONT SIZE=3>AGENT PAUSE CODES</FONT></B><BR><BR>
 <A NAME="pause_codes">
 <BR>
-<B><?php echo _QXZ("If the Agent Pause Codes Active field is set to active then the agents will be able to select from these pause codes when they click on the PAUSE button on their screens. This data is then stored in the agent log. The Pause code must contain only letters and numbers and be less than 7 characters long. The pause code name can be no longer than 30 characters."); ?></B>
+<B><?php echo _QXZ("If the Agent Pause Codes Active field is set to active then the agents will be able to select from these pause codes when they click on the PAUSE button on their screens. This data is then stored in the agent log. The Pause code must contain only letters and numbers and be less than 7 characters long. The pause code name can be no longer than 30 characters.") . ' ' . _QXZ("The Time Limit field, if enabled in System Settings, will change the color of the agent on the Real-Time Report if they are in that pause code for more than the defined amount of seconds."); ?></B>
 
 
 
@@ -5015,6 +5016,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-agent_soundboards">
 <BR>
 <B><?php echo _QXZ("Agent Soundboards"); ?> -</B><?php echo _QXZ("This option allows you to create agent soundboards that allow an agent in the user screen to click on audio files to have them play in their session. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="settings-enable_pause_code_limits">
+<BR>
+<B><?php echo _QXZ("Enable Pause Code Time Limits"); ?> -</B><?php echo _QXZ("This option allows you to be able to set the Time Limit field in campaign pause codes, which will change the color of the agent on the Real-Time Report if they are in that pause code for more than the defined amount of seconds. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="settings-agentonly_callback_campaign_lock">

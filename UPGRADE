@@ -124,6 +124,12 @@ OTHER CHANGES:
 22. Added CHAT option to Inbound Queue No Dial campaign setting to prevent
 	outbound auto-dialing if a chat is waiting for an agent
 
+23. Added qualify option to phones for IAX type phones
+
+24. Added Pause Code Time Limits to allow you to set a time limit on the number
+	of seconds an agent can be in a specific pause code before the real-time
+	report will show them in a different color.
+
 
 
 
