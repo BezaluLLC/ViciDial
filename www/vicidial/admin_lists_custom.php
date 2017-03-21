@@ -42,10 +42,11 @@
 # 160510-2108 - Fixing issues with using only standard fields
 # 170228-2254 - Changes to allow URLs in SCRIPT field types
 # 170301-0827 - Enabled required custom fields with INBOUND_ONLY option
+# 170321-1553 - Fixed list view permissions issue #1005
 #
 
-$admin_version = '2.14-34';
-$build = '170301-0827';
+$admin_version = '2.14-35';
+$build = '170321-1553';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -235,13 +236,31 @@ if ( $modify_leads < 1 )
 	exit;
 	}
 
-$stmt="SELECT full_name,modify_leads,custom_fields_modify,user_level from vicidial_users where user='$PHP_AUTH_USER';";
+$stmt="SELECT full_name,modify_leads,custom_fields_modify,user_level,user_group from vicidial_users where user='$PHP_AUTH_USER';";
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGfullname =				$row[0];
 $LOGmodify_leads =			$row[1];
 $LOGcustom_fields_modify =	$row[2];
 $LOGuser_level =			$row[3];
+$LOGuser_group =			$row[4];
+
+$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$LOGuser_group';";
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
+$LOGallowed_campaigns =			$row[0];
+
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
+$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
+
 
 ?>
 <html>
@@ -354,7 +373,7 @@ echo "$DB,$action,$ip,$user,$copy_option,$field_id,$list_id,$source_list_id,$fie
 if ($action == "COPY_FIELDS_FORM")
 	{
 	##### get lists listing for dynamic pulldown
-	$stmt="SELECT list_id,list_name from vicidial_lists order by list_id";
+	$stmt="SELECT list_id,list_name from vicidial_lists $whereLOGallowed_campaignsSQL order by list_id;";
 	$rsltx=mysql_to_mysqli($stmt, $link);
 	$lists_to_print = mysqli_num_rows($rsltx);
 	$lists_list='';
@@ -891,6 +910,22 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "</TITLE></HEAD><BODY BGCOLOR=white>\n";
 	echo "<TABLE><TR><TD>\n";
 
+	$stmt="SELECT list_name,active,campaign_id from vicidial_lists where list_id='$list_id' $LOGallowed_campaignsSQL;";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$lists_to_print = mysqli_num_rows($rslt);
+	if ($lists_to_print > 0) 
+		{
+		$rowx=mysqli_fetch_row($rslt);
+		$list_name =		$rowx[0];
+		$active =			$rowx[1];
+		$campaign_id =		$rowx[2];
+		}
+	else
+		{
+		echo _QXZ("You do not have permission to view this page")." $list_id\n";
+		exit;
+		}
+
 	$custom_records_count=0;
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -913,7 +948,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		}
 
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
-	echo "<br>"._QXZ("Modify Custom Fields: List ID")." $list_id   &nbsp; &nbsp; &nbsp; &nbsp; ";
+	echo "<br>"._QXZ("Modify Custom Fields: List ID")." $list_id - $list_name  &nbsp; &nbsp; &nbsp; &nbsp; ";
 	echo _QXZ("Records in this custom table").": $custom_records_count<br>\n";
 	echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
@@ -1354,7 +1389,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 ##### BEGIN list lists as well as the number of custom fields in each list
 if ($action == "LIST")
 	{
-	$stmt="SELECT list_id,list_name,active,campaign_id from vicidial_lists order by list_id;";
+	$stmt="SELECT list_id,list_name,active,campaign_id from vicidial_lists $whereLOGallowed_campaignsSQL order by list_id;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$lists_to_print = mysqli_num_rows($rslt);
 	$o=0;
