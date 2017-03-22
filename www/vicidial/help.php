@@ -116,6 +116,7 @@
 # 170313-2012 - Added CHAT option to inbound_queue_no_dial entry
 # 170320-1346 - Added phones conf_qualify entry
 # 170321-1130 - Added pause code limits entries
+# 170322-1720 - Added filter-phone-list entry
 #
 
 
@@ -2159,9 +2160,17 @@ if ($SSqc_features_active > 0)
 <B><?php echo _QXZ("Time Zone Setting"); ?> -</B><?php echo _QXZ("This option allows you to set the method of maintaining the current time zone lookup for the leads within this list. This process is only done at night so any changes you make will not be immediate. COUNTRY_AND_AREA_CODE is the default, and will use the country code and area code of the phone number to determine the time zone of the lead. POSTAL_CODE will use the postal code if available to determine the time zone of the lead. NANPA_PREFIX works only in the USA and will use the area code and prefix of the phone number to determine the time zone of the lead, but this is not enabled by default in the system, so please be sure you have the NANPA prefix data loaded onto your system before selecting this option. OWNER_TIME_ZONE_CODE will use the standard time zone abbreviation loaded into the owner field of the lead to determine the time zone, in the USA examples are AST, EST, CST, MST, PST, AKST, HST. This feature must be enabled by your system administrator to go into effect."); ?>
 
 <BR>
+<BR>
 <A NAME="internal_list-dnc">
 <BR>
 <B><?php echo _QXZ("Internal DNC List"); ?> -</B><?php echo _QXZ("This Do Not Call list contains every lead that has been set to a status of DNC in the system. Through the LISTS - ADD NUMBER TO DNC page you are able to manually add numbers to this list so that they will not be called by campaigns that use the internal DNC list. There is also the option to add leads to the campaign-specific DNC lists for those campaigns that have them. If you have the active DNC option set to AREACODE then you can also use area code wildcard entries like this 201XXXXXXX to block all calls to the 201 areacode when enabled."); ?>
+
+
+<BR>
+<BR>
+<A NAME="filter-phone-list">
+<BR>
+<B><?php echo _QXZ("Filter Phone Group List"); ?> -</B><?php echo _QXZ("Through the Add-Delete FPG Number page you are able to manually add numbers to this list so that they will be filtered when they enter a DID that is using this list. If you have the Filter Phone Group option set to include AREACODE then you can also use area code wildcard entries like this 201XXXXXXX to filter all calls from the 201 areacode when enabled. There is also a special entry that you can add to your Filter Phone Group, BLANK, this will filter calls that arrive with an empty caller ID number."); ?>
 
 
 

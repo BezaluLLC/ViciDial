@@ -6653,7 +6653,7 @@ if ($ADD==171)
 	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Filter Phone Group").": </td><td align=left><select size=1 name=filter_phone_group_id>\n";
 	echo "$vfpg_list";
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Phone Numbers").": <BR><BR> ("._QXZ("one phone number per line only").")<BR>$NWB#internal_list-dnc$NWE</td><td align=left><TEXTAREA name=phone_numbers ROWS=20 COLS=20></TEXTAREA></td></tr>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Phone Numbers").": <BR><BR> ("._QXZ("one phone number per line only").")<BR>$NWB#filter-phone-list$NWE</td><td align=left><TEXTAREA name=phone_numbers ROWS=20 COLS=20></TEXTAREA></td></tr>\n";
 	if ($LOGdelete_from_dnc > 0)
 		{
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Add or Delete").": </td><td align=left><select size=1 name=stage><option SELECTED value='add'>"._QXZ("add")."</option><option value='delete'>"._QXZ("delete")."</option></select></td></tr>\n";

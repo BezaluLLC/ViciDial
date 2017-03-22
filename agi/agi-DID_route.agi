@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# agi-DID_route.agi version 2.12
+# agi-DID_route.agi version 2.14
 # 
 # runs when a call comes into an inbound context on a trunk. This script will 
 # send the calls to various places depending on the settings for each DID.
@@ -13,7 +13,7 @@
 # ;inbound DID catch-all:
 #exten => _X.,1,AGI(agi-DID_route.agi)
 #
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 81007-0324 - First Build
@@ -42,6 +42,7 @@
 # 150806-1316 - Added Filter URL logging to url log, and added variables for uniqueid, channel and server_ip
 # 160106-0719 - Added filter option for GROUP_AREACODE
 # 161102-1035 - Fixed QM partition problem
+# 170322-1708 - Added filter phone group entry BLANK for a blank CIDnumber
 #
 
 
@@ -476,7 +477,9 @@ if ( (length($pre_filter_phone_group_id)>0) && (length($pre_filter_extension)>0)
 	{
 	if ($AGILOG) {$agi_string = "pre-filtering active: |$extension|$pre_filter_phone_group_id|$pre_filter_extension|$filter_clean_cid_number|$callerid";   &agi_output;}
 
-	$stmtA = "SELECT count(*) FROM vicidial_filter_phone_numbers where filter_phone_group_id='$pre_filter_phone_group_id' and phone_number='$callerid';";
+	$temp_cid_test = $callerid;
+	if (length($callerid)<1) {$temp_cid_test = 'BLANK';}
+	$stmtA = "SELECT count(*) FROM vicidial_filter_phone_numbers where filter_phone_group_id='$pre_filter_phone_group_id' and phone_number='$temp_cid_test';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -512,7 +515,9 @@ if ( ($filter_inbound_number =~ /GROUP|URL|DNC_INTERNAL|DNC_CAMPAIGN/) && ($pre_
 	if ($AGILOG) {$agi_string = "filtering active: |$extension|$filter_inbound_number|$filter_phone_group_id|$filter_url|$filter_action|$filter_clean_cid_number|";   &agi_output;}
 	if ($filter_inbound_number =~ /GROUP/)
 		{
-		$stmtA = "SELECT count(*) FROM vicidial_filter_phone_numbers where filter_phone_group_id='$filter_phone_group_id' and phone_number='$callerid';";
+		$temp_cid_test = $callerid;
+		if (length($callerid)<1) {$temp_cid_test = 'BLANK';}
+		$stmtA = "SELECT count(*) FROM vicidial_filter_phone_numbers where filter_phone_group_id='$filter_phone_group_id' and phone_number='$temp_cid_test';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
