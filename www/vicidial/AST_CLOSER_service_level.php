@@ -35,6 +35,7 @@
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 # 160819-0054 - Fixed chart bugs caused by DST
 # 170227-1714 - Fix for default HTML report format, issue #997
+# 170323-2247 - Added debug variable
 #
 
 $startMS = microtime();
@@ -57,6 +58,8 @@ if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))		{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
+if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
+	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_display_type"];}

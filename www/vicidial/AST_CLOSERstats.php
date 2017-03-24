@@ -55,6 +55,7 @@
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 # 160819-0054 - Fixed chart bugs
 # 170227-1715 - Fix for default HTML report format, issue #997
+# 170324-0740 - Fix for daylight savings time issue
 #
 
 $startMS = microtime();
@@ -2832,6 +2833,8 @@ while ($j < $calls_to_print)
 	$Cqueue[$j] =	$row[1];
 	$Cepoch[$j] =	$row[2];
 	$Cdate[$j] =	$row[3];
+	$dst=date("I", strtotime($Cdate[$j]));
+	$epoch_offset =		(($local_gmt + $dst) * 3600);
 	$Crem[$j] = ( ($Cepoch[$j] + $epoch_offset) % 86400); # find the remainder(Modulus) of seconds since start of the day
 #	$MAIN.="|$Cepoch[$j]|$Crem[$j]|$Cdate[$j]|\n";
 	$j++;
