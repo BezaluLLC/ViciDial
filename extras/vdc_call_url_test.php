@@ -1,7 +1,7 @@
 <?php
 # vdc_call_url_test.php
 # 
-# Copyright (C) 2013  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display and log the start_call_url and dispo_call_url
 # queries if activated
@@ -10,15 +10,18 @@
 # 100103-1317 - First build of script
 # 100113-2023 - Added dispo_name
 # 130328-0023 - Converted ereg to preg functions
+# 170324-1251 - Added more debug output
 #
 
-$version = '2.6-3';
-$build = '130328-0023';
+$version = '2.14-4';
+$build = '170324-1251';
 
 require("dbconnect.php");
 
 $query_string = getenv("QUERY_STRING");
 
+if (isset($_GET["format"]))	{$format=$_GET["format"];}
+	elseif (isset($_POST["format"]))	{$format=$_POST["format"];}
 if (isset($_GET["lead_id"]))	{$lead_id=$_GET["lead_id"];}
 	elseif (isset($_POST["lead_id"]))	{$lead_id=$_POST["lead_id"];}
 if (isset($_GET["vendor_id"]))	{$vendor_id=$_GET["vendor_id"];}
@@ -214,6 +217,12 @@ if ($format=='debug')
 	echo "</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	echo "HEADERS:<BR>\n";
+
+	foreach (getallheaders() as $name => $value) 
+		{
+		echo "$name: $value<BR>\n";
+		}
 	}
 
 $output = '';

@@ -1,20 +1,26 @@
 <?php
 # get2post.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to take a url as part of the query string and convert 
 # it to a POST HTTP request and log to the url log table. uniqueid is required!
+#
+# -headers- option allows you to define HTTP headers in the POST, each header separated by 5 dashes, with their values separated by 3 dashes: 
+#   "headers=HEADERXYZ---XYZvalue-----HEADERABC---ABCvalue"
+#
 # Example Dispo Call URL input:
 # VARhttp://127.0.0.1/agc/get2post.php?uniqueid=--A--uniqueid--B--&type=dispo&HTTPURLTOPOST=127.0.0.1/agc/vdc_call_url_test.php?lead_id=--A--lead_id--B--
 # VARhttp://127.0.0.1/agc/get2post.php?uniqueid=--A--uniqueid--B--&type=start&HTTPSURLTOPOST=127.0.0.1/agc/vdc_call_url_test.php?lead_id=--A--lead_id--B--
+# VARhttp://127.0.0.1/agc/get2post.php?uniqueid=--A--uniqueid--B--&type=start&headers=HEADERXYZ---XYZvalue-----HEADERABC---ABCvalue&HTTPURLTOPOST=127.0.0.1/agc/vdc_call_url_test.php?lead_id=--A--lead_id--B--
 #
 # CHANGELOG:
 # 160302-1159 - First build of script
+# 170324-1218 - Added headers options
 #
 
-$version = '2.12-1';
-$build = '160302-1159';
+$version = '2.14-2';
+$build = '170324-1218';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -26,6 +32,8 @@ if (isset($_GET["uniqueid"]))			{$uniqueid=$_GET["uniqueid"];}
 	elseif (isset($_POST["uniqueid"]))	{$uniqueid=$_POST["uniqueid"];}
 if (isset($_GET["type"]))				{$type=$_GET["type"];}
 	elseif (isset($_POST["type"]))		{$type=$_POST["type"];}
+if (isset($_GET["headers"]))			{$headers=$_GET["headers"];}
+	elseif (isset($_POST["headers"]))	{$headers=$_POST["headers"];}
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 
@@ -57,6 +65,7 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
+$headers=preg_replace('/[^- \.\_0-9a-zA-Z]/',"",$headers);
 $uniqueid=preg_replace('/[^-\.\_0-9a-zA-Z]/',"",$uniqueid);
 $type=preg_replace('/[^-\_0-9a-zA-Z]/',"",$type);
 $DB=preg_replace('/[^0-9]/',"",$DB);
@@ -66,6 +75,22 @@ if (!isset($type))   {$type="get2post";}
 
 if (strlen($uniqueid) < 10)
 	{print "ERROR: uniqueid is not valid";   exit;}
+
+$HTTPheader = array();
+if (strlen($headers) > 1)
+	{
+	# &headers=HEADERXYZ---XYZvalue-----HEADERABC---ABCvalue
+	$headersARY = explode('-----',$headers);
+	$headersARYct = count($headersARY);
+	$h=0;
+	while ($h < $headersARYct)
+		{
+		$headerXary = explode('---',$headersARY[$h]);
+		$HTTPheader[] = $headerXary[0] . ": " . $headerXary[1];
+		if ($DB) {echo "HTTP Header SET: |" . $headerXary[0] . ": " . $headerXary[1] ."|\n";}
+		$h++;
+		}
+	}
 
 if (preg_match("/HTTPURLTOPOST=|HTTPSURLTOPOST=/",$query_string))
 	{
@@ -122,6 +147,7 @@ if (preg_match("/HTTPURLTOPOST=|HTTPSURLTOPOST=/",$query_string))
 			CURLOPT_POST => 1,
 			CURLOPT_URL => $post_page,
 			CURLOPT_POSTFIELDS => $post_vars,
+			CURLOPT_HTTPHEADER => $HTTPheader,
 			CURLOPT_USERAGENT => 'VICIdial get2post'
 		));
 
