@@ -122,6 +122,7 @@
 # 151006-0936 - Changed campaign_cid_areacodes to operate with 2-5 digit areacodes
 # 161102-1031 - Fixed QM partition problem
 # 170313-1041 - Added CHAT option to inbound_queue_no_dial
+# 170325-1106 - Added optional vicidial_drop_log logging
 #
 
 ### begin parsing run-time options ###
@@ -282,7 +283,7 @@ $event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
 
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,outbound_autodial_active,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pause_type FROM system_settings;";
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,outbound_autodial_active,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pause_type,enable_drop_lists FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -299,6 +300,7 @@ if ($sthArows > 0)
 	$queuemetrics_loginout =			$aryA[7];
 	$queuemetrics_addmember_enabled =	$aryA[8];
 	$queuemetrics_pause_type =			$aryA[9];
+	$enable_drop_lists =				$aryA[10];
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -1604,6 +1606,14 @@ while($one_day_interval > 0)
 									$stmtB = "INSERT INTO vicidial_log_extended set uniqueid='$CLuniqueid',server_ip='$server_ip',call_date='$SQLdate',lead_id = '$CLlead_id',caller_code='$KLcallerid[$kill_vac]',custom_call_id='';";
 									$affected_rowsB = $dbhA->do($stmtB);
 
+									if ( ($enable_drop_lists > 1) && ($CLnew_status =~ /DROP/) )
+										{
+										$stmtC="INSERT IGNORE INTO vicidial_drop_log SET uniqueid='$CLuniqueid',server_ip='$server_ip',drop_date=NOW(),lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='DROP',phone_code='$CLphone_code',phone_number='$CLphone_number';";
+										$affected_rowsC = $dbhA->do($stmtC);
+										$event_string = "--    DROP vicidial_drop_log insert: |$affected_rowsC|$CLuniqueid|$CLlead_id|$CLnew_status|";
+										 &event_logger;
+										}
+
 									$event_string = "|     dead NA call added to log $CLuniqueid|$CLlead_id|$CLphone_number|$CLstatus|$CLnew_status|$affected_rows|$affected_rowsB|$insertVLcount";
 									 &event_logger;
 									}
@@ -2412,6 +2422,14 @@ while($one_day_interval > 0)
 
 				$stmtB = "INSERT INTO vicidial_log_extended set uniqueid='$CLuniqueid',server_ip='$server_ip',call_date='$SQLdate',lead_id = '$CLlead_id',caller_code='$CLcallerid',custom_call_id='';";
 				$affected_rowsB = $dbhA->do($stmtB);
+
+				if ($enable_drop_lists > 1)
+					{
+					$stmtC="INSERT IGNORE INTO vicidial_drop_log SET uniqueid='$CLuniqueid',server_ip='$server_ip',drop_date=NOW(),lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='DROP',phone_code='$CLphone_code',phone_number='$CLphone_number';";
+					$affected_rowsC = $dbhA->do($stmtC);
+					$event_string = "--    DROP vicidial_drop_log insert: |$affected_rowsC|$CLuniqueid|$CLlead_id|";
+					 &event_logger;
+					}
 
 				$event_string = "|     dead NA call added to logs $CLuniqueid|$CLlead_id|$CLphone_number|$CLstatus|DROP|$affected_rows|$affected_rowsB|";
 				 &event_logger;

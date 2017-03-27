@@ -496,7 +496,7 @@ if (length($report_id) > 1)
 	$sthA->finish();
 
 	### gather user information for last manager who edited the automated report
-	$stmtA = "SELECT user from vicidial_admin_log where event_section='AUTOREPORTS' and record_id='$report_id';";
+	$stmtA = "SELECT user from vicidial_admin_log where event_section='AUTOREPORTS' and record_id='$report_id' and event_type IN('ADD','MODIFY','COPY') order by admin_log_id desc limit 1;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;

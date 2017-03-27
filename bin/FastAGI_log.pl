@@ -25,7 +25,7 @@
 # exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
 # 
 #
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 61010-1007 - First test build
@@ -75,6 +75,7 @@
 # 161214-1717 - Fix for rare multi-server grab from IVR park issue
 # 161226-1135 - rolled back previous fix
 # 161226-1211 - Fix for previous rolled-back code
+# 170325-1105 - Added optional vicidial_drop_log logging
 #
 
 # defaults for PreFork
@@ -1311,6 +1312,21 @@ sub process_request
 							$Euniqueid=$uniqueid;
 							$Euniqueid =~ s/\.\d+$//gi;
 
+							#############################################
+							##### SYSTEM SETTINGS LOOKUP #####
+							$stmtA = "SELECT enable_drop_lists FROM system_settings;";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$enable_drop_lists =	$aryA[0];
+								}
+							$sthA->finish();
+							##### END SYSTEM SETTINGS LOOKUP #####
+							###########################################
+
 							if ($calleridname !~ /^Y\d\d\d\d/)
 								{
 								########## FIND AND UPDATE vicidial_log ##########
@@ -1402,6 +1418,13 @@ sub process_request
 									$stmtA="INSERT IGNORE INTO vicidial_log_extended SET uniqueid='$uniqueid',server_ip='$VARserver_ip',call_date='$VD_call_time',lead_id='$VD_lead_id',caller_code='$VD_callerid',custom_call_id='' ON DUPLICATE KEY UPDATE server_ip='$VARserver_ip',call_date='$VD_call_time',lead_id='$VD_lead_id',caller_code='$VD_callerid';";
 									$VDLXPDaffected_rows = $dbhA->do($stmtA);
 									if ($AGILOG) {$agi_string = "--    PDROP vicidial_extended_log insert: |$VDLXPDaffected_rows|$uniqueid|$CIDlead_id|$VDL_status|";   &agi_output;}
+
+									if ($enable_drop_lists > 1) 
+										{
+										$stmtA="INSERT IGNORE INTO vicidial_drop_log SET uniqueid='$uniqueid',server_ip='$VARserver_ip',drop_date=NOW(),lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='PDROP',phone_code='$VD_phone_code',phone_number='$VD_phone_number';";
+										$VDDLaffected_rows = $dbhA->do($stmtA);
+										if ($AGILOG) {$agi_string = "--    PDROP vicidial_drop_log insert: |$VDDLaffected_rows|$uniqueid|$VD_lead_id|$VDL_status|";   &agi_output;}
+										}
 									}
 								### END if call answers but has not reached routing AGI, then log as a PDROP
 								}
@@ -1512,6 +1535,13 @@ sub process_request
 											if ($AGILOG) {$agi_string = "--    VDAD vicidial_list update CSLR: |$affected_rows|$VD_lead_id";   &agi_output;}
 											}
 										}
+									}
+
+								if ( ( ($calleridname =~ /^Y\d\d\d\d/) && ($enable_drop_lists > 0) ) || ( ($calleridname !~ /^Y\d\d\d\d/) && ($enable_drop_lists > 1) ) )
+									{
+									$stmtA="INSERT IGNORE INTO vicidial_drop_log SET uniqueid='$uniqueid',server_ip='$VARserver_ip',drop_date=NOW(),lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='DROP',phone_code='$VD_phone_code',phone_number='$VD_phone_number';";
+									$VDDLaffected_rows = $dbhA->do($stmtA);
+									if ($AGILOG) {$agi_string = "--    DROP vicidial_drop_log insert: |$VDDLaffected_rows|$uniqueid|$VD_lead_id|$VD_campaign_id|";   &agi_output;}
 									}
 								}
 

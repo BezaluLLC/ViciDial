@@ -129,3 +129,44 @@ ALTER TABLE system_settings ADD enable_pause_code_limits ENUM('1','0') default '
 ALTER TABLE vicidial_pause_codes ADD time_limit SMALLINT(5) UNSIGNED default '65000';
 
 UPDATE system_settings SET db_schema_version='1496',db_schema_update_date=NOW() where db_schema_version < 1496;
+
+ALTER TABLE system_settings ADD enable_drop_lists ENUM('0','1','2') default '0';
+
+CREATE TABLE vicidial_drop_lists (
+dl_id VARCHAR(30) UNIQUE NOT NULL,
+dl_name VARCHAR(100),
+last_run DATETIME,
+dl_server VARCHAR(30) default 'active_voicemail_server',
+dl_times VARCHAR(100) default '',
+dl_weekdays VARCHAR(7) default '',
+dl_monthdays VARCHAR(100) default '',
+drop_statuses VARCHAR(255) default ' DROP -',
+list_id BIGINT(14) UNSIGNED,
+duplicate_check VARCHAR(50) default 'NONE',
+run_now_trigger ENUM('N','Y') default 'N',
+active ENUM('N','Y') default 'N',
+user_group VARCHAR(20) default '---ALL---',
+closer_campaigns TEXT,
+index (dl_times),
+index (run_now_trigger)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_drop_log (
+uniqueid VARCHAR(50) NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+drop_date DATETIME NOT NULL,
+lead_id INT(9) UNSIGNED NOT NULL,
+phone_code VARCHAR(10),
+phone_number VARCHAR(18),
+campaign_id VARCHAR(20) NOT NULL,
+status VARCHAR(6) NOT NULL,
+drop_processed ENUM('N','Y','U') default 'N',
+index(drop_date),
+index(drop_processed)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_drop_log_archive LIKE vicidial_drop_log; 
+DROP INDEX drop_date on vicidial_drop_log_archive;
+CREATE UNIQUE INDEX vicidial_drop_log_archive_key on vicidial_drop_log_archive(drop_date, uniqueid);
+
+UPDATE system_settings SET db_schema_version='1497',db_schema_update_date=NOW() where db_schema_version < 1497;

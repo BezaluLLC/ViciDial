@@ -130,6 +130,9 @@ OTHER CHANGES:
 	of seconds an agent can be in a specific pause code before the real-time
 	report will show them in a different color.
 
+25. Added Drop Lists feature, allowing you to add new leads to a list built from
+	DROPped calls from inbound groups on a scheduled basis.
+
 
 
 

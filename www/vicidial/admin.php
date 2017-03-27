@@ -2192,6 +2192,26 @@ if (isset($_GET["enable_pause_code_limits"]))			{$enable_pause_code_limits=$_GET
 	elseif (isset($_POST["enable_pause_code_limits"]))	{$enable_pause_code_limits=$_POST["enable_pause_code_limits"];}
 if (isset($_GET["time_limit"]))				{$time_limit=$_GET["time_limit"];}
 	elseif (isset($_POST["time_limit"]))	{$time_limit=$_POST["time_limit"];}
+if (isset($_GET["enable_drop_lists"]))			{$enable_drop_lists=$_GET["enable_drop_lists"];}
+	elseif (isset($_POST["enable_drop_lists"]))	{$enable_drop_lists=$_POST["enable_drop_lists"];}
+if (isset($_GET["dl_id"]))			{$dl_id=$_GET["dl_id"];}
+	elseif (isset($_POST["dl_id"]))	{$dl_id=$_POST["dl_id"];}
+if (isset($_GET["dl_name"]))			{$dl_name=$_GET["dl_name"];}
+	elseif (isset($_POST["dl_name"]))	{$dl_name=$_POST["dl_name"];}
+if (isset($_GET["last_run"]))			{$last_run=$_GET["last_run"];}
+	elseif (isset($_POST["last_run"]))	{$last_run=$_POST["last_run"];}
+if (isset($_GET["dl_server"]))			{$dl_server=$_GET["dl_server"];}
+	elseif (isset($_POST["dl_server"]))	{$dl_server=$_POST["dl_server"];}
+if (isset($_GET["dl_times"]))			{$dl_times=$_GET["dl_times"];}
+	elseif (isset($_POST["dl_times"]))	{$dl_times=$_POST["dl_times"];}
+if (isset($_GET["dl_weekdays"]))			{$dl_weekdays=$_GET["dl_weekdays"];}
+	elseif (isset($_POST["dl_weekdays"]))	{$dl_weekdays=$_POST["dl_weekdays"];}
+if (isset($_GET["dl_monthdays"]))			{$dl_monthdays=$_GET["dl_monthdays"];}
+	elseif (isset($_POST["dl_monthdays"]))	{$dl_monthdays=$_POST["dl_monthdays"];}
+if (isset($_GET["drop_status"]))			{$drop_status=$_GET["drop_status"];}
+	elseif (isset($_POST["drop_status"]))	{$drop_status=$_POST["drop_status"];}
+if (isset($_GET["duplicate_check"]))			{$duplicate_check=$_GET["duplicate_check"];}
+	elseif (isset($_POST["duplicate_check"]))	{$duplicate_check=$_POST["duplicate_check"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2206,7 +2226,7 @@ if (strlen($dial_status) > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key,pass_hash_enabled,disable_auto_dial,country_code_list_stats,frozen_server_call_clear,active_modules,allow_chats,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,default_language,user_hide_realtime_enabled,log_recording_access,alt_ivr_logging,admin_row_click,admin_screen_colors,ofcom_uk_drop_calc,agent_screen_colors,script_remove_js,manual_auto_next,user_new_lead_limit,agent_xfer_park_3way,agent_soundboards,web_loader_phone_length,agent_script,enable_auto_reports,enable_pause_code_limits FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key,pass_hash_enabled,disable_auto_dial,country_code_list_stats,frozen_server_call_clear,active_modules,allow_chats,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,default_language,user_hide_realtime_enabled,log_recording_access,alt_ivr_logging,admin_row_click,admin_screen_colors,ofcom_uk_drop_calc,agent_screen_colors,script_remove_js,manual_auto_next,user_new_lead_limit,agent_xfer_park_3way,agent_soundboards,web_loader_phone_length,agent_script,enable_auto_reports,enable_pause_code_limits,enable_drop_lists FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -2280,6 +2300,7 @@ if ($qm_conf_ct > 0)
 	$SSagent_script =						$row[64];
 	$SSenable_auto_reports =				$row[65];
 	$SSenable_pause_code_limits =			$row[66];
+	$SSenable_drop_lists =					$row[67];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -2592,6 +2613,8 @@ if ($non_latin < 1)
 	$report_weekdays = preg_replace('/[^0-9]/','',$report_weekdays);
 	$enable_pause_code_limits = preg_replace('/[^0-9]/','',$enable_pause_code_limits);
 	$time_limit = preg_replace('/[^0-9]/','',$time_limit);
+	$enable_drop_lists = preg_replace('/[^0-9]/','',$enable_drop_lists);
+	$dl_weekdays = preg_replace('/[^0-9]/','',$dl_weekdays);
 
 	$user_new_lead_limit = preg_replace('/[^-0-9]/','',$user_new_lead_limit);
 	$drop_call_seconds = preg_replace('/[^-0-9]/','',$drop_call_seconds);
@@ -3080,6 +3103,10 @@ if ($non_latin < 1)
 	$report_times = preg_replace('/[^-_0-9a-zA-Z]/','',$report_times);
 	$report_monthdays = preg_replace('/[^-_0-9a-zA-Z]/','',$report_monthdays);
 	$populate_state_areacode = preg_replace('/[^-_0-9a-zA-Z]/','',$populate_state_areacode);
+	$dl_id = preg_replace('/[^-_0-9a-zA-Z]/','',$dl_id);
+	$duplicate_check = preg_replace('/[^-_0-9a-zA-Z]/','',$duplicate_check);
+	$dl_times = preg_replace('/[^-_0-9a-zA-Z]/','',$dl_times);
+	$dl_monthdays = preg_replace('/[^-_0-9a-zA-Z]/','',$dl_monthdays);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_timeout_prompt = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$menu_timeout_prompt);
@@ -3162,6 +3189,7 @@ if ($non_latin < 1)
 	$pre_filter_extension = preg_replace('/[^\*\#\.\_0-9a-zA-Z]/','',$pre_filter_extension);
 	$max_queue_ingroup_extension = preg_replace('/[^\*\#\.\_0-9a-zA-Z]/','',$max_queue_ingroup_extension);
 	$report_server = preg_replace('/[^\*\#\.\_0-9a-zA-Z]/','',$report_server);
+	$dl_server = preg_replace('/[^\*\#\.\_0-9a-zA-Z]/','',$dl_server);
 
 	### ALPHA-NUMERIC and spaces dots, commas, dashes, underscores
 	$adaptive_dl_diff_target = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$adaptive_dl_diff_target);
@@ -3257,6 +3285,8 @@ if ($non_latin < 1)
 	$customer_chat_survey_text = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$customer_chat_survey_text);
 	$agent_script = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$agent_script);
 	$report_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$report_name);
+	$dl_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$dl_name);
+	$drop_status = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$drop_status);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
 	$call_out_number_group = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$call_out_number_group);
@@ -4027,12 +4057,13 @@ else
 # 170315-0633 - Fix in in-group copy SQL
 # 170320-1340 - Added conf_qualify phones option for IAX
 # 170321-1100 - Added pause code time limits warning feature
+# 170327-0704 - Added Drop Lists section
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-603a';
-$build = '170321-1100';
+$admin_version = '2.14-604a';
+$build = '170327-0704';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4554,6 +4585,7 @@ if ($ADD==11)			{$hh='campaigns';	$sh='basic';	echo _QXZ("Add New Campaign");}
 if ($ADD==12)			{$hh='campaigns';	$sh='basic';	echo _QXZ("Copy Campaign");}
 if ($ADD==111)			{$hh='lists';		$sh='new';	echo _QXZ("Add New List");}
 if ($ADD==121)			{$hh='lists';		$sh='dnc';	echo _QXZ("Add New DNC");}
+if ($ADD==131)			{$hh='lists';		$sh='droplist';	echo _QXZ("Add New Drop List");}
 if ($ADD==171)			{$hh='ingroups';	$sh='addFPG';	echo _QXZ("Filter Phone Group Numbers");}
 if ($ADD==1111)			{$hh='ingroups';	$sh='newIG';	echo _QXZ("Add New In-Group");}
 if ($ADD==1211)			{$hh='ingroups';	$sh='copyIG';	echo _QXZ("Copy In-Group");}
@@ -4607,6 +4639,7 @@ if ($ADD==29)			{$hh='campaigns';	$sh='listmix';	echo _QXZ("Campaign List Mix Ad
 if ($ADD==201)			{$hh='campaigns';	$sh='preset';	echo _QXZ("Campaign Preset Added");}
 if ($ADD==202)			{$hh='campaigns';	$sh='accid';	echo _QXZ("Campaign Areacode CID Modify");}
 if ($ADD==211)			{$hh='lists';		$sh='new';	echo _QXZ("New List Addition");}
+if ($ADD==231)			{$hh='lists';		$sh='droplist';	echo _QXZ("New Drop List Addition");}
 if ($ADD==2111)			{$hh='ingroups';	$sh='newIG';	echo _QXZ("New In-Group Addition");}
 if ($ADD==2011)			{$hh='ingroups';	$sh='copyIG';	echo _QXZ("New Copied In-Group Addition");}
 if ($ADD==2311)			{$hh='ingroups';	$sh='newDID';	echo _QXZ("New DID Addition");}
@@ -4688,6 +4721,8 @@ if ($ADD==39)			{$hh='campaigns';	$sh='listmix';	echo _QXZ("Campaign List Mixes"
 if ($ADD==301)			{$hh='campaigns';	$sh='preset';	echo _QXZ("Campaign Presets");}
 if ($ADD==302)			{$hh='campaigns';	$sh='accid';	echo _QXZ("Campaign Areacode CID");}
 if ($ADD==311)			{$hh='lists';		$sh='list';	echo _QXZ("Modify List");}
+if ($ADD==331)			{$hh='lists';		$sh='droplist';	echo _QXZ("Modify Drop List");}
+if ($ADD==333)			{$hh='lists';		$sh='droplist';	echo _QXZ("Modify Drop List Status");}
 if ($ADD==3111)			{$hh='ingroups';	echo _QXZ("Modify In-Group");}
 if ($ADD==3311)			{$hh='ingroups';	echo _QXZ("Modify DID");}
 if ($ADD==3321)			{$hh='ingroups';	echo _QXZ("Modify DID RA Extension Overrides");}
@@ -4742,6 +4777,7 @@ if ($ADD==49)			{$hh='campaigns';	$sh='listmix';	echo _QXZ("Modify Campaign List
 if ($ADD==401)			{$hh='campaigns';	$sh='preset';	echo _QXZ("Modify Campaign Preset");}
 if ($ADD=='40A')		{$hh='campaigns';	$sh='survey';	echo _QXZ("Modify Campaign Survey");}
 if ($ADD==411)			{$hh='lists';		$sh='list';	echo _QXZ("Modify List");}
+if ($ADD==431)			{$hh='lists';		$sh='droplist';	echo _QXZ("Modify Drop List");}
 if ($ADD==4111)			{$hh='ingroups';	echo _QXZ("Modify In-Group");}
 if ($ADD==4311)			{$hh='ingroups';	echo _QXZ("Modify DID");}
 if ($ADD==4511)			{$hh='ingroups';	echo _QXZ("Modify Call Menu");}
@@ -4785,6 +4821,7 @@ if ($ADD==52)			{$hh='campaigns';	$sh='detail';	echo _QXZ("Logout Agents");}
 if ($ADD==53)			{$hh='campaigns';	$sh='detail';	echo _QXZ("Emergency VDAC Jam Clear");}
 if ($ADD==511)			{$hh='lists';		$sh='list';	echo _QXZ("Delete List");}
 if ($ADD==512)			{$hh='lists';		$sh='list';	echo _QXZ("Clear List");}
+if ($ADD==531)			{$hh='lists';		$sh='droplist';	echo _QXZ("Delete Drop List");}
 if ($ADD==5111)			{$hh='ingroups';	echo _QXZ("Delete In-Group");}
 if ($ADD==5311)			{$hh='ingroups';	echo _QXZ("Delete DID");}
 if ($ADD==5511)			{$hh='ingroups';	echo _QXZ("Delete Call Menu");}
@@ -4827,6 +4864,7 @@ if ($ADD==69)			{$hh='campaigns';	$sh='listmix';	echo _QXZ("Campaign List Mix Re
 if ($ADD==601)			{$hh='campaigns';	$sh='preset';	echo _QXZ("Campaign Preset Removed");}
 if ($ADD==611)			{$hh='lists';		$sh='list';	echo _QXZ("Delete List");}
 if ($ADD==612)			{$hh='lists';		$sh='list';	echo _QXZ("Clear List");}
+if ($ADD==631)			{$hh='lists';		$sh='droplist';	echo _QXZ("Delete Drop List");}
 if ($ADD==6111)			{$hh='ingroups';	echo _QXZ("Delete In-Group");}
 if ($ADD==6311)			{$hh='ingroups';	echo _QXZ("Delete DID");}
 if ($ADD==6511)			{$hh='ingroups';	echo _QXZ("Delete Call Menu");}
@@ -4874,6 +4912,7 @@ if ($ADD==811)			{$hh='lists';		$sh='list';	echo _QXZ("CallBacks Within List");}
 if ($ADD==8111)			{$hh='usergroups';	echo _QXZ("CallBacks Within User Group");}
 if ($ADD==10)			{$hh='campaigns';	$sh='list';	echo _QXZ("Campaigns");}
 if ($ADD==100)			{$hh='lists';		$sh='list';	echo _QXZ("Lists");}
+if ($ADD==130)			{$hh='lists';		$sh='droplist';	echo _QXZ("Drop Lists");}
 if ($ADD==1000)			{$hh='ingroups';	$sh='listIG';	echo _QXZ("In-Groups");}
 if ($ADD==1300)			{$hh='ingroups';	$sh='listDID';	echo _QXZ("DIDs");}
 if ($ADD==1320)			{$hh='ingroups';	$sh='didRA';	echo _QXZ("Modify DID RA Extension Overrides");}
@@ -6560,6 +6599,50 @@ if ($ADD==121)
 		echo "<select size=1 name=group_id>\n";
 		echo "$campaigns_list";
 		echo "</select><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></FORM>\n";
+		}
+	}
+
+
+######################
+# ADD=131 display the ADD NEW DROP LIST FORM SCREEN
+######################
+if ($ADD==131)
+	{
+	if ($LOGmodify_lists==1)
+		{
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT count(*) FROM vicidial_override_ids where id_table='vicidial_drop_lists' and active='1';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$voi_ct = mysqli_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$voi_count = "$row[0]";
+			}
+		##### END ID override optional section #####
+
+		echo "<TABLE><TR><TD>\n";
+		echo "<img src=\"images/icon_black_lists.png\" alt=\"Lists\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		echo "<br>"._QXZ("ADD A NEW DROP LIST")."<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=231>\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+		if ($voi_count > 0)
+			{
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Drop List ID").": </td><td align=left>"._QXZ("Auto-Generated")." $NWB#drop_lists-dl_id$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Drop List ID").": </td><td align=left><input type=text name=dl_id size=20 maxlength=30> $NWB#drop_lists-dl_id$NWE</td></tr>\n";
+			}
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Drop List Name").": </td><td align=left><input type=text name=dl_name size=30 maxlength=100>$NWB#drop_lists-dl_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
+		echo "</TABLE></center>\n";
+		}
+	else
+		{
+		echo _QXZ("You do not have permission to view this page")."\n";
+		exit;
 		}
 	}
 
@@ -9991,6 +10074,67 @@ if ($ADD==211)
 			}
 		}
 	$ADD=311;
+	}
+
+
+######################
+# ADD=231 adds the new drop list to the system
+######################
+if ($ADD==231)
+	{
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>"._QXZ("You do not have permission to add records on this system")." -system_settings-\n";
+		}
+	else
+		{
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT value FROM vicidial_override_ids where id_table='vicidial_drop_lists' and active='1';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$voi_ct = mysqli_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$dl_id = ($row[0] + 1);
+
+			$stmt="UPDATE vicidial_override_ids SET value='$dl_id' where id_table='vicidial_drop_lists' and active='1';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			}
+		##### END ID override optional section #####
+
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_drop_lists where dl_id='$dl_id';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>"._QXZ("DROP LIST NOT ADDED - there is already a drop list in the system with this ID")."\n";}
+		else
+			{
+			if ( (strlen($dl_id) < 2) or (strlen($dl_name) < 2) )
+				{
+				echo "<br>"._QXZ("DROP LIST NOT ADDED - Please go back and look at the data you entered")."\n";
+				echo "<br>"._QXZ("Drop List ID must be between 2 and 30 characters in length")."\n";
+				echo "<br>"._QXZ("Drop List name must be at least 2 characters in length")."\n";
+				}
+			else
+				{
+				echo "<br><B>"._QXZ("DROP LIST ADDED").": $list_id</B>\n";
+
+				$stmt="INSERT INTO vicidial_drop_lists (dl_id,dl_name) values('$dl_id','$dl_name');";
+				$rslt=mysql_to_mysqli($stmt, $link);
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='DROPLISTS', event_type='ADD', record_id='$dl_id', event_code='ADMIN ADD DROP LIST', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+
+				$ADD=331;
+				}
+			}
+		}
 	}
 
 
@@ -16467,7 +16611,7 @@ if ($ADD==411111111111111)
 			$custom_reports_slave_SQL=",custom_reports_use_slave_db='$custom_reports_slave_SQL'";
 			}
 
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysqli_real_escape_string($link, $webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db'$custom_reports_slave_SQL,webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt',noanswer_log='$noanswer_log',alt_log_server_ip='$alt_log_server_ip',alt_log_dbname='$alt_log_dbname',alt_log_login='$alt_log_login',alt_log_pass='$alt_log_pass',tables_use_alt_log_db='$tables_use_alt_log_db',did_agent_log='$did_agent_log',campaign_cid_areacodes_enabled='$campaign_cid_areacodes_enabled',pllb_grouping_limit='$pllb_grouping_limit',did_ra_extensions_enabled='$did_ra_extensions_enabled',expanded_list_stats='$expanded_list_stats',contacts_enabled='$contacts_enabled',call_menu_qualify_enabled='$call_menu_qualify_enabled',admin_list_counts='$admin_list_counts',allow_voicemail_greeting='$allow_voicemail_greeting',queuemetrics_socket='$queuemetrics_socket',queuemetrics_socket_url='$queuemetrics_socket_url',enhanced_disconnect_logging='$enhanced_disconnect_logging',allow_emails='$allow_emails',level_8_disable_add='$level_8_disable_add',queuemetrics_record_hold='$queuemetrics_record_hold',country_code_list_stats='$country_code_list_stats',queuemetrics_pause_type='$queuemetrics_pause_type',frozen_server_call_clear='$frozen_server_call_clear',callback_time_24hour='$callback_time_24hour',enable_languages='$enable_languages',language_method='$language_method',meetme_enter_login_filename='$meetme_enter_login_filename',meetme_enter_leave3way_filename='$meetme_enter_leave3way_filename',enable_did_entry_list_id='$enable_did_entry_list_id',enable_third_webform='$enable_third_webform',allow_chats='$allow_chats',chat_url='$chat_url',chat_timeout='$chat_timeout',agent_debug_logging='$agent_debug_logging',default_language='$default_language',agent_whisper_enabled='$agent_whisper_enabled',user_hide_realtime_enabled='$user_hide_realtime_enabled',usacan_phone_dialcode_fix='$usacan_phone_dialcode_fix',cache_carrier_stats_realtime='$cache_carrier_stats_realtime',log_recording_access='$log_recording_access',report_default_format='$report_default_format',alt_ivr_logging='$alt_ivr_logging',default_phone_code='$default_phone_code',admin_row_click='$admin_row_click',admin_screen_colors='$admin_screen_colors',ofcom_uk_drop_calc='$ofcom_uk_drop_calc',agent_screen_colors='$agent_screen_colors',script_remove_js='$script_remove_js',manual_auto_next='$manual_auto_next',user_new_lead_limit='$user_new_lead_limit',agent_xfer_park_3way='$agent_xfer_park_3way',agent_soundboards='$agent_soundboards',web_loader_phone_length='$web_loader_phone_length',agent_script='$agent_script',agent_chat_screen_colors='$agent_chat_screen_colors',enable_auto_reports='$enable_auto_reports',enable_pause_code_limits='$enable_pause_code_limits'$custom_dialplanSQL;";
+		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysqli_real_escape_string($link, $webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db'$custom_reports_slave_SQL,webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt',noanswer_log='$noanswer_log',alt_log_server_ip='$alt_log_server_ip',alt_log_dbname='$alt_log_dbname',alt_log_login='$alt_log_login',alt_log_pass='$alt_log_pass',tables_use_alt_log_db='$tables_use_alt_log_db',did_agent_log='$did_agent_log',campaign_cid_areacodes_enabled='$campaign_cid_areacodes_enabled',pllb_grouping_limit='$pllb_grouping_limit',did_ra_extensions_enabled='$did_ra_extensions_enabled',expanded_list_stats='$expanded_list_stats',contacts_enabled='$contacts_enabled',call_menu_qualify_enabled='$call_menu_qualify_enabled',admin_list_counts='$admin_list_counts',allow_voicemail_greeting='$allow_voicemail_greeting',queuemetrics_socket='$queuemetrics_socket',queuemetrics_socket_url='$queuemetrics_socket_url',enhanced_disconnect_logging='$enhanced_disconnect_logging',allow_emails='$allow_emails',level_8_disable_add='$level_8_disable_add',queuemetrics_record_hold='$queuemetrics_record_hold',country_code_list_stats='$country_code_list_stats',queuemetrics_pause_type='$queuemetrics_pause_type',frozen_server_call_clear='$frozen_server_call_clear',callback_time_24hour='$callback_time_24hour',enable_languages='$enable_languages',language_method='$language_method',meetme_enter_login_filename='$meetme_enter_login_filename',meetme_enter_leave3way_filename='$meetme_enter_leave3way_filename',enable_did_entry_list_id='$enable_did_entry_list_id',enable_third_webform='$enable_third_webform',allow_chats='$allow_chats',chat_url='$chat_url',chat_timeout='$chat_timeout',agent_debug_logging='$agent_debug_logging',default_language='$default_language',agent_whisper_enabled='$agent_whisper_enabled',user_hide_realtime_enabled='$user_hide_realtime_enabled',usacan_phone_dialcode_fix='$usacan_phone_dialcode_fix',cache_carrier_stats_realtime='$cache_carrier_stats_realtime',log_recording_access='$log_recording_access',report_default_format='$report_default_format',alt_ivr_logging='$alt_ivr_logging',default_phone_code='$default_phone_code',admin_row_click='$admin_row_click',admin_screen_colors='$admin_screen_colors',ofcom_uk_drop_calc='$ofcom_uk_drop_calc',agent_screen_colors='$agent_screen_colors',script_remove_js='$script_remove_js',manual_auto_next='$manual_auto_next',user_new_lead_limit='$user_new_lead_limit',agent_xfer_park_3way='$agent_xfer_park_3way',agent_soundboards='$agent_soundboards',web_loader_phone_length='$web_loader_phone_length',agent_script='$agent_script',agent_chat_screen_colors='$agent_chat_screen_colors',enable_auto_reports='$enable_auto_reports',enable_pause_code_limits='$enable_pause_code_limits',enable_drop_lists='$enable_drop_lists'$custom_dialplanSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 
 		if ( ($meetme_enter_login_filename != $SSmeetme_enter_login_filename) or ($meetme_enter_leave3way_filename != $SSmeetme_enter_leave3way_filename) )
@@ -16826,6 +16970,28 @@ if ($ADD==511)
 		}
 
 	$ADD='311';		# go to list modification below
+	}
+
+
+######################
+# ADD=531 confirmation before deletion of drop list
+######################
+if ($ADD==531)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( (strlen($dl_id) < 2) or ($LOGdelete_lists < 1) )
+		{
+		echo "<br>"._QXZ("DROP LIST NOT DELETED - Please go back and look at the data you entered")."\n";
+		echo "<br>"._QXZ("dl_id be at least 2 characters in length")."\n";
+		}
+	else
+		{
+		echo "<br><B>"._QXZ("DROP LIST DELETION CONFIRMATION").": $dl_id</B>\n";
+		echo "<br><br><a href=\"$PHP_SELF?ADD=631&dl_id=$dl_id&CoNfIrM=YES\">"._QXZ("Click here to delete drop list")." $dl_id</a><br><br><br>\n";
+		}
+
+	$ADD='331';		# go to drop list modification below
 	}
 
 
@@ -18408,6 +18574,47 @@ if ($ADD==612)
 			}
 		}
 	$ADD='311';		# go to list modify page
+	}
+
+
+######################
+# ADD=631 delete drop list record
+######################
+if ($ADD==631)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( ( strlen($dl_id) < 2) or ($CoNfIrM != 'YES') or ($LOGdelete_lists < 1) )
+		{
+		echo "<br>"._QXZ("DROP LIST NOT DELETED - Please go back and look at the data you entered")."\n";
+		echo "<br>dl_id "._QXZ("must be at least 2 characters in length")."\n";
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_drop_lists where dl_id='$dl_id' $LOGallowed_campaignsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("DROP LIST NOT FOUND").": $dl_id\n";}
+		else
+			{
+			$stmt="DELETE from vicidial_drop_lists where dl_id='$dl_id' $LOGallowed_campaignsSQL limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|$stmtA|$stmtB|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='DROPLISTS', event_type='DELETE', record_id='$dl_id', event_code='ADMIN DELETE DROP LIST', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+
+			echo "<br><B>"._QXZ("DROP LIST DELETION COMPLETED").": $dl_id</B>\n";
+			echo "<br><br>\n";
+			}
+		}
+
+	$ADD='130';		# go to drop lists list
 	}
 
 
@@ -25548,6 +25755,381 @@ if ($ADD==311)
 		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=LISTS&stage=$list_id\">"._QXZ("Click here to see Admin changes to this list")."</FONT>\n";
+			}
+		}
+	else
+		{
+		echo _QXZ("You do not have permission to view this page")."\n";
+		exit;
+		}
+	}
+
+
+
+######################
+# ADD=431 modify drop list, add new drop status to the drop list drop statuses
+######################
+if ($ADD==431)
+	{
+	if ($LOGmodify_lists!=1)
+		{
+		echo "<br>"._QXZ("You do not have permission to view this page")."\n";
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_drop_lists where dl_id='$dl_id' $LOGadmin_viewable_groupsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ( ($row[0] < 1) or (strlen($dl_id) < 2) )
+			{
+			echo "<br>"._QXZ("DROP LIST DROP NOT MODIFIED - Please go back and look at the data you entered")."\n";
+			echo "<br>"._QXZ("drop list id must be between 2 and 30 characters in length")."\n";
+			}
+		else
+			{
+			### BEGIN drop list add status ###
+			if (strlen($drop_status) > 0)
+				{
+				$drop_status = preg_replace('/\-\-\-\-\-.*/i', '',$drop_status);
+				echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+				$stmt="SELECT count(*) from vicidial_drop_lists where dl_id='$dl_id' and drop_statuses LIKE \"% $drop_status %\"  $LOGadmin_viewable_groupsSQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				if ($row[0] > 0)
+					{echo "<br>"._QXZ("DROP LIST DROP STATUS NOT ADDED - there is already an entry for this drop list with this status")."\n";}
+				else
+					{
+					echo "<br><B>"._QXZ("DROP LIST STATUS ADDED").": $dl_id - $drop_status</B>\n";
+
+					$stmt="SELECT drop_statuses from vicidial_drop_lists where dl_id='$dl_id';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+
+					if (strlen($row[0])<2) {$row[0] = ' -';}
+					$drop_statuses = " $drop_status$row[0]";
+					$stmt="UPDATE vicidial_drop_lists set drop_statuses='$drop_statuses' where dl_id='$dl_id';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = preg_replace('/;/', '', $SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='DROPLISTS', event_type='ADD', record_id='$dl_id', event_code='ADMIN ADD DROP LIST STATUS', event_sql=\"$SQL_log\", event_notes='Status: $statuses';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					}
+				### END drop list add status ###
+				}
+			else
+				{
+				### BEGIN modify drop list ###
+				echo "<br><B>"._QXZ("DROP LIST MODIFIED").": $dl_id - $dl_name</B>\n";
+
+				$p=0;
+				$DL_weekdays='';
+				$dl_weekdays_ct = count($dl_weekdays);
+				while ($p <= $dl_weekdays_ct)
+					{
+					$DL_weekdays .= "$dl_weekdays[$p]";
+					$p++;
+					}
+
+				$groups_value='';
+				$group_ct = count($groups);
+				$p=0;
+				while ($p < $group_ct)
+					{
+					$groups_value .= " $groups[$p]";
+					$p++;
+					}
+				if (strlen($groups_value)>2) {$groups_value .= " -";}
+
+				$stmt="UPDATE vicidial_drop_lists set dl_name='$dl_name',dl_server='$dl_server',dl_times='$dl_times',dl_weekdays='$DL_weekdays',dl_monthdays='$dl_monthdays',list_id='$list_id',duplicate_check='$duplicate_check',run_now_trigger='$run_now_trigger',active='$active',user_group='$user_group',closer_campaigns='$groups_value' where dl_id='$dl_id';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='DROPLISTS', event_type='MODIFY', record_id='$dl_id', event_code='ADMIN MODIFY DROP LIST', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				### END modify drop list ###
+				}
+			}
+		}
+	$ADD=331;
+	}
+
+
+######################
+# ADD=333 remove drop list drop status
+######################
+if ($ADD==333)
+	{
+	if ($LOGmodify_lists==1)
+		{
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_drop_lists where dl_id='$dl_id' and drop_statuses LIKE \"% $status %\" $LOGadmin_viewable_groupsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("DROP LIST DROP STATUS NOT REMOVED - this drop status is not selected for this drop list")."\n";}
+		else
+			{
+			if ( (strlen($dl_id) < 2) or (strlen($status) < 1) )
+				{
+				echo "<br>"._QXZ("DROP LIST DROP STATUS NOT REMOVED - Please go back and look at the data you entered")."\n";
+				echo "<br>"._QXZ("status must be between 1 and 6 characters in length")."\n";
+				}
+			else
+				{
+				$stmt="SELECT count(*) from vicidial_drop_lists where dl_id='$dl_id' $LOGadmin_viewable_groupsSQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				if ($row[0] < 1)
+					{echo "<br>"._QXZ("DROP LIST NOT FOUND").": $dl_id";}
+				else
+					{
+					echo "<br><B>"._QXZ("DROP LIST DROP STATUS REMOVED").": $dl_id - $status</B>\n";
+
+					$stmt="SELECT drop_statuses from vicidial_drop_lists where dl_id='$dl_id' $LOGadmin_viewable_groupsSQL;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+
+					$drop_statuses = preg_replace("/\s$status\s/i", " ",$row[0]);
+					$stmt="UPDATE vicidial_drop_lists set drop_statuses='$drop_statuses' where dl_id='$dl_id' $LOGadmin_viewable_groupsSQL;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = preg_replace('/;/', '', $SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='DROPLISTS', event_type='DELETE', record_id='$dl_id', event_code='ADMIN DELETE DROP LIST STATUS', event_sql=\"$SQL_log\", event_notes='Status: $status';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					}
+				}
+			}
+		}
+	else
+		{
+		echo _QXZ("You do not have permission to view this page")."\n";
+		exit;
+		}
+	$ADD=331;	# go to drop list modification form below
+	}
+
+
+######################
+# ADD=331 modify drop list info in the system
+######################
+if ($ADD==331)
+	{
+	if ($LOGmodify_lists==1)
+		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=331&dl_id=$dl_id";
+			$modify_footer_refresh=1;
+			}
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		$stmt="SELECT count(*) from vicidial_drop_lists where dl_id='$dl_id' $LOGadmin_viewable_groupsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ( ($row[0] < 1) or (strlen($dl_id) < 2) )
+			{
+			echo "<br>"._QXZ("DROP LIST DROP NOT MODIFIED - Please go back and look at the data you entered")."\n";
+			echo "<br>"._QXZ("drop list id must be between 2 and 30 characters in length")."\n";
+			}
+		else
+			{
+			##### get server listing for dynamic pulldown 
+			$stmt="SELECT server_ip,server_description,external_server_ip from servers order by server_ip";
+			$rsltx=mysql_to_mysqli($stmt, $link);
+			$servers_to_print = mysqli_num_rows($rsltx);
+			$servers_list='';
+			$o=0;
+			while ($servers_to_print > $o)
+				{
+				$rowx=mysqli_fetch_row($rsltx);
+				$servers_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+				$o++;
+				}
+
+			$stmt="SELECT dl_id,dl_name,last_run,dl_server,dl_times,dl_weekdays,dl_monthdays,drop_statuses,list_id,duplicate_check,run_now_trigger,active,user_group,closer_campaigns from vicidial_drop_lists where dl_id='$dl_id' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			$dl_id =			$row[0];
+			$dl_name =			$row[1];
+			$last_run =			$row[2];
+			$dl_server =		$row[3];
+			$dl_times =			$row[4];
+			$dl_weekdays =		$row[5];
+			$dl_monthdays =		$row[6];
+			$drop_statuses =	$row[7];
+			$list_id =			$row[8];
+			$duplicate_check =	$row[9];
+			$run_now_trigger =	$row[10];
+			$active =			$row[11];
+			$user_group =		$row[12];
+			$closer_campaigns =	$row[13];
+
+			echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+			echo "<br>"._QXZ("MODIFY A DROP LIST")."<form action=$PHP_SELF method=POST>\n";
+			echo "<input type=hidden name=ADD value=431>\n";
+			echo "<input type=hidden name=DB value=\"$DB\">\n";
+			echo "<input type=hidden name=dl_id value=\"$dl_id\">\n";
+			echo "<center><TABLE width=980 cellspacing=3>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Drop List ID").": </td><td align=left><B>$dl_id</B></td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Drop List Name").": </td><td align=left><input type=text name=dl_name size=40 maxlength=100 value=\"$dl_name\"> $NWB#drop_lists-dl_name$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Last Run Time").": </td><td align=left><B>$last_run</B></td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
+			echo "$UUgroups_list";
+			echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
+			echo "</select>$NWB#drop_lists-user_group$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Run Server").": </td><td align=left><select size=1 name=dl_server>\n";
+			echo "<option>active_voicemail_server</option>\n";
+			echo "$servers_list";
+			echo "<option SELECTED>$dl_server</option>\n";
+			echo "</select>$NWB#drop_lists-dl_server$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Run Times").": </td><td align=left><input type=text name=dl_times size=60 maxlength=100 id=dl_times value=\"$dl_times\">$NWB#drop_lists-dl_times$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right NOWRAP>"._QXZ("Run Weekdays").":</td><td align=left NOWRAP>\n";
+			echo "<input type=\"checkbox\" name=\"dl_weekdays[]\" value=\"0\"";
+				if (preg_match('/0/',$dl_weekdays)) {echo " CHECKED";}
+			echo ">"._QXZ("Sunday")." &nbsp; \n";
+			echo "<input type=\"checkbox\" name=\"dl_weekdays[]\" value=\"1\"";
+				if (preg_match('/1/',$dl_weekdays)) {echo " CHECKED";}
+			echo ">"._QXZ("Monday")." &nbsp; \n";
+			echo "<input type=\"checkbox\" name=\"dl_weekdays[]\" value=\"2\"";
+				if (preg_match('/2/',$dl_weekdays)) {echo " CHECKED";}
+			echo ">"._QXZ("Tuesday")." &nbsp; \n";
+			echo "<input type=\"checkbox\" name=\"dl_weekdays[]\" value=\"3\"";
+				if (preg_match('/3/',$dl_weekdays)) {echo " CHECKED";}
+			echo ">"._QXZ("Wednesday")." &nbsp; \n";
+			echo "<input type=\"checkbox\" name=\"dl_weekdays[]\" value=\"4\"";
+				if (preg_match('/4/',$dl_weekdays)) {echo " CHECKED";}
+			echo ">"._QXZ("Thursday")." &nbsp; \n";
+			echo "<input type=\"checkbox\" name=\"dl_weekdays[]\" value=\"5\"";
+				if (preg_match('/5/',$dl_weekdays)) {echo " CHECKED";}
+			echo ">"._QXZ("Friday")." &nbsp; \n";
+			echo "<input type=\"checkbox\" name=\"dl_weekdays[]\" value=\"6\"";
+				if (preg_match('/6/',$dl_weekdays)) {echo " CHECKED";}
+			echo ">"._QXZ("Saturday")." &nbsp; \n";
+			echo "$NWB#drop_lists-dl_weekdays$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Run Month Days").": </td><td align=left><input type=text name=dl_monthdays size=60 maxlength=100 id=dl_monthdays value=\"$dl_monthdays\">$NWB#drop_lists-dl_monthdays$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Duplicate Check").": </td><td align=left><select size=1 name=duplicate_check>\n";
+			echo "<option value=\"NONE\">"._QXZ("NONE")."</option>\n";
+			echo "<option value=\"LIST\">"._QXZ("LIST")."</option>\n";
+			echo "<option value=\"LIST_CAMPAIGN_LISTS\">"._QXZ("LIST_CAMPAIGN_LISTS")."</option>\n";
+			echo "<option value=\"$duplicate_check\" SELECTED>"._QXZ("$duplicate_check")."</option>\n";
+			echo "</select>$NWB#drop_lists-duplicate_check$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("List ID").": </td><td align=left><input type=text name=list_id size=19 maxlength=19 value=\"$list_id\"> &nbsp; ("._QXZ("digits only").") $NWB#drop_lists-list_id$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active>\n";
+			echo "<option value=\"Y\">"._QXZ("YES")."</option>\n";
+			echo "<option value=\"N\">"._QXZ("NO")."</option>\n";
+			echo "<option value=\"$active\" SELECTED>"._QXZ("$active")."</option>\n";
+			echo "</select>$NWB#drop_lists-active$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Run Now Trigger").": </td><td align=left><select size=1 name=run_now_trigger>\n";
+			echo "<option value=\"Y\">"._QXZ("YES")."</option>\n";
+			echo "<option value=\"N\">"._QXZ("NO")."</option>\n";
+			echo "<option value=\"$run_now_trigger\" SELECTED>"._QXZ("$run_now_trigger")."</option>\n";
+			echo "</select>$NWB#drop_lists-run_now_trigger$NWE</td></tr>\n";
+
+			$drop_statuses = preg_replace("/ -$/","",$drop_statuses);
+			$Dstatuses = explode(" ", $drop_statuses);
+			$Ds_to_print = (count($Dstatuses) - 0);
+			$o=0; $p=0;
+			while ($Ds_to_print > $o)
+				{
+				$o++;
+				$Dstatus = $Dstatuses[$o];
+
+				if (strlen($Dstatus)>0)
+					{
+					$p++;
+					echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Drop Status")." $p: </td><td align=left> \n";
+					echo "<b>$Dstatus</b> - $statname_list[$Dstatus] &nbsp; &nbsp; &nbsp; &nbsp; <font size=2>\n";
+					echo "<a href=\"$PHP_SELF?ADD=333&dl_id=$dl_id&status=$Dstatuses[$o]\">"._QXZ("REMOVE")."</a></td></tr>\n";
+					}
+				}
+
+			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Add A Drop Status").": </td><td align=left><select size=1 name=drop_status>\n";
+			echo "<option value=\"\" selected> - "._QXZ("NONE")." - </option>\n";
+			echo "<option>DROP</option>\n";
+			echo "<option>AFTHRS</option>\n";
+			echo "<option>NANQUE</option>\n";
+			echo "<option>MAXCAL</option>\n";
+			echo "<option>HXFER</option>\n";
+			echo "<option>QVMAIL</option>\n";
+			echo "<option>HOLDTO</option>\n";
+			echo "<option>WAITTO</option>\n";
+			echo "<option>ACFLTR</option>\n";
+			echo "<option>HXFER</option>\n";
+			echo "<option>TIMEOT</option>\n";
+			echo "<option>PDROP</option>\n";
+			echo "</select> &nbsp; \n";
+			echo "<input type=submit name=submit value='"._QXZ("ADD")."'> &nbsp; &nbsp; $NWB#drop_lists-drop_statuses$NWE</td></tr>\n";
+
+			$closer_campaignsSQL = 'closer_campaigns';
+			$groups_list='';
+
+			$stmt="SELECT closer_campaigns from vicidial_drop_lists where dl_id='$dl_id' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			$Mcloser_campaigns =	$row[0];
+			$Mcloser_campaigns = preg_replace("/ -$/","",$Mcloser_campaigns);
+			$groups = explode(" ", $Mcloser_campaigns);
+
+			$stmt="SELECT group_id,group_name from vicidial_inbound_groups where group_handling='PHONE' $LOGadmin_viewable_groupsSQL order by group_id;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$Dgroups_to_print = mysqli_num_rows($rslt);
+			$o=0;
+			while ($Dgroups_to_print > $o) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$group_id_values[$o] =		$rowx[0];
+				$group_name_values[$o] =	$rowx[1];
+				if (strlen($group_id_values[$o])>0)
+					{
+					$groups_list .= "<input type=\"checkbox\" name=\"groups[]\" value=\"$group_id_values[$o]\"";
+					$p=0;
+					$group_ct = count($groups);
+					while ($p < $group_ct)
+						{
+						if ($group_id_values[$o] == $groups[$p]) 
+							{
+							$groups_list .= " CHECKED";
+							$groups_value .= " $group_id_values[$o]";
+							}
+						$p++;
+						}
+					$groups_list .= "> <a href=\"$PHP_SELF?ADD=3111&group_id=$group_id_values[$o]\">$group_id_values[$o]</a> - $group_name_values[$o]<BR>\n";
+					}
+				$o++;
+				}
+			if (strlen($groups_value)>2) {$groups_value .= " -";}
+
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right valign=top><BR>"._QXZ("Inbound Groups").": <BR>$NWB#drop_lists-closer_campaigns$NWE</td><td align=left>\n";
+			echo "$groups_list";
+			echo "</td></tr>\n";
+
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
+			echo "</TABLE></center>\n";
+
+			echo "</center><BR><BR>\n";
+
+			if ($LOGmodify_lists > 0)
+				{
+				echo "<br><br><a href=\"$PHP_SELF?ADD=531&dl_id=$dl_id\">"._QXZ("DELETE THIS DROP LIST")."</a>\n";
+				}
+			if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
+				{
+				echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=DROPLISTS&stage=$dl_id\">"._QXZ("Click here to see Admin changes to this drop list")."</FONT>\n";
+				}
 			}
 		}
 	else
@@ -33561,7 +34143,7 @@ if ($ADD==311111111111111)
 			$ALLagent_count =		$rowx[2];
 			}
 
-		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,queuemetrics_socket,queuemetrics_socket_url,enhanced_disconnect_logging,allow_emails,level_8_disable_add,pass_hash_enabled,pass_key,pass_cost,disable_auto_dial,queuemetrics_record_hold,country_code_list_stats,reload_timestamp,queuemetrics_pause_type,frozen_server_call_clear,callback_time_24hour,allow_chats,chat_url,chat_timeout,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,agent_debug_logging,default_language,agent_whisper_enabled,user_hide_realtime_enabled,usacan_phone_dialcode_fix,cache_carrier_stats_realtime,oldest_logs_date,log_recording_access,report_default_format,alt_ivr_logging,default_phone_code,admin_row_click,admin_screen_colors,ofcom_uk_drop_calc,agent_screen_colors,script_remove_js,manual_auto_next,user_new_lead_limit,agent_xfer_park_3way,rec_prompt_count,agent_soundboards,web_loader_phone_length,agent_script,agent_chat_screen_colors,enable_auto_reports,enable_pause_code_limits from system_settings;";
+		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,queuemetrics_socket,queuemetrics_socket_url,enhanced_disconnect_logging,allow_emails,level_8_disable_add,pass_hash_enabled,pass_key,pass_cost,disable_auto_dial,queuemetrics_record_hold,country_code_list_stats,reload_timestamp,queuemetrics_pause_type,frozen_server_call_clear,callback_time_24hour,allow_chats,chat_url,chat_timeout,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,agent_debug_logging,default_language,agent_whisper_enabled,user_hide_realtime_enabled,usacan_phone_dialcode_fix,cache_carrier_stats_realtime,oldest_logs_date,log_recording_access,report_default_format,alt_ivr_logging,default_phone_code,admin_row_click,admin_screen_colors,ofcom_uk_drop_calc,agent_screen_colors,script_remove_js,manual_auto_next,user_new_lead_limit,agent_xfer_park_3way,rec_prompt_count,agent_soundboards,web_loader_phone_length,agent_script,agent_chat_screen_colors,enable_auto_reports,enable_pause_code_limits,enable_drop_lists from system_settings;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		$version =						$row[0];
@@ -33723,6 +34305,7 @@ if ($ADD==311111111111111)
 		$agent_chat_screen_colors =		$row[156];
 		$enable_auto_reports =			$row[157];
 		$enable_pause_code_limits =		$row[158];
+		$enable_drop_lists =			$row[159];
 
 		if ($pass_hash_enabled > 0) {$pass_hash_enabled = 'ENABLED';}
 		else {$pass_hash_enabled = 'DISABLED';}
@@ -33945,8 +34528,6 @@ if ($ADD==311111111111111)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Max FILL Calls per Second").": </td><td align=left><input type=text name=outbound_calls_per_second size=4 maxlength=3 value=\"$outbound_calls_per_second\">$NWB#settings-outbound_calls_per_second$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("New Leads Per List Limit").": </td><td align=left><select size=1 name=user_new_lead_limit><option>1</option><option>0</option><option selected>$user_new_lead_limit</option></select>$NWB#settings-user_new_lead_limit$NWE</td></tr>\n";
-
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Web Lead Loader Phone Length").": </td><td align=left><select size=1 name=web_loader_phone_length><option>DISABLED</option><option>CHOOSE</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option selected>$web_loader_phone_length</option></select>$NWB#settings-web_loader_phone_length$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Allow Custom Dialplan Entries").": </td><td align=left><select size=1 name=allow_custom_dialplan><option>1</option><option>0</option><option selected>$allow_custom_dialplan</option></select>$NWB#settings-allow_custom_dialplan$NWE</td></tr>\n";
@@ -33969,15 +34550,19 @@ if ($ADD==311111111111111)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Enable CallCard").": </td><td align=left><select size=1 name=callcard_enabled><option>1</option><option>0</option><option selected>$callcard_enabled</option></select>$NWB#settings-callcard_enabled$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Enable Custom List Fields").": </td><td align=left><select size=1 name=custom_fields_enabled><option>1</option><option>0</option><option selected>$custom_fields_enabled</option></select>$NWB#settings-custom_fields_enabled$NWE</td></tr>\n";
-
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Enable Campaign Test Calls").": </td><td align=left><select size=1 name=test_campaign_calls><option>1</option><option>0</option><option selected>$test_campaign_calls</option></select>$NWB#settings-test_campaign_calls$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Enable Expanded List Stats").": </td><td align=left><select size=1 name=expanded_list_stats><option>1</option><option>0</option><option selected>$expanded_list_stats</option></select>$NWB#settings-expanded_list_stats$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("New Leads Per List Limit").": </td><td align=left><select size=1 name=user_new_lead_limit><option>1</option><option>0</option><option selected>$user_new_lead_limit</option></select>$NWB#settings-user_new_lead_limit$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Country Code List Stats").": </td><td align=left><select size=1 name=country_code_list_stats><option>1</option><option>0</option><option selected>$country_code_list_stats</option></select>$NWB#settings-country_code_list_stats$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Enable Custom List Fields").": </td><td align=left><select size=1 name=custom_fields_enabled><option>1</option><option>0</option><option selected>$custom_fields_enabled</option></select>$NWB#settings-custom_fields_enabled$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Enable DID Entry List ID").": </td><td align=left><select size=1 name=enable_did_entry_list_id><option>1</option><option>0</option><option selected>$enable_did_entry_list_id</option></select>$NWB#settings-enable_did_entry_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Enable Expanded List Stats").": </td><td align=left><select size=1 name=expanded_list_stats><option>1</option><option>0</option><option selected>$expanded_list_stats</option></select>$NWB#settings-expanded_list_stats$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Country Code List Stats").": </td><td align=left><select size=1 name=country_code_list_stats><option>1</option><option>0</option><option selected>$country_code_list_stats</option></select>$NWB#settings-country_code_list_stats$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Enable DID Entry List ID").": </td><td align=left><select size=1 name=enable_did_entry_list_id><option>1</option><option>0</option><option selected>$enable_did_entry_list_id</option></select>$NWB#settings-enable_did_entry_list_id$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Enable Drop Lists").": </td><td align=left><select size=1 name=enable_drop_lists><option>0</option><option>1</option><option>2</option><option selected>$enable_drop_lists</option></select>$NWB#settings-enable_drop_lists$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Agent Screen Debug Logging").": </td><td align=left><input type=text name=agent_debug_logging size=20 maxlength=20 value=\"$agent_debug_logging\">$NWB#settings-agent_debug_logging$NWE</td></tr>\n";
 
@@ -35183,6 +35768,77 @@ if ($ADD==100)
 		echo "<td><font size=1> $row[6]</td>";
 		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=311&list_id=$row[0]\">"._QXZ("MODIFY")."</a></td></tr>\n";
 		$p++;
+		$o++;
+		}
+
+	echo "</TABLE></center>\n";
+	}
+
+
+######################
+# ADD=130 display all drop lists
+######################
+if ($ADD==130)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	$stmt="SELECT dl_id,dl_name,last_run,active,list_id,user_group,closer_campaigns from vicidial_drop_lists $whereLOGadmin_viewable_groupsSQL order by dl_id;";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$droplists_to_print = mysqli_num_rows($rslt);
+
+	echo _QXZ("DROP LISTS LISTINGS").":\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<TR BGCOLOR=BLACK>";
+	echo "<TD><font size=1 color=white>"._QXZ("ID")."</TD>";
+	echo "<TD><font size=1 color=white>"._QXZ("DROP LIST NAME")."</TD>";
+	echo "<TD><font size=1 color=white>"._QXZ("LAST RUN")."</TD>\n";
+	echo "<TD><font size=1 color=white>"._QXZ("ACTIVE")."</TD>";
+	echo "<TD><font size=1 color=white>"._QXZ("LIST ID")."</TD>";
+	echo "<TD><font size=1 color=white>"._QXZ("INGROUPS")."</TD>";
+	echo "<TD><font size=1 color=white>"._QXZ("ADMIN GROUP")."</TD>";
+	echo "<TD><font size=1 color=white>"._QXZ("MODIFY")."</TD>\n";
+	echo "</TR>\n";
+
+	$o=0;
+	while ($droplists_to_print > $o) 
+		{
+		$row=mysqli_fetch_row($rslt);
+		$dl_id_ary[$o] =			$row[0];
+		$dl_name_ary[$o] =			$row[1];
+		$last_run_ary[$o] =			$row[2];
+		$dl_active_ary[$o] =		$row[3];
+		$list_id_ary[$o] =			$row[4];
+		$group_group_ary[$o] =		$row[5];
+		$closer_campaigns_ary[$o] =	$row[6];
+		$o++;
+		}
+
+	$o=0;
+	while ($droplists_to_print > $o) 
+		{
+		$closer_campaigns_ary[$o] = preg_replace("/^ |^  | -$/",'',$closer_campaigns_ary[$o]);
+		$ingroups_ary = explode(" ",$closer_campaigns_ary[$o]);
+		$ingroups_ary_ct = count($ingroups_ary);
+		$s=0;   $ingroups_ct=0;
+		while($s < $ingroups_ary_ct)
+			{
+			if (strlen($ingroups_ary[$s])>1)
+				{$ingroups_ct++;}
+			$s++;
+			}
+		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
+			{$bgcolor='class="records_list_x"';}
+		else
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=331&dl_id=$dl_id_ary[$o]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=331&dl_id=$dl_id_ary[$o]\"><font size=1 color=black>$dl_id_ary[$o]</a></td>";
+		echo "<td><font size=1> $dl_name_ary[$o]</td>";
+		echo "<td><font size=1> $last_run_ary[$o]</td>";
+		echo "<td><font size=1> $dl_active_ary[$o]</td>";
+		echo "<td><font size=1> $list_id_ary[$o]</td>";
+		echo "<td><font size=1> $ingroups_ct</td>";
+		echo "<td><font size=1> $group_group_ary[$o]</td>";
+		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=331&group_id=$dl_id_ary[$o]\">"._QXZ("MODIFY")."</a></td></tr>\n";
 		$o++;
 		}
 

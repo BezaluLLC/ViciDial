@@ -116,9 +116,10 @@
 # 170113-1645 - Added call menu in-group option DYNAMIC_INGROUP_VAR for use with cm_phonesearch.agi
 # 170304-2039 - Added automated reports triggering code
 # 170320-1338 - Added conf_qualify phones option for IAX
+# 170327-0847 - Added drop list triggering code
 #
 
-$build = '170320-1338';
+$build = '170327-0847';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -824,7 +825,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 
 ##### Get the settings from system_settings #####
-$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats,enable_auto_reports FROM system_settings;";
+$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats,enable_auto_reports,enable_drop_lists FROM system_settings;";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -846,6 +847,7 @@ if ($sthArows > 0)
 	$meetme_enter_leave3way_filename =	$aryA[11];
 	$SSallow_chats =					$aryA[12];
 	$SSenable_auto_reports =			$aryA[13];
+	$SSenable_drop_lists =				$aryA[14];
 	}
 $sthA->finish();
 if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
@@ -3952,7 +3954,7 @@ if ($sthBrows > 0)
 ################################################################################
 #####  BEGIN  automated reports
 ################################################################################
-if ($SSenable_auto_reports > 0) 
+if ($SSenable_auto_reports > 0)
 	{
 	$THISserver_voicemailSQL='';
 	if ($THISserver_voicemail > 0) {$THISserver_voicemailSQL=",'active_voicemail_server'";}
@@ -3994,6 +3996,53 @@ if ($SSenable_auto_reports > 0)
 #####  END  automated reports
 ################################################################################
 
+
+
+
+################################################################################
+#####  BEGIN  drop lists
+################################################################################
+if ($SSenable_drop_lists > 0)
+	{
+	$THISserver_voicemailSQL='';
+	if ($THISserver_voicemail > 0) {$THISserver_voicemailSQL=",'active_voicemail_server'";}
+	$stmtA = "SELECT dl_id FROM vicidial_drop_lists where ( (dl_server IN('$server_ip'$THISserver_voicemailSQL) ) and ( ( (active='Y') and (dl_times LIKE \"%$reset_test%\") and ( (dl_weekdays LIKE \"%$wday%\") or (dl_monthdays LIKE \"%$mday%\") ) ) or (run_now_trigger='Y') ) ) order by dl_id limit 1000;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthBrows=$sthA->rows;
+	if ($DB) {print "Checking for Drop Lists: |$sthBrows|$stmtA|\n";}
+	$r=0;
+	while ($sthBrows > $r)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$dl_idARY[$r]	=	$aryA[0];
+		$r++;
+		}
+	$sthA->finish();
+
+	if ($sthBrows > 0)
+		{
+		$r=0;
+		while ($sthBrows > $r)
+			{
+			$temp_droplist = $dl_idARY[$r];
+			$ar_command = "$PATHhome/AST_droplist_process.pl --quiet --log-to-adminlog --dl-id=$temp_droplist ";
+
+			if ($DB) {print "starting drop list process in a screen... |AR$temp_droplist|\n";}
+			`/usr/bin/screen -d -m -S AR$temp_droplist $ar_command `;
+
+			$stmtA="UPDATE vicidial_drop_lists SET run_now_trigger='N' where run_now_trigger='Y' and dl_server IN('$server_ip'$THISserver_voicemailSQL) and dl_id='$dl_idARY[$r]';";
+			$ARaffected_rows = $dbhA->do($stmtA);
+			if ($DB) {print "FINISHED:   $ARaffected_rows|$stmtA|";}
+
+			$r++;
+			}
+		if ($DB) {print "Drop Lists DONE: $r\n";}
+		}
+	}
+################################################################################
+#####  END  drop lists
+################################################################################
 
 
 

@@ -46,6 +46,7 @@
 # 160827-0957 - Added --recording-log-days=X option
 # 161212-1659 - Added --cpd-log-purge-days=XX option
 # 170209-1213 - Added vicidial_api_urls table rolling and purging to all vicidial_api_log sections
+# 170325-1108 - Added vicidial_drop_log table rolling
 #
 
 $CALC_TEST=0;
@@ -66,7 +67,7 @@ if (length($ARGV[0])>1)
 	if ($args =~ /--help/i)
 		{
 		print "allowed run time options:\n";
-		print "  [--daily] = only archives call_log, vicidial_log_extended and vicidial_dial_log tables, only last 24 hours kept\n";
+		print "  [--daily] = only archives call_log, vicidial_log_extended, vicidial_dial_log and vicidial_drop_log tables, only last 24 hours kept\n";
 		print "  [--carrier-daily] = will also archive the vicidial_carrier_log table when --daily is run\n";
 		print "  [--vlog-daily] = will also archive the vicidial_log table when --daily is run\n";
 		print "  [--days=XX] = number of days to archive past, default is 732(2 years)\n";
@@ -75,7 +76,7 @@ if (length($ARGV[0])>1)
 		print "  [--queue-log] = archive QM queue_log records\n";
 		print "  [--only-trim-archive-level-one] = will not perform normal archive process, instead this will only delete records\n";
 		print "                                    that are older than XX months from least important log archive tables:\n";
-		print "                               call_log_archive, vicidial_log_extended_archive, vicidial_dial_log_archive\n";
+		print "                               call_log_archive, vicidial_log_extended_archive, vicidial_dial_log_archive, vicidial_drop_log\n";
 		print "  [--only-trim-archive-level-two] = same as --only-trim-archive-level-one, except includes tables:\n";
 		print "                               vicidial_carrier_log_archive, vicidial_api_log_archive\n";
 		print "  [--only-trim-archive-level-three] = same as --only-trim-archive-level-two, except includes tables:\n";
@@ -338,7 +339,7 @@ if (!$T)
 		# instead this will only delete records that are older than XX months from 
 		# least important log archive tables. There are three levels:
 		#    LEVEL 1:
-		# call_log_archive, vicidial_log_extended_archive, vicidial_dial_log_archive
+		# call_log_archive, vicidial_log_extended_archive, vicidial_dial_log_archive, vicidial_drop_log
 		#    LEVEL 2:
 		# vicidial_carrier_log_archive, vicidial_api_log_archive
 		#    LEVEL 3:
@@ -406,6 +407,35 @@ if (!$T)
 			}
 		##### END vicidial_log_extended_archive trim processing #####
 
+ 		##### BEGIN vicidial_drop_log_archive trim processing #####
+		$stmtA = "SELECT count(*) from vicidial_drop_log_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vicidial_drop_log_archive_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if (!$Q) {print "Trimming vicidial_drop_log_archive table...  ($vicidial_drop_log_archive_count)\n";}
+		
+		$rv = $sthA->err();
+		if (!$rv) 
+			{
+			$stmtA = "DELETE FROM vicidial_drop_log_archive WHERE drop_date < '$del_time';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows = $sthA->rows;
+			if (!$Q) {print "$sthArows rows deleted from vicidial_drop_log_archive table \n";}
+
+			$stmtA = "optimize table vicidial_drop_log_archive;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			}
+		##### END vicidial_drop_log_archive trim processing #####
+		
 		##### BEGIN vicidial_dial_log_archive trim processing #####
 		$stmtA = "SELECT count(*) from vicidial_dial_log_archive;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -724,6 +754,53 @@ if (!$T)
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			}
 		##### END vicidial_log_extended DAILY processing #####
+
+
+		##### BEGIN vicidial_drop_log DAILY processing #####
+		$stmtA = "SELECT count(*) from vicidial_drop_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vicidial_drop_log_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		$stmtA = "SELECT count(*) from vicidial_drop_log_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vicidial_drop_log_archive_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if (!$Q) {print "\nProcessing vicidial_drop_log table...  ($vicidial_drop_log_count|$vicidial_drop_log_archive_count)\n";}
+		$stmtA = "INSERT IGNORE INTO vicidial_drop_log_archive SELECT * from vicidial_drop_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		
+		$sthArows = $sthA->rows;
+		if (!$Q) {print "$sthArows rows inserted into vicidial_drop_log_archive table \n";}
+		
+		$rv = $sthA->err();
+		if (!$rv) 
+			{
+			$stmtA = "DELETE FROM vicidial_drop_log WHERE drop_date < '$del_time';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows = $sthA->rows;
+			if (!$Q) {print "$sthArows rows deleted from vicidial_drop_log table \n";}
+
+			$stmtA = "optimize table vicidial_drop_log;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			}
+		##### END vicidial_drop_log DAILY processing #####
 
 
 		##### BEGIN vicidial_dial_log DAILY processing #####
@@ -1272,6 +1349,56 @@ if (!$T)
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 
 		$stmtA = "optimize table vicidial_log_extended_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		}
+
+
+	##### vicidial_drop_log
+	$stmtA = "SELECT count(*) from vicidial_drop_log;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$vicidial_drop_log_count =	$aryA[0];
+		}
+	$sthA->finish();
+
+	$stmtA = "SELECT count(*) from vicidial_drop_log_archive;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$vicidial_drop_log_archive_count =	$aryA[0];
+		}
+	$sthA->finish();
+
+	if (!$Q) {print "\nProcessing vicidial_drop_log table...  ($vicidial_drop_log_count|$vicidial_drop_log_archive_count)\n";}
+	$stmtA = "INSERT IGNORE INTO vicidial_drop_log_archive SELECT * from vicidial_drop_log;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	
+	$sthArows = $sthA->rows;
+	if (!$Q) {print "$sthArows rows inserted into vicidial_drop_log_archive table \n";}
+	
+	$rv = $sthA->err();
+	if (!$rv) 
+		{	
+		$stmtA = "DELETE FROM vicidial_drop_log WHERE drop_date < '$del_time';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows = $sthA->rows;
+		if (!$Q) {print "$sthArows rows deleted from vicidial_drop_log table \n";}
+
+		$stmtA = "optimize table vicidial_drop_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+
+		$stmtA = "optimize table vicidial_drop_log_archive;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		}

@@ -208,6 +208,7 @@
 # 170220-2134 - Added areacode_filter options
 # 170221-0912 - Fix for areacode_filter logging issue
 # 170309-1514 - Added populate_state_areacode option
+# 170325-1104 - Added optional vicidial_drop_log logging
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -337,7 +338,7 @@ $sthA->finish();
 
 #############################################
 ##### START SYSTEM SETTINGS LOOKUP      #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_pe_phone_append,did_agent_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_ra_extensions_enabled,queuemetrics_socket,queuemetrics_socket_url,enable_did_entry_list_id FROM system_settings;";
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,queuemetrics_eq_prepend,queuemetrics_pe_phone_append,did_agent_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_ra_extensions_enabled,queuemetrics_socket,queuemetrics_socket_url,enable_did_entry_list_id,enable_drop_lists FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -363,6 +364,7 @@ if ($sthArows > 0)
 	$queuemetrics_socket =			$aryA[15];
 	$queuemetrics_socket_url = 		$aryA[16];
 	$enable_did_entry_list_id =		$aryA[17];
+	$enable_drop_lists =			$aryA[18];
 	}
 $sthA->finish();
 ##### END SYSTEM SETTINGS LOOKUP      #####
@@ -1545,6 +1547,13 @@ if ( ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $c
 		$VLEcount++;
 		}
 
+	if ($enable_drop_lists > 0) 
+		{
+		$stmtA="INSERT IGNORE INTO vicidial_drop_log SET uniqueid='$uniqueid',server_ip='$VARserver_ip',drop_date=NOW(),lead_id='$insert_lead_id',campaign_id='$VD_campaign_id',status='$AHstatus',phone_code='$phone_code',phone_number='$phone_number';";
+		$VDDLaffected_rows = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    vicidial_drop_log insert: |$VDDLaffected_rows|$uniqueid|$insert_lead_id|$AHstatus|";   &agi_output;}
+		}
+
 	$called_since_last_resetSQL='';
 	if ( ($after_hours_action =~ /VOICEMAIL|HANGUP|MESSAGE|VMAIL_NO_INST/) && ($after_hours_lead_reset =~ /Y/) )
 		{$called_since_last_resetSQL = ",called_since_last_reset='N'";}
@@ -1783,6 +1792,13 @@ if ( ( ($no_agent_no_queue =~ /Y|NO_PAUSED/) || ($MCnanque_override > 0) ) && ($
 				$dbhP=$dbhA;   $mysql_count='02146';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			if ($AGILOG) {$agi_string = "--  NANQUE VLE insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
 			$VLEcount++;
+			}
+
+		if ($enable_drop_lists > 0) 
+			{
+			$stmtA="INSERT IGNORE INTO vicidial_drop_log SET uniqueid='$uniqueid',server_ip='$VARserver_ip',drop_date=NOW(),lead_id='$insert_lead_id',campaign_id='$VD_campaign_id',status='$NQstatus',phone_code='$phone_code',phone_number='$phone_number';";
+			$VDDLaffected_rows = $dbhA->do($stmtA);
+			if ($AGILOG) {$agi_string = "--    vicidial_drop_log insert: |$VDDLaffected_rows|$uniqueid|$insert_lead_id|$NQstatus|";   &agi_output;}
 			}
 
 		$called_since_last_resetSQL='';
@@ -3836,6 +3852,13 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 				$dbhP=$dbhA;   $mysql_count='02076';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			if ($AGILOG) {$agi_string = "--    VDCL vcl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
 
+			if ($enable_drop_lists > 0) 
+				{
+				$stmtA="INSERT IGNORE INTO vicidial_drop_log SET uniqueid='$uniqueid',server_ip='$VARserver_ip',drop_date=NOW(),lead_id='$insert_lead_id',campaign_id='$VD_campaign_id',status='HXFER',phone_code='$phone_code',phone_number='$phone_number';";
+				$VDDLaffected_rows = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "--    vicidial_drop_log insert: |$VDDLaffected_rows|$uniqueid|$insert_lead_id|HXFER|";   &agi_output;}
+				}
+
 			$populate_provinceUPDATE='';
 			if ($populate_lead_province =~ /OW_did/i) 
 				{&populate_lead_province_process;}
@@ -4302,6 +4325,13 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					$dbhP=$dbhA;   $mysql_count='02146';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				if ($AGILOG) {$agi_string = "--  ACFLTR VLE insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
 				$VLEcount++;
+				}
+
+			if ($enable_drop_lists > 0) 
+				{
+				$stmtA="INSERT IGNORE INTO vicidial_drop_log SET uniqueid='$uniqueid',server_ip='$VARserver_ip',drop_date=NOW(),lead_id='$insert_lead_id',campaign_id='$VD_campaign_id',status='$NQstatus',phone_code='$phone_code',phone_number='$phone_number';";
+				$VDDLaffected_rows = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "--    vicidial_drop_log insert: |$VDDLaffected_rows|$uniqueid|$insert_lead_id|$NQstatus|";   &agi_output;}
 				}
 
 			$called_since_last_resetSQL='';
@@ -4856,6 +4886,13 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					$dbhP=$dbhA;   $mysql_count='02091';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				if ($AGILOG) {$agi_string = "--    VDCL vcl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
 
+				if ($enable_drop_lists > 0) 
+					{
+					$stmtA="INSERT IGNORE INTO vicidial_drop_log SET uniqueid='$uniqueid',server_ip='$VARserver_ip',drop_date=NOW(),lead_id='$insert_lead_id',campaign_id='$VD_campaign_id',status='$HT_status',phone_code='$phone_code',phone_number='$phone_number';";
+					$VDDLaffected_rows = $dbhA->do($stmtA);
+					if ($AGILOG) {$agi_string = "--    vicidial_drop_log insert: |$VDDLaffected_rows|$uniqueid|$insert_lead_id|$HT_status|";   &agi_output;}
+					}
+
 				if ( ($enable_queuemetrics_logging > 0) && ($exitwithkey < 1) )
 					{
 					$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
@@ -5305,6 +5342,13 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 							$dbhP=$dbhA;   $mysql_count='02091';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 						if ($AGILOG) {$agi_string = "--    VDCL vcl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
 
+						if ($enable_drop_lists > 0) 
+							{
+							$stmtA="INSERT IGNORE INTO vicidial_drop_log SET uniqueid='$uniqueid',server_ip='$VARserver_ip',drop_date=NOW(),lead_id='$insert_lead_id',campaign_id='$VD_campaign_id',status='$HT_status',phone_code='$phone_code',phone_number='$phone_number';";
+							$VDDLaffected_rows = $dbhA->do($stmtA);
+							if ($AGILOG) {$agi_string = "--    vicidial_drop_log insert: |$VDDLaffected_rows|$uniqueid|$insert_lead_id|$HT_status|";   &agi_output;}
+							}
+
 						if ( ($enable_queuemetrics_logging > 0) && ($exitwithkey < 1) )
 							{
 							$dbhB = DBI->connect("DBI:mysql:$queuemetrics_dbname:$queuemetrics_server_ip:3306", "$queuemetrics_login", "$queuemetrics_pass")
@@ -5663,6 +5707,13 @@ if ( ($drop_timer > $DROP_TIME) || ($MCdrop_override > 0) )
 	$affected_rows = $dbhA->do($stmtA);
 		$dbhP=$dbhA;   $mysql_count='02100';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	if ($AGILOG) {$agi_string = "--    VDCL vcl update: |$affected_rows|$insert_lead_id|\n|$stmtA|";   &agi_output;}
+
+	if ($enable_drop_lists > 0) 
+		{
+		$stmtA="INSERT IGNORE INTO vicidial_drop_log SET uniqueid='$uniqueid',server_ip='$VARserver_ip',drop_date=NOW(),lead_id='$insert_lead_id',campaign_id='$VD_campaign_id',status='$DRstatus',phone_code='$phone_code',phone_number='$phone_number';";
+		$VDDLaffected_rows = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    vicidial_drop_log insert: |$VDDLaffected_rows|$uniqueid|$insert_lead_id|$DRstatus|";   &agi_output;}
+		}
 
 	$called_since_last_resetSQL='';
 	if ( ($drop_action =~ /VOICEMAIL|HANGUP|MESSAGE|VMAIL_NO_INST/) && ($drop_lead_reset =~ /Y/) )

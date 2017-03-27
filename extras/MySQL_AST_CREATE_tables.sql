@@ -1698,7 +1698,8 @@ agent_script VARCHAR(50) default 'vicidial.php',
 vdad_debug_logging ENUM('1','0') default '0',
 agent_chat_screen_colors VARCHAR(20) default 'default',
 enable_auto_reports ENUM('1','0') default '0',
-enable_pause_code_limits ENUM('1','0') default '0'
+enable_pause_code_limits ENUM('1','0') default '0',
+enable_drop_lists ENUM('0','1','2') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3644,6 +3645,39 @@ index (report_times),
 index (run_now_trigger)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_drop_lists (
+dl_id VARCHAR(30) UNIQUE NOT NULL,
+dl_name VARCHAR(100),
+last_run DATETIME,
+dl_server VARCHAR(30) default 'active_voicemail_server',
+dl_times VARCHAR(100) default '',
+dl_weekdays VARCHAR(7) default '',
+dl_monthdays VARCHAR(100) default '',
+drop_statuses VARCHAR(255) default ' DROP -',
+list_id BIGINT(14) UNSIGNED,
+duplicate_check VARCHAR(50) default 'NONE',
+run_now_trigger ENUM('N','Y') default 'N',
+active ENUM('N','Y') default 'N',
+user_group VARCHAR(20) default '---ALL---',
+closer_campaigns TEXT,
+index (dl_times),
+index (run_now_trigger)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_drop_log (
+uniqueid VARCHAR(50) NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+drop_date DATETIME NOT NULL,
+lead_id INT(9) UNSIGNED NOT NULL,
+phone_code VARCHAR(10),
+phone_number VARCHAR(18),
+campaign_id VARCHAR(20) NOT NULL,
+status VARCHAR(6) NOT NULL,
+drop_processed ENUM('N','Y','U') default 'N',
+index(drop_date),
+index(drop_processed)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3828,6 +3862,10 @@ CREATE TABLE recording_log_archive LIKE recording_log;
 ALTER TABLE recording_log_archive MODIFY recording_id INT(10) UNSIGNED UNIQUE NOT NULL;
 ALTER TABLE recording_log_archive DROP PRIMARY KEY;
 
+CREATE TABLE vicidial_drop_log_archive LIKE vicidial_drop_log; 
+DROP INDEX drop_date on vicidial_drop_log_archive;
+CREATE UNIQUE INDEX vicidial_drop_log_archive_key on vicidial_drop_log_archive(drop_date, uniqueid);
+
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
 
@@ -3902,4 +3940,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1496',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1497',db_schema_update_date=NOW(),reload_timestamp=NOW();

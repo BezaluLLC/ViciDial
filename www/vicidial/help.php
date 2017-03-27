@@ -117,6 +117,7 @@
 # 170320-1346 - Added phones conf_qualify entry
 # 170321-1130 - Added pause code limits entries
 # 170322-1720 - Added filter-phone-list entry
+# 170326-1135 - Added drop lists entries
 #
 
 
@@ -2171,6 +2172,88 @@ if ($SSqc_features_active > 0)
 <A NAME="filter-phone-list">
 <BR>
 <B><?php echo _QXZ("Filter Phone Group List"); ?> -</B><?php echo _QXZ("Through the Add-Delete FPG Number page you are able to manually add numbers to this list so that they will be filtered when they enter a DID that is using this list. If you have the Filter Phone Group option set to include AREACODE then you can also use area code wildcard entries like this 201XXXXXXX to filter all calls from the 201 areacode when enabled. There is also a special entry that you can add to your Filter Phone Group, BLANK, this will filter calls that arrive with an empty caller ID number."); ?>
+
+
+
+
+
+<BR><BR><BR><BR>
+
+<B><FONT SIZE=3>Drop Lists Help</FONT></B><BR><BR>
+<A NAME="drop_lists">
+<BR>
+<?php echo _QXZ("The Drop Lists process allows you to take the phone numbers of calls that have been dropped from inbound groups and put them into a specified list at defined scheduled days and times."); ?>
+<BR>
+
+<BR>
+<A NAME="drop_lists-dl_id">
+<BR>
+<B><?php echo _QXZ("Drop List ID"); ?> -</B><?php echo _QXZ("This is the ID of the Drop List entry, it must be from 2 to 30 characters in length and contain no spaces."); ?>
+
+<BR>
+<A NAME="drop_lists-dl_name">
+<BR>
+<B><?php echo _QXZ("Drop List Name"); ?> -</B><?php echo _QXZ("This is the name of the Drop List entry, it must be from 2 to 100 characters in length and it used to describe the drop list."); ?>
+
+<BR>
+<A NAME="drop_lists-last_run">
+<BR>
+<B><?php echo _QXZ("Last Run Time"); ?> -</B><?php echo _QXZ("This is the date and time of the last run of this drop list process."); ?>
+
+<BR>
+<A NAME="drop_lists-user_group">
+<BR>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user with Modify Lists permissions to view this record."); ?>
+
+<BR>
+<A NAME="drop_lists-dl_server">
+<BR>
+<B><?php echo _QXZ("Run Server"); ?> -</B><?php echo _QXZ("This is the machine that you want to use to run this drop list process. You must choose a server that runs the keepalive process every minute in the crontab. The default is to use the active voicemail server as defined in System Settings."); ?>
+
+<BR>
+<A NAME="drop_lists-dl_times">
+<BR>
+<B><?php echo _QXZ("Run Times"); ?> -</B><?php echo _QXZ("This is the list of times in HHMM format when you want the drop list process to run. You can specify multiple times by separating them with a dash, like how the List Reset Times feature works. The drop list process will gather all of the matching records since the last time the process was run."); ?>
+
+<BR>
+<A NAME="drop_lists-dl_weekdays">
+<BR>
+<B><?php echo _QXZ("Run Weekdays"); ?> -</B><?php echo _QXZ("This is the list of days of the week when you want the drop list process to run. Either this option or the Month Days field below must be set for the process to run automatically."); ?>
+
+<BR>
+<A NAME="drop_lists-dl_monthdays">
+<BR>
+<B><?php echo _QXZ("Run Month Days"); ?> -</B><?php echo _QXZ("This is the list of days of the month in DD format when you want the drop list process to run. You can specify multiple month days by separating them with a dash. Either this option or the Weekdays field above must be set for the process to run automatically."); ?>
+
+<BR>
+<A NAME="drop_lists-duplicate_check">
+<BR>
+<B><?php echo _QXZ("Duplicate Check"); ?> -</B><?php echo _QXZ("This setting allows you to specify if the drop list process will check for duplicates before adding a new lead that was gathered from the drop list process. You can select LIST which will check for duplicate phone numbers within the leads already within the specified list or LIST_CAMPAIGN_LISTS which will also check for duplicate phone numbers within all of the lists associated with the campaign that the list defined below is assigned to. Default is NONE for no duplicate checking."); ?>
+
+<BR>
+<A NAME="drop_lists-list_id">
+<BR>
+<B><?php echo _QXZ("List ID"); ?> -</B><?php echo _QXZ("This is the list ID of the list that the new leads gathered from the drop list process are to be inserted into."); ?>
+
+<BR>
+<A NAME="drop_lists-active">
+<BR>
+<B><?php echo _QXZ("Active"); ?> -</B><?php echo _QXZ("The drop list process will only run on the set schedule above if active is set to Y. Default is N."); ?>
+
+<BR>
+<A NAME="drop_lists-run_now_trigger">
+<BR>
+<B><?php echo _QXZ("Run Now Trigger"); ?> -</B><?php echo _QXZ("This option offers a way to test this drop list process before setting it to active. It can take up to one minute for the process to start running after submitting this page with this field set to Y. Default is N."); ?>
+
+<BR>
+<A NAME="drop_lists-drop_statuses">
+<BR>
+<B><?php echo _QXZ("Drop Statuses"); ?> -</B><?php echo _QXZ("This is the list of drop statuses that will be used to gather the new leads by the drop list process. Default is DROP."); ?>
+
+<BR>
+<A NAME="drop_lists-closer_campaigns">
+<BR>
+<B><?php echo _QXZ("Inbound Groups"); ?> -</B><?php echo _QXZ("This is the list of Inbound Groups that will be used to gather the new leads by the drop list process."); ?>
 
 
 
@@ -5117,11 +5200,6 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <B><?php echo _QXZ("Max FILL Calls per Second"); ?> -</B><?php echo _QXZ("This setting determines the maximum number of calls that can be placed by the auto-FILL outbound auto-dialing script on for all servers, per second. Must be from 1 to 200. Default is 40."); ?>
 
 <BR>
-<A NAME="settings-user_new_lead_limit">
-<BR>
-<B><?php echo _QXZ("New Leads Per List Limit"); ?> -</B><?php echo _QXZ("This setting enables the new lead limits per list to be set on the list modify page and the user list new lead limit page. This feature will only work properly if the campaign is set to either the MANUAL or INBOUND_MAN Dial Method and No Hopper dialing is enabled. Default is 0 for disabled."); ?>
-
-<BR>
 <A NAME="settings-web_loader_phone_length">
 <BR>
 <B><?php echo _QXZ("Web Lead Loader Phone Length"); ?> -</B><?php echo _QXZ("This setting allows you to only allow phone numbers of a specific length into the system when loading leads with the web lead loader. The CHOOSE option allows a manager to optionally select a number of phone number digits to check the length by when loading leads one file at a time. Selecting a number option will not allow a manager to choose while loading leads, the check will be used every time the web lead loader is used. Default is DISABLED."); ?>
@@ -5177,14 +5255,19 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <B><?php echo _QXZ("Enable CallCard"); ?> -</B><?php echo _QXZ("This setting enables the CallCard features to allow for callers to use pin numbers and card_ids that have a balance of minutes and those balances can have agent talk time on customer calls to in-groups deducted. Default is 0 for disabled."); ?>
 
 <BR>
-<A NAME="settings-custom_fields_enabled">
-<BR>
-<B><?php echo _QXZ("Enable Custom List Fields"); ?> -</B><?php echo _QXZ("This setting enables the custom list fields feature that allows for custom data fields to be defined in the administration web interface on a per-list basis and then have those fields available in a FORM tab to the agent in the agent web interface. Default is 0 for disabled."); ?>
-
-<BR>
 <A NAME="settings-test_campaign_calls">
 <BR>
 <B><?php echo _QXZ("Enable Campaign Test Calls"); ?> -</B><?php echo _QXZ("This setting enables the ability to enter a phone code and phone number into fields at the bottom of the Campaign Detail screen and place a phone call to that number as if it were a lead being auto-dialed in the system. The phone number will be stored as a new lead in the manual dial list ID list. The campaign must be active for this feature to be enabled, and it is recommended that the lists assigned to the campaign all be set to inactive. The dial prefix, dial timeout and all other dialing related features, except for DNC and call time options, will affect the dialing of the test number. The phone call will be placed on the server selected as the voicemail server in the system settings. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="settings-user_new_lead_limit">
+<BR>
+<B><?php echo _QXZ("New Leads Per List Limit"); ?> -</B><?php echo _QXZ("This setting enables the new lead limits per list to be set on the list modify page and the user list new lead limit page. This feature will only work properly if the campaign is set to either the MANUAL or INBOUND_MAN Dial Method and No Hopper dialing is enabled. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="settings-custom_fields_enabled">
+<BR>
+<B><?php echo _QXZ("Enable Custom List Fields"); ?> -</B><?php echo _QXZ("This setting enables the custom list fields feature that allows for custom data fields to be defined in the administration web interface on a per-list basis and then have those fields available in a FORM tab to the agent in the agent web interface. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="settings-expanded_list_stats">
@@ -5200,6 +5283,11 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="settings-enable_did_entry_list_id">
 <BR>
 <B><?php echo _QXZ("Enable DID Entry List ID"); ?> -</B><?php echo _QXZ("This setting if enabled will allow a manager to define an entry list id to use on the DID modify screen. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="settings-enable_drop_lists">
+<BR>
+<B><?php echo _QXZ("Enable Drop Lists"); ?> -</B><?php echo _QXZ("This setting if enabled will make the Drop Lists feature appear under the LISTS menu. This feature set can take dropped call log records and create new leads in a list from multiple inbound groups. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="settings-agent_debug_logging">
