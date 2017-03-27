@@ -118,6 +118,7 @@
 # 170321-1130 - Added pause code limits entries
 # 170322-1720 - Added filter-phone-list entry
 # 170326-1135 - Added drop lists entries
+# 170327-1649 - updated the campaigns-use_custom_cid entry
 #
 
 
@@ -1402,7 +1403,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-use_custom_cid">
 <BR>
-<B><?php echo _QXZ("Custom CallerID"); ?> -</B><?php echo _QXZ("When set to Y, this option allows you to use the security_phrase field in the list table as the CallerID to send out when placing for each specific lead. If this field has no CID in it then the Campaign CallerID defined above will be used instead. This option will disable the list CallerID Override if there is a CID present in the security_phrase field. Default is N. When set to AREACODE you have the ability to go into the AC-CID submenu and define multiple callerids to be used per areacode."); ?>
+<B><?php echo _QXZ("Custom CallerID"); ?> -</B><?php echo _QXZ("When set to Y, this option allows you to use the security_phrase field in the list table as the CallerID to send out when placing for each specific lead. If this field has no CID in it then the Campaign CallerID defined above will be used instead. This option will disable the list CallerID Override if there is a CID present in the security_phrase field. Default is N. When set to AREACODE you have the ability to go into the AC-CID submenu and define multiple callerids to be used per areacode. For MANUAL and INBOUND_MAN dial methods only, you can use one of the USER_CUSTOM selections to take a CallerID number put into one of the User Custom fields in the User Modify screen and use that for outbound manual dial calls placed by an agent."); ?>
 
 <BR>
 <A NAME="campaigns-campaign_rec_exten">

@@ -133,6 +133,9 @@ OTHER CHANGES:
 25. Added Drop Lists feature, allowing you to add new leads to a list built from
 	DROPped calls from inbound groups on a scheduled basis.
 
+26. Added USER_CUSTOM_ options to campaign custom callerID setting to allow for
+	custom caller IDs to be used per agent in MANUAL and INBOUND_MAN modes
+
 
 
 

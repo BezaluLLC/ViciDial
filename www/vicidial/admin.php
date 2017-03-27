@@ -2802,7 +2802,6 @@ if ($non_latin < 1)
 	$my_callback_option = preg_replace('/[^0-9a-zA-Z]/','',$my_callback_option);
 	$auto_pause_precall_code = preg_replace('/[^0-9a-zA-Z]/','',$auto_pause_precall_code);
 	$disable_dispo_status = preg_replace('/[^0-9a-zA-Z]/','',$disable_dispo_status);
-	$use_custom_cid = preg_replace('/[^0-9a-zA-Z]/','',$use_custom_cid);
 	$action_xfer_cid = preg_replace('/[^0-9a-zA-Z]/','',$action_xfer_cid);
 	$callback_list_calltime = preg_replace('/[^0-9a-zA-Z]/','',$callback_list_calltime);
 	$pause_after_next_call = preg_replace('/[^0-9a-zA-Z]/','',$pause_after_next_call);
@@ -3107,6 +3106,7 @@ if ($non_latin < 1)
 	$duplicate_check = preg_replace('/[^-_0-9a-zA-Z]/','',$duplicate_check);
 	$dl_times = preg_replace('/[^-_0-9a-zA-Z]/','',$dl_times);
 	$dl_monthdays = preg_replace('/[^-_0-9a-zA-Z]/','',$dl_monthdays);
+	$use_custom_cid = preg_replace('/[^-_0-9a-zA-Z]/','',$use_custom_cid);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_timeout_prompt = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$menu_timeout_prompt);
@@ -4058,12 +4058,13 @@ else
 # 170320-1340 - Added conf_qualify phones option for IAX
 # 170321-1100 - Added pause code time limits warning feature
 # 170327-0704 - Added Drop Lists section
+# 170327-1655 - Added USER_CUSTOM_ options to campaign custom callerID setting
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-604a';
-$build = '170327-0704';
+$admin_version = '2.14-605a';
+$build = '170327-1655';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -21688,7 +21689,7 @@ if ($ADD==31)
 			{echo " <font color=red>"._QXZ("LIST OVERRIDE ACTIVE")."</font>";}
 		echo "</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Custom CallerID").": </td><td align=left><select size=1 name=use_custom_cid><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='AREACODE'>"._QXZ("AREACODE")."</option><option value='$use_custom_cid' SELECTED>"._QXZ("$use_custom_cid")."</option></select>$NWB#campaigns-use_custom_cid$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Custom CallerID").": </td><td align=left><select size=1 name=use_custom_cid><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='AREACODE'>"._QXZ("AREACODE")."</option><option value='USER_CUSTOM_1'>"._QXZ("USER_CUSTOM_1")."</option><option value='USER_CUSTOM_2'>"._QXZ("USER_CUSTOM_2")."</option><option value='USER_CUSTOM_3'>"._QXZ("USER_CUSTOM_3")."</option><option value='USER_CUSTOM_4'>"._QXZ("USER_CUSTOM_4")."</option><option value='USER_CUSTOM_5'>"._QXZ("USER_CUSTOM_5")."</option><option value='$use_custom_cid' SELECTED>"._QXZ("$use_custom_cid")."</option></select>$NWB#campaigns-use_custom_cid$NWE</td></tr>\n";
 
 		if ($SSoutbound_autodial_active > 0)
 			{

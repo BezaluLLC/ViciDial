@@ -861,7 +861,7 @@ dispo_call_url TEXT,
 xferconf_c_number VARCHAR(50) default '',
 xferconf_d_number VARCHAR(50) default '',
 xferconf_e_number VARCHAR(50) default '',
-use_custom_cid ENUM('Y','N','AREACODE') default 'N',
+use_custom_cid ENUM('Y','N','AREACODE','USER_CUSTOM_1','USER_CUSTOM_2','USER_CUSTOM_3','USER_CUSTOM_4','USER_CUSTOM_5') default 'N',
 scheduled_callbacks_alert ENUM('NONE','BLINK','RED','BLINK_RED','BLINK_DEFER','RED_DEFER','BLINK_RED_DEFER') default 'NONE',
 queuemetrics_callstatus_override ENUM('DISABLED','NO','YES') default 'DISABLED',
 extension_appended_cidname ENUM('Y','N') default 'N',
@@ -3940,4 +3940,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1497',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1498',db_schema_update_date=NOW(),reload_timestamp=NOW();

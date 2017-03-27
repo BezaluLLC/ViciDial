@@ -425,13 +425,14 @@
 # 170228-1625 - Fix to prevent double-logging when emergency logout happens
 # 170309-0704 - Small fix for INBOUND_MAN agent logging issue
 # 170309-1550 - Added campaign agent_xfer_validation option
+# 170327-1656 - Added USER_CUSTOM_ options to campaign custom callerID setting
 #
 
-$version = '2.14-319';
-$build = '170309-1550';
+$version = '2.14-320';
+$build = '170327-1656';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=658;
+$mysql_log_count=661;
 $one_mysql_log=0;
 $DB=0;
 $VD_login=0;
@@ -2903,7 +2904,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 								$vulnl_new_sum=0;
 								$stmt="SELECT sum(new_count) from vicidial_user_list_new_lead where user='$user';";
 								$rslt=mysql_to_mysqli($stmt, $link);
-								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00659',$user,$server_ip,$session_name,$one_mysql_log);}
 								$vulnlags_ct = mysqli_num_rows($rslt);
 								if ($vulnlags_ct > 0)
 									{
@@ -3916,7 +3917,28 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$row=mysqli_fetch_row($rslt);
 					$use_custom_cid =			$row[0];
 					$manual_dial_hopper_check =	$row[1];
-					if ( ($use_custom_cid == 'AREACODE') and ($cid_lock < 1) )
+					if ( (preg_match('/^USER_CUSTOM/', $use_custom_cid)) and ($cid_lock < 1) )
+						{
+						$temp_vu='';
+						$use_custom_cid=preg_replace('/^USER_/', "", $use_custom_cid);
+						$pattern=array('/1/', '/2/', '/3/', '/4/', '/5/');
+						$replace=array('one', 'two', 'three', 'four', 'five');
+						$use_custom_cid = strtolower(preg_replace($pattern,$replace, $use_custom_cid));
+						$stmt="select $use_custom_cid from vicidial_users where user='$user'";
+						$rslt=mysql_to_mysqli($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00660',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($DB) {echo "$stmt\n";}
+						$vu_ct = mysqli_num_rows($rslt);
+						$act=0;
+						while ($vu_ct > $act)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$temp_vu =	$row[0];
+							$act++;
+							}
+						$temp_CID = preg_replace("/\D/",'',$temp_vu);
+						}
+					else if ( ($use_custom_cid == 'AREACODE') and ($cid_lock < 1) )
 						{
 						$temp_vcca='';
 						$temp_ac='';
@@ -4861,7 +4883,28 @@ if ($ACTION == 'manDiaLonly')
 			$row=mysqli_fetch_row($rslt);
 			$use_custom_cid =			$row[0];
 			$manual_dial_hopper_check =	$row[1];
-			if ( ($use_custom_cid == 'AREACODE') and ($cid_lock < 1) )
+			if ( (preg_match('/^USER_CUSTOM/', $use_custom_cid)) and ($cid_lock < 1) )
+				{
+				$temp_vu='';
+				$use_custom_cid=preg_replace('/^USER_/', "", $use_custom_cid);
+				$pattern=array('/1/', '/2/', '/3/', '/4/', '/5/');
+				$replace=array('one', 'two', 'three', 'four', 'five');
+				$use_custom_cid = strtolower(preg_replace($pattern,$replace, $use_custom_cid));
+				$stmt="select $use_custom_cid from vicidial_users where user='$user'";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00661',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$vu_ct = mysqli_num_rows($rslt);
+				$act=0;
+				while ($vu_ct > $act)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$temp_vu =	$row[0];
+					$act++;
+					}
+				$temp_CID = preg_replace("/\D/",'',$temp_vu);
+				}
+			else if ( ($use_custom_cid == 'AREACODE') and ($cid_lock < 1) )
 				{
 				$temp_vcca='';
 				$temp_ac='';
