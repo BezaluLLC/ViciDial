@@ -25997,7 +25997,7 @@ if ($ADD==331)
 			echo "$servers_list";
 			echo "<option SELECTED>$dl_server</option>\n";
 			echo "</select>$NWB#drop_lists-dl_server$NWE</td></tr>\n";
-			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Run Times").": </td><td align=left><input type=text name=dl_times size=60 maxlength=100 id=dl_times value=\"$dl_times\">$NWB#drop_lists-dl_times$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Run Times").": </td><td align=left><input type=text name=dl_times size=80 maxlength=120 id=dl_times value=\"$dl_times\">$NWB#drop_lists-dl_times$NWE</td></tr>\n";
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right NOWRAP>"._QXZ("Run Weekdays").":</td><td align=left NOWRAP>\n";
 			echo "<input type=\"checkbox\" name=\"dl_weekdays[]\" value=\"0\"";
 				if (preg_match('/0/',$dl_weekdays)) {echo " CHECKED";}
@@ -26021,7 +26021,7 @@ if ($ADD==331)
 				if (preg_match('/6/',$dl_weekdays)) {echo " CHECKED";}
 			echo ">"._QXZ("Saturday")." &nbsp; \n";
 			echo "$NWB#drop_lists-dl_weekdays$NWE</td></tr>\n";
-			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Run Month Days").": </td><td align=left><input type=text name=dl_monthdays size=60 maxlength=100 id=dl_monthdays value=\"$dl_monthdays\">$NWB#drop_lists-dl_monthdays$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Run Month Days").": </td><td align=left><input type=text name=dl_monthdays size=80 maxlength=100 id=dl_monthdays value=\"$dl_monthdays\">$NWB#drop_lists-dl_monthdays$NWE</td></tr>\n";
 			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Duplicate Check").": </td><td align=left><select size=1 name=duplicate_check>\n";
 			echo "<option value=\"NONE\">"._QXZ("NONE")."</option>\n";
 			echo "<option value=\"LIST\">"._QXZ("LIST")."</option>\n";
