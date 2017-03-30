@@ -1,4 +1,4 @@
-CALLER ID NAME CODES DOC	Started: 2013-07-15	Updated: 2017-02-22
+CALLER ID NAME CODES DOC	Started: 2013-07-15	Updated: 2017-03-29
 
 
 This document is meant for reference only, and it does not contain all CID name codes possible, but more will be added over time.
@@ -17,7 +17,7 @@ FX - Xfer Back to session From Park (FXvdcW14529553216666)
 VH - Inbound Agent Alert (VH7152252518600051)
 RH - Recording Hangup (RH1234514529553690)
 CX - Consultative Transfer (CXAR2420160116094751)
-XLvdc - Agent ReQueue Call (XLvdcW13739431946666) [epoch + user...]
+XLvdc - Agent Local Closer or ReQueue Call (XLvdcW13739431946666) [epoch + user...]
 XBvdc - Agent blind transfer (XBvdcW14528875091001100110011001) [epoch + user...]
 AGMON - Remote Agent Monitor (AGMON715224918000001)
 HLvdcW - Hangup of customer call from agent screen (HLvdcW1475524272tluc)

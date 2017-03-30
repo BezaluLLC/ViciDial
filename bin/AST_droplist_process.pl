@@ -12,6 +12,7 @@
 #
 # CHANGES
 # 170326-1541 - First version
+# 170330-0934 - populate new lead with field data from dropped lead
 #
 
 $US = '_';
@@ -373,7 +374,6 @@ while ($sthDROProws > $q)
 		}
 	if ($duplicate < 1)
 		{
-
 		### BEGIN figure out the timezone of the phone number ###
 		$PC_processed=0;
 		### UNITED STATES ###
@@ -550,10 +550,50 @@ while ($sthDROProws > $q)
 			if ($DBX) {print "     DST: 0\n";}
 			$AC_processed++;
 			}
-
 		### END figure out the timezone of the phone number ###
 
-		$stmtC="INSERT INTO vicidial_list set entry_date=NOW(),user='',phone_number='$Aphone_number[$q]',phone_code='$Aphone_code[$q]',list_id='$list_id',last_local_call_time='$Adrop_date[$q]',comments='$Acampaign_id[$q] - $ingroup_name - $Adrop_date[$q]',source_id='$Alead_id[$q]',status='NEW',called_since_last_reset='N',gmt_offset_now='$gmt_offset';";
+		### BEGIN gather existing field data for lead ###
+		$stmtB = "SELECT vendor_lead_code,source_id,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,rank,owner from vicidial_list where lead_id='$Alead_id[$q]';";
+		$sthA = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthBrows=$sthA->rows;
+		if ($sthBrows > 0) 
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vendor_lead_code =		$aryA[0];
+			$source_id =			$aryA[1];
+			$title =				$aryA[2];
+			$first_name =			$aryA[3];
+			$middle_initial =		$aryA[4];
+			$last_name =			$aryA[5];
+			$address1 =				$aryA[6];
+			$address2 =				$aryA[7];
+			$address3 =				$aryA[8];
+			$city =					$aryA[9];
+			$state =				$aryA[10];
+			$province =				$aryA[11];
+			$postal_code =			$aryA[12];
+			$country_code =			$aryA[13];
+			$gender =				$aryA[14];
+			$date_of_birth =		$aryA[15];
+			$alt_phone =			$aryA[16];
+			$email =				$aryA[17];
+			$security_phrase =		$aryA[18];
+			$comments =				$aryA[19];
+			$rank =					$aryA[20];
+			$owner =				$aryA[21];
+			}
+		$sthA->finish();
+
+		if (length($comments)>0) 
+			{$comments .= " $Acampaign_id[$q] - $ingroup_name - $Adrop_date[$q]";}
+		else 
+			{$comments = "$Acampaign_id[$q] - $ingroup_name - $Adrop_date[$q]";}
+		if (length($source_id)<1) 
+			{$source_id = "$Alead_id[$q]";}
+		### END gather existing field data for lead ###
+
+		$stmtC="INSERT INTO vicidial_list set entry_date=NOW(),user='',phone_number='$Aphone_number[$q]',phone_code='$Aphone_code[$q]',list_id='$list_id',last_local_call_time='$Adrop_date[$q]',status='NEW',called_since_last_reset='N',gmt_offset_now='$gmt_offset',vendor_lead_code='$vendor_lead_code',source_id='$source_id',title='$title',first_name='$first_name',middle_initial='$middle_initial',last_name='$last_name',address1='$address1',address2='$address2',address3='$address3',city='$city',state='$state',province='$province',postal_code='$postal_code',country_code='$country_code',gender='$gender',date_of_birth='$date_of_birth',alt_phone='$alt_phone',email='$email',security_phrase='$security_phrase',comments='$comments',rank='$rank',owner='$owner';";
 		$Caffected_rows = $dbhA->do($stmtC);
 		$insert_counter++;
 
