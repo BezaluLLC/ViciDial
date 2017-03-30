@@ -4059,7 +4059,7 @@ else
 # 170321-1100 - Added pause code time limits warning feature
 # 170327-0704 - Added Drop Lists section
 # 170327-1655 - Added USER_CUSTOM_ options to campaign custom callerID setting
-#
+# 170330-0953 - Fixed translation phrases in callbacks list, issue #1006
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
@@ -35469,8 +35469,8 @@ if ($ADD==82)
 		echo "<td><font size=1>$row[5]</td>";
 		echo "<td><font size=1>$row[6]</td>";
 		echo "<td><font size=1><A HREF=\"$PHP_SELF?ADD=3&user=$row[8]\">$row[8]</A></td>";
-		echo "<td><font size=1>$row[9]</td>";
-		echo "<td><font size=1>$row[4]</td>";
+		echo "<td><font size=1>"._QXZ("$row[9]")."</td>";
+		echo "<td><font size=1>"._QXZ("$row[4]")."</td>";
 		echo "<td><font size=1><A HREF=\"$PHP_SELF?ADD=311111&user_group=$row[11]\">$row[11]</A></td>";
 		echo "</tr>\n";
 		$o++;

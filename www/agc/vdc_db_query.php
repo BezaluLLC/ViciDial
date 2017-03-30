@@ -6775,7 +6775,7 @@ if ($stage == "end")
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00299',$user,$server_ip,$session_name,$one_mysql_log);}
 
 	### if queuemetrics_dispo_pause dispo tag is enabled, log it here
-	if (strlen($queuemetrics_dispo_pause) > 0)
+	if ( ($enable_queuemetrics_logging > 0) and (strlen($queuemetrics_dispo_pause) > 0) )
 		{
 		$pause_typeSQL='';
 		if ($queuemetrics_pause_type > 0)

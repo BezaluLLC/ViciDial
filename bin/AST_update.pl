@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_update.pl version 2.12
+# AST_update.pl version 2.14
 #
 # DESCRIPTION:
 # uses the Asterisk Manager interface and DBD::MySQL to update the live_channels
@@ -27,7 +27,7 @@
 # 
 # It is recommended that you run this program on each local Asterisk machine
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # version changes:
 # 41228-1659 - modified to compensate for manager output response hiccups
@@ -65,9 +65,10 @@
 # 141124-2309 - Fixed Fhour variable bug
 # 150308-0911 - Added filter for agent sessions in new meetme-enter contexts
 # 150610-1200 - Added support for AMI version 1.3
+# 170329-2125 - Updated system load stats collection for Linux kernel 2.6+
 #
 
-$build = '150308-0911';
+$build = '170329-2125';
 
 # constants
 $SYSPERF=0;	# system performance logging to MySQL server_performance table every 5 seconds
@@ -257,6 +258,9 @@ $event_string='PROGRAM STARTED||||||||||||||||||||||||||||||||||||||||||||||||||
 use Time::HiRes ('gettimeofday','usleep','sleep');  # necessary to have perl sleep command of less than one second
 use Net::Telnet ();
 use DBI;	  
+use POSIX;
+use Scalar::Util qw(looks_like_number);
+
 
 $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
  or die "Couldn't connect to database: " . DBI->errstr;
@@ -628,45 +632,34 @@ while($one_day_interval > 0)
 			$UD_bad_grab=0;
 			if ( ( ($endless_loop =~ /0$/) && ($SYSPERF) ) || ($endless_loop =~ /00$/) || ($gather_stats_first >= 1) )
 				{
+
+				# get cpu percentages
 				$cpuUSERcent=0; $cpuSYSTcent=0; $cpuIDLEcent=0;
-				### get processor usage seconds ###
-				# cpu  924841 211725 270473 6961811
-				@cpuUSE = `$bincat /proc/stat`;
-				if ($cpuUSE[0] =~ /cpu\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/)
-					{
-					$cpuUSER  = ($1 + $2);
-					$cpuSYST  = $3;
-					$cpuIDLE  = $4;
-					$cpuUSERdiff  = ($cpuUSER - $cpuUSERprev);
-					$cpuSYSTdiff  = ($cpuSYST - $cpuSYSTprev);
-					$cpuIDLEdiff  = ($cpuIDLE - $cpuIDLEprev);
-					$cpuIDLEdiffTOTAL = (($cpuUSERdiff + $cpuSYSTdiff) + $cpuIDLEdiff);
-					if ($cpuIDLEdiffTOTAL > 0) 
-						{
-						$cpuUSERcent  = sprintf("%.0f", (($cpuUSERdiff / $cpuIDLEdiffTOTAL) * 100));
-						$cpuSYSTcent  = sprintf("%.0f", (($cpuSYSTdiff / $cpuIDLEdiffTOTAL) * 100));
-						$cpuIDLEcent  = sprintf("%.0f", (($cpuIDLEdiff / $cpuIDLEdiffTOTAL) * 100));
-						}
-					$cpuUSERprev=$cpuUSER;
-					$cpuSYSTprev=$cpuSYST;
-					$cpuIDLEprev=$cpuIDLE;
-					}
+	                        (
+	                                $cpuUSERcent,
+	                                $cpuIDLEcent,
+	                                $cpuSYSTcent,
+	                                $cpu_vm_percent,
+	                                $user_diff,
+	                                $nice_diff,
+	                                $system_diff,
+	                                $idle_diff,
+	                                $iowait_diff,
+	                                $irq_diff,
+	                                $softirq_diff,
+	                                $steal_diff,
+	                                $guest_diff,
+	                                $guest_nice_diff
+	                        ) = get_cpu_percent();
 
-				### get system load ###
-				$serverLOAD = `$bincat /proc/loadavg`;
-				$serverLOAD =~ s/ .*//gi;
-				$serverLOAD =~ s/\D//gi;
+				# get server load
+				$serverLOAD = get_cpu_load();
 
-				### get memory usage ###
-				@GRABserverMEMORY = `$binfree -m -t`;
-					if ($GRABserverMEMORY[1] =~ /Mem:\s+(\d+)\s+(\d+)\s+(\d+)\s+/)
-					{
-					$MEMused  = $2;
-					$MEMfree  = $3;
-					}
-				### get number of system processes ###
-				@GRABserverPROCESSES = `$binps -A --no-heading`;
-				$serverPROCESSES = $#GRABserverPROCESSES;
+				# get memory usage
+				( $mem_total, $MEMused, $MEMfree ) = get_mem_usage();
+
+				# get number of processes
+				$serverPROCESSES = get_num_processes();;
 
 				if ($SYSPERF_rec) {$recording_count = ($test_local_count / 2)}
 				else {$recording_count=0;}
@@ -684,26 +677,11 @@ while($one_day_interval > 0)
 					{
 					### get disk space usage ###
 					$disk_usage='';
-					@serverDISK = `$dfbin -B 1048576 -x nfs -x cifs -x sshfs -x ftpfs`;
-					#Filesystem           1M-blocks      Used Available Use% Mounted on
-					#/dev/sda1                30030      6867     21613   0% /
-
+					$disk_usage = get_disk_space();
 					$gather_stats_first=0;
 					$channels_total=0;
 					if ($#list_channels > 0)
 						{$channels_total = ($#list_channels - 1);}
-					$ct=0;  $ct_PCT=0;
-					foreach(@serverDISK)
-						{
-						if ($serverDISK[$ct] =~ /(\d+\%)/)
-							{
-							$ct_PCT++;
-							$usage = $1;
-							$usage =~ s/\%//gi;
-							$disk_usage .= "$ct_PCT $usage|";
-							}
-						$ct++;
-						}
 
 					$stmtA = "UPDATE servers SET sysload='$serverLOAD',channels_total='$channels_total',cpu_idle_percent='$cpuIDLEcent',disk_usage='$disk_usage' where server_ip='$server_ip';";
 						if( ($DB) or ( ($UD_bad_grab) && ($Q < 1) ) ){print STDERR "\n|$stmtA|\n";}
@@ -1355,3 +1333,171 @@ sub event_logger
 		}
 	$event_string='';
 	}
+
+
+
+sub get_cpu_percent
+        {
+        # stat file in proc
+        $stat = '/proc/stat';
+
+        # read it
+        open( FH , "<$stat" );
+        @lines = <FH>;
+        close( FH );
+
+        # get the various times spent doing stuff ( $cpu is useless )
+        ($cpu, $user, $nice, $system, $idle, $iowait, $irq, $softirq, $steal, $guest, $guest_nice ) = split( ' ', $lines[0] );
+
+        # total the different catagories of time
+        $cpu_user = $user + $nice;
+        $cpu_idle = $idle + $iowait;
+        $cpu_sys = $system + $irq + $softirq;
+        $cpu_vm = $steal + $guest + $guest_nice;
+
+        # check if we have previous values
+        if ( defined ( $prev_user ) ) {
+                # get the differential from last time
+                $cpu_user_diff = $cpu_user - $prev_cpu_user;
+                $cpu_idle_diff = $cpu_idle - $prev_cpu_idle;
+                $cpu_sys_diff = $cpu_sys - $prev_cpu_sys;
+                $cpu_vm_diff = $cpu_vm - $prev_cpu_vm;
+
+                $user_diff = $user + $prev_user;
+                $nice_diff = $nice + $prev_nice;
+                $system_diff = $system + $prev_system;
+                $idle_diff = $idle + $prev_idle;
+                $iowait_diff = $iowait + $prev_iowait;
+                $irq_diff = $irq + $prev_irq;
+                $softirq_diff = $softirq + $prev_softirq;
+                $steal_diff = $steal + $prev_steal;
+                $guest_diff = $guest + $prev_guest;
+                $guest_nice_diff = $guest_nice + $prev_guest_nice;
+
+                # total the differentials
+                $cpu_total_diff = $cpu_user_diff + $cpu_idle_diff + $cpu_sys_diff + $cpu_vm_diff;
+
+                $cpu_user_percent  = sprintf("%.0f", (( $cpu_user_diff / $cpu_total_diff ) * 100 ));
+                $cpu_idle_percent  = sprintf("%.0f", (( $cpu_idle_diff / $cpu_total_diff ) * 100 ));
+                $cpu_sys_percent   = sprintf("%.0f", (( $cpu_sys_diff / $cpu_total_diff ) * 100 ));
+                $cpu_vm_percent    = sprintf("%.0f", (( $cpu_vm_diff / $cpu_total_diff ) * 100 ));
+        } else {
+                # first time runnings so there are no previous values.
+                # all we can do is base it off the system totals since boot.
+                $cpu_total = $cpu_user + $cpu_idle + $cpu_sys + $cpu_vm;
+
+                $cpu_user_percent  = sprintf("%.0f", (( $cpu_user / $cpu_total ) * 100 ));
+                $cpu_idle_percent  = sprintf("%.0f", (( $cpu_idle / $cpu_total ) * 100 ));
+                $cpu_sys_percent   = sprintf("%.0f", (( $cpu_sys / $cpu_total ) * 100 ));
+                $cpu_vm_percent    = sprintf("%.0f", (( $cpu_vm / $cpu_total ) * 100 ));
+        }
+
+        # store the values for the next call
+        $prev_user = $user;
+        $prev_nice = $nice;
+        $prev_system = $system;
+        $prev_idle = $idle;
+        $prev_iowait = $iowait;
+        $prev_irq = $irq;
+        $prev_softirq = $softirq;
+        $prev_steal = $steal;
+        $prev_guest = $guest;
+        $prev_guest_nice = $guest_nice;
+        $prev_cpu_user = $cpu_user;
+        $prev_cpu_idle = $cpu_idle;
+        $prev_cpu_sys = $cpu_sys;
+        $prev_cpu_vm = $cpu_vm;
+
+
+        return (
+                $cpu_user_percent,
+                $cpu_idle_percent,
+                $cpu_sys_percent,
+                $cpu_vm_percent,
+                $user_diff,
+                $nice_diff,
+                $system_diff,
+                $idle_diff,
+                $iowait_diff,
+                $irq_diff,
+                $softirq_diff,
+                $steal_diff,
+                $guest_diff,
+                $guest_nice_diff
+        );
+        }
+
+sub get_cpu_load
+        {
+        $lavg = '/proc/loadavg';
+
+        open( FH , "<$lavg" );
+        @lines = <FH>;
+        close( FH );
+
+        $server_load = $lines[0];
+        $server_load =~ s/ .*//gi;
+        $server_load =~ s/\D//gi;
+
+        return $server_load;
+        }
+
+sub get_mem_usage
+        {
+        $meminfo = '/proc/meminfo';
+
+        open( FH , "<$meminfo" );
+        @lines = <FH>;
+        close( FH );
+
+        $mem_total = $lines[0];
+        $mem_total =~ s/MemTotal: *//g;
+
+        $mem_free = $lines[1];
+        $mem_free =~ s/MemFree: *//g;
+
+        $mem_used = $mem_total - $mem_free;
+
+        $mem_used = floor( $mem_used / 1024 );
+        $mem_total = floor( $mem_total / 1024 );
+        $mem_free = floor( $mem_free / 1023 );
+
+        return ( $mem_total, $mem_used, $mem_free );
+
+        }
+
+sub get_disk_space
+        {
+        @serverDISK = `$dfbin -B 1048576 -x nfs -x cifs -x sshfs -x ftpfs`;
+        $ct=0;
+        $ct_PCT=0;
+        $disk_usage = '';
+        foreach(@serverDISK)
+                {
+                if ($serverDISK[$ct] =~ /(\d+\%)/)
+                        {
+                        $ct_PCT++;
+                        $usage = $1;
+                        $usage =~ s/\%//gi;
+                        $disk_usage .= "$ct_PCT $usage|";
+                        }
+                $ct++;
+                }
+
+        return $disk_usage;
+        }
+
+sub get_num_processes
+        {
+        $num_processes = 0;
+
+        opendir( DH, '/proc');
+        while ( readdir( DH ) )
+                {
+                if ( looks_like_number( $_ ) ) { $num_processes++; }
+                }
+        closedir( DH );
+
+        return ($num_processes);
+        }
+
