@@ -1,5 +1,4 @@
-Sending email after agent dispositions a call		2015-08-06
-
+Sending email after agent dispositions a call		2017-03-30
 
 These instructions will show you how to set up automatic emails to be sent out when an agent dispositions a call with a specific defined "sale status".
 
@@ -26,7 +25,7 @@ VARhttp://192.168.1.1/agc/dispo_send_email.php?container_id=TEST_CONTAINER&lead_
 
 HERE IS AN EXAMPLE SETTINGS CONTAINER TO SEND OUT AN EMAIL:
 
-	(The four keys you can use are: "email_to", "email_from", "email_subject" and "email_body_begin" will start your message while "email_body_end" will mark the finish of the message. You can use most standard SCRIPT variables in the subject and body fields, and you can use either fixed email addresses or "agent_email" and "customer_email" as variables for the email addresses as shown below. A semi-colon ";" at the beginning of a line will comment out that line and it will not be parsed.)
+	(The four keys you can use are: "email_to", "email_from", "email_subject" and "email_body_begin" will start your message while "email_body_end" will mark the finish of the message. You can use most standard SCRIPT variables in the subject and body fields, and you can use either fixed email addresses or "agent_email" and "customer_email" as variables for the email addresses as shown below. A semi-colon ";" at the beginning of a line will comment out that line and it will not be parsed. If you want to include custom fields values in the email, then you need to put "--A--CF_uses_custom_fields--B--" into the email body somewhere, it will be removed before the email is sent. Then you can put custom fields values in just like you do in a script.)
 
 ; destination email
 ;email_to => vicidialemailtesting@gmail.com
@@ -93,7 +92,20 @@ user_custom_three: --A--user_custom_three--B--
 user_custom_four: --A--user_custom_four--B--
 user_custom_five: --A--user_custom_five--B--
 user_group: --A--user_group--B--
+uniqueid: --A--uniqueid--B--
+did_id: --A--did_id--B--
+did_extension: --A--did_extension--B--
+did_pattern: --A--did_pattern--B--
+did_description: --A--did_description--B--
+did_carrier_description: --A--did_carrier_description--B--
+did_custom_one: --A--did_custom_one--B--
+did_custom_two: --A--did_custom_two--B--
+did_custom_three: --A--did_custom_three--B--
+did_custom_four: --A--did_custom_four--B--
+did_custom_five: --A--did_custom_five--B--
+custom field x: --A--custom_xyz--B--
 
+--A--CF_uses_custom_fields--B--
 
 We hope you enjoy your stuff, and happy roadrunner chasing!
 

@@ -36,9 +36,10 @@
 # 170303-1207 - Expanded required custom fields types
 # 170309-0857 - Added list_name and list_description display variables
 # 170317-0753 - Added more missing display variables
+# 170330-1152 - Added did_carrier_description display option
 #
 
-# $mysql_queries = 21
+# $mysql_queries = 22
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
 function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$return_hash,$api_call)
@@ -892,6 +893,28 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 				}
 			}
 
+		if (preg_match('/--A--did_|--U--did_/i',$CFoutput))
+			{
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			### find the did_carrier_description for this call
+			$stmt="SELECT did_carrier_description,custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_inbound_dids where did_id='$did_id';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05022',$user,$server_ip,$session_name,$one_mysql_log);}
+			$dcd_ct = mysqli_num_rows($rslt);
+			if ($dcd_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$did_carrier_description =	$row[0];
+				$did_custom_one =			$row[1];
+				$did_custom_two =			$row[2];
+				$did_custom_three =			$row[3];
+				$did_custom_four =			$row[4];
+				$did_custom_five =			$row[5];
+				}
+			}
+
 		$CFoutput = preg_replace('/--U--lead_id--V--/i',urlencode($lead_id),$CFoutput);
 		$CFoutput = preg_replace('/--U--vendor_id--V--/i',urlencode($vendor_id),$CFoutput);
 		$CFoutput = preg_replace('/--U--vendor_lead_code--V--/i',urlencode($vendor_lead_code),$CFoutput);
@@ -955,6 +978,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 		$CFoutput = preg_replace('/--U--did_custom_three--V--/i',urlencode($did_custom_three),$CFoutput);
 		$CFoutput = preg_replace('/--U--did_custom_four--V--/i',urlencode($did_custom_four),$CFoutput);
 		$CFoutput = preg_replace('/--U--did_custom_five--V--/i',urlencode($did_custom_five),$CFoutput);
+		$CFoutput = preg_replace('/--U--did_carrier_description--V--/i',urlencode($did_carrier_description),$CFoutput);
 		$CFoutput = preg_replace('/--U--list_name--V--/i',urlencode($list_name),$CFoutput);
 		$CFoutput = preg_replace('/--U--list_description--V--/i',urlencode($list_description),$CFoutput);
 
@@ -1021,6 +1045,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 		$CFoutput = preg_replace('/--A--did_custom_three--B--/i',"$did_custom_three",$CFoutput);
 		$CFoutput = preg_replace('/--A--did_custom_four--B--/i',"$did_custom_four",$CFoutput);
 		$CFoutput = preg_replace('/--A--did_custom_five--B--/i',"$did_custom_five",$CFoutput);
+		$CFoutput = preg_replace('/--A--did_carrier_description--B--/i',"$did_carrier_description",$CFoutput);
 		$CFoutput = preg_replace('/--A--list_name--B--/i',"$list_name",$CFoutput);
 		$CFoutput = preg_replace('/--A--list_description--B--/i',"$list_description",$CFoutput);
 

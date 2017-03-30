@@ -1,7 +1,7 @@
 <?php
 # dispo_send_email.php
 # 
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to be used in the "Dispo URL" field of a campaign
 # or in-group. It will send out an email to a fixed email address as defined
@@ -20,6 +20,7 @@
 #
 # CHANGES
 # 150806-1424 - First Build
+# 170329-2145 - Added DID variables and custom fields values
 #
 
 $api_script = 'send_email';
@@ -66,6 +67,8 @@ $sale_status = "$TD$sale_status$TD";
 $search_value='';
 $match_found=0;
 $k=0;
+$mel=1;					# Mysql Error Log enabled = 1
+$mysql_log_count=14;
 
 $user=preg_replace("/\'|\"|\\\\|;| /","",$user);
 $pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
@@ -76,7 +79,7 @@ $VUselected_language = '';
 $stmt="SELECT selected_language from vicidial_users where user='$user';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
-	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60001',$user,$server_ip,$session_name,$one_mysql_log);}
 $sl_ct = mysqli_num_rows($rslt);
 if ($sl_ct > 0)
 	{
@@ -86,7 +89,7 @@ if ($sl_ct > 0)
 
 $stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
-	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02001',$user,$server_ip,$session_name,$one_mysql_log);}
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60002',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
@@ -130,6 +133,7 @@ if ($match_found > 0)
 			$stmt="SELECT count(*) from vicidial_log_extended where caller_code='$pass' and call_date > \"$four_hours_ago\";";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60003',$user,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysqli_fetch_row($rslt);
 			$authlive=$row[0];
 			$auth=$row[0];
@@ -155,6 +159,7 @@ if ($match_found > 0)
 		$stmt="SELECT count(*) from vicidial_live_agents where user='$user';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60004',$user,$server_ip,$session_name,$one_mysql_log);}
 		$row=mysqli_fetch_row($rslt);
 		$authlive=$row[0];
 		}
@@ -170,6 +175,7 @@ if ($match_found > 0)
 		$search_count=0;
 		$stmt = "SELECT count(*) FROM vicidial_settings_containers where container_id='$container_id';";
 		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60005',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
 		$sc_ct = mysqli_num_rows($rslt);
 		if ($sc_ct > 0)
@@ -182,7 +188,7 @@ if ($match_found > 0)
 			{
 			$stmt = "SELECT container_entry FROM vicidial_settings_containers where container_id='$container_id';";
 			$rslt=mysql_to_mysqli($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60006',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
 			$sc_ct = mysqli_num_rows($rslt);
 			if ($sc_ct > 0)
@@ -225,7 +231,7 @@ if ($match_found > 0)
 						##### grab the data from vicidial_list for the lead_id
 						$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
 						$rslt=mysql_to_mysqli($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60007',$user,$server_ip,$session_name,$one_mysql_log);}
 						if ($DB) {echo "$stmt\n";}
 						$list_lead_ct = mysqli_num_rows($rslt);
 						if ($list_lead_ct > 0)
@@ -270,7 +276,7 @@ if ($match_found > 0)
 							$stmt = "SELECT list_name,list_description from vicidial_lists where list_id='$list_id' limit 1;";
 							if ($DB) {echo "$stmt\n";}
 							$rslt=mysql_to_mysqli($stmt, $link);
-								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60008',$user,$server_ip,$session_name,$one_mysql_log);}
 							$VL_ln_ct = mysqli_num_rows($rslt);
 							if ($VL_ln_ct > 0)
 								{
@@ -280,10 +286,70 @@ if ($match_found > 0)
 								}
 							}
 
+						if ( (preg_match('/--A--did_|--A--uniqueid/i',$email_subject)) or (preg_match('/--A--did_|--A--uniqueid/i',$email_body)) )
+							{
+							$uniqueid='';
+
+							$stmt = "SELECT uniqueid from vicidial_log_extended where caller_code='$call_id' order by call_date desc limit 1;";
+							if ($DB) {echo "$stmt\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60009',$user,$server_ip,$session_name,$one_mysql_log);}
+							$VDIDL_ct = mysqli_num_rows($rslt);
+							if ($VDIDL_ct > 0)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$uniqueid	=	$row[0];
+								}
+							}
+
+						if ( (preg_match('/--A--did_/i',$email_subject)) or (preg_match('/--A--did_/i',$email_body)) )
+							{
+							$DID_id='';
+							$DID_extension='';
+							$DID_pattern='';
+							$DID_description='';
+							$DID_carrier_description='';
+							$DID_custom_one='';
+							$DID_custom_two='';
+							$DID_custom_three='';
+							$DID_custom_four='';
+							$DID_custom_five='';
+
+							$stmt = "SELECT did_id,extension from vicidial_did_log where uniqueid='$uniqueid' order by call_date desc limit 1;";
+							if ($DB) {echo "$stmt\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60010',$user,$server_ip,$session_name,$one_mysql_log);}
+							$VDIDL_ct = mysqli_num_rows($rslt);
+							if ($VDIDL_ct > 0)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$DID_id	=			$row[0];
+								$DID_extension	=	$row[1];
+
+								$stmt = "SELECT did_pattern,did_description,did_carrier_description,custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_inbound_dids where did_id='$DID_id' limit 1;";
+								if ($DB) {echo "$stmt\n";}
+								$rslt=mysql_to_mysqli($stmt, $link);
+									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60011',$user,$server_ip,$session_name,$one_mysql_log);}
+								$VDIDL_ct = mysqli_num_rows($rslt);
+								if ($VDIDL_ct > 0)
+									{
+									$row=mysqli_fetch_row($rslt);
+									$DID_pattern =				$row[0];
+									$DID_description =			$row[1];
+									$DID_carrier_description =	$row[2];
+									$DID_custom_one =			$row[3];
+									$DID_custom_two=			$row[4];
+									$DID_custom_three=			$row[5];
+									$DID_custom_four=			$row[6];
+									$DID_custom_five=			$row[7];
+									}
+								}
+							}
+
 						$stmt = "SELECT custom_one,custom_two,custom_three,custom_four,custom_five,full_name,user_group,email from vicidial_users where user='$user';";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $link);
-							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60012',$user,$server_ip,$session_name,$one_mysql_log);}
 						$VUC_ct = mysqli_num_rows($rslt);
 						if ($VUC_ct > 0)
 							{
@@ -297,12 +363,53 @@ if ($match_found > 0)
 							$user_group =			urlencode(trim($row[6]));
 							$agent_email =			urlencode(trim($row[7]));
 							}
+						
+						if ( (preg_match('/--A--CF_uses_custom_fields--B--/i',$email_subject)) or (preg_match('/--A--CF_uses_custom_fields--B--/i',$email_body)) )
+							{
+							### find the names of all custom fields, if any
+							$stmt = "SELECT field_label,field_type FROM vicidial_lists_fields where list_id='$entry_list_id' and field_type NOT IN('SCRIPT','DISPLAY') and field_label NOT IN('entry_date','vendor_lead_code','source_id','list_id','gmt_offset_now','called_since_last_reset','phone_code','phone_number','title','first_name','middle_initial','last_name','address1','address2','address3','city','state','province','postal_code','country_code','gender','date_of_birth','alt_phone','email','security_phrase','comments','called_count','last_local_call_time','rank','owner');";
+							$rslt=mysql_to_mysqli($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60013',$user,$server_ip,$session_name,$one_mysql_log);}
+							if ($DB) {echo "$stmt\n";}
+							$cffn_ct = mysqli_num_rows($rslt);
+							$d=0;   $field_query_SQL='';
+							while ($cffn_ct > $d)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$field_name_id[$d] = $row[0];
+								$field_query_SQL .= "$row[0],";
+								$d++;
+								}
+							if ($d > 0)
+								{
+								$field_query_SQL = preg_replace("/,$/",'',$field_query_SQL);
+								$stmt="SELECT $field_query_SQL FROM custom_$entry_list_id where lead_id='$lead_id' LIMIT 1;";
+								$rslt=mysql_to_mysqli($stmt, $link);
+									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60014',$user,$server_ip,$session_name,$one_mysql_log);}
+								if ($DB) {echo "$stmt\n";}
+								$list_lead_ct = mysqli_num_rows($rslt);
+								if ($list_lead_ct > 0)
+									{
+									$row=mysqli_fetch_row($rslt);
+									$d=0;
+									while ($cffn_ct > $d)
+										{
+										$form_field_value = $row[$d];
+										$field_name_tag = "--A--" . $field_name_id[$d] . "--B--";
+										$email_subject = preg_replace("/$field_name_tag/i","$form_field_value",$email_subject);
+										$email_body = preg_replace("/$field_name_tag/i","$form_field_value",$email_body);
+											if ($DB) {echo "$d|$field_name_id[$d]|$field_name_tag|$form_field_value|<br>\n";}
+										$d++;
+										}
+									}
+								}
+							}
 						}
 
 					### populate variables in email_subject
 					if (preg_match('/--A--/i',$email_subject))
 						{
-						$email_subject = preg_replace('/^VAR/','',$email_subject);
+						$email_subject = preg_replace('/^VAR|--A--CF_uses_custom_fields--B--/','',$email_subject);
 						$email_subject = preg_replace('/--A--lead_id--B--/i',"$lead_id",$email_subject);
 						$email_subject = preg_replace('/--A--vendor_id--B--/i',"$vendor_id",$email_subject);
 						$email_subject = preg_replace('/--A--vendor_lead_code--B--/i',"$vendor_lead_code",$email_subject);
@@ -352,13 +459,23 @@ if ($match_found > 0)
 						$email_subject = preg_replace('/--A--user_custom_five--B--/i',"$user_custom_five",$email_subject);
 						$email_subject = preg_replace('/--A--user_group--B--/i',urlencode(trim($user_group)),$email_subject);
 						$email_subject = preg_replace('/--A--agent_email--B--/i',"$agent_email",$email_subject);
+						$email_subject = preg_replace('/--A--did_id--B--/i',"$DID_id",$email_subject);
+						$email_subject = preg_replace('/--A--did_extension--B--/i',"$DID_extension",$email_subject);
+						$email_subject = preg_replace('/--A--did_pattern--B--/i',"$DID_pattern",$email_subject);
+						$email_subject = preg_replace('/--A--did_description--B--/i',"$DID_description",$email_subject);
+						$email_subject = preg_replace('/--A--did_carrier_description--B--/i',"$DID_carrier_description",$email_subject);
+						$email_subject = preg_replace('/--A--did_custom_one--B--/i',"$DID_custom_one",$email_subject);
+						$email_subject = preg_replace('/--A--did_custom_two--B--/i',"$DID_custom_two",$email_subject);
+						$email_subject = preg_replace('/--A--did_custom_three--B--/i',"$DID_custom_three",$email_subject);
+						$email_subject = preg_replace('/--A--did_custom_four--B--/i',"$DID_custom_four",$email_subject);
+						$email_subject = preg_replace('/--A--did_custom_five--B--/i',"$DID_custom_five",$email_subject);
+						$email_subject = preg_replace('/--A--uniqueid--B--/i',"$uniqueid",$email_subject);
 
 						# not currently active
 						$email_subject = preg_replace('/--A--campaign--B--/i',"$campaign",$email_subject);
 						$email_subject = preg_replace('/--A--phone_login--B--/i',"$phone_login",$email_subject);
 						$email_subject = preg_replace('/--A--group--B--/i',"$VDADchannel_group",$email_subject);
 						$email_subject = preg_replace('/--A--channel_group--B--/i',"$VDADchannel_group",$email_subject);
-						$email_subject = preg_replace('/--A--uniqueid--B--/i',"$uniqueid",$email_subject);
 						$email_subject = preg_replace('/--A--customer_zap_channel--B--/i',"$customer_zap_channel",$email_subject);
 						$email_subject = preg_replace('/--A--customer_server_ip--B--/i',"$customer_server_ip",$email_subject);
 						$email_subject = preg_replace('/--A--server_ip--B--/i',"$server_ip",$email_subject);
@@ -376,27 +493,18 @@ if ($match_found > 0)
 						$email_subject = preg_replace('/--A--talk_time_ms--B--/i',"$talk_time_ms",$email_subject);
 						$email_subject = preg_replace('/--A--talk_time_min--B--/i',"$talk_time_min",$email_subject);
 						$email_subject = preg_replace('/--A--agent_log_id--B--/i',"$CALL_agent_log_id",$email_subject);
-						$email_subject = preg_replace('/--A--did_id--B--/i',urlencode(trim($DID_id)),$email_subject);
-						$email_subject = preg_replace('/--A--did_extension--B--/i',urlencode(trim($DID_extension)),$email_subject);
-						$email_subject = preg_replace('/--A--did_pattern--B--/i',urlencode(trim($DID_pattern)),$email_subject);
-						$email_subject = preg_replace('/--A--did_description--B--/i',urlencode(trim($DID_description)),$email_subject);
 						$email_subject = preg_replace('/--A--closecallid--B--/i',urlencode(trim($INclosecallid)),$email_subject);
 						$email_subject = preg_replace('/--A--xfercallid--B--/i',urlencode(trim($INxfercallid)),$email_subject);
 						$email_subject = preg_replace('/--A--call_notes--B--/i',"$url_call_notes",$email_subject);
 						$email_subject = preg_replace('/--A--recording_id--B--/i',"$recording_id",$email_subject);
 						$email_subject = preg_replace('/--A--recording_filename--B--/i',"$recording_filename",$email_subject);
-						$email_subject = preg_replace('/--A--did_custom_one--B--/i',urlencode(trim($did_custom_one)),$email_subject);
-						$email_subject = preg_replace('/--A--did_custom_two--B--/i',urlencode(trim($did_custom_two)),$email_subject);
-						$email_subject = preg_replace('/--A--did_custom_three--B--/i',urlencode(trim($did_custom_three)),$email_subject);
-						$email_subject = preg_replace('/--A--did_custom_four--B--/i',urlencode(trim($did_custom_four)),$email_subject);
-						$email_subject = preg_replace('/--A--did_custom_five--B--/i',urlencode(trim($did_custom_five)),$email_subject);
 						$email_subject = urldecode($email_subject);
 						}
 
 					### check for variables in email_body
 					if (preg_match('/--A--/i',$email_body))
 						{
-						$email_body = preg_replace('/^VAR/','',$email_body);
+						$email_body = preg_replace('/^VAR|--A--CF_uses_custom_fields--B--/','',$email_body);
 						$email_body = preg_replace('/--A--lead_id--B--/i',"$lead_id",$email_body);
 						$email_body = preg_replace('/--A--vendor_id--B--/i',"$vendor_id",$email_body);
 						$email_body = preg_replace('/--A--vendor_lead_code--B--/i',"$vendor_lead_code",$email_body);
@@ -446,6 +554,17 @@ if ($match_found > 0)
 						$email_body = preg_replace('/--A--user_custom_five--B--/i',"$user_custom_five",$email_body);
 						$email_body = preg_replace('/--A--user_group--B--/i',urlencode(trim($user_group)),$email_body);
 						$email_body = preg_replace('/--A--agent_email--B--/i',"$agent_email",$email_body);
+						$email_body = preg_replace('/--A--did_id--B--/i',"$DID_id",$email_body);
+						$email_body = preg_replace('/--A--did_extension--B--/i',"$DID_extension",$email_body);
+						$email_body = preg_replace('/--A--did_pattern--B--/i',"$DID_pattern",$email_body);
+						$email_body = preg_replace('/--A--did_description--B--/i',"$DID_description",$email_body);
+						$email_body = preg_replace('/--A--did_carrier_description--B--/i',"$DID_carrier_description",$email_body);
+						$email_body = preg_replace('/--A--did_custom_one--B--/i',"$DID_custom_one",$email_body);
+						$email_body = preg_replace('/--A--did_custom_two--B--/i',"$DID_custom_two",$email_body);
+						$email_body = preg_replace('/--A--did_custom_three--B--/i',"$DID_custom_three",$email_body);
+						$email_body = preg_replace('/--A--did_custom_four--B--/i',"$DID_custom_four",$email_body);
+						$email_body = preg_replace('/--A--did_custom_five--B--/i',"$DID_custom_five",$email_body);
+						$email_body = preg_replace('/--A--uniqueid--B--/i',"$uniqueid",$email_body);
 						$email_body = urldecode($email_body);
 						}
 
