@@ -546,10 +546,11 @@
 # 170309-0705 - Small fix for INBOUND_MAN agent logging issue
 # 170309-1215 - Added agent_xfer_validation option
 # 170317-2342 - Fix for script tab ignore list script override
+# 170331-2255 - Assure that custom field form submitted after standard field submit
 #
 
-$version = '2.14-516c';
-$build = '170317-2342';
+$version = '2.14-517c';
+$build = '170331-2255';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -4499,6 +4500,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var api_switch_lead_triggered=0;
 	var agent_xfer_validation='<?php echo $agent_xfer_validation ?>';
 	var agent_xfer_group_selected='';
+	var customsubmit_trigger=0;
+	var updatelead_complete=0;
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -12263,6 +12266,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 // Update vicidial_list lead record with all altered values from form
 	function CustomerData_update()
 		{
+		updatelead_complete=0;
 		if ( (OtherTab == '1') && (comments_all_tabs == 'ENABLED') )
 			{
 			var test_otcx = document.vicidial_form.other_tab_comments.value;
@@ -12333,12 +12337,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				{ 
 				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
 					{
+					updatelead_complete=1;
 				//	alert(xmlhttp.responseText);
 					}
 				}
 			delete xmlhttp;
 			}
-
 		}
 
 // ################################################################################
@@ -14300,7 +14304,7 @@ if ($useIE > 0)
 							dialedcall_send_hangup('NO', 'YES', HKdispo_ary[0]);
 							if (custom_fields_enabled > 0)
 								{
-								vcFormIFrame.document.form_custom_fields.submit();
+								customsubmit_trigger=1;
 								}
 							}
 						}
@@ -14425,7 +14429,7 @@ else
 							dialedcall_send_hangup('NO', 'YES', HKdispo_ary[0]);
 							if (custom_fields_enabled > 0)
 								{
-								vcFormIFrame.document.form_custom_fields.submit();
+								customsubmit_trigger=1;
 								}
 							}
 						}
@@ -16641,9 +16645,25 @@ function phone_number_format(formatphone) {
 				if (custom_fields_enabled > 0)
 					{
 				//	alert("IFRAME submitting!");
-					vcFormIFrame.document.form_custom_fields.submit();
+					customsubmit_trigger=1;
 					}
 				}
+			// trigger custom form submit if standard form has already been submitted or 3 seconds have gone by
+			if (customsubmit_trigger > 0)
+				{
+				if ( (updatelead_complete > 0) || (customsubmit_trigger > 2) )
+					{
+					button_click_log = button_click_log + "" + SQLdate + "-----CustomFormSubmit---" + updatelead_complete + " " + customsubmit_trigger + "|";
+					customsubmit_trigger=0;
+					vcFormIFrame.document.form_custom_fields.submit();
+					}
+				else
+					{
+					customsubmit_trigger++;
+					button_click_log = button_click_log + "" + SQLdate + "-----CustomFormWait---" + updatelead_complete + " " + customsubmit_trigger + "|";
+					}
+				}
+
 			if (UpdatESettingSChecK > 0)
 				{
 				UpdatESettingSChecK=0;
@@ -16811,7 +16831,7 @@ function phone_number_format(formatphone) {
 								dialedcall_send_hangup('NO', 'NO', dead_max_dispo);
 								if (custom_fields_enabled > 0)
 									{
-									vcFormIFrame.document.form_custom_fields.submit();
+									customsubmit_trigger=1;
 									}
 								}
 							}

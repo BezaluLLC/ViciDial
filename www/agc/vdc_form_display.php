@@ -38,10 +38,12 @@
 # 160912-0805 - Added debug, fixed issue with multi-selected values
 # 170301-0834 - Added call_id field for custom fields
 # 170317-0755 - Added more missing display variables
+# 170331-2300 - Added more debug logging
 #
 
-$version = '2.14-28';
-$build = '170317-0755';
+$version = '2.14-29';
+$build = '170331-2300';
+$php_script = 'vdc_form_display.php';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -215,6 +217,7 @@ $MT[0]='';
 $agents='@agents';
 $script_height = ($script_height - 20);
 if (strlen($bgcolor) < 6) {$bgcolor='FFFFFF';}
+$startMS = microtime();
 
 $vicidial_list_fields = '|lead_id|entry_date|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|';
 
@@ -237,7 +240,7 @@ if ($sl_ct > 0)
 	$VUselected_language =		$row[0];
 	}
 
-$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,custom_fields_enabled,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,custom_fields_enabled,enable_languages,language_method,agent_debug_logging FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -251,6 +254,7 @@ if ($qm_conf_ct > 0)
 	$custom_fields_enabled =				$row[3];
 	$SSenable_languages =					$row[4];
 	$SSlanguage_method =					$row[5];
+	$SSagent_debug_logging =				$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -266,8 +270,15 @@ if ($non_latin < 1)
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
 	if ($format == 'debug')	{$DB=1;}
-if (!isset($ACTION))   {$ACTION="refresh";}
+if (!isset($ACTION))   {$ACTION="custom_form_frame";}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
+if (strlen($SSagent_debug_logging) > 1)
+	{
+	if ($SSagent_debug_logging == "$user")
+		{$SSagent_debug_logging=1;}
+	else
+		{$SSagent_debug_logging=0;}
+	}
 
 $auth=0;
 $auth_message = user_authorization($user,$pass,'',0,$bcrypt,0,0);
@@ -312,6 +323,10 @@ else
 ### BEGIN parse submission of the custom fields form ###
 if ($stage=='SUBMIT')
 	{
+	if ($SSagent_debug_logging > 0) 
+		{
+		$stage .= " custom_$list_id";
+		}
 	$update_sent=0;
 	$CFoutput='';
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
@@ -479,6 +494,10 @@ if ($stage=='SUBMIT')
 ### END parse submission of the custom fields form ###
 else
 	{
+	if ($SSagent_debug_logging > 0) 
+		{
+		$stage .= " render $list_id";
+		}
 	echo "<html>\n";
 	echo "<head>\n";
 	echo "<!-- VERSION: $version     BUILD: $build    USER: $user   server_ip: $server_ip-->\n";
@@ -531,6 +550,10 @@ else
 	echo "</BODY></HTML>\n";
 	}
 
+if ($SSagent_debug_logging > 0) 
+	{
+	vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);
+	}
 
 exit;
 
