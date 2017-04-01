@@ -426,10 +426,11 @@
 # 170309-0704 - Small fix for INBOUND_MAN agent logging issue
 # 170309-1550 - Added campaign agent_xfer_validation option
 # 170327-1656 - Added USER_CUSTOM_ options to campaign custom callerID setting
+# 170401-1437 - Added translation of callbacks statuses, issue #1006
 #
 
-$version = '2.14-320';
-$build = '170327-1656';
+$version = '2.14-321';
+$build = '170401-1437';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=661;
@@ -14144,7 +14145,7 @@ if ($ACTION == 'LEADINFOview')
 				{
 				$row=mysqli_fetch_row($rslt);
 				echo "<TABLE CELLPADDING=0 CELLSPACING=1 BORDER=0 WIDTH=500>";
-				echo "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Callback Status:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[0]</td></tr>";
+				echo "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Callback Status:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>"._QXZ("$row[0]")."</td></tr>";
 				echo "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Callback Lead Status:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[7]</td></tr>";
 				echo "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Callback Entry Time:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[1]</td></tr>";
 				echo "<tr bgcolor=white><td ALIGN=right><font class='sb_text'>"._QXZ("Callback Trigger Time:")." &nbsp; </td><td ALIGN=left><font class='sb_text'>$row[2]</td></tr>";
@@ -14950,7 +14951,7 @@ if ($ACTION == 'CalLBacKLisT')
 				$PHONEdialable = dialable_gmt($DB,$link,$local_call_time,$row[3],$row[4]);
 				}
 			}
-		$CBoutput = "$row[0]-!T-$row[1]-!T-$row[2]-!T-$callback_id[$loop_count]-!T-$lead_id[$loop_count]-!T-$campaign_id[$loop_count]-!T-$status[$loop_count]-!T-$entry_time[$loop_count]-!T-$callback_time[$loop_count]-!T-$comments[$loop_count]-!T-$PHONEdialable";
+		$CBoutput = "$row[0]-!T-$row[1]-!T-$row[2]-!T-$callback_id[$loop_count]-!T-$lead_id[$loop_count]-!T-$campaign_id[$loop_count]-!T-"._QXZ("$status[$loop_count]")."-!T-$entry_time[$loop_count]-!T-$callback_time[$loop_count]-!T-$comments[$loop_count]-!T-$PHONEdialable";
 		echo "$CBoutput\n";
 		$loop_count++;
 		}
