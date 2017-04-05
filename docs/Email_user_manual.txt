@@ -1,4 +1,4 @@
-EMAIL HANDLING DOC		Started: 2012-12-23	Updated: 2013-04-25
+EMAIL HANDLING DOC		Started: 2012-12-23	Updated: 2017-04-05
 
 (example of how to set up an email account with Gmail is at the bottom)
 
@@ -18,6 +18,7 @@ install MIME::Decoder
 install Mail::POP3Client
 install Mail::IMAPClient
 install Mail::Message
+install Mail::Box
 install IO::Socket::SSL
 install MIME::Base64
 quit
@@ -252,3 +253,27 @@ below 338 and the message should go away:
 
 SSL_verify_mode => 'SSL_VERIFY_NONE',
 
+
+
+
+- If you see the following error:
+
+SSL_verify_mode must be a number and not a string at /usr/lib/perl5/site_perl/5.12.1/IO/Socket/SSL.pm line 2251.
+
+
+Edit the "SSL.pm" file that is shown in the error you received:
+
+Line 2251, change:
+
+die "SSL_verify_mode must be a number and not a string";
+
+To:
+
+$verify_mode = '0';
+
+
+Save it(since the file is most likely read-only, you might have to force save[in 'vi' that's ':w!'])
+
+Then try running the email script again:
+
+ /usr/share/astguiclient/AST_inbound_email_parser.pl --ssl-no-cert --debugX --force-check
