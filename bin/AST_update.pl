@@ -66,9 +66,10 @@
 # 150308-0911 - Added filter for agent sessions in new meetme-enter contexts
 # 150610-1200 - Added support for AMI version 1.3
 # 170329-2125 - Updated system load stats collection for Linux kernel 2.6+
+# 170406-1528 - Fix for stats calculation
 #
 
-$build = '170329-2125';
+$build = '170406-1528';
 
 # constants
 $SYSPERF=0;	# system performance logging to MySQL server_performance table every 5 seconds
@@ -1363,16 +1364,16 @@ sub get_cpu_percent
                 $cpu_sys_diff = $cpu_sys - $prev_cpu_sys;
                 $cpu_vm_diff = $cpu_vm - $prev_cpu_vm;
 
-                $user_diff = $user + $prev_user;
-                $nice_diff = $nice + $prev_nice;
-                $system_diff = $system + $prev_system;
-                $idle_diff = $idle + $prev_idle;
-                $iowait_diff = $iowait + $prev_iowait;
-                $irq_diff = $irq + $prev_irq;
-                $softirq_diff = $softirq + $prev_softirq;
-                $steal_diff = $steal + $prev_steal;
-                $guest_diff = $guest + $prev_guest;
-                $guest_nice_diff = $guest_nice + $prev_guest_nice;
+                $user_diff = $user - $prev_user;
+                $nice_diff = $nice - $prev_nice;
+                $system_diff = $system - $prev_system;
+                $idle_diff = $idle - $prev_idle;
+                $iowait_diff = $iowait - $prev_iowait;
+                $irq_diff = $irq - $prev_irq;
+                $softirq_diff = $softirq - $prev_softirq;
+                $steal_diff = $steal - $prev_steal;
+                $guest_diff = $guest - $prev_guest;
+                $guest_nice_diff = $guest_nice - $prev_guest_nice;
 
                 # total the differentials
                 $cpu_total_diff = $cpu_user_diff + $cpu_idle_diff + $cpu_sys_diff + $cpu_vm_diff;
