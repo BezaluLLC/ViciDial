@@ -119,6 +119,7 @@
 # 170322-1720 - Added filter-phone-list entry
 # 170326-1135 - Added drop lists entries
 # 170327-1649 - updated the campaigns-use_custom_cid entry
+# 170407-0745 - Added Agents count on server page
 #
 
 
@@ -4625,7 +4626,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="servers-channels_total">
 <BR>
-<B><?php echo _QXZ("Live Channels"); ?> -</B><?php echo _QXZ("This field shows the current number of Asterisk channels that are live on the system right now. It is important to note that the number of Asterisk channels is usually much higher than the number of actual calls on a system. This field is updated once every minute."); ?>
+<B><?php echo _QXZ("Live Channels"); ?> -</B><?php echo _QXZ("This field shows the current number of Asterisk channels that are live on the system right now. It is important to note that the number of Asterisk channels is usually much higher than the number of actual calls on a system. This field is updated once every minute.") . ' ' . _QXZ("The Agents field shows the current number of agents logged into the agent screen on this server."); ?>
 
 <BR>
 <A NAME="servers-disk_usage">
