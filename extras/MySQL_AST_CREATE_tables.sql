@@ -3667,6 +3667,7 @@ run_now_trigger ENUM('N','Y') default 'N',
 active ENUM('N','Y') default 'N',
 user_group VARCHAR(20) default '---ALL---',
 closer_campaigns TEXT,
+dl_minutes MEDIUMINT(6) UNSIGNED default '0',
 index (dl_times),
 index (run_now_trigger)
 ) ENGINE=MyISAM;
@@ -3961,4 +3962,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1499',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1500',db_schema_update_date=NOW(),reload_timestamp=NOW();

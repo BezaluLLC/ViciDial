@@ -13,6 +13,7 @@
 # CHANGES
 # 170326-1541 - First version
 # 170330-0934 - populate new lead with field data from dropped lead
+# 170410-1331 - Added dl_minutes option
 #
 
 $US = '_';
@@ -213,7 +214,7 @@ if ($DB) {print "SEED TIME  $secX      :   $year-$mon-$mday $hour:$min:$sec  LOC
 
 
 ### Grab Server values from the database
-$stmtA = "SELECT closer_campaigns,drop_statuses,duplicate_check,list_id from vicidial_drop_lists where dl_id='$dl_id';";
+$stmtA = "SELECT closer_campaigns,drop_statuses,duplicate_check,list_id,dl_minutes from vicidial_drop_lists where dl_id='$dl_id';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -224,6 +225,7 @@ if ($sthArows > 0)
 	$drop_statuses =	$aryA[1];
 	$duplicate_check =	$aryA[2];
 	$list_id =			$aryA[3];
+	$dl_minutes =		$aryA[4];
 
 	$drop_statusesSQL = $drop_statuses;
 	$drop_statusesSQL =~ s/^  |^ | -$//gi;
@@ -235,7 +237,23 @@ if ($sthArows > 0)
 	$closer_campaignsSQL =~ s/ /','/gi;
 	$closer_campaignsSQL = "and campaign_id IN('$closer_campaignsSQL')";
 
-	if ($DB) {print "DROP LIST RUN: |$dl_id|$list_id|\n";}
+	$drop_dateSQL='';
+	if ($dl_minutes > 0) 
+		{
+		$dl_sec = ($dl_minutes * 60);
+		$BDtarget = ($secX - $dl_sec);
+		($Bsec,$Bmin,$Bhour,$Bmday,$Bmon,$Byear,$Bwday,$Byday,$Bisdst) = localtime($BDtarget);
+		$Byear = ($Byear + 1900);
+		$Bmon++;
+		if ($Bmon < 10) {$Bmon = "0$Bmon";}
+		if ($Bmday < 10) {$Bmday = "0$Bmday";}
+		if ($Bhour < 10) {$Bhour = "0$Bhour";}
+		if ($Bmin < 10) {$Bmin = "0$Bmin";}
+		if ($Bsec < 10) {$Bsec = "0$Bsec";}
+		$BDtsSQLdate = "$Byear-$Bmon-$Bmday $Bhour:$Bmin:$Bsec";
+		$drop_dateSQL = "and drop_date >= \"$BDtsSQLdate\"";
+		}
+	if ($DB) {print "DROP LIST RUN: |$dl_id|$list_id|$dl_minutes($BDtsSQLdate)|\n";}
 	}
 else
 	{
@@ -317,11 +335,11 @@ if ($duplicate_check =~ /LIST/)
 ##### BEGIN drop list process #####
 $insert_counter=0;
 $duplicate_counter=0;
-$stmtB="UPDATE vicidial_drop_log set drop_processed='U' where drop_processed='N' $closer_campaignsSQL $drop_statusesSQL;";
+$stmtB="UPDATE vicidial_drop_log set drop_processed='U' where drop_processed='N' $drop_dateSQL $closer_campaignsSQL $drop_statusesSQL;";
 $Baffected_rows = $dbhA->do($stmtB);
 if ($DB) {print "DROP LOG UPDATE: |$Baffected_rows|$stmtB|\n";}
 
-$stmtA = "SELECT lead_id,drop_date,phone_code,phone_number,campaign_id,status,uniqueid from vicidial_drop_log where drop_processed='U' $closer_campaignsSQL $drop_statusesSQL order by drop_date;";
+$stmtA = "SELECT lead_id,drop_date,phone_code,phone_number,campaign_id,status,uniqueid from vicidial_drop_log where drop_processed='U' $drop_dateSQL $closer_campaignsSQL $drop_statusesSQL order by drop_date;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthDROProws=$sthA->rows;

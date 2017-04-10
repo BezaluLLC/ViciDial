@@ -2233,6 +2233,8 @@ if (isset($_GET["ip_list_name"]))			{$ip_list_name=$_GET["ip_list_name"];}
 	elseif (isset($_POST["ip_list_name"]))	{$ip_list_name=$_POST["ip_list_name"];}
 if (isset($_GET["ip_address"]))				{$ip_address=$_GET["ip_address"];}
 	elseif (isset($_POST["ip_address"]))	{$ip_address=$_POST["ip_address"];}
+if (isset($_GET["dl_minutes"]))				{$dl_minutes=$_GET["dl_minutes"];}
+	elseif (isset($_POST["dl_minutes"]))	{$dl_minutes=$_POST["dl_minutes"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2641,6 +2643,7 @@ if ($non_latin < 1)
 	$allow_ip_lists = preg_replace('/[^0-9]/','',$allow_ip_lists);
 	$modify_ip_lists = preg_replace('/[^0-9]/','',$modify_ip_lists);
 	$ignore_ip_list = preg_replace('/[^0-9]/','',$ignore_ip_list);
+	$dl_minutes = preg_replace('/[^0-9]/','',$dl_minutes);
 
 	$user_new_lead_limit = preg_replace('/[^-0-9]/','',$user_new_lead_limit);
 	$drop_call_seconds = preg_replace('/[^-0-9]/','',$drop_call_seconds);
@@ -4097,12 +4100,13 @@ else
 # 170330-0953 - Fixed translation phrases in callbacks list, issue #1006
 # 170407-0744 - Added Agents count on server page
 # 170409-0950 - Added IP Lists (white and black) functionality
+# 170410-1326 - Added dl_minutes option for drop lists
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-607a';
-$build = '170409-0950';
+$admin_version = '2.14-608a';
+$build = '170410-1326';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -26088,7 +26092,7 @@ if ($ADD==431)
 					}
 				if (strlen($groups_value)>2) {$groups_value .= " -";}
 
-				$stmt="UPDATE vicidial_drop_lists set dl_name='$dl_name',dl_server='$dl_server',dl_times='$dl_times',dl_weekdays='$DL_weekdays',dl_monthdays='$dl_monthdays',list_id='$list_id',duplicate_check='$duplicate_check',run_now_trigger='$run_now_trigger',active='$active',user_group='$user_group',closer_campaigns='$groups_value' where dl_id='$dl_id';";
+				$stmt="UPDATE vicidial_drop_lists set dl_name='$dl_name',dl_server='$dl_server',dl_times='$dl_times',dl_weekdays='$DL_weekdays',dl_monthdays='$dl_monthdays',list_id='$list_id',duplicate_check='$duplicate_check',run_now_trigger='$run_now_trigger',active='$active',user_group='$user_group',closer_campaigns='$groups_value',dl_minutes='$dl_minutes' where dl_id='$dl_id';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 
 				### LOG INSERTION Admin Log Table ###
@@ -26203,7 +26207,7 @@ if ($ADD==331)
 				$o++;
 				}
 
-			$stmt="SELECT dl_id,dl_name,last_run,dl_server,dl_times,dl_weekdays,dl_monthdays,drop_statuses,list_id,duplicate_check,run_now_trigger,active,user_group,closer_campaigns from vicidial_drop_lists where dl_id='$dl_id' $LOGadmin_viewable_groupsSQL;";
+			$stmt="SELECT dl_id,dl_name,last_run,dl_server,dl_times,dl_weekdays,dl_monthdays,drop_statuses,list_id,duplicate_check,run_now_trigger,active,user_group,closer_campaigns,dl_minutes from vicidial_drop_lists where dl_id='$dl_id' $LOGadmin_viewable_groupsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			$row=mysqli_fetch_row($rslt);
 			$dl_id =			$row[0];
@@ -26220,6 +26224,7 @@ if ($ADD==331)
 			$active =			$row[11];
 			$user_group =		$row[12];
 			$closer_campaigns =	$row[13];
+			$dl_minutes =		$row[14];
 
 			echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -26277,6 +26282,7 @@ if ($ADD==331)
 			echo "<option value=\"N\">"._QXZ("NO")."</option>\n";
 			echo "<option value=\"$active\" SELECTED>"._QXZ("$active")."</option>\n";
 			echo "</select>$NWB#drop_lists-active$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Gather Minutes").": </td><td align=left><input type=text name=dl_minutes size=7 maxlength=6 value=\"$dl_minutes\"> &nbsp; ("._QXZ("digits only").") $NWB#drop_lists-dl_minutes$NWE</td></tr>\n";
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Run Now Trigger").": </td><td align=left><select size=1 name=run_now_trigger>\n";
 			echo "<option value=\"Y\">"._QXZ("YES")."</option>\n";
 			echo "<option value=\"N\">"._QXZ("NO")."</option>\n";

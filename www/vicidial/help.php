@@ -121,6 +121,7 @@
 # 170327-1649 - updated the campaigns-use_custom_cid entry
 # 170407-0745 - Added Agents count on server page
 # 170409-0939 - Added IP Lists entries
+# 170410-1329 - Added dl_minutes drop lists entry
 #
 
 
@@ -2242,6 +2243,11 @@ if ($SSqc_features_active > 0)
 <A NAME="drop_lists-active">
 <BR>
 <B><?php echo _QXZ("Active"); ?> -</B><?php echo _QXZ("The drop list process will only run on the set schedule above if active is set to Y. Default is N."); ?>
+
+<BR>
+<A NAME="drop_lists-dl_minutes">
+<BR>
+<B><?php echo _QXZ("Gather Minutes"); ?> -</B><?php echo _QXZ("If set to a number greater than 0, the process will look back this number of minutes from the run time to gather the drop call data. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="drop_lists-run_now_trigger">
