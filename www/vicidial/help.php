@@ -213,7 +213,7 @@ $user_auth=0;
 $auth=0;
 $reports_auth=0;
 $qc_auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'QC',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'QC',1,0);
 if ($auth_message == 'GOOD')
 	{$user_auth=1;}
 
