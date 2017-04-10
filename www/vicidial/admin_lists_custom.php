@@ -43,10 +43,11 @@
 # 170228-2254 - Changes to allow URLs in SCRIPT field types
 # 170301-0827 - Enabled required custom fields with INBOUND_ONLY option
 # 170321-1553 - Fixed list view permissions issue #1005
+# 170409-1558 - Added IP List validation code
 #
 
-$admin_version = '2.14-35';
-$build = '170321-1553';
+$admin_version = '2.14-36';
+$build = '170409-1558';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -202,7 +203,7 @@ if ($sl_ct > 0)
 	}
 
 $auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -212,6 +213,13 @@ if ($auth < 1)
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;

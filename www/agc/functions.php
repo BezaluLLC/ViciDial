@@ -37,9 +37,10 @@
 # 170309-0857 - Added list_name and list_description display variables
 # 170317-0753 - Added more missing display variables
 # 170330-1152 - Added did_carrier_description display option
+# 170409-1004 - Added IP List features to user_authorization
 #
 
-# $mysql_queries = 22
+# $mysql_queries = 26
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
 function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$return_hash,$api_call)
@@ -48,7 +49,7 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 
 	#############################################
 	##### START SYSTEM_SETTINGS LOOKUP #####
-	$stmt = "SELECT use_non_latin,webroot_writable,pass_hash_enabled,pass_key,pass_cost,hosted_settings FROM system_settings;";
+	$stmt = "SELECT use_non_latin,webroot_writable,pass_hash_enabled,pass_key,pass_cost,hosted_settings,allow_ip_lists,system_ip_blacklist FROM system_settings;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$qm_conf_ct = mysqli_num_rows($rslt);
@@ -61,6 +62,8 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 		$SSpass_key =					$row[3];
 		$SSpass_cost =					$row[4];
 		$SShosted_settings =			$row[5];
+		$SSallow_ip_lists =				$row[6];
+		$SSsystem_ip_blacklist =		$row[7];
 		}
 	##### END SETTINGS LOOKUP #####
 	###########################################
@@ -214,6 +217,80 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 			$auth_key='ERRAGENTS';
 			$login_problem++;
 			}
+
+		##### BEGIN IP LIST FEATURES #####
+		if ($SSallow_ip_lists > 0)
+			{
+			$ignore_ip_list=0;
+			$whitelist_match=1;
+			$blacklist_match=0;
+			$stmt="SELECT user_group,ignore_ip_list from vicidial_users where user='$user';";
+			if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05023',$user,$server_ip,$session_name,$one_mysql_log);}
+			$iipl_user_ct = mysqli_num_rows($rslt);
+			if ($iipl_user_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$user_group =		$row[0];
+				$ignore_ip_list =	$row[1];
+				}
+			if ($ignore_ip_list < 1)
+				{
+				$ip_class_c = preg_replace('~\.\d+(?!.*\.\d+)~', '.x', $ip);
+
+				if (strlen($SSsystem_ip_blacklist) > 1)
+					{
+					$blacklist_match=1;
+					$stmt="SELECT count(*) from vicidial_ip_list_entries where ip_list_id='$SSsystem_ip_blacklist' and ip_address IN('$ip','$ip_class_c');";
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05024',$user,$server_ip,$session_name,$one_mysql_log);}
+					$vile_ct = mysqli_num_rows($rslt);
+					if ($vile_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$blacklist_match =	$row[0];
+						}
+					}
+
+				$stmt="SELECT agent_ip_list,api_ip_list from vicidial_user_groups where user_group='$user_group';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05025',$user,$server_ip,$session_name,$one_mysql_log);}
+				$iipl_user_ct = mysqli_num_rows($rslt);
+				if ($iipl_user_ct > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$agent_ip_list =	$row[0];
+					$api_ip_list =		$row[1];
+
+					if ($api_call != '1')
+						{$check_ip_list = $agent_ip_list;}
+					else
+						{$check_ip_list = $api_ip_list;}
+
+					if (strlen($check_ip_list) > 1)
+						{
+						$whitelist_match=0;
+						$stmt="SELECT count(*) from vicidial_ip_list_entries where ip_list_id='$check_ip_list' and ip_address IN('$ip','$ip_class_c');";
+						$rslt=mysql_to_mysqli($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05026',$user,$server_ip,$session_name,$one_mysql_log);}
+						$vile_ct = mysqli_num_rows($rslt);
+						if ($vile_ct > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$whitelist_match =	$row[0];
+							}
+						}
+					}
+				}
+
+			if ( ($whitelist_match < 1) or ($blacklist_match > 0) )
+				{
+				$auth_key='IPBLOCK';
+				$login_problem++;
+				}
+			}
+		##### END IP LIST FEATURES #####
 
 		if ($login_problem < 1)
 			{

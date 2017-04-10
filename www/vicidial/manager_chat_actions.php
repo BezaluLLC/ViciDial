@@ -1,21 +1,22 @@
 <?php
 # manager_chat_actions.php
 # 
-# Copyright (C) 2016  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Contains PHP actions for manager_chat_interface.php - works with vicidial_chat.js
 #
 # changes:
-# 150605-2022 First Build
+# 150605-2022 - First Build
 # 151213-1114 - Added variable filtering
 # 151218-0739 - Added translation where missing
 # 160107-2315 - Bug fix to prevent sending messages on dead chats
 # 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 # 161217-0821 - Added chat-type to allow for multi-user internal chat sessions
+# 170409-1550 - Added IP List validation code
 #
 
-$admin_version = '2.14-6';
-$build = '161217-0821';
+$admin_version = '2.14-7';
+$build = '170409-1550';
 
 $sh="managerchats"; 
 
@@ -75,7 +76,7 @@ else
 	}
 
 $auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -85,6 +86,13 @@ if ($auth < 1)
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;

@@ -120,6 +120,7 @@
 # 170326-1135 - Added drop lists entries
 # 170327-1649 - updated the campaigns-use_custom_cid entry
 # 170407-0745 - Added Agents count on server page
+# 170409-0939 - Added IP Lists entries
 #
 
 
@@ -3620,6 +3621,21 @@ if ($SSoutbound_autodial_active > 0)
 <B><?php echo _QXZ("Allowed Custom Reports"); ?> -</B><?php echo _QXZ("If a user in this group is set to user level 7 or higher, then this feature can be used to restrict the custom reports that the users can view. Access is determined as reports are added from the custom reports admin page, for example, ALL is not the default.  If you want to select more than one report then press the Ctrl key on your keyboard as you select the reports."); ?>
 
 <BR>
+<A NAME="user_groups-admin_ip_list">
+<BR>
+<B><?php echo _QXZ("Admin IP Whitelist"); ?> -</B><?php echo _QXZ("If enabled, this will restrict administration web screen use to only be allowed from the selected list of IP Addresses. Default is DISABLED."); ?>
+
+<BR>
+<A NAME="user_groups-agent_ip_list">
+<BR>
+<B><?php echo _QXZ("Agent IP Whitelist"); ?> -</B><?php echo _QXZ("If enabled, this will restrict agent web screen use to only be allowed from the selected list of IP Addresses. Default is DISABLED."); ?>
+
+<BR>
+<A NAME="user_groups-api_ip_list">
+<BR>
+<B><?php echo _QXZ("API IP Whitelist"); ?> -</B><?php echo _QXZ("If enabled, this will restrict API use to only be allowed from the selected list of IP Addresses. Please note that some API functions need to be done from the servers themselves, so if you enable this, you may need to add internal server IP Addresses for those functions to continue to work. Default is DISABLED."); ?>
+
+<BR>
 <A NAME="user_groups-admin_viewable_groups">
 <BR>
 <B><?php echo _QXZ("Allowed User Groups"); ?> -</B><?php echo _QXZ("This is a selectable list of User Groups to which members of this user group can view and possibly edit. User Groups can restrict access to almost all aspects of the system, from inbound DIDs to phones to voicemail boxes. The --ALL-- option allows the users in this group to see and log in to any record on the system if their user permissions allow for it."); ?>
@@ -5348,6 +5364,16 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <B><?php echo _QXZ("Call Menu Alt DTMF Logging"); ?> -</B><?php echo _QXZ("This setting enables the option in Call Menus to log the DTMF responses to an alternate database table. This can be used in addition to the default DTMF lead logging option. Default is 0 for disabled."); ?>
 
 <BR>
+<A NAME="settings-allow_ip_lists">
+<BR>
+<B><?php echo _QXZ("Allow IP Lists"); ?> -</B><?php echo _QXZ("This setting allows the IP Lists admin section to be used, as well as the User Group options for web access whitelists and the System Settings option for a system-wide web blacklist. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="settings-system_ip_blacklist">
+<BR>
+<B><?php echo _QXZ("System IP Blacklist"); ?> -</B><?php echo _QXZ("If Allow IP Lists above are enabled, this option will allow you to set an IP List as a blacklist for IP addresses that are not able to access the web resources of this system. Default DISABLED."); ?>
+
+<BR>
 <A NAME="settings-level_8_disable_add">
 <BR>
 <B><?php echo _QXZ("Level 8 Disable Add"); ?> -</B><?php echo _QXZ("This setting if enabled will prevent any level 8 user from adding or copying any record in the system, no matter what their user settings are. Excluded from these restrictions are the ability to add DNC and Filter Phone Groups numbers and the Add a New Lead page. Default is 0 for disabled."); ?>
@@ -5882,6 +5908,52 @@ FR_SPAC 00 00 00 00 00 - <?php echo _QXZ("France space separated phone number");
 <A NAME="auto_reports-report_url">
 <BR>
 <B><?php echo _QXZ("Report URL"); ?> -</B><?php echo _QXZ("This is the field where you will put the full web address, or URL, for the report that you want to run. The easiest way to figure out what address to use is to run the report normally, then go to the Reports, Admin Utilities, Admin Report Log Viewer to see the full URL that was used to run that report. Once you have copied that URL, you can replace the dates that you see with one of these variables in the standard format that is used within this system, for example, --A--today--B--. You can use: today, yesterday, 6days, 7days, 13days, 14days, 15days, 30days. Note: some networks may require that you use a local server address in this URL if that is the only way that a server on your network can access the webserver used for reporting. Related to this, you may also have to use a local IP address if a full domain name is not accessible from within your system network. Also, it is recommended that you run reports in TEXT format for best display results."); ?>
+
+
+
+
+
+
+
+<BR><BR><BR><BR>
+
+<B><FONT SIZE=3>IP LISTS TABLE</FONT></B><BR><BR>
+<A NAME="ip_lists">
+<BR>
+<?php echo _QXZ("The purpose of this feature is to allow an administrator the ability to restrict who can use the system web resources on an IP Address basis. This is designed to allow you to create IP Lists and then assign those IP Lists on a per-User-Group basis separated as Admin, Agent and API permissions. For example, you can set the IP List for Agent web access to DISABLED to allow anyone in the User Group to log in as an agent from any location, this is the default behavior. You can then set an IP List with one IP Address in it so within that same User Group, managers will only be able to log in to the admin web screens from that one location. You can also set an IP List with no entries in it for the API access IP List to not allow any user in that User Group to use the APIs."); ?><BR><BR>
+
+<?php echo _QXZ("This IP whitelisting authentication is designed to happen after user authentication in order to allow a specific user to be set to ignore the IP List blocking feature, as well as to be able to have the IP List feature work on a per-User-Group basis."); ?><BR><BR>
+
+<?php echo _QXZ("There is also a System-wide Blacklist option that allows you to specify an IP List to use to block all web service access to all users coming from the IP Addresses listed in the system settings blacklist IP List."); ?><BR><BR>
+
+<?php echo _QXZ("In order to use any of these features, the System Settings option Allow IP Lists must be enabled on your system. Then you will see the IP Lists Admin section appear in the Admin menu."); ?><BR><BR>
+
+<A NAME="ip_lists-ip_list_id">
+<BR>
+<B><?php echo _QXZ("IP List ID"); ?> -</B><?php echo _QXZ("This field needs to be at least 2 characters in length and no more than 30 characters in length, no spaces or special characters. This is the ID that will be used to identify the IP List throughout the system."); ?>
+
+<BR>
+<A NAME="ip_lists-ip_list_name">
+<BR>
+<B><?php echo _QXZ("IP List Name"); ?> -</B><?php echo _QXZ("This is the descriptive name of the IP List entry."); ?>
+
+<BR>
+<A NAME="ip_lists-user_group">
+<BR>
+<B><?php echo _QXZ("Admin User Group"); ?> -</B><?php echo _QXZ("This is the administrative user group for this record, this allows admin viewing of this record restricted by user group. Default is --ALL-- which allows any admin user with Modify IP Lists permissions to view this record."); ?>
+
+<BR>
+<A NAME="ip_lists-active">
+<BR>
+<B><?php echo _QXZ("Active"); ?> -</B><?php echo _QXZ("The IP List will only be able to be ebaled for a user group if active is set to Y. Default is N."); ?>
+
+<BR>
+<A NAME="ip_lists-ip_address">
+<BR>
+<B><?php echo _QXZ("IP Addresses"); ?> -</B><?php echo _QXZ("This is the list of IP Addresses within this IP List. Only one IP Address per line is allowed."); ?>
+
+
+
 
 
 

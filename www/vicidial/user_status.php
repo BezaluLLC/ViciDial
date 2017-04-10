@@ -39,6 +39,7 @@
 # 161102-1041 - Fixed QM partition problem
 # 170217-1213 - Fixed non-latin auth issue #995
 # 170228-1623 - Changed emergency logout to hangup all agent session calls, and more logging
+# 170409-1555 - Added IP List validation code
 #
 
 $startMS = microtime();
@@ -173,7 +174,7 @@ if ($sl_ct > 0)
 $auth=0;
 $reports_auth=0;
 $admin_auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -210,6 +211,13 @@ else
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = ("Too many login attempts, try again in 15 minutes");
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;

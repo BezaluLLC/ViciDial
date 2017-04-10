@@ -1,7 +1,7 @@
 <?php
 # nanpa_type.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to work with the NANPA exchange(NPA-NXX-X) data and
 # the wireless-to-wired and wired-to-wireless number portability data from
@@ -29,10 +29,11 @@
 # CHANGELOG:
 # 130822-1433 - First build of script
 # 140702-2251 - Added prefix phone type of V as landline
+# 170409-1531 - Added IP List validation code
 #
 
-$version = '2.10-2';
-$build = '140702-2251';
+$version = '2.14-3';
+$build = '170409-1531';
 
 $startMS = microtime();
 
@@ -97,7 +98,7 @@ if ($function == 'version')
 
 ##### BEGIN user authentication for all functions below #####
 $auth=0;
-$auth_message = user_authorization($user,$pass,'REPORTS',1);
+$auth_message = user_authorization($user,$pass,'REPORTS',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -109,6 +110,13 @@ if ($auth < 1)
 		$VDdisplayMESSAGE = "ERROR: Too many login attempts, try again in 15 minutes";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$user|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
 		}
 	Header ("Content-type: text/html; charset=utf-8");

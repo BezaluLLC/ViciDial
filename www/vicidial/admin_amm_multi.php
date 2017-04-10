@@ -1,7 +1,7 @@
 <?php
 # admin_amm_multi.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen will control the *amd* settings needed when the Campaign setting 
 # "AM Message Wildcards" is enabled. This screen allows for multiple messages 
@@ -11,10 +11,11 @@
 # changes:
 # 151109-1653 - First Build
 # 160801-1201 - Added colors features
+# 170409-1544 - Added IP List validation code
 #
 
-$admin_version = '2.12-2';
-$build = '160801-1201';
+$admin_version = '2.14-3';
+$build = '170409-1544';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -112,7 +113,7 @@ if ($sl_ct > 0)
 	}
 
 $auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -122,6 +123,13 @@ if ($auth < 1)
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;

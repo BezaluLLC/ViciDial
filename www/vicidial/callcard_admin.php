@@ -1,7 +1,7 @@
 <?php
 # callcard_admin.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This callcard script is to administer the callcard accounts in ViciDial
 # it is separate from the standard admin.php script. callcard_enabled in
@@ -19,10 +19,11 @@
 # 141007-2040 - Finalized adding QXZ translation to all admin files
 # 141229-2044 - Added code for on-the-fly language translations display
 # 160330-1551 - navigation changes and fixes
+# 170409-1539 - Added IP List validation code
 #
 
-$version = '2.12-11';
-$build = '160330-1551';
+$version = '2.14-12';
+$build = '170409-1539';
 
 $MT[0]='';
 
@@ -166,7 +167,7 @@ if ($callcard_enabled < 1)
 $auth=0;
 $reports_auth=0;
 $admin_auth=0;
-$auth_message = user_authorization($USER,$PASS,'',1);
+$auth_message = user_authorization($USER,$PASS,'',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -205,6 +206,13 @@ else
 		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
 		}
 	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");

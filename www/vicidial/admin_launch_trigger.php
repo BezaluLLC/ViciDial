@@ -1,17 +1,18 @@
 <?php
 # admin_launch_trigger.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to launch a CLI script on the voicemail server through
 # the triggering process
 #
 # CHANGELOG:
 # 161016-2014 - First build of script based upon admin_NANPA_updater.php
+# 170409-1543 - Added IP List validation code
 #
 
-$version = '2.12-1';
-$build = '161016-2014';
+$version = '2.14-2';
+$build = '170409-1543';
 $startMS = microtime();
 
 require("dbconnect_mysqli.php");
@@ -79,7 +80,7 @@ $user_auth=0;
 $auth=0;
 $reports_auth=0;
 $qc_auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'QC',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'QC',1,0);
 if ($auth_message == 'GOOD')
 	{$user_auth=1;}
 
@@ -132,6 +133,13 @@ else
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;

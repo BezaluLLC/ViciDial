@@ -36,6 +36,7 @@
 # 160714-2348 - Added and tested ChartJS features for more aesthetically appealing graphs
 # 161021-1326 - Rewrote most of this report to show detail records
 # 170227-1718 - Fix for default HTML report format, issue #997
+# 170409-1555 - Added IP List validation code
 #
 
 $startMS = microtime();
@@ -160,7 +161,7 @@ if ($sl_ct > 0)
 $auth=0;
 $reports_auth=0;
 $admin_auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -197,6 +198,13 @@ else
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -770,10 +778,12 @@ if ($campaign_ct>0 || $user_group_ct>0 || $user_ct>0) {
 }
 
 function cmp($a, $b)
-{
+	{
     return strcmp($a[0], $b[0]);
-}
-usort($complete_xfer_log, "cmp");
+	}
+
+if (count($complete_xfer_log)>0)
+	{usort($complete_xfer_log, "cmp");}
 
 if (count($complete_xfer_log)>0) {
 	$output_header="+---------------------+-----------+----------------------+----------------------+------------+----------------------+------------+----------------------+----------------------+----------------------+---------------------+--------+\n";

@@ -142,7 +142,7 @@ if ($sl_ct > 0)
 
 $auth=0;
 $modify_users_auth=0;
-$auth_message = user_authorization($USER,$PASS,'',1);
+$auth_message = user_authorization($USER,$PASS,'',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 

@@ -1,14 +1,15 @@
 <?php
 # list_merge.php - merge smaller lists into a larger one. Part of Admin Utilities.
 #
-# Copyright (C) 2016  Matt Florell,Joseph Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell,Joseph Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 161004-2240 - Initial Build
+# 170409-1548 - Added IP List validation code
 #
 
-$version = '2.12-1';
-$build = '161004-2240';
+$version = '2.14-2';
+$build = '170409-1548';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -119,7 +120,7 @@ if ($sl_ct > 0)
 	}
 
 $auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -129,6 +130,13 @@ if ($auth < 1)
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
@@ -520,7 +528,12 @@ if (($submit != "submit" ) && ($confirm != "CONFIRM"))
 	$i = 0;
 	while ( $i < $allowed_lists_count )
 		{
-		if (in_array($list_ary[$i], $available_lists)) {$x="selected";} else {$x="";}
+		if (is_array($available_lists))
+			{
+			if (in_array($list_ary[$i], $available_lists)) {$x="selected";} 
+			else {$x="";}
+			}
+		else {$x="";}
 		echo "<option value='$list_ary[$i]' $x>$list_ary[$i] - $list_name_ary[$i] ($list_lead_count_ary[$i] "._QXZ("leads").")</option>\n";
 		$i++;
 		}

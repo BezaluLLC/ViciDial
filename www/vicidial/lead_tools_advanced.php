@@ -11,10 +11,11 @@
 # 141229-2028 - Added code for on-the-fly language translations display
 # 150312-1508 - Allow for single quotes in vicidial_list data fields
 # 170225-1436 - Added date/time range options
+# 170409-1554 - Added IP List validation code
 #
 
-$version = '2.14-7';
-$build = '170225-1436';
+$version = '2.14-8';
+$build = '170409-1554';
 
 # This limit is to prevent data inconsistancies.
 # If there are too many leads in a list this
@@ -127,7 +128,7 @@ if ($sl_ct > 0)
 	}
 
 $auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -137,6 +138,13 @@ if ($auth < 1)
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;

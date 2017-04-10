@@ -657,7 +657,9 @@ modify_colors ENUM('1','0') default '0',
 user_nickname VARCHAR(50) default '',
 user_new_lead_limit SMALLINT(5) default '-1',
 api_only_user ENUM('0','1') default '0',
-modify_auto_reports ENUM('1','0') default '0'
+modify_auto_reports ENUM('1','0') default '0',
+modify_ip_lists ENUM('1','0') default '0',
+ignore_ip_list ENUM('1','0') default '0'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -715,7 +717,10 @@ admin_viewable_groups TEXT,
 admin_viewable_call_times TEXT,
 allowed_custom_reports VARCHAR(2000) default '',
 agent_allowed_chat_groups TEXT,
-agent_xfer_park_3way ENUM('Y','N') default 'Y'
+agent_xfer_park_3way ENUM('Y','N') default 'Y',
+admin_ip_list VARCHAR(30) default '',
+agent_ip_list VARCHAR(30) default '',
+api_ip_list VARCHAR(30) default ''
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns (
@@ -1699,7 +1704,9 @@ vdad_debug_logging ENUM('1','0') default '0',
 agent_chat_screen_colors VARCHAR(20) default 'default',
 enable_auto_reports ENUM('1','0') default '0',
 enable_pause_code_limits ENUM('1','0') default '0',
-enable_drop_lists ENUM('0','1','2') default '0'
+enable_drop_lists ENUM('0','1','2') default '0',
+allow_ip_lists ENUM('0','1','2') default '0',
+system_ip_blacklist VARCHAR(30) default ''
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3678,6 +3685,20 @@ index(drop_date),
 index(drop_processed)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_ip_lists (
+ip_list_id VARCHAR(30) UNIQUE NOT NULL,
+ip_list_name VARCHAR(100),
+active ENUM('N','Y') default 'N',
+user_group VARCHAR(20) default '---ALL---'
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_ip_list_entries (
+ip_list_id VARCHAR(30) NOT NULL,
+ip_address VARCHAR(45) NOT NULL,
+index(ip_list_id),
+index(ip_address)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3940,4 +3961,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1498',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1499',db_schema_update_date=NOW(),reload_timestamp=NOW();

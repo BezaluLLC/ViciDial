@@ -1,7 +1,7 @@
 <?php
 # reset_campaign_lists.php - VICIDIAL administration page
 #
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 130711-2051 - First build
@@ -9,10 +9,11 @@
 # 141007-2058 - Finalized adding QXZ translation to all admin files
 # 141229-2009 - Added code for on-the-fly language translations display
 # 160508-2301 - Added colors features, fixed allowed campaigns bug
+# 170409-1541 - Added IP List validation code
 #
 
-$admin_version = '2.12-5';
-$build = '160508-2301';
+$admin_version = '2.14-6';
+$build = '170409-1541';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -81,7 +82,7 @@ $user_auth=0;
 $auth=0;
 $reports_auth=0;
 $qc_auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'QC',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'QC',1,0);
 if ($auth_message == 'GOOD')
 	{$user_auth=1;}
 
@@ -134,6 +135,13 @@ else
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;

@@ -69,10 +69,11 @@
 # 161103-2224 - Added web_loader_phone_length option
 # 161114-2315 - Added file upload error checking
 # 170219-1427 - Added last-90-day duplicate check options
+# 170409-1553 - Added IP List validation code
 #
 
-$version = '2.14-67';
-$build = '170219-1427';
+$version = '2.14-68';
+$build = '170409-1553';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -248,7 +249,7 @@ if ($sl_ct > 0)
 	}
 
 $auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -258,6 +259,13 @@ if ($auth < 1)
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;

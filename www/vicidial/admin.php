@@ -104,6 +104,7 @@ $reports_color =	'#E6E6E6';
 	$sc_color = 		'#C6C6C6';
 	$sg_color = 		'#C6C6C6';
 	$ar_color = 		'#C6C6C6';
+	$il_color = 		'#C6C6C6';
 $subcamp_color =	'#C6C6C6';
 
 $Msubhead_color =	'#E6E6E6';
@@ -2212,6 +2213,26 @@ if (isset($_GET["drop_status"]))			{$drop_status=$_GET["drop_status"];}
 	elseif (isset($_POST["drop_status"]))	{$drop_status=$_POST["drop_status"];}
 if (isset($_GET["duplicate_check"]))			{$duplicate_check=$_GET["duplicate_check"];}
 	elseif (isset($_POST["duplicate_check"]))	{$duplicate_check=$_POST["duplicate_check"];}
+if (isset($_GET["allow_ip_lists"]))				{$allow_ip_lists=$_GET["allow_ip_lists"];}
+	elseif (isset($_POST["allow_ip_lists"]))	{$allow_ip_lists=$_POST["allow_ip_lists"];}
+if (isset($_GET["system_ip_blacklist"]))			{$system_ip_blacklist=$_GET["system_ip_blacklist"];}
+	elseif (isset($_POST["system_ip_blacklist"]))	{$system_ip_blacklist=$_POST["system_ip_blacklist"];}
+if (isset($_GET["modify_ip_lists"]))			{$modify_ip_lists=$_GET["modify_ip_lists"];}
+	elseif (isset($_POST["modify_ip_lists"]))	{$modify_ip_lists=$_POST["modify_ip_lists"];}
+if (isset($_GET["ignore_ip_list"]))			{$ignore_ip_list=$_GET["ignore_ip_list"];}
+	elseif (isset($_POST["ignore_ip_list"]))	{$ignore_ip_list=$_POST["ignore_ip_list"];}
+if (isset($_GET["admin_ip_list"]))			{$admin_ip_list=$_GET["admin_ip_list"];}
+	elseif (isset($_POST["admin_ip_list"]))	{$admin_ip_list=$_POST["admin_ip_list"];}
+if (isset($_GET["agent_ip_list"]))			{$agent_ip_list=$_GET["agent_ip_list"];}
+	elseif (isset($_POST["agent_ip_list"]))	{$agent_ip_list=$_POST["agent_ip_list"];}
+if (isset($_GET["api_ip_list"]))			{$api_ip_list=$_GET["api_ip_list"];}
+	elseif (isset($_POST["api_ip_list"]))	{$api_ip_list=$_POST["api_ip_list"];}
+if (isset($_GET["ip_list_id"]))			{$ip_list_id=$_GET["ip_list_id"];}
+	elseif (isset($_POST["ip_list_id"]))	{$ip_list_id=$_POST["ip_list_id"];}
+if (isset($_GET["ip_list_name"]))			{$ip_list_name=$_GET["ip_list_name"];}
+	elseif (isset($_POST["ip_list_name"]))	{$ip_list_name=$_POST["ip_list_name"];}
+if (isset($_GET["ip_address"]))				{$ip_address=$_GET["ip_address"];}
+	elseif (isset($_POST["ip_address"]))	{$ip_address=$_POST["ip_address"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2226,7 +2247,7 @@ if (strlen($dial_status) > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key,pass_hash_enabled,disable_auto_dial,country_code_list_stats,frozen_server_call_clear,active_modules,allow_chats,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,default_language,user_hide_realtime_enabled,log_recording_access,alt_ivr_logging,admin_row_click,admin_screen_colors,ofcom_uk_drop_calc,agent_screen_colors,script_remove_js,manual_auto_next,user_new_lead_limit,agent_xfer_park_3way,agent_soundboards,web_loader_phone_length,agent_script,enable_auto_reports,enable_pause_code_limits,enable_drop_lists FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key,pass_hash_enabled,disable_auto_dial,country_code_list_stats,frozen_server_call_clear,active_modules,allow_chats,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,default_language,user_hide_realtime_enabled,log_recording_access,alt_ivr_logging,admin_row_click,admin_screen_colors,ofcom_uk_drop_calc,agent_screen_colors,script_remove_js,manual_auto_next,user_new_lead_limit,agent_xfer_park_3way,agent_soundboards,web_loader_phone_length,agent_script,enable_auto_reports,enable_pause_code_limits,enable_drop_lists,allow_ip_lists,system_ip_blacklist FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -2301,6 +2322,8 @@ if ($qm_conf_ct > 0)
 	$SSenable_auto_reports =				$row[65];
 	$SSenable_pause_code_limits =			$row[66];
 	$SSenable_drop_lists =					$row[67];
+	$SSallow_ip_lists =						$row[68];
+	$SSsystem_ip_blacklist =				$row[69];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -2615,6 +2638,9 @@ if ($non_latin < 1)
 	$time_limit = preg_replace('/[^0-9]/','',$time_limit);
 	$enable_drop_lists = preg_replace('/[^0-9]/','',$enable_drop_lists);
 	$dl_weekdays = preg_replace('/[^0-9]/','',$dl_weekdays);
+	$allow_ip_lists = preg_replace('/[^0-9]/','',$allow_ip_lists);
+	$modify_ip_lists = preg_replace('/[^0-9]/','',$modify_ip_lists);
+	$ignore_ip_list = preg_replace('/[^0-9]/','',$ignore_ip_list);
 
 	$user_new_lead_limit = preg_replace('/[^-0-9]/','',$user_new_lead_limit);
 	$drop_call_seconds = preg_replace('/[^-0-9]/','',$drop_call_seconds);
@@ -3107,8 +3133,13 @@ if ($non_latin < 1)
 	$dl_times = preg_replace('/[^-_0-9a-zA-Z]/','',$dl_times);
 	$dl_monthdays = preg_replace('/[^-_0-9a-zA-Z]/','',$dl_monthdays);
 	$use_custom_cid = preg_replace('/[^-_0-9a-zA-Z]/','',$use_custom_cid);
+	$system_ip_blacklist = preg_replace('/[^-_0-9a-zA-Z]/','',$system_ip_blacklist);
+	$admin_ip_list = preg_replace('/[^-_0-9a-zA-Z]/','',$admin_ip_list);
+	$agent_ip_list = preg_replace('/[^-_0-9a-zA-Z]/','',$agent_ip_list);
+	$api_ip_list = preg_replace('/[^-_0-9a-zA-Z]/','',$api_ip_list);
+	$ip_list_id = preg_replace('/[^-_0-9a-zA-Z]/','',$ip_list_id);
 
-	### ALPHA-NUMERIC and underscore and dash and slash and dot
+### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_timeout_prompt = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$menu_timeout_prompt);
 	$menu_invalid_prompt = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$menu_invalid_prompt);
 	$after_hours_message_filename = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$after_hours_message_filename);
@@ -3287,6 +3318,7 @@ if ($non_latin < 1)
 	$report_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$report_name);
 	$dl_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$dl_name);
 	$drop_status = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$drop_status);
+	$ip_list_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$ip_list_name);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
 	$call_out_number_group = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$call_out_number_group);
@@ -3347,6 +3379,9 @@ if ($non_latin < 1)
 
 	### ALPHA-NUMERIC and newlines
 	$areacode_list = preg_replace('/[^\n0-9a-zA-Z]/', '',$areacode_list);
+
+	### ALPHA-NUMERIC and newlines and period and colon
+	$ip_address = preg_replace('/[^\n\.\:\0-9a-zA-Z]/', '',$ip_address);
 
 	### remove semi-colons ###
 	$lead_filter_sql = preg_replace('/;/','',$lead_filter_sql);
@@ -4061,12 +4096,13 @@ else
 # 170327-1655 - Added USER_CUSTOM_ options to campaign custom callerID setting
 # 170330-0953 - Fixed translation phrases in callbacks list, issue #1006
 # 170407-0744 - Added Agents count on server page
+# 170409-0950 - Added IP Lists (white and black) functionality
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-606a';
-$build = '170407-0744';
+$admin_version = '2.14-607a';
+$build = '170409-0950';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -4165,7 +4201,7 @@ $user_auth=0;
 $auth=0;
 $reports_auth=0;
 $qc_auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'QC',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'QC',1,0);
 if ($auth_message == 'GOOD')
 	{$user_auth=1;}
 
@@ -4222,6 +4258,13 @@ else
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
 		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
 	Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
 	Header("HTTP/1.0 401 Unauthorized");
 	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
@@ -4264,7 +4307,7 @@ if ( ($qc_auth > 0) and ($auth < 1) )
         $qc_only_user=1;
         }
 
-$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,modify_contacts,modify_same_user_level,alter_admin_interface_options,modify_custom_dialplans,modify_languages,selected_language,user_choose_language,modify_colors,api_only_user,modify_auto_reports from vicidial_users where user='$PHP_AUTH_USER';";
+$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,modify_contacts,modify_same_user_level,alter_admin_interface_options,modify_custom_dialplans,modify_languages,selected_language,user_choose_language,modify_colors,api_only_user,modify_auto_reports,modify_ip_lists from vicidial_users where user='$PHP_AUTH_USER';";
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGfull_name				=$row[3];
@@ -4322,6 +4365,7 @@ $LOGuser_choose_language	=$row[87];
 $LOGmodify_colors			=$row[88];
 $LOGapi_only_user			=$row[89];
 $LOGmodify_auto_reports		=$row[90];
+$LOGmodify_ip_lists			=$row[91];
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times,qc_allowed_campaigns,qc_allowed_inbound_groups from vicidial_user_groups where user_group='$LOGuser_group';";
 $rslt=mysql_to_mysqli($stmt, $link);
@@ -4626,6 +4670,7 @@ if ($ADD==191111111111)	{$hh='admin';	$sh='cts';	echo _QXZ("ADD NEW CONTACT");}
 if ($ADD==192111111111)	{$hh='admin';	$sh='sc';	echo _QXZ("ADD SETTINGS CONTAINER");}
 if ($ADD==193111111111)	{$hh='admin';	$sh='sg';	echo _QXZ("ADD STATUS GROUP");}
 if ($ADD==194111111111)	{$hh='admin';	$sh='ar';	echo _QXZ("ADD AUTOMATED REPORT");}
+if ($ADD==195111111111)	{$hh='admin';	$sh='il';	echo _QXZ("ADD IP LIST");}
 if ($ADD==1111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("ADD NEW CONFERENCE");}
 if ($ADD==11111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("ADD NEW AGENT CONFERENCE");}
 if ($ADD=='2')			{$hh='users';		$sh='new';	echo _QXZ("New User Addition");}
@@ -4679,6 +4724,7 @@ if ($ADD==291111111111)	{$hh='admin';	$sh='cts';	echo _QXZ("ADDING NEW CONTACT")
 if ($ADD==292111111111)	{$hh='admin';	$sh='sc';	echo _QXZ("ADDING NEW SETTINGS CONTAINER");}
 if ($ADD==293111111111)	{$hh='admin';	$sh='sg';	echo _QXZ("ADDING NEW STATUS GROUP");}
 if ($ADD==294111111111)	{$hh='admin';	$sh='ar';	echo _QXZ("ADDING NEW AUTOMATED REPORT");}
+if ($ADD==295111111111)	{$hh='admin';	$sh='il';	echo _QXZ("ADDING NEW IP LIST");}
 if ($ADD==2111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("ADDING NEW CONFERENCE");}
 if ($ADD==21111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("ADDING NEW AGENT CONFERENCE");}
 if ($ADD==221111111111111)	{$hh='admin';	$sh='status';	echo _QXZ("ADDING SYSTEM STATUSES");}
@@ -4760,6 +4806,7 @@ if ($ADD==391111111111)	{$hh='admin';	$sh='cts';	echo _QXZ("MODIFY CONTACT");}
 if ($ADD==392111111111)	{$hh='admin';	$sh='sc';	echo _QXZ("MODIFY SETTINGS CONTAINER");}
 if ($ADD==393111111111)	{$hh='admin';	$sh='sg';	echo _QXZ("MODIFY STATUS GROUP");}
 if ($ADD==394111111111)	{$hh='admin';	$sh='ar';	echo _QXZ("MODIFY AUTOMATED REPORT");}
+if ($ADD==395111111111)	{$hh='admin';	$sh='il';	echo _QXZ("MODIFY IP LIST");}
 if ($ADD==3111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("MODIFY CONFERENCE");}
 if ($ADD==31111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("MODIFY AGENT CONFERENCE");}
 if ($ADD==311111111111111)	{$hh='admin';	$sh='settings';	echo _QXZ("MODIFY SYSTEM SETTINGS");}
@@ -4853,6 +4900,7 @@ if ($ADD==591111111111)	{$hh='admin';	$sh='cts';	echo _QXZ("DELETE CONTACT");}
 if ($ADD==592111111111)	{$hh='admin';	$sh='sc';	echo _QXZ("DELETE SETTINGS CONTAINER");}
 if ($ADD==593111111111)	{$hh='admin';	$sh='sg';	echo _QXZ("DELETE STATUS GROUP");}
 if ($ADD==594111111111)	{$hh='admin';	$sh='ar';	echo _QXZ("DELETE AUTOMATED REPORT");}
+if ($ADD==595111111111)	{$hh='admin';	$sh='il';	echo _QXZ("DELETE IP LIST");}
 if ($ADD==5111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("DELETE CONFERENCE");}
 if ($ADD==51111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("DELETE AGENT CONFERENCE");}
 if ($ADD==6)			{$hh='users';		$sh='list';	echo _QXZ("Delete User");}
@@ -4897,6 +4945,7 @@ if ($ADD==691111111111)	{$hh='admin';	$sh='cts';	echo _QXZ("DELETE CONTACT");}
 if ($ADD==692111111111)	{$hh='admin';	$sh='sc';	echo _QXZ("DELETE SETTINGS CONTAINER");}
 if ($ADD==693111111111)	{$hh='admin';	$sh='sg';	echo _QXZ("DELETE STATUS GROUP");}
 if ($ADD==694111111111)	{$hh='admin';	$sh='ar';	echo _QXZ("DELETE AUTOMATED REPORT");}
+if ($ADD==695111111111)	{$hh='admin';	$sh='il';	echo _QXZ("DELETE IP LIST");}
 if ($ADD==6111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("DELETE CONFERENCE");}
 if ($ADD==61111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("DELETE AGENT CONFERENCE");}
 if ($ADD==73)			{$hh='campaigns';	echo _QXZ("Dialable Lead Count");}
@@ -4947,6 +4996,7 @@ if ($ADD==190000000000)	{$hh='admin';	$sh='cts';	echo _QXZ("CONTACTS LIST");}
 if ($ADD==192000000000)	{$hh='admin';	$sh='sc';	echo _QXZ("SETTINGS CONTAINTER LIST");}
 if ($ADD==193000000000)	{$hh='admin';	$sh='sg';	echo _QXZ("STATUS GROUP LIST");}
 if ($ADD==194000000000)	{$hh='admin';	$sh='ar';	echo _QXZ("AUTOMATED REPORTS LIST");}
+if ($ADD==195000000000)	{$hh='admin';	$sh='il';	echo _QXZ("IP LISTS");}
 if ($ADD==1000000000000)	{$hh='admin';	$sh='conference';	echo _QXZ("CONFERENCE LIST");}
 if ($ADD==10000000000000)	{$hh='admin';	$sh='conference';	echo _QXZ("AGENT CONFERENCE LIST");}
 if ($ADD==100000000000000)	{$hh='qc';	$sh='list';	echo _QXZ("Quality Control");}
@@ -6898,9 +6948,6 @@ if ($ADD==3211)
 	}
 
 
-
-
-
 ######################
 # ADD=1111 display the ADD NEW INBOUND GROUP SCREEN
 ######################
@@ -8587,7 +8634,38 @@ if ($ADD==194111111111)
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"---ALL---\">"._QXZ("All Admin User Groups")."</option>\n";
-		echo "</select>$NWB#settings_containers-user_group$NWE</td></tr>\n";
+		echo "</select>$NWB#auto_reports-user_group$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=submit value='"._QXZ("SUBMIT")."'</td></tr>\n";
+		echo "</TABLE></center>\n";
+		}
+	else
+		{
+		echo _QXZ("You do not have permission to view this page")."\n";
+		exit;
+		}
+	}
+
+
+######################
+# ADD=195111111111 display the ADD NEW IP LIST screen
+######################
+if ($ADD==195111111111)
+	{
+	if ($LOGmodify_ip_lists==1)
+		{
+		echo "<TABLE><TR><TD>\n";
+		echo "<img src=\"images/icon_iplists.png\" alt=\"IP Lists\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		echo "<br>"._QXZ("ADD NEW IP LIST")."<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=295111111111>\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("IP List ID").": </td><td align=left><input type=text name=ip_list_id size=30 maxlength=30>$NWB#ip_lists-ip_list_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("IP List Name").": </td><td align=left><input type=text name=ip_list_name size=70 maxlength=100>$NWB#ip_lists-ip_list_name$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
+		echo "$UUgroups_list";
+		echo "<option SELECTED value=\"---ALL---\">"._QXZ("All Admin User Groups")."</option>\n";
+		echo "</select>$NWB#ip_lists-user_group$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=submit value='"._QXZ("SUBMIT")."'</td></tr>\n";
 		echo "</TABLE></center>\n";
@@ -9070,7 +9148,7 @@ if ($ADD=="2A")
 					$pass='';
 					}
 
-				$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,agentcall_chat,modify_email_accounts,pass_hash,alter_admin_interface_options,max_inbound_calls,modify_custom_dialplans,wrapup_seconds_override,modify_languages,selected_language,user_choose_language,ignore_group_on_search,api_list_restrict,api_allowed_functions,lead_filter_id,admin_cf_show_hidden,user_hide_realtime,modify_colors,user_nickname,user_new_lead_limit,api_only_user,modify_auto_reports) SELECT \"$user\",\"$pass\",\"$full_name\",user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,agentcall_chat,modify_email_accounts,\"$pass_hash\",alter_admin_interface_options,max_inbound_calls,modify_custom_dialplans,wrapup_seconds_override,modify_languages,selected_language,user_choose_language,ignore_group_on_search,api_list_restrict,api_allowed_functions,lead_filter_id,admin_cf_show_hidden,user_hide_realtime,modify_colors,user_nickname,user_new_lead_limit,api_only_user,modify_auto_reports from vicidial_users where user=\"$source_user_id\";";
+				$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,agentcall_chat,modify_email_accounts,pass_hash,alter_admin_interface_options,max_inbound_calls,modify_custom_dialplans,wrapup_seconds_override,modify_languages,selected_language,user_choose_language,ignore_group_on_search,api_list_restrict,api_allowed_functions,lead_filter_id,admin_cf_show_hidden,user_hide_realtime,modify_colors,user_nickname,user_new_lead_limit,api_only_user,modify_auto_reports,modify_ip_lists,ignore_ip_list) SELECT \"$user\",\"$pass\",\"$full_name\",user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,agentcall_chat,modify_email_accounts,\"$pass_hash\",alter_admin_interface_options,max_inbound_calls,modify_custom_dialplans,wrapup_seconds_override,modify_languages,selected_language,user_choose_language,ignore_group_on_search,api_list_restrict,api_allowed_functions,lead_filter_id,admin_cf_show_hidden,user_hide_realtime,modify_colors,user_nickname,user_new_lead_limit,api_only_user,modify_auto_reports,modify_ip_lists,ignore_ip_list from vicidial_users where user=\"$source_user_id\";";
 				$rslt=mysql_to_mysqli($stmt, $link);
 
 				$stmtA="INSERT INTO vicidial_inbound_group_agents (user,group_id,group_rank,group_weight,calls_today,group_type) SELECT \"$user\",group_id,group_rank,group_weight,\"0\",group_type from vicidial_inbound_group_agents where user=\"$source_user_id\";";
@@ -12343,6 +12421,48 @@ if ($ADD==294111111111)
 
 
 ######################
+# ADD=295111111111 adds new ip list to the system
+######################
+if ($ADD==295111111111)
+	{
+	if ( ($LOGmodify_ip_lists!=1) or ($add_copy_disabled > 0) )
+		{
+		echo "<br>"._QXZ("You do not have permission to add records on this system")." -system_settings-\n";
+		}
+	else
+		{
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_ip_lists where ip_list_id='$ip_list_id';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>"._QXZ("IP LIST NOT ADDED - there is already a list in the system with this ID")."\n";}
+		else
+			{
+			if ( (strlen($ip_list_id) < 2) or (strlen($ip_list_name) < 2) )
+				{echo "<br>"._QXZ("IP LIST NOT ADDED - Please go back and look at the data you entered")."\n";}
+			else
+				{
+				echo "<br>"._QXZ("IP LIST ADDED")."\n";
+
+				$stmt="INSERT INTO vicidial_ip_lists SET ip_list_id='$ip_list_id',ip_list_name='$ip_list_name',active='N',user_group='$user_group';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='IPLISTS', event_type='ADD', record_id='$ip_list_id', event_code='ADMIN ADD IP LIST', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				}
+			}
+		}
+	$ADD=395111111111;
+	}
+
+
+######################
 # ADD=2111111111111 adds new conference to the system
 ######################
 if ($ADD==2111111111111)
@@ -12594,7 +12714,7 @@ if ($ADD=="4A")
 
 			echo "<br><B>"._QXZ("USER MODIFIED - ADMIN").": $user</B>\n";
 
-			$stmt="UPDATE vicidial_users set pass='$pass',full_name='$full_name',user_level='$user_level',user_group='$user_group',phone_login='$phone_login',phone_pass='$phone_pass',delete_users='$delete_users',delete_user_groups='$delete_user_groups',delete_lists='$delete_lists',delete_campaigns='$delete_campaigns',delete_ingroups='$delete_ingroups',delete_remote_agents='$delete_remote_agents',load_leads='$load_leads',campaign_detail='$campaign_detail',ast_admin_access='$ast_admin_access',ast_delete_phones='$ast_delete_phones',delete_scripts='$delete_scripts',modify_leads='$modify_leads',hotkeys_active='$hotkeys_active',change_agent_campaign='$change_agent_campaign',agent_choose_ingroups='$agent_choose_ingroups',closer_campaigns='$groups_value',scheduled_callbacks='$scheduled_callbacks',agentonly_callbacks='$agentonly_callbacks',agentcall_manual='$agentcall_manual',vicidial_recording='$vicidial_recording',vicidial_transfers='$vicidial_transfers',delete_filters='$delete_filters',alter_agent_interface_options='$alter_agent_interface_options',closer_default_blended='$closer_default_blended',delete_call_times='$delete_call_times',modify_call_times='$modify_call_times',modify_users='$modify_users',modify_campaigns='$modify_campaigns',modify_lists='$modify_lists',modify_scripts='$modify_scripts',modify_filters='$modify_filters',modify_ingroups='$modify_ingroups',modify_usergroups='$modify_usergroups',modify_remoteagents='$modify_remoteagents',modify_servers='$modify_servers',view_reports='$view_reports',vicidial_recording_override='$vicidial_recording_override',alter_custdata_override='$alter_custdata_override',qc_enabled='$qc_enabled',qc_user_level='$qc_user_level',qc_pass='$qc_pass',qc_finish='$qc_finish',qc_commit='$qc_commit',add_timeclock_log='$add_timeclock_log',modify_timeclock_log='$modify_timeclock_log',delete_timeclock_log='$delete_timeclock_log',alter_custphone_override='$alter_custphone_override',vdc_agent_api_access='$vdc_agent_api_access',modify_inbound_dids='$modify_inbound_dids',delete_inbound_dids='$delete_inbound_dids',active='$active',download_lists='$download_lists',agent_shift_enforcement_override='$agent_shift_enforcement_override',manager_shift_enforcement_override='$manager_shift_enforcement_override',export_reports='$export_reports',delete_from_dnc='$delete_from_dnc',email='$email',user_code='$user_code',territory='$territory',allow_alerts='$allow_alerts',agent_choose_territories='$agent_choose_territories',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five',voicemail_id='$voicemail_id',agent_call_log_view_override='$agent_call_log_view_override',callcard_admin='$callcard_admin',agent_choose_blended='$agent_choose_blended',realtime_block_user_info='$realtime_block_user_info',custom_fields_modify='$custom_fields_modify',force_change_password='$force_change_password',agent_lead_search_override='$agent_lead_search',modify_shifts='$modify_shifts',modify_phones='$modify_phones',modify_carriers='$modify_carriers',modify_labels='$modify_labels',modify_statuses='$modify_statuses',modify_voicemail='$modify_voicemail',modify_audiostore='$modify_audiostore',modify_moh='$modify_moh',modify_tts='$modify_tts',preset_contact_search='$preset_contact_search',modify_contacts='$modify_contacts',modify_same_user_level='$modify_same_user_level',admin_hide_lead_data='$admin_hide_lead_data',admin_hide_phone_data='$admin_hide_phone_data',agentcall_email='$agentcall_email',agentcall_chat='$agentcall_chat',modify_email_accounts='$modify_email_accounts',failed_login_count=0,alter_admin_interface_options='$alter_admin_interface_options',max_inbound_calls='$max_inbound_calls',modify_custom_dialplans='$modify_custom_dialplans',wrapup_seconds_override='$wrapup_seconds_override',modify_languages='$modify_languages',selected_language='$selected_language',user_choose_language='$user_choose_language',ignore_group_on_search='$ignore_group_on_search',api_list_restrict='$api_list_restrict',api_allowed_functions='$api_allowed_functions',lead_filter_id='$lead_filter_id',admin_cf_show_hidden='$admin_cf_show_hidden',user_hide_realtime='$user_hide_realtime',access_recordings='$access_recordings',modify_colors='$modify_colors',user_nickname='$user_nickname',user_new_lead_limit='$user_new_lead_limit',api_only_user='$api_only_user',modify_auto_reports='$modify_auto_reports' $pass_hashSQL where user='$user' $LOGadmin_viewable_groupsSQL;";
+			$stmt="UPDATE vicidial_users set pass='$pass',full_name='$full_name',user_level='$user_level',user_group='$user_group',phone_login='$phone_login',phone_pass='$phone_pass',delete_users='$delete_users',delete_user_groups='$delete_user_groups',delete_lists='$delete_lists',delete_campaigns='$delete_campaigns',delete_ingroups='$delete_ingroups',delete_remote_agents='$delete_remote_agents',load_leads='$load_leads',campaign_detail='$campaign_detail',ast_admin_access='$ast_admin_access',ast_delete_phones='$ast_delete_phones',delete_scripts='$delete_scripts',modify_leads='$modify_leads',hotkeys_active='$hotkeys_active',change_agent_campaign='$change_agent_campaign',agent_choose_ingroups='$agent_choose_ingroups',closer_campaigns='$groups_value',scheduled_callbacks='$scheduled_callbacks',agentonly_callbacks='$agentonly_callbacks',agentcall_manual='$agentcall_manual',vicidial_recording='$vicidial_recording',vicidial_transfers='$vicidial_transfers',delete_filters='$delete_filters',alter_agent_interface_options='$alter_agent_interface_options',closer_default_blended='$closer_default_blended',delete_call_times='$delete_call_times',modify_call_times='$modify_call_times',modify_users='$modify_users',modify_campaigns='$modify_campaigns',modify_lists='$modify_lists',modify_scripts='$modify_scripts',modify_filters='$modify_filters',modify_ingroups='$modify_ingroups',modify_usergroups='$modify_usergroups',modify_remoteagents='$modify_remoteagents',modify_servers='$modify_servers',view_reports='$view_reports',vicidial_recording_override='$vicidial_recording_override',alter_custdata_override='$alter_custdata_override',qc_enabled='$qc_enabled',qc_user_level='$qc_user_level',qc_pass='$qc_pass',qc_finish='$qc_finish',qc_commit='$qc_commit',add_timeclock_log='$add_timeclock_log',modify_timeclock_log='$modify_timeclock_log',delete_timeclock_log='$delete_timeclock_log',alter_custphone_override='$alter_custphone_override',vdc_agent_api_access='$vdc_agent_api_access',modify_inbound_dids='$modify_inbound_dids',delete_inbound_dids='$delete_inbound_dids',active='$active',download_lists='$download_lists',agent_shift_enforcement_override='$agent_shift_enforcement_override',manager_shift_enforcement_override='$manager_shift_enforcement_override',export_reports='$export_reports',delete_from_dnc='$delete_from_dnc',email='$email',user_code='$user_code',territory='$territory',allow_alerts='$allow_alerts',agent_choose_territories='$agent_choose_territories',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five',voicemail_id='$voicemail_id',agent_call_log_view_override='$agent_call_log_view_override',callcard_admin='$callcard_admin',agent_choose_blended='$agent_choose_blended',realtime_block_user_info='$realtime_block_user_info',custom_fields_modify='$custom_fields_modify',force_change_password='$force_change_password',agent_lead_search_override='$agent_lead_search',modify_shifts='$modify_shifts',modify_phones='$modify_phones',modify_carriers='$modify_carriers',modify_labels='$modify_labels',modify_statuses='$modify_statuses',modify_voicemail='$modify_voicemail',modify_audiostore='$modify_audiostore',modify_moh='$modify_moh',modify_tts='$modify_tts',preset_contact_search='$preset_contact_search',modify_contacts='$modify_contacts',modify_same_user_level='$modify_same_user_level',admin_hide_lead_data='$admin_hide_lead_data',admin_hide_phone_data='$admin_hide_phone_data',agentcall_email='$agentcall_email',agentcall_chat='$agentcall_chat',modify_email_accounts='$modify_email_accounts',failed_login_count=0,alter_admin_interface_options='$alter_admin_interface_options',max_inbound_calls='$max_inbound_calls',modify_custom_dialplans='$modify_custom_dialplans',wrapup_seconds_override='$wrapup_seconds_override',modify_languages='$modify_languages',selected_language='$selected_language',user_choose_language='$user_choose_language',ignore_group_on_search='$ignore_group_on_search',api_list_restrict='$api_list_restrict',api_allowed_functions='$api_allowed_functions',lead_filter_id='$lead_filter_id',admin_cf_show_hidden='$admin_cf_show_hidden',user_hide_realtime='$user_hide_realtime',access_recordings='$access_recordings',modify_colors='$modify_colors',user_nickname='$user_nickname',user_new_lead_limit='$user_new_lead_limit',api_only_user='$api_only_user',modify_auto_reports='$modify_auto_reports',modify_ip_lists='$modify_ip_lists',ignore_ip_list='$ignore_ip_list' $pass_hashSQL where user='$user' $LOGadmin_viewable_groupsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -15211,34 +15331,34 @@ if ($ADD==411111)
 						}
 					}
 
-			$custom_rpt_SQL='';
-			$custom_stmt="show tables like 'vicidial_custom_reports'";
-			$custom_rslt=mysql_to_mysqli($custom_stmt, $link);
-			if (mysqli_num_rows($custom_rslt)>0) 
-				{
-	
-				$custom_report_str="";
-				if (count($allowed_custom_reports)>0) 
+				$custom_rpt_SQL='';
+				$custom_stmt="show tables like 'vicidial_custom_reports'";
+				$custom_rslt=mysql_to_mysqli($custom_stmt, $link);
+				if (mysqli_num_rows($custom_rslt)>0) 
 					{
-					for ($q=0; $q<count($allowed_custom_reports); $q++) 
+		
+					$custom_report_str="";
+					if (count($allowed_custom_reports)>0) 
 						{
-						$custom_report_str.=$allowed_custom_reports[$q]."|";
+						for ($q=0; $q<count($allowed_custom_reports); $q++) 
+							{
+							$custom_report_str.=$allowed_custom_reports[$q]."|";
+							}
 						}
-					}
-				if (preg_match('/\-\-NONE\-\-/i', $custom_report_str)) {$custom_report_str='';}
-				else if (preg_match('/\-\-ALL\-\-/i', $custom_report_str)) 
-					{
-					$custom_report_str='';
-					$custom_report_stmt="SELECT report_name from vicidial_custom_reports";
-					$custom_report_rslt=mysql_to_mysqli($custom_report_stmt, $link);
-					while ($custom_rpt_row=mysqli_fetch_row($custom_report_rslt)) 
+					if (preg_match('/\-\-NONE\-\-/i', $custom_report_str)) {$custom_report_str='';}
+					else if (preg_match('/\-\-ALL\-\-/i', $custom_report_str)) 
 						{
-						$custom_report_str.=$custom_rpt_row[0]."|";
+						$custom_report_str='';
+						$custom_report_stmt="SELECT report_name from vicidial_custom_reports";
+						$custom_report_rslt=mysql_to_mysqli($custom_report_stmt, $link);
+						while ($custom_rpt_row=mysqli_fetch_row($custom_report_rslt)) 
+							{
+							$custom_report_str.=$custom_rpt_row[0]."|";
+							}
 						}
+						$custom_rpt_SQL=",allowed_custom_reports='$custom_report_str'";
 					}
-					$custom_rpt_SQL=",allowed_custom_reports='$custom_report_str'";
-				}
-				$stmt="UPDATE vicidial_user_groups set user_group='$user_group', group_name='$group_name',allowed_campaigns='$campaigns_value',qc_allowed_campaigns='$qc_campaigns_value',qc_allowed_inbound_groups='$qc_groups_value',group_shifts='$GROUP_shifts',forced_timeclock_login='$forced_timeclock_login',shift_enforcement='$shift_enforcement',agent_status_viewable_groups='$VGROUP_vgroups',agent_status_view_time='$agent_status_view_time',agent_call_log_view='$agent_call_log_view',agent_xfer_consultative='$agent_xfer_consultative',agent_xfer_dial_override='$agent_xfer_dial_override',agent_xfer_vm_transfer='$agent_xfer_vm_transfer',agent_xfer_blind_transfer='$agent_xfer_blind_transfer',agent_xfer_dial_with_customer='$agent_xfer_dial_with_customer',agent_xfer_park_customer_dial='$agent_xfer_park_customer_dial',agent_fullscreen='$agent_fullscreen',allowed_reports='$allowed_reports'$custom_rpt_SQL,webphone_url_override='" . mysqli_real_escape_string($link, $webphone_url_override) . "',webphone_systemkey_override='$webphone_systemkey_override',webphone_dialpad_override='$webphone_dialpad_override',admin_viewable_groups='$Vadmin_viewable_groups',admin_viewable_call_times='$Vadmin_viewable_call_times',agent_allowed_chat_groups='$VGROUP_chatgroups',agent_xfer_park_3way='$agent_xfer_park_3way' where user_group='$OLDuser_group';";
+				$stmt="UPDATE vicidial_user_groups set user_group='$user_group', group_name='$group_name',allowed_campaigns='$campaigns_value',qc_allowed_campaigns='$qc_campaigns_value',qc_allowed_inbound_groups='$qc_groups_value',group_shifts='$GROUP_shifts',forced_timeclock_login='$forced_timeclock_login',shift_enforcement='$shift_enforcement',agent_status_viewable_groups='$VGROUP_vgroups',agent_status_view_time='$agent_status_view_time',agent_call_log_view='$agent_call_log_view',agent_xfer_consultative='$agent_xfer_consultative',agent_xfer_dial_override='$agent_xfer_dial_override',agent_xfer_vm_transfer='$agent_xfer_vm_transfer',agent_xfer_blind_transfer='$agent_xfer_blind_transfer',agent_xfer_dial_with_customer='$agent_xfer_dial_with_customer',agent_xfer_park_customer_dial='$agent_xfer_park_customer_dial',agent_fullscreen='$agent_fullscreen',allowed_reports='$allowed_reports'$custom_rpt_SQL,webphone_url_override='" . mysqli_real_escape_string($link, $webphone_url_override) . "',webphone_systemkey_override='$webphone_systemkey_override',webphone_dialpad_override='$webphone_dialpad_override',admin_viewable_groups='$Vadmin_viewable_groups',admin_viewable_call_times='$Vadmin_viewable_call_times',agent_allowed_chat_groups='$VGROUP_chatgroups',agent_xfer_park_3way='$agent_xfer_park_3way',admin_ip_list='$admin_ip_list',agent_ip_list='$agent_ip_list',api_ip_list='$api_ip_list' where user_group='$OLDuser_group';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 
 				echo "<br><B>"._QXZ("USER GROUP MODIFIED")."</B>\n";
@@ -16662,7 +16782,7 @@ if ($ADD==411111111111111)
 				}
 			}
 
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysqli_real_escape_string($link, $webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db'$custom_reports_slave_SQL,webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt',noanswer_log='$noanswer_log',alt_log_server_ip='$alt_log_server_ip',alt_log_dbname='$alt_log_dbname',alt_log_login='$alt_log_login',alt_log_pass='$alt_log_pass',tables_use_alt_log_db='$tables_use_alt_log_db',did_agent_log='$did_agent_log',campaign_cid_areacodes_enabled='$campaign_cid_areacodes_enabled',pllb_grouping_limit='$pllb_grouping_limit',did_ra_extensions_enabled='$did_ra_extensions_enabled',expanded_list_stats='$expanded_list_stats',contacts_enabled='$contacts_enabled',call_menu_qualify_enabled='$call_menu_qualify_enabled',admin_list_counts='$admin_list_counts',allow_voicemail_greeting='$allow_voicemail_greeting',queuemetrics_socket='$queuemetrics_socket',queuemetrics_socket_url='$queuemetrics_socket_url',enhanced_disconnect_logging='$enhanced_disconnect_logging',allow_emails='$allow_emails',level_8_disable_add='$level_8_disable_add',queuemetrics_record_hold='$queuemetrics_record_hold',country_code_list_stats='$country_code_list_stats',queuemetrics_pause_type='$queuemetrics_pause_type',frozen_server_call_clear='$frozen_server_call_clear',callback_time_24hour='$callback_time_24hour',enable_languages='$enable_languages',language_method='$language_method',meetme_enter_login_filename='$meetme_enter_login_filename',meetme_enter_leave3way_filename='$meetme_enter_leave3way_filename',enable_did_entry_list_id='$enable_did_entry_list_id',enable_third_webform='$enable_third_webform',allow_chats='$allow_chats',chat_url='$chat_url',chat_timeout='$chat_timeout',agent_debug_logging='$agent_debug_logging',default_language='$default_language',agent_whisper_enabled='$agent_whisper_enabled',user_hide_realtime_enabled='$user_hide_realtime_enabled',usacan_phone_dialcode_fix='$usacan_phone_dialcode_fix',cache_carrier_stats_realtime='$cache_carrier_stats_realtime',log_recording_access='$log_recording_access',report_default_format='$report_default_format',alt_ivr_logging='$alt_ivr_logging',default_phone_code='$default_phone_code',admin_row_click='$admin_row_click',admin_screen_colors='$admin_screen_colors',ofcom_uk_drop_calc='$ofcom_uk_drop_calc',agent_screen_colors='$agent_screen_colors',script_remove_js='$script_remove_js',manual_auto_next='$manual_auto_next',user_new_lead_limit='$user_new_lead_limit',agent_xfer_park_3way='$agent_xfer_park_3way',agent_soundboards='$agent_soundboards',web_loader_phone_length='$web_loader_phone_length',agent_script='$agent_script',agent_chat_screen_colors='$agent_chat_screen_colors',enable_auto_reports='$enable_auto_reports',enable_pause_code_limits='$enable_pause_code_limits',enable_drop_lists='$enable_drop_lists'$custom_dialplanSQL;";
+		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysqli_real_escape_string($link, $webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db'$custom_reports_slave_SQL,webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt',noanswer_log='$noanswer_log',alt_log_server_ip='$alt_log_server_ip',alt_log_dbname='$alt_log_dbname',alt_log_login='$alt_log_login',alt_log_pass='$alt_log_pass',tables_use_alt_log_db='$tables_use_alt_log_db',did_agent_log='$did_agent_log',campaign_cid_areacodes_enabled='$campaign_cid_areacodes_enabled',pllb_grouping_limit='$pllb_grouping_limit',did_ra_extensions_enabled='$did_ra_extensions_enabled',expanded_list_stats='$expanded_list_stats',contacts_enabled='$contacts_enabled',call_menu_qualify_enabled='$call_menu_qualify_enabled',admin_list_counts='$admin_list_counts',allow_voicemail_greeting='$allow_voicemail_greeting',queuemetrics_socket='$queuemetrics_socket',queuemetrics_socket_url='$queuemetrics_socket_url',enhanced_disconnect_logging='$enhanced_disconnect_logging',allow_emails='$allow_emails',level_8_disable_add='$level_8_disable_add',queuemetrics_record_hold='$queuemetrics_record_hold',country_code_list_stats='$country_code_list_stats',queuemetrics_pause_type='$queuemetrics_pause_type',frozen_server_call_clear='$frozen_server_call_clear',callback_time_24hour='$callback_time_24hour',enable_languages='$enable_languages',language_method='$language_method',meetme_enter_login_filename='$meetme_enter_login_filename',meetme_enter_leave3way_filename='$meetme_enter_leave3way_filename',enable_did_entry_list_id='$enable_did_entry_list_id',enable_third_webform='$enable_third_webform',allow_chats='$allow_chats',chat_url='$chat_url',chat_timeout='$chat_timeout',agent_debug_logging='$agent_debug_logging',default_language='$default_language',agent_whisper_enabled='$agent_whisper_enabled',user_hide_realtime_enabled='$user_hide_realtime_enabled',usacan_phone_dialcode_fix='$usacan_phone_dialcode_fix',cache_carrier_stats_realtime='$cache_carrier_stats_realtime',log_recording_access='$log_recording_access',report_default_format='$report_default_format',alt_ivr_logging='$alt_ivr_logging',default_phone_code='$default_phone_code',admin_row_click='$admin_row_click',admin_screen_colors='$admin_screen_colors',ofcom_uk_drop_calc='$ofcom_uk_drop_calc',agent_screen_colors='$agent_screen_colors',script_remove_js='$script_remove_js',manual_auto_next='$manual_auto_next',user_new_lead_limit='$user_new_lead_limit',agent_xfer_park_3way='$agent_xfer_park_3way',agent_soundboards='$agent_soundboards',web_loader_phone_length='$web_loader_phone_length',agent_script='$agent_script',agent_chat_screen_colors='$agent_chat_screen_colors',enable_auto_reports='$enable_auto_reports',enable_pause_code_limits='$enable_pause_code_limits',enable_drop_lists='$enable_drop_lists',allow_ip_lists='$allow_ip_lists',system_ip_blacklist='$system_ip_blacklist'$custom_dialplanSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 
 		if ( ($meetme_enter_login_filename != $SSmeetme_enter_login_filename) or ($meetme_enter_leave3way_filename != $SSmeetme_enter_leave3way_filename) )
@@ -17667,6 +17787,27 @@ if ($ADD==594111111111)
 		echo "<br><br><a href=\"$PHP_SELF?ADD=694111111111&report_id=$report_id&CoNfIrM=YES\">"._QXZ("Click here to delete automated report")." $report_id - $report_name</a><br><br><br>\n";
 		}
 	$ADD='394111111111';		# go to automated report entry modification below
+	}
+
+
+######################
+# ADD=595111111111 confirmation before deletion of IP List record
+######################
+if ($ADD==595111111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if (strlen($ip_list_id) < 2)
+		{
+		echo "<br>"._QXZ("IP LIST NOT DELETED - Please go back and look at the data you entered")."\n";
+		echo "<br>"._QXZ("IP LIST ID must be at least 2 characters in length")."\n";
+		}
+	else
+		{
+		echo "<br><B>"._QXZ("IP LIST DELETION CONFIRMATION").": $ip_list_id - $ip_list_name</B>\n";
+		echo "<br><br><a href=\"$PHP_SELF?ADD=695111111111&ip_list_id=$ip_list_id&CoNfIrM=YES\">"._QXZ("Click here to delete IP List")." $ip_list_id - $ip_list_name</a><br><br><br>\n";
+		}
+	$ADD='395111111111';		# go to IP LIST entry modification below
 	}
 
 
@@ -19956,6 +20097,46 @@ if ($ADD==694111111111)
 
 
 ######################
+# ADD=695111111111 delete IP List record
+######################
+if ($ADD==695111111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( (strlen($ip_list_id) < 2) or ($CoNfIrM != 'YES') or ($LOGmodify_ip_lists!=1) )
+		{
+		echo "<br>"._QXZ("IP LIST NOT DELETED - Please go back and look at the data you entered")."\n";
+		echo "<br>"._QXZ("IP LIST ID must be at least 2 characters in length")."\n";
+		}
+	else
+		{
+		$stmt="SELECT count(*) from vicidial_ip_lists where ip_list_id='$ip_list_id' $LOGadmin_viewable_groupsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{echo "<br>"._QXZ("IP LIST NOT FOUND").": $report_id\n";}
+		else
+			{
+			$stmt="DELETE from vicidial_ip_lists where ip_list_id='$ip_list_id' $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='IPLISTS', event_type='DELETE', record_id='$ip_list_id', event_code='ADMIN DELETE IP LIST', event_sql=\"$SQL_log\", event_notes='';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+
+			echo "<br><B>"._QXZ("IP LIST DELETION COMPLETED").": $ip_list_id</B>\n";
+			echo "<br><br>\n";
+			}
+		}
+	$ADD='195000000000';		# go to IP List entry list
+	}
+
+
+######################
 # ADD=6111111111111 delete conference record
 ######################
 if ($ADD==6111111111111)
@@ -20049,7 +20230,7 @@ if ($ADD==3)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,modify_email_accounts,failed_login_count,last_login_date,last_ip,alter_admin_interface_options,max_inbound_calls,modify_custom_dialplans,wrapup_seconds_override,modify_languages,selected_language,user_choose_language,ignore_group_on_search,api_list_restrict,api_allowed_functions,lead_filter_id,agentcall_chat,admin_cf_show_hidden,user_hide_realtime,access_recordings,modify_colors,user_nickname,user_new_lead_limit,api_only_user,modify_auto_reports from vicidial_users where user='$user' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,modify_email_accounts,failed_login_count,last_login_date,last_ip,alter_admin_interface_options,max_inbound_calls,modify_custom_dialplans,wrapup_seconds_override,modify_languages,selected_language,user_choose_language,ignore_group_on_search,api_list_restrict,api_allowed_functions,lead_filter_id,agentcall_chat,admin_cf_show_hidden,user_hide_realtime,access_recordings,modify_colors,user_nickname,user_new_lead_limit,api_only_user,modify_auto_reports,modify_ip_lists,ignore_ip_list from vicidial_users where user='$user' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		$user_id =				$row[0];
@@ -20173,6 +20354,8 @@ if ($ADD==3)
 		$user_new_lead_limit =	$row[120];
 		$api_only_user =		$row[121];
 		$modify_auto_reports =	$row[122];
+		$modify_ip_lists =		$row[123];
+		$ignore_ip_list =		$row[124];
 
 		if ( ( ($user_level >= $LOGuser_level) and ($LOGuser_level < 9) ) or ( ($LOGmodify_same_user_level < 1) and ($LOGuser_level > 8) and ($user_level > 8) ) )
 			{
@@ -20513,6 +20696,16 @@ if ($ADD==3)
 				else
 					{
 					echo "<tr bgcolor=#$SSstd_row2_background><td align=right></td><td align=left><input type=hidden name=modify_auto_reports value=$modify_auto_reports></td></tr>\n";
+					}
+
+				if ($SSallow_ip_lists > 0)
+					{
+					echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify IP Lists").": </td><td align=left><select size=1 name=modify_ip_lists><option>0</option><option>1</option><option SELECTED>$modify_ip_lists</option></select>$NWB#users-modify_sections$NWE</td></tr>\n";
+					echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Ignore IP List").": </td><td align=left><select size=1 name=ignore_ip_list><option>0</option><option>1</option><option SELECTED>$ignore_ip_list</option></select>$NWB#users-modify_sections$NWE</td></tr>\n";
+					}
+				else
+					{
+					echo "<tr bgcolor=#$SSstd_row2_background><td align=right></td><td align=left><input type=hidden name=modify_ip_lists value=$modify_ip_lists><input type=hidden name=ignore_ip_list value=$ignore_ip_list></td></tr>\n";
 					}
 
 				echo "<tr bgcolor=#$SSstd_row1_background><td align=right>"._QXZ("Add Timeclock Log Record").": </td><td align=left><select size=1 name=add_timeclock_log><option>0</option><option>1</option><option SELECTED>$add_timeclock_log</option></select>$NWB#users-add_timeclock_log$NWE</td></tr>\n";
@@ -30509,7 +30702,7 @@ if ($ADD==311111)
 			echo "<TABLE><TR><TD>\n";
 			echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-			$stmt="SELECT user_group,group_name,allowed_campaigns,qc_allowed_campaigns,qc_allowed_inbound_groups,group_shifts,forced_timeclock_login,shift_enforcement,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial,agent_fullscreen,allowed_reports,webphone_url_override,webphone_systemkey_override,webphone_dialpad_override,admin_viewable_groups,admin_viewable_call_times,agent_allowed_chat_groups,agent_xfer_park_3way from vicidial_user_groups where user_group='$user_group' $LOGadmin_viewable_groupsSQL;";
+			$stmt="SELECT user_group,group_name,allowed_campaigns,qc_allowed_campaigns,qc_allowed_inbound_groups,group_shifts,forced_timeclock_login,shift_enforcement,agent_status_viewable_groups,agent_status_view_time,agent_call_log_view,agent_xfer_consultative,agent_xfer_dial_override,agent_xfer_vm_transfer,agent_xfer_blind_transfer,agent_xfer_dial_with_customer,agent_xfer_park_customer_dial,agent_fullscreen,allowed_reports,webphone_url_override,webphone_systemkey_override,webphone_dialpad_override,admin_viewable_groups,admin_viewable_call_times,agent_allowed_chat_groups,agent_xfer_park_3way,admin_ip_list,agent_ip_list,api_ip_list from vicidial_user_groups where user_group='$user_group' $LOGadmin_viewable_groupsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			$row=mysqli_fetch_row($rslt);
 			$user_group =						$row[0];
@@ -30535,6 +30728,9 @@ if ($ADD==311111)
 			$admin_viewable_call_times =		$row[23];
 			$VGROUP_chatgroups =				$row[24];
 			$agent_xfer_park_3way =				$row[25];
+			$admin_ip_list =					$row[26];
+			$agent_ip_list =					$row[27];
+			$api_ip_list =						$row[28];
 
 			echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -30706,38 +30902,38 @@ if ($ADD==311111)
 			echo "</select>$NWB#user_groups-allowed_reports$NWE</td></tr>\n";
 
 
-		$custom_stmt="show tables like 'vicidial_custom_reports'";
-		$custom_rslt=mysql_to_mysqli($custom_stmt, $link);
-		if (mysqli_num_rows($custom_rslt)>0) 
-			{
-
-			$custom_rpt_stmt="SELECT custom_report_id, report_name from vicidial_custom_reports order by report_name asc";
-			$custom_rpt_rslt=mysql_to_mysqli($custom_rpt_stmt, $link);
-
-			$allowed_rpt_stmt="SELECT allowed_custom_reports from vicidial_user_groups where user_group='$user_group'";
-			$allowed_rpt_rslt=mysql_to_mysqli($allowed_rpt_stmt, $link);
-
-			if (mysqli_num_rows($custom_rpt_rslt)>0) 
+			$custom_stmt="show tables like 'vicidial_custom_reports'";
+			$custom_rslt=mysql_to_mysqli($custom_stmt, $link);
+			if (mysqli_num_rows($custom_rslt)>0) 
 				{
-				$allowed_rpt_row=mysqli_fetch_row($allowed_rpt_rslt);
-				$allowed_custom_reports=$allowed_rpt_row[0];
-				$allowed_reports_array=explode("|", $allowed_custom_reports);
 
-				echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Allowed Custom Reports").": </td><td align=left><select MULTIPLE size=8 name=allowed_custom_reports[]>\n";
+				$custom_rpt_stmt="SELECT custom_report_id, report_name from vicidial_custom_reports order by report_name asc";
+				$custom_rpt_rslt=mysql_to_mysqli($custom_rpt_stmt, $link);
 
-				echo "<option value=\"--ALL--\">ALL REPORTS</option>\n";
-				echo "<option value=\"--NONE--\">NONE</option>\n";
+				$allowed_rpt_stmt="SELECT allowed_custom_reports from vicidial_user_groups where user_group='$user_group'";
+				$allowed_rpt_rslt=mysql_to_mysqli($allowed_rpt_stmt, $link);
 
-				while ($custom_rpt_row=mysqli_fetch_array($custom_rpt_rslt)) 
+				if (mysqli_num_rows($custom_rpt_rslt)>0) 
 					{
-					$report_id=$custom_rpt_row["custom_report_id"];
-					$report_name=$custom_rpt_row["report_name"];
-					if (in_array("$report_name", $allowed_reports_array)) {$x="selected";} else {$x="";}
-					echo "<option value=\"$report_name\" $x>$report_name</option>\n";
+					$allowed_rpt_row=mysqli_fetch_row($allowed_rpt_rslt);
+					$allowed_custom_reports=$allowed_rpt_row[0];
+					$allowed_reports_array=explode("|", $allowed_custom_reports);
+
+					echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Allowed Custom Reports").": </td><td align=left><select MULTIPLE size=8 name=allowed_custom_reports[]>\n";
+
+					echo "<option value=\"--ALL--\">ALL REPORTS</option>\n";
+					echo "<option value=\"--NONE--\">NONE</option>\n";
+
+					while ($custom_rpt_row=mysqli_fetch_array($custom_rpt_rslt)) 
+						{
+						$report_id=$custom_rpt_row["custom_report_id"];
+						$report_name=$custom_rpt_row["report_name"];
+						if (in_array("$report_name", $allowed_reports_array)) {$x="selected";} else {$x="";}
+						echo "<option value=\"$report_name\" $x>$report_name</option>\n";
+						}
 					}
+					echo "</select>$NWB#user_groups-allowed_custom_reports$NWE</td></tr>\n";
 				}
-				echo "</select>$NWB#user_groups-allowed_custom_reports$NWE</td></tr>\n";
-			}
 
 
 			if (strlen($SSwebphone_url) > 5)
@@ -30765,6 +30961,73 @@ if ($ADD==311111)
 				echo " <BR>&nbsp;</td></tr>\n";
 				}
 
+			if ($SSallow_ip_lists > 0)
+				{
+				##### get ip lists listing for dynamic pulldowns 
+				$stmt="SELECT ip_list_id,ip_list_name from vicidial_ip_lists where active='Y' order by ip_list_id;";
+				$rsltx=mysql_to_mysqli($stmt, $link);
+				$iplists_to_print = mysqli_num_rows($rsltx);
+				$ip_list='';
+				$o=0;
+				while ($iplists_to_print > $o)
+					{
+					$rowx=mysqli_fetch_row($rsltx);
+					$ip_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+					$o++;
+					}
+
+				if (strlen($admin_ip_list) < 1)
+					{
+					$ip_list_link_BEGIN = "";   $ip_list_link_END = "";
+					$ip_list_menu = "<option value=\"\" SELECTED>--- DISABLED ---</option>\n";
+					}
+				else
+					{
+					$ip_list_link_BEGIN = "<a href='$PHP_SELF?ADD=395111111111&ip_list_id=$admin_ip_list'>";   $ip_list_link_END = "</a>";
+					$ip_list_menu = "<option value=\"\">--- DISABLED ---</option>\n";
+					$ip_list_menu .= "<option SELECTED>$admin_ip_list</option>\n";
+					}
+
+				echo "<tr bgcolor=#$SSstd_row3_background><td align=right>$ip_list_link_BEGIN"._QXZ("Admin IP Whitelist")."$ip_list_link_END: </td><td align=left><select size=1 name=admin_ip_list>\n";
+				echo "$ip_list$ip_list_menu";
+				echo "</select>$NWB#user_groups-admin_ip_list$NWE</td></tr>\n";
+
+				if (strlen($agent_ip_list) < 1)
+					{
+					$ip_list_link_BEGIN = "";   $ip_list_link_END = "";
+					$ip_list_menu = "<option value=\"\" SELECTED>--- DISABLED ---</option>\n";
+					}
+				else
+					{
+					$ip_list_link_BEGIN = "<a href='$PHP_SELF?ADD=395111111111&ip_list_id=$agent_ip_list'>";   $ip_list_link_END = "</a>";
+					$ip_list_menu = "<option value=\"\">--- DISABLED ---</option>\n";
+					$ip_list_menu .= "<option SELECTED>$agent_ip_list</option>\n";
+					}
+
+				echo "<tr bgcolor=#$SSstd_row3_background><td align=right>$ip_list_link_BEGIN"._QXZ("Agent IP Whitelist")."$ip_list_link_END: </td><td align=left><select size=1 name=agent_ip_list>\n";
+				echo "$ip_list$ip_list_menu";
+				echo "</select>$NWB#user_groups-agent_ip_list$NWE</td></tr>\n";
+
+				if (strlen($api_ip_list) < 1)
+					{
+					$ip_list_link_BEGIN = "";   $ip_list_link_END = "";
+					$ip_list_menu = "<option value=\"\" SELECTED>--- DISABLED ---</option>\n";
+					}
+				else
+					{
+					$ip_list_link_BEGIN = "<a href='$PHP_SELF?ADD=395111111111&ip_list_id=$api_ip_list'>";   $ip_list_link_END = "</a>";
+					$ip_list_menu = "<option value=\"\">--- DISABLED ---</option>\n";
+					$ip_list_menu .= "<option SELECTED>$api_ip_list</option>\n";
+					}
+
+				echo "<tr bgcolor=#$SSstd_row3_background><td align=right>$ip_list_link_BEGIN"._QXZ("API IP Whitelist")."$ip_list_link_END: </td><td align=left><select size=1 name=api_ip_list>\n";
+				echo "$ip_list$ip_list_menu";
+				echo "</select>$NWB#user_groups-api_ip_list$NWE</td></tr>\n";
+				}
+			else
+				{
+				echo "<tr bgcolor=#$SSstd_row2_background><td align=right></td><td align=left><input type=hidden name=admin_ip_list value=$admin_ip_list><input type=hidden name=agent_ip_list value=$agent_ip_list><input type=hidden name=api_ip_list value=$api_ip_list></td></tr>\n";
+				}
 
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Allowed User Groups").": <BR>$NWB#user_groups-admin_viewable_groups$NWE</td><td align=left>\n";
 			if ($admin_viewable_groupsALL > 0)
@@ -33858,10 +34121,6 @@ if ($ADD==393111111111)
 	}
 
 
-
-
-
-
 ######################
 # ADD=394111111111 modify automated report info in the system
 ######################
@@ -34003,7 +34262,203 @@ if ($ADD==394111111111)
 	}
 
 
+######################
+# ADD=395111111111 modify IP Lists screen
+######################
+if ($ADD==395111111111)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
+	if ($LOGmodify_ingroups==1)
+		{
+		$stmt = "SELECT count(*) FROM vicidial_ip_lists where ip_list_id='$ip_list_id';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$vig_exists = $row[0];
+
+		if ($vig_exists > 0)
+			{
+			### read in all ip_addresses in this IP List
+			$stmt = "SELECT ip_address FROM vicidial_ip_list_entries where ip_list_id='$ip_list_id' order by ip_address;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vaf_ct = mysqli_num_rows($rslt);
+			$vaf=0;
+			while ($vaf_ct > $vaf)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$vaf_list[$vaf] = $row[0];
+				$vaf_count[$vaf] = 0;
+				$vaf++;
+				}
+
+			$stmt_log='';   $log_notes='';
+			if (strlen($ip_address) > 2)
+				{
+				$PN = explode("\n",$ip_address);
+				$PNct = count($PN);
+				$p=0;   $ip_added=0;   $ip_removed=0;
+				while ($p < $PNct)
+					{
+					if (strlen($PN[$p]) > 0)
+						{
+						$PN[$p] = preg_replace("/\r|\n|\t/",'',$PN[$p]);
+						$ac_found=0;
+						$vaf=0;
+						while ($vaf_ct > $vaf)
+							{
+							if ($PN[$p] == $vaf_list[$vaf]) 
+								{
+								$vaf_count[$vaf]++;
+								$ac_found++;
+								}
+							$vaf++;
+							}
+						if ($ac_found < 1)
+							{
+							$stmt="SELECT count(*) from vicidial_ip_list_entries where ip_address='$PN[$p]' and ip_list_id='$ip_list_id';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$row=mysqli_fetch_row($rslt);
+							if ($row[0] < 1)
+								{
+								$stmt="INSERT INTO vicidial_ip_list_entries (ip_address,ip_list_id) values('$PN[$p]','$ip_list_id');";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								$stmt_log .= "$stmt|";
+								$ip_added++;
+								if ($DB > 0) {echo "Added ip_address $PN[$p]<br>\n";}
+								}
+							else
+								{if ($DB > 0) {echo "Skipped add, already exists: $PN[$p]<br>\n";}}
+							}
+						}
+					$p++;
+					}
+
+				$vaf=0;
+				while ($vaf_ct > $vaf)
+					{
+					if ($vaf_count[$vaf] < 1)
+						{
+						$stmt="SELECT count(*) from vicidial_ip_list_entries where ip_address='$vaf_list[$vaf]' and ip_list_id='$ip_list_id';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$row=mysqli_fetch_row($rslt);
+						if ($row[0] > 0)
+							{
+							$stmt="DELETE FROM vicidial_ip_list_entries where ip_address='$vaf_list[$vaf]' and ip_list_id='$ip_list_id';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$stmt_log .= "$stmt|";
+							$ip_removed++;
+							if ($DB > 0) {echo "Removed ip_address $vaf_list[$vaf]<br>\n";}
+							}
+						else
+							{if ($DB > 0) {echo "Skipped delete, already removed: $vaf_list[$vaf]<br>\n";}}
+						}
+					$vaf++;
+					}
+				$log_notes .= "$ip_added IPs Added|$ip_removed IPs Removed|";
+				}
+
+			if ( (strlen($ip_list_name) > 2) and (strlen($active) > 0) )
+				{
+				$stmt="UPDATE vicidial_ip_lists set ip_list_name='$ip_list_name',active='$active',user_group='$user_group' where ip_list_id='$ip_list_id' $LOGadmin_viewable_groupsSQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$stmt_log .= "$stmt|";
+				$ILaffected_rows = mysqli_affected_rows($link);
+				if ($ILaffected_rows > 0)
+					{$log_notes .= "main entry edited|";}
+				}
+			else
+				{
+				$stmt="SELECT ip_list_id,ip_list_name,active,user_group from vicidial_ip_lists where ip_list_id='$ip_list_id' $LOGadmin_viewable_groupsSQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$ip_list_id =			$row[0];
+				$ip_list_name =			$row[1];
+				$active =				$row[2];
+				$user_group =			$row[3];
+				}
+
+			if (strlen($stmt_log) > 10)
+				{
+				echo "<br>"._QXZ("IP LIST MODIFIED").": $ip_list_id\n";
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt_log|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='IPLISTS', event_type='MODIFY', record_id='$ip_list_id', event_code='ADMIN MODIFY IP LIST', event_sql=\"$SQL_log\", event_notes='$log_notes';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				}
+
+			### read in all ip_addresses in this IP List
+			$stmt = "SELECT ip_address FROM vicidial_ip_list_entries where ip_list_id='$ip_list_id' order by ip_address;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vaf_ct = mysqli_num_rows($rslt);
+			$vaf=0;   $vaf_textarea='';
+			while ($vaf_ct > $vaf)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$vaf_textarea .= "$row[0]\n";
+				$vaf++;
+				}
+
+			echo "<br>"._QXZ("MODIFY IP LIST")."<form action=$PHP_SELF method=POST>\n";
+			echo "<input type=hidden name=ADD value=395111111111>\n";
+			echo "<input type=hidden name=ip_list_id value=\"$ip_list_id\">\n";
+			echo "<input type=hidden name=DB value=\"$DB\">\n";
+			echo "<center><TABLE width=800 cellspacing=3>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("IP List").": </td><td align=left><b>$ip_list_id</b></td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("IP List Name").": </td><td align=left><input type=text name=ip_list_name size=60 maxlength=100 value=\"$ip_list_name\"> $NWB#ip_lists-ip_list_name$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active>\n";
+			echo "<option value=\"Y\">"._QXZ("YES")."</option>\n";
+			echo "<option value=\"N\">"._QXZ("NO")."</option>\n";
+			echo "<option value=\"$active\" SELECTED>"._QXZ("$active")."</option>\n";
+			echo "</select>$NWB#ip_lists-active$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
+			echo "$UUgroups_list";
+			echo "<option SELECTED value=\"$user_group\">$user_group</option>\n";
+			echo "</select>$NWB#ip_lists-user_group$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("IP Addresses").": <BR><BR> ("._QXZ("one ip address per line only").")<BR>$NWB#ip_lists-ip_address$NWE</td><td align=left><TEXTAREA name=ip_address ROWS=20 COLS=45>$vaf_textarea</TEXTAREA></td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
+			echo "</FORM></TABLE></center><BR>\n";
+
+			echo "<B>"._QXZ("USER GROUPS USING THIS IP LIST").":</B><BR>\n";
+			echo "<TABLE>\n";
+			$stmt="SELECT distinct user_group,group_name from vicidial_user_groups where ( (admin_ip_list='$ip_list_id') or (agent_ip_list='$ip_list_id') or (api_ip_list='$ip_list_id') ) $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$ugs_to_print = mysqli_num_rows($rslt);
+			$o=0;
+			while ($ugs_to_print > $o) 
+				{
+				$row=mysqli_fetch_row($rslt);
+				echo "<TR><TD><a href=\"$PHP_SELF?ADD=311111&user_group=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+				$o++;
+				}
+			echo "</TABLE><BR>\n";
+
+			}
+		else
+			{
+			echo _QXZ("You must use a valid IP List")."\n";
+			exit;
+			}
+
+		if ($LOGmodify_ip_lists > 0)
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=595111111111&ip_list_id=$ip_list_id\">"._QXZ("DELETE THIS IP LIST")."</a>\n";
+			}
+		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=720000000000000&category=IPLISTS&stage=$ip_list_id\">"._QXZ("Click here to see Admin changes to this IP List")."</FONT>\n";
+			}
+		}
+	else
+		{
+		echo _QXZ("You do not have permission to view this page")."\n";
+		exit;
+		}
+	}
 
 
 
@@ -34200,7 +34655,7 @@ if ($ADD==311111111111111)
 			$ALLagent_count =		$rowx[2];
 			}
 
-		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,queuemetrics_socket,queuemetrics_socket_url,enhanced_disconnect_logging,allow_emails,level_8_disable_add,pass_hash_enabled,pass_key,pass_cost,disable_auto_dial,queuemetrics_record_hold,country_code_list_stats,reload_timestamp,queuemetrics_pause_type,frozen_server_call_clear,callback_time_24hour,allow_chats,chat_url,chat_timeout,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,agent_debug_logging,default_language,agent_whisper_enabled,user_hide_realtime_enabled,usacan_phone_dialcode_fix,cache_carrier_stats_realtime,oldest_logs_date,log_recording_access,report_default_format,alt_ivr_logging,default_phone_code,admin_row_click,admin_screen_colors,ofcom_uk_drop_calc,agent_screen_colors,script_remove_js,manual_auto_next,user_new_lead_limit,agent_xfer_park_3way,rec_prompt_count,agent_soundboards,web_loader_phone_length,agent_script,agent_chat_screen_colors,enable_auto_reports,enable_pause_code_limits,enable_drop_lists from system_settings;";
+		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,queuemetrics_socket,queuemetrics_socket_url,enhanced_disconnect_logging,allow_emails,level_8_disable_add,pass_hash_enabled,pass_key,pass_cost,disable_auto_dial,queuemetrics_record_hold,country_code_list_stats,reload_timestamp,queuemetrics_pause_type,frozen_server_call_clear,callback_time_24hour,allow_chats,chat_url,chat_timeout,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,agent_debug_logging,default_language,agent_whisper_enabled,user_hide_realtime_enabled,usacan_phone_dialcode_fix,cache_carrier_stats_realtime,oldest_logs_date,log_recording_access,report_default_format,alt_ivr_logging,default_phone_code,admin_row_click,admin_screen_colors,ofcom_uk_drop_calc,agent_screen_colors,script_remove_js,manual_auto_next,user_new_lead_limit,agent_xfer_park_3way,rec_prompt_count,agent_soundboards,web_loader_phone_length,agent_script,agent_chat_screen_colors,enable_auto_reports,enable_pause_code_limits,enable_drop_lists,allow_ip_lists,system_ip_blacklist from system_settings;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		$version =						$row[0];
@@ -34363,6 +34818,8 @@ if ($ADD==311111111111111)
 		$enable_auto_reports =			$row[157];
 		$enable_pause_code_limits =		$row[158];
 		$enable_drop_lists =			$row[159];
+		$allow_ip_lists =				$row[160];
+		$system_ip_blacklist =			$row[161];
 
 		if ($pass_hash_enabled > 0) {$pass_hash_enabled = 'ENABLED';}
 		else {$pass_hash_enabled = 'DISABLED';}
@@ -34642,6 +35099,37 @@ if ($ADD==311111111111111)
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Call Menu Qualify Enabled").": </td><td align=left><select size=1 name=call_menu_qualify_enabled><option>1</option><option>0</option><option selected>$call_menu_qualify_enabled</option></select>$NWB#settings-call_menu_qualify_enabled$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Call Menu Alt DTMF Logging").": </td><td align=left><select size=1 name=alt_ivr_logging><option>1</option><option>0</option><option selected>$alt_ivr_logging</option></select>$NWB#settings-alt_ivr_logging$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Allow IP Lists").": </td><td align=left><select size=1 name=allow_ip_lists><option>1</option><option>0</option><option selected>$allow_ip_lists</option></select>$NWB#settings-allow_ip_lists$NWE</td></tr>\n";
+
+		##### get ip lists listing for dynamic pulldown 
+		$stmt="SELECT ip_list_id,ip_list_name from vicidial_ip_lists where active='Y' order by ip_list_id;";
+		$rsltx=mysql_to_mysqli($stmt, $link);
+		$iplists_to_print = mysqli_num_rows($rsltx);
+		$ip_list='';
+		$o=0;
+		while ($iplists_to_print > $o)
+			{
+			$rowx=mysqli_fetch_row($rsltx);
+			$ip_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+			$o++;
+			}
+
+		if (strlen($system_ip_blacklist) < 1)
+			{
+			$ip_list_link_BEGIN = "";   $ip_list_link_END = "";
+			$ip_list_menu = "<option value=\"\" SELECTED>--- DISABLED ---</option>\n";
+			}
+		else
+			{
+			$ip_list_link_BEGIN = "<a href='$PHP_SELF?ADD=395111111111&ip_list_id=$system_ip_blacklist'>";   $ip_list_link_END = "</a>";
+			$ip_list_menu = "<option value=\"\">--- DISABLED ---</option>\n";
+			$ip_list_menu .= "<option SELECTED>$system_ip_blacklist</option>\n";
+			}
+
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>$ip_list_link_BEGIN"._QXZ("System IP Blacklist")."$ip_list_link_END: </td><td align=left><select size=1 name=system_ip_blacklist>\n";
+		echo "$ip_list$ip_list_menu";
+		echo "</select>$NWB#settings-system_ip_blacklist$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Level 8 Disable Add").": </td><td align=left><select size=1 name=level_8_disable_add><option>1</option><option>0</option><option selected>$level_8_disable_add</option></select>$NWB#settings-level_8_disable_add$NWE</td></tr>\n";
 
@@ -37506,6 +37994,63 @@ if ($ADD==194000000000)
 
 
 ######################
+# ADD=195000000000 display all IP List entries
+######################
+if ($ADD==195000000000)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<img src=\"images/icon_iplists.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	$stmt="SELECT ip_list_id,ip_list_name,active,user_group from vicidial_ip_lists $whereLOGadmin_viewable_groupsSQL order by ip_list_id;";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$ip_lists_to_print = mysqli_num_rows($rslt);
+
+	echo "<br>"._QXZ("IP LIST LISTINGS").":\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<TR BGCOLOR=BLACK>";
+	echo "<TD><font size=1 color=white>"._QXZ("IP LIST ID")."</TD>";
+	echo "<TD><font size=1 color=white>"._QXZ("NAME")."</TD>";
+	echo "<TD><font size=1 color=white>"._QXZ("ACTIVE")."</TD>";
+	echo "<TD><font size=1 color=white>"._QXZ("GROUP")."</TD>";
+	echo "<TD><font size=1 color=white>"._QXZ("IPS")."</TD>";
+	echo "<TD><font size=1 color=white>"._QXZ("MODIFY")."</TD>\n";
+	echo "</TR>\n";
+
+	$o=0;
+	while ($ip_lists_to_print > $o)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$Xip_list_id[$o] =		$row[0];
+		$ip_list_name[$o] =		$row[1];
+		$active[$o] =			$row[2];
+		$admin_group[$o] =		$row[3];
+		$o++;
+		}
+
+	$o=0;
+	while ($ip_lists_to_print > $o)
+		{
+		$stmt="SELECT count(*) from vicidial_ip_list_entries where ip_list_id=\"$Xip_list_id[$o]\";";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
+			{$bgcolor='class="records_list_x"';} 
+		else
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=395111111111&ip_list_id=$Xip_list_id[$o]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=395111111111&ip_list_id=$Xip_list_id[$o]\"><font size=1 color=black>$Xip_list_id[$o]</a></td>";
+		echo "<td><font size=1> $ip_list_name[$o]</td>";
+		echo "<td><font size=1> $active[$o]</td>";
+		echo "<td><font size=1> $admin_group[$o]</td>";
+		echo "<td><font size=1> $row[0]</td>";
+		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=395111111111&ip_list_id=$Xip_list_id[$o]\">"._QXZ("MODIFY")."</a></td></tr>\n";
+		$o++;
+		}
+
+	echo "</TABLE></center>\n";
+	}
+
+
+######################
 # ADD=1000000000000 display all conferences
 ######################
 if ($ADD==1000000000000)
@@ -38828,6 +39373,13 @@ if ($ADD==999998)
 		echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=194000000000';\"";} echo ">\n";
 		echo "<TD><a href=\"$PHP_SELF?ADD=194000000000\"><img src=\"images/icon_autoreports.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
 		echo "<TD><a href=\"$PHP_SELF?ADD=194000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Automated Reports")." </SPAN></a></TD>\n";
+		echo "</TR>\n";
+		}
+	if ($SSallow_ip_lists > 0)
+		{
+		echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=195000000000';\"";} echo ">\n";
+		echo "<TD><a href=\"$PHP_SELF?ADD=195000000000\"><img src=\"images/icon_iplists.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+		echo "<TD><a href=\"$PHP_SELF?ADD=195000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("IP Lists")." </SPAN></a></TD>\n";
 		echo "</TR>\n";
 		}
 	echo "</TABLE>\n";

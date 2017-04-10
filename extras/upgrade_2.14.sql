@@ -174,3 +174,29 @@ UPDATE system_settings SET db_schema_version='1497',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns MODIFY use_custom_cid ENUM('Y','N','AREACODE','USER_CUSTOM_1','USER_CUSTOM_2','USER_CUSTOM_3','USER_CUSTOM_4','USER_CUSTOM_5') default 'N';
 
 UPDATE system_settings SET db_schema_version='1498',db_schema_update_date=NOW() where db_schema_version < 1498;
+
+ALTER TABLE system_settings ADD allow_ip_lists ENUM('0','1','2') default '0';
+ALTER TABLE system_settings ADD system_ip_blacklist VARCHAR(30) default '';
+
+ALTER TABLE vicidial_users ADD modify_ip_lists ENUM('1','0') default '0';
+ALTER TABLE vicidial_users ADD ignore_ip_list ENUM('1','0') default '0';
+
+ALTER TABLE vicidial_user_groups ADD admin_ip_list VARCHAR(30) default '';
+ALTER TABLE vicidial_user_groups ADD agent_ip_list VARCHAR(30) default '';
+ALTER TABLE vicidial_user_groups ADD api_ip_list VARCHAR(30) default '';
+
+CREATE TABLE vicidial_ip_lists (
+ip_list_id VARCHAR(30) UNIQUE NOT NULL,
+ip_list_name VARCHAR(100),
+active ENUM('N','Y') default 'N',
+user_group VARCHAR(20) default '---ALL---'
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_ip_list_entries (
+ip_list_id VARCHAR(30) NOT NULL,
+ip_address VARCHAR(45) NOT NULL,
+index(ip_list_id),
+index(ip_address)
+) ENGINE=MyISAM;
+
+UPDATE system_settings SET db_schema_version='1499',db_schema_update_date=NOW() where db_schema_version < 1499;

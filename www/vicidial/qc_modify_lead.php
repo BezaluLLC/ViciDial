@@ -1,12 +1,12 @@
 <?php
 # qc_modify_lead.php modified from: (by poundteam)
-//admin_modify_lead.php   version 2.12
+//admin_modify_lead.php   version 2.14
 #
 # ViciDial database administration modify lead in vicidial_list
 # qc_modify_lead.php
 # 
 # Copyright (C) 2012  poundteam.com    LICENSE: AGPLv2
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to allow QC review and modification of leads, contributed by poundteam.com
 #
@@ -24,6 +24,7 @@
 # 150908-1531 - Fixed input lengths for several standard fields to match DB
 # 150917-1311 - Added dynamic default field maxlengths based on DB schema
 # 160611-1217 - Fixed for external server IP recording link issue
+# 170409-1542 - Added IP List validation code
 #
 
 require("dbconnect_mysqli.php");
@@ -186,7 +187,7 @@ $VUselected_language =	$rights_row[5];
 if (strlen($phone_number)<6) {$phone_number=$old_phone;}
 
 $auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'QC',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'QC',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -196,6 +197,13 @@ if ($auth < 1)
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;

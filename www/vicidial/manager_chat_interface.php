@@ -1,7 +1,7 @@
 <?php
 # manager_chat_interface.php
 # 
-# Copyright (C) 2016  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This page is for managers (level 8 or higher) to chat with live agents
 #
@@ -13,10 +13,11 @@
 # 160108-2300 - Changed some mysqli_query to mysql_to_mysqli for consistency
 # 161029-2127 - Fixed menu displays, text sizes
 # 161217-0819 - Added chat-type to allow for multi-user internal chat sessions
+# 170409-1551 - Added IP List validation code
 #
 
-$admin_version = '2.14-7';
-$build = '161217-0819';
+$admin_version = '2.14-8';
+$build = '170409-1551';
 
 $sh="managerchats"; 
 
@@ -126,7 +127,7 @@ $user = $PHP_AUTH_USER;
 $add_copy_disabled=0;
 
 $auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -136,6 +137,13 @@ if ($auth < 1)
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;

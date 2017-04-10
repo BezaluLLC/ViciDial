@@ -136,6 +136,10 @@ OTHER CHANGES:
 26. Added USER_CUSTOM_ options to campaign custom callerID setting to allow for
 	custom caller IDs to be used per agent in MANUAL and INBOUND_MAN modes
 
+27. Added IP Lists feature, allowing creating of lists of IP Addresses that can
+	be used as whitelists on a User Group basis for Agent, Admin and API
+	web resources.
+
 
 
 

@@ -115,10 +115,11 @@
 # 170219-1520 - Added 90-day duplicate check option
 # 170223-0743 - Added QXZ translation to admin web user functions text
 # 170301-1649 - Added validation that sounds web dir exists to sounds_list function
+# 170409-1603 - Added IP List validation code
 #
 
-$version = '2.14-91';
-$build = '170301-1649';
+$version = '2.14-92';
+$build = '170409-1603';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -701,7 +702,7 @@ if ($function == 'version')
 
 ##### BEGIN user authentication for all functions below #####
 $auth=0;
-$auth_message = user_authorization($user,$pass,'REPORTS',1);
+$auth_message = user_authorization($user,$pass,'REPORTS',1,1);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -713,6 +714,13 @@ if ($auth < 1)
 		$VDdisplayMESSAGE = "ERROR: Too many login attempts, try again in 15 minutes";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$user|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = "ERROR: Your IP Address is not allowed: $ip";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;
 		}
 	Header ("Content-type: text/html; charset=utf-8");

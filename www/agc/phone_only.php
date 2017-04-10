@@ -1,7 +1,7 @@
 <?php
 # phone_only.php - the web-based web-phone-only client application
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 110511-1336 - First Build
@@ -15,10 +15,11 @@
 # 140810-2113 - Changed to use QXZ function for echoing text
 # 141118-1238 - Formatting changes for QXZ output
 # 141216-2127 - Added language settings lookups and user/pass variable standardization
+# 170409-1600 - Added IP List validation code
 #
 
-$version = '2.10-11p';
-$build = '141216-2127';
+$version = '2.14-12p';
+$build = '170409-1600';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=74;
 $one_mysql_log=0;
@@ -408,6 +409,8 @@ else
             $VDdisplayMESSAGE = "Login incorrect, please try again<br />";
 			if ($auth_message == 'LOCK')
 				{$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes<br />";}
+			if ($auth_message == 'IPBLOCK')
+				{$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed").": $ip<br />";}
 			}
 		}
 	if ($VDloginDISPLAY)

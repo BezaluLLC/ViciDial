@@ -2,7 +2,7 @@
 # admin_listloader_third_gen.php - version 2.8
 #  (based upon - new_listloader_superL.php script)
 # 
-# Copyright (C) 2013  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # ViciDial web-based lead loader from formatted file
 # 
@@ -49,10 +49,11 @@
 # 130610-1055 - Finalized changing of all ereg instances to preg
 # 130621-1815 - Added filtering of input to prevent SQL injection attacks and new user auth
 # 130902-0753 - Changed to mysqli PHP functions
+# 170409-1534 - Added IP List validation code
 #
 
-$version = '2.8-48';
-$build = '130902-0753';
+$version = '2.14-49';
+$build = '170409-1534';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -195,7 +196,7 @@ $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 
 $auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -205,6 +206,13 @@ if ($auth < 1)
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = "Too many login attempts, try again in 15 minutes";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;

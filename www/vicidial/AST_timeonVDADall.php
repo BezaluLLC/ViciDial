@@ -105,10 +105,11 @@
 # 160515-1300 - Added UK OFCOM feature
 # 160803-1901 - Fixed issue with ERROR in campaign/ingroup name
 # 170321-1145 - Added pause code time limits colors
+# 170409-1556 - Added IP List validation code
 #
 
-$version = '2.14-93';
-$build = '170321-1145';
+$version = '2.14-94';
+$build = '170409-1556';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -342,7 +343,7 @@ if ($sl_ct > 0)
 $auth=0;
 $reports_auth=0;
 $admin_auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',0);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',0,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -379,6 +380,13 @@ else
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;

@@ -1,12 +1,13 @@
 <?php
 # callbacks_bulk_move.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 150218-0923 - First build based on callbacks_bulk_change.php
 # 151025-1041 - Fixed issue with check-all
 # 161105-0056 - Added options to purge uncalled callbacks, and also to revert callbacks to their most recent non-callback-dispo based on the callback entry time and the log tables.
+# 170409-1548 - Added IP List validation code
 #
 
 require("dbconnect_mysqli.php");
@@ -115,7 +116,7 @@ if (strlen($list_id) < 1)		{$category='LISTS';			$record_id=$list_id;}
 if (strlen($campaign_id) < 1)	{$category='CAMPAIGNS';		$record_id=$campaign_id;}
 
 $auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -125,6 +126,13 @@ if ($auth < 1)
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;

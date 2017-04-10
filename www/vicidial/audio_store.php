@@ -25,10 +25,11 @@
 # 160508-0139 - Added screen colors feature
 # 160613-1002 - Added feature to copy recordings to a new filename
 # 170301-1650 - Added validation that sounds web dir exists
+# 170409-1555 - Added IP List validation code
 #
 
-$version = '2.14-19';
-$build = '170301-1650';
+$version = '2.14-20';
+$build = '170409-1555';
 
 $MT[0]='';
 
@@ -190,7 +191,7 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 	$auth=0;
 	$reports_auth=0;
 	$admin_auth=0;
-	$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+	$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1,0);
 	if ($auth_message == 'GOOD')
 		{$auth=1;}
 
@@ -220,6 +221,13 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 			echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 			exit;
 			}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
 		Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
 		Header("HTTP/1.0 401 Unauthorized");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";

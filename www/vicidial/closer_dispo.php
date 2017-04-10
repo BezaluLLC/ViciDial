@@ -1,7 +1,7 @@
 <?php
 # closer_dispo.php
 # 
-# Copyright (C) 2014  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this is the closer disposition screen of a call that has been grabbed. This 
 # allows the closer to modify customer information and disposition the call
@@ -16,6 +16,7 @@
 # 130901-1932 - Changed to mysqli PHP functions
 # 141007-2138 - Finalized adding QXZ translation to all admin files
 # 141229-2037 - Added code for on-the-fly language translations display
+# 170409-1532 - Added IP List validation code
 #
 
 require("dbconnect_mysqli.php");
@@ -141,7 +142,7 @@ if ($sl_ct > 0)
 	}
 
 $auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'QC',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'QC',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -151,6 +152,13 @@ if ($auth < 1)
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;

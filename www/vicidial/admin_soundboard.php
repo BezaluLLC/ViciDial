@@ -1,7 +1,7 @@
 <?php
 # admin_soundboard.php
 # 
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen manages the optional soundboard tables in ViciDial
 #
@@ -17,10 +17,11 @@
 # 160429-1122 - Added admin_row_click option
 # 161103-1605 - Updated code for new admin links
 # 161111-1646 - Added HIDENUMBERS display option, Font size, button type and layout options
+# 170409-1549 - Added IP List validation code
 #
 
-$admin_version = '2.12-11';
-$build = '161111-1646';
+$admin_version = '2.14-12';
+$build = '170409-1549';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -172,7 +173,7 @@ if (file_exists('options.php'))
 	{require('options.php');}
 
 $auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -182,6 +183,13 @@ if ($auth < 1)
 	if ($auth_message == 'LOCK')
 		{
 		$VDdisplayMESSAGE = _QXZ("Too many login attempts, try again in 15 minutes");
+		Header ("Content-type: text/html; charset=utf-8");
+		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
+		exit;
+		}
+	if ($auth_message == 'IPBLOCK')
+		{
+		$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed") . ": $ip";
 		Header ("Content-type: text/html; charset=utf-8");
 		echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$auth_message|\n";
 		exit;

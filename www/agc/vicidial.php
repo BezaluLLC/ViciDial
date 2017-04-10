@@ -547,10 +547,11 @@
 # 170309-1215 - Added agent_xfer_validation option
 # 170317-2342 - Fix for script tab ignore list script override
 # 170331-2255 - Assure that custom field form submitted after standard field submit
+# 170409-1601 - Added IP List validation code
 #
 
-$version = '2.14-517c';
-$build = '170331-2255';
+$version = '2.14-518c';
+$build = '170409-1601';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -2435,6 +2436,8 @@ else
 				{$VDdisplayMESSAGE = _QXZ("Too many agents logged in, please contact your administrator")."<br />";}
 			if ($auth_message == 'ERRCASE')
 				{$VDdisplayMESSAGE = _QXZ("Login incorrect, user names are case sensitive")."<br />";}
+			if ($auth_message == 'IPBLOCK')
+				{$VDdisplayMESSAGE = _QXZ("Your IP Address is not allowed").": $ip<br />";}
 			}
 		}
 	if ($VDloginDISPLAY)
