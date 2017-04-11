@@ -548,10 +548,11 @@
 # 170317-2342 - Fix for script tab ignore list script override
 # 170331-2255 - Assure that custom field form submitted after standard field submit
 # 170409-1601 - Added IP List validation code
+# 170411-1158 - Added called_count as a webform variable
 #
 
-$version = '2.14-518c';
-$build = '170409-1601';
+$version = '2.14-519c';
+$build = '170411-1158';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -14582,6 +14583,7 @@ else
 		"&did_custom_three=" + did_custom_three + '' +
 		"&did_custom_four=" + did_custom_four + '' +
 		"&did_custom_five=" + did_custom_five + '' +
+		"&called_count=" + document.vicidial_form.called_count.value + '' +
 		"&web_vars=" + LIVE_web_vars + '' +
 		webform_session;
 
@@ -14810,6 +14812,7 @@ else
 		var SCdid_custom_three = did_custom_three;
 		var SCdid_custom_four = did_custom_four;
 		var SCdid_custom_five = did_custom_five;
+		var SCcalled_count = document.vicidial_form.called_count.value;
 		var SCweb_vars = LIVE_web_vars;
 
 		if (encoded.match(RGiframe))
@@ -14978,6 +14981,7 @@ else
 		var RGdid_custom_three = new RegExp("--A--did_custom_three--B--","g");
 		var RGdid_custom_four = new RegExp("--A--did_custom_four--B--","g");
 		var RGdid_custom_five = new RegExp("--A--did_custom_five--B--","g");
+		var RGcalled_count = new RegExp("--A--called_count--B--","g");
 		var RGweb_vars = new RegExp("--A--web_vars--B--","g");
 
 		encoded = encoded.replace(RGvendor_lead_code, SCvendor_lead_code);
@@ -15063,6 +15067,7 @@ else
 		encoded = encoded.replace(RGdid_custom_three,SCdid_custom_three);
 		encoded = encoded.replace(RGdid_custom_four,SCdid_custom_four);
 		encoded = encoded.replace(RGdid_custom_five,SCdid_custom_five);
+		encoded = encoded.replace(RGcalled_count,SCcalled_count);
 		encoded = encoded.replace(RGweb_vars, SCweb_vars);
 		}
 
