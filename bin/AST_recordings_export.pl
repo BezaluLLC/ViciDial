@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# AST_recordings_export.pl                version: 2.12
+# AST_recordings_export.pl                version: 2.14
 #
 # This script is designed to gather recordings into a temp directory from
 # set in-groups and campaigns and then FTP transfer them out
@@ -12,12 +12,13 @@
 #
 # /usr/share/astguiclient/AST_recordings_export.pl --campaign=GOODB-GROUP1-GROUP3-GROUP4-SPECIALS-DNC_BEDS --output-format=fixed-as400 --sale-statuses=SALE --debug --filename=BEDSsaleMMDD.txt --date=yesterday --email-list=test@gmail.com --email-sender=test@test.com
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 130623-1739 - First version based upon AST_VDsales_export.pl
 # 141020-0612 - Added --did-only option
 # 150916-0628 - Several small fixes
+# 170413-0743 - Added --with-archive-logs option
 #
 
 $txt = '.txt';
@@ -27,6 +28,7 @@ $Q=0;
 $DB=0;
 $uniqueidLIST='|';
 $ftp_audio_transfer=1;
+$archive_logs=0;
 $NODATEDIR = 0;	# Don't use dated directories for audio
 $YEARDIR = 1;	# put dated directories in a year directory first
 
@@ -151,6 +153,7 @@ if (length($ARGV[0])>1)
 		print "allowed run time options:\n";
 		print "  [--date=YYYY-MM-DD] = date override\n";
 		print "  [--end-date=YYYY-MM-DD] = For more than one day, use date as the start\n";
+		print "  [--with-archive-logs] = Will check in both live logs and archive logs\n";
 		print "  [--campaign=XXX] = Campaign that sales will be pulled from\n";
 		print "  [--without-camp=XXX] = Campaign that will be excluded from ALL\n";
 		print "  [--sale-statuses=XXX-XXY] = Statuses that are deemed to be \"Sales\". Default SALE\n";
@@ -176,7 +179,6 @@ if (length($ARGV[0])>1)
 		print "  [--debug] = debugging messages\n";
 		print "  [--debugX] = Super debugging messages\n";
 		print "\n";
-
 
 		exit;
 		}
@@ -278,7 +280,12 @@ if (length($ARGV[0])>1)
 			$shipdate_end = $shipdate;
 			$end_date = $start_date;
 			}
-
+		if ($args =~ /--with-archive-logs/i)
+			{
+			if (!$Q)
+				{print "\n----- WILL SEARCH ARCHIVE LOGS AND ACTIVE LOGS -----\n\n";}
+			$archive_logs=1;
+			}
 		if ($args =~ /--campaign=/i)
 			{
 			#	print "\n|$ARGS|\n\n";
@@ -550,8 +557,12 @@ else
 	$sale_statusesSQL =~ s/-/','/gi;
 	$sale_statusesSQL = "'$sale_statusesSQL'";
 	$close_statusesSQL = $sale_statusesSQL;
+	$archive_sale_statusesSQL = $sale_statusesSQL;
+	$archive_close_statusesSQL = $sale_statusesSQL;
 	$sale_statusesSQL = " and vicidial_log.status IN($sale_statusesSQL)";
 	$close_statusesSQL = " and vicidial_closer_log.status IN($close_statusesSQL)";
+	$archive_sale_statusesSQL = " and vicidial_log_archive.status IN($archive_sale_statusesSQL)";
+	$archive_close_statusesSQL = " and vicidial_closer_log_archive.status IN($archive_close_statusesSQL)";
 	}
 
 
@@ -563,32 +574,47 @@ if (length($with_inbound) < 2)
 		{
 		$with_inboundSQL = $NOTwith_inbound;
 		$with_inboundSQL =~ s/-/','/gi;
+		$archive_with_inboundSQL = $with_inboundSQL;
 		$with_inboundSQL = "vicidial_closer_log.campaign_id NOT IN('$with_inboundSQL')";
+		$archive_with_inboundSQL = "vicidial_closer_log_archive.campaign_id NOT IN('$archive_with_inboundSQL')";
 		}
 	}
 else
 	{
 	$with_inboundSQL = $with_inbound;
 	$with_inboundSQL =~ s/-/','/gi;
+	$archive_with_inboundSQL = $with_inboundSQL;
 	if ($did_only > 0)
 		{
 		$with_inboundSQL = "recording_log.user IN('$with_inboundSQL')";
+		$archive_with_inboundSQL = "recording_log_archive.user IN('$archive_with_inboundSQL')";
 		}
 	else
 		{
 		$with_inboundSQL = "vicidial_closer_log.campaign_id IN('$with_inboundSQL')";
+		$archive_with_inboundSQL = "vicidial_closer_log_archive.campaign_id IN('$archive_with_inboundSQL')";
 		}
 	}
 
 if (length($campaignSQL) < 2)
 	{
 	if (length($NOTcampaignSQL) < 2)
-		{$campaignSQL = "vicidial_log.campaign_id NOT IN('')";}
+		{
+		$campaignSQL = "vicidial_log.campaign_id NOT IN('')";
+		$archive_campaignSQL = "vicidial_log_archive.campaign_id NOT IN('')";
+		}
 	else
-		{$campaignSQL = "vicidial_log.campaign_id NOT IN($NOTcampaignSQL)";}
+		{
+		$campaignSQL = "vicidial_log.campaign_id NOT IN($NOTcampaignSQL)";
+		$archive_campaignSQL = "vicidial_log_archive.campaign_id NOT IN($NOTcampaignSQL)";
+		}
 	}
 else
-	{$campaignSQL = "vicidial_log.campaign_id IN($campaignSQL)";}
+	{
+	$archive_campaignSQL = $campaignSQL;
+	$campaignSQL = "vicidial_log.campaign_id IN($campaignSQL)";
+	$archive_campaignSQL = "vicidial_log_archive.campaign_id IN($archive_campaignSQL)";
+	}
 
 if (!$Q)
 	{
@@ -703,11 +729,43 @@ if ($did_only > 0)
 		$user = '';
 		$agent_name='';
 
+		$archive_search=0;
 		&select_format_loop;
 
 		$TOTAL_SALES++;
 		}
 	$sthA->finish();
+
+	if ($archive_logs > 0) 
+		{
+		$stmtA = "SELECT lead_id,user,vicidial_id,vicidial_id,length_in_sec,UNIX_TIMESTAMP(start_time) from recording_log_archive where $archive_with_inboundSQL and start_time >= '$shipdate 00:00:00' and start_time <= '$shipdate_end 23:59:59' order by start_time;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($DB) {print "$sthArows|$stmtA|\n";}
+		$rec_count=0;
+		while ($sthArows > $rec_count)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$lead_id =		$aryA[0];
+			$xfercallid =	$aryA[1];
+			$vicidial_id =	$aryA[2];
+			$uniqueid =		$aryA[3];
+			$length_in_sec = $aryA[4];
+			$epoch =		$aryA[5];
+
+			$outbound = 'N';
+			$domestic = 'Y';
+			$user = '';
+			$agent_name='';
+
+			$archive_search=1;
+			&select_format_loop;
+
+			$TOTAL_SALES++;
+			}
+		$sthA->finish();
+		}
 	}
 else
 	{
@@ -734,11 +792,42 @@ else
 		$queue_seconds = '0';
 		$closer='';
 
+		$archive_search=0;
 		&select_format_loop;
 
 		$TOTAL_SALES++;
 		}
 	$sthA->finish();
+
+	if ($archive_logs > 0) 
+		{
+		$stmtA = "SELECT vicidial_list.lead_id,uniqueid,length_in_sec,UNIX_TIMESTAMP(vicidial_log_archive.call_date) from vicidial_list,vicidial_log_archive where $archive_campaignSQL $archive_sale_statusesSQL and call_date >= '$shipdate 00:00:00' and call_date <= '$shipdate_end 23:59:59' and vicidial_log_archive.lead_id=vicidial_list.lead_id order by call_date;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$rec_count=0;
+			if ($DB) {print "$sthArows|$stmtA|\n";}
+		while ($sthArows > $rec_count)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$lead_id =			$aryA[0];
+			$vicidial_id =		$aryA[1];
+			$uniqueid =			$aryA[1];
+			$length_in_sec =	$aryA[2];
+			$epoch =			$aryA[3];
+
+			$outbound = 'Y';
+			$domestic = 'Y';
+			$queue_seconds = '0';
+			$closer='';
+
+			$archive_search=1;
+			&select_format_loop;
+
+			$TOTAL_SALES++;
+			}
+		$sthA->finish();
+		}
 
 	if (length($with_inboundSQL)>3)
 		{
@@ -766,11 +855,43 @@ else
 			$user = '';
 			$agent_name='';
 
+			$archive_search=0;
 			&select_format_loop;
 
 			$TOTAL_SALES++;
 			}
 		$sthA->finish();
+
+		if ($archive_logs > 0) 
+			{
+			$stmtA = "SELECT vicidial_list.lead_id,xfercallid,closecallid,uniqueid,length_in_sec,UNIX_TIMESTAMP(vicidial_closer_log_archive.call_date) from vicidial_list,vicidial_closer_log_archive where $archive_with_inboundSQL $archive_close_statusesSQL and call_date >= '$shipdate 00:00:00' and call_date <= '$shipdate_end 23:59:59' and vicidial_closer_log_archive.lead_id=vicidial_list.lead_id order by call_date;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			if ($DB) {print "$sthArows|$stmtA|\n";}
+			$rec_count=0;
+			while ($sthArows > $rec_count)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$lead_id =			$aryA[0];
+				$xfercallid =		$aryA[1];
+				$vicidial_id =		$aryA[2];
+				$uniqueid =			$aryA[3];
+				$length_in_sec =	$aryA[4];
+				$epoch =			$aryA[5];
+
+				$outbound = 'N';
+				$domestic = 'Y';
+				$user = '';
+				$agent_name='';
+
+				$archive_search=1;
+				&select_format_loop;
+
+				$TOTAL_SALES++;
+				}
+			$sthA->finish();
+			}
 		}
 	}
 
@@ -976,6 +1097,7 @@ sub select_format_loop
 		##### BEGIN standard audio lookup #####
 		$ivr_id = '0';
 		$ivr_filename = '';
+		$recording_found=0;
 
 		$stmtB = "SELECT recording_id,filename,location from recording_log where lead_id='$lead_id' and vicidial_id='$vicidial_id' and start_time >= '$shipdate 00:00:00' and start_time <= '$shipdate_end 23:59:59' order by start_time desc limit 100;";
 		$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
@@ -990,6 +1112,7 @@ sub select_format_loop
 			$ivr_filename = $aryB[1];
 			$ivr_location = $aryB[2];
 			$rec_countB++;
+			$recording_found++;
 
 			if ( ($ftp_audio_transfer > 0) && (length($ivr_filename) > 3) && (length($ivr_location) > 5) )
 				{
@@ -1000,6 +1123,34 @@ sub select_format_loop
 				}
 			}
 		$sthB->finish();
+
+		if ( ($archive_logs > 0) && ($recording_found < 1) )
+			{
+			$stmtB = "SELECT recording_id,filename,location from recording_log_archive where lead_id='$lead_id' and vicidial_id='$vicidial_id' and start_time >= '$shipdate 00:00:00' and start_time <= '$shipdate_end 23:59:59' order by start_time desc limit 100;";
+			$sthB = $dbhB->prepare($stmtB) or die "preparing: ",$dbhB->errstr;
+			$sthB->execute or die "executing: $stmtB ", $dbhB->errstr;
+			$sthBrows=$sthB->rows;
+			if ($DBX) {print "$sthBrows|$stmtB|\n";}
+			$rec_countB=0;
+			while ($sthBrows > $rec_countB)
+				{
+				@aryB = $sthB->fetchrow_array;
+				$ivr_id =		$aryB[0];
+				$ivr_filename = $aryB[1];
+				$ivr_location = $aryB[2];
+				$rec_countB++;
+				$recording_found++;
+
+				if ( ($ftp_audio_transfer > 0) && (length($ivr_filename) > 3) && (length($ivr_location) > 5) )
+					{
+					@ivr_path = split(/\//,$ivr_location);
+					$path_file = $ivr_path[$#ivr_path];
+					`$wgetbin -q --output-document=$tempdir/$path_file $ivr_location `;
+					$TOTAL_RECORDINGS++;
+					}
+				}
+			$sthB->finish();
+			}
 		##### END standard audio lookup #####
 
 		$Ealert .= "$TOTAL_SALES   $TOTAL_RECORDINGS   $rec_countB   $call_data\n"; 
