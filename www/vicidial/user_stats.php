@@ -55,6 +55,7 @@
 # 161030-0829 - Fixed excess load Issue #963
 # 170228-1626 - Change to display emergency manager logout note
 # 170409-1555 - Added IP List validation code
+# 170412-2150 - Added park_rpt display option
 #
 
 $startMS = microtime();
@@ -97,6 +98,8 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))		{$file_download=$_POST["file_download"];}
 if (isset($_GET["pause_code_rpt"]))				{$pause_code_rpt=$_GET["pause_code_rpt"];}
 	elseif (isset($_POST["pause_code_rpt"]))	{$pause_code_rpt=$_POST["pause_code_rpt"];}
+if (isset($_GET["park_rpt"]))				{$park_rpt=$_GET["park_rpt"];}
+	elseif (isset($_POST["park_rpt"]))		{$park_rpt=$_POST["park_rpt"];}
 if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
 	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
@@ -506,13 +509,14 @@ $MAIN.="</TD><TD ALIGN=RIGHT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=2> &nbsp; </TD>
 
 $MAIN.="<TR BGCOLOR=\"#$SSframe_background\"><TD ALIGN=LEFT COLSPAN=2><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2><B> &nbsp; \n";
 
-$download_link="$PHP_SELF?DB=$DB&pause_code_rpt=$pause_code_rpt&did_id=$did_id&did=$did&begin_date=$begin_date&end_date=$end_date&user=$user&submit=$submit&search_archived_data=$search_archived_data\n";
+$download_link="$PHP_SELF?DB=$DB&pause_code_rpt=$pause_code_rpt&park_rpt=$park_rpt&did_id=$did_id&did=$did&begin_date=$begin_date&end_date=$end_date&user=$user&submit=$submit&search_archived_data=$search_archived_data\n";
 
 $MAIN.="<form action=$PHP_SELF method=GET name=vicidial_report id=vicidial_report>\n";
 $MAIN.="<input type=hidden name=DB value=\"$DB\">\n";
 $MAIN.="<input type=hidden name=did_id value=\"$did_id\">\n";
 $MAIN.="<input type=hidden name=did value=\"$did\">\n";
 $MAIN.="<input type=hidden name=pause_code_rpt value=\"$pause_code_rpt\">\n";
+$MAIN.="<input type=hidden name=park_rpt value=\"$park_rpt\">\n";
 $MAIN.="<input type=text name=begin_date value=\"$begin_date\" size=10 maxsize=10>";
 
 $MAIN.="<script language=\"JavaScript\">\n";
@@ -616,6 +620,48 @@ if ($pause_code_rpt >= 1)
 
 	$MAIN.="<tr><td><font size=2>&nbsp; </td><td><font size=2>&nbsp; </td><TD><font size=2>&nbsp; </td><td align=right><font size=2> <B>"._QXZ("TOTAL").":</B></td><td align=right><font size=2> $total_pause_time</td></tr>\n";
 	$CSV_text11.="\"\",\"\",\"\",\"\",\""._QXZ("TOTAL").":\",\"$total_pause_time\"\n";
+	$MAIN.="</TABLE></center>\n";
+	$MAIN.="<B><a href='user_stats.php?DB=$DB&user=$user&begin_date=$begin_date&end_date=$end_date'>["._QXZ("VIEW USER STATS")."]</a></B>\n";
+	}
+elseif ($park_rpt >= 1)
+	{
+	$stmt="SELECT parked_time,status,lead_id,parked_sec from park_log where parked_time <= '$end_date 23:59:59' and parked_time >= '$begin_date 00:00:00' and user='$user' order by parked_time asc limit 500000;";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {$MAIN.="$stmt\n";}
+	$rows_to_print = mysqli_num_rows($rslt);
+	$MAIN.="<B>"._QXZ("AGENT PARKED CALL LOGS").":&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href='$download_link&file_download=12'>["._QXZ("DOWNLOAD")."]</a></B>\n";
+
+	$MAIN.="<center><TABLE width=600 cellspacing=0 cellpadding=1>\n";
+	$MAIN.="<tr><td><font size=2>"._QXZ("PARKED TIME")."</td><td align=right><font size=2>"._QXZ("STATUS")."</td><td align=right><font size=2>"._QXZ("LEAD ID")."</td><td align=right><font size=2>"._QXZ("PARKED SEC")."</td></tr>\n";
+
+	$CSV_text12.="\""._QXZ("AGENT PARKED CALL LOGS")."\"\n";
+	$CSV_text12.="\"\",\""._QXZ("PARKED TIME")."\",\""._QXZ("STATUS")."\",\""._QXZ("LEAD ID")."\",\""._QXZ("PARKED SEC")."\"\n";
+
+	$o=0; $total_park_time=0;
+	while ($park_row=mysqli_fetch_array($rslt))
+		{
+		$total_park_time+=$park_row["parked_sec"];
+		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
+			{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
+		else
+			{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
+
+		$MAIN.="<tr $bgcolor><td><font size=2>$park_row[parked_time]</td>";
+		$MAIN.="<td align=right><font size=2> $park_row[status]</td>\n";
+		$MAIN.="<td align=right><font size=2> <a href=\"admin_modify_lead.php?lead_id=$park_row[lead_id]\">$park_row[lead_id]</a></td>\n";
+		$MAIN.="<td align=right><font size=2> $park_row[parked_sec]</td></tr>\n";
+		$CSV_text12.="\"\",\"$park_row[parked_time]\",\"$park_row[status]\",\"$park_row[lead_id]\",\"$park_row[parked_sec]\"\n";
+
+		$o++;
+		}
+
+	$total_park_stmt="SELECT sec_to_time($total_park_time)";
+	$total_park_rslt=mysql_to_mysqli($total_park_stmt, $link);
+	$total_park_row=mysqli_fetch_row($total_park_rslt);
+	$total_park_time=$total_park_row[0];
+
+	$MAIN.="<tr><td><font size=2>&nbsp; </td><td><font size=2>&nbsp; </td><td align=right><font size=2> <B>"._QXZ("TOTAL").":</B></td><td align=right><font size=2> $total_park_time</td></tr>\n";
+	$CSV_text11.="\"\",\"\",\"\",\""._QXZ("TOTAL").":\",\"$total_park_time\"\n";
 	$MAIN.="</TABLE></center>\n";
 	$MAIN.="<B><a href='user_stats.php?DB=$DB&user=$user&begin_date=$begin_date&end_date=$end_date'>["._QXZ("VIEW USER STATS")."]</a></B>\n";
 	}

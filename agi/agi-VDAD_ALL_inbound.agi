@@ -209,6 +209,7 @@
 # 170221-0912 - Fix for areacode_filter logging issue
 # 170309-1514 - Added populate_state_areacode option
 # 170325-1104 - Added optional vicidial_drop_log logging
+# 170412-2223 - Fix for drop call logging
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -659,6 +660,7 @@ if ($AGILOG) {$agi_string = "+++++ INBOUND CALL VDCL STARTED : |$channel_group|$
 $VDADphone='';
 $VDADphone_code='';
 $VCcallerid = $channel_group;
+$VD_campaign_id = $channel_group;
 if (length($VCcallerid)<2)
 	{$VCcallerid = 'ViciDial Inbound';}
 
