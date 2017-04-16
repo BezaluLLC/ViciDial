@@ -122,6 +122,7 @@
 # 170407-0745 - Added Agents count on server page
 # 170409-0939 - Added IP Lists entries
 # 170410-1329 - Added dl_minutes drop lists entry
+# 170416-1620 - Added servers-routing_prefix and user/campaign ready_max_logout entries
 #
 
 
@@ -491,6 +492,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="users-wrapup_seconds_override">
 <BR>
 <B><?php echo _QXZ("Wrap Seconds Override"); ?> -</B><?php echo _QXZ("If this setting is set to a number 0 or greater, then it will override the Campaign setting for Wrapup Seconds. This is a setting that is only refreshed in the agent interface at agent login time. Default is -1 for disabled."); ?>
+
+<BR>
+<A NAME="users-ready_max_logout">
+<BR>
+<B><?php echo _QXZ("Agent Ready Max Logout Override"); ?> -</B><?php echo _QXZ("If this setting is set to a number 0 or greater, then it will override the Campaign setting for Agent Ready Max Logout Seconds. This is a setting that is only refreshed in the agent interface at agent login time. Default is -1 for disabled."); ?>
 
 <BR>
 <A NAME="users-campaign_ranks">
@@ -1672,6 +1678,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-pause_max">
 <BR>
 <B><?php echo _QXZ("Agent Pause Max Seconds"); ?> -</B><?php echo _QXZ("If this is set to greater than 0, and the agent has not gone out of PAUSED status in this number of seconds, the agent will automatically be logged out of the agent screen. Default is 0 for disabled."); ?>
+
+<BR>
+<A NAME="campaigns-ready_max_logout">
+<BR>
+<B><?php echo _QXZ("Agent Ready Max Seconds Logout"); ?> -</B><?php echo _QXZ("If this is set to greater than 0, and the agent has not gone out of READY or CLOSER status in this number of seconds, the agent will automatically be logged out of the agent screen. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="campaigns-customer_gone_seconds">
@@ -4734,6 +4745,11 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="servers-answer_transfer_agent">
 <BR>
 <B><?php echo _QXZ("auto dial extension"); ?> -</B><?php echo _QXZ("The default extension if none is present in the campaign to send calls to for  auto dialing. Default is 8365"); ?>
+
+<BR>
+<A NAME="servers-routing_prefix">
+<BR>
+<B><?php echo _QXZ("Routing Prefix"); ?> -</B><?php echo _QXZ("If populated, this value will be added in front of the auto dial extension when an auto-dial call is placced on a dialer server that is running Asterisk verison 13 or higher. Default is 13."); ?>
 
 <BR>
 <A NAME="servers-ext_context">

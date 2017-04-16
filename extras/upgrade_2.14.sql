@@ -204,3 +204,11 @@ UPDATE system_settings SET db_schema_version='1499',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_drop_lists ADD dl_minutes MEDIUMINT(6) UNSIGNED default '0';
 
 UPDATE system_settings SET db_schema_version='1500',db_schema_update_date=NOW() where db_schema_version < 1500;
+
+ALTER TABLE vicidial_campaigns ADD ready_max_logout MEDIUMINT(7) default '0';
+
+ALTER TABLE vicidial_users ADD ready_max_logout MEDIUMINT(7) default '-1';
+
+ALTER TABLE servers ADD routing_prefix VARCHAR(10) default '13';
+
+UPDATE system_settings SET db_schema_version='1501',db_schema_update_date=NOW() where db_schema_version < 1501;

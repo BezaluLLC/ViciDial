@@ -140,6 +140,10 @@ OTHER CHANGES:
 	be used as whitelists on a User Group basis for Agent, Admin and API
 	web resources.
 
+28. Added campaign option(with user override) Ready Max Seconds Logout to log an
+	agent out of the agent screen if they have been in a ready state for 
+	more than X seconds.
+
 
 
 

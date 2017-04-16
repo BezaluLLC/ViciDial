@@ -160,7 +160,8 @@ asterisk_temp_no_restart ENUM('Y','N') default 'N',
 voicemail_dump_exten_no_inst VARCHAR(20) default '85026666666667',
 gather_asterisk_output ENUM('Y','N') default 'N',
 web_socket_url VARCHAR(255) default '',
-conf_qualify ENUM('Y','N') default 'Y'
+conf_qualify ENUM('Y','N') default 'Y',
+routing_prefix VARCHAR(10) default '13'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -659,7 +660,8 @@ user_new_lead_limit SMALLINT(5) default '-1',
 api_only_user ENUM('0','1') default '0',
 modify_auto_reports ENUM('1','0') default '0',
 modify_ip_lists ENUM('1','0') default '0',
-ignore_ip_list ENUM('1','0') default '0'
+ignore_ip_list ENUM('1','0') default '0',
+ready_max_logout MEDIUMINT(7) default '-1'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -978,7 +980,8 @@ manual_auto_next SMALLINT(5) UNSIGNED default '0',
 manual_auto_show ENUM('Y','N') default 'N',
 allow_required_fields ENUM('Y','N') default 'N',
 dead_to_dispo ENUM('ENABLED','DISABLED') default 'DISABLED',
-agent_xfer_validation ENUM('N','Y') default 'N'
+agent_xfer_validation ENUM('N','Y') default 'N',
+ready_max_logout MEDIUMINT(7) default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -3962,4 +3965,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1500',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1501',db_schema_update_date=NOW(),reload_timestamp=NOW();
