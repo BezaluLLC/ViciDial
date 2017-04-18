@@ -17,10 +17,11 @@
 # CHANGELOG:
 # 160302-1159 - First build of script
 # 170324-1218 - Added headers options
+# 170418-1257 - Added ability to use some special characters in headers
 #
 
-$version = '2.14-2';
-$build = '170324-1218';
+$version = '2.14-3';
+$build = '170418-1257';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -65,7 +66,7 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-$headers=preg_replace('/[^- \.\_0-9a-zA-Z]/',"",$headers);
+$headers=preg_replace('/[^- !\$\.\_0-9a-zA-Z]/',"",$headers);
 $uniqueid=preg_replace('/[^-\.\_0-9a-zA-Z]/',"",$uniqueid);
 $type=preg_replace('/[^-\_0-9a-zA-Z]/',"",$type);
 $DB=preg_replace('/[^0-9]/',"",$DB);

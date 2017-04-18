@@ -2672,7 +2672,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="inbound_groups-onhold_prompt_seconds">
 <BR>
-<B><?php echo _QXZ("On Hold Prompt Seconds"); ?> -</B><?php echo _QXZ("This field needs to be set to the number of seconds that the On Hold Prompt Filename plays for. Default is 10."); ?>
+<B><?php echo _QXZ("On Hold Prompt Seconds"); ?> -</B><?php echo _QXZ("This field needs to be set to the number of seconds that the On Hold Prompt Filename plays for. Default is 9."); ?>
 
 <BR>
 <A NAME="inbound_groups-play_place_in_line">
