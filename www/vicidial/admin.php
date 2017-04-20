@@ -3216,7 +3216,7 @@ if ($non_latin < 1)
 	$script_color = preg_replace('/[^\#0-9a-zA-Z]/','',$script_color);
 	### ALPHA-NUMERIC and hash and star and dot and underscore
 	$hold_time_option_exten = preg_replace('/[^\*\#\.\_0-9a-zA-Z]/','',$hold_time_option_exten);
-	$did_pattern = preg_replace('/[^\+\*\#\.\_0-9a-zA-Z]/','',$did_pattern);
+	$did_pattern = preg_replace('/[^:\+\*\#\.\_0-9a-zA-Z]/','',$did_pattern);
 	$voicemail_ext = preg_replace('/[^\*\#\.\_0-9a-zA-Z]/','',$voicemail_ext);
 	$phone = preg_replace('/[^\*\#\.\_0-9a-zA-Z]/','',$phone);
 	$phone_code = preg_replace('/[^\*\#\.\_0-9a-zA-Z]/','',$phone_code);
