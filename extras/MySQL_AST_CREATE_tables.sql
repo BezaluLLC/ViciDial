@@ -3703,6 +3703,19 @@ index(ip_list_id),
 index(ip_address)
 ) ENGINE=MyISAM;
 
+CREATE TABLE cid_channels_recent (
+caller_id_name VARCHAR(30) COLLATE utf8_unicode_ci NOT NULL,
+connected_line_name VARCHAR(30) COLLATE utf8_unicode_ci NOT NULL,
+server_ip VARCHAR(15) COLLATE utf8_unicode_ci DEFAULT NULL,
+call_date DATETIME,
+channel VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT '',
+dest_channel VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT '',
+linkedid VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT '',
+dest_uniqueid VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT '',
+uniqueid VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT '',
+index(call_date)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3965,4 +3978,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1501',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1502',db_schema_update_date=NOW(),reload_timestamp=NOW();
