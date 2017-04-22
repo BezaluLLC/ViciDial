@@ -26,6 +26,7 @@
 # 141114-0730 - Finalized adding QXZ translation to all admin files
 # 141230-1440 - Added code for on-the-fly language translations display
 # 170409-1550 - Added IP List validation code
+# 170422-0750 - Added input variable filtering
 #
 
 $startMS = microtime();
@@ -81,6 +82,10 @@ else
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
+
+$begin_query_time = preg_replace('/[^- \:_0-9a-zA-Z]/', '', $begin_query_time);
+$end_query_time = preg_replace('/[^- \:_0-9a-zA-Z]/', '', $end_query_time);
+$group = preg_replace('/[^\._0-9a-zA-Z]/', '', $group);
 
 $stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
@@ -529,7 +534,7 @@ else
 	echo "\n";
 	echo "<IMG SRC=\"/$PLOTroot/$PNGfile\">\n";
 
-	echo "<!-- /usr/local/bin/pl -png $DOCroot/$HTMfile -o $DOCroot/$PNGfile -->";
+	#echo "<!-- /usr/local/bin/pl -png $DOCroot/$HTMfile -o $DOCroot/$PNGfile -->";
 	}
 
 if ($db_source == 'S')
