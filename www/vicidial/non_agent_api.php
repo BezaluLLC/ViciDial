@@ -116,10 +116,11 @@
 # 170223-0743 - Added QXZ translation to admin web user functions text
 # 170301-1649 - Added validation that sounds web dir exists to sounds_list function
 # 170409-1603 - Added IP List validation code
+# 170423-0800 - Added force_entry_list_id option for update_lead
 #
 
-$version = '2.14-92';
-$build = '170409-1603';
+$version = '2.14-93';
+$build = '170423-0800';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -416,6 +417,8 @@ if (isset($_GET["lookup_state"]))			{$lookup_state=$_GET["lookup_state"];}
 	elseif (isset($_POST["lookup_state"]))	{$lookup_state=$_POST["lookup_state"];}
 if (isset($_GET["type"]))				{$type=$_GET["type"];}
 	elseif (isset($_POST["type"]))		{$type=$_POST["type"];}
+if (isset($_GET["force_entry_list_id"]))			{$force_entry_list_id=$_GET["force_entry_list_id"];}
+	elseif (isset($_POST["force_entry_list_id"]))	{$force_entry_list_id=$_POST["force_entry_list_id"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -600,6 +603,7 @@ if ($non_latin < 1)
 	$lookup_state = preg_replace('/[^A-Z]/','',$lookup_state);
 	$detail = preg_replace('/[^A-Z]/','',$detail);
 	$type = preg_replace('/[^A-Z]/','',$type);
+	$force_entry_list_id = preg_replace('/[^0-9]/','',$force_entry_list_id);
 	}
 else
 	{
@@ -7610,6 +7614,8 @@ if ($function == 'update_lead')
 				{$search_method='LEAD_ID';}
 			if (strlen($records)<1)
 				{$records='1';}
+			if (strlen($force_entry_list_id) > 1)
+				{$entry_list_id = $force_entry_list_id;}
 			if ( (preg_match("/LEAD_ID/",$search_method)) and (strlen($lead_id)>0) )
 				{
 				$find_lead_id=1;
@@ -7695,6 +7701,8 @@ if ($function == 'update_lead')
 						$search_lead_id[$n] =		$row[0];
 						$search_lead_list[$n] =		$row[1];
 						$search_entry_list[$n] =	$row[2];
+						if (strlen($force_entry_list_id) > 1)
+							{$search_entry_list[$n] = $force_entry_list_id;}
 						$n++;
 						$search_found++;
 						}
@@ -7712,6 +7720,8 @@ if ($function == 'update_lead')
 						$search_lead_id[$n] =		$row[0];
 						$search_lead_list[$n] =		$row[1];
 						$search_entry_list[$n] =	$row[2];
+						if (strlen($force_entry_list_id) > 1)
+							{$search_entry_list[$n] = $force_entry_list_id;}
 						$n++;
 						$search_found++;
 						}
@@ -7729,6 +7739,8 @@ if ($function == 'update_lead')
 						$search_lead_id[$n] =		$row[0];
 						$search_lead_list[$n] =		$row[1];
 						$search_entry_list[$n] =	$row[2];
+						if (strlen($force_entry_list_id) > 1)
+							{$search_entry_list[$n] = $force_entry_list_id;}
 						$n++;
 						$search_found++;
 						}
@@ -7998,6 +8010,8 @@ if ($function == 'update_lead')
 							if ($custom_fields=='Y')
 								{
 								$lead_custom_list = $search_lead_list[$n];
+								if (strlen($force_entry_list_id) > 1)
+									{$lead_custom_list = $force_entry_list_id;}
 								if ($search_entry_list[$n] > 99) {$lead_custom_list = $search_entry_list[$n];}
 								$update_sent=0;
 								$CFoutput='';
@@ -8321,14 +8335,17 @@ if ($function == 'update_lead')
 
 												if (strlen($CFinsert_SQL)>3)
 													{
+													$temp_entry_list_id = $list_id;
+													if (strlen($force_entry_list_id) > 1)
+														{$temp_entry_list_id = $force_entry_list_id;}
 													$CFinsert_SQL = preg_replace("/,$/","",$CFinsert_SQL);
-													$custom_table_update_SQL = "INSERT INTO custom_$list_id SET lead_id='$lead_id',$CFinsert_SQL;";
+													$custom_table_update_SQL = "INSERT INTO custom_$temp_entry_list_id SET lead_id='$lead_id',$CFinsert_SQL;";
 													$rslt=mysql_to_mysqli($custom_table_update_SQL, $link);
 													$custom_insert_count = mysqli_affected_rows($link);
 													if ($custom_insert_count > 0) 
 														{
 														# Update vicidial_list entry to put list_id as entry_list_id 
-														$vl_table_entry_update_SQL = "UPDATE vicidial_list SET entry_list_id='$list_id' where lead_id='$lead_id';";
+														$vl_table_entry_update_SQL = "UPDATE vicidial_list SET entry_list_id='$temp_entry_list_id' where lead_id='$lead_id';";
 														$rslt=mysql_to_mysqli($vl_table_entry_update_SQL, $link);
 														$vl_table_entry_update_count = mysqli_affected_rows($link);
 

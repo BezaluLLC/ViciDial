@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2017-03-01
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2017-04-23
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -121,6 +121,8 @@ Changes:
 170219-1520 - Added 90-day duplicate check option
 170223-0743 - Added QXZ translation to admin web user functions text
 170301-1649 - Added validation that sounds web dir exists to sounds_list function
+170409-1603 - Added IP List validation code
+170423-0800 - Added force_entry_list_id option for update_lead
 
 
 API Functions use the 'function' variable
@@ -815,6 +817,7 @@ rank -			1-5 digits
 owner -			1-20 characters (user ID, Territory or user group)
 called_count -		digits only, the number of attempts dialing the lead
 entry_list_id -		WARNING! ONLY USE IF YOU KNOW WHAT YOU ARE DOING, CAN BREAK CUSTOM FIELDS! (must be all numbers, 3-12 digits, will not work if custom_fields is set to Y)
+force_entry_list_id -	WARNING! ONLY USE IF YOU KNOW WHAT YOU ARE DOING, CAN BREAK CUSTOM FIELDS! (must be all numbers, 3-12 digits, will override entry_list_id to this value in all custom fields queries executed by this command)
 NOTES: 
  - in order to set a field to empty('') set it equal to --BLANK--, i.e. "&province=--BLANK--"
  - please use no special characters like apostrophes, double-quotes or amphersands
