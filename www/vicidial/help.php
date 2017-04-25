@@ -1125,7 +1125,7 @@ if ($SSoutbound_autodial_active > 0)
 	<BR>
 	<A NAME="campaigns-amd_send_to_vmx">
 	<BR>
-	<B><?php echo _QXZ("AMD send to Action"); ?> -</B><?php echo _QXZ("This option allows you to define whether a call is sent to the AMD Action when an answering machine is detected. If this is set to N, then the call will be hung up as soon as it is determined to be an answering machine. Default is N."); ?>
+	<B><?php echo _QXZ("AMD send to Action"); ?> -</B><?php echo _QXZ("This option allows you to define whether a call is sent to the Answering Machine Message or CPD AMD Action when an answering machine is detected, or if it is hung up. If this is set to N, then the call will be hung up as soon as it is determined to be an answering machine. Default is N."); ?>
 
 	<BR>
 	<A NAME="campaigns-cpd_amd_action">

@@ -4109,12 +4109,13 @@ else
 # 170410-1326 - Added dl_minutes option for drop lists
 # 170412-2222 - Added Agent Parked Call Report link in Admin Utilities
 # 170416-1548 - Added ready_max_logout campaign/user setting and routing_prefix server setting
+# 170425-1353 - Fixed issue with entries in this server lists
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-610a';
-$build = '170416-1548';
+$admin_version = '2.14-611a';
+$build = '170425-1353';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -32905,9 +32906,10 @@ if ($ADD==311111111111)
 
 		$active_carriers = 0;
 		$inactive_carriers = 0;
-		$stmt="SELECT carrier_id,carrier_name,registration_string,active from vicidial_server_carriers where server_ip IN('$row[2]','0.0.0.0') $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT carrier_id,carrier_name,registration_string,active from vicidial_server_carriers where server_ip IN('$server_ip','0.0.0.0') $LOGadmin_viewable_groupsSQL;";
 		$rsltx=mysql_to_mysqli($stmt, $link);
 		$carriers_to_print = mysqli_num_rows($rsltx);
+		if ($DB > 0) {echo "|$carriers_to_print|$stmt|\n";}
 		$camp_lists='';
 
 		$o=0;
@@ -32937,9 +32939,10 @@ if ($ADD==311111111111)
 
 		$active_phones = 0;
 		$inactive_phones = 0;
-		$stmt="SELECT extension,active,fullname from phones where server_ip='$row[2]' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT extension,active,fullname from phones where server_ip='$server_ip' $LOGadmin_viewable_groupsSQL;";
 		$rsltx=mysql_to_mysqli($stmt, $link);
 		$lists_to_print = mysqli_num_rows($rsltx);
+		if ($DB > 0) {echo "|$lists_to_print|$stmt|\n";}
 		$camp_lists='';
 
 		$o=0;
@@ -32955,7 +32958,7 @@ if ($ADD==311111111111)
 			else
 				{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 
-			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31111111111&extension=$rowx[0]&server_ip=$row[2]\">$rowx[0]</a></td><td><font size=1>$rowx[2]</td><td><font size=1>$rowx[1]</td></tr>\n";
+			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31111111111&extension=$rowx[0]&server_ip=$server_ip\">$rowx[0]</a></td><td><font size=1>$rowx[2]</td><td><font size=1>$rowx[1]</td></tr>\n";
 			}
 
 		echo "</table></center><br>\n";
@@ -32968,9 +32971,10 @@ if ($ADD==311111111111)
 		echo "<tr><td>"._QXZ("CONFERENCE")."</td><td>"._QXZ("EXTENSION")."</td></tr>\n";
 
 		$active_confs = 0;
-		$stmt="SELECT conf_exten,extension from conferences where server_ip='$row[2]'";
+		$stmt="SELECT conf_exten,extension from conferences where server_ip='$server_ip'";
 		$rsltx=mysql_to_mysqli($stmt, $link);
 		$lists_to_print = mysqli_num_rows($rsltx);
+		if ($DB > 0) {echo "|$lists_to_print|$stmt|\n";}
 		$camp_lists='';
 
 		$o=0;
@@ -32985,7 +32989,7 @@ if ($ADD==311111111111)
 			else
 				{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 
-			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3111111111111&conf_exten=$rowx[0]&server_ip=$row[2]\">$rowx[0]</a></td><td><font size=1>$rowx[2]</td></tr>\n";
+			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=3111111111111&conf_exten=$rowx[0]&server_ip=$server_ip\">$rowx[0]</a></td><td><font size=1>$rowx[2]</td></tr>\n";
 			}
 
 		echo "</table></center><br>\n";
@@ -32998,9 +33002,10 @@ if ($ADD==311111111111)
 		echo "<tr><td>"._QXZ("VD CONFERENCE")."</td><td>"._QXZ("EXTENSION")."</td></tr>\n";
 
 		$active_vdconfs = 0;
-		$stmt="SELECT conf_exten,extension from vicidial_conferences where server_ip='$row[2]'";
+		$stmt="SELECT conf_exten,extension from vicidial_conferences where server_ip='$server_ip'";
 		$rsltx=mysql_to_mysqli($stmt, $link);
 		$lists_to_print = mysqli_num_rows($rsltx);
+		if ($DB > 0) {echo "|$lists_to_print|$stmt|\n";}
 		$camp_lists='';
 
 		$o=0;
@@ -33015,7 +33020,7 @@ if ($ADD==311111111111)
 			else
 				{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 
-			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31111111111111&conf_exten=$rowx[0]&server_ip=$row[2]\">$rowx[0]</a></td><td><font size=1>$rowx[2]</td></tr>\n";
+			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31111111111111&conf_exten=$rowx[0]&server_ip=$server_ip\">$rowx[0]</a></td><td><font size=1>$rowx[2]</td></tr>\n";
 			}
 
 		echo "</table></center><br>\n";
