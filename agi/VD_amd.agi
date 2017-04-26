@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 #
-# VD_amd.agi version 2.12
+# VD_amd.agi version 2.14
 #
 # runs after a call goes through AMD in extensions.conf to send the call on to
 # it's proper destination, or when agent sends to VM message
@@ -21,7 +21,7 @@
 # exten => _8320*.,1,AGI(VD_amd.agi,${EXTEN}-----YES)
 # exten => _8320*.,2,Hangup
 #
-# Copyright (C) 2015  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 60206-1434 - first build
@@ -49,6 +49,7 @@
 # 141211-1634 - Added cpd_unknown_action campaign option
 # 150223-1443 - Added DYN filename prefix for non-TTS dynamic files to be used for am message
 # 151109-1708 - Added new campaign feature allowing for different messages based on answering machine message wildcards
+# 170426-1711 - Fixed double-logging issue
 #
 
 $script = 'VD_amd.agi';
@@ -291,7 +292,7 @@ else
 
 
 	########## FIND vicidial_auto_calls record ##########
-	$stmtA = "SELECT campaign_id,phone_code,phone_number FROM vicidial_auto_calls where callerid='$callerid' order by auto_call_id desc limit 1;";
+	$stmtA = "SELECT campaign_id,phone_code,phone_number,uniqueid,server_ip FROM vicidial_auto_calls where callerid='$callerid' order by auto_call_id desc limit 1;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -302,7 +303,25 @@ else
 		$VD_campaign_id		= $aryA[0];
 		$VD_phone_code		= $aryA[1];
 		$VD_phone_number	= $aryA[2];
+		$VD_uniqueid		= $aryA[3];
+		$VD_server_ip		= $aryA[4];
 		$sthA->finish();
+		}
+	else
+		{
+		########## FIND vicidial_log_extended record if no vicidial_auto_calls record found ##########
+		$stmtA = "SELECT uniqueid,server_ip FROM vicidial_log_extended where caller_code='$callerid' order by call_date desc limit 1;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($AGILOG) {$agi_string = "$sthArows|$stmtA|";   &agi_output;}
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$VD_uniqueid		= $aryA[0];
+			$VD_server_ip		= $aryA[1];
+			$sthA->finish();
+			}
 		}
 	if ( (length($CLIcampaign_id) > 1) && (length($VD_campaign_id) < 1) )
 		{$VD_campaign_id = $CLIcampaign_id;}
@@ -310,6 +329,13 @@ else
 		{$VD_phone_code = $CLIphone_code;}
 	if ( (length($CLIphone_number) > 1) && (length($VD_phone_number) < 1) )
 		{$VD_phone_number = $CLIphone_number;}
+	$VD_uniqueidSQL = '';
+	if (length($VD_uniqueid) > 1)
+		{
+		$EVD_uniqueid = $VD_uniqueid;
+		$EVD_uniqueid =~ s/\.\d+$//gi;
+		$VD_uniqueidSQL = " or (uniqueid LIKE \"$EVD_uniqueid%\")";
+		}
 
 	if ($AMDSTATUS !~ /CPD/)
 		{
@@ -335,12 +361,12 @@ else
 	########## UPDATE vicidial_auto_calls entry ##########
 	$stmtA = "UPDATE vicidial_auto_calls set status='AA' where callerid='$callerid' order by auto_call_id desc limit 1;";
 		$affected_rows = $dbhA->do($stmtA);
-	if ($AGILOG) {$agi_string = "--    VDAC record updated: |$affected_rows|   |$VD_lead_id|$uniqueid|$VD_callerid";   &agi_output;}
+	if ($AGILOG) {$agi_string = "--    VDAC record updated: |$affected_rows|   |$VD_lead_id|$uniqueid|$VD_callerid|$VD_server_ip";   &agi_output;}
 
 	########## FIND AND UPDATE vicidial_log ##########
 	$Euniqueid=$uniqueid;
 	$Euniqueid =~ s/\.\d+$//gi;
-	$stmtA = "SELECT start_epoch,uniqueid FROM vicidial_log where lead_id='$VD_lead_id' and uniqueid LIKE \"$Euniqueid%\" order by call_date desc limit 10;";
+	$stmtA = "SELECT start_epoch,uniqueid FROM vicidial_log where lead_id='$VD_lead_id' and ( (uniqueid LIKE \"$Euniqueid%\") $VD_uniqueidSQL ) order by call_date desc limit 10;";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
