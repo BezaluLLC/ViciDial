@@ -76,6 +76,7 @@
 # 161226-1135 - rolled back previous fix
 # 161226-1211 - Fix for previous rolled-back code
 # 170325-1105 - Added optional vicidial_drop_log logging
+# 170427-1125 - Fix for drop call logging of answered calls hung up by customer first
 #
 
 # defaults for PreFork
@@ -1537,7 +1538,7 @@ sub process_request
 										}
 									}
 
-								if ( ( ($calleridname =~ /^Y\d\d\d\d/) && ($enable_drop_lists > 0) ) || ( ($calleridname !~ /^Y\d\d\d\d/) && ($enable_drop_lists > 1) ) )
+								if ( ( ( ($calleridname =~ /^Y\d\d\d\d/) && ($enable_drop_lists > 0) ) || ( ($calleridname !~ /^Y\d\d\d\d/) && ($enable_drop_lists > 1) ) ) && ( ($VD_user =~ /VDAD|VDCL/) || (length($VD_user) < 1) || ($VD_status =~ /QUEUE/) ) )
 									{
 									$stmtA="INSERT IGNORE INTO vicidial_drop_log SET uniqueid='$uniqueid',server_ip='$VARserver_ip',drop_date=NOW(),lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='DROP',phone_code='$VD_phone_code',phone_number='$VD_phone_number';";
 									$VDDLaffected_rows = $dbhA->do($stmtA);
