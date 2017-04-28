@@ -144,6 +144,9 @@ OTHER CHANGES:
 	agent out of the agent screen if they have been in a ready state for 
 	more than X seconds.
 
+29. Added cm_fpg.agi script to allow callers to place their phone numbers into a
+	Filter Phone Group. Works from a Call Menu.
+
 
 
 

@@ -39,10 +39,11 @@
 # 170301-0834 - Added call_id field for custom fields
 # 170317-0755 - Added more missing display variables
 # 170331-2300 - Added more debug logging
+# 170428-1215 - Small fix for admin modify lead display
 #
 
-$version = '2.14-29';
-$build = '170331-2300';
+$version = '2.14-30';
+$build = '170428-1215';
 $php_script = 'vdc_form_display.php';
 
 require_once("dbconnect_mysqli.php");
@@ -280,8 +281,12 @@ if (strlen($SSagent_debug_logging) > 1)
 		{$SSagent_debug_logging=0;}
 	}
 
+$auth_api_flag = 0;
+if ($submit_button=='YES')
+	{$auth_api_flag = 1;}
+
 $auth=0;
-$auth_message = user_authorization($user,$pass,'',0,$bcrypt,0,0);
+$auth_message = user_authorization($user,$pass,'',0,$bcrypt,0,$auth_api_flag);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
