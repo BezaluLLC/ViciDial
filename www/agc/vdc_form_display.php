@@ -282,7 +282,7 @@ if (strlen($SSagent_debug_logging) > 1)
 	}
 
 $auth_api_flag = 0;
-if ($submit_button=='YES')
+if ( ($submit_button=='YES') or ($admin_submit=='YES') )
 	{$auth_api_flag = 1;}
 
 $auth=0;
