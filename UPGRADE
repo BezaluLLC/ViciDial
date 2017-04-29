@@ -147,6 +147,9 @@ OTHER CHANGES:
 29. Added cm_fpg.agi script to allow callers to place their phone numbers into a
 	Filter Phone Group. Works from a Call Menu.
 
+30. Added Inbound and Advanced Forecasting Reports. Both use the Erlang formulas
+	and past data to forecast agent and call metrics.
+
 
 
 

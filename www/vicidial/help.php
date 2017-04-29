@@ -123,6 +123,7 @@
 # 170409-0939 - Added IP Lists entries
 # 170410-1329 - Added dl_minutes drop lists entry
 # 170416-1620 - Added servers-routing_prefix and user/campaign ready_max_logout entries
+# 170428-1959 - Added Inbound and Advanced Forecasting Reports
 #
 
 
@@ -6559,13 +6560,76 @@ if ($SSqc_features_active > 0)
 <?php echo _QXZ("<U>DROP</U> = Number of transfers that were dropped (did not make it to a live closer)."); ?><BR>
 <?php echo _QXZ("<U>OTHER</U> = Number of transfers that were not dropped, but also not sold by the closer."); ?><BR>
 
-<?php echo _QXZ("<B>FRONTER STATS</B>"); ?><BR>
+<?php echo _QXZ("<B>CLOSER STATS</B>"); ?><BR>
 <?php echo _QXZ("<U>AGENT</U> = The agent receiving the transfer (closer)."); ?><BR>
 <?php echo _QXZ("<U>CALLS</U> = Total calls answered by the closer."); ?><BR>
 <?php echo _QXZ("<U>SALE</U> = Number of sales (dispos where sale=Y in the -Statuses- section) made on the transfers the closer fielded."); ?><BR>
 <?php echo _QXZ("<U>DROP</U> = Number of calls the closer received that were dispoed as dropped."); ?><BR>
 <?php echo _QXZ("<U>OTHER</U> = Calls the closer fielded that did not result in sales."); ?><BR>
 <?php echo _QXZ("<U>CONV %</U> = Percentage of transfers the closer received that resulted in sales."); ?><BR>
+
+<A NAME="inbound_forecasting">
+<BR>
+<B><?php echo _QXZ("Inbound forecasting"); ?> -</B><?php echo _QXZ("This report uses Erlang B formulas to generate call center stats based on inbound call activity for selected campaigns and/or ingroups across a specified date range.  From these statistics and also by entering a desired drop call rate, this report can be used to calculate a recommend number of agents to have on the phones to reach the desired drop rate entered."); ?><BR><BR>
+
+<?php echo _QXZ("<U>CALLING HOUR</U> = The hour interval being reported on."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = Number of calls showing activity in this hour interval.  Unlike other reports, <u>this includes calls that start in the preceding hour, if the length of the call causes the call to end in the current hour</u>.  Example: an inbound call to the system begins at 9:59am and lasts for three minutes, ending at 10:02am.  This call will be counted in both intervals."); ?><BR>
+<?php echo _QXZ("<U>TOTAL TIME</U> = The total amount of time calls were active within this call interval.  This includes time in queue waiting for an agent, and as stated for the CALLS section above, calls starting in one hour and ending in the other will have the time spent in each interval counted in both.  In the above example, 1 minute will be attributed to the 9am hour and 2 minutes to the 10am hour."); ?><BR>
+<?php echo _QXZ("<U>AVERAGE TIME</U> = The average call length for the interval, taken by dividing the total time of call activity within this interval divided by the number of calls active within this interval."); ?><BR>
+<?php echo _QXZ("<U>DROPPED HOURS</U> = The total amount of time taken by calls that were dropped with time active within this call interval."); ?><BR>
+<?php echo _QXZ("<U>BLOCKING</U> = The drop rate, expressed as a decimal in TEXT or a percent in graph form, of an hourly interval.  This is taken by dividing the number dropped calls active in the hour by the number of calls active in the hour."); ?><BR>
+<?php echo _QXZ("<U>ERLANGS</U> = Number of Erlangs for the hour.  Erlangs are calculated by taking the number of calls received in an interval, multiplied by the average duration of a call expressed as a decimal value relative to the interval.  For example, if 100 calls came in during an hour, and the average call length is 6 minutes, the Erlang value is 100 calls/hour * .1 hour (6 minutes is 1/10th of an hour), or 10."); ?><BR>
+
+<A NAME="inbound_forecasting_gos"><?php echo _QXZ("<U>GOS</U> = \"Grade of Service\".  This is the probability that a call is dropped, which is given by the equation"); ?><BR><BR> GoS = (E<sup>M</sup>/M!)<big>/</big>(<big>&#8721;</big><sup>M</sup><sub style="margin-left:-10px;">n=0</sub> E<sup>n</sup>/n!)<BR><BR>
+<?php echo _QXZ("where -GoS- is the desired drop rate, -E- is the Erlang value, and -M- is the number of lines/agents needed"); ?><BR>
+
+
+<?php echo _QXZ("<U>REC AGENTS</U> = The recommended number of agents needed to meet the desired drop rate or the desired queue probability.  For the Erlang B report it uses the formula"); ?><BR><BR> GoS = (E<sup>M</sup>/M!)<big>/</big>(<big>&#8721;</big><sup>M</sup><sub style="margin-left:-10px;">n=0</sub> E<sup>n</sup>/n!)<BR> <BR>
+<?php echo _QXZ("where -GoS- is the desired drop rate, -E- is the Erlang value, and -M- is the number of lines/agents needed.  For the Erlang C report, the equation used is:"); ?><BR><BR> P<sub><small>queued</small></sub> = (E<sup>M</sup>/M!)<big>/</big>[E<sup>M</sup>/M! + (1 - E/M)<big>&#8721;</big><sup>M-1</sup><sub style="margin-left:-23px;">n=0</sub> E<sup>n</sup>/n!]<BR><BR>
+<?php echo _QXZ("where P<sub><small>queued</small></sub> is the queue probability, -E- is the Erlang value, and -M- is the number of lines/agents needed"); ?><BR>
+<?php echo _QXZ("<U>EST AGENTS</U> = The estimated number of agents based on the current drop rate and Erlangs, as entered by the user, for the hours being reported on.  This is reached by using the Erlang B formula, which  is"); ?><BR><BR> GoS = (E<sup>M</sup>/M!)<big>/</big>(<big>&#8721;</big><sup>M</sup><sub style="margin-left:-10px;">n=0</sub> E<sup>n</sup>/n!)<BR><BR>
+<?php echo _QXZ("where -GoS- is the current drop rate, -E- is the Erlang value, and -M- is the number of lines/agents"); ?><BR>
+<?php echo _QXZ("<U>CALLS/AGENT</U> = The average number of calls each agent received for the time interval, gotten by dividing the number of calls by the number of agents (estimated, if an -actual agent- value is not given)"); ?><BR>
+
+<BR><BR><BR><BR>
+<A NAME="erlang_report">
+<BR>
+<B><?php echo _QXZ("Erlang report"); ?> -</B><?php echo _QXZ("This report uses Erlang B and C formulas to generate call center stats based on call activity for selected campaigns and/or ingroups across a specified date range.  From these statistics and also by entering a desired drop call rate, this report can be used to calculate a recommend number of agents to have on the phones to reach the desired drop rate entered, and depending on whether the report type being run is -B- or -C-, it will display statistics pertaining to call loss (drop) probability, or wait time probability."); ?><BR><BR>
+<B><?php echo _QXZ("COST ANALYSIS STATS"); ?></B><BR><?php echo _QXZ("This is an entirely optional set of data that can be entered to calculate the monetary performance of campaigns/call centers."); ?><BR>
+<?php echo _QXZ("<U>Actual agents</U> = If you know the actual number of agents and wish to use this in the report caluclations, enter a non-zero value here.  If you leave this blank the report will use the number of agents it estimates is in the dialer to make its reports."); ?><BR>
+<?php echo _QXZ("<U>Hourly pay per agent</U> = Hourly wages an average employee makes."); ?><BR>
+<?php echo _QXZ("<U>Revenue per sale</U> = How much money each sale made in the selected campaigns/ingroups is worth."); ?><BR>
+<?php echo _QXZ("<U>Chance of sale</U> = The estimated percentage of calls that result in a sale (the actual percentage is provided after the report is run)."); ?><BR>
+<?php echo _QXZ("<U>Retry rate</U> = The percentage of callers that attempt to retry after their call is dropped."); ?><BR><BR>
+
+<?php echo _QXZ("<U>CALLING HOUR</U> = The hour interval being reported on."); ?><BR>
+<?php echo _QXZ("<U>CALLS</U> = Number of calls showing activity in this hour interval.  Unlike other reports, <u>this includes calls that start in the preceding hour, if the length of the call causes the call to end in the current hour</u>.  Example: an inbound call to the system begins at 9:59am and lasts for three minutes, ending at 10:02am.  This call will be counted in both intervals."); ?><BR>
+<?php echo _QXZ("<U>TOTAL TIME</U> = The total amount of time calls were active within this call interval.  This includes time in queue waiting for an agent, and as stated for the CALLS section above, calls starting in one hour and ending in the other will have the time spent in each interval counted in both.  In the above example, 1 minute will be attributed to the 9am hour and 2 minutes to the 10am hour."); ?><BR>
+<?php echo _QXZ("<U>AVERAGE TIME</U> = The average call length for the interval, taken by dividing the total time of call activity within this interval divided by the number of calls active within this interval."); ?><BR>
+<?php echo _QXZ("<U>DROPPED HOURS</U> = The total amount of time taken by calls that were dropped with time active within this call interval."); ?><BR>
+<?php echo _QXZ("<U>BLOCKING</U> = The drop rate, expressed as a decimal in TEXT or a percent in graph form, of an hourly interval.  This is taken by dividing the number dropped calls active in the hour by the number of calls active in the hour."); ?><BR>
+<?php echo _QXZ("<U>ERLANGS</U> = Number of Erlangs for the hour.  Erlangs are calculated by taking the number of calls received in an interval, multiplied by the average duration of a call expressed as a decimal value relative to the interval.  For example, if 100 calls came in during an hour, and the average call length is 6 minutes, the Erlang value is 100 calls/hour * .1 hour (6 minutes is 1/10th of an hour), or 10."); ?><BR>
+
+<A NAME="erlang_report_gos"><?php echo _QXZ("<U>GOS</U> = \"Grade of Service\".   A -B- report value - this is the probability that a call is dropped, which is given by the equation"); ?><BR><BR> GoS = (E<sup>M</sup>/M!)<big>/</big>(<big>&#8721;</big><sup>M</sup><sub style="margin-left:-10px;">n=0</sub> E<sup>n</sup>/n!)<BR><BR>
+<?php echo _QXZ("where -GoS- is the desired drop rate, -E- is the Erlang value, and -M- is the number of lines/agents needed"); ?><BR>
+
+<?php echo _QXZ("<U>QUEUE PROB</U> =  A -C- report value - the probability that a call is queued, which is given by the equation"); ?><BR><BR> P<sub><small>queued</small></sub> = (E<sup>M</sup>/M!)<big>/</big>[E<sup>M</sup>/M! + (1 - E/M)<big>&#8721;</big><sup>M-1</sup><sub style="margin-left:-23px;">n=0</sub> E<sup>n</sup>/n!]<BR><BR>
+<?php echo _QXZ("where P<sub><small>queued</small></sub> is the queue probability, -E- is the Erlang value, and -M- is the number of lines/agents needed"); ?><BR>
+
+<?php echo _QXZ("<U>AVERAGE ANSWER</U> = A -C- report value - the average speed of answer, or average call waiting time.  This is given by the equation"); ?><BR><BR> ASA = (T*P<sub><small>queued</small></sub>)/(M-E)<BR><BR>
+<?php echo _QXZ("-ASA- is the average speed of answer, -T- is the average duration of the call, P<sub><small>queued</small></sub> is the queue probability, -E- is the Erlang value, and -M- is the number of lines/agents needed.  Both this and the P<sub><small>queued</small></sub> formulas above are only valid if -M- is greater than -E-, that is, the number of trunks in a system is greater than the number of Erlangs."); ?><BR>
+
+<?php echo _QXZ("<U>REC AGENTS</U> = The recommended number of agents needed to meet either the desired drop rate or the desired queue probability.  These values are entered by the user and depending on whether the report being run is type -B- or type -C- the report will base their estimate on one of those values.  For the Erlang B report it uses the formula"); ?><BR><BR> GoS = (E<sup>M</sup>/M!)<big>/</big>(<big>&#8721;</big><sup>M</sup><sub style="margin-left:-10px;">n=0</sub> E<sup>n</sup>/n!)<BR> <BR>
+<?php echo _QXZ("where -GoS- is the desired drop rate, -E- is the Erlang value, and -M- is the number of lines/agents needed.  For the Erlang C report, the equation used is:"); ?><BR><BR> P<sub><small>queued</small></sub> = (E<sup>M</sup>/M!)<big>/</big>[E<sup>M</sup>/M! + (1 - E/M)<big>&#8721;</big><sup>M-1</sup><sub style="margin-left:-23px;">n=0</sub> E<sup>n</sup>/n!]<BR><BR>
+<?php echo _QXZ("where P<sub><small>queued</small></sub> is the queue probability, -E- is the Erlang value, and -M- is the number of lines/agents needed"); ?><BR>
+<?php echo _QXZ("<U>EST AGENTS</U> = The estimated number of agents based on the current drop rate and Erlangs, as entered by the user, for the hours being reported on.  This is reached by using the Erlang B formula, for both the B and C report.  Since Vicidial does not log what calls were queued in outbound dialing, the -C- report instead uses the drop rate of outbound calls to estimate agents.  The formula is"); ?><BR><BR> GoS = (E<sup>M</sup>/M!)<big>/</big>(<big>&#8721;</big><sup>M</sup><sub style="margin-left:-10px;">n=0</sub> E<sup>n</sup>/n!)<BR><BR>
+<?php echo _QXZ("where -GoS- is the current drop rate, -E- is the Erlang value, and -M- is the number of lines/agents"); ?><BR>
+<?php echo _QXZ("<U>CALLS/AGENT</U> = The average number of calls each agent received for the time interval, gotten by dividing the number of calls by the number of agents (estimated, if an -actual agent- value is not given)"); ?><BR>
+<?php echo _QXZ("<U>REV/CALL</U> = Average revenue per call, taken by multiplying the revenue per sale by the number of sales, then dividing by the number of calls"); ?><BR>
+<?php echo _QXZ("<U>REV/AGENT</U> = Average revenue generated per agent, based on the total revenue (sales * revenue per sale) divided by the number of agents (estimated, if an -actual agent- value is not given)"); ?><BR>
+<?php echo _QXZ("<U>TOTAL REV</U> = Total revenue, gotten by multiplying the number of sales by the revenue per sale"); ?><BR>
+<?php echo _QXZ("<U>TOTAL COST</U> = Total cost, gotten by multiplying the agent rate by the number of agents (estimated, if an -actual agent- value is not given)"); ?><BR>
+<?php echo _QXZ("<U>MARGIN</U> = The difference between the total revenue and the total cost"); ?><BR>
 
 <BR><BR><BR><BR>
 <B><FONT SIZE=3><?php echo _QXZ("Nanpa cellphone filtering"); ?></FONT></B><BR><BR>

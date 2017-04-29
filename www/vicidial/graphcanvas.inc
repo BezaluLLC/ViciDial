@@ -28,6 +28,9 @@ for ($q=0; $q<$graph_count; $q++) {
 
 	$entry_width=($init_width<20 ? 20 : ($init_width>50 ? 50 : $init_width));
 	$init_width=(($graph_count*$entry_width)<$init_height ? $init_height : ($graph_count*$entry_width));
+	
+	if ($override_height) {$init_height=$override_height;}
+	if ($override_width) {$init_width=$override_width;}
 
 	$graph_info=explode("|", $graph_array[$q]);
 	$dataset_name=$graph_info[0];
