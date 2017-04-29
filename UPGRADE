@@ -150,6 +150,9 @@ OTHER CHANGES:
 30. Added Inbound and Advanced Forecasting Reports. Both use the Erlang formulas
 	and past data to forecast agent and call metrics.
 
+31. Added campaign option for Callbacks Display Days which can limit the 
+	scheduled callbacks displayed to an agent by a number of days from now
+
 
 
 

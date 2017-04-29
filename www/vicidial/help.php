@@ -124,6 +124,7 @@
 # 170410-1329 - Added dl_minutes drop lists entry
 # 170416-1620 - Added servers-routing_prefix and user/campaign ready_max_logout entries
 # 170428-1959 - Added Inbound and Advanced Forecasting Reports
+# 170429-0810 - Added callback_display_days entry
 #
 
 
@@ -1603,7 +1604,12 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-callback_active_limit_override">
 <BR>
-<B><?php echo _QXZ("Scheduled Callbacks Active Limit Override-</B> Enabling this option will allow the Custom User 3 field to override the Scheduled Callbacks Active Limit. Default is N for disabled."); ?>
+<B><?php echo _QXZ("Scheduled Callbacks Active Limit Override"); ?> -</B><?php echo _QXZ("Enabling this option will allow the Custom User 3 field to override the Scheduled Callbacks Active Limit. Default is N for disabled."); ?>
+
+<BR>
+<A NAME="campaigns-callback_display_days">
+<BR>
+<B><?php echo _QXZ("Scheduled Callbacks Display Days"); ?> -</B><?php echo _QXZ("Enabling this option will restrict the scheduled callbacks listings on the agent screen to showing only callbacks set to trigger a number of days from today. The -day- is a standard calendar day, so if this is set to 1, only the current callbacks for today until midnight will be displayed. Default is 0 for disabled."); ?>
 
 <BR>
 <A NAME="campaigns-my_callback_option">

@@ -981,7 +981,8 @@ manual_auto_show ENUM('Y','N') default 'N',
 allow_required_fields ENUM('Y','N') default 'N',
 dead_to_dispo ENUM('ENABLED','DISABLED') default 'DISABLED',
 agent_xfer_validation ENUM('N','Y') default 'N',
-ready_max_logout MEDIUMINT(7) default '0'
+ready_max_logout MEDIUMINT(7) default '0',
+callback_display_days SMALLINT(3) default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -3978,4 +3979,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1502',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1503',db_schema_update_date=NOW(),reload_timestamp=NOW();

@@ -227,3 +227,7 @@ index(call_date)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 UPDATE system_settings SET db_schema_version='1502',db_schema_update_date=NOW() where db_schema_version < 1502;
+
+ALTER TABLE vicidial_campaigns ADD callback_display_days SMALLINT(3) default '0';
+
+UPDATE system_settings SET db_schema_version='1503',db_schema_update_date=NOW() where db_schema_version < 1503;

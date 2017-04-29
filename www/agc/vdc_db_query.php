@@ -427,10 +427,11 @@
 # 170309-1550 - Added campaign agent_xfer_validation option
 # 170327-1656 - Added USER_CUSTOM_ options to campaign custom callerID setting
 # 170401-1437 - Added translation of callbacks statuses, issue #1006
+# 170429-0835 - Added callback_display_days option
 #
 
-$version = '2.14-321';
-$build = '170401-1437';
+$version = '2.14-322';
+$build = '170429-0835';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=661;
@@ -14861,7 +14862,8 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 if ($ACTION == 'CalLBacKLisT')
 	{
 	$campaignCBhoursSQL = '';
-	$stmt = "SELECT callback_hours_block,callback_list_calltime,local_call_time from vicidial_campaigns where campaign_id='$campaign';";
+	$campaignCBdisplaydaysSQL = '';
+	$stmt = "SELECT callback_hours_block,callback_list_calltime,local_call_time,callback_display_days from vicidial_campaigns where campaign_id='$campaign';";
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00437',$user,$server_ip,$session_name,$one_mysql_log);}
 	if ($rslt) {$camp_count = mysqli_num_rows($rslt);}
@@ -14871,17 +14873,23 @@ if ($ACTION == 'CalLBacKLisT')
 		$callback_hours_block =		$row[0];
 		$callback_list_calltime =	$row[1];
 		$local_call_time =			$row[2];
+		$callback_display_days =	$row[3];
 		if ($callback_hours_block > 0)
 			{
 			$x_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-$callback_hours_block,date("i"),date("s"),date("m"),date("d"),date("Y")));
 			$campaignCBhoursSQL = "and entry_time < \"$x_hours_ago\"";
+			}
+		if ($callback_display_days > 0)
+			{
+			$x_days_from_now = date("Y-m-d H:i:s", mktime(0,0,0,date("m"),date("d")+$callback_display_days,date("Y")));
+			$campaignCBdisplaydaysSQL = "and callback_time < \"$x_days_from_now\"";
 			}
 		}
 	$campaignCBsql = '';
 	if ($agentonly_callback_campaign_lock > 0)
 		{$campaignCBsql = "and campaign_id='$campaign'";}
 
-	$stmt = "SELECT callback_id,lead_id,campaign_id,status,entry_time,callback_time,comments from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql $campaignCBhoursSQL and status NOT IN('INACTIVE','DEAD') order by callback_time;";
+	$stmt = "SELECT callback_id,lead_id,campaign_id,status,entry_time,callback_time,comments from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql $campaignCBhoursSQL $campaignCBdisplaydaysSQL and status NOT IN('INACTIVE','DEAD') order by callback_time;";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00178',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -14965,32 +14973,39 @@ if ($ACTION == 'CalLBacKLisT')
 if ($ACTION == 'CalLBacKCounT')
 	{
 	$campaignCBhoursSQL = '';
-	$stmt = "SELECT callback_hours_block from vicidial_campaigns where campaign_id='$campaign';";
+	$campaignCBdisplaydaysSQL = '';
+	$stmt = "SELECT callback_hours_block,callback_display_days from vicidial_campaigns where campaign_id='$campaign';";
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00438',$user,$server_ip,$session_name,$one_mysql_log);}
 	if ($rslt) {$camp_count = mysqli_num_rows($rslt);}
 	if ($camp_count > 0)
 		{
 		$row=mysqli_fetch_row($rslt);
-		$callback_hours_block = $row[0];
+		$callback_hours_block =		$row[0];
+		$callback_display_days =	$row[1];
 		if ($callback_hours_block > 0)
 			{
 			$x_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-$callback_hours_block,date("i"),date("s"),date("m"),date("d"),date("Y")));
 			$campaignCBhoursSQL = "and entry_time < \"$x_hours_ago\"";
+			}
+		if ($callback_display_days > 0)
+			{
+			$x_days_from_now = date("Y-m-d H:i:s", mktime(0,0,0,date("m"),date("d")+$callback_display_days,date("Y")));
+			$campaignCBdisplaydaysSQL = "and callback_time < \"$x_days_from_now\"";
 			}
 		}
 	$campaignCBsql = '';
 	if ($agentonly_callback_campaign_lock > 0)
 		{$campaignCBsql = "and campaign_id='$campaign'";}
 
-	$stmt = "SELECT count(*) from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql $campaignCBhoursSQL and status NOT IN('INACTIVE','DEAD');";
+	$stmt = "SELECT count(*) from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql $campaignCBhoursSQL $campaignCBdisplaydaysSQL and status NOT IN('INACTIVE','DEAD');";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00180',$user,$server_ip,$session_name,$one_mysql_log);}
 	$row=mysqli_fetch_row($rslt);
 	$cbcount=$row[0];
 
-	$stmt = "SELECT count(*) from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql $campaignCBhoursSQL and status IN('LIVE');";
+	$stmt = "SELECT count(*) from vicidial_callbacks where recipient='USERONLY' and user='$user' $campaignCBsql $campaignCBhoursSQL $campaignCBdisplaydaysSQL and status IN('LIVE');";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00332',$user,$server_ip,$session_name,$one_mysql_log);}
