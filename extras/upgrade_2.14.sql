@@ -231,3 +231,8 @@ UPDATE system_settings SET db_schema_version='1502',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD callback_display_days SMALLINT(3) default '0';
 
 UPDATE system_settings SET db_schema_version='1503',db_schema_update_date=NOW() where db_schema_version < 1503;
+
+ALTER TABLE vicidial_campaigns ADD three_way_record_stop ENUM('Y','N') default 'N';
+ALTER TABLE vicidial_campaigns ADD hangup_xfer_record_start ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1504',db_schema_update_date=NOW() where db_schema_version < 1504;

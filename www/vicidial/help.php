@@ -125,6 +125,7 @@
 # 170416-1620 - Added servers-routing_prefix and user/campaign ready_max_logout entries
 # 170428-1959 - Added Inbound and Advanced Forecasting Reports
 # 170429-0810 - Added callback_display_days entry
+# 170430-0957 - Added three_way_record_stop and hangup_xfer_record_start entries
 #
 
 
@@ -902,6 +903,11 @@ if ($SSallow_chats > 0)
 <B><?php echo _QXZ("Default Transfer Group"); ?> -</B><?php echo _QXZ("This field is the default In-Group that will be automatically selected when the agent goes to the transfer-conference frame in their agent interface."); ?>
 
 <BR>
+<A NAME="campaigns-agent_xfer_validation">
+<BR>
+<B><?php echo _QXZ("Agent Transfer In-Group Validation"); ?> -</B><?php echo _QXZ("This option involves the agents that show up in the agent selection screen when an agent is transferring a call to another agent using an AGENTDIRECT in-group. Enabling this option will ensure that the agents listed as available to transfer to have selected the AGENTDIRECT in-group that was chosen by the agent originating the transfer. For example, if the originating agent has selected the AGENTDIRECT_2 in-group, then when that agent clicks on the AGENTS link to select another agent to transfer the call to, only agents that have selected to take calls from the AGENTDIRECT_2 in-group will be shown."); ?>
+
+<BR>
 <A NAME="campaigns-xfer_groups">
 <BR>
 <B><?php echo _QXZ("Allowed Transfer Groups"); ?> -</B><?php echo _QXZ("With these checkbox listings you can select the groups that agents in this campaign can transfer calls to. Allow Closers must be enabled for this option to show up.");
@@ -1502,29 +1508,9 @@ if ($SSoutbound_autodial_active > 0)
 <B><?php echo _QXZ("Xfer-Conf DTMF"); ?> -</B><?php echo _QXZ("These fields allow for you to have two sets of Transfer Conference and DTMF presets. When the call or campaign is loaded, the agent screen will show two buttons on the transfer-conference frame and auto-populate the number-to-dial and the send-dtmf fields when pressed. If you want to allow Consultative Transfers, a fronter to a closer, have the agent use the CONSULTATIVE checkbox, which does not work for third party non-agent consultative calls. For those just have the agent click the Dial With Customer button. Then the agent can just LEAVE-3WAY-CALL and move on to their next call. If you want to allow Blind transfers of customers to an AGI script for logging or an IVR, then place AXFER in the number-to-dial field. You can also specify a custom extension after the AXFER, for instance if you want to do a call to a special IVR you have set to extension 83900 you would put AXFER83900 in the number-to-dial field."); ?>
 
 <BR>
-<A NAME="campaigns-quick_transfer_button">
-<BR>
-<B><?php echo _QXZ("Quick Transfer Button"); ?> -</B><?php echo _QXZ("This option will add a Quick Transfer button to the agent screen below the Transfer-Conf button that will allow one click blind transferring of calls to the selected In-Group or number. IN_GROUP will send calls to the Default Xfer Group for this Campaign, or In-Group if there was an inbound call. The PRESET options will send the calls to the preset selected. Default is N for disabled. The LOCKED options are used to lock the value to the Quick Transfer Button even if the agent uses the transfer conference features during a call before using the Quick Transfer Button."); ?>
-
-<BR>
-<A NAME="campaigns-custom_3way_button_transfer">
-<BR>
-<B><?php echo _QXZ("Custom 3-Way Button Transfer"); ?> -</B><?php echo _QXZ("This option will add a Custom Transfer button to the agent screen below the Transfer-Conf button that will allow one click three way calls using the selected preset or field. The PRESET_ options will place calls using the defined preset value. The FIELD_ options will place calls using the number in the selected field from the lead. DISABLED will not show the button on the agent screen. The PARK_ options will park the customer before dialing. Default is DISABLED. The VIEW_PRESET option will simply open the transfer frame and the preset frame. The VIEW_CONTACTS option will open a contacts search window, this will only work if Enable Presets is set to CONTACTS."); ?>
-
-<BR>
 <A NAME="campaigns-prepopulate_transfer_preset">
 <BR>
 <B><?php echo _QXZ("PrePopulate Transfer Preset"); ?> -</B><?php echo _QXZ("This option will fill in the Number to Dial field in the Transfer Conference frame of the agent screen if defined. Default is N for disabled."); ?>
-
-<BR>
-<A NAME="campaigns-agent_xfer_validation">
-<BR>
-<B><?php echo _QXZ("Agent Transfer In-Group Validation"); ?> -</B><?php echo _QXZ("This option involves the agents that show up in the agent selection screen when an agent is transferring a call to another agent using an AGENTDIRECT in-group. Enabling this option will ensure that the agents listed as available to transfer to have selected the AGENTDIRECT in-group that was chosen by the agent originating the transfer. For example, if the originating agent has selected the AGENTDIRECT_2 in-group, then when that agent clicks on the AGENTS link to select another agent to transfer the call to, only agents that have selected to take calls from the AGENTDIRECT_2 in-group will be shown."); ?>
-
-<BR>
-<A NAME="campaigns-enable_xfer_presets">
-<BR>
-<B><?php echo _QXZ("Enable Transfer Presets"); ?> -</B><?php echo _QXZ("This option will enable the Presets sub menu to appear at the top of the Campaign Modification page, and also you will have the ability to specify Preset dialing numbers for Agents to use in the Transfer-Conference frame of the agent interface. Default is DISABLED. CONTACTS is an option only if contact_information is enabled on your system, that is a custom feature."); ?>
 
 <BR>
 <A NAME="campaigns-enable_xfer_presets">
@@ -1535,6 +1521,51 @@ if ($SSoutbound_autodial_active > 0)
 <A NAME="campaigns-hide_xfer_number_to_dial">
 <BR>
 <B><?php echo _QXZ("Hide Transfer Number to Dial"); ?> -</B><?php echo _QXZ("This option will hide the Number to Dial field in the Transfer-Conference frame of the agent interface. Default is DISABLED."); ?>
+
+<BR>
+<A NAME="campaigns-quick_transfer_button">
+<BR>
+<B><?php echo _QXZ("Quick Transfer Button"); ?> -</B><?php echo _QXZ("This option will add a Quick Transfer button to the agent screen below the Transfer-Conf button that will allow one click blind transferring of calls to the selected In-Group or number. IN_GROUP will send calls to the Default Xfer Group for this Campaign, or In-Group if there was an inbound call. The PRESET options will send the calls to the preset selected. Default is N for disabled. The LOCKED options are used to lock the value to the Quick Transfer Button even if the agent uses the transfer conference features during a call before using the Quick Transfer Button."); ?>
+
+<BR>
+<A NAME="campaigns-custom_3way_button_transfer">
+<BR>
+<B><?php echo _QXZ("Custom 3-Way Button Transfer"); ?> -</B><?php echo _QXZ("This option will add a Custom Transfer button to the agent screen below the Transfer-Conf button that will allow one click three way calls using the selected preset or field. The PRESET_ options will place calls using the defined preset value. The FIELD_ options will place calls using the number in the selected field from the lead. DISABLED will not show the button on the agent screen. The PARK_ options will park the customer before dialing. Default is DISABLED. The VIEW_PRESET option will simply open the transfer frame and the preset frame. The VIEW_CONTACTS option will open a contacts search window, this will only work if Enable Presets is set to CONTACTS."); ?>
+
+<BR>
+<A NAME="campaigns-three_way_call_cid">
+<BR>
+<B><?php echo _QXZ("3-Way Call Outbound CallerID"); ?> -</B><?php echo _QXZ("This defines what is sent out as the outbound callerID number from 3-way calls placed by the agent, CAMPAIGN uses the custom campaign callerID, CUSTOMER uses the number of the customer that is active on the agents screen and AGENT_PHONE uses the callerID for the phone that the agent is logged into. AGENT_CHOOSE allows the agent to choose which callerID to use for 3-way calls from a list of choices. CUSTOM_CID will use the Custom CID that is defined in the security_phrase field of the list table for the lead."); ?>
+
+<BR>
+<A NAME="campaigns-three_way_dial_prefix">
+<BR>
+<B><?php echo _QXZ("3-Way Call Dial Prefix"); ?> -</B><?php echo _QXZ("This defines what is used as the dial prefix for 3-way calls, default is empty so the campaign dial prefix is used, passthru so you can hear ringing is 88."); ?>
+
+<BR>
+<A NAME="campaigns-customer_3way_hangup_logging">
+<BR>
+<B><?php echo _QXZ("Customer 3-Way Hangup Logging"); ?> -</B><?php echo _QXZ("If this option is ENABLED the user_call_log will log when a customer hangup up if they hang up during a 3-way call. Also, this can allow for the Customer 3-way hangup action if one is defined below. Default is ENABLED."); ?>
+
+<BR>
+<A NAME="campaigns-customer_3way_hangup_seconds">
+<BR>
+<B><?php echo _QXZ("Customer 3-Way Hangup Seconds"); ?> -</B><?php echo _QXZ("If Customer 3-way logging is enabled, this option allows you to define the number of seconds after the customer hangup is detected before it is actually logged and the optional customer 3-way hangup action is executed. Default is 5 seconds."); ?>
+
+<BR>
+<A NAME="campaigns-customer_3way_hangup_action">
+<BR>
+<B><?php echo _QXZ("Customer 3-Way Hangup Action"); ?> -</B><?php echo _QXZ("If Customer 3-way logging is enabled, this option allows you to have the agent screen automatically hang up on the call and go to the DISPO screen if this option is set to DISPO. Default is NONE."); ?>
+
+<BR>
+<A NAME="campaigns-three_way_record_stop">
+<BR>
+<B><?php echo _QXZ("3-Way Recording Stop"); ?> -</B><?php echo _QXZ("If this option is enabled, recording of the session will stop when an agent clicks on the DIAL WITH CUSTOMER or PARK CUSTOMER DIAL transfer buttons. Default is N for disabled."); ?>
+
+<BR>
+<A NAME="campaigns-hangup_xfer_record_start">
+<BR>
+<B><?php echo _QXZ("Hangup Xfer Recording Start"); ?> -</B><?php echo _QXZ("If this option is enabled, recording of the session will start when the agent clicks on the HANGUP XFER button in the transfer conference section. Default is N for disabled."); ?>
 
 <BR>
 <A NAME="campaigns-ivr_park_call">
@@ -1854,32 +1885,7 @@ if ($SSoutbound_autodial_active > 0)
 <BR>
 <A NAME="campaigns-agent_clipboard_copy">
 <BR>
-<B><?php echo _QXZ("Agent Screen Clipboard Copy"); ?> -</B><?php echo _QXZ("THIS FEATURE IS CURRENTLY ONLY ENABLED FOR INTERNET EXPLORER. This feature allows you to select a field that will be copied to the computer clipboard of the agent computer upon a call being sent to an agent. Common uses for this are to allow for easy pasting of account numbers or phone numbers into legacy client applications on the agent computer."); ?>
-
-<BR>
-<A NAME="campaigns-three_way_call_cid">
-<BR>
-<B><?php echo _QXZ("3-Way Call Outbound CallerID"); ?> -</B><?php echo _QXZ("This defines what is sent out as the outbound callerID number from 3-way calls placed by the agent, CAMPAIGN uses the custom campaign callerID, CUSTOMER uses the number of the customer that is active on the agents screen and AGENT_PHONE uses the callerID for the phone that the agent is logged into. AGENT_CHOOSE allows the agent to choose which callerID to use for 3-way calls from a list of choices. CUSTOM_CID will use the Custom CID that is defined in the security_phrase field of the list table for the lead."); ?>
-
-<BR>
-<A NAME="campaigns-three_way_dial_prefix">
-<BR>
-<B><?php echo _QXZ("3-Way Call Dial Prefix"); ?> -</B><?php echo _QXZ("This defines what is used as the dial prefix for 3-way calls, default is empty so the campaign dial prefix is used, passthru so you can hear ringing is 88."); ?>
-
-<BR>
-<A NAME="campaigns-customer_3way_hangup_logging">
-<BR>
-<B><?php echo _QXZ("Customer 3-Way Hangup Logging"); ?> -</B><?php echo _QXZ("If this option is ENABLED the user_call_log will log when a customer hangup up if they hang up during a 3-way call. Also, this can allow for the Customer 3-way hangup action if one is defined below. Default is ENABLED."); ?>
-
-<BR>
-<A NAME="campaigns-customer_3way_hangup_seconds">
-<BR>
-<B><?php echo _QXZ("Customer 3-Way Hangup Seconds"); ?> -</B><?php echo _QXZ("If Customer 3-way logging is enabled, this option allows you to define the number of seconds after the customer hangup is detected before it is actually logged and the optional customer 3-way hangup action is executed. Default is 5 seconds."); ?>
-
-<BR>
-<A NAME="campaigns-customer_3way_hangup_action">
-<BR>
-<B><?php echo _QXZ("Customer 3-Way Hangup Action"); ?> -</B><?php echo _QXZ("If Customer 3-way logging is enabled, this option allows you to have the agent screen automatically hang up on the call and go to the DISPO screen if this option is set to DISPO. Default is NONE.");
+<B><?php echo _QXZ("Agent Screen Clipboard Copy"); ?> -</B><?php echo _QXZ("THIS FEATURE IS CURRENTLY ONLY ENABLED FOR INTERNET EXPLORER. This feature allows you to select a field that will be copied to the computer clipboard of the agent computer upon a call being sent to an agent. Common uses for this are to allow for easy pasting of account numbers or phone numbers into legacy client applications on the agent computer.");
 
 if ($SSqc_features_active > 0)
 	{

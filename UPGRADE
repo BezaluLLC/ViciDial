@@ -153,6 +153,9 @@ OTHER CHANGES:
 31. Added campaign option for Callbacks Display Days which can limit the 
 	scheduled callbacks displayed to an agent by a number of days from now
 
+32. Added campaign options to stop recording when a 3-way call is started and 
+	start recording when the hangup xfer line button is clicked
+
 
 
 
