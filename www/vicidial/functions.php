@@ -29,6 +29,7 @@
 # 161102-0039 - Patched sec_convert function to display hours 
 # 170227-2230 - Change to allow horizontal_bar_chart header to be translated, issue #991
 # 170409-1003 - Added IP List features to user_authorization
+# 170503-2130 - Patched sec_convert to fix rounding time bug, issue #1011
 #
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
@@ -225,57 +226,46 @@ function sec_convert($sec,$precision)
 		{
 		if ($precision == 'HF' || $precision == 'H')
 			{return "0:00:00";}
+		elseif ($precision == 'S')
+			{return "0";}
 		else
-			{
-			if ($precision == 'S')
-				{return "0";}
-			else
-				{return "0:00";}
-
-			}
+			{return "0:00";}
 		}
+
+	if ($precision == 'HF')
+		{$precision='H';}
 	else
 		{
-		if ($precision == 'HF')
-			{$precision='H';}
-		else
-			{
-			# if ( ($sec < 3600) and ($precision != 'S') ) {$precision='M';}
-			}
-
-		if ($precision == 'H')
-			{
-			$Fhours_H =	MathZDC($sec, 3600);
-			$Fhours_H_int = floor($Fhours_H);
-			$Fhours_H_int = intval("$Fhours_H_int");
-			$Fhours_M = ($Fhours_H - $Fhours_H_int);
-			$Fhours_M = ($Fhours_M * 60);
-			$Fhours_M_int = floor($Fhours_M);
-			$Fhours_M_int = intval("$Fhours_M_int");
-			$Fhours_S = ($Fhours_M - $Fhours_M_int);
-			$Fhours_S = ($Fhours_S * 60);
-			$Fhours_S = round($Fhours_S, 0);
-			if ($Fhours_S < 10) {$Fhours_S = "0$Fhours_S";}
-			if ($Fhours_M_int < 10) {$Fhours_M_int = "0$Fhours_M_int";}
-			$Ftime = "$Fhours_H_int:$Fhours_M_int:$Fhours_S";
-			}
-		if ($precision == 'M')
-			{
-			$Fminutes_M = MathZDC($sec, 60);
-			$Fminutes_M_int = floor($Fminutes_M);
-			$Fminutes_M_int = intval("$Fminutes_M_int");
-			$Fminutes_S = ($Fminutes_M - $Fminutes_M_int);
-			$Fminutes_S = ($Fminutes_S * 60);
-			$Fminutes_S = round($Fminutes_S, 0);
-			if ($Fminutes_S < 10) {$Fminutes_S = "0$Fminutes_S";}
-			$Ftime = "$Fminutes_M_int:$Fminutes_S";
-			}
-		if ($precision == 'S')
-			{
-			$Ftime = $sec;
-			}
-		return "$Ftime";
+		# if ( ($sec < 3600) and ($precision != 'S') ) {$precision='M';}
 		}
+
+	if ($precision == 'H')
+		{
+		$hours = floor($sec / 3600);
+		$hours_sec = $hours * 3600;
+		$seconds = $sec - $hours_sec;
+		$minutes = floor($seconds / 60);
+		$seconds -= ($minutes * 60);
+		$Ftime = sprintf('%s:%s:%s',
+			$hours,
+			str_pad($minutes,2,'0',STR_PAD_LEFT),
+			str_pad($seconds,2,'0',STR_PAD_LEFT)
+		);
+		}
+	elseif ($precision == 'M')
+		{
+		$minutes = floor($sec / 60);
+		$seconds = $sec - ($minutes * 60);
+		$Ftime = sprintf('%s:%s',
+			$minutes,
+			str_pad($seconds,2,'0',STR_PAD_LEFT)
+		);
+		}
+	else 
+		{
+		$Ftime = $sec;
+		}
+	return "$Ftime";
 	}
 ##### END reformat seconds into HH:MM:SS or MM:SS #####
 

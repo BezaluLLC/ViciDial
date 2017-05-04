@@ -156,6 +156,8 @@ OTHER CHANGES:
 32. Added campaign options to stop recording when a 3-way call is started and 
 	start recording when the hangup xfer line button is clicked
 
+33. Added start call URL feature support for manual dial calls
+
 
 
 

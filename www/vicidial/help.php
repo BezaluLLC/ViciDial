@@ -1995,7 +1995,7 @@ if ($SSqc_features_active > 0)
 <BR>
 <A NAME="campaigns-start_call_url">
 <BR>
-<B><?php echo _QXZ("Start Call URL"); ?> -</B><?php echo _QXZ("This web URL address is not seen by the agent, but it is called every time a call is sent to an agent if it is populated. Uses the same variables as the web form fields and scripts. This URL can NOT be a relative path. The Start URL does not work for Manual dial calls. Default is blank."); ?>
+<B><?php echo _QXZ("Start Call URL"); ?> -</B><?php echo _QXZ("This web URL address is not seen by the agent, but it is called every time a call is sent to an agent if it is populated. Uses the same variables as the web form fields and scripts. This URL can NOT be a relative path. For Manual dial calls, the Start Call URL will be sent when the call is placed. Default is blank."); ?>
 
 <BR>
 <A NAME="campaigns-dispo_call_url">
