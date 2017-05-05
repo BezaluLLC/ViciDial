@@ -6,6 +6,7 @@
 # CHANGES
 #
 # 170428-1205 - First build
+# 170504-2115 - Minor bug fixes
 #
 
 $startMS = microtime();
@@ -166,7 +167,7 @@ if ($sl_ct > 0)
 $auth=0;
 $reports_auth=0;
 $admin_auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
@@ -389,7 +390,7 @@ $MT[0]='';
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
-if (!isset($group)) {$group = '';}
+if (!isset($group)) {$group = array();}
 if (!isset($drop_percent)) {$drop_percent = '3';}
 if (!isset($campaign)) {$campaign = '';}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
