@@ -6,7 +6,7 @@
 # CHANGES
 #
 # 170428-1205 - First build
-# 170504-2115 - Minor bug fixes
+# 170504-2245 - Minor bug fixes
 #
 
 $startMS = microtime();
@@ -39,7 +39,7 @@ require("functions.php");
 
 		for ($q=0; $q<100; $q++) {
 			$E[($q+1)]=$erlangs+($retry_rate/100)*$E[$q]*$P[$q];
-			$P[($q+1)]=(pow($E[($q+1)], $lines)/(factorial($lines)))/(erlsum(0, $lines, $E[($q+1)]));
+			$P[($q+1)]=MathZDC((pow($E[($q+1)], $lines)/(factorial($lines))), (erlsum(0, $lines, $E[($q+1)])));
 
 		}
 		return $P[100];
@@ -394,7 +394,7 @@ $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
 if (!isset($group)) {$group = array();}
 if (!isset($drop_percent)) {$drop_percent = '3';}
-if (!isset($campaign)) {$campaign = '';}
+if (!isset($campaign)) {$campaign = array();}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
@@ -726,8 +726,8 @@ else
 		}
 		$uid_clause="";
 	}
-	$avg_dispo_sec=$dispo_secs/$wrapup_calls;
-	$avg_talk_sec=$talk_secs/$wrapup_calls;
+	$avg_dispo_sec=MathZDC($dispo_secs, $wrapup_calls);
+	$avg_talk_sec=MathZDC($talk_secs, $wrapup_calls);
 	#####
 
 
@@ -761,9 +761,9 @@ else
 		}
 	}
 	$hours_active=count($erlang_array); # Used for giving total erlangs for day, need to divide by number of hours reported, not one hour
-	$total_erlangs=($erlang_calls*$average_call_length/(3600*$hours_active));
-	$total_blocking=($drops_blocks/$erlang_calls);
-	$sale_percent=($sales/$erlang_calls);
+	$total_erlangs=MathZDC(($erlang_calls*$average_call_length),(3600*$hours_active));
+	$total_blocking=MathZDC($drops_blocks, $erlang_calls);
+	$sale_percent=MathZDC($sales, $erlang_calls);
 
 	$rpt_header ="+-----------------+-------+-------+------------+----------+-------------+----------+---------+";
 	if ($erlang_type=="B") {$rpt_header.="---------+";}
@@ -821,19 +821,19 @@ else
 	# ESTIMATED AGENTS
 	$lines=1;
 	if ($total_blocking>0) {
-		$GoS=(pow($total_erlangs, $lines)/(factorial($lines)))/(erlsum(0, $lines, $total_erlangs));
+		$GoS=MathZDC((pow($total_erlangs, $lines)/(factorial($lines))), (erlsum(0, $lines, $total_erlangs)));
 		if ($GoS>$total_blocking) {
 			$ASCII_text.="<!-- $lines \n";
 			while ($GoS>$total_blocking) {
 				$lines++;
-				$GoS=(pow($total_erlangs, $lines)/(factorial($lines)))/(erlsum(0, $lines, $total_erlangs));
+				$GoS=MathZDC((pow($total_erlangs, $lines)/(factorial($lines))), (erlsum(0, $lines, $total_erlangs)));
 				if ($retry_rate>0 && $erlang_type=="B") {$GoS=adjustedGoS($total_erlangs, $GoS, $retry_rate, $lines);} #"B" allows for retry rates, "C" does not.
 				$ASCII_text.=" $GoS \n";
 			}
 			$ASCII_text.="\n-->";
 		}
-		$Pqueue=(pow($total_erlangs, $lines)/(factorial($lines)))/((pow($total_erlangs, $lines)/(factorial($lines)))+((1-($total_erlangs/$lines))*erlsum(0, ($lines-1), $total_erlangs)));
-		$ASA=($Pqueue*$average_call_length)/($lines-$total_erlangs);
+		$Pqueue=(pow($total_erlangs, $lines)/(factorial($lines)))/((pow($total_erlangs, $lines)/(factorial($lines)))+((1-MathZDC($total_erlangs, $lines))*erlsum(0, ($lines-1), $total_erlangs)));
+		$ASA=MathZDC(($Pqueue*$average_call_length), ($lines-$total_erlangs));
 	} else {
 		$lines="N/A";
 		$Pqueue=0;
@@ -878,12 +878,12 @@ else
 	##### RECOMMENDED AGENTS
 	$lines=1;
 	if ($erlang_type=="B") {
-		$GoS=(pow($total_erlangs, $lines)/(factorial($lines)))/(erlsum(0, $lines, $total_erlangs));
+		$GoS=MathZDC((pow($total_erlangs, $lines)/(factorial($lines))), (erlsum(0, $lines, $total_erlangs)));
 		if ($GoS>$drop_rate) {
 			$ASCII_text.="<!-- $lines \n";
 			while ($GoS>$drop_rate) {
 				$lines++;
-				$GoS=(pow($total_erlangs, $lines)/(factorial($lines)))/(erlsum(0, $lines, $total_erlangs));
+				$GoS=MathZDC((pow($total_erlangs, $lines)/(factorial($lines))), (erlsum(0, $lines, $total_erlangs)));
 				if ($retry_rate>0) {$GoS=adjustedGoS($total_erlangs, $GoS, $retry_rate, $lines);}
 				$ASCII_text.=" $GoS \n";
 			}
@@ -891,12 +891,12 @@ else
 		}
 	}
 	if ($erlang_type=="C") {
-		$Pqueue=(pow($total_erlangs, $lines)/(factorial($lines)))/((pow($total_erlangs, $lines)/(factorial($lines)))+((1-($total_erlangs/$lines))*erlsum(0, ($lines-1), $total_erlangs)));
+		$Pqueue=(pow($total_erlangs, $lines)/(factorial($lines)))/((pow($total_erlangs, $lines)/(factorial($lines)))+((1-MathZDC($total_erlangs, $lines))*erlsum(0, ($lines-1), $total_erlangs)));
 		if ($Pqueue>$pqueue_target) {
 			$ASCII_text.="<!-- $lines \n";
 			while ($Pqueue>$pqueue_target) {
 				$lines++;
-				$Pqueue=(pow($total_erlangs, $lines)/(factorial($lines)))/((pow($total_erlangs, $lines)/(factorial($lines)))+((1-($total_erlangs/$lines))*erlsum(0, ($lines-1), $total_erlangs)));
+				$Pqueue=(pow($total_erlangs, $lines)/(factorial($lines)))/((pow($total_erlangs, $lines)/(factorial($lines)))+((1-MathZDC($total_erlangs, $lines))*erlsum(0, ($lines-1), $total_erlangs)));
 				$ASCII_text.=" $GoS \n";
 			}
 			$ASCII_text.="\n-->";
@@ -981,9 +981,9 @@ else
 	while(list($key, $val)=each($erlang_array)) {
 		if ($val[0]>$bht) {$bht=$val[0];}
 		if ($q%2==0) {$tdclass="records_list_x";} else {$tdclass="records_list_y";}
-		$average_time=round($val[0]/$val[2]);
-		$blocking=($val[3]/$val[2]);
-		$erlangs=($val[2]*$average_time/3600); # Row is call per hour, therefore call length average must be in hours.
+		$average_time=round(MathZDC($val[0], $val[2]));
+		$blocking=MathZDC($val[3], $val[2]);
+		$erlangs=$val[2]*MathZDC($average_time, 3600); # Row is call per hour, therefore call length average must be in hours.
 		$sales=$val[4]+0;
 
 		$ASCII_text.="| "; #.substr($key, 0, -2)." - ".substr($key, 5, 2)." ".substr($key, 8, 2)." ".substr($key, 0, 4);
@@ -1027,12 +1027,12 @@ else
 		##### RECOMMENDED AGENTS
 		$lines=1;
 		if ($erlang_type=="B") {
-			$GoS=(pow($erlangs, $lines)/(factorial($lines)))/(erlsum(0, $lines, $erlangs));
+			$GoS=MathZDC((pow($erlangs, $lines)/(factorial($lines))), (erlsum(0, $lines, $erlangs)));
 			if ($GoS>$drop_rate) {
 				$ASCII_text.="<!-- $lines \n";
 				while ($GoS>$drop_rate) {
 					$lines++;
-					$GoS=(pow($erlangs, $lines)/(factorial($lines)))/(erlsum(0, $lines, $erlangs));
+					$GoS=MathZDC((pow($erlangs, $lines)/(factorial($lines))), (erlsum(0, $lines, $erlangs)));
 					if ($retry_rate>0) {$GoS=adjustedGoS($erlangs, $GoS, $retry_rate, $lines);}
 					$ASCII_text.=" $GoS \n";
 				}
@@ -1040,12 +1040,12 @@ else
 			}
 		}
 		if ($erlang_type=="C") {
-			$Pqueue=(pow($erlangs, $lines)/(factorial($lines)))/((pow($erlangs, $lines)/(factorial($lines)))+((1-($erlangs/$lines))*erlsum(0, ($lines-1), $erlangs)));
+			$Pqueue=(pow($erlangs, $lines)/(factorial($lines)))/((pow($erlangs, $lines)/(factorial($lines)))+((1-MathZDC($erlangs, $lines))*erlsum(0, ($lines-1), $erlangs)));
 			if ($Pqueue>$pqueue_target) {
 				$ASCII_text.="<!--  \n";
 				while ($Pqueue>$pqueue_target) {
 					$lines++;
-					$Pqueue=(pow($erlangs, $lines)/(factorial($lines)))/((pow($erlangs, $lines)/(factorial($lines)))+((1-($erlangs/$lines))*erlsum(0, ($lines-1), $erlangs)));
+					$Pqueue=(pow($erlangs, $lines)/(factorial($lines)))/((pow($erlangs, $lines)/(factorial($lines)))+((1-MathZDC($erlangs, $lines))*erlsum(0, ($lines-1), $erlangs)));
 					$ASCII_text.=" $lines, $erlangs - $Pqueue \n";
 				}
 				$ASCII_text.="\n-->";
@@ -1056,20 +1056,20 @@ else
 		##### ESTIMATED AGENTS
 		$lines=1;
 		if ($blocking>0) {
-			$GoS=(pow($erlangs, $lines)/(factorial($lines)))/(erlsum(0, $lines, $erlangs));
+			$GoS=MathZDC((pow($erlangs, $lines)/(factorial($lines))), (erlsum(0, $lines, $erlangs)));
 			if ($GoS>$blocking) {
 				$ASCII_text.="<!-- $lines \n";
 				while ($GoS>$blocking) {
 					$lines++;
-					$GoS=(pow($erlangs, $lines)/(factorial($lines)))/(erlsum(0, $lines, $erlangs));
+					$GoS=MathZDC((pow($erlangs, $lines)/(factorial($lines))), (erlsum(0, $lines, $erlangs)));
 					if ($retry_rate>0 && $erlang_type=="B") {$GoS=adjustedGoS($erlangs, $GoS, $retry_rate, $lines);}  # "B" allows for retry rates, "C" does not
 					$ASCII_text.=" $GoS \n";
 				}
 				$ASCII_text.="\n-->";
 			}
 
-			$Pqueue=(pow($erlangs, $lines)/(factorial($lines)))/((pow($erlangs, $lines)/(factorial($lines)))+((1-($erlangs/$lines))*erlsum(0, ($lines-1), $erlangs)));
-			$ASA=($Pqueue*$average_time)/($lines-$erlangs);
+			$Pqueue=(pow($erlangs, $lines)/(factorial($lines)))/((pow($erlangs, $lines)/(factorial($lines)))+((1-MathZDC($erlangs, $lines))*erlsum(0, ($lines-1), $erlangs)));
+			$ASA=MathZDC(($Pqueue*$average_time), ($lines-$erlangs));
 		} else {
 			$lines="$recommended_agents";
 			$Pqueue=0;
@@ -1114,11 +1114,11 @@ else
 
 		$ASCII_text.=sprintf("%10s", $lines);
 		$ASCII_text.=" | ";
-		$ASCII_text.=sprintf("%-10.2f", ($val[2]/$lines));
+		$ASCII_text.=sprintf("%-10.2f", MathZDC($val[2], $lines));
 #		$ASCII_text.=" | ";
-#		$ASCII_text.=sprintf("%-8s", "\$".number_format(($revenue_per_sale*$sales/$val[2]),2,".",","));
+#		$ASCII_text.=sprintf("%-8s", "\$".number_format(MathZDC(($revenue_per_sale*$sales), $val[2]),2,".",","));
 #		$ASCII_text.=" | ";
-#		$ASCII_text.=sprintf("%-9s", "\$".number_format(($revenue_per_sale*$sales/$lines),2,".",","));
+#		$ASCII_text.=sprintf("%-9s", "\$".number_format(MathZDC(($revenue_per_sale*$sales), $lines),2,".",","));
 #		$ASCII_text.=" | ";
 #		$ASCII_text.=sprintf("%-10s", "\$".number_format(($revenue_per_sale*$sales),2,".",","));
 #		$ASCII_text.=" | ";
@@ -1131,9 +1131,9 @@ else
 
 
 		$CSV_text.="\"$lines\",";
-		$CSV_text.="\"".sprintf("%.2f", ($val[2]/$lines))."\",";
-#		$CSV_text.="\"$".number_format(($revenue_per_sale*$sales/$val[2]),2,".",",")."\",";
-#		$CSV_text.="\"$".number_format(($revenue_per_sale*$sales/$lines),2,".",",")."\",";
+		$CSV_text.="\"".sprintf("%.2f", MathZDC($val[2], $lines))."\",";
+#		$CSV_text.="\"$".number_format(MathZDC(($revenue_per_sale*$sales), $val[2]),2,".",",")."\",";
+#		$CSV_text.="\"$".number_format(MathZDC(($revenue_per_sale*$sales), $lines),2,".",",")."\",";
 #		$CSV_text.="\"$".number_format(($revenue_per_sale*$sales),2,".",",")."\",";
 #		$CSV_text.="\"$".number_format(($lines*$hourly_pay),2,".",",")."\",";
 #		$CSV_text.="\"$".number_format((($revenue_per_sale*$sales)-($lines*$hourly_pay)),2,".",",")."\"\n";
@@ -1141,8 +1141,8 @@ else
 		$graph_stats["$graph_key"][6]=$lines;
 		$graph_stats["$graph_key"][8]=$drop_rate;
 		$graph_stats["$graph_key"][9]=$sales; 
-		$graph_stats["$graph_key"][10]=number_format(($revenue_per_sale*$sales/$val[2]),2,".",""); # Revenue per call 
-		$graph_stats["$graph_key"][11]=number_format(($revenue_per_sale*$sales/$lines),2,".",""); # Revenue per agent 
+		$graph_stats["$graph_key"][10]=number_format(MathZDC(($revenue_per_sale*$sales), $val[2]),2,".",""); # Revenue per call 
+		$graph_stats["$graph_key"][11]=number_format(MathZDC(($revenue_per_sale*$sales), $lines),2,".",""); # Revenue per agent 
 		$graph_stats["$graph_key"][12]=number_format(($revenue_per_sale*$sales),2,".",""); # Total revenue 
 		$graph_stats["$graph_key"][13]=number_format(($lines*$hourly_pay),2,".",""); # Cost 
 		$graph_stats["$graph_key"][14]=number_format((($revenue_per_sale*$sales)-($lines*$hourly_pay)),2,".",",");
@@ -1152,8 +1152,8 @@ else
 
 		$HTML_text2.="<td><font size=1>$lines</font></td>\n";
 		$HTML_text2.="<td><font size=1>".sprintf("%.2f", ($val[2]/$lines))."</font></td>\n";
-#		$HTML_text2.="<td><font size=1>\$".number_format(($revenue_per_sale*$sales/$val[2]),2,".",",")."</font></td>\n";
-#		$HTML_text2.="<td><font size=1>\$".number_format(($revenue_per_sale*$sales/$lines),2,".",",")."</font></td>\n";
+#		$HTML_text2.="<td><font size=1>\$".number_format(MathZDC(($revenue_per_sale*$sales), $val[2]),2,".",",")."</font></td>\n";
+#		$HTML_text2.="<td><font size=1>\$".number_format(MathZDC(($revenue_per_sale*$sales), $lines),2,".",",")."</font></td>\n";
 #		$HTML_text2.="<td><font size=1>\$".number_format(($revenue_per_sale*$sales),2,".",",")."</font></td>\n";
 #		$HTML_text2.="<td><font size=1>\$".number_format(($lines*$hourly_pay),2,".",",")."</font></td>\n";
 #		$HTML_text2.="<td><font size=1>\$".number_format((($revenue_per_sale*$sales)-($lines*$hourly_pay)),2,".",",")."</font></td>\n";
