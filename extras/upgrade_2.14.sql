@@ -236,3 +236,29 @@ ALTER TABLE vicidial_campaigns ADD three_way_record_stop ENUM('Y','N') default '
 ALTER TABLE vicidial_campaigns ADD hangup_xfer_record_start ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1504',db_schema_update_date=NOW() where db_schema_version < 1504;
+
+CREATE TABLE vicidial_rt_monitor_log (
+manager_user VARCHAR(20) NOT NULL,
+manager_server_ip VARCHAR(15) NOT NULL,
+manager_phone VARCHAR(20) NOT NULL,
+manager_ip VARCHAR(15),
+agent_user VARCHAR(20),
+agent_server_ip VARCHAR(15),
+agent_status VARCHAR(10),
+agent_session VARCHAR(10),
+lead_id INT(9) UNSIGNED,
+campaign_id VARCHAR(8),
+caller_code VARCHAR(20),
+monitor_start_time DATETIME,
+monitor_end_time DATETIME,
+monitor_sec INT(9) UNSIGNED default '0',
+monitor_type ENUM('LISTEN','BARGE','HIJACK','WHISPER') default 'LISTEN',
+index (manager_user),
+index (agent_user),
+unique index (caller_code),
+index (monitor_start_time)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_rt_monitor_log_archive LIKE vicidial_rt_monitor_log; 
+
+UPDATE system_settings SET db_schema_version='1505',db_schema_update_date=NOW() where db_schema_version < 1505;

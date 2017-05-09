@@ -3719,6 +3719,28 @@ uniqueid VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT '',
 index(call_date)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE vicidial_rt_monitor_log (
+manager_user VARCHAR(20) NOT NULL,
+manager_server_ip VARCHAR(15) NOT NULL,
+manager_phone VARCHAR(20) NOT NULL,
+manager_ip VARCHAR(15),
+agent_user VARCHAR(20),
+agent_server_ip VARCHAR(15),
+agent_status VARCHAR(10),
+agent_session VARCHAR(10),
+lead_id INT(9) UNSIGNED,
+campaign_id VARCHAR(8),
+caller_code VARCHAR(20),
+monitor_start_time DATETIME,
+monitor_end_time DATETIME,
+monitor_sec INT(9) UNSIGNED default '0',
+monitor_type ENUM('LISTEN','BARGE','HIJACK','WHISPER') default 'LISTEN',
+index (manager_user),
+index (agent_user),
+unique index (caller_code),
+index (monitor_start_time)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3907,6 +3929,8 @@ CREATE TABLE vicidial_drop_log_archive LIKE vicidial_drop_log;
 DROP INDEX drop_date on vicidial_drop_log_archive;
 CREATE UNIQUE INDEX vicidial_drop_log_archive_key on vicidial_drop_log_archive(drop_date, uniqueid);
 
+CREATE TABLE vicidial_rt_monitor_log_archive LIKE vicidial_rt_monitor_log; 
+
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
 
@@ -3981,4 +4005,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1504',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1505',db_schema_update_date=NOW(),reload_timestamp=NOW();

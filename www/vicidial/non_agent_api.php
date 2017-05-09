@@ -117,10 +117,11 @@
 # 170301-1649 - Added validation that sounds web dir exists to sounds_list function
 # 170409-1603 - Added IP List validation code
 # 170423-0800 - Added force_entry_list_id option for update_lead
+# 170508-1048 - Added blind_monitor logging
 #
 
-$version = '2.14-93';
-$build = '170423-0800';
+$version = '2.14-94';
+$build = '170508-1048';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -1722,26 +1723,39 @@ if ($function == 'blind_monitor')
 					if (strlen($D_s_ip[3])<3) {$D_s_ip[3] = "0$D_s_ip[3]";}
 					$monitor_dialstring = "$D_s_ip[0]$S$D_s_ip[1]$S$D_s_ip[2]$S$D_s_ip[3]$S";
 
-					$PADuser = sprintf("%08s", $user);
-						while (strlen($PADuser) > 8) {$PADuser = substr("$PADuser", 0, -1);}
-					$BMquery = "BM$StarTtime$PADuser";
-
+					$monitor_type='LISTEN'; $cid_prefix='BM';
 					if ( (preg_match('/MONITOR/',$stage)) or (strlen($stage)<1) ) {$stage = '0';}
-					if (preg_match('/BARGE/',$stage)) {$stage = '';}
-					if (preg_match('/HIJACK/',$stage)) {$stage = '';}
+					if (preg_match('/BARGE/',$stage)) {$stage = ''; $monitor_type='BARGE'; $cid_prefix='BB';}
+					if (preg_match('/HIJACK/',$stage)) {$stage = ''; $monitor_type='HIJACK'; $cid_prefix='BB';}
 					if (preg_match('/WHISPER/',$stage)) 
 						{
 						if ($agent_whisper_enabled == '1') 
-							{$stage = '47378218';}
+							{$stage = '47378218'; $monitor_type='WHISPER'; $cid_prefix='BW';}
 						else
 							{
 							# WHISPER not enabled
 							$stage = '0';
 							}
 						}
+					
+					$PADuser = sprintf("%08s", $user);
+						while (strlen($PADuser) > 8) {$PADuser = substr("$PADuser", 0, -1);}
+					$BMquery = "$cid_prefix$StarTtime$PADuser";
+
+					$stmt = "SELECT user,lead_id,campaign_id,status FROM vicidial_live_agents where conf_exten='$session_id' and server_ip='$server_ip';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$qm_conf_ct = mysqli_num_rows($rslt);
+					if ($qm_conf_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$AGENTuser =		$row[0];
+						$AGENTlead_id =		$row[1];
+						$AGENTcampaign =	$row[2];
+						$AGENTstatus =		$row[3];
+						}
 
 					### insert a new lead in the system with this phone number
-					$stmt = "INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$monitor_server_ip','','Originate','$BMquery','Channel: Local/$monitor_dialstring$stage$session_id@default','Context: default','Exten: $dialplan_number','Priority: 1','Callerid: \"VC Blind Monitor\" <$outbound_cid>','','','','','');";
+					$stmt = "INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$monitor_server_ip','','Originate','$BMquery','Channel: Local/$monitor_dialstring$stage$session_id@default','Context: default','Exten: $dialplan_number','Priority: 1','Callerid: \"$BMquery\" <$outbound_cid>','','','','','');";
 					if ($DB>0) {echo "DEBUG: blind_monitor query - $stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$affected_rows = mysqli_affected_rows($link);
@@ -1749,7 +1763,10 @@ if ($function == 'blind_monitor')
 						{
 						$man_id = mysqli_insert_id($link);
 
-						$stmt = "INSERT INTO vicidial_dial_log SET caller_code='$BMquery',lead_id='0',server_ip='$monitor_server_ip',call_date='$NOW_TIME',extension='$dialplan_number',channel='Local/$monitor_dialstring$stage$session_id@default',timeout='0',outbound_cid='\"VC Blind Monitor\" <$outbound_cid>',context='default';";
+						$stmt = "INSERT INTO vicidial_dial_log SET caller_code='$BMquery',lead_id='0',server_ip='$monitor_server_ip',call_date='$NOW_TIME',extension='$dialplan_number',channel='Local/$monitor_dialstring$stage$session_id@default',timeout='0',outbound_cid='\"$BMquery\" <$outbound_cid>',context='default';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+
+						$stmt = "INSERT INTO vicidial_rt_monitor_log SET manager_user='$user',manager_server_ip='$monitor_server_ip',manager_phone='$phone_login',manager_ip='$ip',agent_user='$AGENTuser',agent_server_ip='$server_ip',agent_status='$AGENTstatus',agent_session='$session_id',lead_id='$AGENTlead_id',campaign_id='$AGENTcampaign',caller_code='$BMquery',monitor_start_time=NOW(),monitor_type='$monitor_type';";
 						$rslt=mysql_to_mysqli($stmt, $link);
 
 						##### BEGIN log visit to the vicidial_report_log table #####

@@ -77,6 +77,7 @@
 # 161226-1211 - Fix for previous rolled-back code
 # 170325-1105 - Added optional vicidial_drop_log logging
 # 170427-1125 - Fix for drop call logging of answered calls hung up by customer first
+# 170508-1148 - Added blind monitor call end logging
 #
 
 # defaults for PreFork
@@ -670,6 +671,29 @@ sub process_request
 							}
 						}
 					}
+
+				### BEGIN log end of real-time blind monitor calls ###
+				if ( ( ($callerid =~ /^BM\d\d\d\d\d\d\d\d/) && ($channel =~ /ASTblind/) ) || ($callerid =~ /^BB\d\d\d\d\d\d\d\d/) || ($callerid =~ /^BW\d\d\d\d\d\d\d\d/) )
+					{
+					$stmtA = "SELECT monitor_start_time,UNIX_TIMESTAMP(monitor_start_time) from vicidial_rt_monitor_log where caller_code='$callerid' and monitor_end_time is NULL;";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$sthA->finish();
+						$monitor_start_time =		$aryA[0];
+						$EPOCHmonitor_start_time =	$aryA[1];
+						$monitor_sec = ($now_date_epoch - $EPOCHmonitor_start_time);
+
+						$stmtA = "UPDATE vicidial_rt_monitor_log set monitor_sec='$monitor_sec',monitor_end_time='$now_date' where caller_code='$callerid';";
+						$affected_rowsBM = $dbhA->do($stmtA);
+
+						if ($AGILOG) {$agi_string = "|$affected_rowsBM|$stmtA|$monitor_start_time|$EPOCHmonitor_start_time|";   &agi_output;}
+						}
+					}
+				### END log end of real-time blind monitor calls ###
 
 				### get uniqueid and start_epoch from the call_log table
 				$CALLunique_id = $unique_id;
