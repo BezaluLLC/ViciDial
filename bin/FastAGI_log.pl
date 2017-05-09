@@ -675,7 +675,7 @@ sub process_request
 				### BEGIN log end of real-time blind monitor calls ###
 				if ( ( ($callerid =~ /^BM\d\d\d\d\d\d\d\d/) && ($channel =~ /ASTblind/) ) || ($callerid =~ /^BB\d\d\d\d\d\d\d\d/) || ($callerid =~ /^BW\d\d\d\d\d\d\d\d/) )
 					{
-					$stmtA = "SELECT monitor_start_time,UNIX_TIMESTAMP(monitor_start_time) from vicidial_rt_monitor_log where caller_code='$callerid' and monitor_end_time is NULL;";
+					$stmtA = "SELECT monitor_start_time,UNIX_TIMESTAMP(monitor_start_time) from vicidial_rt_monitor_log where caller_code='$callerid' and ( (monitor_end_time is NULL) or (monitor_start_time=monitor_end_time) );";
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 					$sthArows=$sthA->rows;
