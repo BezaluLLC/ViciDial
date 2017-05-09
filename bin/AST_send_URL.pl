@@ -24,6 +24,7 @@
 # 150703-1542 - Fixed issue with list_id check
 # 150711-1501 - Changed to add more logging and better HTTPS support
 # 170202-2321 - Added SC_CALL_URL function
+# 170509-1545 - Added --A--SQLdate--B-- variable
 #
 
 $|++;
@@ -383,6 +384,7 @@ if (length($lead_id) > 0)
 		$add_lead_url =~ s/--A--uniqueid--B--/$VAR_uniqueid/gi;
 		$add_lead_url =~ s/--A--call_id--B--/$VAR_call_id/gi;
 		$add_lead_url =~ s/--A--function--B--/$function/gi;
+		$add_lead_url =~ s/--A--SQLdate--B--/$now_date/gi;
 		$add_lead_url =~ s/ /+/gi;
 		$add_lead_url =~ s/&/\\&/gi;
 		$parse_url = $add_lead_url;
@@ -567,6 +569,7 @@ if (length($lead_id) > 0)
 		$na_call_url =~ s/--A--campaign_id--B--/$VAR_campaign_id/gi;
 		$na_call_url =~ s/--A--group--B--/$VAR_campaign_id/gi;
 		$na_call_url =~ s/--A--function--B--/$function/gi;
+		$na_call_url =~ s/--A--SQLdate--B--/$now_date/gi;
 		$na_call_url =~ s/ /+/gi;
 		$na_call_url =~ s/&/\\&/gi;
 		$parse_url = $na_call_url;
@@ -777,6 +780,7 @@ if (length($lead_id) > 0)
 		$sc_call_url =~ s/--A--ivr_time--B--/$ivr_time/gi;
 		$sc_call_url =~ s/--A--talk_time--B--/$talk_time/gi;
 		$sc_call_url =~ s/--A--talk_time_min--B--/$talk_time_min/gi;
+		$sc_call_url =~ s/--A--SQLdate--B--/$now_date/gi;
 		$sc_call_url =~ s/ /+/gi;
 		$sc_call_url =~ s/&/\\&/gi;
 		$parse_url = $sc_call_url;
@@ -961,6 +965,7 @@ if (length($lead_id) > 0)
 		$start_call_url =~ s/--A--campaign_id--B--/$VAR_campaign_id/gi;
 		$start_call_url =~ s/--A--group--B--/$VAR_campaign_id/gi;
 		$start_call_url =~ s/--A--function--B--/$function/gi;
+		$start_call_url =~ s/--A--SQLdate--B--/$now_date/gi;
 		$start_call_url =~ s/ /+/gi;
 		$start_call_url =~ s/&/\\&/gi;
 		$parse_url = $start_call_url;
