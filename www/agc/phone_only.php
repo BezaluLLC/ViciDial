@@ -16,10 +16,11 @@
 # 141118-1238 - Formatting changes for QXZ output
 # 141216-2127 - Added language settings lookups and user/pass variable standardization
 # 170409-1600 - Added IP List validation code
+# 170511-1107 - Added code for WebRTC phones
 #
 
-$version = '2.14-12p';
-$build = '170409-1600';
+$version = '2.14-13p';
+$build = '170511-1107';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=74;
 $one_mysql_log=0;
@@ -754,6 +755,14 @@ else
 		$codecs_list = preg_replace("/-/",'',$codecs_list);
 		$codecs_list = preg_replace("/&/",'',$codecs_list);
 		$webphone_server_ip = $server_ip;
+
+		$stmt="SELECT asterisk_version,web_socket_url from servers where server_ip='$webphone_server_ip' LIMIT 1;";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$asterisk_version =		$row[0];
+		$web_socket_url =		$row[1];
+
 		if ($use_external_server_ip=='Y')
 			{
 			##### find external_server_ip if enabled for this phone account
@@ -765,7 +774,7 @@ else
 			if ($exip_ct > 0)
 				{
 				$row=mysqli_fetch_row($rslt);
-				$webphone_server_ip =$row[0];
+				$webphone_server_ip =	$row[0];
 				}
 			}
 		if (strlen($webphone_url) < 6)
@@ -803,6 +812,8 @@ else
 		if ($webphone_dialpad == 'TOGGLE_OFF') {$webphone_options .= "--DIALPAD_OFF_TOGGLE";}
 		if ($webphone_auto_answer == 'Y') {$webphone_options .= "--AUTOANSWER_Y";}
 		if ($webphone_auto_answer == 'N') {$webphone_options .= "--AUTOANSWER_N";}
+		if (strlen($web_socket_url) > 5) {$webphone_options .= "--WEBSOCKETURL$web_socket_url";}
+		if ($DB > 0) {echo "<!-- debug: SOCKET:$web_socket_url|VERSION:$asterisk_version| -->";}
 
 		### base64 encode variables
 		$b64_phone_login =		base64_encode($extension);
