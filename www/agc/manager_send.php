@@ -135,10 +135,11 @@
 # 161117-0622 - Fixes for recording_log issue where filename is non-unique
 # 161217-0823 - Added parked_calls_recent table entries for better handling of parked calls
 # 170317-2214 - Added more debugging output
+# 170513-1616 - Added more debugging output
 #
 
-$version = '2.14-82';
-$build = '170317-2214';
+$version = '2.14-83';
+$build = '170513-1616';
 $php_script = 'manager_send.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=142;
@@ -499,6 +500,7 @@ if ($ACTION=="Originate")
 		if ( (preg_match('/MANUAL/i',$agent_dialed_type)) and ( (preg_match("/^\d860\d\d\d\d$/i",$exten)) or (preg_match("/^860\d\d\d\d$/i",$exten)) ) )
 			{
 			echo "ERROR"._QXZ(" You are not allowed to dial into other agent sessions")." $exten\n";
+			$stage .= " ERROR $exten OTHER SESSION";
 			if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 			exit;
 			}
@@ -560,6 +562,7 @@ if ($ACTION=="Originate")
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02094',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
 			}
+		$stage .= " $exten $channel $server_ip $outbound_cid";
 		}
 	}
 
@@ -609,7 +612,6 @@ if ($ACTION=="HangupConfDial")
 ######################
 if ($ACTION=="Hangup")
 	{
-
 	$stmt="UPDATE vicidial_live_agents SET external_hangup='0' where user='$user';";
 		if ($format=='debug') {echo "\n<!-- $stmt -->";}
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -879,6 +881,7 @@ if ($ACTION=="Hangup")
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02020',$user,$server_ip,$session_name,$one_mysql_log);}
 			echo _QXZ("Hangup command sent for Channel %1s on %2s",0,'',$channel,$call_server_ip)."\n";
 			}
+		$stage .= " $channel $call_server_ip";
 		}
 	}
 
@@ -2149,6 +2152,7 @@ if ($ACTION=="Redirect")
 
 			echo _QXZ("Redirect command sent for Channel %1s on %2s",0,'',$channel,$server_ip)."\n";
 			}
+		$stage .= " $exten $channel $server_ip";
 		}
 	}
 

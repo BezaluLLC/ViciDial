@@ -117,9 +117,10 @@
 # 170304-2039 - Added automated reports triggering code
 # 170320-1338 - Added conf_qualify phones option for IAX
 # 170327-0847 - Added drop list triggering code
+# 170513-1728 - Added alternative uptime counter in seconds
 #
 
-$build = '170327-0847';
+$build = '170513-1728';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -3635,6 +3636,10 @@ $uptimebin = '';
 $system_uptime='';
 $recent_reboot=0;
 
+# Grab the system uptime from the Kernel in seconds
+$uptime_seconds=`cat /proc/uptime`;
+$uptime_seconds=substr($uptime_seconds,0,index($uptime_seconds, ' '));
+
 ### find uptime binary
 if ( -e ('/bin/uptime')) {$uptimebin = '/bin/uptime';}
 else 
@@ -3673,7 +3678,7 @@ if (length($uptimebin)>3)
 		$asterisk_temp_no_restartSQL=",asterisk_temp_no_restart='N'";
 		$recent_reboot++;
 		}
-	if ($DBX) {print "Uptime debug 2: |$sysuptime[0]|$system_uptime|$recent_reboot|\n";}
+	if ($DBX) {print "Uptime debug 2: |$sysuptime[0]|$system_uptime|$recent_reboot|  seconds: |$uptime_seconds|\n";}
 
 	$stmtA = "UPDATE servers SET system_uptime='$system_uptime' $asterisk_temp_no_restartSQL where server_ip='$server_ip';";
 	$affected_rows = $dbhA->do($stmtA) or die  "Couldn't execute query: |$stmtA|\n";
@@ -3737,8 +3742,10 @@ if ($active_asterisk_server =~ /Y/)
 
 			`screen -XS asterisk eval 'stuff "/usr/sbin/asterisk -vvvvgcT\015"'`;
 			}
-		else
-			{
+		elsif ($uptime_seconds>300)
+ 			{
+			# We only want to start Asterisk if the system has been up for at least 5 minutes
+			# That way we don't run into the keepalive and the regular init script colliding with each other
 			if ($DB) {print "starting Asterisk process...\n";}
 			$stmtA="INSERT INTO vicidial_admin_log set event_date=NOW(), user='VDAD', ip_address='1.1.1.1', event_section='SERVERS', event_type='RESET', record_id='$server_ip', event_code='AUTO START ASTERISK', event_sql='', event_notes='$system_uptime system uptime';";
 			$Iaffected_rows = $dbhA->do($stmtA);

@@ -552,10 +552,11 @@
 # 170416-1640 - Added ready_max_logout option
 # 170429-0851 - Added callback_display_days option
 # 170430-1005 - Added three_way_record_stop and hangup_xfer_record_start campaign options
+# 170513-1527 - Added debug logging of all alert boxes
 #
 
-$version = '2.14-522c';
-$build = '170430-1005';
+$version = '2.14-523c';
+$build = '170513-1527';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -4691,6 +4692,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					Nactiveext = null;
 					Nactiveext = xmlhttp.responseText;
 					alert_box(xmlhttp.responseText);
+					button_click_log = button_click_log + "" + SQLdate + "-----ForceHangupAlert---" + hangupvalue + "|";
 					}
 				}
 			delete xmlhttp;
@@ -4859,6 +4861,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				if (temp_xfernumber.length < 3)
 					{
 					alert_box("Number to Dial invalid: " + temp_xfernumber);
+					button_click_log = button_click_log + "" + SQLdate + "-----DialXferInvalid---" + temp_xfernumber + "|";
 					ShoWTransferMain('OFF','YES');
 					}
 				else
@@ -4968,8 +4971,6 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				if (active_group_alias.length > 1)
 					{var sending_group_alias = 1;}
 				}
-			if (SMDclick=='YES')
-				{button_click_log = button_click_log + "" + SQLdate + "-----SendManualDial---" + taskFromConf + "|" + agent_dialed_type + "|" + manual_string + "|" + three_way_call_cid + "|" + threeway_cid + "|";}
 			}
 		else
 			{
@@ -4981,8 +4982,6 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 				cid_lock=1;
 				threeway_cid = outbound_cid;
 				}
-			if (SMDclick=='YES')
-				{button_click_log = button_click_log + "" + SQLdate + "-----SendManualDial---" + taskFromConf + "|" + agent_dialed_type + "|" + manual_string + "|" + manual_dial_cid + "|" + threeway_cid + "|";}
 			}
 
 		var regXFvars = new RegExp("XFER","g");
@@ -5009,6 +5008,10 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 			call_variables = '__vendor_lead_code=' + document.vicidial_form.vendor_lead_code.value + ',__lead_id=' + document.vicidial_form.lead_id.value;
 			}
 		var sending_preset_name = document.vicidial_form.xfername.value;
+
+		if (SMDclick=='YES')
+			{button_click_log = button_click_log + "" + SQLdate + "-----SendManualDial---" + taskFromConf + " " + agent_dialed_type + " " + manual_string + " " + three_way_call_cid + " " + threeway_cid + " " + dial_conf_exten + " " + sending_preset_name + " ";}
+
 		if (taskFromConf == 'YES')
 			{
 			// give extra time for custom fields to commit before consultative transfers
@@ -5204,6 +5207,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 					if (BOresponse.match(regBOerr))
 						{
 						alert_box(BOresponse);
+						button_click_log = button_click_log + "" + SQLdate + "-----OriginateError---" + BOresponse + "|";
 						}
 
 					if ((taskdialvalue.length > 0) && (tasknowait != 'YES'))
@@ -5752,7 +5756,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								if (APIDiaL_array_detail[0] == 'MANUALNEXT')  // trigger Dial Next Number button
 									{
 									if (APIDiaL_array_detail[4] == 'YES')  // focus on vicidial agent screen
-										{window.focus();   alert_box("<?php echo _QXZ("Placing call to next number"); ?>");}
+										{
+										window.focus();
+										alert_box("<?php echo _QXZ("Placing call to next number"); ?>");
+										button_click_log = button_click_log + "" + SQLdate + "-----APIdialNextFocus---" + APIDiaL_array_detail[4] + "|";
+										}
 									if (APIDiaL_array_detail[3] == 'YES')
 										{document.vicidial_form.LeadPreview.checked=true;}
 									if (APIDiaL_array_detail[3] == 'NO')
@@ -5779,7 +5787,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									else
 										{document.vicidial_form.LeadLookuP.checked=false;}
 									if (APIDiaL_array_detail[4] == 'YES')  // focus on vicidial agent screen
-										{window.focus();   alert_box("Placing call to:" + APIDiaL_array_detail[1] + " " + APIDiaL_array_detail[0]);}
+										{
+										window.focus();
+										alert_box("Placing call to:" + APIDiaL_array_detail[1] + " " + APIDiaL_array_detail[0]);
+										button_click_log = button_click_log + "" + SQLdate + "-----APIdialFocus---" + APIDiaL_array_detail[1] + " " + APIDiaL_array_detail[0] + "|";
+										}
 									if (APIDiaL_array_detail[3] == 'NO')  // NO call preview
 										{document.vicidial_form.LeadPreview.checked=false;}
 									if (APIDiaL_array_detail[3] == 'YES')  // call preview
@@ -6230,11 +6242,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 // Covers the following types: XFER, VMAIL, ENTRY, CONF, PARK, FROMPARK, XfeRLOCAL, XfeRINTERNAL, XfeRBLIND, VfeRVMAIL
 	function mainxfer_send_redirect(taskvar,taskxferconf,taskserverip,taskdebugnote,taskdispowindow,tasklockedquick,MSRclick) 
 		{
-		if (MSRclick=='YES')
-			{button_click_log = button_click_log + "" + SQLdate + "-----mainxfer_send_redirect---" + taskvar + " " + taskxferconf + " " + taskserverip + " " + taskdebugnote + " " + taskdispowindow + " " + tasklockedquick + "|";}
 		var XfeRSelecT = document.getElementById("XfeRGrouP");
 		var XfeR_GrouP = XfeRSelecT.value;
 		var ADvalue = document.vicidial_form.xfernumber.value;
+		if (MSRclick=='YES')
+			{button_click_log = button_click_log + "" + SQLdate + "-----mainxfer_send_redirect---" + taskvar + " " + taskxferconf + " " + taskserverip + " " + taskdebugnote + " " + taskdispowindow + " " + tasklockedquick + " " + XfeR_GrouP + " " + ADvalue + "|";}
 		if (CalLCID.length < 1)
 			{
 			CalLCID = MDnextCID;
@@ -6242,6 +6254,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if ( ( (taskvar == 'XfeRLOCAL') || (taskvar == 'XfeRINTERNAL') ) && (XfeR_GrouP.match(/AGENTDIRECT/i)) && (ADvalue.length < 2) )
 			{
 			alert_box("<?php echo _QXZ("YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT"); ?>");
+			button_click_log = button_click_log + "" + SQLdate + "-----XferAgentFailed---" + ADvalue + "|";
 			}
 		else
 			{
@@ -6341,6 +6354,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							xferredirect_query='';
 							taskvar = 'NOTHING';
 							alert_box("<?php echo _QXZ("Transfer number must have at least 1 digit:"); ?>" + blindxferdialstring);
+							button_click_log = button_click_log + "" + SQLdate + "-----XferNumberFailed---" + blindxferdialstring + "|";
 							}
 						else
 							{
@@ -7013,6 +7027,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				{
 				move_on=0;
 				alert_box("<?php echo _QXZ("YOU MUST BE PAUSED TO CHECK CALLBACKS IN AUTO-DIAL MODE"); ?>");
+				button_click_log = button_click_log + "" + SQLdate + "-----CheckCallbacksFailed---" + VDRP_stage + "|";
 				}
 			}
 		if (move_on == 1)
@@ -7261,6 +7276,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if (waiting_on_dispo > 0)
 			{
 			alert_box("<?php echo _QXZ("System Delay, Please try again"); ?><BR><font size=1>code:" + agent_log_id + " - " + waiting_on_dispo + "</font>");
+			button_click_log = button_click_log + "" + SQLdate + "-----CallbackSystemDelay---" + agent_log_id + " " + waiting_on_dispo + "|";
 			}
 		else
 			{
@@ -7311,6 +7327,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				{
 				move_on=0;
 				alert_box("<?php echo _QXZ("YOU MUST BE PAUSED TO MANUAL DIAL A NEW LEAD IN AUTO-DIAL MODE"); ?>");
+				button_click_log = button_click_log + "" + SQLdate + "-----ManualDialFailed---" + VDRP_stage + "|";
 				}
 			}
 		if (move_on == 1)
@@ -7940,6 +7957,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if (waiting_on_dispo > 0)
 			{
 			alert_box("<?php echo _QXZ("System Delay, Please try again"); ?><BR><font size=1><?php echo _QXZ("code:"); ?>" + agent_log_id + " - " + waiting_on_dispo + "</font>");
+			button_click_log = button_click_log + "" + SQLdate + "-----ManDialSystemDelay---" + agent_log_id + " " + waiting_on_dispo + "|";
 			}
 		else
 			{
@@ -8032,12 +8050,14 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if ( (MDDiaLCodEform.length < 1) || (MDPhonENumbeRform.length < 5) )
 			{
 			alert_box("<?php echo _QXZ("YOU MUST ENTER A PHONE NUMBER AND DIAL CODE TO USE FAST DIAL"); ?>");
+			button_click_log = button_click_log + "" + SQLdate + "-----FastDialFailed---" + MDDiaLCodEform + " " + MDPhonENumbeRform + "|";
 			}
 		else
 			{
 			if (waiting_on_dispo > 0)
 				{
 				alert_box("<?php echo _QXZ("System Delay, Please try again"); ?><BR><font size=1><?php echo _QXZ("code:"); ?>" + agent_log_id + " - " + waiting_on_dispo + "</font>");
+				button_click_log = button_click_log + "" + SQLdate + "-----FastDialSystemDelay---" + agent_log_id + " " + waiting_on_dispo + "|";
 				}
 			else
 				{
@@ -8361,9 +8381,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 		if ( (MD_ring_secondS > 49) && (MD_ring_secondS > manual_dial_timeout) )
 			{
+			alert_box("Dial timed out, contact your system administrator\n");
+			button_click_log = button_click_log + "" + SQLdate + "-----DialTimedOut---" + MD_ring_secondS + " " + manual_dial_timeout + " " + MD_channel_look + " " + "|";
 			MD_channel_look=0;
 			MD_ring_secondS=0;
-			alert_box("Dial timed out, contact your system administrator\n");
 
 			if (taskCheckOR == 'YES')
 				{
@@ -8402,7 +8423,6 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if (xmlhttp) 
 			{
 			UpdateFields_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=UpdateFields&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&stage=" + update_fields_data;
-			//		alert(manual_dial_filter + "\n" +manDiaLnext_query);
 			xmlhttp.open('POST', 'vdc_db_query.php');
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(UpdateFields_query); 
@@ -8586,6 +8606,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					else
 						{
 						alert_box("Update Fields Error!: " + xmlhttp.responseText);
+						button_click_log = button_click_log + "" + SQLdate + "-----UpdateFieldsError---" + xmlhttp.responseText + " " + "|";
 						}
 					}
 				}
@@ -8603,6 +8624,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if (waiting_on_dispo > 0)
 			{
 			alert_box("<?php echo _QXZ("System Delay, Please try again"); ?><BR><font size=1><?php echo _QXZ("code:"); ?>" + agent_log_id + " - " + waiting_on_dispo + " - " + manual_auto_hotkey_wait + "</font>");
+			button_click_log = button_click_log + "" + SQLdate + "-----DialNextSystemDelay---" + agent_log_id + " " + waiting_on_dispo + "|";
 
 			dial_next_failed=1;
 			var alert_displayed=0;
@@ -8766,6 +8788,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							var regMDFvarTIME = new RegExp("OUTSIDE","ig");
 							if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarCAMP)) || (MDnextCID.match(regMDFvarTIME)) )
 								{
+								button_click_log = button_click_log + "" + SQLdate + "-----DialNextFailed---" + MDnextCID + " " + "|";
+
 								dial_next_failed=1;
 								var alert_displayed=0;
 								trigger_ready=1;
@@ -9250,6 +9274,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if (manual_dial_in_progress==1)
 			{
 			alert_box("<?php echo _QXZ("YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD"); ?>");
+			button_click_log = button_click_log + "" + SQLdate + "-----DialSkipFailed---" + manual_dial_in_progress + " " + "|";
 			}
 		else
 			{
@@ -9304,6 +9329,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						if (MDSnextCID == "LEAD NOT REVERTED")
 							{
 							alert_box("<?php echo _QXZ("Lead was not reverted, there was an error:"); ?>\n" + MDSnextResponse);
+							button_click_log = button_click_log + "" + SQLdate + "-----DialSkipFailRevert---" + MDSnextResponse + " " + "|";
 							}
 						else
 							{
@@ -9542,6 +9568,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					if (MDnextCID == " CALL NOT PLACED")
 						{
 						alert_box("<?php echo _QXZ("call was not placed, there was an error:"); ?>\n" + MDOnextResponse);
+						button_click_log = button_click_log + "" + SQLdate + "-----DialOnlyFailed---" + MDOnextResponse + " " + "|";
 						}
 					else
 						{
@@ -11865,8 +11892,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			}
 		if (required_fail > 0)
 			{
-			button_click_log = button_click_log + "" + SQLdate + "-----required_fields_alert---" + error_field_list + "|";
 			alert_box("<?php echo _QXZ("YOU MUST FILL IN ALL REQUIRED FIELDS BEFORE YOU CAN HANG UP THIS CALL");?>: " + error_field_list);
+			button_click_log = button_click_log + "" + SQLdate + "-----required_fields_alert---" + error_field_list + "|";
 			}
 		else
 			{
@@ -12513,6 +12540,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				{
 				move_on=0;
 				alert_box("<?php echo _QXZ("YOU MUST BE PAUSED TO ENTER A PAUSE CODE IN AUTO-DIAL MODE"); ?>");
+				button_click_log = button_click_log + "" + SQLdate + "-----PauseCodeOpenFailed---" + VDRP_stage + " " + "|";
 				}
 			}
 		if (move_on == 1)
@@ -12580,6 +12608,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					{
 					move_on=0;
 					alert_box("<?php echo _QXZ("YOU MUST BE PAUSED TO SEARCH FOR A LEAD"); ?>: " + inOUT + "|" + agent_lead_search);
+					button_click_log = button_click_log + "" + SQLdate + "-----LeadSearchOpenPauseFailed---" + VDRP_stage + " " + "|";
 					}
 				}
 			}
@@ -12589,6 +12618,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				{
 				move_on=0;
 				alert_box("<?php echo _QXZ("YOU MUST BE ON AN ACTIVE INBOUND CALL TO SEARCH FOR A LEAD"); ?>");
+				button_click_log = button_click_log + "" + SQLdate + "-----LeadSearchOpenLiveFailed---" + VDRP_stage + " " + "|";
 				}
 			}
 		if (move_on == 1)
@@ -12789,7 +12819,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 		var DispoChoice = document.vicidial_form.DispoSelection.value;
 
-		if (DispoChoice.length < 1) {alert_box("<?php echo _QXZ("You Must Select a Disposition"); ?>");}
+		if (DispoChoice.length < 1) 
+			{
+			alert_box("<?php echo _QXZ("You Must Select a Disposition"); ?>");
+			button_click_log = button_click_log + "" + SQLdate + "-----EmptyDispoAlert---" + DispoChoice + " " + "|";
+			}
 		else
 			{
 			document.getElementById("CusTInfOSpaN").innerHTML = "";
@@ -12846,7 +12880,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
  
 		var DispoChoice = document.vicidial_form.DispoSelection.value;
 
-		if (DispoChoice.length < 1) {alert_box("<?php echo _QXZ("You Must Select a Disposition"); ?>");}
+		if (DispoChoice.length < 1) 
+			{
+			alert_box("<?php echo _QXZ("You Must Select a Disposition"); ?>");
+			button_click_log = button_click_log + "" + SQLdate + "-----EmptyDispoAlert2---" + DispoChoice + " " + "|";
+			}
 		else
 			{
 			if (document.vicidial_form.lead_id.value == '') 
@@ -14276,6 +14314,7 @@ if ($useIE > 0)
 								{
 								HKerror=1;
 								alert_box("<?php echo _QXZ("That status is not available at this time: "); ?>" + HKdispo_ary[0] + ' ' + VD_live_call_secondS + '(' + customer_sec + ')');
+								button_click_log = button_click_log + "" + SQLdate + "-----HotKeyNotAvailable---" + HKdispo_ary[0] + " " + VD_live_call_secondS + " " + customer_sec + "|";
 								}
 						//	HKXdebug = HKXdebug + 'ERROR: ' + HKdispo_ary[0] + ' ' + VARstatuses[temp_VARstatuses_ct] + ' ' + VARMINstatuses[temp_VARstatuses_ct] + '| ' + VARMAXstatuses[temp_VARstatuses_ct] + '| ' + CheckDEADcallON + '| ' + VD_live_call_secondS + '| ';
 
@@ -14401,6 +14440,7 @@ else
 								HKerror=1;
 
 								alert_box("<?php echo _QXZ("That status is not available at this time: "); ?>" + HKdispo_ary[0] + ' ' + VD_live_call_secondS + '(' + customer_sec + ')');
+								button_click_log = button_click_log + "" + SQLdate + "-----HotKeyNotAvailable2---" + HKdispo_ary[0] + " " + VD_live_call_secondS + " " + customer_sec + "|";
 								}
 						//	HKXdebug = HKXdebug + 'ERROR: ' + HKdispo_ary[0] + ' ' + VARstatuses[temp_VARstatuses_ct] + ' ' + VARMINstatuses[temp_VARstatuses_ct] + '| ' + VARMAXstatuses[temp_VARstatuses_ct] + '| ' + CheckDEADcallON + '| ' + VD_live_call_secondS + '| ';
 
@@ -15295,6 +15335,7 @@ function phone_number_format(formatphone) {
 					{
 					move_on=0;
 					alert_box("<?php echo _QXZ("YOU MUST BE PAUSED TO GRAB CALLS IN QUEUE"); ?>");
+					button_click_log = button_click_log + "" + SQLdate + "-----CallGrabFailed---" + CQauto_call_id + " " + VDRP_stage + "|";
 					}
 				}
 			if (move_on == 1)
@@ -15333,6 +15374,7 @@ function phone_number_format(formatphone) {
 							if (CQgrabresponse.match(regCQerror))
 								{
 								alert_box(CQgrabresponse);
+								button_click_log = button_click_log + "" + SQLdate + "-----CallGrabError---" + CQauto_call_id + " " + CQgrabresponse + "|";
 								}
 							else
 								{
@@ -15606,6 +15648,7 @@ function phone_number_format(formatphone) {
 				{
 				move_on=0;
 				alert_box("<?php echo _QXZ("YOU MUST BE PAUSED TO VIEW YOUR CALL LOG"); ?>");
+				button_click_log = button_click_log + "" + SQLdate + "-----LogViewFailed---" + VDRP_stage + "|";
 			//	alert("debug: " + AutoDialWaiting + "|" + VD_live_customer_call + "|" + alt_dial_active + "|" + MD_channel_look + "|" + in_lead_preview_state);
 				}
 			}
@@ -15621,6 +15664,7 @@ function phone_number_format(formatphone) {
 				{
 				move_on=0;
 				alert_box("<?php echo _QXZ("Invalid Date Format. Please correct and submit again."); ?>")
+				button_click_log = button_click_log + "" + SQLdate + "-----LogViewInvalid---" + logdate + "|";
 				}
 			else
 				{ //Detailed check for valid date ranges
@@ -15632,6 +15676,7 @@ function phone_number_format(formatphone) {
 					{
 					move_on=0;
 					alert_box("<?php echo _QXZ("Invalid Day, Month, or Year range detected. Please correct and submit again."); ?>")
+					button_click_log = button_click_log + "" + SQLdate + "-----LogViewInvalid2---" + logdate + "|";
 					}
 				}
 			}
@@ -15752,6 +15797,7 @@ function phone_number_format(formatphone) {
 		if ( ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) || (in_lead_preview_state==1) ) && (inbound_lead_search < 1) )
 			{
 			alert_box("<?php echo _QXZ("YOU MUST BE PAUSED TO SEARCH FOR A LEAD"); ?>");
+			button_click_log = button_click_log + "" + SQLdate + "-----LeadSearchFailed---" + VDRP_stage + "|";
 			}
 		else
 			{
@@ -16050,6 +16096,7 @@ function phone_number_format(formatphone) {
 				{
 				move_on=0;
 				alert_box("<?php echo _QXZ("YOU MUST BE PAUSED TO CHANGE GROUPS"); ?>");
+				button_click_log = button_click_log + "" + SQLdate + "-----GroupSelectFailed---" + VDRP_stage + "|";
 				}
 			}
 		if (move_on == 1)
@@ -16057,6 +16104,7 @@ function phone_number_format(formatphone) {
 			if (manager_ingroups_set > 0)
 				{
 				alert_box("<?php echo _QXZ("Manager"); ?> " + external_igb_set_name + " <?php echo _QXZ("has selected your in-group choices"); ?>");
+				button_click_log = button_click_log + "" + SQLdate + "-----GroupSelectManager---" + external_igb_set_name + "|";
 				}
 			else
 				{
@@ -16083,6 +16131,7 @@ function phone_number_format(formatphone) {
 				{
 				move_on=0;
 				alert_box("<?php echo _QXZ("YOU MUST BE PAUSED TO CHANGE TERRITORIES"); ?>");
+				button_click_log = button_click_log + "" + SQLdate + "-----TerritorySelectFailed---" + VDRP_stage + "|";
 				}
 			}
 		if (move_on == 1)
@@ -16150,7 +16199,10 @@ function phone_number_format(formatphone) {
 		CallBackDatEForM = document.vicidial_form.CallBackDatESelectioN.value;
 		CallBackCommenTs = document.vicidial_form.CallBackCommenTsField.value;
 		if (CallBackDatEForM.length < 2)
-			{alert_box("<?php echo _QXZ("You must choose a date"); ?>");}
+			{
+			alert_box("<?php echo _QXZ("You must choose a date"); ?>");
+			button_click_log = button_click_log + "" + SQLdate + "-----CallBackSetFailed---" + CallBackDatEForM + "|";
+			}
 		else
 			{
 
@@ -17520,6 +17572,7 @@ function phone_number_format(formatphone) {
 			if (showxfervar != 'OFF')
 				{
 				alert_box("<?php echo _QXZ("YOU DO NOT HAVE PERMISSIONS TO TRANSFER CALLS"); ?>");
+				button_click_log = button_click_log + "" + SQLdate + "-----CallXferFailed---" + showxfervar + "|";
 				}
 			}
 		}
