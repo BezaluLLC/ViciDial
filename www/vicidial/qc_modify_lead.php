@@ -25,6 +25,7 @@
 # 150917-1311 - Added dynamic default field maxlengths based on DB schema
 # 160611-1217 - Fixed for external server IP recording link issue
 # 170409-1542 - Added IP List validation code
+# 170513-2256 - Added QC Webform, issue #1010
 #
 
 require("dbconnect_mysqli.php");
@@ -364,6 +365,42 @@ $phone_number =			$row['phone_number'];
 $phone_code =			$row['phone_code'];
 $lead_name =			trim(trim($row['first_name'].' '.$row['middle_initial']).' '.$row['last_name']);
 $scheduled_callback =	$row['scheduled_callback'];
+$qc_webform =			$row['qc_web_form_address'];
+
+### BEGIN Replace variables with values for qc_webform ###
+$qc_webform = str_replace('--A--lead_id--B--', $row['lead_id'], $qc_webform);
+$qc_webform = str_replace('--A--vendor_lead_code--B--', $row['vendor_lead_code'], $qc_webform);
+$qc_webform = str_replace('--A--list_id--B--', $row['list_id'], $qc_webform);
+$qc_webform = str_replace('--A--gmt_offset_now--B--', $row['gmt_offset_now'], $qc_webform);
+$qc_webform = str_replace('--A--phone_code--B--', $row['phone_code'], $qc_webform);
+$qc_webform = str_replace('--A--phone_number--B--', $row['phone_number'], $qc_webform);
+$qc_webform = str_replace('--A--title--B--', $row['title'], $qc_webform);
+$qc_webform = str_replace('--A--first_name--B--', $row['first_name'], $qc_webform);
+$qc_webform = str_replace('--A--middle_initial--B--', $row['middle_initial'], $qc_webform);
+$qc_webform = str_replace('--A--last_name--B--', $row['last_name'], $qc_webform);
+$qc_webform = str_replace('--A--address1--B--', $row['address1'], $qc_webform);
+$qc_webform = str_replace('--A--address2--B--', $row['address2'], $qc_webform);
+$qc_webform = str_replace('--A--address3--B--', $row['address3'], $qc_webform);
+$qc_webform = str_replace('--A--city--B--', $row['city'], $qc_webform);
+$qc_webform = str_replace('--A--state--B--', $row['state'], $qc_webform);
+$qc_webform = str_replace('--A--province--B--', $row['province'], $qc_webform);
+$qc_webform = str_replace('--A--postal_code--B--', $row['postal_code'], $qc_webform);
+$qc_webform = str_replace('--A--country_code--B--', $row['country_code'], $qc_webform);
+$qc_webform = str_replace('--A--gender--B--', $row['gender'], $qc_webform);
+$qc_webform = str_replace('--A--date_of_birth--B--', $row['date_of_birth'], $qc_webform);
+$qc_webform = str_replace('--A--alt_phone--B--', $row['alt_phone'], $qc_webform);
+$qc_webform = str_replace('--A--email--B--', $row['email'], $qc_webform);
+$qc_webform = str_replace('--A--security_phrase--B--', $row['security_phrase'], $qc_webform);
+$qc_webform = str_replace('--A--comments--B--', $row['comments'], $qc_webform);
+$qc_webform = str_replace('--A--user--B--', $row['user'], $qc_webform);
+$qc_webform = str_replace('--A--campaign--B--', $row['campaign'], $qc_webform);
+$qc_webform = str_replace('--A--phone_login--B--', $row['phone_login'], $qc_webform);
+$qc_webform = str_replace('--A--rank--B--', $row['rank'], $qc_webform);
+$qc_webform = str_replace('--A--owner--B--', $row['owner'], $qc_webform);
+$qc_webform = str_replace('--A--security_phrase--B--', $row['security_phrase'], $qc_webform);
+$qc_webform = str_replace('--A--current_user--B--', $PHP_AUTH_USER, $qc_webform);
+$qc_webform = str_replace('--A--called_count--B--', $row['called_count'], $qc_webform);
+### END of replace variables code ###
 
 $vdc_form_display = 'vdc_form_display.php';
 if (preg_match("/cf_encrypt/",$active_modules))
@@ -1033,6 +1070,12 @@ else
 	echo "<tr bgcolor=#B6D3FC><td align=left>"._QXZ("Disable QC log entry")." </td><td align=left><input type=checkbox name=add_qc_record value=\"1\">("._QXZ("this feature is not active yet").")</td></tr>\n";
 
 	echo "<tr><td colspan=2 align=center><input type=submit name=submit value=\""._QXZ("SUBMIT")."\"></td></tr>\n";
+	echo "<tr><td align=right>";
+	if (strlen($qc_webform) > 4)
+		{
+		echo "<a href=\"$qc_webform\">"._QXZ("QC Webform")."</a>\n";
+		}
+	echo "</td><td></td></tr>\n";
 	echo "<input type=hidden name=viewtime value='$STARTtime' /></table></form>\n";
 	echo "<BR><BR><BR>\n";
 
