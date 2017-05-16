@@ -126,6 +126,7 @@
 # 170428-1959 - Added Inbound and Advanced Forecasting Reports
 # 170429-0810 - Added callback_display_days entry
 # 170430-0957 - Added three_way_record_stop and hangup_xfer_record_start entries
+# 170516-0628 - Added rt_monitor_log_report entry
 #
 
 
@@ -6642,6 +6643,27 @@ if ($SSqc_features_active > 0)
 <?php echo _QXZ("<U>TOTAL REV</U> = Total revenue, gotten by multiplying the number of sales by the revenue per sale"); ?><BR>
 <?php echo _QXZ("<U>TOTAL COST</U> = Total cost, gotten by multiplying the agent rate by the number of agents (estimated, if an -actual agent- value is not given)"); ?><BR>
 <?php echo _QXZ("<U>MARGIN</U> = The difference between the total revenue and the total cost"); ?><BR>
+
+
+<BR><BR><BR><BR>
+<A NAME="rt_monitor_log_report">
+<BR>
+<B><?php echo _QXZ("Real-time monitoring log report"); ?> -</B><?php echo _QXZ("This report enables level 9 users, users with Admin Utilities privileges, to search the logs of Vicidial managers who utilized the monitoring capabilities of the real-time report.  Searches can be done for date ranges, campaigns, managers, and agents being monitored, and the results can be sorted by any of the following data returned by the report."); ?><BR><BR>
+<?php echo _QXZ("<U>START TIME</U> = The time the manager started monitoring an agent"); ?><BR>
+<?php echo _QXZ("<U>MANAGER</U> = The manager who initiated the monitoring session"); ?><BR>
+<?php echo _QXZ("<U>MANAGER SERVER</U> = The IP address of the server the manager was monitoring from"); ?><BR>
+<?php echo _QXZ("<U>MANAGER PHONE</U> = The phone login the manager used to monitor the agent"); ?><BR>
+<?php echo _QXZ("<U>MANAGER IP</U> = The IP address of the computer the manager was monitoring from"); ?><BR>
+<?php echo _QXZ("<U>AGENT MONITORED</U> = The agent ID and name of the agent being monitored"); ?><BR>
+<?php echo _QXZ("<U>AGENT SERVER</U> = The IP address of the server the agent phone was operating from"); ?><BR>
+<?php echo _QXZ("<U>AGENT STATUS</U> = The dialer status of the agent at the time the monitoring session was initiated"); ?><BR>
+<?php echo _QXZ("<U>AGENT SESSION</U> = The session ID of the agent at the time the monitoring session was initiated"); ?><BR>
+<?php echo _QXZ("<U>LEAD ID</U> = The lead ID the agent was speaking to at the time the monitoring session was initiated.  If the agent was not in a call at the time the manager started monitoring them, this value will be -0-"); ?><BR>
+<?php echo _QXZ("<U>CAMPAIGN</U> = The campaign ID the agent being monitored was placing calls from at the time they started being monitored"); ?><BR>
+<?php echo _QXZ("<U>END TIME</U> = The time the manager stopped monitoring the agent, ending the monitoring session"); ?><BR>
+<?php echo _QXZ("<U>LENGTH</U> = The total length in seconds of the monitoring session"); ?><BR>
+<?php echo _QXZ("<U>TYPE</U> = The type of monitoring session that the manager was running"); ?><BR>
+
 
 <BR><BR><BR><BR>
 <B><FONT SIZE=3><?php echo _QXZ("Nanpa cellphone filtering"); ?></FONT></B><BR><BR>
