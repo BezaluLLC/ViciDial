@@ -80,6 +80,7 @@
 # 160926-1052 - Fix for inbound call notes display
 # 170224-1639 - Added ability to display archived recordings
 # 170409-1554 - Added IP List validation code
+# 170527-2253 - Fix for rare inbound logging issue #1017
 #
 
 require("dbconnect_mysqli.php");
@@ -784,7 +785,7 @@ if ($end_call > 0)
 		### update last record in vicidial_closer_log table
 		   if (($dispo != $status) and ($modify_closer_logs > 0)) 
 			{
-			$stmtH="UPDATE vicidial_closer_log set status='" . mysqli_real_escape_string($link, $status) . "' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by call_date desc limit 1";
+			$stmtH="UPDATE vicidial_closer_log set status='" . mysqli_real_escape_string($link, $status) . "' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by closecallid desc limit 1";
 			if ($DB) {echo "|$stmtH|\n";}
 			$rslt=mysql_to_mysqli($stmtH, $link);
 			}
