@@ -262,3 +262,8 @@ index (monitor_start_time)
 CREATE TABLE vicidial_rt_monitor_log_archive LIKE vicidial_rt_monitor_log; 
 
 UPDATE system_settings SET db_schema_version='1505',db_schema_update_date=NOW() where db_schema_version < 1505;
+
+ALTER TABLE system_settings ADD agent_push_events ENUM('0','1') default '0';
+ALTER TABLE system_settings ADD agent_push_url TEXT;
+
+UPDATE system_settings SET db_schema_version='1506',db_schema_update_date=NOW() where db_schema_version < 1506;
