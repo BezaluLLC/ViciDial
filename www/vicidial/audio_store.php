@@ -26,10 +26,11 @@
 # 160613-1002 - Added feature to copy recordings to a new filename
 # 170301-1650 - Added validation that sounds web dir exists
 # 170409-1555 - Added IP List validation code
+# 170602-1042 - Prevent non-wav/gsm files from being uploaded
 #
 
-$version = '2.14-20';
-$build = '170409-1555';
+$version = '2.14-21';
+$build = '170602-1042';
 
 $MT[0]='';
 
@@ -338,11 +339,18 @@ if ($action == "AUTOUPLOAD")
 		$audiofile_name = preg_replace("/\!/",'',$audiofile_name);
 		$audiofile_name = preg_replace("/\%/",'',$audiofile_name);
 		$audiofile_name = preg_replace("/\^/",'',$audiofile_name);
-		copy($AF_path, "$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
-		chmod("$WeBServeRRooT/$sounds_web_directory/$audiofile_name", 0766);
+		if (preg_match("/\.wav$|\.gsm$/", $audiofile_name))
+			{
+			copy($AF_path, "$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
+			chmod("$WeBServeRRooT/$sounds_web_directory/$audiofile_name", 0766);
 
-		echo _QXZ("SUCCESS").": $audiofile_name "._QXZ("uploaded")."     "._QXZ("size").":" . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "\n";
-		exit;
+			echo _QXZ("SUCCESS").": $audiofile_name "._QXZ("uploaded")."     "._QXZ("size").":" . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "\n";
+			exit;
+			}
+		else
+			{
+			echo _QXZ("ERROR").": "._QXZ("only wav and gsm files are allowed in the audio store")."\n";
+			}
 		}
 	else
 		{
@@ -521,21 +529,28 @@ if ($action == "MANUALUPLOAD")
 		$audiofile_name = preg_replace("/\!/",'',$audiofile_name);
 		$audiofile_name = preg_replace("/\%/",'',$audiofile_name);
 		$audiofile_name = preg_replace("/\^/",'',$audiofile_name);
-		copy($AF_path, "$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
-		chmod("$WeBServeRRooT/$sounds_web_directory/$audiofile_name", 0766);
-		
-		echo _QXZ("SUCCESS").": $audiofile_name "._QXZ("uploaded")."     "._QXZ("size").":" . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "\n";
+		if (preg_match("/\.wav$|\.gsm$/", $audiofile_name))
+			{
+			copy($AF_path, "$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
+			chmod("$WeBServeRRooT/$sounds_web_directory/$audiofile_name", 0766);
+			
+			echo _QXZ("SUCCESS").": $audiofile_name "._QXZ("uploaded")."     "._QXZ("size").":" . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "\n";
 
-		$stmt="UPDATE servers SET sounds_update='Y';";
-		$rslt=mysql_to_mysqli($stmt, $link);
+			$stmt="UPDATE servers SET sounds_update='Y';";
+			$rslt=mysql_to_mysqli($stmt, $link);
 
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='AUDIOSTORE', event_type='LOAD', record_id='manualupload', event_code='$audiofile_name " . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "', event_sql=\"$SQL_log\", event_notes='$audiofile_name $AF_path $AF_orig';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='AUDIOSTORE', event_type='LOAD', record_id='manualupload', event_code='$audiofile_name " . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "', event_sql=\"$SQL_log\", event_notes='$audiofile_name $AF_path $AF_orig';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			}
+		else
+			{
+			echo _QXZ("ERROR").": "._QXZ("only wav and gsm files are allowed in the audio store")."\n";
+			}
 		}
 	else
 		{
