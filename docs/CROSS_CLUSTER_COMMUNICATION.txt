@@ -2,7 +2,7 @@ CROSS-CLUSTER COMMUNICATION	Started: 2011-05-27	Updated: 2017-06-09
 
 
 --------------------------------
- SIMPLER IMPLEMENTED OPTION: implemented in SVN/trunk revision 2776
+ SIMPLER IMPLEMENTED OPTION: implemented in SVN/trunk revision 2777
 --------------------------------
 Below is a description of a simple cross-cluster option, which is to send lead data in one direction from one cluster to another as a phone call is sent over.
 
@@ -13,6 +13,10 @@ Below is a description of a simple cross-cluster option, which is to send lead d
 	Set up an IAX "carrier" on the originating cluster and an IAX "phone" on the destination cluster to link the two together.
 		(Note: the phone entry on the destination cluster must have the Outbound CallerID and Fullname fields blank)
 	The destination phone entry needs to use "trunkinbound" as it's phone and exten context
+
+- Agent on the originating cluster will do a blind-transfer or dial-with-customer to a custom dialplan number that goes to the destination cluster
+	Agent should click on the "commit" link in the Customer Information screen before transferring the call(top right corner)
+	This will ensure that any customer info they have altered is updated on the origination database before the destination cluster gets the call
 
 - At the DID, the call will get sent to a Call Menu where the call will go through an AGI script
 	Set the prompt to "wait-moment|cm_sc_ccc_lookup_insert.agi,ccc_test---8199"
