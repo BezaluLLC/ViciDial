@@ -27,10 +27,11 @@
 # 170301-1650 - Added validation that sounds web dir exists
 # 170409-1555 - Added IP List validation code
 # 170602-1042 - Prevent non-wav/gsm files from being uploaded
+# 170630-1440 - Require modify_audiostore user permissions to access this page
 #
 
-$version = '2.14-21';
-$build = '170602-1042';
+$version = '2.14-22';
+$build = '170630-1440';
 
 $MT[0]='';
 
@@ -198,7 +199,7 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 
 	if ($auth > 0)
 		{
-		$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and( (modify_campaigns='1') or (modify_audiostore='1') );";
+		$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and (modify_audiostore='1');";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
