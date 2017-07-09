@@ -286,3 +286,8 @@ ALTER TABLE system_settings MODIFY default_phone_login_password VARCHAR(100) def
 ALTER TABLE system_settings MODIFY default_server_password VARCHAR(100) default 'test';
 
 UPDATE system_settings SET db_schema_version='1508',db_schema_update_date=NOW() where db_schema_version < 1508;
+
+ALTER TABLE user_call_log ADD xfer_hungup VARCHAR(20) default '';
+ALTER TABLE user_call_log ADD xfer_hungup_datetime DATETIME;
+
+UPDATE system_settings SET db_schema_version='1509',db_schema_update_date=NOW() where db_schema_version < 1509;

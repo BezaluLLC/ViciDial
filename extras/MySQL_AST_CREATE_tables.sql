@@ -2148,6 +2148,8 @@ preset_name VARCHAR(40) default '',
 campaign_id VARCHAR(20) default '',
 customer_hungup ENUM('BEFORE_CALL','DURING_CALL','') default '',
 customer_hungup_seconds SMALLINT(5) UNSIGNED default '0',
+xfer_hungup VARCHAR(20) default '',
+xfer_hungup_datetime DATETIME,
 index (user),
 index (call_date),
 index (group_alias_id)
@@ -4008,4 +4010,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1508',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1509',db_schema_update_date=NOW(),reload_timestamp=NOW();

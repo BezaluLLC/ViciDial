@@ -557,10 +557,11 @@
 # 170601-2017 - Added more agent events
 # 170609-1711 - Added 'commit' function to force immediate submission of Customer Information changes to database
 # 170629-1831 - Added some new agent_events entries
+# 170709-1116 - Added Xfer Hung Up notification
 #
 
-$version = '2.14-527c';
-$build = '170629-1831';
+$version = '2.14-528c';
+$build = '170709-1116';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -5377,7 +5378,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				}
 			if (xmlhttprequestcheckconf) 
 				{
-				checkconf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&client=vdc&conf_exten=" + taskconfnum + "&auto_dial_level=" + auto_dial_level + "&campagentstdisp=" + campagentstdisp + "&customer_chat_id=" + document.vicidial_form.customer_chat_id.value + "&live_call_seconds=" + VD_live_call_secondS +"&clicks=" + button_click_log;
+				checkconf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&client=vdc&conf_exten=" + taskconfnum + "&auto_dial_level=" + auto_dial_level + "&campagentstdisp=" + campagentstdisp + "&customer_chat_id=" + document.vicidial_form.customer_chat_id.value + "&live_call_seconds=" + VD_live_call_secondS + "&xferchannel=" + document.vicidial_form.xferchannel.value + "&clicks=" + button_click_log;
 				button_click_log='';
 				xmlhttprequestcheckconf.open('POST', 'conf_exten_check.php'); 
 				xmlhttprequestcheckconf.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
@@ -5526,6 +5527,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						var api_pause_code = APIPauseCode_array[1];
 						var APILeadSwitch_array = check_time_array[30].split("LeadIDSwitch: ");
 						var api_switch_lead = APILeadSwitch_array[1];
+						var DEADxfer_array = check_time_array[31].split("DEADxfer: ");
+						var DEADxfer = DEADxfer_array[1];
 						var APIdtmf_array = check_time_array[20].split("APIdtmf: ");
 						api_dtmf = APIdtmf_array[1];
 						var APItransfercond_array = check_time_array[21].split("APItransferconf: ");
@@ -5540,6 +5543,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						var APIpark_array = check_time_array[22].split("APIpark: ");
 						api_parkcustomer = APIpark_array[1];
 
+						if(DEADxfer >  0)
+							{                             
+							button_click_log = button_click_log + "" + SQLdate + "-----XferHungUp---" + document.vicidial_form.xferchannel.value + "|";	
+							xfercall_send_hangup('YES');
+							alert_box("XFER LINE HUNG UP");
+							}
 						if ( (api_switch_lead.length > 0) && (api_switch_lead > 0) )
 							{
 							if (api_switch_lead_triggered < 1)
