@@ -432,11 +432,12 @@
 # 170526-2327 - Added additional variable filtering
 # 170527-2208 - Added more additional variable filtering, fixed rare inbound logging issue #1017
 # 170605-1633 - Added vendor_lead_code to agent lead search results screen
-# 170609-1710 - small debug addition
+# 170609-1710 - Small debug addition
+# 170712-1548 - Changed agents view to use last_state_change for time
 #
 
-$version = '2.14-327';
-$build = '170609-1710';
+$version = '2.14-328';
+$build = '170712-1548';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=684;
@@ -13697,7 +13698,7 @@ if ($ACTION == 'AGENTSview')
 	### Gather agents data and statuses
 	$agentviewlistSQL='';
 	$j=0;
-	$stmt="SELECT vla.user,vla.status,vu.full_name,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish) from vicidial_live_agents vla,vicidial_users vu where vla.user=vu.user $AGENTviewSQL order by vu.full_name;";
+	$stmt="SELECT vla.user,vla.status,vu.full_name,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_call_finish),UNIX_TIMESTAMP(last_state_change) from vicidial_live_agents vla,vicidial_users vu where vla.user=vu.user $AGENTviewSQL order by vu.full_name;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00227',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 	if ($rslt) {$agents_count = mysqli_num_rows($rslt);}
@@ -13710,22 +13711,23 @@ if ($ACTION == 'AGENTSview')
 		$full_name =	$row[2];
 		$call_start =	$row[3];
 		$call_finish =	$row[4];
+		$state_change = $row[5];
 		$agentviewlistSQL .= "'$user',";
 
 		if ( ($status=='READY') or ($status=='CLOSER') ) 
 			{
 			$statuscolor='#ADD8E6';
-			$call_time = ($StarTtime - $call_finish);
+			$call_time = ($StarTtime - $state_change);
 			}
 		if ( ($status=='QUEUE') or ($status=='INCALL') ) 
 			{
 			$statuscolor='#D8BFD8';
-			$call_time = ($StarTtime - $call_start);
+			$call_time = ($StarTtime - $state_change);
 			}
 		if ($status=='PAUSED') 
 			{
 			$statuscolor='#F0E68C';
-			$call_time = ($StarTtime - $call_finish);
+			$call_time = ($StarTtime - $state_change);
 			}
 
 		if ($call_time < 1)
