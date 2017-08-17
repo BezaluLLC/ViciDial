@@ -1219,7 +1219,12 @@ areacode_filter ENUM('DISABLED','ALLOW_ONLY','DROP_ONLY') default 'DISABLED',
 areacode_filter_seconds SMALLINT(5) default '10',
 areacode_filter_action ENUM('CALLMENU','INGROUP','DID','MESSAGE','EXTENSION','VOICEMAIL','VMAIL_NO_INST') default 'MESSAGE',
 areacode_filter_action_value VARCHAR(255) default 'nbdy-avail-to-take-call|vm-goodbye',
-populate_state_areacode ENUM('DISABLED','NEW_LEAD_ONLY','OVERWRITE_ALWAYS') default 'DISABLED'
+populate_state_areacode ENUM('DISABLED','NEW_LEAD_ONLY','OVERWRITE_ALWAYS') default 'DISABLED',
+inbound_survey ENUM('DISABLED','ENABLED') default 'DISABLED',
+inbound_survey_filename TEXT,
+inbound_survey_accept_digit VARCHAR(1) default '',
+inbound_survey_question_filename TEXT,
+inbound_survey_callmenu TEXT
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -3770,6 +3775,20 @@ index (date_hour),
 unique index vclhc_hour (date_hour, type)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_inbound_survey_log (
+uniqueid VARCHAR(50) NOT NULL,
+lead_id INT(9) UNSIGNED NOT NULL,
+campaign_id VARCHAR(20) NOT NULL,
+call_date DATETIME,
+participate ENUM('N','Y') default 'N',
+played ENUM('N','R','Y') default 'N',
+dtmf_response VARCHAR(1) default '',
+next_call_menu TEXT,
+index (call_date),
+index (lead_id),
+index (uniqueid)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -3967,6 +3986,9 @@ CREATE TABLE vicidial_carrier_hour_counts_archive LIKE vicidial_carrier_hour_cou
 CREATE TABLE user_call_log_archive LIKE user_call_log;
 ALTER TABLE user_call_log_archive MODIFY user_call_log_id INT(9) UNSIGNED NOT NULL;
 
+CREATE TABLE vicidial_inbound_survey_log_archive LIKE vicidial_inbound_survey_log;
+CREATE UNIQUE INDEX visla_key on vicidial_inbound_survey_log_archive(uniqueid, call_date, campaign_id, lead_id);
+
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
 
@@ -4041,4 +4063,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1511',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1512',db_schema_update_date=NOW(),reload_timestamp=NOW();
