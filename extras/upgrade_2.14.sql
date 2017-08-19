@@ -351,3 +351,7 @@ ALTER TABLE vicidial_inbound_groups ADD inbound_survey_question_filename TEXT;
 ALTER TABLE vicidial_inbound_groups ADD inbound_survey_callmenu TEXT;
 
 UPDATE system_settings SET db_schema_version='1512',db_schema_update_date=NOW() where db_schema_version < 1512;
+
+ALTER TABLE system_settings ADD allow_manage_active_lists ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1513',db_schema_update_date=NOW() where db_schema_version < 1513;
