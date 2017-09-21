@@ -1723,7 +1723,8 @@ system_ip_blacklist VARCHAR(30) default '',
 agent_push_events ENUM('0','1') default '0',
 agent_push_url TEXT,
 hide_inactive_lists ENUM('0','1') default '0',
-allow_manage_active_lists ENUM('0','1') default '0'
+allow_manage_active_lists ENUM('0','1') default '0',
+expired_lists_inactive ENUM('0','1') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -4071,4 +4072,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1515',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1516',db_schema_update_date=NOW(),reload_timestamp=NOW();

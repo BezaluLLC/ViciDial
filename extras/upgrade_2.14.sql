@@ -370,3 +370,7 @@ CREATE TABLE vicidial_xfer_log_archive LIKE vicidial_xfer_log;
 ALTER TABLE vicidial_xfer_log_archive MODIFY xfercallid INT(9) UNSIGNED NOT NULL;
 
 UPDATE system_settings SET db_schema_version='1515',db_schema_update_date=NOW() where db_schema_version < 1515;
+
+ALTER TABLE system_settings ADD expired_lists_inactive ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1516',db_schema_update_date=NOW() where db_schema_version < 1516;
