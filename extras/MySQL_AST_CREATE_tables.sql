@@ -3801,6 +3801,7 @@ phone_number VARCHAR(18),
 scrub_date DATETIME NOT NULL,
 flag_invalid ENUM('','0','1') default '',
 flag_dnc ENUM('','0','1') default '',
+flag_projdnc ENUM('','0','1') default '',
 flag_litigator ENUM('','0','1') default '',
 full_response VARCHAR(255) default '',
 index(phone_number),
@@ -4084,4 +4085,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1517',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1518',db_schema_update_date=NOW(),reload_timestamp=NOW();
