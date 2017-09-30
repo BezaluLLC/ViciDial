@@ -873,7 +873,7 @@ xferconf_e_number VARCHAR(50) default '',
 use_custom_cid ENUM('Y','N','AREACODE','USER_CUSTOM_1','USER_CUSTOM_2','USER_CUSTOM_3','USER_CUSTOM_4','USER_CUSTOM_5') default 'N',
 scheduled_callbacks_alert ENUM('NONE','BLINK','RED','BLINK_RED','BLINK_DEFER','RED_DEFER','BLINK_RED_DEFER') default 'NONE',
 queuemetrics_callstatus_override ENUM('DISABLED','NO','YES') default 'DISABLED',
-extension_appended_cidname ENUM('Y','N') default 'N',
+extension_appended_cidname ENUM('Y','N','Y_USER','Y_WITH_CAMPAIGN','Y_USER_WITH_CAMPAIGN') default 'N',
 scheduled_callbacks_count ENUM('LIVE','ALL_ACTIVE') default 'ALL_ACTIVE',
 manual_dial_override ENUM('NONE','ALLOW_ALL','DISABLE_ALL') default 'NONE',
 blind_monitor_warning ENUM('DISABLED','ALERT','NOTICE','AUDIO','ALERT_NOTICE','ALERT_AUDIO','NOTICE_AUDIO','ALL') default 'DISABLED',
@@ -1158,7 +1158,7 @@ xferconf_c_number VARCHAR(50) default '',
 xferconf_d_number VARCHAR(50) default '',
 xferconf_e_number VARCHAR(50) default '',
 ignore_list_script_override ENUM('Y','N') default 'N',
-extension_appended_cidname ENUM('Y','N') default 'N',
+extension_appended_cidname ENUM('Y','N','Y_USER','Y_WITH_CAMPAIGN','Y_USER_WITH_CAMPAIGN') default 'N',
 uniqueid_status_display ENUM('DISABLED','ENABLED','ENABLED_PREFIX','ENABLED_PRESERVE') default 'DISABLED',
 uniqueid_status_prefix VARCHAR(50) default '',
 hold_time_option_minimum SMALLINT(5) default '0',
@@ -3484,7 +3484,8 @@ report_name VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT NULL,
 date_added DATETIME DEFAULT NULL,
 user VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
 domain VARCHAR(70) COLLATE utf8_unicode_ci DEFAULT NULL,
-path_name VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+path_name TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
+custom_variables TEXT COLLATE utf8_unicode_ci DEFAULT NULL,
 date_modified TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
 user_modify VARCHAR(20) COLLATE utf8_unicode_ci DEFAULT NULL,
 PRIMARY KEY (custom_report_id),
@@ -4085,4 +4086,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1518',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1519',db_schema_update_date=NOW(),reload_timestamp=NOW();
