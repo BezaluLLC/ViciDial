@@ -402,3 +402,8 @@ ALTER TABLE vicidial_custom_reports MODIFY path_name TEXT COLLATE utf8_unicode_c
 ALTER TABLE vicidial_custom_reports ADD custom_variables TEXT COLLATE utf8_unicode_ci DEFAULT NULL AFTER path_name;
 
 UPDATE system_settings SET db_schema_version='1519',db_schema_update_date=NOW() where db_schema_version < 1519;
+
+ALTER TABLE server_performance ADD disk_reads MEDIUMINT(7);
+ALTER TABLE server_performance ADD disk_writes MEDIUMINT(7);
+
+UPDATE system_settings SET db_schema_version='1520',db_schema_update_date=NOW() where db_schema_version < 1520;
