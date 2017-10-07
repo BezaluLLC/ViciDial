@@ -1016,7 +1016,8 @@ na_call_url TEXT,
 local_call_time VARCHAR(10) NOT NULL DEFAULT 'campaign',
 web_form_address_three TEXT,
 status_group_id VARCHAR(20) default '',
-user_new_lead_limit SMALLINT(5) default '-1'
+user_new_lead_limit SMALLINT(5) default '-1',
+inbound_list_script_override VARCHAR(20)
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_statuses (
@@ -4088,4 +4089,4 @@ UPDATE vicidial_configuration set value='1766' where name='qc_database_version';
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1520',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1521',db_schema_update_date=NOW(),reload_timestamp=NOW();
