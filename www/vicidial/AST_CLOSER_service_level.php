@@ -39,6 +39,7 @@
 # 170409-1559 - Added IP List validation code
 # 170602-1008 - Added 8am-5pm shift
 # 170829-0040 - Added screen color settings
+# 171012-2015 - Fixed javascript/apache errors with graphs
 #
 
 $startMS = microtime();
@@ -960,6 +961,7 @@ $CSV_text.="\"TOTALS\",\"$FtotDROPS\",\"$FtotDROPSpct%\",\"$FtotDROPSavg\",\"$Ft
 	$graph_count=count($graph_array);
 	$graph_title=_QXZ("CALL STATUS STATS");
 	include("graphcanvas.inc");
+	$HEADER.=$HTML_graph_head;
 	$GRAPH.=$graphCanvas;
 
 
@@ -1299,6 +1301,7 @@ for ($q=0; $q<count($graph_array); $q++) {
 $graph_count=count($graph_array);
 $graph_title=_QXZ("AVERAGE HOLD TIME");
 include("graphcanvas.inc");
+$HEADER.=$HTML_graph_head;
 $GRAPH_text.=$graphCanvas."<PRE>";
 
 
@@ -1487,7 +1490,7 @@ else
 	echo "$HEADER";
 	require("admin_header.php");
 	echo "$MAIN";
-	echo $JS_text;
+	if ($report_display_type=="HTML") {echo $JS_text;}
 	}
 }
 

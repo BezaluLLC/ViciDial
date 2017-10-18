@@ -53,6 +53,7 @@
 # 170409-1555 - Added IP List validation code
 # 170629-2080 - Added download option
 # 170829-0040 - Added screen color settings
+# 171012-2015 - Fixed javascript/apache errors with graphs
 #
 
 $startMS = microtime();
@@ -1295,6 +1296,7 @@ else
 	$graph_count=count($graph_array);
 	$graph_title=_QXZ("CALL HANGUP REASON STATS");
 	include("graphcanvas.inc");
+	$HEADER.=$HTML_graph_head;
 	$GRAPH_text.=$graphCanvas;
 
 
@@ -1579,6 +1581,7 @@ else
 	$graph_count=count($graph_array);
 	$graph_title=_QXZ("CALL STATUS STATS");
 	include("graphcanvas.inc");
+	$HEADER.=$HTML_graph_head;
 	$GRAPH_text.=$graphCanvas;
 
 
@@ -1733,6 +1736,7 @@ else
 	$graph_count=count($graph_array);
 	$graph_title=_QXZ("LIST ID STATS");
 	include("graphcanvas.inc");
+	$HEADER.=$HTML_graph_head;
 	$GRAPH_text.=$graphCanvas;
 
 
@@ -1915,6 +1919,7 @@ else
 		$graph_count=count($graph_array);
 		$graph_title=_QXZ("AGENT PRESET DIALS");
 		include("graphcanvas.inc");
+		$HEADER.=$HTML_graph_head;
 		$GRAPH_text.=$graphCanvas;
 
 		$TOTPREcalls =	sprintf("%10s", $TOTPREcalls); while(strlen($TOTPREcalls)>10) {$TOTPREcalls = substr("$TOTPREcalls", 0, -1);}
@@ -2056,6 +2061,7 @@ else
 		$graph_count=count($graph_array);
 		$graph_title=_QXZ("CUSTOM STATUS CATEGORY STATS");
 		include("graphcanvas.inc");
+		$HEADER.=$HTML_graph_head;
 		$GRAPH_text.=$graphCanvas;
 
 
@@ -2288,6 +2294,7 @@ else
 	$graph_count=count($graph_array);
 	$graph_title="AGENT STATS";
 	include("graphcanvas.inc");
+	$HEADER.=$HTML_graph_head;
 	$GRAPH_text.=$graphCanvas;
 
 	$GRAPH_text.="</PRE>";

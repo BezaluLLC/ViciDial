@@ -30,6 +30,7 @@
 # 170227-1713 - Fix for default HTML report format, issue #997
 # 170409-1555 - Added IP List validation code
 # 170829-0040 - Added screen color settings
+# 171012-2015 - Fixed javascript/apache errors with graphs
 #
 
 $startMS = microtime();
@@ -977,6 +978,7 @@ else
 			$graph_count=count($graph_array);
 			$graph_title=" $group[$i] - $group_name[$i]<BR>"._QXZ("INBOUND SERVICE LEVEL REPORT");
 			include("graphcanvas.inc");
+			$HEADER.=$HTML_graph_head;
 			$sub_GRAPH.=$graphCanvas;
 
 
@@ -1073,6 +1075,7 @@ else
 		$graph_count=count($graph_array);
 		$graph_title=_QXZ("INBOUND SERVICE LEVEL REPORT");
 		include("graphcanvas.inc");
+		$HEADER.=$HTML_graph_head;
 		$GRAPH.=$graphCanvas;
 
 
