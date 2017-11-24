@@ -433,3 +433,7 @@ UPDATE system_settings SET db_schema_version='1523',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_lists_fields ADD field_duplicate ENUM('Y','N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1524',db_schema_update_date=NOW() where db_schema_version < 1524;
+
+ALTER TABLE vicidial_campaigns ADD max_inbound_calls_outcome ENUM('DEFAULT','ALLOW_AGENTDIRECT','ALLOW_MI_PAUSE','ALLOW_AGENTDIRECT_AND_MI_PAUSE') default 'DEFAULT';
+
+UPDATE system_settings SET db_schema_version='1525',db_schema_update_date=NOW() where db_schema_version < 1525;
