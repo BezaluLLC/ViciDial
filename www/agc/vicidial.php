@@ -573,10 +573,11 @@
 # 171124-1459 - Added manual_auto_next_options options
 # 171126-1140 - Added ability to use EMAILinbound_message script variable
 # 171130-0226 - Added agent_screen_time_display option
+# 171214-2018 - Added PREVIEW_ get_call_launch options
 #
 
-$version = '2.14-543c';
-$build = '171130-0226';
+$version = '2.14-544c';
+$build = '171214-2018';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -8037,17 +8038,17 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									FormPanelToFront();
 									}
 
-								if (CalL_AutO_LauncH == 'WEBFORM')
+								if ( (CalL_AutO_LauncH == 'WEBFORM') || (CalL_AutO_LauncH == 'PREVIEW_WEBFORM') )
 									{
 									window.open(TEMP_VDIC_web_form_address, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 									webform_click_log('Awebform1');
 									}
-								if (CalL_AutO_LauncH == 'WEBFORMTWO')
+								if ( (CalL_AutO_LauncH == 'WEBFORMTWO') || (CalL_AutO_LauncH == 'PREVIEW_WEBFORMTWO') )
 									{
 									window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 									webform_click_log('Awebform2');
 									}
-								if (CalL_AutO_LauncH == 'WEBFORMTHREE')
+								if ( (CalL_AutO_LauncH == 'WEBFORMTHREE') || (CalL_AutO_LauncH == 'PREVIEW_WEBFORMTHREE') )
 									{
 									window.open(TEMP_VDIC_web_form_address_three, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 									webform_click_log('Awebform3');
@@ -9450,17 +9451,17 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 										CustomerChatPanelToFront();
 										}
 
-									if (get_call_launch == 'WEBFORM')
+									if ( (get_call_launch == 'WEBFORM') || (get_call_launch == 'PREVIEW_WEBFORM') )
 										{
 										window.open(TEMP_VDIC_web_form_address, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 										webform_click_log('Awebform1');
 										}
-									if (get_call_launch == 'WEBFORMTWO')
+									if ( (get_call_launch == 'WEBFORMTWO') || (get_call_launch == 'PREVIEW_WEBFORMTWO') )
 										{
 										window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 										webform_click_log('Awebform2');
 										}
-									if (get_call_launch == 'WEBFORMTHREE')
+									if ( (get_call_launch == 'WEBFORMTHREE') || (get_call_launch == 'PREVIEW_WEBFORMTHREE') )
 										{
 										window.open(TEMP_VDIC_web_form_address_three, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 										webform_click_log('Awebform3');
@@ -9486,6 +9487,22 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 											}
 										}
 									reselect_preview_dial = 1;
+
+									if (get_call_launch == 'PREVIEW_WEBFORM')
+										{
+										window.open(TEMP_VDIC_web_form_address, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+										webform_click_log('Awebform1');
+										}
+									if (get_call_launch == 'PREVIEW_WEBFORMTWO')
+										{
+										window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+										webform_click_log('Awebform2');
+										}
+									if (get_call_launch == 'PREVIEW_WEBFORMTHREE')
+										{
+										window.open(TEMP_VDIC_web_form_address_three, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
+										webform_click_log('Awebform3');
+										}
 									}
 								}
 							}
@@ -10942,17 +10959,17 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								EmailPanelToFront();
 								}
 
-							if (CalL_AutO_LauncH == 'WEBFORM')
+							if ( (CalL_AutO_LauncH == 'WEBFORM') || (CalL_AutO_LauncH == 'PREVIEW_WEBFORM') )
 								{
 								window.open(TEMP_VDIC_web_form_address, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 								webform_click_log('Awebform1');
 								}
-							if (CalL_AutO_LauncH == 'WEBFORMTWO')
+							if ( (CalL_AutO_LauncH == 'WEBFORMTWO') || (CalL_AutO_LauncH == 'PREVIEW_WEBFORMTWO') )
 								{
 								window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 								webform_click_log('Awebform2');
 								}
-							if (CalL_AutO_LauncH == 'WEBFORMTHREE')
+							if ( (CalL_AutO_LauncH == 'WEBFORMTHREE') || (CalL_AutO_LauncH == 'PREVIEW_WEBFORMTHREE') )
 								{
 								window.open(TEMP_VDIC_web_form_address_three, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 								webform_click_log('Awebform3');
@@ -11698,17 +11715,17 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								CustomerChatPanelToFront();
 								}
 
-							if (CalL_AutO_LauncH == 'WEBFORM')
+							if ( (CalL_AutO_LauncH == 'WEBFORM') || (CalL_AutO_LauncH == 'PREVIEW_WEBFORM') )
 								{
 								window.open(TEMP_VDIC_web_form_address, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 								webform_click_log('Awebform1');
 								}
-							if (CalL_AutO_LauncH == 'WEBFORMTWO')
+							if ( (CalL_AutO_LauncH == 'WEBFORMTWO') || (CalL_AutO_LauncH == 'PREVIEW_WEBFORMTWO') )
 								{
 								window.open(TEMP_VDIC_web_form_address_two, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 								webform_click_log('Awebform2');
 								}
-							if (CalL_AutO_LauncH == 'WEBFORMTHREE')
+							if ( (CalL_AutO_LauncH == 'WEBFORMTHREE') || (CalL_AutO_LauncH == 'PREVIEW_WEBFORMTHREE') )
 								{
 								window.open(TEMP_VDIC_web_form_address_three, web_form_target, 'toolbar=1,scrollbars=1,location=1,statusbar=1,menubar=1,resizable=1,width=640,height=450');
 								webform_click_log('Awebform3');
