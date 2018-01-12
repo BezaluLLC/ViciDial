@@ -3837,6 +3837,18 @@ index(phone_number),
 index(scrub_date)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_process_log (
+serial_id VARCHAR(20) NOT NULL,
+run_time DATETIME,
+run_sec INT,
+server_ip VARCHAR(15) NOT NULL,
+script VARCHAR(100),
+process VARCHAR(100),
+output_lines MEDIUMTEXT,
+index (serial_id),
+index (run_time)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -4118,4 +4130,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1531',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1532',db_schema_update_date=NOW(),reload_timestamp=NOW();
