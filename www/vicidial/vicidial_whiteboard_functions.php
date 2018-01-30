@@ -1,3 +1,7 @@
+<?php
+header('Content-Type: application/javascript');
+require("functions.php");
+?>
 // vicidial_whiteboard_functions.php
 // 
 // Copyright (C) 2017  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
@@ -154,10 +158,10 @@ function RefreshReportWindow() {
 
         var InvForm = document.forms[0];
         var x = 0;
-		var query_date_str="Start date: "+query_date+" "+query_time;
+		var query_date_str="<?php echo _QXZ("Start date"); ?>: "+query_date+" "+query_time;
 		if (hourly_display && hourly_display>0)
 			{
-			query_date_str="Displaying last "+hourly_display+" hours";
+			query_date_str="<?php echo _QXZ("Displaying last"); ?> "+hourly_display+" <?php echo _QXZ("hours"); ?>";
 			}
 
 		var campaign_parameters_str="";
@@ -235,14 +239,14 @@ function RefreshReportWindow() {
 
 		
 		var report_parameters="<div class='embossed border2px round_corners sm_shadow alt_row1'>";
-		report_parameters+="Report Type: "+report_type+"<BR>\n";
+		report_parameters+="<?php echo _QXZ("Report Type"); ?>: "+report_type+"<BR>\n";
 		report_parameters+=query_date_str+"<BR>\n";
-		if (campaign_parameters_str.length>0) {report_parameters+="Campaigns: "+CPstr+"<BR>\n";}
-		if (user_groups_parameters_str.length>0) {report_parameters+="User groups: "+UGPstr+"<BR>\n";}
-		if (users_parameters_str.length>0) {report_parameters+="Users: "+USPstr+"<BR>\n";}
-		if (groups_parameters_str.length>0) {report_parameters+="In-groups: "+GPstr+"<BR>\n";}
-		if (did_parameters_str.length>0) {report_parameters+="DIDs: "+DPstr+"<BR>\n";}
-		if (status_flags_parameters_str.length>0) {report_parameters+="Status flags: "+SFstr+"<BR>\n";}
+		if (campaign_parameters_str.length>0) {report_parameters+="<?php echo _QXZ("Campaigns"); ?>: "+CPstr+"<BR>\n";}
+		if (user_groups_parameters_str.length>0) {report_parameters+="<?php echo _QXZ("User groups"); ?>: "+UGPstr+"<BR>\n";}
+		if (users_parameters_str.length>0) {report_parameters+="<?php echo _QXZ("Users"); ?>: "+USPstr+"<BR>\n";}
+		if (groups_parameters_str.length>0) {report_parameters+="<?php echo _QXZ("In-groups"); ?>: "+GPstr+"<BR>\n";}
+		if (did_parameters_str.length>0) {report_parameters+="<?php echo _QXZ("DIDs"); ?>: "+DPstr+"<BR>\n";}
+		if (status_flags_parameters_str.length>0) {report_parameters+="<?php echo _QXZ("Status flags"); ?>: "+SFstr+"<BR>\n";}
 		report_parameters+="</div>\n";
 
 		document.getElementById("parameters_span").innerHTML=report_parameters;
@@ -340,12 +344,12 @@ function RefreshReportWindow() {
 
 				var Top10HTMLChart="<div class='embossed border2px round_corners sm_shadow alt_row1' align='center'><table cellpadding='8' valign='top'>";
 				Top10HTMLChart+="<tr>";
-				Top10HTMLChart+="<th colspan='3'><font size='+2'>TOP 10 PERFORMERS</font></th>";
+				Top10HTMLChart+="<th colspan='3'><font size='+2'><?php echo _QXZ("TOP 10 PERFORMERS"); ?></font></th>";
 				Top10HTMLChart+="<td align='right'><input type='button' class='red_btn sm_shadow' style='width:20px;height:20px' value=' X' onClick=\"ToggleVisibility('top_10_display'); ToggleVisibility('graph_display');\"></td>";
 				Top10HTMLChart+="</tr>";
 				Top10HTMLChart+="<tr>";
-				Top10HTMLChart+="<th>RANK</th>";
-				Top10HTMLChart+="<th>NAME</th>";
+				Top10HTMLChart+="<th><?php echo _QXZ("RANK"); ?></th>";
+				Top10HTMLChart+="<th><?php echo _QXZ("NAME"); ?></th>";
 				Top10HTMLChart+="<th></th>";
 				Top10HTMLChart+="</tr>";
 
@@ -382,7 +386,7 @@ function RefreshReportWindow() {
 						}
 					}
 				Top10HTMLChart+="<tr>";
-				Top10HTMLChart+="<th colspan='4'><input type='button' class='green_btn sm_shadow round_corners' style='width:250px' value='SHOW PERFORMANCE CHART' onClick=\"ToggleVisibility('top_10_display'); ToggleVisibility('graph_display');\"></th>";
+				Top10HTMLChart+="<th colspan='4'><input type='button' class='green_btn sm_shadow round_corners' style='width:250px' value='<?php echo _QXZ("SHOW PERFORMANCE CHART"); ?>' onClick=\"ToggleVisibility('top_10_display'); ToggleVisibility('graph_display');\"></th>";
 				Top10HTMLChart+="</tr>";
 				Top10HTMLChart+="</table><BR><BR></div>";
 				document.getElementById("top_10_display").innerHTML=Top10HTMLChart;
@@ -399,12 +403,12 @@ function RefreshReportWindow() {
 				TotalSeconds="0"+TotalSeconds;
 
 				if (response_txt && response_txt=="REPORT RETURNED NO RESULTS") {
-					document.getElementById("total_calls_div").innerHTML="** NO RESULTS **";
-					document.getElementById("total_sales_div").innerHTML="** NO RESULTS **";
-					document.getElementById("total_time_div").innerHTML="** NO RESULTS **";
-					document.getElementById("total_cph_div").innerHTML="** NO RESULTS **";
-					document.getElementById("total_sph_div").innerHTML="** NO RESULTS **";
-					document.getElementById("total_conv_div").innerHTML="** NO RESULTS **";
+					document.getElementById("total_calls_div").innerHTML="** <?php echo _QXZ("NO RESULTS"); ?> **";
+					document.getElementById("total_sales_div").innerHTML="** <?php echo _QXZ("NO RESULTS"); ?> **";
+					document.getElementById("total_time_div").innerHTML="** <?php echo _QXZ("NO RESULTS"); ?> **";
+					document.getElementById("total_cph_div").innerHTML="** <?php echo _QXZ("NO RESULTS"); ?> **";
+					document.getElementById("total_sph_div").innerHTML="** <?php echo _QXZ("NO RESULTS"); ?> **";
+					document.getElementById("total_conv_div").innerHTML="** <?php echo _QXZ("NO RESULTS"); ?> **";
 				} else {
 					document.getElementById("total_calls_div").innerHTML=TotalCallCount;
 					document.getElementById("total_sales_div").innerHTML=TotalSaleCount;
@@ -440,12 +444,12 @@ function RefreshReportWindow() {
 								// options: { elements: { point: { radius: 0 } } }, // no dots
 								data: {
 									datasets: [
-										{label: 'Total calls', data: TotalCallCountArray, backgroundColor: "rgba(153,153,255,0.5)", hidden: hide_total}, // dataset 0, see below
-										{label: 'Total sales', data: TotalSaleCountArray, backgroundColor: "rgba(255,153,153,0.5)", hidden: hide_total}, // dataset 1, see below
-										{label: 'Calls per hour', data: CPHArray, backgroundColor: "rgba(255,255,0,0.5)", hidden: hide_rates}, // dataset 2, see below
-										{label: 'Sales per hour', data: SPHArray, backgroundColor: "rgba(153,255,153,0.5)", hidden: hide_rates}, // dataset 3, see below
-										{label: 'Conversion rate %', data: ConvRateArray, backgroundColor: "rgba(255,153,255,0.5)", hidden: hide_rates}, // dataset 4, see below
-										{label: 'Target gross', data: TGArray, type: 'line', pointRadius: 0, backgroundColor: "rgba(153,255,255,0.5)", hidden: hide_total} // dataset 5, see below
+										{label: '<?php echo _QXZ("Total calls"); ?>', data: TotalCallCountArray, backgroundColor: "rgba(153,153,255,0.5)", hidden: hide_total}, // dataset 0, see below
+										{label: '<?php echo _QXZ("Total sales"); ?>', data: TotalSaleCountArray, backgroundColor: "rgba(255,153,153,0.5)", hidden: hide_total}, // dataset 1, see below
+										{label: '<?php echo _QXZ("Calls per hour"); ?>', data: CPHArray, backgroundColor: "rgba(255,255,0,0.5)", hidden: hide_rates}, // dataset 2, see below
+										{label: '<?php echo _QXZ("Sales per hour"); ?>', data: SPHArray, backgroundColor: "rgba(153,255,153,0.5)", hidden: hide_rates}, // dataset 3, see below
+										{label: '<?php echo _QXZ("Conversion rate %"); ?>', data: ConvRateArray, backgroundColor: "rgba(255,153,255,0.5)", hidden: hide_rates}, // dataset 4, see below
+										{label: '<?php echo _QXZ("Target gross"); ?>', data: TGArray, type: 'line', pointRadius: 0, backgroundColor: "rgba(153,255,255,0.5)", hidden: hide_total} // dataset 5, see below
 									],
 									labels: LabelArray
 								}
@@ -490,11 +494,11 @@ function RefreshReportWindow() {
 								// options: { elements: { point: { radius: 0 } } }, // no dots
 								data: {
 									datasets: [
-										{label: 'Total calls', data: CallCountArray, backgroundColor: "rgba(153,153,255,0.5)", hidden: false}, // dataset 0, see below
-										{label: 'Total sales', data: SaleCountArray, backgroundColor: "rgba(255,153,153,0.5)", hidden: false}, // dataset 1, see below
-										{label: 'Sales per hour', data: SPHArray, backgroundColor: "rgba(153,255,153,0.5)", hidden: false}, // dataset 2, see below
-										{label: 'Conversion rate %', data: ConvRateArray, backgroundColor: "rgba(255,255,0,0.5)", hidden: false}, // dataset 3, see below
-										{label: 'Target per unit', data: TPAArray, type: 'line', pointRadius: 0, backgroundColor: "rgba(153,255,255,0.5)", hidden: false} // dataset 4, see below
+										{label: '<?php echo _QXZ("Total calls"); ?>', data: CallCountArray, backgroundColor: "rgba(153,153,255,0.5)", hidden: false}, // dataset 0, see below
+										{label: '<?php echo _QXZ("Total sales"); ?>', data: SaleCountArray, backgroundColor: "rgba(255,153,153,0.5)", hidden: false}, // dataset 1, see below
+										{label: '<?php echo _QXZ("Sales per hour"); ?>', data: SPHArray, backgroundColor: "rgba(153,255,153,0.5)", hidden: false}, // dataset 2, see below
+										{label: '<?php echo _QXZ("Conversion rate %"); ?>', data: ConvRateArray, backgroundColor: "rgba(255,255,0,0.5)", hidden: false}, // dataset 3, see below
+										{label: '<?php echo _QXZ("Target per unit"); ?>', data: TPAArray, type: 'line', pointRadius: 0, backgroundColor: "rgba(153,255,255,0.5)", hidden: false} // dataset 4, see below
 									],
 									labels: LabelArray
 								},
