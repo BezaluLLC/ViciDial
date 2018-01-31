@@ -861,12 +861,14 @@ while($one_day_interval > 0)
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 					$sthArows=$sthA->rows;
 					if ($DBX) {print "$sthArows|$stmtA\n";}
-					if ($sthArows > 0)
+					$u=0;
+					while ($sthArows > $u)
 						{
 						@aryA = $sthA->fetchrow_array;
 						$DBIPinand_users[$user_CIPct] .= "'$aryA[0]',";
-						$DBIPinand_users[$user_CIPct] =~ s/,$//gi;
+						$u++;
 						}
+					$DBIPinand_users[$user_CIPct] =~ s/,$//gi;
 					$sthA->finish();
 
 					if (length($DBIPinand_users[$user_CIPct]) > 2) 
@@ -885,6 +887,7 @@ while($one_day_interval > 0)
 								{
 								$DBIPinbound_no_agents_no_dial_trigger[$user_CIPct]=0;
 								}
+							if ($DBX) {print "DEBUG: INBOUND NO-AGENT    Agents: $DBIPinand_agent_ready_count[$user_CIPct]  Threshold: $DBIPinbound_no_agents_no_dial_threshold[$user_CIPct]\n";}
 							}
 						$sthA->finish();
 						}
