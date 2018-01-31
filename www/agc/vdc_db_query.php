@@ -444,10 +444,11 @@
 # 171204-1528 - Fixes for custom field duplicate fields
 # 171224-1222 - Added List default_xfer_group override
 # 180108-2048 - Added next_dial_my_callbacks feature
+# 180131-1116 - Fixed ereg issue
 #
 
-$version = '2.14-338';
-$build = '180108-2048';
+$version = '2.14-339';
+$build = '180131-1116';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=708;
@@ -6147,7 +6148,7 @@ if ($ACTION == 'manDiaLonly')
 			if ($SCUfile)
 				{
 				$SCUfile_contents = implode("", $SCUfile);
-				$SCUfile_contents = ereg_replace(';','',$SCUfile_contents);
+				$SCUfile_contents = preg_replace('/;/','',$SCUfile_contents);
 				$SCUfile_contents = addslashes($SCUfile_contents);
 				}
 			else
@@ -9071,7 +9072,7 @@ if ($ACTION == 'VDADcheckINCOMING')
                 if ($SCUfile)
 					{
 					$SCUfile_contents = implode("", $SCUfile);
-					$SCUfile_contents = ereg_replace(';','',$SCUfile_contents);
+					$SCUfile_contents = preg_replace('/;/','',$SCUfile_contents);
 					$SCUfile_contents = addslashes($SCUfile_contents);
 					}
                 else
@@ -10374,7 +10375,7 @@ if ($ACTION == 'VDADcheckINCOMINGother')
                 if ($SCUfile)
 					{
 					$SCUfile_contents = implode("", $SCUfile);
-					$SCUfile_contents = ereg_replace(';','',$SCUfile_contents);
+					$SCUfile_contents = preg_replace('/;/','',$SCUfile_contents);
 					$SCUfile_contents = addslashes($SCUfile_contents);
 					}
                 else
@@ -12897,7 +12898,7 @@ if ($ACTION == 'updateDISPO')
 		if ($SCUfile)
 			{
 			$SCUfile_contents = implode("", $SCUfile);
-			$SCUfile_contents = ereg_replace(';','',$SCUfile_contents);
+			$SCUfile_contents = preg_replace('/;/','',$SCUfile_contents);
 			$SCUfile_contents = addslashes($SCUfile_contents);
 			}
 		else
@@ -13032,7 +13033,7 @@ if ($ACTION == 'RUNurls')
 					if ($SCUfile)
 						{
 						$SCUfile_contents = implode("", $SCUfile);
-						$SCUfile_contents = ereg_replace(';','',$SCUfile_contents);
+						$SCUfile_contents = preg_replace('/;/','',$SCUfile_contents);
 						$SCUfile_contents = addslashes($SCUfile_contents);
 						}
 					else
