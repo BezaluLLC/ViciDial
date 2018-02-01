@@ -1082,10 +1082,25 @@ while($one_day_interval > 0)
 				if ( ($DBIPadlevel[$user_CIPct] < 1) || ($DBIPdial_method[$user_CIPct] =~ /MANUAL|INBOUND_MAN/) )
 					{
 					$event_string="Manual Dial Override for Shortage |$DBIPadlevel[$user_CIPct]|$DBIPtrunk_shortage[$user_CIPct]|";
-					&event_logger;
 					$debug_string .= "$event_string\n";
+					&event_logger;
 					$DBIPtrunk_shortage[$user_CIPct] = 0;
 					}
+				if ( ( ($DBIPinbound_queue_no_dial[$user_CIPct] =~ /ENABLED/) && ($DBIPexistcalls_IN_LIVE[$user_CIPct] > 0) ) || ( ($DBIPinbound_queue_no_dial[$user_CIPct] =~ /CHAT/) && ($DBIPexistchats_IN_LIVE[$user_CIPct] > 0) ) )
+					{
+					$event_string="Inbound Queue No-Dial Override for Shortage |$DBIPexistcalls_IN_LIVE[$user_CIPct]|$DBIPtrunk_shortage[$user_CIPct]|";
+					$debug_string .= "$event_string\n";
+					&event_logger;
+					$DBIPtrunk_shortage[$user_CIPct] = 0;
+					}
+				if ($DBIPinbound_no_agents_no_dial_trigger[$user_CIPct] > 0)
+					{
+					$event_string="Inbound No-Agents No-Dial Override for Shortage |$DBIPinbound_no_agents_no_dial_trigger[$user_CIPct]|$DBIPtrunk_shortage[$user_CIPct]|";
+					$debug_string .= "$event_string\n";
+					&event_logger;
+					$DBIPtrunk_shortage[$user_CIPct] = 0;
+					}
+
 				$stmtA = "UPDATE vicidial_campaign_server_stats SET local_trunk_shortage='$DBIPtrunk_shortage[$user_CIPct]',update_time='$now_date' where server_ip='$server_ip' and campaign_id='$DBIPcampaign[$user_CIPct]';";
 				$affected_rows = $dbhA->do($stmtA);
 				}
