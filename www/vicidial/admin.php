@@ -21559,7 +21559,7 @@ if ($ADD==31)
 	while ($lists_to_print > $o) 
 		{
 		$rowx=mysqli_fetch_row($rslt);
-		$camp_status_groups .= "'$rowx[0]',";
+		if (strlen($rowx[0]) > 0) {$camp_status_groups .= "'$rowx[0]',";}
 		$o++;
 		}
 	$closer_campaigns = preg_replace("/ -$/","",$closer_campaigns);
@@ -21572,7 +21572,7 @@ if ($ADD==31)
 	while ($lists_to_print > $o) 
 		{
 		$rowx=mysqli_fetch_row($rslt);
-		$camp_status_groups .= "'$rowx[0]',";
+		if (strlen($rowx[0]) > 0) {$camp_status_groups .= "'$rowx[0]',";}
 		$o++;
 		}
 #	$camp_status_groups = preg_replace('/.$/i','',$camp_status_groups);
@@ -24007,7 +24007,7 @@ if ($ADD==34)
 	while ($lists_to_print > $o) 
 		{
 		$rowx=mysqli_fetch_row($rslt);
-		$camp_status_groups .= "'$rowx[0]',";
+		if (strlen($rowx[0]) > 0) {$camp_status_groups .= "'$rowx[0]',";}
 		$o++;
 		}
 	$closer_campaigns = preg_replace("/ -$/","",$closer_campaigns);
@@ -24020,7 +24020,7 @@ if ($ADD==34)
 	while ($lists_to_print > $o) 
 		{
 		$rowx=mysqli_fetch_row($rslt);
-		$camp_status_groups .= "'$rowx[0]',";
+		if (strlen($rowx[0]) > 0) {$camp_status_groups .= "'$rowx[0]',";}
 		$o++;
 		}
 #	$camp_status_groups = preg_replace('/.$/i','',$camp_status_groups);
