@@ -569,3 +569,7 @@ ALTER TABLE vicidial_campaign_cid_areacodes MODIFY campaign_id VARCHAR(20) NOT N
 ALTER TABLE vicidial_campaigns ADD cid_group_id VARCHAR(20) default '---DISABLED---';
 
 UPDATE system_settings SET db_schema_version='1536',db_schema_update_date=NOW() where db_schema_version < 1536;
+
+ALTER TABLE vicidial_campaigns ADD pause_max_dispo VARCHAR(6) default 'PAUSMX';
+
+UPDATE system_settings SET db_schema_version='1537',db_schema_update_date=NOW() where db_schema_version < 1537;
