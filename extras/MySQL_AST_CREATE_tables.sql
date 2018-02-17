@@ -1159,7 +1159,7 @@ play_welcome_message ENUM('ALWAYS','NEVER','IF_WAIT_ONLY','YES_UNLESS_NODELAY') 
 answer_sec_pct_rt_stat_one SMALLINT(5) UNSIGNED default '20',
 answer_sec_pct_rt_stat_two SMALLINT(5) UNSIGNED default '30',
 default_group_alias VARCHAR(30) default '',
-no_agent_no_queue ENUM('N','Y','NO_PAUSED') default 'N',
+no_agent_no_queue ENUM('N','Y','NO_PAUSED','NO_READY') default 'N',
 no_agent_action ENUM('CALLMENU','INGROUP','DID','MESSAGE','EXTENSION','VOICEMAIL','VMAIL_NO_INST') default 'MESSAGE',
 no_agent_action_value VARCHAR(255) default 'nbdy-avail-to-take-call|vm-goodbye',
 web_form_address_two TEXT,
@@ -4186,4 +4186,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1537',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1538',db_schema_update_date=NOW(),reload_timestamp=NOW();
