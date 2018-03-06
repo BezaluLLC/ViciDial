@@ -577,3 +577,7 @@ UPDATE system_settings SET db_schema_version='1537',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_inbound_groups MODIFY no_agent_no_queue ENUM('N','Y','NO_PAUSED','NO_READY') default 'N';
 
 UPDATE system_settings SET db_schema_version='1538',db_schema_update_date=NOW() where db_schema_version < 1538;
+
+ALTER TABLE vicidial_campaigns ADD script_top_dispo ENUM('Y', 'N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1539',db_schema_update_date=NOW() where db_schema_version < 1539;
