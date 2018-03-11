@@ -581,3 +581,7 @@ UPDATE system_settings SET db_schema_version='1538',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD script_top_dispo ENUM('Y', 'N') default 'N';
 
 UPDATE system_settings SET db_schema_version='1539',db_schema_update_date=NOW() where db_schema_version < 1539;
+
+ALTER TABLE system_settings ADD source_id_display ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1540',db_schema_update_date=NOW() where db_schema_version < 1540;
