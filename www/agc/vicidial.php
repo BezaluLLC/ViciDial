@@ -588,10 +588,11 @@
 # 180306-1717 - Added script_top_dispo feature
 # 180314-2222 - Fix for lead search screen hidden fields, issue #1079
 # 180323-2228 - Added more logging for notices
+# 180327-1355 - Added code for LOCALFQDN conversion to browser-used server URL for webform and script iframes
 #
 
-$version = '2.14-558c';
-$build = '180323-2228';
+$version = '2.14-559c';
+$build = '180327-1355';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -899,7 +900,6 @@ if ( ($SSweb_logo!='default_new') and ($SSweb_logo!='default_old') )
 
 $hide_gender=0;
 $US='_';
-$CL=':';
 $AT='@';
 $DS='-';
 $date = date("r");
@@ -909,10 +909,14 @@ $browser=preg_replace("/\'|\"|\\\\/","",$browser);
 $script_name = getenv("SCRIPT_NAME");
 $server_name = getenv("SERVER_NAME");
 $server_port = getenv("SERVER_PORT");
+$CL=':';
 if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
   else {$HTTPprotocol = 'http://';}
 if (($server_port == '80') or ($server_port == '443') ) {$server_port='';}
 else {$server_port = "$CL$server_port";}
+$FQDN = "$server_name$server_port";
+$chat_URL = preg_replace("/LOCALFQDN/",$FQDN,$chat_URL);
+$agent_push_url = preg_replace("/LOCALFQDN/",$FQDN,$agent_push_url);
 $agcPAGE = "$HTTPprotocol$server_name$server_port$script_name";
 $agcDIR = preg_replace('/vicidial\.php/i','',$agcPAGE);
 $agcDIR = preg_replace("/$SSagent_script/i",'',$agcDIR);
@@ -923,6 +927,8 @@ if (strlen($VUselected_language) < 1)
 $vdc_form_display = 'vdc_form_display.php';
 if (preg_match("/cf_encrypt/",$active_modules))
 	{$vdc_form_display = 'vdc_form_display_encrypt.php';}
+
+
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
 header ("Pragma: no-cache");                          // HTTP/1.0
@@ -3349,6 +3355,7 @@ else
 				if ($webphone_debug == 'Y') {$webphone_options .= "--DEBUG";}
 				if (strlen($web_socket_url) > 5) {$webphone_options .= "--WEBSOCKETURL$web_socket_url";}
 				if (strlen($webphone_layout) > 0) {$webphone_options .= "--WEBPHONELAYOUT$webphone_layout";}
+				$webphone_url = preg_replace("/LOCALFQDN/",$FQDN,$webphone_url);
 
 				### base64 encode variables
 				$b64_phone_login =		base64_encode($extension);
@@ -4162,6 +4169,7 @@ $CCAL_OUT .= "</table>";
 	var filedate = '<?php echo $FILE_TIME ?>';
 	var agcDIR = '<?php echo $agcDIR ?>';
 	var agcPAGE = '<?php echo $agcPAGE ?>';
+	var FQDN = '<?php echo $FQDN ?>';
 	var extension = '<?php echo $extension ?>';
 	var extension_xfer = '<?php echo $extension ?>';
 	var dialplan_number = '<?php echo $dialplan_number ?>';
@@ -4386,6 +4394,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var adfREGrank = new RegExp("rank","g");
 	var adfREGowner = new RegExp("owner","g");
 	var adfREGlast_local_call_time = new RegExp("last_local_call_time","g");
+	var regLOCALFQDN = new RegExp("LOCALFQDN","g");
 	var DispO3waychannel = '';
 	var DispO3wayXtrAchannel = '';
 	var DispO3wayCalLserverip = '';
@@ -15634,6 +15643,7 @@ else
 
 	var regWFAencode = new RegExp("^VAR","ig");
 	encoded = encoded.replace(regWFAencode, '');
+	encoded = encoded.replace(regLOCALFQDN, FQDN);
 
 	decoded=encoded; // simple no ?
 	decoded = decoded.replace(RGnl, '+');
@@ -17342,6 +17352,7 @@ function phone_number_format(formatphone) {
 				var regWFAcustom = new RegExp("^VAR","ig");
 				var TEMP_crm_login_address = URLDecode(crm_login_address,'YES');
 				TEMP_crm_login_address = TEMP_crm_login_address.replace(regWFAcustom, '');
+				TEMP_crm_login_address = TEMP_crm_login_address.replace(regLOCALFQDN, FQDN);
 
 				var CRMwin = 'CRMwin';
 				CRMwin = window.open(TEMP_crm_login_address, CRMwin,'toolbar=1,location=1,directories=1,status=1,menubar=1,scrollbars=1,resizable=1,width=700,height=480');
