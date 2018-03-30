@@ -514,6 +514,7 @@ while ($i < $leads_to_print)
 		}
 	elseif ($download_type == 'cidgroup')
 		{
+		if ($row[3]=='') {$row[3]='N';}
 		$row_data[$i] .= "$row[0],$row[1],$row[2],$row[3]";
 		}
 	else
