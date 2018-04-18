@@ -453,10 +453,11 @@
 # 180228-0726 - Fix for LogiNCamPaigns function, removed unnecesary onfocus trigger, issue #1074
 # 180410-1630 - Added Pause Code manager approval feature, Added switch_lead logging
 # 180411-1833 - Added Dispo URL Filter feature
+# 180418-1713 - Fix for not using campaign in vicidial_campaign_statuses queries
 #
 
-$version = '2.14-347';
-$build = '180411-1833';
+$version = '2.14-348';
+$build = '180418-1713';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=719;
@@ -3990,7 +3991,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				}
 			if ($CBstatus < 1)
 				{
-				$stmt="SELECT count(*) FROM vicidial_campaign_statuses where status='$dispo' and scheduled_callback='Y';";
+				$stmt="SELECT count(*) FROM vicidial_campaign_statuses where status='$dispo' and scheduled_callback='Y' and campaign_id='$campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00367',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -8131,7 +8132,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				}
 			if ($CBstatus < 1)
 				{
-				$stmt="SELECT count(*) FROM vicidial_campaign_statuses where status='$dispo' and scheduled_callback='Y';";
+				$stmt="SELECT count(*) FROM vicidial_campaign_statuses where status='$dispo' and scheduled_callback='Y' and campaign_id='$campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00369',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -8962,7 +8963,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				}
 			if ($CBstatus < 1)
 				{
-				$stmt="SELECT count(*) FROM vicidial_campaign_statuses where status='$dispo' and scheduled_callback='Y';";
+				$stmt="SELECT count(*) FROM vicidial_campaign_statuses where status='$dispo' and scheduled_callback='Y' and campaign_id='$campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00371',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -10262,7 +10263,7 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 				}
 			if ($CBstatus < 1)
 				{
-				$stmt="SELECT count(*) FROM vicidial_campaign_statuses where status='$dispo' and scheduled_callback='Y';";
+				$stmt="SELECT count(*) FROM vicidial_campaign_statuses where status='$dispo' and scheduled_callback='Y' and campaign_id='$campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00517',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -10813,7 +10814,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 				}
 			if ($CBstatus < 1)
 				{
-				$stmt="SELECT count(*) FROM vicidial_campaign_statuses where status='$dispo' and scheduled_callback='Y';";
+				$stmt="SELECT count(*) FROM vicidial_campaign_statuses where status='$dispo' and scheduled_callback='Y' and campaign_id='$campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00457',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -11356,7 +11357,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 				}
 			if ($CBstatus < 1)
 				{
-				$stmt="SELECT count(*) FROM vicidial_campaign_statuses where status='$dispo' and scheduled_callback='Y';";
+				$stmt="SELECT count(*) FROM vicidial_campaign_statuses where status='$dispo' and scheduled_callback='Y' and campaign_id='$campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00483',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -11668,7 +11669,7 @@ if ($ACTION == 'updateDISPO')
 				$i++;
 				}
 
-			$stmt = "SELECT status FROM vicidial_campaign_statuses where dnc='Y';";
+			$stmt = "SELECT status FROM vicidial_campaign_statuses where dnc='Y' and campaign_id='$campaign';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00196',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -12216,7 +12217,7 @@ if ($ACTION == 'updateDISPO')
 						$SALE_string_check .= "$row[0]|";
 						$i++;
 						}
-					$stmt = "SELECT status FROM vicidial_campaign_statuses where sale='Y';";
+					$stmt = "SELECT status FROM vicidial_campaign_statuses where sale='Y' and campaign_id='$campaign';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00560',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
@@ -12243,7 +12244,7 @@ if ($ACTION == 'updateDISPO')
 						$CC_string_check .= "$row[0]|";
 						$i++;
 						}
-					$stmt = "SELECT status FROM vicidial_campaign_statuses where customer_contact='Y';";
+					$stmt = "SELECT status FROM vicidial_campaign_statuses where customer_contact='Y' and campaign_id='$campaign';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00287',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
