@@ -614,3 +614,8 @@ CREATE TABLE vicidial_agent_function_log_archive LIKE vicidial_agent_function_lo
 ALTER TABLE vicidial_agent_function_log_archive MODIFY agent_function_log_id INT(9) UNSIGNED NOT NULL;
 
 UPDATE system_settings SET db_schema_version='1541',db_schema_update_date=NOW() where db_schema_version < 1541;
+
+ALTER TABLE vicidial_inbound_groups ADD populate_lead_source VARCHAR(20) default 'DISABLED';
+ALTER TABLE vicidial_inbound_groups ADD populate_lead_vendor VARCHAR(20) default 'INBOUND_NUMBER';
+
+UPDATE system_settings SET db_schema_version='1542',db_schema_update_date=NOW() where db_schema_version < 1542;
