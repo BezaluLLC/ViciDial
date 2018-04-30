@@ -619,3 +619,7 @@ ALTER TABLE vicidial_inbound_groups ADD populate_lead_source VARCHAR(20) default
 ALTER TABLE vicidial_inbound_groups ADD populate_lead_vendor VARCHAR(20) default 'INBOUND_NUMBER';
 
 UPDATE system_settings SET db_schema_version='1542',db_schema_update_date=NOW() where db_schema_version < 1542;
+
+ALTER TABLE vicidial_inbound_groups ADD park_file_name VARCHAR(100) default '';
+
+UPDATE system_settings SET db_schema_version='1543',db_schema_update_date=NOW() where db_schema_version < 1543;
