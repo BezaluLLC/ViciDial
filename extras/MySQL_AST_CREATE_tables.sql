@@ -2685,7 +2685,7 @@ field_name VARCHAR(5000),
 field_description VARCHAR(100),
 field_rank SMALLINT(5),
 field_help VARCHAR(1000),
-field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY','HIDEBLOB') default 'TEXT',
+field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY','HIDEBLOB','SWITCH') default 'TEXT',
 field_options VARCHAR(5000),
 field_size SMALLINT(5),
 field_max SMALLINT(5),
@@ -4216,4 +4216,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1543',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1544',db_schema_update_date=NOW(),reload_timestamp=NOW();
