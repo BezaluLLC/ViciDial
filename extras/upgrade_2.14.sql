@@ -627,3 +627,13 @@ UPDATE system_settings SET db_schema_version='1543',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_lists_fields MODIFY field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY','HIDEBLOB','SWITCH') default 'TEXT';
 
 UPDATE system_settings SET db_schema_version='1544',db_schema_update_date=NOW() where db_schema_version < 1544;
+
+ALTER TABLE system_settings ADD help_modification_date VARCHAR(20) default '0';
+
+CREATE TABLE help_documentation (
+help_id varchar(100) PRIMARY KEY COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+help_title text COLLATE utf8_unicode_ci,
+help_text text COLLATE utf8_unicode_ci
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+UPDATE system_settings SET db_schema_version='1545',db_schema_update_date=NOW() where db_schema_version < 1545;

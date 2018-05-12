@@ -1766,7 +1766,8 @@ expired_lists_inactive ENUM('0','1') default '0',
 did_system_filter ENUM('0','1') default '0',
 anyone_callback_inactive_lists ENUM('default','NO_ADD_TO_HOPPER','KEEP_IN_HOPPER') default 'default',
 enable_gdpr_download_deletion ENUM('0','1','2') default '0',
-source_id_display ENUM('0','1') default '0'
+source_id_display ENUM('0','1') default '0',
+help_modification_date VARCHAR(20) default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -3929,6 +3930,12 @@ index (lead_id),
 index (stage)
 ) ENGINE=MyISAM;
 
+CREATE TABLE help_documentation (
+help_id varchar(100) PRIMARY KEY COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
+help_title text COLLATE utf8_unicode_ci,
+help_text text COLLATE utf8_unicode_ci
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -4216,4 +4223,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1544',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1545',db_schema_update_date=NOW(),reload_timestamp=NOW();
