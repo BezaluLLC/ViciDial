@@ -637,3 +637,11 @@ help_text text COLLATE utf8_unicode_ci
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 UPDATE system_settings SET db_schema_version='1545',db_schema_update_date=NOW() where db_schema_version < 1545;
+
+ALTER TABLE vicidial_campaign_agents ADD hopper_calls_today SMALLINT(5) UNSIGNED default '0';
+ALTER TABLE vicidial_campaign_agents ADD hopper_calls_hour SMALLINT(5) UNSIGNED default '0';
+
+ALTER TABLE vicidial_users ADD max_hopper_calls SMALLINT(5) UNSIGNED default '0';
+ALTER TABLE vicidial_users ADD max_hopper_calls_hour SMALLINT(5) UNSIGNED default '0';
+
+UPDATE system_settings SET db_schema_version='1546',db_schema_update_date=NOW() where db_schema_version < 1546;

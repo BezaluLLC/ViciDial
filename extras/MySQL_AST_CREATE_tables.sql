@@ -666,7 +666,9 @@ modify_ip_lists ENUM('1','0') default '0',
 ignore_ip_list ENUM('1','0') default '0',
 ready_max_logout MEDIUMINT(7) default '-1',
 export_gdpr_leads ENUM('0','1','2') default '0',
-pause_code_approval ENUM('1','0') default '0'
+pause_code_approval ENUM('1','0') default '0',
+max_hopper_calls SMALLINT(5) UNSIGNED default '0',
+max_hopper_calls_hour SMALLINT(5) UNSIGNED default '0'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -1883,6 +1885,8 @@ campaign_weight TINYINT(1) default '0',
 calls_today SMALLINT(5) UNSIGNED default '0',
 group_web_vars VARCHAR(255) default '',
 campaign_grade TINYINT(2) UNSIGNED default '1',
+hopper_calls_today SMALLINT(5) UNSIGNED default '0',
+hopper_calls_hour SMALLINT(5) UNSIGNED default '0',
 index (campaign_id),
 index (user),
 unique index vlca_user_campaign_id (user, campaign_id)
@@ -4223,4 +4227,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1545',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1546',db_schema_update_date=NOW(),reload_timestamp=NOW();
