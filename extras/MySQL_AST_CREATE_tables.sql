@@ -1261,7 +1261,10 @@ icbq_call_time_id VARCHAR(20) default '24hours',
 icbq_dial_filter VARCHAR(50) default 'NONE',
 populate_lead_source VARCHAR(20) default 'DISABLED',
 populate_lead_vendor VARCHAR(20) default 'INBOUND_NUMBER',
-park_file_name VARCHAR(100) default ''
+park_file_name VARCHAR(100) default '',
+waiting_call_url_on TEXT,
+waiting_call_url_off TEXT,
+waiting_call_count SMALLINT(5) UNSIGNED default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -4227,4 +4230,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1546',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1547',db_schema_update_date=NOW(),reload_timestamp=NOW();

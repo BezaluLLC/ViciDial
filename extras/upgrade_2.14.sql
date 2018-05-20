@@ -645,3 +645,9 @@ ALTER TABLE vicidial_users ADD max_hopper_calls SMALLINT(5) UNSIGNED default '0'
 ALTER TABLE vicidial_users ADD max_hopper_calls_hour SMALLINT(5) UNSIGNED default '0';
 
 UPDATE system_settings SET db_schema_version='1546',db_schema_update_date=NOW() where db_schema_version < 1546;
+
+ALTER TABLE vicidial_inbound_groups ADD waiting_call_url_on TEXT;
+ALTER TABLE vicidial_inbound_groups ADD waiting_call_url_off TEXT;
+ALTER TABLE vicidial_inbound_groups ADD waiting_call_count SMALLINT(5) UNSIGNED default '0';
+
+UPDATE system_settings SET db_schema_version='1547',db_schema_update_date=NOW() where db_schema_version < 1547;
