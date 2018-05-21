@@ -1264,7 +1264,8 @@ populate_lead_vendor VARCHAR(20) default 'INBOUND_NUMBER',
 park_file_name VARCHAR(100) default '',
 waiting_call_url_on TEXT,
 waiting_call_url_off TEXT,
-waiting_call_count SMALLINT(5) UNSIGNED default '0'
+waiting_call_count SMALLINT(5) UNSIGNED default '0',
+enter_ingroup_url TEXT
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -4230,4 +4231,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1547',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1548',db_schema_update_date=NOW(),reload_timestamp=NOW();
