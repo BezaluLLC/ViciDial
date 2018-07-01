@@ -29,6 +29,7 @@
 # 170602-1042 - Prevent non-wav/gsm files from being uploaded
 # 170630-1440 - Require modify_audiostore user permissions to access this page
 # 180508-0115 - Added new help display
+# 180618-2300 - Modified calls to audio file chooser function
 #
 
 $version = '2.14-22';
