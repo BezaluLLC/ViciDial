@@ -53,12 +53,14 @@
 # 170825-2243 - Added rolling of vicidial_xfer_log
 # 171026-0105 - Added --wipe-closer-log flag
 # 180410-1728 - Added vicidial_agent_function_log archiving
+# 180712-1641 - Added --wipe-all-being-archived AND --did-log-days options
 #
 
 $CALC_TEST=0;
 $T=0;   $TEST=0;
 $only_trim_archive=0;
 $recording_log_archive=0;
+$did_log_archive=0;
 $wipe_closer_log=0;
 
 ### begin parsing run-time options ###
@@ -88,8 +90,10 @@ if (length($ARGV[0])>1)
 		print "  [--only-trim-archive-level-three] = same as --only-trim-archive-level-two, except includes tables:\n";
 		print "                               vicidial_log_archive, vicidial_agent_log_archive, vicidial_closer_log_archive, vicidial_xfer_log_archive\n";
 		print "  [--recording-log-days=XX] = OPTIONAL, number of days to archive recording_log table only past\n";
+		print "  [--did-log-days=XX] = OPTIONAL, number of days to archive vicidial_did_log table only past\n";
 		print "  [--cpd-log-purge-days=XX] = OPTIONAL, number of days to purge vicidial_cpd_log table only past\n";
 		print "  [--wipe-closer-log] = OPTIONAL, deletes all records from vicidial_closer_log after archiving\n";
+		print "  [--wipe-all-being-archived] = OPTIONAL, deletes all records from most tables after archiving\n";
 		print "  [--quiet] = quiet\n";
 		print "  [--calc-test] = date calculation test only\n";
 		print "  [--test] = test\n\n";
@@ -115,6 +119,11 @@ if (length($ARGV[0])>1)
 			{
 			$wipe_closer_log=1;
 			print "\n----- WIPE CLOSER LOG: $wipe_closer_log -----\n\n";
+			}
+		if ($args =~ /--wipe-all-being-archived/i) 
+			{
+			$wipe_all=1;
+			print "\n----- WIPE ALL LOG TABLES BEING ARCHIVED: $wipe_all -----\n\n";
 			}
 		if ($args =~ /--daily/i)
 			{
@@ -192,6 +201,18 @@ if (length($ARGV[0])>1)
 			if ($Q < 1) 
 				{print "\n----- RECORDING LOG ARCHIVE ACTIVE, DAYS: $RECORDINGdays -----\n\n";}
 			}
+		if ($args =~ /--did-log-days=/i)
+			{
+			$did_log_archive++;
+			@data_in = split(/--did-log-days=/,$args);
+			$diddays = $data_in[1];
+			$diddays =~ s/ .*$//gi;
+			$diddays =~ s/\D//gi;
+			if ($diddays > 999999)
+				{$diddays=1825;}
+			if ($Q < 1) 
+				{print "\n----- DID LOG ARCHIVE ACTIVE, DAYS: $diddays -----\n\n";}
+			}
 		if ($args =~ /--cpd-log-purge-days=/i)
 			{
 			$cpd_log_purge++;
@@ -262,6 +283,19 @@ if ($recording_log_archive > 0)
 	if ($RECsec < 10) {$RECsec = "0$RECsec";}
 	$RECdel_time = "$RECyear-$RECmon-$RECmday $REChour:$RECmin:$RECsec";
 	}
+if ($did_log_archive > 0) 
+	{
+	$DIDdel_epoch = ($secX - (86400 * $diddays));   # X days ago
+	($DIDsec,$DIDmin,$DIDhour,$DIDmday,$DIDmon,$DIDyear,$DIDwday,$DIDyday,$DIDisdst) = localtime($DIDdel_epoch);
+	$DIDyear = ($DIDyear + 1900);
+	$DIDmon++;
+	if ($DIDmon < 10) {$DIDmon = "0$DIDmon";}
+	if ($DIDmday < 10) {$DIDmday = "0$DIDmday";}
+	if ($DIDhour < 10) {$DIDhour = "0$DIDhour";}
+	if ($DIDmin < 10) {$DIDmin = "0$DIDmin";}
+	if ($DIDsec < 10) {$DIDsec = "0$DIDsec";}
+	$DIDdel_time = "$DIDyear-$DIDmon-$DIDmday $DIDhour:$DIDmin:$DIDsec";
+	}
 if ($cpd_log_purge > 0) 
 	{
 	$CPDdel_epoch = ($secX - (86400 * $CPDdays));   # X days ago
@@ -284,6 +318,7 @@ if (!$Q) {print "vicidial_call_notes, vicidial_lead_search_log and others into r
 if (!$Q) {print "_archive tables and delete records in original tables older than\n";}
 if (!$Q) {print "$CLIdays days ( $del_time|$del_epoch ) from current date \n\n";}
 if ( (!$Q) && ($recording_log_archive > 0) ) {print "REC $RECORDINGdays days ( $RECdel_time|$RECdel_epoch ) from current date \n\n";}
+if ( (!$Q) && ($did_log_archive > 0) ) {print "DID $diddays days ( $DIDdel_time|$DIDdel_epoch ) from current date \n\n";}
 if ( (!$Q) && ($cpd_log_purge > 0) ) {print "CPD $CPDdays days ( $CPDdel_time|$CPDdel_epoch ) from current date \n\n";}
 
 if ($CALC_TEST > 0)
@@ -1245,7 +1280,10 @@ if (!$T)
 	$rv = $sthA->err();
 	if (!$rv)
 		{
-		$stmtA = "DELETE FROM call_log WHERE start_time < '$del_time';";
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM call_log;";}
+		else
+			{$stmtA = "DELETE FROM call_log WHERE start_time < '$del_time';";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -1300,8 +1338,11 @@ if (!$T)
 	
 	$rv = $sthA->err();
 	if (!$rv) 
-		{	
-		$stmtA = "DELETE FROM vicidial_log WHERE call_date < '$del_time';";
+		{
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_log;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_log WHERE call_date < '$del_time';";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -1351,7 +1392,7 @@ if (!$T)
 	$rv = $sthA->err();
 	if (!$rv) 
 		{
-		if ($wipe_closer_log > 0) 
+		if ( ($wipe_closer_log > 0) || ($wipe_all > 0) )
 			{$stmtA = "DELETE FROM vicidial_closer_log;";}
 		else
 			{$stmtA = "DELETE FROM vicidial_closer_log WHERE call_date < '$del_time';";}
@@ -1404,7 +1445,10 @@ if (!$T)
 	$rv = $sthA->err();
 	if (!$rv) 
 		{	
-		$stmtA = "DELETE FROM vicidial_xfer_log WHERE call_date < '$del_time';";
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_xfer_log;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_xfer_log WHERE call_date < '$del_time';";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -1454,7 +1498,10 @@ if (!$T)
 	$rv = $sthA->err();
 	if (!$rv) 
 		{	
-		$stmtA = "DELETE FROM vicidial_log_extended WHERE call_date < '$del_time';";
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_log_extended;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_log_extended WHERE call_date < '$del_time';";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -1504,7 +1551,10 @@ if (!$T)
 	$rv = $sthA->err();
 	if (!$rv) 
 		{	
-		$stmtA = "DELETE FROM vicidial_drop_log WHERE drop_date < '$del_time';";
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_drop_log;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_drop_log WHERE drop_date < '$del_time';";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -1554,7 +1604,10 @@ if (!$T)
 	$rv = $sthA->err();
 	if (!$rv) 
 		{	
-		$stmtA = "DELETE FROM vicidial_dial_log WHERE call_date < '$del_time';";
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_dial_log;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_dial_log WHERE call_date < '$del_time';";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -1605,7 +1658,10 @@ if (!$T)
 	$rv = $sthA->err();
 	if (!$rv) 
 		{
-		$stmtA = "DELETE FROM vicidial_api_log WHERE api_date < '$del_time';";
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_api_log;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_api_log WHERE api_date < '$del_time';";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -1655,7 +1711,10 @@ if (!$T)
 	$rv = $sthA->err();
 	if (!$rv) 
 		{
-		$stmtA = "DELETE FROM vicidial_api_urls WHERE api_date < '$del_time';";
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_api_urls;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_api_urls WHERE api_date < '$del_time';";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -1705,7 +1764,10 @@ if (!$T)
 	$rv = $sthA->err();
 	if (!$rv) 
 		{
-		$stmtA = "DELETE FROM vicidial_rt_monitor_log WHERE monitor_start_time < '$del_time';";
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_rt_monitor_log;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_rt_monitor_log WHERE monitor_start_time < '$del_time';";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -1757,7 +1819,10 @@ if (!$T)
 	$rv = $sthA->err();
 	if ( (!$rv) && ($user_call_log_count_mil > 0) )
 		{
-		$stmtA = "DELETE FROM user_call_log WHERE call_date < '$del_time' order by user_call_log_id limit $user_call_log_count_mil;";
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM user_call_log;";}
+		else
+			{$stmtA = "DELETE FROM user_call_log WHERE call_date < '$del_time' order by user_call_log_id limit $user_call_log_count_mil;";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -1808,7 +1873,10 @@ if (!$T)
 	$rv = $sthA->err();
 	if (!$rv) 
 		{	
-		$stmtA = "DELETE FROM vicidial_inbound_survey_log WHERE call_date < '$del_time';";
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_inbound_survey_log;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_inbound_survey_log WHERE call_date < '$del_time';";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -1859,7 +1927,10 @@ if (!$T)
 	$rv = $sthA->err();
 	if (!$rv) 
 		{	
-		$stmtA = "DELETE FROM vicidial_log_noanswer WHERE call_date < '$del_time';";
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_log_noanswer;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_log_noanswer WHERE call_date < '$del_time';";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -1910,7 +1981,10 @@ if (!$T)
 	$rv = $sthA->err();
 	if (!$rv) 
 		{	
-		$stmtA = "DELETE FROM vicidial_did_agent_log WHERE call_date < '$del_time';";
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_did_agent_log;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_did_agent_log WHERE call_date < '$del_time';";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -1940,7 +2014,10 @@ if (!$T)
 	$sthA->finish();
 
 	if (!$Q) {print "\nProcessing server_performance table...  ($server_performance_count)\n";}
-	$stmtA = "DELETE FROM server_performance WHERE start_time < '$del_time';";
+	if ($wipe_all > 0)
+		{$stmtA = "DELETE FROM server_performance;";}
+	else
+		{$stmtA = "DELETE FROM server_performance WHERE start_time < '$del_time';";}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows = $sthA->rows;
@@ -2032,7 +2109,10 @@ if (!$T)
 	$rv = $sthA->err();
 	if (!$rv) 
 		{
-		$stmtA = "DELETE FROM vicidial_agent_log WHERE event_time < '$del_time';";
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_agent_log;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_agent_log WHERE event_time < '$del_time';";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -2082,7 +2162,10 @@ if (!$T)
 	$rv = $sthA->err();
 	if (!$rv) 
 		{	
-		$stmtA = "DELETE FROM vicidial_carrier_log WHERE call_date < '$del_time';";
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_carrier_log;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_carrier_log WHERE call_date < '$del_time';";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -2234,7 +2317,10 @@ if (!$T)
 	$rv = $sthA->err();
 	if (!$rv) 
 		{	
-		$stmtA = "DELETE FROM vicidial_agent_function_log WHERE event_time < '$del_time';";
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_agent_function_log;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_agent_function_log WHERE event_time < '$del_time';";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -2285,7 +2371,10 @@ if (!$T)
 	$rv = $sthA->err();
 	if (!$rv) 
 		{	
-		$stmtA = "DELETE FROM vicidial_outbound_ivr_log WHERE event_date < '$del_time';";
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_outbound_ivr_log;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_outbound_ivr_log WHERE event_date < '$del_time';";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows = $sthA->rows;
@@ -2348,6 +2437,59 @@ if (!$T)
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 
 			$stmtA = "optimize table recording_log_archive;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			}
+		}
+
+
+	if ($did_log_archive > 0) 
+		{
+		##### vicidial_did_log
+		$stmtA = "SELECT count(*) from vicidial_did_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$did_log_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		$stmtA = "SELECT count(*) from vicidial_did_log_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$did_log_archive_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if (!$Q) {print "\nProcessing vicidial_did_log table...  ($did_log_count|$did_log_archive_count)\n";}
+		$stmtA = "INSERT IGNORE INTO vicidial_did_log_archive SELECT * from vicidial_did_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		
+		$sthArows = $sthA->rows;
+		if (!$Q) {print "$sthArows rows inserted into vicidial_did_log_archive table \n";}
+		
+		$rv = $sthA->err();
+		if (!$rv) 
+			{	
+			$stmtA = "DELETE FROM vicidial_did_log WHERE call_date < '$DIDdel_time';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows = $sthA->rows;
+			if (!$Q) {print "$sthArows rows deleted from vicidial_did_log table \n";}
+
+			$stmtA = "optimize table vicidial_did_log;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+
+			$stmtA = "optimize table vicidial_did_log_archive;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			}
