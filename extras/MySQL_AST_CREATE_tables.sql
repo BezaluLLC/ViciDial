@@ -1789,7 +1789,8 @@ did_system_filter ENUM('0','1') default '0',
 anyone_callback_inactive_lists ENUM('default','NO_ADD_TO_HOPPER','KEEP_IN_HOPPER') default 'default',
 enable_gdpr_download_deletion ENUM('0','1','2') default '0',
 source_id_display ENUM('0','1') default '0',
-help_modification_date VARCHAR(20) default '0'
+help_modification_date VARCHAR(20) default '0',
+agent_logout_link ENUM('0','1','2','3','4') default '1'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -4265,4 +4266,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1550',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1551',db_schema_update_date=NOW(),reload_timestamp=NOW();
