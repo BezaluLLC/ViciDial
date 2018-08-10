@@ -699,3 +699,7 @@ UPDATE system_settings SET db_schema_version='1550',db_schema_update_date=NOW() 
 ALTER TABLE system_settings ADD agent_logout_link ENUM('0','1','2','3','4') default '1';
 
 UPDATE system_settings SET db_schema_version='1551',db_schema_update_date=NOW() where db_schema_version < 1551;
+
+ALTER TABLE vicidial_campaigns ADD scheduled_callbacks_force_dial ENUM('N','Y') default 'N';
+
+UPDATE system_settings SET db_schema_version='1552',db_schema_update_date=NOW() where db_schema_version < 1552;

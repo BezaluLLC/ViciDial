@@ -1007,7 +1007,8 @@ dead_trigger_seconds SMALLINT(5) default '0',
 dead_trigger_action ENUM('DISABLED','AUDIO','URL','AUDIO_AND_URL') default 'DISABLED',
 dead_trigger_repeat ENUM('NO','REPEAT_ALL','REPEAT_AUDIO','REPEAT_URL') default 'NO',
 dead_trigger_filename TEXT,
-dead_trigger_url TEXT
+dead_trigger_url TEXT,
+scheduled_callbacks_force_dial ENUM('N','Y') default 'N'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -4266,4 +4267,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1551',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1552',db_schema_update_date=NOW(),reload_timestamp=NOW();
