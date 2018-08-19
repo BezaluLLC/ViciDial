@@ -128,6 +128,7 @@
 # 180130-1346 - Added inbound_no_agents_no_dial campaign options
 # 180214-1559 - Added CID Group functionality
 # 180301-1338 - Small changes for Inbound Queue No Dial
+# 180812-1026 - Added code for scheduled_callbacks_auto_reschedule campaign feature
 #
 
 ### begin parsing run-time options ###
@@ -245,6 +246,7 @@ if (!$VDADLOGfile) {$VDADLOGfile = "$PATHlogs/vdautodial.$year-$mon-$mday";}
 if (!$JAMdebugFILE) {$JAMdebugFILE = "$PATHlogs/vdad-JAM.$year-$mon-$mday";}
 
 use Time::HiRes ('gettimeofday','usleep','sleep');  # necessary to have perl sleep command of less than one second
+use Time::Local;
 use DBI;
 	
 ### connect to MySQL database defined in the conf file
@@ -283,7 +285,7 @@ if ($sthArows > 0)
 	if ($DBASTmgrUSERNAMEsend)		{$ASTmgrUSERNAMEsend = $DBASTmgrUSERNAMEsend;}
 	$max_vicidial_trunks = $DBmax_vicidial_trunks;
 	if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
-	if ($DBSERVER_GMT)				{$SERVER_GMT = $DBSERVER_GMT;}
+	if (length($DBSERVER_GMT) > 0)	{$SERVER_GMT = $DBSERVER_GMT;}
 	if ($DBext_context)				{$ext_context = $DBext_context;}
 	if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
 	else {$SYSLOG = '0';}
@@ -640,7 +642,7 @@ while($one_day_interval > 0)
 
 			### grab the dial_level and multiply by active agents to get your goalcalls
 			$DBIPadlevel[$user_CIPct]=0;
-			$stmtA = "SELECT auto_dial_level,local_call_time,dial_timeout,dial_prefix,campaign_cid,active,campaign_vdad_exten,closer_campaigns,omit_phone_code,available_only_ratio_tally,auto_alt_dial,campaign_allow_inbound,queue_priority,dial_method,use_custom_cid,inbound_queue_no_dial,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,adaptive_dl_diff_target,dl_diff_target_method,inbound_no_agents_no_dial_container,inbound_no_agents_no_dial_threshold,cid_group_id FROM vicidial_campaigns where campaign_id='$DBIPcampaign[$user_CIPct]'";
+			$stmtA = "SELECT auto_dial_level,local_call_time,dial_timeout,dial_prefix,campaign_cid,active,campaign_vdad_exten,closer_campaigns,omit_phone_code,available_only_ratio_tally,auto_alt_dial,campaign_allow_inbound,queue_priority,dial_method,use_custom_cid,inbound_queue_no_dial,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,adaptive_dl_diff_target,dl_diff_target_method,inbound_no_agents_no_dial_container,inbound_no_agents_no_dial_threshold,cid_group_id,scheduled_callbacks_auto_reschedule FROM vicidial_campaigns where campaign_id='$DBIPcampaign[$user_CIPct]'";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -676,6 +678,7 @@ while($one_day_interval > 0)
 				$DBIPinbound_no_agents_no_dial[$user_CIPct] =	$aryA[22];
 				$DBIPinbound_no_agents_no_dial_threshold[$user_CIPct] =	$aryA[23];
 				$DBIPcid_group_id[$user_CIPct] =	$aryA[24];
+				$DBIPscheduled_callbacks_auto_reschedule[$user_CIPct] =	$aryA[25];
 
 				if ($DBIPdl_diff_target_method[$user_CIPct] =~ /ADAPT_CALC_ONLY/)
 					{
@@ -1189,7 +1192,7 @@ while($one_day_interval > 0)
 								$lead_id=''; $phone_code=''; $phone_number=''; $called_count='';
 								while ($call_CMPIPct < $UDaffected_rows)
 									{
-									$stmtA = "SELECT lead_id,alt_dial FROM vicidial_hopper where campaign_id='$DBIPcampaign[$user_CIPct]' and status='QUEUE' and user='VDAD_$server_ip' order by priority desc,hopper_id LIMIT 1";
+									$stmtA = "SELECT lead_id,alt_dial,source FROM vicidial_hopper where campaign_id='$DBIPcampaign[$user_CIPct]' and status='QUEUE' and user='VDAD_$server_ip' order by priority desc,hopper_id LIMIT 1";
 									print "|$stmtA|\n";
 									$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 									$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1199,201 +1202,265 @@ while($one_day_interval > 0)
 									while ($sthArows > $rec_count)
 										{
 										@aryA = $sthA->fetchrow_array;
-										$lead_id =		$aryA[0];
-										$alt_dial =		$aryA[1];
+										$lead_id =			$aryA[0];
+										$alt_dial =			$aryA[1];
+										$hopper_source =	$aryA[2];
 										$rec_count++;
 										}
 									$sthA->finish();
 
-								if ($lead_id_call_list =~ /\|$lead_id\|/)
-									{
-									print "!!!!!!!!!!!!!!!!duplicate lead_id for this run: |$lead_id|     $lead_id_call_list\n";
-									if ($SYSLOG)
+									if ($lead_id_call_list =~ /\|$lead_id\|/)
 										{
-										open(DUPout, ">>$PATHlogs/VDAD_DUPLICATE.$file_date")
-												|| die "Can't open $PATHlogs/VDAD_DUPLICATE.$file_date: $!\n";
-										print DUPout "$now_date-----$lead_id_call_list-----$lead_id\n";
-										close(DUPout);
+										print "!!!!!!!!!!!!!!!!duplicate lead_id for this run: |$lead_id|     $lead_id_call_list\n";
+										if ($SYSLOG)
+											{
+											open(DUPout, ">>$PATHlogs/VDAD_DUPLICATE.$file_date")
+													|| die "Can't open $PATHlogs/VDAD_DUPLICATE.$file_date: $!\n";
+											print DUPout "$now_date-----$lead_id_call_list-----$lead_id\n";
+											close(DUPout);
+											}
 										}
-									}
-								else
-									{
-									$stmtA = "UPDATE vicidial_hopper set status='INCALL' where lead_id='$lead_id'";
-									print "|$stmtA|\n";
-									$UQaffected_rows = $dbhA->do($stmtA);
-									print "hopper row updated to INCALL: |$UQaffected_rows|$lead_id|\n";
-
-									### Gather lead data
-									$stmtA = "SELECT list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,address3,alt_phone,called_count,security_phrase,state FROM vicidial_list where lead_id='$lead_id';";
-									$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-									$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-									$sthArows=$sthA->rows;
-									$rec_count=0;
-									$rec_countCUSTDATA=0;
-									if ($sthArows > 0)
+									else
 										{
-										@aryA = $sthA->fetchrow_array;
-										$list_id =					$aryA[0];
-										$gmt_offset_now	=			$aryA[1];
-										$called_since_last_reset =	$aryA[2];
-										$phone_code	=				$aryA[3];
-										$phone_number =				$aryA[4];
-										$address3 =					$aryA[5];
-										$alt_phone =				$aryA[6];
-										$called_count =				$aryA[7];
-										$security_phrase =			$aryA[8];
-										$state =					$aryA[9];
+										$stmtA = "UPDATE vicidial_hopper set status='INCALL' where lead_id='$lead_id'";
+										print "|$stmtA|\n";
+										$UQaffected_rows = $dbhA->do($stmtA);
+										print "hopper row updated to INCALL: |$UQaffected_rows|$lead_id|\n";
 
-										$rec_countCUSTDATA++;
-										$rec_count++;
-										}
-									$sthA->finish();
-
-									if ($rec_countCUSTDATA)
-										{
-										$campaign_cid_override='';
-										### gather list_id overrides
-										$stmtA = "SELECT campaign_cid_override FROM vicidial_lists where list_id='$list_id';";
+										### Gather lead data
+										$stmtA = "SELECT list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,address3,alt_phone,called_count,security_phrase,state FROM vicidial_list where lead_id='$lead_id';";
 										$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 										$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-										$sthArowsL=$sthA->rows;
-										if ($sthArowsL > 0)
+										$sthArows=$sthA->rows;
+										$rec_count=0;
+										$rec_countCUSTDATA=0;
+										if ($sthArows > 0)
 											{
 											@aryA = $sthA->fetchrow_array;
-											$campaign_cid_override =	$aryA[0];
+											$list_id =					$aryA[0];
+											$gmt_offset_now	=			$aryA[1];
+											$called_since_last_reset =	$aryA[2];
+											$phone_code	=				$aryA[3];
+											$phone_number =				$aryA[4];
+											$address3 =					$aryA[5];
+											$alt_phone =				$aryA[6];
+											$called_count =				$aryA[7];
+											$security_phrase =			$aryA[8];
+											$state =					$aryA[9];
+
+											$rec_countCUSTDATA++;
+											$rec_count++;
 											}
 										$sthA->finish();
 
-										### update called_count
-										$called_count++;
-										if ($called_since_last_reset =~ /^Y/)
+										if ($rec_countCUSTDATA)
 											{
-											if ($called_since_last_reset =~ /^Y$/) {$CSLR = 'Y1';}
-											else
+											$campaign_cid_override='';
+											### gather list_id overrides
+											$stmtA = "SELECT campaign_cid_override FROM vicidial_lists where list_id='$list_id';";
+											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+											$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+											$sthArowsL=$sthA->rows;
+											if ($sthArowsL > 0)
 												{
-												$called_since_last_reset =~ s/^Y//gi;
-												$called_since_last_reset++;
-												$CSLR = "Y$called_since_last_reset";
+												@aryA = $sthA->fetchrow_array;
+												$campaign_cid_override =	$aryA[0];
 												}
-											}
-										else {$CSLR = 'Y';}
-										
-										$LLCT_DATE_offset = ($LOCAL_GMT_OFF - $gmt_offset_now);
-										$LLCT_DATE_offset_epoch = ( $secX - ($LLCT_DATE_offset * 3600) );
-										($Lsec,$Lmin,$Lhour,$Lmday,$Lmon,$Lyear,$Lwday,$Lyday,$Lisdst) = localtime($LLCT_DATE_offset_epoch);
-										$Lyear = ($Lyear + 1900);
-										$Lmon++;
-										if ($Lmon < 10) {$Lmon = "0$Lmon";}
-										if ($Lmday < 10) {$Lmday = "0$Lmday";}
-										if ($Lhour < 10) {$Lhour = "0$Lhour";}
-										if ($Lmin < 10) {$Lmin = "0$Lmin";}
-										if ($Lsec < 10) {$Lsec = "0$Lsec";}
-											$LLCT_DATE = "$Lyear-$Lmon-$Lmday $Lhour:$Lmin:$Lsec";
+											$sthA->finish();
 
-										if ( ($alt_dial =~ /ALT|ADDR3|X/) && ($DBIPautoaltdial[$user_CIPct] =~ /ALT|ADDR|X/) )
-											{
-											if ( ($alt_dial =~ /ALT/) && ($DBIPautoaltdial[$user_CIPct] =~ /ALT/) )
+											### update called_count
+											$called_count++;
+											if ($called_since_last_reset =~ /^Y/)
 												{
-												$alt_phone =~ s/\D//gi;
-												$phone_number = $alt_phone;
-												}
-											if ( ($alt_dial =~ /ADDR3/) && ($DBIPautoaltdial[$user_CIPct] =~ /ADDR3/) )
-												{
-												$address3 =~ s/\D//gi;
-												$phone_number = $address3;
-												}
-											if  ( ($alt_dial =~ /X/) && ($DBIPautoaltdial[$user_CIPct] =~ /X/) )
-												{
-												if ($alt_dial =~ /LAST/) 
-													{
-													$stmtA = "SELECT phone_code,phone_number FROM vicidial_list_alt_phones where lead_id='$lead_id' order by alt_phone_count desc limit 1;";
-													}
+												if ($called_since_last_reset =~ /^Y$/) {$CSLR = 'Y1';}
 												else
 													{
-													$Talt_dial = $alt_dial;
-													$Talt_dial =~ s/\D//gi;
-													$stmtA = "SELECT phone_code,phone_number FROM vicidial_list_alt_phones where lead_id='$lead_id' and alt_phone_count='$Talt_dial';";										
+													$called_since_last_reset =~ s/^Y//gi;
+													$called_since_last_reset++;
+													$CSLR = "Y$called_since_last_reset";
 													}
+												}
+											else {$CSLR = 'Y';}
+											
+											$LLCT_DATE_offset = ($LOCAL_GMT_OFF - $gmt_offset_now);
+											$LLCT_DATE_offset_epoch = ( $secX - ($LLCT_DATE_offset * 3600) );
+											($Lsec,$Lmin,$Lhour,$Lmday,$Lmon,$Lyear,$Lwday,$Lyday,$Lisdst) = localtime($LLCT_DATE_offset_epoch);
+											$Lyear = ($Lyear + 1900);
+											$Lmon++;
+											if ($Lmon < 10) {$Lmon = "0$Lmon";}
+											if ($Lmday < 10) {$Lmday = "0$Lmday";}
+											if ($Lhour < 10) {$Lhour = "0$Lhour";}
+											if ($Lmin < 10) {$Lmin = "0$Lmin";}
+											if ($Lsec < 10) {$Lsec = "0$Lsec";}
+												$LLCT_DATE = "$Lyear-$Lmon-$Lmday $Lhour:$Lmin:$Lsec";
+
+											if ( ($alt_dial =~ /ALT|ADDR3|X/) && ($DBIPautoaltdial[$user_CIPct] =~ /ALT|ADDR|X/) )
+												{
+												if ( ($alt_dial =~ /ALT/) && ($DBIPautoaltdial[$user_CIPct] =~ /ALT/) )
+													{
+													$alt_phone =~ s/\D//gi;
+													$phone_number = $alt_phone;
+													}
+												if ( ($alt_dial =~ /ADDR3/) && ($DBIPautoaltdial[$user_CIPct] =~ /ADDR3/) )
+													{
+													$address3 =~ s/\D//gi;
+													$phone_number = $address3;
+													}
+												if  ( ($alt_dial =~ /X/) && ($DBIPautoaltdial[$user_CIPct] =~ /X/) )
+													{
+													if ($alt_dial =~ /LAST/) 
+														{
+														$stmtA = "SELECT phone_code,phone_number FROM vicidial_list_alt_phones where lead_id='$lead_id' order by alt_phone_count desc limit 1;";
+														}
+													else
+														{
+														$Talt_dial = $alt_dial;
+														$Talt_dial =~ s/\D//gi;
+														$stmtA = "SELECT phone_code,phone_number FROM vicidial_list_alt_phones where lead_id='$lead_id' and alt_phone_count='$Talt_dial';";										
+														}
+													$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+													$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+													$sthArows=$sthA->rows;
+													if ($sthArows > 0)
+														{
+														@aryA = $sthA->fetchrow_array;
+														$phone_code	=	$aryA[0];
+														$phone_number =	$aryA[1];
+														$phone_number =~ s/\D//gi;
+														}
+													$sthA->finish();
+													}
+
+												$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR',called_count='$called_count',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id'";
+												}
+											else
+												{
+												$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR', called_count='$called_count',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id'";
+												}
+											$affected_rows = $dbhA->do($stmtA);
+
+											$PADlead_id = sprintf("%010s", $lead_id);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
+											# VmddhhmmssLLLLLLLLLL Set the callerIDname to a unique call_id string
+											$VqueryCID = "V$CIDdate$PADlead_id";
+
+											if ( ( ($DBIPscheduled_callbacks_auto_reschedule[$user_CIPct] !~ /DISABLED/) && (length($DBIPscheduled_callbacks_auto_reschedule[$user_CIPct]) > 0) ) || ($hopper_source eq 'C') )
+												{
+												### gather vicidial_callbacks information for this lead, if any
+												$stmtA = "SELECT callback_id,callback_time,lead_status,list_id FROM vicidial_callbacks where lead_id='$lead_id' and status='LIVE' and recipient='ANYONE' order by callback_id limit 1;";
 												$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 												$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-												$sthArows=$sthA->rows;
-												if ($sthArows > 0)
+												$sthArowsPSCB=$sthA->rows;
+												if ($sthArowsPSCB > 0)
 													{
 													@aryA = $sthA->fetchrow_array;
-													$phone_code	=	$aryA[0];
-													$phone_number =	$aryA[1];
-													$phone_number =~ s/\D//gi;
+													$PSCBcallback_id =		$aryA[0];
+													$PSCBcallback_time =	$aryA[1];
+													$PSCBlead_status =		$aryA[2];
+													$PSCBlist_id =			$aryA[3];
 													}
 												$sthA->finish();
-												}
-
-											$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR',called_count='$called_count',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id'";
-											}
-										else
-											{
-											$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR', called_count='$called_count',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id'";
-											}
-										$affected_rows = $dbhA->do($stmtA);
-
-										$stmtA = "DELETE FROM vicidial_hopper where lead_id='$lead_id'";
-										$affected_rows = $dbhA->do($stmtA);
-
-										$CCID_on=0;   $CCID='';
-										$local_DEF = 'Local/';
-										$local_AMP = '@';
-										$Local_out_prefix = '9';
-										$Local_dial_timeout = '60';
-										if ($DBIPdialtimeout[$user_CIPct] > 4) {$Local_dial_timeout = $DBIPdialtimeout[$user_CIPct];}
-										$Local_dial_timeout = ($Local_dial_timeout * 1000);
-										if (length($DBIPdialprefix[$user_CIPct]) > 0) {$Local_out_prefix = "$DBIPdialprefix[$user_CIPct]";}
-										if (length($DBIPvdadexten[$user_CIPct]) > 0) {$VDAD_dial_exten = "$DBIPvdadexten[$user_CIPct]";}
-										else {$VDAD_dial_exten = "$answer_transfer_agent";}
-
-										# add the routing prefix if using Asterisk 13
-										if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} > 11)) 
-											{
-											$VDAD_dial_exten = $routing_prefix . $VDAD_dial_exten;
-											}
-
-										if (length($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
-										else
-											{
-											if (length($DBIPcampaigncid[$user_CIPct]) > 6) {$CCID = "$DBIPcampaigncid[$user_CIPct]";   $CCID_on++;}
-											if ($DBIPuse_custom_cid[$user_CIPct] =~ /Y/) 
-												{
-												$temp_CID = $security_phrase;
-												$temp_CID =~ s/\D//gi;
-												if (length($temp_CID) > 6) 
-													{$CCID = "$temp_CID";   $CCID_on++;}
-												}
-											$CIDG_set=0;
-											if ($DBIPcid_group_id[$user_CIPct] !~ /\-\-\-DISABLED\-\-\-/)
-												{
-												$stmtA = "SELECT cid_group_type FROM vicidial_cid_groups where cid_group_id='$DBIPcid_group_id[$user_CIPct]';";
-												$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-												$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-												$sthArows=$sthA->rows;
-												if ($sthArows > 0)
+												### insert record in recent callbacks table
+												if ($sthArowsPSCB > 0)
 													{
-													@aryA = $sthA->fetchrow_array;
-													$cid_group_type =	$aryA[0];
+													$stmtA = "INSERT INTO vicidial_recent_ascb_calls SET call_date='$SQLdate',callback_date='$PSCBcallback_time',callback_id='$PSCBcallback_id',caller_code='$VqueryCID',lead_id='$lead_id',server_ip='$DBIPaddress[$user_CIPct]',orig_status='$PSCBlead_status',reschedule='$DBIPscheduled_callbacks_auto_reschedule[$user_CIPct]',list_id='$PSCBlist_id',rescheduled='U';";
+													$affected_rows = $dbhA->do($stmtA);
+													}
+												}
+
+											$stmtA = "DELETE FROM vicidial_hopper where lead_id='$lead_id'";
+											$affected_rows = $dbhA->do($stmtA);
+
+											$CCID_on=0;   $CCID='';
+											$local_DEF = 'Local/';
+											$local_AMP = '@';
+											$Local_out_prefix = '9';
+											$Local_dial_timeout = '60';
+											if ($DBIPdialtimeout[$user_CIPct] > 4) {$Local_dial_timeout = $DBIPdialtimeout[$user_CIPct];}
+											$Local_dial_timeout = ($Local_dial_timeout * 1000);
+											if (length($DBIPdialprefix[$user_CIPct]) > 0) {$Local_out_prefix = "$DBIPdialprefix[$user_CIPct]";}
+											if (length($DBIPvdadexten[$user_CIPct]) > 0) {$VDAD_dial_exten = "$DBIPvdadexten[$user_CIPct]";}
+											else {$VDAD_dial_exten = "$answer_transfer_agent";}
+
+											# add the routing prefix if using Asterisk 13
+											if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} > 11)) 
+												{
+												$VDAD_dial_exten = $routing_prefix . $VDAD_dial_exten;
+												}
+
+											if (length($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;}
+											else
+												{
+												if (length($DBIPcampaigncid[$user_CIPct]) > 6) {$CCID = "$DBIPcampaigncid[$user_CIPct]";   $CCID_on++;}
+												if ($DBIPuse_custom_cid[$user_CIPct] =~ /Y/) 
+													{
+													$temp_CID = $security_phrase;
+													$temp_CID =~ s/\D//gi;
+													if (length($temp_CID) > 6) 
+														{$CCID = "$temp_CID";   $CCID_on++;}
+													}
+												$CIDG_set=0;
+												if ($DBIPcid_group_id[$user_CIPct] !~ /\-\-\-DISABLED\-\-\-/)
+													{
+													$stmtA = "SELECT cid_group_type FROM vicidial_cid_groups where cid_group_id='$DBIPcid_group_id[$user_CIPct]';";
+													$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+													$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+													$sthArows=$sthA->rows;
+													if ($sthArows > 0)
+														{
+														@aryA = $sthA->fetchrow_array;
+														$cid_group_type =	$aryA[0];
+														$temp_CID='';
+														$temp_vcca='';
+														$temp_ac='';
+
+														if ($cid_group_type =~ /AREACODE/)
+															{
+															$temp_ac_two = substr("$phone_number", 0, 2);
+															$temp_ac_three = substr("$phone_number", 0, 3);
+															$temp_ac_four = substr("$phone_number", 0, 4);
+															$temp_ac_five = substr("$phone_number", 0, 5);
+															$stmtA = "SELECT outbound_cid,areacode FROM vicidial_campaign_cid_areacodes where campaign_id='$DBIPcid_group_id[$user_CIPct]' and areacode IN('$temp_ac_two','$temp_ac_three','$temp_ac_four','$temp_ac_five') and active='Y' order by CAST(areacode as SIGNED INTEGER) asc, call_count_today desc limit 100000;";
+															}
+														if ($cid_group_type =~ /STATE/)
+															{
+															$temp_state = $state;
+															$stmtA = "SELECT outbound_cid,areacode FROM vicidial_campaign_cid_areacodes where campaign_id='$DBIPcid_group_id[$user_CIPct]' and areacode IN('$temp_state') and active='Y' order by call_count_today desc limit 100000;";
+															}											$temp_CID='';
+														$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+														$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+														$sthArows=$sthA->rows;
+														$act=0;
+														while ($sthArows > $act)
+															{
+															@aryA = $sthA->fetchrow_array;
+															$temp_vcca =	$aryA[0];
+															$temp_ac =		$aryA[1];
+															$act++;
+															}
+														if ($act > 0) 
+															{
+															$sthA->finish();
+															$stmtA="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$DBIPcid_group_id[$user_CIPct]' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
+															$affected_rows = $dbhA->do($stmtA);
+															}
+														else
+															{$sthA->finish();}
+														$temp_CID = $temp_vcca;
+														$temp_CID =~ s/\D//gi;
+														if (length($temp_CID) > 6) 
+															{$CCID = "$temp_CID";   $CCID_on++;   $CIDG_set++;}
+														}
+													}
+												if ( ($DBIPuse_custom_cid[$user_CIPct] =~ /AREACODE/) && ($CIDG_set < 1) )
+													{
 													$temp_CID='';
 													$temp_vcca='';
 													$temp_ac='';
-
-													if ($cid_group_type =~ /AREACODE/)
-														{
-														$temp_ac_two = substr("$phone_number", 0, 2);
-														$temp_ac_three = substr("$phone_number", 0, 3);
-														$temp_ac_four = substr("$phone_number", 0, 4);
-														$temp_ac_five = substr("$phone_number", 0, 5);
-														$stmtA = "SELECT outbound_cid,areacode FROM vicidial_campaign_cid_areacodes where campaign_id='$DBIPcid_group_id[$user_CIPct]' and areacode IN('$temp_ac_two','$temp_ac_three','$temp_ac_four','$temp_ac_five') and active='Y' order by CAST(areacode as SIGNED INTEGER) asc, call_count_today desc limit 100000;";
-														}
-													if ($cid_group_type =~ /STATE/)
-														{
-														$temp_state = $state;
-														$stmtA = "SELECT outbound_cid,areacode FROM vicidial_campaign_cid_areacodes where campaign_id='$DBIPcid_group_id[$user_CIPct]' and areacode IN('$temp_state') and active='Y' order by call_count_today desc limit 100000;";
-														}											$temp_CID='';
+													$temp_ac_two = substr("$phone_number", 0, 2);
+													$temp_ac_three = substr("$phone_number", 0, 3);
+													$temp_ac_four = substr("$phone_number", 0, 4);
+													$temp_ac_five = substr("$phone_number", 0, 5);
+													$stmtA = "SELECT outbound_cid,areacode FROM vicidial_campaign_cid_areacodes where campaign_id='$DBIPcampaign[$user_CIPct]' and areacode IN('$temp_ac_two','$temp_ac_three','$temp_ac_four','$temp_ac_five') and active='Y' order by CAST(areacode as SIGNED INTEGER) asc, call_count_today desc limit 100000;";
 													$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 													$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 													$sthArows=$sthA->rows;
@@ -1408,7 +1475,7 @@ while($one_day_interval > 0)
 													if ($act > 0) 
 														{
 														$sthA->finish();
-														$stmtA="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$DBIPcid_group_id[$user_CIPct]' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
+														$stmtA="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$DBIPcampaign[$user_CIPct]' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
 														$affected_rows = $dbhA->do($stmtA);
 														}
 													else
@@ -1416,72 +1483,35 @@ while($one_day_interval > 0)
 													$temp_CID = $temp_vcca;
 													$temp_CID =~ s/\D//gi;
 													if (length($temp_CID) > 6) 
-														{$CCID = "$temp_CID";   $CCID_on++;   $CIDG_set++;}
+														{$CCID = "$temp_CID";   $CCID_on++;}
 													}
 												}
-											if ( ($DBIPuse_custom_cid[$user_CIPct] =~ /AREACODE/) && ($CIDG_set < 1) )
+
+											if ($DBIPdialprefix[$user_CIPct] =~ /x/i) {$Local_out_prefix = '';}
+
+											if ($RECcount)
 												{
-												$temp_CID='';
-												$temp_vcca='';
-												$temp_ac='';
-												$temp_ac_two = substr("$phone_number", 0, 2);
-												$temp_ac_three = substr("$phone_number", 0, 3);
-												$temp_ac_four = substr("$phone_number", 0, 4);
-												$temp_ac_five = substr("$phone_number", 0, 5);
-												$stmtA = "SELECT outbound_cid,areacode FROM vicidial_campaign_cid_areacodes where campaign_id='$DBIPcampaign[$user_CIPct]' and areacode IN('$temp_ac_two','$temp_ac_three','$temp_ac_four','$temp_ac_five') and active='Y' order by CAST(areacode as SIGNED INTEGER) asc, call_count_today desc limit 100000;";
-												$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-												$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-												$sthArows=$sthA->rows;
-												$act=0;
-												while ($sthArows > $act)
-													{
-													@aryA = $sthA->fetchrow_array;
-													$temp_vcca =	$aryA[0];
-													$temp_ac =		$aryA[1];
-													$act++;
-													}
-												if ($act > 0) 
-													{
-													$sthA->finish();
-													$stmtA="UPDATE vicidial_campaign_cid_areacodes set call_count_today=(call_count_today + 1) where campaign_id='$DBIPcampaign[$user_CIPct]' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
-													$affected_rows = $dbhA->do($stmtA);
-													}
-												else
-													{$sthA->finish();}
-												$temp_CID = $temp_vcca;
-												$temp_CID =~ s/\D//gi;
-												if (length($temp_CID) > 6) 
-													{$CCID = "$temp_CID";   $CCID_on++;}
+												if ( (length($RECprefix)>0) && ($called_count < $RECcount) )
+												   {$Local_out_prefix .= "$RECprefix";}
 												}
-											}
 
-										if ($DBIPdialprefix[$user_CIPct] =~ /x/i) {$Local_out_prefix = '';}
+											if ($lists_update !~ /'$list_id'/) {$lists_update .= "'$list_id',"; $LUcount++;}
 
-										if ($RECcount)
-											{
-											if ( (length($RECprefix)>0) && ($called_count < $RECcount) )
-											   {$Local_out_prefix .= "$RECprefix";}
-											}
-										$PADlead_id = sprintf("%010s", $lead_id);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
+											$lead_id_call_list .= "$lead_id|";
 
-										if ($lists_update !~ /'$list_id'/) {$lists_update .= "'$list_id',"; $LUcount++;}
+											if (length($alt_dial)<1) {$alt_dial='MAIN';}
 
-										$lead_id_call_list .= "$lead_id|";
+											### whether to omit phone_code or not
+											if ($DBIPomitcode[$user_CIPct] > 0) 
+												{$Ndialstring = "$Local_out_prefix$phone_number";}
+											else
+												{$Ndialstring = "$Local_out_prefix$phone_code$phone_number";}
 
-										if (length($alt_dial)<1) {$alt_dial='MAIN';}
-
-										### whether to omit phone_code or not
-										if ($DBIPomitcode[$user_CIPct] > 0) 
-											{$Ndialstring = "$Local_out_prefix$phone_number";}
-										else
-											{$Ndialstring = "$Local_out_prefix$phone_code$phone_number";}
-
-										if (length($ext_context) < 1) {$ext_context='default';}
-										### use manager middleware-app to connect the next call to the meetme room
-										# VmddhhmmssLLLLLLLLLL
-											$VqueryCID = "V$CIDdate$PADlead_id";
-										if ($CCID_on) {$CIDstring = "\"$VqueryCID\" <$CCID>";}
-										else {$CIDstring = "$VqueryCID";}
+											if (length($ext_context) < 1) {$ext_context='default';}
+											### use manager middleware-agi to connect the next call to the meetme room of an agent after call is answered
+											if ($CCID_on) {$CIDstring = "\"$VqueryCID\" <$CCID>";}
+											else {$CIDstring = "$VqueryCID";}
+										
 										### insert a NEW record to the vicidial_manager table to be processed
 											$stmtA = "INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$DBIPaddress[$user_CIPct]','','Originate','$VqueryCID','Exten: $VDAD_dial_exten','Context: $ext_context','Channel: $local_DEF$Ndialstring$local_AMP$ext_context','Priority: 1','Callerid: $CIDstring','Timeout: $Local_dial_timeout','','','','VDACnote: $DBIPcampaign[$user_CIPct]|$lead_id|$phone_code|$phone_number|OUT|$alt_dial|$DBIPqueue_priority[$user_CIPct]')";
 											$affected_rows = $dbhA->do($stmtA);
@@ -3425,6 +3455,345 @@ while($one_day_interval > 0)
 			}
 
 
+	###############################################################################
+	###### seventh we will check to see if any campaign has scheduled callbacks 
+	######    auto reschedule enabled. if yes, then go through the unprocessed  
+	######    vicidial_recent_ascb_calls entries for this server_ip and process them.
+	###############################################################################
+		
+		$SCARincall='|INCALL|QUEUE|DISPO|';
+		$scheduled_callbacks_auto_reschedule_count=0;
+		$stmtA = "SELECT count(*) FROM vicidial_campaigns where scheduled_callbacks_auto_reschedule!='DISABLED' and campaign_calldate > \"$MCDSQLdate\";";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$scheduled_callbacks_auto_reschedule_count	= $aryA[0];
+			}
+		$sthA->finish();
+
+		if ($scheduled_callbacks_auto_reschedule_count > 0)
+			{
+			@SCARcamp_id = @MT;
+			@SCARcall_time = @MT;
+			@SCARcamp_reschedule = @MT;
+			@SCARstatuses = @MT;
+			@SCARlists = @MT;
+			@SCARstatus_groups = @MT;
+
+			$SCARcampaigns='|';
+			$stmtA = "SELECT campaign_id,local_call_time,scheduled_callbacks_auto_reschedule FROM vicidial_campaigns where scheduled_callbacks_auto_reschedule!='DISABLED' and campaign_calldate > \"$MCDSQLdate\";";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			$SCARcamp_count=0;
+			while ($sthArows > $SCARcamp_count)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$SCARcampaigns	.= "$aryA[0]|";
+				$SCARcamp_id[$SCARcamp_count] =			$aryA[0];
+				$SCARcall_time[$SCARcamp_count] =		$aryA[1];
+				$SCARcamp_reschedule[$SCARcamp_count] = $aryA[2];
+				$SCARcamp_count++;
+				}
+			$sthA->finish();
+
+			$SCARcamp_count=0;
+			foreach(@SCARcamp_id)
+				{
+				$SCARlists[$SCARcamp_count]='';
+				$stmtA = "SELECT list_id FROM vicidial_lists where campaign_id='$SCARcamp_id[$SCARcamp_count]';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				$SCARlist_count=0;
+				while ($sthArows > $SCARlist_count)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$SCARlists[$SCARcamp_count]		.= "'$aryA[0]',";
+					$SCARlist_count++;
+					}
+				$sthA->finish();
+				$SCARlists[$SCARcamp_count] =~ s/,$//gi;
+				if (length($SCARlists[$SCARcamp_count]) < 2)
+					{$SCARlists[$SCARcamp_count]="''";}
+
+				$SCARstatus_groups[$SCARcamp_count]='';
+				if ($SCARlist_count > 0) 
+					{
+					$stmtA = "SELECT distinct status_group_id FROM vicidial_lists where list_id IN($SCARlists[$SCARcamp_count]);";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					$SCARstatus_groups_count=0;
+					while ($sthArows > $SCARstatus_groups_count)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$SCARstatus_groups[$SCARcamp_count]		.= "'$aryA[0]',";
+						$SCARstatus_groups_count++;
+						}
+					$sthA->finish();
+					$SCARstatus_groups[$SCARcamp_count] =~ s/,$//gi;
+					}
+				if (length($SCARstatus_groups[$SCARcamp_count]) < 2)
+					{$SCARstatus_groups[$SCARcamp_count]="''";}
+
+				$SCARstatuses[$SCARcamp_count]=' ';
+				$stmtA = "SELECT distinct status from vicidial_statuses where human_answered='Y' UNION select distinct status from vicidial_campaign_statuses where campaign_id='$SCARcamp_id[$SCARcamp_count]' and human_answered='Y' UNION select distinct status from vicidial_campaign_statuses where campaign_id IN($SCARstatus_groups[$SCARcamp_count]) and human_answered='Y';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				$SCARstatuses_count=0;
+				while ($sthArows > $SCARstatuses_count)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$SCARstatuses[$SCARcamp_count]		.= "$aryA[0] ";
+					$SCARstatuses_count++;
+					}
+				$sthA->finish();
+
+				$SCARcamp_count++;
+				}
+
+			$event_string = "     Scheduled Callbacks Auto Reschedule check:   $scheduled_callbacks_auto_reschedule_count active($MCDSQLdate), checking unprocessed calls...";
+			 &event_logger;
+
+			@SCARleadid = @MT;
+			@SCARcalldate = @MT;
+			@SCARcalldateFIVE = @MT;
+			@SCARcallback_date = @MT;
+			@SCARcallerid = @MT;
+			@SCARorig_status = @MT;
+			@SCARreschedule = @MT;
+			@SCARlist_id = @MT;
+			@SCARcallback_id = @MT;
+			@SCARflag = @MT;
+			@SCARcampaign = @MT;
+			@SCARstatus = @MT;
+
+			$stmtA = "SELECT lead_id,call_date,caller_code,orig_status,reschedule,list_id,callback_id,(call_date + INTERVAL 5 MINUTE),callback_date FROM vicidial_recent_ascb_calls where server_ip='$server_ip' and call_date > \"$MCDSQLdate\" and rescheduled='U' order by call_date,lead_id limit 100000;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+			$vrac_count=0;
+			$vrac_auto_count=0;
+			while ($sthArows > $vrac_count)
+				{
+				$SCARflag[$vrac_count]	= 0;
+				@aryA = $sthA->fetchrow_array;
+				if ($aryA[2] =~ /^V|^M/)
+					{
+					$vrac_auto_count++;
+					$SCARflag[$vrac_count]	= 1;
+					}
+				$SCARleadid[$vrac_count] =			$aryA[0];
+				$SCARcalldate[$vrac_count] =		$aryA[1];
+				$SCARcallerid[$vrac_count] =		$aryA[2];
+				$SCARorig_status[$vrac_count] =		$aryA[3];
+				$SCARreschedule[$vrac_count] =		$aryA[4];
+				$SCARlist_id[$vrac_count] =			$aryA[5];
+				$SCARcallback_id[$vrac_count] =		$aryA[6];
+				$SCARcalldateFIVE[$vrac_count] =	$aryA[7];
+				$SCARcallback_date[$vrac_count] =	$aryA[8];
+				$vrac_count++;
+				}
+			$sthA->finish();
+
+			$event_string = "     Scheduled Callbacks Auto Reschedule records count:   $vrac_count|$vrac_auto_count";
+			 &event_logger;
+
+			$vle_count=0;
+			foreach(@SCARcallerid)
+				{
+				if ($SCARflag[$vle_count] > 0)
+					{
+					$vac_count=0;
+					$stmtA = "SELECT count(*) FROM vicidial_auto_calls where callerid='$SCARcallerid[$vle_count]' and lead_id='$SCARleadid[$vle_count]';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$vac_count	= $aryA[0];
+						}
+					$sthA->finish();
+
+					if ($vac_count < 1)
+						{
+						$stmtA = "SELECT campaign_id,status FROM vicidial_log where lead_id='$SCARleadid[$vle_count]' and call_date>=\"$SCARcalldate[$vle_count]\" and call_date < \"$SCARcalldateFIVE[$vle_count]\" order by call_date limit 1;";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						$sthArows=$sthA->rows;
+						if ($sthArows > 0)
+							{
+							@aryA = $sthA->fetchrow_array;
+							$SCARcampaign[$vle_count]	= $aryA[0];
+							$SCARstatus[$vle_count]	= $aryA[1];
+							$sthA->finish();
+
+							if ($SCARcampaigns =~ /\|$SCARcampaign[$vle_count]\|/i)
+								{
+								if ($SCARincall !~ /\|$SCARstatus[$vle_count]\|/i)
+									{
+									$SCARaads_value='';
+									$SCARlists_value="''";
+									$SCARcall_time_value='';
+									$SCARreschedule_value='';
+									$SCARcamp_match=0;
+									$SCARcamp_loop=0;
+									while ( ($SCARcamp_match < 1) && ($SCARcamp_loop <= $SCARcamp_count) )
+										{
+										if ( ($SCARcampaign[$vle_count] =~ /$SCARcamp_id[$SCARcamp_loop]/i) && (length($SCARcampaign[$vle_count]) == length($SCARcamp_id[$SCARcamp_loop])) )
+											{
+											$SCARcamp_match++;
+											$SCARaads_value = $SCARstatuses[$SCARcamp_loop];
+											$SCARlists_value = $SCARlists[$SCARcamp_loop];
+											$SCARcall_time_value = $SCARcall_time[$SCARcamp_loop];
+											$SCARreschedule_value = $SCARcamp_reschedule[$SCARcamp_loop];
+											}
+										$SCARcamp_loop++;
+										}
+									if ($SCARaads_value !~ / $SCARstatus[$vle_count] /i)
+										{
+										$event_string = "        SCAR human-answered status no-match, starting auto-reschedule:   $SCARcallerid[$vle_count]|$SCARstatus[$vle_count]|$SCARcallback_date[$vle_count]|$SCARreschedule_value|";
+										 &event_logger;
+
+										@temp_dateARY = split(" ",$SCARcallback_date[$vle_count]);
+										@temp_orig_date = split("-",$temp_dateARY[0]);
+										@temp_orig_time = split(":",$temp_dateARY[1]);
+										$temp_orig_date[1] = ($temp_orig_date[1] - 1);
+										$temp_time = timelocal($temp_orig_time[2],$temp_orig_time[1],$temp_orig_time[0],$temp_orig_date[2],$temp_orig_date[1],$temp_orig_date[0]);
+
+										$recheduled_first_date_calculated=0;
+										@SCARreschedule_valueARY = split('_',$SCARreschedule_value);
+										if ($SCARreschedule_valueARY[0] eq 'DAY') 
+											{$temp_time_next = ($temp_time + (86400 * $SCARreschedule_valueARY[1]) );   $recheduled_first_date_calculated++;}
+										if ($SCARreschedule_valueARY[0] eq 'WEEK') 
+											{$temp_time_next = ($temp_time + (604800 * $SCARreschedule_valueARY[1]) );   $recheduled_first_date_calculated++;}
+										if ($SCARreschedule_valueARY[0] eq 'MONTH') 
+											{$temp_time_next = ($temp_time + (2419200 * $SCARreschedule_valueARY[1]) );   $recheduled_first_date_calculated++;}
+										if ($recheduled_first_date_calculated < 1) 
+											{$temp_time_next = ($temp_time + 86400);}
+
+										while ($now_date_epoch > $temp_time_next) 
+											{$temp_time_next = ($temp_time_next + 86400);}
+
+										$temp_SCAR_lead_id='';   $temp_SCAR_gmt_offset='';   $temp_SCAR_state='';   $temp_SCAR_list_id='';
+										$stmtA = "SELECT gmt_offset_now,state,list_id,status FROM vicidial_list where lead_id='$SCARleadid[$vle_count]';";
+										$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+										$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+										$sthArows=$sthA->rows;
+										if ($sthArows > 0)
+											{
+											@aryA = $sthA->fetchrow_array;
+											$temp_SCAR_lead_id =	$SCARleadid[$vle_count];
+											$temp_SCAR_gmt_offset = $aryA[0];
+											$temp_SCAR_state =		$aryA[1];
+											$temp_SCAR_list_id =	$aryA[2];
+											$temp_SCAR_status =		$aryA[3];
+											}
+										$sthA->finish();
+
+										$stmtA = "SELECT local_call_time FROM vicidial_lists where list_id='$temp_SCAR_list_id';";
+										$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+										$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+										$sthArows=$sthA->rows;
+										if ($sthArows > 0)
+											{
+											@aryA = $sthA->fetchrow_array;
+											$temp_list_call_time_override = $aryA[0];
+											if ($temp_list_call_time_override ne 'campaign') 
+												{$SCARcall_time_value = $temp_list_call_time_override;}
+											}
+										$sthA->finish();
+
+										$temp_time_dialable=0;   $temp_count=0;   $SCARcalldateNEW[$vle_count]='';   $SCARcalldateNEWlocal[$vle_count]='';
+										while ( ($temp_time_dialable < 1) && ($temp_count < 58) )
+											{
+											&temp_time_dialable_check;
+											if ($temp_time_dialable < 1) 
+												{
+												if ($DBX > 0) {print "     SCAR next time debug: $temp_count|$temp_time_next|$SCARcalldateNEW[$vle_count]|$SCARcalldateNEWlocal[$vle_count]|\n";}
+												# add 6 hours to temp_time_next for the next loop
+												$temp_time_next = ($temp_time_next + 21600);
+												}
+											$temp_count++;
+											}
+										if ($temp_time_dialable < 1)
+											{
+											$event_string = "        SCAR auto-reschedule time failed:   $SCARcallerid[$vle_count]|$SCARcallback_id[$vle_count]|$SCARcalldate[$vle_count]|$temp_orig_time|$temp_time_dialable|$temp_time_next|";
+											 &event_logger;
+											}
+										else
+											{
+											$event_string = "        SCAR auto-reschedule time calculated:   $SCARcallerid[$vle_count]|$SCARcallback_id[$vle_count]|$SCARcalldate[$vle_count]|$temp_orig_time|$SCARcalldateNEW[$vle_count]|";
+											 &event_logger;
+
+											### update existing vicidial_callbacks record with auto-reschedule time (,lead_status='$temp_SCAR_status')
+											$stmtA="UPDATE vicidial_callbacks SET status='ACTIVE',callback_time='$SCARcalldateNEW[$vle_count]' where callback_id='$SCARcallback_id[$vle_count]' and lead_id='$SCARleadid[$vle_count]';";
+											$affected_rowsA = $dbhA->do($stmtA);
+
+											### set vicidial_recent_ascb_calls status non-match, set record to Y for processed, auto-reschedule updated
+											$stmtB = "UPDATE vicidial_recent_ascb_calls SET rescheduled='Y' where caller_code='$SCARcallerid[$vle_count]';";
+											$affected_rowsB = $dbhA->do($stmtB);
+
+											### update existing vicidial_list record with CBHOLD status
+											$stmtC="UPDATE vicidial_list SET status='CBHOLD' where lead_id='$SCARleadid[$vle_count]';";
+											$affected_rowsC = $dbhA->do($stmtC);
+
+											$event_string = "        SCAR auto-reschedule updated:   $SCARcallerid[$vle_count]|$affected_rowsA|$affected_rowsB|$affected_rowsC|$stmtA|";
+											 &event_logger;
+											}
+										}
+									else
+										{
+										### set vicidial_recent_ascb_calls record to P for processed as a human-answered call, not-auto-rescheduled
+										$stmtA = "UPDATE vicidial_recent_ascb_calls SET rescheduled='P' where caller_code='$SCARcallerid[$vle_count]';";
+										$affected_rows = $dbhA->do($stmtA);
+
+										$event_string = "        SCAR match, log processed:   $SCARcallerid[$vle_count]|$affected_rows";
+										 &event_logger;
+										}
+									}
+								else
+									{
+									$event_string = "        SCAR status in-call, do nothing:   $SCARcallerid[$vle_count]|$SCARuniqueid[$vle_count]|$SCARstatus[$vle_count]";
+									 &event_logger;
+									}
+								}
+							else
+								{
+								### set vicidial_recent_ascb_calls record to N for no-auto-reschedule
+								$stmtA = "UPDATE vicidial_recent_ascb_calls SET rescheduled='N' where caller_code='$SCARcallerid[$vle_count]';";
+								$affected_rows = $dbhA->do($stmtA);
+								}
+							}
+						else
+							{
+							$sthA->finish();
+							$event_string = "        SCAR no log entry, do nothing:   $SCARcallerid[$vle_count]|$SCARcalldate[$vle_count]";
+							 &event_logger;
+							}
+						}
+					else
+						{
+						$event_string = "        SCAR active call, do nothing:   $SCARcallerid[$vle_count]";
+						 &event_logger;
+						}
+					}
+				else
+					{
+					### set vicidial_recent_ascb_calls record to N for no-auto-reschedule because call was not outbound
+					$stmtA = "UPDATE vicidial_recent_ascb_calls SET rescheduled='N' where caller_code='$SCARcallerid[$vle_count]';";
+					$affected_rows = $dbhA->do($stmtA);
+					}
+				$vle_count++;
+				}
+			}
+
 
 	###############################################################################
 	###### last, wait for a little bit and repeat the loop
@@ -3522,7 +3891,7 @@ while($one_day_interval > 0)
 				$DBext_context = 			$aryA[3];
 					$max_vicidial_trunks = $DBmax_vicidial_trunks;
 				if ($DBanswer_transfer_agent)	{$answer_transfer_agent = $DBanswer_transfer_agent;}
-				if ($DBSERVER_GMT)				{$SERVER_GMT = $DBSERVER_GMT;}
+				if (length($DBSERVER_GMT) > 0)	{$SERVER_GMT = $DBSERVER_GMT;}
 				if ($DBext_context)				{$ext_context = $DBext_context;}
 				}
 			$sthA->finish();
@@ -3701,6 +4070,232 @@ sub get_time_now	#get the current date and time and epoch for logging call lengt
 	$RMSQLdate = "$RMyear-$RMmon-$RMmday $RMhour:$RMmin:$RMsec";
 	}
 
+
+
+sub temp_time_dialable_check
+	{
+	$SERVER_GMT_OFF=0;
+	$SERVERsec_diff=0;
+	$SERVERtemp_time_next = $temp_time_next;
+	$SERVERtempGMT_now = $SERVERtemp_time_next;
+	($SXsec,$SXmin,$SXhour,$SXmday,$SXmon,$SXyear,$SXwday,$SXyday,$SXisdst) = localtime($SERVERtemp_time_next);
+	if ($SXisdst) {$SERVER_GMT_OFF++;}
+	if ( ($SXisdst > 0) && ($isdst < 1) )
+		{$SERVERtempGMT_now = ($SERVERtemp_time_next - 3600);   $SERVERsec_diff = -3600;}
+	if ( ($SXisdst < 1) && ($isdst  > 0) )
+		{$SERVERtempGMT_now = ($SERVERtemp_time_next + 3600);   $SERVERsec_diff = 3600;}
+	($SYsec,$SYmin,$SYhour,$SYmday,$SYmon,$SYyear,$SYwday,$SYyday,$SYisdst) = localtime($SERVERtempGMT_now);
+	$SYyear = ($SYyear + 1900);
+	$SYmon++;
+	if ($SYmon < 10) {$SYmon = "0$SYmon";}
+	if ($SYmday < 10) {$SYmday = "0$SYmday";}
+	if ($SYsec < 10) {$SYsec = "0$SYsec";}
+	if ($SYmin < 10) {$SYmin = "0$SYmin";}
+	if ($SYhour < 10) {$SYhour = "0$SYhour";}
+	$SCARcalldateNEW[$vle_count] = "$SYyear-$SYmon-$SYmday $SYhour:$SYmin:$SYsec";
+	if ($DBX > 0) {print "     SCAR debug Server time: |$SERVERtempGMT_now|$SXisdst|$isdst|$SERVERsec_diff|\n";}
+
+	$SCARzone_diff = (($SERVER_GMT + $SERVER_GMT_OFF) - $temp_SCAR_gmt_offset);
+	$SCARzone=0;
+	if ($SCARzone_diff != 0) 
+		{$SCARzone = (3600 * $SCARzone_diff);}
+	$LOCALnow_date_epoch = ($now_date_epoch + $SCARzone);
+	if ($DBX > 0) {print "      SCAR debug Local time: |$SCARzone_diff (($SERVER_GMT + $SERVER_GMT_OFF) - $temp_SCAR_gmt_offset)|$LOCALnow_date_epoch ($now_date_epoch + $SCARzone)|\n";}
+	($TNsec,$TNmin,$TNhour,$TNmday,$TNmon,$TNyear,$TNwday,$TNyday,$TNisdst) = localtime($LOCALnow_date_epoch);
+	$LOCALsec_diff=0;
+	$LOCALtemp_time_next = ($temp_time_next + $SCARzone);
+	($TXsec,$TXmin,$TXhour,$TXmday,$TXmon,$TXyear,$TXwday,$TXyday,$TXisdst) = localtime($LOCALtemp_time_next);
+	if ( ($TXisdst > 0) && ($TNisdst < 1) )
+		{$LOCALtempGMT_now = ($LOCALtemp_time_next - 3600);   $LOCALsec_diff = -3600;}
+	if ( ($TXisdst < 1) && ($TNisdst  > 0) )
+		{$LOCALtempGMT_now = ($LOCALtemp_time_next + 3600);   $LOCALsec_diff = 3600;}
+	$tempGMT_now = ($LOCALtemp_time_next + $LOCALsec_diff);
+	if ($DBX > 0) {print "            SCAR debug time: |$TXisdst|$TNisdst|$LOCALtemp_time_next|$LOCALsec_diff|$tempGMT_now|\n";}
+	($TYsec,$TYmin,$TYhour,$TYmday,$TYmon,$TYyear,$TYwday,$TYyday,$TYisdst) = localtime($tempGMT_now);
+	$TYyear = ($TYyear + 1900);
+	$TYmon++;
+	if ($TYmon < 10) {$TYmon = "0$TYmon";}
+	if ($TYmday < 10) {$TYmday = "0$TYmday";}
+	if ($TYsec < 10) {$TYsec = "0$TYsec";}
+	if ($TYmin < 10) {$TYmin = "0$TYmin";}
+	$SCARhour = "$TYhour$TYmin";   $SCARhour = ($SCARhour + 0);
+	if ($TYhour < 10) {$TYhour = "0$TYhour";}
+	$SCARcalldateNEWlocal[$vle_count] = "$TYyear-$TYmon-$TYmday $TYhour:$TYmin:$TYsec";
+	$SCARdate = "$TYyear-$TYmon-$TYmday";
+
+	$ct_default_start='2400';
+	$ct_default_stop='2400';
+	$ct_state_call_times='';
+	$ct_holidays='';
+	$ct_day_start='2400';
+	$ct_day_stop='2400';
+
+	$TY_timeSQL=',2400,2400';
+	if ($TYwday eq '0') {$TY_timeSQL = ',ct_sunday_start,ct_sunday_stop';}
+	if ($TYwday eq '1') {$TY_timeSQL = ',ct_monday_start,ct_monday_stop';}
+	if ($TYwday eq '2') {$TY_timeSQL = ',ct_tuesday_start,ct_tuesday_stop';}
+	if ($TYwday eq '3') {$TY_timeSQL = ',ct_wednesday_start,ct_wednesday_stop';}
+	if ($TYwday eq '4') {$TY_timeSQL = ',ct_thursday_start,ct_thursday_stop';}
+	if ($TYwday eq '5') {$TY_timeSQL = ',ct_friday_start,ct_friday_stop';}
+	if ($TYwday eq '6') {$TY_timeSQL = ',ct_saturday_start,ct_saturday_stop';}
+
+	### Grab Call Time values from the database
+	$stmtA="SELECT ct_default_start,ct_default_stop,ct_state_call_times,ct_holidays $TY_timeSQL FROM vicidial_call_times where call_time_id='$SCARcall_time_value';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$ct_default_start = 	$aryA[0];
+		$ct_default_stop = 		$aryA[1];
+		$ct_state_call_times =	$aryA[2];
+		$ct_holidays = 			$aryA[3];
+		$ct_day_start =			$aryA[4];
+		$ct_day_stop = 			$aryA[5];
+		}
+	$sthA->finish();
+	if ($DBX > 0) {print "     SCAR call time debug: $sthArows|$stmtA|$SCARcall_time_value|$ct_default_start|$ct_default_stop|$ct_state_call_times|$ct_holidays|$ct_day_start|$ct_day_stop($TYwday)|\n";}
+
+	### Check for outbound holidays ###
+	$holiday_id = '';   $holidy_applied=0;
+	if (length($ct_holidays) > 2)
+		{
+		$ct_holidaysSQL = $ct_holidays;
+		$ct_holidaysSQL =~ s/\|/','/gi;
+		$ct_holidaysSQL = "'".$ct_holidaysSQL."'";
+		
+		$stmtA="SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id IN($ct_holidaysSQL) and holiday_status='ACTIVE' and holiday_date='$SCARdate' order by holiday_id;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$holiday_id =			$aryA[0];
+			$holiday_date =			$aryA[1];
+			$holiday_name =			$aryA[2];
+			if ( ($ct_default_start < $aryA[3]) && ($ct_default_stop > 0) )	{$ct_default_start = $aryA[3];   $holidy_applied++;}
+			if ( ($ct_default_stop > $aryA[4]) && ($ct_default_stop > 0) )	{$ct_default_stop = $aryA[4];   $holidy_applied++;}
+			if ( ($ct_day_start < $aryA[3]) && ($ct_day_start > 0) )		{$ct_day_start = $aryA[3];   $holidy_applied++;}
+			if ( ($ct_day_stop > $aryA[4]) && ($ct_day_stop > 0) )			{$ct_day_stop = $aryA[4];   $holidy_applied++;}
+			}
+		$sthA->finish();
+		if ($DBX > 0) {print "     SCAR call time holiday debug: $sthArows|$stmtA|$ct_default_start|$ct_default_stop|$ct_state_call_times|$ct_day_start|$ct_day_stop|\n";}
+		}
+	### BEGIN gather state call times, if configured
+	if ( (length($ct_state_call_times) > 2) && (length($temp_SCAR_state) > 0) )
+		{
+		$state_ct_match=0;
+		$b=0;
+		@temp_state_rules = split( /\|/,$ct_state_call_times);
+
+		if ($DBX > 0) {print "     SCAR state call time count debug: -$ct_state_call_times-|$temp_SCAR_state|\n";}
+
+		foreach(@temp_state_rules)
+			{
+			if (length($temp_state_rules[$b]) > 1)
+				{
+				$sct_default_start='2400';
+				$sct_default_stop='2400';
+				$sct_state_call_times='';
+				$sct_holidays='';
+				$sct_day_start='2400';
+				$sct_day_stop='2400';
+				$TY_StimeSQL=',2400,2400';
+				if ($TYwday eq '0') {$TY_StimeSQL = ',sct_sunday_start,sct_sunday_stop';}
+				if ($TYwday eq '1') {$TY_StimeSQL = ',sct_monday_start,sct_monday_stop';}
+				if ($TYwday eq '2') {$TY_StimeSQL = ',sct_tuesday_start,sct_tuesday_stop';}
+				if ($TYwday eq '3') {$TY_StimeSQL = ',sct_wednesday_start,sct_wednesday_stop';}
+				if ($TYwday eq '4') {$TY_StimeSQL = ',sct_thursday_start,sct_thursday_stop';}
+				if ($TYwday eq '5') {$TY_StimeSQL = ',sct_friday_start,sct_friday_stop';}
+				if ($TYwday eq '6') {$TY_StimeSQL = ',sct_saturday_start,sct_saturday_stop';}
+				$stmtA="SELECT sct_default_start,sct_default_stop,ct_holidays $TY_StimeSQL from vicidial_state_call_times where state_call_time_id='$temp_state_rules[$b]' and state_call_time_state='$temp_SCAR_state';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$sct_default_start = 	$aryA[0];
+					$sct_default_stop = 	$aryA[1];
+					$sct_holidays = 		$aryA[2];
+					$sct_day_start =		$aryA[3];
+					$sct_day_stop = 		$aryA[4];
+					$state_ct_match++;
+					}
+				$sthA->finish();
+				if ($DBX > 0) {print "     SCAR state call time debug: $sthArows|$stmtA|$state_ct_match|$temp_state_rules[$b]|$temp_SCAR_state|$sct_default_start|$sct_default_stop|$sct_holidays|$sct_day_start|$sct_day_stop|\n";}
+
+				if (length($sct_holidays) > 2)
+					{
+					$sholidy_applied=0;
+					$sct_holidaysSQL = $sct_holidays;
+					$sct_holidaysSQL =~ s/\|/','/gi;
+					$sct_holidaysSQL = "'".$sct_holidaysSQL."'";
+					
+					$stmtA="SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id IN($sct_holidaysSQL) and holiday_status='ACTIVE' and holiday_date='$SCARdate' order by holiday_id;";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$holiday_id =			$aryA[0];
+						$holiday_date =			$aryA[1];
+						$holiday_name =			$aryA[2];
+						if ( ($sct_default_start < $aryA[3]) && ($sct_default_stop > 0) )	{$sct_default_start = $aryA[3];   $sholidy_applied++;}
+						if ( ($sct_default_stop > $aryA[4]) && ($sct_default_stop > 0) )	{$sct_default_stop = $aryA[4];   $sholidy_applied++;}
+						if ( ($sct_day_start < $aryA[3]) && ($sct_day_start > 0) )			{$sct_day_start = $aryA[3];   $sholidy_applied++;}
+						if ( ($sct_day_stop > $aryA[4]) && ($sct_day_stop > 0) )			{$sct_day_stop = $aryA[4];   $sholidy_applied++;}
+						}
+					$sthA->finish();
+					if ($DBX > 0) {print "     SCAR state call time holiday debug: $sthArows|$stmtA|$sct_default_start|$sct_default_stop|$sct_state_call_times|$sct_day_start|$sct_day_stop|\n";}
+					}
+				if ( ($sholidy_applied < 1) && ($holidy_applied > 0) )
+					{
+					if ( ($sct_default_start < $ct_default_start) && ($sct_default_stop > 0) )	{$sct_default_start = $ct_default_start;}
+					if ( ($sct_default_stop > $ct_default_stop) && ($sct_default_stop > 0) )	{$sct_default_stop = $ct_default_stop;}
+					if ( ($sct_day_start < $ct_default_start) && ($sct_day_start > 0) )			{$sct_day_start = $ct_default_start;}
+					if ( ($sct_day_stop > $ct_default_stop) && ($sct_day_stop > 0) )			{$sct_day_stop = $ct_default_stop;}
+					}
+				}
+			$b++;
+			}
+		}
+	### END gather state call times, if configured
+
+	if ($state_ct_match > 0) 
+		{
+		# STATE RULES
+		if (($sct_day_start == 0) && ($sct_day_stop == 0))
+			{
+			if ( ($SCARhour >= $sct_default_start) && ($SCARhour < $sct_default_stop) )
+				{$temp_time_dialable=1;}
+			}
+		else
+			{
+			if ( ($SCARhour >= $sct_day_start) && ($SCARhour < $sct_day_stop) )
+				{$temp_time_dialable=1;}
+			}
+		}
+	else 
+		{		
+		#NO STATE RULES
+		if ( ($ct_day_start == 0) and ($ct_day_stop == 0) )
+			{
+			if ( ($SCARhour >= $ct_default_start) and ($SCARhour < $ct_default_stop) )
+				{$temp_time_dialable=1;}
+			}
+		else
+			{
+			if ( ($SCARhour >= $ct_day_start) and ($SCARhour < $ct_day_stop) )
+				{$temp_time_dialable=1;}
+			}
+		}
+
+	if ($DBX > 0) {print "     SCAR dialable debug: $temp_time_dialable|$state_ct_match|$SCARhour|$sct_default_start|$sct_default_stop|$sct_day_start|$sct_day_stop|$ct_default_start|$ct_default_stop|$ct_day_start|$ct_day_stop|$SCARcalldateNEWlocal[$vle_count]|$SCARdate\n";}
+	}
 
 
 sub event_logger

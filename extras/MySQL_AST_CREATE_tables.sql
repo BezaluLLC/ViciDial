@@ -1008,7 +1008,8 @@ dead_trigger_action ENUM('DISABLED','AUDIO','URL','AUDIO_AND_URL') default 'DISA
 dead_trigger_repeat ENUM('NO','REPEAT_ALL','REPEAT_AUDIO','REPEAT_URL') default 'NO',
 dead_trigger_filename TEXT,
 dead_trigger_url TEXT,
-scheduled_callbacks_force_dial ENUM('N','Y') default 'N'
+scheduled_callbacks_force_dial ENUM('N','Y') default 'N',
+scheduled_callbacks_auto_reschedule VARCHAR(10) default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -3977,6 +3978,22 @@ index (local_call_id),
 index (lead_id)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_recent_ascb_calls (
+call_date DATETIME,
+callback_date DATETIME,
+callback_id INT(9) UNSIGNED default '0',
+caller_code VARCHAR(30) default '',
+lead_id INT(9) UNSIGNED,
+server_ip VARCHAR(60) NOT NULL,
+orig_status VARCHAR(6) default 'CALLBK',
+reschedule VARCHAR(10) default '',
+list_id BIGINT(14) UNSIGNED,
+rescheduled ENUM('U','P','Y','N') default 'U',
+unique index (caller_code),
+index (call_date),
+index (lead_id)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -4191,6 +4208,8 @@ ALTER TABLE vicidial_agent_function_log_archive MODIFY agent_function_log_id INT
 CREATE TABLE vicidial_did_log_archive LIKE vicidial_did_log;
 CREATE UNIQUE INDEX vdidla_key on vicidial_did_log_archive(uniqueid, call_date, server_ip);
 
+CREATE TABLE vicidial_recent_ascb_calls_archive LIKE vicidial_recent_ascb_calls;
+
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
 
@@ -4267,4 +4286,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1552',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1553',db_schema_update_date=NOW(),reload_timestamp=NOW();
