@@ -2,7 +2,7 @@
 #
 # ADMIN_area_code_populate.pl    version 2.14
 #
-# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2018  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Description:
 # server application that allows load areacodes into to asterisk list database
@@ -24,6 +24,7 @@
 # 151228-1043 - Added ISO-TLD table and import
 # 160611-0933 - Added more documentation
 # 170614-2146 - Added some dirty input filtering and more debug output
+# 180825-2038 - Added php_tz field to vicidial_phone_codes table
 #
 
 
@@ -359,6 +360,7 @@ else
 		if ($codefile[$pc] !~ /GEOGRAPHIC DESCRIPTION/)
 			{
 			$pc++;
+			$row[9] =~ s/\r|\n|\t| $//gi;
 			$row[8] =~ s/\r|\n|\t| $//gi;
 			$row[7] =~ s/\r|\n|\t| $//gi;
 			$row[6] =~ s/\r|\n|\t| $//gi;
@@ -368,7 +370,7 @@ else
 			$row[2] =~ s/\r|\n|\t| $//gi;
 			$row[1] =~ s/\r|\n|\t| $//gi;
 			$row[0] =~ s/\r|\n|\t| $//gi;
-			$ins_stmt.="('$row[0]', '$row[1]', '$row[2]', '$row[3]', '$row[4]', '$row[5]', '$row[6]', '$row[7]', '$row[8]'), ";
+			$ins_stmt.="('$row[0]', '$row[1]', '$row[2]', '$row[3]', '$row[4]', '$row[5]', '$row[6]', '$row[7]', '$row[8]', '$row[9]'), ";
 			if ($pc =~ /00$/) 
 				{
 				chop($ins_stmt);
