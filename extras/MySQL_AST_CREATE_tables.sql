@@ -3137,6 +3137,7 @@ PRIMARY KEY (email_row_id),
 KEY email_list_account_key (email_account_id),
 KEY email_list_user_key (user),
 KEY vicidial_email_lead_id_key (lead_id)
+KEY vicidial_email_group_key (group_id)
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_email_accounts (
@@ -4294,4 +4295,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1554',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1555',db_schema_update_date=NOW(),reload_timestamp=NOW();

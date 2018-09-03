@@ -743,3 +743,7 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 INSERT INTO vicidial_settings_containers(container_id,container_notes,container_type,user_group,container_entry) VALUES ('TIMEZONES_AUSTRALIA','Australian Timezone List','TIMEZONE_LIST','---ALL---','AUS,AEST,Y,Eastern Australia Time Zone\nAUS,AEST,N,Queensland Time Zone\nAUS,ACST,Y,Central Australia Time Zone\nAUS,ACST,N,Northern Territory Time Zone\nAUS,AWST,N,Western Australia Time Zone\n');
 
 UPDATE system_settings SET db_schema_version='1554',db_schema_update_date=NOW() where db_schema_version < 1554;
+
+CREATE INDEX vicidial_email_group_key on vicidial_email_list(group_id);
+
+UPDATE system_settings SET db_schema_version='1555',db_schema_update_date=NOW() where db_schema_version < 1555;
