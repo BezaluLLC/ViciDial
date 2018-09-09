@@ -3979,6 +3979,7 @@ channel VARCHAR(100) default '',
 server_ip VARCHAR(60) NOT NULL,
 list_id BIGINT(14) UNSIGNED,
 container_id VARCHAR(40) default '',
+remote_lead_id INT(9) UNSIGNED,
 index (call_date),
 index (local_call_id),
 index (lead_id)
@@ -4216,6 +4217,9 @@ CREATE UNIQUE INDEX vdidla_key on vicidial_did_log_archive(uniqueid, call_date, 
 
 CREATE TABLE vicidial_recent_ascb_calls_archive LIKE vicidial_recent_ascb_calls;
 
+CREATE TABLE vicidial_ccc_log_archive LIKE vicidial_ccc_log;
+CREATE UNIQUE INDEX ccc_unq_key on vicidial_ccc_log_archive(uniqueid, call_date, lead_id);
+
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
 
@@ -4295,4 +4299,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1555',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1556',db_schema_update_date=NOW(),reload_timestamp=NOW();

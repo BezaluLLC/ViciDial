@@ -672,6 +672,7 @@ channel VARCHAR(100) default '',
 server_ip VARCHAR(60) NOT NULL,
 list_id BIGINT(14) UNSIGNED,
 container_id VARCHAR(40) default '',
+remote_lead_id INT(9) UNSIGNED,
 index (call_date),
 index (local_call_id),
 index (lead_id)
@@ -747,3 +748,10 @@ UPDATE system_settings SET db_schema_version='1554',db_schema_update_date=NOW() 
 CREATE INDEX vicidial_email_group_key on vicidial_email_list(group_id);
 
 UPDATE system_settings SET db_schema_version='1555',db_schema_update_date=NOW() where db_schema_version < 1555;
+
+ALTER TABLE vicidial_ccc_log ADD remote_lead_id INT(9) UNSIGNED;
+
+CREATE TABLE vicidial_ccc_log_archive LIKE vicidial_ccc_log;
+CREATE UNIQUE INDEX ccc_unq_key on vicidial_ccc_log_archive(uniqueid, call_date, lead_id);
+
+UPDATE system_settings SET db_schema_version='1556',db_schema_update_date=NOW() where db_schema_version < 1556;
