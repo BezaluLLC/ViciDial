@@ -760,3 +760,7 @@ ALTER TABLE vicidial_lists ADD daily_reset_limit SMALLINT(5) default '-1';
 ALTER TABLE vicidial_lists ADD resets_today SMALLINT(5) UNSIGNED default '0';
 
 UPDATE system_settings SET db_schema_version='1557',db_schema_update_date=NOW() where db_schema_version < 1557;
+
+ALTER TABLE vicidial_campaigns ADD three_way_volume_buttons VARCHAR(20) default 'ENABLED';
+
+UPDATE system_settings SET db_schema_version='1558',db_schema_update_date=NOW() where db_schema_version < 1558;
