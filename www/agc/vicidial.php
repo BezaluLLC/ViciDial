@@ -603,10 +603,11 @@
 # 180809-1649 - Added scheduled_callbacks_force_dial campaign feature
 # 180827-1224 - Added scheduled_callbacks_timezones_... features
 # 180924-0002 - Added three_way_volume_buttons campaign feature
+# 180926-1757 - Fix for rare webform URL issue
 #
 
-$version = '2.14-572c';
-$build = '180924-0002';
+$version = '2.14-573c';
+$build = '180926-1757';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;
@@ -12072,7 +12073,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		var regWFAcustom = new RegExp("^VAR","ig");
 		if (VDIC_web_form_address.match(regWFAcustom))
 			{
-			TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','CUSTOM');
+			TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','CUSTOM','1');
 			TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAcustom, '');
 			}
 		else
@@ -12080,7 +12081,15 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 		if ( (webvars_refresh > 0) || (force_webvars_refresh > 0) )
 			{
-			TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','DEFAULT','1');
+			if (VDIC_web_form_address.match(regWFAcustom))
+				{
+				TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','CUSTOM','1');
+				TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAcustom, '');
+				}
+			else
+				{
+				TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','DEFAULT','1');
+				}
 			}
 
 		if (taskrefresh == 'OUT')
@@ -12117,7 +12126,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		var regWFAcustom = new RegExp("^VAR","ig");
 		if (VDIC_web_form_address_two.match(regWFAcustom))
 			{
-			TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','CUSTOM');
+			TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','CUSTOM','2');
 			TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAcustom, '');
 			}
 		else
@@ -12162,7 +12171,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		var regWFAcustom = new RegExp("^VAR","ig");
 		if (VDIC_web_form_address_three.match(regWFAcustom))
 			{
-			TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM');
+			TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM','3');
 			TEMP_VDIC_web_form_address_three = TEMP_VDIC_web_form_address_three.replace(regWFAcustom, '');
 			}
 		else
