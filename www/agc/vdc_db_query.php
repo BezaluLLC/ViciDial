@@ -463,10 +463,11 @@
 # 180904-0131 - Fix for calls_today count when using dial-ingroup
 # 180910-2340 - Small fix for call notes display
 # 180918-2231 - Change to use the same new function for manual dial DNC filtering
+# 180926-2150 - Added translatable phrases, related to issue #1114
 #
 
-$version = '2.14-357';
-$build = '180918-2231';
+$version = '2.14-358';
+$build = '180926-2150';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=762;
@@ -15713,7 +15714,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 			}
 		else
 			{
-			echo "ERROR: "._QXZ("You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name")."\n";
+			echo _QXZ("ERROR").": "._QXZ("You must enter in search terms, one of these must be populated: lead ID, vendor ID, phone number, last name")."\n";
 			echo "<BR><BR>";
 			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
@@ -15968,7 +15969,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 			}
 		else
 			{
-			echo "ERROR: "._QXZ("There was a problem with your search terms")."\n";
+			echo _QXZ("ERROR").": "._QXZ("There was a problem with your search terms")."\n";
 			echo "<BR><BR>";
 			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
@@ -15979,7 +15980,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 		}
 	else
 		{
-		echo "ERROR: "._QXZ("Campaign not found")."\n";
+		echo _QXZ("ERROR").": "._QXZ("Campaign not found")."\n";
 		echo "<BR><BR>";
 		echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSDisplaYBox');return false;\">"._QXZ("Go Back")."</a>";
 		echo "</CENTER>";
@@ -16160,7 +16161,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 			}
 		else
 			{
-			echo "ERROR: "._QXZ("You must enter in search terms, one of these must be populated: office number, last name, first name")."\n";
+			echo _QXZ("ERROR").": "._QXZ("You must enter in search terms, one of these must be populated: office number, last name, first name")."\n";
 			echo "<BR><BR>";
 			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
@@ -16301,7 +16302,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 			}
 		else
 			{
-			echo "ERROR: "._QXZ("There was a problem with your search terms")."\n";
+			echo _QXZ("ERROR").": "._QXZ("There was a problem with your search terms")."\n";
 			echo "<BR><BR>";
 			echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">"._QXZ("Go Back")."</a>";
 			echo "</CENTER>";
@@ -16312,7 +16313,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 		}
 	else
 		{
-		echo "ERROR: "._QXZ("Campaign not found")."\n";
+		echo _QXZ("ERROR").": "._QXZ("Campaign not found")."\n";
 		echo "<BR><BR>";
 		echo "<a href=\"#\" onclick=\"hideDiv('SearcHResultSContactsBox');return false;\">"._QXZ("Go Back")."</a>";
 		echo "</CENTER>";
