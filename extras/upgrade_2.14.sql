@@ -768,3 +768,8 @@ UPDATE system_settings SET db_schema_version='1558',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD callback_dnc ENUM('ENABLED','DISABLED') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1559',db_schema_update_date=NOW() where db_schema_version < 1559;
+
+ALTER TABLE vicidial_campaigns MODIFY next_agent_call VARCHAR(40) default 'longest_wait_time';
+ALTER TABLE vicidial_inbound_groups MODIFY next_agent_call VARCHAR(40) default 'longest_wait_time';
+
+UPDATE system_settings SET db_schema_version='1560',db_schema_update_date=NOW() where db_schema_version < 1560;
