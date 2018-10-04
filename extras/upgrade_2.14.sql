@@ -773,3 +773,7 @@ ALTER TABLE vicidial_campaigns MODIFY next_agent_call VARCHAR(40) default 'longe
 ALTER TABLE vicidial_inbound_groups MODIFY next_agent_call VARCHAR(40) default 'longest_wait_time';
 
 UPDATE system_settings SET db_schema_version='1560',db_schema_update_date=NOW() where db_schema_version < 1560;
+
+ALTER TABLE servers ADD external_web_socket_url VARCHAR(255) default '';
+
+UPDATE system_settings SET db_schema_version='1561',db_schema_update_date=NOW() where db_schema_version < 1561;

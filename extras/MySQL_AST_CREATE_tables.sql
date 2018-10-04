@@ -162,7 +162,8 @@ voicemail_dump_exten_no_inst VARCHAR(20) default '85026666666667',
 gather_asterisk_output ENUM('Y','N') default 'N',
 web_socket_url VARCHAR(255) default '',
 conf_qualify ENUM('Y','N') default 'Y',
-routing_prefix VARCHAR(10) default '13'
+routing_prefix VARCHAR(10) default '13',
+external_web_socket_url VARCHAR(255) default ''
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -4303,4 +4304,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1560',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1561',db_schema_update_date=NOW(),reload_timestamp=NOW();
