@@ -46,6 +46,7 @@
 # 180319-1339 - Added entry_date as custom field SCRIPT type variable
 # 180327-1357 - Added code for LOCALFQDN conversion to browser-used server URL script iframes
 # 180503-1817 - Added code for SWITCH field type
+# 181004-1644 - Fix for defaut field in AREA type
 #
 
 # $mysql_queries = 26
@@ -680,9 +681,16 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 					}
 				if ($A_field_type[$o]=='AREA') 
 					{
+					$change_trigger='';
+					$default_field_flag=0;
+					if (preg_match("/\|$A_field_label[$o]\|/i",$vicidial_list_fields))
+						{
+						$change_trigger="onchange=\"update_default_vd_field('$A_field_label[$o]');\"";
+						$default_field_flag++;
+						}
 					if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
 					if (strlen($A_field_value[$o]) < 1) {$A_field_value[$o] = $A_field_default[$o];}
-					$field_HTML .= "<textarea name=$A_field_label[$o] id=$A_field_label[$o] ROWS=$A_field_max[$o] COLS=$A_field_size[$o]>$A_field_value[$o]</textarea>";
+					$field_HTML .= "<textarea name=$A_field_label[$o] id=$A_field_label[$o] ROWS=$A_field_max[$o] COLS=$A_field_size[$o] $change_trigger>$A_field_value[$o]</textarea>";
 					if ( ($A_field_required[$o] == 'Y') or ( ($A_field_required[$o] == 'INBOUND_ONLY') and (preg_match("/^Y\d\d\d\d\d\d\d/",$call_id)) ) )
 						{$custom_required_fields .= "$A_field_label[$o]|";}
 					}
