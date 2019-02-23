@@ -799,3 +799,8 @@ index(call_date)
 CREATE TABLE vicidial_sessions_recent_archive LIKE vicidial_sessions_recent;
 
 UPDATE system_settings SET db_schema_version='1563',db_schema_update_date=NOW() where db_schema_version < 1563;
+
+ALTER TABLE vicidial_inbound_groups ADD place_in_line_caller_number_filename TEXT;
+ALTER TABLE vicidial_inbound_groups ADD place_in_line_you_next_filename TEXT;
+
+UPDATE system_settings SET db_schema_version='1564',db_schema_update_date=NOW() where db_schema_version < 1564;

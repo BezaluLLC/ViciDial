@@ -1291,7 +1291,9 @@ cid_cb_you_entered_filename TEXT,
 cid_cb_press_to_confirm_filename TEXT,
 cid_cb_invalid_filename TEXT,
 cid_cb_reenter_filename TEXT,
-cid_cb_error_filename TEXT
+cid_cb_error_filename TEXT,
+place_in_line_caller_number_filename TEXT,
+place_in_line_you_next_filename TEXT
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -4320,4 +4322,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1563',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1564',db_schema_update_date=NOW(),reload_timestamp=NOW();
