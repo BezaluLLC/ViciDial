@@ -472,10 +472,11 @@
 # 190322-1557 - Fix for issue with wrong script background with list-script-override on outbound autodial calls
 # 190406-1614 - Added agent next_dial_my_callbacks override
 # 190515-1556 - Fixed scheduled callback email alert bug
+# 190524-1142 - Added gmt_offset population to new manual dialed leads
 #
 
-$version = '2.14-366';
-$build = '190515-1556';
+$version = '2.14-367';
+$build = '190524-1142';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=793;
@@ -2483,8 +2484,12 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 			if ($lookup_empty_insert_lead > 0)
 				{
+				### get current gmt_offset of the phone_number
+				$USarea = substr($phone_number, 0, 3);
+				$gmt_offset = lookup_gmt($phone_code,$USarea,$state,$LOCAL_GMT_OFF_STD,$Shour,$Smin,$Ssec,$Smon,$Smday,$Syear,$postalgmt,$postal_code);
+
 				### insert a new lead in the system with this phone number
-				$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$list_id',status='QUEUE',user='$user',called_since_last_reset='Y',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME',vendor_lead_code=\"$vendor_lead_code\";";
+				$stmt = "INSERT INTO vicidial_list SET phone_code='$phone_code',phone_number='$phone_number',list_id='$list_id',status='QUEUE',user='$user',called_since_last_reset='Y',entry_date='$ENTRYdate',last_local_call_time='$NOW_TIME',vendor_lead_code=\"$vendor_lead_code\", gmt_offset_now='$gmt_offset';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00022',$user,$server_ip,$session_name,$one_mysql_log);}
