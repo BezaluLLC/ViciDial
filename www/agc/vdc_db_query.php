@@ -17803,7 +17803,7 @@ if ($ACTION == 'AGENTtimeREPORT')
 				}
 
 			$days=-1;
-			if ($start_date == "$end_date")
+			if ($start_date == "$NOW_DATE")
 				{
 				$days=0;
 				$temp_date_epoch = $secX;
