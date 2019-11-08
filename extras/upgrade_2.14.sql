@@ -1108,3 +1108,7 @@ index (lead_id)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1578',db_schema_update_date=NOW() where db_schema_version < 1578;
+
+ALTER TABLE vicidial_campaigns ADD dial_timeout_lead_container VARCHAR(40) default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1579',db_schema_update_date=NOW() where db_schema_version < 1579;

@@ -441,6 +441,11 @@ OTHER CHANGES:
 122. Added a Campaign option to not send an agent immediately to the disposition
 	screen after transferring a customer call to a VoiceMail Message.
 
+123. Added Campaign option for Dial Timeout Lead overrides, allowing you to set
+	up a Settings Container with values for manual-dial and/or auto-dial
+	lead fields and associated values that will tie to different 
+	Dial Timeouts.
+
 
 
 

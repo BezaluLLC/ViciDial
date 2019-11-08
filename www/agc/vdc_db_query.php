@@ -484,10 +484,11 @@
 # 191030-1536 - Added code to gather VM Message Group entries
 # 191104-1800 - Fixes for translations
 # 191107-1010 - Fix for issue #1180, hide phone number in callback info
+# 191108-0920 - Added Dial Timeout Lead override function
 #
 
-$version = '2.14-377';
-$build = '191107-1010';
+$version = '2.14-378';
+$build = '191108-0920';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=824;
@@ -4209,20 +4210,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			##### BEGIN if NOT preview dialing, do send the call #####
 			if ( (strlen($preview)<1) or ($preview == 'NO') or (strlen($dial_ingroup) > 1) )
 				{
-				### prepare variables to place manual call from VICIDiaL
-				$CCID_on=0;   $CCID='';
-				$local_DEF = 'Local/';
-				$local_AMP = '@';
-				$Local_out_prefix = '9';
-				$Local_dial_timeout = '60';
-				$Local_persist = '';	#	$Local_persist = '/n';
-				if ($dial_timeout > 4) {$Local_dial_timeout = $dial_timeout;}
-				$Local_dial_timeout = ($Local_dial_timeout * 1000);
-				if (strlen($dial_prefix) > 0) {$Local_out_prefix = "$dial_prefix";}
-				if (strlen($campaign_cid) > 6) {$CCID = "$campaign_cid";   $CCID_on++;}
-				### check for custom cid use
-				$use_custom_cid=0;
-				$stmt = "SELECT use_custom_cid,manual_dial_hopper_check,start_call_url,manual_dial_filter,use_internal_dnc,use_campaign_dnc,use_other_campaign_dnc,cid_group_id,scheduled_callbacks_auto_reschedule FROM vicidial_campaigns where campaign_id='$campaign';";
+				$stmt = "SELECT use_custom_cid,manual_dial_hopper_check,start_call_url,manual_dial_filter,use_internal_dnc,use_campaign_dnc,use_other_campaign_dnc,cid_group_id,scheduled_callbacks_auto_reschedule,dial_timeout_lead_container FROM vicidial_campaigns where campaign_id='$campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00313',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -4239,7 +4227,103 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$use_other_campaign_dnc =				$row[6];
 					$cid_group_id =							$row[7];
 					$scheduled_callbacks_auto_reschedule =	$row[8];
+					$dial_timeout_lead_container =			$row[9];
 					}
+
+				### BEGIN check for Dial Timeout Lead Override ###
+				if ( (strlen($dial_timeout_lead_container) > 1) and ($dial_timeout_lead_container != 'DISABLED') )
+					{
+					$MD_field='';
+					$DTL_override='';
+					$DTLOset=0;   $skip_line=0;
+					# Gather details on Dial Timeout Lead settings container
+					$stmt = "SELECT container_entry FROM vicidial_settings_containers where container_id='$dial_timeout_lead_container';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$SCinfo_ct = mysqli_num_rows($rslt);
+					if ($SCinfo_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$DTcontainer_entry =	$row[0];
+						$DTcontainer_entry = preg_replace("/\r|\t|\'|\"/",'',$DTcontainer_entry);
+						$DTcontainer_entry = preg_replace("/ => |=> | =>/",'=>',$DTcontainer_entry);
+						$dial_timeout_lead_settings = explode("\n",$DTcontainer_entry);
+						$dial_timeout_lead_settings_ct = count($dial_timeout_lead_settings);
+						$dtl=0;
+						while ( ($dial_timeout_lead_settings_ct >= $dtl) and ($DTLOset < 1) )
+							{
+							if (preg_match("/^manual_dial_field=>/",$dial_timeout_lead_settings[$dtl]))
+								{
+								$dial_timeout_lead_settings[$dtl] = preg_replace("/^manual_dial_field=>/",'',$dial_timeout_lead_settings[$dtl]);
+								$MD_field = $dial_timeout_lead_settings[$dtl];
+								}
+							elseif ( (preg_match("/auto_dial_field=>|^;/",$dial_timeout_lead_settings[$dtl])) or (strlen($dial_timeout_lead_settings[$dtl]) < 4) )
+								{$skip_line++;}
+							else
+								{
+								$temp_key_value = explode('=>',$dial_timeout_lead_settings[$dtl]);
+								if ( ($MD_field == 'vendor_lead_code') and ($vendor_id == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'source_id') and ($source_id == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'list_id') and ($list_id == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'gmt_offset_now') and ($gmt_offset_now == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'phone_code') and ($phone_code == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'title') and ($title == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'first_name') and ($first_name == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'middle_initial') and ($middle_initial == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'last_name') and ($last_name == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'address1') and ($address1 == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'address2') and ($address2 == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'address3') and ($address3 == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'city') and ($city == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'state') and ($state == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'province') and ($province == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'postal_code') and ($postal_code == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'country_code') and ($country_code == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'date_of_birth') and ($date_of_birth == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'alt_phone') and ($alt_phone == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'email') and ($email == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'security_phrase') and ($security_phrase == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'comments') and ($comments == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'called_count') and ($called_count == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'rank') and ($rank == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+								if ( ($MD_field == 'owner') and ($owner == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+
+								if ($DTLOset > 0)
+									{
+									# Dial Timeout Lead debug logging
+								#	$fp = fopen ("./DTLdebug_log.txt", "a");
+								#	fwrite ($fp, "$NOW_TIME DTL-Debug 1: $DTLOset|$MD_field|$lead_id|$temp_key_value[0]|$temp_key_value[1]|$DTL_override|\n");
+								#	fclose($fp);
+									}
+								}
+							$dtl++;
+							}
+						if ($DTLOset < 1)
+							{
+							# Dial Timeout Lead debug logging
+						#	$fp = fopen ("./DTLdebug_log.txt", "a");
+						#	fwrite ($fp, "$NOW_TIME DTL-Debug 2: $DTLOset|$MD_field|$lead_id|$skip_line|$dtl|\n");
+						#	fclose($fp);
+							}
+						}
+					}
+				### END check for Dial Timeout Lead Override ###
+
+				### prepare variables to place manual call from VICIDiaL
+				$CCID_on=0;   $CCID='';
+				$local_DEF = 'Local/';
+				$local_AMP = '@';
+				$Local_out_prefix = '9';
+				$Local_dial_timeout = '60';
+				$Local_persist = '';	#	$Local_persist = '/n';
+				if ($dial_timeout > 4) {$Local_dial_timeout = $dial_timeout;}
+				if ($DTL_override > 4) {$Local_dial_timeout = $DTL_override;}
+				$Local_dial_timeout = ($Local_dial_timeout * 1000);
+				if (strlen($dial_prefix) > 0) {$Local_out_prefix = "$dial_prefix";}
+				if (strlen($campaign_cid) > 6) {$CCID = "$campaign_cid";   $CCID_on++;}
+				### check for custom cid use
+				$use_custom_cid=0;
 
 				if ($no_hopper_dialing_used > 0)
 					{
@@ -5003,7 +5087,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					if ($SCUfile)
 						{
 						$SCUfile_contents = implode("", $SCUfile);
-						$SCUfile_contents = ereg_replace(';','',$SCUfile_contents);
+						$SCUfile_contents = preg_replace('/;/','',$SCUfile_contents);
 						$SCUfile_contents = addslashes($SCUfile_contents);
 						}
 					else
@@ -5522,7 +5606,7 @@ if ($ACTION == 'manDiaLonly')
 		### check for manual dial filter and extension append settings in campaign
 		$use_eac=0;
 		$use_custom_cid=0;
-		$stmt = "SELECT manual_dial_filter,use_internal_dnc,use_campaign_dnc,use_other_campaign_dnc,extension_appended_cidname,start_call_url,scheduled_callbacks_auto_reschedule FROM vicidial_campaigns where campaign_id='$campaign';";
+		$stmt = "SELECT manual_dial_filter,use_internal_dnc,use_campaign_dnc,use_other_campaign_dnc,extension_appended_cidname,start_call_url,scheduled_callbacks_auto_reschedule,dial_timeout_lead_container FROM vicidial_campaigns where campaign_id='$campaign';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00325',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -5537,6 +5621,7 @@ if ($ACTION == 'manDiaLonly')
 			$extension_appended_cidname =			$row[4];
 			$start_call_url =						$row[5];
 			$scheduled_callbacks_auto_reschedule =	$row[6];
+			$dial_timeout_lead_container =			$row[7];
 			if ($extension_appended_cidname == 'Y')
 				{$use_eac++;}
 			}
@@ -5644,6 +5729,123 @@ if ($ACTION == 'manDiaLonly')
 			}
 		### END check phone filtering for DNC or camplists if enabled ###
 
+		### BEGIN check for Dial Timeout Lead Override ###
+		if ( (strlen($dial_timeout_lead_container) > 1) and ($dial_timeout_lead_container != 'DISABLED') )
+			{
+			$MD_field='';
+			$DTL_override='';
+			$DTLOset=0;   $skip_line=0;
+			# Gather details on Dial Timeout Lead settings container
+			$stmt = "SELECT container_entry FROM vicidial_settings_containers where container_id='$dial_timeout_lead_container';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$SCinfo_ct = mysqli_num_rows($rslt);
+			if ($SCinfo_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$DTcontainer_entry =	$row[0];
+				$DTcontainer_entry = preg_replace("/\r|\t|\'|\"/",'',$DTcontainer_entry);
+				$DTcontainer_entry = preg_replace("/ => |=> | =>/",'=>',$DTcontainer_entry);
+				$dial_timeout_lead_settings = explode("\n",$DTcontainer_entry);
+				$dial_timeout_lead_settings_ct = count($dial_timeout_lead_settings);
+
+				### BEGIN load lead information to be used by Dial Timeout Lead Override ###
+				$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id FROM vicidial_list where lead_id='$lead_id' LIMIT 1;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$list_lead_ct = mysqli_num_rows($rslt);
+				if ($list_lead_ct > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$vendor_id		= trim("$row[5]");
+					$source_id		= trim("$row[6]");
+					$list_id		= trim("$row[7]");
+					$gmt_offset_now	= trim("$row[8]");
+					$phone_code		= trim("$row[10]");
+					$title			= trim("$row[12]");
+					$first_name		= trim("$row[13]");
+					$middle_initial	= trim("$row[14]");
+					$last_name		= trim("$row[15]");
+					$address1		= trim("$row[16]");
+					$address2		= trim("$row[17]");
+					$address3		= trim("$row[18]");
+					$city			= trim("$row[19]");
+					$state			= trim("$row[20]");
+					$province		= trim("$row[21]");
+					$postal_code	= trim("$row[22]");
+					$country_code	= trim("$row[23]");
+					$date_of_birth	= trim("$row[25]");
+					$alt_phone		= trim("$row[26]");
+					$email			= trim("$row[27]");
+					$security_phrase		= trim("$row[28]");
+					$comments		= stripslashes(trim("$row[29]"));
+					$called_count	= trim("$row[30]");
+					$rank			= trim("$row[32]");
+					$owner			= trim("$row[33]");
+					}
+				### END load lead information to be used by Dial Timeout Lead Override ###
+
+				$dtl=0;
+				while ( ($dial_timeout_lead_settings_ct >= $dtl) and ($DTLOset < 1) )
+					{
+					if (preg_match("/^manual_dial_field=>/",$dial_timeout_lead_settings[$dtl]))
+						{
+						$dial_timeout_lead_settings[$dtl] = preg_replace("/^manual_dial_field=>/",'',$dial_timeout_lead_settings[$dtl]);
+						$MD_field = $dial_timeout_lead_settings[$dtl];
+						}
+					elseif ( (preg_match("/auto_dial_field=>|^;/",$dial_timeout_lead_settings[$dtl])) or (strlen($dial_timeout_lead_settings[$dtl]) < 4) )
+						{$skip_line++;}
+					else
+						{
+						$temp_key_value = explode('=>',$dial_timeout_lead_settings[$dtl]);
+						if ( ($MD_field == 'vendor_lead_code') and ($vendor_id == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'source_id') and ($source_id == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'list_id') and ($list_id == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'gmt_offset_now') and ($gmt_offset_now == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'phone_code') and ($phone_code == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'title') and ($title == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'first_name') and ($first_name == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'middle_initial') and ($middle_initial == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'last_name') and ($last_name == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'address1') and ($address1 == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'address2') and ($address2 == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'address3') and ($address3 == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'city') and ($city == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'state') and ($state == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'province') and ($province == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'postal_code') and ($postal_code == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'country_code') and ($country_code == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'date_of_birth') and ($date_of_birth == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'alt_phone') and ($alt_phone == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'email') and ($email == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'security_phrase') and ($security_phrase == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'comments') and ($comments == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'called_count') and ($called_count == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'rank') and ($rank == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+						if ( ($MD_field == 'owner') and ($owner == $temp_key_value[0]) ) {$DTL_override = $temp_key_value[1];   $DTLOset++;}
+
+						if ($DTLOset > 0)
+							{
+							# Dial Timeout Lead debug logging
+						#	$fp = fopen ("./DTLdebug_log.txt", "a");
+						#	fwrite ($fp, "$NOW_TIME DTL-Debug 3: $DTLOset|$MD_field|$lead_id|$temp_key_value[0]|$temp_key_value[1]|$DTL_override|\n");
+						#	fclose($fp);
+							}
+						}
+					$dtl++;
+					}
+				if ($DTLOset < 1)
+					{
+					# Dial Timeout Lead debug logging
+				#	$fp = fopen ("./DTLdebug_log.txt", "a");
+				#	fwrite ($fp, "$NOW_TIME DTL-Debug 4: $DTLOset|$MD_field|$lead_id|$skip_line|$dtl|\n");
+				#	fclose($fp);
+					}
+				}
+			}
+		### END check for Dial Timeout Lead Override ###
 
 		### prepare variables to place manual call from VICIDiaL
 		$CCID_on=0;   $CCID='';
@@ -5656,6 +5858,7 @@ if ($ACTION == 'manDiaLonly')
 		$Local_dial_timeout = '60';
 		$Local_persist = '/n';
 		if ($dial_timeout > 4) {$Local_dial_timeout = $dial_timeout;}
+		if ($DTL_override > 4) {$Local_dial_timeout = $DTL_override;}
 		$Local_dial_timeout = ($Local_dial_timeout * 1000);
 		if (strlen($dial_prefix) > 0) {$Local_out_prefix = "$dial_prefix";}
 		if (strlen($campaign_cid) > 6) {$CCID = "$campaign_cid";   $CCID_on++;}
