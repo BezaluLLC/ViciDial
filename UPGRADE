@@ -449,6 +449,9 @@ OTHER CHANGES:
 124. Added LTMGAD and XAMMAD Campaign Hotkey options that will transfer to the 
 	Leave-Voicemail option as well as dispositioning the call.
 
+125. Added a per-User option to define an additional Status Group of call 
+	statuses that agents can use to disposition all calls they handle.
+
 
 
 

@@ -679,7 +679,8 @@ user_admin_redirect_url TEXT,
 max_inbound_filter_enabled ENUM('0','1') default '0',
 max_inbound_filter_statuses TEXT,
 max_inbound_filter_ingroups TEXT,
-max_inbound_filter_min_sec SMALLINT(5) default '-1'
+max_inbound_filter_min_sec SMALLINT(5) default '-1',
+status_group_id VARCHAR(20) default ''
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -1034,7 +1035,8 @@ sip_event_logging VARCHAR(40) default 'DISABLED',
 campaign_script_two VARCHAR(20) default '',
 leave_vm_no_dispo ENUM('ENABLED','DISABLED') default 'DISABLED',
 leave_vm_message_group_id VARCHAR(40) default '---NONE---',
-dial_timeout_lead_container VARCHAR(40) default 'DISABLED'
+dial_timeout_lead_container VARCHAR(40) default 'DISABLED',
+amd_type ENUM('AMD','CPD','KHOMP') default 'AMD'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -4566,4 +4568,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1579',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1580',db_schema_update_date=NOW(),reload_timestamp=NOW();

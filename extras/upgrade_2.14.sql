@@ -1112,3 +1112,9 @@ UPDATE system_settings SET db_schema_version='1578',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD dial_timeout_lead_container VARCHAR(40) default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1579',db_schema_update_date=NOW() where db_schema_version < 1579;
+
+ALTER TABLE vicidial_users ADD status_group_id VARCHAR(20) default '';
+
+ALTER TABLE vicidial_campaigns ADD amd_type ENUM('AMD','CPD','KHOMP') default 'AMD';
+
+UPDATE system_settings SET db_schema_version='1580',db_schema_update_date=NOW() where db_schema_version < 1580;
