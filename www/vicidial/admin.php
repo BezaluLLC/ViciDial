@@ -4580,12 +4580,13 @@ else
 # 191106-0934 - Added several multi-campaign options to the add/delete DNC number page
 # 191107-1150 - Added list_info as API function option
 # 191107-2356 - Added Dial Timeout Lead Container functionality
+# 191111-0833 - Added LTMGAD/XAMMAD Hotkey options
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-725a';
-$build = '191107-2356';
+$admin_version = '2.14-726a';
+$build = '191111-0833';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -25278,10 +25279,12 @@ if ($ADD==31)
 		echo "</select> &nbsp; \n";
 		echo _QXZ("Status").": <select size=1 name=HKstatus>\n";
 		echo "$HKstatuses_list\n";
-		echo "<option value=\"ALTPH2\">ALTPH2 - "._QXZ("Alternate Phone Hot Dial")."</option>\n";
-		echo "<option value=\"ADDR3\">ADDR3 - "._QXZ("Address3 Hot Dial")."</option>\n";
-		echo "<option value=\"LTMG\">LTMG - "._QXZ("Send to Answering Machine Message")."</option>\n";
-		echo "<option value=\"XFTAMM\">XFTAMM - "._QXZ("Send to Answering Machine Message")."</option>\n";
+		echo "<option value=\"ALTPH2-----"._QXZ("Alternate Phone Hot Dial")."\">ALTPH2 - "._QXZ("Alternate Phone Hot Dial")."</option>\n";
+		echo "<option value=\"ADDR3-----"._QXZ("Address3 Hot Dial")."\">ADDR3 - "._QXZ("Address3 Hot Dial")."</option>\n";
+		echo "<option value=\"LTMG-----"._QXZ("Send to Answering Machine Msg")."\">LTMG - "._QXZ("Send to Answering Machine Msg")."</option>\n";
+		echo "<option value=\"XFTAMM-----"._QXZ("Send to Answering Machine Msg")."\">XFTAMM - "._QXZ("Send to Answering Machine Msg")."</option>\n";
+		echo "<option value=\"LTMGAD-----"._QXZ("Send to AM Message and Dispo")."\">LTMGAD - "._QXZ("Send to AM Message and Dispo")."</option>\n";
+		echo "<option value=\"XAMMAD-----"._QXZ("Send to AM Message and Dispo")."\">XAMMAD - "._QXZ("Send to AM Message and Dispo")."</option>\n";
 		echo "</select> &nbsp; \n";
 		echo "<input type=submit name=submit value='"._QXZ("ADD")."'><BR>\n";
 		echo "</form><BR>\n";

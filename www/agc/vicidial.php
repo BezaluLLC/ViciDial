@@ -625,10 +625,11 @@
 # 191105-0824 - Fix for issue #1177
 # 191107-0935 - Added $webphone_call_seconds option
 # 191107-1011 - Fix for issue #1180, hide phone number in callback list
+# 191111-0837 - Added LTMGAD/XAMMAD Hotkey options
 #
 
-$version = '2.14-594c';
-$build = '191107-1011';
+$version = '2.14-595c';
+$build = '191111-0837';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=91;
 $one_mysql_log=0;
@@ -15890,13 +15891,17 @@ if ($useIE > 0)
 						}
 					if (HKerror < 1)
 						{
-						// transfer call to answering maching message with hotkey
+						// transfer call to answering maching message with hotkey 
 						if ( (HKdispo_ary[0] == 'LTMG') || (HKdispo_ary[0] == 'XFTAMM') )
 							{
 							mainxfer_send_redirect('XfeRVMAIL', lastcustchannel, lastcustserverip);
 							}
 						else
 							{
+							if ( (HKdispo_ary[0] == 'LTMGAD') || (HKdispo_ary[0] == 'XAMMAD') )
+								{
+								mainxfer_send_redirect('XfeRVMAIL', lastcustchannel, lastcustserverip);
+								}
 							HKdispo_display = 3;
 							// Check for hotkeys enabled wrapup message
 							if ( (wrapup_after_hotkey == 'ENABLED') && (wrapup_seconds > 0) )
@@ -16023,6 +16028,10 @@ else
 							}
 						else
 							{
+							if ( (HKdispo_ary[0] == 'LTMGAD') || (HKdispo_ary[0] == 'XAMMAD') )
+								{
+								mainxfer_send_redirect('XfeRVMAIL', lastcustchannel, lastcustserverip);
+								}
 							HKdispo_display = 3;
 							// Check for hotkeys enabled wrapup message
 							if ( (wrapup_after_hotkey == 'ENABLED') && (wrapup_seconds > 0) )

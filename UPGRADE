@@ -446,6 +446,9 @@ OTHER CHANGES:
 	lead fields and associated values that will tie to different 
 	Dial Timeouts.
 
+124. Added LTMGAD and XAMMAD Campaign Hotkey options that will transfer to the 
+	Leave-Voicemail option as well as dispositioning the call.
+
 
 
 
