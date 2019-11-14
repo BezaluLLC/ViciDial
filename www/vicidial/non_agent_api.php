@@ -140,10 +140,11 @@
 # 190703-0858 - Added custom_fields_copy option to add_list function
 # 190930-1629 - Added list_description field to add_list and update_list functions
 # 191107-1143 - Added list_info function
+# 191113-1758 - Added add_dnc_phone and add_fpg_phone functions
 #
 
-$version = '2.14-117';
-$build = '191107-1143';
+$version = '2.14-118';
+$build = '191113-1758';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -3054,6 +3055,220 @@ if ($function == 'add_group_alias')
 ### END add_group_alias
 ################################################################################
 
+
+
+################################################################################
+### add_dnc_phone - adds a phone number to a DNC list in the system
+################################################################################
+if ($function == 'add_dnc_phone')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and modify_lists='1' and user_level >= 8 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "add_dnc_phone USER DOES NOT HAVE PERMISSION TO ADD DNC NUMBERS";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($phone_number) < 6) or (strlen($campaign_id) < 1) )
+				{
+				$result = 'ERROR';
+				$result_reason = "add_dnc_phone YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$phone_number|$campaign_id";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number='$phone_number' and campaign_id='$campaign_id';";
+				if ($campaign_id == 'SYSTEM_INTERNAL')
+					{$stmt="SELECT count(*) from vicidial_dnc where phone_number='$phone_number';";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$dnc_exists=$row[0];
+				if ($dnc_exists > 0)
+					{
+					$result = 'ERROR';
+					$result_reason = "add_dnc_phone DNC NUMBER ALREADY EXISTS";
+					$data = "$phone_number|$campaign_id";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$stmtA="INSERT INTO vicidial_campaign_dnc (phone_number,campaign_id) values('$phone_number','$campaign_id');";
+					if ($campaign_id == 'SYSTEM_INTERNAL')
+						{$stmtA="INSERT INTO vicidial_dnc (phone_number) values('$phone_number');";}
+					$rslt=mysql_to_mysqli($stmtA, $link);
+					$affected_rowsA = mysqli_affected_rows($link);
+
+					$stmtB="INSERT INTO vicidial_dnc_log SET phone_number='$phone_number', campaign_id='$campaign_id', action='add', action_date=NOW(), user='$user';";
+					if ($campaign_id == 'SYSTEM_INTERNAL')
+						{$stmtB="INSERT INTO vicidial_dnc_log SET phone_number='$phone_number', campaign_id='-SYSINT-', action='add', action_date=NOW(), user='$user';";}
+					$rslt=mysql_to_mysqli($stmtB, $link);
+					$affected_rowsB = mysqli_affected_rows($link);
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = preg_replace('/;/', '', $SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LISTS', event_type='ADD', record_id='$phone_number', event_code='ADMIN API ADD DNC NUMBER', event_sql=\"$SQL_log\", event_notes='$phone_number|$campaign_id|$affected_rowsA|$affected_rowsB';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+
+					$result = 'SUCCESS';
+					$result_reason = "add_dnc_phone DNC NUMBER HAS BEEN ADDED";
+					$data = "$phone_number|$campaign_id";
+					echo "$result: $result_reason - $user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END add_dnc_phone
+################################################################################
+
+
+################################################################################
+### add_fpg_phone - adds a phone number to a Filter Phone Group in the system
+################################################################################
+if ($function == 'add_fpg_phone')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and modify_lists='1' and user_level >= 8 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "add_fpg_phone USER DOES NOT HAVE PERMISSION TO ADD FILTER PHONE GROUP NUMBERS";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($phone_number) < 6) or (strlen($group) < 1) )
+				{
+				$result = 'ERROR';
+				$result_reason = "add_fpg_phone YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$phone_number|$group";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT count(*) from vicidial_filter_phone_groups where filter_phone_group_id='$group';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$fpg_exists=$row[0];
+				if ($fpg_exists < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "add_fpg_phone FILTER PHONE GROUP DOES NOT EXIST";
+					$data = "$group";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$stmt="SELECT count(*) from vicidial_filter_phone_numbers where phone_number='$phone_number' and filter_phone_group_id='$group';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					$fpg_entry_exists=$row[0];
+					if ($fpg_entry_exists > 0)
+						{
+						$result = 'ERROR';
+						$result_reason = "add_fpg_phone FILTER PHONE GROUP NUMBER ALREADY EXISTS";
+						$data = "$phone_number|$group";
+						echo "$result: $result_reason: |$user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					else
+						{
+						$stmtA="INSERT INTO vicidial_filter_phone_numbers (phone_number,filter_phone_group_id) values('$phone_number','$group');";
+						$rslt=mysql_to_mysqli($stmtA, $link);
+						$affected_rowsA = mysqli_affected_rows($link);
+
+						### LOG INSERTION Admin Log Table ###
+						$SQL_log = "$stmt|";
+						$SQL_log = preg_replace('/;/', '', $SQL_log);
+						$SQL_log = addslashes($SQL_log);
+						$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='FILTERPHONEGROUPS', event_type='ADD', record_id='$phone_number', event_code='ADMIN API ADD NUMBER TO FILTER PHONE GROUP $group', event_sql=\"$SQL_log\", event_notes='$phone_number|$group|$affected_rowsA';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+
+						$result = 'SUCCESS';
+						$result_reason = "add_fpg_phone FILTER PHONE GROUP NUMBER HAS BEEN ADDED";
+						$data = "$phone_number|$group";
+						echo "$result: $result_reason - $user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END add_fpg_phone
+################################################################################
 
 
 ################################################################################
