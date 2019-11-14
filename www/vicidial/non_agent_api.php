@@ -141,10 +141,11 @@
 # 190930-1629 - Added list_description field to add_list and update_list functions
 # 191107-1143 - Added list_info function
 # 191113-1758 - Added add_dnc_phone and add_fpg_phone functions
+# 191114-1637 - Added remove_from_hopper option to update_lead function
 #
 
-$version = '2.14-118';
-$build = '191113-1758';
+$version = '2.14-119';
+$build = '191114-1637';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -515,6 +516,8 @@ if (isset($_GET["list_description"]))			{$list_description=$_GET["list_descripti
 	elseif (isset($_POST["list_description"]))	{$list_description=$_POST["list_description"];}
 if (isset($_GET["leads_counts"]))			{$leads_counts=$_GET["leads_counts"];}
 	elseif (isset($_POST["leads_counts"]))	{$leads_counts=$_POST["leads_counts"];}
+if (isset($_GET["remove_from_hopper"]))				{$remove_from_hopper=$_GET["remove_from_hopper"];}
+	elseif (isset($_POST["remove_from_hopper"]))	{$remove_from_hopper=$_POST["remove_from_hopper"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -739,6 +742,7 @@ if ($non_latin < 1)
 	if ($areacode != '---ALL---')
 		{$areacode=preg_replace('/[^0-9a-zA-Z]/','',$areacode);}
 	$leads_counts = preg_replace('/[^-_0-9a-zA-Z]/','',$leads_counts);
+	$remove_from_hopper=preg_replace('/[^0-9a-zA-Z]/','',$remove_from_hopper);
 	}
 else
 	{
@@ -752,6 +756,7 @@ $USprefix = 		substr($phone_number, 3, 3);
 if (strlen($hopper_priority)<1) {$hopper_priority=0;}
 if ($hopper_priority < -99) {$hopper_priority=-99;}
 if ($hopper_priority > 99) {$hopper_priority=99;}
+if (preg_match("/^Y$/",$remove_from_hopper)) {$add_to_hopper='N';}
 
 $StarTtime = date("U");
 $NOW_DATE = date("Y-m-d");
@@ -11009,6 +11014,50 @@ if ($function == 'update_lead')
 						}
 					}
 				### END add to hopper section ###
+
+				### BEGIN remove from hopper section ###
+				if ( (preg_match("/^Y$/",$remove_from_hopper)) and ( ($search_found > 0) or ($insert_if_not_found_inserted > 0) ) )
+					{
+					$stmt="SELECT status from vicidial_hopper where lead_id='$lead_id';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$hopper_ct = mysqli_num_rows($rslt);
+					if ($hopper_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$hopper_status =		$row[0];
+
+						### delete record from vicidial_hopper
+						$stmt = "DELETE FROM vicidial_hopper WHERE lead_id='$lead_id' and status NOT IN('INCALL','DONE','HOLD','DNC');";
+						if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$Haffected_rows = mysqli_affected_rows($link);
+						if ($Haffected_rows > 0)
+							{
+							$result = 'NOTICE';
+							$result_reason = "update_lead REMOVED FROM HOPPER";
+							echo "$result: $result_reason - $phone_number|$lead_id|$hopper_status|$user\n";
+							$data = "$phone_number|$lead_id|$hopper_status";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						else
+							{
+							$result = 'NOTICE';
+							$result_reason = "update_lead NOT REMOVED FROM HOPPER";
+							echo "$result: $result_reason - $phone_number|$lead_id|$hopper_status|$user\n";
+							$data = "$phone_number|$lead_id|$hopper_status";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						}
+					else
+						{
+						$result = 'NOTICE';
+						$result_reason = "update_lead NOT REMOVED FROM HOPPER, LEAD IS NOT IN THE HOPPER";
+						echo "$result: $result_reason - $phone_number|$lead_id|$user\n";
+						$data = "$phone_number|$lead_id|$user";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					}
+				### END remove from hopper section ###
 				}
 			}
 		exit;
