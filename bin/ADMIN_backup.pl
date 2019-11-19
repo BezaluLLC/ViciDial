@@ -5,7 +5,7 @@
 # DESCRIPTION:
 # Backs-up the asterisk database, conf/agi/sounds/bin files 
 #
-# Copyright (C) 2016  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2019  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 #
@@ -24,6 +24,7 @@
 # 160510-2249 - Added --db-without-archives flag, issue #945
 # 160719-1415 - Added --dbs-selected=XXX---YYY option
 # 161030-0847 - Added CLI ftp options, Issue #442
+# 191119-1649 - Fix for sounds symlinks with Asterisk 13, issue #1149
 #
 
 $secT = time();
@@ -550,8 +551,8 @@ if ( ($conf_only < 1) && ($db_only < 1) )
 if ( ($conf_only < 1) && ($db_only < 1) && ($without_sounds < 1) )
 	{
 	### BACKUP THE ASTERISK SOUNDS ON THE SERVER ###
-	if ($DBX) {print "$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$sounds$wday$tar $PATHsounds\n";}
-	`$tarbin cf $ARCHIVEpath/temp/$VARserver_ip$sounds$wday$tar $PATHsounds`;
+	if ($DBX) {print "$tarbin chf $ARCHIVEpath/temp/$VARserver_ip$sounds$wday$tar $PATHsounds\n";}
+	`$tarbin chf $ARCHIVEpath/temp/$VARserver_ip$sounds$wday$tar $PATHsounds`;
 	}
 
 if ( ($conf_only < 1) && ($db_only < 1) && ($without_voicemail < 1) )
