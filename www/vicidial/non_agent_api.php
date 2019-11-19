@@ -743,6 +743,7 @@ if ($non_latin < 1)
 		{$areacode=preg_replace('/[^0-9a-zA-Z]/','',$areacode);}
 	$leads_counts = preg_replace('/[^-_0-9a-zA-Z]/','',$leads_counts);
 	$remove_from_hopper=preg_replace('/[^0-9a-zA-Z]/','',$remove_from_hopper);
+	$list_description=preg_replace('/[^- \+\.\:\/\@\?\&\_0-9a-zA-Z]/','',$list_description);
 	}
 else
 	{
