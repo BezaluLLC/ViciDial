@@ -461,6 +461,9 @@ OTHER CHANGES:
 128. Added ability to play multiple audio prompts for outbound survey campaigns
 	and to use DYN for lead field wildcards defined as audio prompts.
 
+129. Added ability to limit the number of voicemail messages played to a single 
+	lead per day, as a campaign setting.
+
 
 
 

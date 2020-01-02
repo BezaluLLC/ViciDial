@@ -1131,3 +1131,20 @@ ALTER TABLE vicidial_campaigns MODIFY survey_third_audio_file TEXT;
 ALTER TABLE vicidial_campaigns MODIFY survey_fourth_audio_file TEXT;
 
 UPDATE system_settings SET db_schema_version='1582',db_schema_update_date=NOW() where db_schema_version < 1582;
+
+ALTER TABLE vicidial_campaigns ADD vmm_daily_limit TINYINT(3) UNSIGNED default '0';
+
+CREATE TABLE vicidial_vmm_counts (
+call_date DATE,
+lead_id INT(9) UNSIGNED,
+vmm_count SMALLINT(5) UNSIGNED default '0',
+vmm_played SMALLINT(5) UNSIGNED default '0',
+index (call_date),
+index (lead_id)
+) ENGINE=MyISAM;
+
+CREATE UNIQUE INDEX vvmmcount on vicidial_vmm_counts (lead_id,call_date);
+
+CREATE TABLE vicidial_vmm_counts_archive LIKE vicidial_vmm_counts;
+
+UPDATE system_settings SET db_schema_version='1583',db_schema_update_date=NOW() where db_schema_version < 1583;
