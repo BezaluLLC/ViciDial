@@ -1,7 +1,7 @@
 <?php
 # admin.php - VICIDIAL administration page
 #
-# Copyright (C) 2019  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 $startMS = microtime();
@@ -4600,12 +4600,13 @@ else
 # 191114-0923 - Added enable_first_webform and recording_buttons system settings
 # 191121-2256 - Extended survey audio file lengths
 # 191230-1001 - Added Voicemail Message Daily Limit
+# 200108-0937 - Added CID Group Type of NONE, update date for 2020
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-731a';
-$build = '191230-1001';
+$admin_version = '2.14-732a';
+$build = '200108-0937';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5119,7 +5120,7 @@ echo "<html>\n";
 echo "<head>\n";
 echo "<!-- VERSION: $admin_version   BUILD: $build   ADD: $ADD   PHP_SELF: $PHP_SELF-->\n";
 echo "<META NAME=\"ROBOTS\" CONTENT=\"NONE\">\n";
-echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2019 ViciDial Group\">\n";
+echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2020 ViciDial Group\">\n";
 echo "<META NAME=\"AUTHOR\" CONTENT=\"ViciDial Group\">\n";
 echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 echo "<script language=\"JavaScript\" src=\"help.js\"></script>\n";
@@ -9494,6 +9495,7 @@ if ($ADD==196111111111)
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("CID Group Type").": </td><td align=left><select size=1 name=cid_group_type>\n";
 		echo "<option SELECTED value=\"AREACODE\">"._QXZ("AREACODE")."</option>\n";
 		echo "<option value=\"STATE\">"._QXZ("STATE")."</option>\n";
+		echo "<option value=\"NONE\">"._QXZ("NONE")."</option>\n";
 		echo "</select>$NWB#cid_groups$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
@@ -37570,7 +37572,10 @@ if ($ADD==396111111111)
 		echo "<input type=hidden name=stage value=ADD>\n";
 		echo "<input type=hidden name=DB value=\"$DB\">\n";
 		echo "<input type=hidden name=cid_group_id value=\"$cid_group_id\">\n";
-		echo _QXZ("$cid_group_type").": <input type=text size=7 maxlength=5 name=areacode>\n";
+		if ($cid_group_type == 'NONE')
+			{echo "<input type=hidden name=areacode value=\"NONE\">\n";}
+		else
+			{echo _QXZ("$cid_group_type").": <input type=text size=7 maxlength=5 name=areacode>\n";}
 		echo _QXZ("Outbound CID").": <input type=text size=20 maxlength=20 name=outbound_cid><BR>\n";
 		echo _QXZ("Description").": <input type=text size=50 maxlength=100 name=cid_description>\n";
 		echo "<input type=submit name=submit value='"._QXZ("ADD")."'><BR>\n";
@@ -43112,7 +43117,7 @@ if ($ADD==999995)
 	echo "<br><B> "._QXZ("Welcome to ViciDial: copyright, trademark and license page")."</B><BR><BR>\n";
 	echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
 
-	echo "<tr bgcolor=#$SSstd_row4_background><td align=right valign=top><B><font size=3>"._QXZ("Copyright").": </B></td><td align=left> &nbsp; "._QXZ("The ViciDial Contact Center Suite is maintained by the")." <a href=\"http://www.vicidial.com/\" target=\"_blank\">ViciDial Group</a>, &copy; 2019</td></tr>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right valign=top><B><font size=3>"._QXZ("Copyright").": </B></td><td align=left> &nbsp; "._QXZ("The ViciDial Contact Center Suite is maintained by the")." <a href=\"http://www.vicidial.com/\" target=\"_blank\">ViciDial Group</a>, &copy; 2020</td></tr>\n";
 
 	echo "<tr bgcolor=#$SSstd_row4_background><td align=right valign=top><B><font size=3>"._QXZ("Trademark").": </B></td><td align=left> &nbsp; \"VICIDIAL\" "._QXZ("is a registered trademark of the")." <a href=\"http://www.vicidial.com/\" target=\"_blank\">ViciDial Group</a>. Here is our <a href=\"http://www.vicidial.com/?page_id=262\" target=\"_blank\">"._QXZ("trademark use policy")."</a></td></tr>\n";
 
@@ -44031,7 +44036,7 @@ echo "<FONT STYLE=\"font-family:HELVETICA;font-size:9;color:white;\"><br><br><!-
 echo _QXZ("VERSION").": $admin_version<BR>";
 echo _QXZ("BUILD").": $build\n";
 if (!preg_match("/_BUILD_/",$SShosted_settings))
-	{echo "<BR><a href=\"$PHP_SELF?ADD=999995\"><font color=white>&copy; 2019 ViciDial Group</font></a><BR><img src=\"images/pixel.gif\">";}
+	{echo "<BR><a href=\"$PHP_SELF?ADD=999995\"><font color=white>&copy; 2020 ViciDial Group</font></a><BR><img src=\"images/pixel.gif\">";}
 echo "</FONT>\n";
 ?>
 

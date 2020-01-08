@@ -3990,7 +3990,7 @@ index (date_deleted)
 CREATE TABLE vicidial_cid_groups (
 cid_group_id VARCHAR(20) PRIMARY KEY NOT NULL,
 cid_group_notes VARCHAR(255) default '',
-cid_group_type ENUM('AREACODE','STATE') default 'AREACODE',
+cid_group_type ENUM('AREACODE','STATE','NONE') default 'AREACODE',
 user_group VARCHAR(20) default '---ALL---'
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
@@ -4583,4 +4583,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1583',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1584',db_schema_update_date=NOW(),reload_timestamp=NOW();

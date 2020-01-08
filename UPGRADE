@@ -464,6 +464,9 @@ OTHER CHANGES:
 129. Added ability to limit the number of voicemail messages played to a single 
 	lead per day, as a campaign setting.
 
+130. Added CID Group Type of NONE to allow for a group of outbound CIDs to be 
+	used for all outbound phone calls no matter where they are. 
+
 
 
 
