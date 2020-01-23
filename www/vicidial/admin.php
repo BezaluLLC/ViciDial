@@ -2479,6 +2479,10 @@ if (isset($_GET["enable_first_webform"]))			{$enable_first_webform=$_GET["enable
 	elseif (isset($_POST["enable_first_webform"]))	{$enable_first_webform=$_POST["enable_first_webform"];}
 if (isset($_GET["vmm_daily_limit"]))			{$vmm_daily_limit=$_GET["vmm_daily_limit"];}
 	elseif (isset($_POST["vmm_daily_limit"]))	{$vmm_daily_limit=$_POST["vmm_daily_limit"];}
+if (isset($_GET["cid_auto_rotate_minutes"]))			{$cid_auto_rotate_minutes=$_GET["cid_auto_rotate_minutes"];}
+	elseif (isset($_POST["cid_auto_rotate_minutes"]))	{$cid_auto_rotate_minutes=$_POST["cid_auto_rotate_minutes"];}
+if (isset($_GET["cid_auto_rotate_minimum"]))			{$cid_auto_rotate_minimum=$_GET["cid_auto_rotate_minimum"];}
+	elseif (isset($_POST["cid_auto_rotate_minimum"]))	{$cid_auto_rotate_minimum=$_POST["cid_auto_rotate_minimum"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2922,6 +2926,8 @@ if ($non_latin < 1)
 	$time_end = preg_replace('/[^0-9]/','',$time_end);
 	$enable_first_webform = preg_replace('/[^0-9]/','',$enable_first_webform);
 	$vmm_daily_limit = preg_replace('/[^0-9]/','',$vmm_daily_limit);
+	$cid_auto_rotate_minutes = preg_replace('/[^0-9]/','',$cid_auto_rotate_minutes);
+	$cid_auto_rotate_minimum = preg_replace('/[^0-9]/','',$cid_auto_rotate_minimum);
 
 	$user_new_lead_limit = preg_replace('/[^-0-9]/','',$user_new_lead_limit);
 	$drop_call_seconds = preg_replace('/[^-0-9]/','',$drop_call_seconds);
@@ -4602,12 +4608,13 @@ else
 # 191230-1001 - Added Voicemail Message Daily Limit
 # 200108-0937 - Added CID Group Type of NONE, update date for 2020
 # 200115-1702 - Added Caller ID Log Report to Admin Utilities
+# 200122-0921 - Added CID Group auto-rotate feature settings
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-733a';
-$build = '200115-1702';
+$admin_version = '2.14-734a';
+$build = '200122-0921';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -13436,7 +13443,7 @@ if ($ADD==296111111111)
 					{
 					echo "<br>"._QXZ("CID GROUP ADDED")."\n";
 
-					$stmt="INSERT INTO vicidial_cid_groups SET cid_group_id='$cid_group_id',cid_group_notes='$cid_group_notes',cid_group_type='$cid_group_type',user_group='$user_group';";
+					$stmt="INSERT INTO vicidial_cid_groups SET cid_group_id='$cid_group_id',cid_group_notes='$cid_group_notes',cid_group_type='$cid_group_type',user_group='$user_group',cid_auto_rotate_minutes='0',cid_auto_rotate_minimum='0',cid_auto_rotate_calls='0',cid_last_auto_rotate='2020-01-01 00:00:01';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 
 					### LOG INSERTION Admin Log Table ###
@@ -18026,7 +18033,7 @@ if ($ADD==496111111111)
 					{echo "<br>"._QXZ("CID GROUP NOT MODIFIED - Please go back and look at the data you entered")."\n";}
 				else
 					{
-					$stmt="UPDATE vicidial_cid_groups set cid_group_notes='$cid_group_notes',user_group='$user_group' where cid_group_id='$cid_group_id';";
+					$stmt="UPDATE vicidial_cid_groups set cid_group_notes='$cid_group_notes',user_group='$user_group',cid_auto_rotate_minutes='$cid_auto_rotate_minutes',cid_auto_rotate_minimum='$cid_auto_rotate_minimum' where cid_group_id='$cid_group_id';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 
 					echo "<br>"._QXZ("CID GROUP MODIFIED").": $cid_group_id\n";
@@ -37453,12 +37460,17 @@ if ($ADD==396111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT cid_group_notes,cid_group_type,user_group from vicidial_cid_groups where cid_group_id='$cid_group_id' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT cid_group_notes,cid_group_type,user_group,cid_auto_rotate_minutes,cid_auto_rotate_minimum,cid_auto_rotate_calls,cid_last_auto_rotate,cid_auto_rotate_cid from vicidial_cid_groups where cid_group_id='$cid_group_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
-		$cid_group_notes =		$row[0];
-		$cid_group_type =		$row[1];
-		$user_group =			$row[2];
+		$cid_group_notes =			$row[0];
+		$cid_group_type =			$row[1];
+		$user_group =				$row[2];
+		$cid_auto_rotate_minutes =	$row[3];
+		$cid_auto_rotate_minimum =	$row[4];
+		$cid_auto_rotate_calls =	$row[5];
+		$cid_last_auto_rotate =		$row[6];
+		$cid_auto_rotate_cid =		$row[7];
 
 		echo "<br>"._QXZ("MODIFY CID GROUP").": $cid_group_id<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=496111111111>\n";
@@ -37475,6 +37487,18 @@ if ($ADD==396111111111)
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"$user_group\">".(preg_match('/\-\-ALL\-\-/', $user_group) ? _QXZ("$user_group") : $user_group)."</option>\n";
 		echo "</select>$NWB#cid_groups$NWE</td></tr>\n";
+
+		if ($cid_group_type == 'NONE')
+			{
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("CID Auto Rotate Minutes").": </td><td align=left><input type=text name=cid_auto_rotate_minutes size=8 maxlength=7 value=\"$cid_auto_rotate_minutes\">$NWB#cid_groups-cid_auto_rotate_minutes$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("CID Auto Rotate Minimum").": </td><td align=left><input type=text name=cid_auto_rotate_minimum size=8 maxlength=7 value=\"$cid_auto_rotate_minimum\">$NWB#cid_groups-cid_auto_rotate_minimum$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("CID Auto Rotate Calls, CID and Time").": </td><td align=left><B>$cid_auto_rotate_calls - $cid_auto_rotate_cid - $cid_last_auto_rotate</B>$NWB#cid_groups-cid_auto_rotate_calls$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right><input type=hidden name=cid_auto_rotate_minutes value=\"$cid_auto_rotate_minutes\">\n";
+			echo "<input type=hidden name=cid_auto_rotate_minimum value=\"$cid_auto_rotate_minimum\"></td></tr>\n";
+			}
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input type=submit name=submit value='"._QXZ("SUBMIT")."'</td></tr>\n";
 		echo "</TABLE></center></form>\n";
@@ -41353,7 +41377,7 @@ if ($ADD==196000000000)
 	echo "<TABLE><TR><TD>\n";
 	echo "<img src=\"images/icon_cidgroups.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-	$stmt="SELECT cid_group_id,cid_group_notes,cid_group_type,user_group from vicidial_cid_groups $whereLOGadmin_viewable_groupsSQL order by cid_group_id;";
+	$stmt="SELECT cid_group_id,cid_group_notes,cid_group_type,user_group,cid_auto_rotate_minutes from vicidial_cid_groups $whereLOGadmin_viewable_groupsSQL order by cid_group_id;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$cid_groups_to_print = mysqli_num_rows($rslt);
 
@@ -41363,6 +41387,7 @@ if ($ADD==196000000000)
 	echo "<TD><font size=1 color=white>"._QXZ("CID GROUP ID")."</TD>";
 	echo "<TD><font size=1 color=white>"._QXZ("NOTES")."</TD>";
 	echo "<TD><font size=1 color=white>"._QXZ("TYPE")."</TD>";
+	echo "<TD align=left><font size=1 color=white> &nbsp; </TD>";
 	echo "<TD><font size=1 color=white>"._QXZ("GROUP")."</TD>";
 	echo "<TD><font size=1 color=white>"._QXZ("CIDS")."</TD>";
 	echo "<TD><font size=1 color=white>"._QXZ("MODIFY")."</TD>\n";
@@ -41373,14 +41398,17 @@ if ($ADD==196000000000)
 	$cid_group_notes = $MT;
 	$cid_group_type = $MT;
 	$admin_group = $MT;
+	$cid_auto_rotate_minutes = $MT;
 
 	while ($cid_groups_to_print > $o) 
 		{
 		$row=mysqli_fetch_row($rslt);
-		$cid_group_id[$o] =		$row[0];
-		$cid_group_notes[$o] =	$row[1];
-		$cid_group_type[$o] =	_QXZ("$row[2]");
+		$cid_group_id[$o] =			$row[0];
+		$cid_group_notes[$o] =		$row[1];
+		$cid_group_type[$o] =		_QXZ("$row[2]");
 		$admin_group[$o] =		(preg_match('/\-\-ALL\-\-/', $row[3]) ? _QXZ("$row[3]") : $row[3]);
+		$cid_auto_rotate_minutes[$o] =	'';
+		if ($row[4] > 0) {$cid_auto_rotate_minutes[$o] =	' &nbsp; AR &nbsp; ';}
 		$o++;
 		}
 
@@ -41397,8 +41425,9 @@ if ($ADD==196000000000)
 		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=396111111111&cid_group_id=$cid_group_id[$o]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=396111111111&cid_group_id=$cid_group_id[$o]\"><font size=1 color=black>$cid_group_id[$o]</a></td>";
 		echo "<td><font size=1> $cid_group_notes[$o]</td>";
 		echo "<td><font size=1> $cid_group_type[$o]</td>";
+		echo "<td align=left><font size=1> <b>$cid_auto_rotate_minutes[$o]</b></td>";
 		echo "<td><font size=1> $admin_group[$o]</td>";
-		echo "<td><font size=1> $row[0]</td>";
+		echo "<td><font size=1>$row[0]</td>";
 		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=396111111111&cid_group_id=$cid_group_id[$o]\">"._QXZ("MODIFY")."</a></td></tr>\n";
 		$o++;
 		}
