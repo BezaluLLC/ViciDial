@@ -1,4 +1,4 @@
-# version: 20200122122501
+# version: 20200127162001
 users-user	User ID	<QXZ>This field is where you put the users ID number, can be up to 8 digits in length, Must be at least 2 characters in length.</QXZ>
 users-pass	Password	<QXZ>This field is where you put the users password. Must be at least 2 characters in length. A medium strength user password will be at least 10 characters in length, and a strong user password will be at least 20 characters in length and have letters as well as at least one number. It is recommended that you use a longer password if possible, stringing together several unrelated words with no spaces, and a number somewhere in the string. The maximum size of a password is 100 characters.</QXZ>
 users-force_change_password	Force Change Password	<QXZ>If this option is set to Y then the user will be prompted to change their password the next time they log in to the administration webpage. Default is N.</QXZ>
@@ -65,7 +65,10 @@ users-delete_remote_agents	Delete Remote Agents	<QXZ>This option if set to 1 all
 users-load_leads	Load Leads	<QXZ>This option if set to 1 allows the user to load lead lists into the list table by way of the web based lead loader.</QXZ>
 users-custom_fields_modify	Custom Fields Modify	<QXZ>This option if set to 1 allows the user to modify custom list fields.</QXZ>
 users-campaign_detail	Campaign Detail	<QXZ>This option if set to 1 allows the user to view and modify the campaign detail screen elements.</QXZ>
-users-ast_admin_access	AGC Admin Access	<QXZ>This option if set to 1 allows the user to login to the astGUIclient admin pages.</QXZ>
+users-ast_admin_access	AGC Admin Access	<QXZ>This option if set to 1 allows the user to login to the astGUIclient admin pages. This setting is special in that it allows for admin access to multiple admin sections by itself -  vicidial conferences, conferences, group aliases, phones, phone aliases, conf templates, carriers, text-to-speech, music-on-hold, voicemail boxes, screen labels, screen colors, contacts, settings containers, status groups and CID groups.</QXZ>
+users-modify_phones	Modify Phones	<QXZ>This setting will allow access for the user to modify the following sections - phones, phone aliases and group aliases.</QXZ>
+users-modify_servers	Modify Servers	<QXZ>This setting will allow access for the user to modify the following sections - servers, settings containers, system settings, system statuses, status categories and QC status codes.</QXZ>
+users-modify_statuses	Modify Statuses	<QXZ>This setting will allow access for the user to modify the following sections - system statuses, status groups, status categories, CID groups and VM message groups.</QXZ>
 users-ast_delete_phones	AGC Delete Phones	<QXZ>This option if set to 1 allows the user to delete phone entries in the astGUIclient admin pages.</QXZ>
 users-delete_scripts	Delete Scripts	<QXZ>This option if set to 1 allows the user to delete Campaign scripts in the script modification screen.</QXZ>
 users-modify_leads	Modify Leads	<QXZ>This option if set to 1 allows the user to modify leads in the admin section lead search results page.</QXZ>

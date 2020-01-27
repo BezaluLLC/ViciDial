@@ -4609,12 +4609,13 @@ else
 # 200108-0937 - Added CID Group Type of NONE, update date for 2020
 # 200115-1702 - Added Caller ID Log Report to Admin Utilities
 # 200122-0921 - Added CID Group auto-rotate feature settings
+# 200127-1620 - Changes to HELP content
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-734a';
-$build = '200122-0921';
+$admin_version = '2.14-735a';
+$build = '200127-1620';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -22574,10 +22575,10 @@ if ($ADD==3)
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("AGC Delete Phones").": </td><td align=left><select size=1 name=ast_delete_phones><option>0</option><option>1</option><option SELECTED>$ast_delete_phones</option></select>$NWB#users-ast_delete_phones$NWE</td></tr>\n";
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Call Times").": </td><td align=left><select size=1 name=modify_call_times><option>0</option><option>1</option><option SELECTED>$modify_call_times</option></select>$NWB#users-modify_call_times$NWE</td></tr>\n";
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Delete Call Times").": </td><td align=left><select size=1 name=delete_call_times><option>0</option><option>1</option><option SELECTED>$delete_call_times</option></select>$NWB#users-delete_call_times$NWE</td></tr>\n";
-				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Servers").": </td><td align=left><select size=1 name=modify_servers><option>0</option><option>1</option><option SELECTED>$modify_servers</option></select>$NWB#users-modify_sections$NWE</td></tr>\n";
+				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Servers").": </td><td align=left><select size=1 name=modify_servers><option>0</option><option>1</option><option SELECTED>$modify_servers</option></select>$NWB#users-modify_servers$NWE</td></tr>\n";
 
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Shifts").": </td><td align=left><select size=1 name=modify_shifts><option>0</option><option>1</option><option SELECTED>$modify_shifts</option></select>$NWB#users-modify_sections$NWE</td></tr>\n";
-				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Phones").": </td><td align=left><select size=1 name=modify_phones><option>0</option><option>1</option><option SELECTED>$modify_phones</option></select>$NWB#users-modify_sections$NWE</td></tr>\n";
+				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Phones").": </td><td align=left><select size=1 name=modify_phones><option>0</option><option>1</option><option SELECTED>$modify_phones</option></select>$NWB#users-modify_phones$NWE</td></tr>\n";
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Carriers").": </td><td align=left><select size=1 name=modify_carriers><option>0</option><option>1</option><option SELECTED>$modify_carriers</option></select>$NWB#users-modify_sections$NWE</td></tr>\n";
 				if ($SSallow_emails > 0) 
 					{
@@ -22597,7 +22598,7 @@ if ($ADD==3)
 					{
 					echo "<tr bgcolor=#$SSstd_row2_background><td align=right></td><td align=left><input type=hidden name=modify_languages value=$modify_languages></td></tr>\n";
 					}
-				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Statuses").": </td><td align=left><select size=1 name=modify_statuses><option>0</option><option>1</option><option SELECTED>$modify_statuses</option></select>$NWB#users-modify_sections$NWE</td></tr>\n";
+				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Statuses").": </td><td align=left><select size=1 name=modify_statuses><option>0</option><option>1</option><option SELECTED>$modify_statuses</option></select>$NWB#users-modify_statuses$NWE</td></tr>\n";
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Voicemail").": </td><td align=left><select size=1 name=modify_voicemail><option>0</option><option>1</option><option SELECTED>$modify_voicemail</option></select>$NWB#users-modify_sections$NWE</td></tr>\n";
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Audio Store").": </td><td align=left><select size=1 name=modify_audiostore><option>0</option><option>1</option><option SELECTED>$modify_audiostore</option></select>$NWB#users-modify_sections$NWE</td></tr>\n";
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Music On Hold").": </td><td align=left><select size=1 name=modify_moh><option>0</option><option>1</option><option SELECTED>$modify_moh</option></select>$NWB#users-modify_sections$NWE</td></tr>\n";
