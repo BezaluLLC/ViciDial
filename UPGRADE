@@ -470,6 +470,10 @@ OTHER CHANGES:
 131. Added Auto-Rotating CID Group numbers, allowing for timed automatic cycling
 	of CID numbers, one-at-a-time, within a CID Group.
 
+132. Added optional OpenSIPs CallerID Name settings, for use only with systems
+	that use an OpenSIPs server to route outbound calls where this feature
+	has been enabled.
+
 
 
 
