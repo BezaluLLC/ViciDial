@@ -474,6 +474,10 @@ OTHER CHANGES:
 	that use an OpenSIPs server to route outbound calls where this feature
 	has been enabled.
 
+133. Added system settings option to require passwords of a set minimum length.
+	This setting affects User passwords, Phone and Server registration 
+	passwords and the System Settings default passwords.
+
 
 
 

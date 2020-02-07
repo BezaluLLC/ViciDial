@@ -2485,6 +2485,8 @@ if (isset($_GET["cid_auto_rotate_minimum"]))			{$cid_auto_rotate_minimum=$_GET["
 	elseif (isset($_POST["cid_auto_rotate_minimum"]))	{$cid_auto_rotate_minimum=$_POST["cid_auto_rotate_minimum"];}
 if (isset($_GET["opensips_cid_name"]))			{$opensips_cid_name=$_GET["opensips_cid_name"];}
 	elseif (isset($_POST["opensips_cid_name"]))	{$opensips_cid_name=$_POST["opensips_cid_name"];}
+if (isset($_GET["require_password_length"]))			{$require_password_length=$_GET["require_password_length"];}
+	elseif (isset($_POST["require_password_length"]))	{$require_password_length=$_POST["require_password_length"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -2499,7 +2501,7 @@ if (strlen($dial_status) > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key,pass_hash_enabled,disable_auto_dial,country_code_list_stats,frozen_server_call_clear,active_modules,allow_chats,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,default_language,user_hide_realtime_enabled,log_recording_access,alt_ivr_logging,admin_row_click,admin_screen_colors,ofcom_uk_drop_calc,agent_screen_colors,script_remove_js,manual_auto_next,user_new_lead_limit,agent_xfer_park_3way,agent_soundboards,web_loader_phone_length,agent_script,enable_auto_reports,enable_pause_code_limits,enable_drop_lists,allow_ip_lists,system_ip_blacklist,hide_inactive_lists,allow_manage_active_lists,expired_lists_inactive,did_system_filter,enable_gdpr_download_deletion,mute_recordings,user_admin_redirect,list_status_modification_confirmation,sip_event_logging,call_quota_lead_ranking,enable_second_script,enable_first_webform,recording_buttons,opensips_cid_name FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_queuemetrics_logging,enable_vtiger_integration,qc_features_active,outbound_autodial_active,sounds_central_control_active,enable_second_webform,user_territories_active,custom_fields_enabled,admin_web_directory,webphone_url,first_login_trigger,hosted_settings,default_phone_registration_password,default_phone_login_password,default_server_password,test_campaign_calls,active_voicemail_server,voicemail_timezones,default_voicemail_timezone,default_local_gmt,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,allow_emails,level_8_disable_add,pass_key,pass_hash_enabled,disable_auto_dial,country_code_list_stats,frozen_server_call_clear,active_modules,allow_chats,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,default_language,user_hide_realtime_enabled,log_recording_access,alt_ivr_logging,admin_row_click,admin_screen_colors,ofcom_uk_drop_calc,agent_screen_colors,script_remove_js,manual_auto_next,user_new_lead_limit,agent_xfer_park_3way,agent_soundboards,web_loader_phone_length,agent_script,enable_auto_reports,enable_pause_code_limits,enable_drop_lists,allow_ip_lists,system_ip_blacklist,hide_inactive_lists,allow_manage_active_lists,expired_lists_inactive,did_system_filter,enable_gdpr_download_deletion,mute_recordings,user_admin_redirect,list_status_modification_confirmation,sip_event_logging,call_quota_lead_ranking,enable_second_script,enable_first_webform,recording_buttons,opensips_cid_name,require_password_length FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -2590,6 +2592,7 @@ if ($qm_conf_ct > 0)
 	$SSenable_first_webform =				$row[81];
 	$SSrecording_buttons =					$row[82];
 	$SSopensips_cid_name =					$row[83];
+	$SSrequire_password_length =			$row[84];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -2931,6 +2934,7 @@ if ($non_latin < 1)
 	$vmm_daily_limit = preg_replace('/[^0-9]/','',$vmm_daily_limit);
 	$cid_auto_rotate_minutes = preg_replace('/[^0-9]/','',$cid_auto_rotate_minutes);
 	$cid_auto_rotate_minimum = preg_replace('/[^0-9]/','',$cid_auto_rotate_minimum);
+	$require_password_length = preg_replace('/[^0-9]/','',$require_password_length);
 
 	$user_new_lead_limit = preg_replace('/[^-0-9]/','',$user_new_lead_limit);
 	$drop_call_seconds = preg_replace('/[^-0-9]/','',$drop_call_seconds);
@@ -4615,12 +4619,13 @@ else
 # 200122-0921 - Added CID Group auto-rotate feature settings
 # 200127-1620 - Changes to HELP content
 # 200204-2336 - Added opensips_cid_name settings
+# 200206-2154 - Added require_password_length system setting and display of password length in modify pages
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-736a';
-$build = '200204-2336';
+$admin_version = '2.14-737a';
+$build = '200206-2154';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6660,7 +6665,7 @@ if ($ADD=="1")
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("User Number").": </td><td align=left><input type=text name=user id=user size=20 maxlength=20> <input type=button name=auto_user value=\""._QXZ("AUTO-GENERATE")."\" onClick=\"user_auto()\"> $NWB#users-user$NWE</td></tr>\n";
 			}
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=pass size=50 maxlength=100 onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\">$NWB#users-pass$NWE &nbsp; &nbsp; "._QXZ("Strength").": <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=pass size=50 maxlength=100 onkeyup=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\">$NWB#users-pass$NWE &nbsp; &nbsp; <font size=1> "._QXZ("Strength").":</font> <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\"> &nbsp; <font size=1>"._QXZ("Length").": <span id=pass_length name=pass_length>0</span></font></td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Full Name").": </td><td align=left><input type=text name=full_name size=20 maxlength=100>$NWB#users-full_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("User Level").": </td><td align=left><select size=1 name=user_level>";
@@ -6724,7 +6729,7 @@ if ($ADD=="1A")
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("User Number").": </td><td align=left><input type=text name=user id=user size=20 maxlength=20> <input type=button name=auto_user value=\""._QXZ("AUTO-GENERATE")."\" onClick=\"user_auto()\"> $NWB#users-user$NWE</td></tr>\n";
 			}
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=pass size=50 maxlength=100 onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\">$NWB#users-pass$NWE &nbsp; &nbsp; "._QXZ("Strength").": <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=pass size=50 maxlength=100 onkeyup=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\">$NWB#users-pass$NWE &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_length name=pass_length>0</span></font></td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Full Name").": </td><td align=left><input type=text name=full_name size=20 maxlength=100>$NWB#users-full_name$NWE</td></tr>\n";
 
@@ -8886,7 +8891,7 @@ if ($ADD==11111111111)
 		echo "</select>$NWB#phones-server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Agent Screen Login").": </td><td align=left><input type=text name=login size=15 maxlength=15>$NWB#phones-login$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Login Password").": </td><td align=left><input type=text name=pass size=40 maxlength=100 value=\"$SSdefault_phone_login_password\">$NWB#phones-pass$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Registration Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=conf_secret size=40 maxlength=100 value=\"$SSdefault_phone_registration_password\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\">$NWB#phones-conf_secret$NWE &nbsp; &nbsp; "._QXZ("Strength").": <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Registration Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=conf_secret size=40 maxlength=100 value=\"$SSdefault_phone_registration_password\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\">$NWB#phones-conf_secret$NWE &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_length name=pass_length>0</span></font></td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Status").": </td><td align=left><select size=1 name=status><option value='ACTIVE' SELECTED>"._QXZ("ACTIVE")."</option><option value='SUSPENDED'>"._QXZ("SUSPENDED")."</option><option value='CLOSED'>"._QXZ("CLOSED")."</option><option value='PENDING'>"._QXZ("PENDING")."</option><option value='ADMIN'>"._QXZ("ADMIN")."</option></select>$NWB#phones-status$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active Account").": </td><td align=left><select size=1 name=active><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option></select>$NWB#phones-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Phone Type").": </td><td align=left><input type=text name=phone_type size=20 maxlength=50>$NWB#phones-phone_type$NWE</td></tr>\n";
@@ -9666,11 +9671,17 @@ if ($ADD=="2")
 				{
 				$user = 'AUTOGENERA';
 				}
-			if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (strlen($user_group) < 2) or ( (strlen($user) > 20) and (!preg_match('/AUTOGENERA/',$user)) ) )
+			if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (strlen($user_group) < 2) or ( (strlen($user) > 20) and (!preg_match('/AUTOGENERA/',$user)) ) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($pass)) ) )
 				{
 				echo "<br>"._QXZ("USER NOT ADDED - Please go back and look at the data you entered")."\n";
 				echo "<br>"._QXZ("user id must be between 2 and 20 characters long")."\n";
-				echo "<br>"._QXZ("full name and password must be at least 2 characters long")."\n";
+				if ($SSrequire_password_length > 0)
+					{
+					echo "<br>"._QXZ("full name must be at least 2 characters long")."\n";
+					echo "<br>"._QXZ("password must be at least $SSrequire_password_length characters long")."\n";
+					}
+				else
+					{echo "<br>"._QXZ("full name and password must be at least 2 characters long")."\n";}
 				echo "<br>"._QXZ("you must select a user group")."\n";
 				}
 			else
@@ -9977,11 +9988,17 @@ if ($ADD=="2A")
 			{echo "<br>"._QXZ("USER NOT ADDED - there is already a user in the system with this user number")."\n";}
 		else
 			{
-			if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (strlen($user) > 20) )
+			if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (strlen($user) > 20) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($pass)) ) )
 				{
 				echo "<br>"._QXZ("USER NOT ADDED - Please go back and look at the data you entered")."\n";
 				echo "<br>"._QXZ("user id must be between 2 and 20 characters long")."\n";
-				echo "<br>"._QXZ("full name and password must be at least 2 characters long")."\n";
+				if ($SSrequire_password_length > 0)
+					{
+					echo "<br>"._QXZ("full name must be at least 2 characters long")."\n";
+					echo "<br>"._QXZ("password must be at least $SSrequire_password_length characters long")."\n";
+					}
+				else
+					{echo "<br>"._QXZ("full name and password must be at least 2 characters long")."\n";}
 				echo "<!-- |$user|$pass|$full_name| -->\n";
 				}
 			else
@@ -12585,10 +12602,14 @@ if ($ADD==21111111111)
 						{echo "<br>"._QXZ("PHONE NOT ADDED - there is already a Voicemail ID in the system with this ID")."\n";}
 					else
 						{
-						if ( (strlen($extension) < 1) or (strlen($server_ip) < 7) or (strlen($dialplan_number) < 1) or (strlen($voicemail_id) < 1) or (strlen($login) < 1)  or (strlen($pass) < 1))
+						if ( (strlen($extension) < 1) or (strlen($server_ip) < 7) or (strlen($dialplan_number) < 1) or (strlen($voicemail_id) < 1) or (strlen($login) < 1)  or (strlen($pass) < 1) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($conf_secret)) ))
 							{
 							echo "<br>"._QXZ("PHONE NOT ADDED - Please go back and look at the data you entered")."\n";
 							echo "<br>"._QXZ("The following fields must have data").": extension, server_ip, dialplan_number, voicemail_id, login, pass\n";
+							if ($SSrequire_password_length > 0)
+								{
+								echo "<br>"._QXZ("registration password must be at least $SSrequire_password_length characters long")."\n";
+								}
 							}
 						else
 							{
@@ -13722,10 +13743,17 @@ if ($ADD=="4A")
 		{
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		if ( ( (strlen($pass) < 2) and ($SSpass_hash_enabled < 1) ) or (strlen($full_name) < 2) or (strlen($user_level) < 1) )
+		$enc_pass_nochange=0;
+		if ( ($SSpass_hash_enabled > 0) and (strlen($pass) < 1) ) {$enc_pass_nochange=1;}
+
+		if ( ( (strlen($pass) < 2) and ($SSpass_hash_enabled < 1) ) or (strlen($full_name) < 2) or (strlen($user_level) < 1) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($pass)) and ($enc_pass_nochange < 1) ) )
 			{
 			echo "<br>"._QXZ("USER NOT MODIFIED - Please go back and look at the data you entered")."\n";
 			echo "<br>"._QXZ("Password and Full Name each need to be at least 2 characters in length")."\n";
+			if ($SSrequire_password_length > 0)
+				{
+				echo "<br>"._QXZ("Password must be at least $SSrequire_password_length characters long")."\n";
+				}
 			}
 		else
 			{
@@ -14014,10 +14042,17 @@ if ($ADD=="4B")
 		{
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		if ( ( (strlen($pass) < 2) and ($SSpass_hash_enabled < 1) ) or (strlen($full_name) < 2) or (strlen($user_level) < 1) )
+		$enc_pass_nochange=0;
+		if ( ($SSpass_hash_enabled > 0) and (strlen($pass) < 1) ) {$enc_pass_nochange=1;}
+
+		if ( ( (strlen($pass) < 2) and ($SSpass_hash_enabled < 1) ) or (strlen($full_name) < 2) or (strlen($user_level) < 1) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($pass)) and ($enc_pass_nochange < 1) ) )
 			{
 			echo "<br>"._QXZ("USER NOT MODIFIED - Please go back and look at the data you entered")."\n";
 			echo "<br>"._QXZ("Password and Full Name each need to be at least 2 characters in length")."\n";
+			if ($SSrequire_password_length > 0)
+				{
+				echo "<br>"._QXZ("Password must be at least $SSrequire_password_length characters long")."\n";
+				}
 			}
 		else
 			{
@@ -14297,10 +14332,17 @@ if ($ADD==4)
 		{
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		if ( ( (strlen($pass) < 2) and ($SSpass_hash_enabled < 1) ) or (strlen($full_name) < 2) or (strlen($user_level) < 1) )
+		$enc_pass_nochange=0;
+		if ( ($SSpass_hash_enabled > 0) and (strlen($pass) < 1) ) {$enc_pass_nochange=1;}
+
+		if ( ( (strlen($pass) < 2) and ($SSpass_hash_enabled < 1) ) or (strlen($full_name) < 2) or (strlen($user_level) < 1) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($pass)) and ($enc_pass_nochange < 1) ) )
 			{
 			echo "<br>"._QXZ("USER NOT MODIFIED - Please go back and look at the data you entered")."\n";
 			echo "<br>"._QXZ("Password and Full Name each need to be at least 2 characters in length")."\n";
+			if ($SSrequire_password_length > 0)
+				{
+				echo "<br>"._QXZ("Password must be at least $SSrequire_password_length characters long")."\n";
+				}
 			}
 		else
 			{
@@ -16909,8 +16951,14 @@ if ($ADD==41111111111)
 			{echo "<br>"._QXZ("PHONE NOT MODIFIED - there is already a Phone in the system with this extension/server")."\n";}
 		else
 			{
-			if ( (strlen($extension) < 1) or (strlen($server_ip) < 7) or (strlen($dialplan_number) < 1) or (strlen($voicemail_id) < 1) or (strlen($login) < 1)  or (strlen($pass) < 1))
-				{echo "<br>"._QXZ("PHONE NOT MODIFIED - Please go back and look at the data you entered")."\n";}
+			if ( (strlen($extension) < 1) or (strlen($server_ip) < 7) or (strlen($dialplan_number) < 1) or (strlen($voicemail_id) < 1) or (strlen($login) < 1)  or (strlen($pass) < 1) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($conf_secret)) ))
+				{
+				echo "<br>"._QXZ("PHONE NOT MODIFIED - Please go back and look at the data you entered")."\n";
+				if ($SSrequire_password_length > 0)
+					{
+					echo "<br>"._QXZ("registration password must be at least $SSrequire_password_length characters long")."\n";
+					}
+				}
 			else
 				{
 				$stmt="SELECT count(*) from vicidial_voicemail where voicemail_id='$voicemail_id';";
@@ -17055,8 +17103,14 @@ if ($ADD==411111111111)
 				{echo "<br>"._QXZ("SERVER NOT MODIFIED - there is already a server in the system with this")." server_ip\n";}
 			else
 				{
-				if ( (strlen($server_id) < 1) or (strlen($server_ip) < 7) )
-					{echo "<br>"._QXZ("SERVER NOT MODIFIED - Please go back and look at the data you entered")."\n";}
+				if ( (strlen($server_id) < 1) or (strlen($server_ip) < 7) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($conf_secret)) ) )
+					{
+					echo "<br>"._QXZ("SERVER NOT MODIFIED - Please go back and look at the data you entered")."\n";
+					if ($SSrequire_password_length > 0)
+						{
+						echo "<br>"._QXZ("Conf File Secret must be at least $SSrequire_password_length characters long")."\n";
+						}
+					}
 				else
 					{
 					if (preg_match("/_MXCS/",$SShosted_settings))
@@ -18161,102 +18215,110 @@ if ($ADD==411111111111111)
 		{
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		echo "<br>"._QXZ("SYSTEM SETTINGS MODIFIED")."\n";
-
-		$k=0;
-		if (is_array($reports_use_slave_db)) {$multi_count = count($reports_use_slave_db);} else {$multi_count=0;}
-		$multi_array = $reports_use_slave_db;
-		while ($k < $multi_count)
+		if ( ($SSrequire_password_length > 0) and ( ($SSrequire_password_length > strlen($default_phone_registration_password)) or ( ($SSrequire_password_length > strlen($default_phone_login_password)) or ( ($SSrequire_password_length > strlen($default_server_password)) ) ) ) )
 			{
-			$new_field_value .= "$multi_array[$k],";
-			$k++;
+			echo "<br>"._QXZ("SYSTEM SETTINGS NOT MODIFIED - Please go back and look at the data you entered")."\n";
+			echo "<br>"._QXZ("The default passwords must be at least $SSrequire_password_length characters long")."\n";
 			}
-		$reports_use_slave_db = preg_replace("/,$/","",$new_field_value);
-
-		$m=0;
-		if (is_array($tables_use_alt_log_db)) {$altlog_count = count($tables_use_alt_log_db);} else {$altlog_count=0;}
-		$altlog_array = $tables_use_alt_log_db;
-		while ($m < $altlog_count)
+		else
 			{
-			$new_altlog_value .= "$altlog_array[$m],";
-			$m++;
-			}
-		$tables_use_alt_log_db = preg_replace("/,$/","",$new_altlog_value);
+			echo "<br>"._QXZ("SYSTEM SETTINGS MODIFIED")."\n";
 
-		$custom_dialplanSQL='';
-		if ($LOGmodify_custom_dialplans > 0)
-			{$custom_dialplanSQL = ",custom_dialplan_entry='$custom_dialplan_entry'";}
-
-		$custom_stmt="show tables like 'vicidial_custom_reports'";
-		$custom_rslt=mysql_to_mysqli($custom_stmt, $link);
-		$custom_reports_slave_SQL='';
-		if (mysqli_num_rows($custom_rslt)>0) 
-			{
-			if (is_array($custom_reports_use_slave_db)) 
+			$k=0;
+			if (is_array($reports_use_slave_db)) {$multi_count = count($reports_use_slave_db);} else {$multi_count=0;}
+			$multi_array = $reports_use_slave_db;
+			while ($k < $multi_count)
 				{
-				for ($q=0; $q<count($custom_reports_use_slave_db); $q++) 
+				$new_field_value .= "$multi_array[$k],";
+				$k++;
+				}
+			$reports_use_slave_db = preg_replace("/,$/","",$new_field_value);
+
+			$m=0;
+			if (is_array($tables_use_alt_log_db)) {$altlog_count = count($tables_use_alt_log_db);} else {$altlog_count=0;}
+			$altlog_array = $tables_use_alt_log_db;
+			while ($m < $altlog_count)
+				{
+				$new_altlog_value .= "$altlog_array[$m],";
+				$m++;
+				}
+			$tables_use_alt_log_db = preg_replace("/,$/","",$new_altlog_value);
+
+			$custom_dialplanSQL='';
+			if ($LOGmodify_custom_dialplans > 0)
+				{$custom_dialplanSQL = ",custom_dialplan_entry='$custom_dialplan_entry'";}
+
+			$custom_stmt="show tables like 'vicidial_custom_reports'";
+			$custom_rslt=mysql_to_mysqli($custom_stmt, $link);
+			$custom_reports_slave_SQL='';
+			if (mysqli_num_rows($custom_rslt)>0) 
+				{
+				if (is_array($custom_reports_use_slave_db)) 
 					{
-					$custom_reports_slave_SQL.=$custom_reports_use_slave_db[$q].",";
+					for ($q=0; $q<count($custom_reports_use_slave_db); $q++) 
+						{
+						$custom_reports_slave_SQL.=$custom_reports_use_slave_db[$q].",";
+						}
+					}
+				if (preg_match('/\-\-NONE\-\-/i', $custom_reports_slave_SQL))
+					{
+					$custom_reports_slave_SQL='';
+					}
+				$custom_reports_slave_SQL=substr($custom_reports_slave_SQL,0,-1);
+				$custom_reports_slave_SQL=",custom_reports_use_slave_db='$custom_reports_slave_SQL'";
+				}
+			$stmt="SELECT count(*) from servers where active='Y' and active_asterisk_server='Y';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			$active_asterisk_servers = $row[0];
+			if ($row[0] < 1) {$row[0] = '1';}
+			if (preg_match("/_MXCS/",$SShosted_settings))
+				{
+				$maxcps_set = $SShosted_settings;
+				$maxcps_set = preg_replace("/MXAG\d+|_BUILD_|DRA|_MXTR\d+|.*_MXCS| /",'',$maxcps_set);
+				$maxcps_set = preg_replace('/[^0-9]/','',$maxcps_set);
+				$maxcps_set = ($maxcps_set * $row[0]);
+				if (strlen($maxcps_set)>0)
+					{
+					if ($outbound_calls_per_second > $maxcps_set)
+						{
+						if ($DB > 0) {echo "MAX CPS: |$outbound_calls_per_second|$maxcps_set|\n";}
+						$outbound_calls_per_second = $maxcps_set;
+						}
 					}
 				}
-			if (preg_match('/\-\-NONE\-\-/i', $custom_reports_slave_SQL))
+
+			$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysqli_real_escape_string($link, $webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db'$custom_reports_slave_SQL,webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt',noanswer_log='$noanswer_log',alt_log_server_ip='$alt_log_server_ip',alt_log_dbname='$alt_log_dbname',alt_log_login='$alt_log_login',alt_log_pass='$alt_log_pass',tables_use_alt_log_db='$tables_use_alt_log_db',did_agent_log='$did_agent_log',campaign_cid_areacodes_enabled='$campaign_cid_areacodes_enabled',pllb_grouping_limit='$pllb_grouping_limit',did_ra_extensions_enabled='$did_ra_extensions_enabled',expanded_list_stats='$expanded_list_stats',contacts_enabled='$contacts_enabled',call_menu_qualify_enabled='$call_menu_qualify_enabled',admin_list_counts='$admin_list_counts',allow_voicemail_greeting='$allow_voicemail_greeting',queuemetrics_socket='$queuemetrics_socket',queuemetrics_socket_url='$queuemetrics_socket_url',enhanced_disconnect_logging='$enhanced_disconnect_logging',allow_emails='$allow_emails',level_8_disable_add='$level_8_disable_add',queuemetrics_record_hold='$queuemetrics_record_hold',country_code_list_stats='$country_code_list_stats',queuemetrics_pause_type='$queuemetrics_pause_type',frozen_server_call_clear='$frozen_server_call_clear',callback_time_24hour='$callback_time_24hour',enable_languages='$enable_languages',language_method='$language_method',meetme_enter_login_filename='$meetme_enter_login_filename',meetme_enter_leave3way_filename='$meetme_enter_leave3way_filename',enable_did_entry_list_id='$enable_did_entry_list_id',enable_third_webform='$enable_third_webform',allow_chats='$allow_chats',chat_url='$chat_url',chat_timeout='$chat_timeout',agent_debug_logging='$agent_debug_logging',default_language='$default_language',agent_whisper_enabled='$agent_whisper_enabled',user_hide_realtime_enabled='$user_hide_realtime_enabled',usacan_phone_dialcode_fix='$usacan_phone_dialcode_fix',cache_carrier_stats_realtime='$cache_carrier_stats_realtime',log_recording_access='$log_recording_access',report_default_format='$report_default_format',alt_ivr_logging='$alt_ivr_logging',default_phone_code='$default_phone_code',admin_row_click='$admin_row_click',admin_screen_colors='$admin_screen_colors',ofcom_uk_drop_calc='$ofcom_uk_drop_calc',agent_screen_colors='$agent_screen_colors',script_remove_js='$script_remove_js',manual_auto_next='$manual_auto_next',user_new_lead_limit='$user_new_lead_limit',agent_xfer_park_3way='$agent_xfer_park_3way',agent_soundboards='$agent_soundboards',web_loader_phone_length='$web_loader_phone_length',agent_script='$agent_script',agent_chat_screen_colors='$agent_chat_screen_colors',enable_auto_reports='$enable_auto_reports',enable_pause_code_limits='$enable_pause_code_limits',enable_drop_lists='$enable_drop_lists',allow_ip_lists='$allow_ip_lists',system_ip_blacklist='$system_ip_blacklist',agent_push_events='$agent_push_events',agent_push_url='$agent_push_url',hide_inactive_lists='$hide_inactive_lists',allow_manage_active_lists='$allow_manage_active_lists',expired_lists_inactive='$expired_lists_inactive',did_system_filter='$did_system_filter',anyone_callback_inactive_lists='$anyone_callback_inactive_lists',enable_gdpr_download_deletion='$enable_gdpr_download_deletion',source_id_display='$source_id_display',agent_logout_link='$agent_logout_link',manual_dial_validation='$manual_dial_validation',mute_recordings='$mute_recordings',user_admin_redirect='$user_admin_redirect',list_status_modification_confirmation='$list_status_modification_confirmation',sip_event_logging='$sip_event_logging',call_quota_lead_ranking='$call_quota_lead_ranking',enable_second_script='$enable_second_script',enable_first_webform='$enable_first_webform',recording_buttons='$recording_buttons',opensips_cid_name='$opensips_cid_name',require_password_length='$require_password_length'$custom_dialplanSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+
+			if ( ($meetme_enter_login_filename != $SSmeetme_enter_login_filename) or ($meetme_enter_leave3way_filename != $SSmeetme_enter_leave3way_filename) )
+				{$reload_dialplan_on_servers=1;}
+
+			if ($reload_dialplan_on_servers > 0)
 				{
-				$custom_reports_slave_SQL='';
+				$stmtB="UPDATE system_settings set reload_timestamp=NOW();";
+				$rslt=mysql_to_mysqli($stmtB, $link);
+
+				$stmtC="UPDATE servers set rebuild_conf_files='Y' where active='Y' and active_asterisk_server='Y' and generate_vicidial_conf='Y';";
+				$rslt=mysql_to_mysqli($stmtC, $link);
 				}
-			$custom_reports_slave_SQL=substr($custom_reports_slave_SQL,0,-1);
-			$custom_reports_slave_SQL=",custom_reports_use_slave_db='$custom_reports_slave_SQL'";
-			}
-		$stmt="SELECT count(*) from servers where active='Y' and active_asterisk_server='Y';";
-		$rslt=mysql_to_mysqli($stmt, $link);
-		$row=mysqli_fetch_row($rslt);
-		$active_asterisk_servers = $row[0];
-		if ($row[0] < 1) {$row[0] = '1';}
-		if (preg_match("/_MXCS/",$SShosted_settings))
-			{
-			$maxcps_set = $SShosted_settings;
-			$maxcps_set = preg_replace("/MXAG\d+|_BUILD_|DRA|_MXTR\d+|.*_MXCS| /",'',$maxcps_set);
-			$maxcps_set = preg_replace('/[^0-9]/','',$maxcps_set);
-			$maxcps_set = ($maxcps_set * $row[0]);
-			if (strlen($maxcps_set)>0)
+
+			$update_gdpr_users_stmt="update vicidial_users set export_gdpr_leads='$enable_gdpr_download_deletion' where export_gdpr_leads>$enable_gdpr_download_deletion";
+			$update_gdpr_users_rslt=mysql_to_mysqli($update_gdpr_users_stmt, $link);
+			$update_gdpr_rows=mysqli_affected_rows($link);
+			if ($update_gdpr_rows>0) 
 				{
-				if ($outbound_calls_per_second > $maxcps_set)
-					{
-					if ($DB > 0) {echo "MAX CPS: |$outbound_calls_per_second|$maxcps_set|\n";}
-					$outbound_calls_per_second = $maxcps_set;
-					}
+				$event_notes="$update_gdpr_rows "._QXZ("GDPR-enabled users downgraded due to setting change");
 				}
+
+			### LOG INSERTION Admin Log Table ###
+			$SQL_log = "$stmt|$stmtB|$stmtC|";
+			$SQL_log = preg_replace('/;/', '', $SQL_log);
+			$SQL_log = addslashes($SQL_log);
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SYSTEMSETTINGS', event_type='MODIFY', record_id='system_settings', event_code='ADMIN MODIFY SYSTEM SETTINGS', event_sql=\"$SQL_log\", event_notes='$event_notes';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
 			}
-
-		$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysqli_real_escape_string($link, $webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db'$custom_reports_slave_SQL,webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt',noanswer_log='$noanswer_log',alt_log_server_ip='$alt_log_server_ip',alt_log_dbname='$alt_log_dbname',alt_log_login='$alt_log_login',alt_log_pass='$alt_log_pass',tables_use_alt_log_db='$tables_use_alt_log_db',did_agent_log='$did_agent_log',campaign_cid_areacodes_enabled='$campaign_cid_areacodes_enabled',pllb_grouping_limit='$pllb_grouping_limit',did_ra_extensions_enabled='$did_ra_extensions_enabled',expanded_list_stats='$expanded_list_stats',contacts_enabled='$contacts_enabled',call_menu_qualify_enabled='$call_menu_qualify_enabled',admin_list_counts='$admin_list_counts',allow_voicemail_greeting='$allow_voicemail_greeting',queuemetrics_socket='$queuemetrics_socket',queuemetrics_socket_url='$queuemetrics_socket_url',enhanced_disconnect_logging='$enhanced_disconnect_logging',allow_emails='$allow_emails',level_8_disable_add='$level_8_disable_add',queuemetrics_record_hold='$queuemetrics_record_hold',country_code_list_stats='$country_code_list_stats',queuemetrics_pause_type='$queuemetrics_pause_type',frozen_server_call_clear='$frozen_server_call_clear',callback_time_24hour='$callback_time_24hour',enable_languages='$enable_languages',language_method='$language_method',meetme_enter_login_filename='$meetme_enter_login_filename',meetme_enter_leave3way_filename='$meetme_enter_leave3way_filename',enable_did_entry_list_id='$enable_did_entry_list_id',enable_third_webform='$enable_third_webform',allow_chats='$allow_chats',chat_url='$chat_url',chat_timeout='$chat_timeout',agent_debug_logging='$agent_debug_logging',default_language='$default_language',agent_whisper_enabled='$agent_whisper_enabled',user_hide_realtime_enabled='$user_hide_realtime_enabled',usacan_phone_dialcode_fix='$usacan_phone_dialcode_fix',cache_carrier_stats_realtime='$cache_carrier_stats_realtime',log_recording_access='$log_recording_access',report_default_format='$report_default_format',alt_ivr_logging='$alt_ivr_logging',default_phone_code='$default_phone_code',admin_row_click='$admin_row_click',admin_screen_colors='$admin_screen_colors',ofcom_uk_drop_calc='$ofcom_uk_drop_calc',agent_screen_colors='$agent_screen_colors',script_remove_js='$script_remove_js',manual_auto_next='$manual_auto_next',user_new_lead_limit='$user_new_lead_limit',agent_xfer_park_3way='$agent_xfer_park_3way',agent_soundboards='$agent_soundboards',web_loader_phone_length='$web_loader_phone_length',agent_script='$agent_script',agent_chat_screen_colors='$agent_chat_screen_colors',enable_auto_reports='$enable_auto_reports',enable_pause_code_limits='$enable_pause_code_limits',enable_drop_lists='$enable_drop_lists',allow_ip_lists='$allow_ip_lists',system_ip_blacklist='$system_ip_blacklist',agent_push_events='$agent_push_events',agent_push_url='$agent_push_url',hide_inactive_lists='$hide_inactive_lists',allow_manage_active_lists='$allow_manage_active_lists',expired_lists_inactive='$expired_lists_inactive',did_system_filter='$did_system_filter',anyone_callback_inactive_lists='$anyone_callback_inactive_lists',enable_gdpr_download_deletion='$enable_gdpr_download_deletion',source_id_display='$source_id_display',agent_logout_link='$agent_logout_link',manual_dial_validation='$manual_dial_validation',mute_recordings='$mute_recordings',user_admin_redirect='$user_admin_redirect',list_status_modification_confirmation='$list_status_modification_confirmation',sip_event_logging='$sip_event_logging',call_quota_lead_ranking='$call_quota_lead_ranking',enable_second_script='$enable_second_script',enable_first_webform='$enable_first_webform',recording_buttons='$recording_buttons',opensips_cid_name='$opensips_cid_name'$custom_dialplanSQL;";
-		$rslt=mysql_to_mysqli($stmt, $link);
-
-		if ( ($meetme_enter_login_filename != $SSmeetme_enter_login_filename) or ($meetme_enter_leave3way_filename != $SSmeetme_enter_leave3way_filename) )
-			{$reload_dialplan_on_servers=1;}
-
-		if ($reload_dialplan_on_servers > 0)
-			{
-			$stmtB="UPDATE system_settings set reload_timestamp=NOW();";
-			$rslt=mysql_to_mysqli($stmtB, $link);
-
-			$stmtC="UPDATE servers set rebuild_conf_files='Y' where active='Y' and active_asterisk_server='Y' and generate_vicidial_conf='Y';";
-			$rslt=mysql_to_mysqli($stmtC, $link);
-			}
-
-		$update_gdpr_users_stmt="update vicidial_users set export_gdpr_leads='$enable_gdpr_download_deletion' where export_gdpr_leads>$enable_gdpr_download_deletion";
-		$update_gdpr_users_rslt=mysql_to_mysqli($update_gdpr_users_stmt, $link);
-		$update_gdpr_rows=mysqli_affected_rows($link);
-		if ($update_gdpr_rows>0) 
-			{
-			$event_notes="$update_gdpr_rows "._QXZ("GDPR-enabled users downgraded due to setting change");
-			}
-
-		### LOG INSERTION Admin Log Table ###
-		$SQL_log = "$stmt|$stmtB|$stmtC|";
-		$SQL_log = preg_replace('/;/', '', $SQL_log);
-		$SQL_log = addslashes($SQL_log);
-		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='SYSTEMSETTINGS', event_type='MODIFY', record_id='system_settings', event_code='ADMIN MODIFY SYSTEM SETTINGS', event_sql=\"$SQL_log\", event_notes='$event_notes';";
-		if ($DB) {echo "|$stmt|\n";}
-		$rslt=mysql_to_mysqli($stmt, $link);
 		}
 	else
 		{
@@ -22081,7 +22143,7 @@ if ($ADD==3)
 				{
 				echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><b>"._QXZ("PASSWORD IS ENCRYPTED, ONLY ENTER IN A PASSWORD BELOW IF YOU WANT TO CHANGE IT")."!</b></td></tr>\n";
 				}
-			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=pass size=50 maxlength=100 value=\"$pass\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\">$NWB#users-pass$NWE &nbsp; &nbsp; "._QXZ("Strength").": <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=pass size=50 maxlength=100 value=\"$pass\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\">$NWB#users-pass$NWE &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_length name=pass_length>0</span></font></td></tr>\n";
 
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Force Change Password").": </td><td align=left><select size=1 name=force_change_password><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value=\"$force_change_password\" SELECTED>"._QXZ("$force_change_password")."</option></select>$NWB#users-force_change_password$NWE</td></tr>\n";
 
@@ -35217,7 +35279,7 @@ if ($ADD==31111111111)
 		echo "</select>$NWB#phones-server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Agent Screen Login").": </td><td align=left><input type=text name=login size=15 maxlength=15 value=\"$row[6]\">$NWB#phones-login$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Login Password").": </td><td align=left><input type=text name=pass size=40 maxlength=100 value=\"$row[7]\">$NWB#phones-pass$NWE</td></tr>\n";
-		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Registration Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=conf_secret size=40 maxlength=100 value=\"$row[72]\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\">$NWB#phones-conf_secret$NWE &nbsp; &nbsp; "._QXZ("Strength").": <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Registration Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=conf_secret size=40 maxlength=100 value=\"$row[72]\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\">$NWB#phones-conf_secret$NWE &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_length name=pass_length>0</span></font></td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Set As Webphone").": </td><td align=left><select size=1 name=is_webphone><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option>Y_API_LAUNCH</option><option selected value='$row[74]'>"._QXZ("$row[74]")."</option></select>$NWB#phones-is_webphone$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Webphone Dialpad").": </td><td align=left><select size=1 name=webphone_dialpad><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='TOGGLE'>"._QXZ("TOGGLE")."</option><option value='TOGGLE_OFF'>"._QXZ("TOGGLE_OFF")."</option><option value=\"$row[78]\" SELECTED>"._QXZ("$row[78]")."</option></select>$NWB#phones-webphone_dialpad$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Webphone Auto-Answer").": </td><td align=left><select size=1 name=webphone_auto_answer><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED value='$row[80]'>"._QXZ("$row[80]")."</option></select>$NWB#phones-webphone_auto_answer$NWE</td></tr>\n";
@@ -35619,7 +35681,7 @@ if ($ADD==311111111111)
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Manager Update User").": </td><td align=left><input type=text name=ASTmgrUSERNAMEupdate size=20 maxlength=20 value=\"$ASTmgrUSERNAMEupdate\">$NWB#servers-ASTmgrUSERNAMEupdate$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Manager Listen User").": </td><td align=left><input type=text name=ASTmgrUSERNAMElisten size=20 maxlength=20 value=\"$ASTmgrUSERNAMElisten\">$NWB#servers-ASTmgrUSERNAMElisten$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Manager Send User").": </td><td align=left><input type=text name=ASTmgrUSERNAMEsend size=20 maxlength=20 value=\"$ASTmgrUSERNAMEsend\">$NWB#servers-ASTmgrUSERNAMEsend$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Conf File Secret").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=conf_secret size=40 maxlength=100 value=\"$conf_secret\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\">$NWB#servers-conf_secret$NWE &nbsp; &nbsp; "._QXZ("Strength").": <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Conf File Secret").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=conf_secret size=40 maxlength=100 value=\"$conf_secret\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\">$NWB#servers-conf_secret$NWE &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_length name=pass_length>0</span></font></td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Local GMT").": </td><td align=left><select size=1 name=local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option><option selected>$local_gmt</option></select> ("._QXZ("Do NOT Adjust for DST").")$NWB#servers-local_gmt$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("VMail Dump Exten").": </td><td align=left><input type=text name=voicemail_dump_exten size=20 maxlength=20 value=\"$voicemail_dump_exten\">$NWB#servers-voicemail_dump_exten$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("VMail Dump Exten NI").": </td><td align=left><input type=text name=voicemail_dump_exten_no_inst size=20 maxlength=20 value=\"$voicemail_dump_exten_no_inst\">$NWB#servers-voicemail_dump_exten_no_inst$NWE</td></tr>\n";
@@ -37845,7 +37907,7 @@ if ($ADD==311111111111111)
 			$ALLagent_count =		$rowx[2];
 			}
 
-		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,queuemetrics_socket,queuemetrics_socket_url,enhanced_disconnect_logging,allow_emails,level_8_disable_add,pass_hash_enabled,pass_key,pass_cost,disable_auto_dial,queuemetrics_record_hold,country_code_list_stats,reload_timestamp,queuemetrics_pause_type,frozen_server_call_clear,callback_time_24hour,allow_chats,chat_url,chat_timeout,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,agent_debug_logging,default_language,agent_whisper_enabled,user_hide_realtime_enabled,usacan_phone_dialcode_fix,cache_carrier_stats_realtime,oldest_logs_date,log_recording_access,report_default_format,alt_ivr_logging,default_phone_code,admin_row_click,admin_screen_colors,ofcom_uk_drop_calc,agent_screen_colors,script_remove_js,manual_auto_next,user_new_lead_limit,agent_xfer_park_3way,rec_prompt_count,agent_soundboards,web_loader_phone_length,agent_script,agent_chat_screen_colors,enable_auto_reports,enable_pause_code_limits,enable_drop_lists,allow_ip_lists,system_ip_blacklist,agent_push_events,agent_push_url,hide_inactive_lists,allow_manage_active_lists,expired_lists_inactive,did_system_filter,anyone_callback_inactive_lists,enable_gdpr_download_deletion,source_id_display,agent_logout_link,manual_dial_validation,mute_recordings,user_admin_redirect,list_status_modification_confirmation,sip_event_logging,call_quota_lead_ranking,enable_second_script,enable_first_webform,recording_buttons,opensips_cid_name from system_settings;";
+		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,queuemetrics_socket,queuemetrics_socket_url,enhanced_disconnect_logging,allow_emails,level_8_disable_add,pass_hash_enabled,pass_key,pass_cost,disable_auto_dial,queuemetrics_record_hold,country_code_list_stats,reload_timestamp,queuemetrics_pause_type,frozen_server_call_clear,callback_time_24hour,allow_chats,chat_url,chat_timeout,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,agent_debug_logging,default_language,agent_whisper_enabled,user_hide_realtime_enabled,usacan_phone_dialcode_fix,cache_carrier_stats_realtime,oldest_logs_date,log_recording_access,report_default_format,alt_ivr_logging,default_phone_code,admin_row_click,admin_screen_colors,ofcom_uk_drop_calc,agent_screen_colors,script_remove_js,manual_auto_next,user_new_lead_limit,agent_xfer_park_3way,rec_prompt_count,agent_soundboards,web_loader_phone_length,agent_script,agent_chat_screen_colors,enable_auto_reports,enable_pause_code_limits,enable_drop_lists,allow_ip_lists,system_ip_blacklist,agent_push_events,agent_push_url,hide_inactive_lists,allow_manage_active_lists,expired_lists_inactive,did_system_filter,anyone_callback_inactive_lists,enable_gdpr_download_deletion,source_id_display,agent_logout_link,manual_dial_validation,mute_recordings,user_admin_redirect,list_status_modification_confirmation,sip_event_logging,call_quota_lead_ranking,enable_second_script,enable_first_webform,recording_buttons,opensips_cid_name,require_password_length from system_settings;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		$version =						$row[0];
@@ -38030,6 +38092,7 @@ if ($ADD==311111111111111)
 		$enable_first_webform =			$row[179];
 		$recording_buttons =			$row[180];
 		$opensips_cid_name =			$row[181];
+		$require_password_length =		$row[182];
 
 		if ($pass_hash_enabled > 0) {$pass_hash_enabled = 'ENABLED';}
 		else {$pass_hash_enabled = 'DISABLED';}
@@ -38408,11 +38471,13 @@ if ($ADD==311111111111111)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("First Login Trigger").": </td><td align=left><input type=hidden name=first_login_trigger value=\"$first_login_trigger\"> "._QXZ("$first_login_trigger")." &nbsp; $NWB#settings-first_login_trigger$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Default Phone Registration Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_passX name=default_phone_registration_password size=40 maxlength=100 value=\"$default_phone_registration_password\" onkeyup=\"return pwdChanged('reg_passX','reg_pass_imgX');\">$NWB#settings-default_phone_registration_password$NWE &nbsp; &nbsp; "._QXZ("Strength").": <IMG id=reg_pass_imgX src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passX','reg_pass_imgX');\"></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("User Password Minimum Length").": </td><td align=left><select size=1 name=require_password_length><option>0</option><option>12</option><option>14</option><option>16</option><option>18</option><option>20</option><option>25</option><option>30</option><option>35</option><option>40</option><option>45</option><option>50</option><option>60</option><option>70</option><option selected>$require_password_length</option></select>$NWB#settings-require_password_length$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Default Phone Login Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_passY name=default_phone_login_password size=40 maxlength=100 value=\"$default_phone_login_password\" onkeyup=\"return pwdChanged('reg_passY','reg_pass_imgY');\">$NWB#settings-default_phone_login_password$NWE &nbsp; &nbsp; "._QXZ("Strength").": <IMG id=reg_pass_imgY src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passY','reg_pass_imgY');\"></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Default Phone Registration Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_passX name=default_phone_registration_password size=40 maxlength=100 value=\"$default_phone_registration_password\" onkeyup=\"return pwdChanged('reg_passX','reg_pass_imgX','pass_lengthX','$SSrequire_password_length');\">$NWB#settings-default_phone_registration_password$NWE &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_imgX src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passX','reg_pass_imgX','pass_lengthX','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_lengthX name=pass_lengthX>0</span></font></td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Default Server Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_passZ name=default_server_password size=40 maxlength=100 value=\"$default_server_password\" onkeyup=\"return pwdChanged('reg_passZ','reg_pass_imgZ');\">$NWB#settings-default_server_password$NWE &nbsp; &nbsp; "._QXZ("Strength").": <IMG id=reg_pass_imgZ src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passZ','reg_pass_imgZ');\"></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Default Phone Login Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_passY name=default_phone_login_password size=40 maxlength=100 value=\"$default_phone_login_password\" onkeyup=\"return pwdChanged('reg_passY','reg_pass_imgY','pass_lengthY','$SSrequire_password_length');\">$NWB#settings-default_phone_login_password$NWE &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_imgY src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passY','reg_pass_imgY','pass_lengthY','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_lengthY name=pass_lengthY>0</span></font></td></tr>\n";
+
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Default Server Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_passZ name=default_server_password size=40 maxlength=100 value=\"$default_server_password\" onkeyup=\"return pwdChanged('reg_passZ','reg_pass_imgZ','pass_lengthZ','$SSrequire_password_length');\">$NWB#settings-default_server_password$NWE &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_imgZ src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passZ','reg_pass_imgZ','pass_lengthZ','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_lengthZ name=pass_lengthZ>0</span></font></td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Report Default Format").": </td><td align=left><select size=1 name=report_default_format><option value=
 		'TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option><option selected value='$report_default_format'>"._QXZ("$report_default_format")."</option></select>$NWB#settings-report_default_format$NWE</td></tr>\n";
@@ -42954,8 +43019,14 @@ if ($ADD==999997)
 	$show_form=1;
 	if ( ($stage=='SUBMIT') or ($stage==_QXZ("SUBMIT")) )
 		{
-		if ( (strlen($pass) > 20) or (strlen($pass) < 2) or ($pass==$PHP_AUTH_PW) )
-			{echo _QXZ("Password has not been changed, please try again")." |1|" . strlen($pass);}
+		if ( (strlen($pass) > 100) or (strlen($pass) < 2) or ($pass==$PHP_AUTH_PW) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($pass)) ) )
+			{
+			echo _QXZ("Password has not been changed, please try again")." |1|" . strlen($pass);
+			if ($SSrequire_password_length > 0)
+				{
+				echo "<br>"._QXZ("Password must be at least $SSrequire_password_length characters long")."\n";
+				}
+			}
 		else
 			{
 			$pass_hash='';
@@ -43012,7 +43083,7 @@ if ($ADD==999997)
 		echo "<input type=hidden name=user value=\"$PHP_AUTH_USER\">\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("New Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=pass size=50 maxlength=100 onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\"> &nbsp; &nbsp; "._QXZ("Strength").": <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("New Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=pass size=50 maxlength=100 onkeyup=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\"> &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_length name=pass_length>0</span></font></td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=left colspan=2>"._QXZ("You are required to change your password before you can continue on to Administration. The longer the password is, the stronger it will be. Your password must be from 2 to 100 characters in length and cannot contain any characters that are not letters or numbers. Be sure that this password is something that you can remember, because as soon as you make this change you will be prompted to enter your new password to log back in to Administration")."</td></tr>\n";
 
@@ -43033,8 +43104,14 @@ if ($ADD==999996)
 		$show_form=1;
 		if ( ($stage=='SUBMIT') or ($stage==_QXZ("SUBMIT")) )
 			{
-			if ( (strlen($pass) > 20) or (strlen($pass) < 2) or ($pass==$PHP_AUTH_PW) )
-				{echo _QXZ("Password has not been changed, please try again")." |1|" . strlen($pass);}
+			if ( (strlen($pass) > 100) or (strlen($pass) < 2) or ($pass==$PHP_AUTH_PW) or ( ($SSrequire_password_length > 0) and ( ($SSrequire_password_length > strlen($default_phone_registration_password)) or ( ($SSrequire_password_length > strlen($default_phone_login_password)) or ( ($SSrequire_password_length > strlen($default_server_password)) ) ) or ($SSrequire_password_length > strlen($pass)) ) ) )
+				{
+				echo _QXZ("Password has not been changed, please try again")." |1|" . strlen($pass);
+				if ($SSrequire_password_length > 0)
+					{
+					echo "<br>"._QXZ("All passwords must be at least $SSrequire_password_length characters long")."\n";
+					}
+				}
 			else
 				{
 				$pass_hash='';
@@ -43107,17 +43184,17 @@ if ($ADD==999996)
 
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=left colspan=2>"._QXZ("You are required to change your password before you can continue on to Administration. The longer the password is, the stronger it will be. Your password must be from 2 to 100 characters in length and cannot contain any characters that are not letters or numbers. Be sure that this password is something that you can remember, because as soon as you complete this initial setup screen you will be prompted to enter your new password in again to log back in to Administration")."</td></tr>\n";
 
-			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("New Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=pass size=50 maxlength=100 onkeyup=\"return pwdChanged('reg_pass','reg_pass_img');\"> &nbsp; &nbsp; "._QXZ("Strength").": <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img');\"></td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("New Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=pass size=50 maxlength=100 onkeyup=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\"> &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_length name=pass_length>0</span></font></td></tr>\n";
 
 			echo "<tr><td colspan=2> &nbsp; </td></tr>\n";
 
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=left colspan=2>"._QXZ("The next three default passwords are defined in the System Settings section, and you can change them after you define them here. It is a good idea to make these passwords strong so that no one can hack into your phone accounts and place phone calls without you knowing. The default registration password used when new phones are added to the system as the SIP or IAX VOIP phone password. The default phone web login password used when new phones are added to the system, as the phone password that an agent would use in the ViciDial Agent Interface. The default server password used when new servers are added to the system for servers to communicate with each other.")."</td></tr>\n";
 
-			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Default Phone Registration Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_passX name=default_phone_registration_password size=40 maxlength=100 value=\"$SSdefault_phone_registration_password\" onkeyup=\"return pwdChanged('reg_passX','reg_pass_imgX');\"> &nbsp; &nbsp; "._QXZ("Strength").": <IMG id=reg_pass_imgX src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passX','reg_pass_imgX');\"></td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Default Phone Registration Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_passX name=default_phone_registration_password size=40 maxlength=100 value=\"$SSdefault_phone_registration_password\" onkeyup=\"return pwdChanged('reg_passX','reg_pass_imgX','pass_lengthX','$SSrequire_password_length');\"> &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_imgX src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passX','reg_pass_imgX','pass_lengthX','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_lengthX name=pass_lengthX>0</span></font></td></tr>\n";
 
-			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Default Phone Login Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_passY name=default_phone_login_password size=40 maxlength=100 value=\"$SSdefault_phone_login_password\" onkeyup=\"return pwdChanged('reg_passY','reg_pass_imgY');\"> &nbsp; &nbsp; "._QXZ("Strength").": <IMG id=reg_pass_imgY src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passY','reg_pass_imgY');\"></td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Default Phone Login Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_passY name=default_phone_login_password size=40 maxlength=100 value=\"$SSdefault_phone_login_password\" onkeyup=\"return pwdChanged('reg_passY','reg_pass_imgY','pass_lengthY','$SSrequire_password_length');\"> &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_imgY src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passY','reg_pass_imgY','pass_lengthY','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_lengthY name=pass_lengthY>0</span></font></td></tr>\n";
 
-			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Default Server Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_passZ name=default_server_password size=40 maxlength=100 value=\"$SSdefault_server_password\" onkeyup=\"return pwdChanged('reg_passZ','reg_pass_imgZ');\"> &nbsp; &nbsp; "._QXZ("Strength").": <IMG id=reg_pass_imgZ src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passZ','reg_pass_imgZ');\"></td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Default Server Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_passZ name=default_server_password size=40 maxlength=100 value=\"$SSdefault_server_password\" onkeyup=\"return pwdChanged('reg_passZ','reg_pass_imgZ','pass_lengthZ','$SSrequire_password_length');\"> &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_imgZ src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passZ','reg_pass_imgZ','pass_lengthZ','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_lengthZ name=pass_lengthZ>0</span></font></td></tr>\n";
 
 			echo "<tr><td colspan=2> &nbsp; </td></tr>\n";
 
