@@ -4620,12 +4620,13 @@ else
 # 200127-1620 - Changes to HELP content
 # 200204-2336 - Added opensips_cid_name settings
 # 200206-2154 - Added require_password_length system setting and display of password length in modify pages
+# 200210-1628 - Added link for KHOMP Admin Tool in admin utilities
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-737a';
-$build = '200206-2154';
+$admin_version = '2.14-738a';
+$build = '200210-1628';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -43281,6 +43282,16 @@ if ($ADD==999995)
 ######################
 if ($ADD==999994)
 	{
+	$KHOMP_enabled=0;
+	$stmt="SELECT count(*) from vicidial_settings_containers where container_id='KHOMPSETTINGS';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$rows_to_print = mysqli_num_rows($rslt);
+	if ($rows_to_print > 0) 
+		{
+		$rowx=mysqli_fetch_row($rslt);
+		$KHOMP_enabled = $rowx[0];
+		}
+
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -43301,6 +43312,8 @@ if ($ADD==999994)
 		echo "<LI><a href=\"AST_hangup_cause_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Hangup Cause Report")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_SIP_event_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("SIP Event Report")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_AMD_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("AMD Log Report")."</a></FONT>\n";
+		if ($KHOMP_enabled > 0)
+			{echo "<LI><a href=\"KHOMP_admin.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Dialer KHOMP Admin Tool")."</a></FONT>\n";}
 		echo "<LI><a href=\"asterisk_debug.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Asterisk Debug Page")."</a></FONT>\n";
 		echo "<LI><a href=\"call_report_export_carrier.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Export Calls Report Carrier")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_url_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("URL Log Report")."</a></FONT>\n";
