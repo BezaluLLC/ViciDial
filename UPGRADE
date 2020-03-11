@@ -482,6 +482,9 @@ OTHER CHANGES:
 	commercial(paid-for) solution. The code and documentation can be found
 	in the "extras/KHOMP" directory of the codebase.
 
+135. Added AMD Agent Route Options as a campaign option allowing you to set
+	the specific AMD responses for calls that should be routed to agents
+
 
 
 

@@ -926,7 +926,7 @@ queuemetrics_phone_environment VARCHAR(20) default '',
 auto_pause_precall ENUM('Y','N') default 'N',
 auto_pause_precall_code VARCHAR(6) default 'PRECAL',
 auto_resume_precall ENUM('Y','N') default 'N',
-manual_dial_cid ENUM('CAMPAIGN','AGENT_PHONE') default 'CAMPAIGN',
+manual_dial_cid ENUM('CAMPAIGN','AGENT_PHONE','AGENT_PHONE_OVERRIDE') default 'CAMPAIGN',
 post_phone_time_diff_alert VARCHAR(30) default 'DISABLED',
 custom_3way_button_transfer VARCHAR(30) default 'DISABLED',
 available_only_tally_threshold ENUM('DISABLED','LOGGED-IN_AGENTS','NON-PAUSED_AGENTS','WAITING_AGENTS') default 'DISABLED',
@@ -1038,7 +1038,8 @@ leave_vm_message_group_id VARCHAR(40) default '---NONE---',
 dial_timeout_lead_container VARCHAR(40) default 'DISABLED',
 amd_type ENUM('AMD','CPD','KHOMP') default 'AMD',
 vmm_daily_limit TINYINT(3) UNSIGNED default '0',
-opensips_cid_name VARCHAR(15) default ''
+opensips_cid_name VARCHAR(15) default '',
+amd_agent_route_options ENUM('ENABLED','DISABLED','PENDING') default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -4591,4 +4592,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1587',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1588',db_schema_update_date=NOW(),reload_timestamp=NOW();
