@@ -4625,18 +4625,20 @@ else
 # 200206-2154 - Added require_password_length system setting and display of password length in modify pages
 # 200210-1628 - Added link for KHOMP Admin Tool in admin utilities
 # 200310-0946 - Added AGENT_PHONE_OVERRIDE campaign option, and amd_agent_route_options
+# 200315-1126 - Added a SKIP option for the CID Group auto-rotate feature
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-739a';
-$build = '200310-1801';
+$admin_version = '2.14-740a';
+$build = '200315-1126';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
 $REPORTdate = date("Y-m-d");
 $EXPtestdate = date("Ymd");
 $CIDdate = date("mdHis");
+$dateint = date("YmdHis");
 while (strlen($CIDdate) > 9) {$CIDdate = substr("$CIDdate", 1);}
 
 $MT[0]='';
@@ -18003,7 +18005,66 @@ if ($ADD==496111111111)
 			{echo "<br>"._QXZ("CID GROUP NOT MODIFIED - Please go back and look at the data you entered")."\n";}
 		else
 			{
-			if ($stage == 'ADD')
+			if ($stage == 'SKIP')
+				{
+				$stmt="SELECT count(*) from vicidial_campaign_cid_areacodes where campaign_id='$cid_group_id' and outbound_cid='$outbound_cid' and active='Y' and cid_description NOT IN('NOROTATE','NO-ROTATE','NO_ROTATE','INACTIVE','DONOTUSE') and cid_description NOT LIKE \"%NOROTATE%\";";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				if ($row[0] < 1)
+					{echo "<br>"._QXZ("CID GROUP CID IS NOT ACTIVE - you cannot skip a CID that is not active")."<br>\n";}
+				else
+					{
+					if ( (strlen($cid_group_id) < 2) or (strlen($outbound_cid) < 6) )
+						{
+						echo "<br>"._QXZ("CID GROUP CID NOT SKIPPED - Please go back and look at the data you entered")."<br>\n";
+						if ($DB) {echo "|$cid_group_id|$outbound_cid|\n";}
+						}
+					else
+						{
+						### BEGIN set the next CID to active and the current one to inactive ###
+						$outbound_cid_next='';
+						$stmt="SELECT outbound_cid from vicidial_campaign_cid_areacodes where campaign_id='$cid_group_id' and outbound_cid!='$outbound_cid' and cid_description NOT IN('NOROTATE','NO-ROTATE','NO_ROTATE','INACTIVE','DONOTUSE') and cid_description NOT LIKE \"%NOROTATE%\" order by CAST(cid_description as SIGNED INTEGER) limit 1;";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$accids_to_print = mysqli_num_rows($rslt);
+						if ($accids_to_print > 0) 
+							{
+							$rowx=mysqli_fetch_row($rslt);
+							$outbound_cid_next =			$rowx[0];
+							}
+
+						if (strlen($outbound_cid_next) < 6) 
+							{
+							if ($DB) {echo "     skip CID Group rotate, next CID could not be found: $cid_group_id   ($stmt)\n";}
+							}
+						else
+							{
+							$stmtA="UPDATE vicidial_campaign_cid_areacodes SET cid_description='$dateint',active='Y' where campaign_id='$cid_group_id' and outbound_cid='$outbound_cid_next';";
+							$rslt=mysql_to_mysqli($stmtA, $link);
+							$affected_rowsA=mysqli_affected_rows($link);
+
+							$stmtB="UPDATE vicidial_cid_groups SET cid_auto_rotate_calls='0',cid_last_auto_rotate=NOW(),cid_auto_rotate_cid='$outbound_cid_next' where cid_group_id='$cid_group_id';";
+							$rslt=mysql_to_mysqli($stmtB, $link);
+							$affected_rowsB=mysqli_affected_rows($link);
+
+							$stmtC="UPDATE vicidial_campaign_cid_areacodes SET cid_description='NOROTATE',active='N' where campaign_id='$cid_group_id' and outbound_cid='$outbound_cid';";
+							$rslt=mysql_to_mysqli($stmtC, $link);
+							$affected_rowsC=mysqli_affected_rows($link);
+							### END set the next CID to active and the current one to inactive ###
+
+							echo "<br><B>"._QXZ("CID GROUP CID SKIPPED").": $cid_group_id - $outbound_cid - "._QXZ("NEXT CID").": $outbound_cid_next</B><br>\n";
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmtA|$stmtB|$stmtC|";
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CIDGROUPS', event_type='MODIFY', record_id='$cid_group_id', event_code='ADMIN SKIP CID GROUP ENTRY', event_sql=\"$SQL_log\", event_notes='CID: $outbound_cid - NEXT CID: $outbound_cid_next - affected rows: $affected_rowsA|$affected_rowsB|$affected_rowsC|';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+							}
+						}
+					}
+				}
+			elseif ($stage == 'ADD')
 				{
 				$stmt="SELECT count(*) from vicidial_campaign_cid_areacodes where campaign_id='$cid_group_id' and areacode='$areacode' and outbound_cid='$outbound_cid';";
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -37620,7 +37681,12 @@ if ($ADD==396111111111)
 			{
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("CID Auto Rotate Minutes").": </td><td align=left><input type=text name=cid_auto_rotate_minutes size=8 maxlength=7 value=\"$cid_auto_rotate_minutes\">$NWB#cid_groups-cid_auto_rotate_minutes$NWE</td></tr>\n";
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("CID Auto Rotate Minimum").": </td><td align=left><input type=text name=cid_auto_rotate_minimum size=8 maxlength=7 value=\"$cid_auto_rotate_minimum\">$NWB#cid_groups-cid_auto_rotate_minimum$NWE</td></tr>\n";
-			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("CID Auto Rotate Calls, CID and Time").": </td><td align=left><B>$cid_auto_rotate_calls - $cid_auto_rotate_cid - $cid_last_auto_rotate</B>$NWB#cid_groups-cid_auto_rotate_calls$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("CID Auto Rotate Calls, CID and Time").": </td><td align=left><B>$cid_auto_rotate_calls - $cid_auto_rotate_cid - $cid_last_auto_rotate </B>$NWB#cid_groups-cid_auto_rotate_calls$NWE\n";
+			if (strlen($cid_auto_rotate_cid) > 5)
+				{
+				echo "<font size=1> <BR> &nbsp; <a href=\"$PHP_SELF?ADD=496111111111&stage=SKIP&cid_group_id=$cid_group_id&outbound_cid=$cid_auto_rotate_cid\">"._QXZ("Skip and NOROTATE current CID")."</a></font>\n";
+				}
+			echo "</td></tr>\n";
 			}
 		else
 			{
