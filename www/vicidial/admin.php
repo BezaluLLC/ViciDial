@@ -4626,12 +4626,13 @@ else
 # 200210-1628 - Added link for KHOMP Admin Tool in admin utilities
 # 200310-0946 - Added AGENT_PHONE_OVERRIDE campaign option, and amd_agent_route_options
 # 200315-1126 - Added a SKIP option for the CID Group auto-rotate feature
+# 200318-1330 - Added a default bgcolor to the servers table on the Reports page, Issue #1203
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-740a';
-$build = '200315-1126';
+$admin_version = '2.14-741a';
+$build = '200318-1330';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -42796,12 +42797,12 @@ if ($ADD==999999)
 
 			if ($stage == 'TIME')
 				{
-				echo "<TR><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("SERVER")." <a href=\"$PHP_SELF?ADD=999999\">-</a></TD>";
+				echo "<TR bgcolor=#$SSstd_row4_background><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("SERVER")." <a href=\"$PHP_SELF?ADD=999999\">-</a></TD>";
 				echo "<TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("DESCRIPTION")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("IP")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("ACT")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("LOAD")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("CHAN")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("AGNT")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("DISK")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("TIME")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("VER")."</TD></TR>\n";
 				}
 			else
 				{
-				echo "<TR><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("SERVER")." <a href=\"$PHP_SELF?ADD=999999&stage=TIME\">+</a></TD>";
+				echo "<TR bgcolor=#$SSstd_row4_background><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("SERVER")." <a href=\"$PHP_SELF?ADD=999999&stage=TIME\">+</a></TD>";
 				echo "<TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("DESCRIPTION")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("IP")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("ACT")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("LOAD")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("CHAN")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("AGNT")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("DISK")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("OUTBOUND")."</TD><TD><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("INBOUND")."</TD></TR>\n";
 				}
 
@@ -42852,7 +42853,7 @@ if ($ADD==999999)
 					$row=mysqli_fetch_row($rslt);
 					$agnt =		$row[0];
 					}
-				$server_bgcolor='';
+				$server_bgcolor=' bgcolor="#B1E4BB"';
 				$FROZEN_output='';
 				if ($web_u_time > $u_time)
 					{$server_bgcolor=' bgcolor=red';}
@@ -42928,7 +42929,7 @@ if ($ADD==999999)
 
 			if ($stage == 'TIME')
 				{
-				echo "<TR><TD COLSPAN=2 NOWRAP> &nbsp; </TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("PHP Time")."</TD><TD COLSPAN=5 NOWRAP> &nbsp; </TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>" . date("Y-m-d H:i:s") . "</TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2> &nbsp; </TD></TR>";
+				echo "<TR bgcolor=\"#B1E4BB\"><TD COLSPAN=2 NOWRAP> &nbsp; </TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("PHP Time")."</TD><TD COLSPAN=5 NOWRAP> &nbsp; </TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>" . date("Y-m-d H:i:s") . "</TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2> &nbsp; </TD></TR>";
 
 				$stmt="SELECT NOW();";
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -42937,7 +42938,7 @@ if ($ADD==999999)
 				if ($dbtime_to_print)
 					{
 					$row=mysqli_fetch_row($rslt);
-					echo "<TR><TD COLSPAN=2 NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2> &nbsp; </TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("DB Time")."</TD><TD COLSPAN=5 NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2> &nbsp; </TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>$row[0]</TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2> &nbsp; </TD></TR>";
+					echo "<TR bgcolor=\"#B1E4BB\"><TD COLSPAN=2 NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2> &nbsp; </TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>"._QXZ("DB Time")."</TD><TD COLSPAN=5 NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2> &nbsp; </TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2>$row[0]</TD><TD NOWRAP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK size=2> &nbsp; </TD></TR>";
 					}
 				}
 			echo "</TABLE>\n";
