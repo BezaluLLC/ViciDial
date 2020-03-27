@@ -4627,12 +4627,13 @@ else
 # 200310-0946 - Added AGENT_PHONE_OVERRIDE campaign option, and amd_agent_route_options
 # 200315-1126 - Added a SKIP option for the CID Group auto-rotate feature
 # 200318-1330 - Added a default bgcolor to the servers table on the Reports page, Issue #1203
+# 200327-1715 - Translation fixes
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-741a';
-$build = '200318-1330';
+$admin_version = '2.14-742a';
+$build = '200327-1715';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6873,7 +6874,7 @@ if ($ADD==11)
 				if ($adl > $SSauto_dial_limit) {$hmm=1;}
 				else {echo "<option>$adl</option>\n";}
 				}
-			echo "</select>(0 = off)$NWB#campaigns-auto_dial_level$NWE</td></tr>\n";
+			echo "</select>(0 = "._QXZ("off").")$NWB#campaigns-auto_dial_level$NWE</td></tr>\n";
 			}
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Next Agent Call").": </td><td align=left><select size=1 name=next_agent_call><option value='random'>"._QXZ("random")."</option><option value='oldest_call_start'>"._QXZ("oldest_call_start")."</option><option value='oldest_call_finish'>"._QXZ("oldest_call_finish")."</option><option value='overall_user_level'>"._QXZ("overall_user_level")."</option><option value='campaign_rank'>"._QXZ("campaign_rank")."</option><option value='campaign_grade_random'>"._QXZ("campaign_grade_random")."</option><option value='fewest_calls'>"._QXZ("fewest_calls")."</option><option value='longest_wait_time'>"._QXZ("longest_wait_time")."</option><option value='overall_user_level_wait_time'>"._QXZ("overall_user_level_wait_time")."</option><option value='campaign_rank_wait_time'>"._QXZ("campaign_rank_wait_time")."</option><option value='fewest_calls_wait_time'>"._QXZ("fewest_calls_wait_time")."</option></select>$NWB#campaigns-next_agent_call$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Local Call Time").": </td><td align=left><select size=1 name=local_call_time>";
@@ -23974,7 +23975,7 @@ if ($ADD==31)
 				if ($adl > $SSauto_dial_limit) {$hmm=1;}
 				else {echo "<option>$adl</option>\n";}
 				}
-			echo "</select>(0 = off)$NWB#campaigns-auto_dial_level$NWE &nbsp; &nbsp; &nbsp; <input type=checkbox name=dial_level_override value=\"1\">"._QXZ("ADAPT OVERRIDE")."</td></tr>\n";
+			echo "</select>(0 = "._QXZ("off").")$NWB#campaigns-auto_dial_level$NWE &nbsp; &nbsp; &nbsp; <input type=checkbox name=dial_level_override value=\"1\">"._QXZ("ADAPT OVERRIDE")."</td></tr>\n";
 
 			echo "<tr bgcolor=#$SSalt_row1_background><td align=right>"._QXZ("Auto Dial Level Threshold").": </td><td align=left><select size=1 name=dial_level_threshold><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='LOGGED-IN_AGENTS'>"._QXZ("LOGGED-IN_AGENTS")."</option><option value='NON-PAUSED_AGENTS'>"._QXZ("NON-PAUSED_AGENTS")."</option><option value='WAITING_AGENTS'>"._QXZ("WAITING_AGENTS")."</option><option value='$dial_level_threshold' SELECTED>"._QXZ("$dial_level_threshold")."</option></select>$NWB#campaigns-dial_level_threshold$NWE &nbsp; &nbsp; &nbsp; "._QXZ("agents").": <select size=1 name=dial_level_threshold_agents><option SELECTED>$dial_level_threshold_agents</option><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option>19</option><option>20</option><option>25</option><option>30</option><option>35</option><option>40</option><option>50</option></select></td></tr>\n";
 
@@ -24156,7 +24157,7 @@ if ($ADD==31)
 
 		if ($SSoutbound_autodial_active > 0)
 			{
-			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Dial Timeout").": </td><td align=left><input type=text name=dial_timeout size=3 maxlength=3 value=\"$dial_timeout\"> <i>in seconds</i>$NWB#campaigns-dial_timeout$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Dial Timeout").": </td><td align=left><input type=text name=dial_timeout size=3 maxlength=3 value=\"$dial_timeout\"> <i>"._QXZ("in seconds")."</i>$NWB#campaigns-dial_timeout$NWE</td></tr>\n";
 			}
 
 		##### get container listings for dynamic dial timeout lead container pulldown menu
@@ -24272,7 +24273,7 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Campaign Rec Filename").": </td><td align=left><input type=text name=campaign_rec_filename size=50 maxlength=50 value=\"$campaign_rec_filename\">$NWB#campaigns-campaign_rec_filename$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Recording Delay").": </td><td align=left><input type=text name=allcalls_delay size=3 maxlength=3 value=\"$allcalls_delay\"> <i>in seconds</i>$NWB#campaigns-allcalls_delay$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Recording Delay").": </td><td align=left><input type=text name=allcalls_delay size=3 maxlength=3 value=\"$allcalls_delay\"> <i>"._QXZ("in seconds")."</i>$NWB#campaigns-allcalls_delay$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Routing Initiated Recording").": </td><td align=left><select size=1 name=routing_initiated_recordings><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$routing_initiated_recordings' SELECTED>"._QXZ("$routing_initiated_recordings")."</option></select>$NWB#campaigns-routing_initiated_recordings$NWE</td></tr>\n";
 
@@ -26542,7 +26543,7 @@ if ($ADD==34)
 				if ($adl > $SSauto_dial_limit) {$hmm=1;}
 				else {echo "<option>$adl</option>\n";}
 				}
-			echo "</select>(0 = off)$NWB#campaigns-auto_dial_level$NWE</td></tr>\n";
+			echo "</select>(0 = "._QXZ("off").")$NWB#campaigns-auto_dial_level$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#$SSalt_row1_background><td align=right>"._QXZ("Adapt Intensity Modifier").": </td><td align=left><select size=1 name=adaptive_intensity>\n";
 			$n=40;

@@ -388,7 +388,7 @@ if ($user_auth > 0)
 	$qc_only_user=0;
 	if ( ($reports_auth > 0) and ($auth < 1) )
 		{
-		$ADD=999999;
+		$ADD=999990;
 		$reports_only_user=1;
 		}
 	if ( ($qc_auth > 0) and ($reports_auth < 1) and ($auth < 1) )
