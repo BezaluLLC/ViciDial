@@ -16637,8 +16637,8 @@ if ($ACTION == 'CALLLOGview')
 		$ALLlead_id[$g] =		$row[7];
 		$ALLhangup_reason[$g] =	$row[8];
 		$ALLalt_dial[$g] =		$row[9];
-		$ALLin_out[$g] =		"OUT-AUTO";
-		if ($row[10] == 'MANUAL') {$ALLin_out[$g] = "OUT-MANUAL";}
+		$ALLin_out[$g] =		_QXZ("OUT-AUTO");
+		if ($row[10] == 'MANUAL') {$ALLin_out[$g] = _QXZ("OUT-MANUAL");}
 
 		$stmtA="SELECT first_name,last_name FROM vicidial_list WHERE lead_id='$ALLlead_id[$g]';";
 		$rsltA=mysql_to_mysqli($stmtA, $link);

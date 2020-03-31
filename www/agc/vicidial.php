@@ -4094,9 +4094,8 @@ $cb_display_days=999;
 if ($callback_display_days > 0)
 	{$cb_display_days=$callback_display_days;}
 
-$Cmonths = Array('0','January','February','March','April','May','June',
-				'July','August','September','October','November','December');
-$Cdays = Array('Sun','Mon','Tue','Wed','Thu','Fri','Sat');
+$Cmonths = Array('0',_QXZ('January'),_QXZ('February'),_QXZ('March'),_QXZ('April'),_QXZ('May'),_QXZ('June'),_QXZ('July'),_QXZ('August'),_QXZ('September'),_QXZ('October'),_QXZ('November'),_QXZ('December'));
+$Cdays = Array(_QXZ('Sun'),_QXZ('Mon'),_QXZ('Tue'),_QXZ('Wed'),_QXZ('Thu'),_QXZ('Fri'),_QXZ('Sat'));
 
 $CCAL_OUT = '';
 
