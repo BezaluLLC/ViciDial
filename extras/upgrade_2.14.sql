@@ -1177,3 +1177,7 @@ ALTER TABLE vicidial_campaigns MODIFY manual_dial_cid ENUM('CAMPAIGN','AGENT_PHO
 ALTER TABLE vicidial_campaigns ADD amd_agent_route_options ENUM('ENABLED','DISABLED','PENDING') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1588',db_schema_update_date=NOW() where db_schema_version < 1588;
+
+ALTER TABLE system_settings ADD user_account_emails ENUM('DISABLED','SEND_NO_PASS','SEND_WITH_PASS') DEFAULT 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1589',db_schema_update_date=NOW() where db_schema_version < 1589;
