@@ -492,6 +492,9 @@ OTHER CHANGES:
 	Modify page to send a shortcut URL link for the agent to more easily
 	log into the agent screen. Must be enabled in System Settings.
 
+138. Added new System Settings option to allow sending of any CallerID through
+	the Agent API for external_dial outbound calls.
+
 
 
 
