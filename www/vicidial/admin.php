@@ -3144,7 +3144,6 @@ if ($non_latin < 1)
 	$callback_list_calltime = preg_replace('/[^0-9a-zA-Z]/','',$callback_list_calltime);
 	$pause_after_next_call = preg_replace('/[^0-9a-zA-Z]/','',$pause_after_next_call);
 	$owner_populate = preg_replace('/[^0-9a-zA-Z]/','',$owner_populate);
-	$use_other_campaign_dnc = preg_replace('/[^0-9a-zA-Z]/','',$use_other_campaign_dnc);
 	$dead_max_dispo = preg_replace('/[^0-9a-zA-Z]/','',$dead_max_dispo);
 	$dispo_max_dispo = preg_replace('/[^0-9a-zA-Z]/','',$dispo_max_dispo);
 	$wrapup_bypass = preg_replace('/[^0-9a-zA-Z]/','',$wrapup_bypass);
@@ -3502,6 +3501,7 @@ if ($non_latin < 1)
 	$dial_timeout_lead_container = preg_replace('/[^-_0-9a-zA-Z]/','',$dial_timeout_lead_container);
 	$amd_type = preg_replace('/[^-_0-9a-zA-Z]/','',$amd_type);
 	$recording_buttons = preg_replace('/[^-_0-9a-zA-Z]/','',$recording_buttons);
+	$use_other_campaign_dnc = preg_replace('/[^-_0-9a-zA-Z]/','',$use_other_campaign_dnc);
 
 ### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_timeout_prompt = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$menu_timeout_prompt);
