@@ -4645,12 +4645,13 @@ else
 # 200401-1448 - Added email_agent_login_link.php feature
 # 200405-1805 - Added entries_per_page system setting option, fixed phone relocate conf file load issue
 # 200405-2339 - Added warnings for inactive voicemail server
+# 200406-0033 - Fix for Remote Agents where user deleted
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-746a';
-$build = '200405-2339';
+$admin_version = '2.14-747a';
+$build = '200406-0033';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -19609,8 +19610,11 @@ if ($ADD==6)
 				$stmtC="DELETE from vicidial_inbound_group_agents where user='$user';";
 				$rslt=mysql_to_mysqli($stmtC, $link);
 
+				$stmtD="UPDATE vicidial_remote_agents SET status='INACTIVE' where user_start='$user';";
+				$rslt=mysql_to_mysqli($stmtD, $link);
+
 				### LOG INSERTION Admin Log Table ###
-				$SQL_log = "$stmtA|$stmtB|$stmtC|";
+				$SQL_log = "$stmtA|$stmtB|$stmtC|$stmtD|";
 				$SQL_log = preg_replace('/;/', '', $SQL_log);
 				$SQL_log = addslashes($SQL_log);
 				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='DELETE', record_id='$user', event_code='ADMIN DELETE USER', event_sql=\"$SQL_log\", event_notes='';";
