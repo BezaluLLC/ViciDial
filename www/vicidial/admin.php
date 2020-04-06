@@ -4644,12 +4644,13 @@ else
 # 200331-1148 - Added list_custom_fields API function, and more translation fixes
 # 200401-1448 - Added email_agent_login_link.php feature
 # 200405-1805 - Added entries_per_page system setting option, fixed phone relocate conf file load issue
+# 200405-2339 - Added warnings for inactive voicemail server
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-745a';
-$build = '200405-1805';
+$admin_version = '2.14-746a';
+$build = '200405-2339';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6260,7 +6261,7 @@ if ( ($ADD==211111) or ($ADD==311111) or ($ADD==411111) or ($ADD==511111) or ($A
 if ( (strlen($ADD)==11) or (strlen($ADD)>12) or ( ($ADD > 1299) and ($ADD < 9999) ) or ($ADD=='141111111111') or ($ADD=='140111111111') or ($ADD=='341111111111') or ($ADD=='311111111111111') or ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($ADD<70)) or ($ADD=="4A") or ($ADD=="4B") or (strlen($ADD)==12) )
 	{
 	##### get server listing for dynamic pulldown 
-	$stmt="SELECT server_ip,server_description,external_server_ip from servers order by server_ip";
+	$stmt="SELECT server_ip,server_description,external_server_ip,active,active_asterisk_server from servers order by server_ip";
 	$rsltx=mysql_to_mysqli($stmt, $link);
 	$servers_to_print = mysqli_num_rows($rsltx);
 	$servers_list='';
@@ -6269,7 +6270,7 @@ if ( (strlen($ADD)==11) or (strlen($ADD)>12) or ( ($ADD > 1299) and ($ADD < 9999
 	while ($servers_to_print > $o)
 		{
 		$rowx=mysqli_fetch_row($rsltx);
-		$servers_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1] - $rowx[2]</option>\n";
+		$servers_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1] - $rowx[2] - "._QXZ("$rowx[3]")." - "._QXZ("$rowx[4]")."</option>\n";
 		$o++;
 		}
 	}
@@ -35799,7 +35800,7 @@ if ($ADD==311111111111)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("System Load").": </td><td align=left>$sysload - $cpu% &nbsp; $NWB#servers-sysload$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Live Channels").": </td><td align=left>$channels_total &nbsp; &nbsp; "._QXZ("Agents").": $live_agents &nbsp; $NWB#servers-channels_total$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Disk Usage").": </td><td align=left nowrap>$disk_usage &nbsp; $NWB#servers-disk_usage$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Disk Usage").": </td><td align=left><font size=0>$disk_usage</font> &nbsp; $NWB#servers-disk_usage$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("System Uptime").": </td><td align=left>$system_uptime &nbsp; $NWB#servers-system_uptime$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
@@ -38402,10 +38403,29 @@ if ($ADD==311111111111111)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Agent Screen Script").": </td><td align=left><input type=text name=agent_script size=50 maxlength=100 value=\"$agent_script\">$NWB#settings-agent_script$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active Voicemail Server").": </td><td align=left><select size=1 name=active_voicemail_server>\n";
+		$stmt="SELECT server_id,active,active_asterisk_server from servers where server_ip='$active_voicemail_server' $LOGadmin_viewable_groupsSQL limit 1;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$servers_to_print = mysqli_num_rows($rslt);
+		$avmMESSAGE='';
+		$AVMactive=0;
+		$AVMlinkA='';   $AVMlinkB='';
+		if ($servers_to_print > 0) 
+			{
+			$rowx=mysqli_fetch_row($rslt);
+			if ( ($rowx[1] == 'Y') and ($rowx[2] == 'Y') )
+				{$AVMactive++;}
+			$AVMlinkA = "<a href=\"$PHP_SELF?ADD=311111111111&server_id=$rowx[0]\">\n";
+			$AVMlinkB = "</a>";
+			}
+		if ($AVMactive < 1)
+			{
+			$avmMESSAGE .= "<BR><font size=2 color=red><b>"._QXZ("WARNING! The defined Active Voicemail Server is not an active server!")."</b></font>\n";
+			}
+
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>$AVMlinkA"._QXZ("Active Voicemail Server")."$AVMlinkB: </td><td align=left><select size=1 name=active_voicemail_server>\n";
 		echo "$servers_list";
 		echo "<option SELECTED>$active_voicemail_server</option>\n";
-		echo "</select>$NWB#settings-active_voicemail_server$NWE</td></tr>\n";
+		echo "</select>$NWB#settings-active_voicemail_server$NWE$avmMESSAGE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Allow Voicemail Greeting Chooser").": </td><td align=left><select size=1 name=allow_voicemail_greeting><option>1</option><option>0</option><option selected>$allow_voicemail_greeting</option></select>$NWB#settings-allow_voicemail_greeting$NWE</td></tr>\n";
 
