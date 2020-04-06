@@ -632,10 +632,11 @@
 # 200123-1554 - PHP7 fix for array
 # 200310-1116 - Added manual_dial_cid AGENT_PHONE_OVERRIDE option 
 # 200403-1539 - Added Manual Dial API outbound_cid function
+# 200406-0949 - Fix for manual dial box with no phone number, Issue #1188
 #
 
-$version = '2.14-601c';
-$build = '200403-1539';
+$version = '2.14-602c';
+$build = '200406-0949';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=91;
 $one_mysql_log=0;
@@ -4969,6 +4970,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var temp_webphone_call_seconds=0;
 	var SSenable_second_script='<?php echo $SSenable_second_script ?>';
 	var SSoutbound_cid_any='<?php echo $SSoutbound_cid_any ?>';
+	var NeWManuaLDiaLBox_open=0;
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -8052,6 +8054,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
                     document.getElementById("NoDiaLSelecteD").innerHTML = "<font size=\"2\" face=\"Arial,Helvetica\"><?php echo _QXZ("No-Call Dial:"); ?> " + nocall_dial_flag + " &nbsp; &nbsp; </font><a href=\"#\" onclick=\"NoDiaLSwitcH('');\"><font size=\"1\" face=\"Arial,Helvetica\"><?php echo _QXZ("Click Here to Activate"); ?></font></a>";
 					}
 				showDiv('NeWManuaLDiaLBox');
+				NeWManuaLDiaLBox_open=1;
 
 				agent_events('manual_dial_open', '', aec);   aec++;
 
@@ -8674,17 +8677,15 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		{
 		if (NMDclick=='YES')
 			{button_click_log = button_click_log + "" + SQLdate + "-----NeWManuaLDiaLCalLSubmiT---" + tempDiaLnow + "|";}
+		var new_dial_continue=1;
 		if (waiting_on_dispo > 0)
 			{
 			alert_box("<?php echo _QXZ("System Delay, Please try again"); ?><BR><font size=1><?php echo _QXZ("code:"); ?>" + agent_log_id + " - " + waiting_on_dispo + "</font>");
 			button_click_log = button_click_log + "" + SQLdate + "-----ManDialSystemDelay---" + agent_log_id + " " + waiting_on_dispo + "|";
+			new_dial_continue=0;
 			}
-		else
+		if (new_dial_continue > 0)
 			{
-			hideDiv('NeWManuaLDiaLBox');
-			hideDiv('SCForceDialBox');
-		//	document.getElementById("debugbottomspan").innerHTML = "DEBUG OUTPUT" + document.vicidial_form.MDPhonENumbeR.value + "|" + active_group_alias;
-
 			var sending_group_alias = 0;
 			var MDDiaLCodEform = document.vicidial_form.MDDiaLCodE.value;
 			var MDPhonENumbeRform = document.vicidial_form.MDPhonENumbeR.value;
@@ -8706,57 +8707,70 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			if (MDLeadIDEntryform.length > 0)
 				{MDLeadIDform = document.vicidial_form.MDLeadIDEntry.value;}
 
-			if ( (MDDiaLOverridEform.length > 0) && (active_ingroup_dial.length < 1) && (manual_dial_override_field == 'ENABLED') )
+			if ( (NeWManuaLDiaLBox_open > 0) && (MDPhonENumbeRform.length < 5) && (MDLeadIDform.length < 1) )
 				{
-				agent_dialed_number=1;
-				agent_dialed_type='MANUAL_OVERRIDE';
-				basic_originate_call(session_id,'NO','YES',MDDiaLOverridEform,'YES','','1','0');
+				button_click_log = button_click_log + "" + SQLdate + "-----ManDialEmptyPhone---" + agent_log_id + " " + NeWManuaLDiaLBox_open + " " + MDPhonENumbeRform + " " + MDLeadIDform + "|";
+				alert_box("<?php echo _QXZ("YOU MUST ENTER A PHONE NUMBER TO USE MANUAL DIAL"); ?>");
 				}
 			else
 				{
-				if (active_ingroup_dial.length < 1)
-					{
-					auto_dial_level=0;
-					manual_dial_in_progress=1;
-					agent_dialed_number=1;
-					}
-				MainPanelToFront();
+				hideDiv('NeWManuaLDiaLBox');
+				hideDiv('SCForceDialBox');
+				NeWManuaLDiaLBox_open=0;
+			//	document.getElementById("debugbottomspan").innerHTML = "DEBUG OUTPUT" + document.vicidial_form.MDPhonENumbeR.value + "|" + active_group_alias;
 
-				if ( (tempDiaLnow == 'PREVIEW') && (active_ingroup_dial.length < 1) )
+				if ( (MDDiaLOverridEform.length > 0) && (active_ingroup_dial.length < 1) && (manual_dial_override_field == 'ENABLED') )
 					{
-				//	alt_phone_dialing=1;
-					agent_dialed_type='MANUAL_PREVIEW';
-					buildDiv('DiaLLeaDPrevieW');
-					if (alt_phone_dialing == 1)
-						{buildDiv('DiaLDiaLAltPhonE');}
-					document.vicidial_form.LeadPreview.checked=true;
-				//	document.vicidial_form.DiaLAltPhonE.checked=true;
+					agent_dialed_number=1;
+					agent_dialed_type='MANUAL_OVERRIDE';
+					basic_originate_call(session_id,'NO','YES',MDDiaLOverridEform,'YES','','1','0');
 					}
 				else
 					{
-					agent_dialed_type='MANUAL_DIALNOW';
-					if ( (alt_number_dialing == 'SELECTED') || (alt_number_dialing == 'SELECTED_TIMER_ALT') || (alt_number_dialing == 'SELECTED_TIMER_ADDR3') )
+					if (active_ingroup_dial.length < 1)
 						{
-						document.vicidial_form.DiaLAltPhonE.checked=true;
+						auto_dial_level=0;
+						manual_dial_in_progress=1;
+						agent_dialed_number=1;
+						}
+					MainPanelToFront();
+
+					if ( (tempDiaLnow == 'PREVIEW') && (active_ingroup_dial.length < 1) )
+						{
+					//	alt_phone_dialing=1;
+						agent_dialed_type='MANUAL_PREVIEW';
+						buildDiv('DiaLLeaDPrevieW');
+						if (alt_phone_dialing == 1)
+							{buildDiv('DiaLDiaLAltPhonE');}
+						document.vicidial_form.LeadPreview.checked=true;
+					//	document.vicidial_form.DiaLAltPhonE.checked=true;
 						}
 					else
 						{
-						document.vicidial_form.LeadPreview.checked=false;
-						document.vicidial_form.DiaLAltPhonE.checked=false;
+						agent_dialed_type='MANUAL_DIALNOW';
+						if ( (alt_number_dialing == 'SELECTED') || (alt_number_dialing == 'SELECTED_TIMER_ALT') || (alt_number_dialing == 'SELECTED_TIMER_ADDR3') )
+							{
+							document.vicidial_form.DiaLAltPhonE.checked=true;
+							}
+						else
+							{
+							document.vicidial_form.LeadPreview.checked=false;
+							document.vicidial_form.DiaLAltPhonE.checked=false;
+							}
 						}
+					if (active_group_alias.length > 1)
+						{var sending_group_alias = 1;}
+
+					ManualDialNext("",MDLeadIDform,MDDiaLCodEform,MDPhonENumbeRform,MDLookuPLeaD,MDVendorLeadCode,sending_group_alias,MDTypeform);
 					}
-				if (active_group_alias.length > 1)
-					{var sending_group_alias = 1;}
 
-				ManualDialNext("",MDLeadIDform,MDDiaLCodEform,MDPhonENumbeRform,MDLookuPLeaD,MDVendorLeadCode,sending_group_alias,MDTypeform);
+				document.vicidial_form.MDPhonENumbeR.value = '';
+				document.vicidial_form.MDDiaLOverridE.value = '';
+				document.vicidial_form.MDLeadID.value = '';
+				document.vicidial_form.MDLeadIDEntry.value='';
+				document.vicidial_form.MDType.value = '';
+				document.vicidial_form.MDPhonENumbeRHiddeN.value = '';
 				}
-
-			document.vicidial_form.MDPhonENumbeR.value = '';
-			document.vicidial_form.MDDiaLOverridE.value = '';
-			document.vicidial_form.MDLeadID.value = '';
-			document.vicidial_form.MDLeadIDEntry.value='';
-			document.vicidial_form.MDType.value = '';
-			document.vicidial_form.MDPhonENumbeRHiddeN.value = '';
 			}
 		}
 
@@ -17639,6 +17653,7 @@ function phone_number_format(formatphone) {
 			AutoDial_ReSume_PauSe("VDADready");
 			}
 		hideDiv('NeWManuaLDiaLBox');
+		NeWManuaLDiaLBox_open=0;
 		document.vicidial_form.MDPhonENumbeR.value = '';
 		document.vicidial_form.MDDiaLOverridE.value = '';
 		document.vicidial_form.MDLeadID.value = '';
