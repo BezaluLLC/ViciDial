@@ -81,6 +81,7 @@
 # 190530-1013 - Added javascript for active list change feature
 # 191028-1739 - Added VM Message Groups
 # 200206-2314 - Added password length indicator
+# 200407-1534 - Added play_browser_sound javascript function for campaigns/ingroups
 #
 
 $stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add,allow_chats,enable_languages,admin_row_click,admin_screen_colors,user_new_lead_limit,user_territories_active,qc_features_active,agent_soundboards,enable_drop_lists,allow_ip_lists from system_settings;";
@@ -844,7 +845,6 @@ else
 		document.getElementById("audio_chooser_span").innerHTML = '';
 		}
 
-
 	function user_submit()
 		{
 		var user_field = document.getElementById("user");
@@ -852,6 +852,22 @@ else
 		document.userform.submit();
 		}
 
+	function play_browser_sound(temp_element,temp_volume)
+		{
+		var taskIndex = document.getElementById(temp_element).selectedIndex;
+		var taskValue = document.getElementById(temp_element).options[taskIndex].value;
+		var temp_selected_element = 'BAS_' + taskValue;
+		if ( (taskValue != '---NONE---') && (taskValue != '---DISABLED---') && (taskValue != '') )
+			{
+			var temp_audio = document.getElementById(temp_selected_element);
+			var taskVolIndex = document.getElementById(temp_volume).selectedIndex;
+			var taskVolValue = document.getElementById(temp_volume).options[taskVolIndex].value;
+			var temp_js_volume = (taskVolValue * .01);
+			temp_audio.volume = temp_js_volume;
+		//	alert(temp_selected_element + ' ' + temp_js_volume);
+			temp_audio.play();
+			}
+		}
 	<?php
 	}
 
