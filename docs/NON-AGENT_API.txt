@@ -1527,9 +1527,9 @@ reset_time -		4-100 characters, must be in valid 4-digit groups of 24-hour time 
 expiration_date -	10 characters, must be in valid date format YYYY-MM-DD (i.e. 2012-11-25)
 custom_fields_copy -	A valid list ID with custom fields to be copied to the list being updated, 2-14 digits
 custom_copy_method -	(APPEND,UPDATE,REPLACE) method for how to perform the 'custom_fields_copy', default is APPEND
-				APPEND - the only 100% safe method, will not result in any lost existing data, only adds fields not present in the new list
+				APPEND - the only 100% safe method, will not result in any lost existing data, only adds fields not present in the destination list
 				UPDATE - will only update existing custom fields definitions to match the source list, will not add new fields
-				REPLACE - will delete all existing custom field lead data in new list and start clean with new fields
+				REPLACE - will delete all existing custom field lead data in destination list and start clean with new fields
 NOTES: 
  - in order to set a field to empty('') set it equal to --BLANK--, i.e. "&drop_inbound_group=--BLANK--"
  - please use no special characters like apostrophes, quotes or amphersands
