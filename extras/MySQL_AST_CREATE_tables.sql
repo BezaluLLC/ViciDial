@@ -4300,6 +4300,16 @@ index (event_time),
 index (remote_address)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_lead_messages (
+lead_id INT(9) UNSIGNED NOT NULL,
+call_date DATETIME,
+user VARCHAR(20) DEFAULT NULL,
+played TINYINT(3) default '0',
+message_entry MEDIUMTEXT,
+index (lead_id),
+index (call_date)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -4628,4 +4638,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1593',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1594',db_schema_update_date=NOW(),reload_timestamp=NOW();
