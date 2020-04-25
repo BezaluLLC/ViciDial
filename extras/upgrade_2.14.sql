@@ -1238,3 +1238,7 @@ index (call_date)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1594',db_schema_update_date=NOW() where db_schema_version < 1594;
+
+ALTER TABLE vicidial_users MODIFY agentcall_manual ENUM('0','1','2','3','4','5') default '0';
+
+UPDATE system_settings SET db_schema_version='1595',db_schema_update_date=NOW() where db_schema_version < 1595;

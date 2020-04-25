@@ -569,7 +569,7 @@ agent_choose_ingroups ENUM('0','1') default '1',
 closer_campaigns TEXT,
 scheduled_callbacks ENUM('0','1') default '1',
 agentonly_callbacks ENUM('0','1') default '0',
-agentcall_manual ENUM('0','1') default '0',
+agentcall_manual ENUM('0','1','2','3','4','5') default '0',
 vicidial_recording ENUM('0','1') default '1',
 vicidial_transfers ENUM('0','1') default '1',
 delete_filters ENUM('0','1') default '0',
@@ -4638,4 +4638,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1594',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1595',db_schema_update_date=NOW(),reload_timestamp=NOW();

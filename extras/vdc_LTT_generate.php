@@ -4,9 +4,14 @@
 # Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to generate a list of wav audio files to play and then
-# insert a record into the vicidial_lead_messages table
+# insert a record into the vicidial_lead_messages table. This web page should be
+# launched from the agent webform or as an IFRAME in a script tab while on a
+# call(you can use Get-Call-Launch or the Trigger function to auto-launch a
+# webform).
 #
-# !!! IMPORTANT !!! You must customize this script to your needs!
+# !!! IMPORTANT !!! You must customize this script to your needs, and you must
+#                   have the campaign setting for 'Answering Machine Message'
+#                   set to 'LTTagent' for this to work.
 #
 ### Example line to put in the campaign WEBFORM field:
 # http://127.0.0.1/agc/vdc_LTT_generate.php
@@ -223,8 +228,12 @@ else
 	#     EXship07.wav =			'Goodbye'
 	#
 	# TEST URL: http://127.0.0.1/agc/vdc_LTT_generate.php?lead_id=101&user=6666&address3=ACME+Shipping&vendor_lead_code=A1234567&owner=876543&province=2020-12-01&security_phrase=123456.78&alt_phone=3125551212
+	#
 	# SAMPLE WEBFORM URL:
 	# VARhttp://127.0.0.1/agc/vdc_LTT_generate.php?lead_id=--A--lead_id--B--&user=--A--user--B--&address3=--A--address3--B--&vendor_lead_code=--A--vendor_lead_code--B--&owner=--A--owner--B--&province=--A--province--B--&security_phrase=--A--security_phrase--B--&alt_phone=--A--alt_phone--B--
+	#
+	# NOTES:
+	# After this page loads, the agent will just need to open the transfer panel and click on the 'VM' button to send the call to the customized message(or use a properly-configured HotKey to do so). Keep in mind that there are many campaign settings that can override this function, so you will want to disable 'AM Message Wildcards' and 'VM Message Groups', and also set the 'Answering Machine Message' to 'LTTagent' for this to work.
 	#
 
 	if ($address3 == 'ACME Shipping') {$EXship01a = 'EXshipACME.wav';}

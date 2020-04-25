@@ -876,6 +876,7 @@ else
 					{
 					@aryA = $sthA->fetchrow_array;
 					$TTS_text =		$aryA[0];
+					$TTS_text =~s/^DYN//gi;
 					}
 				$sthA->finish();
 				}
