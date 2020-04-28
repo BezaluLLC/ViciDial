@@ -1,12 +1,13 @@
 <?php
 # whiteboard_reports.php
 # 
-# Copyright (C) 2019  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
 #
 # A PHP file that is for generating the stats that are displayed in the whiteboard report.  Returns values.
 #
 # 171027-2352 - First build
 # 190302-1707 - Added code to exclude active calls from being counted with some stats
+# 200427-2225 - Added use of slave database, if activated, fixes Issue #1207
 #
 
 require("dbconnect_mysqli.php");
@@ -54,6 +55,38 @@ if (isset($_GET["target_per_team"]))			{$target_per_team=$_GET["target_per_team"
 	elseif (isset($_POST["target_per_team"]))	{$target_per_team=$_POST["target_per_team"];}
 if (isset($_GET["rpt_type"]))					{$rpt_type=$_GET["rpt_type"];}
 	elseif (isset($_POST["rpt_type"]))			{$rpt_type=$_POST["rpt_type"];}
+
+$report_name="Real-Time Whiteboard Report";
+
+#############################################
+##### START SYSTEM_SETTINGS LOOKUP #####
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,admin_screen_colors FROM system_settings;";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {$MAIN.="$stmt\n";}
+$qm_conf_ct = mysqli_num_rows($rslt);
+if ($qm_conf_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$non_latin =					$row[0];
+	$outbound_autodial_active =		$row[1];
+	$slave_db_server =				$row[2];
+	$reports_use_slave_db =			$row[3];
+	$SSenable_languages =			$row[4];
+	$SSlanguage_method =			$row[5];
+	$admin_screen_colors =			$row[6];
+	}
+##### END SETTINGS LOOKUP #####
+###########################################
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysqli_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect_mysqli.php");
+	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
+	}
+
 
 if (!$query_date) {$query_date=date("Y-m-d");}
 if (!$query_time) {$query_time="08:00:00";}
