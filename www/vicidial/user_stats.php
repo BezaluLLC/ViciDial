@@ -528,6 +528,7 @@ $download_link="$PHP_SELF?DB=$DB&pause_code_rpt=$pause_code_rpt&park_rpt=$park_r
 
 $MAIN.="<form action=$PHP_SELF method=GET name=vicidial_report id=vicidial_report>\n";
 $MAIN.="<input type=hidden name=DB value=\"$DB\">\n";
+$MAIN.="<input type=hidden name=NVAuser value=\"$NVAuser\">\n";
 $MAIN.="<input type=hidden name=did_id value=\"$did_id\">\n";
 $MAIN.="<input type=hidden name=did value=\"$did\">\n";
 $MAIN.="<input type=hidden name=pause_code_rpt value=\"$pause_code_rpt\">\n";
