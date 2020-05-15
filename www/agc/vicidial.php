@@ -638,10 +638,11 @@
 # 200408-0952 - Small fix for Issue #1188, allow dial override
 # 200425-0948 - Added 2nd option for agentcall_manual to disable FAST DIAL
 # 200512-1005 - Added hide_relogin_fields URL variable feature
+# 200515-1352 - Disable volume controls for Asterisk 13 servers, added options.php override setting(ast13_volume_override)
 #
 
-$version = '2.14-607c';
-$build = '200512-1005';
+$version = '2.14-608c';
+$build = '200515-1352';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=91;
 $one_mysql_log=0;
@@ -855,6 +856,7 @@ $local_consult_xfers	= '1';	# set to 1 to send consultative transfers from origi
 $clientDST				= '1';	# set to 1 to check for DST on server for agent time
 $no_delete_sessions		= '1';	# set to 1 to not delete sessions at logout
 $volumecontrol_active	= '1';	# set to 1 to allow agents to alter volume of channels
+$ast13_volume_override	= '0';	# set to 1 to allow agent to use volume controls even on Asterisk 13 servers
 $PreseT_DiaL_LinKs		= '0';	# set to 1 to show a DIAL link for Dial Presets
 $LogiNAJAX				= '1';	# set to 1 to do lookups on campaigns for login
 $HidEMonitoRSessionS	= '1';	# set to 1 to hide remote monitoring channels from "session calls"
@@ -3230,6 +3232,15 @@ else
 		$external_web_socket_url =	$row[2];
 		if ( ($use_external_server_ip=='Y') and (strlen($external_web_socket_url) > 5) )
 			{$web_socket_url = $external_web_socket_url;}
+		$major_version = explode('.',$asterisk_version);
+		if ($major_version[0] >= 13)
+			{
+			if ( ($volumecontrol_active > 0) and ($ast13_volume_override < 1) )
+				{
+				echo "<!-- ASTERISK 13 VOLUME CONTROLS DISABLED:  |$asterisk_version($major_version[0])|$volumecontrol_active|$ast13_volume_override| -->\n";
+				$volumecontrol_active=0;
+				}
+			}
 
 		if ($protocol == 'EXTERNAL')
 			{
