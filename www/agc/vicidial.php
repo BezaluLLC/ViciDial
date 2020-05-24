@@ -639,10 +639,11 @@
 # 200425-0948 - Added 2nd option for agentcall_manual to disable FAST DIAL
 # 200512-1005 - Added hide_relogin_fields URL variable feature
 # 200515-1352 - Disable volume controls for Asterisk 13 servers, added options.php override setting(ast13_volume_override)
+# 200524-1021 - Fix for agentchannel not populating while volumecontrol_active disabled
 #
 
-$version = '2.14-608c';
-$build = '200515-1352';
+$version = '2.14-609c';
+$build = '200524-1021';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=91;
 $one_mysql_log=0;
@@ -856,7 +857,7 @@ $local_consult_xfers	= '1';	# set to 1 to send consultative transfers from origi
 $clientDST				= '1';	# set to 1 to check for DST on server for agent time
 $no_delete_sessions		= '1';	# set to 1 to not delete sessions at logout
 $volumecontrol_active	= '1';	# set to 1 to allow agents to alter volume of channels
-$ast13_volume_override	= '1';	# set to 1 to allow agent to use volume controls even on Asterisk 13 servers
+$ast13_volume_override	= '0';	# set to 1 to allow agent to use volume controls even on Asterisk 13 servers
 $PreseT_DiaL_LinKs		= '0';	# set to 1 to show a DIAL link for Dial Presets
 $LogiNAJAX				= '1';	# set to 1 to do lookups on campaigns for login
 $HidEMonitoRSessionS	= '1';	# set to 1 to hide remote monitoring channels from "session calls"
@@ -6640,29 +6641,32 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 											{custchannellive++;}
 										}
 
-									if (volumecontrol_active > 0)
+									if ( (protocol != 'EXTERNAL') && (protocol != 'Local') )
 										{
-										if ( (protocol != 'EXTERNAL') && (protocol != 'Local') )
+										var regAGNTchan = new RegExp(protocol + '/' + extension,"g");
+										if  ( (channelfieldA.match(regAGNTchan)) && (agentchannel != channelfieldA) )
 											{
-											var regAGNTchan = new RegExp(protocol + '/' + extension,"g");
-											if  ( (channelfieldA.match(regAGNTchan)) && (agentchannel != channelfieldA) )
-												{
-												agentchannel = channelfieldA;
+											agentchannel = channelfieldA;
 
-                                                document.getElementById("AgentMuteSpan").innerHTML = "<a href=\"#CHAN-" + agentchannel + "\" onclick=\"volume_control('MUTING','" + agentchannel + "','AgenT');return false;\"><img src=\"./images/<?php echo _QXZ("vdc_volume_MUTE.gif") ?>\" border=\"0\" /></a>";
+											if (volumecontrol_active > 0)
+												{
+												document.getElementById("AgentMuteSpan").innerHTML = "<a href=\"#CHAN-" + agentchannel + "\" onclick=\"volume_control('MUTING','" + agentchannel + "','AgenT');return false;\"><img src=\"./images/<?php echo _QXZ("vdc_volume_MUTE.gif") ?>\" border=\"0\" /></a>";
 												}
 											}
-										else							
-											{
-											if (agentchannel.length < 3)
-												{
-												agentchannel = channelfieldA;
-
-                                                document.getElementById("AgentMuteSpan").innerHTML = "<a href=\"#CHAN-" + agentchannel + "\" onclick=\"volume_control('MUTING','" + agentchannel + "','AgenT');return false;\"><img src=\"./images/<?php echo _QXZ("vdc_volume_MUTE.gif") ?>\" border=\"0\" /></a>";
-												}
-											}
-							//			document.getElementById("agentchannelSPAN").innerHTML = agentchannel;
 										}
+									else							
+										{
+										if (agentchannel.length < 3)
+											{
+											agentchannel = channelfieldA;
+
+											if (volumecontrol_active > 0)
+												{
+												document.getElementById("AgentMuteSpan").innerHTML = "<a href=\"#CHAN-" + agentchannel + "\" onclick=\"volume_control('MUTING','" + agentchannel + "','AgenT');return false;\"><img src=\"./images/<?php echo _QXZ("vdc_volume_MUTE.gif") ?>\" border=\"0\" /></a>";
+												}
+											}
+										}
+						//			document.getElementById("agentchannelSPAN").innerHTML = agentchannel;
 
                 //      document.getElementById("debugbottomspan").innerHTML = debugspan + '<br />' + channelfieldA + '|' + lastcustchannel + '|' + custchannellive + '|' + LMAcontent_change + '|' + LMAalter;
 
