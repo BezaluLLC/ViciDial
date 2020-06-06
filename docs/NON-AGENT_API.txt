@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2020-05-22
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2020-06-06
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -156,6 +156,7 @@ Changes:
 191114-1637 - Added remove_from_hopper option to update_lead function
 200331-1207 - Added list_custom_fields function
 200418-0837 - Added custom_copy_method option for the add_list function
+200606-0938 - Added more settings to add_list & update_list
 
 
 API Functions use the 'function' variable
@@ -1462,6 +1463,8 @@ web_form_address -	6-100 characters
 web_form_address_two -	6-100 characters
 web_form_address_three - 6-100 characters
 reset_time -		4-100 characters, must be in valid 4-digit groups of 24-hour time (i.e. 0900-1700-2359)
+tz_method -		one of the following: COUNTRY_AND_AREA_CODE,POSTAL_CODE,NANPA_PREFIX,OWNER_TIME_ZONE_CODE default is COUNTRY_AND_AREA_CODE
+local_call_time -	must be a valid call time ID in the system or 'campaign' which is the default
 expiration_date -	10 characters, must be in valid date format YYYY-MM-DD (i.e. 2012-11-25)
 custom_fields_copy -	A valid list ID with custom fields to be copied to this new list, 2-14 digits
 custom_copy_method -	(APPEND,UPDATE,REPLACE) method for how to perform the 'custom_fields_copy', default is APPEND
@@ -1487,6 +1490,8 @@ ERROR: add_list SCRIPT DOES NOT EXIST, THIS IS AN OPTIONAL FIELD - 6666|TESTSCRI
 ERROR: add_list IN-GROUP DOES NOT EXIST, THIS IS AN OPTIONAL FIELD - 6666|TEST_IN8
 ERROR: add_list RESET TIME IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|012
 ERROR: add_list EXPIRATION DATE IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|012
+ERROR: add_list LOCAL CALL TIME DOES NOT EXIST, THIS IS AN OPTIONAL FIELD - 6666|012
+ERROR: add_list TIME ZONE METHOD IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|012
 ERROR: add_list CUSTOM FIELDS LIST ID TO COPY FROM DOES NOT EXIST, THIS IS AN OPTIONAL FIELD - 6666|1101|1102|0
 ERROR: add_list CUSTOM FIELDS LIST ID TO COPY FROM HAS NO CUSTOM FIELDS, THIS IS AN OPTIONAL FIELD - 6666|1101|1102|0
 ERROR: add_list USER DOES NOT HAVE PERMISSION TO MODIFY CUSTOM FIELDS, THIS IS AN OPTIONAL FIELD - 6666|1101|1102|0
@@ -1525,6 +1530,8 @@ web_form_address -	6-100 characters
 web_form_address_two -	6-100 characters
 web_form_address_three - 6-100 characters
 reset_time -		4-100 characters, must be in valid 4-digit groups of 24-hour time (i.e. 0900-1700-2359)
+tz_method -		one of the following: COUNTRY_AND_AREA_CODE,POSTAL_CODE,NANPA_PREFIX,OWNER_TIME_ZONE_CODE default is COUNTRY_AND_AREA_CODE
+local_call_time -	must be a valid call time ID in the system or 'campaign' which is the default
 expiration_date -	10 characters, must be in valid date format YYYY-MM-DD (i.e. 2012-11-25)
 custom_fields_copy -	A valid list ID with custom fields to be copied to the list being updated, 2-14 digits
 custom_copy_method -	(APPEND,UPDATE,REPLACE) method for how to perform the 'custom_fields_copy', default is APPEND
@@ -1560,6 +1567,8 @@ ERROR: update_list OUTBOUND CID MUST BE FROM 6 TO 18 DIGITS, THIS IS AN OPTIONAL
 ERROR: update_list ANSWERING MACHINE MESSAGE MUST LESS THAN 101 DIGITS, THIS IS AN OPTIONAL FIELD - 6666|123...
 ERROR: update_list RESET TIME IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|012
 ERROR: update_list EXPIRATION DATE IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|012
+ERROR: update_list TIME ZONE METHOD IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|012
+ERROR: update_list LOCAL CALL TIME DOES NOT EXIST, THIS IS AN OPTIONAL FIELD - 6666|012
 NOTICE: update_list NO UPDATES DEFINED - 6666|
 SUCCESS: update_list LIST HAS BEEN UPDATED - 6666|1101
 NOTICE: update_list LEADS IN LIST HAVE BEEN RESET - 6666|1101|324

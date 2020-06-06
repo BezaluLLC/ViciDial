@@ -148,10 +148,11 @@
 # 200502-0858 - Fix for update_lead --BLANK-- issue with custom fields
 # 200508-1503 - Fix for PHP7 issues
 # 200525-0118 - Fix for middle_initial --BLANK--
+# 200606-0938 - Added more settings to add_list & update_list
 #
 
-$version = '2.14-125';
-$build = '200525-0118';
+$version = '2.14-126';
+$build = '200606-0938';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -4443,6 +4444,8 @@ if ($function == 'update_list')
 					$resettimeSQL='';
 					$expiration_dateSQL='';
 					$list_descriptionSQL='';
+					$tz_methodSQL='';
+					$local_call_timeSQL='';
 					if (strlen($campaign_id) > 0)
 						{
 						$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
@@ -4654,8 +4657,45 @@ if ($function == 'update_list')
 						else
 							{$list_descriptionSQL = " ,list_description='$list_description'";}
 						}
+					if (strlen($tz_method) > 0)
+						{
+						if (preg_match("/^COUNTRY_AND_AREA_CODE$|^POSTAL_CODE$|^NANPA_PREFIX$|^OWNER_TIME_ZONE_CODE$/",$tz_method))
+							{$tz_methodSQL = " ,time_zone_setting='$tz_method'";}
+						else
+							{
+							$result = 'ERROR';
+							$result_reason = "update_list TIME ZONE METHOD IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+							$data = "$tz_method";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						}
+					if (strlen($local_call_time) > 0)
+						{
+						if (preg_match("/^campaign$/",$local_call_time))
+							{$local_call_timeSQL = " ,local_call_time='$local_call_time'";}
+						else
+							{
+							$stmt="SELECT count(*) from vicidial_call_times where call_time_id='$local_call_time';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$row=mysqli_fetch_row($rslt);
+							$call_time_exists=$row[0];
+							if ($call_time_exists < 1)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_list LOCAL CALL TIME DOES NOT EXIST, THIS IS AN OPTIONAL FIELD";
+								$data = "$local_call_time";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$local_call_timeSQL = " ,local_call_time='$local_call_time'";}
+							}
+						}
 
-					$updateSQL = "$webformthreeSQL$webformtwoSQL$webformSQL$ammessageSQL$outboundcidSQL$activeSQL$listnameSQL$campaignSQL$scriptSQL$dropingroupSQL$resettimeSQL$expiration_dateSQL$list_descriptionSQL";
+					$updateSQL = "$webformthreeSQL$webformtwoSQL$webformSQL$ammessageSQL$outboundcidSQL$activeSQL$listnameSQL$campaignSQL$scriptSQL$dropingroupSQL$resettimeSQL$expiration_dateSQL$list_descriptionSQL$tz_methodSQL$local_call_timeSQL";
 
 					if (strlen($updateSQL)< 3)
 						{
@@ -5531,6 +5571,8 @@ if ($function == 'add_list')
 							$webformtwoSQL='';
 							$webformthreeSQL='';
 							$list_descriptionSQL='';
+							$tz_methodSQL='';
+							$local_call_timeSQL='';
 							if (strlen($web_form_address) > 0)
 								{
 								if (preg_match("/%3A%2F%2F/",$web_form_address)) 
@@ -5576,8 +5618,40 @@ if ($function == 'add_list')
 								else
 									{$list_descriptionSQL = " ,list_description='$list_description'";}
 								}
+							if (strlen($tz_method) > 0)
+								{
+								if (preg_match("/^COUNTRY_AND_AREA_CODE$|^POSTAL_CODE$|^NANPA_PREFIX$|^OWNER_TIME_ZONE_CODE$/",$tz_method))
+									{$tz_methodSQL = " ,time_zone_setting='$tz_method'";}
+								else
+									{
+									$result = 'ERROR';
+									$result_reason = "add_list TIME ZONE METHOD IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+									$data = "$tz_method";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								}
+							if ( (strlen($local_call_time) > 0) and (!preg_match("/^campaign$/",$local_call_time)) )
+								{
+								$stmt="SELECT count(*) from vicidial_call_times where call_time_id='$local_call_time';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								$row=mysqli_fetch_row($rslt);
+								$call_time_exists=$row[0];
+								if ($call_time_exists < 1)
+									{
+									$result = 'ERROR';
+									$result_reason = "add_list LOCAL CALL TIME DOES NOT EXIST, THIS IS AN OPTIONAL FIELD";
+									$data = "$local_call_time";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$local_call_timeSQL = " ,local_call_time='$local_call_time'";}
+								}
 
-							$stmt="INSERT INTO vicidial_lists SET list_id='$list_id', list_name='$list_name', campaign_id='$campaign_id', active='$active', campaign_cid_override='$outbound_cid', agent_script_override='$script', am_message_exten_override='$am_message', drop_inbound_group_override='$drop_inbound_group', reset_time='$reset_time', expiration_date='$expiration_date' $webformSQL $webformtwoSQL $webformthreeSQL $list_descriptionSQL;";
+							$stmt="INSERT INTO vicidial_lists SET list_id='$list_id', list_name='$list_name', campaign_id='$campaign_id', active='$active', campaign_cid_override='$outbound_cid', agent_script_override='$script', am_message_exten_override='$am_message', drop_inbound_group_override='$drop_inbound_group', reset_time='$reset_time', expiration_date='$expiration_date' $webformSQL $webformtwoSQL $webformthreeSQL $list_descriptionSQL $tz_methodSQL $local_call_timeSQL;";
 							$rslt=mysql_to_mysqli($stmt, $link);
 							if ($DB) {echo "|$stmt|\n";}
 
