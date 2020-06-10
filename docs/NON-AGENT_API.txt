@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2020-06-06
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2020-06-10
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -157,6 +157,7 @@ Changes:
 200331-1207 - Added list_custom_fields function
 200418-0837 - Added custom_copy_method option for the add_list function
 200606-0938 - Added more settings to add_list & update_list
+200610-1447 - Added duration option to recording_lookup function
 
 
 API Functions use the 'function' variable
@@ -359,6 +360,7 @@ uniqueid -		uniqueid of the call, works best included with another search field
 SETTINGS FIELDS-
 stage -			the format of the exported data: csv, tab, pipe(default)
 header -		include a header(YES) or not(NO). This is optional, default is not to include a header
+duration -		Y or N, default is N. Includes the duration of the recording in the output(in seconds), before the location
 
 NOTES- 
 There is a hard limit of 100000 results
@@ -375,6 +377,9 @@ A SUCCESS response will not show "SUCCESS", but instead will just print the resu
 start_time|user|recording_id|lead_id|location
 2010-12-03 12:00:01|1000|534820|876409|http://server/path/to/recording/20101203_120000_1234567890_1000-all.wav
 
+If 'duration' is enabled, this will be the format used:
+start_time|user|recording_id|lead_id|duration|location
+2010-12-03 12:00:01|1000|534820|876409|63|http://server/path/to/recording/20101203_120000_1234567890_1000-all.wav
 
 
 

@@ -149,10 +149,11 @@
 # 200508-1503 - Fix for PHP7 issues
 # 200525-0118 - Fix for middle_initial --BLANK--
 # 200606-0938 - Added more settings to add_list & update_list
+# 200610-1447 - Added duration option to recording_lookup function
 #
 
-$version = '2.14-126';
-$build = '200606-0938';
+$version = '2.14-127';
+$build = '200610-1447';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -533,6 +534,8 @@ if (isset($_GET["custom_order"]))				{$custom_order=$_GET["custom_order"];}
 	elseif (isset($_POST["custom_order"]))		{$custom_order=$_POST["custom_order"];}
 if (isset($_GET["custom_copy_method"]))				{$custom_copy_method=$_GET["custom_copy_method"];}
 	elseif (isset($_POST["custom_copy_method"]))	{$custom_copy_method=$_POST["custom_copy_method"];}
+if (isset($_GET["duration"]))			{$duration=$_GET["duration"];}
+	elseif (isset($_POST["duration"]))	{$duration=$_POST["duration"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -761,6 +764,7 @@ if ($non_latin < 1)
 	$list_description=preg_replace('/[^- \+\.\:\/\@\?\&\_0-9a-zA-Z]/','',$list_description);
 	$custom_order = preg_replace('/[^-_0-9a-zA-Z]/','',$custom_order);
 	$custom_copy_method = preg_replace('/[^-_0-9a-zA-Z]/','',$custom_copy_method);
+	$duration = preg_replace('/[^-_0-9a-zA-Z]/','',$duration);
 	}
 else
 	{
@@ -6810,7 +6814,7 @@ if ($function == 'recording_lookup')
 				}
 			else
 				{
-				$stmt="SELECT start_time,user,recording_id,lead_id,location from recording_log where $search_SQL order by start_time limit 100000;";
+				$stmt="SELECT start_time,user,recording_id,lead_id,location,start_epoch,end_epoch,length_in_sec from recording_log where $search_SQL order by start_time limit 100000;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$rec_recs = mysqli_num_rows($rslt);
 				if ($DB>0) {echo "DEBUG: recording_lookup query - $rec_recs|$stmt\n";}
@@ -6847,8 +6851,26 @@ if ($function == 'recording_lookup')
 						$RLrecording_id =	$row[2];
 						$RLlead_id =		$row[3];
 						$RLlocation =		$row[4];
+						$Rduration='';
+						if (preg_match("/Y/",$duration))
+							{
+							$Rduration .= "$DL";
+							$temp_duration=0;
+							if ($row[7] > 0) 
+								{$temp_duration = $row[7];}
+							else
+								{
+								$calc_duration = ($row[6] - $row[5]);
+								if ( ($calc_duration > 0) and ($calc_duration < 86400) )
+									{
+									if ($DB > 0) {echo "DEBUG: CALC duration";}
+									$temp_duration = $calc_duration;
+									}
+								}
+							$Rduration .= "$temp_duration";
+							}
 
-						$output .= "$RLstart_time$DL$RLuser$DL$RLrecording_id$DL$RLlead_id$DL$RLlocation\n";
+						$output .= "$RLstart_time$DL$RLuser$DL$RLrecording_id$DL$RLlead_id$Rduration$DL$RLlocation\n";
 	
 						$k++;
 						}
