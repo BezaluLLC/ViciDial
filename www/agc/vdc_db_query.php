@@ -490,10 +490,11 @@
 # 200310-1117 - Added manual_dial_cid AGENT_PHONE_OVERRIDE option 
 # 200403-1601 - Added option for forced outbound CID through API
 # 200407-2036 - Added option for browser alert sounds
+# 200609-2357 - Added NONE_ options for the campaign manual_dial_filter
 #
 
-$version = '2.14-383';
-$build = '200407-2036';
+$version = '2.14-384';
+$build = '200609-2357';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=824;
@@ -2228,7 +2229,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						if ($DB) {echo "$stmt\n";}
 						$man_leadID_ct = mysqli_num_rows($rslt);
 
-						if ( ($man_leadID_ct < 1) and (preg_match("/WITH_ALT/",$manual_dial_search_filter)) )
+						if ( ($man_leadID_ct < 1) and ( (preg_match("/WITH_ALT/",$manual_dial_search_filter)) or (preg_match("/NONE_WITH_ALT/",$manual_dial_filter)) ) )
 							{
 							$stmt="SELECT lead_id FROM vicidial_list where alt_phone='$phone_number' $manual_dial_search_filterSQL order by modify_date desc LIMIT 1;";
 							$rslt=mysql_to_mysqli($stmt, $link);
@@ -2237,7 +2238,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 							$man_leadID_ct = mysqli_num_rows($rslt);
 							if ($man_leadID_ct > 0) {$MDF_search_flag='ALT';   $agent_dialed_type='ALT';}
 
-							if ( ($man_leadID_ct < 1) and (preg_match("/WITH_ALT_ADDR3/",$manual_dial_search_filter)) )
+							if ( ($man_leadID_ct < 1) and ( (preg_match("/WITH_ALT_ADDR3/",$manual_dial_search_filter)) or (preg_match("/NONE_WITH_ALT_ADDR3/",$manual_dial_filter)) ) )
 								{
 								$stmt="SELECT lead_id FROM vicidial_list where address3='$phone_number' $manual_dial_search_filterSQL order by modify_date desc LIMIT 1;";
 								$rslt=mysql_to_mysqli($stmt, $link);
