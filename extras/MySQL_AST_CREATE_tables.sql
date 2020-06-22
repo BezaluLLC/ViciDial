@@ -1859,7 +1859,8 @@ require_password_length TINYINT(3) UNSIGNED default '0',
 user_account_emails ENUM('DISABLED','SEND_NO_PASS','SEND_WITH_PASS') DEFAULT 'DISABLED',
 outbound_cid_any ENUM('DISABLED','API_ONLY') DEFAULT 'DISABLED',
 entries_per_page SMALLINT(5) UNSIGNED DEFAULT '0',
-browser_call_alerts ENUM('0','1','2') DEFAULT '0'
+browser_call_alerts ENUM('0','1','2') DEFAULT '0',
+queuemetrics_pausereason ENUM('STANDARD','EVERY_NEW') default 'STANDARD'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -4639,4 +4640,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1596',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1597',db_schema_update_date=NOW(),reload_timestamp=NOW();

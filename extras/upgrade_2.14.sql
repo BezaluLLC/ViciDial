@@ -1246,3 +1246,7 @@ UPDATE system_settings SET db_schema_version='1595',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD three_way_record_stop_exception VARCHAR(40) default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1596',db_schema_update_date=NOW() where db_schema_version < 1596;
+
+ALTER TABLE system_settings ADD queuemetrics_pausereason ENUM('STANDARD','EVERY_NEW') default 'STANDARD';
+
+UPDATE system_settings SET db_schema_version='1597',db_schema_update_date=NOW() where db_schema_version < 1597;
