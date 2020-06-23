@@ -150,10 +150,11 @@
 # 200525-0118 - Fix for middle_initial --BLANK--
 # 200606-0938 - Added more settings to add_list & update_list
 # 200610-1447 - Added duration option to recording_lookup function
+# 200622-1609 - Added more options to add_phone and update_phone functions
 #
 
-$version = '2.14-127';
-$build = '200610-1447';
+$version = '2.14-128';
+$build = '200622-1609';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -536,6 +537,16 @@ if (isset($_GET["custom_copy_method"]))				{$custom_copy_method=$_GET["custom_co
 	elseif (isset($_POST["custom_copy_method"]))	{$custom_copy_method=$_POST["custom_copy_method"];}
 if (isset($_GET["duration"]))			{$duration=$_GET["duration"];}
 	elseif (isset($_POST["duration"]))	{$duration=$_POST["duration"];}
+if (isset($_GET["is_webphone"]))			{$is_webphone=$_GET["is_webphone"];}
+	elseif (isset($_POST["is_webphone"]))	{$is_webphone=$_POST["is_webphone"];}
+if (isset($_GET["webphone_auto_answer"]))			{$webphone_auto_answer=$_GET["webphone_auto_answer"];}
+	elseif (isset($_POST["webphone_auto_answer"]))	{$webphone_auto_answer=$_POST["webphone_auto_answer"];}
+if (isset($_GET["use_external_server_ip"]))			{$use_external_server_ip=$_GET["use_external_server_ip"];}
+	elseif (isset($_POST["use_external_server_ip"]))	{$use_external_server_ip=$_POST["use_external_server_ip"];}
+if (isset($_GET["template_id"]))			{$template_id=$_GET["template_id"];}
+	elseif (isset($_POST["template_id"]))	{$template_id=$_POST["template_id"];}
+if (isset($_GET["on_hook_agent"]))			{$on_hook_agent=$_GET["on_hook_agent"];}
+	elseif (isset($_POST["on_hook_agent"]))	{$on_hook_agent=$_POST["on_hook_agent"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -765,6 +776,11 @@ if ($non_latin < 1)
 	$custom_order = preg_replace('/[^-_0-9a-zA-Z]/','',$custom_order);
 	$custom_copy_method = preg_replace('/[^-_0-9a-zA-Z]/','',$custom_copy_method);
 	$duration = preg_replace('/[^-_0-9a-zA-Z]/','',$duration);
+	$is_webphone = preg_replace('/[^-_0-9a-zA-Z]/','',$is_webphone);
+	$webphone_auto_answer = preg_replace('/[^-_0-9a-zA-Z]/','',$webphone_auto_answer);
+	$use_external_server_ip = preg_replace('/[^-_0-9a-zA-Z]/','',$use_external_server_ip);
+	$template_id = preg_replace('/[^-_0-9a-zA-Z]/','',$template_id);
+	$on_hook_agent = preg_replace('/[^-_0-9a-zA-Z]/','',$on_hook_agent);
 	}
 else
 	{
@@ -3428,10 +3444,47 @@ if ($function == 'add_phone')
 								}
 							else
 								{
+								$is_webphone_SQL='';
+								$webphone_auto_answer_SQL='';
+								$use_external_server_ip_SQL='';
+								$template_id_SQL='';
+								$on_hook_agent_SQL='';
+								if (preg_match("/^Y$|^N$|^Y_API_LAUNCH$/i",$is_webphone))
+									{$is_webphone_SQL = ",is_webphone='$is_webphone'";}
+								if (preg_match("/^Y$|^N$/i",$webphone_auto_answer))
+									{$webphone_auto_answer_SQL = ",webphone_auto_answer='$webphone_auto_answer'";}
+								if (preg_match("/^Y$|^N$/i",$use_external_server_ip))
+									{$use_external_server_ip_SQL = ",use_external_server_ip='$use_external_server_ip'";}
+								if (preg_match("/^Y$|^N$/i",$on_hook_agent))
+									{$on_hook_agent_SQL = ",on_hook_agent='$on_hook_agent'";}
+								if (strlen($template_id) > 1)
+									{
+									if (preg_match("/^--BLANK--$/i",$template_id))
+										{$template_id_SQL = ",template_id=''";}
+									else
+										{
+										$stmt="SELECT count(*) from vicidial_conf_templates where template_id='$template_id';";
+										$rslt=mysql_to_mysqli($stmt, $link);
+										$row=mysqli_fetch_row($rslt);
+										$template_id_exists=$row[0];
+										if ($template_id_exists > 0)
+											{$template_id_SQL = ",template_id='$template_id'";}
+										else
+											{
+											$result = 'ERROR';
+											$result_reason = "add_phone TEMPLATE ID DOES NOT EXIST, THIS IS AN OPTIONAL FIELD";
+											$data = "$phone_login|$template_id";
+											echo "$result: $result_reason: |$user|$data\n";
+											api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+											exit;
+											}
+										}
+									}
+								
 								if (strlen($phone_context)<1) {$phone_context='default';}
 								if (strlen($admin_user_group)<1) {$admin_user_group='---ALL---';}
 
-								$stmt="INSERT INTO phones SET  extension='$extension', dialplan_number='$dialplan_number', voicemail_id='$voicemail_id', login='$phone_login', pass='$phone_pass', server_ip='$server_ip', protocol='$protocol', conf_secret='$registration_password', fullname='$phone_full_name', local_gmt='$local_gmt', outbound_cid='$outbound_cid', phone_context='$phone_context', email='$email', active='Y', status='ACTIVE', user_group='$admin_user_group';";
+								$stmt="INSERT INTO phones SET  extension='$extension', dialplan_number='$dialplan_number', voicemail_id='$voicemail_id', login='$phone_login', pass='$phone_pass', server_ip='$server_ip', protocol='$protocol', conf_secret='$registration_password', fullname='$phone_full_name', local_gmt='$local_gmt', outbound_cid='$outbound_cid', phone_context='$phone_context', email='$email', active='Y', status='ACTIVE', user_group='$admin_user_group' $is_webphone_SQL $webphone_auto_answer_SQL $use_external_server_ip_SQL $template_id_SQL $on_hook_agent_SQL;";
 								$rslt=mysql_to_mysqli($stmt, $link);
 
 								### LOG INSERTION Admin Log Table ###
@@ -3624,6 +3677,11 @@ if ($function == 'update_phone')
 						$outbound_alt_cidSQL='';
 						$phone_ring_timeoutSQL='';
 						$delete_vm_after_emailSQL='';
+						$is_webphone_SQL='';
+						$webphone_auto_answer_SQL='';
+						$use_external_server_ip_SQL='';
+						$template_id_SQL='';
+						$on_hook_agent_SQL='';
 
 						if (strlen($local_gmt) > 0)
 							{
@@ -3883,9 +3941,39 @@ if ($function == 'update_phone')
 							else
 								{$delete_vm_after_emailSQL = " ,delete_vm_after_email='$delete_vm_after_email'";}
 							}
-
-
-						$updateSQL = "$dialplan_numberSQL$activeSQL$outboundcidSQL$voicemail_idSQL$phone_loginSQL$phone_passSQL$protocolSQL$registration_passwordSQL$phone_full_nameSQL$phone_contextSQL$emailSQL$local_gmtSQL$admin_user_groupSQL$outbound_alt_cidSQL$phone_ring_timeoutSQL$delete_vm_after_emailSQL";
+						if (preg_match("/^Y$|^N$|^Y_API_LAUNCH$/i",$is_webphone))
+							{$is_webphone_SQL = ",is_webphone='$is_webphone'";}
+						if (preg_match("/^Y$|^N$/i",$webphone_auto_answer))
+							{$webphone_auto_answer_SQL = ",webphone_auto_answer='$webphone_auto_answer'";}
+						if (preg_match("/^Y$|^N$/i",$use_external_server_ip))
+							{$use_external_server_ip_SQL = ",use_external_server_ip='$use_external_server_ip'";}
+						if (preg_match("/^Y$|^N$/i",$on_hook_agent))
+							{$on_hook_agent_SQL = ",on_hook_agent='$on_hook_agent'";}
+						if (strlen($template_id) > 1)
+							{
+							if (preg_match("/^--BLANK--$/i",$template_id))
+								{$template_id_SQL = ",template_id=''";}
+							else
+								{
+								$stmt="SELECT count(*) from vicidial_conf_templates where template_id='$template_id';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								$row=mysqli_fetch_row($rslt);
+								$template_id_exists=$row[0];
+								if ($template_id_exists > 0)
+									{$template_id_SQL = ",template_id='$template_id'";}
+								else
+									{
+									$result = 'ERROR';
+									$result_reason = "update_phone TEMPLATE ID DOES NOT EXIST, THIS IS AN OPTIONAL FIELD";
+									$data = "$phone_login|$template_id";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								}
+							}
+						
+						$updateSQL = "$dialplan_numberSQL$activeSQL$outboundcidSQL$voicemail_idSQL$phone_loginSQL$phone_passSQL$protocolSQL$registration_passwordSQL$phone_full_nameSQL$phone_contextSQL$emailSQL$local_gmtSQL$admin_user_groupSQL$outbound_alt_cidSQL$phone_ring_timeoutSQL$delete_vm_after_emailSQL $is_webphone_SQL $webphone_auto_answer_SQL $use_external_server_ip_SQL $template_id_SQL $on_hook_agent_SQL";
 
 
 						if (strlen($updateSQL)< 3)
