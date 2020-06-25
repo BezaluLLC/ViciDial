@@ -952,6 +952,7 @@ $sthA->finish();
 if ( ($inbound_answer_config > 0) and ($answer_signal !~ /NONE|ROUTE/i) ) 
 	{
 	$AGI->answer();
+	if ($AGILOG) {$agi_string = "   Answering call: - $channel|$answer_signal";   &agi_output;}
 	}
 
 # When VID or VIDPROMPT, methods are not used, no Vendor Lead Code can be supplied. Fill it with inbound_number
@@ -1161,8 +1162,15 @@ if ( ($channel_group =~ /AGENTDIRECT/i) && (length($agent_only) < 1) )
 
 $LOGuser='VDCL';
 
-$AGI->stream_file('sip-silence');
-$AGI->stream_file('sip-silence');
+if ( ($inbound_answer_config > 0) and ($answer_signal =~ /NONE|ROUTE/i) ) 
+	{
+	if ($AGILOG) {$agi_string = "     skipping sip-silence playback: $channel|";   &agi_output;}
+	}
+else
+	{
+	$AGI->stream_file('sip-silence');
+	$AGI->stream_file('sip-silence');
+	}
 
 if ($call_handle_method =~ /DIGITID$/)
 	{
@@ -1809,6 +1817,7 @@ if ( ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $c
 			if ( ($inbound_answer_config > 0) and ($answer_signal =~ /ROUTE/i) ) 
 				{
 				$AGI->answer();
+				if ($AGILOG) {$agi_string = "   Answering call: - $channel|$answer_signal";   &agi_output;}
 				}
 
 			if ($no_delay_call_route =~ /N/)
@@ -1819,10 +1828,17 @@ if ( ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $c
 				usleep(1*990*1000);
 				}
 
-			$AGI->stream_file('sip-silence');
-			$AGI->stream_file('sip-silence');
-			$AGI->stream_file('sip-silence');
-			$AGI->stream_file('sip-silence');
+			if ( ($inbound_answer_config > 0) and ($answer_signal =~ /NONE/i) ) 
+				{
+				if ($AGILOG) {$agi_string = "     skipping sip-silence playback: $channel|";   &agi_output;}
+				}
+			else
+				{
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+				}
 
 			if ($AGILOG) {$agi_string = "exiting the VDAD app after hours, transferring call to $DROPexten";   &agi_output;}
 			print "SET CONTEXT $ext_context\n";
@@ -2099,6 +2115,7 @@ if ( ( ($no_agent_no_queue =~ /Y|NO_PAUSED|NO_READY/) || ($MCnanque_override > 0
 				if ( ($inbound_answer_config > 0) and ($answer_signal =~ /ROUTE/i) ) 
 					{
 					$AGI->answer();
+					if ($AGILOG) {$agi_string = "   Answering call: - $channel|$answer_signal";   &agi_output;}
 					}
 
 				if ($no_delay_call_route =~ /N/)
@@ -2109,10 +2126,17 @@ if ( ( ($no_agent_no_queue =~ /Y|NO_PAUSED|NO_READY/) || ($MCnanque_override > 0
 					usleep(1*990*1000);
 					}
 
-				$AGI->stream_file('sip-silence');
-				$AGI->stream_file('sip-silence');
-				$AGI->stream_file('sip-silence');
-				$AGI->stream_file('sip-silence');
+				if ( ($inbound_answer_config > 0) and ($answer_signal =~ /NONE/i) ) 
+					{
+					if ($AGILOG) {$agi_string = "     skipping sip-silence playback: $channel|";   &agi_output;}
+					}
+				else
+					{
+					$AGI->stream_file('sip-silence');
+					$AGI->stream_file('sip-silence');
+					$AGI->stream_file('sip-silence');
+					$AGI->stream_file('sip-silence');
+					}
 
 				if ($AGILOG) {$agi_string = "exiting the VDAD app no agent no queue, transferring call to $DROPexten";   &agi_output;}
 				print "SET CONTEXT $ext_context\n";
@@ -4237,12 +4261,20 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 				if ( ($inbound_answer_config > 0) and ($answer_signal =~ /ROUTE/i) ) 
 					{
 					$AGI->answer();
+					if ($AGILOG) {$agi_string = "   Answering call: - $channel|$answer_signal";   &agi_output;}
 					}
 
-				$AGI->stream_file('sip-silence');
-				$AGI->stream_file('sip-silence');
-				$AGI->stream_file('sip-silence');
-				$AGI->stream_file('sip-silence');
+				if ( ($inbound_answer_config > 0) and ($answer_signal =~ /NONE/i) ) 
+					{
+					if ($AGILOG) {$agi_string = "     skipping sip-silence playback: $channel|";   &agi_output;}
+					}
+				else
+					{
+					$AGI->stream_file('sip-silence');
+					$AGI->stream_file('sip-silence');
+					$AGI->stream_file('sip-silence');
+					$AGI->stream_file('sip-silence');
+					}
 
 				print "SET CONTEXT $ext_context\n";
 					$result = <STDIN>;
@@ -4396,12 +4428,20 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 			if ( ($inbound_answer_config > 0) and ($answer_signal =~ /ROUTE/i) ) 
 				{
 				$AGI->answer();
+				if ($AGILOG) {$agi_string = "   Answering call: - $channel|$answer_signal";   &agi_output;}
 				}
 
-			$AGI->stream_file('sip-silence');
-			$AGI->stream_file('sip-silence');
-			$AGI->stream_file('sip-silence');
-			$AGI->stream_file('sip-silence');
+			if ( ($inbound_answer_config > 0) and ($answer_signal =~ /NONE/i) ) 
+				{
+				if ($AGILOG) {$agi_string = "     skipping sip-silence playback: $channel|";   &agi_output;}
+				}
+			else
+				{
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+				$AGI->stream_file('sip-silence');
+				}
 
 			if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $DROPexten";   &agi_output;}
 			print "SET CONTEXT $ext_context\n";
@@ -4982,6 +5022,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					if ( ($inbound_answer_config > 0) and ($answer_signal =~ /ROUTE/i) ) 
 						{
 						$AGI->answer();
+						if ($AGILOG) {$agi_string = "   Answering call: - $channel|$answer_signal";   &agi_output;}
 						}
 
 					if ($no_delay_call_route =~ /N/)
@@ -4992,10 +5033,17 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						usleep(1*990*1000);
 						}
 
-					$AGI->stream_file('sip-silence');
-					$AGI->stream_file('sip-silence');
-					$AGI->stream_file('sip-silence');
-					$AGI->stream_file('sip-silence');
+					if ( ($inbound_answer_config > 0) and ($answer_signal =~ /NONE/i) ) 
+						{
+						if ($AGILOG) {$agi_string = "     skipping sip-silence playback: $channel|";   &agi_output;}
+						}
+					else
+						{
+						$AGI->stream_file('sip-silence');
+						$AGI->stream_file('sip-silence');
+						$AGI->stream_file('sip-silence');
+						$AGI->stream_file('sip-silence');
+						}
 
 					if ($AGILOG) {$agi_string = "exiting the VDAD app areacode filter, transferring call to $DROPexten";   &agi_output;}
 					print "SET CONTEXT $ext_context\n";
@@ -5553,6 +5601,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 				if ( ($inbound_answer_config > 0) and ($answer_signal =~ /ROUTE/i) ) 
 					{
 					$AGI->answer();
+					if ($AGILOG) {$agi_string = "   Answering call: - $channel|$answer_signal";   &agi_output;}
 					}
 
 				$AGI->stream_file('sip-silence');
@@ -6102,6 +6151,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 						if ( ($inbound_answer_config > 0) and ($answer_signal =~ /ROUTE/i) ) 
 							{
 							$AGI->answer();
+							if ($AGILOG) {$agi_string = "   Answering call: - $channel|$answer_signal";   &agi_output;}
 							}
 
 						$AGI->stream_file('sip-silence');
@@ -6646,6 +6696,7 @@ if ($closing_check > 0)
 		if ( ($inbound_answer_config > 0) and ($answer_signal =~ /ROUTE/i) ) 
 			{
 			$AGI->answer();
+			if ($AGILOG) {$agi_string = "   Answering call: - $channel|$answer_signal";   &agi_output;}
 			}
 
 		$AGI->stream_file('sip-silence');
@@ -6917,6 +6968,7 @@ if ( ($drop_timer > $DROP_TIME) || ($MCdrop_override > 0) )
 		if ( ($inbound_answer_config > 0) and ($answer_signal =~ /ROUTE/i) ) 
 			{
 			$AGI->answer();
+			if ($AGILOG) {$agi_string = "   Answering call: - $channel|$answer_signal";   &agi_output;}
 			}
 
 		if ($no_delay_call_route =~ /N/)
@@ -6927,10 +6979,17 @@ if ( ($drop_timer > $DROP_TIME) || ($MCdrop_override > 0) )
 			usleep(1*990*1000);
 			}
 
-		$AGI->stream_file('sip-silence');
-		$AGI->stream_file('sip-silence');
-		$AGI->stream_file('sip-silence');
-		$AGI->stream_file('sip-silence');
+		if ( ($inbound_answer_config > 0) and ($answer_signal =~ /NONE/i) ) 
+			{
+			if ($AGILOG) {$agi_string = "     skipping sip-silence playback: $channel|";   &agi_output;}
+			}
+		else
+			{
+			$AGI->stream_file('sip-silence');
+			$AGI->stream_file('sip-silence');
+			$AGI->stream_file('sip-silence');
+			$AGI->stream_file('sip-silence');
+			}
 
 		if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $DROPexten";   &agi_output;}
 		print "SET CONTEXT $ext_context\n";

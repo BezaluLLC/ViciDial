@@ -3657,7 +3657,15 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 							}
 						else
 							{
-							$menu_prompt_ext .= "exten => s,n,Background($menu_prompts_array[$w])\n";
+							if ($menu_prompts_array[$w] =~ /^NOPLAY/)
+								{
+								$menu_prompts_array[$w] =~ s/^NOPLAY//g;
+								$menu_prompt_ext .= "exten => s,n,NoOp($menu_prompts_array[$w])\n";
+								}
+							else
+								{
+								$menu_prompt_ext .= "exten => s,n,Background($menu_prompts_array[$w])\n";
+								}
 							}
 						}
 					}
@@ -3679,7 +3687,15 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 					}
 				else
 					{
-					$menu_prompt_ext .= "exten => s,n,Background($menu_prompt[$i])\n";
+					if ($menu_prompt[$i] =~ /^NOPLAY/)
+						{
+						$menu_prompt[$i] =~ s/^NOPLAY//g;
+						$menu_prompt_ext .= "exten => s,n,NoOp($menu_prompt[$i])\n";
+						}
+					else
+						{
+						$menu_prompt_ext .= "exten => s,n,Background($menu_prompt[$i])\n";
+						}
 					}
 				}
 			}
@@ -3709,11 +3725,16 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$call_menu_ext .= "; $menu_name[$i]\n";
 		$call_menu_ext .= "[$menu_id[$i]]\n";
 		if ( ($SSinbound_answer_config > 0) && ($answer_signal[$i] =~ /N/i) ) 
-			{$call_menu_ext .= "exten => s,1,NoOp(NoAnswer-Call-Menu-Start)\n";}
+			{
+			$call_menu_ext .= "exten => s,1,NoOp(NoAnswer-Call-Menu-Start)\n";
+			$call_menu_ext .= "exten => s,n,AGI(agi-VDAD_inbound_calltime_check.agi,$tracking_group[$i]-----$track_in_vdac[$i]-----$menu_id[$i]-----$time_check_scheme-----$time_check_route-----$time_check_route_value-----$time_check_route_context-----$qualify_sql_active[$i]-----NO)\n";
+			}
 		else
-			{$call_menu_ext .= "exten => s,1,Answer\n";}
+			{
+			$call_menu_ext .= "exten => s,1,Answer\n";
+			$call_menu_ext .= "exten => s,n,AGI(agi-VDAD_inbound_calltime_check.agi,$tracking_group[$i]-----$track_in_vdac[$i]-----$menu_id[$i]-----$time_check_scheme-----$time_check_route-----$time_check_route_value-----$time_check_route_context-----$qualify_sql_active[$i]-----YES)\n";
+			}
 		
-		$call_menu_ext .= "exten => s,n,AGI(agi-VDAD_inbound_calltime_check.agi,$tracking_group[$i]-----$track_in_vdac[$i]-----$menu_id[$i]-----$time_check_scheme-----$time_check_route-----$time_check_route_value-----$time_check_route_context-----$qualify_sql_active[$i])\n";
 		$call_menu_ext .= "exten => s,n,Set(INVCOUNT=0) \n";
 		$call_menu_ext .= "$menu_prompt_ext";
 		if ($menu_timeout[$i] > 0)
