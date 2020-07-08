@@ -1266,3 +1266,9 @@ UPDATE system_settings SET db_schema_version='1598',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns MODIFY concurrent_transfers ENUM('AUTO','1','2','3','4','5','6','7','8','9','10','15','20','25','30','40','50','60','80','100','1000','10000') default 'AUTO';
 
 UPDATE system_settings SET db_schema_version='1599',db_schema_update_date=NOW() where db_schema_version < 1599;
+
+ALTER TABLE vicidial_lists ADD inbound_drop_voicemail VARCHAR(20);
+ALTER TABLE vicidial_lists ADD inbound_after_hours_voicemail VARCHAR(20);
+
+UPDATE system_settings SET db_schema_version='1600',db_schema_update_date=NOW() where db_schema_version < 1600;
+

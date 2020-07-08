@@ -2514,6 +2514,10 @@ if (isset($_GET["inbound_route_answer"]))			{$inbound_route_answer=$_GET["inboun
 	elseif (isset($_POST["inbound_route_answer"]))	{$inbound_route_answer=$_POST["inbound_route_answer"];}
 if (isset($_GET["answer_signal"]))			{$answer_signal=$_GET["answer_signal"];}
 	elseif (isset($_POST["answer_signal"]))	{$answer_signal=$_POST["answer_signal"];}
+if (isset($_GET["inbound_drop_voicemail"]))				{$inbound_drop_voicemail=$_GET["inbound_drop_voicemail"];}
+	elseif (isset($_POST["inbound_drop_voicemail"]))	{$inbound_drop_voicemail=$_POST["inbound_drop_voicemail"];}
+if (isset($_GET["inbound_after_hours_voicemail"]))			{$inbound_after_hours_voicemail=$_GET["inbound_after_hours_voicemail"];}
+	elseif (isset($_POST["inbound_after_hours_voicemail"]))	{$inbound_after_hours_voicemail=$_POST["inbound_after_hours_voicemail"];}
 
 
 if (isset($script_id)) {$script_id= strtoupper($script_id);}
@@ -3536,6 +3540,8 @@ if ($non_latin < 1)
 	$three_way_record_stop_exception = preg_replace('/[^-_0-9a-zA-Z]/','',$three_way_record_stop_exception);
 	$queuemetrics_pausereason = preg_replace('/[^-_0-9a-zA-Z]/','',$queuemetrics_pausereason);
 	$answer_signal = preg_replace('/[^-_0-9a-zA-Z]/','',$answer_signal);
+	$inbound_drop_voicemail = preg_replace('/[^-_0-9a-zA-Z]/','',$inbound_drop_voicemail);
+	$inbound_after_hours_voicemail = preg_replace('/[^-_0-9a-zA-Z]/','',$inbound_after_hours_voicemail);
 
 ### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_timeout_prompt = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$menu_timeout_prompt);
@@ -4687,12 +4693,13 @@ else
 # 200623-1957 - Added inbound answer configuration
 # 200624-1939 - Added Callbacks Export report
 # 200701-1525 - Added more concurrent_transfers options
+# 200708-1033 - Added List overrides for some inbound settings
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-760a';
-$build = '200701-1525';
+$admin_version = '2.14-761a';
+$build = '200708-1033';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -15852,7 +15859,7 @@ if ($ADD==411)
 
 				echo "<br><B>"._QXZ("LIST MODIFIED").": $list_id</B>\n";
 
-				$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate',reset_time='$reset_time',agent_script_override='$agent_script_override',inbound_list_script_override='$inbound_list_script_override',campaign_cid_override='$campaign_cid_override',am_message_exten_override='$am_message_exten_override',drop_inbound_group_override='$drop_inbound_group_override',xferconf_a_number='$xferconf_a_number',xferconf_b_number='$xferconf_b_number',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',web_form_address='" . mysqli_real_escape_string($link, $web_form_address) . "',web_form_address_two='" . mysqli_real_escape_string($link, $web_form_address_two) . "',time_zone_setting='$time_zone_setting',inventory_report='$inventory_report',expiration_date='$expiration_date',na_call_url='" . mysqli_real_escape_string($link, $na_call_url) . "',local_call_time='$local_call_time',web_form_address_three='" . mysqli_real_escape_string($link, $web_form_address_three) . "',status_group_id='$status_group_id',user_new_lead_limit='$user_new_lead_limit',default_xfer_group='$default_xfer_group' $daily_reset_limitSQL,auto_active_list_rank='$auto_active_list_rank' where list_id='$list_id';";
+				$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate',reset_time='$reset_time',agent_script_override='$agent_script_override',inbound_list_script_override='$inbound_list_script_override',campaign_cid_override='$campaign_cid_override',am_message_exten_override='$am_message_exten_override',drop_inbound_group_override='$drop_inbound_group_override',xferconf_a_number='$xferconf_a_number',xferconf_b_number='$xferconf_b_number',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',web_form_address='" . mysqli_real_escape_string($link, $web_form_address) . "',web_form_address_two='" . mysqli_real_escape_string($link, $web_form_address_two) . "',time_zone_setting='$time_zone_setting',inventory_report='$inventory_report',expiration_date='$expiration_date',na_call_url='" . mysqli_real_escape_string($link, $na_call_url) . "',local_call_time='$local_call_time',web_form_address_three='" . mysqli_real_escape_string($link, $web_form_address_three) . "',status_group_id='$status_group_id',user_new_lead_limit='$user_new_lead_limit',default_xfer_group='$default_xfer_group' $daily_reset_limitSQL,auto_active_list_rank='$auto_active_list_rank',inbound_drop_voicemail='$inbound_drop_voicemail',inbound_after_hours_voicemail='$inbound_after_hours_voicemail' where list_id='$list_id';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 
 				## QC Addition for Audited Comments
@@ -27819,7 +27826,7 @@ if ($ADD==311)
 				}
 			}
 
-		$stmt="SELECT vicidial_lists.list_id,list_name,campaign_id,active,list_description,list_changedate,list_lastcalldate,reset_time,agent_script_override,campaign_cid_override,am_message_exten_override,drop_inbound_group_override,xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two,time_zone_setting,inventory_report,IFNULL(audit_comments,0),expiration_date,DATE_FORMAT(expiration_date,'%Y%m%d'),na_call_url,local_call_time,web_form_address_three,status_group_id,user_new_lead_limit,inbound_list_script_override,default_xfer_group,daily_reset_limit,resets_today,auto_active_list_rank from vicidial_lists left outer join vicidial_lists_custom on vicidial_lists.list_id=vicidial_lists_custom.list_id where vicidial_lists.list_id='$list_id' $LOGallowed_campaignsSQL;";
+		$stmt="SELECT vicidial_lists.list_id,list_name,campaign_id,active,list_description,list_changedate,list_lastcalldate,reset_time,agent_script_override,campaign_cid_override,am_message_exten_override,drop_inbound_group_override,xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two,time_zone_setting,inventory_report,IFNULL(audit_comments,0),expiration_date,DATE_FORMAT(expiration_date,'%Y%m%d'),na_call_url,local_call_time,web_form_address_three,status_group_id,user_new_lead_limit,inbound_list_script_override,default_xfer_group,daily_reset_limit,resets_today,auto_active_list_rank,inbound_drop_voicemail,inbound_after_hours_voicemail from vicidial_lists left outer join vicidial_lists_custom on vicidial_lists.list_id=vicidial_lists_custom.list_id where vicidial_lists.list_id='$list_id' $LOGallowed_campaignsSQL;";
 
 		$rslt=mysql_to_mysqli($stmt, $link);
                 if ($DB) {echo "$stmt\n";}
@@ -27857,6 +27864,8 @@ if ($ADD==311)
 		$daily_reset_limit =		$row[31];
 		$resets_today =				$row[32];
 		$auto_active_list_rank =	$row[33];
+		$inbound_drop_voicemail =	$row[34];
+		$inbound_after_hours_voicemail =	$row[35];
 
 		# grab names of global statuses and statuses in the selected campaign
 		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,min_sec,max_sec,answering_machine from vicidial_statuses order by status;";
@@ -28032,6 +28041,8 @@ if ($ADD==311)
  		echo "$Lscripts_list";
  		echo "<option selected value=\"$inbound_list_script_override\">$inbound_list_script_override - $scriptname_list[$inbound_list_script_override]</option>\n";
  		echo "</select>$NWB#lists-inbound_list_script_override$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Inbound Drop Voicemail Override").": </td><td align=left><input type=text name=inbound_drop_voicemail id=inbound_drop_voicemail size=12 maxlength=20 value=\"$inbound_drop_voicemail\"> <a href=\"javascript:launch_vm_chooser('inbound_drop_voicemail','vm');\">"._QXZ("voicemail chooser")."</a>$NWB#lists-inbound_drop_voicemail$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Inbound After Hours Voicemail Override").": </td><td align=left><input type=text name=inbound_after_hours_voicemail id=inbound_after_hours_voicemail size=12 maxlength=20 value=\"$inbound_after_hours_voicemail\"> <a href=\"javascript:launch_vm_chooser('inbound_after_hours_voicemail','vm');\">"._QXZ("voicemail chooser")."</a>$NWB#lists-inbound_after_hours_voicemail$NWE</td></tr>\n";
 
 		$DID_edit_link_BEGIN='';
 		$DID_edit_link_END='';
