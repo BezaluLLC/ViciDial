@@ -492,10 +492,11 @@
 # 200407-2036 - Added option for browser alert sounds
 # 200609-2357 - Added NONE_ options for the campaign manual_dial_filter
 # 200621-1027 - Added queuemetrics_pausereason options
+# 200712-2034 - Fix for use_custom_cid variable issue
 #
 
-$version = '2.14-385';
-$build = '200621-1027';
+$version = '2.14-386';
+$build = '200712-2034';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=839;
@@ -4218,6 +4219,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 			##### BEGIN if NOT preview dialing, do send the call #####
 			if ( (strlen($preview)<1) or ($preview == 'NO') or (strlen($dial_ingroup) > 1) )
 				{
+				$use_custom_cid='N';
 				$stmt = "SELECT use_custom_cid,manual_dial_hopper_check,start_call_url,manual_dial_filter,use_internal_dnc,use_campaign_dnc,use_other_campaign_dnc,cid_group_id,scheduled_callbacks_auto_reschedule,dial_timeout_lead_container,manual_dial_cid FROM vicidial_campaigns where campaign_id='$campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00313',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -4332,7 +4334,6 @@ if ($ACTION == 'manDiaLnextCaLL')
 				if (strlen($dial_prefix) > 0) {$Local_out_prefix = "$dial_prefix";}
 				if (strlen($campaign_cid) > 6) {$CCID = "$campaign_cid";   $CCID_on++;}
 				### check for custom cid use
-				$use_custom_cid=0;
 
 				if ($no_hopper_dialing_used > 0)
 					{
@@ -5661,7 +5662,7 @@ if ($ACTION == 'manDiaLonly')
 
 		### check for manual dial filter and extension append settings in campaign
 		$use_eac=0;
-		$use_custom_cid=0;
+		$use_custom_cid='N';
 		$stmt = "SELECT manual_dial_filter,use_internal_dnc,use_campaign_dnc,use_other_campaign_dnc,extension_appended_cidname,start_call_url,scheduled_callbacks_auto_reschedule,dial_timeout_lead_container FROM vicidial_campaigns where campaign_id='$campaign';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00325',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -5960,7 +5961,7 @@ if ($ACTION == 'manDiaLonly')
 		else
 			{
 			### check for custom cid use
-			$use_custom_cid=0;
+			$use_custom_cid='N';
 			$stmt = "SELECT use_custom_cid,manual_dial_hopper_check,cid_group_id,manual_dial_cid FROM vicidial_campaigns where campaign_id='$campaign';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00314',$user,$server_ip,$session_name,$one_mysql_log);}
