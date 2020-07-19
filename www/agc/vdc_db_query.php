@@ -493,10 +493,11 @@
 # 200609-2357 - Added NONE_ options for the campaign manual_dial_filter
 # 200621-1027 - Added queuemetrics_pausereason options
 # 200712-2034 - Fix for use_custom_cid variable issue
+# 200719-1645 - Added EVERY_NEW_ALLCALL queuemetrics_pausereason option
 #
 
-$version = '2.14-386';
-$build = '200712-2034';
+$version = '2.14-387';
+$build = '200719-1645';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=839;
@@ -15920,55 +15921,86 @@ if ($ACTION == 'PauseCodeSubmit')
 					$affected_rows = mysqli_affected_rows($linkB);
 					}
 
-				if ( (preg_match("/ADMINCALL/",$queuemetrics_pausereason)) and (preg_match("/^ADMIN$|^220208$/",$status)) )
+				if ( ( (preg_match("/ADMINCALL/",$queuemetrics_pausereason)) and (preg_match("/^ADMIN$|^220208$/",$status)) ) or (preg_match("/ALLCALL/",$queuemetrics_pausereason)) )
 					{
-					##### BEGIN insert new 1-second fake phone call, back-dated before the PAUSEREASON
-					$unpauseall_time = ($secX - 3);
-					$calloutbound_time = ($secX - 3);
-					$connect_time = ($secX - 3);
-					$completecaller_time = ($secX - 2);
-					$callstatus_time = ($secX - 1);
-					$pauseall_time = ($secX - 1);
-					$fake_call_id = $secX;
-						while (strlen($fake_call_id) > 9) {$fake_call_id = substr("$fake_call_id", 1);}
-					$fake_call_id = "F".$fake_call_id."0000000001";
+					### BEGIN Check for any calls connecting(CONNECT) to this agent since the last AGENTLOGIN event ###
+					$recentCONNECT=0;
+					$lastAGENTLOGIN = $secX;
+					$checkAGENTLOGIN = ($secX - 86400);
 
-					$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$unpauseall_time',call_id='',queue='NONE',agent='Agent/$user',verb='UNPAUSEALL',serverid='$queuemetrics_log_id';";
-					if ($DB) {echo "$stmt\n";}
+					$stmt="SELECT time_id from queue_log where agent='Agent/$user' and verb='AGENTLOGIN' and time_id <= \"$secX\" and time_id > \"$checkAGENTLOGIN\" order by time_id desc limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $linkB);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00832',$user,$server_ip,$session_name,$one_mysql_log);}
-					$UPAaffected_rows = mysqli_affected_rows($linkB);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00080',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$QM_AL_ct = mysqli_num_rows($rslt);
+					if ($QM_AL_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$lastAGENTLOGIN	= $row[0];
+						}
 
-					$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$calloutbound_time',call_id='$fake_call_id',queue='$campaign',agent='Agent/$user',verb='CALLOUTBOUND',data2='9998881112',serverid='$queuemetrics_log_id';";
-					if ($DB) {echo "$stmt\n";}
+					$stmt="SELECT count(*) from queue_log where agent='Agent/$user' and verb='CONNECT' and time_id <= \"$secX\" and time_id > \"$lastAGENTLOGIN\";";
 					$rslt=mysql_to_mysqli($stmt, $linkB);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00833',$user,$server_ip,$session_name,$one_mysql_log);}
-					$UPAaffected_rows = mysqli_affected_rows($linkB);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00080',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$QM_RC_ct = mysqli_num_rows($rslt);
+					if ($QM_RC_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$recentCONNECT	= $row[0];
+						}
+					### END Check for any calls connecting(CONNECT) to this agent since the last AGENTLOGIN event ###
 
-					$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$connect_time',call_id='$fake_call_id',queue='$campaign',agent='Agent/$user',verb='CONNECT',data1='0',serverid='$queuemetrics_log_id';";
-					if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_to_mysqli($stmt, $linkB);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00834',$user,$server_ip,$session_name,$one_mysql_log);}
-					$UPAaffected_rows = mysqli_affected_rows($linkB);
+					if ($recentCONNECT < 1)
+						{
+						##### BEGIN insert new 1-second fake phone call, back-dated before the PAUSEREASON
+						$unpauseall_time = ($secX - 3);
+						$calloutbound_time = ($secX - 3);
+						$connect_time = ($secX - 3);
+						$completecaller_time = ($secX - 2);
+						$callstatus_time = ($secX - 1);
+						$pauseall_time = ($secX - 1);
+						$fake_call_id = $secX;
+							while (strlen($fake_call_id) > 9) {$fake_call_id = substr("$fake_call_id", 1);}
+						$fake_call_id = "F".$fake_call_id."0000000001";
 
-					$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$completecaller_time',call_id='$fake_call_id',queue='$campaign',agent='Agent/$user',verb='COMPLETECALLER',data1='0',data2='1',data3='1',serverid='$queuemetrics_log_id';";
-					if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_to_mysqli($stmt, $linkB);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00835',$user,$server_ip,$session_name,$one_mysql_log);}
-					$UPAaffected_rows = mysqli_affected_rows($linkB);
+						$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$unpauseall_time',call_id='',queue='NONE',agent='Agent/$user',verb='UNPAUSEALL',serverid='$queuemetrics_log_id';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_to_mysqli($stmt, $linkB);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00832',$user,$server_ip,$session_name,$one_mysql_log);}
+						$UPAaffected_rows = mysqli_affected_rows($linkB);
 
-					$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$callstatus_time',call_id='$fake_call_id',queue='$campaign',agent='Agent/$user',verb='CALLSTATUS',data1='NOCALL',serverid='$queuemetrics_log_id';";
-					if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_to_mysqli($stmt, $linkB);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00836',$user,$server_ip,$session_name,$one_mysql_log);}
-					$UPAaffected_rows = mysqli_affected_rows($linkB);
+						$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$calloutbound_time',call_id='$fake_call_id',queue='$campaign',agent='Agent/$user',verb='CALLOUTBOUND',data2='9998881112',serverid='$queuemetrics_log_id';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_to_mysqli($stmt, $linkB);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00833',$user,$server_ip,$session_name,$one_mysql_log);}
+						$UPAaffected_rows = mysqli_affected_rows($linkB);
 
-					$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$pauseall_time',call_id='',queue='NONE',agent='Agent/$user',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
-					if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_to_mysqli($stmt, $linkB);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00837',$user,$server_ip,$session_name,$one_mysql_log);}
-					$PAaffected_rows = mysqli_affected_rows($linkB);
-					##### END insert new pause session, back-dated before the PAUSEREASON
+						$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$connect_time',call_id='$fake_call_id',queue='$campaign',agent='Agent/$user',verb='CONNECT',data1='0',serverid='$queuemetrics_log_id';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_to_mysqli($stmt, $linkB);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00834',$user,$server_ip,$session_name,$one_mysql_log);}
+						$UPAaffected_rows = mysqli_affected_rows($linkB);
+
+						$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$completecaller_time',call_id='$fake_call_id',queue='$campaign',agent='Agent/$user',verb='COMPLETECALLER',data1='0',data2='1',data3='1',serverid='$queuemetrics_log_id';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_to_mysqli($stmt, $linkB);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00835',$user,$server_ip,$session_name,$one_mysql_log);}
+						$UPAaffected_rows = mysqli_affected_rows($linkB);
+
+						$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$callstatus_time',call_id='$fake_call_id',queue='$campaign',agent='Agent/$user',verb='CALLSTATUS',data1='NOCALL',serverid='$queuemetrics_log_id';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_to_mysqli($stmt, $linkB);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00836',$user,$server_ip,$session_name,$one_mysql_log);}
+						$UPAaffected_rows = mysqli_affected_rows($linkB);
+
+						$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$pauseall_time',call_id='',queue='NONE',agent='Agent/$user',verb='PAUSEALL',serverid='$queuemetrics_log_id';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_to_mysqli($stmt, $linkB);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$linkB,$mel,$stmt,'00837',$user,$server_ip,$session_name,$one_mysql_log);}
+						$PAaffected_rows = mysqli_affected_rows($linkB);
+						##### END insert new pause session, back-dated before the PAUSEREASON
+						}
 					}
 				else
 					{
