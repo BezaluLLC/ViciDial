@@ -119,10 +119,11 @@
 # 200401-1930 - Added option to show more customer info for level 9 users and customize the color chart times
 # 200428-1337 - Added RS_INcolumnsHIDE, RS_report_default_format & RS_AGENTstatusTALLY options.php settings
 # 200506-1642 - Added RS_CUSTINFOminUL options.php setting
+# 200815-0930 - Added agent-paused 10 & 15 minute indicators
 #
 
-$version = '2.14-104';
-$build = '200506-1642';
+$version = '2.14-105';
+$build = '200815-0930';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -140,6 +141,8 @@ $rt_report_times["incall_long_time"]=300;
 $rt_report_times["paused_short_time"]=10;
 $rt_report_times["paused_medium_time"]=60;
 $rt_report_times["paused_long_time"]=300;
+$rt_report_times["paused_long_time10"]=600;
+$rt_report_times["paused_long_time15"]=900;
 $rt_report_times["threeway_short_time"]=10;
 $rt_report_times["dead_short_time"]=10;
 $rt_report_times["pause_limit"]=20;
@@ -1253,6 +1256,8 @@ else
 		.violet {color: black; background-color: #EE82EE} 
 		.thistle {color: black; background-color: #D8BFD8} 
 		.olive {color: white; background-color: #808000}
+		.darkolivegreen {color: white; background-color: #556B2F}
+		.saddlebrown {color: white; background-color: #8B4513}
 		.lime {color: white; background-color: #006600}
 		.yellow {color: black; background-color: yellow}
 		.khaki {color: black; background-color: #F0E68C}
@@ -3565,6 +3570,8 @@ if ($talking_to_print > 0)
 				if ($call_time_S >= $rt_report_times["paused_short_time"]) {$G='<SPAN class="khaki"><B>'; $EG='</B></SPAN>'; $tr_class='TRkhaki';}
 				if ($call_time_S >= $rt_report_times["paused_medium_time"]) {$G='<SPAN class="yellow"><B>'; $EG='</B></SPAN>'; $tr_class='TRyellow';}
 				if ($call_time_S >= $rt_report_times["paused_long_time"]) {$G='<SPAN class="olive"><B>'; $EG='</B></SPAN>'; $tr_class='TRolive';}
+				if ($call_time_S >= $rt_report_times["paused_long_time10"]) {$G='<SPAN class="darkolivegreen"><B>'; $EG='</B></SPAN>'; $tr_class='TRdarkolivegreen';}
+				if ($call_time_S >= $rt_report_times["paused_long_time15"]) {$G='<SPAN class="saddlebrown"><B>'; $EG='</B></SPAN>'; $tr_class='TRsaddlebrown';}
 				if ($call_time_S >= $rt_report_times["pause_limit"]) {$G='<SPAN class="darkred"><B>'; $EG='</B></SPAN>'; $tr_class='TRdarkred';}
 				}
 			}
@@ -3607,6 +3614,8 @@ if ($talking_to_print > 0)
 				if ($call_time_S >= $rt_report_times["paused_short_time"]) {$G='<SPAN class="khaki"><B>'; $EG='</B></SPAN>'; $tr_class='TRkhaki';}
 				if ($call_time_S >= $rt_report_times["paused_medium_time"]) {$G='<SPAN class="yellow"><B>'; $EG='</B></SPAN>'; $tr_class='TRyellow';}
 				if ($call_time_S >= $rt_report_times["paused_long_time"]) {$G='<SPAN class="olive"><B>'; $EG='</B></SPAN>'; $tr_class='TRolive';}
+				if ($call_time_S >= $rt_report_times["paused_long_time10"]) {$G='<SPAN class="darkolivegreen"><B>'; $EG='</B></SPAN>'; $tr_class='TRdarkolivegreen';}
+				if ($call_time_S >= $rt_report_times["paused_long_time15"]) {$G='<SPAN class="saddlebrown"><B>'; $EG='</B></SPAN>'; $tr_class='TRsaddlebrown';}
 				if ($call_time_S >= $pause_limit) {$G='<SPAN class="darkred"><B>'; $EG='</B></SPAN>'; $tr_class='TRdarkred';}
 				}
 			}
@@ -3891,6 +3900,8 @@ if ($talking_to_print > 0)
 	$Aecho .= "  <SPAN class=\"khaki\"><B>          </SPAN> - "._QXZ("Agent Paused")." > ".TimeToText($rt_report_times["paused_short_time"])."</B>\n";
 	$Aecho .= "  <SPAN class=\"yellow\"><B>          </SPAN> - "._QXZ("Agent Paused")." > ".TimeToText($rt_report_times["paused_medium_time"])."</B>\n";
 	$Aecho .= "  <SPAN class=\"olive\"><B>          </SPAN> - "._QXZ("Agent Paused")." > ".TimeToText($rt_report_times["paused_long_time"])."</B>\n";
+	$Aecho .= "  <SPAN class=\"darkolivegreen\"><B>          </SPAN> - "._QXZ("Agent Paused")." > ".TimeToText($rt_report_times["paused_long_time10"])."</B>\n";
+	$Aecho .= "  <SPAN class=\"saddlebrown\"><B>          </SPAN> - "._QXZ("Agent Paused")." > ".TimeToText($rt_report_times["paused_long_time15"])."</B>\n";
 	$Aecho .= "  <SPAN class=\"lime\"><B>          </SPAN> - "._QXZ("Agent in 3-WAY")." > ".TimeToText($rt_report_times["threeway_short_time"])."</B>\n";
 	$Aecho .= "  <SPAN class=\"black\"><B>          </SPAN> - "._QXZ("Agent on a dead call")."</B>\n";
 	if ($SSenable_pause_code_limits > 0)
