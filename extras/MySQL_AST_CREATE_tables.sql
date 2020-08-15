@@ -562,7 +562,7 @@ campaign_detail ENUM('0','1') default '0',
 ast_admin_access ENUM('0','1') default '0',
 ast_delete_phones ENUM('0','1') default '0',
 delete_scripts ENUM('0','1') default '0',
-modify_leads ENUM('0','1') default '0',
+modify_leads ENUM('0','1','2','3','4','5','6') default '0',
 hotkeys_active ENUM('0','1') default '0',
 change_agent_campaign ENUM('0','1') default '0',
 agent_choose_ingroups ENUM('0','1') default '1',
@@ -4666,4 +4666,4 @@ INSERT INTO vicidial_settings_containers VALUES ('INTERNATIONAL_DNC_IMPORT','Pro
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1603',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1604',db_schema_update_date=NOW(),reload_timestamp=NOW();
