@@ -516,6 +516,9 @@ OTHER CHANGES:
 144. Added options for HTML formatting and UTF-8 charset in emails through the
 	dispo_send_email.php script.
 
+145. Added tools for International DNC phone number scrubbing. See the
+	INTERNATIONAL_DNC_SCRUB.txt doc for more information.
+
 
 
 

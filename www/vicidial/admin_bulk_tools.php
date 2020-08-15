@@ -531,7 +531,7 @@ if ($form_to_run == "ACCID")
 	echo "<input type=hidden name=ACCIDactiveinput value='$ACCIDactiveinput_raw'>";
 	echo "<input type=hidden name=ACCIDactive value='$ACCIDactive'>";
 	echo "<input type=hidden name=ACCIDmethod value='$ACCIDmethod'>";
-	echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input type=submit name=did_submit value='CONFIRM'></td></tr>\n";
+	echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=did_submit value='CONFIRM'></td></tr>\n";
 	echo "</table></center></form>\n";
 	echo "</html>";
 	}
@@ -735,7 +735,7 @@ elseif ($form_to_run == "ACCIDDELETEselect")
 		$i++;
 		}
 	echo "</select></td></tr>\n";
-	echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input type=submit name=did_submit value='"._QXZ("Submit")."'></td></tr>\n";
+	echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=did_submit value='"._QXZ("Submit")."'></td></tr>\n";
 
 	echo "</table></center></form>\n";
 	echo "</html>";
@@ -760,7 +760,7 @@ elseif ($form_to_run == "ACCIDDELETEconfirm")
 		echo "<input type=hidden name=DB value='$DB'>";
 		echo "<input type=hidden name=ACCIDdelete_campaign value='$ACCIDdelete_campaign'>";
 		echo "<input type=hidden name=ACCIDclear_all_CONFIRMED value='$ACCIDclear_all'>";
-		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input type=submit name=did_submit value='CONFIRM'></td></tr>\n";
+		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=did_submit value='CONFIRM'></td></tr>\n";
 		echo "</table></center></form>\n";
 		echo "</html>";
 		}
@@ -792,7 +792,7 @@ elseif ($form_to_run == "ACCIDDELETEconfirm")
 		echo "<input type=hidden name=DB value='$DB'>";
 		echo "<input type=hidden name=ACCIDdelete_from_CONFIRMED value='$ACCIDdelete_from'>";
 		echo "<input type=hidden name=ACCIDdelete_campaign value='$ACCIDdelete_campaign'>";
-		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input type=submit name=did_submit value='CONFIRM'></td></tr>\n";
+		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=did_submit value='CONFIRM'></td></tr>\n";
 		echo "</table></center></form>\n";
 		echo "</html>";
 		}
@@ -980,7 +980,7 @@ elseif ($form_to_run == "BULKDIDS")
 		echo "<input type=hidden name=DB value='$DB'>";
 		echo "<input type=hidden name=DIDto_insert_CONFIRMED value='$DIDto_insert'>";
 		echo "<input type=hidden name=DIDcopy_from value='$DIDcopy_from'>";
-		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input type=submit name=did_submit value='CONFIRM'></td></tr>\n";
+		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=did_submit value='CONFIRM'></td></tr>\n";
 		echo "</table></center></form>\n";
 		echo "</html>";
 	}
@@ -1172,7 +1172,7 @@ elseif ($form_to_run == "BULKDIDSDELETE")
 	echo "<input type=hidden name=form_to_run value='BULKDIDSDELETEconfirmed'>";
 	echo "<input type=hidden name=DB value='$DB'>";
 	echo "<input type=hidden name=DIDdelete_from_CONFIRMED value='$DIDdelete_from'>";
-	echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input type=submit name=did_submit value='CONFIRM'></td></tr>\n";
+	echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=did_submit value='CONFIRM'></td></tr>\n";
 	echo "</table></center></form>\n";
 	echo "</html>";
 	}
@@ -1324,7 +1324,7 @@ elseif ($form_to_run == "BULKUSERS")
 	echo "<input type=hidden name=USERto_insert value='$USERto_insert'>";
 	echo "<input type=hidden name=USERcopy_from value='$USERcopy_from'>";
 	echo "<input type=hidden name=USERforce_pw value='$USERforce_pw'>";
-	echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input type=submit name=did_submit value='CONFIRM'></td></tr>\n";
+	echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=did_submit value='CONFIRM'></td></tr>\n";
 	echo "</table></center></form>\n";
 	echo "</html>";
 	}
@@ -1575,7 +1575,7 @@ elseif ($form_to_run == "BULKUSERSDELETE") ### BULK USER DELETE
 	echo "<input type=hidden name=form_to_run value='BULKUSERSDELETEconfirmed'>";
 	echo "<input type=hidden name=DB value='$DB'>";
 	echo "<input type=hidden name=USERdelete_from_CONFIRMED value='$USERdelete_from'>";
-	echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input type=submit name=did_submit value='CONFIRM'></td></tr>\n";
+	echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#".$SSbutton_color."' type=submit name=did_submit value='CONFIRM'></td></tr>\n";
 	echo "</table></center></form>\n";
 	echo "</html>";
 	}
@@ -1661,7 +1661,7 @@ else
 
 		echo "</select></td></tr>\n";
 		echo "<tr bgcolor=#". $SSstd_row1_background ."><td align=right>"._QXZ("DIDs to insert").":</td><td align=left><textarea name='DIDto_insert' cols='11' rows='10'></textarea></td></td></tr>";
-		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input type=submit name=did_submit value='"._QXZ("Submit")."'></td></tr>\n";
+		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=did_submit value='"._QXZ("Submit")."'></td></tr>\n";
 		echo "</table></center></form>\n";
 		}
 
@@ -1705,7 +1705,7 @@ else
 			$i++;
 			}
 		echo "</select></td></tr>\n";
-		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input type=submit name=did_submit value='"._QXZ("Submit")."'></td></tr>\n";
+		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=did_submit value='"._QXZ("Submit")."'></td></tr>\n";
 		echo "</table></center></form>\n";
 		echo "</html>";
 		}
@@ -1781,7 +1781,7 @@ else
 		echo "<option value='F'>"._QXZ("Input")."</option>\n";
 		echo "</select></td></tr>\n";	
 		echo "<tr bgcolor=#". $SSstd_row1_background ."><td align=right>"._QXZ("AC-CIDs").":</td><td align=left><textarea name='ACCIDdids' cols='70' rows='10'></textarea></td>\n";	
-		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input type=submit name=accid_submit value='"._QXZ("Submit")."'></td></tr>\n";
+		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=accid_submit value='"._QXZ("Submit")."'></td></tr>\n";
 		echo "</table></center></form>\n";
 		echo "</html>";
 		}
@@ -1851,7 +1851,7 @@ else
 		echo "<option value='N'>"._QXZ("No")."</option>\n";
 		echo "<option value='Y'>"._QXZ("Yes")."</option>\n";
 		echo "</select></td></tr>\n";		
-		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input type=submit name=accid_submit value='"._QXZ("Submit")."'></td></tr>\n";
+		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=accid_submit value='"._QXZ("Submit")."'></td></tr>\n";
 		echo "</table></center></form>\n";
 		echo "</html>";
 		}
@@ -1905,7 +1905,7 @@ else
 		echo "<option value='N'>"._QXZ("No")."</option>\n";
 		echo "<option value='Y'>"._QXZ("Yes")."</option>\n";
 		echo "</select></td></tr>\n";
-		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input type=submit name=did_submit value='"._QXZ("Submit")."'></td></tr>\n";
+		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=did_submit value='"._QXZ("Submit")."'></td></tr>\n";
 		echo "</table></center></form>\n";
 		echo "</html>";
 		}
@@ -1977,7 +1977,7 @@ else
 			}
 		
 		echo "</select></td></tr>\n";
-		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input type=submit name=did_submit value='"._QXZ("Submit")."'></td></tr>\n";
+		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=did_submit value='"._QXZ("Submit")."'></td></tr>\n";
 		echo "</table></center></form>\n";
 		
 		echo "<br> <font size=1><p align=left>"._QXZ("Version").": $version   "._QXZ("Build").": $build</p></font>";
