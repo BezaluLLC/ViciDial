@@ -522,6 +522,8 @@ OTHER CHANGES:
 146. Added option '2' to the User Modify "Modify Leads" setting allowing admin
 	users to modify all lead fields except for phone number and alt phone.
 
+147. Added campaigns_list & hopper_list functions to the Non-Agent API
+
 
 
 
