@@ -4705,12 +4705,13 @@ else
 # 200719-1645 - Added EVERY_NEW_ALLCALL option for QM PAUSEREASON system setting
 # 200814-2249 - Added International DNC scrub options
 # 200815-0015 - Added another modify_leads option for users
+# 200816-0912 - Removed the ability to delete the 'default' DID entry
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-765a';
-$build = '200815-0015';
+$admin_version = '2.14-766a';
+$build = '200816-0912';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -32918,7 +32919,10 @@ if ($ADD==3311)
 			}
 		if ($LOGdelete_dids > 0)
 			{
-			echo "<br><br><a href=\"$PHP_SELF?ADD=5311&did_id=$did_id\">"._QXZ("DELETE THIS DID")."</a>\n";
+			if ($did_pattern == 'default')
+				{echo "<br><br><DEL>"._QXZ("DELETE THIS DID")."</DEL>\n";}
+			else
+				{echo "<br><br><a href=\"$PHP_SELF?ADD=5311&did_id=$did_id\">"._QXZ("DELETE THIS DID")."</a>\n";}
 			}
 		if ( ($LOGuser_level >= 9) and ( (preg_match("/Administration Change Log/",$LOGallowed_reports)) or (preg_match("/ALL REPORTS/",$LOGallowed_reports)) ) )
 			{
