@@ -145,7 +145,7 @@ $rt_report_times["paused_long_time10"]=600;
 $rt_report_times["paused_long_time15"]=900;
 $rt_report_times["threeway_short_time"]=10;
 $rt_report_times["dead_short_time"]=10;
-$rt_report_times["pause_limit"]=20;
+$rt_report_times["pause_limit"]=999999;
 
 $container_stmt="select container_entry from vicidial_settings_containers where container_id='REALTIME_REPORT_TIMES'";
 $container_rslt=mysql_to_mysqli($container_stmt, $link);
