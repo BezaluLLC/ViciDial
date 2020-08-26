@@ -494,10 +494,11 @@
 # 200621-1027 - Added queuemetrics_pausereason options
 # 200712-2034 - Fix for use_custom_cid variable issue
 # 200719-1645 - Added EVERY_NEW_ALLCALL queuemetrics_pausereason option
+# 200825-2342 - Added option for manual-only sip actions
 #
 
-$version = '2.14-387';
-$build = '200719-1645';
+$version = '2.14-388';
+$build = '200825-2342';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=839;
@@ -7176,9 +7177,9 @@ if ($ACTION == 'manDiaLlookCaLL')
 									$sea=0;
 									while ($sip_action_settings_ct >= $sea)
 										{
-										if (preg_match("/^invite_to_final => /",$sip_action_settings[$sea]))
+										if ( (preg_match("/^invite_to_final => /",$sip_action_settings[$sea])) and (!preg_match("/auto-only/i",$sip_action_settings[$sea])) )
 											{
-											# invite_to_final => 0.0,1.0,hangup-dispo-message,FAS,Auto Hangup and Dispo of False Answer Call
+											# invite_to_final => 0.0,1.0,hangup-dispo-message,FAS,Auto Hangup and Dispo of False Answer Call,manual-only
 											$sip_action_settings[$sea] = preg_replace("/invite_to_final => /",'',$sip_action_settings[$sea]);
 											$invite_to_finalARY = explode(",",$sip_action_settings[$sea]);
 											$T_dial_time =	floatval($dial_time);
