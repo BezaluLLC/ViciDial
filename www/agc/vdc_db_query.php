@@ -495,10 +495,11 @@
 # 200712-2034 - Fix for use_custom_cid variable issue
 # 200719-1645 - Added EVERY_NEW_ALLCALL queuemetrics_pausereason option
 # 200825-2342 - Added option for manual-only sip actions
+# 200828-1535 - Fixed issue with dispo URL statuse being sent for CBHOLD statuses
 #
 
-$version = '2.14-388';
-$build = '200825-2342';
+$version = '2.14-389';
+$build = '200828-1535';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=839;
@@ -14068,6 +14069,9 @@ if ($ACTION == 'updateDISPO')
 			$owner			= urlencode(trim($row[33]));
 			$entry_list_id	= urlencode(trim($row[34]));
 			}
+
+		if ($dispo=="CBHOLD" && strlen($log_dispo_choice)>0 && $dispo!=$log_dispo_choice) {$dispo=$log_dispo_choice;}
+
 
 		if (preg_match('/list_name--B--|list_description--B--/i',$dispo_call_urlARY[$j]))
 			{
