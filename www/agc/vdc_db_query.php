@@ -14070,6 +14070,7 @@ if ($ACTION == 'updateDISPO')
 			$entry_list_id	= urlencode(trim($row[34]));
 			}
 
+		# Revert to log dispo choice if the lead is a callback, as CBHOLD would not be what the agent selected
 		if ($dispo=="CBHOLD" && strlen($log_dispo_choice)>0 && $dispo!=$log_dispo_choice) {$dispo=$log_dispo_choice;}
 
 
