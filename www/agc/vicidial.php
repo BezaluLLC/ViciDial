@@ -642,6 +642,7 @@
 # 200524-1021 - Fix for agentchannel not populating while volumecontrol_active disabled
 # 200528-2239 - Added three_way_record_stop_exception campaign setting
 # 200909-0952 - Fix for script_top_dispo issue #1228
+# 200912-1426 - Added more get_call_launch PREVIEW_ options
 #
 
 $version = '2.14-611c';
@@ -10275,7 +10276,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 										{
 										CustomerChatContentsLoad();
 										}
-									if (get_call_launch == 'SCRIPT')
+									if ( (get_call_launch == 'SCRIPT') || (get_call_launch == 'PREVIEW_SCRIPT') )
 										{
 										if (delayed_script_load == 'YES')
 											{
@@ -10283,7 +10284,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 											}
 										ScriptPanelToFront();
 										}
-									if ( (get_call_launch == 'SCRIPTTWO') && (SSenable_second_script > 0) )
+									if ( ( (get_call_launch == 'SCRIPTTWO') || (get_call_launch == 'PREVIEW_SCRIPTTWO') ) && (SSenable_second_script > 0) )
 										{
 										if (delayed_script_load == 'YES')
 											{
@@ -10292,7 +10293,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 										ScriptPanel2ToFront();
 										}
 
-									if (get_call_launch == 'FORM')
+									if ( (get_call_launch == 'FORM') || (get_call_launch == 'PREVIEW_FORM') )
 										{
 										FormPanelToFront();
 										}
@@ -10345,6 +10346,28 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 											}
 										}
 									reselect_preview_dial = 1;
+
+									if (get_call_launch == 'PREVIEW_SCRIPT')
+										{
+										if (delayed_script_load == 'YES')
+											{
+											load_script_contents('ScriptContents','');
+											}
+										ScriptPanelToFront();
+										}
+									if ( (get_call_launch == 'PREVIEW_SCRIPTTWO') && (SSenable_second_script > 0) )
+										{
+										if (delayed_script_load == 'YES')
+											{
+											load_script_contents('Script2Contents','');
+											}
+										ScriptPanel2ToFront();
+										}
+
+									if (get_call_launch == 'PREVIEW_FORM')
+										{
+										FormPanelToFront();
+										}
 
 									if (get_call_launch == 'PREVIEW_WEBFORM')
 										{

@@ -4706,12 +4706,13 @@ else
 # 200814-2249 - Added International DNC scrub options
 # 200815-0015 - Added another modify_leads option for users
 # 200816-0912 - Removed the ability to delete the 'default' DID entry
+# 200912-1649 - Added more get_call_launch PREVIEW_ options
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-766a';
-$build = '200816-0912';
+$admin_version = '2.14-767a';
+$build = '200912-1649';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -24427,18 +24428,18 @@ if ($ADD==31)
 
 		$eswHTML=''; $cfwHTML='';
 		if ($SSenable_second_script > 0)
-			{$eswHTML .= "<option value='SCRIPTTWO'>"._QXZ("SCRIPTTWO")."</option>";}
+			{$eswHTML .= "<option value='SCRIPTTWO'>"._QXZ("SCRIPTTWO")."</option><option value='PREVIEW_SCRIPTTWO'>"._QXZ("PREVIEW_SCRIPTTWO")."</option>";}
 		if ($SSenable_second_webform > 0)
 			{$eswHTML .= '<option value="WEBFORMTWO">'._QXZ("WEBFORMTWO").'</option><option value="PREVIEW_WEBFORMTWO">'._QXZ("PREVIEW_WEBFORMTWO").'</option>';}
 		if ($SSenable_third_webform > 0)
 			{$eswHTML .= "<option value='WEBFORMTHREE'>"._QXZ("WEBFORMTHREE")."</option><option value='PREVIEW_WEBFORMTHREE'>"._QXZ("PREVIEW_WEBFORMTHREE")."</option>";}
 		if ($SScustom_fields_enabled > 0)
-			{$cfwHTML .= '<option value="FORM">'._QXZ("FORM").'</option>';}
+			{$cfwHTML .= '<option value="FORM">'._QXZ("FORM").'</option><option value="PREVIEW_FORM">'._QXZ("PREVIEW_FORM").'</option>';}
 		if ($SSallow_emails > 0)
 			{$aemHTML .= "<option value='EMAIL'>"._QXZ("EMAIL")."</option>";}
 		if ($SSallow_chats > 0)
 			{$achHTML .= '<option value="CHAT">'._QXZ("CHAT").'</option>';}
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Get Call Launch").": </td><td align=left><select size=1 name=get_call_launch><option value='NONE' selected>"._QXZ("NONE")."</option><option value='SCRIPT'>"._QXZ("SCRIPT")."</option><option value='WEBFORM'>"._QXZ("WEBFORM")."</option><option value='PREVIEW_WEBFORM'>"._QXZ("PREVIEW_WEBFORM")."</option>$eswHTML$cfwHTML$aemHTML$achHTML<option value='$get_call_launch' selected>"._QXZ("$get_call_launch")."</option></select>$NWB#campaigns-get_call_launch$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Get Call Launch").": </td><td align=left><select size=1 name=get_call_launch><option value='NONE' selected>"._QXZ("NONE")."</option><option value='SCRIPT'>"._QXZ("SCRIPT")."</option></option><option value='PREVIEW_SCRIPT'>"._QXZ("PREVIEW_SCRIPT")."</option><option value='WEBFORM'>"._QXZ("WEBFORM")."</option><option value='PREVIEW_WEBFORM'>"._QXZ("PREVIEW_WEBFORM")."</option>$eswHTML$cfwHTML$aemHTML$achHTML<option value='$get_call_launch' selected>"._QXZ("$get_call_launch")."</option></select>$NWB#campaigns-get_call_launch$NWE</td></tr>\n";
 
 		if ($SSbrowser_call_alerts > 0)
 			{
