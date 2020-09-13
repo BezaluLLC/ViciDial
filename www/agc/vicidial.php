@@ -643,10 +643,11 @@
 # 200528-2239 - Added three_way_record_stop_exception campaign setting
 # 200909-0952 - Fix for script_top_dispo issue #1228
 # 200912-1426 - Added more get_call_launch PREVIEW_ options
+# 200913-0817 - Added UNSELECTED options for campaign alt_number_dialing
 #
 
-$version = '2.14-611c';
-$build = '200909-0952';
+$version = '2.14-612c';
+$build = '200913-0817';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=92;
 $one_mysql_log=0;
@@ -2533,7 +2534,7 @@ else
 					{$manual_dial_prefix = $dial_prefix;}
 				if (strlen($three_way_dial_prefix) < 1)
 					{$three_way_dial_prefix = $dial_prefix;}
-				if ( ($alt_number_dialing=='Y') or ($alt_number_dialing=='SELECTED') or ($alt_number_dialing=='SELECTED_TIMER_ALT') or ($alt_number_dialing=='SELECTED_TIMER_ADDR3') )
+				if ( ($alt_number_dialing=='Y') or ($alt_number_dialing=='SELECTED') or ($alt_number_dialing=='SELECTED_TIMER_ALT') or ($alt_number_dialing=='SELECTED_TIMER_ADDR3') or ($alt_number_dialing=='UNSELECTED') or ($alt_number_dialing=='UNSELECTED_TIMER_ALT') or ($alt_number_dialing=='UNSELECTED_TIMER_ADDR3') )
 					{$alt_phone_dialing='1';}
 				else
 					{
@@ -7555,7 +7556,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					reselect_alt_dial = 1;
 					alt_dial_active = 1;
 					alt_dial_status_display = 1;
-					if ( ( (alt_number_dialing == 'SELECTED_TIMER_ALT') || (alt_number_dialing == 'SELECTED_TIMER_ADDR3') ) && ( (last_mdtype != 'ALT') && (last_mdtype != 'ADDR3') ) )
+					if ( ( (alt_number_dialing == 'SELECTED_TIMER_ALT') || (alt_number_dialing == 'SELECTED_TIMER_ADDR3') || (alt_number_dialing == 'UNSELECTED_TIMER_ALT') || (alt_number_dialing == 'UNSELECTED_TIMER_ADDR3') ) && ( (last_mdtype != 'ALT') && (last_mdtype != 'ADDR3') ) )
 						{
 						timer_alt_count=timer_alt_seconds;
 						timer_alt_trigger=1;
@@ -14886,6 +14887,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						{
 						document.vicidial_form.DiaLAltPhonE.checked=true;
 						}
+					if ( (alt_number_dialing == 'UNSELECTED') || (alt_number_dialing == 'UNSELECTED_TIMER_ALT') || (alt_number_dialing == 'UNSELECTED_TIMER_ADDR3') )
+						{
+						document.vicidial_form.DiaLAltPhonE.checked=false;
+						}
 					if ( (shift_logout_flag < 1) && (api_logout_flag < 1) )
 						{
 						if (wrapup_waiting == 0)
@@ -18736,6 +18741,8 @@ function phone_number_format(formatphone) {
 				{hideDiv('VolumeControlSpan');}
 			if ( (DefaulTAlTDiaL == '1') || (alt_number_dialing == 'SELECTED') || (alt_number_dialing == 'SELECTED_TIMER_ALT') || (alt_number_dialing == 'SELECTED_TIMER_ADDR3') )
 				{document.vicidial_form.DiaLAltPhonE.checked=true;}
+			if ( (alt_number_dialing == 'UNSELECTED') || (alt_number_dialing == 'UNSELECTED_TIMER_ALT') || (alt_number_dialing == 'UNSELECTED_TIMER_ADDR3') )
+				{document.vicidial_form.DiaLAltPhonE.checked=false;}
 			if (agent_status_view != '1')
 				{document.getElementById("AgentViewLink").innerHTML = "";}
 			if (dispo_check_all_pause == '1')
@@ -19070,9 +19077,9 @@ function phone_number_format(formatphone) {
 						timer_alt_trigger=0;
 						timer_alt_count=timer_alt_seconds;
 						document.getElementById("timer_alt_display").innerHTML = '';
-						if (alt_number_dialing == 'SELECTED_TIMER_ALT')
+						if ( (alt_number_dialing == 'SELECTED_TIMER_ALT') || (alt_number_dialing == 'SELECTED_TIMER_ALT') )
 							{ManualDialOnly('ALTPhonE','NO','0');}
-						if (alt_number_dialing == 'SELECTED_TIMER_ADDR3')
+						if ( (alt_number_dialing == 'SELECTED_TIMER_ADDR3') || (alt_number_dialing == 'UNSELECTED_TIMER_ADDR3') )
 							{ManualDialOnly('AddresS3','NO','0');}
 						}
 					else
@@ -19745,6 +19752,8 @@ function phone_number_format(formatphone) {
 					{document.vicidial_form.DiaLAltPhonE.checked=true}
 				if ( (DefaulTAlTDiaL == '1') || (alt_number_dialing == 'SELECTED') || (alt_number_dialing == 'SELECTED_TIMER_ALT') || (alt_number_dialing == 'SELECTED_TIMER_ADDR3') )
 					{document.vicidial_form.DiaLAltPhonE.checked=true;}
+				if ( (alt_number_dialing == 'UNSELECTED') || (alt_number_dialing == 'UNSELECTED_TIMER_ALT') || (alt_number_dialing == 'UNSELECTED_TIMER_ADDR3') )
+					{document.vicidial_form.DiaLAltPhonE.checked=false;}
 				}
 			}
 		}
@@ -19954,6 +19963,10 @@ function phone_number_format(formatphone) {
 				if ( (alt_number_dialing == 'SELECTED') || (alt_number_dialing == 'SELECTED_TIMER_ALT') || (alt_number_dialing == 'SELECTED_TIMER_ADDR3') )
 					{
 					document.vicidial_form.DiaLAltPhonE.checked=true;
+					}
+				if ( (alt_number_dialing == 'UNSELECTED') || (alt_number_dialing == 'UNSELECTED_TIMER_ALT') || (alt_number_dialing == 'UNSELECTED_TIMER_ADDR3') )
+					{
+					document.vicidial_form.DiaLAltPhonE.checked=false;
 					}
 				}
 			else

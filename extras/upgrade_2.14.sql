@@ -1311,3 +1311,7 @@ UPDATE system_settings SET db_schema_version='1604',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns MODIFY get_call_launch ENUM('NONE','SCRIPT','SCRIPTTWO','WEBFORM','WEBFORMTWO','WEBFORMTHREE','FORM','PREVIEW_WEBFORM','PREVIEW_WEBFORMTWO','PREVIEW_WEBFORMTHREE','PREVIEW_SCRIPT','PREVIEW_SCRIPTTWO','PREVIEW_FORM') default 'NONE';
 
 UPDATE system_settings SET db_schema_version='1605',db_schema_update_date=NOW() where db_schema_version < 1605;
+
+ALTER TABLE vicidial_campaigns MODIFY alt_number_dialing ENUM('N','Y','SELECTED','SELECTED_TIMER_ALT','SELECTED_TIMER_ADDR3','UNSELECTED','UNSELECTED_TIMER_ALT','UNSELECTED_TIMER_ADDR3') default 'N';
+
+UPDATE system_settings SET db_schema_version='1606',db_schema_update_date=NOW() where db_schema_version < 1605;

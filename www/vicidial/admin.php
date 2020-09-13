@@ -4707,12 +4707,13 @@ else
 # 200815-0015 - Added another modify_leads option for users
 # 200816-0912 - Removed the ability to delete the 'default' DID entry
 # 200912-1649 - Added more get_call_launch PREVIEW_ options
+# 200913-0820 - Added UNSELECTED options for campaign alt_number_dialing
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-767a';
-$build = '200912-1649';
+$admin_version = '2.14-768a';
+$build = '200913-0820';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -24940,7 +24941,7 @@ if ($ADD==31)
 
 		if ($SSoutbound_autodial_active > 0)
 			{
-			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Manual Alt Num Dialing").": </td><td align=left><select size=1 name=alt_number_dialing><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='SELECTED'>"._QXZ("SELECTED")."</option><option value='SELECTED_TIMER_ALT'>"._QXZ("SELECTED_TIMER_ALT")."</option><option value='SELECTED_TIMER_ADDR3'>"._QXZ("SELECTED_TIMER_ADDR3")."</option><option value='$alt_number_dialing' SELECTED>"._QXZ("$alt_number_dialing")."</option></select>$NWB#campaigns-alt_number_dialing$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Manual Alt Num Dialing").": </td><td align=left><select size=1 name=alt_number_dialing><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='SELECTED'>"._QXZ("SELECTED")."</option><option value='SELECTED_TIMER_ALT'>"._QXZ("SELECTED_TIMER_ALT")."</option><option value='SELECTED_TIMER_ADDR3'>"._QXZ("SELECTED_TIMER_ADDR3")."</option><option value='UNSELECTED'>"._QXZ("UNSELECTED")."</option><option value='UNSELECTED_TIMER_ALT'>"._QXZ("UNSELECTED_TIMER_ALT")."</option><option value='UNSELECTED_TIMER_ADDR3'>"._QXZ("UNSELECTED_TIMER_ADDR3")."</option><option value='$alt_number_dialing' SELECTED>"._QXZ("$alt_number_dialing")."</option></select>$NWB#campaigns-alt_number_dialing$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Timer Alt Seconds").": </td><td align=left><input type=text name=timer_alt_seconds size=5 maxlength=4 value=\"$timer_alt_seconds\">$NWB#campaigns-timer_alt_seconds$NWE</td></tr>\n";
 			}

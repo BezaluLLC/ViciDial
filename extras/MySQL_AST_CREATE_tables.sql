@@ -781,7 +781,7 @@ xferconf_a_dtmf VARCHAR(50),
 xferconf_a_number VARCHAR(50),
 xferconf_b_dtmf VARCHAR(50),
 xferconf_b_number VARCHAR(50),
-alt_number_dialing ENUM('N','Y','SELECTED','SELECTED_TIMER_ALT','SELECTED_TIMER_ADDR3') default 'N',
+alt_number_dialing ENUM('N','Y','SELECTED','SELECTED_TIMER_ALT','SELECTED_TIMER_ADDR3','UNSELECTED','UNSELECTED_TIMER_ALT','UNSELECTED_TIMER_ADDR3') default 'N',
 scheduled_callbacks ENUM('Y','N') default 'N',
 lead_filter_id VARCHAR(20) default 'NONE',
 drop_call_seconds TINYINT(3) default '5',
@@ -4666,4 +4666,4 @@ INSERT INTO vicidial_settings_containers VALUES ('INTERNATIONAL_DNC_IMPORT','Pro
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1605',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1606',db_schema_update_date=NOW(),reload_timestamp=NOW();
