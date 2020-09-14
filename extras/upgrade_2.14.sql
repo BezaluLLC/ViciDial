@@ -1314,4 +1314,4 @@ UPDATE system_settings SET db_schema_version='1605',db_schema_update_date=NOW() 
 
 ALTER TABLE vicidial_campaigns MODIFY alt_number_dialing ENUM('N','Y','SELECTED','SELECTED_TIMER_ALT','SELECTED_TIMER_ADDR3','UNSELECTED','UNSELECTED_TIMER_ALT','UNSELECTED_TIMER_ADDR3') default 'N';
 
-UPDATE system_settings SET db_schema_version='1606',db_schema_update_date=NOW() where db_schema_version < 1605;
+UPDATE system_settings SET db_schema_version='1606',db_schema_update_date=NOW() where db_schema_version < 1606;
