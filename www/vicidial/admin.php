@@ -4708,12 +4708,13 @@ else
 # 200816-0912 - Removed the ability to delete the 'default' DID entry
 # 200912-1649 - Added more get_call_launch PREVIEW_ options
 # 200913-0820 - Added UNSELECTED options for campaign alt_number_dialing
+# 200916-0922 - Added more modify_leads options for users(modify log statuses)
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-768a';
-$build = '200913-0820';
+$admin_version = '2.14-769a';
+$build = '200916-0922';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -22803,7 +22804,7 @@ if ($ADD==3)
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Lists").": </td><td align=left><select size=1 name=modify_lists><option>0</option><option>1</option><option SELECTED>$modify_lists</option></select>$NWB#users-modify_sections$NWE</td></tr>\n";
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Delete Lists").": </td><td align=left><select size=1 name=delete_lists><option>0</option><option>1</option><option SELECTED>$delete_lists</option></select>$NWB#users-delete_lists$NWE</td></tr>\n";
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Load Leads").": </td><td align=left><select size=1 name=load_leads><option>0</option><option>1</option><option SELECTED>$load_leads</option></select>$NWB#users-load_leads$NWE</td></tr>\n";
-				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Leads").": </td><td align=left><select size=1 name=modify_leads><option>0</option><option>1</option><option>2</option><option SELECTED>$modify_leads</option></select>$NWB#users-modify_leads$NWE</td></tr>\n";
+				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Leads").": </td><td align=left><select size=1 name=modify_leads><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option SELECTED>$modify_leads</option></select>$NWB#users-modify_leads$NWE</td></tr>\n";
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("GDPR-Compliant Export Delete Leads").": </td><td align=left><select size=1 name=export_gdpr_leads>";
 				for ($i=0; $i<=$SSenable_gdpr_download_deletion; $i++) 
 					{
