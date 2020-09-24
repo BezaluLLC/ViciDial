@@ -644,10 +644,11 @@
 # 200909-0952 - Fix for script_top_dispo issue #1228
 # 200912-1426 - Added more get_call_launch PREVIEW_ options
 # 200913-0817 - Added UNSELECTED options for campaign alt_number_dialing
+# 200922-0948 - Added manual_dial_phone_strip system setting feature
 #
 
-$version = '2.14-612c';
-$build = '200913-0817';
+$version = '2.14-613c';
+$build = '200922-0948';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=92;
 $one_mysql_log=0;
@@ -766,7 +767,7 @@ if ($sl_ct > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script,agent_push_events,agent_push_url,agent_logout_link,agentonly_callback_campaign_lock,manual_dial_validation,mute_recordings,enable_second_script,enable_first_webform,recording_buttons,outbound_cid_any,browser_call_alerts FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script,agent_push_events,agent_push_url,agent_logout_link,agentonly_callback_campaign_lock,manual_dial_validation,mute_recordings,enable_second_script,enable_first_webform,recording_buttons,outbound_cid_any,browser_call_alerts,manual_dial_phone_strip FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -817,6 +818,7 @@ if ($qm_conf_ct > 0)
 	$SSrecording_buttons =				$row[40];
 	$SSoutbound_cid_any =				$row[41];
 	$SSbrowser_call_alerts =			$row[42];
+	$SSmanual_dial_phone_strip =		$row[43];
 	}
 else
 	{
@@ -8833,7 +8835,14 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			var MDLookuPLeaD = 'new';
 			if ( (document.vicidial_form.LeadLookuP.checked==true) || (manual_dial_search_checkbox == 'SELECTED_LOCK') )
 				{MDLookuPLeaD = 'lookup';}
-
+			<?php
+			if ( ($SSmanual_dial_phone_strip!='DISABLED') and (strlen($SSmanual_dial_phone_strip) > 0) )
+				{
+				echo "var REGphone_strip = new RegExp(\"^$SSmanual_dial_phone_strip\",'');\n";
+				echo "			MDPhonENumbeRform = MDPhonENumbeRform.replace(REGphone_strip, '');\n";
+				echo "			document.vicidial_form.MDPhonENumbeR.value = MDPhonENumbeRform;\n";
+				}
+			?>
 			if (MDPhonENumbeRform == 'XXXXXXXXXX')
 				{MDPhonENumbeRform = document.vicidial_form.MDPhonENumbeRHiddeN.value;}
 
@@ -8917,6 +8926,14 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		var MDDiaLCodEform = document.vicidial_form.phone_code.value;
 		var MDPhonENumbeRform = document.vicidial_form.phone_number.value;
 		var MDVendorLeadCode = document.vicidial_form.vendor_lead_code.value;
+		<?php
+		if ( ($SSmanual_dial_phone_strip!='DISABLED') and (strlen($SSmanual_dial_phone_strip) > 0) )
+			{
+			echo "var REGphone_strip = new RegExp(\"^$SSmanual_dial_phone_strip\",'');\n";
+			echo "		MDPhonENumbeRform = MDPhonENumbeRform.replace(REGphone_strip, '');\n";
+			echo "		document.vicidial_form.phone_number.value = MDPhonENumbeRform;\n";
+			}
+		?>
 
 		if ( (MDDiaLCodEform.length < 1) || (MDPhonENumbeRform.length < 5) )
 			{

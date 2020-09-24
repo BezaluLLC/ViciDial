@@ -630,7 +630,7 @@ $dispo_sale_rslt=mysql_to_mysqli($dispo_sale_stmt, $link);
 while ($dispo_sale_row=mysqli_fetch_row($dispo_sale_rslt))
 	{
 	$status=$dispo_sale_row[0];
-	$campaign=$dispo_sale_row[1];
+	$campaign=strtoupper($dispo_sale_row[1]);
 	if (!$report_sale_array["$campaign"]) {$report_sale_array["$campaign"]="|";}
 	$report_sale_array["$campaign"].="$status|";
 	}
@@ -650,7 +650,7 @@ if ( ($SUBMIT=="SUBMIT") or ($SUBMIT==_QXZ("SUBMIT")) )
 		$lead_id=$row["lead_id"];
 		$user=$row["user"];
 		$current_status=$row["current_status"];
-		$campaign_id=$row["campaign_id"];
+		$campaign_id=strtoupper($row["campaign_id"]);
 		$agent_status=$row["status"];
 		if (preg_match("/QCCANC/i", $current_status)) 
 			{
