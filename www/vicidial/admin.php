@@ -3624,8 +3624,6 @@ if ($non_latin < 1)
 	$forced_timeclock_login = preg_replace('/[^-\,\_0-9a-zA-Z]/','',$forced_timeclock_login);
 	$uniqueid_status_prefix = preg_replace('/[^-\,\_0-9a-zA-Z]/','',$uniqueid_status_prefix);
 
-	### ALPHA-NUMERIC and dots
-	$sounds_web_server = preg_replace('/[^-\:\.0-9a-zA-Z]/','',$sounds_web_server);
 	### ALPHA-NUMERIC and spaces
 	$lead_order = preg_replace('/[^ 0-9a-zA-Z]/','',$lead_order);
 	### ALPHA-NUMERIC and spaces and dashes and underscores
@@ -3884,6 +3882,11 @@ if ($non_latin < 1)
 	$waiting_call_url_off = preg_replace('/;/','',$waiting_call_url_off);
 	$waiting_call_url_off = preg_replace('/\r|\n/', '',$waiting_call_url_off);
 	$waiting_call_url_off = preg_replace('/\'/', '',$waiting_call_url_off);
+	$sounds_web_server = preg_replace('/\\\\/', '',$sounds_web_server);
+	$sounds_web_server = preg_replace('/;/','',$sounds_web_server);
+	$sounds_web_server = preg_replace('/\r|\n/', '',$sounds_web_server);
+	$sounds_web_server = preg_replace('/\'/', '',$sounds_web_server);
+
 
 	### VARIABLES TO BE mysqli_real_escape_string ###
 	# $web_form_address
@@ -4718,12 +4721,13 @@ else
 # 200913-0820 - Added UNSELECTED options for campaign alt_number_dialing
 # 200916-0922 - Added more modify_leads options for users(modify log statuses)
 # 200922-0924 - Added web_loader_phone_strip & manual_dial_phone_strip system settings
+# 201002-1534 - Allowed for secure sounds_web_server setting
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-770a';
-$build = '200922-0924';
+$admin_version = '2.14-771a';
+$build = '201002-1534';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -38666,8 +38670,10 @@ if ($ADD==311111111111111)
 		$admin_web_dir='';
 		if (preg_match("/\//",$admin_web_directory))
 			{$admin_web_dir = dirname("$admin_web_directory");   $admin_web_dir .= "/";}
+		if (!preg_match("/^http:|^https:/i",$sounds_web_server))
+			{$sounds_web_server = "http://".$sounds_web_server;}
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Sounds Web Directory").": </td><td align=left><a href=\"http://$sounds_web_server/$admin_web_dir$sounds_web_directory\">$sounds_web_directory</a> $NWB#settings-sounds_web_directory$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Sounds Web Directory").": </td><td align=left><a href=\"$sounds_web_server/$admin_web_dir$sounds_web_directory\">$sounds_web_directory</a> $NWB#settings-sounds_web_directory$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Custom Agent Login Sound").": </td><td><input type=text size=50 maxlength=255 name=meetme_enter_login_filename id=meetme_enter_login_filename value=\"$meetme_enter_login_filename\"> <a href=\"javascript:launch_chooser('meetme_enter_login_filename','date');\">"._QXZ("audio chooser")."</a>  $NWB#settings-meetme_enter_login_filename$NWE</td></tr>\n";
 
