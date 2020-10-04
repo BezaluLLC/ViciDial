@@ -1320,3 +1320,7 @@ ALTER TABLE system_settings ADD web_loader_phone_strip VARCHAR(10) default 'DISA
 ALTER TABLE system_settings ADD manual_dial_phone_strip VARCHAR(10) default 'DISABLED'; 
 
 UPDATE system_settings SET db_schema_version='1607',db_schema_update_date=NOW() where db_schema_version < 1607;
+
+ALTER TABLE vicidial_campaigns ADD pause_max_exceptions VARCHAR(40) default '';
+
+UPDATE system_settings SET db_schema_version='1608',db_schema_update_date=NOW() where db_schema_version < 1608;
