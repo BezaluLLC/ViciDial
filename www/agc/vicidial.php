@@ -647,10 +647,11 @@
 # 200922-0948 - Added manual_dial_phone_strip system setting feature
 # 201004-1112 - Added pause_max_exceptions campaign feature
 # 201010-2223 - Added force change password feature
+# 201026-0143 - Fix for pause_max_exceptions issue
 #
 
-$version = '2.14-615c';
-$build = '201010-2223';
+$version = '2.14-616c';
+$build = '201026-0143';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=92;
 $one_mysql_log=0;
@@ -15326,6 +15327,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						if (agent_log_id.length > 0) {previous_agent_log_id = agent_log_id;}
 						agent_log_id = check_PC_array[2];
 						current_pause_code = newpausecode;
+						if (pause_max_exceptions.length > 2)
+							{VDRP_stage_seconds=0;}
 						}
 				//	alert(VMCpausecode_query);
 				//	alert(xmlhttp.responseText + "\n|" + check_PC_array[1] + "\n|" + check_PC_array[2] + "|" + agent_log_id + "|" + pause_code_counter);
