@@ -154,10 +154,11 @@
 # 200815-1025 - Added campaigns_list & hopper_list functions
 # 200824-2330 - Added search_method BLOCK option for hopper_list function
 # 201002-1545 - Added extension as recording lookup option, Allowed for secure sounds_web_server setting
+# 201106-1654 - Added campaign_id option to agent_stats_export function
 #
 
-$version = '2.14-131';
-$build = '201002-1545';
+$version = '2.14-132';
+$build = '201106-1654';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -7837,6 +7838,13 @@ if ($function == 'agent_stats_export')
 				$search_SQL .= "user='$agent_user'";
 				$search_ready++;
 				}
+			if ( (strlen($campaign_id)>0) and (strlen($campaign_id)<9) )
+				{
+				if (strlen($search_SQL)>5)
+					{$search_SQL .= " and ";}
+				$search_SQL .= "campaign_id='$campaign_id'";
+				$search_ready++;
+				}
 			if ( (strlen($datetime_start)>18) and (strlen($datetime_start)<20) and (strlen($datetime_end)>18) and (strlen($datetime_end)<20) )
 				{
 				$datetime_start = preg_replace("/\+/",' ',$datetime_start);
@@ -7852,7 +7860,7 @@ if ($function == 'agent_stats_export')
 				{
 				$result = 'ERROR';
 				$result_reason = "agent_stats_export INVALID SEARCH PARAMETERS";
-				$data = "$user|$agent_user|$datetime_start|$datetime_end";
+				$data = "$user|$agent_user|$datetime_start|$datetime_end|$campaign_id";
 				echo "$result: $result_reason: $data\n";
 				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 				exit;
@@ -7867,7 +7875,7 @@ if ($function == 'agent_stats_export')
 					{
 					$result = 'ERROR';
 					$result_reason = "agent_stats_export NO RECORDS FOUND";
-					$data = "$user|$agent_user|$lead_id|$date";
+					$data = "$user|$agent_user|$datetime_start|$datetime_end|$campaign_id";
 					echo "$result: $result_reason - $data\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 					exit;
