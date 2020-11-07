@@ -4730,12 +4730,13 @@ else
 # 201002-1534 - Allowed for secure sounds_web_server setting
 # 201004-1045 - Added campaign pause_max_exceptions setting, also fix for issue #1235
 # 201101-1056 - Added In-Group setting for No-Agent-No-Queue delay
+# 201106-2324 - Fix for issue with populate_lead_source menu
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-773a';
-$build = '201101-1056';
+$admin_version = '2.14-774a';
+$build = '201106-2324';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -30383,7 +30384,7 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Populate Lead State Areacode").": </td><td align=left><select size=1 name=populate_state_areacode><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='NEW_LEAD_ONLY'>"._QXZ("NEW_LEAD_ONLY")."</option><option value='OVERWRITE_ALWAYS'>"._QXZ("OVERWRITE_ALWAYS")."</option><option value='$populate_state_areacode' SELECTED>"._QXZ("$populate_state_areacode")."</option></select>$NWB#inbound_groups-populate_state_areacode$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Populate Lead Source").": </td><td align=left><select size=1 name=populate_lead_source><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='INBOUND_NUMBER'>"._QXZ("INBOUND_NUMBER")."</option><option value='BLANK'>"._QXZ("BLANK")."</option><option value='$populate_lead_province' SELECTED>"._QXZ("$populate_lead_source")."</option></select>$NWB#inbound_groups-populate_lead_source$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Populate Lead Source").": </td><td align=left><select size=1 name=populate_lead_source><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='INBOUND_NUMBER'>"._QXZ("INBOUND_NUMBER")."</option><option value='BLANK'>"._QXZ("BLANK")."</option><option value='$populate_lead_source' SELECTED>"._QXZ("$populate_lead_source")."</option></select>$NWB#inbound_groups-populate_lead_source$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Populate Lead Vendor").": </td><td align=left><input type=text name=populate_lead_vendor id=populate_lead_vendor size=22 maxlength=20 value=\"$populate_lead_vendor\"> $NWB#inbound_groups-populate_lead_vendor$NWE</td></tr>\n";
 
