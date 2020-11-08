@@ -540,6 +540,9 @@ OTHER CHANGES:
 152. Added Pause Max Exceptions campaign setting, allowing for exceptions to the
 	Agent Pause Max feature for specified Pause Codes.
 
+153. Added optional display of parked call stats and SLA 1&2 percentages to the
+	Real-Time Report
+
 
 
 
