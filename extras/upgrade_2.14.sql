@@ -1338,3 +1338,7 @@ ALTER TABLE vicidial_campaign_stats ADD park_calls_today MEDIUMINT(8) UNSIGNED d
 ALTER TABLE vicidial_campaign_stats ADD park_sec_today BIGINT(14) UNSIGNED default '0';
 
 UPDATE system_settings SET db_schema_version='1610',db_schema_update_date=NOW() where db_schema_version < 1610;
+
+ALTER TABLE vicidial_campaigns ADD hopper_drop_run_trigger VARCHAR(1) default 'N';
+
+UPDATE system_settings SET db_schema_version='1611',db_schema_update_date=NOW() where db_schema_version < 1611;

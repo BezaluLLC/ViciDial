@@ -543,6 +543,9 @@ OTHER CHANGES:
 153. Added optional display of parked call stats and SLA 1&2 percentages to the
 	Real-Time Report
 
+154. Added Campaign setting for Hopper Drop-Run triggering. Forcing the one-time
+	hopper insertion of DROP status leads instead of standard hopper loading
+
 
 
 

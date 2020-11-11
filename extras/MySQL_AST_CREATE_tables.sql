@@ -1047,7 +1047,8 @@ amd_agent_route_options ENUM('ENABLED','DISABLED','PENDING') default 'DISABLED',
 browser_alert_sound VARCHAR(20) default '---NONE---',
 browser_alert_volume TINYINT(3) UNSIGNED default '50',
 three_way_record_stop_exception VARCHAR(40) default 'DISABLED',
-pause_max_exceptions VARCHAR(40) default ''
+pause_max_exceptions VARCHAR(40) default '',
+hopper_drop_run_trigger VARCHAR(1) default 'N'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -4677,4 +4678,4 @@ INSERT INTO vicidial_settings_containers VALUES ('INTERNATIONAL_DNC_IMPORT','Pro
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1610',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1611',db_schema_update_date=NOW(),reload_timestamp=NOW();
