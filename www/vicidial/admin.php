@@ -4735,13 +4735,13 @@ else
 # 201101-1056 - Added In-Group setting for No-Agent-No-Queue delay
 # 201106-2324 - Fix for issue with populate_lead_source menu
 # 201111-1258 - Added campaigns hopper_drop_run_trigger setting
-#
+# 201111-1616 - Fix for CID Groups permissions issue #1234
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-775a';
-$build = '201111-1258';
+$admin_version = '2.14-776a';
+$build = '201111-1616';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5030,6 +5030,7 @@ $LOGqc_allowed_campaigns =		$row[4];
 $LOGqc_allowed_inbound_groups =	$row[5];
 
 $LOGallowed_campaignsSQL='';
+$notLOGallowed_campaignsSQL = "and campaign_id IN('')";
 $campLOGallowed_campaignsSQL='';
 $whereLOGallowed_campaignsSQL='';
 if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
@@ -5037,6 +5038,7 @@ if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
 	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
 	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$notLOGallowed_campaignsSQL = "and campaign_id NOT IN('$rawLOGallowed_campaignsSQL')";
 	$campLOGallowed_campaignsSQL = "and camp.campaign_id IN('$rawLOGallowed_campaignsSQL')";
 	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
 	}
@@ -18229,10 +18231,20 @@ if ($ADD==496111111111)
 				}
 			elseif ($stage == 'DELETE')
 				{
-				$stmt="SELECT count(*) from vicidial_campaign_cid_areacodes where campaign_id='$cid_group_id' and areacode='$areacode' and outbound_cid='$outbound_cid' $LOGallowed_campaignsSQL;";
+				$not_allowed_campaigns_ct=0;
+				$stmt="SELECT count(*) from vicidial_campaigns where cid_group_id='$cid_group_id' $notLOGallowed_campaignsSQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$accidsX_to_print = mysqli_num_rows($rslt);
+				if ($accidsX_to_print > 0) 
+					{
+					$rowx=mysqli_fetch_row($rslt);
+					$not_allowed_campaigns_ct = $rowx[0];
+					}
+
+				$stmt="SELECT count(*) from vicidial_campaign_cid_areacodes where campaign_id='$cid_group_id' and areacode='$areacode' and outbound_cid='$outbound_cid';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$row=mysqli_fetch_row($rslt);
-				if ($row[0] < 1)
+				if ( ($row[0] < 1) or ($not_allowed_campaigns_ct > 0) )
 					{echo "<br>"._QXZ("CID GROUP CID NOT DELETED - this entry does not exist")."<br>\n";}
 				else
 					{
@@ -18259,67 +18271,82 @@ if ($ADD==496111111111)
 				}
 			elseif ($stage == 'MODIFY')
 				{
-				$stmt="SELECT areacode,outbound_cid,active,cid_description,call_count_today from vicidial_campaign_cid_areacodes where campaign_id='$cid_group_id' $LOGallowed_campaignsSQL order by areacode,outbound_cid";
+				$not_allowed_campaigns_ct=0;
+				$stmt="SELECT count(*) from vicidial_campaigns where cid_group_id='$cid_group_id' $notLOGallowed_campaignsSQL;";
 				$rslt=mysql_to_mysqli($stmt, $link);
-				$accids_to_print = mysqli_num_rows($rslt);
-				$o=0;
-				while ($accids_to_print > $o) 
+				$accidsX_to_print = mysqli_num_rows($rslt);
+				if ($accidsX_to_print > 0) 
 					{
 					$rowx=mysqli_fetch_row($rslt);
-					$Xareacode[$o] =			$rowx[0];
-					$Xoutbound_cid[$o] =		$rowx[1];
-					$Xactive[$o] =				$rowx[2];
-					$Xcid_description[$o] =		$rowx[3];
-					$Xcall_count_today[$o] =	$rowx[4];
-					$o++;
+					$not_allowed_campaigns_ct = $rowx[0];
 					}
 
-				$accid_modified=0;
-				$stmt_log='';
-				$accid_log='';
-				$o=0;
-				while ($accids_to_print > $o) 
+				if ($not_allowed_campaigns_ct > 0)
+					{echo "<br>"._QXZ("CID GROUP CID NOT MODIFIED - this entry does not exist")."<br>\n";}
+				else
 					{
-					$Factive_value='';
-					$Fcid_description_value='';
-					$Factive = "active_$Xareacode[$o]_$Xoutbound_cid[$o]";
-					$Fcid_description = "cid_description_$Xareacode[$o]_$Xoutbound_cid[$o]";
-
-					if (isset($_GET[$Factive]))						{$Factive_value=$_GET[$Factive];}
-						elseif (isset($_POST[$Factive]))			{$Factive_value=$_POST[$Factive];}
-					if (isset($_GET[$Fcid_description]))			{$Fcid_description_value=$_GET[$Fcid_description];}
-						elseif (isset($_POST[$Fcid_description]))	{$Fcid_description_value=$_POST[$Fcid_description];}
-					$Fcid_description_value = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$Fcid_description_value);
-					$Factive_value = preg_replace('/[^A-Z]/','',$Factive_value);
-
-				#	echo "$cid_group_id - $Xareacode[$o] - $Xoutbound_cid[$o] - $Factive($Factive_value|$Xactive[$o]) - $Fcid_description($Fcid_description_value|$Xcid_description[$o])<BR>";
-
-					if ( ($Factive_value == $Xactive[$o]) and ($Fcid_description_value == $Xcid_description[$o]) )
-						{
-					#	echo "<br>AREACODE CID NOT MODIFIED - Please go back and look at the data you entered<br>\n";
-						}
-					else
-						{
-						$accid_modified++;
-						echo "<B>"._QXZ("CID GROUP CID MODIFIED").": $Xareacode[$o] - $Xoutbound_cid[$o]</B><br>\n";
-
-						$stmt="UPDATE vicidial_campaign_cid_areacodes SET active='$Factive_value',cid_description='$Fcid_description_value' WHERE campaign_id='$cid_group_id' and areacode='$Xareacode[$o]' and outbound_cid='$Xoutbound_cid[$o]';";
-						$rslt=mysql_to_mysqli($stmt, $link);
-
-						$stmt_log .= "$stmt|";
-						$accid_log .= "CID: $Xareacode[$o] - $Xoutbound_cid[$o] - $Factive_value - $Fcid_description_value|";
-						}
-					$o++;
-					}
-				if ($accid_modified > 0)
-					{
-					### LOG INSERTION Admin Log Table ###
-					$SQL_log = "$stmt_log|";
-					$SQL_log = preg_replace('/;/', '', $SQL_log);
-					$SQL_log = addslashes($SQL_log);
-					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CIDGROUPS', event_type='MODIFY', record_id='$cid_group_id', event_code='ADMIN MODIFY CID GROUP ENTRY', event_sql=\"$SQL_log\", event_notes='$accid_modified CIDs MODIFIED. CHANGES: $accid_log';";
-					if ($DB) {echo "|$stmt|\n";}
+					$stmt="SELECT areacode,outbound_cid,active,cid_description,call_count_today from vicidial_campaign_cid_areacodes where campaign_id='$cid_group_id' order by areacode,outbound_cid";
 					$rslt=mysql_to_mysqli($stmt, $link);
+					$accids_to_print = mysqli_num_rows($rslt);
+					$o=0;
+					while ($accids_to_print > $o) 
+						{
+						$rowx=mysqli_fetch_row($rslt);
+						$Xareacode[$o] =			$rowx[0];
+						$Xoutbound_cid[$o] =		$rowx[1];
+						$Xactive[$o] =				$rowx[2];
+						$Xcid_description[$o] =		$rowx[3];
+						$Xcall_count_today[$o] =	$rowx[4];
+						$o++;
+						}
+
+					$accid_modified=0;
+					$stmt_log='';
+					$accid_log='';
+					$o=0;
+					while ($accids_to_print > $o) 
+						{
+						$Factive_value='';
+						$Fcid_description_value='';
+						$Factive = "active_$Xareacode[$o]_$Xoutbound_cid[$o]";
+						$Fcid_description = "cid_description_$Xareacode[$o]_$Xoutbound_cid[$o]";
+
+						if (isset($_GET[$Factive]))						{$Factive_value=$_GET[$Factive];}
+							elseif (isset($_POST[$Factive]))			{$Factive_value=$_POST[$Factive];}
+						if (isset($_GET[$Fcid_description]))			{$Fcid_description_value=$_GET[$Fcid_description];}
+							elseif (isset($_POST[$Fcid_description]))	{$Fcid_description_value=$_POST[$Fcid_description];}
+						$Fcid_description_value = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$Fcid_description_value);
+						$Factive_value = preg_replace('/[^A-Z]/','',$Factive_value);
+
+					#	echo "$cid_group_id - $Xareacode[$o] - $Xoutbound_cid[$o] - $Factive($Factive_value|$Xactive[$o]) - $Fcid_description($Fcid_description_value|$Xcid_description[$o])<BR>";
+
+						if ( ($Factive_value == $Xactive[$o]) and ($Fcid_description_value == $Xcid_description[$o]) )
+							{
+						#	echo "<br>AREACODE CID NOT MODIFIED - Please go back and look at the data you entered<br>\n";
+							}
+						else
+							{
+							$accid_modified++;
+							echo "<B>"._QXZ("CID GROUP CID MODIFIED").": $Xareacode[$o] - $Xoutbound_cid[$o]</B><br>\n";
+
+							$stmt="UPDATE vicidial_campaign_cid_areacodes SET active='$Factive_value',cid_description='$Fcid_description_value' WHERE campaign_id='$cid_group_id' and areacode='$Xareacode[$o]' and outbound_cid='$Xoutbound_cid[$o]';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+
+							$stmt_log .= "$stmt|";
+							$accid_log .= "CID: $Xareacode[$o] - $Xoutbound_cid[$o] - $Factive_value - $Fcid_description_value|";
+							}
+						$o++;
+						}
+					if ($accid_modified > 0)
+						{
+						### LOG INSERTION Admin Log Table ###
+						$SQL_log = "$stmt_log|";
+						$SQL_log = preg_replace('/;/', '', $SQL_log);
+						$SQL_log = addslashes($SQL_log);
+						$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CIDGROUPS', event_type='MODIFY', record_id='$cid_group_id', event_code='ADMIN MODIFY CID GROUP ENTRY', event_sql=\"$SQL_log\", event_notes='$accid_modified CIDs MODIFIED. CHANGES: $accid_log';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+						}
 					}
 				}
 			else
@@ -38013,6 +38040,22 @@ if ($ADD==396111111111)
 			}
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		$not_allowed_campaigns_ct=0;
+		$stmt="SELECT count(*) from vicidial_campaigns where cid_group_id='$cid_group_id' $notLOGallowed_campaignsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$accidsX_to_print = mysqli_num_rows($rslt);
+		if ($accidsX_to_print > 0) 
+			{
+			$rowx=mysqli_fetch_row($rslt);
+			$not_allowed_campaigns_ct = $rowx[0];
+			}
+
+		if ($not_allowed_campaigns_ct > 0)
+			{
+			echo "<br>"._QXZ("CID GROUP NOT AVAILABLE - this CID Group is assigned to a campaign you are not allowed to view")."<br>\n";
+			exit;
+			}
 
 		$stmt="SELECT cid_group_notes,cid_group_type,user_group,cid_auto_rotate_minutes,cid_auto_rotate_minimum,cid_auto_rotate_calls,cid_last_auto_rotate,cid_auto_rotate_cid from vicidial_cid_groups where cid_group_id='$cid_group_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
