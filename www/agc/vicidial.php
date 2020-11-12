@@ -649,10 +649,11 @@
 # 201010-2223 - Added force change password feature
 # 201026-0143 - Fix for pause_max_exceptions issue
 # 201107-2236 - Change for parked call logging
+# 201112-1110 - Added better QueueMetrics misconfiguration error handling
 #
 
-$version = '2.14-617c';
-$build = '201107-2236';
+$version = '2.14-618c';
+$build = '201112-1110';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=92;
 $one_mysql_log=0;
@@ -3898,8 +3899,15 @@ else
 						$QM_LOGIN = 'AGENTCALLBACKLOGIN';
 						$QM_PHONE = "$SIP_user_DiaL";
 						}
-					$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
-					if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
+					if ( (strlen($queuemetrics_server_ip)>0) and (strlen($queuemetrics_login)>0) and (strlen($queuemetrics_pass)>0) and (strlen($queuemetrics_dbname)>0) )
+						 {
+						 $linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+						 if (!$linkB) {die(_QXZ("Could not connect to Queuemetrics: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
+						 }
+					else
+						 {
+						 die(_QXZ("Invalid Queuemetrics DB Credentials").": $queuemetrics_server_ip|$queuemetrics_login|PASS|$queuemetrics_dbname");
+						 }
 					mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 					if ( ($queuemetrics_pe_phone_append > 0) and (strlen($qm_phone_environment)>0) )
@@ -3965,8 +3973,15 @@ else
 						$QM_LOGIN = 'AGENTCALLBACKLOGIN';
 						$QM_PHONE = "$SIP_user_DiaL";
 						}
-					$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
-					if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
+					if ( (strlen($queuemetrics_server_ip)>0) and (strlen($queuemetrics_login)>0) and (strlen($queuemetrics_pass)>0) and (strlen($queuemetrics_dbname)>0) )
+						 {
+						 $linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+						 if (!$linkB) {die(_QXZ("Could not connect to Queuemetrics: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
+						 }
+					else
+						 {
+						 die(_QXZ("Invalid Queuemetrics DB Credentials").": $queuemetrics_server_ip|$queuemetrics_login|PASS|$queuemetrics_dbname");
+						 }
 					mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 					if ($queuemetrics_loginout!='NONE')
@@ -4104,8 +4119,15 @@ else
 		if ($enable_queuemetrics_logging > 0)
 			{
 			$StarTtimEpause = ($StarTtimE + 1);
-			$linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
-			if (!$linkB) {die(_QXZ("Could not connect: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
+			if ( (strlen($queuemetrics_server_ip)>0) and (strlen($queuemetrics_login)>0) and (strlen($queuemetrics_pass)>0) and (strlen($queuemetrics_dbname)>0) )
+				 {
+				 $linkB=mysqli_connect("$queuemetrics_server_ip", "$queuemetrics_login", "$queuemetrics_pass");
+				 if (!$linkB) {die(_QXZ("Could not connect to Queuemetrics: ")."$queuemetrics_server_ip|$queuemetrics_login" . mysqli_connect_error());}
+				 }
+			else
+				 {
+				 die(_QXZ("Invalid Queuemetrics DB Credentials").": $queuemetrics_server_ip|$queuemetrics_login|PASS|$queuemetrics_dbname");
+				 }
 			mysqli_select_db($linkB, "$queuemetrics_dbname");
 
 			$pause_typeSQL='';
