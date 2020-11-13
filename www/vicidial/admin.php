@@ -4736,12 +4736,13 @@ else
 # 201106-2324 - Fix for issue with populate_lead_source menu
 # 201111-1258 - Added campaigns hopper_drop_run_trigger setting
 # 201111-1616 - Fix for CID Groups permissions issue #1234
+# 201113-0754 - Changed Modify DID page variable population
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-776a';
-$build = '201111-1616';
+$admin_version = '2.14-777a';
+$build = '201113-0754';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -32533,8 +32534,10 @@ if ($ADD==3311)
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
-		$did_id = 				$row[0];
-		$did_pattern = 			$row[1];
+		if (strlen($row[0])>0)
+			{$did_id = 			$row[0];}
+		if (strlen($row[1])>0)
+			{$did_pattern = 	$row[1];}
 		$did_description = 		$row[2];
 		$did_active = 			$row[3];
 		$did_route = 			$row[4];

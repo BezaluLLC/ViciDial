@@ -893,7 +893,7 @@ lead_id -
  OPTIONAL, The lead_id of the call that the agent is currently on, if populated it will validate that is the lead the agent is talking to
 
 EXAMPLE URLS:
-http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=vm_message&lead_id=12345&value=EXship01|EXship02|EXship03
+http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=vm_message&value=EXship01|EXship02|EXship03
 http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=vm_message&lead_id=12345&value=appointment_reminder2
 
 RESPONSES:

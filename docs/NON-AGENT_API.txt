@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2020-11-06
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2020-11-13
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -165,6 +165,7 @@ Changes:
 200824-2330 - Added search_method BLOCK option for hopper_list function
 201002-1545 - Added extension as recording_lookup option, Allowed for secure sounds_web_server setting
 201106-1654 - Added campaign_id option to agent_stats_export function
+201113-0713 - Added delete_did option to update_did function
 
 
 API Functions use the 'function' variable
@@ -2007,6 +2008,7 @@ phone_extension -	1-100 characters
 server_ip -		must be all numbers and dots, max 15 characters
 group -			a valid in-group group_id
 filter_clean_cid_number - 1-20 characters
+delete_did -		Can be one of these: 'Y','N' (default is 'N')
 
 Example URL strings for API calls:
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_did&did_pattern=%2B1727555112&did_description=Updated+test+API+DID&active=Y
@@ -2014,6 +2016,7 @@ http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&functio
 
 Example responses:
 ERROR: update_did USER DOES NOT HAVE PERMISSION TO UPDATE DIDS - 6666
+ERROR: update_did USER DOES NOT HAVE PERMISSION TO DELETE DIDS - 6666
 ERROR: update_did YOU MUST USE ALL REQUIRED FIELDS - 6666|1
 ERROR: update_did NOT AN ALLOWED DID - 98762
 ERROR: update_did DID DOES NOT EXIST - 6666|1000
@@ -2029,6 +2032,7 @@ ERROR: update_did SERVER IP MUST BE A VALID SERVER IN THE SYSTEM, THIS IS AN OPT
 ERROR: update_did GROUP ID MUST BE A VALID INBOUND GROUP IN THE SYSTEM, THIS IS AN OPTIONAL FIELD - 6666|test
 ERROR: update_did CLEAN CID NUMBER MUST BE FROM 1 TO 20 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|
 NOTICE: update_did NO UPDATES DEFINED - 6666|
+SUCCESS: update_did DID HAS BEEN DELETED - 6666|23|1101
 SUCCESS: update_did DID HAS BEEN UPDATED - 6666|1101
 
 
