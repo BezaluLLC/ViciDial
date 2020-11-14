@@ -563,12 +563,12 @@ $LOGuser_group =			$row[1];
 $LOGadmin_hide_lead_data =	$row[2];
 $LOGadmin_hide_phone_data =	$row[3];
 
-$stmt="SELECT allowed_campaigns,allowed_reports from vicidial_user_groups where user_group='$LOGuser_group';";
+$stmt="SELECT allowed_campaigns,allowed_reports,allowed_custom_reports from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns = $row[0];
-$LOGallowed_reports =	$row[1];
+$LOGallowed_reports =	"$row[1]|$row[2]";
 
 if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 	{

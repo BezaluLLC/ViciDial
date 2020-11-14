@@ -587,12 +587,12 @@ $row=mysqli_fetch_row($rslt);
 $realtime_block_user_info = $row[0];
 $LOGuser_group =			$row[1];
 
-$stmt="SELECT allowed_campaigns,allowed_reports,webphone_url_override,webphone_dialpad_override,webphone_systemkey_override from vicidial_user_groups where user_group='$LOGuser_group';";
+$stmt="SELECT allowed_campaigns,allowed_reports,webphone_url_override,webphone_dialpad_override,webphone_systemkey_override,allowed_custom_reports from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
-$LOGallowed_reports =			$row[1];
+$LOGallowed_reports =			"$row[1]$row[5]";
 $webphone_url =					$row[2];
 $webphone_dialpad_override =	$row[3];
 $system_key =					$row[4];
