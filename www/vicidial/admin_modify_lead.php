@@ -101,6 +101,7 @@
 # 200916-2321 - Added options to allow users to modify any call or agent log status
 # 201113-0841 - Added server_ip information to extended log view
 # 201117-0807 - Changes for better compatibility with non-latin data input
+# 201109-1725 - Fix for blank page after certain updates submitted
 #
 
 require("dbconnect_mysqli.php");
@@ -1616,6 +1617,17 @@ if ($end_call > 0)
 		{
 		$messagesHTML .= _QXZ("you do not have permission to modify this lead")." $lead_id &nbsp; &nbsp; &nbsp; $list_id &nbsp; &nbsp; &nbsp; $NOW_TIME\n<BR><BR>\n";
 		}
+	echo "</script>\n";
+	echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+	echo "</head><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	echo "<span style=\"position:absolute;left:0px;top:0px;z-index:20;\" id=admin_header>";
+
+	$short_header=1;
+
+	require("admin_header.php");
+
+	echo "</span>\n";
+	echo "$messagesHTML\n";
 	}
 else
 	{
@@ -2292,6 +2304,7 @@ else
 	else
 		{echo "<br>"._QXZ("Lead information").": $first_name $last_name - $phone_number\n";}
 
+	if ($campaign_id=='---NONE') {$campaign_id='';}
 	echo "<br><br><form action=$PHP_SELF method=POST>\n";
 	echo "<input type=hidden name=end_call value=1>\n";
 	echo "<input type=hidden name=DB value=\"$DB\">\n";
@@ -3480,7 +3493,6 @@ else
 			}
 		echo "\n";
 		}
-	}
 
 	if ($enable_gdpr_download_deletion > 0)
 		{
@@ -3505,6 +3517,7 @@ else
 			}
 		}
 	echo "\n";
+	}
 
 
 $ENDtime = date("U");
