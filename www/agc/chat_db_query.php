@@ -1,7 +1,7 @@
 <?php
 # chat_db_query.php
 #
-# Copyright (C) 2017  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2020  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Called by vdc_chat_display.php and vicidial_chat_agent.js.  This contains all actions taken by the
 # agent's interface when chatting with customers, other agents, and managers, through 
@@ -23,6 +23,7 @@
 # 161221-0800 - Added color-coding for users in internal chat sessions
 # 170526-2257 - Added additional variable filtering
 # 170528-1028 - Added more variable filtering
+# 201117-2238 - Changes for better compatibility with non-latin data input
 #
 
 require("dbconnect_mysqli.php");
@@ -106,24 +107,6 @@ if (file_exists('options.php'))
 # variable filtering
 $user=preg_replace("/\'|\"|\\\\|;| /","",$user);
 $pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
-$session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
-$server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
-$agent_manager = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$agent_manager);
-$agent_user = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$agent_user);
-$manager_chat_id = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$manager_chat_id);
-$chat_creator = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$chat_creator);
-$group_id = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$group_id);
-$chat_member_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/',"",$chat_member_name);
-$lead_id = preg_replace('/[^0-9]/','',$lead_id);
-$agent_to_add = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$agent_to_add);
-$chat_group_id = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$chat_group_id);
-$chat_id = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$chat_id);
-$chat_level = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$chat_level);
-$chat_xfer_type = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$chat_xfer_type);
-$chat_xfer_value = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$chat_xfer_value);
-$email = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$email);
-$field_name = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$field_name);
-$manager_chat_subid = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$manager_chat_subid);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -145,6 +128,35 @@ if ($qm_conf_ct > 0)
 $VUselected_language = $SSdefault_language;
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+$session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
+$server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
+$agent_manager = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$agent_manager);
+$agent_user = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$agent_user);
+$manager_chat_id = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$manager_chat_id);
+$chat_creator = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$chat_creator);
+$group_id = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$group_id);
+$lead_id = preg_replace('/[^0-9]/','',$lead_id);
+$agent_to_add = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$agent_to_add);
+$chat_group_id = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$chat_group_id);
+$chat_id = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$chat_id);
+$chat_level = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$chat_level);
+$chat_xfer_type = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$chat_xfer_type);
+$chat_xfer_value = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$chat_xfer_value);
+$email = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$email);
+$field_name = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$field_name);
+$manager_chat_subid = preg_replace("/\||`|&|\'|\"|\\\\|;| /","",$manager_chat_subid);
+
+if ($non_latin < 1)
+	{
+	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
+	$pass=preg_replace("/[^-_0-9a-zA-Z]/","",$pass);
+	$chat_member_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/',"",$chat_member_name);
+	}
+else
+	{
+	$chat_member_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u',"",$chat_member_name);
+	}
 
 $auth=0;
 $auth_message = user_authorization($user,$pass,'',0,0,0,0,'chat_db_query');

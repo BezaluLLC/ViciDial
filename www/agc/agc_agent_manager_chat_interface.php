@@ -1,7 +1,7 @@
 <?php
 # agc_agent_manager_chat_interface.php
 # 
-# Copyright (C) 2018  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2020  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This page is for agents to chat with managers via the agent interface.
 #
@@ -15,10 +15,11 @@
 # 161217-0827 - Added code for multi-user internal chat sessions
 # 161221-0801 - Added color-coding for users in internal chat sessions
 # 180927-0624 - Fix for missing translationm issue #1125
+# 201117-2239 - Changes for better compatibility with non-latin data input
 #
 
-$admin_version = '2.14-9';
-$build = '180927-0624';
+$admin_version = '2.14-10';
+$build = '201117-2239';
 
 $sh="managerchats"; 
 
@@ -38,19 +39,6 @@ if (isset($_GET["user"]))						{$user=$_GET["user"];}
 if (isset($_GET["pass"]))						{$pass=$_GET["pass"];}
 	elseif (isset($_POST["pass"]))				{$pass=$_POST["pass"];}
 if (!$user) {echo "Page should only be viewed through the agent interface."; die;}
-
-if ($non_latin < 1)
-	{
-	$user = preg_replace('/[^-\_0-9a-zA-Z]/','',$user);
-	$pass = preg_replace('/[^-\_0-9a-zA-Z]/','',$pass);
-	$manager_chat_id = preg_replace('/[^- \_\.0-9a-zA-Z]/','',$user);
-	}
-else
-	{
-	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
-	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
-	$manager_chat_id = preg_replace("/\'|\"|\\\\|;/","",$user);
-	}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
@@ -72,6 +60,19 @@ if ($qm_conf_ct > 0)
 $VUselected_language = $SSdefault_language;
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+if ($non_latin < 1)
+	{
+	$user = preg_replace('/[^-\_0-9a-zA-Z]/','',$user);
+	$pass = preg_replace('/[^-\_0-9a-zA-Z]/','',$pass);
+	$manager_chat_id = preg_replace('/[^- \_\.0-9a-zA-Z]/','',$user);
+	}
+else
+	{
+	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+	$manager_chat_id = preg_replace("/\'|\"|\\\\|;/","",$user);
+	}
 
 $auth=0;
 $auth_message = user_authorization($user,$pass,'',0,0,0,0,'chat');

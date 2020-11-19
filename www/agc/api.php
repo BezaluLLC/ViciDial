@@ -1882,6 +1882,7 @@ if ($function == 'external_dial')
 					if ($api_manual_dial=='STANDARD')
 						{
 						$stmt="UPDATE vicidial_live_agents set external_dial='$value!$phone_code!$search!$preview!$focus!$vendor_id!$epoch!$dial_prefix!$group_alias!$caller_id_number!$vtiger_callback_id!$lead_id!$alt_dial!$dial_ingroup' where user='$agent_user';";
+						if ($DB) {echo "$stmt\n";}
 						$success=1;
 						}
 					else

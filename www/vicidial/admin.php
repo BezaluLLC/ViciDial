@@ -2534,8 +2534,8 @@ if (isset($_GET["hopper_drop_run_trigger"]))			{$hopper_drop_run_trigger=$_GET["
 	elseif (isset($_POST["hopper_drop_run_trigger"]))	{$hopper_drop_run_trigger=$_POST["hopper_drop_run_trigger"];}
 
 
-if (isset($script_id)) {$script_id= strtoupper($script_id);}
-if (isset($lead_filter_id)) {$lead_filter_id = strtoupper($lead_filter_id);}
+if (isset($script_id)) {$script_id= mb_strtoupper($script_id,'utf-8');}
+if (isset($lead_filter_id)) {$lead_filter_id = mb_strtoupper($lead_filter_id,'utf-8');}
 
 if (strlen($dial_status) > 0) 
 	{
@@ -2664,7 +2664,12 @@ if ( ($qm_conf_ct > 0) and (strlen($SSpass_key)<16) )
 	$stmt="UPDATE system_settings set pass_key='$SSpass_key' where ( (pass_key is NULL) or (pass_key='') );";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	}
-
+if ($non_latin > 0)
+	{
+	if (!mysqli_set_charset($link,"utf8")) {printf("Error loading character set utf8: %s\n", mysqli_error());}
+#	else {printf("Current character set: %s\n", mysqli_character_set_name($link));}
+	$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);
+	}
 
 ######################################################################################################
 ######################################################################################################
@@ -2672,473 +2677,493 @@ if ( ($qm_conf_ct > 0) and (strlen($SSpass_key)<16) )
 ######################################################################################################
 ######################################################################################################
 
+### DIGITS ONLY ###
+$adaptive_latest_server_time = preg_replace('/[^0-9]/','',$adaptive_latest_server_time);
+$admin_hangup_enabled = preg_replace('/[^0-9]/','',$admin_hangup_enabled);
+$admin_hijack_enabled = preg_replace('/[^0-9]/','',$admin_hijack_enabled);
+$admin_monitor_enabled = preg_replace('/[^0-9]/','',$admin_monitor_enabled);
+$AFLogging_enabled = preg_replace('/[^0-9]/','',$AFLogging_enabled);
+$agent_choose_ingroups = preg_replace('/[^0-9]/','',$agent_choose_ingroups);
+$agentcall_manual = preg_replace('/[^0-9]/','',$agentcall_manual);
+$agentonly_callbacks = preg_replace('/[^0-9]/','',$agentonly_callbacks);
+$AGI_call_logging_enabled = preg_replace('/[^0-9]/','',$AGI_call_logging_enabled);
+$allcalls_delay = preg_replace('/[^0-9]/','',$allcalls_delay);
+$alter_agent_interface_options = preg_replace('/[^0-9]/','',$alter_agent_interface_options);
+$answer_transfer_agent = preg_replace('/[^0-9]/','',$answer_transfer_agent);
+$ast_admin_access = preg_replace('/[^0-9]/','',$ast_admin_access);
+$ast_delete_phones = preg_replace('/[^0-9]/','',$ast_delete_phones);
+$attempt_delay = preg_replace('/[^0-9]/','',$attempt_delay);
+$attempt_maximum = preg_replace('/[^0-9]/','',$attempt_maximum);
+$auto_dial_next_number = preg_replace('/[^0-9]/','',$auto_dial_next_number);
+$balance_trunks_offlimits = preg_replace('/[^0-9]/','',$balance_trunks_offlimits);
+$call_parking_enabled = preg_replace('/[^0-9]/','',$call_parking_enabled);
+$CallerID_popup_enabled = preg_replace('/[^0-9]/','',$CallerID_popup_enabled);
+$campaign_detail = preg_replace('/[^0-9]/','',$campaign_detail);
+$campaign_rec_exten = preg_replace('/[^0-9]/','',$campaign_rec_exten);
+$campaign_vdad_exten = preg_replace('/[^0-9]/','',$campaign_vdad_exten);
+$change_agent_campaign = preg_replace('/[^0-9]/','',$change_agent_campaign);
+$closer_default_blended = preg_replace('/[^0-9]/','',$closer_default_blended);
+$conf_exten = preg_replace('/[^0-9]/','',$conf_exten);
+$conf_on_extension = preg_replace('/[^0-9]/','',$conf_on_extension);
+$conferencing_enabled = preg_replace('/[^0-9]/','',$conferencing_enabled);
+$ct_default_start = preg_replace('/[^0-9]/','',$ct_default_start);
+$ct_default_stop = preg_replace('/[^0-9]/','',$ct_default_stop);
+$ct_friday_start = preg_replace('/[^0-9]/','',$ct_friday_start);
+$ct_friday_stop = preg_replace('/[^0-9]/','',$ct_friday_stop);
+$ct_monday_start = preg_replace('/[^0-9]/','',$ct_monday_start);
+$ct_monday_stop = preg_replace('/[^0-9]/','',$ct_monday_stop);
+$ct_saturday_start = preg_replace('/[^0-9]/','',$ct_saturday_start);
+$ct_saturday_stop = preg_replace('/[^0-9]/','',$ct_saturday_stop);
+$ct_sunday_start = preg_replace('/[^0-9]/','',$ct_sunday_start);
+$ct_sunday_stop = preg_replace('/[^0-9]/','',$ct_sunday_stop);
+$ct_thursday_start = preg_replace('/[^0-9]/','',$ct_thursday_start);
+$ct_thursday_stop = preg_replace('/[^0-9]/','',$ct_thursday_stop);
+$ct_tuesday_start = preg_replace('/[^0-9]/','',$ct_tuesday_start);
+$ct_tuesday_stop = preg_replace('/[^0-9]/','',$ct_tuesday_stop);
+$ct_wednesday_start = preg_replace('/[^0-9]/','',$ct_wednesday_start);
+$ct_wednesday_stop = preg_replace('/[^0-9]/','',$ct_wednesday_stop);
+$DBX_port = preg_replace('/[^0-9]/','',$DBX_port);
+$DBY_port = preg_replace('/[^0-9]/','',$DBY_port);
+$dedicated_trunks = preg_replace('/[^0-9]/','',$dedicated_trunks);
+$delete_call_times = preg_replace('/[^0-9]/','',$delete_call_times);
+$delete_campaigns = preg_replace('/[^0-9]/','',$delete_campaigns);
+$delete_filters = preg_replace('/[^0-9]/','',$delete_filters);
+$delete_ingroups = preg_replace('/[^0-9]/','',$delete_ingroups);
+$delete_lists = preg_replace('/[^0-9]/','',$delete_lists);
+$delete_remote_agents = preg_replace('/[^0-9]/','',$delete_remote_agents);
+$delete_scripts = preg_replace('/[^0-9]/','',$delete_scripts);
+$delete_user_groups = preg_replace('/[^0-9]/','',$delete_user_groups);
+$delete_users = preg_replace('/[^0-9]/','',$delete_users);
+$dial_timeout = preg_replace('/[^0-9]/','',$dial_timeout);
+$dialplan_number = preg_replace('/[^0-9]/','',$dialplan_number);
+$enable_fast_refresh = preg_replace('/[^0-9]/','',$enable_fast_refresh);
+$enable_persistant_mysql = preg_replace('/[^0-9]/','',$enable_persistant_mysql);
+$fast_refresh_rate = preg_replace('/[^0-9]/','',$fast_refresh_rate);
+$hopper_level = preg_replace('/[^0-9]/','',$hopper_level);
+$hotkey = preg_replace('/[^0-9]/','',$hotkey);
+$hotkeys_active = preg_replace('/[^0-9]/','',$hotkeys_active);
+$list_id = preg_replace('/[^0-9]/','',$list_id);
+$load_leads = preg_replace('/[^0-9]/','',$load_leads);
+$max_vicidial_trunks = preg_replace('/[^0-9]/','',$max_vicidial_trunks);
+$modify_call_times = preg_replace('/[^0-9]/','',$modify_call_times);
+$modify_users = preg_replace('/[^0-9]/','',$modify_users);
+$modify_campaigns = preg_replace('/[^0-9]/','',$modify_campaigns);
+$modify_lists = preg_replace('/[^0-9]/','',$modify_lists);
+$modify_scripts = preg_replace('/[^0-9]/','',$modify_scripts);
+$modify_filters = preg_replace('/[^0-9]/','',$modify_filters);
+$modify_ingroups = preg_replace('/[^0-9]/','',$modify_ingroups);
+$modify_usergroups = preg_replace('/[^0-9]/','',$modify_usergroups);
+$modify_remoteagents = preg_replace('/[^0-9]/','',$modify_remoteagents);
+$modify_servers = preg_replace('/[^0-9]/','',$modify_servers);
+$view_reports = preg_replace('/[^0-9]/','',$view_reports);
+$modify_leads = preg_replace('/[^0-9]/','',$modify_leads);
+$export_gdpr_leads = preg_replace('/[^0-9]/','',$export_gdpr_leads);
+$monitor_prefix = preg_replace('/[^0-9]/','',$monitor_prefix);
+$number_of_lines = preg_replace('/[^0-9]/','',$number_of_lines);
+$old_conf_exten = preg_replace('/[^0-9]/','',$old_conf_exten);
+$outbound_cid = preg_replace('/[^0-9]/','',$outbound_cid);
+$park_ext = preg_replace('/[^0-9]/','',$park_ext);
+$park_on_extension = preg_replace('/[^0-9]/','',$park_on_extension);
+$phone_number = preg_replace('/[^0-9]/','',$phone_number);
+$QUEUE_ACTION_enabled = preg_replace('/[^0-9]/','',$QUEUE_ACTION_enabled);
+$recording_exten = preg_replace('/[^0-9]/','',$recording_exten);
+$remote_agent_id = preg_replace('/[^0-9]/','',$remote_agent_id);
+$telnet_port = preg_replace('/[^0-9]/','',$telnet_port);
+$updater_check_enabled = preg_replace('/[^0-9]/','',$updater_check_enabled);
+$user_level = preg_replace('/[^0-9]/','',$user_level);
+$user_switching_enabled = preg_replace('/[^0-9]/','',$user_switching_enabled);
+$VDstop_rec_after_each_call = preg_replace('/[^0-9]/','',$VDstop_rec_after_each_call);
+$VICIDIAL_park_on_extension = preg_replace('/[^0-9]/','',$VICIDIAL_park_on_extension);
+$vicidial_recording = preg_replace('/[^0-9]/','',$vicidial_recording);
+$vicidial_transfers = preg_replace('/[^0-9]/','',$vicidial_transfers);
+$voicemail_button_enabled = preg_replace('/[^0-9]/','',$voicemail_button_enabled);
+$voicemail_dump_exten = preg_replace('/[^0-9]/','',$voicemail_dump_exten);
+$voicemail_dump_exten_no_inst = preg_replace('/[^0-9]/','',$voicemail_dump_exten_no_inst);
+$voicemail_exten = preg_replace('/[^0-9]/','',$voicemail_exten);
+$wrapup_seconds = preg_replace('/[^0-9]/','',$wrapup_seconds);
+$use_non_latin = preg_replace('/[^0-9]/','',$use_non_latin);
+$webroot_writable = preg_replace('/[^0-9]/','',$webroot_writable);
+$enable_queuemetrics_logging = preg_replace('/[^0-9]/','',$enable_queuemetrics_logging);
+$enable_sipsak_messages = preg_replace('/[^0-9]/','',$enable_sipsak_messages);
+$allow_sipsak_messages = preg_replace('/[^0-9]/','',$allow_sipsak_messages);
+$mix_container_item = preg_replace('/[^0-9]/','',$mix_container_item);
+$prompt_interval = preg_replace('/[^0-9]/','',$prompt_interval);
+$agent_alert_delay = preg_replace('/[^0-9]/','',$agent_alert_delay);
+$manual_dial_list_id = preg_replace('/[^0-9]/','',$manual_dial_list_id);
+$qc_user_level = preg_replace('/[^0-9]/','',$qc_user_level);
+$qc_pass = preg_replace('/[^0-9]/','',$qc_pass);
+$qc_finish = preg_replace('/[^0-9]/','',$qc_finish);
+$qc_commit = preg_replace('/[^0-9]/','',$qc_commit);
+$shift_start_time = preg_replace('/[^0-9]/','',$shift_start_time);
+$timeclock_end_of_day = preg_replace('/[^0-9]/','',$timeclock_end_of_day);
+$survey_xfer_exten = preg_replace('/[^0-9]/','',$survey_xfer_exten);
+$add_timeclock_log = preg_replace('/[^0-9]/','',$add_timeclock_log);
+$modify_timeclock_log = preg_replace('/[^0-9]/','',$modify_timeclock_log);
+$delete_timeclock_log = preg_replace('/[^0-9]/','',$delete_timeclock_log);
+$vdc_agent_api_access = preg_replace('/[^0-9]/','',$vdc_agent_api_access);
+$vdc_agent_api_active = preg_replace('/[^0-9]/','',$vdc_agent_api_active);
+$hold_time_option_seconds = preg_replace('/[^0-9]/','',$hold_time_option_seconds);
+$hold_time_option_callback_list_id = preg_replace('/[^0-9]/','',$hold_time_option_callback_list_id);
+$source_did = preg_replace('/[^0-9]/','',$source_did);
+$modify_inbound_dids = preg_replace('/[^0-9]/','',$modify_inbound_dids);
+$delete_inbound_dids = preg_replace('/[^0-9]/','',$delete_inbound_dids);
+$answer_sec_pct_rt_stat_one = preg_replace('/[^0-9]/','',$answer_sec_pct_rt_stat_one);
+$answer_sec_pct_rt_stat_two = preg_replace('/[^0-9]/','',$answer_sec_pct_rt_stat_two);
+$enable_vtiger_integration = preg_replace('/[^0-9]/','',$enable_vtiger_integration);
+$qc_features_active = preg_replace('/[^0-9]/','',$qc_features_active);
+$outbound_autodial_active = preg_replace('/[^0-9]/','',$outbound_autodial_active);
+$download_lists = preg_replace('/[^0-9]/','',$download_lists);
+$caller_id_number = preg_replace('/[^0-9]/','',$caller_id_number);
+$outbound_calls_per_second = preg_replace('/[^0-9]/','',$outbound_calls_per_second);
+$manager_shift_enforcement_override = preg_replace('/[^0-9]/','',$manager_shift_enforcement_override);
+$export_reports = preg_replace('/[^0-9]/','',$export_reports);
+$delete_from_dnc = preg_replace('/[^0-9]/','',$delete_from_dnc);
+$menu_timeout = preg_replace('/[^0-9]/','',$menu_timeout);
+$menu_time_check = preg_replace('/[^0-9]/','',$menu_time_check);
+$track_in_vdac = preg_replace('/[^0-9]/','',$track_in_vdac);
+$menu_repeat = preg_replace('/[^0-9]/','',$menu_repeat);
+$agentonly_callback_campaign_lock = preg_replace('/[^0-9]/','',$agentonly_callback_campaign_lock);
+$sounds_central_control_active = preg_replace('/[^0-9]/','',$sounds_central_control_active);
+$user_territories_active = preg_replace('/[^0-9]/','',$user_territories_active);
+$vicidial_recording_limit = preg_replace('/[^0-9]/','',$vicidial_recording_limit);
+$allow_custom_dialplan = preg_replace('/[^0-9]/','',$allow_custom_dialplan);
+$phone_ring_timeout = preg_replace('/[^0-9]/','',$phone_ring_timeout);
+$enable_tts_integration = preg_replace('/[^0-9]/','',$enable_tts_integration);
+$allow_alerts = preg_replace('/[^0-9]/','',$allow_alerts);
+$vicidial_balance_rank = preg_replace('/[^0-9]/','',$vicidial_balance_rank);
+$rank = preg_replace('/[^0-9]/','',$rank);
+$enable_second_webform = preg_replace('/[^0-9]/','',$enable_second_webform);
+$campaign_cid_override = preg_replace('/[^0-9]/','',$campaign_cid_override);
+$agent_choose_territories = preg_replace('/[^0-9]/','',$agent_choose_territories);
+$timer_action_seconds = preg_replace('/[^0-9]/','',$timer_action_seconds);
+$default_webphone = preg_replace('/[^0-9]/','',$default_webphone);
+$default_external_server_ip = preg_replace('/[^0-9]/','',$default_external_server_ip);
+$enable_agc_xfer_log = preg_replace('/[^0-9]/','',$enable_agc_xfer_log);
+$enable_agc_dispo_log = preg_replace('/[^0-9]/','',$enable_agc_dispo_log);
+$callcard_enabled = preg_replace('/[^0-9]/','',$callcard_enabled);
+$callcard_admin = preg_replace('/[^0-9]/','',$callcard_admin);
+$extension_id = preg_replace('/[^0-9]/','',$extension_id);
+$agent_choose_blended = preg_replace('/[^0-9]/','',$agent_choose_blended);
+$realtime_block_user_info = preg_replace('/[^0-9]/','',$realtime_block_user_info);
+$codecs_with_template = preg_replace('/[^0-9]/','',$codecs_with_template);
+$custom_fields_modify = preg_replace('/[^0-9]/','',$custom_fields_modify);
+$hold_time_option_minimum = preg_replace('/[^0-9]/','',$hold_time_option_minimum);
+$onhold_prompt_seconds = preg_replace('/[^0-9]/','',$onhold_prompt_seconds);
+$hold_time_option_prompt_seconds = preg_replace('/[^0-9]/','',$hold_time_option_prompt_seconds);
+$custom_fields_enabled = preg_replace('/[^0-9]/','',$custom_fields_enabled);
+$wait_time_option_seconds = preg_replace('/[^0-9]/','',$wait_time_option_seconds);
+$wait_time_option_callback_list_id = preg_replace('/[^0-9]/','',$wait_time_option_callback_list_id);
+$wait_time_option_prompt_seconds = preg_replace('/[^0-9]/','',$wait_time_option_prompt_seconds);
+$filter_list_id = preg_replace('/[^0-9]/','',$filter_list_id);
+$calculate_estimated_hold_seconds = preg_replace('/[^0-9]/','',$calculate_estimated_hold_seconds);
+$customer_3way_hangup_seconds = preg_replace('/[^0-9]/','',$customer_3way_hangup_seconds);
+$eht_minimum_prompt_seconds = preg_replace('/[^0-9]/','',$eht_minimum_prompt_seconds);
+$admin_modify_refresh = preg_replace('/[^0-9]/','',$admin_modify_refresh);
+$nocache_admin = preg_replace('/[^0-9]/','',$nocache_admin);
+$generate_cross_server_exten = preg_replace('/[^0-9]/','',$generate_cross_server_exten);
+$queuemetrics_addmember_enabled = preg_replace('/[^0-9]/','',$queuemetrics_addmember_enabled);
+$modify_page = preg_replace('/[^0-9]/','',$modify_page);
+$on_hook_ring_time = preg_replace('/[^0-9]/','',$on_hook_ring_time);
+$reload_dialplan_on_servers = preg_replace('/[^0-9]/','',$reload_dialplan_on_servers);
+$available_only_tally_threshold_agents = preg_replace('/[^0-9]/','',$available_only_tally_threshold_agents);
+$dial_level_threshold_agents = preg_replace('/[^0-9]/','',$dial_level_threshold_agents);
+$dtmf_log = preg_replace('/[^0-9]/','',$dtmf_log);
+$callback_days_limit = preg_replace('/[^0-9]/','',$callback_days_limit);
+$queuemetrics_pe_phone_append = preg_replace('/[^0-9]/','',$queuemetrics_pe_phone_append);
+$test_campaign_calls = preg_replace('/[^0-9]/','',$test_campaign_calls);
+$agents_calls_reset = preg_replace('/[^0-9]/','',$agents_calls_reset);
+$campaign_cid_areacodes_enabled = preg_replace('/[^0-9]/','',$campaign_cid_areacodes_enabled);
+$pllb_grouping_limit = preg_replace('/[^0-9]/','',$pllb_grouping_limit);
+$did_ra_extensions_enabled = preg_replace('/[^0-9]/','',$did_ra_extensions_enabled);
+$modify_shifts = preg_replace('/[^0-9]/','',$modify_shifts);
+$modify_phones = preg_replace('/[^0-9]/','',$modify_phones);
+$modify_carriers = preg_replace('/[^0-9]/','',$modify_carriers);
+$modify_labels = preg_replace('/[^0-9]/','',$modify_labels);
+$modify_colors = preg_replace('/[^0-9]/','',$modify_colors);
+$modify_statuses = preg_replace('/[^0-9]/','',$modify_statuses);
+$modify_voicemail = preg_replace('/[^0-9]/','',$modify_voicemail);
+$modify_audiostore = preg_replace('/[^0-9]/','',$modify_audiostore);
+$modify_moh = preg_replace('/[^0-9]/','',$modify_moh);
+$modify_tts = preg_replace('/[^0-9]/','',$modify_tts);
+$call_count_limit = preg_replace('/[^0-9]/','',$call_count_limit);
+$call_count_target = preg_replace('/[^0-9]/','',$call_count_target);
+$expanded_list_stats = preg_replace('/[^0-9]/','',$expanded_list_stats);
+$contacts_enabled = preg_replace('/[^0-9]/','',$contacts_enabled);
+$contact_id = preg_replace('/[^0-9]/','',$contact_id);
+$office_num = preg_replace('/[^0-9]/','',$office_num);
+$cell_num = preg_replace('/[^0-9]/','',$cell_num);
+$other_num1 = preg_replace('/[^0-9]/','',$other_num1);
+$other_num2 = preg_replace('/[^0-9]/','',$other_num2);
+$modify_contacts = preg_replace('/[^0-9]/','',$modify_contacts);
+$callback_hours_block = preg_replace('/[^0-9]/','',$callback_hours_block);
+$modify_same_user_level = preg_replace('/[^0-9]/','',$modify_same_user_level);
+$admin_hide_lead_data = preg_replace('/[^0-9]/','',$admin_hide_lead_data);
+$max_calls_count = preg_replace('/[^0-9]/','',$max_calls_count);
+$report_rank = preg_replace('/[^0-9]/','',$report_rank);
+$dial_ingroup_cid = preg_replace('/[^0-9]/','',$dial_ingroup_cid);
+$call_menu_qualify_enabled = preg_replace('/[^0-9]/','',$call_menu_qualify_enabled);
+$admin_list_counts = preg_replace('/[^0-9]/','',$admin_list_counts);
+$allow_voicemail_greeting = preg_replace('/[^0-9]/','',$allow_voicemail_greeting);
+$enhanced_disconnect_logging = preg_replace('/[^0-9]/','',$enhanced_disconnect_logging);
+$level_8_disable_add = preg_replace('/[^0-9]/','',$level_8_disable_add);
+$survey_wait_sec = preg_replace('/[^0-9]/','',$survey_wait_sec);
+$queuemetrics_record_hold = preg_replace('/[^0-9]/','',$queuemetrics_record_hold);
+$country_code_list_stats = preg_replace('/[^0-9]/','',$country_code_list_stats);
+$dead_max = preg_replace('/[^0-9]/','',$dead_max);
+$dispo_max = preg_replace('/[^0-9]/','',$dispo_max);
+$pause_max = preg_replace('/[^0-9]/','',$pause_max);
+$alter_admin_interface_options = preg_replace('/[^0-9]/','',$alter_admin_interface_options);
+$max_inbound_calls = preg_replace('/[^0-9]/','',$max_inbound_calls);
+$modify_custom_dialplans = preg_replace('/[^0-9]/','',$modify_custom_dialplans);
+$queuemetrics_pause_type = preg_replace('/[^0-9]/','',$queuemetrics_pause_type);
+$frozen_server_call_clear = preg_replace('/[^0-9]/','',$frozen_server_call_clear);
+$callback_time_24hour = preg_replace('/[^0-9]/','',$callback_time_24hour);
+$callback_active_limit = preg_replace('/[^0-9]/','',$callback_active_limit);
+$modify_languages = preg_replace('/[^0-9]/','',$modify_languages);
+$enable_languages = preg_replace('/[^0-9]/','',$enable_languages);
+$user_choose_language = preg_replace('/[^0-9]/','',$user_choose_language);
+$ignore_group_on_search = preg_replace('/[^0-9]/','',$ignore_group_on_search);
+$enable_did_entry_list_id = preg_replace('/[^0-9]/','',$enable_did_entry_list_id);
+$entry_list_id = preg_replace('/[^0-9]/','',$entry_list_id);
+$filter_entry_list_id = preg_replace('/[^0-9]/','',$filter_entry_list_id);
+$enable_third_webform = preg_replace('/[^0-9]/','',$enable_third_webform);
+$api_list_restrict = preg_replace('/[^0-9]/','',$api_list_restrict);
+$customer_gone_seconds = preg_replace('/[^0-9]/','',$customer_gone_seconds);
+$agent_whisper_enabled = preg_replace('/[^0-9]/','',$agent_whisper_enabled);
+$admin_cf_show_hidden = preg_replace('/[^0-9]/','',$admin_cf_show_hidden);
+$agentcall_chat = preg_replace('/[^0-9]/','',$agentcall_chat);
+$user_hide_realtime_enabled = preg_replace('/[^0-9]/','',$user_hide_realtime_enabled);
+$user_hide_realtime = preg_replace('/[^0-9]/','',$user_hide_realtime);
+$min_sec = preg_replace('/[^0-9]/','',$min_sec);
+$max_sec = preg_replace('/[^0-9]/','',$max_sec);
+$usacan_phone_dialcode_fix = preg_replace('/[^0-9]/','',$usacan_phone_dialcode_fix);
+$cache_carrier_stats_realtime = preg_replace('/[^0-9]/','',$cache_carrier_stats_realtime);
+$nva_new_list_id = preg_replace('/[^0-9]/','',$nva_new_list_id);
+$nva_new_phone_code = preg_replace('/[^0-9]/','',$nva_new_phone_code);
+$manual_dial_timeout = preg_replace('/[^0-9]/','',$manual_dial_timeout);
+$alt_ivr_logging = preg_replace('/[^0-9]/','',$alt_ivr_logging);
+$question = preg_replace('/[^0-9]/','',$question);
+$alt_dtmf_log = preg_replace('/[^0-9]/','',$alt_dtmf_log);
+$callback_useronly_move_minutes = preg_replace('/[^0-9]/','',$callback_useronly_move_minutes);
+$default_phone_code = preg_replace('/[^0-9]/','',$default_phone_code);
+$admin_row_click = preg_replace('/[^0-9]/','',$admin_row_click);
+$outbound_alt_cid = preg_replace('/[^0-9]/','',$outbound_alt_cid);
+$script_remove_js = preg_replace('/[^0-9]/','',$script_remove_js);
+$manual_auto_next = preg_replace('/[^0-9]/','',$manual_auto_next);
+$agent_soundboards = preg_replace('/[^0-9]/','',$agent_soundboards);
+$api_only_user = preg_replace('/[^0-9]/','',$api_only_user);
+$areacode_filter_seconds = preg_replace('/[^0-9]/','',$areacode_filter_seconds);
+$enable_auto_reports = preg_replace('/[^0-9]/','',$enable_auto_reports);
+$modify_auto_reports = preg_replace('/[^0-9]/','',$modify_auto_reports);
+$report_weekdays = preg_replace('/[^0-9]/','',$report_weekdays);
+$enable_pause_code_limits = preg_replace('/[^0-9]/','',$enable_pause_code_limits);
+$time_limit = preg_replace('/[^0-9]/','',$time_limit);
+$enable_drop_lists = preg_replace('/[^0-9]/','',$enable_drop_lists);
+$dl_weekdays = preg_replace('/[^0-9]/','',$dl_weekdays);
+$allow_ip_lists = preg_replace('/[^0-9]/','',$allow_ip_lists);
+$modify_ip_lists = preg_replace('/[^0-9]/','',$modify_ip_lists);
+$ignore_ip_list = preg_replace('/[^0-9]/','',$ignore_ip_list);
+$dl_minutes = preg_replace('/[^0-9]/','',$dl_minutes);
+$callback_display_days = preg_replace('/[^0-9]/','',$callback_display_days);
+$agent_push_events = preg_replace('/[^0-9]/','',$agent_push_events);
+$hide_inactive_lists = preg_replace('/[^0-9]/','',$hide_inactive_lists);
+$inbound_survey_accept_digit = preg_replace('/[^0-9]/','',$inbound_survey_accept_digit);
+$allow_manage_active_lists = preg_replace('/[^0-9]/','',$allow_manage_active_lists);
+$expired_lists_inactive = preg_replace('/[^0-9]/','',$expired_lists_inactive);
+$enable_gdpr_download_deletion = preg_replace('/[^0-9]/','',$enable_gdpr_download_deletion);
+$did_system_filter = preg_replace('/[^0-9]/','',$did_system_filter);
+$icbq_expiration_hours = preg_replace('/[^0-9]/','',$icbq_expiration_hours);
+$source_id_display = preg_replace('/[^0-9]/','',$source_id_display);
+$pause_code_approval = preg_replace('/[^0-9]/','',$pause_code_approval);
+$max_hopper_calls = preg_replace('/[^0-9]/','',$max_hopper_calls);
+$max_hopper_calls_hour = preg_replace('/[^0-9]/','',$max_hopper_calls_hour);
+$agent_logout_link = preg_replace('/[^0-9]/','',$agent_logout_link);
+$user_admin_redirect = preg_replace('/[^0-9]/','',$user_admin_redirect);
+$list_status_modification_confirmation = preg_replace('/[^0-9]/','',$list_status_modification_confirmation);
+$max_inbound_filter_enabled = preg_replace('/[^0-9]/','',$max_inbound_filter_enabled);
+$enable_second_script = preg_replace('/[^0-9]/','',$enable_second_script);
+$time_start = preg_replace('/[^0-9]/','',$time_start);
+$time_end = preg_replace('/[^0-9]/','',$time_end);
+$enable_first_webform = preg_replace('/[^0-9]/','',$enable_first_webform);
+$vmm_daily_limit = preg_replace('/[^0-9]/','',$vmm_daily_limit);
+$cid_auto_rotate_minutes = preg_replace('/[^0-9]/','',$cid_auto_rotate_minutes);
+$cid_auto_rotate_minimum = preg_replace('/[^0-9]/','',$cid_auto_rotate_minimum);
+$require_password_length = preg_replace('/[^0-9]/','',$require_password_length);
+$entries_per_page = preg_replace('/[^0-9]/','',$entries_per_page);
+$start_count = preg_replace('/[^0-9]/','',$start_count);
+$browser_call_alerts = preg_replace('/[^0-9]/','',$browser_call_alerts);
+$browser_alert_volume = preg_replace('/[^0-9]/','',$browser_alert_volume);
+$inbound_answer_config = preg_replace('/[^0-9]/','',$inbound_answer_config);
+$enable_international_dncs = preg_replace('/[^0-9]/','',$enable_international_dncs);
+
+$user_new_lead_limit = preg_replace('/[^-0-9]/','',$user_new_lead_limit);
+$drop_call_seconds = preg_replace('/[^-0-9]/','',$drop_call_seconds);
+$timer_alt_seconds = preg_replace('/[^-0-9]/','',$timer_alt_seconds);
+$wrapup_seconds_override = preg_replace('/[^-0-9]/','',$wrapup_seconds_override);
+$max_queue_ingroup_calls = preg_replace('/[^-0-9]/','',$max_queue_ingroup_calls);
+$ready_max_logout = preg_replace('/[^-0-9]/','',$ready_max_logout);
+$inbound_no_agents_no_dial_threshold = preg_replace('/[^-0-9]/','',$inbound_no_agents_no_dial_threshold);
+$dead_trigger_seconds = preg_replace('/[^-0-9]/','',$dead_trigger_seconds);
+$cid_cb_valid_length = preg_replace('/[^-0-9]/','',$cid_cb_valid_length);
+$daily_reset_limit = preg_replace('/[^-0-9]/','',$daily_reset_limit);
+$auto_active_list_rank = preg_replace('/[^-0-9]/','',$auto_active_list_rank);
+$max_inbound_filter_min_sec = preg_replace('/[^-0-9]/','',$max_inbound_filter_min_sec);
+$no_agent_delay = preg_replace('/[^-0-9]/','',$no_agent_delay);
+
+### DIGITS and COLONS
+$shift_length = preg_replace('/[^\:0-9]/','',$shift_length);
+
+### DIGITS and HASHES and STARS
+$survey_dtmf_digits = preg_replace('/[^\#\*0-9]/','',$survey_dtmf_digits);
+$survey_ni_digit = preg_replace('/[^\#\*0-9]/','',$survey_ni_digit);
+
+### DIGITS and DASHES
+$group_rank = preg_replace('/[^-0-9]/','',$group_rank);
+$campaign_rank = preg_replace('/[^-0-9]/','',$campaign_rank);
+$queue_priority = preg_replace('/[^-0-9]/','',$queue_priority);
+
+### Y or N ONLY ###
+$allow_closers = preg_replace('/[^NY]/','',$allow_closers);
+$reset_hopper = preg_replace('/[^NY]/','',$reset_hopper);
+$amd_send_to_vmx = preg_replace('/[^NY]/','',$amd_send_to_vmx);
+$selectable = preg_replace('/[^NY]/','',$selectable);
+$reset_list = preg_replace('/[^NY]/','',$reset_list);
+$fronter_display = preg_replace('/[^NY]/','',$fronter_display);
+$omit_phone_code = preg_replace('/[^NY]/','',$omit_phone_code);
+$available_only_ratio_tally = preg_replace('/[^NY]/','',$available_only_ratio_tally);
+$sys_perf_log = preg_replace('/[^NY]/','',$sys_perf_log);
+$vicidial_balance_active = preg_replace('/[^NY]/','',$vicidial_balance_active);
+$vd_server_logs = preg_replace('/[^NY]/','',$vd_server_logs);
+$campaign_stats_refresh = preg_replace('/[^NY]/','',$campaign_stats_refresh);
+$disable_alter_custdata = preg_replace('/[^NY]/','',$disable_alter_custdata);
+$no_hopper_leads_logins = preg_replace('/[^NY]/','',$no_hopper_leads_logins);
+$human_answered = preg_replace('/[^NY]/','',$human_answered);
+$tovdad_display = preg_replace('/[^NY]/','',$tovdad_display);
+$campaign_allow_inbound = preg_replace('/[^NY]/','',$campaign_allow_inbound);
+$old_campaign_allow_inbound = preg_replace('/[^NY]/','',$old_campaign_allow_inbound);
+$display_queue_count = preg_replace('/[^NY]/','',$display_queue_count);
+$qc_show_recording = preg_replace('/[^NY]/','',$qc_show_recording);
+$sale_category = preg_replace('/[^NY]/','',$sale_category);
+$dead_lead_category = preg_replace('/[^NY]/','',$dead_lead_category);
+$agent_extended_alt_dial  = preg_replace('/[^NY]/','',$agent_extended_alt_dial);
+$play_place_in_line  = preg_replace('/[^NY]/','',$play_place_in_line);
+$play_estimate_hold_time  = preg_replace('/[^NY]/','',$play_estimate_hold_time);
+$no_delay_call_route  = preg_replace('/[^NY]/','',$no_delay_call_route);
+$did_active  = preg_replace('/[^NY]/','',$did_active);
+$active_asterisk_server = preg_replace('/[^NY]/','',$active_asterisk_server);
+$generate_vicidial_conf = preg_replace('/[^NY]/','',$generate_vicidial_conf);
+$rebuild_conf_files = preg_replace('/[^NY]/','',$rebuild_conf_files);
+$agent_allow_group_alias = preg_replace('/[^NY]/','',$agent_allow_group_alias);
+$vtiger_status_call = preg_replace('/[^NY]/','',$vtiger_status_call);
+$sale = preg_replace('/[^NY]/','',$sale);
+$dnc = preg_replace('/[^NY]/','',$dnc);
+$customer_contact = preg_replace('/[^NY]/','',$customer_contact);
+$not_interested = preg_replace('/[^NY]/','',$not_interested);
+$unworkable = preg_replace('/[^NY]/','',$unworkable);
+$sounds_update = preg_replace('/[^NY]/','',$sounds_update);
+$carrier_logging_active = preg_replace('/[^NY]/','',$carrier_logging_active);
+$agent_status_view_time = preg_replace('/[^NY]/','',$agent_status_view_time);
+$no_hopper_dialing = preg_replace('/[^NY]/','',$no_hopper_dialing);
+$agent_display_dialable_leads = preg_replace('/[^NY]/','',$agent_display_dialable_leads);
+$random = preg_replace('/[^NY]/','',$random);
+$rebuild_music_on_hold = preg_replace('/[^NY]/','',$rebuild_music_on_hold);
+$active_agent_login_server = preg_replace('/[^NY]/','',$active_agent_login_server);
+$agent_select_territories = preg_replace('/[^NY]/','',$agent_select_territories);
+$delete_vm_after_email = preg_replace('/[^NY]/','',$delete_vm_after_email);
+$crm_popup_login = preg_replace('/[^NY]/','',$crm_popup_login);
+$ignore_list_script_override = preg_replace('/[^NY]/','',$ignore_list_script_override);
+$use_external_server_ip = preg_replace('/[^NY]/','',$use_external_server_ip);
+$agent_xfer_consultative = preg_replace('/[^NY]/','',$agent_xfer_consultative);
+$agent_xfer_dial_override = preg_replace('/[^NY]/','',$agent_xfer_dial_override);
+$agent_xfer_vm_transfer = preg_replace('/[^NY]/','',$agent_xfer_vm_transfer);
+$agent_xfer_blind_transfer = preg_replace('/[^NY]/','',$agent_xfer_blind_transfer);
+$agent_xfer_dial_with_customer = preg_replace('/[^NY]/','',$agent_xfer_dial_with_customer);
+$agent_xfer_park_customer_dial = preg_replace('/[^NY]/','',$agent_xfer_park_customer_dial);
+$agent_fullscreen = preg_replace('/[^NY]/','',$agent_fullscreen);
+$onhold_prompt_no_block = preg_replace('/[^NY]/','',$onhold_prompt_no_block);
+$hold_time_option_no_block = preg_replace('/[^NY]/','',$hold_time_option_no_block);
+$wait_time_option_no_block = preg_replace('/[^NY]/','',$wait_time_option_no_block);
+$preset_hide_number = preg_replace('/[^NY]/','',$preset_hide_number);
+$use_auto_hopper = preg_replace('/[^NY]/','',$use_auto_hopper);
+$auto_trim_hopper = preg_replace('/[^NY]/','',$auto_trim_hopper);
+$force_change_password = preg_replace('/[^NY]/','',$force_change_password);
+$first_login_trigger = preg_replace('/[^NY]/','',$first_login_trigger);
+$eht_minimum_prompt_no_block = preg_replace('/[^NY]/','',$eht_minimum_prompt_no_block);
+$lead_order_randomize = preg_replace('/[^NY]/','',$lead_order_randomize);
+$on_hook_agent = preg_replace('/[^NY]/','',$on_hook_agent);
+$auto_pause_precall = preg_replace('/[^NY]/','',$auto_pause_precall);
+$auto_resume_precall = preg_replace('/[^NY]/','',$auto_resume_precall);
+$webphone_auto_answer = preg_replace('/[^NY]/','',$webphone_auto_answer);
+$noanswer_log = preg_replace('/[^NY]/','',$noanswer_log);
+$did_agent_log = preg_replace('/[^NY]/','',$did_agent_log);
+$completed = preg_replace('/[^NY]/','',$completed);
+$report_option = preg_replace('/[^NY]/','',$report_option);
+$hopper_vlc_dup_check = preg_replace('/[^NY]/','',$hopper_vlc_dup_check);
+$inventory_report = preg_replace('/[^NY]/','',$inventory_report);
+$manual_dial_lead_id = preg_replace('/[^NY]/','',$manual_dial_lead_id);
+$auto_restart_asterisk = preg_replace('/[^NY]/','',$auto_restart_asterisk);
+$asterisk_temp_no_restart = preg_replace('/[^NY]/','',$asterisk_temp_no_restart);
+$voicemail_instructions = preg_replace('/[^NY]/','',$voicemail_instructions);
+$filter_url_did_redirect = preg_replace('/[^NY]/','',$filter_url_did_redirect);
+$callback_active_limit_override = preg_replace('/[^NY]/','',$callback_active_limit_override);
+$drop_lead_reset = preg_replace('/[^NY]/','',$drop_lead_reset);
+$after_hours_lead_reset = preg_replace('/[^NY]/','',$after_hours_lead_reset);
+$nanq_lead_reset = preg_replace('/[^NY]/','',$nanq_lead_reset);
+$wait_time_lead_reset = preg_replace('/[^NY]/','',$wait_time_lead_reset);
+$hold_time_lead_reset = preg_replace('/[^NY]/','',$hold_time_lead_reset);
+$am_message_wildcards = preg_replace('/[^NY]/','',$am_message_wildcards);
+$gather_asterisk_output = preg_replace('/[^NY]/','',$gather_asterisk_output);
+$routing_initiated_recordings = preg_replace('/[^NY]/','',$routing_initiated_recordings);
+$manual_dial_hopper_check = preg_replace('/[^NY]/','',$manual_dial_hopper_check);
+$webphone_dialbox = preg_replace('/[^NY]/','',$webphone_dialbox);
+$webphone_mute = preg_replace('/[^NY]/','',$webphone_mute);
+$webphone_volume = preg_replace('/[^NY]/','',$webphone_volume);
+$webphone_debug = preg_replace('/[^NY]/','',$webphone_debug);
+$answering_machine = preg_replace('/[^NY]/','',$answering_machine);
+$manual_auto_show = preg_replace('/[^NY]/','',$manual_auto_show);
+$allow_required_fields = preg_replace('/[^NY]/','',$allow_required_fields);
+$conf_qualify = preg_replace('/[^NY]/','',$conf_qualify);
+$run_now_trigger = preg_replace('/[^NY]/','',$run_now_trigger);
+$agent_xfer_validation = preg_replace('/[^NY]/','',$agent_xfer_validation);
+$three_way_record_stop = preg_replace('/[^NY]/','',$three_way_record_stop);
+$hangup_xfer_record_start = preg_replace('/[^NY]/','',$hangup_xfer_record_start);
+$scheduled_callbacks_email_alert = preg_replace('/[^NY]/','',$scheduled_callbacks_email_alert);
+$closing_time_now_trigger = preg_replace('/[^NY]/','',$closing_time_now_trigger);
+$closing_time_lead_reset = preg_replace('/[^NY]/','',$closing_time_lead_reset);
+$script_top_dispo = preg_replace('/[^NY]/','',$script_top_dispo);
+$scheduled_callbacks_force_dial = preg_replace('/[^NY]/','',$scheduled_callbacks_force_dial);
+$inbound_route_answer = preg_replace('/[^NY]/','',$inbound_route_answer);
+
+$qc_enabled = preg_replace('/[^0-9NY]/','',$qc_enabled);
+$active = preg_replace('/[^0-9NY]/','',$active);
+$ofcom_uk_drop_calc = preg_replace('/[^0-9NY]/','',$ofcom_uk_drop_calc);
+$agent_xfer_park_3way = preg_replace('/[^0-9NY]/','',$agent_xfer_park_3way);
+$manual_dial_validation = preg_replace('/[^0-9NY]/','',$manual_dial_validation);
+
+### ALPHACAPS-NUMERIC
+$xferconf_a_number = preg_replace('/[^0-9A-Z]/','',$xferconf_a_number);
+$xferconf_b_number = preg_replace('/[^0-9A-Z]/','',$xferconf_b_number);
+
+### DIGITS and Dots
+$server_ip = preg_replace('/[^\.0-9]/','',$server_ip);
+$auto_dial_level = preg_replace('/[^\.0-9]/','',$auto_dial_level);
+$adaptive_maximum_level = preg_replace('/[^\.0-9]/','',$adaptive_maximum_level);
+$phone_ip = preg_replace('/[^\.0-9]/','',$phone_ip);
+$old_server_ip = preg_replace('/[^\.0-9]/','',$old_server_ip);
+$computer_ip = preg_replace('/[^\.0-9]/','',$computer_ip);
+$queuemetrics_server_ip = preg_replace('/[^\.0-9]/','',$queuemetrics_server_ip);
+$vtiger_server_ip = preg_replace('/[^\.0-9]/','',$vtiger_server_ip);
+$active_voicemail_server = preg_replace('/[^\.0-9]/','',$active_voicemail_server);
+$auto_dial_limit = preg_replace('/[^\.0-9]/','',$auto_dial_limit);
+$adaptive_dropped_percentage = preg_replace('/[^\.0-9]/','',$adaptive_dropped_percentage);
+$drop_lockout_time = preg_replace('/[^\.0-9]/','',$drop_lockout_time);
+$filter_server_ip = preg_replace('/[^\.0-9]/','',$filter_server_ip);
+$auto_hopper_multi = preg_replace('/[^\.0-9]/','',$auto_hopper_multi);
+
 if ($non_latin < 1)
 	{
-	### DIGITS ONLY ###
-	$adaptive_latest_server_time = preg_replace('/[^0-9]/','',$adaptive_latest_server_time);
-	$admin_hangup_enabled = preg_replace('/[^0-9]/','',$admin_hangup_enabled);
-	$admin_hijack_enabled = preg_replace('/[^0-9]/','',$admin_hijack_enabled);
-	$admin_monitor_enabled = preg_replace('/[^0-9]/','',$admin_monitor_enabled);
-	$AFLogging_enabled = preg_replace('/[^0-9]/','',$AFLogging_enabled);
-	$agent_choose_ingroups = preg_replace('/[^0-9]/','',$agent_choose_ingroups);
-	$agentcall_manual = preg_replace('/[^0-9]/','',$agentcall_manual);
-	$agentonly_callbacks = preg_replace('/[^0-9]/','',$agentonly_callbacks);
-	$AGI_call_logging_enabled = preg_replace('/[^0-9]/','',$AGI_call_logging_enabled);
-	$allcalls_delay = preg_replace('/[^0-9]/','',$allcalls_delay);
-	$alter_agent_interface_options = preg_replace('/[^0-9]/','',$alter_agent_interface_options);
-	$answer_transfer_agent = preg_replace('/[^0-9]/','',$answer_transfer_agent);
-	$ast_admin_access = preg_replace('/[^0-9]/','',$ast_admin_access);
-	$ast_delete_phones = preg_replace('/[^0-9]/','',$ast_delete_phones);
-	$attempt_delay = preg_replace('/[^0-9]/','',$attempt_delay);
-	$attempt_maximum = preg_replace('/[^0-9]/','',$attempt_maximum);
-	$auto_dial_next_number = preg_replace('/[^0-9]/','',$auto_dial_next_number);
-	$balance_trunks_offlimits = preg_replace('/[^0-9]/','',$balance_trunks_offlimits);
-	$call_parking_enabled = preg_replace('/[^0-9]/','',$call_parking_enabled);
-	$CallerID_popup_enabled = preg_replace('/[^0-9]/','',$CallerID_popup_enabled);
-	$campaign_detail = preg_replace('/[^0-9]/','',$campaign_detail);
-	$campaign_rec_exten = preg_replace('/[^0-9]/','',$campaign_rec_exten);
-	$campaign_vdad_exten = preg_replace('/[^0-9]/','',$campaign_vdad_exten);
-	$change_agent_campaign = preg_replace('/[^0-9]/','',$change_agent_campaign);
-	$closer_default_blended = preg_replace('/[^0-9]/','',$closer_default_blended);
-	$conf_exten = preg_replace('/[^0-9]/','',$conf_exten);
-	$conf_on_extension = preg_replace('/[^0-9]/','',$conf_on_extension);
-	$conferencing_enabled = preg_replace('/[^0-9]/','',$conferencing_enabled);
-	$ct_default_start = preg_replace('/[^0-9]/','',$ct_default_start);
-	$ct_default_stop = preg_replace('/[^0-9]/','',$ct_default_stop);
-	$ct_friday_start = preg_replace('/[^0-9]/','',$ct_friday_start);
-	$ct_friday_stop = preg_replace('/[^0-9]/','',$ct_friday_stop);
-	$ct_monday_start = preg_replace('/[^0-9]/','',$ct_monday_start);
-	$ct_monday_stop = preg_replace('/[^0-9]/','',$ct_monday_stop);
-	$ct_saturday_start = preg_replace('/[^0-9]/','',$ct_saturday_start);
-	$ct_saturday_stop = preg_replace('/[^0-9]/','',$ct_saturday_stop);
-	$ct_sunday_start = preg_replace('/[^0-9]/','',$ct_sunday_start);
-	$ct_sunday_stop = preg_replace('/[^0-9]/','',$ct_sunday_stop);
-	$ct_thursday_start = preg_replace('/[^0-9]/','',$ct_thursday_start);
-	$ct_thursday_stop = preg_replace('/[^0-9]/','',$ct_thursday_stop);
-	$ct_tuesday_start = preg_replace('/[^0-9]/','',$ct_tuesday_start);
-	$ct_tuesday_stop = preg_replace('/[^0-9]/','',$ct_tuesday_stop);
-	$ct_wednesday_start = preg_replace('/[^0-9]/','',$ct_wednesday_start);
-	$ct_wednesday_stop = preg_replace('/[^0-9]/','',$ct_wednesday_stop);
-	$DBX_port = preg_replace('/[^0-9]/','',$DBX_port);
-	$DBY_port = preg_replace('/[^0-9]/','',$DBY_port);
-	$dedicated_trunks = preg_replace('/[^0-9]/','',$dedicated_trunks);
-	$delete_call_times = preg_replace('/[^0-9]/','',$delete_call_times);
-	$delete_campaigns = preg_replace('/[^0-9]/','',$delete_campaigns);
-	$delete_filters = preg_replace('/[^0-9]/','',$delete_filters);
-	$delete_ingroups = preg_replace('/[^0-9]/','',$delete_ingroups);
-	$delete_lists = preg_replace('/[^0-9]/','',$delete_lists);
-	$delete_remote_agents = preg_replace('/[^0-9]/','',$delete_remote_agents);
-	$delete_scripts = preg_replace('/[^0-9]/','',$delete_scripts);
-	$delete_user_groups = preg_replace('/[^0-9]/','',$delete_user_groups);
-	$delete_users = preg_replace('/[^0-9]/','',$delete_users);
-	$dial_timeout = preg_replace('/[^0-9]/','',$dial_timeout);
-	$dialplan_number = preg_replace('/[^0-9]/','',$dialplan_number);
-	$enable_fast_refresh = preg_replace('/[^0-9]/','',$enable_fast_refresh);
-	$enable_persistant_mysql = preg_replace('/[^0-9]/','',$enable_persistant_mysql);
-	$fast_refresh_rate = preg_replace('/[^0-9]/','',$fast_refresh_rate);
-	$hopper_level = preg_replace('/[^0-9]/','',$hopper_level);
-	$hotkey = preg_replace('/[^0-9]/','',$hotkey);
-	$hotkeys_active = preg_replace('/[^0-9]/','',$hotkeys_active);
-	$list_id = preg_replace('/[^0-9]/','',$list_id);
-	$load_leads = preg_replace('/[^0-9]/','',$load_leads);
-	$max_vicidial_trunks = preg_replace('/[^0-9]/','',$max_vicidial_trunks);
-	$modify_call_times = preg_replace('/[^0-9]/','',$modify_call_times);
-	$modify_users = preg_replace('/[^0-9]/','',$modify_users);
-	$modify_campaigns = preg_replace('/[^0-9]/','',$modify_campaigns);
-	$modify_lists = preg_replace('/[^0-9]/','',$modify_lists);
-	$modify_scripts = preg_replace('/[^0-9]/','',$modify_scripts);
-	$modify_filters = preg_replace('/[^0-9]/','',$modify_filters);
-	$modify_ingroups = preg_replace('/[^0-9]/','',$modify_ingroups);
-	$modify_usergroups = preg_replace('/[^0-9]/','',$modify_usergroups);
-	$modify_remoteagents = preg_replace('/[^0-9]/','',$modify_remoteagents);
-	$modify_servers = preg_replace('/[^0-9]/','',$modify_servers);
-	$view_reports = preg_replace('/[^0-9]/','',$view_reports);
-	$modify_leads = preg_replace('/[^0-9]/','',$modify_leads);
-	$export_gdpr_leads = preg_replace('/[^0-9]/','',$export_gdpr_leads);
-	$monitor_prefix = preg_replace('/[^0-9]/','',$monitor_prefix);
-	$number_of_lines = preg_replace('/[^0-9]/','',$number_of_lines);
-	$old_conf_exten = preg_replace('/[^0-9]/','',$old_conf_exten);
-	$outbound_cid = preg_replace('/[^0-9]/','',$outbound_cid);
-	$park_ext = preg_replace('/[^0-9]/','',$park_ext);
-	$park_on_extension = preg_replace('/[^0-9]/','',$park_on_extension);
-	$phone_number = preg_replace('/[^0-9]/','',$phone_number);
-	$QUEUE_ACTION_enabled = preg_replace('/[^0-9]/','',$QUEUE_ACTION_enabled);
-	$recording_exten = preg_replace('/[^0-9]/','',$recording_exten);
-	$remote_agent_id = preg_replace('/[^0-9]/','',$remote_agent_id);
-	$telnet_port = preg_replace('/[^0-9]/','',$telnet_port);
-	$updater_check_enabled = preg_replace('/[^0-9]/','',$updater_check_enabled);
-	$user_level = preg_replace('/[^0-9]/','',$user_level);
-	$user_switching_enabled = preg_replace('/[^0-9]/','',$user_switching_enabled);
-	$VDstop_rec_after_each_call = preg_replace('/[^0-9]/','',$VDstop_rec_after_each_call);
-	$VICIDIAL_park_on_extension = preg_replace('/[^0-9]/','',$VICIDIAL_park_on_extension);
-	$vicidial_recording = preg_replace('/[^0-9]/','',$vicidial_recording);
-	$vicidial_transfers = preg_replace('/[^0-9]/','',$vicidial_transfers);
-	$voicemail_button_enabled = preg_replace('/[^0-9]/','',$voicemail_button_enabled);
-	$voicemail_dump_exten = preg_replace('/[^0-9]/','',$voicemail_dump_exten);
-	$voicemail_dump_exten_no_inst = preg_replace('/[^0-9]/','',$voicemail_dump_exten_no_inst);
-	$voicemail_exten = preg_replace('/[^0-9]/','',$voicemail_exten);
-	$wrapup_seconds = preg_replace('/[^0-9]/','',$wrapup_seconds);
-	$use_non_latin = preg_replace('/[^0-9]/','',$use_non_latin);
-	$webroot_writable = preg_replace('/[^0-9]/','',$webroot_writable);
-	$enable_queuemetrics_logging = preg_replace('/[^0-9]/','',$enable_queuemetrics_logging);
-	$enable_sipsak_messages = preg_replace('/[^0-9]/','',$enable_sipsak_messages);
-	$allow_sipsak_messages = preg_replace('/[^0-9]/','',$allow_sipsak_messages);
-	$mix_container_item = preg_replace('/[^0-9]/','',$mix_container_item);
-	$prompt_interval = preg_replace('/[^0-9]/','',$prompt_interval);
-	$agent_alert_delay = preg_replace('/[^0-9]/','',$agent_alert_delay);
-	$manual_dial_list_id = preg_replace('/[^0-9]/','',$manual_dial_list_id);
-	$qc_user_level = preg_replace('/[^0-9]/','',$qc_user_level);
-	$qc_pass = preg_replace('/[^0-9]/','',$qc_pass);
-	$qc_finish = preg_replace('/[^0-9]/','',$qc_finish);
-	$qc_commit = preg_replace('/[^0-9]/','',$qc_commit);
-	$shift_start_time = preg_replace('/[^0-9]/','',$shift_start_time);
-	$timeclock_end_of_day = preg_replace('/[^0-9]/','',$timeclock_end_of_day);
-	$survey_xfer_exten = preg_replace('/[^0-9]/','',$survey_xfer_exten);
-	$add_timeclock_log = preg_replace('/[^0-9]/','',$add_timeclock_log);
-	$modify_timeclock_log = preg_replace('/[^0-9]/','',$modify_timeclock_log);
-	$delete_timeclock_log = preg_replace('/[^0-9]/','',$delete_timeclock_log);
-	$vdc_agent_api_access = preg_replace('/[^0-9]/','',$vdc_agent_api_access);
-	$vdc_agent_api_active = preg_replace('/[^0-9]/','',$vdc_agent_api_active);
-	$hold_time_option_seconds = preg_replace('/[^0-9]/','',$hold_time_option_seconds);
-	$hold_time_option_callback_list_id = preg_replace('/[^0-9]/','',$hold_time_option_callback_list_id);
-	$source_did = preg_replace('/[^0-9]/','',$source_did);
-	$modify_inbound_dids = preg_replace('/[^0-9]/','',$modify_inbound_dids);
-	$delete_inbound_dids = preg_replace('/[^0-9]/','',$delete_inbound_dids);
-	$answer_sec_pct_rt_stat_one = preg_replace('/[^0-9]/','',$answer_sec_pct_rt_stat_one);
-	$answer_sec_pct_rt_stat_two = preg_replace('/[^0-9]/','',$answer_sec_pct_rt_stat_two);
-	$enable_vtiger_integration = preg_replace('/[^0-9]/','',$enable_vtiger_integration);
-	$qc_features_active = preg_replace('/[^0-9]/','',$qc_features_active);
-	$outbound_autodial_active = preg_replace('/[^0-9]/','',$outbound_autodial_active);
-	$download_lists = preg_replace('/[^0-9]/','',$download_lists);
-	$caller_id_number = preg_replace('/[^0-9]/','',$caller_id_number);
-	$outbound_calls_per_second = preg_replace('/[^0-9]/','',$outbound_calls_per_second);
-	$manager_shift_enforcement_override = preg_replace('/[^0-9]/','',$manager_shift_enforcement_override);
-	$export_reports = preg_replace('/[^0-9]/','',$export_reports);
-	$delete_from_dnc = preg_replace('/[^0-9]/','',$delete_from_dnc);
-	$menu_timeout = preg_replace('/[^0-9]/','',$menu_timeout);
-	$menu_time_check = preg_replace('/[^0-9]/','',$menu_time_check);
-	$track_in_vdac = preg_replace('/[^0-9]/','',$track_in_vdac);
-	$menu_repeat = preg_replace('/[^0-9]/','',$menu_repeat);
-	$agentonly_callback_campaign_lock = preg_replace('/[^0-9]/','',$agentonly_callback_campaign_lock);
-	$sounds_central_control_active = preg_replace('/[^0-9]/','',$sounds_central_control_active);
-	$user_territories_active = preg_replace('/[^0-9]/','',$user_territories_active);
-	$vicidial_recording_limit = preg_replace('/[^0-9]/','',$vicidial_recording_limit);
-	$allow_custom_dialplan = preg_replace('/[^0-9]/','',$allow_custom_dialplan);
-	$phone_ring_timeout = preg_replace('/[^0-9]/','',$phone_ring_timeout);
-	$enable_tts_integration = preg_replace('/[^0-9]/','',$enable_tts_integration);
-	$allow_alerts = preg_replace('/[^0-9]/','',$allow_alerts);
-	$vicidial_balance_rank = preg_replace('/[^0-9]/','',$vicidial_balance_rank);
-	$rank = preg_replace('/[^0-9]/','',$rank);
-	$enable_second_webform = preg_replace('/[^0-9]/','',$enable_second_webform);
-	$campaign_cid_override = preg_replace('/[^0-9]/','',$campaign_cid_override);
-	$agent_choose_territories = preg_replace('/[^0-9]/','',$agent_choose_territories);
-	$timer_action_seconds = preg_replace('/[^0-9]/','',$timer_action_seconds);
-	$default_webphone = preg_replace('/[^0-9]/','',$default_webphone);
-	$default_external_server_ip = preg_replace('/[^0-9]/','',$default_external_server_ip);
-	$enable_agc_xfer_log = preg_replace('/[^0-9]/','',$enable_agc_xfer_log);
-	$enable_agc_dispo_log = preg_replace('/[^0-9]/','',$enable_agc_dispo_log);
-	$callcard_enabled = preg_replace('/[^0-9]/','',$callcard_enabled);
-	$callcard_admin = preg_replace('/[^0-9]/','',$callcard_admin);
-	$extension_id = preg_replace('/[^0-9]/','',$extension_id);
-	$agent_choose_blended = preg_replace('/[^0-9]/','',$agent_choose_blended);
-	$realtime_block_user_info = preg_replace('/[^0-9]/','',$realtime_block_user_info);
-	$codecs_with_template = preg_replace('/[^0-9]/','',$codecs_with_template);
-	$custom_fields_modify = preg_replace('/[^0-9]/','',$custom_fields_modify);
-	$hold_time_option_minimum = preg_replace('/[^0-9]/','',$hold_time_option_minimum);
-	$onhold_prompt_seconds = preg_replace('/[^0-9]/','',$onhold_prompt_seconds);
-	$hold_time_option_prompt_seconds = preg_replace('/[^0-9]/','',$hold_time_option_prompt_seconds);
-	$custom_fields_enabled = preg_replace('/[^0-9]/','',$custom_fields_enabled);
-	$wait_time_option_seconds = preg_replace('/[^0-9]/','',$wait_time_option_seconds);
-	$wait_time_option_callback_list_id = preg_replace('/[^0-9]/','',$wait_time_option_callback_list_id);
-	$wait_time_option_prompt_seconds = preg_replace('/[^0-9]/','',$wait_time_option_prompt_seconds);
-	$filter_list_id = preg_replace('/[^0-9]/','',$filter_list_id);
-	$calculate_estimated_hold_seconds = preg_replace('/[^0-9]/','',$calculate_estimated_hold_seconds);
-	$customer_3way_hangup_seconds = preg_replace('/[^0-9]/','',$customer_3way_hangup_seconds);
-	$eht_minimum_prompt_seconds = preg_replace('/[^0-9]/','',$eht_minimum_prompt_seconds);
-	$admin_modify_refresh = preg_replace('/[^0-9]/','',$admin_modify_refresh);
-	$nocache_admin = preg_replace('/[^0-9]/','',$nocache_admin);
-	$generate_cross_server_exten = preg_replace('/[^0-9]/','',$generate_cross_server_exten);
-	$queuemetrics_addmember_enabled = preg_replace('/[^0-9]/','',$queuemetrics_addmember_enabled);
-	$modify_page = preg_replace('/[^0-9]/','',$modify_page);
-	$on_hook_ring_time = preg_replace('/[^0-9]/','',$on_hook_ring_time);
-	$reload_dialplan_on_servers = preg_replace('/[^0-9]/','',$reload_dialplan_on_servers);
-	$available_only_tally_threshold_agents = preg_replace('/[^0-9]/','',$available_only_tally_threshold_agents);
-	$dial_level_threshold_agents = preg_replace('/[^0-9]/','',$dial_level_threshold_agents);
-	$dtmf_log = preg_replace('/[^0-9]/','',$dtmf_log);
-	$callback_days_limit = preg_replace('/[^0-9]/','',$callback_days_limit);
-	$queuemetrics_pe_phone_append = preg_replace('/[^0-9]/','',$queuemetrics_pe_phone_append);
-	$test_campaign_calls = preg_replace('/[^0-9]/','',$test_campaign_calls);
-	$agents_calls_reset = preg_replace('/[^0-9]/','',$agents_calls_reset);
-	$campaign_cid_areacodes_enabled = preg_replace('/[^0-9]/','',$campaign_cid_areacodes_enabled);
-	$pllb_grouping_limit = preg_replace('/[^0-9]/','',$pllb_grouping_limit);
-	$did_ra_extensions_enabled = preg_replace('/[^0-9]/','',$did_ra_extensions_enabled);
-	$modify_shifts = preg_replace('/[^0-9]/','',$modify_shifts);
-	$modify_phones = preg_replace('/[^0-9]/','',$modify_phones);
-	$modify_carriers = preg_replace('/[^0-9]/','',$modify_carriers);
-	$modify_labels = preg_replace('/[^0-9]/','',$modify_labels);
-	$modify_colors = preg_replace('/[^0-9]/','',$modify_colors);
-	$modify_statuses = preg_replace('/[^0-9]/','',$modify_statuses);
-	$modify_voicemail = preg_replace('/[^0-9]/','',$modify_voicemail);
-	$modify_audiostore = preg_replace('/[^0-9]/','',$modify_audiostore);
-	$modify_moh = preg_replace('/[^0-9]/','',$modify_moh);
-	$modify_tts = preg_replace('/[^0-9]/','',$modify_tts);
-	$call_count_limit = preg_replace('/[^0-9]/','',$call_count_limit);
-	$call_count_target = preg_replace('/[^0-9]/','',$call_count_target);
-	$expanded_list_stats = preg_replace('/[^0-9]/','',$expanded_list_stats);
-	$contacts_enabled = preg_replace('/[^0-9]/','',$contacts_enabled);
-	$contact_id = preg_replace('/[^0-9]/','',$contact_id);
-	$office_num = preg_replace('/[^0-9]/','',$office_num);
-	$cell_num = preg_replace('/[^0-9]/','',$cell_num);
-	$other_num1 = preg_replace('/[^0-9]/','',$other_num1);
-	$other_num2 = preg_replace('/[^0-9]/','',$other_num2);
-	$modify_contacts = preg_replace('/[^0-9]/','',$modify_contacts);
-	$callback_hours_block = preg_replace('/[^0-9]/','',$callback_hours_block);
-	$modify_same_user_level = preg_replace('/[^0-9]/','',$modify_same_user_level);
-	$admin_hide_lead_data = preg_replace('/[^0-9]/','',$admin_hide_lead_data);
-	$max_calls_count = preg_replace('/[^0-9]/','',$max_calls_count);
-	$report_rank = preg_replace('/[^0-9]/','',$report_rank);
-	$dial_ingroup_cid = preg_replace('/[^0-9]/','',$dial_ingroup_cid);
-	$call_menu_qualify_enabled = preg_replace('/[^0-9]/','',$call_menu_qualify_enabled);
-	$admin_list_counts = preg_replace('/[^0-9]/','',$admin_list_counts);
-	$allow_voicemail_greeting = preg_replace('/[^0-9]/','',$allow_voicemail_greeting);
-	$enhanced_disconnect_logging = preg_replace('/[^0-9]/','',$enhanced_disconnect_logging);
-	$level_8_disable_add = preg_replace('/[^0-9]/','',$level_8_disable_add);
-	$survey_wait_sec = preg_replace('/[^0-9]/','',$survey_wait_sec);
-	$queuemetrics_record_hold = preg_replace('/[^0-9]/','',$queuemetrics_record_hold);
-	$country_code_list_stats = preg_replace('/[^0-9]/','',$country_code_list_stats);
-	$dead_max = preg_replace('/[^0-9]/','',$dead_max);
-	$dispo_max = preg_replace('/[^0-9]/','',$dispo_max);
-	$pause_max = preg_replace('/[^0-9]/','',$pause_max);
-	$alter_admin_interface_options = preg_replace('/[^0-9]/','',$alter_admin_interface_options);
-	$max_inbound_calls = preg_replace('/[^0-9]/','',$max_inbound_calls);
-	$modify_custom_dialplans = preg_replace('/[^0-9]/','',$modify_custom_dialplans);
-	$queuemetrics_pause_type = preg_replace('/[^0-9]/','',$queuemetrics_pause_type);
-	$frozen_server_call_clear = preg_replace('/[^0-9]/','',$frozen_server_call_clear);
-	$callback_time_24hour = preg_replace('/[^0-9]/','',$callback_time_24hour);
-	$callback_active_limit = preg_replace('/[^0-9]/','',$callback_active_limit);
-	$modify_languages = preg_replace('/[^0-9]/','',$modify_languages);
-	$enable_languages = preg_replace('/[^0-9]/','',$enable_languages);
-	$user_choose_language = preg_replace('/[^0-9]/','',$user_choose_language);
-	$ignore_group_on_search = preg_replace('/[^0-9]/','',$ignore_group_on_search);
-	$enable_did_entry_list_id = preg_replace('/[^0-9]/','',$enable_did_entry_list_id);
-	$entry_list_id = preg_replace('/[^0-9]/','',$entry_list_id);
-	$filter_entry_list_id = preg_replace('/[^0-9]/','',$filter_entry_list_id);
-	$enable_third_webform = preg_replace('/[^0-9]/','',$enable_third_webform);
-	$api_list_restrict = preg_replace('/[^0-9]/','',$api_list_restrict);
-	$customer_gone_seconds = preg_replace('/[^0-9]/','',$customer_gone_seconds);
-	$agent_whisper_enabled = preg_replace('/[^0-9]/','',$agent_whisper_enabled);
-	$admin_cf_show_hidden = preg_replace('/[^0-9]/','',$admin_cf_show_hidden);
-	$agentcall_chat = preg_replace('/[^0-9]/','',$agentcall_chat);
-	$user_hide_realtime_enabled = preg_replace('/[^0-9]/','',$user_hide_realtime_enabled);
-	$user_hide_realtime = preg_replace('/[^0-9]/','',$user_hide_realtime);
-	$min_sec = preg_replace('/[^0-9]/','',$min_sec);
-	$max_sec = preg_replace('/[^0-9]/','',$max_sec);
-	$usacan_phone_dialcode_fix = preg_replace('/[^0-9]/','',$usacan_phone_dialcode_fix);
-	$cache_carrier_stats_realtime = preg_replace('/[^0-9]/','',$cache_carrier_stats_realtime);
-	$nva_new_list_id = preg_replace('/[^0-9]/','',$nva_new_list_id);
-	$nva_new_phone_code = preg_replace('/[^0-9]/','',$nva_new_phone_code);
-	$manual_dial_timeout = preg_replace('/[^0-9]/','',$manual_dial_timeout);
-	$alt_ivr_logging = preg_replace('/[^0-9]/','',$alt_ivr_logging);
-	$question = preg_replace('/[^0-9]/','',$question);
-	$alt_dtmf_log = preg_replace('/[^0-9]/','',$alt_dtmf_log);
-	$callback_useronly_move_minutes = preg_replace('/[^0-9]/','',$callback_useronly_move_minutes);
-	$default_phone_code = preg_replace('/[^0-9]/','',$default_phone_code);
-	$admin_row_click = preg_replace('/[^0-9]/','',$admin_row_click);
-	$outbound_alt_cid = preg_replace('/[^0-9]/','',$outbound_alt_cid);
-	$script_remove_js = preg_replace('/[^0-9]/','',$script_remove_js);
-	$manual_auto_next = preg_replace('/[^0-9]/','',$manual_auto_next);
-	$agent_soundboards = preg_replace('/[^0-9]/','',$agent_soundboards);
-	$api_only_user = preg_replace('/[^0-9]/','',$api_only_user);
-	$areacode_filter_seconds = preg_replace('/[^0-9]/','',$areacode_filter_seconds);
-	$enable_auto_reports = preg_replace('/[^0-9]/','',$enable_auto_reports);
-	$modify_auto_reports = preg_replace('/[^0-9]/','',$modify_auto_reports);
-	$report_weekdays = preg_replace('/[^0-9]/','',$report_weekdays);
-	$enable_pause_code_limits = preg_replace('/[^0-9]/','',$enable_pause_code_limits);
-	$time_limit = preg_replace('/[^0-9]/','',$time_limit);
-	$enable_drop_lists = preg_replace('/[^0-9]/','',$enable_drop_lists);
-	$dl_weekdays = preg_replace('/[^0-9]/','',$dl_weekdays);
-	$allow_ip_lists = preg_replace('/[^0-9]/','',$allow_ip_lists);
-	$modify_ip_lists = preg_replace('/[^0-9]/','',$modify_ip_lists);
-	$ignore_ip_list = preg_replace('/[^0-9]/','',$ignore_ip_list);
-	$dl_minutes = preg_replace('/[^0-9]/','',$dl_minutes);
-	$callback_display_days = preg_replace('/[^0-9]/','',$callback_display_days);
-	$agent_push_events = preg_replace('/[^0-9]/','',$agent_push_events);
-	$hide_inactive_lists = preg_replace('/[^0-9]/','',$hide_inactive_lists);
-	$inbound_survey_accept_digit = preg_replace('/[^0-9]/','',$inbound_survey_accept_digit);
-	$allow_manage_active_lists = preg_replace('/[^0-9]/','',$allow_manage_active_lists);
-	$expired_lists_inactive = preg_replace('/[^0-9]/','',$expired_lists_inactive);
-	$enable_gdpr_download_deletion = preg_replace('/[^0-9]/','',$enable_gdpr_download_deletion);
-	$did_system_filter = preg_replace('/[^0-9]/','',$did_system_filter);
-	$icbq_expiration_hours = preg_replace('/[^0-9]/','',$icbq_expiration_hours);
-	$source_id_display = preg_replace('/[^0-9]/','',$source_id_display);
-	$pause_code_approval = preg_replace('/[^0-9]/','',$pause_code_approval);
-	$max_hopper_calls = preg_replace('/[^0-9]/','',$max_hopper_calls);
-	$max_hopper_calls_hour = preg_replace('/[^0-9]/','',$max_hopper_calls_hour);
-	$agent_logout_link = preg_replace('/[^0-9]/','',$agent_logout_link);
-	$user_admin_redirect = preg_replace('/[^0-9]/','',$user_admin_redirect);
-	$list_status_modification_confirmation = preg_replace('/[^0-9]/','',$list_status_modification_confirmation);
-	$max_inbound_filter_enabled = preg_replace('/[^0-9]/','',$max_inbound_filter_enabled);
-	$enable_second_script = preg_replace('/[^0-9]/','',$enable_second_script);
-	$time_start = preg_replace('/[^0-9]/','',$time_start);
-	$time_end = preg_replace('/[^0-9]/','',$time_end);
-	$enable_first_webform = preg_replace('/[^0-9]/','',$enable_first_webform);
-	$vmm_daily_limit = preg_replace('/[^0-9]/','',$vmm_daily_limit);
-	$cid_auto_rotate_minutes = preg_replace('/[^0-9]/','',$cid_auto_rotate_minutes);
-	$cid_auto_rotate_minimum = preg_replace('/[^0-9]/','',$cid_auto_rotate_minimum);
-	$require_password_length = preg_replace('/[^0-9]/','',$require_password_length);
-	$entries_per_page = preg_replace('/[^0-9]/','',$entries_per_page);
-	$start_count = preg_replace('/[^0-9]/','',$start_count);
-	$browser_call_alerts = preg_replace('/[^0-9]/','',$browser_call_alerts);
-	$browser_alert_volume = preg_replace('/[^0-9]/','',$browser_alert_volume);
-	$inbound_answer_config = preg_replace('/[^0-9]/','',$inbound_answer_config);
-	$enable_international_dncs = preg_replace('/[^0-9]/','',$enable_international_dncs);
-
-	$user_new_lead_limit = preg_replace('/[^-0-9]/','',$user_new_lead_limit);
-	$drop_call_seconds = preg_replace('/[^-0-9]/','',$drop_call_seconds);
-	$timer_alt_seconds = preg_replace('/[^-0-9]/','',$timer_alt_seconds);
-	$wrapup_seconds_override = preg_replace('/[^-0-9]/','',$wrapup_seconds_override);
-	$max_queue_ingroup_calls = preg_replace('/[^-0-9]/','',$max_queue_ingroup_calls);
-	$ready_max_logout = preg_replace('/[^-0-9]/','',$ready_max_logout);
-	$inbound_no_agents_no_dial_threshold = preg_replace('/[^-0-9]/','',$inbound_no_agents_no_dial_threshold);
-	$dead_trigger_seconds = preg_replace('/[^-0-9]/','',$dead_trigger_seconds);
-	$cid_cb_valid_length = preg_replace('/[^-0-9]/','',$cid_cb_valid_length);
-	$daily_reset_limit = preg_replace('/[^-0-9]/','',$daily_reset_limit);
-	$auto_active_list_rank = preg_replace('/[^-0-9]/','',$auto_active_list_rank);
-	$max_inbound_filter_min_sec = preg_replace('/[^-0-9]/','',$max_inbound_filter_min_sec);
-	$no_agent_delay = preg_replace('/[^-0-9]/','',$no_agent_delay);
-
-	### DIGITS and COLONS
-	$shift_length = preg_replace('/[^\:0-9]/','',$shift_length);
-
-	### DIGITS and HASHES and STARS
-	$survey_dtmf_digits = preg_replace('/[^\#\*0-9]/','',$survey_dtmf_digits);
-	$survey_ni_digit = preg_replace('/[^\#\*0-9]/','',$survey_ni_digit);
-
-	### DIGITS and DASHES
-	$group_rank = preg_replace('/[^-0-9]/','',$group_rank);
-	$campaign_rank = preg_replace('/[^-0-9]/','',$campaign_rank);
-	$queue_priority = preg_replace('/[^-0-9]/','',$queue_priority);
-
-	### Y or N ONLY ###
-	$allow_closers = preg_replace('/[^NY]/','',$allow_closers);
-	$reset_hopper = preg_replace('/[^NY]/','',$reset_hopper);
-	$amd_send_to_vmx = preg_replace('/[^NY]/','',$amd_send_to_vmx);
-	$selectable = preg_replace('/[^NY]/','',$selectable);
-	$reset_list = preg_replace('/[^NY]/','',$reset_list);
-	$fronter_display = preg_replace('/[^NY]/','',$fronter_display);
-	$omit_phone_code = preg_replace('/[^NY]/','',$omit_phone_code);
-	$available_only_ratio_tally = preg_replace('/[^NY]/','',$available_only_ratio_tally);
-	$sys_perf_log = preg_replace('/[^NY]/','',$sys_perf_log);
-	$vicidial_balance_active = preg_replace('/[^NY]/','',$vicidial_balance_active);
-	$vd_server_logs = preg_replace('/[^NY]/','',$vd_server_logs);
-	$campaign_stats_refresh = preg_replace('/[^NY]/','',$campaign_stats_refresh);
-	$disable_alter_custdata = preg_replace('/[^NY]/','',$disable_alter_custdata);
-	$no_hopper_leads_logins = preg_replace('/[^NY]/','',$no_hopper_leads_logins);
-	$human_answered = preg_replace('/[^NY]/','',$human_answered);
-	$tovdad_display = preg_replace('/[^NY]/','',$tovdad_display);
-	$campaign_allow_inbound = preg_replace('/[^NY]/','',$campaign_allow_inbound);
-	$old_campaign_allow_inbound = preg_replace('/[^NY]/','',$old_campaign_allow_inbound);
-	$display_queue_count = preg_replace('/[^NY]/','',$display_queue_count);
-	$qc_show_recording = preg_replace('/[^NY]/','',$qc_show_recording);
-	$sale_category = preg_replace('/[^NY]/','',$sale_category);
-	$dead_lead_category = preg_replace('/[^NY]/','',$dead_lead_category);
-	$agent_extended_alt_dial  = preg_replace('/[^NY]/','',$agent_extended_alt_dial);
-	$play_place_in_line  = preg_replace('/[^NY]/','',$play_place_in_line);
-	$play_estimate_hold_time  = preg_replace('/[^NY]/','',$play_estimate_hold_time);
-	$no_delay_call_route  = preg_replace('/[^NY]/','',$no_delay_call_route);
-	$did_active  = preg_replace('/[^NY]/','',$did_active);
-	$active_asterisk_server = preg_replace('/[^NY]/','',$active_asterisk_server);
-	$generate_vicidial_conf = preg_replace('/[^NY]/','',$generate_vicidial_conf);
-	$rebuild_conf_files = preg_replace('/[^NY]/','',$rebuild_conf_files);
-	$agent_allow_group_alias = preg_replace('/[^NY]/','',$agent_allow_group_alias);
-	$vtiger_status_call = preg_replace('/[^NY]/','',$vtiger_status_call);
-	$sale = preg_replace('/[^NY]/','',$sale);
-	$dnc = preg_replace('/[^NY]/','',$dnc);
-	$customer_contact = preg_replace('/[^NY]/','',$customer_contact);
-	$not_interested = preg_replace('/[^NY]/','',$not_interested);
-	$unworkable = preg_replace('/[^NY]/','',$unworkable);
-	$sounds_update = preg_replace('/[^NY]/','',$sounds_update);
-	$carrier_logging_active = preg_replace('/[^NY]/','',$carrier_logging_active);
-	$agent_status_view_time = preg_replace('/[^NY]/','',$agent_status_view_time);
-	$no_hopper_dialing = preg_replace('/[^NY]/','',$no_hopper_dialing);
-	$agent_display_dialable_leads = preg_replace('/[^NY]/','',$agent_display_dialable_leads);
-	$random = preg_replace('/[^NY]/','',$random);
-	$rebuild_music_on_hold = preg_replace('/[^NY]/','',$rebuild_music_on_hold);
-	$active_agent_login_server = preg_replace('/[^NY]/','',$active_agent_login_server);
-	$agent_select_territories = preg_replace('/[^NY]/','',$agent_select_territories);
-	$delete_vm_after_email = preg_replace('/[^NY]/','',$delete_vm_after_email);
-	$crm_popup_login = preg_replace('/[^NY]/','',$crm_popup_login);
-	$ignore_list_script_override = preg_replace('/[^NY]/','',$ignore_list_script_override);
-	$is_webphone = preg_replace('/[^-_0-9a-zA-Z]/','',$is_webphone);
-	$use_external_server_ip = preg_replace('/[^NY]/','',$use_external_server_ip);
-	$agent_xfer_consultative = preg_replace('/[^NY]/','',$agent_xfer_consultative);
-	$agent_xfer_dial_override = preg_replace('/[^NY]/','',$agent_xfer_dial_override);
-	$agent_xfer_vm_transfer = preg_replace('/[^NY]/','',$agent_xfer_vm_transfer);
-	$agent_xfer_blind_transfer = preg_replace('/[^NY]/','',$agent_xfer_blind_transfer);
-	$agent_xfer_dial_with_customer = preg_replace('/[^NY]/','',$agent_xfer_dial_with_customer);
-	$agent_xfer_park_customer_dial = preg_replace('/[^NY]/','',$agent_xfer_park_customer_dial);
-	$agent_fullscreen = preg_replace('/[^NY]/','',$agent_fullscreen);
-	$onhold_prompt_no_block = preg_replace('/[^NY]/','',$onhold_prompt_no_block);
-	$hold_time_option_no_block = preg_replace('/[^NY]/','',$hold_time_option_no_block);
-	$wait_time_option_no_block = preg_replace('/[^NY]/','',$wait_time_option_no_block);
-	$preset_hide_number = preg_replace('/[^NY]/','',$preset_hide_number);
-	$use_auto_hopper = preg_replace('/[^NY]/','',$use_auto_hopper);
-	$auto_trim_hopper = preg_replace('/[^NY]/','',$auto_trim_hopper);
-	$force_change_password = preg_replace('/[^NY]/','',$force_change_password);
-	$first_login_trigger = preg_replace('/[^NY]/','',$first_login_trigger);
-	$eht_minimum_prompt_no_block = preg_replace('/[^NY]/','',$eht_minimum_prompt_no_block);
-	$lead_order_randomize = preg_replace('/[^NY]/','',$lead_order_randomize);
-	$on_hook_agent = preg_replace('/[^NY]/','',$on_hook_agent);
-	$auto_pause_precall = preg_replace('/[^NY]/','',$auto_pause_precall);
-	$auto_resume_precall = preg_replace('/[^NY]/','',$auto_resume_precall);
-	$webphone_auto_answer = preg_replace('/[^NY]/','',$webphone_auto_answer);
-	$noanswer_log = preg_replace('/[^NY]/','',$noanswer_log);
-	$did_agent_log = preg_replace('/[^NY]/','',$did_agent_log);
-	$completed = preg_replace('/[^NY]/','',$completed);
-	$report_option = preg_replace('/[^NY]/','',$report_option);
-	$hopper_vlc_dup_check = preg_replace('/[^NY]/','',$hopper_vlc_dup_check);
-	$inventory_report = preg_replace('/[^NY]/','',$inventory_report);
-	$manual_dial_lead_id = preg_replace('/[^NY]/','',$manual_dial_lead_id);
-	$auto_restart_asterisk = preg_replace('/[^NY]/','',$auto_restart_asterisk);
-	$asterisk_temp_no_restart = preg_replace('/[^NY]/','',$asterisk_temp_no_restart);
-	$voicemail_instructions = preg_replace('/[^NY]/','',$voicemail_instructions);
-	$filter_url_did_redirect = preg_replace('/[^NY]/','',$filter_url_did_redirect);
-	$callback_active_limit_override = preg_replace('/[^NY]/','',$callback_active_limit_override);
-	$drop_lead_reset = preg_replace('/[^NY]/','',$drop_lead_reset);
-	$after_hours_lead_reset = preg_replace('/[^NY]/','',$after_hours_lead_reset);
-	$nanq_lead_reset = preg_replace('/[^NY]/','',$nanq_lead_reset);
-	$wait_time_lead_reset = preg_replace('/[^NY]/','',$wait_time_lead_reset);
-	$hold_time_lead_reset = preg_replace('/[^NY]/','',$hold_time_lead_reset);
-	$am_message_wildcards = preg_replace('/[^NY]/','',$am_message_wildcards);
-	$gather_asterisk_output = preg_replace('/[^NY]/','',$gather_asterisk_output);
-	$routing_initiated_recordings = preg_replace('/[^NY]/','',$routing_initiated_recordings);
-	$manual_dial_hopper_check = preg_replace('/[^NY]/','',$manual_dial_hopper_check);
-	$webphone_dialbox = preg_replace('/[^NY]/','',$webphone_dialbox);
-	$webphone_mute = preg_replace('/[^NY]/','',$webphone_mute);
-	$webphone_volume = preg_replace('/[^NY]/','',$webphone_volume);
-	$webphone_debug = preg_replace('/[^NY]/','',$webphone_debug);
-	$answering_machine = preg_replace('/[^NY]/','',$answering_machine);
-	$manual_auto_show = preg_replace('/[^NY]/','',$manual_auto_show);
-	$allow_required_fields = preg_replace('/[^NY]/','',$allow_required_fields);
-	$conf_qualify = preg_replace('/[^NY]/','',$conf_qualify);
-	$run_now_trigger = preg_replace('/[^NY]/','',$run_now_trigger);
-	$agent_xfer_validation = preg_replace('/[^NY]/','',$agent_xfer_validation);
-	$three_way_record_stop = preg_replace('/[^NY]/','',$three_way_record_stop);
-	$hangup_xfer_record_start = preg_replace('/[^NY]/','',$hangup_xfer_record_start);
-	$scheduled_callbacks_email_alert = preg_replace('/[^NY]/','',$scheduled_callbacks_email_alert);
-	$closing_time_now_trigger = preg_replace('/[^NY]/','',$closing_time_now_trigger);
-	$closing_time_lead_reset = preg_replace('/[^NY]/','',$closing_time_lead_reset);
-	$script_top_dispo = preg_replace('/[^NY]/','',$script_top_dispo);
-	$scheduled_callbacks_force_dial = preg_replace('/[^NY]/','',$scheduled_callbacks_force_dial);
-	$inbound_route_answer = preg_replace('/[^NY]/','',$inbound_route_answer);
-
-	$qc_enabled = preg_replace('/[^0-9NY]/','',$qc_enabled);
-	$active = preg_replace('/[^0-9NY]/','',$active);
-	$ofcom_uk_drop_calc = preg_replace('/[^0-9NY]/','',$ofcom_uk_drop_calc);
-	$agent_xfer_park_3way = preg_replace('/[^0-9NY]/','',$agent_xfer_park_3way);
-	$manual_dial_validation = preg_replace('/[^0-9NY]/','',$manual_dial_validation);
-
 	### ALPHA-NUMERIC ONLY ###
+	$is_webphone = preg_replace('/[^-_0-9a-zA-Z]/','',$is_webphone);
 	$agent_script_override = preg_replace('/[^0-9a-zA-Z]/','',$agent_script_override);
 	$campaign_script = preg_replace('/[^0-9a-zA-Z]/','',$campaign_script);
 	$submit = preg_replace('/[^0-9a-zA-Z]/','',$submit);
@@ -3230,22 +3255,6 @@ if ($non_latin < 1)
 	$amd_agent_route_options = preg_replace('/[^0-9a-zA-Z]/','',$amd_agent_route_options);
 	$hopper_drop_run_trigger = preg_replace('/[^0-9a-zA-Z]/','',$hopper_drop_run_trigger);
 
-	### DIGITS and Dots
-	$server_ip = preg_replace('/[^\.0-9]/','',$server_ip);
-	$auto_dial_level = preg_replace('/[^\.0-9]/','',$auto_dial_level);
-	$adaptive_maximum_level = preg_replace('/[^\.0-9]/','',$adaptive_maximum_level);
-	$phone_ip = preg_replace('/[^\.0-9]/','',$phone_ip);
-	$old_server_ip = preg_replace('/[^\.0-9]/','',$old_server_ip);
-	$computer_ip = preg_replace('/[^\.0-9]/','',$computer_ip);
-	$queuemetrics_server_ip = preg_replace('/[^\.0-9]/','',$queuemetrics_server_ip);
-	$vtiger_server_ip = preg_replace('/[^\.0-9]/','',$vtiger_server_ip);
-	$active_voicemail_server = preg_replace('/[^\.0-9]/','',$active_voicemail_server);
-	$auto_dial_limit = preg_replace('/[^\.0-9]/','',$auto_dial_limit);
-	$adaptive_dropped_percentage = preg_replace('/[^\.0-9]/','',$adaptive_dropped_percentage);
-	$drop_lockout_time = preg_replace('/[^\.0-9]/','',$drop_lockout_time);
-	$filter_server_ip = preg_replace('/[^\.0-9]/','',$filter_server_ip);
-	$auto_hopper_multi = preg_replace('/[^\.0-9]/','',$auto_hopper_multi);
-
 	### ALPHA-NUMERIC and spaces and hash and star and comma
 	$xferconf_a_dtmf = preg_replace('/[^ \,\*\#0-9a-zA-Z]/','',trim($xferconf_a_dtmf));
 	$xferconf_b_dtmf = preg_replace('/[^ \,\*\#0-9a-zA-Z]/','',trim($xferconf_b_dtmf));
@@ -3257,11 +3266,6 @@ if ($non_latin < 1)
 	$survey_third_exten = preg_replace('/[^ \,\*\#0-9a-zA-Z]/','',$survey_third_exten);
 	$survey_fourth_exten = preg_replace('/[^ \,\*\#0-9a-zA-Z]/','',$survey_fourth_exten);
 	$preset_dtmf = preg_replace('/[^ \,\*\#0-9a-zA-Z]/','',$preset_dtmf);
-
-
-	### ALPHACAPS-NUMERIC
-	$xferconf_a_number = preg_replace('/[^0-9A-Z]/','',$xferconf_a_number);
-	$xferconf_b_number = preg_replace('/[^0-9A-Z]/','',$xferconf_b_number);
 
 	### ALPHA-NUMERIC and underscore and dash
 	$agi_output = preg_replace('/[^-_0-9a-zA-Z]/','',$agi_output);
@@ -3563,7 +3567,7 @@ if ($non_latin < 1)
 	$inbound_after_hours_voicemail = preg_replace('/[^-_0-9a-zA-Z]/','',$inbound_after_hours_voicemail);
 	$pause_max_exceptions = preg_replace('/[^-_0-9a-zA-Z]/','',$pause_max_exceptions);
 
-### ALPHA-NUMERIC and underscore and dash and slash and dot
+	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_timeout_prompt = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$menu_timeout_prompt);
 	$menu_invalid_prompt = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$menu_invalid_prompt);
 	$after_hours_message_filename = preg_replace('/[^-\/\|\._0-9a-zA-Z]/','',$after_hours_message_filename);
@@ -3829,119 +3833,784 @@ if ($non_latin < 1)
 
 	### ALPHA-NUMERIC and newlines and period and colon
 	$ip_address = preg_replace('/[^\n\.\:\0-9a-zA-Z]/', '',$ip_address);
-
-	### remove semi-colons ###
-	$lead_filter_sql = preg_replace('/;/','',$lead_filter_sql);
-	$list_mix_container = preg_replace('/;/','',$list_mix_container);
-	$survey_response_digit_map = preg_replace('/;/','',$survey_response_digit_map);
-	$survey_camp_record_dir = preg_replace('/;/','',$survey_camp_record_dir);
-	$conf_override = preg_replace('/;/','',$conf_override);
-	$template_contents = preg_replace('/;/','',$template_contents);
-	$registration_string = preg_replace('/;/','',$registration_string);
-	$account_entry = preg_replace('/;/','',$account_entry);
-	$account_entry = preg_replace('/\r/', '',$account_entry);
-	$globals_string = preg_replace('/;/','',$globals_string);
-	$dialplan_entry = preg_replace('/\\\\/', '',$dialplan_entry);
-	$dialplan_entry = preg_replace('/\'/', '',$dialplan_entry);
-	$dialplan_entry = preg_replace('/\r/', '',$dialplan_entry);
-	$custom_dialplan_entry = preg_replace('/\\\\/', '',$custom_dialplan_entry);
-	$custom_dialplan_entry = preg_replace('/\'/', '',$custom_dialplan_entry);
-	$custom_dialplan_entry = preg_replace('/\r/', '',$custom_dialplan_entry);
-	$tts_text = preg_replace('/\\\\/', '',$tts_text);
-	$tts_text = preg_replace('/;/','',$tts_text);
-	$tts_text = preg_replace('/\r/', '',$tts_text);
-	$tts_text = preg_replace('/\"/', '',$tts_text);
-	$carrier_description = preg_replace('/\\\\/', '',$carrier_description);
-	$carrier_description = preg_replace('/;/','',$carrier_description);
-	$carrier_description = preg_replace('/\r/', '',$carrier_description);
-	$carrier_description = preg_replace('/\"/', '',$carrier_description);
-	$blind_monitor_message = preg_replace('/\\\\/', '',$blind_monitor_message);
-	$blind_monitor_message = preg_replace('/;/','',$blind_monitor_message);
-	$blind_monitor_message = preg_replace('/\r/', '',$blind_monitor_message);
-	$blind_monitor_message = preg_replace('/\"/', '',$blind_monitor_message);
-	$modify_url = preg_replace('/\\\\/', '',$modify_url);
-	$modify_url = preg_replace('/;/','',$modify_url);
-	$modify_url = preg_replace('/\r/', '',$modify_url);
-	$modify_url = preg_replace('/\"/', '',$modify_url);
-	$qualify_sql = preg_replace('/\\\\/', '',$qualify_sql);
-	$qualify_sql = preg_replace('/;/','',$qualify_sql);
-	$qualify_sql = preg_replace('/\r/', '',$qualify_sql);
-	$qualify_sql = preg_replace('/\'/', "\"",$qualify_sql);
-	$queuemetrics_socket_url = preg_replace('/\\\\/', '',$queuemetrics_socket_url);
-	$queuemetrics_socket_url = preg_replace('/;/','',$queuemetrics_socket_url);
-	$queuemetrics_socket_url = preg_replace('/\r/', '',$queuemetrics_socket_url);
-	$queuemetrics_socket_url = preg_replace('/\'/', "\"",$queuemetrics_socket_url);
-	$agent_status_viewable_groups = preg_replace('/\\\\/', '',$agent_status_viewable_groups);
-	$agent_status_viewable_groups = preg_replace('/\\\\/', '',$agent_status_viewable_groups);
-	$agent_allowed_chat_groups = preg_replace('/\\\\/', '',$agent_allowed_chat_groups);
-	$agent_allowed_chat_groups = preg_replace('/\\\\/', '',$agent_allowed_chat_groups);
-	$report_url = preg_replace('/\\\\/', '',$report_url);
-	$report_url = preg_replace('/;/','',$report_url);
-	$report_url = preg_replace('/\r|\n/', '',$report_url);
-	$report_url = preg_replace('/\'/', '',$report_url);
-	$agent_push_url = preg_replace('/\\\\/', '',$agent_push_url);
-	$agent_push_url = preg_replace('/;/','',$agent_push_url);
-	$agent_push_url = preg_replace('/\r|\n/', '',$agent_push_url);
-	$agent_push_url = preg_replace('/\'/', '',$agent_push_url);
-	$waiting_call_url_on = preg_replace('/\\\\/', '',$waiting_call_url_on);
-	$waiting_call_url_on = preg_replace('/;/','',$waiting_call_url_on);
-	$waiting_call_url_on = preg_replace('/\r|\n/', '',$waiting_call_url_on);
-	$waiting_call_url_on = preg_replace('/\'/', '',$waiting_call_url_on);
-	$waiting_call_url_off = preg_replace('/\\\\/', '',$waiting_call_url_off);
-	$waiting_call_url_off = preg_replace('/;/','',$waiting_call_url_off);
-	$waiting_call_url_off = preg_replace('/\r|\n/', '',$waiting_call_url_off);
-	$waiting_call_url_off = preg_replace('/\'/', '',$waiting_call_url_off);
-	$sounds_web_server = preg_replace('/\\\\/', '',$sounds_web_server);
-	$sounds_web_server = preg_replace('/;/','',$sounds_web_server);
-	$sounds_web_server = preg_replace('/\r|\n/', '',$sounds_web_server);
-	$sounds_web_server = preg_replace('/\'/', '',$sounds_web_server);
-
-
-	### VARIABLES TO BE mysqli_real_escape_string ###
-	# $web_form_address
-	# $queuemetrics_url
-	# $admin_home_url
-	# $qc_web_form_address
-	# $vtiger_url
-	# $web_form_address_two
-	# $crm_login_address
-	# $start_call_url
-	# $dispo_call_url
-	# $add_lead_url
-	# $webphone_url
-	# $webphone_url_override
-	# $filter_url
-	# $na_call_url
-	# $web_form_address_three
-	# $container_entry
-	# $nva_call_url
-	# $web_socket_url
-	# $external_web_socket_url
-	# $customer_chat_survey_link
-	# $ftp_user
-	# $ftp_pass
-	# $webphone_layout
-	# $enter_ingroup_url
-	# $dead_trigger_url
-	# $user_admin_redirect_url
-
-	### VARIABLES optionally filtered: ###
-	# $script_text
-	if ($SSscript_remove_js > 0)
-		{
-		$script_text = preg_replace('/<script\b[^>]*>(.*?)<\/script\s*>/is','',$script_text);
-	#	$script_text = "PROCESSED:".date("U")."\n".$script_text;
-		}
-
-	}	# end of non_latin
+	}
 else
 	{
-	$PHP_AUTH_PW = preg_replace('/\'|\"|\\\\|;/', '',$PHP_AUTH_PW);
-	$PHP_AUTH_USER = preg_replace('/\'|\"|\\\\|;/', '',$PHP_AUTH_USER);
+	### ALPHA-NUMERIC ONLY ###
+	$is_webphone = preg_replace('/[^-_0-9\p{L}]/u','',$is_webphone);
+	$agent_script_override = preg_replace('/[^0-9\p{L}]/u','',$agent_script_override);
+	$campaign_script = preg_replace('/[^0-9\p{L}]/u','',$campaign_script);
+	$submit = preg_replace('/[^0-9\p{L}]/u','',$submit);
+	$campaign_cid = preg_replace('/[^0-9\p{L}]/u','',$campaign_cid);
+	$campaign_recording = preg_replace('/[^0-9\p{L}]/u','',$campaign_recording);
+	$ADD = preg_replace('/[^0-9\p{L}]/u','',$ADD);
+	$dial_prefix = preg_replace('/[^0-9\p{L}]/u','',$dial_prefix);
+	$state_call_time_state = preg_replace('/[^0-9\p{L}]/u','',$state_call_time_state);
+	$scheduled_callbacks = preg_replace('/[^0-9\p{L}]/u','',$scheduled_callbacks);
+	$concurrent_transfers = preg_replace('/[^0-9\p{L}]/u','',$concurrent_transfers);
+	$billable = preg_replace('/[^0-9\p{L}]/u','',$billable);
+	$pause_code = preg_replace('/[^0-9\p{L}]/u','',$pause_code);
+	$vicidial_recording_override = preg_replace('/[^0-9\p{L}]/u','',$vicidial_recording_override);
+	$ingroup_recording_override = preg_replace('/[^0-9\p{L}]/u','',$ingroup_recording_override);
+	$queuemetrics_log_id = preg_replace('/[^0-9\p{L}]/u','',$queuemetrics_log_id);
+	$after_hours_exten = preg_replace('/[^0-9\p{L}]/u','',$after_hours_exten);
+	$after_hours_voicemail = preg_replace('/[^0-9\p{L}]/u','',$after_hours_voicemail);
+	$qc_script = preg_replace('/[^0-9\p{L}]/u','',$qc_script);
+	$code = preg_replace('/[^0-9\p{L}]/u','',$code);
+	$survey_no_response_action = preg_replace('/[^0-9\p{L}]/u','',$survey_no_response_action);
+	$survey_ni_status = preg_replace('/[^0-9\p{L}]/u','',$survey_ni_status);
+	$qc_get_record_launch = preg_replace('/[^0-9\p{L}]/u','',$qc_get_record_launch);
+	$agent_pause_codes_active = preg_replace('/[^0-9\p{L}]/u','',$agent_pause_codes_active);
+	$three_way_dial_prefix = preg_replace('/[^0-9\p{L}]/u','',$three_way_dial_prefix);
+	$agent_shift_enforcement_override = preg_replace('/[^0-9\p{L}]/u','',$agent_shift_enforcement_override);
+	$survey_third_status = preg_replace('/[^0-9\p{L}]/u','',$survey_third_status);
+	$survey_fourth_status = preg_replace('/[^0-9\p{L}]/u','',$survey_fourth_status);
+	$sounds_web_directory = preg_replace('/[^0-9\p{L}]/u','',$sounds_web_directory);
+	$disable_alter_custphone = preg_replace('/[^0-9\p{L}]/u','',$disable_alter_custphone);
+	$view_calls_in_queue = preg_replace('/[^0-9\p{L}]/u','',$view_calls_in_queue);
+	$view_calls_in_queue_launch = preg_replace('/[^0-9\p{L}]/u','',$view_calls_in_queue_launch);
+	$grab_calls_in_queue = preg_replace('/[^0-9\p{L}]/u','',$grab_calls_in_queue);
+	$call_requeue_button = preg_replace('/[^0-9\p{L}]/u','',$call_requeue_button);
+	$pause_after_each_call = preg_replace('/[^0-9\p{L}]/u','',$pause_after_each_call);
+	$use_internal_dnc = preg_replace('/[^0-9\p{L}]/u','',$use_internal_dnc);
+	$use_campaign_dnc = preg_replace('/[^0-9\p{L}]/u','',$use_campaign_dnc);
+	$voicemail_id = preg_replace('/[^0-9\p{L}]/u','',$voicemail_id);
+	$status_id = preg_replace('/[^0-9\p{L}]/u','',$status_id);
+	$agent_call_log_view = preg_replace('/[^0-9\p{L}]/u','',$agent_call_log_view);
+	$agent_call_log_view_override = preg_replace('/[^0-9\p{L}]/u','',$agent_call_log_view_override);
+	$queuemetrics_loginout = preg_replace('/[^0-9\p{L}]/u','',$queuemetrics_loginout);
+	$queuemetrics_callstatus = preg_replace('/[^0-9\p{L}]/u','',$queuemetrics_callstatus);
+	$enable_xfer_presets = preg_replace('/[^0-9\p{L}]/u','',$enable_xfer_presets);
+	$hide_xfer_number_to_dial = preg_replace('/[^0-9\p{L}]/u','',$hide_xfer_number_to_dial);
+	$manual_dial_prefix = preg_replace('/[^0-9\p{L}]/u','',$manual_dial_prefix);
+	$customer_3way_hangup_logging = preg_replace('/[^0-9\p{L}]/u','',$customer_3way_hangup_logging);
+	$customer_3way_hangup_action = preg_replace('/[^0-9\p{L}]/u','',$customer_3way_hangup_action);
+	$queuemetrics_dispo_pause = preg_replace('/[^0-9\p{L}]/u','',$queuemetrics_dispo_pause);
+	$per_call_notes = preg_replace('/[^0-9\p{L}]/u','',$per_call_notes);
+	$my_callback_option = preg_replace('/[^0-9\p{L}]/u','',$my_callback_option);
+	$auto_pause_precall_code = preg_replace('/[^0-9\p{L}]/u','',$auto_pause_precall_code);
+	$disable_dispo_status = preg_replace('/[^0-9\p{L}]/u','',$disable_dispo_status);
+	$action_xfer_cid = preg_replace('/[^0-9\p{L}]/u','',$action_xfer_cid);
+	$callback_list_calltime = preg_replace('/[^0-9\p{L}]/u','',$callback_list_calltime);
+	$pause_after_next_call = preg_replace('/[^0-9\p{L}]/u','',$pause_after_next_call);
+	$owner_populate = preg_replace('/[^0-9\p{L}]/u','',$owner_populate);
+	$dead_max_dispo = preg_replace('/[^0-9\p{L}]/u','',$dead_max_dispo);
+	$dispo_max_dispo = preg_replace('/[^0-9\p{L}]/u','',$dispo_max_dispo);
+	$wrapup_bypass = preg_replace('/[^0-9\p{L}]/u','',$wrapup_bypass);
+	$wrapup_after_hotkey = preg_replace('/[^0-9\p{L}]/u','',$wrapup_after_hotkey);
+	$show_previous_callback = preg_replace('/[^0-9\p{L}]/u','',$show_previous_callback);
+	$clear_script = preg_replace('/[^0-9\p{L}]/u','',$clear_script);
+	$allow_chats = preg_replace('/[^0-9\p{L}]/u','',$allow_chats);
+	$allow_emails = preg_replace('/[^0-9\p{L}]/u','',$allow_emails);
+	$status_display_ingroup = preg_replace('/[^0-9\p{L}]/u','',$status_display_ingroup);
+	$populate_lead_ingroup = preg_replace('/[^0-9\p{L}]/u','',$populate_lead_ingroup);
+	$nva_new_status = preg_replace('/[^0-9\p{L}]/u','',$nva_new_status);
+	$report_default_format = preg_replace('/[^0-9\p{L}]/u','',$report_default_format);
+	$menu_background = preg_replace('/[^0-9\p{L}]/u','',$menu_background);
+	$frame_background = preg_replace('/[^0-9\p{L}]/u','',$frame_background);
+	$std_row1_background = preg_replace('/[^0-9\p{L}]/u','',$std_row1_background);
+	$std_row2_background = preg_replace('/[^0-9\p{L}]/u','',$std_row2_background);
+	$std_row3_background = preg_replace('/[^0-9\p{L}]/u','',$std_row3_background);
+	$std_row4_background = preg_replace('/[^0-9\p{L}]/u','',$std_row4_background);
+	$std_row5_background = preg_replace('/[^0-9\p{L}]/u','',$std_row5_background);
+	$alt_row1_background = preg_replace('/[^0-9\p{L}]/u','',$alt_row1_background);
+	$alt_row2_background = preg_replace('/[^0-9\p{L}]/u','',$alt_row2_background);
+	$alt_row3_background = preg_replace('/[^0-9\p{L}]/u','',$alt_row3_background);
+	$button_color = preg_replace('/[^0-9\p{L}]/u','',$button_color);
+	$dead_to_dispo = preg_replace('/[^0-9\p{L}]/u','',$dead_to_dispo);
+	$routing_prefix = preg_replace('/[^0-9\p{L}]/u','',$routing_prefix);
+	$inbound_survey = preg_replace('/[^0-9\p{L}]/u','',$inbound_survey);
+	$inbound_list_script_override = preg_replace('/[^0-9\p{L}]/u','',$inbound_list_script_override);
+	$pause_max_dispo = preg_replace('/[^0-9\p{L}]/u','',$pause_max_dispo);
+	$areacode = preg_replace('/[^0-9\p{L}]/u','',$areacode);
+	$require_mgr_approval = preg_replace('/[^0-9\p{L}]/u','',$require_mgr_approval);
+	$mute_recordings = preg_replace('/[^0-9\p{L}]/u','',$mute_recordings);
+	$leave_vm_no_dispo = preg_replace('/[^0-9\p{L}]/u','',$leave_vm_no_dispo);
+	$amd_agent_route_options = preg_replace('/[^0-9\p{L}]/u','',$amd_agent_route_options);
+	$hopper_drop_run_trigger = preg_replace('/[^0-9\p{L}]/u','',$hopper_drop_run_trigger);
+
+	### ALPHA-NUMERIC and spaces and hash and star and comma
+	$xferconf_a_dtmf = preg_replace('/[^ \,\*\#0-9\p{L}]/u','',trim($xferconf_a_dtmf));
+	$xferconf_b_dtmf = preg_replace('/[^ \,\*\#0-9\p{L}]/u','',trim($xferconf_b_dtmf));
+	$xferconf_c_dtmf = preg_replace('/[^ \,\*\#0-9\p{L}]/u','',trim($xferconf_c_dtmf));
+	$xferconf_d_dtmf = preg_replace('/[^ \,\*\#0-9\p{L}]/u','',trim($xferconf_d_dtmf));
+	$xferconf_e_dtmf = preg_replace('/[^ \,\*\#0-9\p{L}]/u','',trim($xferconf_e_dtmf));
+	$survey_third_digit = preg_replace('/[^ \,\*\#0-9\p{L}]/u','',$survey_third_digit);
+	$survey_fourth_digit = preg_replace('/[^ \,\*\#0-9\p{L}]/u','',$survey_fourth_digit);
+	$survey_third_exten = preg_replace('/[^ \,\*\#0-9\p{L}]/u','',$survey_third_exten);
+	$survey_fourth_exten = preg_replace('/[^ \,\*\#0-9\p{L}]/u','',$survey_fourth_exten);
+	$preset_dtmf = preg_replace('/[^ \,\*\#0-9\p{L}]/u','',$preset_dtmf);
+
+	### ALPHA-NUMERIC and underscore and dash
+	$agi_output = preg_replace('/[^-_0-9\p{L}]/u','',$agi_output);
+	$ASTmgrSECRET = preg_replace('/[^-_0-9\p{L}]/u','',$ASTmgrSECRET);
+	$ASTmgrUSERNAME = preg_replace('/[^-_0-9\p{L}]/u','',$ASTmgrUSERNAME);
+	$ASTmgrUSERNAMElisten = preg_replace('/[^-_0-9\p{L}]/u','',$ASTmgrUSERNAMElisten);
+	$ASTmgrUSERNAMEsend = preg_replace('/[^-_0-9\p{L}]/u','',$ASTmgrUSERNAMEsend);
+	$ASTmgrUSERNAMEupdate = preg_replace('/[^-_0-9\p{L}]/u','',$ASTmgrUSERNAMEupdate);
+	$call_time_id = preg_replace('/[^-_0-9\p{L}]/u','',$call_time_id);
+	$campaign_id = preg_replace('/[^-_0-9\p{L}]/u','',$campaign_id);
+	$CoNfIrM = preg_replace('/[^-_0-9\p{L}]/u','',$CoNfIrM);
+	$DBX_database = preg_replace('/[^-_0-9\p{L}]/u','',$DBX_database);
+	$DBX_pass = preg_replace('/[^-_0-9\p{L}]/u','',$DBX_pass);
+	$DBX_user = preg_replace('/[^-_0-9\p{L}]/u','',$DBX_user);
+	$DBY_database = preg_replace('/[^-_0-9\p{L}]/u','',$DBY_database);
+	$DBY_pass = preg_replace('/[^-_0-9\p{L}]/u','',$DBY_pass);
+	$DBY_user = preg_replace('/[^-_0-9\p{L}]/u','',$DBY_user);
+	$dial_method = preg_replace('/[^-_0-9\p{L}]/u','',$dial_method);
+	$dial_status_a = preg_replace('/[^-_0-9\p{L}]/u','',$dial_status_a);
+	$dial_status_b = preg_replace('/[^-_0-9\p{L}]/u','',$dial_status_b);
+	$dial_status_c = preg_replace('/[^-_0-9\p{L}]/u','',$dial_status_c);
+	$dial_status_d = preg_replace('/[^-_0-9\p{L}]/u','',$dial_status_d);
+	$dial_status_e = preg_replace('/[^-_0-9\p{L}]/u','',$dial_status_e);
+	$ext_context = preg_replace('/[^-_0-9\p{L}]/u','',$ext_context);
+	$group_id = preg_replace('/[^-_0-9\p{L}]/u','',$group_id);
+	$lead_filter_id = preg_replace('/[^-_0-9\p{L}]/u','',$lead_filter_id);
+	$local_call_time = preg_replace('/[^-_0-9\p{L}]/u','',$local_call_time);
+	$login = preg_replace('/[^-_0-9\p{L}]/u','',$login);
+	$login_campaign = preg_replace('/[^-_0-9\p{L}]/u','',$login_campaign);
+	$login_pass = preg_replace('/[^-_0-9\p{L}]/u','',$login_pass);
+	$login_user = preg_replace('/[^-_0-9\p{L}]/u','',$login_user);
+	$next_agent_call = preg_replace('/[^-_0-9\p{L}]/u','',$next_agent_call);
+	$old_campaign_id = preg_replace('/[^-_0-9\p{L}]/u','',$old_campaign_id);
+	$old_server_id = preg_replace('/[^-_0-9\p{L}]/u','',$old_server_id);
+	$OLDuser_group = preg_replace('/[^-_0-9\p{L}]/u','',$OLDuser_group);
+	$park_file_name = preg_replace('/[^-_0-9\p{L}]/u','',$park_file_name);
+	$pass = preg_replace('/[^-_0-9\p{L}]/u','',$pass);
+	$phone_login = preg_replace('/[^-_0-9\p{L}]/u','',$phone_login);
+	$phone_pass = preg_replace('/[^-_0-9\p{L}]/u','',$phone_pass);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9\p{L}]/u','',$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9\p{L}]/u','',$PHP_AUTH_USER);
+	$protocol = preg_replace('/[^-_0-9\p{L}]/u','',$protocol);
+	$server_id = preg_replace('/[^-_0-9\p{L}]/u','',$server_id);
+	$stage = preg_replace('/[^-_0-9\p{L}]/u','',$stage);
+	$state_rule = preg_replace('/[^-_0-9\p{L}]/u','',$state_rule);
+	$holiday_rule = preg_replace('/[^-_0-9\p{L}]/u','',$holiday_rule);
+	$trunk_restriction = preg_replace('/[^-_0-9\p{L}]/u','',$trunk_restriction);
+	$user = preg_replace('/[^-_0-9\p{L}]/u','',$user);
+	$user_group = preg_replace('/[^-_0-9\p{L}]/u','',$user_group);
+	$VICIDIAL_park_on_filename = preg_replace('/[^-_0-9\p{L}]/u','',$VICIDIAL_park_on_filename);
+	$auto_alt_dial = preg_replace('/[^-_0-9\p{L}]/u','',$auto_alt_dial);
+	$dial_status = preg_replace('/[^-_0-9\p{L}]/u','',$dial_status);
+	$queuemetrics_eq_prepend = preg_replace('/[^-_0-9\p{L}]/u','',$queuemetrics_eq_prepend);
+	$vicidial_agent_disable = preg_replace('/[^-_0-9\p{L}]/u','',$vicidial_agent_disable);
+	$alter_custdata_override = preg_replace('/[^-_0-9\p{L}]/u','',$alter_custdata_override);
+	$list_order_mix = preg_replace('/[^-_0-9\p{L}]/u','',$list_order_mix);
+	$vcl_id = preg_replace('/[^-_0-9\p{L}]/u','',$vcl_id);
+	$mix_method = preg_replace('/[^-_0-9\p{L}]/u','',$mix_method);
+	$category = preg_replace('/[^-_0-9\p{L}]/u','',$category);
+	$vsc_id = preg_replace('/[^-_0-9\p{L}]/u','',$vsc_id);
+	$moh_context = preg_replace('/[^-_0-9\p{L}]/u','',$moh_context);
+	$source_campaign_id = preg_replace('/[^-_0-9\p{L}]/u','',$source_campaign_id);
+	$source_user_id = preg_replace('/[^-_0-9\p{L}]/u','',$source_user_id);
+	$source_group_id = preg_replace('/[^-_0-9\p{L}]/u','',$source_group_id);
+	$default_xfer_group = preg_replace('/[^-_0-9\p{L}]/u','',$default_xfer_group);
+	$drop_exten = preg_replace('/[^-_0-9\p{L}]/u','',$drop_exten);
+	$safe_harbor_exten = preg_replace('/[^-_0-9\p{L}]/u','',$safe_harbor_exten);
+	$drop_action = preg_replace('/[^-_0-9\p{L}]/u','',$drop_action);
+	$drop_inbound_group = preg_replace('/[^-_0-9\p{L}]/u','',$drop_inbound_group);
+	$afterhours_xfer_group = preg_replace('/[^-_0-9\p{L}]/u','',$afterhours_xfer_group);
+	$after_hours_action = preg_replace('/[^-_0-9\p{L}]/u','',$after_hours_action);
+	$alias_id = preg_replace('/[^-_0-9\p{L}]/u','',$alias_id);
+	$shift_id = preg_replace('/[^-_0-9\p{L}]/u','',$shift_id);
+	$qc_shift_id = preg_replace('/[^-_0-9\p{L}]/u','',$qc_shift_id);
+	$survey_method = preg_replace('/[^-_0-9\p{L}]/u','',$survey_method);
+	$alter_custphone_override = preg_replace('/[^-_0-9\p{L}]/u','',$alter_custphone_override);
+	$manual_dial_filter = preg_replace('/[^-_0-9\p{L}]/u','',$manual_dial_filter);
+	$manual_dial_search_filter = preg_replace('/[^-_0-9\p{L}]/u','',$manual_dial_search_filter);
+	$agent_clipboard_copy = preg_replace('/[^-_0-9\p{L}]/u','',$agent_clipboard_copy);
+	$hold_time_option = preg_replace('/[^-_0-9\p{L}]/u','',$hold_time_option);
+	$hold_time_option_xfer_group = preg_replace('/[^-_0-9\p{L}]/u','',$hold_time_option_xfer_group);
+	$hold_recall_xfer_group = preg_replace('/[^-_0-9\p{L}]/u','',$hold_recall_xfer_group);
+	$play_welcome_message = preg_replace('/[^-_0-9\p{L}]/u','',$play_welcome_message);
+	$did_route = preg_replace('/[^-_0-9\p{L}]/u','',$did_route);
+	$user_unavailable_action = preg_replace('/[^-_0-9\p{L}]/u','',$user_unavailable_action);
+	$user_route_settings_ingroup = preg_replace('/[^-_0-9\p{L}]/u','',$user_route_settings_ingroup);
+	$call_handle_method = preg_replace('/[^-_0-9\p{L}]/u','',$call_handle_method);
+	$agent_search_method = preg_replace('/[^-_0-9\p{L}]/u','',$agent_search_method);
+	$hold_time_option_voicemail = preg_replace('/[^-_0-9\p{L}]/u','',$hold_time_option_voicemail);
+	$exten_context = preg_replace('/[^-_0-9\p{L}]/u','',$exten_context);
+	$three_way_call_cid = preg_replace('/[^-_0-9\p{L}]/u','',$three_way_call_cid);
+	$web_form_target = preg_replace('/[^-_0-9\p{L}]/u','',$web_form_target);
+	$recording_web_link = preg_replace('/[^-_0-9\p{L}]/u','',$recording_web_link);
+	$vtiger_search_category = preg_replace('/[^-_0-9\p{L}]/u','',$vtiger_search_category);
+	$vtiger_create_call_record = preg_replace('/[^-_0-9\p{L}]/u','',$vtiger_create_call_record);
+	$vtiger_create_lead_record = preg_replace('/[^-_0-9\p{L}]/u','',$vtiger_create_lead_record);
+	$vtiger_screen_login = preg_replace('/[^-_0-9\p{L}]/u','',$vtiger_screen_login);
+	$cpd_amd_action = preg_replace('/[^-_0-9\p{L}]/u','',$cpd_amd_action);
+	$cpd_unknown_action = preg_replace('/[^-_0-9\p{L}]/u','',$cpd_unknown_action);
+	$template_id = preg_replace('/[^-_0-9\p{L}]/u','',$template_id);
+	$carrier_id = preg_replace('/[^-_0-9\p{L}]/u','',$carrier_id);
+	$source_carrier = preg_replace('/[^-_0-9\p{L}]/u','',$source_carrier);
+	$group_alias_id = preg_replace('/[^-_0-9\p{L}]/u','',$group_alias_id);
+	$default_group_alias = preg_replace('/[^-_0-9\p{L}]/u','',$default_group_alias);
+	$vtiger_search_dead = preg_replace('/[^-_0-9\p{L}]/u','',$vtiger_search_dead);
+	$menu_id = preg_replace('/[^-_0-9\p{L}]/u','',$menu_id);
+	$source_menu = preg_replace('/[^-_0-9\p{L}]/u','',$source_menu);
+	$call_time_id = preg_replace('/[^-_0-9\p{L}]/u','',$call_time_id);
+	$phone_context = preg_replace('/[^-_0-9\p{L}]/u','',$phone_context);
+	$conf_secret = preg_replace('/[^-_0-9\p{L}]/u','',$conf_secret);
+	$tracking_group = preg_replace('/[^-_0-9\p{L}]/u','',$tracking_group);
+	$no_agent_no_queue = preg_replace('/[^-_0-9\p{L}]/u','',$no_agent_no_queue);
+	$no_agent_action = preg_replace('/[^-_0-9\p{L}]/u','',$no_agent_action);
+	$quick_transfer_button = preg_replace('/[^-_0-9\p{L}]/u','',$quick_transfer_button);
+	$prepopulate_transfer_preset = preg_replace('/[^-_0-9\p{L}]/u','',$prepopulate_transfer_preset);
+	$tts_id = preg_replace('/[^-_0-9\p{L}]/u','',$tts_id);
+	$drop_rate_group = preg_replace('/[^-_0-9\p{L}]/u','',$drop_rate_group);
+	$agent_dial_owner_only = preg_replace('/[^-_0-9\p{L}]/u','',$agent_dial_owner_only);
+	$reset_time = preg_replace('/[^-_0-9\p{L}]/u','',$reset_time);
+	$moh_id = preg_replace('/[^-_0-9\p{L}]/u','',$moh_id);
+	$drop_inbound_group_override = preg_replace('/[^-_0-9\p{L}]/u','',$drop_inbound_group_override);
+	$timer_action = preg_replace('/[^-_0-9\p{L}]/u','',$timer_action);
+	$record_call = preg_replace('/[^-_0-9\p{L}]/u','',$record_call);
+	$scheduled_callbacks_alert = preg_replace('/[^-_0-9\p{L}]/u','',$scheduled_callbacks_alert);
+	$extension_group_id = preg_replace('/[^-_0-9\p{L}]/u','',$extension_group_id);
+	$extension_group = preg_replace('/[^-_0-9\p{L}]/u','',$extension_group);
+	$scheduled_callbacks_count = preg_replace('/[^-_0-9\p{L}]/u','',$scheduled_callbacks_count);
+	$manual_dial_override = preg_replace('/[^-_0-9\p{L}]/u','',$manual_dial_override);
+	$blind_monitor_warning = preg_replace('/[^-_0-9\p{L}]/u','',$blind_monitor_warning);
+	$uniqueid_status_display = preg_replace('/[^-_0-9\p{L}]/u','',$uniqueid_status_display);
+	$hold_time_option_callmenu = preg_replace('/[^-_0-9\p{L}]/u','',$hold_time_option_callmenu);
+	$inbound_queue_no_dial = preg_replace('/[^-_0-9\p{L}]/u','',$inbound_queue_no_dial);
+	$hold_time_second_option = preg_replace('/[^-_0-9\p{L}]/u','',$hold_time_second_option);
+	$hold_time_third_option = preg_replace('/[^-_0-9\p{L}]/u','',$hold_time_third_option);
+	$wait_hold_option_priority = preg_replace('/[^-_0-9\p{L}]/u','',$wait_hold_option_priority);
+	$wait_time_option = preg_replace('/[^-_0-9\p{L}]/u','',$wait_time_option);
+	$wait_time_second_option = preg_replace('/[^-_0-9\p{L}]/u','',$wait_time_second_option);
+	$wait_time_third_option = preg_replace('/[^-_0-9\p{L}]/u','',$wait_time_third_option);
+	$wait_time_option_xfer_group = preg_replace('/[^-_0-9\p{L}]/u','',$wait_time_option_xfer_group);
+	$wait_time_option_callmenu = preg_replace('/[^-_0-9\p{L}]/u','',$wait_time_option_callmenu);
+	$wait_time_option_voicemail = preg_replace('/[^-_0-9\p{L}]/u','',$wait_time_option_voicemail);
+	$filter_phone_group_id = preg_replace('/[^-_0-9\p{L}]/u','',$filter_phone_group_id);
+	$filter_action = preg_replace('/[^-_0-9\p{L}]/u','',$filter_action);
+	$filter_user_unavailable_action = preg_replace('/[^-_0-9\p{L}]/u','',$filter_user_unavailable_action);
+	$filter_user_route_settings_ingroup = preg_replace('/[^-_0-9\p{L}]/u','',$filter_user_route_settings_ingroup);
+	$filter_agent_search_method = preg_replace('/[^-_0-9\p{L}]/u','',$filter_agent_search_method);
+	$filter_campaign_id = preg_replace('/[^-_0-9\p{L}]/u','',$filter_campaign_id);
+	$filter_group_id = preg_replace('/[^-_0-9\p{L}]/u','',$filter_group_id);
+	$filter_menu_id = preg_replace('/[^-_0-9\p{L}]/u','',$filter_menu_id);
+	$filter_call_handle_method = preg_replace('/[^-_0-9\p{L}]/u','',$filter_call_handle_method);
+	$filter_user = preg_replace('/[^-_0-9\p{L}]/u','',$filter_user);
+	$filter_exten_context = preg_replace('/[^-_0-9\p{L}]/u','',$filter_exten_context);
+	$webphone_systemkey = preg_replace('/[^-_0-9\p{L}]/u','',$webphone_systemkey);
+	$webphone_dialpad = preg_replace('/[^-_0-9\p{L}]/u','',$webphone_dialpad);
+	$webphone_systemkey_override = preg_replace('/[^-_0-9\p{L}]/u','',$webphone_systemkey_override);
+	$webphone_dialpad_override = preg_replace('/[^-_0-9\p{L}]/u','',$webphone_dialpad_override);
+	$default_phone_registration_password = preg_replace('/[^-_0-9\p{L}]/u','',$default_phone_registration_password);
+	$default_phone_login_password = preg_replace('/[^-_0-9\p{L}]/u','',$default_phone_login_password);
+	$default_server_password = preg_replace('/[^-_0-9\p{L}]/u','',$default_server_password);
+	$ivr_park_call = preg_replace('/[^-_0-9\p{L}]/u','',$ivr_park_call);
+	$manual_preview_dial = preg_replace('/[^-_0-9\p{L}]/u','',$manual_preview_dial);
+	$realtime_agent_time_stats = preg_replace('/[^-_0-9\p{L}]/u','',$realtime_agent_time_stats);
+	$api_manual_dial = preg_replace('/[^-_0-9\p{L}]/u','',$api_manual_dial);
+	$manual_dial_call_time_check = preg_replace('/[^-_0-9\p{L}]/u','',$manual_dial_call_time_check);
+	$lead_order_secondary = preg_replace('/[^-_0-9\p{L}]/u','',$lead_order_secondary);
+	$agent_lead_search = preg_replace('/[^-_0-9\p{L}]/u','',$agent_lead_search);
+	$agent_lead_search_method = preg_replace('/[^-_0-9\p{L}]/u','',$agent_lead_search_method);
+	$manual_dial_cid = preg_replace('/[^-_0-9\p{L}]/u','',$manual_dial_cid);
+	$post_phone_time_diff_alert = preg_replace('/[^-_0-9\p{L}]/u','',$post_phone_time_diff_alert);
+	$custom_3way_button_transfer = preg_replace('/[^-_0-9\p{L}]/u','',$custom_3way_button_transfer);
+	$available_only_tally_threshold_agents = preg_replace('/[^-_0-9\p{L}]/u','',$available_only_tally_threshold_agents);
+	$dial_level_threshold_agents = preg_replace('/[^-_0-9\p{L}]/u','',$dial_level_threshold_agents);
+	$time_zone_setting = preg_replace('/[^-_0-9\p{L}]/u','',$time_zone_setting);
+	$safe_harbor_menu_id = preg_replace('/[^-_0-9\p{L}]/u','',$safe_harbor_menu_id);
+	$survey_menu_id = preg_replace('/[^-_0-9\p{L}]/u','',$survey_menu_id);
+	$dl_diff_target_method = preg_replace('/[^-_0-9\p{L}]/u','',$dl_diff_target_method);
+	$disable_dispo_screen = preg_replace('/[^-_0-9\p{L}]/u','',$disable_dispo_screen);
+	$screen_labels = preg_replace('/[^-_0-9\p{L}]/u','',$screen_labels);
+	$label_hide_field_logs = preg_replace('/[^-_0-9\p{L}]/u','',$label_hide_field_logs);
+	$label_id = preg_replace('/[^-_0-9\p{L}]/u','',$label_id);
+	$status_display_fields = preg_replace('/[^-_0-9\p{L}]/u','',$status_display_fields);
+	$voicemail_timezone = preg_replace('/[^-_0-9\p{L}]/u','',$voicemail_timezone);
+	$default_voicemail_timezone = preg_replace('/[^-_0-9\p{L}]/u','',$default_voicemail_timezone);
+	$on_hook_cid = preg_replace('/[^-_0-9\p{L}]/u','',$on_hook_cid);
+	$pllb_grouping = preg_replace('/[^-_0-9\p{L}]/u','',$pllb_grouping);
+	$user_start = preg_replace('/[^-_0-9\p{L}]/u','',$user_start);
+	$drop_callmenu = preg_replace('/[^-_0-9\p{L}]/u','',$drop_callmenu);
+	$after_hours_callmenu = preg_replace('/[^-_0-9\p{L}]/u','',$after_hours_callmenu);
+	$survey_recording = preg_replace('/[^-_0-9\p{L}]/u','',$survey_recording);
+	$dtmf_field = preg_replace('/[^-_0-9\p{L}]/u','',$dtmf_field);
+	$preset_contact_search = preg_replace('/[^-_0-9\p{L}]/u','',$preset_contact_search);
+	$admin_hide_phone_data = preg_replace('/[^-_0-9\p{L}]/u','',$admin_hide_phone_data);
+	$max_calls_method = preg_replace('/[^-_0-9\p{L}]/u','',$max_calls_method);
+	$max_calls_action = preg_replace('/[^-_0-9\p{L}]/u','',$max_calls_action);
+	$in_group_dial = preg_replace('/[^-_0-9\p{L}]/u','',$in_group_dial);
+	$in_group_dial_select = preg_replace('/[^-_0-9\p{L}]/u','',$in_group_dial_select);
+	$queuemetrics_socket = preg_replace('/[^-_0-9\p{L}]/u','',$queuemetrics_socket);
+	$holiday_id = preg_replace('/[^-_0-9\p{L}]/u','',$holiday_id);
+	$holiday_date = preg_replace('/[^-_0-9\p{L}]/u','',$holiday_date);
+	$holiday_status = preg_replace('/[^-_0-9\p{L}]/u','',$holiday_status);
+	$expiration_date = preg_replace('/[^-_0-9\p{L}]/u','',$expiration_date);
+	$amd_inbound_group = preg_replace('/[^-_0-9\p{L}]/u','',$amd_inbound_group);
+	$amd_callmenu = preg_replace('/[^-_0-9\p{L}]/u','',$amd_callmenu);
+	$filter_inbound_number = preg_replace('/[^-_0-9\p{L}]/u','',$filter_inbound_number);
+	$filter_dnc_campaign = preg_replace('/[^-_0-9\p{L}]/u','',$filter_dnc_campaign);
+	$manual_dial_search_checkbox = preg_replace('/[^-_0-9\p{L}]/u','',$manual_dial_search_checkbox);
+	$alt_number_dialing = preg_replace('/[^-_0-9\p{L}]/u','',$alt_number_dialing);
+	$no_agent_ingroup_redirect = preg_replace('/[^-_0-9\p{L}]/u','',$no_agent_ingroup_redirect);
+	$no_agent_ingroup_id = preg_replace('/[^-_0-9\p{L}]/u','',$no_agent_ingroup_id);
+	$pre_filter_phone_group_id = preg_replace('/[^-_0-9\p{L}]/u','',$pre_filter_phone_group_id);
+	$shift_enforcement = preg_replace('/[^-_0-9\p{L}]/u','',$shift_enforcement);
+	$comments_all_tabs = preg_replace('/[^-_0-9\p{L}]/u','',$comments_all_tabs);
+	$comments_dispo_screen = preg_replace('/[^-_0-9\p{L}]/u','',$comments_dispo_screen);
+	$comments_callback_screen = preg_replace('/[^-_0-9\p{L}]/u','',$comments_callback_screen);
+	$qc_comment_history = preg_replace('/[^-_0-9\p{L}]/u','',$qc_comment_history);
+	$language_method = preg_replace('/[^-_0-9\p{L}]/u','',$language_method);
+	$manual_dial_override_field = preg_replace('/[^-_0-9\p{L}]/u','',$manual_dial_override_field);
+	$max_queue_ingroup_id = preg_replace('/[^-_0-9\p{L}]/u','',$max_queue_ingroup_id);
+	$agent_debug_logging = preg_replace('/[^-_0-9\p{L}]/u','',$agent_debug_logging);
+	$container_id = preg_replace('/[^-_0-9\p{L}]/u','',$container_id);
+	$container_type = preg_replace('/[^-_0-9\p{L}]/u','',$container_type);
+	$status_group_id = preg_replace('/[^-_0-9\p{L}]/u','',$status_group_id);
+	$unavail_dialplan_fwd_exten = preg_replace('/[^-_0-9\p{L}]/u','',$unavail_dialplan_fwd_exten);
+	$unavail_dialplan_fwd_context = preg_replace('/[^-_0-9\p{L}]/u','',$unavail_dialplan_fwd_context);
+	$nva_search_method = preg_replace('/[^-_0-9\p{L}]/u','',$nva_search_method);
+	$on_hook_cid_number = preg_replace('/[^-_0-9\p{L}]/u','',$on_hook_cid_number);
+	$colors_id = preg_replace('/[^-_0-9\p{L}]/u','',$colors_id);
+	$agent_screen_colors = preg_replace('/[^-_0-9\p{L}]/u','',$agent_screen_colors);
+	$customer_chat_screen_colors = preg_replace('/[^-_0-9\p{L}]/u','',$customer_chat_screen_colors);
+	$web_loader_phone_length = preg_replace('/[^-_0-9\p{L}]/u','',$web_loader_phone_length);
+	$agent_chat_screen_colors = preg_replace('/[^-_0-9\p{L}]/u','',$agent_chat_screen_colors);
+	$populate_lead_province = preg_replace('/[^-_0-9\p{L}]/u','',$populate_lead_province);
+	$areacode_filter = preg_replace('/[^-_0-9\p{L}]/u','',$areacode_filter);
+	$areacode_filter_action = preg_replace('/[^-_0-9\p{L}]/u','',$areacode_filter_action);
+	$report_id = preg_replace('/[^-_0-9\p{L}]/u','',$report_id);
+	$report_destination = preg_replace('/[^-_0-9\p{L}]/u','',$report_destination);
+	$report_times = preg_replace('/[^-_0-9\p{L}]/u','',$report_times);
+	$report_monthdays = preg_replace('/[^-_0-9\p{L}]/u','',$report_monthdays);
+	$populate_state_areacode = preg_replace('/[^-_0-9\p{L}]/u','',$populate_state_areacode);
+	$dl_id = preg_replace('/[^-_0-9\p{L}]/u','',$dl_id);
+	$duplicate_check = preg_replace('/[^-_0-9\p{L}]/u','',$duplicate_check);
+	$dl_times = preg_replace('/[^-_0-9\p{L}]/u','',$dl_times);
+	$dl_monthdays = preg_replace('/[^-_0-9\p{L}]/u','',$dl_monthdays);
+	$use_custom_cid = preg_replace('/[^-_0-9\p{L}]/u','',$use_custom_cid);
+	$system_ip_blacklist = preg_replace('/[^-_0-9\p{L}]/u','',$system_ip_blacklist);
+	$admin_ip_list = preg_replace('/[^-_0-9\p{L}]/u','',$admin_ip_list);
+	$agent_ip_list = preg_replace('/[^-_0-9\p{L}]/u','',$agent_ip_list);
+	$api_ip_list = preg_replace('/[^-_0-9\p{L}]/u','',$api_ip_list);
+	$ip_list_id = preg_replace('/[^-_0-9\p{L}]/u','',$ip_list_id);
+	$inbound_survey_callmenu = preg_replace('/[^-_0-9\p{L}]/u','',$inbound_survey_callmenu);
+	$filename_override = preg_replace('/[^-_0-9\p{L}]/u','',$filename_override);
+	$did_id = preg_replace('/[^-_0-9\p{L}]/u','',$did_id);
+	$extension_appended_cidname = preg_replace('/[^-_0-9\p{L}]/u','',$extension_appended_cidname);
+	$max_inbound_calls_outcome = preg_replace('/[^-_0-9\p{L}]/u','',$max_inbound_calls_outcome);
+	$manual_auto_next_options = preg_replace('/[^-_0-9\p{L}]/u','',$manual_auto_next_options);
+	$agent_screen_time_display = preg_replace('/[^-_0-9\p{L}]/u','',$agent_screen_time_display);
+	$get_call_launch = preg_replace('/[^-_0-9\p{L}]/u','',$get_call_launch);
+	$next_dial_my_callbacks = preg_replace('/[^-_0-9\p{L}]/u','',$next_dial_my_callbacks);
+	$anyone_callback_inactive_lists = preg_replace('/[^-_0-9\p{L}]/u','',$anyone_callback_inactive_lists);
+	$inbound_no_agents_no_dial_container = preg_replace('/[^-_0-9\p{L}]/u','',$inbound_no_agents_no_dial_container);
+	$closing_time_action = preg_replace('/[^-_0-9\p{L}]/u','',$closing_time_action);
+	$closing_time_option_exten = preg_replace('/[^-_0-9\p{L}]/u','',$closing_time_option_exten);
+	$closing_time_option_callmenu = preg_replace('/[^-_0-9\p{L}]/u','',$closing_time_option_callmenu);
+	$closing_time_option_voicemail = preg_replace('/[^-_0-9\p{L}]/u','',$closing_time_option_voicemail);
+	$closing_time_option_callback_list_id = preg_replace('/[^-_0-9\p{L}]/u','',$closing_time_option_callback_list_id);
+	$icbq_call_time_id = preg_replace('/[^-_0-9\p{L}]/u','',$icbq_call_time_id);
+	$add_lead_timezone = preg_replace('/[^-_0-9\p{L}]/u','',$add_lead_timezone);
+	$icbq_dial_filter = preg_replace('/[^-_0-9\p{L}]/u','',$icbq_dial_filter);
+	$cid_group_id = preg_replace('/[^-_0-9\p{L}]/u','',$cid_group_id);
+	$cid_group_type = preg_replace('/[^-_0-9\p{L}]/u','',$cid_group_type);
+	$populate_lead_source = preg_replace('/[^-_0-9\p{L}]/u','',$populate_lead_source);
+	$dead_trigger_action = preg_replace('/[^-_0-9\p{L}]/u','',$dead_trigger_action);
+	$dead_trigger_repeat = preg_replace('/[^-_0-9\p{L}]/u','',$dead_trigger_repeat);
+	$cid_cb_confirm_number = preg_replace('/[^-_0-9\p{L}]/u','',$cid_cb_confirm_number);
+	$cid_cb_invalid_filter_phone_group = preg_replace('/[^-_0-9\p{L}]/u','',$cid_cb_invalid_filter_phone_group);
+	$scheduled_callbacks_auto_reschedule = preg_replace('/[^-_0-9\p{L}]/u','',$scheduled_callbacks_auto_reschedule);
+	$scheduled_callbacks_timezones_container = preg_replace('/[^-_0-9\p{L}]/u','',$scheduled_callbacks_timezones_container);
+	$three_way_volume_buttons = preg_replace('/[^-_0-9\p{L}]/u','',$three_way_volume_buttons);
+	$callback_dnc = preg_replace('/[^-_0-9\p{L}]/u','',$callback_dnc);
+	$hide_call_log_info = preg_replace('/[^-_0-9\p{L}]/u','',$hide_call_log_info);
+	$call_quota_lead_ranking = preg_replace('/[^-_0-9\p{L}]/u','',$call_quota_lead_ranking);
+	$sip_event_logging = preg_replace('/[^-_0-9\p{L}]/u','',$sip_event_logging);
+	$auto_active_list_new = preg_replace('/[^-_0-9\p{L}]/u','',$auto_active_list_new);
+	$script_id = preg_replace('/[^-_0-9\p{L}]/u','',$script_id);
+	$ingroup_script = preg_replace('/[^-_0-9\p{L}]/u','',$ingroup_script);
+	$ingroup_script_two = preg_replace('/[^-_0-9\p{L}]/u','',$ingroup_script_two);
+	$campaign_script = preg_replace('/[^-_0-9\p{L}]/u','',$campaign_script);
+	$campaign_script_two = preg_replace('/[^-_0-9\p{L}]/u','',$campaign_script_two);
+	$leave_vm_message_group_id = preg_replace('/[^-_0-9\p{L}]/u','',$leave_vm_message_group_id);
+	$dial_timeout_lead_container = preg_replace('/[^-_0-9\p{L}]/u','',$dial_timeout_lead_container);
+	$amd_type = preg_replace('/[^-_0-9\p{L}]/u','',$amd_type);
+	$recording_buttons = preg_replace('/[^-_0-9\p{L}]/u','',$recording_buttons);
+	$use_other_campaign_dnc = preg_replace('/[^-_0-9\p{L}]/u','',$use_other_campaign_dnc);
+	$browser_alert_sound = preg_replace('/[^-_0-9\p{L}]/u','',$browser_alert_sound);
+	$three_way_record_stop_exception = preg_replace('/[^-_0-9\p{L}]/u','',$three_way_record_stop_exception);
+	$queuemetrics_pausereason = preg_replace('/[^-_0-9\p{L}]/u','',$queuemetrics_pausereason);
+	$answer_signal = preg_replace('/[^-_0-9\p{L}]/u','',$answer_signal);
+	$inbound_drop_voicemail = preg_replace('/[^-_0-9\p{L}]/u','',$inbound_drop_voicemail);
+	$inbound_after_hours_voicemail = preg_replace('/[^-_0-9\p{L}]/u','',$inbound_after_hours_voicemail);
+	$pause_max_exceptions = preg_replace('/[^-_0-9\p{L}]/u','',$pause_max_exceptions);
+
+	### ALPHA-NUMERIC and underscore and dash and slash and dot
+	$menu_timeout_prompt = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$menu_timeout_prompt);
+	$menu_invalid_prompt = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$menu_invalid_prompt);
+	$after_hours_message_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$after_hours_message_filename);
+	$welcome_message_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$welcome_message_filename);
+	$onhold_prompt_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$onhold_prompt_filename);
+	$hold_time_option_callback_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$hold_time_option_callback_filename);
+	$agent_alert_exten = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$agent_alert_exten);
+	$filename = preg_replace('/[^-\/\._0-9\p{L}]/u','',$filename);
+	$am_message_exten = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$am_message_exten);
+	$am_message_exten_override = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$am_message_exten_override);
+	$campaign_groups = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$campaign_groups);
+	$blind_monitor_filename = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$blind_monitor_filename);
+	$hold_time_option_press_filename = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$hold_time_option_press_filename);
+	$default_afterhours_filename_override = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$default_afterhours_filename_override);
+	$sunday_afterhours_filename_override = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$sunday_afterhours_filename_override);
+	$monday_afterhours_filename_override = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$monday_afterhours_filename_override);
+	$tuesday_afterhours_filename_override = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$tuesday_afterhours_filename_override);
+	$wednesday_afterhours_filename_override = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$wednesday_afterhours_filename_override);
+	$thursday_afterhours_filename_override = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$thursday_afterhours_filename_override);
+	$friday_afterhours_filename_override = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$friday_afterhours_filename_override);
+	$saturday_afterhours_filename_override = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$saturday_afterhours_filename_override);
+	$admin_web_directory = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$admin_web_directory);
+	$tts_voice = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$tts_voice);
+	$wait_time_option_callback_filename = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$wait_time_option_callback_filename);
+	$wait_time_option_press_filename = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$wait_time_option_press_filename);
+	$eht_minimum_prompt_filename = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$eht_minimum_prompt_filename);
+	$queuemetrics_phone_environment = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$queuemetrics_phone_environment);
+	$active_twin_server_ip = preg_replace('/[^-\|\/\._0-9\p{L}]/u','',$active_twin_server_ip);
+	$safe_harbor_audio = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$safe_harbor_audio);
+	$alt_log_server_ip = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$alt_log_server_ip);
+	$alt_log_dbname = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$alt_log_dbname);
+	$alt_log_login = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$alt_log_login);
+	$alt_log_pass = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$alt_log_pass);
+	$survey_first_audio_file = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$survey_first_audio_file);
+	$survey_opt_in_audio_file = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$survey_opt_in_audio_file);
+	$survey_ni_audio_file = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$survey_ni_audio_file);
+	$survey_third_audio_file = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$survey_third_audio_file);
+	$survey_fourth_audio_file = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$survey_fourth_audio_file);
+	$safe_harbor_audio_field = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$safe_harbor_audio_field);
+	$voicemail_greeting = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$voicemail_greeting);
+	$old_voicemail_greeting = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$old_voicemail_greeting);
+	$meetme_enter_login_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$meetme_enter_login_filename);
+	$meetme_enter_leave3way_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$meetme_enter_leave3way_filename);
+	$nva_error_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$nva_error_filename);
+	$inbound_survey_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$inbound_survey_filename);
+	$inbound_survey_question_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$inbound_survey_question_filename);
+	$closing_time_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$closing_time_filename);
+	$closing_time_end_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$closing_time_end_filename);
+	$dead_trigger_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$dead_trigger_filename);
+	$cid_cb_valid_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$cid_cb_valid_filename);
+	$cid_cb_confirmed_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$cid_cb_confirmed_filename);
+	$cid_cb_enter_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$cid_cb_enter_filename);
+	$cid_cb_you_entered_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$cid_cb_you_entered_filename);
+	$cid_cb_press_to_confirm_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$cid_cb_press_to_confirm_filename);
+	$cid_cb_invalid_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$cid_cb_invalid_filename);
+	$cid_cb_reenter_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$cid_cb_reenter_filename);
+	$cid_cb_error_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$cid_cb_error_filename);
+	$place_in_line_caller_number_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$place_in_line_caller_number_filename);
+	$place_in_line_you_next_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$place_in_line_you_next_filename);
+	$audio_filename = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$audio_filename);
+
+	### ALPHA-NUMERIC and underscore and dash and slash and dot and comma
+	$menu_prompt = preg_replace('/[^-\/\|\,\._0-9\p{L}]/u','',$menu_prompt);
+
+	### ALPHA-NUMERIC and underscore and dash and comma
+	$logins_list = preg_replace('/[^-\,\_0-9\p{L}]/u','',$logins_list);
+	$forced_timeclock_login = preg_replace('/[^-\,\_0-9\p{L}]/u','',$forced_timeclock_login);
+	$uniqueid_status_prefix = preg_replace('/[^-\,\_0-9\p{L}]/u','',$uniqueid_status_prefix);
+
+	### ALPHA-NUMERIC and spaces
+	$lead_order = preg_replace('/[^ 0-9\p{L}]/u','',$lead_order);
+	### ALPHA-NUMERIC and spaces and dashes and underscores
+	$preset_name = preg_replace('/[^- \_0-9\p{L}]/u','',$preset_name);
+	$selected_language = preg_replace('/[^- \_0-9\p{L}]/u','',$selected_language);
+	$default_language = preg_replace('/[^- \_0-9\p{L}]/u','',$default_language);
+	$opensips_cid_name = preg_replace('/[^- \_0-9\p{L}]/u','',$opensips_cid_name);
+
+	### ALPHA-NUMERIC and hash
+	$group_color = preg_replace('/[^\#0-9\p{L}]/u','',$group_color);
+	$script_color = preg_replace('/[^\#0-9\p{L}]/u','',$script_color);
+	### ALPHA-NUMERIC and hash and star and dot and underscore
+	$hold_time_option_exten = preg_replace('/[^\*\#\.\_0-9\p{L}]/u','',$hold_time_option_exten);
+	$voicemail_ext = preg_replace('/[^\*\#\.\_0-9\p{L}]/u','',$voicemail_ext);
+	$phone = preg_replace('/[^\*\#\.\_0-9\p{L}]/u','',$phone);
+	$phone_code = preg_replace('/[^\*\#\.\_0-9\p{L}]/u','',$phone_code);
+	$wait_time_option_exten = preg_replace('/[^\*\#\.\_0-9\p{L}]/u','',$wait_time_option_exten);
+	$filter_voicemail_ext = preg_replace('/[^\*\#\.\_0-9\p{L}]/u','',$filter_voicemail_ext);
+	$filter_phone_code = preg_replace('/[^\*\#\.\_0-9\p{L}]/u','',$filter_phone_code);
+	$filter_phone = preg_replace('/[^\*\#\.\_0-9\p{L}]/u','',$filter_phone);
+	$preset_number = preg_replace('/[^\*\#\.\_0-9\p{L}]/u','',$preset_number);
+	$no_agent_ingroup_extension = preg_replace('/[^\*\#\.\_0-9\p{L}]/u','',$no_agent_ingroup_extension);
+	$pre_filter_extension = preg_replace('/[^\*\#\.\_0-9\p{L}]/u','',$pre_filter_extension);
+	$max_queue_ingroup_extension = preg_replace('/[^\*\#\.\_0-9\p{L}]/u','',$max_queue_ingroup_extension);
+	$report_server = preg_replace('/[^\*\#\.\_0-9\p{L}]/u','',$report_server);
+	$dl_server = preg_replace('/[^\*\#\.\_0-9\p{L}]/u','',$dl_server);
+
+	### ALPHA-NUMERIC and hash and star and dot and underscore and colon and plus sign
+	$did_pattern = preg_replace('/[^:\+\*\#\.\_0-9\p{L}]/u','',$did_pattern);
+	$web_loader_phone_strip = preg_replace('/[^:\+\*\#\.\_0-9\p{L}]/u','',$web_loader_phone_strip);
+	$manual_dial_phone_strip = preg_replace('/[^:\+\*\#\.\_0-9\p{L}]/u','',$manual_dial_phone_strip);
+
+	### ALPHA-NUMERIC and spaces dots, commas, dashes, underscores
+	$adaptive_dl_diff_target = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$adaptive_dl_diff_target);
+	$adaptive_intensity = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$adaptive_intensity);
+	$asterisk_version = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$asterisk_version);
+	$call_time_comments = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$call_time_comments);
+	$call_time_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$call_time_name);
+	$campaign_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$campaign_name);
+	$campaign_rec_filename = preg_replace('/[^-\.\_0-9\p{L}]/u','',$campaign_rec_filename);
+	$ingroup_rec_filename = preg_replace('/[^-\.\_0-9\p{L}]/u','',$ingroup_rec_filename);
+	$company = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$company);
+	$full_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$full_name);
+	$fullname = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$fullname);
+	$group_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$group_name);
+	$HKstatus = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$HKstatus);
+	$lead_filter_comments = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$lead_filter_comments);
+	$lead_filter_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$lead_filter_name);
+	$list_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$list_name);
+	$local_gmt = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$local_gmt);
+	$phone_type = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$phone_type);
+	$picture = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$picture);
+	$script_comments = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$script_comments);
+	$script_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$script_name);
+	$server_description = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$server_description);
+	$status = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$status);
+	$status_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$status_name);
+	$wrapup_message = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$wrapup_message);
+	$pause_code_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$pause_code_name);
+	$campaign_description = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$campaign_description);
+	$list_description = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$list_description);
+	$vcl_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$vcl_name);
+	$vsc_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$vsc_name);
+	$vsc_description = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$vsc_description);
+	$code_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$code_name);
+	$alias_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$alias_name);
+	$shift_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$shift_name);
+	$did_description = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$did_description);
+	$template_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$template_name);
+	$carrier_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$carrier_name);
+	$group_alias_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$group_alias_name);
+	$caller_id_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$caller_id_name);
+	$user_code = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$user_code);
+	$territory = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$territory);
+	$tts_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$tts_name);
+	$moh_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$moh_name);
+	$timer_action_message = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$timer_action_message);
+	$default_codecs = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$default_codecs);
+	$codecs_list = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$codecs_list);
+	$label_title = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_title);
+	$label_first_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_first_name);
+	$label_middle_initial = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_middle_initial);
+	$label_last_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_last_name);
+	$label_address1 = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_address1);
+	$label_address2 = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_address2);
+	$label_address3 = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_address3);
+	$label_city = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_city);
+	$label_state = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_state);
+	$label_province = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_province);
+	$label_postal_code = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_postal_code);
+	$label_vendor_lead_code = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_vendor_lead_code);
+	$label_gender = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_gender);
+	$label_phone_number = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_phone_number);
+	$label_phone_code = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_phone_code);
+	$label_alt_phone = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_alt_phone);
+	$label_security_phrase = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_security_phrase);
+	$label_email = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_email);
+	$label_comments = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_comments);
+	$slave_db_server = preg_replace('/[^- \.\,\:\_0-9\p{L}]/u','',$slave_db_server);
+	$filter_phone_group_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$filter_phone_group_name);
+	$filter_phone_group_description = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$filter_phone_group_description);
+	$filter_clean_cid_number = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$filter_clean_cid_number);
+	$label_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$label_name);
+	$default_local_gmt = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$default_local_gmt);
+	$cid_description = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$cid_description);
+	$description = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$description);
+	$first_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$first_name);
+	$last_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$last_name);
+	$bu_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$bu_name);
+	$department = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$department);
+	$group = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$group);
+	$job_title = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$job_title);
+	$location = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$location);
+	$holiday_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$holiday_name);
+	$holiday_comments = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$holiday_comments);
+	$api_allowed_functions = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$api_allowed_functions);
+	$agent_display_fields = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$agent_display_fields);
+	$container_notes = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$container_notes);
+	$did_carrier_description = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$did_carrier_description);
+	$status_group_notes = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$status_group_notes);
+	$colors_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$colors_name);
+	$web_logo = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$web_logo);
+	$user_nickname = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$user_nickname);
+	$customer_chat_survey_text = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$customer_chat_survey_text);
+	$agent_script = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$agent_script);
+	$report_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$report_name);
+	$dl_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$dl_name);
+	$drop_status = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$drop_status);
+	$ip_list_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$ip_list_name);
+	$cid_group_notes = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$cid_group_notes);
+	$populate_lead_vendor = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$populate_lead_vendor);
+	$leave_vm_message_group_notes = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$leave_vm_message_group_notes);
+	$audio_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$audio_name);
+
+	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
+	$call_out_number_group = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$call_out_number_group);
+	$client_browser = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$client_browser);
+	$DBX_server = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$DBX_server);
+	$DBY_server = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$DBY_server);
+	$dtmf_send_extension = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$dtmf_send_extension);
+	$install_directory = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$install_directory);
+	$old_extension = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$old_extension);
+	$telnet_host = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$telnet_host);
+	$queuemetrics_dbname = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$queuemetrics_dbname);
+	$queuemetrics_login = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$queuemetrics_login);
+	$queuemetrics_pass = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$queuemetrics_pass);
+	$email = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$email);
+	$vtiger_dbname = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$vtiger_dbname);
+	$vtiger_login = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$vtiger_login);
+	$vtiger_pass = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$vtiger_pass);
+	$external_server_ip = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$external_server_ip);
+	$alt_server_ip = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$alt_server_ip);
+	$email_from = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$email_from);
+	$email_to = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$email_to);
+	$ftp_server = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$ftp_server);
+	$ftp_directory = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$ftp_directory);
+
+	### ALPHA-NUMERIC and underscore and dash and slash and at and dot and space
+	$custom_one = preg_replace('/[^- \.\:\/\@\_0-9\p{L}]/u','',$custom_one);
+	$custom_two = preg_replace('/[^- \.\:\/\@\_0-9\p{L}]/u','',$custom_two);
+	$custom_three = preg_replace('/[^- \.\:\/\@\_0-9\p{L}]/u','',$custom_three);
+	$custom_four = preg_replace('/[^- \.\:\/\@\_0-9\p{L}]/u','',$custom_four);
+	$custom_five = preg_replace('/[^- \.\:\/\@\_0-9\p{L}]/u','',$custom_five);
+	$email_subject = preg_replace('/[^- \.\:\/\@\_0-9\p{L}]/u','',$email_subject);
+
+	### ALPHA-NUMERIC and underscore and dash and slash and at and dot and pound and star
+	$extension = preg_replace('/[^-\*\#\.\:\/\@\_0-9\p{L}]/u','',$extension);
+	$timer_action_destination = preg_replace('/[^-\*\#\.\:\/\@\_0-9\p{L}]/u','',$timer_action_destination);
+	$filter_extension = preg_replace('/[^-\*\#\.\:\/\@\_0-9\p{L}]/u','',$filter_extension);
+
+	### ALPHA-NUMERIC and space and underscore and dash and slash and at and dot and pound and star and pipe and comma
+	$ivr_park_call_agi = preg_replace('/[^- \*\#\.\,\:\/\|\@\_0-9\p{L}]/u','',$ivr_park_call_agi);
+
+	### ALPHA-NUMERIC and space and underscore and dash and slash and at and dot and pound and star and pipe and comma and equal
+	$voicemail_options = preg_replace('/[^- \=\*\#\.\,\:\/\|\@\_0-9\p{L}]/u','',$voicemail_options);
+
+	### NUMERIC and comma and pipe
+	$waitforsilence_options = preg_replace('/[^\|\,0-9\p{L}]/u','',$waitforsilence_options);
+
+	### value cleaning
+	$no_agent_action_value = preg_replace('/[^-\/\|\_\#\*\,\.\_0-9\p{L}]/u','',$no_agent_action_value);
+	$areacode_filter_action_value = preg_replace('/[^-\/\|\_\#\*\,\.\_0-9\p{L}]/u','',$areacode_filter_action_value);
+
+	### ALPHA-NUMERIC and underscore and dash and slash and at and space and colon
+	$vdc_header_date_format = preg_replace('/[^- \:\/\_0-9\p{L}]/u','',$vdc_header_date_format);
+	$vdc_customer_date_format = preg_replace('/[^- \:\/\_0-9\p{L}]/u','',$vdc_customer_date_format);
+	$menu_name = preg_replace('/[^- \:\/\_0-9\p{L}]/u','',$menu_name);
+
+	### ALPHA-NUMERIC and underscore and dash and at and space and parantheses
+	$vdc_header_phone_format = preg_replace('/[^- \(\)\_0-9\p{L}]/u', '',$vdc_header_phone_format);
+
+	### ALPHA-NUMERIC and newlines
+	$areacode_list = preg_replace('/[^\n0-9\p{L}]/u', '',$areacode_list);
+
+	### ALPHA-NUMERIC and newlines and period and colon
+	$ip_address = preg_replace('/[^\n\.\:\0-9\p{L}]/u', '',$ip_address);
 	}
 
+### remove semi-colons and other special characters ###
+$lead_filter_sql = preg_replace('/;/','',$lead_filter_sql);
+$list_mix_container = preg_replace('/;/','',$list_mix_container);
+$survey_response_digit_map = preg_replace('/;/','',$survey_response_digit_map);
+$survey_camp_record_dir = preg_replace('/;/','',$survey_camp_record_dir);
+$conf_override = preg_replace('/;/','',$conf_override);
+$template_contents = preg_replace('/;/','',$template_contents);
+$registration_string = preg_replace('/;/','',$registration_string);
+$account_entry = preg_replace('/;/','',$account_entry);
+$account_entry = preg_replace('/\r/', '',$account_entry);
+$globals_string = preg_replace('/;/','',$globals_string);
+$dialplan_entry = preg_replace('/\\\\/', '',$dialplan_entry);
+$dialplan_entry = preg_replace('/\'/', '',$dialplan_entry);
+$dialplan_entry = preg_replace('/\r/', '',$dialplan_entry);
+$custom_dialplan_entry = preg_replace('/\\\\/', '',$custom_dialplan_entry);
+$custom_dialplan_entry = preg_replace('/\'/', '',$custom_dialplan_entry);
+$custom_dialplan_entry = preg_replace('/\r/', '',$custom_dialplan_entry);
+$tts_text = preg_replace('/\\\\/', '',$tts_text);
+$tts_text = preg_replace('/;/','',$tts_text);
+$tts_text = preg_replace('/\r/', '',$tts_text);
+$tts_text = preg_replace('/\"/', '',$tts_text);
+$carrier_description = preg_replace('/\\\\/', '',$carrier_description);
+$carrier_description = preg_replace('/;/','',$carrier_description);
+$carrier_description = preg_replace('/\r/', '',$carrier_description);
+$carrier_description = preg_replace('/\"/', '',$carrier_description);
+$blind_monitor_message = preg_replace('/\\\\/', '',$blind_monitor_message);
+$blind_monitor_message = preg_replace('/;/','',$blind_monitor_message);
+$blind_monitor_message = preg_replace('/\r/', '',$blind_monitor_message);
+$blind_monitor_message = preg_replace('/\"/', '',$blind_monitor_message);
+$modify_url = preg_replace('/\\\\/', '',$modify_url);
+$modify_url = preg_replace('/;/','',$modify_url);
+$modify_url = preg_replace('/\r/', '',$modify_url);
+$modify_url = preg_replace('/\"/', '',$modify_url);
+$qualify_sql = preg_replace('/\\\\/', '',$qualify_sql);
+$qualify_sql = preg_replace('/;/','',$qualify_sql);
+$qualify_sql = preg_replace('/\r/', '',$qualify_sql);
+$qualify_sql = preg_replace('/\'/', "\"",$qualify_sql);
+$queuemetrics_socket_url = preg_replace('/\\\\/', '',$queuemetrics_socket_url);
+$queuemetrics_socket_url = preg_replace('/;/','',$queuemetrics_socket_url);
+$queuemetrics_socket_url = preg_replace('/\r/', '',$queuemetrics_socket_url);
+$queuemetrics_socket_url = preg_replace('/\'/', "\"",$queuemetrics_socket_url);
+$agent_status_viewable_groups = preg_replace('/\\\\/', '',$agent_status_viewable_groups);
+$agent_status_viewable_groups = preg_replace('/\\\\/', '',$agent_status_viewable_groups);
+$agent_allowed_chat_groups = preg_replace('/\\\\/', '',$agent_allowed_chat_groups);
+$agent_allowed_chat_groups = preg_replace('/\\\\/', '',$agent_allowed_chat_groups);
+$report_url = preg_replace('/\\\\/', '',$report_url);
+$report_url = preg_replace('/;/','',$report_url);
+$report_url = preg_replace('/\r|\n/', '',$report_url);
+$report_url = preg_replace('/\'/', '',$report_url);
+$agent_push_url = preg_replace('/\\\\/', '',$agent_push_url);
+$agent_push_url = preg_replace('/;/','',$agent_push_url);
+$agent_push_url = preg_replace('/\r|\n/', '',$agent_push_url);
+$agent_push_url = preg_replace('/\'/', '',$agent_push_url);
+$waiting_call_url_on = preg_replace('/\\\\/', '',$waiting_call_url_on);
+$waiting_call_url_on = preg_replace('/;/','',$waiting_call_url_on);
+$waiting_call_url_on = preg_replace('/\r|\n/', '',$waiting_call_url_on);
+$waiting_call_url_on = preg_replace('/\'/', '',$waiting_call_url_on);
+$waiting_call_url_off = preg_replace('/\\\\/', '',$waiting_call_url_off);
+$waiting_call_url_off = preg_replace('/;/','',$waiting_call_url_off);
+$waiting_call_url_off = preg_replace('/\r|\n/', '',$waiting_call_url_off);
+$waiting_call_url_off = preg_replace('/\'/', '',$waiting_call_url_off);
+$sounds_web_server = preg_replace('/\\\\/', '',$sounds_web_server);
+$sounds_web_server = preg_replace('/;/','',$sounds_web_server);
+$sounds_web_server = preg_replace('/\r|\n/', '',$sounds_web_server);
+$sounds_web_server = preg_replace('/\'/', '',$sounds_web_server);
 
+### VARIABLES TO BE mysqli_real_escape_string ###
+# $web_form_address
+# $queuemetrics_url
+# $admin_home_url
+# $qc_web_form_address
+# $vtiger_url
+# $web_form_address_two
+# $crm_login_address
+# $start_call_url
+# $dispo_call_url
+# $add_lead_url
+# $webphone_url
+# $webphone_url_override
+# $filter_url
+# $na_call_url
+# $web_form_address_three
+# $container_entry
+# $nva_call_url
+# $web_socket_url
+# $external_web_socket_url
+# $customer_chat_survey_link
+# $ftp_user
+# $ftp_pass
+# $webphone_layout
+# $enter_ingroup_url
+# $dead_trigger_url
+# $user_admin_redirect_url
 
+### VARIABLES optionally filtered: ###
+
+# $script_text
+if ($SSscript_remove_js > 0)
+	{
+	$script_text = preg_replace('/<script\b[^>]*>(.*?)<\/script\s*>/is','',$script_text);
+#	$script_text = "PROCESSED:".date("U")."\n".$script_text;
+	}
 ##### END VARIABLE FILTERING FOR SECURITY #####
 
 
@@ -4737,12 +5406,13 @@ else
 # 201111-1258 - Added campaigns hopper_drop_run_trigger setting
 # 201111-1616 - Fix for CID Groups permissions issue #1234
 # 201113-0754 - Changed Modify DID page variable population
+# 201118-1057 - Better compatibility with non-latin data input
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-777a';
-$build = '201113-0754';
+$admin_version = '2.14-778a';
+$build = '201118-1057';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5284,6 +5954,7 @@ if ( ($SSadmin_modify_refresh > 1) and (preg_match("/^3/",$ADD)) )
 	if (preg_match("/^3/",$ADD)) {$modify_url = "$PHP_SELF?$QUERY_STRING";}
 	echo "<META HTTP-EQUIV=\"REFRESH\" CONTENT=\"$SSadmin_modify_refresh;URL=$modify_url\">\n";
 	}
+echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 echo "<title>"._QXZ("ADMINISTRATION").": ";
 
 ### set the default screen to the user list
@@ -5879,12 +6550,9 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 				elseif (isset($_POST["WEB_$campaign_id_values[$o]"]))	{$campaign_web=$_POST["WEB_$campaign_id_values[$o]"];}
 			if (isset($_GET["GRADE_$campaign_id_values[$o]"]))			{$campaign_grade=$_GET["GRADE_$campaign_id_values[$o]"];}
 				elseif (isset($_POST["GRADE_$campaign_id_values[$o]"]))	{$campaign_grade=$_POST["GRADE_$campaign_id_values[$o]"];}
-			if ($non_latin < 1)
-				{
-				$campaign_rank = preg_replace('/[^-\_0-9]/','',$campaign_rank);
-				$campaign_web = preg_replace("/;|\"|\'/","",$campaign_web);
-				$campaign_grade = preg_replace('/[^-\_0-9]/','',$campaign_grade);
-				}
+			$campaign_rank = preg_replace('/[^-\_0-9]/','',$campaign_rank);
+			$campaign_web = preg_replace("/;|\"|\'/","",$campaign_web);
+			$campaign_grade = preg_replace('/[^-\_0-9]/','',$campaign_grade);
 
 			if ($ranks_to_print > 0)
 				{
@@ -6118,12 +6786,9 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 			if (isset($_GET["GRADE_$group_id_values[$o]"]))				{$group_grade=$_GET["GRADE_$group_id_values[$o]"];}
 				elseif (isset($_POST["GRADE_$group_id_values[$o]"]))	{$group_grade=$_POST["GRADE_$group_id_values[$o]"];}
 
-			if ($non_latin < 1)
-				{
-				$group_rank = preg_replace('/[^-\_0-9]/','',$group_rank);
-				$group_web = preg_replace("/;|\"|\'/","",$group_web);
-				$group_grade = preg_replace('/[^-\_0-9]/','',$group_grade);
-				}
+			$group_rank = preg_replace('/[^-\_0-9]/','',$group_rank);
+			$group_web = preg_replace("/;|\"|\'/","",$group_web);
+			$group_grade = preg_replace('/[^-\_0-9]/','',$group_grade);
 
 			if ($ranks_to_print > 0)
 				{
@@ -7610,8 +8275,14 @@ if ($ADD==131)
 if ($ADD==171)
 	{
 	### filter for Letters DIGITS and NEWLINES
-	$phone_numbers = preg_replace('/[^\n0-9a-zA-Z]/', '',$phone_numbers);
-
+	if ($non_latin < 1)
+		{
+		$phone_numbers = preg_replace('/[^\n0-9a-zA-Z]/', '',$phone_numbers);
+		}
+	else
+		{
+		$phone_numbers = preg_replace('/[^\n0-9\p{L}]/u', '',$phone_numbers);
+		}
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -9798,7 +10469,7 @@ if ($ADD=="2")
 				{
 				$user = 'AUTOGENERA';
 				}
-			if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (strlen($user_group) < 2) or ( (strlen($user) > 20) and (!preg_match('/AUTOGENERA/',$user)) ) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($pass)) ) )
+			if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (strlen($user_group) < 2) or ( (mb_strlen($user,'utf-8') > 20) and (!preg_match('/AUTOGENERA/',$user)) ) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($pass)) ) )
 				{
 				echo "<br>"._QXZ("USER NOT ADDED - Please go back and look at the data you entered")."\n";
 				echo "<br>"._QXZ("user id must be between 2 and 20 characters long")."\n";
@@ -10115,7 +10786,7 @@ if ($ADD=="2A")
 			{echo "<br>"._QXZ("USER NOT ADDED - there is already a user in the system with this user number")."\n";}
 		else
 			{
-			if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (strlen($user) > 20) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($pass)) ) )
+			if ( (strlen($user) < 2) or (strlen($pass) < 2) or (strlen($full_name) < 2) or (mb_strlen($user,'utf-8') > 20) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($pass)) ) )
 				{
 				echo "<br>"._QXZ("USER NOT ADDED - Please go back and look at the data you entered")."\n";
 				echo "<br>"._QXZ("user id must be between 2 and 20 characters long")."\n";
@@ -10454,7 +11125,7 @@ if ($ADD==21)
 					{echo "<br>"._QXZ("CAMPAIGN NOT ADDED - there is already a status group in the system with this ID")."\n";}
 				else
 					{
-					if ( (strlen($campaign_id) < 2) or (strlen($campaign_id) > 8) or (strlen($campaign_name) < 6)  or (strlen($campaign_name) > 40) )
+					if ( (strlen($campaign_id) < 2) or (mb_strlen($campaign_id,'utf-8') > 8) or (strlen($campaign_name) < 6)  or (mb_strlen($campaign_name,'utf-8') > 40) )
 						{
 						echo "<br>"._QXZ("CAMPAIGN NOT ADDED - Please go back and look at the data you entered")."\n";
 						echo "<br>"._QXZ("campaign ID must be between 2 and 8 characters in length")."\n";
@@ -10552,7 +11223,7 @@ if ($ADD==20)
 					{echo "<br>"._QXZ("CAMPAIGN NOT ADDED - there is already a status group in the system with this ID")."\n";}
 				else
 					{
-					if ( (strlen($campaign_id) < 2) or (strlen($campaign_id) > 8) or  (strlen($campaign_name) < 6) or (strlen($source_campaign_id) < 2) or (strlen($source_campaign_id) > 8) )
+					if ( (strlen($campaign_id) < 2) or (mb_strlen($campaign_id,'utf-8') > 8) or  (strlen($campaign_name) < 6) or (strlen($source_campaign_id) < 2) or (mb_strlen($source_campaign_id,'utf-8') > 8) )
 						{
 						echo "<br>"._QXZ("CAMPAIGN NOT ADDED - Please go back and look at the data you entered")."\n";
 						echo "<br>"._QXZ("campaign ID must be between 2 and 8 characters in length")."\n";
@@ -10876,7 +11547,7 @@ if ($ADD==27)
 			{echo "<br>"._QXZ("AGENT PAUSE CODE NOT ADDED - there is already an entry for this campaign with this  pause code")."\n";}
 		else
 			{
-			if ( (strlen($campaign_id) < 2) or (strlen($pause_code) < 1) or (strlen($pause_code) > 6) or (strlen($pause_code_name) < 2) )
+			if ( (strlen($campaign_id) < 2) or (strlen($pause_code) < 1) or (mb_strlen($pause_code,'utf-8') > 6) or (strlen($pause_code_name) < 2) )
 				{
 				echo "<br>"._QXZ("AGENT PAUSE CODE NOT ADDED - Please go back and look at the data you entered")."\n";
 				echo "<br>"._QXZ("pause code must be between 1 and 6 characters in length")."\n";
@@ -11112,7 +11783,15 @@ if ($ADD==202)
 					elseif (isset($_POST[$Factive]))			{$Factive_value=$_POST[$Factive];}
 				if (isset($_GET[$Fcid_description]))			{$Fcid_description_value=$_GET[$Fcid_description];}
 					elseif (isset($_POST[$Fcid_description]))	{$Fcid_description_value=$_POST[$Fcid_description];}
-				$Fcid_description_value = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$Fcid_description_value);
+				if ($non_latin < 1)
+					{
+					$Fcid_description_value = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$Fcid_description_value);
+					}
+				else
+					{
+					$Fcid_description_value = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$Fcid_description_value);
+					}
+
 				$Factive_value = preg_replace('/[^A-Z]/','',$Factive_value);
 
 			#	echo "$campaign_id - $Xareacode[$o] - $Xoutbound_cid[$o] - $Factive($Factive_value|$Xactive[$o]) - $Fcid_description($Fcid_description_value|$Xcid_description[$o])<BR>";
@@ -11314,7 +11993,7 @@ if ($ADD==2111)
 				{echo "<br>"._QXZ("GROUP NOT ADDED - there is already a campaign in the system with this ID")."\n";}
 			else
 				{
-				if ( (strlen($group_id) < 2) or (strlen($group_name) < 2)  or (strlen($group_color) < 2) or (strlen($group_id) > 20) or (preg_match('/\s/i',$group_id)) or (preg_match('/\-/i',$group_id)) or (preg_match("/\+/i",$group_id)) )
+				if ( (strlen($group_id) < 2) or (strlen($group_name) < 2)  or (strlen($group_color) < 2) or (mb_strlen($group_id,'utf-8') > 20) or (preg_match('/\s/i',$group_id)) or (preg_match('/\-/i',$group_id)) or (preg_match("/\+/i",$group_id)) )
 					{
 					echo "<br>"._QXZ("GROUP NOT ADDED - Please go back and look at the data you entered")."\n";
 					echo "<br>"._QXZ("Group ID must be between 2 and 20 characters in length and contain no")." ' -+'.\n";
@@ -11389,7 +12068,7 @@ if ( ($ADD==2811) and ($SSallow_emails>0) )
 				{echo "<br>"._QXZ("EMAIL GROUP NOT ADDED - there is already a campaign in the system with this ID")."\n";}
 			else
 				{
-				if ( (strlen($group_id) < 2) or (strlen($group_name) < 2)  or (strlen($group_color) < 2) or (strlen($group_id) > 20) or (preg_match('/\s/i',$group_id)) or (preg_match('/\-/i',$group_id)) or (preg_match("/\+/i",$group_id)) )
+				if ( (strlen($group_id) < 2) or (strlen($group_name) < 2)  or (strlen($group_color) < 2) or (mb_strlen($group_id,'utf-8') > 20) or (preg_match('/\s/i',$group_id)) or (preg_match('/\-/i',$group_id)) or (preg_match("/\+/i",$group_id)) )
 					{
 					echo "<br>"._QXZ("GROUP NOT ADDED - Please go back and look at the data you entered")."\n";
 					echo "<br>"._QXZ("Group ID must be between 2 and 20 characters in length and contain no")." ' -+'.\n";
@@ -11464,7 +12143,7 @@ if ( ($ADD==28111) and ($SSallow_chats>0) )
 				{echo "<br>"._QXZ("CHAT GROUP NOT ADDED - there is already a campaign in the system with this ID")."\n";}
 			else
 				{
-				if ( (strlen($group_id) < 2) or (strlen($group_name) < 2)  or (strlen($group_color) < 2) or (strlen($group_id) > 20) or (preg_match('/\s/i',$group_id)) or (preg_match('/\-/i',$group_id)) or (preg_match("/\+/i",$group_id)) )
+				if ( (strlen($group_id) < 2) or (strlen($group_name) < 2)  or (strlen($group_color) < 2) or (mb_strlen($group_id,'utf-8') > 20) or (preg_match('/\s/i',$group_id)) or (preg_match('/\-/i',$group_id)) or (preg_match("/\+/i",$group_id)) )
 					{
 					echo "<br>"._QXZ("GROUP NOT ADDED - Please go back and look at the data you entered")."\n";
 					echo "<br>"._QXZ("Group ID must be between 2 and 20 characters in length and contain no")." ' -+'.\n";
@@ -11539,7 +12218,7 @@ if ($ADD==2011)
 				{echo "<br>"._QXZ("GROUP NOT ADDED - there is already a campaign in the system with this ID")."\n";}
 			else
 				{
-				if ( (strlen($group_id) < 2) or (strlen($group_name) < 2) or (strlen($group_id) > 20) or (preg_match('/\s/i',$group_id)) or (preg_match('/\-/i',$group_id)) or (preg_match("/\+/i",$group_id)) )
+				if ( (strlen($group_id) < 2) or (strlen($group_name) < 2) or (mb_strlen($group_id,'utf-8') > 20) or (preg_match('/\s/i',$group_id)) or (preg_match('/\-/i',$group_id)) or (preg_match("/\+/i",$group_id)) )
 					{
 					echo "<br>"._QXZ("GROUP NOT ADDED - Please go back and look at the data you entered")."\n";
 					echo "<br>"._QXZ("Group ID must be between 2 and 20 characters in length and contain no")." ' -+'.\n";
@@ -11633,7 +12312,7 @@ if ( ($ADD==2911) and ($SSallow_emails>0) )
 				{echo "<br>"._QXZ("EMAIL GROUP NOT ADDED - there is already a campaign in the system with this ID")."\n";}
 			else
 				{
-				if ( (strlen($group_id) < 2) or (strlen($group_name) < 2) or (strlen($group_id) > 20) or (preg_match('/\s/i',$group_id)) or (preg_match('/\-/i',$group_id)) or (preg_match("/\+/i",$group_id)) )
+				if ( (strlen($group_id) < 2) or (strlen($group_name) < 2) or (mb_strlen($group_id,'utf-8') > 20) or (preg_match('/\s/i',$group_id)) or (preg_match('/\-/i',$group_id)) or (preg_match("/\+/i",$group_id)) )
 					{
 					echo "<br>"._QXZ("EMAIL GROUP NOT ADDED - Please go back and look at the data you entered")."\n";
 					echo "<br>"._QXZ("Email group ID must be between 2 and 20 characters in length and contain no")." ' -+'.\n";
@@ -11727,7 +12406,7 @@ if ( ($ADD==29111) and ($SSallow_chats>0) )
 				{echo "<br>"._QXZ("CHAT GROUP NOT ADDED - there is already a campaign in the system with this ID")."\n";}
 			else
 				{
-				if ( (strlen($group_id) < 2) or (strlen($group_name) < 2) or (strlen($group_id) > 20) or (preg_match('/\s/i',$group_id)) or (preg_match('/\-/i',$group_id)) or (preg_match("/\+/i",$group_id)) )
+				if ( (strlen($group_id) < 2) or (strlen($group_name) < 2) or (mb_strlen($group_id,'utf-8') > 20) or (preg_match('/\s/i',$group_id)) or (preg_match('/\-/i',$group_id)) or (preg_match("/\+/i",$group_id)) )
 					{
 					echo "<br>"._QXZ("CHAT GROUP NOT ADDED - Please go back and look at the data you entered")."\n";
 					echo "<br>"._QXZ("Chat group ID must be between 2 and 20 characters in length and contain no")." ' -+'.\n";
@@ -12055,7 +12734,7 @@ if ($ADD==2711)
 			{echo "<br>"._QXZ("PHONE FILTER GROUP NOT ADDED - there is already a PHONE FILTER GROUP in the system with this ID")."\n";}
 		else
 			{
-			if ( (strlen($filter_phone_group_id) < 2) or (strlen($filter_phone_group_id) > 20) or (preg_match('/\s/i',$filter_phone_group_id)) )
+			if ( (strlen($filter_phone_group_id) < 2) or (mb_strlen($filter_phone_group_id,'utf-8') > 20) or (preg_match('/\s/i',$filter_phone_group_id)) )
 				{
 				echo "<br>"._QXZ("PHONE FILTER GROUP NOT ADDED - Please go back and look at the data you entered")."\n";
 				echo "<br>"._QXZ("Phone Filter Group ID must be between 2 and 20 characters in length and contain no")." ' '.\n";
@@ -13826,7 +14505,7 @@ if ($ADD==231111111111111)
 			{echo "<br>"._QXZ("STATUS CATEGORY NOT ADDED - there is already a status category in the system with this ID").": $row[0]\n";}
 		else
 			{
-			if ( (strlen($vsc_id) < 2) or (strlen($vsc_id) > 20) or (strlen($vsc_name) < 2) )
+			if ( (strlen($vsc_id) < 2) or (mb_strlen($vsc_id,'utf-8') > 20) or (strlen($vsc_name) < 2) )
 				{
 				echo "<br>"._QXZ("STATUS CATEGORY NOT ADDED - Please go back and look at the data you entered")."\n";
 				echo "<br>"._QXZ("ID must be between 2 and 20 characters in length")."\n";
@@ -15424,7 +16103,8 @@ if ($ADD==47)
 		{
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		if ( (strlen($campaign_id) < 2) or (strlen($pause_code) < 1) or (strlen($pause_code) > 6) or (strlen($pause_code_name) < 2) )
+
+		if ( (strlen($campaign_id) < 2) or (strlen($pause_code) < 1) or (mb_strlen($pause_code,'utf-8') > 6) or (strlen($pause_code_name) < 2) )
 			{
 			echo "<br>"._QXZ("AGENT PAUSE CODE NOT MODIFIED - Please go back and look at the data you entered")."\n";
 			echo "<br>"._QXZ("pause_code must be between 1 and 6 characters in length")."\n";
@@ -16142,9 +16822,14 @@ if ($ADD==4111 || $ADD==4811 || $ADD==4911)
 
 						$no_agent_action_value = "$EXextension,$EXcontext";
 						}
-
-					$no_agent_action_value = preg_replace('/[^-\/\|\_\#\*\,\.\_0-9a-zA-Z]/','',$no_agent_action_value);
-
+					if ($non_latin < 1)
+						{
+						$no_agent_action_value = preg_replace('/[^-\/\|\_\#\*\,\.\_0-9a-zA-Z]/','',$no_agent_action_value);
+						}
+					else
+						{
+						$no_agent_action_value = preg_replace('/[^-\/\|\_\#\*\,\.\_0-9\p{L}]/u','',$no_agent_action_value);
+						}
 					if ($areacode_filter_action == "INGROUP")
 						{
 						if (isset($_GET["IGgroup_id_areacode_filter_action"]))					{$IGgroup_id=$_GET["IGgroup_id_areacode_filter_action"];}
@@ -16198,9 +16883,14 @@ if ($ADD==4111 || $ADD==4811 || $ADD==4911)
 
 						$areacode_filter_action_value = "$EXextension,$EXcontext";
 						}
-
-					$areacode_filter_action_value = preg_replace('/[^-\/\|\_\#\*\,\.\_0-9a-zA-Z]/','',$areacode_filter_action_value);
-
+					if ($non_latin < 1)
+						{
+						$areacode_filter_action_value = preg_replace('/[^-\/\|\_\#\*\,\.\_0-9a-zA-Z]/','',$areacode_filter_action_value);
+						}
+					else
+						{
+						$areacode_filter_action_value = preg_replace('/[^-\/\|\_\#\*\,\.\_0-9\p{L}]/u','',$areacode_filter_action_value);
+						}
 
 					echo "<br><B>"._QXZ("GROUP MODIFIED ").": $group_id</B>\n";
 
@@ -16359,6 +17049,14 @@ if ($ADD==4511)
 					$option_route_value = preg_replace('/[^-\/\|\_\#\*\,\.\_0-9a-zA-Z]/','',$option_route_value);
 					$option_route_value_context = preg_replace('/[^-\,\_0-9a-zA-Z]/','',$option_route_value_context);
 					}
+				else
+					{
+					$option_value = preg_replace('/[^-\_0-9A-Z]/','',$option_value);
+					$option_description = preg_replace('/[^- \:\/\_0-9\p{L}]/u','',$option_description);
+					$option_route = preg_replace('/[^-\_0-9\p{L}]/u', '',$option_route);
+					$option_route_value = preg_replace('/[^-\/\|\_\#\*\,\.\_0-9\p{L}]/u','',$option_route_value);
+					$option_route_value_context = preg_replace('/[^-\,\_0-9\p{L}]/u','',$option_route_value_context);
+					}
 
 				if (strlen($option_route) > 0)
 					{
@@ -16448,7 +17146,7 @@ if ($ADD==4711)
 		{
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		if ( (strlen($filter_phone_group_id) < 2) or (strlen($filter_phone_group_name) < 2) or (strlen($filter_phone_group_name) > 40) )
+		if ( (strlen($filter_phone_group_id) < 2) or (strlen($filter_phone_group_name) < 2) or (mb_strlen($filter_phone_group_name,'utf-8') > 40) )
 			{
 			echo "<br>"._QXZ("FILTER PHONE GROUP NOT MODIFIED - Please go back and look at the data you entered")."\n";
 			echo "<br>"._QXZ("Filter Phone Group Name and ID must be at least 2 characters in length")."\n";
@@ -16605,7 +17303,14 @@ if ($ADD==411111)
 				$group_shifts_ct = count($group_shifts);
 				while ($p <= $group_shifts_ct)
 					{
-					$group_shifts[$p] = preg_replace('/[^- \_0-9a-zA-Z]/','',$group_shifts[$p]);
+					if ($non_latin < 1)
+						{
+						$group_shifts[$p] = preg_replace('/[^- \_0-9a-zA-Z]/','',$group_shifts[$p]);
+						}
+					else
+						{
+						$group_shifts[$p] = preg_replace('/[^- \_0-9\p{L}]/u','',$group_shifts[$p]);
+						}
 					$GROUP_shifts .= "$group_shifts[$p] ";
 					$p++;
 					}
@@ -16614,7 +17319,14 @@ if ($ADD==411111)
 				$vgroup_vgroups_ct = count($agent_status_viewable_groups);
 				while ($p <= $vgroup_vgroups_ct)
 					{
-					$agent_status_viewable_groups[$p] = preg_replace('/[^- \_0-9a-zA-Z]/','',$agent_status_viewable_groups[$p]);
+					if ($non_latin < 1)
+						{
+						$agent_status_viewable_groups[$p] = preg_replace('/[^- \_0-9a-zA-Z]/','',$agent_status_viewable_groups[$p]);
+						}
+					else
+						{
+						$agent_status_viewable_groups[$p] = preg_replace('/[^- \_0-9\p{L}]/u','',$agent_status_viewable_groups[$p]);
+						}
 					$VGROUP_vgroups .= "$agent_status_viewable_groups[$p] ";
 					$p++;
 					}
@@ -16623,7 +17335,14 @@ if ($ADD==411111)
 				$vgroup_chatgroups_ct = count($agent_allowed_chat_groups);
 				while ($p <= $vgroup_chatgroups_ct)
 					{
-					$agent_allowed_chat_groups[$p] = preg_replace('/[^- \_0-9a-zA-Z]/','',$agent_allowed_chat_groups[$p]);
+					if ($non_latin < 1)
+						{
+						$agent_allowed_chat_groups[$p] = preg_replace('/[^- \_0-9a-zA-Z]/','',$agent_allowed_chat_groups[$p]);
+						}
+					else
+						{
+						$agent_allowed_chat_groups[$p] = preg_replace('/[^- \_0-9\p{L}]/u','',$agent_allowed_chat_groups[$p]);
+						}
 					$VGROUP_chatgroups .= "$agent_allowed_chat_groups[$p] ";
 					$p++;
 					}
@@ -16632,7 +17351,14 @@ if ($ADD==411111)
 				$admin_viewable_groups_ct = count($admin_viewable_groups);
 				while ($p <= $admin_viewable_groups_ct)
 					{
-					$admin_viewable_groups[$p] = preg_replace('/[^- \_0-9a-zA-Z]/','',$admin_viewable_groups[$p]);
+					if ($non_latin < 1)
+						{
+						$admin_viewable_groups[$p] = preg_replace('/[^- \_0-9a-zA-Z]/','',$admin_viewable_groups[$p]);
+						}
+					else
+						{
+						$admin_viewable_groups[$p] = preg_replace('/[^- \_0-9\p{L}]/u','',$admin_viewable_groups[$p]);
+						}
 					$Vadmin_viewable_groups .= "$admin_viewable_groups[$p] ";
 					$p++;
 					}
@@ -16641,7 +17367,14 @@ if ($ADD==411111)
 				$admin_viewable_call_times_ct = count($admin_viewable_call_times);
 				while ($p <= $admin_viewable_call_times_ct)
 					{
-					$admin_viewable_call_times[$p] = preg_replace('/[^- \_0-9a-zA-Z]/','',$admin_viewable_call_times[$p]);
+					if ($non_latin < 1)
+						{
+						$admin_viewable_call_times[$p] = preg_replace('/[^- \_0-9a-zA-Z]/','',$admin_viewable_call_times[$p]);
+						}
+					else
+						{
+						$admin_viewable_call_times[$p] = preg_replace('/[^- \_0-9\p{L}]/u','',$admin_viewable_call_times[$p]);
+						}
 					$Vadmin_viewable_call_times .= "$admin_viewable_call_times[$p] ";
 					$p++;
 					}
@@ -17712,7 +18445,14 @@ if ($ADD==497111111111)
 					$new_rank = preg_replace('/[^0-9]/','',$new_rank);
 					$new_start = preg_replace('/[^0-9]/','',$new_start);
 					$new_end = preg_replace('/[^0-9]/','',$new_end);
-					$new_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$new_name);
+					if ($non_latin < 1)
+						{
+						$new_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$new_name);
+						}
+					else
+						{
+						$new_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$new_name);
+						}
 
 					$stmt="UPDATE leave_vm_message_groups_entries set rank='$new_rank',time_start='$new_start',time_end='$new_end',audio_name='$new_name' where leave_vm_message_group_id='$leave_vm_message_group_id' and audio_filename='$vmmgfiles[$o]';";
 					$rslt=mysql_to_mysqli($stmt, $link);
@@ -18316,7 +19056,14 @@ if ($ADD==496111111111)
 							elseif (isset($_POST[$Factive]))			{$Factive_value=$_POST[$Factive];}
 						if (isset($_GET[$Fcid_description]))			{$Fcid_description_value=$_GET[$Fcid_description];}
 							elseif (isset($_POST[$Fcid_description]))	{$Fcid_description_value=$_POST[$Fcid_description];}
-						$Fcid_description_value = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$Fcid_description_value);
+						if ($non_latin < 1)
+							{
+							$Fcid_description_value = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$Fcid_description_value);
+							}
+						else
+							{
+							$Fcid_description_value = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$Fcid_description_value);
+							}
 						$Factive_value = preg_replace('/[^A-Z]/','',$Factive_value);
 
 					#	echo "$cid_group_id - $Xareacode[$o] - $Xoutbound_cid[$o] - $Factive($Factive_value|$Xactive[$o]) - $Fcid_description($Fcid_description_value|$Xcid_description[$o])<BR>";
@@ -24028,8 +24775,8 @@ if ($ADD==31)
 				while ($cqlr_to_print > $o) 
 					{
 					$rowx=mysqli_fetch_row($rslt);
-					if (strlen($rowx[1])>40)
-						{$rowx[1] = substr($rowx[1],0,40) . '...';}
+					if (mb_strlen($rowx[1],'utf-8')>40)
+						{$rowx[1] = mb_substr($rowx[1],0,40,'utf-8') . '...';}
 					$call_quota_container_menu .= "<option ";
 					if ($call_quota_lead_ranking == "$rowx[0]") 
 						{
@@ -24255,8 +25002,8 @@ if ($ADD==31)
 					}
 				if (strlen($DRcampaigns)<2)
 					{$DRcampaigns='-'._QXZ("EMPTY").'- ';}
-				while(strlen($DRcampaigns) > 45) {$DRcampaigns = substr("$DRcampaigns", 0, -1);}
-				if(strlen($DRcampaigns) > 42) {$DRcampaigns = "$DRcampaigns...";}
+				while(mb_strlen($DRcampaigns,'utf-8') > 45) {$DRcampaigns = mb_substr("$DRcampaigns", 0, -1,'utf-8');}
+				if(mb_strlen($DRcampaigns,'utf-8') > 42) {$DRcampaigns = "$DRcampaigns...";}
 
 				$DRgroups_list .= "<option value=\"$DRgroups[$o]\">$DRgroups[$o] ( $DRcampaigns)</option>\n";
 				$o++;
@@ -24275,8 +25022,8 @@ if ($ADD==31)
 			while ($inand_to_print > $o) 
 				{
 				$rowx=mysqli_fetch_row($rslt);
-				if (strlen($rowx[1])>40)
-					{$rowx[1] = substr($rowx[1],0,40) . '...';}
+				if (mb_strlen($rowx[1],'utf-8')>40)
+					{$rowx[1] = mb_substr($rowx[1],0,40,'utf-8') . '...';}
 				$inbound_no_agents_no_dial_container_menu .= "<option ";
 				if ($inbound_no_agents_no_dial_container == "$rowx[0]") 
 					{
@@ -24341,8 +25088,8 @@ if ($ADD==31)
 		while ($dtlc_to_print > $o) 
 			{
 			$rowx=mysqli_fetch_row($rslt);
-			if (strlen($rowx[1])>40)
-				{$rowx[1] = substr($rowx[1],0,40) . '...';}
+			if (mb_strlen($rowx[1],'utf-8')>40)
+				{$rowx[1] = mb_substr($rowx[1],0,40,'utf-8') . '...';}
 			$dial_timeout_lead_container_menu .= "<option ";
 			if ($dial_timeout_lead_container == "$rowx[0]") 
 				{
@@ -24661,8 +25408,8 @@ if ($ADD==31)
 		while ($twrse_to_print > $o) 
 			{
 			$rowx=mysqli_fetch_row($rslt);
-			if (strlen($rowx[1])>40)
-				{$rowx[1] = substr($rowx[1],0,40) . '...';}
+			if (mb_strlen($rowx[1],'utf-8')>40)
+				{$rowx[1] = mb_substr($rowx[1],0,40,'utf-8') . '...';}
 			$three_way_record_stop_exception_menu .= "<option ";
 			if ($three_way_record_stop_exception == "$rowx[0]") 
 				{
@@ -24748,8 +25495,8 @@ if ($ADD==31)
 			while ($tzlc_to_print > $o) 
 				{
 				$rowx=mysqli_fetch_row($rslt);
-				if (strlen($rowx[1])>40)
-					{$rowx[1] = substr($rowx[1],0,40) . '...';}
+				if (mb_strlen($rowx[1],'utf-8')>40)
+					{$rowx[1] = mb_substr($rowx[1],0,40,'utf-8') . '...';}
 				$scheduled_callbacks_timezones_container_menu .= "<option ";
 				if ($scheduled_callbacks_timezones_container == "$rowx[0]") 
 					{
@@ -24852,8 +25599,8 @@ if ($ADD==31)
 		while ($csea_to_print > $o) 
 			{
 			$rowx=mysqli_fetch_row($rslt);
-			if (strlen($rowx[1])>40)
-				{$rowx[1] = substr($rowx[1],0,40) . '...';}
+			if (mb_strlen($rowx[1],'utf-8')>40)
+				{$rowx[1] = mb_substr($rowx[1],0,40,'utf-8') . '...';}
 			$pause_max_exceptions_container_menu .= "<option ";
 			if ($pause_max_exceptions == "$rowx[0]") 
 				{
@@ -24889,8 +25636,8 @@ if ($ADD==31)
 			while ($csea_to_print > $o) 
 				{
 				$rowx=mysqli_fetch_row($rslt);
-				if (strlen($rowx[1])>40)
-					{$rowx[1] = substr($rowx[1],0,40) . '...';}
+				if (mb_strlen($rowx[1],'utf-8')>40)
+					{$rowx[1] = mb_substr($rowx[1],0,40,'utf-8') . '...';}
 				$sip_event_actions_container_menu .= "<option ";
 				if ($sip_event_logging == "$rowx[0]") 
 					{
@@ -33216,7 +33963,14 @@ if ($ADD==3321)
 					elseif (isset($_POST[$Factive]))			{$Factive_value=$_POST[$Factive];}
 				if (isset($_GET[$Fdescription]))				{$Fdescription_value=$_GET[$Fdescription];}
 					elseif (isset($_POST[$Fdescription]))		{$Fdescription_value=$_POST[$Fdescription];}
-				$Fdescription_value = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$Fdescription_value);
+				if ($non_latin < 1)
+					{
+					$Fdescription_value = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$Fdescription_value);
+					}
+				else
+					{
+					$Fdescription_value = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$Fdescription_value);
+					}
 				$Factive_value = preg_replace('/[^A-Z]/','',$Factive_value);
 
 			#	echo "$did_id - $Xuser_start[$o] - $Xextension[$o] - $Factive($Factive_value|$Xactive[$o]) - $Fdescription($Fdescription_value|$Xdescription[$o])<BR>";
@@ -38662,7 +39416,7 @@ if ($ADD==311111111111111)
 		if ($vicidial_phone_codes_count < 1000) {$pcblinkB='<b><font color=red><blink>'; $pcblinkE='</blink></font></b>';}
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"$PHP_SELF?ADD=999988\">"._QXZ("Phone Codes")."</a>: </td><td align=left> $pcblinkB$vicidial_phone_codes_count - $vicidial_postal_codes_count - $vicidial_nanpa_prefix_codes_count$pcblinkE - $nanpa_prefix_exchanges_master_count - $nanpa_prefix_exchanges_fast_count - $nanpa_wired_to_wireless_count - $nanpa_wireless_to_wired_count</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Today System Stats").": </td><td align=left> $ALLtotal_calls - $ALLmax_inbound - $ALLmax_outbound - $ALLchannels_count - $ALLcalls_count - $ALLagent_count</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Use Non-Latin").": </td><td align=left><select size=1 name=use_non_latin><option>1</option><option>0</option><option selected>$use_non_latin</option></select>$NWB#settings-use_non_latin$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Use Non-Latin")."(UTF-8): </td><td align=left><select size=1 name=use_non_latin><option>1</option><option>0</option><option selected>$use_non_latin</option></select>$NWB#settings-use_non_latin$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Enable Languages").": </td><td align=left><select size=1 name=enable_languages><option>1</option><option>0</option><option selected>$enable_languages</option></select>$NWB#settings-enable_languages$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Language Method").": </td><td align=left><select size=1 name=language_method><option>"._QXZ("DISABLED")."</option><option>"._QXZ("MYSQL")."</option><option value=\"$language_method\" SELECTED>"._QXZ("$language_method")."</option></select>$NWB#settings-language_method$NWE</td></tr>\n";
 
@@ -40727,14 +41481,14 @@ if ($ADD==1300)
 			{$bgcolor='class="records_list_y"';}
 
 		# truncate description and carrier if they are more than 60 characters
-		if (strlen($row[2])>60)
+		if (mb_strlen($row[2],'utf-8')>60)
 			{
-			while (strlen($row[2])>60) {$row[2] = preg_replace("/.$/",'',$row[2]);}
+			while (mb_strlen($row[2],'utf-8')>60) {$row[2] = mb_substr("$row[2]", 0, -1,'utf-8');}
 			$row[2] .= '...';
 			}
-		if (strlen($row[3])>40)
+		if (mb_strlen($row[3],'utf-8')>40)
 			{
-			while (strlen($row[3])>40) {$row[3] = preg_replace("/.$/",'',$row[3]);}
+			while (mb_strlen($row[3],'utf-8')>40) {$row[3] = mb_substr("$row[3]", 0, -1,'utf-8');}
 			$row[3] .= '...';
 			}
 
@@ -41620,9 +42374,9 @@ if ($ADD==140000000000)
 	while ($carriers_to_print > $o) 
 		{
 		$row=mysqli_fetch_row($rslt);
-		if (strlen($row[4])>14)
+		if (mb_strlen($row[4],'utf-8')>14)
 			{
-			while (strlen($row[4])>14) {$row[4] = preg_replace("/.$/",'',$row[4]);}
+			while (mb_strlen($row[4],'utf-8')>14) {$row[4] = mb_substr("$row[4]", 0, -1,'utf-8');}
 			$row[4] .= '...';
 			}
 		if ($row[2] == '0.0.0.0') {$row[2]='ALL SERVERS';}
@@ -41673,8 +42427,8 @@ if ($ADD==150000000000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		$row[3]=preg_replace('/;|<|>/', '', $row[3]);
-		while(strlen($row[3]) > 50) {$row[3] = substr("$row[3]", 0, -1);}
-		if(strlen($row[3]) > 47) {$row[3] = "$row[3]...";}
+		while(mb_strlen($row[3],'utf-8') > 50) {$row[3] = mb_substr("$row[3]", 0, -1,'utf-8');}
+		if(mb_strlen($row[3],'utf-8') > 47) {$row[3] = "$row[3]...";}
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='class="records_list_x"';} 
@@ -41721,8 +42475,8 @@ if ($ADD==160000000000)
 		{
 		$row=mysqli_fetch_row($rslt);
 		$row[3]=preg_replace('/;|<|>/', '', $row[3]);
-		while(strlen($row[3]) > 50) {$row[3] = substr("$row[3]", 0, -1);}
-		if(strlen($row[3]) > 47) {$row[3] = "$row[3]...";}
+		while(mb_strlen($row[3],'utf-8') > 50) {$row[3] = mb_substr("$row[3]", 0, -1,'utf-8');}
+		if(mb_strlen($row[3],'utf-8') > 47) {$row[3] = "$row[3]...";}
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='class="records_list_x"';} 
@@ -41941,11 +42695,11 @@ if ($ADD==190000000000)
 	while ($lb_to_print > $o) 
 		{
 		$row=mysqli_fetch_row($rslt);
-		while (strlen($row[4])>20) {$row[4] = preg_replace("/.$/","",$row[4]);}
-		while (strlen($row[5])>20) {$row[5] = preg_replace("/.$/","",$row[5]);}
-		while (strlen($row[6])>20) {$row[6] = preg_replace("/.$/","",$row[6]);}
-		while (strlen($row[7])>20) {$row[7] = preg_replace("/.$/","",$row[7]);}
-		while (strlen($row[8])>20) {$row[8] = preg_replace("/.$/","",$row[8]);}
+		while (mb_strlen($row[4],'utf-8')>20) {$row[4] = mb_substr("$row[4]", 0, -1,'utf-8');}
+		while (mb_strlen($row[5],'utf-8')>20) {$row[5] = mb_substr("$row[5]", 0, -1,'utf-8');}
+		while (mb_strlen($row[6],'utf-8')>20) {$row[6] = mb_substr("$row[6]", 0, -1,'utf-8');}
+		while (mb_strlen($row[7],'utf-8')>20) {$row[7] = mb_substr("$row[7]", 0, -1,'utf-8');}
+		while (mb_strlen($row[8],'utf-8')>20) {$row[8] = mb_substr("$row[8]", 0, -1,'utf-8');}
 
 		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 			{$bgcolor='class="records_list_x"';} 
@@ -43748,7 +44502,7 @@ if ($ADD==999997)
 	$show_form=1;
 	if ( ($stage=='SUBMIT') or ($stage==_QXZ("SUBMIT")) )
 		{
-		if ( (strlen($pass) > 100) or (strlen($pass) < 2) or ($pass==$PHP_AUTH_PW) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($pass)) ) )
+		if ( (mb_strlen($pass,'utf-8') > 100) or (strlen($pass) < 2) or ($pass==$PHP_AUTH_PW) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($pass)) ) )
 			{
 			echo _QXZ("Password has not been changed, please try again")." |1|" . strlen($pass);
 			if ($SSrequire_password_length > 0)
@@ -43833,7 +44587,7 @@ if ($ADD==999996)
 		$show_form=1;
 		if ( ($stage=='SUBMIT') or ($stage==_QXZ("SUBMIT")) )
 			{
-			if ( (strlen($pass) > 100) or (strlen($pass) < 2) or ($pass==$PHP_AUTH_PW) or ( ($SSrequire_password_length > 0) and ( ($SSrequire_password_length > strlen($default_phone_registration_password)) or ( ($SSrequire_password_length > strlen($default_phone_login_password)) or ( ($SSrequire_password_length > strlen($default_server_password)) ) ) or ($SSrequire_password_length > strlen($pass)) ) ) )
+			if ( (mb_strlen($pass,'utf-8') > 100) or (strlen($pass) < 2) or ($pass==$PHP_AUTH_PW) or ( ($SSrequire_password_length > 0) and ( ($SSrequire_password_length > strlen($default_phone_registration_password)) or ( ($SSrequire_password_length > strlen($default_phone_login_password)) or ( ($SSrequire_password_length > strlen($default_server_password)) ) ) or ($SSrequire_password_length > strlen($pass)) ) ) )
 				{
 				echo _QXZ("Password has not been changed, please try again")." |1|" . strlen($pass);
 				if ($SSrequire_password_length > 0)
@@ -44741,7 +45495,7 @@ if ($ADD==999989)
 	$show_form=1;
 	if ( ($stage=='SUBMIT') or ($stage==_QXZ("SUBMIT")) )
 		{
-		if ( (strlen($selected_language) > 100) or (strlen($selected_language) < 1) or (strlen($PHP_AUTH_USER)<2) )
+		if ( (mb_strlen($selected_language,'utf-8') > 100) or (strlen($selected_language) < 1) or (strlen($PHP_AUTH_USER)<2) )
 			{echo _QXZ("Language has not been changed, please try again")." |1|" . strlen($selected_language);}
 		else
 			{

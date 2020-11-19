@@ -497,10 +497,11 @@
 # 200825-2342 - Added option for manual-only sip actions
 # 200828-1535 - Fixed issue with dispo URL statuse being sent for CBHOLD statuses
 # 201111-2139 - Fix for AGENTDIRECT selected in-groups issue #1241
+# 201117-0820 - Changes for better compatibility with non-latin data input
 #
 
-$version = '2.14-390';
-$build = '201111-2139';
+$version = '2.14-391';
+$build = '201117-0820';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=839;
@@ -1011,27 +1012,6 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
-if ($non_latin < 1)
-	{
-	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
-	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
-	$orig_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$orig_pass);
-	$phone_code = preg_replace("/[^0-9a-zA-Z]/","",$phone_code);
-	$phone_number = preg_replace("/[^0-9a-zA-Z]/","",$phone_number);
-	$status = preg_replace("/[^-_0-9a-zA-Z]/","",$status);
-	$MgrApr_user = preg_replace("/[^-_0-9a-zA-Z]/","",$MgrApr_user);
-	$MgrApr_pass = preg_replace("/[^-_0-9a-zA-Z]/","",$MgrApr_pass);
-	}
-else
-	{
-	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
-	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
-	$orig_pass = preg_replace("/\'|\"|\\\\|;/","",$orig_pass);
-	$status = preg_replace("/\'|\"|\\\\|;/","",$status);
-	$MgrApr_user = preg_replace("/\'|\"|\\\\|;/","",$MgrApr_user);
-	$MgrApr_pass = preg_replace("/\'|\"|\\\\|;/","",$MgrApr_pass);
-	}
-
 $session_name = preg_replace("/\'|\"|\\\\|;/","",$session_name);
 $server_ip = preg_replace("/\'|\"|\\\\|;/","",$server_ip);
 $alt_phone = preg_replace("/\s/","",$alt_phone);
@@ -1058,16 +1038,12 @@ $agent_dialed_type = preg_replace('/[^-_0-9a-zA-Z]/','',$agent_dialed_type);
 $agent_email = preg_replace("/\'|\"|\\\\|;/","",$agent_email);
 $agent_log = preg_replace('/[^-_0-9a-zA-Z]/','',$agent_log);
 $agent_log_id = preg_replace('/[^-_0-9a-zA-Z]/','',$agent_log_id);
-$agent_territories = preg_replace('/[^- _0-9a-zA-Z]/','',$agent_territories);
 $agentchannel = preg_replace("/\'|\"|\\\\/","",$agentchannel);
 $alt_dial = preg_replace('/[^-_0-9a-zA-Z]/','',$alt_dial);
-$alt_num_status = preg_replace('/[^-_0-9a-zA-Z]/','',$alt_num_status);
 $auto_dial_level = preg_replace('/[^-\._0-9a-zA-Z]/','',$auto_dial_level);
 $blind_transfer = preg_replace('/[^-_0-9a-zA-Z]/','',$blind_transfer);
 $callback_id = preg_replace('/[^-_0-9a-zA-Z]/','',$callback_id);
 $called_count = preg_replace('/[^0-9]/','',$called_count);
-$camp_script = preg_replace('/[^-_0-9a-zA-Z]/','',$camp_script);
-$campaign_cid = preg_replace('/[^-_0-9a-zA-Z]/','',$campaign_cid);
 $channel = preg_replace("/\'|\"|\\\\/","",$channel);
 $cid_lock = preg_replace('/[^0-9]/','',$cid_lock);
 $closer_blended = preg_replace('/[^-_0-9a-zA-Z]/','',$closer_blended);
@@ -1077,16 +1053,11 @@ $custom_field_names = preg_replace("/\'|\"|\\\\|;/","",$custom_field_names);
 $customer_server_ip = preg_replace("/\'|\"|\\\\|;/","",$customer_server_ip);
 $customer_zap_channel = preg_replace("/\'|\"|\\\\/","",$customer_zap_channel);
 $date = preg_replace('/[^-_0-9]/','',$date);
-$dial_ingroup = preg_replace('/[^-_0-9a-zA-Z]/','',$dial_ingroup);
-$dial_method = preg_replace('/[^-_0-9a-zA-Z]/','',$dial_method);
-$dial_prefix = preg_replace('/[^-_0-9a-zA-Z]/','',$dial_prefix);
 $dial_timeout = preg_replace('/[^0-9]/','',$dial_timeout);
 $disable_alter_custphone = preg_replace('/[^-_0-9a-zA-Z]/','',$disable_alter_custphone);
-$dispo_choice = preg_replace('/[^-_0-9a-zA-Z]/','',$dispo_choice);
 $email_enabled = preg_replace('/[^0-9]/','',$email_enabled);
 $email_row_id = preg_replace('/[^-_0-9a-zA-Z]/','',$email_row_id);
 $enable_sipsak_messages = preg_replace('/[^0-9]/','',$enable_sipsak_messages);
-$ext_context = preg_replace('/[^-_0-9a-zA-Z]/','',$ext_context);
 $ext_priority = preg_replace('/[^-_0-9a-zA-Z]/','',$ext_priority);
 $exten = preg_replace("/\'|\"|\\\\|;/","",$exten);
 $extension = preg_replace("/\'|\"|\\\\|;/","",$extension);
@@ -1096,17 +1067,13 @@ $gender = preg_replace('/[^-_0-9a-zA-Z]/','',$gender);
 $group_name = preg_replace("/\'|\"|\\\\|;/","",$group_name);
 $hangup_all_non_reserved = preg_replace('/[^0-9]/','',$hangup_all_non_reserved);
 $inOUT = preg_replace('/[^-_0-9a-zA-Z]/','',$inOUT);
-$in_script = preg_replace('/[^-_0-9a-zA-Z]/','',$in_script);
 $inbound_lead_search = preg_replace('/[^0-9]/','',$inbound_lead_search);
 $last_VDRP_stage = preg_replace('/[^-_0-9a-zA-Z]/','',$last_VDRP_stage);
 $leaving_threeway = preg_replace('/[^0-9]/','',$leaving_threeway);
 $manual_dial_call_time_check = preg_replace('/[^-_0-9a-zA-Z]/','',$manual_dial_call_time_check);
-$manual_dial_filter = preg_replace('/[^-_0-9a-zA-Z]/','',$manual_dial_filter);
-$manual_dial_search_filter = preg_replace('/[^-_0-9a-zA-Z]/','',$manual_dial_search_filter);
 $no_delete_sessions = preg_replace('/[^0-9]/','',$no_delete_sessions);
 $nocall_dial_flag = preg_replace('/[^-_0-9a-zA-Z]/','',$nocall_dial_flag);
 $nodeletevdac = preg_replace('/[^0-9]/','',$nodeletevdac);
-$old_CID = preg_replace('/[^- _0-9a-zA-Z]/','',$old_CID);
 $omit_phone_code = preg_replace('/[^-_0-9a-zA-Z]/','',$omit_phone_code);
 $original_phone_login = preg_replace("/\'|\"|\\\\|;/","",$original_phone_login);
 $parked_hangup = preg_replace('/[^-_0-9a-zA-Z]/','',$parked_hangup);
@@ -1116,16 +1083,12 @@ $phone_pass = preg_replace("/\'|\"|\\\\|;/","",$phone_pass);
 $preview = preg_replace('/[^-_0-9a-zA-Z]/','',$preview);
 $previous_agent_log_id = preg_replace('/[^-_0-9a-zA-Z]/','',$previous_agent_log_id);
 $protocol = preg_replace('/[^-_0-9a-zA-Z]/','',$protocol);
-$qm_dispo_code = preg_replace('/[^-_0-9a-zA-Z]/','',$qm_dispo_code);
 $qm_extension = preg_replace("/\'|\"|\\\\|;/","",$qm_extension);
 $qm_phone = preg_replace("/\'|\"|\\\\|;/","",$qm_phone);
-$recipient = preg_replace('/[^-_0-9a-zA-Z]/','',$recipient);
 $recording_filename = preg_replace("/\'|\"|\\\\|;/","",$recording_filename);
 $recording_id = preg_replace('/[^0-9]/','',$recording_id);
-$search = preg_replace('/[^-_0-9a-zA-Z]/','',$search);
 $stage = preg_replace("/\'|\"|\\\\|;/","",$stage);
 $start_epoch = preg_replace("/\'|\"|\\\\|;/","",$start_epoch);
-$sub_status = preg_replace('/[^-_0-9a-zA-Z]/','',$sub_status);
 $url_ids = preg_replace("/\'|\"|\\\\|;/","",$url_ids);
 $use_campaign_dnc = preg_replace('/[^-_0-9a-zA-Z]/','',$use_campaign_dnc);
 $use_internal_dnc = preg_replace('/[^-_0-9a-zA-Z]/','',$use_internal_dnc);
@@ -1134,7 +1097,6 @@ $user_abb = preg_replace("/\'|\"|\\\\|;/","",$user_abb);
 $vtiger_callback_id = preg_replace("/\'|\"|\\\\|;/","",$vtiger_callback_id);
 $wrapup = preg_replace("/\'|\"|\\\\|;/","",$wrapup);
 $url_link = preg_replace("/\'|\"|\\\\|;/","",$url_link);
-$user_group = preg_replace('/[^-_0-9a-zA-Z]/','',$user_group);
 $routing_initiated_recording = preg_replace('/[^-_0-9a-zA-Z]/','',$routing_initiated_recording);
 $dead_time = preg_replace('/[^0-9]/','',$dead_time);
 $callback_gmt_offset = preg_replace('/[^- \._0-9a-zA-Z]/','',$callback_gmt_offset);
@@ -1143,6 +1105,64 @@ $manual_dial_validation = preg_replace('/[^-_0-9a-zA-Z]/','',$manual_dial_valida
 $start_date = preg_replace('/[^-_0-9]/','',$start_date);
 $end_date = preg_replace('/[^-_0-9]/','',$end_date);
 $customer_sec = preg_replace('/[^-_0-9]/','',$customer_sec);
+
+if ($non_latin < 1)
+	{
+	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+	$orig_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$orig_pass);
+	$phone_code = preg_replace("/[^0-9a-zA-Z]/","",$phone_code);
+	$phone_number = preg_replace("/[^0-9a-zA-Z]/","",$phone_number);
+	$status = preg_replace("/[^-_0-9a-zA-Z]/","",$status);
+	$MgrApr_user = preg_replace("/[^-_0-9a-zA-Z]/","",$MgrApr_user);
+	$MgrApr_pass = preg_replace("/[^-_0-9a-zA-Z]/","",$MgrApr_pass);
+	$agent_territories = preg_replace('/[^- _0-9a-zA-Z]/','',$agent_territories);
+	$alt_num_status = preg_replace('/[^-_0-9a-zA-Z]/','',$alt_num_status);
+	$camp_script = preg_replace('/[^-_0-9a-zA-Z]/','',$camp_script);
+	$campaign_cid = preg_replace('/[^-_0-9a-zA-Z]/','',$campaign_cid);
+	$dial_ingroup = preg_replace('/[^-_0-9a-zA-Z]/','',$dial_ingroup);
+	$dial_method = preg_replace('/[^-_0-9a-zA-Z]/','',$dial_method);
+	$dial_prefix = preg_replace('/[^-_0-9a-zA-Z]/','',$dial_prefix);
+	$dispo_choice = preg_replace('/[^-_0-9a-zA-Z]/','',$dispo_choice);
+	$ext_context = preg_replace('/[^-_0-9a-zA-Z]/','',$ext_context);
+	$in_script = preg_replace('/[^-_0-9a-zA-Z]/','',$in_script);
+	$manual_dial_filter = preg_replace('/[^-_0-9a-zA-Z]/','',$manual_dial_filter);
+	$manual_dial_search_filter = preg_replace('/[^-_0-9a-zA-Z]/','',$manual_dial_search_filter);
+	$old_CID = preg_replace('/[^- _0-9a-zA-Z]/','',$old_CID);
+	$qm_dispo_code = preg_replace('/[^-_0-9a-zA-Z]/','',$qm_dispo_code);
+	$recipient = preg_replace('/[^-_0-9a-zA-Z]/','',$recipient);
+	$search = preg_replace('/[^-_0-9a-zA-Z]/','',$search);
+	$sub_status = preg_replace('/[^-_0-9a-zA-Z]/','',$sub_status);
+	$user_group = preg_replace('/[^-_0-9a-zA-Z]/','',$user_group);
+	}
+else
+	{
+	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
+	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+	$orig_pass = preg_replace("/\'|\"|\\\\|;/","",$orig_pass);
+	$status = preg_replace("/\'|\"|\\\\|;/","",$status);
+	$MgrApr_user = preg_replace("/\'|\"|\\\\|;/","",$MgrApr_user);
+	$MgrApr_pass = preg_replace("/\'|\"|\\\\|;/","",$MgrApr_pass);
+	$agent_territories = preg_replace('/[^- _0-9\p{L}]/u','',$agent_territories);
+	$alt_num_status = preg_replace('/[^-_0-9\p{L}]/u','',$alt_num_status);
+	$camp_script = preg_replace('/[^-_0-9\p{L}]/u','',$camp_script);
+	$campaign_cid = preg_replace('/[^-_0-9\p{L}]/u','',$campaign_cid);
+	$dial_ingroup = preg_replace('/[^-_0-9\p{L}]/u','',$dial_ingroup);
+	$dial_method = preg_replace('/[^-_0-9\p{L}]/u','',$dial_method);
+	$dial_prefix = preg_replace('/[^-_0-9\p{L}]/u','',$dial_prefix);
+	$dispo_choice = preg_replace('/[^-_0-9\p{L}]/u','',$dispo_choice);
+	$ext_context = preg_replace('/[^-_0-9\p{L}]/u','',$ext_context);
+	$in_script = preg_replace('/[^-_0-9\p{L}]/u','',$in_script);
+	$manual_dial_filter = preg_replace('/[^-_0-9\p{L}]/u','',$manual_dial_filter);
+	$manual_dial_search_filter = preg_replace('/[^-_0-9\p{L}]/u','',$manual_dial_search_filter);
+	$old_CID = preg_replace('/[^- _0-9\p{L}]/u','',$old_CID);
+	$qm_dispo_code = preg_replace('/[^-_0-9\p{L}]/u','',$qm_dispo_code);
+	$recipient = preg_replace('/[^-_0-9\p{L}]/u','',$recipient);
+	$search = preg_replace('/[^-_0-9\p{L}]/u','',$search);
+	$sub_status = preg_replace('/[^-_0-9\p{L}]/u','',$sub_status);
+	$user_group = preg_replace('/[^-_0-9\p{L}]/u','',$user_group);
+	}
+
 
 # default optional vars if not set
 if (!isset($format))   {$format="text";}
@@ -16264,7 +16284,14 @@ if ($ACTION == 'SBC_timezone_build')
 					$line_country = $cust_timezome_line[0];
 					$line_zone =	$cust_timezome_line[1];
 					$line_dst =		$cust_timezome_line[2];
-					$line_name = preg_replace('/[^-, _0-9a-zA-Z]/','',$cust_timezome_line[3]);
+					if ($non_latin < 1)
+						{
+						$line_name = preg_replace('/[^-, _0-9a-zA-Z]/','',$cust_timezome_line[3]);
+						}
+					else
+						{
+						$line_name = preg_replace('/[^-, _0-9\p{L}]/u','',$cust_timezome_line[3]);
+						}
 					$stmt = "SELECT php_tz from vicidial_phone_codes where country='$line_country' and DST='$line_dst' and tz_code='$line_zone' limit 1;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);

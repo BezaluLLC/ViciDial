@@ -650,10 +650,11 @@
 # 201026-0143 - Fix for pause_max_exceptions issue
 # 201107-2236 - Change for parked call logging
 # 201112-1110 - Added better QueueMetrics misconfiguration error handling
+# 201117-0818 - Changes for better compatibility with non-latin data input
 #
 
-$version = '2.14-618c';
-$build = '201112-1110';
+$version = '2.14-619c';
+$build = '201117-0818';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=92;
 $one_mysql_log=0;
@@ -717,7 +718,7 @@ if (!isset($phone_pass))
 	}
 if (isset($VD_campaign))
 	{
-	$VD_campaign = strtoupper($VD_campaign);
+	$VD_campaign = mb_strtoupper($VD_campaign,'utf-8');
 	$VD_campaign = preg_replace("/\s/i",'',$VD_campaign);
 	}
 if (!isset($flag_channels))
@@ -728,19 +729,9 @@ if (!isset($flag_channels))
 
 ### security strip all non-alphanumeric characters out of the variables ###
 $DB=preg_replace("/[^0-9a-z]/","",$DB);
-$phone_login=preg_replace("/[^\,0-9a-zA-Z]/","",$phone_login);
-$phone_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$phone_pass);
 $VD_login=preg_replace("/\'|\"|\\\\|;| /","",$VD_login);
 $VD_pass=preg_replace("/\'|\"|\\\\|;| /","",$VD_pass);
-$VD_campaign = preg_replace("/[^-_0-9a-zA-Z]/","",$VD_campaign);
 $VD_language = preg_replace("/\'|\"|\\\\|;/","",$VD_language);
-$admin_test = preg_replace("/[^0-9a-zA-Z]/","",$admin_test);
-$LOGINvarONE=preg_replace("/[^-_0-9a-zA-Z]/","",$LOGINvarONE);
-$LOGINvarTWO=preg_replace("/[^-_0-9a-zA-Z]/","",$LOGINvarTWO);
-$LOGINvarTHREE=preg_replace("/[^-_0-9a-zA-Z]/","",$LOGINvarTHREE);
-$LOGINvarFOUR=preg_replace("/[^-_0-9a-zA-Z]/","",$LOGINvarFOUR);
-$LOGINvarFIVE=preg_replace("/[^-_0-9a-zA-Z]/","",$LOGINvarFIVE);
-$hide_relogin_fields=preg_replace("/[^-_0-9a-zA-Z]/","",$hide_relogin_fields);
 $set_pass=preg_replace("/\'|\"|\\\\|;| /","",$set_pass);
 $new_pass1=preg_replace("/\'|\"|\\\\|;| /","",$new_pass1);
 $new_pass2=preg_replace("/\'|\"|\\\\|;| /","",$new_pass2);
@@ -851,6 +842,31 @@ if ($non_latin < 1)
 	{
 	$VD_login=preg_replace("/[^-_0-9a-zA-Z]/","",$VD_login);
 	$VD_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$VD_pass);
+	$phone_login=preg_replace("/[^\,0-9a-zA-Z]/","",$phone_login);
+	$phone_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$phone_pass);
+	$VD_campaign = preg_replace("/[^-_0-9a-zA-Z]/","",$VD_campaign);
+	$admin_test = preg_replace("/[^0-9a-zA-Z]/","",$admin_test);
+	$LOGINvarONE=preg_replace("/[^-_0-9a-zA-Z]/","",$LOGINvarONE);
+	$LOGINvarTWO=preg_replace("/[^-_0-9a-zA-Z]/","",$LOGINvarTWO);
+	$LOGINvarTHREE=preg_replace("/[^-_0-9a-zA-Z]/","",$LOGINvarTHREE);
+	$LOGINvarFOUR=preg_replace("/[^-_0-9a-zA-Z]/","",$LOGINvarFOUR);
+	$LOGINvarFIVE=preg_replace("/[^-_0-9a-zA-Z]/","",$LOGINvarFIVE);
+	$hide_relogin_fields=preg_replace("/[^-_0-9a-zA-Z]/","",$hide_relogin_fields);
+	}
+else
+	{
+	$VD_login = preg_replace("/\'|\"|\\\\|;/","",$VD_login);
+	$VD_pass=preg_replace("/\'|\"|\\\\|;| /","",$VD_pass);
+	$phone_login=preg_replace("/[^\,0-9\p{L}]/u","",$phone_login);
+	$phone_pass=preg_replace("/[^-_0-9\p{L}]/u","",$phone_pass);
+	$VD_campaign = preg_replace("/[^-_0-9\p{L}]/u","",$VD_campaign);
+	$admin_test = preg_replace("/[^0-9\p{L}]/u","",$admin_test);
+	$LOGINvarONE=preg_replace("/[^-_0-9\p{L}]/u","",$LOGINvarONE);
+	$LOGINvarTWO=preg_replace("/[^-_0-9\p{L}]/u","",$LOGINvarTWO);
+	$LOGINvarTHREE=preg_replace("/[^-_0-9\p{L}]/u","",$LOGINvarTHREE);
+	$LOGINvarFOUR=preg_replace("/[^-_0-9\p{L}]/u","",$LOGINvarFOUR);
+	$LOGINvarFIVE=preg_replace("/[^-_0-9\p{L}]/u","",$LOGINvarFIVE);
+	$hide_relogin_fields=preg_replace("/[^-_0-9\p{L}]/u","",$hide_relogin_fields);
 	}
 
 if ($force_logout)

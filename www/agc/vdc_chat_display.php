@@ -1,7 +1,7 @@
 <?php
 # vdc_chat_display.php
 #
-# Copyright (C) 2019  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2020  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This is the interface for agents to chat with customers and each other.  It's separate from the manager-to-agent 
 # chat interface out of necessity and calls the chat_db_query.php page to send information and display it.  It will
@@ -18,6 +18,7 @@
 # 160818-1235 - Added line colors and scrolling
 # 170528-1001 - Added variable filtering
 # 190902-0914 - Fix for PHP 7.2
+# 201117-2207 - Changes for better compatibility with non-latin data input
 #
 
 require("dbconnect_mysqli.php");
@@ -90,10 +91,8 @@ if ($clickmute!="1") {$clickmute="0";} // Prevents annoying quirk of playing the
 
 $lead_id = preg_replace("/[^0-9]/","",$lead_id);
 $chat_id = preg_replace('/[^- \_\.0-9a-zA-Z]/','',$chat_id);
-$chat_group_id = preg_replace('/[^- \_\.0-9a-zA-Z]/','',$chat_group_id);
 $server_ip = preg_replace('/[^- \_\.0-9a-zA-Z]/','',$server_ip);
 $email = preg_replace("/\'|\"|\\\\|;/","",$email);
-$campaign = preg_replace('/[^-\_0-9a-zA-Z]/','',$campaign);
 $dial_method = preg_replace('/[^-\_0-9a-zA-Z]/','',$dial_method);
 $clickmute = preg_replace("/\'|\"|\\\\|;/","",$clickmute);
 $stage = preg_replace('/[^-\_0-9a-zA-Z]/','',$stage);
@@ -108,12 +107,18 @@ if ($non_latin < 1)
 	$phone_number = preg_replace("/[^0-9]/","",$phone_number);
 	$first_name = preg_replace('/[^- \_\.0-9a-zA-Z]/','',$first_name);
 	$last_name = preg_replace('/[^- \_\.0-9a-zA-Z]/','',$last_name);
+	$campaign = preg_replace('/[^-\_0-9a-zA-Z]/','',$campaign);
+	$chat_group_id = preg_replace('/[^- \_\.0-9a-zA-Z]/','',$chat_group_id);
 	}
 else
 	{
 	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
 	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 	$outside_user_name = preg_replace("/\'|\"|\\\\|;/","",$user);
+	$first_name = preg_replace('/[^- \_\.0-9\p{L}]/u','',$first_name);
+	$last_name = preg_replace('/[^- \_\.0-9\p{L}]/u','',$last_name);
+	$campaign = preg_replace('/[^-\_0-9\p{L}]/u','',$campaign);
+	$chat_group_id = preg_replace('/[^- \_\.0-9\p{L}]/u','',$chat_group_id);
 	}
 
 if( (strlen($stage) > 0) and ($stage == 'WELCOME') )
@@ -139,7 +144,7 @@ if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 	exit;
 	}
 
-$user_stmt="select full_name,user_level,selected_language from vicidial_users where user='$user'";
+$user_stmt="SELECT full_name,user_level,selected_language from vicidial_users where user='$user';";
 $user_level=0;
 $user_rslt=mysql_to_mysqli($user_stmt, $link);
 if (mysqli_num_rows($user_rslt)>0) {
@@ -149,7 +154,7 @@ if (mysqli_num_rows($user_rslt)>0) {
 	$VUselected_language =	$user_row[2];
 
 	if ($chat_id) {
-		$chat_stmt="select * from vicidial_live_chats where chat_creator='$user' and chat_id='$chat_id'";
+		$chat_stmt="SELECT * from vicidial_live_chats where chat_creator='$user' and chat_id='$chat_id';";
 	#	echo "<!-- \n$chat_stmt\n";
 		$chat_rslt=mysql_to_mysqli($chat_stmt, $link);
 		if (mysqli_num_rows($chat_rslt)>0) {
@@ -164,14 +169,14 @@ if (mysqli_num_rows($user_rslt)>0) {
 	unset($pass);
 
 	## Since user is not a vicidial user, check to see if they belong to another chat and use that as the default chat variable.
-	$chat_stmt="select chat_id from vicidial_chat_participants where chat_member='$user'";
+	$chat_stmt="SELECT chat_id from vicidial_chat_participants where chat_member='$user';";
 	$chat_rslt=mysql_to_mysqli($chat_stmt, $link);
 	if (mysqli_num_rows($chat_rslt)>0) {
 		$chat_row=mysqli_fetch_row($chat_rslt);
 		$chat_id=$chat_row[0];
 	}
 }
-$stmt="select * from vicidial_list where lead_id='$lead_id'";
+$stmt="SELECT * from vicidial_list where lead_id='$lead_id';";
 $rslt=mysql_to_mysqli($stmt, $link);
 if (mysqli_num_rows($rslt)>0) {
 	$row=mysqli_fetch_array($rslt);
@@ -801,7 +806,7 @@ if (!$user) {
 	exit;
 }
 
-$user_stmt="select if(user_nickname!='' and user_nickname is not null, user_nickname, full_name) from vicidial_users where user='$user' limit 1";
+$user_stmt="SELECT if(user_nickname!='' and user_nickname is not null, user_nickname, full_name) from vicidial_users where user='$user' limit 1;";
 $user_rslt=mysql_to_mysqli($user_stmt, $link);
 $inchat_html=""; $nochat_html="";
 $autojoin_js_fx="StartRefresh();";
@@ -811,7 +816,7 @@ if (mysqli_num_rows($user_rslt)==0) {
 		$inchat_html.="<input type='hidden' name='chat_member_name' id='chat_member_name' value='$outside_user_name'>";
 		$autojoin_js_fx.="JoinChat('$chat_id');";
 	} else {
-		$chat_stmt="select chat_member_name from vicidial_chat_log where poster='$user' order by message_time desc limit 1";
+		$chat_stmt="SELECT chat_member_name from vicidial_chat_log where poster='$user' order by message_time desc limit 1;";
 		$chat_rslt=mysql_to_mysqli($chat_stmt, $link);
 		if (mysqli_num_rows($chat_rslt)==0) {
 			$nochat_html.="Please enter your name below before joining a chat:<BR>";
@@ -918,13 +923,13 @@ if($child_window) {
 			if (count($chat_group_ids)>0) {
 				$chat_group_idsSQL = implode("','", $chat_group_ids);
 				$chat_group_idsSQL = preg_replace("/\\\\|;/","",$chat_group_idsSQL);
-				$group_stmt="select group_id, group_name from vicidial_inbound_groups where group_handling='CHAT' and group_id in ('$chat_group_idsSQL') order by group_name asc";
+				$group_stmt="SELECT group_id, group_name from vicidial_inbound_groups where group_handling='CHAT' and group_id in ('$chat_group_idsSQL') order by group_name asc;";
 				$group_rslt=mysql_to_mysqli($group_stmt, $link);
 				while ($group_row=mysqli_fetch_row($group_rslt)) {
 					echo "<option value='".$group_row[0]."'>".$group_row[1]."</option>\n";
 				}
 			} else {
-				$vla_stmt="select closer_campaigns from vicidial_live_agents where user='$user'";
+				$vla_stmt="SELECT closer_campaigns from vicidial_live_agents where user='$user';";
 				$vla_rslt=mysql_to_mysqli($vla_stmt, $link);
 				if (mysqli_num_rows($vla_rslt)>0) {
 					$vla_row=mysqli_fetch_row($vla_rslt);
@@ -934,7 +939,7 @@ if($child_window) {
 					echo "*$closer_campaigns*";
 					$closer_campaigns_SQL="'".$closer_campaigns."'";
 
-					$group_stmt="select group_id, group_name from vicidial_inbound_groups where group_handling='CHAT' and group_id in ($closer_campaigns_SQL) order by group_name asc";
+					$group_stmt="SELECT group_id, group_name from vicidial_inbound_groups where group_handling='CHAT' and group_id in ($closer_campaigns_SQL) order by group_name asc;";
 					$group_rslt=mysql_to_mysqli($group_stmt, $link);
 					while ($group_row=mysqli_fetch_row($group_rslt)) {
 						echo "<option value='".$group_row[0]."'>".$group_row[1]."</option>\n";

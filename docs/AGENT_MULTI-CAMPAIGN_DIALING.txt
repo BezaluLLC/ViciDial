@@ -1,4 +1,4 @@
-AGENT MULTI-CAMPAIGN DIALING DOC	Started: 2020-08-24	Updated: 2020-08-26
+AGENT MULTI-CAMPAIGN DIALING DOC	Started: 2020-08-24	Updated: 2020-11-17
 
 NOTE: Requires VICIdial svn/trunk code revision 3284 or higher to work properly!!!
 
@@ -100,3 +100,64 @@ HOW IT WORKS:
 When an outbound dialing campaign has the "Drop Call Seconds" set to '-1' and the "Drop Action" set to 'IN_GROUP' then the predictive dialing system will look for active agents logged in to other campaigns that have selected that campaign's "Drop Transfer Group" and will count them as agents in the outbound campaign, for the purposes of calculating how many calls to place outbound. For this reason, we recommend enabling the campaign "Available Only Tally" settings, to ensure too many calls are not being placed for agents already in phone calls since any agent with more than one campaign "drop in-group" selected will appear as more than one agent to the dialing system. The Remote Agents are used as a way of telling the system that the outbound dialing campaigns should be active, and when the "Drop Call Seconds" set to '-1' and the "Drop Action" set to 'IN_GROUP' then the first remote agent entry will be ignored for a campaign when the system calculates how many calls to place outbound.
 
 When "Drop Call Seconds" set to '-1' in a campaign, and a call is answered by a customer, the system will not even look for an agent in that campaign to send a call to, it will immediately drop the call to the selected drop in-group. With the In-Group "No Delay Call Route" set to 'Y', the system will attempt to send the call to an agent as fast as possible.
+
+
+
+
+THE PROBLEM OF "OVER-DIALING":
+
+When you allow a single agent to have multiple calls placed for them, there can always be a problem with "over-dialing", even when only using a single campaign. This issue is more complicated though when that same level of dialing is happening across multiple campaigns. At a minimum, the campaign "Available Only Tally" settings should be the first things you check to see if they are active. Beyond that, there really are not any simple solutions for it.
+
+One possible development option would be allowing for campaigns to have their dial levels set to a value below "1.0", which would not dial any calls unless there were more agents available to take calls from a specific campaign. There are multiple issues with making this work on the back-end that will need to be programmed around, as well as the problem that some campaigns which can't get above the 1.0 threshold to place a call with the number of agents logged-in not being able to place any calls at all. But if you aren't planning on having single agents dialing by themselves for a campaign at any point, this would be the simplest and quickest solution to try. This option would be 12 hours of development time.
+
+Another much more complex development option would be to add a new campaign dialing method "SHARED_RATIO" that would be specifically for shared agent campaigns that would operate somewhat like a round-robin system for shared campaign dialing. For instance, if only one agent is logged-in with dialing happening for that agent across 3 campaigns, each of those 3 campaigns would take turns dialing for that one agent. The number of calls would be calculated based on the number of agents that could take calls from each campaign, and the number of campaigns each agent is set to take calls from. This would be a very complex project to complete, but it would be the most efficient option with the best possibility for a balance between keeping agents on the phone and not dropping calls under all conditions(even single-agent dialing). This option would be 40 hours of development time.
+
+
+
+
+
+
+
+***********************  The following are notes for how this second option might work:
+
+
+How a "SHARED_RATIO" dial method would work:
+1. New code added to the AST_VDadapt.pl and AST_VDauto_dial.pl(and FILL) scripts that would for agents logged into shared-dialing campaigns, for dialing purposes only, rotate them among the campaigns that they are able to take calls from, while still allowing them to have calls from any of those campaigns sent to them any time they are available.
+2. Change the dialing algorithm, for campaigns with this dial method only, to use a count of calls placed by all shared campaigns on the system as a total, instead of only each campaign. This would prevent over-dialing as agents are rotated from dialing-campaign to dialing-campaign.
+3. The agent-dialing-campaign-rotation process would attempt to balance agents by time(round-robin-like) across the campaigns that they are assigned to take calls from.
+4. New database fields/tables to store the temporary dialing campaign designations for each agent and what other campaigns they had just been assigned to
+5. New debug Admin Utilities report that would show everything that is going on for shared campaigns in the process of agent rotation and shared ratio dialing
+
+Agent rotation steps: (see new database changes below for details on the DB storage of this data)
+- runs once every interval[2.5 sec, 15 sec, 1 minute] <- haven't decided this yet
+- for each agent, gather all campaigns they can dial for, and their current dial_campaign
+- delete from vicidial_agent_dial_campaigns any campaigns agent is no longer dialing for, update validate_time for others
+- set dial_campaign to ''(blank)
+- grab oldest vicidial_agent_dial_campaigns.dial_time campaign_id for each agent and update vicidial_live_agents.dial_campaign_id then update dial_time
+- at Timeclock-end-of-day, wipe out everything in vicidial_agent_dial_campaigns table older than 5 minutes and optimize table
+
+Shared campaigns outbound dialing steps:
+- gather all campaigns that are using a SHARED_ dial method, use that list to count current calls and calculate how many new calls can be placed for all shared campaigns
+- when counting for agents in the campaign, use the vicidial_live_agents.dial_campaign_id field
+- when allocating dials for each campaign, sort by oldest dial first(vicidial_campaigns.campaign_calldate) or by new ranking field(vicidial_campaigns.shared_dial_rank)
+
+
+
+DATABASE CHANGES:
+
+CREATE TABLE vicidial_agent_dial_campaigns (
+campaign_id VARCHAR(8),
+user VARCHAR(20),
+validate_time DATETIME,
+dial_time DATETIME,
+index (user),
+index (campaign_id)
+) ENGINE=MyISAM;
+
+CREATE UNIQUE INDEX vadc_key on vicidial_agent_dial_campaigns(campaign_id, user);
+
+ALTER TABLE vicidial_live_agents ADD dial_campaign_id VARCHAR(8) default '';
+
+ALTER TABLE vicidial_campaigns ADD shared_dial_rank TINYINT(3) default '0';
+
+ALTER TABLE system_settings ADD allow_shared_dial ENUM('0','1') default '0';
