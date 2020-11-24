@@ -550,6 +550,9 @@ OTHER CHANGES:
 	be played to a customer when the agent clicks on the VM button in the
 	agent screen.
 
+156. Added Daily Called Count Limits as a campaign setting, with options to
+	count and/or restrict for manual dial calls or not.
+
 
 
 

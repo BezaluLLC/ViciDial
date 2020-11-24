@@ -1342,3 +1342,21 @@ UPDATE system_settings SET db_schema_version='1610',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD hopper_drop_run_trigger VARCHAR(1) default 'N';
 
 UPDATE system_settings SET db_schema_version='1611',db_schema_update_date=NOW() where db_schema_version < 1611;
+
+ALTER TABLE system_settings ADD daily_call_count_limit ENUM('0','1') default '0';
+
+ALTER TABLE vicidial_campaigns ADD daily_call_count_limit TINYINT(3) UNSIGNED default '0';
+ALTER TABLE vicidial_campaigns ADD daily_limit_manual VARCHAR(20) default 'DISABLED';
+
+CREATE TABLE vicidial_lead_call_daily_counts (
+lead_id INT(9) UNSIGNED NOT NULL,
+list_id BIGINT(14) UNSIGNED DEFAULT '0',
+called_count_total TINYINT(3) UNSIGNED default '0',
+called_count_auto TINYINT(3) UNSIGNED default '0',
+called_count_manual TINYINT(3) UNSIGNED default '0',
+modify_date DATETIME,
+unique index vlcdc_lead (lead_id),
+index(list_id)
+) ENGINE=MyISAM;
+
+UPDATE system_settings SET db_schema_version='1612',db_schema_update_date=NOW() where db_schema_version < 1612;

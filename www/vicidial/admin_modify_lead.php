@@ -102,6 +102,7 @@
 # 201113-0841 - Added server_ip information to extended log view
 # 201117-0807 - Changes for better compatibility with non-latin data input
 # 201109-1725 - Fix for blank page after certain updates submitted
+# 201123-1704 - Added today called count display
 #
 
 require("dbconnect_mysqli.php");
@@ -2256,6 +2257,20 @@ else
 
 	$comments = preg_replace("/!N/","\n",$comments);
 
+
+	##### grab today call count for lead #####
+	$call_count_today=0;
+	$stmt="SELECT called_count_total from vicidial_lead_call_daily_counts where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' $LOGallowed_listsSQL";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$counts_to_print = mysqli_num_rows($rslt);
+	if ($counts_to_print > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$call_count_today		= $row[0];
+		}
+
+
 	if ($lead_id == 'NEW')
 		{
 		##### create a select list of lists if a NEW lead_id #####
@@ -2321,7 +2336,7 @@ else
 	echo "<input type=hidden name=FORM_LOADED id=FORM_LOADED value=\"0\" />\n";
 	echo "<table cellpadding=1 cellspacing=0>\n";
 	echo "<tr><td colspan=2>"._QXZ("Lead ID").": $lead_id &nbsp; &nbsp; "._QXZ("List ID").":  $list_id &nbsp; &nbsp; <font size=2>"._QXZ("GMT offset").": $gmt_offset_now &nbsp; &nbsp; "._QXZ("CSLR").": $called_since_last_reset</td></tr>\n";
-	echo "<tr><td colspan=2>"._QXZ("Fronter").": <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; "._QXZ("Called Count").": $called_count &nbsp; &nbsp; <font size=2>"._QXZ("Last Local Call").": $last_local_call_time</td></tr>\n";
+	echo "<tr><td colspan=2>"._QXZ("Fronter").": <A HREF=\"user_stats.php?user=$tsr\">$tsr</A> &nbsp; &nbsp; "._QXZ("Called Count").": $called_count <font size=2>("._QXZ("today").": $call_count_today)</font> &nbsp; &nbsp; "._QXZ("Last Local Call").": $last_local_call_time</td></tr>\n";
 	if ($archive_search=="Yes") 
 		{
 		echo "<tr><td colspan=2 align='center'>";

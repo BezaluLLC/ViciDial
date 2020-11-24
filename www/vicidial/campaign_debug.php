@@ -1,7 +1,7 @@
 <?php 
 # campaign_debug.php
 # 
-# Copyright (C) 2019  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 110514-1231 - First build
@@ -15,6 +15,7 @@
 # 170409-1534 - Added IP List validation code
 # 180201-1245 - Added live call and shortage counts per server tables
 # 190716-0909 - Added Call Quota process output
+# 201122-2249 - Added Hopper debug output
 #
 
 $startMS = microtime();
@@ -289,6 +290,22 @@ else
 
 		echo _QXZ("Campaign Debug").": $group - $row[0]           $NOW_TIME\n\n";
 		echo _QXZ("Total leads in hopper right now").":       $TOTALcalls\n\n";
+		}
+
+	$stmt="select update_time,debug_output,adapt_output from vicidial_campaign_stats_debug where campaign_id='" . mysqli_real_escape_string($link, $group) . "' and server_ip='HOPPER' limit 1;";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	if ($DB) {echo "$stmt\n";}
+	$debugs_to_print = mysqli_num_rows($rslt);
+	$i=0;
+	while ($debugs_to_print > $i)
+		{
+		$row=mysqli_fetch_row($rslt);
+
+		echo _QXZ("Hopper Debug").":     $row[0]\n";
+		echo "$row[1]\n";
+		echo "$row[2]\n";
+
+		$i++;
 		}
 
 	$stmt="select update_time,debug_output,adapt_output from vicidial_campaign_stats_debug where campaign_id='" . mysqli_real_escape_string($link, $group) . "' and server_ip='ADAPT' limit 1;";

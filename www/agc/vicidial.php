@@ -651,10 +651,11 @@
 # 201107-2236 - Change for parked call logging
 # 201112-1110 - Added better QueueMetrics misconfiguration error handling
 # 201117-0818 - Changes for better compatibility with non-latin data input
+# 201123-1436 - Added Daily call count limit features
 #
 
-$version = '2.14-619c';
-$build = '201117-0818';
+$version = '2.14-620c';
+$build = '201123-1436';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=92;
 $one_mysql_log=0;
@@ -10074,11 +10075,13 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 							var regMNCvar = new RegExp("HOPPER EMPTY","ig");
 							var regMDFvarDNC = new RegExp("DNC","ig");
+							var regMDFvarDCCL = new RegExp("DAILY CALL LIMIT","ig");
 							var regMNHDNCvar = new RegExp("NO-HOPPER DNC","ig");
+							var regMNHDCCLvar = new RegExp("NO-HOPPER DAILY CALL LIMIT","ig");
 							var regMDFvarCAMP = new RegExp("CAMPLISTS","ig");
 							var regMDFvarSYS = new RegExp("SYSTEM","ig");
 							var regMDFvarTIME = new RegExp("OUTSIDE","ig");
-							if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarCAMP)) || (MDnextCID.match(regMDFvarSYS)) || (MDnextCID.match(regMDFvarTIME)) )
+							if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarDCCL)) || (MDnextCID.match(regMDFvarCAMP)) || (MDnextCID.match(regMDFvarSYS)) || (MDnextCID.match(regMDFvarTIME)) )
 								{
 								button_click_log = button_click_log + "" + SQLdate + "-----DialNextFailed---" + MDnextCID + " " + "|";
 
@@ -10095,6 +10098,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									{alert_box("<?php echo _QXZ("No more leads in the hopper for campaign:"); ?>\n" + campaign);   alert_displayed=1;}
 								if (MDnextCID.match(regMDFvarDNC))
 									{alert_box("<?php echo _QXZ("This phone number is in the DNC list:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
+								if (MDnextCID.match(regMDFvarDCCL))
+									{alert_box("<?php echo _QXZ("This lead has exceeded its daily call count limit:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
 								if (MDnextCID.match(regMDFvarCAMP))
 									{alert_box("<?php echo _QXZ("This phone number is not in the campaign lists:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
 								if (MDnextCID.match(regMDFvarSYS))
@@ -10104,6 +10109,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 								if (MDnextCID.match(regMNHDNCvar))
 									{alert_box("<?php echo _QXZ("The next lead is a DNC phone number, please try again:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
+								if (MDnextCID.match(regMNHDCCLvar))
+									{alert_box("<?php echo _QXZ("The next lead has exceeded its daily call count limit, please try again:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
 
 								if (alert_displayed==0)						
 									{alert_box("<?php echo _QXZ("Unspecified error:"); ?>\n" + mdnPhonENumbeR + "|" + MDnextCID);   alert_displayed=1;}

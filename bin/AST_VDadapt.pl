@@ -305,6 +305,29 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 if ($DBX) {print "CONNECTED TO DATABASE:  $VARDB_server|$VARDB_database\n";}
 
+##### gather relevent system settings
+$stmtA = "SELECT cache_carrier_stats_realtime,ofcom_uk_drop_calc,call_quota_lead_ranking,use_non_latin from system_settings;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$generate_carrier_stats =		$aryA[0];
+	$SSofcom_uk_drop_calc =			$aryA[1];
+	$SScall_quota_lead_ranking =	$aryA[2];
+	$non_latin = 					$aryA[3];
+	}
+$sthA->finish();
+
+if ($non_latin > 0) 
+	{
+	$stmtA = "SET NAMES 'UTF8';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthA->finish();
+	}
+
 # make sure the vicidial_campaign_stats table has all of the campaigns.  
 # They should exist, but sometimes they get accidently removed during db moves and the like.
 $stmtA = "INSERT IGNORE into vicidial_campaign_stats (campaign_id) select campaign_id from vicidial_campaigns;";
@@ -315,20 +338,6 @@ $sthA->finish();
 $stmtA = "INSERT IGNORE into vicidial_campaign_stats_debug (campaign_id,server_ip) select campaign_id,'ADAPT' from vicidial_campaigns;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-$sthA->finish();
-
-##### gather relevent system settings
-$stmtA = "SELECT cache_carrier_stats_realtime,ofcom_uk_drop_calc,call_quota_lead_ranking from system_settings;";
-$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-$sthArows=$sthA->rows;
-if ($sthArows > 0)
-	{
-	@aryA = $sthA->fetchrow_array;
-	$generate_carrier_stats =		$aryA[0];
-	$SSofcom_uk_drop_calc =			$aryA[1];
-	$SScall_quota_lead_ranking =	$aryA[2];
-	}
 $sthA->finish();
 
 

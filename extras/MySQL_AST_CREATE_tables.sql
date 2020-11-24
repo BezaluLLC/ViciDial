@@ -1048,7 +1048,9 @@ browser_alert_sound VARCHAR(20) default '---NONE---',
 browser_alert_volume TINYINT(3) UNSIGNED default '50',
 three_way_record_stop_exception VARCHAR(40) default 'DISABLED',
 pause_max_exceptions VARCHAR(40) default '',
-hopper_drop_run_trigger VARCHAR(1) default 'N'
+hopper_drop_run_trigger VARCHAR(1) default 'N',
+daily_call_count_limit TINYINT(3) UNSIGNED default '0',
+daily_limit_manual VARCHAR(20) default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -1874,7 +1876,8 @@ queuemetrics_pausereason ENUM('STANDARD','EVERY_NEW','EVERY_NEW_ADMINCALL','EVER
 inbound_answer_config ENUM('0','1','2','3','4','5') DEFAULT '0',
 enable_international_dncs ENUM('0','1') default '0',
 web_loader_phone_strip VARCHAR(10) default 'DISABLED',
-manual_dial_phone_strip VARCHAR(10) default 'DISABLED'
+manual_dial_phone_strip VARCHAR(10) default 'DISABLED',
+daily_call_count_limit ENUM('0','1') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -4345,6 +4348,17 @@ PRIMARY KEY (dnc_file_id),
 KEY vicidial_country_dnc_queue_filename_key (filename)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8mb4;
 
+CREATE TABLE vicidial_lead_call_daily_counts (
+lead_id INT(9) UNSIGNED NOT NULL,
+list_id BIGINT(14) UNSIGNED DEFAULT '0',
+called_count_total TINYINT(3) UNSIGNED default '0',
+called_count_auto TINYINT(3) UNSIGNED default '0',
+called_count_manual TINYINT(3) UNSIGNED default '0',
+modify_date DATETIME,
+unique index vlcdc_lead (lead_id),
+index(list_id)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -4678,4 +4692,4 @@ INSERT INTO vicidial_settings_containers VALUES ('INTERNATIONAL_DNC_IMPORT','Pro
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1611',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1612',db_schema_update_date=NOW(),reload_timestamp=NOW();

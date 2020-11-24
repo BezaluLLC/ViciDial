@@ -134,6 +134,7 @@
 # 200108-1315 - Added CID Group type of NONE
 # 200122-1851 - Added code for CID Group auto-rotate feature
 # 200825-0032 - Include live agents from other campaigns if they have the campaign Drop-InGroup selected and drop sec < 0
+# 201122-0928 - Added code for dialy call count limits
 #
 
 ### begin parsing run-time options ###
@@ -344,6 +345,26 @@ if ($run_check > 0)
 		&event_logger;
 		exit;
 		}
+	}
+
+### Grab system_settings values from the database
+$stmtA = "SELECT use_non_latin FROM system_settings;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;
+	$non_latin = 						$aryA[0];
+	}
+$sthA->finish();
+
+if ($non_latin > 0) 
+	{
+	$stmtA = "SET NAMES 'UTF8';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthA->finish();
 	}
 
 
@@ -1456,6 +1477,12 @@ while($one_day_interval > 0)
 												$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR', called_count='$called_count',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id'";
 												}
 											$affected_rows = $dbhA->do($stmtA);
+
+											# update daily called counts for this lead
+											$stmtDC = "INSERT IGNORE INTO vicidial_lead_call_daily_counts SET lead_id='$lead_id',modify_date=NOW(),list_id='$list_id',called_count_total='1',called_count_auto='1' ON DUPLICATE KEY UPDATE modify_date=NOW(),list_id='$list_id',called_count_total=(called_count_total + 1),called_count_auto=(called_count_auto + 1);";
+											$affected_rowsDC = $dbhA->do($stmtDC);
+											if ($DB) {print "LEAD UPDATE: $affected_rows|$stmtA|\n";}
+											if ($DB) {print "LEAD CALL COUNT UPDATE: $affected_rowsDC|$stmtDC|\n";}
 
 											$PADlead_id = sprintf("%010s", $lead_id);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
 											# VmddhhmmssLLLLLLLLLL Set the callerIDname to a unique call_id string
