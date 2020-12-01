@@ -156,10 +156,11 @@
 # 201002-1545 - Added extension as recording lookup option, Allowed for secure sounds_web_server setting
 # 201106-1654 - Added campaign_id option to agent_stats_export function
 # 201113-0713 - Added delete_did option to update_did function, Issue #1242
+# 201201-1625 - Added group_by_campaign option to agent_stats_export function
 #
 
-$version = '2.14-133';
-$build = '201113-0713';
+$version = '2.14-134';
+$build = '201201-1625';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -554,6 +555,8 @@ if (isset($_GET["on_hook_agent"]))			{$on_hook_agent=$_GET["on_hook_agent"];}
 	elseif (isset($_POST["on_hook_agent"]))	{$on_hook_agent=$_POST["on_hook_agent"];}
 if (isset($_GET["delete_did"]))				{$delete_did=$_GET["delete_did"];}
 	elseif (isset($_POST["delete_did"]))	{$delete_did=$_POST["delete_did"];}
+if (isset($_GET["group_by_campaign"]))			{$group_by_campaign=$_GET["group_by_campaign"];}
+	elseif (isset($_POST["group_by_campaign"]))	{$group_by_campaign=$_POST["group_by_campaign"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -789,6 +792,7 @@ if ($non_latin < 1)
 	$template_id = preg_replace('/[^-_0-9a-zA-Z]/','',$template_id);
 	$on_hook_agent = preg_replace('/[^-_0-9a-zA-Z]/','',$on_hook_agent);
 	$delete_did = preg_replace('/[^0-9a-zA-Z]/','',$delete_did);
+	$group_by_campaign = preg_replace('/[^0-9a-zA-Z]/','',$group_by_campaign);
 	}
 else
 	{
@@ -7908,7 +7912,14 @@ if ($function == 'agent_stats_export')
 				}
 			else
 				{
-				$stmt="SELECT user,lead_id,sub_status,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec,pause_epoch from vicidial_agent_log where $search_SQL order by user,agent_log_id limit 10000000;";
+				if ($group_by_campaign == 'YES')
+					{
+					$stmt="SELECT user,lead_id,sub_status,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec,pause_epoch,campaign_id from vicidial_agent_log where $search_SQL order by campaign_id,user,agent_log_id limit 10000000;";
+					}
+				else
+					{
+					$stmt="SELECT user,lead_id,sub_status,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec,pause_epoch,campaign_id from vicidial_agent_log where $search_SQL order by user,agent_log_id limit 10000000;";
+					}
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$rec_recs = mysqli_num_rows($rslt);
 				if ($DB>0) {echo "DEBUG: agent_stats_export query - $rec_recs|$stmt\n";}
@@ -7937,9 +7948,19 @@ if ($function == 'agent_stats_export')
 					if (strlen($time_format) < 1)
 						{$time_format = 'HF';}
 					if ($header == 'YES')
-						{$output .= 'user' . $DL . 'full_name' . $DL . 'user_group' . $DL . 'calls' . $DL . 'login_time' . $DL . 'total_talk_time' . $DL . 'avg_talk_time' . $DL . 'avg_wait_time' . $DL . 'pct_of_queue' . $DL . 'pause_time' . $DL . 'sessions' . $DL . 'avg_session' . $DL . 'pauses' . $DL . 'avg_pause_time' . $DL . 'pause_pct' . $DL . 'pauses_per_session' . "\n";}
+						{
+						if ($group_by_campaign == 'YES')
+							{
+							$output .= 'campaign_id' . $DL . 'user' . $DL . 'full_name' . $DL . 'user_group' . $DL . 'calls' . $DL . 'login_time' . $DL . 'total_talk_time' . $DL . 'avg_talk_time' . $DL . 'avg_wait_time' . $DL . 'pct_of_queue' . $DL . 'pause_time' . $DL . 'sessions' . $DL . 'avg_session' . $DL . 'pauses' . $DL . 'avg_pause_time' . $DL . 'pause_pct' . $DL . 'pauses_per_session' . "\n";
+							}
+						else
+							{
+							$output .= 'user' . $DL . 'full_name' . $DL . 'user_group' . $DL . 'calls' . $DL . 'login_time' . $DL . 'total_talk_time' . $DL . 'avg_talk_time' . $DL . 'avg_wait_time' . $DL . 'pct_of_queue' . $DL . 'pause_time' . $DL . 'sessions' . $DL . 'avg_session' . $DL . 'pauses' . $DL . 'avg_pause_time' . $DL . 'pause_pct' . $DL . 'pauses_per_session' . "\n";
+							}
+						}
 
 					$ASuser=array();
+					$AScampaign=array();
 					$ASstart_epoch=array();
 					$AScalls=array();
 					$ASpauses=array();
@@ -7961,15 +7982,33 @@ if ($function == 'agent_stats_export')
 						{
 						# user,lead_id,sub_status,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec
 						$row=mysqli_fetch_row($rslt);
-						if (!preg_match("/^$last_user$/i", $row[0]))
+						if ($group_by_campaign == 'YES')
 							{
-							$uc++;
-							$ASuser[$uc] =			$row[0];
-							$ASstart_epoch[$uc] =	$row[8];
-							$last_user =			$row[0];
-							$AScalls[$uc] =			0;
-							$ASpauses[$uc] =		0;
-							$ASsessions[$uc] =		0;
+							$temp_camp_user="$row[9] $row[0]";
+							if (!preg_match("/^$last_user$/i", $temp_camp_user))
+								{
+								$uc++;
+								$ASuser[$uc] =			$row[0];
+								$AScampaign[$uc] =		$row[9];
+								$ASstart_epoch[$uc] =	$row[8];
+								$last_user =			$temp_camp_user;
+								$AScalls[$uc] =			0;
+								$ASpauses[$uc] =		0;
+								$ASsessions[$uc] =		0;
+								}
+							}
+						else
+							{
+							if (!preg_match("/^$last_user$/i", $row[0]))
+								{
+								$uc++;
+								$ASuser[$uc] =			$row[0];
+								$ASstart_epoch[$uc] =	$row[8];
+								$last_user =			$row[0];
+								$AScalls[$uc] =			0;
+								$ASpauses[$uc] =		0;
+								$ASsessions[$uc] =		0;
+								}
 							}
 						if ($row[1] > 0)		
 							{
@@ -8047,8 +8086,14 @@ if ($function == 'agent_stats_export')
 						$avg_cust_sec =		sec_convert($avg_cust_sec,$time_format);
 						$avg_wait_sec =		sec_convert($avg_wait_sec,$time_format);
 
-						$output .= "$ASuser[$k]$DL$ASfull_name[$k]$DL$ASuser_group[$k]$DL$AScalls[$k]$DL$login_sec$DL$cust_sec$DL$avg_cust_sec$DL$avg_wait_sec$DL$pct_of_queue%$DL$ASpause_sec[$k]$DL$ASsessions[$k]$DL$avg_session_sec$DL$ASpauses[$k]$DL$avg_pause_sec$DL$pct_pause%$DL$avg_pause_session$DL$wait_sec\n";
-	
+						if ($group_by_campaign == 'YES')
+							{
+							$output .= "$AScampaign[$k]$DL$ASuser[$k]$DL$ASfull_name[$k]$DL$ASuser_group[$k]$DL$AScalls[$k]$DL$login_sec$DL$cust_sec$DL$avg_cust_sec$DL$avg_wait_sec$DL$pct_of_queue%$DL$ASpause_sec[$k]$DL$ASsessions[$k]$DL$avg_session_sec$DL$ASpauses[$k]$DL$avg_pause_sec$DL$pct_pause%$DL$avg_pause_session$DL$wait_sec\n";
+							}
+						else
+							{
+							$output .= "$ASuser[$k]$DL$ASfull_name[$k]$DL$ASuser_group[$k]$DL$AScalls[$k]$DL$login_sec$DL$cust_sec$DL$avg_cust_sec$DL$avg_wait_sec$DL$pct_of_queue%$DL$ASpause_sec[$k]$DL$ASsessions[$k]$DL$avg_session_sec$DL$ASpauses[$k]$DL$avg_pause_sec$DL$pct_pause%$DL$avg_pause_session$DL$wait_sec\n";
+							}
 						$k++;
 						}
 

@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2020-11-13
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2020-12-01
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -166,6 +166,7 @@ Changes:
 201002-1545 - Added extension as recording_lookup option, Allowed for secure sounds_web_server setting
 201106-1654 - Added campaign_id option to agent_stats_export function
 201113-0713 - Added delete_did option to update_did function
+201201-1625 - Added group_by_campaign option to agent_stats_export function
 
 
 API Functions use the 'function' variable
@@ -539,6 +540,7 @@ stage -			the format of the exported data: csv, tab, pipe(default)
 header -		include a header(YES) or not(NO). This is optional, default is not to include a header
 time_format -		time format('H','HF','M','S') in hours, minutes or seconds: H = 1:23:45, M = 83:45, S = 5023  (default 'HF')
 				* HF will force hour format even for zero seconds time "0:00:00"
+group_by_campaign -	divide and output the agent results grouped by campaign(YES) or not(NO). This is optional, default is 'NO'
 
 NOTES- 
 There is a hard limit of 10000000 records analyzed
@@ -556,6 +558,8 @@ A SUCCESS response will not show "SUCCESS", but instead will just print the resu
 user|full_name|user_group|calls|login_time|total_talk_time|avg_talk_time|avg_wait_time|pct_of_queue|pause_time|sessions|avg_session|pauses|avg_pause_time|pause_pct|pauses_per_session|total_wait_time
 1029|test agent|ADMIN|1|0:01:52|0:00:16|0:00:16|0:00:18|16.7%|54|3|0:00:37|5|0:00:11|48.2%|2|0:00:32
 6666|Admin|ADMIN|5|0:04:11|0:01:48|0:00:22|0:00:17|83.3%|27|2|0:02:06|4|0:00:07|10.8%|2|0:00:32
+
+* if the 'group_by_campaign' option is enabled, the format above will have 'campaign_id' as the first column, and each agent's activity will be divided on separate lines by the campaigns they were logged into during the requested time period.
 
 
 
