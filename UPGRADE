@@ -553,6 +553,9 @@ OTHER CHANGES:
 156. Added Daily Called Count Limits as a campaign setting, with options to
 	count and/or restrict for manual dial calls or not.
 
+157. Added Transfer-Conf Button Launch campaign setting, allowing you to set a
+	webform window to open when an agent clicks on the Transfer-Conf button.
+
 
 
 

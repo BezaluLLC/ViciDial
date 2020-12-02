@@ -1360,3 +1360,7 @@ index(list_id)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1612',db_schema_update_date=NOW() where db_schema_version < 1612;
+
+ALTER TABLE vicidial_campaigns ADD transfer_button_launch VARCHAR(12) default 'NONE';
+
+UPDATE system_settings SET db_schema_version='1613',db_schema_update_date=NOW() where db_schema_version < 1613;

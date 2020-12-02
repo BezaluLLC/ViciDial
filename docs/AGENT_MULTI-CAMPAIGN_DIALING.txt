@@ -46,7 +46,7 @@ NOTE: The following instructions below assume that you already know how to set u
 
 2. Set up two lists:
 	1101(Appointments English List), assigned to the APPTENG campaign
-	1102(Appointments English List), assigned to the APPTSPA campaign
+	1102(Appointments Spanish List), assigned to the APPTSPA campaign
 
 3. Set up two Inbound Groups to use as Drop In-Groups:
 	DROP_APPT_ENG(Appointments English Drop InGroup)

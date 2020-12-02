@@ -1050,7 +1050,8 @@ three_way_record_stop_exception VARCHAR(40) default 'DISABLED',
 pause_max_exceptions VARCHAR(40) default '',
 hopper_drop_run_trigger VARCHAR(1) default 'N',
 daily_call_count_limit TINYINT(3) UNSIGNED default '0',
-daily_limit_manual VARCHAR(20) default 'DISABLED'
+daily_limit_manual VARCHAR(20) default 'DISABLED',
+transfer_button_launch VARCHAR(12) default 'NONE'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -4692,4 +4693,4 @@ INSERT INTO vicidial_settings_containers VALUES ('INTERNATIONAL_DNC_IMPORT','Pro
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1612',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1613',db_schema_update_date=NOW(),reload_timestamp=NOW();
