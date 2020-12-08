@@ -159,5 +159,6 @@ CREATE UNIQUE INDEX vadc_key on vicidial_agent_dial_campaigns(campaign_id, user)
 ALTER TABLE vicidial_live_agents ADD dial_campaign_id VARCHAR(8) default '';
 
 ALTER TABLE vicidial_campaigns ADD shared_dial_rank TINYINT(3) default '0';
+ALTER TABLE vicidial_campaigns MODIFY dial_method ENUM('MANUAL','RATIO','ADAPT_HARD_LIMIT','ADAPT_TAPERED','ADAPT_AVERAGE','INBOUND_MAN','SHARED_RATIO','SHARED_ADAPT_HARD_LIMIT','SHARED_ADAPT_TAPERED','SHARED_ADAPT_AVERAGE') default 'MANUAL';
 
 ALTER TABLE system_settings ADD allow_shared_dial ENUM('0','1') default '0';
