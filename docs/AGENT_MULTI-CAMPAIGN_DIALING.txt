@@ -122,13 +122,13 @@ Another much more complex development option would be to add a new campaign dial
 
 
 How a "SHARED_RATIO" dial method would work:
-1. New code added to the AST_VDadapt.pl and AST_VDauto_dial.pl(and FILL) scripts that would for agents logged into shared-dialing campaigns, for dialing purposes only, rotate them among the campaigns that they are able to take calls from, while still allowing them to have calls from any of those campaigns sent to them any time they are available.
-2. Change the dialing algorithm, for campaigns with this dial method only, to use a count of calls placed by all shared campaigns on the system as a total, instead of only each campaign. This would prevent over-dialing as agents are rotated from dialing-campaign to dialing-campaign.
+1. New code added to the AST_VDadapt.pl and AST_VDauto_dial.pl(and FILL) scripts that would(for agents logged into shared-dialing campaigns, for dialing purposes only) rotate them among the campaigns that they are able to take calls from, while still allowing them to have calls from any of those campaigns sent to them any time they are available.
+2. Change the dialing algorithm(for campaigns with a "SHARED_" dial method only) to use a count of calls placed by all shared campaigns on the system as a total, instead of only each campaign. This would prevent over-dialing as agents are rotated from dialing-campaign to dialing-campaign.
 3. The agent-dialing-campaign-rotation process would attempt to balance agents by time(round-robin-like) across the campaigns that they are assigned to take calls from.
 4. New database fields/tables to store the temporary dialing campaign designations for each agent and what other campaigns they had just been assigned to
 5. New debug Admin Utilities report that would show everything that is going on for shared campaigns in the process of agent rotation and shared ratio dialing
 
-Agent rotation steps: (see new database changes below for details on the DB storage of this data)
+Agent rotation steps, added to the AST_VDadapt.pl script: (see new database changes below for details on the DB storage of this data)
 - runs once every interval[2.5 sec, 15 sec, 1 minute] <- haven't decided this yet
 - for each agent, gather all campaigns they can dial for, and their current dial_campaign
 - delete from vicidial_agent_dial_campaigns any campaigns agent is no longer dialing for, update validate_time for others
@@ -143,7 +143,9 @@ Shared campaigns outbound dialing steps:
 
 
 
-DATABASE CHANGES:
+DATABASE CHANGES: !!!!!! FOR DOCUMENTATION PURPOSES ONLY !!!!!
+
+ALTER TABLE system_settings ADD allow_shared_dial ENUM('0','1') default '0';
 
 CREATE TABLE vicidial_agent_dial_campaigns (
 campaign_id VARCHAR(8),
@@ -161,4 +163,3 @@ ALTER TABLE vicidial_live_agents ADD dial_campaign_id VARCHAR(8) default '';
 ALTER TABLE vicidial_campaigns ADD shared_dial_rank TINYINT(3) default '0';
 ALTER TABLE vicidial_campaigns MODIFY dial_method ENUM('MANUAL','RATIO','ADAPT_HARD_LIMIT','ADAPT_TAPERED','ADAPT_AVERAGE','INBOUND_MAN','SHARED_RATIO','SHARED_ADAPT_HARD_LIMIT','SHARED_ADAPT_TAPERED','SHARED_ADAPT_AVERAGE') default 'MANUAL';
 
-ALTER TABLE system_settings ADD allow_shared_dial ENUM('0','1') default '0';

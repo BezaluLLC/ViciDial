@@ -157,10 +157,11 @@
 # 201106-1654 - Added campaign_id option to agent_stats_export function
 # 201113-0713 - Added delete_did option to update_did function, Issue #1242
 # 201201-1625 - Added group_by_campaign option to agent_stats_export function
+# 201214-1547 - Fixes for PHP8 compatibility
 #
 
-$version = '2.14-134';
-$build = '201201-1625';
+$version = '2.14-135';
+$build = '201214-1547';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -12888,7 +12889,8 @@ if ($function == 'call_status_stats')
 				}
 			}
 			
-			while(list($key, $val)=each($outbound_array)) {
+#			while(list($key, $val)=each($outbound_array)) {
+			foreach($outbound_array as $key => $val) {
 				$hour_str="";
 				$status_str="";
 				for ($i=0; $i<24; $i++) 
@@ -12903,7 +12905,8 @@ if ($function == 'call_status_stats')
 				if ($temp_ary_ct > 0)
 					{
 					ksort($temp_stat_array{"$key"});
-					while(list($statkey, $statval)=each($temp_stat_array{"$key"})) 
+#					while(list($statkey, $statval)=each($temp_stat_array{"$key"})) 
+					foreach($temp_stat_array{"$key"} as $statkey => $statval)
 						{
 						$status_str.=$statkey."-".$temp_stat_array{"$key"}{"$statkey"}.",";
 						}
@@ -12913,7 +12916,8 @@ if ($function == 'call_status_stats')
 				echo $key."|".$outbound_array{$key}[0]."|".$outbound_array{$key}[1]."|".$hour_str."|".$status_str."|\n";
 			}
 
-			while(list($key, $val)=each($inbound_array)) {
+#			while(list($key, $val)=each($inbound_array)) {
+			foreach($inbound_array as $key => $val) {
 				$hour_str="";
 				$status_str="";
 				for ($i=0; $i<24; $i++) 
@@ -12928,7 +12932,8 @@ if ($function == 'call_status_stats')
 				if ($temp_ary_ct > 0)
 					{
 					ksort($temp_stat_array{"$key"});
-					while(list($statkey, $statval)=each($temp_stat_array{"$key"})) 
+					# while(list($statkey, $statval)=each($temp_stat_array{"$key"})) 
+					foreach($temp_stat_array{"$key"} as $statkey => $statval)
 						{
 						$status_str.=$statkey."-".$temp_stat_array{"$key"}{"$statkey"}.",";
 						}
@@ -13194,7 +13199,8 @@ if ($function == 'call_dispo_report')
 					}
 				}
 			$rpt_str.="\n";
-			while (list($key, $val)=each($outbound_ct_array)) 
+#			while (list($key, $val)=each($outbound_ct_array)) 
+			foreach($outbound_ct_array as $key => $val)
 				{
 				$total_calls=$outbound_ct_array{$key}{"TOTAL CALLS"};
 				$rpt_str.="$key,".$outbound_ct_array{$key}{"TOTAL CALLS"};
@@ -13206,7 +13212,8 @@ if ($function == 'call_dispo_report')
 						$outbound_ct_array{$key}{"$status_ct_array[$i]"}+=0;
 						}
 					ksort($outbound_ct_array{$key});
-					while (list($key2, $val2)=each($outbound_ct_array{$key})) 
+#					while (list($key2, $val2)=each($outbound_ct_array{$key})) 
+					foreach($outbound_ct_array{$key} as $key2 => $val2)
 						{
 						$rpt_str.=",$val2";
 						if ($show_percentages) 
@@ -13219,7 +13226,8 @@ if ($function == 'call_dispo_report')
 					}
 				$rpt_str.="\n";
 				}
-			while (list($key, $val)=each($inbound_ct_array)) 
+#			while (list($key, $val)=each($inbound_ct_array)) 
+			foreach($inbound_ct_array as $key => $val)
 				{
 				$total_calls=$inbound_ct_array{$key}{"TOTAL CALLS"};
 				$rpt_str.="$key,".$inbound_ct_array{$key}{"TOTAL CALLS"};
@@ -13231,7 +13239,8 @@ if ($function == 'call_dispo_report')
 						$inbound_ct_array{$key}{"$status_ct_array[$i]"}+=0;
 						}
 					ksort($inbound_ct_array{$key});
-					while (list($key2, $val2)=each($inbound_ct_array{$key})) 
+#					while (list($key2, $val2)=each($inbound_ct_array{$key})) 
+					foreach($inbound_ct_array{$key} as $key2 => $val2)
 						{
 						$rpt_str.=",$val2";
 						if ($show_percentages) 
@@ -13244,7 +13253,8 @@ if ($function == 'call_dispo_report')
 					}
 				$rpt_str.="\n";
 				}
-			while (list($key, $val)=each($did_ct_array)) 
+#			while (list($key, $val)=each($did_ct_array)) 
+			foreach($did_ct_array as $key => $val)
 				{
 				$total_calls=$did_ct_array{$key}{"TOTAL CALLS"};
 				$rpt_str.="$key,".$did_ct_array{$key}{"TOTAL CALLS"};
@@ -13256,7 +13266,8 @@ if ($function == 'call_dispo_report')
 						$did_ct_array{$key}{"$status_ct_array[$i]"}+=0;
 						}
 					ksort($did_ct_array{$key});
-					while (list($key2, $val2)=each($did_ct_array{$key})) 
+#					while (list($key2, $val2)=each($did_ct_array{$key})) 
+					foreach($did_ct_array{$key} as $key2 => $val2)
 						{
 						$rpt_str.=",$val2";
 						if ($show_percentages) 
@@ -13271,7 +13282,8 @@ if ($function == 'call_dispo_report')
 				}
 			$rpt_str.="TOTAL,$grand_total_calls";
 			ksort($grand_total_array);
-			while (list($key, $val)=each($grand_total_array)) 
+#			while (list($key, $val)=each($grand_total_array)) 
+			foreach($grand_total_array as $key => $val)
 				{
 				$rpt_str.=",$val";
 				if ($show_percentages) 

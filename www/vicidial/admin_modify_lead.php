@@ -748,7 +748,8 @@ if ($enable_gdpr_download_deletion>0)
 						$HTML_header.="<tr>\n";
 						}
 					$HTML_body.="<tr>\n";
-					while (list($key, $val)=each($row)) 
+#					while (list($key, $val)=each($row)) 
+					foreach ($row as $key => $val)
 						{
 						if ($key=="entry_list_id") {$list_id=$val;}
 						if (in_array($key, $purge_field_array["$table_name"]) || (preg_match("/^custom_/", $table_name) && $key!="lead_id")) 

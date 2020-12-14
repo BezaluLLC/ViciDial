@@ -136,7 +136,8 @@ $sip_response_directory = array(
 $master_sip_response_directory=array();
 $master_sip_response_verbiage_directory=array();
 $i=0;
-while (list($key, $val)=each($sip_response_directory)) 
+# while (list($key, $val)=each($sip_response_directory)) 
+foreach ($sip_response_directory as $key => $val)
 	{
 	$master_sip_response_directory[$i]=$key;
 	$master_sip_response_verbiage_directory[$i]=$val;

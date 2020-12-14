@@ -171,7 +171,8 @@ asort($chat_managers_array);
 
 asort($chat_reload_id_number_array);
 $ChatReloadIDNumber="";
-while (list($key, $id_number) = each($chat_reload_id_number_array)) {
+#while (list($key, $id_number) = each($chat_reload_id_number_array)) {
+foreach($chat_reload_id_number_array as $key => $id_number) {
 	$ChatReloadIDNumber.="$id_number.";
 }
 $ChatReloadIDNumber=substr($ChatReloadIDNumber,0,-1);
@@ -738,7 +739,8 @@ echo "<div class='scrolling_chat_display' id='AllActiveChats'>\n";
 	if (empty($chat_managers_array)) {
 		echo "\t<li class='arial_bold'>"._QXZ("NO OPEN CHATS")."</li>\n";
 	} else {
-		while (list($manager_chat_id, $text) = each($chat_managers_array)) {
+#		while (list($manager_chat_id, $text) = each($chat_managers_array)) {
+		foreach($chat_managers_array as $manager_chat_id => $text) {
 			$manager_chat_subid=$chat_subid_array[$manager_chat_id];
 			if (!empty($unread_chats_array) && in_array($manager_chat_id, $unread_chats_array)) {$cclass="unreadchat";} else {$cclass="viewedchat";}
 			echo "\t<li class='".$cclass."'><a onClick=\"document.getElementById('CurrentActiveChat').value='$manager_chat_id'; document.getElementById('CurrentActiveChatSubID').value='$manager_chat_subid'; document.getElementById('AgentManagerOverride').value='".$agents_managers_array[$manager_chat_id]."'; LoadAvailableAgentsForChat('AllLiveNonChatAgents', 'agent_to_add');\">Chat #".$manager_chat_id."</a></li>\n"; # $chat_managers_array[$manager_chat_id]

@@ -5421,12 +5421,13 @@ if ($SSscript_remove_js > 0)
 # 201118-1057 - Better compatibility with non-latin data input
 # 201123-2300 - Added daily_call_count_limit features
 # 201201-1944 - Added transfer_button_launch campaign feature
+# 201214-1545 - Fixes for PHP8 compatibility
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-780a';
-$build = '201201-1944';
+$admin_version = '2.14-781a';
+$build = '201214-1545';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -26226,7 +26227,8 @@ if ($ADD==31)
 				$o=0;
 				if ($lead_list['count'] > 0)
 					{
-					while (list($dispo,) = each($lead_list[$since_reset]))
+#					while (list($dispo,) = each($lead_list[$since_reset]))
+					foreach($lead_list[$since_reset] as $dispo => $blank)
 						{
 						if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 							{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
@@ -27823,7 +27825,8 @@ if ($ADD==34)
 			$o=0;
 			if ($lead_list['count'] > 0)
 				{
-				while (list($dispo,) = each($lead_list[$since_reset]))
+#				while (list($dispo,) = each($lead_list[$since_reset]))
+				foreach($lead_list[$since_reset] as $dispo => $blank)
 					{
 					if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 						{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
@@ -29192,7 +29195,8 @@ if ($ADD==311)
 		$o=0;
 		if ($lead_list['count'] > 0)
 			{
-			while (list($dispo,) = each($lead_list[$since_reset]))
+			#while (list($dispo,) = each($lead_list[$since_reset]))
+			foreach($lead_list[$since_reset] as $dispo => $blank)
 				{
 				if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 					{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
@@ -29301,7 +29305,8 @@ if ($ADD==311)
 
 		if ($lead_list['count'] > 0)
 			{
-			while (list($tzone,) = each($lead_list[$since_reset]))
+#			while (list($tzone,) = each($lead_list[$since_reset]))
+			foreach($lead_list[$since_reset] as $tzone => $blank)
 				{
 				$LOCALzone=3600 * $tzone;
 				$LOCALdate=gmdate("D j M Y H:i", time() + $LOCALzone);
@@ -29378,7 +29383,8 @@ if ($ADD==311)
 			$o=0;
 			if ($lead_list['count'] > 0)
 				{
-				while (list($owner,) = each($lead_list[$since_reset]))
+#				while (list($owner,) = each($lead_list[$since_reset]))
+				foreach($lead_list[$since_reset] as $owner => $blank)
 					{
 					if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 						{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
@@ -29444,7 +29450,8 @@ if ($ADD==311)
 			$o=0;
 			if ($lead_list['count'] > 0)
 				{
-				while (list($owner,) = each($lead_list[$since_reset]))
+#				while (list($owner,) = each($lead_list[$since_reset]))
+				foreach($lead_list[$since_reset] as $owner => $blank)
 					{
 					if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 						{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
@@ -29511,7 +29518,8 @@ if ($ADD==311)
 		$o=0;
 		if ($lead_list['count'] > 0)
 			{
-			while (list($rank,) = each($lead_list[$since_reset]))
+#			while (list($rank,) = each($lead_list[$since_reset]))
+			foreach($lead_list[$since_reset] as $rank => $blank)
 				{
 				if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 					{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
@@ -29579,7 +29587,8 @@ if ($ADD==311)
 			$o=0;
 			if ($lead_list['count'] > 0)
 				{
-				while (list($rank,) = each($lead_list[$since_reset]))
+#				while (list($rank,) = each($lead_list[$since_reset]))
+				foreach($lead_list[$since_reset] as $rank => $blank)
 					{
 					if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 						{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 

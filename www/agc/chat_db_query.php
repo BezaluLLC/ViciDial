@@ -231,7 +231,8 @@ if ($action=="CreateAgentToAgentChat" && $agent_manager && $agent_user && $manag
 
 			# post message to each user, use $error_msg variable to ensure every insert command worked
 			$error_msg="";
-			while (list($key, $val) = each($participants_array)) {
+#			while (list($key, $val) = each($participants_array)) {
+			foreach($participants_array as $key => $val) {
 				$participant=$val;
 				$ins_chat_stmt="insert into vicidial_manager_chat_log(manager_chat_id, manager_chat_subid, manager, user, message, message_id, message_date, message_posted_by) VALUES('$manager_chat_id', '$subid', '$agent_manager', '$participant', '".mysqli_real_escape_string($link, $manager_message)."', '$message_id', '$message_date', '$agent_manager')";
 				$ins_chat_rslt=mysql_to_mysqli($ins_chat_stmt, $link);
@@ -451,7 +452,8 @@ if ($action=="RefreshActiveChatView" && $user) {
 	#########
 	asort($chat_reload_id_number_array);
 	$new_ChatReloadIDNumber="";
-	while (list($key, $id_number) = each($chat_reload_id_number_array)) {
+#	while (list($key, $id_number) = each($chat_reload_id_number_array)) {
+	foreach ($chat_reload_id_number_array as $key => $id_number) {
 		$new_ChatReloadIDNumber.="$id_number.";
 	}
 	$new_ChatReloadIDNumber=substr($new_ChatReloadIDNumber,0,-1);
@@ -491,7 +493,8 @@ if ($action=="RefreshActiveChatView" && $user) {
 	if (empty($chat_managers_array)) {
 		echo "\t<li class='arial_bold'>"._QXZ("NO OPEN CHATS")."</li>\n";
 	} else {
-		while (list($manager_chat_id, $text) = each($chat_managers_array)) {
+#		while (list($manager_chat_id, $text) = each($chat_managers_array)) {
+		foreach($chat_managers_array as $manager_chat_id => $text) {
 			$manager_chat_subid=$chat_subid_array[$manager_chat_id];
 			if (!empty($unread_chats_array) && in_array($manager_chat_id, $unread_chats_array)) {$cclass="unreadchat";} else {$cclass="viewedchat";}
 			echo "\t<li class='".$cclass."'><a onClick=\"document.getElementById('CurrentActiveChat').value='$manager_chat_id'; document.getElementById('CurrentActiveChatSubID').value='$manager_chat_subid'; document.getElementById('AgentManagerOverride').value='".$agents_managers_array[$manager_chat_id]."'; LoadAvailableAgentsForChat('AllLiveNonChatAgents', 'agent_to_add');\">Chat #".$manager_chat_id."</a></li>\n"; # $chat_managers_array[$manager_chat_id] 
@@ -701,7 +704,8 @@ if ($action=="add_agent_to_existing_chat" && $agent_to_add && $manager_chat_id &
 
 				# post message to each user, use $error_msg variable to ensure every insert command worked
 				$error_msg="";
-				while (list($key, $val) = each($participants_array)) {
+#				while (list($key, $val) = each($participants_array)) {
+				foreach($participants_array as $key => $val) {
 					$participant=$val;
 					$ins_chat_stmt="insert into vicidial_manager_chat_log(manager_chat_id, manager_chat_subid, manager, user, message, message_id, message_date, message_posted_by) VALUES('$manager_chat_id', '$manager_chat_subid', '$manager', '$participant', 'Agent $invited has been added to the chat by $invitee', '$message_id', '$message_date', '$message_posted_by')";
 					$ins_chat_rslt=mysql_to_mysqli($ins_chat_stmt, $link);
@@ -747,7 +751,8 @@ if ($action=="SendMgrChatMessage" && $manager_chat_id && $manager_chat_subid) {
 		if ($internal_chat_type=="AGENT") {
 			# post message to each user, use $error_msg variable to ensure every insert command worked.
 			$error_msg="";
-			while (list($key, $val) = each($participants_array)) {
+#			while (list($key, $val) = each($participants_array)) {
+			foreach($participants_array as $key => $val) {
 				$participant=$val;
 
 				$ins_chat_stmt="insert into vicidial_manager_chat_log(manager_chat_id, manager_chat_subid, manager, user, message, message_id, message_date, message_posted_by) VALUES('$manager_chat_id', '$manager_chat_subid', '$manager', '$participant', '".mysqli_real_escape_string($link, $chat_message)."', '$message_id', '$message_date', '$user')";
@@ -1324,7 +1329,8 @@ if ($action=="show_live_chats" && $user) {
 	
 	if ($active_chats) {
 		echo "<font class='chat_title bold'>"._QXZ("Live Chats").":</font><BR><BR>";
-		while (list($key, $val)=each($active_chats)) {
+#		while (list($key, $val)=each($active_chats)) {
+		foreach($active_chats as $key => $val) {
 			# PREVENT CLICKING ON UNAVAILABLE CHAT ROOMS
 			if ($val[0][3]!="NONE") {
 				echo "<li class='submenu' onClick=\"JoinChat('$key', '$chat_creator');\"><font class='chat_message bold'>"._QXZ("Chat ID")." #$key</font>\n";
@@ -1332,7 +1338,8 @@ if ($action=="show_live_chats" && $user) {
 				echo "<li class='submenu' onClick=\"chat_alert_box('Chat room is not available - no agent has been assigned it.')\"><font class='chat_message bold'>"._QXZ("Chat ID")." #$key</font>\n";
 			}
 			echo "\t<ul id=\"chat_members_$key\">\n";
-			while (list($subkey, $subval)=each($val)) {
+#			while (list($subkey, $subval)=each($val)) {
+			foreach($val as $subkey => $subval) {
 				if ($subval[2]=="absent") {
 					$font_color=" absent_agent";
 				} else if (in_array($subval[0], $agents_in_chat)) {
