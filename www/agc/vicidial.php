@@ -6488,6 +6488,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							if (api_transferconf_ID == api_transferconf_values_array[7])
 								{
 							//	alert("TRANSFERCONF COMMAND ALREADY RECEIVED: " + api_transferconf_function + "|" + api_transferconf_ID + "|" + api_transferconf_values_array[7] + "|" + external_transferconf_count);
+								button_click_log = button_click_log + "" + SQLdate + "-----TRANSFERCONF_API_DUP---" + api_transferconf_function + " " + api_transferconf_ID + " " + api_transferconf_values_array[7] + " " + external_transferconf_count + " " + "|";	
 								Clear_API_Field('external_transferconf');
 								}
 							else

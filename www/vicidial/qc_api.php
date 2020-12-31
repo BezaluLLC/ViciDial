@@ -353,6 +353,7 @@ if ($format=='debug')
 if ($function == 'external_dial_lead')
 	{
 	$value = preg_replace("/[^0-9]/","",$value);
+	# $DB=1;
 
 	if ( (strlen($value)<1) or ( (strlen($agent_user)<2) and (strlen($alt_user)<2) ) or (strlen($search)<2) or (strlen($preview)<2) or (strlen($focus)<2) )
 		{
