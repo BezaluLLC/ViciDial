@@ -47,6 +47,7 @@
 # 200108-1314 - Added CID Group type of NONE
 # 200122-1850 - Added code for CID Group auto-rotate feature
 # 201122-0932 - Added code for dialy call count limits
+# 201220-1034 - Changes for shared agent campaigns
 #
 
 ### begin parsing run-time options ###
@@ -602,7 +603,7 @@ while($one_day_interval > 0)
 							$event_string.="     Campaign Dial Fill tally: $DBfill_tally[$camp_CIPct]/$DBfill_needed[$camp_CIPct]";
 							&event_logger;
 
-							$stmtA = "SELECT count(*) FROM vicidial_live_agents where campaign_id='$DBfill_campaign[$camp_CIPct]' and status NOT IN('PAUSED');";
+							$stmtA = "SELECT count(*) FROM vicidial_live_agents where ( (campaign_id='$DBfill_campaign[$camp_CIPct]') or (dial_campaign_id='$DBfill_campaign[$camp_CIPct]') ) and status NOT IN('PAUSED');";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;

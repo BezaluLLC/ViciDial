@@ -16,6 +16,7 @@
 # 180201-1245 - Added live call and shortage counts per server tables
 # 190716-0909 - Added Call Quota process output
 # 201122-2249 - Added Hopper debug output
+# 201219-2119 - Added SHARED campaign output
 #
 
 $startMS = microtime();
@@ -39,7 +40,7 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,enable_languages,language_method,allow_shared_dial FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -52,6 +53,7 @@ if ($qm_conf_ct > 0)
 	$user_territories_active =		$row[3];
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
+	$SSallow_shared_dial =			$row[6];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -279,7 +281,7 @@ else
 	echo "---------- "._QXZ("ADAPT DEBUG")."\n";
 	echo "\n";
 
-	$stmt="select campaign_name,closer_campaigns from vicidial_campaigns where campaign_id='" . mysqli_real_escape_string($link, $group) . "' limit 1;";
+	$stmt="select campaign_name,closer_campaigns,dial_method,shared_dial_rank from vicidial_campaigns where campaign_id='" . mysqli_real_escape_string($link, $group) . "' limit 1;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$camps_to_print = mysqli_num_rows($rslt);
@@ -287,6 +289,8 @@ else
 		{
 		$row=mysqli_fetch_row($rslt);
 		$closer_campaigns = $row[1];
+		$dial_method =		$row[2];
+		$shared_dial_rank = $row[3];
 
 		echo _QXZ("Campaign Debug").": $group - $row[0]           $NOW_TIME\n\n";
 		echo _QXZ("Total leads in hopper right now").":       $TOTALcalls\n\n";
@@ -322,6 +326,60 @@ else
 		echo "$row[2]\n";
 
 		$i++;
+		}
+
+	if ($SSallow_shared_dial > 0)
+		{
+		$stmt="select update_time,debug_output,adapt_output from vicidial_campaign_stats_debug where campaign_id='" . mysqli_real_escape_string($link, $group) . "' and server_ip='SHARED' limit 1;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		if ($DB) {echo "$stmt\n";}
+		$debugs_to_print = mysqli_num_rows($rslt);
+		$i=0;
+		while ($debugs_to_print > $i)
+			{
+			$row=mysqli_fetch_row($rslt);
+
+			echo _QXZ("Shared Agent Campaign Debug").":     $row[0]\n";
+			echo "$row[1]\n";
+			echo "$row[2]\n";
+
+			$i++;
+			}
+
+		if (preg_match("/SHARED/i",$dial_method))
+			{
+			$stmt="select update_time,debug_output,adapt_output from vicidial_campaign_stats_debug where campaign_id='--ALL--' and server_ip='SHARED' limit 1;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$debugs_to_print = mysqli_num_rows($rslt);
+			$i=0;
+			while ($debugs_to_print > $i)
+				{
+				$row=mysqli_fetch_row($rslt);
+
+				echo _QXZ("Shared Agent System-wide Debug").":     $row[0]\n";
+				echo "$row[1]\n";
+				echo "$row[2]\n";
+
+				$i++;
+				}
+
+			$stmt="select update_time,debug_output,adapt_output,server_ip from vicidial_campaign_stats_debug where campaign_id='-SHARE-' and server_ip!='SHARED' limit 100;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$debugs_to_print = mysqli_num_rows($rslt);
+			$i=0;
+			while ($debugs_to_print > $i)
+				{
+				$row=mysqli_fetch_row($rslt);
+
+				echo _QXZ("Shared Agent Server Debug").": $row[3]    $row[0]\n";
+				echo "$row[1]\n";
+				echo "$row[2]\n";
+
+				$i++;
+				}
+			}
 		}
 
 	$stmt="select update_time,server_ip,debug_output,adapt_output from vicidial_campaign_stats_debug where campaign_id='" . mysqli_real_escape_string($link, $group) . "' and server_ip NOT IN('ADAPT','CALLQUOTA') order by server_ip limit 100;";

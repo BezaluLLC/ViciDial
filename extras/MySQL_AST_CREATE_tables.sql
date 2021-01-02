@@ -442,6 +442,7 @@ preview_lead_id INT(9) UNSIGNED default '0',
 external_lead_id INT(9) UNSIGNED default '0',
 last_inbound_call_time_filtered DATETIME,
 last_inbound_call_finish_filtered DATETIME,
+dial_campaign_id VARCHAR(8) default '',
 index (random_id),
 index (last_call_time),
 index (last_update_time),
@@ -796,7 +797,7 @@ closer_campaigns TEXT,
 use_internal_dnc ENUM('Y','N','AREACODE') default 'N',
 allcalls_delay SMALLINT(3) UNSIGNED default '0',
 omit_phone_code ENUM('Y','N') default 'N',
-dial_method ENUM('MANUAL','RATIO','ADAPT_HARD_LIMIT','ADAPT_TAPERED','ADAPT_AVERAGE','INBOUND_MAN') default 'MANUAL',
+dial_method ENUM('MANUAL','RATIO','ADAPT_HARD_LIMIT','ADAPT_TAPERED','ADAPT_AVERAGE','INBOUND_MAN','SHARED_RATIO','SHARED_ADAPT_HARD_LIMIT','SHARED_ADAPT_TAPERED','SHARED_ADAPT_AVERAGE') default 'MANUAL',
 available_only_ratio_tally ENUM('Y','N') default 'N',
 adaptive_dropped_percentage VARCHAR(4) default '3',
 adaptive_maximum_level VARCHAR(6) default '3.0',
@@ -1051,7 +1052,8 @@ pause_max_exceptions VARCHAR(40) default '',
 hopper_drop_run_trigger VARCHAR(1) default 'N',
 daily_call_count_limit TINYINT(3) UNSIGNED default '0',
 daily_limit_manual VARCHAR(20) default 'DISABLED',
-transfer_button_launch VARCHAR(12) default 'NONE'
+transfer_button_launch VARCHAR(12) default 'NONE',
+shared_dial_rank TINYINT(3) default '99'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -1878,7 +1880,8 @@ inbound_answer_config ENUM('0','1','2','3','4','5') DEFAULT '0',
 enable_international_dncs ENUM('0','1') default '0',
 web_loader_phone_strip VARCHAR(10) default 'DISABLED',
 manual_dial_phone_strip VARCHAR(10) default 'DISABLED',
-daily_call_count_limit ENUM('0','1') default '0'
+daily_call_count_limit ENUM('0','1') default '0',
+allow_shared_dial ENUM('0','1') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -4360,6 +4363,18 @@ unique index vlcdc_lead (lead_id),
 index(list_id)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_agent_dial_campaigns (
+campaign_id VARCHAR(8),
+group_id VARCHAR(20),
+user VARCHAR(20),
+validate_time DATETIME,
+dial_time DATETIME,
+index (user),
+index (campaign_id)
+) ENGINE=MyISAM;
+
+CREATE UNIQUE INDEX vadc_key on vicidial_agent_dial_campaigns(campaign_id, user);
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -4693,4 +4708,4 @@ INSERT INTO vicidial_settings_containers VALUES ('INTERNATIONAL_DNC_IMPORT','Pro
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1613',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1614',db_schema_update_date=NOW(),reload_timestamp=NOW();

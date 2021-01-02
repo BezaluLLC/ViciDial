@@ -143,9 +143,10 @@
 # 200425-0218 - Added purging of vicidial_lead_messages after 1 day
 # 200623-2304 - Added Answer Signal options
 # 201123-1651 - Added reset of vicidial_lead_call_daily_counts table
+# 201218-2054 - Added reset of vicidial_agent_dial_campaigns table
 #
 
-$build = '201123-1651';
+$build = '201218-2054';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -232,7 +233,18 @@ if ($SXsec < 10) {$SXsec = "0$SXsec";}
 $SXSQLdate = "$SXyear-$SXmon-$SXmday $SXhour:$SXmin:$SXsec";
 $SXdate = "$SXyear-$SXmon-$SXmday";
 
+### calculate the date and time for 5 minutes ago
 $FMtarget = ($secX - 300);	# 5 minutes ago
+($Fsec,$Fmin,$Fhour,$Fmday,$Fmon,$Fyear,$Fwday,$Fyday,$Fisdst) = localtime($FMtarget);
+$Fyear = ($Fyear + 1900);
+$Fmon++;
+if ($Fmon < 10) {$Fmon = "0$Fmon";}
+if ($Fmday < 10) {$Fmday = "0$Fmday";}
+if ($Fhour < 10) {$Fhour = "0$Fhour";}
+if ($Fmin < 10) {$Fmin = "0$Fmin";}
+if ($Fsec < 10) {$Fsec = "0$Fsec";}
+$FMSQLdate = "$Fyear-$Fmon-$Fmday $Fhour:$Fmin:$Fsec";
+
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -1289,6 +1301,21 @@ if ($timeclock_end_of_day_NOW > 0)
 		if ($teodDB) {$event_string = "vicidial_lead_call_daily_counts records reset: $affected_rows";   &teod_logger;}
 
 		$stmtA = "optimize table vicidial_lead_call_daily_counts;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "delete from vicidial_agent_dial_campaigns where validate_time < \"$FMSQLdate\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_agent_dial_campaigns records deleted|\n";}
+		if ($teodDB) {$event_string = "vicidial_agent_dial_campaigns records reset: $affected_rows";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_agent_dial_campaigns;";
 		if($DBX){print STDERR "\n|$stmtA|\n";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;

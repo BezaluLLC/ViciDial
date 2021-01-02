@@ -1364,3 +1364,24 @@ UPDATE system_settings SET db_schema_version='1612',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD transfer_button_launch VARCHAR(12) default 'NONE';
 
 UPDATE system_settings SET db_schema_version='1613',db_schema_update_date=NOW() where db_schema_version < 1613;
+
+ALTER TABLE system_settings ADD allow_shared_dial ENUM('0','1') default '0';
+
+ALTER TABLE vicidial_campaigns ADD shared_dial_rank TINYINT(3) default '99';
+ALTER TABLE vicidial_campaigns MODIFY dial_method ENUM('MANUAL','RATIO','ADAPT_HARD_LIMIT','ADAPT_TAPERED','ADAPT_AVERAGE','INBOUND_MAN','SHARED_RATIO','SHARED_ADAPT_HARD_LIMIT','SHARED_ADAPT_TAPERED','SHARED_ADAPT_AVERAGE') default 'MANUAL';
+
+ALTER TABLE vicidial_live_agents ADD dial_campaign_id VARCHAR(8) default '';
+
+CREATE TABLE vicidial_agent_dial_campaigns (
+campaign_id VARCHAR(8),
+group_id VARCHAR(20),
+user VARCHAR(20),
+validate_time DATETIME,
+dial_time DATETIME,
+index (user),
+index (campaign_id)
+) ENGINE=MyISAM;
+
+CREATE UNIQUE INDEX vadc_key on vicidial_agent_dial_campaigns(campaign_id, user);
+
+UPDATE system_settings SET db_schema_version='1614',db_schema_update_date=NOW() where db_schema_version < 1614;

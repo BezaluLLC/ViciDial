@@ -99,10 +99,11 @@
 # 200814-2132 - Added support for Internation DNC scrubbing
 # 201111-1359 - Added support for hopper_drop_run_trigger
 # 201122-1039 - Added support for daily call count limits
+# 201220-1032 - Changes for shared agent campaigns
 #
 
 # constants
-$build = '201122-1039';
+$build = '201220-1032';
 $DB=0;  # Debug flag, set to 0 for no debug messages. Can be overriden with CLI --debug flag
 $US='__';
 $MT[0]='';
@@ -1158,14 +1159,14 @@ while ($sthArows > $rec_count)
 	if ( $use_auto_hopper[$rec_count] =~ /Y/) 
 		{
 		### Find the number of agents
-		$stmtB = "SELECT COUNT(*) FROM vicidial_live_agents WHERE campaign_id='$campaign_id[$rec_count]' and status IN ('READY','QUEUE','INCALL','CLOSER') and last_update_time >= '$VDL_tensec'";
+		$stmtB = "SELECT COUNT(*) FROM vicidial_live_agents WHERE ( (campaign_id='$campaign_id[$rec_count]') or (dial_campaign_id='$campaign_id[$rec_count]') ) and status IN ('READY','QUEUE','INCALL','CLOSER') and last_update_time >= '$VDL_tensec'";
 		$sthB = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 		$sthB->execute or die "executing: $stmtB ", $dbhA->errstr;
 		@aryAgent = $sthB->fetchrow_array;
 		$num_agents = $aryAgent[0];
 		$sthB->finish();
 
-		$stmtB = "SELECT COUNT(*) FROM vicidial_live_agents WHERE campaign_id='$campaign_id[$rec_count]' and status IN ('PAUSED') and last_update_time >= '$VDL_tensec' and last_state_change >= '$VDL_one'";
+		$stmtB = "SELECT COUNT(*) FROM vicidial_live_agents WHERE ( (campaign_id='$campaign_id[$rec_count]') or (dial_campaign_id='$campaign_id[$rec_count]') ) and status IN ('PAUSED') and last_update_time >= '$VDL_tensec' and last_state_change >= '$VDL_one'";
 		$sthB = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 		$sthB->execute or die "executing: $stmtB ", $dbhA->errstr;
 		@aryAgent = $sthB->fetchrow_array;
