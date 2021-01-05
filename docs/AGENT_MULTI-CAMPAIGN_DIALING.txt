@@ -2,7 +2,7 @@ AGENT MULTI-CAMPAIGN DIALING DOC	Started: 2020-08-24	Updated: 2021-01-02
 
 NOTE: Requires VICIdial svn/trunk code revision 3284 or higher to work properly!!!
 
-NOTE: The new SHARED campaign dial method requires VICIdial svn/trunk code revision 3339 or higher to work properly!!!
+NOTE: The new SHARED campaign dial method requires VICIdial svn/trunk code revision 3340 or higher to work properly!!!
 
 NOTE: THIS FEATURE IS OPTIONAL, AND SHOULD ONLY BE CONFIGURED AFTER YOUR SYSTEM 
       HAS BEEN INSTALLED AND TESTED!
@@ -120,6 +120,8 @@ We have added a new campaign dialing method "SHARED_..." that is specifically fo
 
 
 ***********************  The following are notes for how the new "SHARED_..." campaign Dial Methods work:
+
+NOTE: to use the new SHARED campaign dial method, you must first enable the "Shared Agent Campaign Dialing" System Setting.
 
 
 How a "SHARED_..." dial methods work:

@@ -671,7 +671,7 @@ while($one_day_interval > 0)
 		$user_CIPct_sort = 0;
 		foreach(@DBIPcampaign_sorted)
 			{
-			@camp_sort_line = split(/\n/,$DBIPcampaign_sorted[$user_CIPct_sort]);
+			@camp_sort_line = split(/_/,$DBIPcampaign_sorted[$user_CIPct_sort]);
 			$user_CIPct = $camp_sort_line[3];
 			$debug_string='';
 			$user_counter=0;
@@ -981,7 +981,7 @@ while($one_day_interval > 0)
 			if ($DBIPactive[$user_CIPct] =~ /N/) {$DBIPgoalcalls[$user_CIPct] = 0;}
 			$DBIPgoalcalls[$user_CIPct] = sprintf("%.0f", $DBIPgoalcalls[$user_CIPct]);
 
-			$event_string="$DBIPcampaign[$user_CIPct] $DBIPaddress[$user_CIPct]: agents: $DBIPcount[$user_CIPct] (READY: $DBIPcampaign_ready_agents[$user_CIPct])    dial_level: $DBIPadlevel[$user_CIPct]     ($DBIPACTIVEcount[$user_CIPct]|$DBIPINCALLcount[$user_CIPct]|$DBIPDEADcount[$user_CIPct])   $DBIPadaptive_dl_diff_target[$user_CIPct]";
+			$event_string="$user_CIPct_sort $user_CIPct   $DBIPcampaign[$user_CIPct] $DBIPaddress[$user_CIPct]: agents: $DBIPcount[$user_CIPct] (READY: $DBIPcampaign_ready_agents[$user_CIPct])    dial_level: $DBIPadlevel[$user_CIPct]     ($DBIPACTIVEcount[$user_CIPct]|$DBIPINCALLcount[$user_CIPct]|$DBIPDEADcount[$user_CIPct])   $DBIPadaptive_dl_diff_target[$user_CIPct]";
 			$debug_string .= "$event_string\n";
 			&event_logger;
 
@@ -1204,10 +1204,10 @@ while($one_day_interval > 0)
 					}
 				}
 
-			if ($DBIPmakecalls[$user_CIPct] > 0) 
+			if ($DBIPmakecalls[$user_CIPct] > 0)
 				{$active_line_counter = ($DBIPmakecalls[$user_CIPct] + $active_line_counter);}
 
-			$event_string="$DBIPcampaign[$user_CIPct] $DBIPaddress[$user_CIPct]: Calls to place: $DBIPmakecalls[$user_CIPct] ($DBIPgoalcalls[$user_CIPct] - $DBIPexistcalls[$user_CIPct] [$DBIPexistcalls_IN[$user_CIPct] + $DBIPexistcalls_OUT[$user_CIPct]|$DBIPexistcalls_IN_ALL[$user_CIPct]|$DBIPexistcalls_IN_LIVE[$user_CIPct]|$DBIPexistcalls_QUEUE_LIVE[$user_CIPct]]) $active_line_counter $MVT_msg";
+			$event_string="$user_CIPct_sort $user_CIPct   $DBIPcampaign[$user_CIPct] $DBIPaddress[$user_CIPct]: Calls to place: $DBIPmakecalls[$user_CIPct] ($DBIPgoalcalls[$user_CIPct] - $DBIPexistcalls[$user_CIPct] [$DBIPexistcalls_IN[$user_CIPct] + $DBIPexistcalls_OUT[$user_CIPct]|$DBIPexistcalls_IN_ALL[$user_CIPct]|$DBIPexistcalls_IN_LIVE[$user_CIPct]|$DBIPexistcalls_QUEUE_LIVE[$user_CIPct]]) $active_line_counter $MVT_msg";
 			$debug_string .= "$event_string\n";
 			&event_logger;
 
