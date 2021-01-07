@@ -1385,3 +1385,11 @@ index (campaign_id)
 CREATE UNIQUE INDEX vadc_key on vicidial_agent_dial_campaigns(campaign_id, user);
 
 UPDATE system_settings SET db_schema_version='1614',db_schema_update_date=NOW() where db_schema_version < 1614;
+
+ALTER TABLE system_settings ADD agent_search_method ENUM('0','1','2','3','4','5','6') default '0';
+
+ALTER TABLE vicidial_campaigns ADD agent_search_method VARCHAR(2) default '';
+
+ALTER TABLE vicidial_inbound_groups ADD agent_search_method VARCHAR(2) default '';
+
+UPDATE system_settings SET db_schema_version='1615',db_schema_update_date=NOW() where db_schema_version < 1615;

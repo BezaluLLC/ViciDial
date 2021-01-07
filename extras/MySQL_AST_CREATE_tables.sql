@@ -1053,7 +1053,8 @@ hopper_drop_run_trigger VARCHAR(1) default 'N',
 daily_call_count_limit TINYINT(3) UNSIGNED default '0',
 daily_limit_manual VARCHAR(20) default 'DISABLED',
 transfer_button_launch VARCHAR(12) default 'NONE',
-shared_dial_rank TINYINT(3) default '99'
+shared_dial_rank TINYINT(3) default '99',
+agent_search_method VARCHAR(2) default ''
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -1345,7 +1346,8 @@ ingroup_script_two VARCHAR(20) default '',
 browser_alert_sound VARCHAR(20) default '---NONE---',
 browser_alert_volume TINYINT(3) UNSIGNED default '50',
 answer_signal ENUM('START','ROUTE','NONE') DEFAULT 'START',
-no_agent_delay SMALLINT(5) default '0'
+no_agent_delay SMALLINT(5) default '0',
+agent_search_method VARCHAR(2) default ''
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -1881,7 +1883,8 @@ enable_international_dncs ENUM('0','1') default '0',
 web_loader_phone_strip VARCHAR(10) default 'DISABLED',
 manual_dial_phone_strip VARCHAR(10) default 'DISABLED',
 daily_call_count_limit ENUM('0','1') default '0',
-allow_shared_dial ENUM('0','1') default '0'
+allow_shared_dial ENUM('0','1') default '0',
+agent_search_method ENUM('0','1','2','3','4','5','6') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -4708,4 +4711,4 @@ INSERT INTO vicidial_settings_containers VALUES ('INTERNATIONAL_DNC_IMPORT','Pro
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1614',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1615',db_schema_update_date=NOW(),reload_timestamp=NOW();

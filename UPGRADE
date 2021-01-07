@@ -560,6 +560,8 @@ OTHER CHANGES:
 	agent multi-campaign dialing. Read the AGENT_MULTI-CAMPAIGN_DIALING.txt
 	document for more information.
 
+159. Added Agent Search Method override options for campaigns and in-groups.
+
 
 
 
