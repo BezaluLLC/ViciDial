@@ -15,10 +15,11 @@
 # 161217-0819 - Added chat-type to allow for multi-user internal chat sessions
 # 170409-1551 - Added IP List validation code
 # 180508-2215 - Added new help display
+# 210114-1338 - Fixed user group permission bug, Issue #1240
 #
 
-$admin_version = '2.14-8';
-$build = '170409-1551';
+$admin_version = '2.14-10';
+$build = '210114-1338';
 
 $sh="managerchats"; 
 
@@ -155,7 +156,7 @@ if ($auth < 1)
 	exit;
 	}
 
-$user_stmt="select full_name,user_level,selected_language,qc_enabled from vicidial_users where user='$PHP_AUTH_USER'";
+$user_stmt="select full_name,user_level,selected_language,qc_enabled,user_group from vicidial_users where user='$PHP_AUTH_USER'";
 $user_level=0;
 $user_rslt=mysql_to_mysqli($user_stmt, $link);
 if (mysqli_num_rows($user_rslt)>0) 
@@ -165,6 +166,7 @@ if (mysqli_num_rows($user_rslt)>0)
 	$user_level =			$user_row[1];
 	$VUselected_language =	$user_row[2];
 	$qc_auth =				$user_row[3];
+	$LOGuser_group =		$user_row[4];
 	}
 if ($SSallow_chats < 1)
 	{
@@ -293,13 +295,15 @@ if ($active_chats<1 && $manager_message && ($submit_chat== _QXZ("ALL LIVE AGENTS
 if (($LOGuser_level < 9) and ($SSlevel_8_disable_add > 0))
 	{$add_copy_disabled++;}
 
-$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times,agent_allowed_chat_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {echo $stmt;}
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
 $LOGallowed_reports =			$row[1];
 $LOGadmin_viewable_groups =		$row[2];
 $LOGadmin_viewable_call_times =	$row[3];
+$LOGagent_allowed_chat_groups =	$row[4];
 $admin_viewable_groupsALL=0;
 $LOGadmin_viewable_groupsSQL='';
 $whereLOGadmin_viewable_groupsSQL='';
@@ -331,6 +335,21 @@ while ($UUgroups_to_print > $o)
 	$UUgroups_list .= "<option value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
 	$o++;
 	}
+
+if ( (!preg_match("/\-\-ALL\-GROUPS\-\-/i",$LOGagent_allowed_chat_groups)) and (strlen($LOGagent_allowed_chat_groups) > 3) )
+	{
+	$rawLOGagent_allowed_chat_groupsSQL = preg_replace("/ -/",'',$LOGagent_allowed_chat_groups);
+	$rawLOGagent_allowed_chat_groupsSQL = preg_replace("/ /","','",$rawLOGagent_allowed_chat_groupsSQL);
+	$LOGagent_allowed_chat_groupsSQL = "and user_group IN('---ALL---','$rawLOGagent_allowed_chat_groupsSQL')";
+	$whereLOGagent_allowed_chat_groupsSQL = "where user_group IN('---ALL---','$rawLOGagent_allowed_chat_groupsSQL')";
+	$vuLOGagent_allowed_chat_groupsSQL = "and vu.user_group IN('---ALL---','$rawLOGagent_allowed_chat_groupsSQL')";
+	$valLOGagent_allowed_chat_groupsSQL = "and val.user_group IN('---ALL---','$rawLOGagent_allowed_chat_groupsSQL')";
+	$vmLOGagent_allowed_chat_groupsSQL = "and vm.user_group IN('---ALL---','$rawLOGagent_allowed_chat_groupsSQL')";
+	}
+else 
+	{$agent_allowed_chat_groupsALL=1;}
+
+
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -732,7 +751,8 @@ $NWE = "')\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP>";
 
 	echo "<span id='ManagerChatDisplay'>";
 	if (!$manager_chat_id) { # DO NOT ALLOW NEW CHATS WHILE AN OLD ONE IS OPEN!!!
-		$stmt="select vla.user, vu.full_name, vu.user_group, vla.campaign_id, vc.campaign_name, vug.group_name from vicidial_users vu, vicidial_live_agents vla, vicidial_campaigns vc, vicidial_user_groups vug where vla.user=vu.user and vla.campaign_id=vc.campaign_id and vu.user_group=vug.user_group";
+		$stmt="select vla.user, vu.full_name, vu.user_group, vla.campaign_id, vc.campaign_name, vug.group_name from vicidial_users vu, vicidial_live_agents vla, vicidial_campaigns vc, vicidial_user_groups vug where vla.user=vu.user and vla.campaign_id=vc.campaign_id and vu.user_group=vug.user_group $vuLOGagent_allowed_chat_groupsSQL";
+		if ($DB) {echo $stmt;}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$user_array=array();
 		$user_group_array=array();
