@@ -562,6 +562,8 @@ OTHER CHANGES:
 
 159. Added Agent Search Method override options for campaigns and in-groups.
 
+160. Added 'copy_user' function to the Non-Agent API.
+
 
 
 

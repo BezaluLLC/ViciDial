@@ -1,7 +1,7 @@
 <?php
 # non_agent_api.php
 # 
-# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with all non-agent-screen VICIDIAL functions
@@ -158,10 +158,11 @@
 # 201113-0713 - Added delete_did option to update_did function, Issue #1242
 # 201201-1625 - Added group_by_campaign option to agent_stats_export function
 # 201214-1547 - Fixes for PHP8 compatibility
+# 210113-1714 - Added copy_user function
 #
 
-$version = '2.14-135';
-$build = '201214-1547';
+$version = '2.14-136';
+$build = '210113-1714';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -558,6 +559,8 @@ if (isset($_GET["delete_did"]))				{$delete_did=$_GET["delete_did"];}
 	elseif (isset($_POST["delete_did"]))	{$delete_did=$_POST["delete_did"];}
 if (isset($_GET["group_by_campaign"]))			{$group_by_campaign=$_GET["group_by_campaign"];}
 	elseif (isset($_POST["group_by_campaign"]))	{$group_by_campaign=$_POST["group_by_campaign"];}
+if (isset($_GET["source_user"]))			{$source_user=$_GET["source_user"];}
+	elseif (isset($_POST["source_user"]))	{$source_user=$_POST["source_user"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -794,12 +797,14 @@ if ($non_latin < 1)
 	$on_hook_agent = preg_replace('/[^-_0-9a-zA-Z]/','',$on_hook_agent);
 	$delete_did = preg_replace('/[^0-9a-zA-Z]/','',$delete_did);
 	$group_by_campaign = preg_replace('/[^0-9a-zA-Z]/','',$group_by_campaign);
+	$source_user = preg_replace('/[^-_0-9a-zA-Z]/','',$source_user);
 	}
 else
 	{
 	$user = preg_replace("/'|\"|\\\\|;|#/","",$user);
 	$pass = preg_replace("/'|\"|\\\\|;|#/","",$pass);
 	$source = preg_replace("/'|\"|\\\\|;|#/","",$source);
+	$source_user = preg_replace("/'|\"|\\\\|;|#/","",$source_user);
 	}
 
 $USarea = 			substr($phone_number, 0, 3);
@@ -2858,6 +2863,215 @@ if ($function == 'add_user')
 	}
 ################################################################################
 ### END add_user
+################################################################################
+
+
+
+
+
+################################################################################
+### copy_user - adds user to the vicidial_users table
+################################################################################
+if ($function == 'copy_user')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_users='1' and user_level >= 8 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "copy_user USER DOES NOT HAVE PERMISSION TO COPY USERS";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($agent_user)<2) or (strlen($agent_pass)<2) or (strlen($source_user)<1) or (strlen($agent_full_name)<1) )
+				{
+				$result = 'ERROR';
+				$result_reason = "copy_user YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$agent_user|$agent_pass|$source_user|$agent_full_name";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT user_level,user_group,modify_same_user_level from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_users='1' and user_level >= 8;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$user_level =				$row[0];
+				$LOGuser_group =			$row[1];
+				$modify_same_user_level =	$row[2];
+
+				$stmt="SELECT user_level,user_group from vicidial_users where user='$source_user';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$SOURCEuser_level =			$row[0];
+				$SOURCEuser_group =			$row[1];
+
+				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+				$LOGadmin_viewable_groups =		$row[1];
+
+				$LOGadmin_viewable_groupsSQL='';
+				$whereLOGadmin_viewable_groupsSQL='';
+				if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+					{
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+					$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					}
+
+				if ( ( ($user_level < 9) and ($user_level <= $SOURCEuser_level) ) or ( ($modify_same_user_level < 1) and ($user_level >= 9) and ($user_level==$SOURCEuser_level) ) )
+					{
+					$result = 'ERROR';
+					$result_reason = "copy_user USER DOES NOT HAVE PERMISSION TO COPY USERS IN THIS USER LEVEL";
+					$data = "$SOURCEuser_level|$user_level";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$stmt="SELECT count(*) from vicidial_user_groups where user_group='$SOURCEuser_group' $LOGadmin_viewable_groupsSQL;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					$group_exists=$row[0];
+					if ($group_exists < 1)
+						{
+						$result = 'ERROR';
+						$result_reason = "copy_user USER GROUP DOES NOT EXIST";
+						$data = "$SOURCEuser_group";
+						echo "$result: $result_reason: |$user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					else
+						{
+						$stmt="SELECT count(*) from vicidial_users where user='$agent_user';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$row=mysqli_fetch_row($rslt);
+						$user_exists=$row[0];
+						if ($user_exists > 0)
+							{
+							$result = 'ERROR';
+							$result_reason = "copy_user USER ALREADY EXISTS";
+							$data = "$agent_user";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{
+							# if user value is set to autogenerate then find the next value for user
+							if (preg_match('/AUTOGENERA/',$agent_user))
+								{
+								$new_user=0;
+								$auto_user_add_value=0;
+								while ($new_user < 2)
+									{
+									if ($new_user < 1)
+										{
+										$stmt = "SELECT auto_user_add_value FROM system_settings;";
+										$rslt=mysql_to_mysqli($stmt, $link);
+										$ss_auav_ct = mysqli_num_rows($rslt);
+										if ($ss_auav_ct > 0)
+											{
+											$row=mysqli_fetch_row($rslt);
+											$auto_user_add_value = $row[0];
+											}
+										$new_user++;
+										}
+									$stmt = "SELECT count(*) FROM vicidial_users where user='$auto_user_add_value';";
+									$rslt=mysql_to_mysqli($stmt, $link);
+									$row=mysqli_fetch_row($rslt);
+									if ($row[0] < 1)
+										{
+										$new_user++;
+										}
+									else 
+										{
+									#	echo "<!-- AG: $auto_user_add_value -->\n";
+										$auto_user_add_value = ($auto_user_add_value + 7);
+										}
+									}
+								$agent_user = $auto_user_add_value;
+
+								$stmt="UPDATE system_settings SET auto_user_add_value='$agent_user';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								}
+
+							$pass_hash='';
+							if ( ($SSpass_hash_enabled > 0) and (strlen($agent_pass) > 1) )
+								{
+								$agent_pass = preg_replace("/\'|\"|\\\\|;| /","",$agent_pass);
+								$pass_hash = exec("../agc/bp.pl --pass=$agent_pass");
+								$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
+								$agent_pass='';
+								}
+
+							$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,agentcall_chat,modify_email_accounts,pass_hash,alter_admin_interface_options,max_inbound_calls,modify_custom_dialplans,wrapup_seconds_override,modify_languages,selected_language,user_choose_language,ignore_group_on_search,api_list_restrict,api_allowed_functions,lead_filter_id,admin_cf_show_hidden,user_hide_realtime,modify_colors,user_nickname,user_new_lead_limit,api_only_user,modify_auto_reports,modify_ip_lists,ignore_ip_list,ready_max_logout,export_gdpr_leads,access_recordings,pause_code_approval,max_hopper_calls,max_hopper_calls_hour,mute_recordings,hide_call_log_info,next_dial_my_callbacks,user_admin_redirect_url,max_inbound_filter_enabled,max_inbound_filter_statuses,max_inbound_filter_ingroups,max_inbound_filter_min_sec,status_group_id) SELECT \"$agent_user\",\"$agent_pass\",\"$agent_full_name\",user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,agentcall_chat,modify_email_accounts,\"$pass_hash\",alter_admin_interface_options,max_inbound_calls,modify_custom_dialplans,wrapup_seconds_override,modify_languages,selected_language,user_choose_language,ignore_group_on_search,api_list_restrict,api_allowed_functions,lead_filter_id,admin_cf_show_hidden,user_hide_realtime,modify_colors,user_nickname,user_new_lead_limit,api_only_user,modify_auto_reports,modify_ip_lists,ignore_ip_list,ready_max_logout,export_gdpr_leads,access_recordings,pause_code_approval,max_hopper_calls,max_hopper_calls_hour,mute_recordings,hide_call_log_info,next_dial_my_callbacks,user_admin_redirect_url,max_inbound_filter_enabled,max_inbound_filter_statuses,max_inbound_filter_ingroups,max_inbound_filter_min_sec,status_group_id from vicidial_users where user=\"$source_user\";";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$affected_rows = mysqli_affected_rows($link);
+
+							$stmtA="INSERT INTO vicidial_inbound_group_agents (user,group_id,group_rank,group_weight,calls_today,group_type) SELECT \"$agent_user\",group_id,group_rank,group_weight,\"0\",group_type from vicidial_inbound_group_agents where user=\"$source_user\";";
+							$rslt=mysql_to_mysqli($stmtA, $link);
+							$affected_rowsA = mysqli_affected_rows($link);
+
+							$stmtB="INSERT INTO vicidial_campaign_agents (user,campaign_id,campaign_rank,campaign_weight,calls_today) SELECT \"$agent_user\",campaign_id,campaign_rank,campaign_weight,\"0\" from vicidial_campaign_agents where user=\"$source_user\";";
+							$rslt=mysql_to_mysqli($stmtB, $link);
+							$affected_rowsB = mysqli_affected_rows($link);
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|$stmtA|$stmtB|";
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='USERS', event_type='COPY', record_id='$agent_user', event_code='ADMIN API COPY USER', event_sql=\"$SQL_log\", event_notes='user: $agent_user   source_user: $source_user   rows: $affected_rows,$affected_rowsA,$affected_rowsB';";
+							if ($DB) {echo "|$stmt|$stmtA|$stmtB|\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+
+							$result = 'SUCCESS';
+							$result_reason = "copy_user USER HAS BEEN COPIED";
+							$data = "$agent_user|$agent_pass|$agent_full_name|$source_user";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						}
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END copy_user
 ################################################################################
 
 
