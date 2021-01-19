@@ -13345,7 +13345,7 @@ if ($function == 'call_dispo_report')
 			$grand_total_calls=0;
 			if (!$skip_outbound) 
 				{
-				$stmt="select campaign_id, status, count(*) from vicidial_log where call_date>='$query_date $query_time' and call_date<='$end_date $end_time' $ingroup_SQL $status_SQL $user_SQL group by campaign_id, status order by campaign_id, status asc";
+				$stmt="select campaign_id, status, count(*) from vicidial_log where call_date>='$query_date $query_time' and call_date<='$end_date $end_time' $campaign_SQL $status_SQL $user_SQL group by campaign_id, status order by campaign_id, status asc";
 				if ($DB) {$rpt_str.=$stmt."<BR>\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 				while ($row=mysqli_fetch_row($rslt)) 
