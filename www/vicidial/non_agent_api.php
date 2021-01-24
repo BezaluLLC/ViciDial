@@ -13289,7 +13289,7 @@ if ($function == 'call_dispo_report')
 				{
 				$status_array=explode("-", $statuses);
 				$categories_array=explode("-", $categories);
-				$cat_stmt="select distinct statuses from vicidial_statuses where category in ('".implode("','", $categories_array)."') UNION select distinct statuses from vicidial_campaign_statuses where category in ('".implode("','", $categories_array)."') $campaign_SQL";
+				$cat_stmt="select distinct status from vicidial_statuses where category in ('".implode("','", $categories_array)."') UNION select distinct status from vicidial_campaign_statuses where category in ('".implode("','", $categories_array)."') $campaign_SQL";
 				if ($DB) {$rpt_str.=$cat_stmt."<BR>\n";}
 				$cat_rslt=mysql_to_mysqli($cat_stmt, $link);
 				while($cat_row=mysqli_fetch_row($cat_rslt)) 
