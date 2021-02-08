@@ -1365,7 +1365,7 @@ ALTER TABLE vicidial_campaigns ADD transfer_button_launch VARCHAR(12) default 'N
 
 UPDATE system_settings SET db_schema_version='1613',db_schema_update_date=NOW() where db_schema_version < 1613;
 
-ALTER TABLE system_settings ADD allow_shared_dial ENUM('0','1') default '0';
+ALTER TABLE system_settings ADD allow_shared_dial ENUM('0','1','2','3','4','5','6') default '0';
 
 ALTER TABLE vicidial_campaigns ADD shared_dial_rank TINYINT(3) default '99';
 ALTER TABLE vicidial_campaigns MODIFY dial_method ENUM('MANUAL','RATIO','ADAPT_HARD_LIMIT','ADAPT_TAPERED','ADAPT_AVERAGE','INBOUND_MAN','SHARED_RATIO','SHARED_ADAPT_HARD_LIMIT','SHARED_ADAPT_TAPERED','SHARED_ADAPT_AVERAGE') default 'MANUAL';
@@ -1393,3 +1393,40 @@ ALTER TABLE vicidial_campaigns ADD agent_search_method VARCHAR(2) default '';
 ALTER TABLE vicidial_inbound_groups ADD agent_search_method VARCHAR(2) default '';
 
 UPDATE system_settings SET db_schema_version='1615',db_schema_update_date=NOW() where db_schema_version < 1615;
+
+ALTER TABLE system_settings MODIFY allow_shared_dial ENUM('0','1','2','3','4','5','6') default '0';
+
+CREATE TABLE vicidial_shared_log (
+campaign_id VARCHAR(20) NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+log_time DATETIME,
+total_agents SMALLINT(5) default '0',
+total_calls SMALLINT(5) default '0',
+debug_output TEXT,
+adapt_output TEXT,
+index (campaign_id),
+index (log_time)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_shared_drops (
+callerid VARCHAR(20),
+server_ip VARCHAR(15) NOT NULL,
+campaign_id VARCHAR(20),
+status ENUM('SENT','RINGING','LIVE','XFER','PAUSED','CLOSER','BUSY','DISCONNECT','IVR') default 'PAUSED',
+lead_id INT(9) UNSIGNED NOT NULL,
+uniqueid VARCHAR(20),
+channel VARCHAR(100),
+phone_code VARCHAR(10),
+phone_number VARCHAR(18),
+call_time DATETIME,
+call_type ENUM('IN','OUT','OUTBALANCE') default 'OUT',
+stage VARCHAR(20) default 'START',
+last_update_time DATETIME,
+alt_dial VARCHAR(6) default 'NONE',
+drop_time DATETIME,
+index (callerid),
+index (call_time),
+index (drop_time)
+) ENGINE=MyISAM;
+
+UPDATE system_settings SET db_schema_version='1616',db_schema_update_date=NOW() where db_schema_version < 1616;

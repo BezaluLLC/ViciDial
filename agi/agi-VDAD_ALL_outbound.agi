@@ -4114,6 +4114,14 @@ if ($drop_timer > $DROP_TIME)
 			$dbhP=$dbhA;   $mysql_count='01051';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		if ($AGILOG) {$agi_string = "--    VDAD vicidial_list update: |$affected_rows|$CIDlead_id";   &agi_output;}
 
+		if ( ($DBdrop_call_seconds < 0) && ($drop_action =~ /IN_GROUP/) ) 
+			{
+			$stmtA = "INSERT IGNORE INTO vicidial_shared_drops (callerid,server_ip,campaign_id,status,lead_id,uniqueid,channel,phone_code,phone_number,call_time,call_type,stage,last_update_time,alt_dial,drop_time) SELECT callerid,server_ip,campaign_id,status,lead_id,uniqueid,channel,phone_code,phone_number,call_time,call_type,stage,last_update_time,alt_dial,now() from vicidial_auto_calls where callerid='$callerid' order by call_time desc limit 1;";
+			$affected_rows = $dbhA->do($stmtA);
+				$dbhP=$dbhA;   $mysql_count='01XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+			if ($AGILOG) {$agi_string = "--    SHARED drop record inserted: |$affected_rows|$VDADcampaign|";   &agi_output;}
+			}
+
 		$stmtA = "DELETE FROM vicidial_auto_calls where callerid='$callerid' order by call_time desc limit 1;";
 		$affected_rows = $dbhA->do($stmtA);
 			$dbhP=$dbhA;   $mysql_count='01052';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;

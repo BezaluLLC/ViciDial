@@ -195,6 +195,7 @@ else
 	}
 #############
 
+$query_date = preg_replace('/[^-_0-9a-zA-Z]/', '', $query_date);
 
 if ($non_latin < 1)
 	{

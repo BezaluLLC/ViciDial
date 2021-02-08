@@ -6,7 +6,7 @@
 # adjusts the auto_dial_level for vicidial adaptive-predictive campaigns. 
 # gather call stats for campaigns and in-groups
 #
-# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 60823-1302 - First build from AST_VDhopper.pl
@@ -54,8 +54,10 @@
 # 200811-1600 - Include live agents from other campaigns if they have the campaign Drop-InGroup selected and drop sec < 0
 # 201106-2141 - Added calculation and caching of park_log stats per campaign/in-group
 # 201214-0857 - Added SHARED_ campaign agent rotation functions
+# 210207-1205 - Added more logging and debug code for SHARED agent campaigns
 #
 
+$build='210207-1205';
 # constants
 $DB=0;  # Debug flag, set to 0 for no debug messages, On an active system this will generate lots of lines of output per minute
 $US='__';
@@ -2381,6 +2383,12 @@ sub shared_agent_process
 		$stmtA = "UPDATE vicidial_campaign_stats_debug SET entry_time='$now_date',debug_output='$debug_shared_output' where campaign_id='--ALL--' and server_ip='SHARED';";
 		$affected_rows = $dbhA->do($stmtA);
 
+		if ($SSallow_shared_dial > 1) 
+			{
+			$stmtA = "INSERT INTO vicidial_shared_log SET log_time='$now_date',total_agents='$SHARED_agents_ct',total_calls='0',debug_output='BUILD: $build\n$debug_shared_output',campaign_id='--ALL--',server_ip='SHARED';";
+			$affected_rows = $dbhA->do($stmtA);
+			}
+
 		### If there are active SHARED_ campaigns and agents set to take calls from the drop-in-groups of those campaigns, then start processing SHARED_ agents
 		if ( ($SHARED_campaigns_ct > 0) and ($SHARED_agents_ct > 0) ) 
 			{
@@ -2446,6 +2454,7 @@ sub shared_agent_process
 
 			$cp_ct=0;
 			$agent_shared_output .= "\nSHARED Campaigns:\n";
+			$total_shared_calls_counter=0;
 			while($SHARED_campaigns_ct > $cp_ct)
 				{
 				$shared_camp_output="$SHARED_campaigns[$cp_ct]   Drop In-Group: $SHARED_campaigns_drop_ig[$cp_ct]   Shared Agents: $SHARED_campaigns_agnt_ct[$cp_ct] (Dial Agents: $SHARED_campaigns_agnt_dl[$cp_ct])";
@@ -2455,12 +2464,37 @@ sub shared_agent_process
 				$stmtA = "UPDATE vicidial_campaign_stats_debug SET entry_time='$now_date',adapt_output='$shared_camp_output' where campaign_id='$SHARED_campaigns[$cp_ct]' and server_ip='SHARED';";
 				$affected_rows = $dbhA->do($stmtA);
 
+				### see how many total VDAD calls are going on right now for this shared campaign
+				$temp_calls_counter=0;
+				$stmtA = "SELECT count(*) FROM vicidial_auto_calls where campaign_id IN('$SHARED_campaigns_drop_ig[$cp_ct]','$SHARED_campaigns[$cp_ct]') and status IN('SENT','RINGING','LIVE','XFER','CLOSER','IVR');";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$temp_calls_counter = $aryA[0];
+					$total_shared_calls_counter = ($total_shared_calls_counter + $temp_calls_counter);
+					}
+				$sthA->finish();
+
+				if ($SSallow_shared_dial > 1) 
+					{
+					$stmtA = "INSERT INTO vicidial_shared_log SET log_time='$now_date',total_agents='$SHARED_campaigns_agnt_dl[$cp_ct]',total_calls='$temp_calls_counter',adapt_output='BUILD: $build\n$shared_camp_output',campaign_id='$SHARED_campaigns[$cp_ct]',server_ip='SHARED';";
+					$affected_rows = $dbhA->do($stmtA);
+					}
 				$cp_ct++;
 				}
 
 			# update debug output
 			$stmtA = "UPDATE vicidial_campaign_stats_debug SET entry_time='$now_date',adapt_output='$agent_shared_output' where campaign_id='--ALL--' and server_ip='SHARED';";
 			$affected_rows = $dbhA->do($stmtA);
+
+			if ($SSallow_shared_dial > 1) 
+				{
+				$stmtA = "INSERT INTO vicidial_shared_log SET log_time='$now_date',total_agents='$SHARED_agents_ct',total_calls='$total_shared_calls_counter',adapt_output='BUILD: $build\n$agent_shared_output',campaign_id='--ALL--',server_ip='SHARED';";
+				$affected_rows = $dbhA->do($stmtA);
+				}
 			}
 		}
 	}

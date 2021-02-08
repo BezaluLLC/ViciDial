@@ -1883,7 +1883,7 @@ enable_international_dncs ENUM('0','1') default '0',
 web_loader_phone_strip VARCHAR(10) default 'DISABLED',
 manual_dial_phone_strip VARCHAR(10) default 'DISABLED',
 daily_call_count_limit ENUM('0','1') default '0',
-allow_shared_dial ENUM('0','1') default '0',
+allow_shared_dial ENUM('0','1','2','3','4','5','6') default '0',
 agent_search_method ENUM('0','1','2','3','4','5','6') default '0'
 ) ENGINE=MyISAM;
 
@@ -4378,6 +4378,39 @@ index (campaign_id)
 
 CREATE UNIQUE INDEX vadc_key on vicidial_agent_dial_campaigns(campaign_id, user);
 
+CREATE TABLE vicidial_shared_log (
+campaign_id VARCHAR(20) NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+log_time DATETIME,
+total_agents SMALLINT(5) default '0',
+total_calls SMALLINT(5) default '0',
+debug_output TEXT,
+adapt_output TEXT,
+index (campaign_id),
+index (log_time)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_shared_drops (
+callerid VARCHAR(20),
+server_ip VARCHAR(15) NOT NULL,
+campaign_id VARCHAR(20),
+status ENUM('SENT','RINGING','LIVE','XFER','PAUSED','CLOSER','BUSY','DISCONNECT','IVR') default 'PAUSED',
+lead_id INT(9) UNSIGNED NOT NULL,
+uniqueid VARCHAR(20),
+channel VARCHAR(100),
+phone_code VARCHAR(10),
+phone_number VARCHAR(18),
+call_time DATETIME,
+call_type ENUM('IN','OUT','OUTBALANCE') default 'OUT',
+stage VARCHAR(20) default 'START',
+last_update_time DATETIME,
+alt_dial VARCHAR(6) default 'NONE',
+drop_time DATETIME,
+index (callerid),
+index (call_time),
+index (drop_time)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -4711,4 +4744,4 @@ INSERT INTO vicidial_settings_containers VALUES ('INTERNATIONAL_DNC_IMPORT','Pro
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1615',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1616',db_schema_update_date=NOW(),reload_timestamp=NOW();

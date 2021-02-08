@@ -1,4 +1,4 @@
-AGENT MULTI-CAMPAIGN DIALING DOC	Started: 2020-08-24	Updated: 2021-01-02
+AGENT MULTI-CAMPAIGN DIALING DOC	Started: 2020-08-24	Updated: 2021-02-07
 
 NOTE: Requires VICIdial svn/trunk code revision 3284 or higher to work properly!!!
 
@@ -130,7 +130,9 @@ How a "SHARED_..." dial methods work:
 2. Change the dialing algorithm(for campaigns with a "SHARED_" dial method only) to prevent over-dialing as agents are rotated from dialing-campaign to dialing-campaign.
 3. The agent-dialing-campaign-rotation process attempts to balance agents by time(round-robin-like) across the campaigns that they are assigned to take calls from.
 4. New database fields/tables were added to store the temporary dialing campaign designations for each agent and what other campaigns they had just been assigned to
-5. Add shared debug output to existing Admin Utilities "Campaign Debug Report" that will show everything that is going on for shared campaigns in the process of agent rotation and shared outbound dialing
+5. Added shared debug output to existing Admin Utilities "Campaign Debug Report" that will show everything that is going on for shared campaigns in the process of agent rotation and shared outbound dialing
+6. Added optional debugging and a new "vicidial_shared_log" DB table as well as "Shared Debug Page" to help with troubleshooting of the SHARED dialing processes
+	*NOTE: the optional extra debugging is enabled by changing the "Shared Agent Campaign Dialing" System Setting to '2' or higher.
 
 Agent rotation steps, added to the AST_VDadapt.pl script: (see new database changes below for details on the DB storage of this data)
 - runs once every 1 minute
@@ -191,14 +193,14 @@ The following are instructions for how to set up a "SHARED_" set of campaigns:
 
 * NOTES: 
 - The "SHARED_..." campaign dial method does not require the use of Remote Agents at all, and the live agents do need to select to take blended (outbound) calls or no calls will be placed for them as they rotate through the shared agent campaigns.
-- For SHARED agent campaigns, there will be an additional campaign setting: "Shared Dial Rank", which will allow you to prioritize the dialing of your shared campaigns as calls are placed for them.
+- For SHARED agent campaigns, there is an additional campaign setting: "Shared Dial Rank", which will allow you to prioritize the dialing of your shared campaigns as calls are placed for them.
 
 
 
 
 DATABASE CHANGES: !!!!!! FOR DOCUMENTATION PURPOSES ONLY !!!!!
 
-ALTER TABLE system_settings ADD allow_shared_dial ENUM('0','1') default '0';
+ALTER TABLE system_settings ADD allow_shared_dial ENUM('0','1','2','3','4','5','6') default '0';
 
 ALTER TABLE vicidial_campaigns ADD shared_dial_rank TINYINT(3) default '99';
 ALTER TABLE vicidial_campaigns MODIFY dial_method ENUM('MANUAL','RATIO','ADAPT_HARD_LIMIT','ADAPT_TAPERED','ADAPT_AVERAGE','INBOUND_MAN','SHARED_RATIO','SHARED_ADAPT_HARD_LIMIT','SHARED_ADAPT_TAPERED','SHARED_ADAPT_AVERAGE') default 'MANUAL';
@@ -217,3 +219,35 @@ index (campaign_id)
 
 CREATE UNIQUE INDEX vadc_key on vicidial_agent_dial_campaigns(campaign_id, user);
 
+CREATE TABLE vicidial_shared_log (
+campaign_id VARCHAR(20) NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+log_time DATETIME,
+total_agents SMALLINT(5) default '0',
+total_calls SMALLINT(5) default '0',
+debug_output TEXT,
+adapt_output TEXT,
+index (campaign_id),
+index (log_time)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_shared_drops (
+callerid VARCHAR(20),
+server_ip VARCHAR(15) NOT NULL,
+campaign_id VARCHAR(20),
+status ENUM('SENT','RINGING','LIVE','XFER','PAUSED','CLOSER','BUSY','DISCONNECT','IVR') default 'PAUSED',
+lead_id INT(9) UNSIGNED NOT NULL,
+uniqueid VARCHAR(20),
+channel VARCHAR(100),
+phone_code VARCHAR(10),
+phone_number VARCHAR(18),
+call_time DATETIME,
+call_type ENUM('IN','OUT','OUTBALANCE') default 'OUT',
+stage VARCHAR(20) default 'START',
+last_update_time DATETIME,
+alt_dial VARCHAR(6) default 'NONE',
+drop_time DATETIME,
+index (callerid),
+index (call_time),
+index (drop_time)
+) ENGINE=MyISAM;
