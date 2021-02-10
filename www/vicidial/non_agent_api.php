@@ -160,10 +160,11 @@
 # 201214-1547 - Fixes for PHP8 compatibility
 # 210113-1714 - Added copy_user function
 # 210209-2014 - Added add_did function
+# 210210-1627 - Added duplicate check with more X-day options for add_lead function
 #
 
-$version = '2.14-137';
-$build = '210209-2014';
+$version = '2.14-138';
+$build = '210210-1627';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -11055,12 +11056,18 @@ if ($function == 'add_lead')
 				### END checking for DNC if defined ###
 
 				### START checking for duplicate if defined ###
-				$ninetydaySQL='';
-				if (preg_match("/90DAY/i",$duplicate_check))
+				$multidaySQL='';
+				if (preg_match("/30DAY|60DAY|90DAY|180DAY|360DAY/i",$duplicate_check))
 					{
-					$ninetyday = date("Y-m-d H:i:s", mktime(date("H"),date("i"),date("s"),date("m"),date("d")-90,date("Y")));
-					$ninetydaySQL = "and entry_date > \"$ninetyday\"";
-					if ($DB > 0) {echo "DEBUG: 90day SQL: |$ninetydaySQL|";}
+					$day_val=30;
+					if (preg_match("/30DAY/i",$duplicate_check)) {$day_val=30;}
+					if (preg_match("/60DAY/i",$duplicate_check)) {$day_val=60;}
+					if (preg_match("/90DAY/i",$duplicate_check)) {$day_val=90;}
+					if (preg_match("/180DAY/i",$duplicate_check)) {$day_val=180;}
+					if (preg_match("/360DAY/i",$duplicate_check)) {$day_val=360;}
+					$multiday = date("Y-m-d H:i:s", mktime(date("H"),date("i"),date("s"),date("m"),date("d")-$day_val,date("Y")));
+					$multidaySQL = "and entry_date > \"$multiday\"";
+					if ($DB > 0) {echo "DEBUG: $day_val day SQL: |$multidaySQL|";}
 					}
 
 				if (preg_match("/CAMP/i",$duplicate_check)) # find lists within campaign
@@ -11094,7 +11101,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPLIST\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where phone_number='$phone_number' and list_id='$list_id' $ninetydaySQL limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where phone_number='$phone_number' and list_id='$list_id' $multidaySQL limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -11119,7 +11126,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPCAMP - $duplicate_lists\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where phone_number='$phone_number' and list_id IN($duplicate_lists) $ninetydaySQL limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where phone_number='$phone_number' and list_id IN($duplicate_lists) $multidaySQL limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -11144,7 +11151,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPSYS\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where phone_number='$phone_number' $ninetydaySQL limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where phone_number='$phone_number' $multidaySQL limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -11169,7 +11176,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPTITLEALTPHONELIST\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' $ninetydaySQL limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id='$list_id' $multidaySQL limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -11194,7 +11201,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPTITLEALTPHONECAMP\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id IN($duplicate_lists) $ninetydaySQL limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' and list_id IN($duplicate_lists) $multidaySQL limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -11219,7 +11226,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPTITLEALTPHONESYS\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' $ninetydaySQL limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where title='$title' and alt_phone='$alt_phone' $multidaySQL limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -11244,7 +11251,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPNAMEPHONELIST\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where first_name='$first_name' and last_name='$last_name' and phone_number='$phone_number' $ninetydaySQL and list_id='$list_id' limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where first_name='$first_name' and last_name='$last_name' and phone_number='$phone_number' $multidaySQL and list_id='$list_id' limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -11269,7 +11276,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPNAMEPHONECAMP\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where first_name='$first_name' and last_name='$last_name' and phone_number='$phone_number' and list_id IN($duplicate_lists) $ninetydaySQL limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where first_name='$first_name' and last_name='$last_name' and phone_number='$phone_number' and list_id IN($duplicate_lists) $multidaySQL limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)
@@ -11294,7 +11301,7 @@ if ($function == 'add_lead')
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPNAMEPHONESYS\n";}
 					$duplicate_found=0;
-					$stmt="SELECT lead_id,list_id from vicidial_list where first_name='$first_name' and last_name='$last_name' and phone_number='$phone_number' $ninetydaySQL limit 1;";
+					$stmt="SELECT lead_id,list_id from vicidial_list where first_name='$first_name' and last_name='$last_name' and phone_number='$phone_number' $multidaySQL limit 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($pc_recs > 0)

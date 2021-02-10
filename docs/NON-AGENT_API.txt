@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-02-09
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-02-10
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -171,6 +171,7 @@ Changes:
 201201-1625 - Added group_by_campaign option to agent_stats_export function
 210113-1714 - Added copy_user function
 210209-2014 - Added add_did function
+210210-1627 - Added duplicate check with more X-day options for add_lead function
 
 
 API Functions use the 'function' variable
@@ -899,7 +900,7 @@ duplicate_check -	Check for duplicate records in the system, can select more tha
 				DUPNAMEPHONELIST - check for duplicate first_name, last_name and phone_number in same list
 				DUPNAMEPHONECAMP - check for duplicate first_name, last_name and phone_number in all lists for this list's campaign
 				DUPNAMEPHONESYS - check for duplicate first_name, last_name and phone_number in entire system
-				 "  90DAY - Added to one of the above duplicate checks(i.e. "DUPSYS90DAY"), only checks leads loaded in last 90 days
+				 "  30/60/90/180/360DAY - Added to one of the above duplicate checks(i.e. "DUPSYS90DAY"), only checks leads loaded in last 90 days
 usacan_prefix_check -	Y or N, default is N. Check for a valid 4th digit for USA and Canada phone numbers (cannot be 0 or 1)
 usacan_areacode_check -	Y or N, default is N. Check for a valid areacode for USA and Canada phone numbers(also checks for 10-digit length)
 nanpa_ac_prefix_check -	Y or N, default is N. Check for a valid NANPA areacode and prefix, if optional NANPA data is on the system
