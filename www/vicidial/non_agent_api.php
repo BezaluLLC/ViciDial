@@ -159,10 +159,11 @@
 # 201201-1625 - Added group_by_campaign option to agent_stats_export function
 # 201214-1547 - Fixes for PHP8 compatibility
 # 210113-1714 - Added copy_user function
+# 210209-2014 - Added add_did function
 #
 
-$version = '2.14-136';
-$build = '210113-1714';
+$version = '2.14-137';
+$build = '210209-2014';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -6733,6 +6734,302 @@ if ($function == 'update_campaign')
 	}
 ################################################################################
 ### END update_campaign
+################################################################################
+
+
+
+
+
+################################################################################
+### add_did - adds new Inbound DID entries to the system in the vicidial_inbound_dids table
+################################################################################
+if ($function == 'add_did')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_inbound_dids='1' and user_level >= 8 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "add_did USER DOES NOT HAVE PERMISSION TO ADD DIDS";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($did_pattern)<2) or (strlen($did_pattern)>50) )
+				{
+				$result = 'ERROR';
+				$result_reason = "add_did YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$did_pattern";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+				$LOGadmin_viewable_groups =		$row[1];
+
+				$admin_viewable_groupsSQL='';
+				$WHEREadmin_viewable_groupsSQL='';
+				if  (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups))
+					{
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+					$admin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					$WHEREadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					}
+
+				$stmt="SELECT count(*) from vicidial_inbound_dids where did_pattern='$did_pattern';";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$did_exists=$row[0];
+				if ($did_exists > 0)
+					{
+					$result = 'ERROR';
+					$result_reason = "add_did DID ALREADY EXISTS";
+					$data = "$did_pattern";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$did_patternSQL = "did_pattern='$did_pattern'";
+					$did_descriptionSQL='';
+					$activeSQL='';
+					$did_routeSQL='';
+					$record_callSQL='';
+					$extensionSQL='';
+					$exten_contextSQL='';
+					$voicemail_extSQL='';
+					$phone_extensionSQL='';
+					$server_ipSQL='';
+					$groupSQL='';
+					$filter_clean_cid_numberSQL='';
+						
+					if (strlen($did_description) > 0)
+						{
+						if ( (strlen($did_description) > 50) or (strlen($did_description) < 6) )
+							{
+							$result = 'ERROR';
+							$result_reason = "add_did DID DESCRIPTION MUST BE FROM 6 TO 50 CHARACTERS, THIS IS AN OPTIONAL FIELD";
+							$data = "$did_description";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$did_descriptionSQL = " ,did_description='$did_description'";}
+						}
+					if (strlen($active) > 0)
+						{
+						if ( ($active != 'Y') and ($active != 'N') )
+							{
+							$result = 'ERROR';
+							$result_reason = "add_did ACTIVE MUST BE Y OR N, THIS IS AN OPTIONAL FIELD";
+							$data = "$active";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$activeSQL = " ,did_active='$active'";}
+						}
+					if (strlen($did_route) > 0)
+						{
+						if (preg_match("/^EXTEN$|^VOICEMAIL$|^AGENT$|^PHONE$|^IN_GROUP$|^CALLMENU$|^VMAIL_NO_INST$/",$did_route))
+							{$did_routeSQL = " ,did_route='$did_route'";}
+						else
+							{
+							$result = 'ERROR';
+							$result_reason = "add_did DID ROUTE IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+							$data = "$did_route";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						}
+					if (strlen($record_call) > 0)
+						{
+						if ( ($record_call != 'Y') and ($record_call != 'N') and ($record_call != 'Y_QUEUESTOP') )
+							{
+							$result = 'ERROR';
+							$result_reason = "add_did RECORD CALL MUST BE Y OR N, THIS IS AN OPTIONAL FIELD";
+							$data = "$record_call";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$record_callSQL = " ,record_call='$record_call'";}
+						}
+					if (strlen($extension) > 0)
+						{
+						if (strlen($extension) > 50)
+							{
+							$result = 'ERROR';
+							$result_reason = "add_did EXTENSION MUST BE FROM 1 TO 50 CHARACTERS, THIS IS AN OPTIONAL FIELD";
+							$data = "$extension";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$extensionSQL = " ,extension='$extension'";}
+						}
+					if (strlen($exten_context) > 0)
+						{
+						if (strlen($exten_context) > 50)
+							{
+							$result = 'ERROR';
+							$result_reason = "add_did EXTENSION CONTEXT MUST BE FROM 1 TO 50 CHARACTERS, THIS IS AN OPTIONAL FIELD";
+							$data = "$exten_context";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$exten_contextSQL = " ,exten_context='$exten_context'";}
+						}
+					if (strlen($voicemail_ext) > 0)
+						{
+						if ( (strlen($voicemail_ext) > 10) or (strlen($voicemail_ext) < 1) )
+							{
+							$result = 'ERROR';
+							$result_reason = "add_did VOICEMAIL EXTENSION MUST BE FROM 1 TO 10 CHARACTERS, THIS IS AN OPTIONAL FIELD";
+							$data = "$voicemail_ext";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$voicemail_extSQL = " ,voicemail_ext='$voicemail_ext'";}
+						}
+					if (strlen($phone_extension) > 0)
+						{
+						if ( (strlen($phone_extension) > 100) or (strlen($phone_extension) < 1) )
+							{
+							$result = 'ERROR';
+							$result_reason = "add_did PHONE EXTENSION MUST BE FROM 1 TO 100 CHARACTERS, THIS IS AN OPTIONAL FIELD";
+							$data = "$phone_extension";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$phone_extensionSQL = " ,phone='$phone_extension'";}
+						}
+					if (strlen($server_ip) > 0)
+						{
+						$stmt="SELECT count(*) from servers where server_ip='$server_ip';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$row=mysqli_fetch_row($rslt);
+						$server_exists=$row[0];
+
+						if ($server_exists < 1)
+							{
+							$result = 'ERROR';
+							$result_reason = "add_did SERVER IP MUST BE A VALID SERVER IN THE SYSTEM, THIS IS AN OPTIONAL FIELD";
+							$data = "$server_ip";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						$server_ipSQL = " ,server_ip='$server_ip'";
+						}
+					if (strlen($group) > 0)
+						{
+						$stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$group';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$row=mysqli_fetch_row($rslt);
+						$group_exists=$row[0];
+
+						if ($group_exists < 1)
+							{
+							$result = 'ERROR';
+							$result_reason = "add_did GROUP ID MUST BE A VALID INBOUND GROUP IN THE SYSTEM, THIS IS AN OPTIONAL FIELD";
+							$data = "$group";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						$groupSQL = " ,group_id='$group'";
+						}
+					if (strlen($filter_clean_cid_number) > 0)
+						{
+						if ( (strlen($filter_clean_cid_number) > 20) or (strlen($filter_clean_cid_number) < 1) )
+							{
+							$result = 'ERROR';
+							$result_reason = "add_did CLEAN CID NUMBER MUST BE FROM 1 TO 20 CHARACTERS, THIS IS AN OPTIONAL FIELD";
+							$data = "$filter_clean_cid_number";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$filter_clean_cid_numberSQL = " ,filter_clean_cid_number='$filter_clean_cid_number'";}
+						}
+
+					$addSQL = "$did_patternSQL$did_descriptionSQL$activeSQL$did_routeSQL$record_callSQL$extensionSQL$exten_contextSQL$voicemail_extSQL$phone_extensionSQL$server_ipSQL$groupSQL$filter_clean_cid_numberSQL";
+
+					$addSQL = preg_replace("/^ ,/",'',$addSQL);
+					$stmt="INSERT INTO vicidial_inbound_dids SET $addSQL;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$add_count = mysqli_affected_rows($link);
+					$did_id = mysqli_insert_id($link);
+					if ($DB) {echo "$add_count|$did_id|$stmt|\n";}
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = preg_replace('/;/', '', $SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='DIDS', event_type='ADD', record_id='$did_id', event_code='ADMIN API ADD DID', event_sql=\"$SQL_log\", event_notes='did: $did_pattern did_id: $did_id inserted: $add_count';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+
+					$result = 'SUCCESS';
+					$result_reason = "add_did DID HAS BEEN ADDED";
+					$data = "$did_pattern";
+					echo "$result: $result_reason - $user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END add_did
 ################################################################################
 
 

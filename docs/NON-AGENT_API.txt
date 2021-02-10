@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-01-13
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-02-09
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -45,6 +45,7 @@ server_refresh - forces a conf file refresh on all telco servers in the cluster
 check_phone_number - allows you to check if a phone number is valid and dialable
 logged_in_agents - list of agents that are logged in to the system
 update_campaign - updates campaign settings in the system
+add_did - adds new Inbound DID entries to the system
 update_did - updates Inbound DID information in the system
 phone_number_log - exports list of calls placed to one of more phone numbers
 ccc_lead_info - outputs lead data for cross-cluster-communication call
@@ -169,6 +170,7 @@ Changes:
 201113-0713 - Added delete_did option to update_did function
 201201-1625 - Added group_by_campaign option to agent_stats_export function
 210113-1714 - Added copy_user function
+210209-2014 - Added add_did function
 
 
 API Functions use the 'function' variable
@@ -2016,6 +2018,54 @@ ERROR: update_campaign ACTIVE MUST BE Y OR N, THIS IS AN OPTIONAL FIELD - 6666|U
 NOTICE: update_campaign NO UPDATES DEFINED - 6666|
 NOTICE: update_campaign HOPPER HAS BEEN RESET - 6666|1101|324
 SUCCESS: update_campaign CAMPAIGN HAS BEEN UPDATED - 6666|1101
+
+
+
+
+--------------------------------------------------------------------------------
+add_did - adds new Inbound DID entries to the system in the vicidial_inbound_dids table
+
+NOTE: api user for this function must have user_level set to 8 or higher and "Modify DIDs" enabled
+
+REQUIRED FIELDS-
+did_pattern -		2-50 characters, must be a valid DID in the system
+			   NOTE: special characters in the did_pattern need to be URL encoded, for example the plus sign '+' must be sent as '%2B'
+source -		description of what originated the API call (maximum 20 characters)
+
+EDITABLE FIELDS- 
+did_description -	6-50 characters
+active -		Must be one of these: 'Y','N'
+did_route -		must be one of these: 'EXTEN','VOICEMAIL','AGENT','PHONE','IN_GROUP','CALLMENU','VMAIL_NO_INST'
+record_call -		must be one of these: 'Y','N','Y_QUEUESTOP'
+extension -		1-50 digits
+exten_context -		1-50 characters
+voicemail_ext -		1-10 digits
+phone_extension -	1-100 characters
+server_ip -		must be all numbers and dots, max 15 characters
+group -			a valid in-group group_id
+filter_clean_cid_number - 1-20 characters
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=add_did&did_pattern=%2B1727555112&did_description=Updated+test+API+DID&active=Y
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=add_did&did_pattern=7275553331&did_description=Testing+DID&active=N&did_route=EXTEN&record_call=Y_QUEUESTOP&extension=8300&exten_context=notdefault&voicemail_ext=8301&phone_extension=55000&server_ip=192.168.198.5&group=TEST_IN2&filter_clean_cid_number=R10
+
+Example responses:
+ERROR: add_did USER DOES NOT HAVE PERMISSION TO ADD DIDS - 6666
+ERROR: add_did YOU MUST USE ALL REQUIRED FIELDS - 6666|1
+ERROR: add_did NOT AN ALLOWED DID - 98762
+ERROR: add_did DID ALREADY EXISTS - 6666|1000
+ERROR: add_did DID DESCRIPTION MUST BE FROM 6 TO 50 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|012
+ERROR: add_did ACTIVE MUST BE Y OR N, THIS IS AN OPTIONAL FIELD - 6666|U
+ERROR: add_did DID ROUTE IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|12
+ERROR: add_did RECORD CALL MUST BE Y OR N, THIS IS AN OPTIONAL FIELD - 6666|
+ERROR: add_did EXTENSION MUST BE FROM 1 TO 50 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|
+ERROR: add_did EXTENSION CONTEXT MUST BE FROM 1 TO 50 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|
+ERROR: add_did VOICEMAIL EXTENSION MUST BE FROM 1 TO 10 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|
+ERROR: add_did PHONE EXTENSION MUST BE FROM 1 TO 100 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|
+ERROR: add_did SERVER IP MUST BE A VALID SERVER IN THE SYSTEM, THIS IS AN OPTIONAL FIELD - 6666|0.0.0.0
+ERROR: add_did GROUP ID MUST BE A VALID INBOUND GROUP IN THE SYSTEM, THIS IS AN OPTIONAL FIELD - 6666|test
+ERROR: add_did CLEAN CID NUMBER MUST BE FROM 1 TO 20 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|
+SUCCESS: add_did DID HAS BEEN ADDED - 6666|1101
 
 
 

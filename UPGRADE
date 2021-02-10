@@ -564,6 +564,8 @@ OTHER CHANGES:
 
 160. Added 'copy_user' function to the Non-Agent API.
 
+161. Added 'add_did' function to the Non-Agent API.
+
 
 
 
