@@ -566,6 +566,14 @@ OTHER CHANGES:
 
 161. Added 'add_did' function to the Non-Agent API.
 
+162. Added new SOURCESELECT Custom Field Type, it is a single-selection pull-
+	down menu where there are multiple sets of options available depending 
+	on the value of another field for the lead. Also added the ability to
+	perform basic Math functions within a SCRIPT Custom Field using values
+	from other fields in the equations. For more information on how both of
+	these new features work, see the Field Options help in the admin web
+	screen.
+
 
 
 

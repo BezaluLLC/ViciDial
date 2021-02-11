@@ -624,7 +624,7 @@ ALTER TABLE vicidial_inbound_groups ADD park_file_name VARCHAR(100) default '';
 
 UPDATE system_settings SET db_schema_version='1543',db_schema_update_date=NOW() where db_schema_version < 1543;
 
-ALTER TABLE vicidial_lists_fields MODIFY field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY','HIDEBLOB','SWITCH') default 'TEXT';
+ALTER TABLE vicidial_lists_fields MODIFY field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY','HIDEBLOB','SWITCH','SOURCESELECT') default 'TEXT';
 
 UPDATE system_settings SET db_schema_version='1544',db_schema_update_date=NOW() where db_schema_version < 1544;
 
@@ -1430,3 +1430,7 @@ index (drop_time)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1616',db_schema_update_date=NOW() where db_schema_version < 1616;
+
+ALTER TABLE vicidial_lists_fields MODIFY field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY','HIDEBLOB','SWITCH','SOURCESELECT') default 'TEXT';
+
+UPDATE system_settings SET db_schema_version='1617',db_schema_update_date=NOW() where db_schema_version < 1617;

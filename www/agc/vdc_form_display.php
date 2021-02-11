@@ -1,7 +1,7 @@
 <?php
 # vdc_form_display.php
 # 
-# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed display the contents of the FORM tab in the agent 
 # interface, as well as take submission of the form submission when the agent 
@@ -45,10 +45,11 @@
 # 180503-1813 - Added code for SWITCH field type
 # 200406-1137 - Added hide_gender and gender default population
 # 201117-2056 - Changes for better compatibility with non-latin data input
+# 210211-0146 - Added SOURCESELECT field type
 #
 
-$version = '2.14-35';
-$build = '201117-2056';
+$version = '2.14-36';
+$build = '210211-0146';
 $php_script = 'vdc_form_display.php';
 
 require_once("dbconnect_mysqli.php");

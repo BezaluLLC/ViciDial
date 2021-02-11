@@ -5434,12 +5434,13 @@ if ($SSscript_remove_js > 0)
 # 210124-0947 - Added copy_user Non-Agent API function
 # 210207-0915 - Added Shared Debug Page to admin utilities
 # 210210-1601 - Added add_did Non-Agent API function
+# 210211-1145 - Added Matex use information
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-786a';
-$build = '210210-1601';
+$admin_version = '2.14-787a';
+$build = '210211-1145';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -44904,6 +44905,14 @@ if ($ADD==999995)
 		}
 
 	echo "<br><br><B> "._QXZ("Other integrated software disclaimers").":</B><BR><BR>\n";
+
+	echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right valign=middle rowspan=3 nowrap><B><font size=3>"._QXZ("Matex").": </B></td>";
+	echo "<td align=right valign=top><B><font size=2>"._QXZ("Copyright").": </B></td><td align=left><font size=1> &nbsp; "._QXZ("Matex PHP Mathematical expression parser and evaluator library was written by Dorin Marcoci").", &copy; 2021</td></tr>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right valign=top><B><font size=2>"._QXZ("License").": </B></td><td align=left><font size=1> &nbsp; "._QXZ("Chart.js is licensed under the")." <a href=\"https://github.com/madorin/matex/blob/master/LICENSE.md\" target=\"_blank\">MIT "._QXZ("open source license")."</a></td></tr>\n";
+	echo "<tr bgcolor=#$SSstd_row4_background><td align=right valign=top nowrap><B><font size=2>"._QXZ("Source Code").": </B></td><td align=left><font size=1> &nbsp; "._QXZ("Matex original source code is available at")." <a href=\"https://github.com/madorin/matex\" target=\"_blank\">"._QXZ("this link")."</a>.</td></tr>\n";
+
+	echo "<tr><td colspan=3> &nbsp; </tr>";
 
 	echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=2>\n";
 	echo "<tr bgcolor=#$SSstd_row4_background><td align=right valign=middle rowspan=3 nowrap><B><font size=3>"._QXZ("Pure-knob").": </B></td>";
