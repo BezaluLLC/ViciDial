@@ -50,7 +50,8 @@
 # 191013-1029 - Fixes for PHP7
 # 200406-1204 - Fix for gender default field population
 # 210211-0145 - Added SOURCESELECT field type, added basic Math equations to SCRIPT custom field types
-# 
+# 210211-1916 - Disable SCRIPT custom fields Math functions on older PHP versions
+#
 
 # $mysql_queries = 26
 
@@ -344,7 +345,10 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 	$custom_required_fields_multi='|';
 
 	require("dbconnect_mysqli.php");
-	require("Evaluator.php");
+
+	$php_version = phpversion();
+	if (!preg_match("/^4|^5|^6/",$php_version))
+		{require("Evaluator.php");}
 
 	$CFoutput='';
 	$stmt="SHOW TABLES LIKE \"custom_$list_id\";";
@@ -1378,23 +1382,26 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 		# check for Math formulas
 		if ( (preg_match("/--M--/",$CFoutput)) or (preg_match("/--N--/",$CFoutput)) )
 			{
-			$DBM=0;
-			$evaluator = new \Matex\Evaluator();
-			preg_match_all("/--M--(.*?)--N--/", $CFoutput, $MathMatch);
-			$MathMatch_count = count($MathMatch[0]);
-			$Mct=0;
-			while ($MathMatch_count > $Mct)
+			if (!preg_match("/^4|^5|^6/",$php_version))
 				{
-				$temp_MathEq = $MathMatch[0][$Mct];
-				$temp_MathEq = preg_replace("/--M--|--N--/",'',$temp_MathEq);
-				$temp_MathEq_orig = $temp_MathEq;
-				$temp_MathEq = preg_replace("/[^- \+\-\*\^\.\(\)\%\/0-9]/",'',$temp_MathEq);
+				$DBM=0;
+				$evaluator = new \Matex\Evaluator();
+				preg_match_all("/--M--(.*?)--N--/", $CFoutput, $MathMatch);
+				$MathMatch_count = count($MathMatch[0]);
+				$Mct=0;
+				while ($MathMatch_count > $Mct)
+					{
+					$temp_MathEq = $MathMatch[0][$Mct];
+					$temp_MathEq = preg_replace("/--M--|--N--/",'',$temp_MathEq);
+					$temp_MathEq_orig = $temp_MathEq;
+					$temp_MathEq = preg_replace("/[^- \+\-\*\^\.\(\)\%\/0-9]/",'',$temp_MathEq);
 
-				$temp_MathResult = $evaluator->execute($temp_MathEq);
-				if ($DBM > 0) {$CFoutput .= "MATH DEBUG: $Mct|$temp_MathEq|$temp_MathResult|\n";}
-				$CFoutput = str_replace("--M--$temp_MathEq_orig--N--","$temp_MathResult",$CFoutput);
+					$temp_MathResult = $evaluator->execute($temp_MathEq);
+					if ($DBM > 0) {$CFoutput .= "MATH DEBUG: $Mct|$temp_MathEq|$temp_MathResult|\n";}
+					$CFoutput = str_replace("--M--$temp_MathEq_orig--N--","$temp_MathResult",$CFoutput);
 
-				$Mct++;
+					$Mct++;
+					}
 				}
 			}
 

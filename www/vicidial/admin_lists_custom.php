@@ -180,9 +180,9 @@ if ($non_latin < 1)
 
 	$field_name = preg_replace('/[^ \.\,-\_0-9a-zA-Z]/','',$field_name);
 	$field_description = preg_replace('/[^ \.\,-\_0-9a-zA-Z]/','',$field_description);
-	$field_options = preg_replace('/[^ \'\&\.\n\,-\_0-9a-zA-Z]/', '',$field_options);
+	$field_options = preg_replace('/[^ \'\&\.\n\|\,-\_0-9a-zA-Z]/', '',$field_options);
 	if ($field_type != 'SCRIPT')
-		{$field_options = preg_replace('/[^ \.\n\,-\_0-9a-zA-Z]/', '',$field_options);}
+		{$field_options = preg_replace('/[^ \.\n\|\,-\_0-9a-zA-Z]/', '',$field_options);}
 	$field_default = preg_replace('/[^ \.\n\,-\_0-9a-zA-Z]/', '',$field_default);
 	}	# end of non_latin
 else
