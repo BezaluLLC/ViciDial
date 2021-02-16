@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-02-10
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-02-16
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -172,6 +172,7 @@ Changes:
 210113-1714 - Added copy_user function
 210209-2014 - Added add_did function
 210210-1627 - Added duplicate check with more X-day options for add_lead function
+210216-1415 - Added list_exists_check option for add_lead function
 
 
 API Functions use the 'function' variable
@@ -918,6 +919,7 @@ callback_type -		USERONLY or ANYONE, default is ANYONE
 callback_user -		User ID the USERONLY callback is assigned to
 callback_comments -	Optional comments to appear when the callback is called back
 lookup_state -		Y or N, default is N. Looks up state field from areacode list. Only works if the 'state' field is not populated.
+list_exists_check -	Y or N, default is N. If the list_id is not a defined list in the system, it will ERROR and not insert the lead.
 
 (for fields with spaces in the values, you can replace the space with a plus + sign[address, city, first_name, etc...])
 OPTIONAL FIELDS- 
@@ -995,6 +997,7 @@ ERROR: add_lead INVALID PHONE NUMBER NANPA AREACODE PREFIX - 7275551212|6666
 
 ERROR: add_lead USER DOES NOT HAVE PERMISSION TO ADD LEADS TO THE SYSTEM - 6666|0 
 ERROR: add_lead NOT AN ALLOWED LIST ID - 7275551212|98762
+ERROR: add_lead NOT A DEFINED LIST ID, LIST EXISTS CHECK ENABLED - 7275551212|12344
 
 ERROR: NO FUNCTION SPECIFIED
 

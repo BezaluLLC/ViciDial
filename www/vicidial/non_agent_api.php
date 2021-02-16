@@ -161,10 +161,11 @@
 # 210113-1714 - Added copy_user function
 # 210209-2014 - Added add_did function
 # 210210-1627 - Added duplicate check with more X-day options for add_lead function
+# 210216-1415 - Added list_exists_check option for add_lead function
 #
 
-$version = '2.14-138';
-$build = '210210-1627';
+$version = '2.14-139';
+$build = '210216-1415';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -563,6 +564,8 @@ if (isset($_GET["group_by_campaign"]))			{$group_by_campaign=$_GET["group_by_cam
 	elseif (isset($_POST["group_by_campaign"]))	{$group_by_campaign=$_POST["group_by_campaign"];}
 if (isset($_GET["source_user"]))			{$source_user=$_GET["source_user"];}
 	elseif (isset($_POST["source_user"]))	{$source_user=$_POST["source_user"];}
+if (isset($_GET["list_exists_check"]))			{$list_exists_check=$_GET["list_exists_check"];}
+	elseif (isset($_POST["list_exists_check"]))	{$list_exists_check=$_POST["list_exists_check"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -808,6 +811,7 @@ else
 	$source = preg_replace("/'|\"|\\\\|;|#/","",$source);
 	$source_user = preg_replace("/'|\"|\\\\|;|#/","",$source_user);
 	}
+$list_exists_check = preg_replace('/[^0-9a-zA-Z]/','',$list_exists_check);
 
 $USarea = 			substr($phone_number, 0, 3);
 $USprefix = 		substr($phone_number, 3, 3);
@@ -10896,6 +10900,23 @@ if ($function == 'add_lead')
 					{
 					$result = 'ERROR';
 					$result_reason = "add_lead NOT AN ALLOWED LIST ID";
+					$data = "$phone_number|$list_id";
+					echo "$result: $result_reason - $data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				}
+			if (preg_match("/Y/i",$list_exists_check))
+				{
+				$stmt="SELECT count(*) from vicidial_lists where list_id='$list_id';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				if ($DB>0) {echo "DEBUG: add_lead list_exists_check query - $row[0]|$stmt\n";}
+				$list_exists_count = $row[0];
+				if ($list_exists_count < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "add_lead NOT A DEFINED LIST ID, LIST EXISTS CHECK ENABLED";
 					$data = "$phone_number|$list_id";
 					echo "$result: $result_reason - $data\n";
 					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
