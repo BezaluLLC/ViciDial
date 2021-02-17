@@ -162,10 +162,11 @@
 # 210209-2014 - Added add_did function
 # 210210-1627 - Added duplicate check with more X-day options for add_lead function
 # 210216-1415 - Added list_exists_check option for add_lead function
+# 210217-1454 - Added menu_id option for add_did and update_did functions
 #
 
-$version = '2.14-139';
-$build = '210216-1415';
+$version = '2.14-140';
+$build = '210217-1454';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -566,6 +567,8 @@ if (isset($_GET["source_user"]))			{$source_user=$_GET["source_user"];}
 	elseif (isset($_POST["source_user"]))	{$source_user=$_POST["source_user"];}
 if (isset($_GET["list_exists_check"]))			{$list_exists_check=$_GET["list_exists_check"];}
 	elseif (isset($_POST["list_exists_check"]))	{$list_exists_check=$_POST["list_exists_check"];}
+if (isset($_GET["menu_id"]))			{$menu_id=$_GET["menu_id"];}
+	elseif (isset($_POST["menu_id"]))	{$menu_id=$_POST["menu_id"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -803,6 +806,7 @@ if ($non_latin < 1)
 	$delete_did = preg_replace('/[^0-9a-zA-Z]/','',$delete_did);
 	$group_by_campaign = preg_replace('/[^0-9a-zA-Z]/','',$group_by_campaign);
 	$source_user = preg_replace('/[^-_0-9a-zA-Z]/','',$source_user);
+	$menu_id = preg_replace('/[^-_0-9a-zA-Z]/','',$menu_id);
 	}
 else
 	{
@@ -810,6 +814,7 @@ else
 	$pass = preg_replace("/'|\"|\\\\|;|#/","",$pass);
 	$source = preg_replace("/'|\"|\\\\|;|#/","",$source);
 	$source_user = preg_replace("/'|\"|\\\\|;|#/","",$source_user);
+	$menu_id = preg_replace("/'|\"|\\\\|;|#/",'',$menu_id);
 	}
 $list_exists_check = preg_replace('/[^0-9a-zA-Z]/','',$list_exists_check);
 
@@ -6840,6 +6845,7 @@ if ($function == 'add_did')
 					$phone_extensionSQL='';
 					$server_ipSQL='';
 					$groupSQL='';
+					$menu_idSQL='';
 					$filter_clean_cid_numberSQL='';
 						
 					if (strlen($did_description) > 0)
@@ -6990,6 +6996,24 @@ if ($function == 'add_did')
 							}
 						$groupSQL = " ,group_id='$group'";
 						}
+					if (strlen($menu_id) > 0)
+						{
+						$stmt="SELECT count(*) from vicidial_call_menu where menu_id='$menu_id';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$row=mysqli_fetch_row($rslt);
+						$menu_id_exists=$row[0];
+
+						if ($menu_id_exists < 1)
+							{
+							$result = 'ERROR';
+							$result_reason = "update_did MENU ID MUST BE A VALID CALL MENU IN THE SYSTEM, THIS IS AN OPTIONAL FIELD";
+							$data = "$menu_id";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						$menu_idSQL = " ,menu_id='$menu_id'";
+						}
 					if (strlen($filter_clean_cid_number) > 0)
 						{
 						if ( (strlen($filter_clean_cid_number) > 20) or (strlen($filter_clean_cid_number) < 1) )
@@ -7005,7 +7029,7 @@ if ($function == 'add_did')
 							{$filter_clean_cid_numberSQL = " ,filter_clean_cid_number='$filter_clean_cid_number'";}
 						}
 
-					$addSQL = "$did_patternSQL$did_descriptionSQL$activeSQL$did_routeSQL$record_callSQL$extensionSQL$exten_contextSQL$voicemail_extSQL$phone_extensionSQL$server_ipSQL$groupSQL$filter_clean_cid_numberSQL";
+					$addSQL = "$did_patternSQL$did_descriptionSQL$activeSQL$did_routeSQL$record_callSQL$extensionSQL$exten_contextSQL$voicemail_extSQL$phone_extensionSQL$server_ipSQL$groupSQL$menu_idSQL$filter_clean_cid_numberSQL";
 
 					$addSQL = preg_replace("/^ ,/",'',$addSQL);
 					$stmt="INSERT INTO vicidial_inbound_dids SET $addSQL;";
@@ -7140,6 +7164,7 @@ if ($function == 'update_did')
 					$phone_extensionSQL='';
 					$server_ipSQL='';
 					$groupSQL='';
+					$menu_idSQL='';
 					$filter_clean_cid_numberSQL='';
 
 					if ($delete_did == 'Y')
@@ -7325,6 +7350,24 @@ if ($function == 'update_did')
 							}
 						$groupSQL = " ,group_id='$group'";
 						}
+					if (strlen($menu_id) > 0)
+						{
+						$stmt="SELECT count(*) from vicidial_call_menu where menu_id='$menu_id';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$row=mysqli_fetch_row($rslt);
+						$menu_id_exists=$row[0];
+
+						if ($menu_id_exists < 1)
+							{
+							$result = 'ERROR';
+							$result_reason = "update_did MENU ID MUST BE A VALID CALL MENU IN THE SYSTEM, THIS IS AN OPTIONAL FIELD";
+							$data = "$menu_id";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						$menu_idSQL = " ,menu_id='$menu_id'";
+						}
 					if (strlen($filter_clean_cid_number) > 0)
 						{
 						if ( (strlen($filter_clean_cid_number) > 20) or (strlen($filter_clean_cid_number) < 1) )
@@ -7341,7 +7384,7 @@ if ($function == 'update_did')
 						}
 
 
-					$updateSQL = "$did_descriptionSQL$activeSQL$did_routeSQL$record_callSQL$extensionSQL$exten_contextSQL$voicemail_extSQL$phone_extensionSQL$server_ipSQL$groupSQL$filter_clean_cid_numberSQL";
+					$updateSQL = "$did_descriptionSQL$activeSQL$did_routeSQL$record_callSQL$extensionSQL$exten_contextSQL$voicemail_extSQL$phone_extensionSQL$server_ipSQL$groupSQL$menu_idSQL$filter_clean_cid_numberSQL";
 
 
 					if (strlen($updateSQL)< 3)

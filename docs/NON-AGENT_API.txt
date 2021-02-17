@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-02-16
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-02-17
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -173,6 +173,7 @@ Changes:
 210209-2014 - Added add_did function
 210210-1627 - Added duplicate check with more X-day options for add_lead function
 210216-1415 - Added list_exists_check option for add_lead function
+210217-1454 - Added menu_id option for add_did and update_did functions
 
 
 API Functions use the 'function' variable
@@ -2047,6 +2048,7 @@ voicemail_ext -		1-10 digits
 phone_extension -	1-100 characters
 server_ip -		must be all numbers and dots, max 15 characters
 group -			a valid in-group group_id
+menu_id -		a valid call menu menu_id
 filter_clean_cid_number - 1-20 characters
 
 Example URL strings for API calls:
@@ -2068,6 +2070,7 @@ ERROR: add_did VOICEMAIL EXTENSION MUST BE FROM 1 TO 10 CHARACTERS, THIS IS AN O
 ERROR: add_did PHONE EXTENSION MUST BE FROM 1 TO 100 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|
 ERROR: add_did SERVER IP MUST BE A VALID SERVER IN THE SYSTEM, THIS IS AN OPTIONAL FIELD - 6666|0.0.0.0
 ERROR: add_did GROUP ID MUST BE A VALID INBOUND GROUP IN THE SYSTEM, THIS IS AN OPTIONAL FIELD - 6666|test
+ERROR: add_did MENU ID MUST BE A VALID CALL MENU IN THE SYSTEM, THIS IS AN OPTIONAL FIELD - 6666|test_menu
 ERROR: add_did CLEAN CID NUMBER MUST BE FROM 1 TO 20 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|
 SUCCESS: add_did DID HAS BEEN ADDED - 6666|1101
 
@@ -2096,6 +2099,7 @@ voicemail_ext -		1-10 digits
 phone_extension -	1-100 characters
 server_ip -		must be all numbers and dots, max 15 characters
 group -			a valid in-group group_id
+menu_id -		a valid call menu menu_id
 filter_clean_cid_number - 1-20 characters
 delete_did -		Can be one of these: 'Y','N' (default is 'N')
 
@@ -2119,6 +2123,7 @@ ERROR: update_did VOICEMAIL EXTENSION MUST BE FROM 1 TO 10 CHARACTERS, THIS IS A
 ERROR: update_did PHONE EXTENSION MUST BE FROM 1 TO 100 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|
 ERROR: update_did SERVER IP MUST BE A VALID SERVER IN THE SYSTEM, THIS IS AN OPTIONAL FIELD - 6666|0.0.0.0
 ERROR: update_did GROUP ID MUST BE A VALID INBOUND GROUP IN THE SYSTEM, THIS IS AN OPTIONAL FIELD - 6666|test
+ERROR: update_did MENU ID MUST BE A VALID CALL MENU IN THE SYSTEM, THIS IS AN OPTIONAL FIELD - 6666|test_menu
 ERROR: update_did CLEAN CID NUMBER MUST BE FROM 1 TO 20 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|
 NOTICE: update_did NO UPDATES DEFINED - 6666|
 SUCCESS: update_did DID HAS BEEN DELETED - 6666|23|1101
