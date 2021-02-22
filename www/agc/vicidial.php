@@ -1,7 +1,7 @@
 <?php
 # vicidial.php - the web-based version of the astVICIDIAL client application
 # 
-# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Other scripts that this application depends on:
 # - vdc_db_query.php: Updates information in the database
@@ -653,10 +653,11 @@
 # 201117-0818 - Changes for better compatibility with non-latin data input
 # 201123-1436 - Added Daily call count limit features
 # 201201-2015 - Added transfer_button_launch feature
+# 210222-0819 - Fixes for manual dial agent-state issues and a translation issue
 #
 
-$version = '2.14-621c';
-$build = '201201-2015';
+$version = '2.14-622c';
+$build = '210222-0819';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=92;
 $one_mysql_log=0;
@@ -4800,6 +4801,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var lastxferchannel='';
 	var custchannellive=0;
 	var xferchannellive=0;
+	var manual_call_live=0;
 	var nochannelinsession=0;
 	var agc_dial_prefix = '91';
 	var dtmf_silent_prefix = '<?php echo $dtmf_silent_prefix ?>';
@@ -8348,7 +8350,15 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		if (MEdial=='YES')
 			{manual_entry_dial=1;}
 		var move_on=1;
-		if ( (starting_dial_level != 0) && (dial_next_failed < 1) && ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) || (in_lead_preview_state==1) ) )
+		// JCJ
+		// alert("Both move_ons must be true plus at least one of the last 5 variables must be '1' to check.  Then all 7 non-move_on must be true to manual dial.:\nmove_on - starting_dial_level != 0 ("+starting_dial_level+")\nmove_on - dial_next_failed < 1 ("+dial_next_failed+")\n(N/A)dial_method = "+dial_method+"\n(N/A)custchanellive = "+custchannellive+"\nauto_pause_precall == 'Y' ("+auto_pause_precall+")\nagent_pause_codes_active=='Y' OR 'FORCE' ("+agent_pause_codes_active+")\nAutoDialWaiting == 1 ("+AutoDialWaiting+")\nVD_live_customer_call != 1 ("+VD_live_customer_call+")\nalt_dial_active != 1 ("+alt_dial_active+")\nMD_channel_look != 1 ("+MD_channel_look+")\nin_lead_preview_state != 1 ("+in_lead_preview_state+")");
+		// JCJ Check if in live call in MANUAL dial method so person can't place manual calls
+		if (dial_method == 'MANUAL' && (lastcustchannel.length > 0 || manual_call_live > 0))
+			{
+			move_on=0;
+			alert_box("<?php echo _QXZ("MANUAL DIAL IS NOT ALLOWED WHILE INCALL"); ?>");
+			}
+		else if ( (starting_dial_level != 0) && (dial_next_failed < 1) && ( (AutoDialWaiting == 1) || (VD_live_customer_call==1) || (alt_dial_active==1) || (MD_channel_look==1) || (in_lead_preview_state==1) ) )
 			{
 			if ((auto_pause_precall == 'Y') && ( (agent_pause_codes_active=='Y') || (agent_pause_codes_active=='FORCE') ) && (AutoDialWaiting == 1) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) && (in_lead_preview_state!=1) )
 				{
@@ -10099,7 +10109,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								InternalChatsCheck(); 
 
 								if (MDnextCID.match(regMNCvar))
-									{alert_box("<?php echo _QXZ("No more leads in the hopper for campaign:"); ?>\n" + campaign);   alert_displayed=1;}
+									{
+									alert_box("<?php echo _QXZ("No more leads in the hopper for campaign:"); ?>\n" + campaign);   
+									alert_displayed=1;
+									in_lead_preview_state=0; // JCJ - This needs to be reset here otherwise the variable stays at 1 and thus manual dials can't be made even if the agent is paused.
+									}
 								if (MDnextCID.match(regMDFvarDNC))
 									{alert_box("<?php echo _QXZ("This phone number is in the DNC list:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
 								if (MDnextCID.match(regMDFvarDCCL))
@@ -10142,6 +10156,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							else
 								{
 								fronter = user;
+								manual_call_live=1;
 								LasTCID											= MDnextResponse_array[0];
 								document.vicidial_form.lead_id.value			= MDnextResponse_array[1];
 								LeaDPreVDispO									= MDnextResponse_array[2];
@@ -10817,6 +10832,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				prefix_choice='';
 				agent_dialed_number='';
 				agent_dialed_type='';
+				manual_call_live=0;
 			//	CalL_ScripT_id='';
 			//	CalL_ScripT_color='';
 				dial_next_failed=0;
@@ -11040,6 +11056,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							LasTCID =	MDOnextResponse_array[0];
 							MD_channel_look=1;
 							custchannellive=1;
+							manual_call_live=1;
 
 							var dispnum = manDiaLonly_num;
 							var status_display_number = phone_number_format(dispnum);
@@ -11209,6 +11226,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					if (dial_method == "INBOUND_MAN")
 						{
 						auto_dial_level=starting_dial_level;
+						// JCJ - reset dial_next_failed to zero here. Currently if hopper is empty, agent is auto paused and dial_next_failed=1
+						// However it remains 1 if you click to be active which causes the move_on check to be skipped allowing active
+						// agents to manual dial.						
+						dial_next_failed=0;
 
 						document.getElementById("DiaLControl").innerHTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif"); ?>\" border=\"0\" alt=\"You are active\" /></a><br /><a href=\"#\" onclick=\"ManualDialNext('','','','','','0','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_dialnextnumber.gif"); ?>\" border=\"0\" alt=\"Dial Next Number\" /></a>";
 						}
@@ -13718,6 +13739,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				lastcustchannel='';
 				lastcustserverip='';
 				MDchannel='';
+				manual_call_live=0;
 				if (post_phone_time_diff_alert_message.length > 10)
 					{
 					document.getElementById("post_phone_time_diff_span_contents").innerHTML = "";
@@ -17828,7 +17850,7 @@ function phone_number_format(formatphone) {
 					{
 					var temp_response = xmlhttp.responseText;
 				//	alert(xmlhttp.responseText);
-					var regCDS = new RegExp("ERROR: no","ig");
+					var regCDS = new RegExp("ERROR","ig");
 					if (temp_response.match(regCDS))
 						{
 					//	alert_box(temp_response);
@@ -19268,7 +19290,7 @@ function phone_number_format(formatphone) {
 			if (logout_stop_timeouts==1)	{WaitingForNextStep=1;}
 			if ( (custchannellive < customer_gone_seconds) && (lastcustchannel.length > 3) && (no_empty_session_warnings < 1) && (document.vicidial_form.lead_id.value != '') && (currently_in_email_or_chat==0) ) 
 				{CustomerChanneLGone();}
-		//	document.getElementById("debugbottomspan").innerHTML = "custchannellive: " + custchannellive + " lastcustchannel.length: " + lastcustchannel.length + " no_empty_session_warnings: " + no_empty_session_warnings + " lead_id: |" + document.vicidial_form.lead_id.value + "|";
+		//	document.getElementById("debugbottomspan").innerHTML = "custchannellive: " + custchannellive + " customer_gone_seconds: " + customer_gone_seconds + ", lastcustchannel.length: " + lastcustchannel.length + " no_empty_session_warnings: " + no_empty_session_warnings + " lead_id: |" + document.vicidial_form.lead_id.value + "|" + " currently_in_email_or_chat: " + currently_in_email_or_chat; //JCJ
 			if ( (custchannellive < -10) && (lastcustchannel.length > 3) ) {ReChecKCustoMerChaN();}
 			if ( (nochannelinsession > 16) && (check_n > 15) && (no_empty_session_warnings < 1) ) {NoneInSession();}
 			if (external_transferconf_count > 0) {external_transferconf_count = (external_transferconf_count - 1);}
