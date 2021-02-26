@@ -458,6 +458,24 @@ if (isset($_GET["export_gdpr_leads"]))	{$export_gdpr_leads=$_GET["export_gdpr_le
 	elseif (isset($_POST["export_gdpr_leads"]))	{$export_gdpr_leads=$_POST["export_gdpr_leads"];}
 if (isset($_GET["monitor_prefix"]))	{$monitor_prefix=$_GET["monitor_prefix"];}
 	elseif (isset($_POST["monitor_prefix"]))	{$monitor_prefix=$_POST["monitor_prefix"];}
+if (isset($_GET["new_extension"]))	{$new_extension=$_GET["new_extension"];}
+	elseif (isset($_POST["new_extension"]))	{$new_extension=$_POST["new_extension"];}
+if (isset($_GET["new_dialplan_number"]))	{$new_dialplan_number=$_GET["new_dialplan_number"];}
+	elseif (isset($_POST["new_dialplan_number"]))	{$new_dialplan_number=$_POST["new_dialplan_number"];}
+if (isset($_GET["new_voicemail_id"]))	{$new_voicemail_id=$_GET["new_voicemail_id"];}
+	elseif (isset($_POST["new_voicemail_id"]))	{$new_voicemail_id=$_POST["new_voicemail_id"];}
+if (isset($_GET["new_outbound_cid"]))	{$new_outbound_cid=$_GET["new_outbound_cid"];}
+	elseif (isset($_POST["new_outbound_cid"]))	{$new_outbound_cid=$_POST["new_outbound_cid"];}
+if (isset($_GET["new_server_ip"]))	{$new_server_ip=$_GET["new_server_ip"];}
+	elseif (isset($_POST["new_server_ip"]))	{$new_server_ip=$_POST["new_server_ip"];}
+if (isset($_GET["new_login"]))	{$new_login=$_GET["new_login"];}
+	elseif (isset($_POST["new_login"]))	{$new_login=$_POST["new_login"];}
+if (isset($_GET["new_pass"]))	{$new_pass=$_GET["new_pass"];}
+	elseif (isset($_POST["new_pass"]))	{$new_pass=$_POST["new_pass"];}
+if (isset($_GET["new_conf_secret"]))	{$new_conf_secret=$_GET["new_conf_secret"];}
+	elseif (isset($_POST["new_conf_secret"]))	{$new_conf_secret=$_POST["new_conf_secret"];}
+if (isset($_GET["new_fullname"]))	{$new_fullname=$_GET["new_fullname"];}
+	elseif (isset($_POST["new_fullname"]))	{$new_fullname=$_POST["new_fullname"];}
 if (isset($_GET["next_agent_call"]))	{$next_agent_call=$_GET["next_agent_call"];}
 	elseif (isset($_POST["next_agent_call"]))	{$next_agent_call=$_POST["next_agent_call"];}
 if (isset($_GET["number_of_lines"]))	{$number_of_lines=$_GET["number_of_lines"];}
@@ -530,6 +548,8 @@ if (isset($_GET["server_id"]))	{$server_id=$_GET["server_id"];}
 	elseif (isset($_POST["server_id"]))	{$server_id=$_POST["server_id"];}
 if (isset($_GET["server_ip"]))	{$server_ip=$_GET["server_ip"];}
 	elseif (isset($_POST["server_ip"]))	{$server_ip=$_POST["server_ip"];}
+if (isset($_GET["source_phone"]))	{$source_phone=$_GET["source_phone"];}
+	elseif (isset($_POST["source_phone"]))	{$source_phone=$_POST["source_phone"];}
 if (isset($_GET["stage"]))	{$stage=$_GET["stage"];}
 	elseif (isset($_POST["stage"]))	{$stage=$_POST["stage"];}
 if (isset($_GET["state_call_time_state"]))	{$state_call_time_state=$_GET["state_call_time_state"];}
@@ -2771,6 +2791,8 @@ $view_reports = preg_replace('/[^0-9]/','',$view_reports);
 $modify_leads = preg_replace('/[^0-9]/','',$modify_leads);
 $export_gdpr_leads = preg_replace('/[^0-9]/','',$export_gdpr_leads);
 $monitor_prefix = preg_replace('/[^0-9]/','',$monitor_prefix);
+$new_dialplan_number = preg_replace('/[^0-9]/','',$new_dialplan_number);
+$new_outbound_cid = preg_replace('/[^0-9]/','',$new_outbound_cid);
 $number_of_lines = preg_replace('/[^0-9]/','',$number_of_lines);
 $old_conf_exten = preg_replace('/[^0-9]/','',$old_conf_exten);
 $outbound_cid = preg_replace('/[^0-9]/','',$outbound_cid);
@@ -3160,6 +3182,7 @@ $xferconf_a_number = preg_replace('/[^0-9A-Z]/','',$xferconf_a_number);
 $xferconf_b_number = preg_replace('/[^0-9A-Z]/','',$xferconf_b_number);
 
 ### DIGITS and Dots
+$new_server_ip = preg_replace('/[^\.0-9]/','',$new_server_ip);
 $server_ip = preg_replace('/[^\.0-9]/','',$server_ip);
 $auto_dial_level = preg_replace('/[^\.0-9]/','',$auto_dial_level);
 $adaptive_maximum_level = preg_replace('/[^\.0-9]/','',$adaptive_maximum_level);
@@ -3220,6 +3243,7 @@ if ($non_latin < 1)
 	$use_internal_dnc = preg_replace('/[^0-9a-zA-Z]/','',$use_internal_dnc);
 	$use_campaign_dnc = preg_replace('/[^0-9a-zA-Z]/','',$use_campaign_dnc);
 	$voicemail_id = preg_replace('/[^0-9a-zA-Z]/','',$voicemail_id);
+	$new_voicemail_id = preg_replace('/[^0-9a-zA-Z]/','',$new_voicemail_id);
 	$status_id = preg_replace('/[^0-9a-zA-Z]/','',$status_id);
 	$agent_call_log_view = preg_replace('/[^0-9a-zA-Z]/','',$agent_call_log_view);
 	$agent_call_log_view_override = preg_replace('/[^0-9a-zA-Z]/','',$agent_call_log_view_override);
@@ -3316,6 +3340,8 @@ if ($non_latin < 1)
 	$login_campaign = preg_replace('/[^-_0-9a-zA-Z]/','',$login_campaign);
 	$login_pass = preg_replace('/[^-_0-9a-zA-Z]/','',$login_pass);
 	$login_user = preg_replace('/[^-_0-9a-zA-Z]/','',$login_user);
+	$new_login = preg_replace('/[^-_0-9a-zA-Z]/','',$new_login);
+	$new_pass = preg_replace('/[^-_0-9a-zA-Z]/','',$new_pass);
 	$next_agent_call = preg_replace('/[^-_0-9a-zA-Z]/','',$next_agent_call);
 	$old_campaign_id = preg_replace('/[^-_0-9a-zA-Z]/','',$old_campaign_id);
 	$old_server_id = preg_replace('/[^-_0-9a-zA-Z]/','',$old_server_id);
@@ -3394,6 +3420,7 @@ if ($non_latin < 1)
 	$source_menu = preg_replace('/[^-_0-9a-zA-Z]/','',$source_menu);
 	$call_time_id = preg_replace('/[^-_0-9a-zA-Z]/','',$call_time_id);
 	$phone_context = preg_replace('/[^-_0-9a-zA-Z]/','',$phone_context);
+	$new_conf_secret = preg_replace('/[^-_0-9a-zA-Z]/','',$new_conf_secret);
 	$conf_secret = preg_replace('/[^-_0-9a-zA-Z]/','',$conf_secret);
 	$tracking_group = preg_replace('/[^-_0-9a-zA-Z]/','',$tracking_group);
 	$no_agent_no_queue = preg_replace('/[^-_0-9a-zA-Z]/','',$no_agent_no_queue);
@@ -3706,6 +3733,7 @@ if ($non_latin < 1)
 	$lead_filter_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$lead_filter_name);
 	$list_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$list_name);
 	$local_gmt = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$local_gmt);
+	$new_fullname = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$new_fullname);
 	$phone_type = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$phone_type);
 	$picture = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$picture);
 	$script_comments = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$script_comments);
@@ -3823,11 +3851,13 @@ if ($non_latin < 1)
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot and pound and star
 	$extension = preg_replace('/[^-\*\#\.\:\/\@\_0-9a-zA-Z]/','',$extension);
+	$new_extension = preg_replace('/[^-\*\#\.\:\/\@\_0-9a-zA-Z]/','',$new_extension);
 	$timer_action_destination = preg_replace('/[^-\*\#\.\:\/\@\_0-9a-zA-Z]/','',$timer_action_destination);
 	$filter_extension = preg_replace('/[^-\*\#\.\:\/\@\_0-9a-zA-Z]/','',$filter_extension);
 
 	### ALPHA-NUMERIC and space and underscore and dash and slash and at and dot and pound and star and pipe and comma
 	$ivr_park_call_agi = preg_replace('/[^- \*\#\.\,\:\/\|\@\_0-9a-zA-Z]/','',$ivr_park_call_agi);
+	$source_phone = preg_replace('/[^- \*\#\.\,\:\/\|\@\_0-9a-zA-Z]/','',$source_phone);
 
 	### ALPHA-NUMERIC and space and underscore and dash and slash and at and dot and pound and star and pipe and comma and equal
 	$voicemail_options = preg_replace('/[^- \=\*\#\.\,\:\/\|\@\_0-9a-zA-Z]/','',$voicemail_options);
@@ -3893,7 +3923,8 @@ else
 	$pause_after_each_call = preg_replace('/[^0-9\p{L}]/u','',$pause_after_each_call);
 	$use_internal_dnc = preg_replace('/[^0-9\p{L}]/u','',$use_internal_dnc);
 	$use_campaign_dnc = preg_replace('/[^0-9\p{L}]/u','',$use_campaign_dnc);
-	$voicemail_id = preg_replace('/[^0-9\p{L}]/u','',$voicemail_id);
+	$new_voicemail_id = preg_replace('/[^0-9\p{L}]/u','',$new_voicemail_id);
+	$voicemail_id = preg_replace('/[^0-9a-zA-Z]/','',$voicemail_id);
 	$status_id = preg_replace('/[^0-9\p{L}]/u','',$status_id);
 	$agent_call_log_view = preg_replace('/[^0-9\p{L}]/u','',$agent_call_log_view);
 	$agent_call_log_view_override = preg_replace('/[^0-9\p{L}]/u','',$agent_call_log_view_override);
@@ -3990,6 +4021,8 @@ else
 	$login_campaign = preg_replace('/[^-_0-9\p{L}]/u','',$login_campaign);
 	$login_pass = preg_replace('/[^-_0-9\p{L}]/u','',$login_pass);
 	$login_user = preg_replace('/[^-_0-9\p{L}]/u','',$login_user);
+	$new_login = preg_replace('/[^-_0-9\p{L}]/u','',$new_login);
+	$new_pass = preg_replace('/[^-_0-9\p{L}]/u','',$new_pass);
 	$next_agent_call = preg_replace('/[^-_0-9\p{L}]/u','',$next_agent_call);
 	$old_campaign_id = preg_replace('/[^-_0-9\p{L}]/u','',$old_campaign_id);
 	$old_server_id = preg_replace('/[^-_0-9\p{L}]/u','',$old_server_id);
@@ -4068,6 +4101,7 @@ else
 	$source_menu = preg_replace('/[^-_0-9\p{L}]/u','',$source_menu);
 	$call_time_id = preg_replace('/[^-_0-9\p{L}]/u','',$call_time_id);
 	$phone_context = preg_replace('/[^-_0-9\p{L}]/u','',$phone_context);
+	$new_conf_secret = preg_replace('/[^-_0-9\p{L}]/u','',$new_conf_secret);
 	$conf_secret = preg_replace('/[^-_0-9\p{L}]/u','',$conf_secret);
 	$tracking_group = preg_replace('/[^-_0-9\p{L}]/u','',$tracking_group);
 	$no_agent_no_queue = preg_replace('/[^-_0-9\p{L}]/u','',$no_agent_no_queue);
@@ -4380,6 +4414,7 @@ else
 	$lead_filter_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$lead_filter_name);
 	$list_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$list_name);
 	$local_gmt = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$local_gmt);
+	$new_fullname = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$new_fullname);
 	$phone_type = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$phone_type);
 	$picture = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$picture);
 	$script_comments = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$script_comments);
@@ -4497,11 +4532,13 @@ else
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot and pound and star
 	$extension = preg_replace('/[^-\*\#\.\:\/\@\_0-9\p{L}]/u','',$extension);
+	$new_extension = preg_replace('/[^-\*\#\.\:\/\@\_0-9\p{L}]/u','',$new_extension);
 	$timer_action_destination = preg_replace('/[^-\*\#\.\:\/\@\_0-9\p{L}]/u','',$timer_action_destination);
 	$filter_extension = preg_replace('/[^-\*\#\.\:\/\@\_0-9\p{L}]/u','',$filter_extension);
 
 	### ALPHA-NUMERIC and space and underscore and dash and slash and at and dot and pound and star and pipe and comma
 	$ivr_park_call_agi = preg_replace('/[^- \*\#\.\,\:\/\|\@\_0-9\p{L}]/u','',$ivr_park_call_agi);
+	$source_phone = preg_replace('/[^- \*\#\.\,\:\/\|\@\_0-9\p{L}]/u','',$source_phone);
 
 	### ALPHA-NUMERIC and space and underscore and dash and slash and at and dot and pound and star and pipe and comma and equal
 	$voicemail_options = preg_replace('/[^- \=\*\#\.\,\:\/\|\@\_0-9\p{L}]/u','',$voicemail_options);
@@ -5435,12 +5472,13 @@ if ($SSscript_remove_js > 0)
 # 210207-0915 - Added Shared Debug Page to admin utilities
 # 210210-1601 - Added add_did Non-Agent API function
 # 210211-1145 - Added Matex use information
+# 210226-1545 - Added Copy Phone functionality
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-787a';
-$build = '210211-1145';
+$admin_version = '2.14-788a';
+$build = '210226-1545';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6019,6 +6057,7 @@ if ($ADD==131111111)	{$hh='admin';	$sh='shifts';	echo _QXZ("Add New Shift");}
 if ($ADD==1111111111)	{$hh='admin';	$sh='times';	echo _QXZ("Add New State Call Time");}
 if ($ADD==1211111111)	{$hh='admin';	$sh='times';	echo _QXZ("Add Holiday");}
 if ($ADD==11111111111)	{$hh='admin';	$sh='phones';	echo _QXZ("ADD NEW PHONE");}
+if ($ADD==12222222222)	{$hh='admin';	$sh='phones';	echo _QXZ("COPY NEW PHONE");}
 if ($ADD==12111111111)	{$hh='admin';	$sh='phones';	echo _QXZ("ADD NEW PHONE ALIAS");}
 if ($ADD==13111111111)	{$hh='admin';	$sh='phones';	echo _QXZ("ADD NEW GROUP ALIAS");}
 if ($ADD==111111111111)	{$hh='admin';	$sh='server';	echo _QXZ("ADD NEW SERVER");}
@@ -6074,6 +6113,7 @@ if ($ADD==231111111)	{$hh='admin';	$sh='shifts';	echo _QXZ("New Shift Addition")
 if ($ADD==2111111111)	{$hh='admin';	$sh='times';	echo _QXZ("New State Call Time Addition");}
 if ($ADD==2211111111)	{$hh='admin';	$sh='times';	echo _QXZ("New Holiday Addition");}
 if ($ADD==21111111111)	{$hh='admin';	$sh='phones';	echo _QXZ("ADDING NEW PHONE");}
+if ($ADD==21222222222)	{$hh='admin';	$sh='phones';	echo _QXZ("COPYING NEW PHONE");}
 if ($ADD==22111111111)	{$hh='admin';	$sh='phones';	echo _QXZ("ADDING NEW PHONE ALIAS");}
 if ($ADD==23111111111)	{$hh='admin';	$sh='phones';	echo _QXZ("ADDING NEW GROUP ALIAS");}
 if ($ADD==211111111111)	{$hh='admin';	$sh='server';	echo _QXZ("ADDING NEW SERVER");}
@@ -9733,6 +9773,177 @@ if ($ADD==11111111111)
 		}
 	}
 
+######################
+# ADD=21222222222 adds copied new phone to the system
+######################
+if ($ADD==21222222222)
+	{
+	$source_phone_array=explode("|", $source_phone);
+	$source_extension=$source_phone_array[0];
+	$source_server_ip=$source_phone_array[1];
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>"._QXZ("You do not have permission to add records on this system")." -system_settings-\n";
+		}
+	 else
+		{
+		$stmt="SELECT count(*) from phones where extension='$source_extension' and server_ip='$source_server_ip';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] < 1)
+			{
+			echo "<br>"._QXZ("PHONE NOT COPIED - Your selected Source Phone does not exist")."\n";
+			}
+		 else
+			{
+			echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+			$stmt="SELECT count(*) from phones where extension='$new_extension' and server_ip='$new_server_ip';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			if ($row[0] > 0)
+				{echo "<br>"._QXZ("PHONE NOT COPIED - there is already a phone in the system with this extension/server")."\n";}
+			else
+				{
+				$stmt="SELECT count(*) from phones where login='$new_login';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				if ($row[0] > 0)
+					{echo "<br>"._QXZ("PHONE NOT COPIED - there is already a Phone in the system with this login")."\n";}
+				else
+					{
+					$stmt="SELECT count(*) from phones_alias where alias_id='$new_login';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					if ($row[0] > 0)
+						{echo "<br>"._QXZ("PHONE NOT COPIED - there is already a Phone alias in the system with this login")."\n";}
+					else
+						{
+						$stmt="SELECT count(*) from vicidial_voicemail where voicemail_id='$new_voicemail_id';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$row=mysqli_fetch_row($rslt);
+						if ($row[0] > 0)
+							{echo "<br>"._QXZ("PHONE NOT COPIED - there is already a Voicemail ID in the system with this ID")."\n";}
+						else
+							{
+							if ( (strlen($new_extension) < 1) or (strlen($new_server_ip) < 7) or (strlen($new_dialplan_number) < 1) or (strlen($new_voicemail_id) < 1) or (strlen($new_login) < 1)  or (strlen($new_pass) < 1) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($new_conf_secret)) ))
+								{
+								echo "<br>"._QXZ("PHONE NOT COPIED - Please go back and look at the data you entered")."\n";
+								echo "<br>"._QXZ("The following fields must have data").": extension, server_ip, dialplan_number, voicemail_id, login, pass\n";
+								if ($SSrequire_password_length > 0)
+									{
+									echo "<br>"._QXZ("registration password must be at least $SSrequire_password_length characters long")."\n";
+									}
+								}
+							else
+								{
+								echo "<br><B>"._QXZ("PHONE COPIED").": $new_extension, $new_server_ip - <a href='admin.php?ADD=31111111111&extension=$new_extension&server_ip=$new_server_ip'>VIEW HERE</a></B>\n";
+								$ins_stmt="INSERT INTO phones select '$new_extension', '$new_dialplan_number', '$new_voicemail_id', phone_ip, computer_ip, '$new_server_ip', '$new_login', '$new_pass', status, active, phone_type, '$new_fullname', company, picture, messages, old_messages, protocol, local_gmt, ASTmgrUSERNAME, ASTmgrSECRET, login_user, login_pass, login_campaign, park_on_extension, conf_on_extension, VICIDIAL_park_on_extension, VICIDIAL_park_on_filename, monitor_prefix, recording_exten, voicemail_exten, voicemail_dump_exten, ext_context, dtmf_send_extension, call_out_number_group, client_browser, install_directory, local_web_callerID_URL, VICIDIAL_web_URL, AGI_call_logging_enabled, user_switching_enabled, conferencing_enabled, admin_hangup_enabled, admin_hijack_enabled, admin_monitor_enabled, call_parking_enabled, updater_check_enabled, AFLogging_enabled, QUEUE_ACTION_enabled, CallerID_popup_enabled, voicemail_button_enabled, enable_fast_refresh, fast_refresh_rate, enable_persistant_mysql, auto_dial_next_number, VDstop_rec_after_each_call, DBX_server, DBX_database, DBX_user, DBX_pass, DBX_port, DBY_server, DBY_database, DBY_user, DBY_pass, DBY_port, '$new_outbound_cid', enable_sipsak_messages, email, template_id, conf_override, phone_context, phone_ring_timeout, '$new_conf_secret', delete_vm_after_email, is_webphone, use_external_server_ip, codecs_list, codecs_with_template, webphone_dialpad, on_hook_agent, webphone_auto_answer, voicemail_timezone, voicemail_options, user_group, voicemail_greeting, voicemail_dump_exten_no_inst, voicemail_instructions, on_login_report, unavail_dialplan_fwd_exten, unavail_dialplan_fwd_context, nva_call_url, nva_search_method, nva_error_filename, nva_new_list_id, nva_new_phone_code, nva_new_status, webphone_dialbox, webphone_mute, webphone_volume, webphone_debug, outbound_alt_cid, conf_qualify, webphone_layout from phones where extension='$source_extension' and server_ip='$source_server_ip'";
+								$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
+								$affected_rows = mysqli_affected_rows($link);
+								if ($affected_rows>0)
+									{
+									### LOG INSERTION Admin Log Table ###
+									$SQL_log = "$ins_stmt";
+									$SQL_log = preg_replace('/;/', '', $SQL_log);
+									$SQL_log = addslashes($SQL_log);
+									$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONES', event_type='COPY', record_id='$new_extension-$new_server_ip', event_code='ADMIN COPY PHONE', event_sql=\"$SQL_log\", event_notes='$affected_rows';";
+									if ($DB) {echo "|$stmt|\n";}
+									$rslt=mysql_to_mysqli($stmt, $link);
+									}
+								else
+									{
+									echo "<br>"._QXZ("UNKNOWN SQL ERROR - $ins_stmt")."\n";
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	echo "</font>";
+	$ADD=12222222222;
+	}
+
+######################
+# ADD=12222222222 display the COPY PHONE SCREEN
+######################
+if ($ADD==12222222222)
+	{
+	if ($LOGmodify_phones==1)
+		{
+		##### BEGIN ID override optional section, if enabled it increments user by 1 ignoring entered value #####
+		$stmt = "SELECT count(*) FROM vicidial_override_ids where id_table='vicidial_campaigns' and active='1';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$voi_ct = mysqli_num_rows($rslt);
+		if ($voi_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$voi_count = "$row[0]";
+			}
+		##### END ID override optional section #####
+
+		echo "<TABLE><TR><TD>\n";
+		echo "<img src=\"images/icon_phones.png\" alt=\"Phones\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		echo ""._QXZ("COPY A PHONE")."<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=21222222222>\n";
+		echo "<input type=hidden name=DB value=\"$DB\">\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+		/*
+		if ($voi_count > 0)
+			{
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Campaign ID").": </td><td align=left>"._QXZ("Auto-Generated")." $NWB#campaigns-campaign_id$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Campaign ID").": </td><td align=left><input type=text name=campaign_id size=10 maxlength=8>$NWB#campaigns-campaign_id$NWE</td></tr>\n";
+			}
+		*/
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Phone Extension").": </td><td align=left><input type=text name=new_extension size=20 maxlength=100 value='$new_extension'>$NWB#phones-extension$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Dial Plan Number").": </td><td align=left><input type=text name=new_dialplan_number size=15 maxlength=20 value='$new_dialplan_number'> ("._QXZ("digits only").")$NWB#phones-dialplan_number$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Voicemail Box").": </td><td align=left><input type=text name=new_voicemail_id size=10 maxlength=10 value='$new_voicemail_id'> ("._QXZ("digits only").")$NWB#phones-voicemail_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Outbound CallerID").": </td><td align=left><input type=text name=new_outbound_cid size=10 maxlength=20 value='$new_outbound_cid'> ("._QXZ("digits only").")$NWB#phones-outbound_cid$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Server IP").": </td><td align=left><select size=1 name=new_server_ip>\n";
+		if ($new_server_ip) {echo "<option value='$new_server_ip' selected>$new_server_ip</option>\n";}
+		echo "$servers_list";
+		echo "</select>$NWB#phones-server_ip$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Agent Screen Login").": </td><td align=left><input type=text name=new_login size=15 maxlength=15 value='$new_login'>$NWB#phones-login$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Login Password").": </td><td align=left><input type=text name=new_pass size=40 maxlength=100 value=\"".(!$new_pass ? $SSdefault_phone_login_password : $new_pass)."\">$NWB#phones-pass$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Registration Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=new_conf_secret size=40 maxlength=100 value=\"".(!$new_conf_secret ? $SSdefault_phone_registration_password : $new_conf_secret)."\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\">$NWB#phones-conf_secret$NWE &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_length name=pass_length>0</span></font></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Full Name").": </td><td align=left><input type=text name=new_fullname size=20 maxlength=50 value='$new_fullname'>$NWB#phones-fullname$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Source Phone").": </td><td align=left><select size=1 name=source_phone>\n";
+		$stmt="SELECT extension, server_ip, fullname from phones $whereLOGadmin_viewable_groupsSQL order by extension, server_ip, fullname;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$phones_to_print = mysqli_num_rows($rslt);
+		$phones_list='';
+		$phone_selected=0;
+		$o=0;
+		while ($phones_to_print > $o) 
+			{
+			$rowx=mysqli_fetch_row($rslt);
+			if ($source_phone=="$rowx[0]|$rowx[1]") {$s=" selected";   $phone_selected++;} else {$s="";}
+			$phones_list .= "<option value=\"$rowx[0]|$rowx[1]\"$s>$rowx[0], $rowx[1]</option>\n";
+			$o++;
+			}
+		if ($phone_selected < 1)
+			{echo "<option value=\"\" selected>-- Select a Phone (Extension, Server) --</option>\n";}
+		echo "$phones_list";
+		echo "</select>$NWB#campaigns-campaign_id$NWE</td></tr>\n";
+		
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input style='background-color:#$SSbutton_color' type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>"._QXZ("NOTE: Copying a phone will copy all the settings from the selected source phone, except for the settings entered above.")."</td></tr>\n";
+		echo "</TABLE></center>\n";
+		}
+	else
+		{
+		echo _QXZ("You do not have permission to view this page")."\n";
+		exit;
+		}
+	}
 
 ######################
 # ADD=12111111111 display the ADD NEW PHONE ALIAS SCREEN
@@ -11201,7 +11412,6 @@ if ($ADD==21)
 		}
 	$ADD=31;
 	}
-
 
 ######################
 # ADD=20 adds copied new campaign to the system
