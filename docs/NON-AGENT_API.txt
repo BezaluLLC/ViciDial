@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-02-17
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-02-27
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -174,6 +174,7 @@ Changes:
 210210-1627 - Added duplicate check with more X-day options for add_lead function
 210216-1415 - Added list_exists_check option for add_lead function
 210217-1454 - Added menu_id option for add_did and update_did functions
+210227-1116 - Added xferconf number options to update_campaign, add_list & update_list functions
 
 
 API Functions use the 'function' variable
@@ -1599,6 +1600,11 @@ reset_time -		4-100 characters, must be in valid 4-digit groups of 24-hour time 
 tz_method -		one of the following: COUNTRY_AND_AREA_CODE,POSTAL_CODE,NANPA_PREFIX,OWNER_TIME_ZONE_CODE default is COUNTRY_AND_AREA_CODE
 local_call_time -	must be a valid call time ID in the system or 'campaign' which is the default
 expiration_date -	10 characters, must be in valid date format YYYY-MM-DD (i.e. 2012-11-25)
+xferconf_one -		Transfer - Conf Number Override 1: 1-50 characters
+xferconf_two -		Transfer - Conf Number Override 2: 1-50 characters
+xferconf_three -	Transfer - Conf Number Override 3: 1-50 characters
+xferconf_four -		Transfer - Conf Number Override 4: 1-50 characters
+xferconf_five -		Transfer - Conf Number Override 5: 1-50 characters
 custom_fields_copy -	A valid list ID with custom fields to be copied to this new list, 2-14 digits
 custom_copy_method -	(APPEND,UPDATE,REPLACE) method for how to perform the 'custom_fields_copy', default is APPEND
 				APPEND - the only 100% safe method, will not result in any lost existing data, only adds fields not present in the new list
@@ -1625,6 +1631,11 @@ ERROR: add_list RESET TIME IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|012
 ERROR: add_list EXPIRATION DATE IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|012
 ERROR: add_list LOCAL CALL TIME DOES NOT EXIST, THIS IS AN OPTIONAL FIELD - 6666|012
 ERROR: add_list TIME ZONE METHOD IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|012
+ERROR: add_list TRANSFER CONF OVERRIDE ONE IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
+ERROR: add_list TRANSFER CONF OVERRIDE TWO IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
+ERROR: add_list TRANSFER CONF OVERRIDE THREE IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
+ERROR: add_list TRANSFER CONF OVERRIDE FOUR IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
+ERROR: add_list TRANSFER CONF OVERRIDE FIVE IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
 ERROR: add_list CUSTOM FIELDS LIST ID TO COPY FROM DOES NOT EXIST, THIS IS AN OPTIONAL FIELD - 6666|1101|1102|0
 ERROR: add_list CUSTOM FIELDS LIST ID TO COPY FROM HAS NO CUSTOM FIELDS, THIS IS AN OPTIONAL FIELD - 6666|1101|1102|0
 ERROR: add_list USER DOES NOT HAVE PERMISSION TO MODIFY CUSTOM FIELDS, THIS IS AN OPTIONAL FIELD - 6666|1101|1102|0
@@ -1666,6 +1677,11 @@ reset_time -		4-100 characters, must be in valid 4-digit groups of 24-hour time 
 tz_method -		one of the following: COUNTRY_AND_AREA_CODE,POSTAL_CODE,NANPA_PREFIX,OWNER_TIME_ZONE_CODE default is COUNTRY_AND_AREA_CODE
 local_call_time -	must be a valid call time ID in the system or 'campaign' which is the default
 expiration_date -	10 characters, must be in valid date format YYYY-MM-DD (i.e. 2012-11-25)
+xferconf_one -		Transfer - Conf Number Override 1: 1-50 characters
+xferconf_two -		Transfer - Conf Number Override 2: 1-50 characters
+xferconf_three -	Transfer - Conf Number Override 3: 1-50 characters
+xferconf_four -		Transfer - Conf Number Override 4: 1-50 characters
+xferconf_five -		Transfer - Conf Number Override 5: 1-50 characters
 custom_fields_copy -	A valid list ID with custom fields to be copied to the list being updated, 2-14 digits
 custom_copy_method -	(APPEND,UPDATE,REPLACE) method for how to perform the 'custom_fields_copy', default is APPEND
 				APPEND - the only 100% safe method, will not result in any lost existing data, only adds fields not present in the destination list
@@ -1702,6 +1718,11 @@ ERROR: update_list RESET TIME IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|012
 ERROR: update_list EXPIRATION DATE IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|012
 ERROR: update_list TIME ZONE METHOD IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|012
 ERROR: update_list LOCAL CALL TIME DOES NOT EXIST, THIS IS AN OPTIONAL FIELD - 6666|012
+ERROR: update_list TRANSFER CONF OVERRIDE ONE IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
+ERROR: update_list TRANSFER CONF OVERRIDE TWO IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
+ERROR: update_list TRANSFER CONF OVERRIDE THREE IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
+ERROR: update_list TRANSFER CONF OVERRIDE FOUR IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
+ERROR: update_list TRANSFER CONF OVERRIDE FIVE IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
 NOTICE: update_list NO UPDATES DEFINED - 6666|
 SUCCESS: update_list LIST HAS BEEN UPDATED - 6666|1101
 NOTICE: update_list LEADS IN LIST HAVE BEEN RESET - 6666|1101|324
@@ -1997,6 +2018,11 @@ dial_method -		Must be one of these: 'MANUAL','RATIO','INBOUND_MAN','ADAPT_AVERA
 dial_timeout -		Must be from 1 to 120
 outbound_cid -		1-20 digits
 lead_filter_id -	Must be a valid Filter in the system, or '---NONE---' to not use a filter
+xferconf_one -		Transfer - Conf Number 1: 1-50 characters
+xferconf_two -		Transfer - Conf Number 2: 1-50 characters
+xferconf_three -	Transfer - Conf Number 3: 1-50 characters
+xferconf_four -		Transfer - Conf Number 4: 1-50 characters
+xferconf_five -		Transfer - Conf Number 5: 1-50 characters
 NOTES: 
  - please use no special characters like apostrophes, quotes or amphersands
 
@@ -2019,6 +2045,11 @@ ERROR: update_campaign DIAL TIMEOUT MUST BE FROM 1 TO 120, THIS IS AN OPTIONAL F
 ERROR: update_campaign CAMPAIGN NAME MUST BE FROM 6 TO 40 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|test
 ERROR: update_campaign CAMPAIGN CID MUST BE FROM 6 TO 20 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|test
 ERROR: update_campaign CAMPAIGN LEAD FILTER MUST BE A VALID FILTER IN THE SYSTEM, THIS IS AN OPTIONAL FIELD - 6666|test
+ERROR: update_campaign TRANSFER CONF NUMBER ONE IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
+ERROR: update_campaign TRANSFER CONF NUMBER TWO IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
+ERROR: update_campaign TRANSFER CONF NUMBER THREE IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
+ERROR: update_campaign TRANSFER CONF NUMBER FOUR IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
+ERROR: update_campaign TRANSFER CONF NUMBER FIVE IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
 ERROR: update_campaign ACTIVE MUST BE Y OR N, THIS IS AN OPTIONAL FIELD - 6666|U
 NOTICE: update_campaign NO UPDATES DEFINED - 6666|
 NOTICE: update_campaign HOPPER HAS BEEN RESET - 6666|1101|324

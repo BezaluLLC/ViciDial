@@ -3180,6 +3180,9 @@ $manual_dial_validation = preg_replace('/[^0-9NY]/','',$manual_dial_validation);
 ### ALPHACAPS-NUMERIC
 $xferconf_a_number = preg_replace('/[^0-9A-Z]/','',$xferconf_a_number);
 $xferconf_b_number = preg_replace('/[^0-9A-Z]/','',$xferconf_b_number);
+$xferconf_c_number = preg_replace('/[^0-9A-Z]/','',$xferconf_c_number);
+$xferconf_d_number = preg_replace('/[^0-9A-Z]/','',$xferconf_d_number);
+$xferconf_e_number = preg_replace('/[^0-9A-Z]/','',$xferconf_e_number);
 
 ### DIGITS and Dots
 $new_server_ip = preg_replace('/[^\.0-9]/','',$new_server_ip);
@@ -5473,12 +5476,13 @@ if ($SSscript_remove_js > 0)
 # 210210-1601 - Added add_did Non-Agent API function
 # 210211-1145 - Added Matex use information
 # 210226-1545 - Added Copy Phone functionality
+# 210227-1126 - Variable filter changes
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-788a';
-$build = '210226-1545';
+$admin_version = '2.14-789a';
+$build = '210227-1126';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -7685,15 +7689,15 @@ if ($ADD==11)
 								{$adl = ($adl + 0.5);}
 							else
 								{
-								if ($adl < 10)
+								if ($adl < 20)
 									{$adl = ($adl + 1);}
 								else
 									{
-									if ($adl < 20)
+									if ($adl < 40)
 										{$adl = ($adl + 2);}
 									else
 										{
-										if ($adl < 40)
+										if ($adl < 100)
 											{$adl = ($adl + 5);}
 										else
 											{
@@ -25120,15 +25124,15 @@ if ($ADD==31)
 								{$adl = ($adl + 0.5);}
 							else
 								{
-								if ($adl < 10)
+								if ($adl < 20)
 									{$adl = ($adl + 1);}
 								else
 									{
-									if ($adl < 20)
+									if ($adl < 40)
 										{$adl = ($adl + 2);}
 									else
 										{
-										if ($adl < 40)
+										if ($adl < 100)
 											{$adl = ($adl + 5);}
 										else
 											{
@@ -27838,15 +27842,15 @@ if ($ADD==34)
 								{$adl = ($adl + 0.5);}
 							else
 								{
-								if ($adl < 10)
+								if ($adl < 20)
 									{$adl = ($adl + 1);}
 								else
 									{
-									if ($adl < 20)
+									if ($adl < 40)
 										{$adl = ($adl + 2);}
 									else
 										{
-										if ($adl < 40)
+										if ($adl < 100)
 											{$adl = ($adl + 5);}
 										else
 											{
@@ -39960,15 +39964,15 @@ if ($ADD==311111111111111)
 						{$adl = ($adl + 0.5);}
 					else
 						{
-						if ($adl < 10)
+						if ($adl < 20)
 							{$adl = ($adl + 1);}
 						else
 							{
-							if ($adl < 20)
+							if ($adl < 40)
 								{$adl = ($adl + 2);}
 							else
 								{
-								if ($adl < 40)
+								if ($adl < 100)
 									{$adl = ($adl + 5);}
 								else
 									{

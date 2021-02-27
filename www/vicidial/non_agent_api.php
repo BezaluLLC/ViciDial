@@ -163,10 +163,11 @@
 # 210210-1627 - Added duplicate check with more X-day options for add_lead function
 # 210216-1415 - Added list_exists_check option for add_lead function
 # 210217-1454 - Added menu_id option for add_did and update_did functions
+# 210227-1116 - Added xferconf number options to update_campaign, add_list & update_list functions
 #
 
-$version = '2.14-140';
-$build = '210217-1454';
+$version = '2.14-141';
+$build = '210227-1116';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -569,6 +570,16 @@ if (isset($_GET["list_exists_check"]))			{$list_exists_check=$_GET["list_exists_
 	elseif (isset($_POST["list_exists_check"]))	{$list_exists_check=$_POST["list_exists_check"];}
 if (isset($_GET["menu_id"]))			{$menu_id=$_GET["menu_id"];}
 	elseif (isset($_POST["menu_id"]))	{$menu_id=$_POST["menu_id"];}
+if (isset($_GET["xferconf_one"]))			{$xferconf_one=$_GET["xferconf_one"];}
+	elseif (isset($_POST["xferconf_one"]))	{$xferconf_one=$_POST["xferconf_one"];}
+if (isset($_GET["xferconf_two"]))			{$xferconf_two=$_GET["xferconf_two"];}
+	elseif (isset($_POST["xferconf_two"]))	{$xferconf_two=$_POST["xferconf_two"];}
+if (isset($_GET["xferconf_three"]))			{$xferconf_three=$_GET["xferconf_three"];}
+	elseif (isset($_POST["xferconf_three"]))	{$xferconf_three=$_POST["xferconf_three"];}
+if (isset($_GET["xferconf_four"]))			{$xferconf_four=$_GET["xferconf_four"];}
+	elseif (isset($_POST["xferconf_four"]))	{$xferconf_four=$_POST["xferconf_four"];}
+if (isset($_GET["xferconf_five"]))			{$xferconf_five=$_GET["xferconf_five"];}
+	elseif (isset($_POST["xferconf_five"]))	{$xferconf_five=$_POST["xferconf_five"];}
 
 
 header ("Content-type: text/html; charset=utf-8");
@@ -807,6 +818,11 @@ if ($non_latin < 1)
 	$group_by_campaign = preg_replace('/[^0-9a-zA-Z]/','',$group_by_campaign);
 	$source_user = preg_replace('/[^-_0-9a-zA-Z]/','',$source_user);
 	$menu_id = preg_replace('/[^-_0-9a-zA-Z]/','',$menu_id);
+	$xferconf_one=preg_replace('/[^-_0-9a-zA-Z]/','',$xferconf_one);
+	$xferconf_two=preg_replace('/[^-_0-9a-zA-Z]/','',$xferconf_two);
+	$xferconf_three=preg_replace('/[^-_0-9a-zA-Z]/','',$xferconf_three);
+	$xferconf_four=preg_replace('/[^-_0-9a-zA-Z]/','',$xferconf_four);
+	$xferconf_five=preg_replace('/[^-_0-9a-zA-Z]/','',$xferconf_five);
 	}
 else
 	{
@@ -5173,6 +5189,12 @@ if ($function == 'update_list')
 					$list_descriptionSQL='';
 					$tz_methodSQL='';
 					$local_call_timeSQL='';
+					$xferconf_oneSQL='';
+					$xferconf_twoSQL='';
+					$xferconf_threeSQL='';
+					$xferconf_fourSQL='';
+					$xferconf_fiveSQL='';
+
 					if (strlen($campaign_id) > 0)
 						{
 						$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id';";
@@ -5421,8 +5443,103 @@ if ($function == 'update_list')
 								{$local_call_timeSQL = " ,local_call_time='$local_call_time'";}
 							}
 						}
+					if (strlen($xferconf_one) > 0)
+						{
+						if ($xferconf_one == '--BLANK--')
+							{$xferconf_oneSQL = " ,xferconf_a_number=''";}
+						else
+							{
+							if (strlen($xferconf_one) > 50)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_list TRANSFER CONF OVERRIDE ONE IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$xferconf_one";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$xferconf_oneSQL = " ,xferconf_a_number='$xferconf_one'";}
+							}
+						}
+					if (strlen($xferconf_two) > 0)
+						{
+						if ($xferconf_two == '--BLANK--')
+							{$xferconf_twoSQL = " ,xferconf_b_number=''";}
+						else
+							{
+							if (strlen($xferconf_two) > 50)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_list TRANSFER CONF OVERRIDE TWO IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$xferconf_two";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$xferconf_twoSQL = " ,xferconf_b_number='$xferconf_two'";}
+							}
+						}
+					if (strlen($xferconf_three) > 0)
+						{
+						if ($xferconf_three == '--BLANK--')
+							{$xferconf_threeSQL = " ,xferconf_c_number=''";}
+						else
+							{
+							if (strlen($xferconf_three) > 50)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_list TRANSFER CONF OVERRIDE THREE IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$xferconf_three";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$xferconf_threeSQL = " ,xferconf_c_number='$xferconf_three'";}
+							}
+						}
+					if (strlen($xferconf_four) > 0)
+						{
+						if ($xferconf_four == '--BLANK--')
+							{$xferconf_fourSQL = " ,xferconf_d_number=''";}
+						else
+							{
+							if (strlen($xferconf_four) > 50)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_list TRANSFER CONF OVERRIDE FOUR IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$xferconf_four";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$xferconf_fourSQL = " ,xferconf_d_number='$xferconf_four'";}
+							}
+						}
+					if (strlen($xferconf_five) > 0)
+						{
+						if ($xferconf_five == '--BLANK--')
+							{$xferconf_fiveSQL = " ,xferconf_e_number=''";}
+						else
+							{
+							if (strlen($xferconf_five) > 50)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_list TRANSFER CONF OVERRIDE FIVE IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$xferconf_five";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$xferconf_fiveSQL = " ,xferconf_e_number='$xferconf_five'";}
+							}
+						}
 
-					$updateSQL = "$webformthreeSQL$webformtwoSQL$webformSQL$ammessageSQL$outboundcidSQL$activeSQL$listnameSQL$campaignSQL$scriptSQL$dropingroupSQL$resettimeSQL$expiration_dateSQL$list_descriptionSQL$tz_methodSQL$local_call_timeSQL";
+					$updateSQL = "$webformthreeSQL$webformtwoSQL$webformSQL$ammessageSQL$outboundcidSQL$activeSQL$listnameSQL$campaignSQL$scriptSQL$dropingroupSQL$resettimeSQL$expiration_dateSQL$list_descriptionSQL$tz_methodSQL$local_call_timeSQL$xferconf_oneSQL$xferconf_twoSQL$xferconf_threeSQL$xferconf_fourSQL$xferconf_fiveSQL";
 
 					if (strlen($updateSQL)< 3)
 						{
@@ -6300,6 +6417,11 @@ if ($function == 'add_list')
 							$list_descriptionSQL='';
 							$tz_methodSQL='';
 							$local_call_timeSQL='';
+							$xferconf_oneSQL='';
+							$xferconf_twoSQL='';
+							$xferconf_threeSQL='';
+							$xferconf_fourSQL='';
+							$xferconf_fiveSQL='';
 							if (strlen($web_form_address) > 0)
 								{
 								if (preg_match("/%3A%2F%2F/",$web_form_address)) 
@@ -6377,8 +6499,78 @@ if ($function == 'add_list')
 								else
 									{$local_call_timeSQL = " ,local_call_time='$local_call_time'";}
 								}
+							if (strlen($xferconf_one) > 0)
+								{
+								if (strlen($xferconf_one) > 50)
+									{
+									$result = 'ERROR';
+									$result_reason = "add_list TRANSFER CONF OVERRIDE ONE IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+									$data = "$xferconf_one";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$xferconf_oneSQL = " ,xferconf_a_number='$xferconf_one'";}
+								}
+							if (strlen($xferconf_two) > 0)
+								{
+								if (strlen($xferconf_two) > 50)
+									{
+									$result = 'ERROR';
+									$result_reason = "add_list TRANSFER CONF OVERRIDE TWO IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+									$data = "$xferconf_two";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$xferconf_twoSQL = " ,xferconf_b_number='$xferconf_two'";}
+								}
+							if (strlen($xferconf_three) > 0)
+								{
+								if (strlen($xferconf_three) > 50)
+									{
+									$result = 'ERROR';
+									$result_reason = "add_list TRANSFER CONF OVERRIDE THREE IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+									$data = "$xferconf_three";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$xferconf_threeSQL = " ,xferconf_c_number='$xferconf_three'";}
+								}
+							if (strlen($xferconf_four) > 0)
+								{
+								if (strlen($xferconf_four) > 50)
+									{
+									$result = 'ERROR';
+									$result_reason = "add_list TRANSFER CONF OVERRIDE FOUR IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+									$data = "$xferconf_four";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$xferconf_fourSQL = " ,xferconf_d_number='$xferconf_four'";}
+								}
+							if (strlen($xferconf_five) > 0)
+								{
+								if (strlen($xferconf_five) > 50)
+									{
+									$result = 'ERROR';
+									$result_reason = "add_list TRANSFER CONF OVERRIDE FIVE IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+									$data = "$xferconf_five";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$xferconf_fiveSQL = " ,xferconf_e_number='$xferconf_five'";}
+								}
 
-							$stmt="INSERT INTO vicidial_lists SET list_id='$list_id', list_name='$list_name', campaign_id='$campaign_id', active='$active', campaign_cid_override='$outbound_cid', agent_script_override='$script', am_message_exten_override='$am_message', drop_inbound_group_override='$drop_inbound_group', reset_time='$reset_time', expiration_date='$expiration_date' $webformSQL $webformtwoSQL $webformthreeSQL $list_descriptionSQL $tz_methodSQL $local_call_timeSQL;";
+							$stmt="INSERT INTO vicidial_lists SET list_id='$list_id', list_name='$list_name', campaign_id='$campaign_id', active='$active', campaign_cid_override='$outbound_cid', agent_script_override='$script', am_message_exten_override='$am_message', drop_inbound_group_override='$drop_inbound_group', reset_time='$reset_time', expiration_date='$expiration_date' $webformSQL $webformtwoSQL $webformthreeSQL $list_descriptionSQL $tz_methodSQL $local_call_timeSQL $xferconf_oneSQL$xferconf_twoSQL$xferconf_threeSQL$xferconf_fourSQL$xferconf_fiveSQL;";
 							$rslt=mysql_to_mysqli($stmt, $link);
 							if ($DB) {echo "|$stmt|\n";}
 
@@ -6534,6 +6726,11 @@ if ($function == 'update_campaign')
 					$campaignfilterSQL='';
 					$activeSQL='';
 					$autodiallevelSQL='';
+					$xferconf_oneSQL='';
+					$xferconf_twoSQL='';
+					$xferconf_threeSQL='';
+					$xferconf_fourSQL='';
+					$xferconf_fiveSQL='';
 
 					if (strlen($auto_dial_level) > 0)
 						{
@@ -6684,8 +6881,103 @@ if ($function == 'update_campaign')
 						else
 							{$activeSQL = " ,active='$active'";}
 						}
+					if (strlen($xferconf_one) > 0)
+						{
+						if ($xferconf_one == '--BLANK--')
+							{$xferconf_oneSQL = " ,xferconf_a_number=''";}
+						else
+							{
+							if (strlen($xferconf_one) > 50)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_campaign TRANSFER CONF NUMBER ONE IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$xferconf_one";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$xferconf_oneSQL = " ,xferconf_a_number='$xferconf_one'";}
+							}
+						}
+					if (strlen($xferconf_two) > 0)
+						{
+						if ($xferconf_two == '--BLANK--')
+							{$xferconf_twoSQL = " ,xferconf_b_number=''";}
+						else
+							{
+							if (strlen($xferconf_two) > 50)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_campaign TRANSFER CONF NUMBER TWO IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$xferconf_two";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$xferconf_twoSQL = " ,xferconf_b_number='$xferconf_two'";}
+							}
+						}
+					if (strlen($xferconf_three) > 0)
+						{
+						if ($xferconf_three == '--BLANK--')
+							{$xferconf_threeSQL = " ,xferconf_c_number=''";}
+						else
+							{
+							if (strlen($xferconf_three) > 50)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_campaign TRANSFER CONF NUMBER THREE IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$xferconf_three";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$xferconf_threeSQL = " ,xferconf_c_number='$xferconf_three'";}
+							}
+						}
+					if (strlen($xferconf_four) > 0)
+						{
+						if ($xferconf_four == '--BLANK--')
+							{$xferconf_fourSQL = " ,xferconf_d_number=''";}
+						else
+							{
+							if (strlen($xferconf_four) > 50)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_campaign TRANSFER CONF NUMBER FOUR IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$xferconf_four";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$xferconf_fourSQL = " ,xferconf_d_number='$xferconf_four'";}
+							}
+						}
+					if (strlen($xferconf_five) > 0)
+						{
+						if ($xferconf_five == '--BLANK--')
+							{$xferconf_fiveSQL = " ,xferconf_e_number=''";}
+						else
+							{
+							if (strlen($xferconf_five) > 50)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_campaign TRANSFER CONF NUMBER FIVE IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$xferconf_five";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$xferconf_fiveSQL = " ,xferconf_e_number='$xferconf_five'";}
+							}
+						}
 
-					$updateSQL = "$campaignnameSQL$activeSQL$dialtimeoutSQL$hopperlevelSQL$campaignvdadextenSQL$adaptivemaximumlevelSQL$dialmethodSQL$autodiallevelSQL$campaigncidSQL$campaignfilterSQL";
+					$updateSQL = "$campaignnameSQL$activeSQL$dialtimeoutSQL$hopperlevelSQL$campaignvdadextenSQL$adaptivemaximumlevelSQL$dialmethodSQL$autodiallevelSQL$campaigncidSQL$campaignfilterSQL$xferconf_oneSQL$xferconf_twoSQL$xferconf_threeSQL$xferconf_fourSQL$xferconf_fiveSQL";
 
 					if (strlen($updateSQL)< 3)
 						{
