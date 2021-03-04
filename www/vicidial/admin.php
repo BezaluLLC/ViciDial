@@ -5479,12 +5479,13 @@ if ($SSscript_remove_js > 0)
 # 210226-1545 - Added Copy Phone functionality
 # 210227-1126 - Variable filter changes
 # 210302-1032 - Changed Logout to auto-logout through AJAX, with redirect to Admin Home URL
+# 210304-1615 - Added User modify_leads = 5 option, for READONLY
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-790a';
-$build = '210302-1032';
+$admin_version = '2.14-791a';
+$build = '210304-1615';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -23916,7 +23917,7 @@ if ($ADD==3)
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Lists").": </td><td align=left><select size=1 name=modify_lists><option>0</option><option>1</option><option SELECTED>$modify_lists</option></select>$NWB#users-modify_sections$NWE</td></tr>\n";
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Delete Lists").": </td><td align=left><select size=1 name=delete_lists><option>0</option><option>1</option><option SELECTED>$delete_lists</option></select>$NWB#users-delete_lists$NWE</td></tr>\n";
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Load Leads").": </td><td align=left><select size=1 name=load_leads><option>0</option><option>1</option><option SELECTED>$load_leads</option></select>$NWB#users-load_leads$NWE</td></tr>\n";
-				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Leads").": </td><td align=left><select size=1 name=modify_leads><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option SELECTED>$modify_leads</option></select>$NWB#users-modify_leads$NWE</td></tr>\n";
+				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify Leads").": </td><td align=left><select size=1 name=modify_leads><option>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option SELECTED>$modify_leads</option></select>$NWB#users-modify_leads$NWE</td></tr>\n";
 				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("GDPR-Compliant Export Delete Leads").": </td><td align=left><select size=1 name=export_gdpr_leads>";
 				for ($i=0; $i<=$SSenable_gdpr_download_deletion; $i++) 
 					{

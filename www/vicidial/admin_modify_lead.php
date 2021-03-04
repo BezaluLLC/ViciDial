@@ -8,7 +8,7 @@
 # just needs to enter the leadID and then they can view and modify the 
 # information in the record for that lead
 #
-# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -103,6 +103,7 @@
 # 201117-0807 - Changes for better compatibility with non-latin data input
 # 201109-1725 - Fix for blank page after certain updates submitted
 # 201123-1704 - Added today called count display
+# 210304-1509 - Added option '5' for modify_lead for this page to work as read-only
 #
 
 require("dbconnect_mysqli.php");
@@ -1344,6 +1345,11 @@ $messagesHTML .= "<span style=\"position:absolute;left:3px;top:30px;z-index:19;\
 ### BEGIN - Add a new lead in the system ###
 if ($lead_id == 'NEW')
 	{
+	if ($LOGmodify_leads == '5')
+		{
+		echo "ERROR: "._QXZ("You do not have permission to add new leads").": $LOGmodify_leads \n";
+		exit;
+		}
 	$secX = date("U");
 	$hour = date("H");
 	$min = date("i");
@@ -1461,7 +1467,7 @@ if ($end_call > 0)
 		$list_valid = $rowx[0];
 		}
 
-	if ( ($list_valid > 0) or (preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
+	if ( ( ($list_valid > 0) or (preg_match('/\-ALL/i', $LOGallowed_campaigns)) ) and ($LOGmodify_leads != '5') )
 		{
 		$diff_orig=''; $diff_new='';
 		# gather existing lead data to store for admin log diff
@@ -1633,6 +1639,11 @@ if ($end_call > 0)
 	}
 else
 	{
+	if ( ($LOGmodify_leads == '5') and ( ($CBchangeUSERtoANY == 'YES') or ($CBchangeANYtoUSER == 'YES') or ($CBchangeDATE == 'YES') ) )
+		{
+		echo "ERROR: "._QXZ("You do not have permission to modify leads").": $LOGmodify_leads \n";
+		exit;
+		}
 	if ($CBchangeUSERtoANY == 'YES')
 		{
 		### set vicidial_callbacks record to an ANYONE callback for this lead 
@@ -2947,9 +2958,11 @@ else
 					{
 					$rowx=mysqli_fetch_row($rslt);
 					$custom_records_count =	$rowx[0];
+					$submit_buttonURL = '&submit_button=YES';
+					if ($LOGmodify_leads == '5') {$submit_buttonURL = '&submit_button=READONLY';}
 
 					echo "<B>"._QXZ("CUSTOM FIELDS FOR THIS LEAD").":</B><BR>\n";
-					echo "<iframe src=\"../agc/$vdc_form_display?lead_id=$lead_id&list_id=$CLlist_id&stage=DISPLAY&submit_button=YES&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bcrypt=OFF&bgcolor=E6E6E6\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"2\" allowtransparency=\"true\" id=\"vcFormIFrame\" name=\"vcFormIFrame\" width=\"740\" height=\"300\" STYLE=\"z-index:18\"> </iframe>\n";
+					echo "<iframe src=\"../agc/$vdc_form_display?lead_id=$lead_id&list_id=$CLlist_id&stage=DISPLAY$submit_buttonURL&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bcrypt=OFF&bgcolor=E6E6E6\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"2\" allowtransparency=\"true\" id=\"vcFormIFrame\" name=\"vcFormIFrame\" width=\"740\" height=\"300\" STYLE=\"z-index:18\"> </iframe>\n";
 					echo "<BR><BR>";
 					}
 				}

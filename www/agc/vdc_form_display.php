@@ -46,10 +46,11 @@
 # 200406-1137 - Added hide_gender and gender default population
 # 201117-2056 - Changes for better compatibility with non-latin data input
 # 210211-0146 - Added SOURCESELECT field type
+# 210304-1612 - Added READONLY submit_button option
 #
 
-$version = '2.14-36';
-$build = '210211-0146';
+$version = '2.14-37';
+$build = '210304-1612';
 $php_script = 'vdc_form_display.php';
 
 require_once("dbconnect_mysqli.php");
@@ -308,7 +309,7 @@ if (strlen($SSagent_debug_logging) > 1)
 	}
 
 $auth_api_flag = 0;
-if ( ($submit_button=='YES') or ($admin_submit=='YES') )
+if ( ($submit_button=='YES') or ($submit_button=='READONLY') or ($admin_submit=='YES') )
 	{$auth_api_flag = 1;}
 
 $auth=0;
@@ -354,6 +355,11 @@ else
 ### BEGIN parse submission of the custom fields form ###
 if ($stage=='SUBMIT')
 	{
+	if ($submit_button=='READONLY')
+		{
+		echo  _QXZ("You do not have permission to modify leads").": $submit_button\n<BR>\n";
+		exit;
+		}
 	$SUBMIT_only=1;
 	if ($SSagent_debug_logging > 0) 
 		{
@@ -668,6 +674,10 @@ if ($SUBMIT_only < 1)
 	echo "<input type=hidden name=user_group id=user_group value=\"$user_group\">\n";
 	echo "<input type=hidden name=uniqueid id=uniqueid value=\"$uniqueid\">\n";
 	echo "\n";
+	if ($submit_button=='READONLY')
+		{
+		echo "<input type=hidden name=submit_button id=submit_button value=\"READONLY\">\n";
+		}
 
 
 	require_once("functions.php");
