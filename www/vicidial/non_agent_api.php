@@ -164,10 +164,11 @@
 # 210216-1415 - Added list_exists_check option for add_lead function
 # 210217-1454 - Added menu_id option for add_did and update_did functions
 # 210227-1116 - Added xferconf number options to update_campaign, add_list & update_list functions
+# 210303-1802 - Added list_exists_check option for update_lead function
 #
 
-$version = '2.14-141';
-$build = '210227-1116';
+$version = '2.14-142';
+$build = '210303-1802';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -12116,6 +12117,23 @@ if ($function == 'update_lead')
 						$result = 'ERROR';
 						$result_reason = "update_lead NOT AN ALLOWED LIST ID";
 						$data = "$phone_number|$list_id";
+						echo "$result: $result_reason - $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				if ( (preg_match("/Y/i",$list_exists_check)) and (strlen($list_id_field) > 0) )
+					{
+					$stmt="SELECT count(*) from vicidial_lists where list_id='$list_id_field';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					if ($DB>0) {echo "DEBUG: update_lead list_exists_check query - $row[0]|$stmt\n";}
+					$list_exists_count = $row[0];
+					if ($list_exists_count < 1)
+						{
+						$result = 'ERROR';
+						$result_reason = "update_lead NOT A DEFINED LIST ID, LIST EXISTS CHECK ENABLED";
+						$data = "$phone_number|$list_id_field";
 						echo "$result: $result_reason - $data\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						exit;

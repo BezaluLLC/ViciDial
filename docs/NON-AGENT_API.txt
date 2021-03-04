@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-02-27
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-03-03
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -175,6 +175,7 @@ Changes:
 210216-1415 - Added list_exists_check option for add_lead function
 210217-1454 - Added menu_id option for add_did and update_did functions
 210227-1116 - Added xferconf number options to update_campaign, add_list & update_list functions
+210303-1802 - Added list_exists_check option for update_lead function
 
 
 API Functions use the 'function' variable
@@ -1064,6 +1065,7 @@ add_to_hopper -		Y or N, default is N
 remove_from_hopper -	Y or N, default is N
 hopper_priority -	99 to -99, the higher number the higher priority, default is 0
 hopper_local_call_time_check - Y or N, default is N. Validate the local call time and/or state call time before inserting lead in the hopper
+list_exists_check -	Y or N, default is N. If the list_id_field is not a defined list in the system, it will ERROR and not update the lead.
 
 EDITABLE FIELDS- 
 user_field -		1-20 characters, this updates the 'user' field in the vicidial_list table
@@ -1158,6 +1160,7 @@ NOTICE: update_lead NOT REMOVED FROM HOPPER, LEAD IS NOT IN THE HOPPER - 7275551
 ERROR: update_lead INVALID DATA FOR LEAD INSERTION - 6666|||
 ERROR: update_lead NO MATCHES FOUND IN THE SYSTEM - 6666|||
 ERROR: update_lead NO VALID SEARCH METHOD - 6666|SYSTEM|||
+ERROR: update_lead NOT A DEFINED LIST ID, LIST EXISTS CHECK ENABLED - 6666|139
 
 ERROR: update_lead USER DOES NOT HAVE PERMISSION TO UPDATE LEADS IN THE SYSTEM - 6666|0 
 ERROR: update_lead NOT AN ALLOWED LIST ID - 7275551212|98762
