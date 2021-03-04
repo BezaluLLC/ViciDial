@@ -6,7 +6,7 @@
 # qc_modify_lead.php
 # 
 # Copyright (C) 2012  poundteam.com    LICENSE: AGPLv2
-# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to allow QC review and modification of leads, contributed by poundteam.com
 #
@@ -28,6 +28,7 @@
 # 170513-2256 - Added QC Webform, issue #1010
 # 170527-2252 - Fix for rare inbound logging issue #1017
 # 171001-1110 - Added in-browser audio control, if recording access control is disabled
+# 210304-1650 - Added modify_leads=5 read-only option
 #
 
 require("dbconnect_mysqli.php");
@@ -429,6 +430,11 @@ echo "<CENTER><FONT FACE='Courier' COLOR=BLACK SIZE=3><a href=\"admin.php?ADD=88
 //end_call is set by submit button to denote "save", without it this is a VIEW, with it this is a SAVE
 if ($end_call > 0) 
 	{
+	if ($LOGmodify_leads == '5')
+		{
+		echo "ERROR: "._QXZ("You do not have permission to modify leads").": $LOGmodify_leads \n";
+		exit;
+		}
     if($DB) { echo __LINE__."\n"; }
 	### update the lead record in the vicidial_list table
 	$stmt="UPDATE vicidial_list set status='" . mysqli_real_escape_string($link, $status) . "',title='" . mysqli_real_escape_string($link, $title) . "',first_name='" . mysqli_real_escape_string($link, $first_name) . "',middle_initial='" . mysqli_real_escape_string($link, $middle_initial) . "',last_name='" . mysqli_real_escape_string($link, $last_name) . "',address1='" . mysqli_real_escape_string($link, $address1) . "',address2='" . mysqli_real_escape_string($link, $address2) . "',address3='" . mysqli_real_escape_string($link, $address3) . "',city='" . mysqli_real_escape_string($link, $city) . "',state='" . mysqli_real_escape_string($link, $state) . "',province='" . mysqli_real_escape_string($link, $province) . "',postal_code='" . mysqli_real_escape_string($link, $postal_code) . "',country_code='" . mysqli_real_escape_string($link, $country_code) . "',alt_phone='" . mysqli_real_escape_string($link, $alt_phone) . "',phone_number='$phone_number',phone_code='$phone_code',email='" . mysqli_real_escape_string($link, $email) . "',security_phrase='" . mysqli_real_escape_string($link, $security) . "',comments='" . mysqli_real_escape_string($link, $comments) . "',rank='" . mysqli_real_escape_string($link, $rank) . "',owner='" . mysqli_real_escape_string($link, $owner) . "' where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "'";
@@ -1307,9 +1313,11 @@ else
 				{
 				$rowx=mysqli_fetch_row($rslt);
 				$custom_records_count =	$rowx[0];
+				$submit_buttonURL = '&submit_button=YES';
+				if ($LOGmodify_leads == '5') {$submit_buttonURL = '&submit_button=READONLY';}
 
 				echo "<B>"._QXZ("CUSTOM FIELDS FOR THIS LEAD").":</B><BR>\n";
-				echo "<iframe src=\"../agc/$vdc_form_display?lead_id=$lead_id&list_id=$CLlist_id&stage=DISPLAY&submit_button=YES&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bcrypt=OFF&bgcolor=E6E6E6\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"2\" allowtransparency=\"true\" id=\"vcFormIFrame\" name=\"vcFormIFrame\" width=\"740\" height=\"300\" STYLE=\"z-index:18\"> </iframe>\n";
+				echo "<iframe src=\"../agc/$vdc_form_display?lead_id=$lead_id&list_id=$CLlist_id&stage=DISPLAY$submit_buttonURL&user=$PHP_AUTH_USER&pass=$PHP_AUTH_PW&bcrypt=OFF&bgcolor=E6E6E6\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"2\" allowtransparency=\"true\" id=\"vcFormIFrame\" name=\"vcFormIFrame\" width=\"740\" height=\"300\" STYLE=\"z-index:18\"> </iframe>\n";
 				echo "<BR><BR>";
 				}
 			}
