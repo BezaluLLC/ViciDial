@@ -1345,11 +1345,6 @@ $messagesHTML .= "<span style=\"position:absolute;left:3px;top:30px;z-index:19;\
 ### BEGIN - Add a new lead in the system ###
 if ($lead_id == 'NEW')
 	{
-	if ($LOGmodify_leads == '5')
-		{
-		echo "ERROR: "._QXZ("You do not have permission to add new leads").": $LOGmodify_leads \n";
-		exit;
-		}
 	$secX = date("U");
 	$hour = date("H");
 	$min = date("i");
@@ -1405,7 +1400,7 @@ if ($lead_id == 'NEW')
 		$list_valid = $rowx[0];
 		}
 
-	if ( ($list_valid > 0) or (preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
+	if ( ( ($list_valid > 0) or (preg_match('/\-ALL/i', $LOGallowed_campaigns)) ) and ($LOGmodify_leads != '5') )
 		{
 		$source_idSQL='';
 		if ($SSsource_id_display > 0)
@@ -2327,7 +2322,14 @@ else
 
 
 	if ($lead_id == 'NEW')
-		{echo "<br><b>"._QXZ("Add A New Lead")."</B>\n";}
+		{
+		if ($LOGmodify_leads == '5')
+			{
+			echo "ERROR: "._QXZ("You do not have permission to add new leads").": $LOGmodify_leads \n";
+			exit;
+			}
+		echo "<br><b>"._QXZ("Add A New Lead")."</B>\n";
+		}
 	else
 		{echo "<br>"._QXZ("Lead information").": $first_name $last_name - $phone_number\n";}
 
