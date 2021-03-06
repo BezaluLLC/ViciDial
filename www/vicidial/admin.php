@@ -504,6 +504,8 @@ if (isset($_GET["park_on_extension"]))	{$park_on_extension=$_GET["park_on_extens
 	elseif (isset($_POST["park_on_extension"]))	{$park_on_extension=$_POST["park_on_extension"];}
 if (isset($_GET["pass"]))	{$pass=$_GET["pass"];}
 	elseif (isset($_POST["pass"]))	{$pass=$_POST["pass"];}
+if (isset($_GET["phone_defaults_container"]))	{$phone_defaults_container=$_GET["phone_defaults_container"];}
+	elseif (isset($_POST["phone_defaults_container"]))	{$phone_defaults_container=$_POST["phone_defaults_container"];}
 if (isset($_GET["phone_ip"]))	{$phone_ip=$_GET["phone_ip"];}
 	elseif (isset($_POST["phone_ip"]))	{$phone_ip=$_POST["phone_ip"];}
 if (isset($_GET["phone_login"]))	{$phone_login=$_GET["phone_login"];}
@@ -3536,6 +3538,7 @@ if ($non_latin < 1)
 	$max_queue_ingroup_id = preg_replace('/[^-_0-9a-zA-Z]/','',$max_queue_ingroup_id);
 	$agent_debug_logging = preg_replace('/[^-_0-9a-zA-Z]/','',$agent_debug_logging);
 	$container_id = preg_replace('/[^-_0-9a-zA-Z]/','',$container_id);
+	$phone_defaults_container = preg_replace('/[^-_0-9a-zA-Z]/','',$phone_defaults_container);
 	$container_type = preg_replace('/[^-_0-9a-zA-Z]/','',$container_type);
 	$status_group_id = preg_replace('/[^-_0-9a-zA-Z]/','',$status_group_id);
 	$unavail_dialplan_fwd_exten = preg_replace('/[^-_0-9a-zA-Z]/','',$unavail_dialplan_fwd_exten);
@@ -4217,6 +4220,7 @@ else
 	$max_queue_ingroup_id = preg_replace('/[^-_0-9\p{L}]/u','',$max_queue_ingroup_id);
 	$agent_debug_logging = preg_replace('/[^-_0-9\p{L}]/u','',$agent_debug_logging);
 	$container_id = preg_replace('/[^-_0-9\p{L}]/u','',$container_id);
+	$phone_defaults_container = preg_replace('/[^-_0-9\p{L}]/u','',$phone_defaults_container);
 	$container_type = preg_replace('/[^-_0-9\p{L}]/u','',$container_type);
 	$status_group_id = preg_replace('/[^-_0-9\p{L}]/u','',$status_group_id);
 	$unavail_dialplan_fwd_exten = preg_replace('/[^-_0-9\p{L}]/u','',$unavail_dialplan_fwd_exten);
@@ -5480,12 +5484,13 @@ if ($SSscript_remove_js > 0)
 # 210227-1126 - Variable filter changes
 # 210302-1032 - Changed Logout to auto-logout through AJAX, with redirect to Admin Home URL
 # 210304-1615 - Added User modify_leads = 5 option, for READONLY
+# 210305-2159 - Added Default Phone Fields, Changed CLEAR LIST to remove custom fields for removed leads
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-791a';
-$build = '210304-1615';
+$admin_version = '2.14-792a';
+$build = '210305-2159';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -9784,10 +9789,44 @@ if ($ADD==11111111111)
 			}
 		##### END ID override optional section #####
 
+
 		echo "<TABLE><TR><TD>\n";
 		echo "<img src=\"images/icon_phones.png\" alt=\"Phones\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		echo "<br>"._QXZ("ADD A NEW PHONE")."<form action=$PHP_SELF method=POST>\n";
+
+		##### Lookup settings container #####
+		$SScontainer_stmt="select phone_defaults_container from system_settings limit 1";
+		$SScontainer_rslt=mysql_to_mysqli($SScontainer_stmt, $link);
+		$SScontainer_row=mysqli_fetch_row($SScontainer_rslt);
+		$dps=array(); # Default phone setting array
+		if (!preg_match('/\-\-\-DISABLED\-\-\-/', $SScontainer_row[0]))
+			{
+			$container_stmt="select container_entry from vicidial_settings_containers where container_id='$SScontainer_row[0]'";
+			$container_rslt=mysql_to_mysqli($container_stmt, $link);
+			$container_entry="";
+			if (mysqli_num_rows($container_rslt)>0)
+				{
+				echo "<B><font color='#F00'>"._QXZ("Using default phone setting container")." $SScontainer_row[0]...</font></B><BR>\n";
+				$container_row=mysqli_fetch_row($container_rslt);
+				$container_entry=$container_row[0];
+				$container_entry_array=explode("\n", $container_entry);
+				for ($c=0; $c<count($container_entry_array); $c++)
+					{
+					$container_line=trim($container_entry_array[$c]);
+					if (!preg_match('/^\#/', $container_line))
+						{
+						$current_setting_array=explode("=>", $container_line);
+						if (strlen(trim($current_setting_array[0]))>0 && strlen(trim($current_setting_array[1]))>0)
+							{
+							# $$current_setting_array[0]=$current_setting_array[1];
+							$dps[trim($current_setting_array[0])]=trim($current_setting_array[1]);
+							}
+						}
+					}
+				}
+			}
+
 		echo "<input type=hidden name=ADD value=21111111111>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 
@@ -9801,28 +9840,72 @@ if ($ADD==11111111111)
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Phone Extension").": </td><td align=left><input type=text name=extension size=20 maxlength=100 value=\"\">$NWB#phones-extension$NWE</td></tr>\n";
 			}
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Dial Plan Number").": </td><td align=left><input type=text name=dialplan_number size=15 maxlength=20> ("._QXZ("digits only").")$NWB#phones-dialplan_number$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Voicemail Box").": </td><td align=left><input type=text name=voicemail_id size=10 maxlength=10> ("._QXZ("digits only").")$NWB#phones-voicemail_id$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Outbound CallerID").": </td><td align=left><input type=text name=outbound_cid size=10 maxlength=20> ("._QXZ("digits only").")$NWB#phones-outbound_cid$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Voicemail Box").": </td><td align=left><input type=text name=voicemail_id size=10 maxlength=10 value='".$dps["voicemail_id"]."'> ("._QXZ("digits only").")$NWB#phones-voicemail_id$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Outbound CallerID").": </td><td align=left><input type=text name=outbound_cid size=10 maxlength=20 value='".$dps["outbound_cid"]."'> ("._QXZ("digits only").")$NWB#phones-outbound_cid$NWE</td></tr>\n";
 #		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>Phone IP address: </td><td align=left><input type=text name=phone_ip size=20 maxlength=15> (optional)$NWB#phones-phone_ip$NWE</td></tr>\n";
 #		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>Computer IP address: </td><td align=left><input type=text name=computer_ip size=20 maxlength=15> (optional)$NWB#phones-computer_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
+		$s="SELECTED";
+		if ($dps["user_group"])
+			{
+			echo "<option SELECTED value=\"".$dps["user_group"]."\">".$dps["user_group"]."</option>\n";
+			$s="";
+			}
 		echo "$UUgroups_list";
-		echo "<option SELECTED value=\"---ALL---\">"._QXZ("All Admin User Groups")."</option>\n";
+		echo "<option $s value=\"---ALL---\">"._QXZ("All Admin User Groups")."</option>\n";
 		echo "</select>$NWB#phones-user_group$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Server IP").": </td><td align=left><select size=1 name=server_ip>\n";
+		if ($dps["server_ip"])
+			{
+			echo "<option SELECTED value=\"".$dps["server_ip"]."\">".$dps["server_ip"]."</option>\n";
+			}
 		echo "$servers_list";
 		echo "</select>$NWB#phones-server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Agent Screen Login").": </td><td align=left><input type=text name=login size=15 maxlength=15>$NWB#phones-login$NWE</td></tr>\n";
+		if ($dps["pass"])
+			{
+			$SSdefault_phone_login_password=$dps["pass"];
+			}
+		if ($dps["conf_secret"])
+			{
+			$SSdefault_phone_registration_password=$dps["conf_secret"];
+			}
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Login Password").": </td><td align=left><input type=text name=pass size=40 maxlength=100 value=\"$SSdefault_phone_login_password\">$NWB#phones-pass$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Registration Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=conf_secret size=40 maxlength=100 value=\"$SSdefault_phone_registration_password\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\">$NWB#phones-conf_secret$NWE &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_length name=pass_length>0</span></font></td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Status").": </td><td align=left><select size=1 name=status><option value='ACTIVE' SELECTED>"._QXZ("ACTIVE")."</option><option value='SUSPENDED'>"._QXZ("SUSPENDED")."</option><option value='CLOSED'>"._QXZ("CLOSED")."</option><option value='PENDING'>"._QXZ("PENDING")."</option><option value='ADMIN'>"._QXZ("ADMIN")."</option></select>$NWB#phones-status$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active Account").": </td><td align=left><select size=1 name=active><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option></select>$NWB#phones-active$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Phone Type").": </td><td align=left><input type=text name=phone_type size=20 maxlength=50>$NWB#phones-phone_type$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Status").": </td><td align=left><select size=1 name=status>";
+		
+		if ($dps["status"])
+			{
+			echo "<option value='".$dps["status"]."' SELECTED>".$dps["status"]."</option>";
+			echo "<option value='ACTIVE'>"._QXZ("ACTIVE")."</option>";
+			}
+		else
+			{
+			echo "<option value='ACTIVE' SELECTED>"._QXZ("ACTIVE")."</option>";
+			}
+		echo "<option value='SUSPENDED'>"._QXZ("SUSPENDED")."</option><option value='CLOSED'>"._QXZ("CLOSED")."</option><option value='PENDING'>"._QXZ("PENDING")."</option><option value='ADMIN'>"._QXZ("ADMIN")."</option></select>$NWB#phones-status$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active Account").": </td><td align=left><select size=1 name=active>";
+		
+		echo "<option value='Y' ".($dps["active"]!="N" ? "selected" : "").">"._QXZ("Y")."</option><option value='N' ".($dps["active"]=="N" ? "selected" : "").">"._QXZ("N")."</option></select>$NWB#phones-active$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Phone Type").": </td><td align=left><input type=text name=phone_type size=20 maxlength=50 value='".$dps["phone_type"]."'>$NWB#phones-phone_type$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Full Name").": </td><td align=left><input type=text name=fullname size=20 maxlength=50>$NWB#phones-fullname$NWE</td></tr>\n";
 #		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>Company: </td><td align=left><input type=text name=company size=10 maxlength=10>$NWB#phones-company$NWE</td></tr>\n";
 #		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>Picture: </td><td align=left><input type=text name=picture size=20 maxlength=19>$NWB#phones-picture$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Client Protocol").": </td><td align=left><select size=1 name=protocol><option SELECTED>SIP</option><option>Zap</option><option>IAX2</option><option value='EXTERNAL'>"._QXZ("EXTERNAL")."</option><option>DAHDI</option></select>$NWB#phones-protocol$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Client Protocol").": </td><td align=left><select size=1 name=protocol>";
+		if ($dps["protocol"])
+			{
+			echo "<option value='".$dps["protocol"]."' selected>".$dps["protocol"]."</option><option>SIP</option>";
+			}
+		else
+			{
+			echo "<option SELECTED>SIP</option>";
+			}
+		echo "<option>Zap</option><option>IAX2</option><option value='EXTERNAL'>"._QXZ("EXTERNAL")."</option><option>DAHDI</option></select>$NWB#phones-protocol$NWE</td></tr>\n";
+		if ($dps["local_gmt"])
+			{
+			$SSdefault_local_gmt=$dps["local_gmt"];
+			}
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Local GMT").": </td><td align=left><select size=1 name=local_gmt><option>12.75</option><option>12.00</option><option>11.00</option><option>10.00</option><option>9.50</option><option>9.00</option><option>8.00</option><option>7.00</option><option>6.50</option><option>6.00</option><option>5.75</option><option>5.50</option><option>5.00</option><option>4.50</option><option>4.00</option><option>3.50</option><option>3.00</option><option>2.00</option><option>1.00</option><option>0.00</option><option>-1.00</option><option>-2.00</option><option>-3.00</option><option>-3.50</option><option>-4.00</option><option>-5.00</option><option>-6.00</option><option>-7.00</option><option>-8.00</option><option>-9.00</option><option>-10.00</option><option>-11.00</option><option>-12.00</option><option SELECTED>$SSdefault_local_gmt</option></select> ("._QXZ("Do NOT Adjust for DST").")$NWB#phones-local_gmt$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input style='background-color:#$SSbutton_color' type=submit name=submit value='"._QXZ("SUBMIT")."'</td></tr>\n";
 		echo "</TABLE></center>\n";
@@ -10476,6 +10559,7 @@ if ($ADD==192111111111)
 		<option value='TIMEZONE_LIST'>"._QXZ("TIMEZONE_LIST")."</option>
 		<option value='PAUSE_CODES_LIST'>"._QXZ("PAUSE_CODES_LIST")."</option>
 		<option value='PHONE_NUMBERS'>"._QXZ("PHONE_NUMBERS")."</option>
+		<option value='PHONE_DEFAULTS'>"._QXZ("PHONE_DEFAULTS")."</option>
 		<option value='DISPO_FILTER'>"._QXZ("DISPO_FILTER")."</option>
 		<option value='CALL_QUOTA'>"._QXZ("CALL_QUOTA")."</option>
 		<option value='SIP_EVENT_ACTIONS'>"._QXZ("SIP_EVENT_ACTIONS")."</option>
@@ -13732,7 +13816,79 @@ if ($ADD==21111111111)
 							{
 							echo "<br>"._QXZ("PHONE ADDED")."\n";
 
-							$stmt="INSERT INTO phones (extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,protocol,local_gmt,outbound_cid,conf_secret,voicemail_timezone,user_group) values('$extension','$dialplan_number','$voicemail_id','$phone_ip','$computer_ip','$server_ip','$login','$pass','$status','$active','$phone_type','$fullname','$company','$picture','$protocol','$local_gmt','$outbound_cid','$conf_secret','$SSdefault_voicemail_timezone','$user_group');";
+							##### Lookup settings container #####
+							$SScontainer_stmt="select phone_defaults_container from system_settings limit 1";
+							$SScontainer_rslt=mysql_to_mysqli($SScontainer_stmt, $link);
+							$SScontainer_row=mysqli_fetch_row($SScontainer_rslt);
+							$dps=array("voicemail_timezone" => "$SSdefault_voicemail_timezone"); # Default phone setting array, need to set voicemail timezone here due to system settings
+
+							# Below settings were pre-set at the initial page, so we remove them here so the settings don't overwrite anything the user may have modified.
+							$settings_to_purge=array("active", "local_gmt", "conf_secret", "outbound_cid", "pass", "phone_type", "protocol", "server_ip", "status", "voicemail_id", "user_group");
+							if (!preg_match('/\-\-\-DISABLED\-\-\-/', $SScontainer_row[0]))
+								{
+								$container_stmt="select container_entry from vicidial_settings_containers where container_id='$SScontainer_row[0]'";
+								$container_rslt=mysql_to_mysqli($container_stmt, $link);
+								$container_entry="";
+								if (mysqli_num_rows($container_rslt)>0)
+									{
+									# echo "Using container $SScontainer_row[0]...<BR>\n";
+									$container_row=mysqli_fetch_row($container_rslt);
+									$container_entry=$container_row[0];
+									$container_entry_array=explode("\n", $container_entry);
+									for ($c=0; $c<count($container_entry_array); $c++)
+										{
+										$container_line=trim($container_entry_array[$c]);
+										if (!preg_match('/^\#/', $container_line))
+											{
+											$current_setting_array=explode("=>", $container_line);
+											$setting_key=trim($current_setting_array[0]);
+											$setting_value=trim($current_setting_array[1]);
+
+											if (strlen($setting_key)>0 && (strlen($setting_value)>0 || $setting_key=="conf_override") && !in_array($setting_key, $settings_to_purge))
+												{
+												if($setting_key=="conf_override")
+													{
+													$conf_override_on=1;
+													$conf_override_str=$setting_value;
+													}
+												else
+													{
+													if ($conf_override_on==1)
+														{
+														$conf_override_on=0;
+														$dps["conf_override"]=trim($conf_override_str);
+														}
+													$dps[$setting_key]=$setting_value;
+													}
+												# $$current_setting_array[0]=$current_setting_array[1];
+												}
+											else if ($conf_override_on==1)
+												{
+												$conf_override_str.="\n".trim($container_line);
+												}
+											} 
+										else
+											{
+											if ($conf_override_on==1)
+												{
+												$dps["conf_override"]=trim($conf_override_str);
+												}
+											$conf_override_on=0;
+											}
+										}
+									}
+								
+								# Compile additional SQL to insert into phones
+								foreach($dps as $field_name => $field_val)
+									{
+									$SQLfields.=",$field_name";
+									$SQLvalues.=",'".mysqli_real_escape_string($link, $field_val)."'";
+									}
+								}
+
+							$stmt="INSERT INTO phones (extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,protocol,local_gmt,outbound_cid,conf_secret,user_group$SQLfields) values('$extension','$dialplan_number','$voicemail_id','$phone_ip','$computer_ip','$server_ip','$login','$pass','$status','$active','$phone_type','$fullname','$company','$picture','$protocol','$local_gmt','$outbound_cid','$conf_secret','$user_group'$SQLvalues);";
+							#print_r($dps);
+							#echo "$stmt<BR>"; die;
 							$rslt=mysql_to_mysqli($stmt, $link);
 
 							$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
@@ -19597,7 +19753,7 @@ if ($ADD==411111111111111)
 					}
 				}
 
-			$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysqli_real_escape_string($link, $webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db'$custom_reports_slave_SQL,webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt',noanswer_log='$noanswer_log',alt_log_server_ip='$alt_log_server_ip',alt_log_dbname='$alt_log_dbname',alt_log_login='$alt_log_login',alt_log_pass='$alt_log_pass',tables_use_alt_log_db='$tables_use_alt_log_db',did_agent_log='$did_agent_log',campaign_cid_areacodes_enabled='$campaign_cid_areacodes_enabled',pllb_grouping_limit='$pllb_grouping_limit',did_ra_extensions_enabled='$did_ra_extensions_enabled',expanded_list_stats='$expanded_list_stats',contacts_enabled='$contacts_enabled',call_menu_qualify_enabled='$call_menu_qualify_enabled',admin_list_counts='$admin_list_counts',allow_voicemail_greeting='$allow_voicemail_greeting',queuemetrics_socket='$queuemetrics_socket',queuemetrics_socket_url='$queuemetrics_socket_url',enhanced_disconnect_logging='$enhanced_disconnect_logging',allow_emails='$allow_emails',level_8_disable_add='$level_8_disable_add',queuemetrics_record_hold='$queuemetrics_record_hold',country_code_list_stats='$country_code_list_stats',queuemetrics_pause_type='$queuemetrics_pause_type',frozen_server_call_clear='$frozen_server_call_clear',callback_time_24hour='$callback_time_24hour',enable_languages='$enable_languages',language_method='$language_method',meetme_enter_login_filename='$meetme_enter_login_filename',meetme_enter_leave3way_filename='$meetme_enter_leave3way_filename',enable_did_entry_list_id='$enable_did_entry_list_id',enable_third_webform='$enable_third_webform',allow_chats='$allow_chats',chat_url='$chat_url',chat_timeout='$chat_timeout',agent_debug_logging='$agent_debug_logging',default_language='$default_language',agent_whisper_enabled='$agent_whisper_enabled',user_hide_realtime_enabled='$user_hide_realtime_enabled',usacan_phone_dialcode_fix='$usacan_phone_dialcode_fix',cache_carrier_stats_realtime='$cache_carrier_stats_realtime',log_recording_access='$log_recording_access',report_default_format='$report_default_format',alt_ivr_logging='$alt_ivr_logging',default_phone_code='$default_phone_code',admin_row_click='$admin_row_click',admin_screen_colors='$admin_screen_colors',ofcom_uk_drop_calc='$ofcom_uk_drop_calc',agent_screen_colors='$agent_screen_colors',script_remove_js='$script_remove_js',manual_auto_next='$manual_auto_next',user_new_lead_limit='$user_new_lead_limit',agent_xfer_park_3way='$agent_xfer_park_3way',agent_soundboards='$agent_soundboards',web_loader_phone_length='$web_loader_phone_length',agent_script='$agent_script',agent_chat_screen_colors='$agent_chat_screen_colors',enable_auto_reports='$enable_auto_reports',enable_pause_code_limits='$enable_pause_code_limits',enable_drop_lists='$enable_drop_lists',allow_ip_lists='$allow_ip_lists',system_ip_blacklist='$system_ip_blacklist',agent_push_events='$agent_push_events',agent_push_url='$agent_push_url',hide_inactive_lists='$hide_inactive_lists',allow_manage_active_lists='$allow_manage_active_lists',expired_lists_inactive='$expired_lists_inactive',did_system_filter='$did_system_filter',anyone_callback_inactive_lists='$anyone_callback_inactive_lists',enable_gdpr_download_deletion='$enable_gdpr_download_deletion',source_id_display='$source_id_display',agent_logout_link='$agent_logout_link',manual_dial_validation='$manual_dial_validation',mute_recordings='$mute_recordings',user_admin_redirect='$user_admin_redirect',list_status_modification_confirmation='$list_status_modification_confirmation',sip_event_logging='$sip_event_logging',call_quota_lead_ranking='$call_quota_lead_ranking',enable_second_script='$enable_second_script',enable_first_webform='$enable_first_webform',recording_buttons='$recording_buttons',opensips_cid_name='$opensips_cid_name',require_password_length='$require_password_length',user_account_emails='$user_account_emails',outbound_cid_any='$outbound_cid_any',entries_per_page='$entries_per_page',browser_call_alerts='$browser_call_alerts',queuemetrics_pausereason='$queuemetrics_pausereason',inbound_answer_config='$inbound_answer_config',enable_international_dncs='$enable_international_dncs',web_loader_phone_strip='$web_loader_phone_strip',manual_dial_phone_strip='$manual_dial_phone_strip',daily_call_count_limit='$daily_call_count_limit',allow_shared_dial='$allow_shared_dial',agent_search_method='$agent_search_method'$custom_dialplanSQL;";
+			$stmt="UPDATE system_settings set use_non_latin='$use_non_latin',webroot_writable='$webroot_writable',enable_queuemetrics_logging='$enable_queuemetrics_logging',queuemetrics_server_ip='$queuemetrics_server_ip',queuemetrics_dbname='$queuemetrics_dbname',queuemetrics_login='$queuemetrics_login',queuemetrics_pass='$queuemetrics_pass',queuemetrics_url='$queuemetrics_url',queuemetrics_log_id='$queuemetrics_log_id',queuemetrics_eq_prepend='$queuemetrics_eq_prepend',vicidial_agent_disable='$vicidial_agent_disable',allow_sipsak_messages='$allow_sipsak_messages',admin_home_url='$admin_home_url',enable_agc_xfer_log='$enable_agc_xfer_log',timeclock_end_of_day='$timeclock_end_of_day',vdc_header_date_format='$vdc_header_date_format',vdc_customer_date_format='$vdc_customer_date_format',vdc_header_phone_format='$vdc_header_phone_format',vdc_agent_api_active='$vdc_agent_api_active',enable_vtiger_integration='$enable_vtiger_integration',vtiger_server_ip='$vtiger_server_ip',vtiger_dbname='$vtiger_dbname',vtiger_login='$vtiger_login',vtiger_pass='$vtiger_pass',vtiger_url='$vtiger_url',qc_features_active='$qc_features_active',outbound_autodial_active='$outbound_autodial_active',outbound_calls_per_second='$outbound_calls_per_second',enable_tts_integration='$enable_tts_integration',agentonly_callback_campaign_lock='$agentonly_callback_campaign_lock',sounds_central_control_active='$sounds_central_control_active',sounds_web_server='$sounds_web_server',sounds_web_directory='$sounds_web_directory',active_voicemail_server='$active_voicemail_server',auto_dial_limit='$auto_dial_limit',user_territories_active='$user_territories_active',allow_custom_dialplan='$allow_custom_dialplan',enable_second_webform='$enable_second_webform',default_webphone='$default_webphone',default_external_server_ip='$default_external_server_ip',webphone_url='" . mysqli_real_escape_string($link, $webphone_url) . "',enable_agc_dispo_log='$enable_agc_dispo_log',queuemetrics_loginout='$queuemetrics_loginout',callcard_enabled='$callcard_enabled',queuemetrics_callstatus='$queuemetrics_callstatus',default_codecs='$default_codecs',admin_web_directory='$admin_web_directory',label_title='$label_title',label_first_name='$label_first_name',label_middle_initial='$label_middle_initial',label_last_name='$label_last_name',label_address1='$label_address1',label_address2='$label_address2',label_address3='$label_address3',label_city='$label_city',label_state='$label_state',label_province='$label_province',label_postal_code='$label_postal_code',label_vendor_lead_code='$label_vendor_lead_code',label_gender='$label_gender',label_phone_number='$label_phone_number',label_phone_code='$label_phone_code',label_alt_phone='$label_alt_phone',label_security_phrase='$label_security_phrase',label_email='$label_email',label_comments='$label_comments',custom_fields_enabled='$custom_fields_enabled',slave_db_server='$slave_db_server',reports_use_slave_db='$reports_use_slave_db'$custom_reports_slave_SQL,webphone_systemkey='$webphone_systemkey',first_login_trigger='$first_login_trigger',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',admin_modify_refresh='$admin_modify_refresh',nocache_admin='$nocache_admin',generate_cross_server_exten='$generate_cross_server_exten',queuemetrics_addmember_enabled='$queuemetrics_addmember_enabled',queuemetrics_dispo_pause='$queuemetrics_dispo_pause',label_hide_field_logs='$label_hide_field_logs',queuemetrics_pe_phone_append='$queuemetrics_pe_phone_append',test_campaign_calls='$test_campaign_calls',agents_calls_reset='$agents_calls_reset',default_voicemail_timezone='$default_voicemail_timezone',default_local_gmt='$default_local_gmt',noanswer_log='$noanswer_log',alt_log_server_ip='$alt_log_server_ip',alt_log_dbname='$alt_log_dbname',alt_log_login='$alt_log_login',alt_log_pass='$alt_log_pass',tables_use_alt_log_db='$tables_use_alt_log_db',did_agent_log='$did_agent_log',campaign_cid_areacodes_enabled='$campaign_cid_areacodes_enabled',pllb_grouping_limit='$pllb_grouping_limit',did_ra_extensions_enabled='$did_ra_extensions_enabled',expanded_list_stats='$expanded_list_stats',contacts_enabled='$contacts_enabled',call_menu_qualify_enabled='$call_menu_qualify_enabled',admin_list_counts='$admin_list_counts',allow_voicemail_greeting='$allow_voicemail_greeting',queuemetrics_socket='$queuemetrics_socket',queuemetrics_socket_url='$queuemetrics_socket_url',enhanced_disconnect_logging='$enhanced_disconnect_logging',allow_emails='$allow_emails',level_8_disable_add='$level_8_disable_add',queuemetrics_record_hold='$queuemetrics_record_hold',country_code_list_stats='$country_code_list_stats',queuemetrics_pause_type='$queuemetrics_pause_type',frozen_server_call_clear='$frozen_server_call_clear',callback_time_24hour='$callback_time_24hour',enable_languages='$enable_languages',language_method='$language_method',meetme_enter_login_filename='$meetme_enter_login_filename',meetme_enter_leave3way_filename='$meetme_enter_leave3way_filename',enable_did_entry_list_id='$enable_did_entry_list_id',enable_third_webform='$enable_third_webform',allow_chats='$allow_chats',chat_url='$chat_url',chat_timeout='$chat_timeout',agent_debug_logging='$agent_debug_logging',default_language='$default_language',agent_whisper_enabled='$agent_whisper_enabled',user_hide_realtime_enabled='$user_hide_realtime_enabled',usacan_phone_dialcode_fix='$usacan_phone_dialcode_fix',cache_carrier_stats_realtime='$cache_carrier_stats_realtime',log_recording_access='$log_recording_access',report_default_format='$report_default_format',alt_ivr_logging='$alt_ivr_logging',default_phone_code='$default_phone_code',admin_row_click='$admin_row_click',admin_screen_colors='$admin_screen_colors',ofcom_uk_drop_calc='$ofcom_uk_drop_calc',agent_screen_colors='$agent_screen_colors',script_remove_js='$script_remove_js',manual_auto_next='$manual_auto_next',user_new_lead_limit='$user_new_lead_limit',agent_xfer_park_3way='$agent_xfer_park_3way',agent_soundboards='$agent_soundboards',web_loader_phone_length='$web_loader_phone_length',agent_script='$agent_script',agent_chat_screen_colors='$agent_chat_screen_colors',enable_auto_reports='$enable_auto_reports',enable_pause_code_limits='$enable_pause_code_limits',enable_drop_lists='$enable_drop_lists',allow_ip_lists='$allow_ip_lists',system_ip_blacklist='$system_ip_blacklist',agent_push_events='$agent_push_events',agent_push_url='$agent_push_url',hide_inactive_lists='$hide_inactive_lists',allow_manage_active_lists='$allow_manage_active_lists',expired_lists_inactive='$expired_lists_inactive',did_system_filter='$did_system_filter',anyone_callback_inactive_lists='$anyone_callback_inactive_lists',enable_gdpr_download_deletion='$enable_gdpr_download_deletion',source_id_display='$source_id_display',agent_logout_link='$agent_logout_link',manual_dial_validation='$manual_dial_validation',mute_recordings='$mute_recordings',user_admin_redirect='$user_admin_redirect',list_status_modification_confirmation='$list_status_modification_confirmation',sip_event_logging='$sip_event_logging',call_quota_lead_ranking='$call_quota_lead_ranking',enable_second_script='$enable_second_script',enable_first_webform='$enable_first_webform',recording_buttons='$recording_buttons',opensips_cid_name='$opensips_cid_name',require_password_length='$require_password_length',user_account_emails='$user_account_emails',outbound_cid_any='$outbound_cid_any',entries_per_page='$entries_per_page',browser_call_alerts='$browser_call_alerts',queuemetrics_pausereason='$queuemetrics_pausereason',inbound_answer_config='$inbound_answer_config',enable_international_dncs='$enable_international_dncs',web_loader_phone_strip='$web_loader_phone_strip',manual_dial_phone_strip='$manual_dial_phone_strip',daily_call_count_limit='$daily_call_count_limit',allow_shared_dial='$allow_shared_dial',agent_search_method='$agent_search_method',phone_defaults_container='$phone_defaults_container'$custom_dialplanSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 
 			if ( ($meetme_enter_login_filename != $SSmeetme_enter_login_filename) or ($meetme_enter_leave3way_filename != $SSmeetme_enter_leave3way_filename) )
@@ -21649,29 +21805,61 @@ if ($ADD==612)
 			echo "<br>"._QXZ("REMOVING LIST HOPPER LEADS FROM OLD CAMPAIGN HOPPER")." ($list_id)\n";
 			$stmt="DELETE from vicidial_hopper where list_id='$list_id' $LOGallowed_campaignsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
+			$affected_rowsH = mysqli_affected_rows($link);
+			echo ": $affected_rowsH "._QXZ("records")."\n";
 			
+			# If custom fields are enabled, go through each lead looking for custom data to delete before deleting all standard lead data in this list
+			$custom_records_deleted=0;
+			if ($SScustom_fields_enabled > 0) 
+				{
+				echo "<br>"._QXZ("REMOVING LEADS CUSTOM FIELDS RECORDS")."\n";
+				$cld_lead_id=array();
+				$cld_entry_list_id=array();
+				$stmt="SELECT lead_id,entry_list_id from vicidial_list where list_id='$list_id';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$cld_to_print = mysqli_num_rows($rslt);
+				$o=0;
+				while ($cld_to_print > $o) 
+					{
+					$rowx=mysqli_fetch_row($rslt);
+					$cld_lead_id[$o] =			$rowx[0];
+					$cld_entry_list_id[$o] =	$rowx[1];
+					$cld_entry_list_id[$o] = preg_replace('/[^0-9]/','',$cld_entry_list_id[$o]);
+					$o++;
+					}
+				$o=0;
+				while ($cld_to_print > $o) 
+					{
+					if (strlen($cld_entry_list_id[$o]) > 0)
+						{
+						$stmtC="SHOW TABLES LIKE \"custom_$cld_entry_list_id[$o]\";";
+						if ($DB>0) {echo "$stmt";}
+						$rsltC=mysql_to_mysqli($stmtC, $link);
+						$tablecount_to_print = mysqli_num_rows($rsltC);
+						if ($tablecount_to_print > 0) 
+							{
+							$stmtC="DELETE from custom_$cld_entry_list_id[$o] where lead_id='$cld_lead_id[$o]';";
+							$rsltC=mysql_to_mysqli($stmtC, $link);
+							$affected_rowsC = mysqli_affected_rows($link);
+							$custom_records_deleted = ($custom_records_deleted + $affected_rowsC);
+							}
+						}
+					$o++;
+					}
+				echo ": $custom_records_deleted "._QXZ("records")."\n";
+				}
+
 			echo "<br>"._QXZ("REMOVING LEADS FROM LIST TABLE")."\n";
 			$stmtA="DELETE from vicidial_list where list_id='$list_id';";
 			$rslt=mysql_to_mysqli($stmtA, $link);
-
-		# Decided not to activate this in case a lead was moved to another list but still had data in this list.
-		#	$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id';";
-		#	$rslt=mysql_to_mysqli($stmt, $link);
-		#	$rowx=mysqli_fetch_row($rslt);
-		#	$custom_fields_count = $rowx[0];
-		#
-		#	if ($custom_fields_count > 0)
-		#		{
-		#		echo "<br>REMOVING CUSTOM FIELDS DATA\n";
-		#		$stmt="DELETE from custom_$list_id;";
-		#		$rslt=mysql_to_mysqli($stmt, $link);
-		#		}
+			$affected_rowsA = mysqli_affected_rows($link);
+			echo ": $affected_rowsA "._QXZ("records")."\n";
 
 			### LOG INSERTION Admin Log Table ###
-			$SQL_log = "$stmt|$stmtA|";
+			$SQL_log = "$stmt|$stmtA|$stmtC|";
 			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='CLEAR', record_id='$list_id', event_code='ADMIN CLEARED LIST', event_sql=\"$SQL_log\", event_notes='';";
+			$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='CLEAR', record_id='$list_id', event_code='ADMIN CLEARED LIST', event_sql=\"$SQL_log\", event_notes='Leads removed: $affected_rowsA   Custom Fields records removed: $custom_records_deleted   Hopper records removed: $affected_rowsH';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -38597,6 +38785,7 @@ if ($ADD==392111111111)
 		<option value='TIMEZONE_LIST'>"._QXZ("TIMEZONE_LIST")."</option>
 		<option value='PAUSE_CODES_LIST'>"._QXZ("PAUSE_CODES_LIST")."</option>
 		<option value='PHONE_NUMBERS'>"._QXZ("PHONE_NUMBERS")."</option>
+		<option value='PHONE_DEFAULTS'>"._QXZ("PHONE_DEFAULTS")."</option>
 		<option value='DISPO_FILTER'>"._QXZ("DISPO_FILTER")."</option>
 		<option value='CALL_QUOTA'>"._QXZ("CALL_QUOTA")."</option>
 		<option value='SIP_EVENT_ACTIONS'>"._QXZ("SIP_EVENT_ACTIONS")."</option>
@@ -39616,7 +39805,7 @@ if ($ADD==311111111111111)
 			$ALLagent_count =		$rowx[2];
 			}
 
-		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,queuemetrics_socket,queuemetrics_socket_url,enhanced_disconnect_logging,allow_emails,level_8_disable_add,pass_hash_enabled,pass_key,pass_cost,disable_auto_dial,queuemetrics_record_hold,country_code_list_stats,reload_timestamp,queuemetrics_pause_type,frozen_server_call_clear,callback_time_24hour,allow_chats,chat_url,chat_timeout,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,agent_debug_logging,default_language,agent_whisper_enabled,user_hide_realtime_enabled,usacan_phone_dialcode_fix,cache_carrier_stats_realtime,oldest_logs_date,log_recording_access,report_default_format,alt_ivr_logging,default_phone_code,admin_row_click,admin_screen_colors,ofcom_uk_drop_calc,agent_screen_colors,script_remove_js,manual_auto_next,user_new_lead_limit,agent_xfer_park_3way,rec_prompt_count,agent_soundboards,web_loader_phone_length,agent_script,agent_chat_screen_colors,enable_auto_reports,enable_pause_code_limits,enable_drop_lists,allow_ip_lists,system_ip_blacklist,agent_push_events,agent_push_url,hide_inactive_lists,allow_manage_active_lists,expired_lists_inactive,did_system_filter,anyone_callback_inactive_lists,enable_gdpr_download_deletion,source_id_display,agent_logout_link,manual_dial_validation,mute_recordings,user_admin_redirect,list_status_modification_confirmation,sip_event_logging,call_quota_lead_ranking,enable_second_script,enable_first_webform,recording_buttons,opensips_cid_name,require_password_length,user_account_emails,outbound_cid_any,entries_per_page,browser_call_alerts,queuemetrics_pausereason,inbound_answer_config,enable_international_dncs,web_loader_phone_strip,manual_dial_phone_strip,daily_call_count_limit,allow_shared_dial,agent_search_method from system_settings;";
+		$stmt="SELECT version,install_date,use_non_latin,webroot_writable,enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_url,queuemetrics_log_id,queuemetrics_eq_prepend,vicidial_agent_disable,allow_sipsak_messages,admin_home_url,enable_agc_xfer_log,db_schema_version,auto_user_add_value,timeclock_end_of_day,timeclock_last_reset_date,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,vdc_agent_api_active,qc_last_pull_time,enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,qc_features_active,outbound_autodial_active,outbound_calls_per_second,enable_tts_integration,agentonly_callback_campaign_lock,sounds_central_control_active,sounds_web_server,sounds_web_directory,active_voicemail_server,auto_dial_limit,user_territories_active,allow_custom_dialplan,db_schema_update_date,enable_second_webform,default_webphone,default_external_server_ip,webphone_url,enable_agc_dispo_log,custom_dialplan_entry,queuemetrics_loginout,callcard_enabled,queuemetrics_callstatus,default_codecs,admin_web_directory,label_title,label_first_name,label_middle_initial,label_last_name,label_address1,label_address2,label_address3,label_city,label_state,label_province,label_postal_code,label_vendor_lead_code,label_gender,label_phone_number,label_phone_code,label_alt_phone,label_security_phrase,label_email,label_comments,custom_fields_enabled,slave_db_server,reports_use_slave_db,webphone_systemkey,first_login_trigger,default_phone_registration_password,default_phone_login_password,default_server_password,admin_modify_refresh,nocache_admin,generate_cross_server_exten,queuemetrics_addmember_enabled,queuemetrics_dispo_pause,label_hide_field_logs,queuemetrics_pe_phone_append,test_campaign_calls,agents_calls_reset,default_voicemail_timezone,default_local_gmt,noanswer_log,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,did_agent_log,campaign_cid_areacodes_enabled,pllb_grouping_limit,did_ra_extensions_enabled,expanded_list_stats,contacts_enabled,call_menu_qualify_enabled,admin_list_counts,allow_voicemail_greeting,svn_revision,queuemetrics_socket,queuemetrics_socket_url,enhanced_disconnect_logging,allow_emails,level_8_disable_add,pass_hash_enabled,pass_key,pass_cost,disable_auto_dial,queuemetrics_record_hold,country_code_list_stats,reload_timestamp,queuemetrics_pause_type,frozen_server_call_clear,callback_time_24hour,allow_chats,chat_url,chat_timeout,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_did_entry_list_id,enable_third_webform,agent_debug_logging,default_language,agent_whisper_enabled,user_hide_realtime_enabled,usacan_phone_dialcode_fix,cache_carrier_stats_realtime,oldest_logs_date,log_recording_access,report_default_format,alt_ivr_logging,default_phone_code,admin_row_click,admin_screen_colors,ofcom_uk_drop_calc,agent_screen_colors,script_remove_js,manual_auto_next,user_new_lead_limit,agent_xfer_park_3way,rec_prompt_count,agent_soundboards,web_loader_phone_length,agent_script,agent_chat_screen_colors,enable_auto_reports,enable_pause_code_limits,enable_drop_lists,allow_ip_lists,system_ip_blacklist,agent_push_events,agent_push_url,hide_inactive_lists,allow_manage_active_lists,expired_lists_inactive,did_system_filter,anyone_callback_inactive_lists,enable_gdpr_download_deletion,source_id_display,agent_logout_link,manual_dial_validation,mute_recordings,user_admin_redirect,list_status_modification_confirmation,sip_event_logging,call_quota_lead_ranking,enable_second_script,enable_first_webform,recording_buttons,opensips_cid_name,require_password_length,user_account_emails,outbound_cid_any,entries_per_page,browser_call_alerts,queuemetrics_pausereason,inbound_answer_config,enable_international_dncs,web_loader_phone_strip,manual_dial_phone_strip,daily_call_count_limit,allow_shared_dial,agent_search_method,phone_defaults_container from system_settings;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		$version =						$row[0];
@@ -39814,6 +40003,7 @@ if ($ADD==311111111111111)
 		$daily_call_count_limit =		$row[192];
 		$allow_shared_dial =			$row[193];
 		$agent_search_method =			$row[194];
+		$phone_defaults_container =		$row[195];
 
 		if ($pass_hash_enabled > 0) {$pass_hash_enabled = 'ENABLED';}
 		else {$pass_hash_enabled = 'DISABLED';}
@@ -40234,6 +40424,20 @@ if ($ADD==311111111111111)
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("User Password Minimum Length").": </td><td align=left><select size=1 name=require_password_length><option>0</option><option>12</option><option>14</option><option>16</option><option>18</option><option>20</option><option>25</option><option>30</option><option>35</option><option>40</option><option>45</option><option>50</option><option>60</option><option>70</option><option selected>$require_password_length</option></select>$NWB#settings-require_password_length$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("User Login Link Emails Allowed").": </td><td align=left><select size=1 name=user_account_emails><option value=\"DISABLED\">"._QXZ("DISABLED")."</option><option value=\"SEND_NO_PASS\">"._QXZ("SEND_NO_PASS")."</option><option value=\"SEND_WITH_PASS\">"._QXZ("SEND_WITH_PASS")."</option><option selected value=\"$user_account_emails\">"._QXZ("$user_account_emails")."</option></select>$NWB#settings-user_account_emails$NWE</td></tr>\n";
+
+		$phone_container_stmt="select container_id from vicidial_settings_containers where container_type='PHONE_DEFAULTS' order by container_id asc";
+		$phone_container_rslt=mysql_to_mysqli($phone_container_stmt, $link);
+		$phone_defaults_container_list="<option value='---DISABLED---'>---DISABLED---</option>\n";
+		while ($pcr_row=mysqli_fetch_row($phone_container_rslt))
+			{
+			$phone_defaults_container_list.="<option value='$pcr_row[0]'>$pcr_row[0]</option>\n";
+			}
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>";
+		if ( (strlen($phone_defaults_container) > 0) and ($phone_defaults_container != '---DISABLED---') )
+			{echo "<a href=\"$PHP_SELF?ADD=392111111111&container_id=$phone_defaults_container\">"._QXZ("Default Phone Settings Container")."</a>";}
+		else
+			{echo _QXZ("Default Phone Settings Container");}
+		echo ": </td><td align=left><select size=1 name=phone_defaults_container>$phone_defaults_container_list<option selected value=\"$phone_defaults_container\">"._QXZ("$phone_defaults_container")."</option></select>$NWB#settings-phone_defaults_container$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Default Phone Registration Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_passX name=default_phone_registration_password size=40 maxlength=100 value=\"$default_phone_registration_password\" onkeyup=\"return pwdChanged('reg_passX','reg_pass_imgX','pass_lengthX','$SSrequire_password_length');\">$NWB#settings-default_phone_registration_password$NWE &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_imgX src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_passX','reg_pass_imgX','pass_lengthX','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_lengthX name=pass_lengthX>0</span></font></td></tr>\n";
 
@@ -43168,7 +43372,7 @@ if ($ADD==192000000000)
 	$sc_to_print = mysqli_num_rows($rslt);
 
 	echo "<br>"._QXZ("Settings Containers").":\n";
-	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<center><TABLE width=900 cellspacing=0 cellpadding=1>\n";
 	echo "<tr bgcolor=black>";
 	echo "<td><font size=1 color=white align=left><B>"._QXZ("Container ID")."</B></td>";
 	echo "<td><font size=1 color=white><B>"._QXZ("Notes")."</B></td>";

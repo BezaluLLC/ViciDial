@@ -574,6 +574,10 @@ OTHER CHANGES:
 	these new features work, see the Field Options help in the admin web
 	screen.
 
+163. Added Phone Defaults system setting, allowing you to set many default
+	values when adding new phones through admin.php. Also added a Copy New
+	Phone admin web function.
+
 
 
 
