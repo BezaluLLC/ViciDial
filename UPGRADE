@@ -578,6 +578,10 @@ OTHER CHANGES:
 	values when adding new phones through admin.php. Also added a Copy New
 	Phone admin web function.
 
+164. Redesign of QC module, with new QC scorecards, the ability to do QC by 
+	Campaign/List/In-Group, new reporting and more. See the
+	docs/QC_PROCCES.txt document for more information.
+
 
 
 

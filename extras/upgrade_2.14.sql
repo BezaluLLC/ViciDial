@@ -1440,3 +1440,94 @@ INSERT INTO vicidial_settings_containers VALUES ('PHONE_DEFAULTS','Default phone
 ALTER TABLE system_settings ADD phone_defaults_container VARCHAR(40) default '---DISABLED---';
 
 UPDATE system_settings SET db_schema_version='1618',db_schema_update_date=NOW() where db_schema_version < 1618;
+
+CREATE TABLE quality_control_checkpoint_log (
+qc_checkpoint_log_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+qc_log_id INT(10) UNSIGNED DEFAULT NULL,
+campaign_id VARCHAR(8) DEFAULT NULL,
+group_id VARCHAR(20) DEFAULT NULL,
+list_id BIGINT(14) UNSIGNED DEFAULT NULL,
+qc_scorecard_id VARCHAR(20) DEFAULT NULL,
+checkpoint_row_id INT(10) UNSIGNED DEFAULT NULL,
+checkpoint_text TEXT,
+checkpoint_rank TINYINT(3) UNSIGNED DEFAULT NULL,
+checkpoint_points TINYINT(3) UNSIGNED DEFAULT NULL,
+instant_fail ENUM('Y','N') DEFAULT 'N',
+checkpoint_points_earned TINYINT(5) UNSIGNED DEFAULT NULL,
+qc_agent VARCHAR(20) DEFAULT NULL,
+checkpoint_comment_agent TEXT,
+PRIMARY KEY (qc_checkpoint_log_id)
+) ENGINE=MyISAM;
+
+CREATE TABLE quality_control_checkpoints (
+checkpoint_row_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+qc_scorecard_id VARCHAR(20) DEFAULT NULL,
+checkpoint_text TEXT,
+checkpoint_rank INT(3) UNSIGNED DEFAULT NULL,
+checkpoint_points TINYINT(3) UNSIGNED DEFAULT NULL,
+instant_fail ENUM('Y','N') DEFAULT 'N',
+admin_notes TEXT,
+active ENUM('Y','N') DEFAULT NULL,
+campaign_ids TEXT,
+ingroups TEXT,
+list_ids TEXT,
+create_date DATETIME DEFAULT NULL,
+create_user VARCHAR(10) DEFAULT NULL,
+modify_date TIMESTAMP NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+modify_user VARCHAR(10) DEFAULT NULL,
+PRIMARY KEY (checkpoint_row_id)
+) ENGINE=MyISAM;
+
+CREATE TABLE quality_control_queue (
+qc_log_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+qc_display_method ENUM('CALL','LEAD') DEFAULT 'CALL',
+lead_id INT(10) UNSIGNED DEFAULT NULL,
+status VARCHAR(6) DEFAULT NULL,
+call_date DATETIME DEFAULT NULL,
+agent_log_id INT(9) UNSIGNED DEFAULT NULL,
+user VARCHAR(20) DEFAULT NULL,
+user_group VARCHAR(20) DEFAULT NULL,
+campaign_id VARCHAR(8) DEFAULT NULL,
+group_id VARCHAR(20) DEFAULT NULL,
+list_id BIGINT(14) UNSIGNED DEFAULT NULL,
+scorecard_source ENUM('CAMPAIGN','INGROUP','LIST') DEFAULT 'CAMPAIGN',
+qc_web_form_address VARCHAR(255) DEFAULT NULL,
+vicidial_id VARCHAR(20) DEFAULT NULL,
+recording_id INT(10) UNSIGNED DEFAULT NULL,
+qc_scorecard_id VARCHAR(20) DEFAULT NULL,
+qc_agent VARCHAR(20) DEFAULT NULL,
+qc_user_group VARCHAR(20) DEFAULT NULL,
+qc_status VARCHAR(20) DEFAULT NULL,
+date_modified TIMESTAMP NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+date_claimed DATETIME DEFAULT NULL,
+date_completed DATETIME DEFAULT NULL,
+PRIMARY KEY (qc_log_id),
+UNIQUE KEY quality_control_queue_agent_log_id_key (agent_log_id),
+KEY quality_control_queue_lead_id_key (lead_id)
+) ENGINE=MyISAM;
+
+CREATE TABLE quality_control_scorecards (
+qc_scorecard_id VARCHAR(20) NOT NULL,
+scorecard_name VARCHAR(255) DEFAULT NULL,
+active ENUM('Y','N') DEFAULT 'Y',
+passing_score SMALLINT(5) UNSIGNED DEFAULT 0,
+last_modified TIMESTAMP NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+PRIMARY KEY (qc_scorecard_id)
+) ENGINE=MyISAM;
+
+ALTER TABLE vicidial_campaigns ADD qc_scorecard_id VARCHAR(20) DEFAULT '';
+ALTER TABLE vicidial_campaigns ADD qc_statuses_id VARCHAR(20) DEFAULT '';
+
+ALTER TABLE vicidial_lists ADD qc_scorecard_id VARCHAR(20) DEFAULT '';
+ALTER TABLE vicidial_lists ADD qc_statuses_id VARCHAR(20) DEFAULT '';
+ALTER TABLE vicidial_lists ADD qc_web_form_address VARCHAR(255) DEFAULT '';
+
+ALTER TABLE vicidial_inbound_groups ADD qc_scorecard_id VARCHAR(20) DEFAULT '';
+ALTER TABLE vicidial_inbound_groups ADD qc_statuses_id VARCHAR(20) DEFAULT '';
+
+ALTER TABLE system_settings ADD qc_claim_limit TINYINT UNSIGNED DEFAULT '3';
+ALTER TABLE system_settings ADD qc_expire_days TINYINT UNSIGNED DEFAULT '3';
+
+INSERT INTO vicidial_settings_containers(container_id,container_notes,container_type,user_group,container_entry) VALUES ('QC_STATUS_TEMPLATE','Sample QC Status Template','QC_TEMPLATE','---ALL---','# These types of containers are simply used for creating a list of \r\n# QC-enabled statuses to apply to campaigns, lists, and ingroups.\r\n# Simply put all the statuses that this template should allow in\r\n# a comma-delimited string, as below:\r\n\r\nSALE,DNC,NI');
+
+UPDATE system_settings SET db_schema_version='1619',db_schema_update_date=NOW() where db_schema_version < 1619;
