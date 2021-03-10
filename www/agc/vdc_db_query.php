@@ -1,7 +1,7 @@
 <?php
 # vdc_db_query.php
 # 
-# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to exchange information between vicidial.php and the database server for various actions
 # 
@@ -499,10 +499,11 @@
 # 201111-2139 - Fix for AGENTDIRECT selected in-groups issue #1241
 # 201117-0820 - Changes for better compatibility with non-latin data input
 # 201122-1038 - Added Daily call count limit features
+# 210309-2343 - Small change to Fake-call-logging in QM for some queuemetrics_pausereason settings
 #
 
-$version = '2.14-392';
-$build = '201122-1038';
+$version = '2.14-393';
+$build = '210309-2343';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=844;
@@ -16020,7 +16021,8 @@ if ($ACTION == 'PauseCodeSubmit')
 					$pauseall_time = ($secX - 1);
 					$fake_call_id = $secX;
 						while (strlen($fake_call_id) > 9) {$fake_call_id = substr("$fake_call_id", 1);}
-					$fake_call_id = "F".$fake_call_id."0000000001";
+					$f_random = (rand(1000, 9999) + 10000);
+					$fake_call_id = "F".$fake_call_id."00".$f_random."001";
 
 					$stmt = "INSERT INTO queue_log SET `partition`='P01',time_id='$unpauseall_time',call_id='',queue='NONE',agent='Agent/$user',verb='UNPAUSEALL',serverid='$queuemetrics_log_id';";
 					if ($DB) {echo "$stmt\n";}
