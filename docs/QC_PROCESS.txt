@@ -1,7 +1,7 @@
 QC(Quality Control) process flow				2021-03-09
 
 This document covers the QC module features as of admin.php build 210306-0840
-(svn/trunk revision 3368). For information on the previous version of the QC
+(svn/trunk revision 3370). For information on the previous version of the QC
 Module, see the PREVIOUS VERSIONS section further down in this document.
 
 
