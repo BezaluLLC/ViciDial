@@ -624,7 +624,7 @@ ALTER TABLE vicidial_inbound_groups ADD park_file_name VARCHAR(100) default '';
 
 UPDATE system_settings SET db_schema_version='1543',db_schema_update_date=NOW() where db_schema_version < 1543;
 
-ALTER TABLE vicidial_lists_fields MODIFY field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY','HIDEBLOB','SWITCH','SOURCESELECT') default 'TEXT';
+ALTER TABLE vicidial_lists_fields MODIFY field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY','HIDEBLOB','SWITCH','SOURCESELECT','BUTTON') default 'TEXT';
 
 UPDATE system_settings SET db_schema_version='1544',db_schema_update_date=NOW() where db_schema_version < 1544;
 
@@ -1431,7 +1431,7 @@ index (drop_time)
 
 UPDATE system_settings SET db_schema_version='1616',db_schema_update_date=NOW() where db_schema_version < 1616;
 
-ALTER TABLE vicidial_lists_fields MODIFY field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY','HIDEBLOB','SWITCH','SOURCESELECT') default 'TEXT';
+ALTER TABLE vicidial_lists_fields MODIFY field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY','HIDEBLOB','SWITCH','SOURCESELECT','BUTTON') default 'TEXT';
 
 UPDATE system_settings SET db_schema_version='1617',db_schema_update_date=NOW() where db_schema_version < 1617;
 
@@ -1531,3 +1531,31 @@ ALTER TABLE system_settings ADD qc_expire_days TINYINT UNSIGNED DEFAULT '3';
 INSERT INTO vicidial_settings_containers(container_id,container_notes,container_type,user_group,container_entry) VALUES ('QC_STATUS_TEMPLATE','Sample QC Status Template','QC_TEMPLATE','---ALL---','# These types of containers are simply used for creating a list of \r\n# QC-enabled statuses to apply to campaigns, lists, and ingroups.\r\n# Simply put all the statuses that this template should allow in\r\n# a comma-delimited string, as below:\r\n\r\nSALE,DNC,NI');
 
 UPDATE system_settings SET db_schema_version='1619',db_schema_update_date=NOW() where db_schema_version < 1619;
+
+ALTER TABLE vicidial_lists_fields MODIFY field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY','HIDEBLOB','SWITCH','SOURCESELECT','BUTTON') default 'TEXT';
+
+ALTER TABLE vicidial_users ADD mobile_number VARCHAR(20) default '';
+ALTER TABLE vicidial_users ADD two_factor_override  ENUM('NOT_ACTIVE','ENABLED','DISABLED') default 'NOT_ACTIVE';
+
+ALTER TABLE system_settings ADD two_factor_auth_hours SMALLINT(5) default '0';
+ALTER TABLE system_settings ADD two_factor_container VARCHAR(40) default '---DISABLED---';
+
+INSERT INTO vicidial_call_menu (menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field,user_group,qualify_sql,alt_dtmf_log,question,answer_signal) values('2FA_say_auth_code','2FA_say_auth_code','sip-silence|hello|your|access-code|is|cm_speak_var.agi,say_digits---access_code---DP',1,'NONE','NONE',1,'0','24hours','1','','CALLMENU','0','NONE','---ALL---','','0',0,'Y');
+
+INSERT INTO vicidial_call_menu_options (menu_id,option_value,option_description,option_route,option_route_value,option_route_value_context) values('2FA_say_auth_code','TIMEOUT','','HANGUP','','');
+
+CREATE TABLE vicidial_two_factor_auth (
+auth_date DATETIME,
+auth_exp_date DATETIME,
+user VARCHAR(20) default '',
+auth_stage ENUM('0','1','2','3','4','5','6') default '0',
+auth_code VARCHAR(20) default '',
+auth_code_exp_date DATETIME,
+auth_method VARCHAR(20) default 'EMAIL',
+auth_attempts SMALLINT(5) default '0',
+index (user),
+index (auth_date),
+index (auth_exp_date)
+) ENGINE=MyISAM;
+
+UPDATE system_settings SET db_schema_version='1620',db_schema_update_date=NOW() where db_schema_version < 1620;

@@ -55,10 +55,11 @@
 # 191013-1014 - Fixes for PHP7
 # 210211-0032 - Added SOURCESELECT field type
 # 210304-2039 - Added option to "re-rank" field ranks when adding/updating a field in the middle of the form
+# 210311-2338 - Added BUTTON field type and 2FA
 #
 
-$admin_version = '2.14-46';
-$build = '210304-2039';
+$admin_version = '2.14-47';
+$build = '210311-2338';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -228,8 +229,16 @@ if ($sl_ct > 0)
 
 $auth=0;
 $auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1,0);
-if ($auth_message == 'GOOD')
-	{$auth=1;}
+if ( ($auth_message == 'GOOD') or ($auth_message == '2FA') )
+	{
+	$auth=1;
+	if ($auth_message == '2FA')
+		{
+		header ("Content-type: text/html; charset=utf-8");
+		echo _QXZ("Your session is expired").". <a href=\"admin.php\">"._QXZ("Click here to log in")."</a>.\n";
+		exit;
+		}
+	}
 
 if ($auth < 1)
 	{
@@ -1349,6 +1358,19 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 			if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
 			$field_HTML .= "\n";
 			}
+		if ($A_field_type[$o]=='BUTTON')
+			{
+			$field_options_array = explode("\n",$A_field_options[$o]);
+			if (preg_match("/^SubmitRefresh/i",$field_options_array[0]))
+				{
+				if ($A_multi_position[$o]=='VERTICAL') 
+					{$field_HTML .= " &nbsp; ";}
+				if (strlen($A_field_default[$o]) < 1) {$A_field_default[$o] = _QXZ("Commit Changes and Refresh Form");}
+				$field_HTML .= "<button class='button_active' disabled onclick=\"form_button_functions('SubmitRefresh');\"> "._QXZ("$A_field_default[$o]")." </button> \n";
+				if ($A_multi_position[$o]=='VERTICAL') 
+					{$field_HTML .= "<BR>\n";}
+				}
+			}
 		if ($A_field_type[$o]=='READONLY')
 			{
 			if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
@@ -1548,6 +1570,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 		echo "<option value='SWITCH'>"._QXZ("SWITCH")."</option>\n";
 		echo "<option value='READONLY'>"._QXZ("READONLY")."</option>\n";
 		echo "<option value='SOURCESELECT'>"._QXZ("SOURCESELECT")."</option>\n";
+		echo "<option value='BUTTON'>"._QXZ("BUTTON")."</option>\n";
 		echo "<option value='$A_field_type[$o]' selected>"._QXZ("$A_field_type[$o]")."</option>\n";
 		echo "</select>  $NWB#lists_fields-field_type$NWE </td></tr>\n";
 		echo "<tr $bgcolor><td align=right>"._QXZ("Field Options")." $A_field_rank[$o]: </td><td align=left><textarea name=field_options ROWS=5 COLS=60>$A_field_options[$o]</textarea>  $NWB#lists_fields-field_options$NWE </td></tr>\n";
@@ -1656,6 +1679,7 @@ if ( ($action == "MODIFY_CUSTOM_FIELDS") and ($list_id > 99) )
 	echo "<option value='SWITCH'>"._QXZ("SWITCH")."</option>\n";
 	echo "<option value='READONLY'>"._QXZ("READONLY")."</option>\n";
 	echo "<option value='SOURCESELECT'>"._QXZ("SOURCESELECT")."</option>\n";
+	echo "<option value='BUTTON'>"._QXZ("BUTTON")."</option>\n";
 	echo "<option selected value='TEXT'>"._QXZ("TEXT")."</option>\n";
 	echo "</select>  $NWB#lists_fields-field_type$NWE </td></tr>\n";
 	echo "<tr $bgcolor><td align=right>"._QXZ("Field Options").": </td><td align=left><textarea name=field_options ROWS=5 COLS=60></textarea>  $NWB#lists_fields-field_options$NWE </td></tr>\n";
@@ -2020,7 +2044,7 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 
 	$SQLexecuted=0;
 
-	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or ($field_type=='SWITCH') or (preg_match("/\|$field_label\|/i",$vicidial_list_fields)) or ($field_duplicate=='Y') )
+	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or ($field_type=='SWITCH') or ($field_type=='BUTTON') or (preg_match("/\|$field_label\|/i",$vicidial_list_fields)) or ($field_duplicate=='Y') )
 		{
 		if ($DB) {echo "Non-DB $field_type field type, $field_label\n";}
 
@@ -2127,7 +2151,7 @@ function add_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field
 function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$field_id,$list_id,$field_label,$field_name,$field_description,$field_rank,$field_help,$field_type,$field_options,$field_size,$field_max,$field_default,$field_required,$field_cost,$multi_position,$name_position,$field_order,$field_encrypt,$field_show_hide,$field_duplicate,$vicidial_list_fields,$field_rerank)
 	{
 	$field_db_exists=0;
-	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or ($field_type=='SWITCH') or (preg_match("/\|$field_label\|/i",$vicidial_list_fields)) or ($field_duplicate=='Y') )
+	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or ($field_type=='SWITCH') or ($field_type=='BUTTON') or (preg_match("/\|$field_label\|/i",$vicidial_list_fields)) or ($field_duplicate=='Y') )
 		{$field_db_exists=1;}
 	else
 		{
@@ -2258,7 +2282,7 @@ function modify_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 
 	$SQLexecuted=0;
 
-	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or ($field_type=='SWITCH') or (preg_match("/\|$field_label\|/i",$vicidial_list_fields)) or ($field_duplicate=='Y') )
+	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or ($field_type=='SWITCH') or ($field_type=='BUTTON') or (preg_match("/\|$field_label\|/i",$vicidial_list_fields)) or ($field_duplicate=='Y') )
 		{
 		if ($DB) {echo _QXZ("Non-DB")." $field_type "._QXZ("field type").", $field_label\n";}
 		$SQLexecuted++;
@@ -2358,7 +2382,7 @@ function delete_field_function($DB,$link,$linkCUSTOM,$ip,$user,$table_exists,$fi
 	{
 	$SQLexecuted=0;
 
-	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or ($field_type=='SWITCH') or (preg_match("/\|$field_label\|/i",$vicidial_list_fields)) or ($field_duplicate=='Y') )
+	if ( ($field_type=='DISPLAY') or ($field_type=='SCRIPT') or ($field_type=='SWITCH') or ($field_type=='BUTTON') or (preg_match("/\|$field_label\|/i",$vicidial_list_fields)) or ($field_duplicate=='Y') )
 		{
 		if ($DB) {echo "Non-DB $field_type field type, $field_label\n";}
 		$SQLexecuted++;

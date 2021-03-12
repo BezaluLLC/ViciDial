@@ -685,7 +685,9 @@ max_inbound_filter_enabled ENUM('0','1') default '0',
 max_inbound_filter_statuses TEXT,
 max_inbound_filter_ingroups TEXT,
 max_inbound_filter_min_sec SMALLINT(5) default '-1',
-status_group_id VARCHAR(20) default ''
+status_group_id VARCHAR(20) default '',
+mobile_number VARCHAR(20) default '',
+two_factor_override  ENUM('NOT_ACTIVE','ENABLED','DISABLED') default 'NOT_ACTIVE'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -1894,7 +1896,9 @@ allow_shared_dial ENUM('0','1','2','3','4','5','6') default '0',
 agent_search_method ENUM('0','1','2','3','4','5','6') default '0',
 phone_defaults_container VARCHAR(40) default '---DISABLED---',
 qc_claim_limit TINYINT UNSIGNED DEFAULT '3',
-qc_expire_days TINYINT UNSIGNED DEFAULT '3'
+qc_expire_days TINYINT UNSIGNED DEFAULT '3',
+two_factor_auth_hours SMALLINT(5) default '0',
+two_factor_container VARCHAR(40) default '---DISABLED---'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -2821,7 +2825,7 @@ field_name VARCHAR(5000),
 field_description VARCHAR(100),
 field_rank SMALLINT(5),
 field_help VARCHAR(1000),
-field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY','HIDEBLOB','SWITCH','SOURCESELECT') default 'TEXT',
+field_type ENUM('TEXT','AREA','SELECT','MULTI','RADIO','CHECKBOX','DATE','TIME','DISPLAY','SCRIPT','HIDDEN','READONLY','HIDEBLOB','SWITCH','SOURCESELECT','BUTTON') default 'TEXT',
 field_options VARCHAR(5000),
 field_size SMALLINT(5),
 field_max SMALLINT(5),
@@ -4495,6 +4499,20 @@ last_modified TIMESTAMP NOT NULL DEFAULT current_timestamp() ON UPDATE current_t
 PRIMARY KEY (qc_scorecard_id)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_two_factor_auth (
+auth_date DATETIME,
+auth_exp_date DATETIME,
+user VARCHAR(20) default '',
+auth_stage ENUM('0','1','2','3','4','5','6') default '0',
+auth_code VARCHAR(20) default '',
+auth_code_exp_date DATETIME,
+auth_method VARCHAR(20) default 'EMAIL',
+auth_attempts SMALLINT(5) default '0',
+index (user),
+index (auth_date),
+index (auth_exp_date)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -4599,9 +4617,11 @@ INSERT INTO vicidial_process_triggers SET trigger_id='LOAD_LEADS',server_ip='10.
 
 INSERT INTO vicidial_call_menu SET menu_id='defaultlog',menu_name='logging of all outbound calls from agent phones',menu_prompt='sip-silence',menu_timeout='20',menu_timeout_prompt='NONE',menu_invalid_prompt='NONE',menu_repeat='0',menu_time_check='0',call_time_id='',track_in_vdac='0',custom_dialplan_entry='exten => _X.,1,AGI(agi-NVA_recording.agi,BOTH------Y---Y---Y)\nexten => _X.,n,Goto(default,${EXTEN},1)',tracking_group='';
 INSERT INTO vicidial_call_menu SET menu_id='default---agent',menu_name='agent phones restricted to only internal extensions',menu_prompt='sip-silence',menu_timeout='20',menu_timeout_prompt='NONE',menu_invalid_prompt='NONE',menu_repeat='0',menu_time_check='0',call_time_id='',track_in_vdac='0',custom_dialplan_entry='include => vicidial-auto-internal\ninclude => vicidial-auto-phones\n',tracking_group='';
+INSERT INTO vicidial_call_menu (menu_id,menu_name,menu_prompt,menu_timeout,menu_timeout_prompt,menu_invalid_prompt,menu_repeat,menu_time_check,call_time_id,track_in_vdac,custom_dialplan_entry,tracking_group,dtmf_log,dtmf_field,user_group,qualify_sql,alt_dtmf_log,question,answer_signal) values('2FA_say_auth_code','2FA_say_auth_code','sip-silence|hello|your|access-code|is|cm_speak_var.agi,say_digits---access_code---DP',1,'NONE','NONE',1,'0','24hours','1','','CALLMENU','0','NONE','---ALL---','','0',0,'Y');
 
 INSERT INTO vicidial_call_menu_options SET menu_id='defaultlog',option_value='TIMEOUT',option_description='hangup',option_route='HANGUP',option_route_value='vm-goodbye',option_route_value_context='';
 INSERT INTO vicidial_call_menu_options SET menu_id='default---agent',option_value='TIMEOUT',option_description='hangup',option_route='HANGUP',option_route_value='vm-goodbye',option_route_value_context='';
+INSERT INTO vicidial_call_menu_options (menu_id,option_value,option_description,option_route,option_route_value,option_route_value_context) values('2FA_say_auth_code','TIMEOUT','','HANGUP','','');
 
 INSERT INTO vicidial_scripts (script_id,script_name,script_comments,active,script_text) values('CALLNOTES','Call Notes and Appointment Setting','','Y','<iframe src=\"../agc/vdc_script_notes.php?lead_id=--A--lead_id--B--&vendor_id=--A--vendor_lead_code--B--&list_id=--A--list_id--B--&gmt_offset_now=--A--gmt_offset_now--B--&phone_code=--A--phone_code--B--&phone_number=--A--phone_number--B--&title=--A--title--B--&first_name=--A--first_name--B--&middle_initial=--A--middle_initial--B--&last_name=--A--last_name--B--&address1=--A--address1--B--&address2=--A--address2--B--&address3=--A--address3--B--&city=--A--city--B--&state=--A--state--B--&province=--A--province--B--&postal_code=--A--postal_code--B--&country_code=--A--country_code--B--&gender=--A--gender--B--&date_of_birth=--A--date_of_birth--B--&alt_phone=--A--alt_phone--B--&email=--A--email--B--&security_phrase=--A--security_phrase--B--&comments=--A--comments--B--&user=--A--user--B--&pass=--A--pass--B--&campaign=--A--campaign--B--&phone_login=--A--phone_login--B--&fronter=--A--fronter--B--&closer=--A--user--B--&group=--A--group--B--&channel_group=--A--group--B--&SQLdate=--A--SQLdate--B--&epoch=--A--epoch--B--&uniqueid=--A--uniqueid--B--&rank=--A--rank--B--&owner=--A--owner--B--&customer_zap_channel=--A--customer_zap_channel--B--&server_ip=--A--server_ip--B--&SIPexten=--A--SIPexten--B--&session_id=--A--session_id--B--\" style=\"background-color:transparent;\" scrolling=\"auto\" frameborder=\"0\" allowtransparency=\"true\" id=\"popupFrame\" name=\"popupFrame\"  width=\"--A--script_width--B--\" height=\"--A--script_height--B--\" STYLE=\"z-index:17\"> </iframe>');
 
@@ -4829,4 +4849,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1619',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1620',db_schema_update_date=NOW(),reload_timestamp=NOW();
