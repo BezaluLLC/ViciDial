@@ -1,7 +1,7 @@
 <?php
 # admin_bulk_tools.php
 #
-# Copyright (C) 2020  Mike Coate, Mike Cargile, Matt Florell	<vicidial@gmail.com>	LICENSE: AGPLv2
+# Copyright (C) 2021  Mike Coate, Mike Cargile, Matt Florell	<vicidial@gmail.com>	LICENSE: AGPLv2
 #
 # This is the admin screen for various bulk copy/delete tools.
 #
@@ -28,13 +28,14 @@
 # 200108-0956 - Added CID Group type of NONE
 # 200405-1738 - Fix for Issue #1202
 # 200816-0930 - Added CID Groups to several labels
+# 210312-1429 - Added DID bulk delete text area, filtered out did_system_filter as selectable
 #
 
 require("dbconnect_mysqli.php");
 require("functions.php");
 
-$version = '2.14-22';
-$build = '200816-0930';
+$version = '2.14-23';
+$build = '210312-1429';
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -81,6 +82,8 @@ if (isset($_POST["USERstop"]))						{$USERstop=$_POST["USERstop"];}
 if (isset($_POST["USERforce_pw"]))					{$USERforce_pw=$_POST["USERforce_pw"];}
 if (isset($_POST["USERdelete_from"]))				{$USERdelete_from=$_POST["USERdelete_from"];}
 if (isset($_POST["USERdelete_from_CONFIRMED"]))		{$USERdelete_from_CONFIRMED=$_POST["USERdelete_from_CONFIRMED"];}
+if (isset($_POST["DIDto_delete_TB"]))				{$DIDto_delete_TB=$_POST["DIDto_delete_TB"];}
+
 
 if ($DB) {echo "$form_to_run|";}
 
@@ -105,11 +108,15 @@ if ($ACCIDmethod == "CSV")
 	}
 else 
 	{
-$ACCIDto_insert_raw = preg_replace('/[^0-9]/','',$ACCIDto_insert_raw);
-$ACCIDto_insert_raw_ArFilter = array_filter($ACCIDto_insert_raw);
+	$ACCIDto_insert_raw = preg_replace('/[^0-9]/','',$ACCIDto_insert_raw);
+	$ACCIDto_insert_raw_ArFilter = array_filter($ACCIDto_insert_raw);
 	}
 $DIDto_insert_raw = explode("\n", $DIDto_insert_raw);
 $DIDto_insert_raw = preg_replace('/[^0-9]/','',$DIDto_insert_raw);
+if ( $form_to_run == "BULKDIDSDELETETB" ) {
+	$DIDdelete_from = explode("\n", $DIDto_delete_TB);
+	$DIDdelete_from = preg_replace('/[^0-9]/','',$DIDdelete_from);
+}
 $DIDto_insert_raw_ArFilter = array_filter($DIDto_insert_raw);
 $USERstart = preg_replace('/[^0-9]/','',$USERstart);
 $USERstop = preg_replace('/[^0-9]/','',$USERstop);
@@ -1158,14 +1165,14 @@ elseif ($form_to_run == "DIDADDconfirmed")
 	
 ################################################################################
 ##### CONFIRM DID delete
-elseif ($form_to_run == "BULKDIDSDELETE")
+elseif ($form_to_run == "BULKDIDSDELETE" || $form_to_run == "BULKDIDSDELETETB")
 	{	
 	if ($DIDdelete_from=="BLANK")
 		{
 		echo _QXZ("Go back, you did not specify any DIDs to delete.")."\n";
 		exit;
 		}
-	$SQL="SELECT COUNT(*) FROM vicidial_inbound_dids where did_pattern not in ('default');";
+	$SQL="SELECT COUNT(*) FROM vicidial_inbound_dids where did_pattern not in ('default','did_system_filter');";
 	$SQL_rslt=mysql_to_mysqli($SQL, $link);
 	$row=mysqli_fetch_row($SQL_rslt);
 	if ($row[0] == count($DIDdelete_from))
@@ -1189,7 +1196,6 @@ elseif ($form_to_run == "BULKDIDSDELETE")
 	echo "</table></center></form>\n";
 	echo "</html>";
 	}
-	
 	
 ################################################################################
 ##### PROCESS DID delete
@@ -1688,6 +1694,7 @@ else
 		}
 	else
 		{
+		// Original delete form
 		echo "<html><form action=$PHP_SELF method=POST>";
 		echo "<input type=hidden name=form_to_run value='BULKDIDSDELETE'>";
 		echo "<input type=hidden name=DB value='$DB'>";
@@ -1697,7 +1704,7 @@ else
 		echo "<tr bgcolor=#". $SSstd_row1_background ."><td align=right>"._QXZ("DIDs to delete").": </td><td align=left>\n";
 			
 		$DIDto_copy = array();
-		$SQL="SELECT did_pattern,did_description FROM vicidial_inbound_dids WHERE did_pattern NOT IN ('default') AND $admin_viewable_groupsSQL ORDER BY did_pattern ASC;";
+		$SQL="SELECT did_pattern,did_description FROM vicidial_inbound_dids WHERE did_pattern NOT IN ('default','did_system_filter') AND $admin_viewable_groupsSQL ORDER BY did_pattern ASC;";
 		if ($DB) {echo "$SQL|";}
 		$SQL_rslt = mysql_to_mysqli($SQL, $link);
 		$did_count = mysqli_num_rows($SQL_rslt);
@@ -1719,7 +1726,19 @@ else
 			}
 		echo "</select></td></tr>\n";
 		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=did_submit value='"._QXZ("Submit")."'></td></tr>\n";
+		echo "</table></center></form><br>\n";
+		
+		// New text box delete
+		echo "<form action=$PHP_SELF method=POST>";
+		echo "<input type=hidden name=form_to_run value='BULKDIDSDELETETB'>";
+		echo "<input type=hidden name=DB value='$DB'>";
+		echo "<center><table width=$section_width cellspacing='3'>";
+		echo "<col width=50%><col width=50%>";
+		echo "<tr bgcolor=#". $SSmenu_background ."><td colspan=2 align=center><font color=white><b>"._QXZ("DID Bulk Delete")."</b>$NWB#DIDDELETE$NWE</font></td></tr>\n";
+		echo "<tr bgcolor=#". $SSstd_row1_background ."><td align=right>"._QXZ("DIDs to delete").":</td><td align=left><textarea name='DIDto_delete_TB' cols='11' rows='10'></textarea></td></td></tr>";
+		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=did_submit value='"._QXZ("Submit")."'></td></tr>\n";
 		echo "</table></center></form>\n";
+		
 		echo "</html>";
 		}
 	
