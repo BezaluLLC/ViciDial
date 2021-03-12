@@ -654,10 +654,11 @@
 # 201123-1436 - Added Daily call count limit features
 # 201201-2015 - Added transfer_button_launch feature
 # 210222-0819 - Fixes for manual dial agent-state issues and a translation issue
+# 210312-1520 - Force clearing of webphone panel upon logout
 #
 
-$version = '2.14-622c';
-$build = '210222-0819';
+$version = '2.14-623c';
+$build = '210312-1520';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=92;
 $one_mysql_log=0;
@@ -16377,6 +16378,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
                         {logout_content="<?php echo _QXZ("You have been paused for too long, you have been logged out of your session"); ?><br /><br />";}
 					if (tempreason=='READY_TIMEOUT')
                         {logout_content="<?php echo _QXZ("You have been ready for too long, you have been logged out of your session"); ?><br /><br />";}
+					if (is_webphone=='Y')
+						{document.getElementById('webphone').src = './images/blank.gif';}
 
 					if (agent_logout_link > 0)
 						{
