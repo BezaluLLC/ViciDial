@@ -5528,12 +5528,13 @@ if ($SSscript_remove_js > 0)
 # 210306-0840 - Added new QC module with QC scorecards, Quality Control Report, Settings Compare Utility
 # 210309-2207 - Added Inbound main panel sub-links, fixed System Settings modify SQL
 # 210312-1239 - Added Two-Factor Authentication system, Added mobile_number to User Modify screen
+# 210312-1456 - Small change to Copy User page
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-795a';
-$build = '210312-1239';
+$admin_version = '2.14-796a';
+$build = '210312-1456';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -7714,14 +7715,14 @@ if ($ADD=="1A")
 		echo "<br>"._QXZ("COPY USER")."<form action=$PHP_SELF method=POST name=userform id=userform>\n";
 		echo "<input type=hidden name=ADD value=2A>\n";
 		echo "<input type=hidden name=user_toggle id=user_toggle value=0>\n";
-		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+		echo "<center><TABLE width=800 cellspacing=3>\n";
 		if ($voi_count > 0)
 			{
-			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("User Number").": </td><td align=left>"._QXZ("Auto-Generated")." <input type=hidden name=user id=user value=\"99999\">$NWB#users-user$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("New User Number").": </td><td align=left>"._QXZ("Auto-Generated")." <input type=hidden name=user id=user value=\"99999\">$NWB#users-user$NWE</td></tr>\n";
 			}
 		else
 			{
-			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("User Number").": </td><td align=left><input type=text name=user id=user size=20 maxlength=20> <input style='background-color:#$SSbutton_color' type=button name=auto_user value=\""._QXZ("AUTO-GENERATE")."\" onClick=\"user_auto()\"> $NWB#users-user$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("New User Number").": </td><td align=left><input type=text name=user id=user size=20 maxlength=20> <input style='background-color:#$SSbutton_color' type=button name=auto_user value=\""._QXZ("AUTO-GENERATE")."\" onClick=\"user_auto()\"> $NWB#users-user$NWE</td></tr>\n";
 			}
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=pass size=50 maxlength=100 onkeyup=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\">$NWB#users-pass$NWE &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_length name=pass_length>0</span></font></td></tr>\n";
