@@ -1559,3 +1559,7 @@ index (auth_exp_date)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1620',db_schema_update_date=NOW() where db_schema_version < 1620;
+
+ALTER TABLE system_settings MODIFY enhanced_disconnect_logging ENUM('0','1','2','3','4','5','6') default '0';
+
+UPDATE system_settings SET db_schema_version='1621',db_schema_update_date=NOW() where db_schema_version < 1621;

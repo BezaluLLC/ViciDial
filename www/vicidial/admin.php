@@ -5529,12 +5529,13 @@ if ($SSscript_remove_js > 0)
 # 210309-2207 - Added Inbound main panel sub-links, fixed System Settings modify SQL
 # 210312-1239 - Added Two-Factor Authentication system, Added mobile_number to User Modify screen
 # 210312-1456 - Small change to Copy User page
+# 210314-0919 - Added more enhanced_disconnect_logging options in System Settings
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-796a';
-$build = '210312-1456';
+$admin_version = '2.14-797a';
+$build = '210314-0919';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -40560,7 +40561,7 @@ if ($ADD==311111111111111)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Agent Screen Debug Logging").": </td><td align=left><input type=text name=agent_debug_logging size=20 maxlength=20 value=\"$agent_debug_logging\">$NWB#settings-agent_debug_logging$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Enhanced Disconnect Logging").": </td><td align=left><select size=1 name=enhanced_disconnect_logging><option>1</option><option>0</option><option selected>$enhanced_disconnect_logging</option></select>$NWB#settings-enhanced_disconnect_logging$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Enhanced Disconnect Logging").": </td><td align=left><select size=1 name=enhanced_disconnect_logging><option>6</option><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option><option>0</option><option selected>$enhanced_disconnect_logging</option></select>$NWB#settings-enhanced_disconnect_logging$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("SIP Event Logging").": </td><td align=left><select size=1 name=sip_event_logging><option>1</option><option>0</option><option selected>$sip_event_logging</option></select>$NWB#settings-sip_event_logging$NWE</td></tr>\n";
 

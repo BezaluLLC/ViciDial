@@ -1807,7 +1807,7 @@ audio_store_purge TEXT,
 svn_revision INT(9) default '0',
 queuemetrics_socket VARCHAR(20) default 'NONE',
 queuemetrics_socket_url TEXT,
-enhanced_disconnect_logging ENUM('0','1') default '0',
+enhanced_disconnect_logging ENUM('0','1','2','3','4','5','6') default '0',
 allow_emails ENUM('0','1') default '0',
 level_8_disable_add ENUM('0','1') default '0',
 pass_hash_enabled ENUM('0','1') default '0',
@@ -4849,4 +4849,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1620',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1621',db_schema_update_date=NOW(),reload_timestamp=NOW();
