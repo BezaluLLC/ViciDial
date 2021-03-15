@@ -48,10 +48,11 @@
 # 210211-0146 - Added SOURCESELECT field type
 # 210304-1612 - Added READONLY submit_button option
 # 210310-1115 - Added BUTTON field type with SubmitRefresh function
+# 210315-1747 - Added campaign setting for clear_form
 #
 
-$version = '2.14-38';
-$build = '210310-1115';
+$version = '2.14-39';
+$build = '210315-1747';
 $php_script = 'vdc_form_display.php';
 
 require_once("dbconnect_mysqli.php");
@@ -602,9 +603,30 @@ if ($stage=='SUBMIT')
 			}
 		else
 			{
-			echo  _QXZ("Custom Form Output:")."\n<BR>\n";
-
-			echo "$SUBMIT_output";
+			$clear_form='';
+			$stmt="SELECT clear_form from vicidial_campaigns where campaign_id='$campaign';";
+			if ($DB>0) {echo "$stmt";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'06XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			$camps_to_print = mysqli_num_rows($rslt);
+			if ($camps_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$clear_form =	$rowx[0];
+				}
+			if ($clear_form == 'ACKNOWLEDGE')
+				{
+				echo  _QXZ("Custom Form Data Submitted")."\n<BR>\n";
+				}
+			if ($clear_form == 'ENABLED')
+				{
+				echo "\n<BR>\n";
+				}
+			if ($clear_form == 'DISABLED')
+				{
+				echo  _QXZ("Custom Form Output:")."\n<BR>\n";
+				echo "$SUBMIT_output";
+				}
 			}
 
 		echo "<form action=./vdc_form_display.php method=POST name=form_custom_fields id=form_custom_fields>\n";

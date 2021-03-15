@@ -1058,7 +1058,8 @@ transfer_button_launch VARCHAR(12) default 'NONE',
 shared_dial_rank TINYINT(3) default '99',
 agent_search_method VARCHAR(2) default '',
 qc_scorecard_id VARCHAR(20) DEFAULT '',
-qc_statuses_id VARCHAR(20) DEFAULT ''
+qc_statuses_id VARCHAR(20) DEFAULT '',
+clear_form ENUM('DISABLED','ENABLED','ACKNOWLEDGE') default 'ACKNOWLEDGE'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -4849,4 +4850,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1621',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1622',db_schema_update_date=NOW(),reload_timestamp=NOW();
