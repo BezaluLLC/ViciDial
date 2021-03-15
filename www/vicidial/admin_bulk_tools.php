@@ -29,13 +29,14 @@
 # 200405-1738 - Fix for Issue #1202
 # 200816-0930 - Added CID Groups to several labels
 # 210312-1429 - Added DID bulk delete text area, filtered out did_system_filter as selectable
+# 210315-1644 - Added CID bulk delete text area and ---ALL-- option
 #
 
 require("dbconnect_mysqli.php");
 require("functions.php");
 
-$version = '2.14-23';
-$build = '210312-1429';
+$version = '2.14-24';
+$build = '210315-1644';
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -128,6 +129,10 @@ if (empty($DIDto_insert_raw_ArFilter)) 		{$DIDcheck = "BLANK";}
 if (empty($DIDdelete_from)) 				{$DIDdelete_from="BLANK";}
 if (empty($USERstart)) 						{$USERstart = "BLANK";}
 if (empty($USERstop)) 						{$USERstop = "BLANK";}
+if ( $form_to_run == "ACCIDDELETEconfirmTB" ) {
+	$ACCIDdelete_from = explode("\n", $ACCIDdelete_from);
+	$ACCIDdelete_from = preg_replace('/[^0-9]/','',$ACCIDdelete_from);
+}
 if (empty($ACCIDdelete_from)) 				{$ACCIDdelete_from = "BLANK";}
 if (empty($ACCIDdelete_campaign)) 			{$ACCIDdelete_campaign = "BLANK";}
 if ($ACCIDclear_all == "Y")					{$form_to_run="ACCIDDELETEconfirm";}
@@ -730,7 +735,7 @@ elseif ($form_to_run == "ACCIDDELETEselect")
 	echo "<input type=hidden name=ACCIDdelete_campaign value='$ACCIDdelete_campaign'>";
 	echo "<center><table width=$section_width cellspacing='3'>";
 	echo "<col width=50%><col width=50%>";
-	echo "<tr bgcolor=#". $SSmenu_background ."><td colspan=2 align=center><font color=white><b>"._QXZ("Campaign")." $ACCIDdelete_campaign "._QXZ("AC-DID Bulk Delete")."</b></font></td></tr>\n";
+	echo "<tr bgcolor=#". $SSmenu_background ."><td colspan=2 align=center><font color=white><b>"._QXZ("Campaign")." $ACCIDdelete_campaign "._QXZ("AC-CID Bulk Delete")."</b></font></td></tr>\n";
 	echo "<tr bgcolor=#". $SSstd_row1_background ."><td align=right>"._QXZ("AC-CIDs to delete").": </td><td align=left>\n";
 		
 	$ACCIDdelete_from = array();
@@ -765,7 +770,7 @@ elseif ($form_to_run == "ACCIDDELETEselect")
 ################################################################################
 ##### CONFIRM AC-CID delete
 
-elseif ($form_to_run == "ACCIDDELETEconfirm")
+elseif ($form_to_run == "ACCIDDELETEconfirm" || $form_to_run == "ACCIDDELETEconfirmTB")
 	{
 	if ($ACCIDclear_all == "Y")
 		{
@@ -808,7 +813,12 @@ elseif ($form_to_run == "ACCIDDELETEconfirm")
 			}
 		$ACCIDdelete_from = serialize($ACCIDdelete_from);
 		echo "<html><form action=$PHP_SELF method=POST>";
-		echo "<input type=hidden name=form_to_run value='ACCIDDELETEconfirmed'>";
+		if ( $form_to_run == "ACCIDDELETEconfirmTB" ) {
+			echo "<input type=hidden name=form_to_run value='ACCIDDELETEconfirmedTB'>";
+		}
+		else {
+			echo "<input type=hidden name=form_to_run value='ACCIDDELETEconfirmed'>";
+		}
 		echo "<input type=hidden name=DB value='$DB'>";
 		echo "<input type=hidden name=ACCIDdelete_from_CONFIRMED value='$ACCIDdelete_from'>";
 		echo "<input type=hidden name=ACCIDdelete_campaign value='$ACCIDdelete_campaign'>";
@@ -821,7 +831,7 @@ elseif ($form_to_run == "ACCIDDELETEconfirm")
 
 ################################################################################
 ##### PROCESS AC-CID delete
-elseif ($form_to_run == "ACCIDDELETEconfirmed")
+elseif ($form_to_run == "ACCIDDELETEconfirmed" || $form_to_run == "ACCIDDELETEconfirmedTB")
 	{
 	if ($ACCIDclear_all_CONFIRMED == "Y")
 		{
@@ -843,44 +853,71 @@ elseif ($form_to_run == "ACCIDDELETEconfirmed")
 		}
 	else
 		{
-		$DELETEsqlLOG='';
-		$ACCIDdelete_from_CONFIRMED = unserialize($ACCIDdelete_from_CONFIRMED); # Go through the data and make a new array then break off the AC and CID
-		$ACCIDdelete_from_CONFIRMED = implode("x",$ACCIDdelete_from_CONFIRMED);
-		$ACCIDdelete_from_CONFIRMED = explode("x",$ACCIDdelete_from_CONFIRMED);
-		$ACCIDdelete_areacode = array();
-		$ACCIDdelete_cid = array();
-		$ACCIDdelete_areacode[0] = $ACCIDdelete_from_CONFIRMED[0];
-		$SQL_sentence = "$ACCIDdelete_areacode[0] |";
-		$i = 1; # loop counter
-		$j = 0; # CID index counter
-		$k = 1; # areacode index counter
-		while ($i < count($ACCIDdelete_from_CONFIRMED))
-			{
-			if ($i & 1)
+		if ($form_to_run == "ACCIDDELETEconfirmedTB" ) {
+			$DELETEsqlLOG='';
+			$ACCIDdelete_from_CONFIRMED = unserialize($ACCIDdelete_from_CONFIRMED); # Go through the data and make a new array then break off the AC and CID
+			$SQL_sentence = "$ACCIDdelete_from_CONFIRMED[0] |";
+			$i = 1; # loop counter
+			while ($i < count($ACCIDdelete_from_CONFIRMED))
 				{
-				$ACCIDdelete_cid[$j] = $ACCIDdelete_from_CONFIRMED[$i];
-				$SQL_sentence.= "$ACCIDdelete_cid[$j] |";
-				$j++;
+				$SQL_sentence.= "$ACCIDdelete_from_CONFIRMED[$i] |";
+				$i++;
 				}
-			else
+			$i = 0;
+			while ($i < count($ACCIDdelete_from_CONFIRMED))
 				{
-				$ACCIDdelete_areacode[$j] = $ACCIDdelete_from_CONFIRMED[$i];
-				$SQL_sentence.= "$ACCIDdelete_areacode[$k] |";
-				$k++;
+				if ( $ACCIDdelete_campaign == '---ALL---' ) {
+					$SQL = "DELETE FROM vicidial_campaign_cid_areacodes WHERE outbound_cid='$ACCIDdelete_from_CONFIRMED[$i]';";
 				}
-			$i++;
-			}
-
-		$i = 0;
-		while ($i < count($ACCIDdelete_areacode))
-			{
-			$SQL = "DELETE FROM vicidial_campaign_cid_areacodes WHERE campaign_id='$ACCIDdelete_campaign' AND outbound_cid='$ACCIDdelete_cid[$i]' AND areacode='$ACCIDdelete_areacode[$i]';";
-			$i++;
-			if ($DB) {echo "$SQL|";}
-			$SQL_rslt = mysql_to_mysqli($SQL, $link);
-			$DELETEsqlLOG .= "$SQL|";
-			}				
+				else {
+					$SQL = "DELETE FROM vicidial_campaign_cid_areacodes WHERE campaign_id='$ACCIDdelete_campaign' AND outbound_cid='$ACCIDdelete_from_CONFIRMED[$i]';";
+				}
+				$i++;
+				if ($DB) {echo "$SQL|";}
+				$SQL_rslt = mysql_to_mysqli($SQL, $link);
+				$DELETEsqlLOG .= "$SQL|";
+				}
 		
+		}
+		else {
+			$DELETEsqlLOG='';
+			$ACCIDdelete_from_CONFIRMED = unserialize($ACCIDdelete_from_CONFIRMED); # Go through the data and make a new array then break off the AC and CID
+			$ACCIDdelete_from_CONFIRMED = implode("x",$ACCIDdelete_from_CONFIRMED);
+			$ACCIDdelete_from_CONFIRMED = explode("x",$ACCIDdelete_from_CONFIRMED);
+			$ACCIDdelete_areacode = array();
+			$ACCIDdelete_cid = array();
+			$ACCIDdelete_areacode[0] = $ACCIDdelete_from_CONFIRMED[0];
+			$SQL_sentence = "$ACCIDdelete_areacode[0] |";
+			$i = 1; # loop counter
+			$j = 0; # CID index counter
+			$k = 1; # areacode index counter
+			while ($i < count($ACCIDdelete_from_CONFIRMED))
+				{
+				if ($i & 1)
+					{
+					$ACCIDdelete_cid[$j] = $ACCIDdelete_from_CONFIRMED[$i];
+					$SQL_sentence.= "$ACCIDdelete_cid[$j] |";
+					$j++;
+					}
+				else
+					{
+					$ACCIDdelete_areacode[$j] = $ACCIDdelete_from_CONFIRMED[$i];
+					$SQL_sentence.= "$ACCIDdelete_areacode[$k] |";
+					$k++;
+					}
+				$i++;
+				}
+
+			$i = 0;
+			while ($i < count($ACCIDdelete_areacode))
+				{
+				$SQL = "DELETE FROM vicidial_campaign_cid_areacodes WHERE campaign_id='$ACCIDdelete_campaign' AND outbound_cid='$ACCIDdelete_cid[$i]' AND areacode='$ACCIDdelete_areacode[$i]';";
+				$i++;
+				if ($DB) {echo "$SQL|";}
+				$SQL_rslt = mysql_to_mysqli($SQL, $link);
+				$DELETEsqlLOG .= "$SQL|";
+				}				
+		}
 		#Log our stuff
 		$SQL_sentence = "ACCID entries removed from campaign $ACCIDdelete_campaign: " . $SQL_sentence;
 		$SQL = "DELETE FROM vicidial_campaign_cid_areacodes WHERE campaign_id='$ACCIDdelete_campaign' AND outbound_cid='$ACCIDdelete_cid[0]' AND areacode='$ACCIDdelete_areacode[0]';";
@@ -1700,7 +1737,7 @@ else
 		echo "<input type=hidden name=DB value='$DB'>";
 		echo "<center><table width=$section_width cellspacing='3'>";
 		echo "<col width=50%><col width=50%>";
-		echo "<tr bgcolor=#". $SSmenu_background ."><td colspan=2 align=center><font color=white><b>"._QXZ("DID Bulk Delete")."</b>$NWB#DIDDELETE$NWE</font></td></tr>\n";
+		echo "<tr bgcolor=#". $SSmenu_background ."><td colspan=2 align=center><font color=white><b>"._QXZ("DID Bulk Delete Select")."</b>$NWB#DIDDELETE$NWE</font></td></tr>\n";
 		echo "<tr bgcolor=#". $SSstd_row1_background ."><td align=right>"._QXZ("DIDs to delete").": </td><td align=left>\n";
 			
 		$DIDto_copy = array();
@@ -1834,7 +1871,7 @@ else
 		echo "<input type=hidden name=DB value='$DB'>";
 		echo "<center><table width=$section_width cellspacing='3'>";
 		echo "<col width=50%><col width=50%>";
-		echo "<tr bgcolor=#". $SSmenu_background ."><td colspan=2 align=center><font color=white><b>"._QXZ("CID Groups and AC-CID Bulk Delete")."</b>$NWB#ACCIDDELETE$NWE</font></td></tr>\n";
+		echo "<tr bgcolor=#". $SSmenu_background ."><td colspan=2 align=center><font color=white><b>"._QXZ("CID Groups and AC-CID Bulk Delete Select")."</b>$NWB#ACCIDDELETE$NWE</font></td></tr>\n";
 		echo "<tr bgcolor=#". $SSstd_row1_background ."><td align=right>"._QXZ("Campaign or CID Group").":</td><td align=left>\n";
 		
 		$ACCIDdelete_campaign_selection = array();
@@ -1885,6 +1922,64 @@ else
 		echo "</select></td></tr>\n";		
 		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=accid_submit value='"._QXZ("Submit")."'></td></tr>\n";
 		echo "</table></center></form>\n";
+		echo "</html>";
+		
+		// New text box delete
+		echo "<form action=$PHP_SELF method=POST>";
+		echo "<input type=hidden name=form_to_run value='ACCIDDELETEconfirmTB'>";
+		echo "<input type=hidden name=DB value='$DB'>";
+		echo "<center><table width=$section_width cellspacing='3'>";
+		echo "<col width=50%><col width=50%>";
+		echo "<tr bgcolor=#". $SSmenu_background ."><td colspan=2 align=center><font color=white><b>"._QXZ("CID Groups and AC-CID Bulk Delete")."</b>$NWB#ACCIDDELETE$NWE</font></td></tr>\n";
+		echo "<tr bgcolor=#". $SSstd_row1_background ."><td align=right>"._QXZ("Campaign or CID Group").":</td><td align=left>\n";
+		
+		$ACCIDdelete_campaign_selection = array();
+		$SQL="SELECT campaign_id,campaign_name from vicidial_campaigns WHERE campaign_id IN (select distinct campaign_id from vicidial_campaign_cid_areacodes) AND $allowed_campaignsSQL AND $admin_viewable_groupsSQL ORDER BY campaign_id ASC;";
+		if ($DB) {echo "$SQL|";}
+		$SQL_rslt = mysql_to_mysqli($SQL, $link);
+		$camp_count = mysqli_num_rows($SQL_rslt);
+		$i = 0;
+		$g = 0;
+		while ($i < $camp_count)
+			{
+			$row = mysqli_fetch_row($SQL_rslt);
+			$ACCIDdelete_campaign_selection[$g] = $row[0];
+			$ACCIDdelete_campaign_name[$g] = $row[1];
+			$ACCIDdelete_campaign_type[$g] = _QXZ('AREACODE');
+			$i++;
+			$g++;
+			}
+		$SQL="SELECT cid_group_id,cid_group_notes,cid_group_type FROM vicidial_cid_groups WHERE $admin_viewable_groupsSQL ORDER BY cid_group_id ASC;";
+		if ($DB) {echo "$SQL|";}
+		$SQL_rslt = mysql_to_mysqli($SQL, $link);
+		$cgid_count = mysqli_num_rows($SQL_rslt);
+		$i = 0;
+		while ($i < $cgid_count)
+			{
+			$row = mysqli_fetch_row($SQL_rslt);
+			$ACCIDdelete_campaign_selection[$g] = $row[0];
+			$ACCIDdelete_campaign_name[$g] = $row[1];
+			$ACCIDdelete_campaign_type[$g] = _QXZ("$row[2]");
+			$i++;
+			$g++;
+			}
+
+		echo "<select size=1 name=ACCIDdelete_campaign>\n";
+		echo "<option value='BLANK'>"._QXZ("Select a campaign or CID group")."</option>\n";
+		echo "<option value='---ALL---'>---ALL---</option>\n";
+		
+		$i = 0;
+		while ( $i < $g )
+			{
+			echo "<option value='$ACCIDdelete_campaign_selection[$i]'>$ACCIDdelete_campaign_selection[$i] - $ACCIDdelete_campaign_type[$i] - $ACCIDdelete_campaign_name[$i]</option>\n";
+			$i++;
+			}	
+
+		echo "</select></td></tr>\n";
+		echo "<tr bgcolor=#". $SSstd_row1_background ."><td align=right>"._QXZ("CIDs to delete").":</td><td align=left><textarea name='ACCIDdelete_from' cols='11' rows='10'></textarea></td></td></tr>";
+		echo "<tr bgcolor=#". $SSstd_row1_background ."><td colspan=2 align=center><input style='background-color:#$SSbutton_color' type=submit name=did_submit value='"._QXZ("Submit")."'></td></tr>\n";
+		echo "</table></center></form>\n";
+		
 		echo "</html>";
 		}
 	
