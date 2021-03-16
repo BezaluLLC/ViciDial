@@ -655,10 +655,11 @@
 # 201201-2015 - Added transfer_button_launch feature
 # 210222-0819 - Fixes for manual dial agent-state issues and a translation issue
 # 210312-1520 - Force clearing of webphone panel upon logout
+# 210315-2102 - Added CALLBACK manual dial filter option, Issue #1139
 #
 
-$version = '2.14-623c';
-$build = '210312-1520';
+$version = '2.14-624c';
+$build = '210315-2102';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=92;
 $one_mysql_log=0;
@@ -10095,8 +10096,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							var regMNHDCCLvar = new RegExp("NO-HOPPER DAILY CALL LIMIT","ig");
 							var regMDFvarCAMP = new RegExp("CAMPLISTS","ig");
 							var regMDFvarSYS = new RegExp("SYSTEM","ig");
+							var regMDFvarCB = new RegExp("CALLBACK","ig");
 							var regMDFvarTIME = new RegExp("OUTSIDE","ig");
-							if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarDCCL)) || (MDnextCID.match(regMDFvarCAMP)) || (MDnextCID.match(regMDFvarSYS)) || (MDnextCID.match(regMDFvarTIME)) )
+							if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarDCCL)) || (MDnextCID.match(regMDFvarCAMP)) || (MDnextCID.match(regMDFvarSYS)) ||(MDnextCID.match(regMDFvarCB)) || (MDnextCID.match(regMDFvarTIME)) )
 								{
 								button_click_log = button_click_log + "" + SQLdate + "-----DialNextFailed---" + MDnextCID + " " + "|";
 
@@ -10123,6 +10125,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									{alert_box("<?php echo _QXZ("This phone number is not in the campaign lists:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
 								if (MDnextCID.match(regMDFvarSYS))
 									{alert_box("<?php echo _QXZ("This phone number is not in the system lists:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
+								if (MDnextCID.match(regMDFvarCB))
+									{alert_box("<?php echo _QXZ("This phone number is not a callback:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
 								if (MDnextCID.match(regMDFvarTIME))
 									{alert_box("<?php echo _QXZ("This phone number is outside of the local call time:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
 
