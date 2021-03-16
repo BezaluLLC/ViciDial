@@ -5535,12 +5535,13 @@ if ($SSscript_remove_js > 0)
 # 210314-0919 - Added more enhanced_disconnect_logging options in System Settings
 # 210315-1730 - Added clear_form campaign option, Issue #1179
 # 210315-2118 - Added new manual_dial_filter CALLBACK options, Issue #1139
+# 210316-0923 - Small fix for 2FA consistency
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-799a';
-$build = '210315-2118';
+$admin_version = '2.14-800a';
+$build = '210316-0923';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5976,7 +5977,7 @@ $first_login_link=0;
 $VALID_2FA=1;
 
 # check for 2FA being active, and if so, see if there is a non-expired 2FA auth
-if ( ($SStwo_factor_auth_hours > 0) and ($LOGtwo_factor_override != 'DISABLED') )
+if ( ($SStwo_factor_auth_hours > 0) and ($SStwo_factor_container != '') and ($SStwo_factor_container != '---DISABLED---') )
 	{
 	$stmt="SELECT count(*) from vicidial_two_factor_auth where user='$PHP_AUTH_USER' and auth_stage='1' and auth_exp_date > NOW();";
 	$rslt=mysql_to_mysqli($stmt, $link);
