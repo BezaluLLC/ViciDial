@@ -656,12 +656,13 @@
 # 210222-0819 - Fixes for manual dial agent-state issues and a translation issue
 # 210312-1520 - Force clearing of webphone panel upon logout
 # 210315-2102 - Added CALLBACK manual dial filter option, Issue #1139
+# 210317-1207 - Fixes for better consistency in password change process, Issue #1261
 #
 
-$version = '2.14-624c';
-$build = '210315-2102';
+$version = '2.14-625c';
+$build = '210317-1207';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=92;
+$mysql_log_count=95;
 $one_mysql_log=0;
 $DB=0;
 
@@ -847,6 +848,8 @@ if ($non_latin < 1)
 	{
 	$VD_login=preg_replace("/[^-_0-9a-zA-Z]/","",$VD_login);
 	$VD_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$VD_pass);
+	$new_pass1=preg_replace("/[^-_0-9a-zA-Z]/","",$new_pass1);
+	$new_pass2=preg_replace("/[^-_0-9a-zA-Z]/","",$new_pass2);
 	$phone_login=preg_replace("/[^\,0-9a-zA-Z]/","",$phone_login);
 	$phone_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$phone_pass);
 	$VD_campaign = preg_replace("/[^-_0-9a-zA-Z]/","",$VD_campaign);
@@ -862,6 +865,8 @@ else
 	{
 	$VD_login = preg_replace("/\'|\"|\\\\|;/","",$VD_login);
 	$VD_pass=preg_replace("/\'|\"|\\\\|;| /","",$VD_pass);
+	$new_pass1=preg_replace("/[^-_0-9\p{L}]/u","",$new_pass1);
+	$new_pass2=preg_replace("/[^-_0-9\p{L}]/u","",$new_pass2);
 	$phone_login=preg_replace("/[^\,0-9\p{L}]/u","",$phone_login);
 	$phone_pass=preg_replace("/[^-_0-9\p{L}]/u","",$phone_pass);
 	$VD_campaign = preg_replace("/[^-_0-9\p{L}]/u","",$VD_campaign);
@@ -1560,6 +1565,7 @@ else
 						{
 						$pass_hash='';
 						$pass_hashSQL='';
+						$pass_querySQL="and pass='$new_pass1'";
 						if ($SSpass_hash_enabled > 0)
 							{
 							if (strlen($new_pass1) > 1)
@@ -1568,14 +1574,30 @@ else
 								$pass_hash = exec("../agc/bp.pl --pass=$pass");
 								$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
 								$pass_hashSQL = ",pass_hash='$pass_hash'";
+								$pass_querySQL = "and pass_hash='$pass_hash'";
 								}
 							$new_pass1='';
 							}
+						$stmt="SELECT count(*) from vicidial_users where user='$VD_login' $pass_querySQL;";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01093',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+						$row=mysqli_fetch_row($rslt);
+						$dup_password=$row[0];
 
+						if ($dup_password > 0)
+							{
+							$set_pass_message = _QXZ("You cannot use the same password as your last password");
+							$set_pass=1;
+							}
+						}
+
+					if ($set_pass == '2')
+						{
 						$stmt="UPDATE vicidial_users SET force_change_password='N',pass='$new_pass1' $pass_hashSQL where user='$VD_login';";
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $link);
-								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01094',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 						$VUpassword_affected_rows = mysqli_affected_rows($link);
 
 						echo "<title>"._QXZ("Agent web client: Change Password")."</title>\n";
@@ -1651,10 +1673,11 @@ else
 				echo "<td align=\"left\" valign=\"bottom\" bgcolor=\"#$SSmenu_background\" width=\"170\"><img src=\"$selected_logo\" border=\"0\" height=\"45\" width=\"170\" alt=\"Agent Screen\" /></td>";
 				echo "<td align=\"center\" valign=\"middle\" bgcolor=\"#$SSmenu_background\"> <font class=\"sh_text_white\">$set_pass_message</font> </td>";
 				echo "</tr>\n";
+				echo "<tr><td colspan=2 align=\"center\"><font class=\"sk_text\"><BR>"._QXZ("Note: Passwords may be up to 100 characters in length, and you may only use letters and numbers in your password").". <BR> &nbsp; </font></td></tr>";
 				echo "<tr><td align=\"right\"><font class=\"skb_text\">"._QXZ("New Password").": </font> </td>";
-				echo "<td align=\"left\"><input type=\"password\" name=\"new_pass1\" id=\"new_pass1\" size=\"40\" maxlength=\"100\" onkeyup=\"return pwdChanged('new_pass1','pass_length1');\" /> &nbsp; <font size=1 face=\"Arial,Helvetica\"><span id=\"pass_length1\"></font></td></tr>\n";
+				echo "<td align=\"left\"><input type=\"password\" name=\"new_pass1\" id=\"new_pass1\" size=\"60\" maxlength=\"100\" onkeyup=\"return pwdChanged('new_pass1','pass_length1');\" /> &nbsp; <font size=1 face=\"Arial,Helvetica\"><span id=\"pass_length1\"></font></td></tr>\n";
 				echo "<tr><td align=\"right\"><font class=\"skb_text\">"._QXZ("Confirm New Password").":  </font> </td>";
-				echo "<td align=\"left\"><input type=\"password\" name=\"new_pass2\" id=\"new_pass2\" size=\"40\" maxlength=\"100\" onkeyup=\"return pwdChanged('new_pass2','pass_length2');\" /> &nbsp; <font size=1 face=\"Arial,Helvetica\"><span id=\"pass_length2\"></font></td></tr>\n";
+				echo "<td align=\"left\"><input type=\"password\" name=\"new_pass2\" id=\"new_pass2\" size=\"60\" maxlength=\"100\" onkeyup=\"return pwdChanged('new_pass2','pass_length2');\" /> &nbsp; <font size=1 face=\"Arial,Helvetica\"><span id=\"pass_length2\"></font></td></tr>\n";
 				echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\""._QXZ("SUBMIT")."\" /> &nbsp; \n";
 				echo "<span id=\"LogiNReseT\"></span></td></tr>\n";
 				echo "<tr><td align=\"left\" colspan=\"2\"><font class=\"body_tiny\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
@@ -2442,7 +2465,7 @@ else
 					# Gather details on Pause Codes Max Exceptions settings container
 					$stmt = "SELECT container_entry FROM vicidial_settings_containers where container_id='$pause_max_exceptions';";
 					$rslt=mysql_to_mysqli($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01095',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
 					$SCinfo_ct = mysqli_num_rows($rslt);
 					if ($SCinfo_ct > 0)

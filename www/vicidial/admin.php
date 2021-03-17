@@ -5537,12 +5537,13 @@ if ($SSscript_remove_js > 0)
 # 210315-2118 - Added new manual_dial_filter CALLBACK options, Issue #1139
 # 210316-0923 - Small fix for 2FA consistency
 # 210317-0819 - Added lead_all_info Non-Agent API function, Changed lead-modify page links to javascript because of Chrome
+# 210317-1211 - Fixes for better consistency in password change process, Issue #1261
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-801a';
-$build = '210317-0819';
+$admin_version = '2.14-802a';
+$build = '210317-1211';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -45852,6 +45853,14 @@ if ($ADD==999997)
 		if ( (mb_strlen($pass,'utf-8') > 100) or (strlen($pass) < 2) or ($pass==$PHP_AUTH_PW) or ( ($SSrequire_password_length > 0) and ($SSrequire_password_length > strlen($pass)) ) )
 			{
 			echo _QXZ("Password has not been changed, please try again")." |1|" . strlen($pass);
+			if ( (mb_strlen($pass,'utf-8') > 100) or (strlen($pass) < 2) )
+				{
+				echo "<br>"._QXZ("Your password must be between 2 and 100 characters in length")."\n";
+				}
+			if ($pass==$PHP_AUTH_PW)
+				{
+				echo "<br>"._QXZ("You cannot use the same password as your last password")."\n";
+				}
 			if ($SSrequire_password_length > 0)
 				{
 				echo "<br>"._QXZ("Password must be at least $SSrequire_password_length characters long")."\n";
@@ -45883,20 +45892,35 @@ if ($ADD==999997)
 					{echo _QXZ("Password has not been changed, please try again")." |3|$row[0]";}
 				else
 					{
-					$show_form=0;
-
-					$stmt="UPDATE vicidial_users SET pass='$pass',pass_hash='$pass_hash',force_change_password='N',failed_login_count=0 where user='$user' and force_change_password='Y' and active='Y' and user_level > 6;";
+					$stmt="SELECT count(*) from vicidial_users where user='$user' and $pass_checkSQL;";
 					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					$userpass_to_print = mysqli_num_rows($rslt);
+					if ($userpass_to_print < 1)
+						{echo _QXZ("Password has not been changed, please try again")." |4|$userpass_to_print";}
+					else
+						{
+						$row=mysqli_fetch_row($rslt);
+						if ($row[0] > 0)
+							{echo _QXZ("You cannot use the same password as your last password, please try again")." |5|$row[0]";}
+						else
+							{
+							$show_form=0;
 
-					### LOG INSERTION Admin Log Table ###
-					$SQL_log = "$stmt|";
-					$SQL_log = preg_replace('/;/', '', $SQL_log);
-					$SQL_log = addslashes($SQL_log);
-					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$user', event_code='USER FORCE CHANGE PASSWORD', event_sql=\"$SQL_log\", event_notes='';";
-					if ($DB) {echo "|$stmt|\n";}
-					$rslt=mysql_to_mysqli($stmt, $link);
+							$stmt="UPDATE vicidial_users SET pass='$pass',pass_hash='$pass_hash',force_change_password='N',failed_login_count=0 where user='$user' and force_change_password='Y' and active='Y' and user_level > 6;";
+							$rslt=mysql_to_mysqli($stmt, $link);
 
-					echo _QXZ("Password has been updated, you may now continue")."\n";
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$user', event_code='USER FORCE CHANGE PASSWORD', event_sql=\"$SQL_log\", event_notes='';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+
+							echo _QXZ("Password has been updated, you may now continue")."\n";
+							}
+						}
 					}
 				}
 			}
@@ -46461,35 +46485,50 @@ if ($ADD==999996)
 						{echo _QXZ("Password has not been changed, please try again")." |3|$row[0]";}
 					else
 						{
-						$show_form=0;
-
-						if (strlen($default_phone_registration_password) < 2) {$default_phone_registration_password = $SSdefault_phone_registration_password;}
-						if (strlen($default_phone_login_password) < 2) {$default_phone_login_password = $SSdefault_phone_login_password;}
-						if (strlen($default_server_password) < 2) {$default_server_password = $SSdefault_server_password;}
-						if (strlen($default_local_gmt) < 2) {$default_local_gmt = $SSdefault_local_gmt;}
-						if (strlen($default_voicemail_timezone) < 2) {$default_voicemail_timezone = $SSdefault_voicemail_timezone;}
-
-						$stmt="UPDATE vicidial_users SET pass='$pass',pass_hash='$pass_hash',force_change_password='N',failed_login_count=0 where user='$user' and active='Y' and user_level > 6;";
+						$stmt="SELECT count(*) from vicidial_users where user='$user' and $pass_checkSQL;";
 						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($DB) {echo "$stmt\n";}
+						$userpass_to_print = mysqli_num_rows($rslt);
+						if ($userpass_to_print < 1)
+							{echo _QXZ("Password has not been changed, please try again")." |4|$userpass_to_print";}
+						else
+							{
+							$row=mysqli_fetch_row($rslt);
+							if ($row[0] > 0)
+								{echo _QXZ("You cannot use the same password as your last password, please try again")." |5|$row[0]";}
+							else
+								{
+								$show_form=0;
 
-						$stmtA="UPDATE system_settings SET first_login_trigger='N',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',default_local_gmt='$default_local_gmt',default_voicemail_timezone='$default_voicemail_timezone';";
-						$rslt=mysql_to_mysqli($stmtA, $link);
+								if (strlen($default_phone_registration_password) < 2) {$default_phone_registration_password = $SSdefault_phone_registration_password;}
+								if (strlen($default_phone_login_password) < 2) {$default_phone_login_password = $SSdefault_phone_login_password;}
+								if (strlen($default_server_password) < 2) {$default_server_password = $SSdefault_server_password;}
+								if (strlen($default_local_gmt) < 2) {$default_local_gmt = $SSdefault_local_gmt;}
+								if (strlen($default_voicemail_timezone) < 2) {$default_voicemail_timezone = $SSdefault_voicemail_timezone;}
 
-						$stmtB="UPDATE phones SET conf_secret='$default_phone_registration_password',pass='$default_phone_login_password',local_gmt='$default_local_gmt',voicemail_timezone='$default_voicemail_timezone';";
-						$rslt=mysql_to_mysqli($stmtB, $link);
+								$stmt="UPDATE vicidial_users SET pass='$pass',pass_hash='$pass_hash',force_change_password='N',failed_login_count=0 where user='$user' and active='Y' and user_level > 6;";
+								$rslt=mysql_to_mysqli($stmt, $link);
 
-						$stmtC="UPDATE servers SET conf_secret='$default_server_password',rebuild_conf_files='Y';";
-						$rslt=mysql_to_mysqli($stmtC, $link);
+								$stmtA="UPDATE system_settings SET first_login_trigger='N',default_phone_registration_password='$default_phone_registration_password',default_phone_login_password='$default_phone_login_password',default_server_password='$default_server_password',default_local_gmt='$default_local_gmt',default_voicemail_timezone='$default_voicemail_timezone';";
+								$rslt=mysql_to_mysqli($stmtA, $link);
 
-						### LOG INSERTION Admin Log Table ###
-						$SQL_log = "$stmt|$stmtA|$stmtB|$stmtC|";
-						$SQL_log = preg_replace('/;/', '', $SQL_log);
-						$SQL_log = addslashes($SQL_log);
-						$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$user', event_code='INITIAL SETTINGS UPDATE', event_sql=\"$SQL_log\", event_notes='';";
-						if ($DB) {echo "|$stmt|\n";}
-						$rslt=mysql_to_mysqli($stmt, $link);
+								$stmtB="UPDATE phones SET conf_secret='$default_phone_registration_password',pass='$default_phone_login_password',local_gmt='$default_local_gmt',voicemail_timezone='$default_voicemail_timezone';";
+								$rslt=mysql_to_mysqli($stmtB, $link);
 
-						echo _QXZ("Passwords have been updated, you may now continue on into Administration").". <BR><BR>"._QXZ("You may want to start by reading the ViciDial Manager Manual available at")." <a href=\"http://www.vicidial.org/store.php#MANAGER\" target=\"_blank\">vicidial.org</a> ("._QXZ("there is a free version available").")\n";
+								$stmtC="UPDATE servers SET conf_secret='$default_server_password',rebuild_conf_files='Y';";
+								$rslt=mysql_to_mysqli($stmtC, $link);
+
+								### LOG INSERTION Admin Log Table ###
+								$SQL_log = "$stmt|$stmtA|$stmtB|$stmtC|";
+								$SQL_log = preg_replace('/;/', '', $SQL_log);
+								$SQL_log = addslashes($SQL_log);
+								$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$user', event_code='INITIAL SETTINGS UPDATE', event_sql=\"$SQL_log\", event_notes='';";
+								if ($DB) {echo "|$stmt|\n";}
+								$rslt=mysql_to_mysqli($stmt, $link);
+
+								echo _QXZ("Passwords have been updated, you may now continue on into Administration").". <BR><BR>"._QXZ("You may want to start by reading the ViciDial Manager Manual available at")." <a href=\"http://www.vicidial.org/store.php#MANAGER\" target=\"_blank\">vicidial.org</a> ("._QXZ("there is a free version available").")\n";
+								}
+							}
 						}
 					}
 				}
