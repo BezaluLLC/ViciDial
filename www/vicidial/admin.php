@@ -5538,12 +5538,13 @@ if ($SSscript_remove_js > 0)
 # 210316-0923 - Small fix for 2FA consistency
 # 210317-0819 - Added lead_all_info Non-Agent API function, Changed lead-modify page links to javascript because of Chrome
 # 210317-1211 - Fixes for better consistency in password change process, Issue #1261
+# 210317-1736 - Added the ability to see orphan Remote Agent entries(with no valid User account)
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-802a';
-$build = '210317-1211';
+$admin_version = '2.14-803a';
+$build = '210317-1736';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -17728,10 +17729,12 @@ if ($ADD==41111)
 		$stmt="SELECT count(*) from vicidial_users where user='$user_start' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
-		if ($row[0] < 1)
+		if ( ($row[0] < 1) and ($stage != 'ORPHAN') )
 			{echo "<br>"._QXZ("REMOTE AGENTS NOT MODIFIED - you must use a valid user as the user_start for remote agents")."\n";}
 		else
 			{
+			if ($row[0] < 1)
+				{echo "<br><b>"._QXZ("This Remote Agent does not have a valid User")."</b><br>\n";}
 			### check for closest remote agents to this account to ensure no overlapping
 			$user_finish = ($user_start + $number_of_lines);
 			$user_finish_length = strlen($user_finish);
@@ -35552,7 +35555,7 @@ if ($ADD==31111)
 			echo "<option value='NONE'>"._QXZ("NONE")."</option>\n";
 			echo "<option value='$extension_group' SELECTED>"._QXZ("$extension_group")."</option>\n";
 			echo "</select>$NWB#remote_agents-extension_group$NWE</td></tr>\n";
-			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Status").": </td><td align=left><select size=1 name=status><option value='ACTIVE' SELECTED>"._QXZ("ACTIVE")."</option><option value='INACTIVE'>"._QXZ("INACTIVE")."</option><option value='$status' SELECTED>"._QXZ("$status")."</option></select>$NWB#remote_agents-status$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Status").": </td><td align=left><select size=1 name=status><option value='ACTIVE'>"._QXZ("ACTIVE")."</option><option value='INACTIVE'>"._QXZ("INACTIVE")."</option><option value='$status' SELECTED>"._QXZ("$status")."</option></select>$NWB#remote_agents-status$NWE</td></tr>\n";
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id\">"._QXZ("Campaign")."</a>: </td><td align=left><select size=1 name=campaign_id>\n";
 			echo "$campaigns_list";
 			echo "<option SELECTED>$campaign_id</option>\n";
@@ -35598,7 +35601,41 @@ if ($ADD==31111)
 			}
 		else
 			{
-			echo _QXZ("User Start for this remote agent does not exist").": $user_start\n";
+			echo "<b>"._QXZ("User Start for this remote agent does not exist as a User").": $user_start</b><BR>\n";
+
+			echo "<br><b>"._QXZ("MODIFY AN ORPHAN REMOTE AGENTS ENTRY").": $row[0]</b><form action=$PHP_SELF method=POST>\n";
+			echo "<input type=hidden name=ADD value=41111>\n";
+			echo "<input type=hidden name=DB value=\"$DB\">\n";
+			echo "<input type=hidden name=stage value=\"ORPHAN\">\n";
+			echo "<input type=hidden name=remote_agent_id value=\"$row[0]\">\n";
+			echo "<center><TABLE width=$section_width cellspacing=3>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"$PHP_SELF?ADD=3&user=$user_start\">"._QXZ("User ID Start")."</a>: </td><td align=left><input type=text name=user_start size=9 maxlength=9 value=\"$user_start\"> ("._QXZ("numbers only, incremented, must be an existing vicidial user").")$NWB#remote_agents-user_start$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Number of Lines").": </td><td align=left><input type=text name=number_of_lines size=3 maxlength=3 value=\"$number_of_lines\"> ("._QXZ("numbers only").")$NWB#remote_agents-number_of_lines$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Server IP").": </td><td align=left><select size=1 name=server_ip>\n";
+			echo "$servers_list";
+			echo "<option SELECTED>$row[3]</option>\n";
+			echo "</select>$NWB#remote_agents-server_ip$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("External Extension").": </td><td align=left><input type=text name=conf_exten size=20 maxlength=20 value=\"$conf_exten\"> ("._QXZ("dial plan number dialed to reach agents").")$NWB#remote_agents-conf_exten$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Extension Group").": </td><td align=left><select size=1 name=extension_group>\n";
+			echo "<option value='NONE'>"._QXZ("NONE")."</option>\n";
+			echo "<option value='$extension_group' SELECTED>"._QXZ("$extension_group")."</option>\n";
+			echo "</select>$NWB#remote_agents-extension_group$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Status").": </td><td align=left><select size=1 name=status><option value='ACTIVE'>"._QXZ("ACTIVE")."</option><option value='INACTIVE'>"._QXZ("INACTIVE")."</option><option value='$status' SELECTED>"._QXZ("$status")."</option></select>$NWB#remote_agents-status$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id\">"._QXZ("Campaign")."</a>: </td><td align=left><select size=1 name=campaign_id>\n";
+			echo "<option SELECTED>$campaign_id</option>\n";
+			echo "</select>$NWB#remote_agents-campaign_id$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("On-Hook Agent").": </td><td align=left><select size=1 name=on_hook_agent><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$on_hook_agent' SELECTED>"._QXZ("$on_hook_agent")."</option></select>$NWB#remote_agents-on_hook_agent$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("On-Hook Ring Time").": </td><td align=left><input type=text name=on_hook_ring_time size=5 maxlength=4 value=\"$on_hook_ring_time\"> $NWB#remote_agents-on_hook_ring_time$NWE</td></tr>\n";
+
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
+				$temp_chart_title = _QXZ("8 Day call count for this remote-agent");
+				horizontal_bar_chart($user_start,'8','remote-agent',$link,'ra_total_calls','call count',1,'','',$temp_chart_title);
+			echo "</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Inbound Groups").": </td><td align=left>\n";
+			echo "$NWB#remote_agents-closer_campaigns$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input style='background-color:#$SSbutton_color' type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
+			echo "</TABLE></center>\n";
+			echo _QXZ("NOTE: It can take up to 30 seconds for changes submitted on this screen to go live")."\n";
 			exit;
 			}
 		}
@@ -42687,6 +42724,9 @@ if ($ADD==10000)
 		$o++;
 		}
 	$user_start_SQL = preg_replace("/,$/","",$user_start_SQL);
+	$OTHERuser_start_SQL='';
+	if (strlen($whereLOGadmin_viewable_groupsSQL) < 1)
+		{$OTHERuser_start_SQL="where user_start NOT IN($user_start_SQL)";}
 	if (strlen($user_start_SQL) > 2)
 		{$user_start_SQL = "user_start IN($user_start_SQL)";}
 
@@ -42728,6 +42768,34 @@ if ($ADD==10000)
 		echo "<td><font size=1> $row[7]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=31111&remote_agent_id=$row[0]\">"._QXZ("MODIFY")."</a></td></tr>\n";
 		$o++;
+		}
+
+	### For users with no User Group restrictions, show all Remote Agents with no user attached
+	if (strlen($OTHERuser_start_SQL) > 0)
+		{
+		$stmt="SELECT remote_agent_id,user_start,number_of_lines,server_ip,conf_exten,extension_group,status,campaign_id from vicidial_remote_agents $whereLOGallowed_campaignsSQL $OTHERuser_start_SQL order by server_ip,campaign_id,user_start;";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$OTHERremoteagents_to_print = mysqli_num_rows($rslt);
+
+		$o=0;
+		while ($OTHERremoteagents_to_print > $o) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
+				{$bgcolor='class="records_list_x"';} 
+			else
+				{$bgcolor='class="records_list_y"';}
+			echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=31111&remote_agent_id=$row[0]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=31111&remote_agent_id=$row[0]\"><font size=1 color=red><b>($row[1])</a></td>";
+			echo "<td><font size=1> $row[2]</td>";
+			echo "<td><font size=1> $row[3]</td>";
+			echo "<td><font size=1> $row[4]</td>";
+			echo "<td><font size=1> ".(preg_match('/^NONE$/', $row[5]) ? _QXZ("$row[5]") : $row[5])."</td>";
+			echo "<td><font size=1> "._QXZ("$row[6]")."</td>";
+			echo "<td><font size=1> $row[7]</td>";
+			echo "<td align=center><a href=\"$PHP_SELF?ADD=31111&remote_agent_id=$row[0]\"><font size=1 color=red><b>"._QXZ("MODIFY")."</a></td></tr>\n";
+			$o++;
+			}
 		}
 
 	echo "</TABLE></center>\n";
