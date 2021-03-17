@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-03-03
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-03-16
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -41,6 +41,10 @@ in_group_status - real-time status of one or more in groups
 agent_status - real-time status of one user
 callid_info - information about a call based upon the caller_code or call ID
 lead_field_info - pulls the value of one field of a lead
+lead_callback_info - outputs scheduled callback data for a specific lead
+lead_all_info - outputs all lead data for a lead(optionally including custom fields)
+lead_status_search - displays all field values of all leads that match the status and call date in request
+ccc_lead_info - outputs lead data for cross-cluster-communication call
 server_refresh - forces a conf file refresh on all telco servers in the cluster
 check_phone_number - allows you to check if a phone number is valid and dialable
 logged_in_agents - list of agents that are logged in to the system
@@ -48,11 +52,8 @@ update_campaign - updates campaign settings in the system
 add_did - adds new Inbound DID entries to the system
 update_did - updates Inbound DID information in the system
 phone_number_log - exports list of calls placed to one of more phone numbers
-ccc_lead_info - outputs lead data for cross-cluster-communication call
-lead_status_search - displays all field values of all leads that match the status and call date in request
 call_status_stats - report on number of calls made by campaign and ingroup, with hourly and status breakdowns
 call_dispo_report - call disposition breakdown report
-lead_callback_info - outputs scheduled callback data for a specific lead
 agent_campaigns - looks up allowed campaigns/in-groups for a specific user
 update_cid_group_entry - updates CID Group entries
 add_dnc_phone - adds a phone number to one of the DNC lists
@@ -176,7 +177,7 @@ Changes:
 210217-1454 - Added menu_id option for add_did and update_did functions
 210227-1116 - Added xferconf number options to update_campaign, add_list & update_list functions
 210303-1802 - Added list_exists_check option for update_lead function
-
+210316-2207 - Added lead_all_info function
 
 API Functions use the 'function' variable
 
@@ -728,6 +729,41 @@ ERROR: lead_field_info LEAD FIELD NOT FOUND - 6666||
 
 A SUCCESS response will not show "SUCCESS", but instead will just print the value of the field:
 1234567890
+
+
+
+
+
+--------------------------------------------------------------------------------
+lead_all_info - outputs all lead data for a lead(optionally including custom fields)
+
+NOTE: api user for this function must have user_level set to 7 or higher and "view reports" enabled and modify_leads set to 1-4
+
+REQUIRED FIELDS-
+source -		description of what originated the API call (maximum 20 characters)
+lead_id -		1-10 digits
+
+OPTIONAL FIELDS-
+custom_fields -		Y or N, default is N. If the field you want to pull is a custom field or not
+force_entry_list_id -	3-12 digits, will override the lead's assigned entry_list_id to look for custom fields data for this lead from a different list
+
+SETTINGS FIELDS-
+stage -			the format of the exported data: csv, tab, newline, pipe(default)
+header -		include a header(YES) or not(NO). This is optional, default is not to include a header
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=lead_all_info&lead_id=1079425
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=lead_all_info&lead_id=1079425&header=YES&custom_fields=Y
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=lead_all_info&lead_id=1079425&header=YES&custom_fields=Y&force_entry_list_id=999880
+
+Example responses:
+ERROR: lead_all_info USER DOES NOT HAVE PERMISSION TO GET LEAD INFO - 6666|0
+ERROR: lead_all_info LIST NOT FOUND - 6666||
+ERROR: lead_all_info LEAD NOT FOUND - 6666||
+
+A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
+status|user|vendor_lead_code|source_id|list_id|gmt_offset_now|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|entry_list_id
+TD|6666|554443||501|-4.00|1|9998887112|Mr|Billy'Oj|U|O'Reillyo|ad1|ad2|ad3|city next|FL|U|33777||U|0000-00-00|bobo'brien|test@test.com||2017-06-01 18:38:41|79|2017-06-09 14:53:27|0|4646|0
 
 
 

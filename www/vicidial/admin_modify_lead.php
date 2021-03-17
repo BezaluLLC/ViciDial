@@ -1447,7 +1447,17 @@ else
 	$lead_count =	$row[0];
 	if ( ($lead_exists > 0) and ($lead_count < 1) )
 		{
-		echo _QXZ("lead does not exist")."\n";
+		echo "</script>\n";
+		echo "<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+		echo "</head><BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+		echo "<span style=\"position:absolute;left:0px;top:0px;z-index:20;\" id=admin_header>";
+
+		$short_header=1;
+
+		require("admin_header.php");
+
+		echo "</span>\n";
+		echo "<BR><BR><b>"._QXZ("lead does not exist")."</b><BR>\n";
 		exit;
 		}
 	}
