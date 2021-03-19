@@ -658,10 +658,11 @@
 # 210315-2102 - Added CALLBACK manual dial filter option, Issue #1139
 # 210317-1207 - Fixes for better consistency in password change process, Issue #1261
 # 210318-0236 - Added agent browser visibility logging and Agent Hidden Browser Sounds
+# 210319-1500 - Small change for agent screen visibility logging on logout
 #
 
-$version = '2.14-626c';
-$build = '210318-0236';
+$version = '2.14-627c';
+$build = '210319-1500';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=95;
 $one_mysql_log=0;
@@ -16473,8 +16474,16 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 	function LogouT(tempreason,temppause)
 		{
 		button_click_log = button_click_log + "" + SQLdate + "-----LogouT---" + tempreason + " " + temppause + "|";
-		onHidden('1');
-		onVisible('1');
+		if (isVisible)
+			{
+			onHidden('1');
+			onVisible('1');
+			}
+		else
+			{
+			onVisible('1');
+			onHidden('1');
+			}
 		check_for_conf_calls(session_id, '0');
 
 		if (MD_channel_look==1)
