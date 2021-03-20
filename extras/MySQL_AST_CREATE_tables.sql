@@ -4437,9 +4437,11 @@ list_id BIGINT(14) UNSIGNED DEFAULT NULL,
 qc_scorecard_id VARCHAR(20) DEFAULT NULL,
 checkpoint_row_id INT(10) UNSIGNED DEFAULT NULL,
 checkpoint_text TEXT,
+checkpoint_text_presets TEXT,
 checkpoint_rank TINYINT(3) UNSIGNED DEFAULT NULL,
 checkpoint_points TINYINT(3) UNSIGNED DEFAULT NULL,
 instant_fail ENUM('Y','N') DEFAULT 'N',
+instant_fail_value ENUM('Y', 'N') default 'N',
 checkpoint_points_earned TINYINT(5) UNSIGNED DEFAULT NULL,
 qc_agent VARCHAR(20) DEFAULT NULL,
 checkpoint_comment_agent TEXT,
@@ -4450,6 +4452,7 @@ CREATE TABLE quality_control_checkpoints (
 checkpoint_row_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 qc_scorecard_id VARCHAR(20) DEFAULT NULL,
 checkpoint_text TEXT,
+checkpoint_text_presets TEXT,
 checkpoint_rank INT(3) UNSIGNED DEFAULT NULL,
 checkpoint_points TINYINT(3) UNSIGNED DEFAULT NULL,
 instant_fail ENUM('Y','N') DEFAULT 'N',
@@ -4866,4 +4869,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1623',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1624',db_schema_update_date=NOW(),reload_timestamp=NOW();
