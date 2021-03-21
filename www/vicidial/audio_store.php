@@ -1,7 +1,7 @@
 <?php
 # audio_store.php
 # 
-# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Central Audio Storage script
 # 
@@ -31,10 +31,11 @@
 # 180508-0115 - Added new help display
 # 180618-2300 - Modified calls to audio file chooser function
 # 201002-1536 - Allowed for secure sounds_web_server setting
+# 210321-0131 - Added classAudioFile PHP library for WAV file format validation
 #
 
-$version = '2.14-23';
-$build = '201002-1536';
+$version = '2.14-24';
+$build = '210321-0131';
 
 $MT[0]='';
 
@@ -548,7 +549,38 @@ if ($action == "MANUALUPLOAD")
 			copy($AF_path, "$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
 			chmod("$WeBServeRRooT/$sounds_web_directory/$audiofile_name", 0766);
 			
-			echo _QXZ("SUCCESS").": $audiofile_name "._QXZ("uploaded")."     "._QXZ("size").":" . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "\n";
+			echo "<BR>"._QXZ("SUCCESS").": $audiofile_name "._QXZ("uploaded")."     "._QXZ("size").":" . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "<BR><BR>\n";
+
+			if (preg_match("/\.wav$/", $audiofile_name))
+				{
+				require ('classAudioFile.php');
+
+				$AF = new AudioFile;
+				$AF->loadFile("$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
+
+				$wav_type = $AF->wave_type;
+				$wav_compression = $AF->getCompression ($AF->wave_compression);
+				$wav_channels = $AF->wave_channels;
+				$wav_framerate = $AF->wave_framerate;
+				$wav_bits=$AF->wave_bits;
+				$invalid_wav=0;
+
+				if (!preg_match('/^wav/i',$wav_type)) {$invalid_wav++;}
+				if (!preg_match('/^pcm/i',$wav_compression)) {$invalid_wav++;}
+				if ($wav_channels > 1) {$invalid_wav++;}
+				if ( ($wav_framerate > 8000) or ($wav_framerate < 8000) ) {$invalid_wav++;}
+				if ( ($wav_bits > 16) or ($wav_bits < 16) ) {$invalid_wav++;}
+
+				if ($invalid_wav > 0)
+					{
+					echo " &nbsp; <BR><BR><font color=red>"._QXZ("INVALID WAV FILE FORMAT").": ($audiofile_name)</font><BR> &nbsp; </FONT><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>$wav_type &nbsp; "._QXZ("channels").": $wav_channels &nbsp; "._QXZ("framerate").": $wav_framerate &nbsp; "._QXZ("bits").": $wav_bits &nbsp; "._QXZ("compression").": $wav_compression<BR><BR><BR>\n";
+					}
+				else
+					{
+					echo " &nbsp; </FONT><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=1>"._QXZ("WAV FILE FORMAT VALIDATED").": $wav_type &nbsp; "._QXZ("channels").": $wav_channels &nbsp; "._QXZ("framerate").": $wav_framerate &nbsp; "._QXZ("bits").": $wav_bits &nbsp; "._QXZ("compression").": $wav_compression<BR><BR>\n";
+					}
+				echo "</FONT><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3>";
+				}
 
 			$stmt="UPDATE servers SET sounds_update='Y';";
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -557,7 +589,7 @@ if ($action == "MANUALUPLOAD")
 			$SQL_log = "$stmt|";
 			$SQL_log = preg_replace('/;/', '', $SQL_log);
 			$SQL_log = addslashes($SQL_log);
-			$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='AUDIOSTORE', event_type='LOAD', record_id='manualupload', event_code='$audiofile_name " . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "', event_sql=\"$SQL_log\", event_notes='$audiofile_name $AF_path $AF_orig';";
+			$stmt="INSERT INTO vicidial_admin_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$ip', event_section='AUDIOSTORE', event_type='LOAD', record_id='manualupload', event_code='$audiofile_name " . filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name") . "', event_sql=\"$SQL_log\", event_notes='$audiofile_name $AF_path $AF_orig   Invalid: $invalid_wav $wav_type &nbsp; "._QXZ("channels").": $wav_channels &nbsp; "._QXZ("framerate").": $wav_framerate &nbsp; "._QXZ("bits").": $wav_bits &nbsp; "._QXZ("compression").": $wav_compression';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 			}
