@@ -659,10 +659,11 @@
 # 210317-1207 - Fixes for better consistency in password change process, Issue #1261
 # 210318-0236 - Added agent browser visibility logging and Agent Hidden Browser Sounds
 # 210319-1500 - Small change for agent screen visibility logging on logout
+# 210320-2348 - Added additional update_fields options: scriptreload,script2reload
 #
 
-$version = '2.14-627c';
-$build = '210319-1500';
+$version = '2.14-628c';
+$build = '210320-2348';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=95;
 $one_mysql_log=0;
@@ -9996,6 +9997,18 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 							FormContentsLoad();
 							event_data = event_data + '--- formreload ';
+							}
+						var regUDscriptreload = new RegExp("scriptreload,","ig");
+						if (fields_list.match(regUDscriptreload))
+							{
+							RefresHScript('','YES');
+							event_data = event_data + '--- scriptreload ';
+							}
+						var regUDscript2reload = new RegExp("script2reload,","ig");
+						if (fields_list.match(regUDscript2reload))
+							{
+							RefresHScript2('','YES');
+							event_data = event_data + '--- script2reload ';
 							}
 
 						// JOEJ 082812 - new for email feature
