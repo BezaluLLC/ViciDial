@@ -660,10 +660,11 @@
 # 210318-0236 - Added agent browser visibility logging and Agent Hidden Browser Sounds
 # 210319-1500 - Small change for agent screen visibility logging on logout
 # 210320-2348 - Added additional update_fields options: scriptreload,script2reload
+# 210322-1301 - Fixed issue with agent_hidden_sound
 #
 
-$version = '2.14-628c';
-$build = '210320-2348';
+$version = '2.14-629c';
+$build = '210322-1301';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=95;
 $one_mysql_log=0;
@@ -22551,7 +22552,7 @@ if ($agent_display_dialable_leads > 0)
 <audio id='EmailAudioAlertFile'><source src="sounds/email_alert.mp3" type="audio/mpeg"></audio>
 
 <?php 
-if ($SSbrowser_call_alerts > 0)
+if ( ($SSbrowser_call_alerts > 0) or ($SSagent_hidden_sound_seconds > 0) )
 	{
 	$bas=0;   $bas_embed_output='';
 	$browser_alert_sounds_listARY = explode(',',$browser_alert_sounds_list);
