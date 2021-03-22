@@ -654,16 +654,15 @@ if ($action == "MANUALUPLOAD")
 		$audiofile_name = preg_replace("/\^/",'',$audiofile_name);
 		if (preg_match("/\.wav$|\.gsm$/", $audiofile_name))
 			{
+			copy($AF_path, "$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
+			chmod("$WeBServeRRooT/$sounds_web_directory/$audiofile_name", 0766);
+			
 			$audio_epoch = date("U");
 			$audio_format='gsm';
 			$audio_filesize = filesize("$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
 			$audio_length = ($audio_filesize / 1650);
 			$wav_format_details='';
 			$wav_asterisk_valid='NA';
-
-			copy($AF_path, "$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
-			chmod("$WeBServeRRooT/$sounds_web_directory/$audiofile_name", 0766);
-			
 			echo "<BR>"._QXZ("SUCCESS").": $audiofile_name "._QXZ("uploaded")."     "._QXZ("size").": $audio_filesize<BR><BR>\n";
 
 			if (preg_match("/\.wav$/", $audiofile_name))
