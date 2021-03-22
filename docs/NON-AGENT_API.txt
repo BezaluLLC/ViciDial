@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-03-20
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-03-22
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -180,6 +180,7 @@ Changes:
 210316-2207 - Added lead_all_info function
 210319-1720 - Added special 'xDAYS' value option for callback_datetime
 210320-2127 - Added 'custom_fields_add' option for update_list function
+210322-1218 - Added display of bad wav file formats on sounds_list function
 
 API Functions use the 'function' variable
 

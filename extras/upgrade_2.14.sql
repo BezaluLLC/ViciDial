@@ -1594,3 +1594,8 @@ ALTER TABLE quality_control_checkpoint_log ADD checkpoint_text_presets TEXT AFTE
 ALTER TABLE quality_control_checkpoints ADD checkpoint_text_presets TEXT AFTER checkpoint_text;
 
 UPDATE system_settings SET db_schema_version='1624',db_schema_update_date=NOW() where db_schema_version < 1624;
+
+ALTER TABLE audio_store_details ADD wav_format_details VARCHAR(255) default '';
+ALTER TABLE audio_store_details ADD wav_asterisk_valid ENUM('','GOOD','BAD','NA') default '';
+
+UPDATE system_settings SET db_schema_version='1625',db_schema_update_date=NOW() where db_schema_version < 1625;

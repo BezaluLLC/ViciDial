@@ -3440,6 +3440,8 @@ audio_format VARCHAR(10) default 'unknown',
 audio_filesize BIGINT(20) UNSIGNED default '0',
 audio_epoch BIGINT(20) UNSIGNED default '0',
 audio_length INT(10) UNSIGNED default '0',
+wav_format_details VARCHAR(255) default '',
+wav_asterisk_valid ENUM('','GOOD','BAD','NA') default '',
 unique index (audio_filename)
 ) ENGINE=MyISAM;
 
@@ -4869,4 +4871,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1624',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1625',db_schema_update_date=NOW(),reload_timestamp=NOW();

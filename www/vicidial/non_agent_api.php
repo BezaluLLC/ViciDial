@@ -168,10 +168,11 @@
 # 210316-2207 - Added lead_all_info function
 # 210319-1720 - Added special 'xDAYS' value option for callback_datetime
 # 210320-2127 - Added 'custom_fields_add' option for update_list function
+# 210322-1218 - Added display of bad wav file formats on sounds_list function
 #
 
-$version = '2.14-145';
-$build = '210320-2127';
+$version = '2.14-146';
+$build = '210322-1218';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -1202,6 +1203,18 @@ if ($function == 'sounds_list')
 				exit;
 				}
 
+			$bad_wavs='|';
+			$stmt="SELECT audio_filename from audio_store_details where wav_asterisk_valid='BAD';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$bw_ct = mysqli_num_rows($rslt);
+			$bw=0;
+			while ($bw_ct > $bw)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$bad_wavs .= "$row[0]|";
+				$bw++;
+				}
+
 			$dh = opendir($dirpath);
 			if ($DB>0) {echo "DEBUG: sounds_list variables - $dirpath|$stage|$format\n";}
 
@@ -1297,8 +1310,18 @@ if ($function == 'sounds_list')
 							echo "</tr>\n";
 							}
 						$sf++;
+						$BWB='';   $BWE='';
+						if ( (preg_match('/\.wav$/', $file_names[$m])) and (strlen($bad_wavs) > 2) )
+							{
+							$temp_filename = $file_names[$m];
+							if (preg_match("/\|$temp_filename\|/",$bad_wavs))
+								{
+								$BWB='<font color=red><b>';
+								$BWE=" &nbsp; &nbsp; "._QXZ("BAD WAV FORMAT")."</b></font>";
+								}
+							}
 						echo "<tr><td><font size=1 face=\"Arial,Helvetica\">$sf</td>\n";
-						echo "<td><a href=\"javascript:choose_file('$file_namesPROMPT[$m]','$comments');\"><font size=1 face=\"Arial,Helvetica\">$file_names[$m]</a></td>\n";
+						echo "<td><a href=\"javascript:choose_file('$file_namesPROMPT[$m]','$comments');\"><font size=1 face=\"Arial,Helvetica\">$BWB$file_names[$m]$BWE</a></td>\n";
 						echo "<td><font size=1 face=\"Arial,Helvetica\">$file_dates[$m]</td>\n";
 						echo "<td><font size=1 face=\"Arial,Helvetica\">$file_sizes[$m]</td>\n";
 						echo "<td><a href=\"$admDIR/$admin_web_dir$sounds_web_directory/$file_names[$m]\" target=\"_blank\"><font size=1 face=\"Arial,Helvetica\">"._QXZ("PLAY")."</a></td></tr>\n";
