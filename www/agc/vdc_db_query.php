@@ -501,10 +501,11 @@
 # 201122-1038 - Added Daily call count limit features
 # 210309-2343 - Small change to Fake-call-logging in QM for some queuemetrics_pausereason settings
 # 210315-2105 - Added CALLBACK manual dial filter option
+# 210324-1606 - Added leave_3way_start_recording campaign options
 #
 
-$version = '2.14-394';
-$build = '210315-2105';
+$version = '2.14-395';
+$build = '210324-1606';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=850;
@@ -809,7 +810,12 @@ if (isset($_GET["end_date"]))			{$end_date=$_GET["end_date"];}
 	elseif (isset($_POST["end_date"]))	{$end_date=$_POST["end_date"];}
 if (isset($_GET["customer_sec"]))			{$customer_sec=$_GET["customer_sec"];}
 	elseif (isset($_POST["customer_sec"]))	{$customer_sec=$_POST["customer_sec"];}
-
+if (isset($_GET["leave_3way_start_recording_trigger"]))				{$leave_3way_start_recording_trigger=$_GET["leave_3way_start_recording_trigger"];}
+	elseif (isset($_POST["leave_3way_start_recording_trigger"]))	{$leave_3way_start_recording_trigger=$_POST["leave_3way_start_recording_trigger"];}
+if (isset($_GET["leave_3way_start_recording_filename"]))			{$leave_3way_start_recording_filename=$_GET["leave_3way_start_recording_filename"];}
+	elseif (isset($_POST["leave_3way_start_recording_filename"]))	{$leave_3way_start_recording_filename=$_POST["leave_3way_start_recording_filename"];}
+if (isset($_GET["channelrec"]))				{$channelrec=$_GET["channelrec"];}
+	elseif (isset($_POST["channelrec"]))	{$channelrec=$_POST["channelrec"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -1109,6 +1115,9 @@ $manual_dial_validation = preg_replace('/[^-_0-9a-zA-Z]/','',$manual_dial_valida
 $start_date = preg_replace('/[^-_0-9]/','',$start_date);
 $end_date = preg_replace('/[^-_0-9]/','',$end_date);
 $customer_sec = preg_replace('/[^-_0-9]/','',$customer_sec);
+$leave_3way_start_recording_trigger = preg_replace('/[^0-9]/','',$leave_3way_start_recording_trigger);
+$leave_3way_start_recording_filename = preg_replace('/[^-_0-9a-zA-Z]/','',$leave_3way_start_recording_filename);
+$channelrec = preg_replace("/\'|\"|\\\\|;/","",$channelrec);
 
 if ($non_latin < 1)
 	{
@@ -8642,6 +8651,61 @@ if ($stage == "end")
 			$loop_count++;
 			}
 		}
+
+	##### BEGIN leave_3way_start_recording if triggered #####  $ACTION == 'manDiaLlogCaLL' and $stage == "end" leave_3way_start_recording_trigger
+	if ( ($leave_3way_start_recording_trigger > 0) and (strlen($leave_3way_start_recording_filename) > 3) )
+		{
+		$recFULLDATE = date("Ymd-His");
+		$recTINYDATE = date("ymdHis");
+		$leave_3way_start_recording_filename = preg_replace("/FULLDATE/","$recFULLDATE",$leave_3way_start_recording_filename);
+		$leave_3way_start_recording_filename = preg_replace("/TINYDATE/","$recTINYDATE",$leave_3way_start_recording_filename);
+		$leave_3way_start_recording_filename = preg_replace("/EPOCH/","$StarTtime",$leave_3way_start_recording_filename);
+		$leave_3way_start_recording_filename = preg_replace("/\"|\'/",'',$leave_3way_start_recording_filename);
+		if (preg_match("/RECID/",$leave_3way_start_recording_filename) )
+			{
+			$stmt = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename,lead_id,user,vicidial_id,length_in_sec) values('$channel','$server_ip','$exten','$NOW_TIME','$StarTtime','$leave_3way_start_recording_filename','$lead_id','$user','$uniqueid','0')";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			$RLaffected_rows = mysqli_affected_rows($link);
+			if ($RLaffected_rows > 0)
+				{
+				$recording_id = mysqli_insert_id($link);
+				}
+
+			$leave_3way_start_recording_filename = preg_replace("/RECID/","$recording_id",$leave_3way_start_recording_filename);
+
+			$stmt = "UPDATE recording_log SET filename='$leave_3way_start_recording_filename' where recording_id='$recording_id';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			$vmgr_callerid = substr($leave_3way_start_recording_filename, 0, 17) . '...';
+			$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$vmgr_callerid','Channel: $channelrec','Context: $ext_context','Exten: $exten','Priority: 1','Callerid: $leave_3way_start_recording_filename','','','','','');";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			}
+		else
+			{
+			$vmgr_callerid = substr($leave_3way_start_recording_filename, 0, 17) . '...';
+			$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$vmgr_callerid','Channel: $channelrec','Context: $ext_context','Exten: $exten','Priority: 1','Callerid: $leave_3way_start_recording_filename','','','','','');";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
+			$stmt = "INSERT INTO recording_log (channel,server_ip,extension,start_time,start_epoch,filename,lead_id,user,vicidial_id,length_in_sec) values('$channel','$server_ip','$exten','$NOW_TIME','$StarTtime','$leave_3way_start_recording_filename','$lead_id','$user','$uniqueid','0')";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			$RLaffected_rows = mysqli_affected_rows($link);
+			if ($RLaffected_rows > 0)
+				{
+				$recording_id = mysqli_insert_id($link);
+				}
+			}
+		}
+	##### END leave_3way_start_recording if triggered #####
 
 	if ($log_no_enter > 0)
 		{

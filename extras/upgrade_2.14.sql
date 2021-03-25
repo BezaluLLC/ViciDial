@@ -1599,3 +1599,8 @@ ALTER TABLE audio_store_details ADD wav_format_details VARCHAR(255) default '';
 ALTER TABLE audio_store_details ADD wav_asterisk_valid ENUM('','GOOD','BAD','NA') default '';
 
 UPDATE system_settings SET db_schema_version='1625',db_schema_update_date=NOW() where db_schema_version < 1625;
+
+ALTER TABLE vicidial_campaigns ADD leave_3way_start_recording ENUM('DISABLED','ALL_CALLS','ALL_BUT_EXCEPTIONS','ONLY_EXCEPTIONS') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD leave_3way_start_recording_exception VARCHAR(40) default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1626',db_schema_update_date=NOW() where db_schema_version < 1626;

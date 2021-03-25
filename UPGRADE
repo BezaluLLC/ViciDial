@@ -605,6 +605,11 @@ OTHER CHANGES:
 169. Added WAV audio file validation for Audio Store, and display of badly
 	formatted WAV files in the audio chooser in admin.php
 
+170. Added "Leave 3-Way Start Recording" campaign feature that will start a new
+	recording after the agent clicks on the LEAVE 3WAY button and leaves the
+	call. Also includes an "Exception" option to disable/enable only for 
+	specific 3-way call numbers.
+
 
 
 
