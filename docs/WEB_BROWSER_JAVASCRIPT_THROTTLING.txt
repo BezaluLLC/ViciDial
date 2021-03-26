@@ -16,6 +16,7 @@ In 2017, the Google Chrome development team announced that, in an effort to redu
 
 In early 2021, Google Chrome build 88 changed this behavior by default and enabled what they call "Intensive Javascript Throttling" which would only affect hidden tabs starting at 5 minutes being hidden, with no audio having played for 30 seconds and no Web RTC connections on the page(like VICIphone). This "Intensive" throttling actually begins as soon as the VICIdial Agent Screen is hidden from view by only allowing it to refresh every 2 seconds, instead of the standard every 1 second that happens when the agent screen is visible. Then after 5 minutes of being hidden, the refresh rate is limited to once every minute(usually at a set number of seconds past the minute, like :02, :22, etc...). At this point, the VICIdial Agent Screen will become unusable unless you make it visible right away, and the agent session will pause automatically.
 
+NOTE: Any web browser that is based on the Chromium Open-Source codebase, like Google Chrome and Microsoft Edge, might be affected by this issue.
 
 
 
@@ -72,7 +73,7 @@ We have tested the following settings and found them to be effective on all clie
 - Set "volume" to '25'
 - Set "Agent Hidden Browser Sound Seconds" to '20'
 
-Adding this new feature also required us to add Agent Screen Vicibility Logging to VICIdial, so you can now also view statistics of how long your agents' screens were visible to them in the Agent Time Detail report and the User Stats report.
+Adding this new feature also required us to add Agent Screen Visibility Logging to VICIdial, so you can now also view statistics of how long your agents' screens were visible to them in the Agent Time Detail report and the User Stats report.
 
 
 

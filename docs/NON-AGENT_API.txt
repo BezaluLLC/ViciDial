@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-03-22
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-03-25
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -181,6 +181,7 @@ Changes:
 210319-1720 - Added special 'xDAYS' value option for callback_datetime
 210320-2127 - Added 'custom_fields_add' option for update_list function
 210322-1218 - Added display of bad wav file formats on sounds_list function
+210325-2042 - Added more data output fields to agent_stats_export function
 
 API Functions use the 'function' variable
 
@@ -568,9 +569,9 @@ ERROR: agent_stats_export INVALID SEARCH PARAMETERS - 6666||2010-12-03 00:00:00|
 ERROR: agent_stats_export NO RECORDS FOUND - 1255||2010-12-03 00:00:00|2010-12-03 00:00:01|
 
 A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
-user|full_name|user_group|calls|login_time|total_talk_time|avg_talk_time|avg_wait_time|pct_of_queue|pause_time|sessions|avg_session|pauses|avg_pause_time|pause_pct|pauses_per_session|total_wait_time
-1029|test agent|ADMIN|1|0:01:52|0:00:16|0:00:16|0:00:18|16.7%|54|3|0:00:37|5|0:00:11|48.2%|2|0:00:32
-6666|Admin|ADMIN|5|0:04:11|0:01:48|0:00:22|0:00:17|83.3%|27|2|0:02:06|4|0:00:07|10.8%|2|0:00:32
+user|full_name|user_group|calls|login_time|total_talk_time|avg_talk_time|avg_wait_time|pct_of_queue|pause_time|sessions|avg_session|pauses|avg_pause_time|pause_pct|pauses_per_session|wait_time|talk_time|dispo_time|dead_time
+1029|test agent|ADMIN|1|0:01:52|0:00:16|0:00:16|0:00:18|16.7%|54|3|0:00:37|5|0:00:11|48.2%|2|0:00:32|0:07:54|0:01:22|0:00:00
+6666|Admin user|ADMIN|16|0:34:31|0:07:54|0:00:00|0:00:07|100%|1411|13|0:02:39|42|0:00:34|68.1%|3|0:01:44|0:07:54|0:01:22|0:00:00
 
 * if the 'group_by_campaign' option is enabled, the format above will have 'campaign_id' as the first column, and each agent's activity will be divided on separate lines by the campaigns they were logged into during the requested time period.
 

@@ -169,10 +169,11 @@
 # 210319-1720 - Added special 'xDAYS' value option for callback_datetime
 # 210320-2127 - Added 'custom_fields_add' option for update_list function
 # 210322-1218 - Added display of bad wav file formats on sounds_list function
+# 210325-2042 - Added more data output fields to agent_stats_export function
 #
 
-$version = '2.14-146';
-$build = '210322-1218';
+$version = '2.14-147';
+$build = '210325-2042';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -9010,11 +9011,11 @@ if ($function == 'agent_stats_export')
 						{
 						if ($group_by_campaign == 'YES')
 							{
-							$output .= 'campaign_id' . $DL . 'user' . $DL . 'full_name' . $DL . 'user_group' . $DL . 'calls' . $DL . 'login_time' . $DL . 'total_talk_time' . $DL . 'avg_talk_time' . $DL . 'avg_wait_time' . $DL . 'pct_of_queue' . $DL . 'pause_time' . $DL . 'sessions' . $DL . 'avg_session' . $DL . 'pauses' . $DL . 'avg_pause_time' . $DL . 'pause_pct' . $DL . 'pauses_per_session' . "\n";
+							$output .= 'campaign_id' . $DL . 'user' . $DL . 'full_name' . $DL . 'user_group' . $DL . 'calls' . $DL . 'login_time' . $DL . 'total_talk_time' . $DL . 'avg_talk_time' . $DL . 'avg_wait_time' . $DL . 'pct_of_queue' . $DL . 'pause_time' . $DL . 'sessions' . $DL . 'avg_session' . $DL . 'pauses' . $DL . 'avg_pause_time' . $DL . 'pause_pct' . $DL . 'pauses_per_session' . $DL . 'wait_time' . $DL . 'talk_time' . $DL . 'dispo_time' . $DL . 'dead_time' . "\n";
 							}
 						else
 							{
-							$output .= 'user' . $DL . 'full_name' . $DL . 'user_group' . $DL . 'calls' . $DL . 'login_time' . $DL . 'total_talk_time' . $DL . 'avg_talk_time' . $DL . 'avg_wait_time' . $DL . 'pct_of_queue' . $DL . 'pause_time' . $DL . 'sessions' . $DL . 'avg_session' . $DL . 'pauses' . $DL . 'avg_pause_time' . $DL . 'pause_pct' . $DL . 'pauses_per_session' . "\n";
+							$output .= 'user' . $DL . 'full_name' . $DL . 'user_group' . $DL . 'calls' . $DL . 'login_time' . $DL . 'total_talk_time' . $DL . 'avg_talk_time' . $DL . 'avg_wait_time' . $DL . 'pct_of_queue' . $DL . 'pause_time' . $DL . 'sessions' . $DL . 'avg_session' . $DL . 'pauses' . $DL . 'avg_pause_time' . $DL . 'pause_pct' . $DL . 'pauses_per_session' . $DL . 'wait_time' . $DL . 'talk_time' . $DL . 'dispo_time' . $DL . 'dead_time' . "\n";
 							}
 						}
 
@@ -9048,6 +9049,8 @@ if ($function == 'agent_stats_export')
 								{
 								$uc++;
 								$ASuser[$uc] =			$row[0];
+#								$ASdispo_sec[$uc] =		$row[6];
+#								$ASdead_sec[$uc] =	$row[7];
 								$AScampaign[$uc] =		$row[9];
 								$ASstart_epoch[$uc] =	$row[8];
 								$last_user =			$temp_camp_user;
@@ -9062,7 +9065,9 @@ if ($function == 'agent_stats_export')
 								{
 								$uc++;
 								$ASuser[$uc] =			$row[0];
-								$ASstart_epoch[$uc] =	$row[8];
+								$ASdispo_sec[$uc] =		$row[6];
+#								$ASdead_sec[$uc] =	$row[7];
+#								$ASstart_epoch[$uc] =	$row[8];
 								$last_user =			$row[0];
 								$AScalls[$uc] =			0;
 								$ASpauses[$uc] =		0;
@@ -9124,11 +9129,17 @@ if ($function == 'agent_stats_export')
 							{
 							$cust_sec = 0;
 							$wait_sec = 0;
+							$talk_sec = 0;
+							$dead_sec = 0;
+							$dispo_sec = 0;
 							}
 						else
 							{
 							$cust_sec = ($AStalk_sec[$k] - $ASdead_sec[$k]);
 							$wait_sec = $ASwait_sec[$k];
+							$talk_sec = $AStalk_sec[$k];
+							$dead_sec = $ASdead_sec[$k];
+							$dispo_sec = $ASdispo_sec[$k];
 							}
 						$avg_session_sec = round($avg_session_sec);
 						$avg_pause_sec = round($avg_pause_sec);
@@ -9142,16 +9153,19 @@ if ($function == 'agent_stats_export')
 						$avg_pause_sec =	sec_convert($avg_pause_sec,$time_format);
 						$cust_sec =			sec_convert($cust_sec,$time_format);
 						$wait_sec =			sec_convert($wait_sec,$time_format);
+						$talk_sec =			sec_convert($talk_sec,$time_format);
+						$dead_sec =			sec_convert($dead_sec,$time_format);
+						$dispo_sec =		sec_convert($dispo_sec,$time_format);
 						$avg_cust_sec =		sec_convert($avg_cust_sec,$time_format);
 						$avg_wait_sec =		sec_convert($avg_wait_sec,$time_format);
 
 						if ($group_by_campaign == 'YES')
 							{
-							$output .= "$AScampaign[$k]$DL$ASuser[$k]$DL$ASfull_name[$k]$DL$ASuser_group[$k]$DL$AScalls[$k]$DL$login_sec$DL$cust_sec$DL$avg_cust_sec$DL$avg_wait_sec$DL$pct_of_queue%$DL$ASpause_sec[$k]$DL$ASsessions[$k]$DL$avg_session_sec$DL$ASpauses[$k]$DL$avg_pause_sec$DL$pct_pause%$DL$avg_pause_session$DL$wait_sec\n";
+							$output .= "$AScampaign[$k]$DL$ASuser[$k]$DL$ASfull_name[$k]$DL$ASuser_group[$k]$DL$AScalls[$k]$DL$login_sec$DL$cust_sec$DL$avg_cust_sec$DL$avg_wait_sec$DL$pct_of_queue%$DL$ASpause_sec[$k]$DL$ASsessions[$k]$DL$avg_session_sec$DL$ASpauses[$k]$DL$avg_pause_sec$DL$pct_pause%$DL$avg_pause_session$DL$wait_sec$DL$talk_sec$DL$dispo_sec$DL$dead_sec\n";
 							}
 						else
 							{
-							$output .= "$ASuser[$k]$DL$ASfull_name[$k]$DL$ASuser_group[$k]$DL$AScalls[$k]$DL$login_sec$DL$cust_sec$DL$avg_cust_sec$DL$avg_wait_sec$DL$pct_of_queue%$DL$ASpause_sec[$k]$DL$ASsessions[$k]$DL$avg_session_sec$DL$ASpauses[$k]$DL$avg_pause_sec$DL$pct_pause%$DL$avg_pause_session$DL$wait_sec\n";
+							$output .= "$ASuser[$k]$DL$ASfull_name[$k]$DL$ASuser_group[$k]$DL$AScalls[$k]$DL$login_sec$DL$cust_sec$DL$avg_cust_sec$DL$avg_wait_sec$DL$pct_of_queue%$DL$ASpause_sec[$k]$DL$ASsessions[$k]$DL$avg_session_sec$DL$ASpauses[$k]$DL$avg_pause_sec$DL$pct_pause%$DL$avg_pause_session$DL$wait_sec$DL$talk_sec$DL$dispo_sec$DL$dead_sec\n";
 							}
 						$k++;
 						}
