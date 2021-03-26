@@ -146,9 +146,10 @@
 # 201218-2054 - Added reset of vicidial_agent_dial_campaigns table
 # 210207-1200 - Added purging of vicidial_shared_log log entries
 # 210311-2229 - Added purging of old records from vicidial_two_factor_auth
+# 210325-2145 - Fix for -adfill-delay= CLI flag, Issue #1266
 #
 
-$build = '210311-2229';
+$build = '210325-2145';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -321,7 +322,7 @@ if (length($ARGV[0])>1)
 			}
 		if ($args =~ /-adfill-delay=/i) # CLI defined delay
 			{
-			@CLIvarADFARY = split(/-autodial-delay=/,$args);
+			@CLIvarADFARY = split(/-adfill-delay=/,$args);
 			@CLIvarADFARX = split(/ /,$CLIvarADFARY[1]);
 			if (length($CLIvarADFARX[0])>0)
 				{
