@@ -1,4 +1,4 @@
-WEB BROWSER JAVASCRIPT THROTTLING	Started: 2021-03-25	Updated: 2021-03-25
+WEB BROWSER JAVASCRIPT THROTTLING	Started: 2021-03-25	Updated: 2021-03-27
 
 
 
@@ -29,6 +29,7 @@ Below are the ways you can prevent Chrome's Intensive Javascript Throttling from
 2. Manually disable the Chrome throttling flag on each of your agent's web browsers
 3. Use a WebRTC phone for your agent phone connection(like VICIphone)
 4. Enable the VICIdial System Settings for "Agent Hidden Browser Sound"
+5. Switch the VICIdial System Setting for "Agent Screen Timer" to 'EventSource'
 
 
 More information on each of the above...
@@ -77,11 +78,26 @@ Adding this new feature also required us to add Agent Screen Visibility Logging 
 
 
 
+5. SWITCH THE VICIDIAL SYSTEM SETTING FOR "AGENT SCREEN TIMER" TO 'EventSource'
+
+Thanks to 'fperdomo' on the VICIdial Forums for posting a simple method using SSE to work-around the Chrome JavasScript Throttling issue by replacing the JavaScript "setTimeout()" with an "EventSource()" that runs once a second. After some fine-tuning and testing in different web browsers, we committed this as an optional System Setting called "Agent Screen Timer" to the VICIdial codebase in svn/trunk revision 3407. Since EventSource SSE uses open connection streaming over HTTP, some older networks and proxy servers may have problems handling the open connections, so be sure to test on your network before enabling during production times.
+
+
+
 
 
 THE FUTURE
 
 It looks like the maintainers of Chrome have every intention of increasing Javascript Throttling in the future, but hopefully they will leave the above methods for disabling it in place.
+
+
+Why not switch the VICIdial Agent Screen from AJAX(Polling) to using streaming server connections (SSE, Server-Sent-Events) like EventSource or WebSockets?
+
+First of all, switching to SSE would take a tremendous amount of development and testing time since none of the code is set to work like that currently.
+
+Second, this would require moving some of the data processing to the server, and it would require presistent connections to web services, which could greatly reduce webserver capacity.
+
+Third, some older networks and proxy servers do not support perpetual connections like SSE uses, which will cause the network to fail to transmit all data to the client workstation, so it is not a one-size-fits-all solution like AJAX has been for the last 16 years.
 
 
 

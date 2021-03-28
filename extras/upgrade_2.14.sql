@@ -1608,3 +1608,7 @@ UPDATE system_settings SET db_schema_version='1626',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_inbound_groups ADD populate_lead_comments VARCHAR(40) default 'CALLERID_NAME';
 
 UPDATE system_settings SET db_schema_version='1627',db_schema_update_date=NOW() where db_schema_version < 1627;
+
+ALTER TABLE system_settings ADD agent_screen_timer VARCHAR(20) default 'setTimeout';
+
+UPDATE system_settings SET db_schema_version='1628',db_schema_update_date=NOW() where db_schema_version < 1628;

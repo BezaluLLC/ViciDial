@@ -662,10 +662,11 @@
 # 210320-2348 - Added additional update_fields options: scriptreload,script2reload
 # 210322-1301 - Fixed issue with agent_hidden_sound
 # 210324-1604 - Added leave_3way_start_recording campaign options
+# 210327-2058 - Added system setting(agent_screen_timer) for selection of JavaScript timer: setTimeout or EventSource
 #
 
-$version = '2.14-630c';
-$build = '210324-1604';
+$version = '2.14-631c';
+$build = '210327-2058';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=95;
 $one_mysql_log=0;
@@ -786,7 +787,7 @@ if ($sl_ct > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script,agent_push_events,agent_push_url,agent_logout_link,agentonly_callback_campaign_lock,manual_dial_validation,mute_recordings,enable_second_script,enable_first_webform,recording_buttons,outbound_cid_any,browser_call_alerts,manual_dial_phone_strip,require_password_length,pass_hash_enabled,agent_hidden_sound_seconds,agent_hidden_sound,agent_hidden_sound_volume FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script,agent_push_events,agent_push_url,agent_logout_link,agentonly_callback_campaign_lock,manual_dial_validation,mute_recordings,enable_second_script,enable_first_webform,recording_buttons,outbound_cid_any,browser_call_alerts,manual_dial_phone_strip,require_password_length,pass_hash_enabled,agent_hidden_sound_seconds,agent_hidden_sound,agent_hidden_sound_volume,agent_screen_timer FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 if ($DB) {echo "$stmt\n";}
@@ -843,6 +844,7 @@ if ($qm_conf_ct > 0)
 	$SSagent_hidden_sound_seconds =		$row[46];
 	$SSagent_hidden_sound =				$row[47];
 	$SSagent_hidden_sound_volume =		$row[48];
+	$SSagent_screen_timer =				$row[49];
 	if ( ($SSagent_hidden_sound == '---NONE---') or ($SSagent_hidden_sound == '') ) {$SSagent_hidden_sound_seconds=0;}
 	}
 else
@@ -4594,6 +4596,7 @@ $CCAL_OUT .= "</table>";
 	<script language="Javascript">
 	
 	var needToConfirmExit = true;
+	var source = null;
 	var MTvar;
 	var NOW_TIME = '<?php echo $NOW_TIME ?>';
 	var SQLdate = '<?php echo $NOW_TIME ?>';
@@ -20010,7 +20013,51 @@ function phone_number_format(formatphone) {
 					}
 				}
 			}
-		setTimeout("all_refresh()", refresh_interval);
+		<?php
+		### Selection of JavaScript timer, either EventSource() or setTimeout()
+		if ($SSagent_screen_timer == 'EventSource')
+			{
+		?>
+
+		if(typeof(EventSource) !== "undefined") 
+			{
+			if (!source) 
+				{
+				if (refresh_interval < 7300000)
+					{
+					source = new EventSource("sse.php?refresh_interval=" + refresh_interval);
+					source.onmessage = function(event) 
+						{
+						if (refresh_interval < 7300000)
+							{
+							//console.log('event', event);
+							all_refresh();
+							}
+						else
+							{
+							console.log('Logout, connection closed 1');
+							source.close();
+							}
+						};
+					}
+				else
+					{
+					console.log('Logout, connection closed 2');
+					}
+				}
+			}
+		else 
+			{
+			setTimeout("all_refresh()", refresh_interval);
+			}
+		<?php 
+			}
+		else
+			{
+			echo "\n		setTimeout(\"all_refresh()\", refresh_interval);\n";
+			}
+		?>
+
 		}
 	function all_refresh()
 		{
