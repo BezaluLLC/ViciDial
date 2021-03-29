@@ -170,10 +170,11 @@
 # 210320-2127 - Added 'custom_fields_add' option for update_list function
 # 210322-1218 - Added display of bad wav file formats on sounds_list function
 # 210325-2042 - Added more data output fields to agent_stats_export function
+# 210328-2140 - Added more variable filtering
 #
 
-$version = '2.14-147';
-$build = '210325-2042';
+$version = '2.14-148';
+$build = '210328-2140';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -5164,6 +5165,7 @@ if ($function == 'server_refresh')
 ################################################################################
 if ($function == 'update_list')
 	{
+	$list_id = preg_replace('/[^0-9]/','',$list_id);
 	if(strlen($source)<2)
 		{
 		$result = 'ERROR';
@@ -6407,6 +6409,7 @@ if ($function == 'list_custom_fields')
 ################################################################################
 if ($function == 'add_list')
 	{
+	$list_id = preg_replace('/[^0-9]/','',$list_id);
 	if(strlen($source)<2)
 		{
 		$result = 'ERROR';
