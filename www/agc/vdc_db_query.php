@@ -502,10 +502,11 @@
 # 210309-2343 - Small change to Fake-call-logging in QM for some queuemetrics_pausereason settings
 # 210315-2105 - Added CALLBACK manual dial filter option
 # 210324-1606 - Added leave_3way_start_recording campaign options
+# 210329-1515 - Fix for issue on transfer list user fullname having an underscore
 #
 
-$version = '2.14-395';
-$build = '210324-1606';
+$version = '2.14-396';
+$build = '210329-1515';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=850;
@@ -16594,7 +16595,7 @@ if ($ACTION == 'AGENTSview')
 
 		if ($comments=='AgentXferViewSelect') 
 			{
-			$AXVSuserORDER[$j] =	"$full_name$US$j";
+			$AXVSuserORDER[$j] =	$full_name.'____________________'.$j;
 			$AXVSuser[$j] =			$user;
 			$AXVSfull_name[$j] =	$full_name;
 			$AXVScall_time[$j] =	$call_time;
@@ -16631,7 +16632,7 @@ if ($ACTION == 'AGENTSview')
 
 			if ($comments=='AgentXferViewSelect') 
 				{
-				$AXVSuserORDER[$j] =	"$full_name$US$j";
+				$AXVSuserORDER[$j] =	$full_name.'____________________'.$j;
 				$AXVSuser[$j] =			$user;
 				$AXVSfull_name[$j] =	$full_name;
 				$AXVScall_time[$j] =	'0:00';
@@ -16671,7 +16672,7 @@ if ($ACTION == 'AGENTSview')
 		sort($AXVSuserORDER);
 		while ($j > $k)
 			{
-			$order_split = explode("_",$AXVSuserORDER[$k]);
+			$order_split = explode('____________________',$AXVSuserORDER[$k]);
 			$i = $order_split[1];
 
 			echo "<TR BGCOLOR=\"$AXVSstatuscolor[$i]\"><TD><font style=\"font-size: $AXVSfontsize; font-family: sans-serif;\"> &nbsp; <a href=\"#\" onclick=\"AgentsXferSelect('$AXVSuser[$i]','AgentXferViewSelect');return false;\">$AXVSuser[$i] - $AXVSfull_name[$i]</a>&nbsp;</font></TD>";
