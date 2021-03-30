@@ -171,10 +171,11 @@
 # 210322-1218 - Added display of bad wav file formats on sounds_list function
 # 210325-2042 - Added more data output fields to agent_stats_export function
 # 210328-2140 - Added more variable filtering
+# 210329-2016 - Fixed for consistent custom fields values filtering
 #
 
-$version = '2.14-148';
-$build = '210328-2140';
+$version = '2.14-149';
+$build = '210329-2016';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -678,7 +679,6 @@ if ($non_latin < 1)
 	$pass=preg_replace('/[^-_0-9a-zA-Z]/','',$pass);
 	$function = preg_replace('/[^-\_0-9a-zA-Z]/', '',$function);
 	$format = preg_replace('/[^0-9a-zA-Z]/','',$format);
-	$list_id = preg_replace('/[^-_0-9a-zA-Z]/','',$list_id);
 	$entry_list_id = preg_replace('/[^0-9]/','',$entry_list_id);
 	$phone_code = preg_replace('/[^0-9]/','',$phone_code);
 	$update_phone_number=preg_replace('/[^A-Z]/','',$update_phone_number);
@@ -741,8 +741,6 @@ if ($non_latin < 1)
 	$records = preg_replace('/[^0-9]/','',$records);
 	$search_location = preg_replace('/[^A-Z]/','',$search_location);
 	$user_field = preg_replace('/[^-_0-9a-zA-Z]/','',$user_field);
-	$list_id_field = preg_replace('/[^0-9]/','',$list_id_field);
-	$lead_id = preg_replace('/[^0-9]/','',$lead_id);
 	$no_update = preg_replace('/[^A-Z]/','',$no_update);
 	$delete_lead = preg_replace('/[^A-Z]/','',$delete_lead);
 	$called_count=preg_replace('/[^0-9]/','',$called_count);
@@ -901,6 +899,9 @@ else
 	$source_user = preg_replace("/'|\"|\\\\|;|#/","",$source_user);
 	$menu_id = preg_replace("/'|\"|\\\\|;|#/",'',$menu_id);
 	}
+$list_id = preg_replace('/[^-_0-9a-zA-Z]/','',$list_id);
+$list_id_field = preg_replace('/[^0-9]/','',$list_id_field);
+$lead_id = preg_replace('/[^0-9]/','',$lead_id);
 $list_exists_check = preg_replace('/[^0-9a-zA-Z]/','',$list_exists_check);
 $use_internal_webserver = preg_replace('/[^0-9a-zA-Z]/','',$use_internal_webserver);
 $field_rerank = preg_replace('/[^_0-9a-zA-Z]/','',$field_rerank);
@@ -11753,6 +11754,7 @@ if ($function == 'update_log_entry')
 ################################################################################
 if ($function == 'add_lead')
 	{
+	$list_id = preg_replace('/[^0-9]/','',$list_id);
 	if(strlen($source)<2)
 		{
 		$result = 'ERROR';
@@ -12343,6 +12345,7 @@ if ($function == 'add_lead')
 									$form_field_value = preg_replace("/\+/"," ",$form_field_value);
 									$form_field_value = preg_replace("/;|\"/","",$form_field_value);
 									$form_field_value = preg_replace("/\\b/","",$form_field_value);
+									$form_field_value = preg_replace("/\\\\$/","",$form_field_value);
 									$A_field_value[$o] = $form_field_value;
 
 									if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
@@ -12596,6 +12599,7 @@ if ($function == 'add_lead')
 ################################################################################
 if ($function == 'update_lead')
 	{
+	$list_id = preg_replace('/[^0-9]/','',$list_id);
 	if(strlen($source)<2)
 		{
 		$result = 'ERROR';
@@ -13137,6 +13141,7 @@ if ($function == 'update_lead')
 												$form_field_value = preg_replace("/\+/"," ",$form_field_value);
 												$form_field_value = preg_replace("/;|\"/","",$form_field_value);
 												$form_field_value = preg_replace("/\\b/","",$form_field_value);
+												$form_field_value = preg_replace("/\\\\$/","",$form_field_value);
 												$A_field_value[$o] = $form_field_value;
 												$update_this_field++;
 												}
@@ -13370,8 +13375,9 @@ if ($function == 'update_lead')
 														elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
 
 													$form_field_value = preg_replace("/\+/"," ",$form_field_value);
-													$form_field_value = preg_replace("/\'/","",$form_field_value);
+													$form_field_value = preg_replace("/;|\"/","",$form_field_value);
 													$form_field_value = preg_replace("/\\b/","",$form_field_value);
+													$form_field_value = preg_replace("/\\\\$/","",$form_field_value);
 													$A_field_value[$o] = $form_field_value;
 
 													if ( ($A_field_type[$o]=='DISPLAY') or ($A_field_type[$o]=='SCRIPT') )
@@ -13400,7 +13406,7 @@ if ($function == 'update_lead')
 															else
 																{$A_field_valueSQL[$o] = $A_field_value[$o];}
 
-															$CFinsert_SQL .= "$A_field_label[$o]='$A_field_valueSQL[$o]',";
+															$CFinsert_SQL .= "$A_field_label[$o]=\"$A_field_valueSQL[$o]\",";
 															}
 														}
 													$o++;

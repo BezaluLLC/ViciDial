@@ -49,10 +49,11 @@
 # 210304-1612 - Added READONLY submit_button option
 # 210310-1115 - Added BUTTON field type with SubmitRefresh function
 # 210315-1747 - Added campaign setting for clear_form
+# 210329-2025 - Fixed for consistent custom fields values filtering
 #
 
-$version = '2.14-39';
-$build = '210315-1747';
+$version = '2.14-40';
+$build = '210329-2025';
 $php_script = 'vdc_form_display.php';
 
 require_once("dbconnect_mysqli.php");
@@ -442,7 +443,8 @@ if ($stage=='SUBMIT')
 			if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
 				elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
 			$form_field_value = preg_replace("/\"/","",$form_field_value);	// remove double-quote
-			$form_field_value = preg_replace("/\\b/","",$form_field_value);	// remove backslashes
+			$form_field_value = preg_replace("/\\b/","",$form_field_value);	// remove backspaces
+			$form_field_value = preg_replace("/\\\\$/","",$form_field_value);	// remove end backslashes
 
 			if ( ($A_field_type[$o]=='MULTI') or ($A_field_type[$o]=='CHECKBOX') or ($A_field_type[$o]=='RADIO') )
 				{
@@ -464,6 +466,8 @@ if ($stage=='SUBMIT')
 					elseif (isset($_POST["MINUTE_$field_name_id"]))	{$form_field_valueM=$_POST["MINUTE_$field_name_id"];}
 				if (isset($_GET["HOUR_$field_name_id"]))			{$form_field_valueH=$_GET["HOUR_$field_name_id"];}
 					elseif (isset($_POST["HOUR_$field_name_id"]))	{$form_field_valueH=$_POST["HOUR_$field_name_id"];}
+				$form_field_valueH = preg_replace('/[^0-9]/','',$form_field_valueH);
+				$form_field_valueM = preg_replace('/[^0-9]/','',$form_field_valueM);
 				$form_field_value = "$form_field_valueH:$form_field_valueM:00";
 				}
 
