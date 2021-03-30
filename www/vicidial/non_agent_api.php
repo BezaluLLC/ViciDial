@@ -172,10 +172,11 @@
 # 210325-2042 - Added more data output fields to agent_stats_export function
 # 210328-2140 - Added more variable filtering
 # 210329-2016 - Fixed for consistent custom fields values filtering
+# 210330-1633 - Added ability to use custom_fields_copy on update_list on a deleted list_id
 #
 
-$version = '2.14-149';
-$build = '210329-2016';
+$version = '2.14-150';
+$build = '210330-1633';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -5246,7 +5247,7 @@ if ($function == 'update_list')
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$row=mysqli_fetch_row($rslt);
 				$list_exists=$row[0];
-				if ( ($list_exists < 1) and ($custom_fields_add != 'Y') )
+				if ( ($list_exists < 1) and ($custom_fields_add != 'Y') and ( (strlen($custom_fields_copy) < 1) or (strlen($custom_fields_copy) > 14) ) )
 					{
 					if ($insert_if_not_found == 'Y')
 						{

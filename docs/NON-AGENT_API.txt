@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-03-25
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-03-30
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -182,6 +182,7 @@ Changes:
 210320-2127 - Added 'custom_fields_add' option for update_list function
 210322-1218 - Added display of bad wav file formats on sounds_list function
 210325-2042 - Added more data output fields to agent_stats_export function
+210330-1633 - Added ability to use custom_fields_copy on update_list on a deleted list_id
 
 API Functions use the 'function' variable
 
