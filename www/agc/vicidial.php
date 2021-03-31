@@ -663,10 +663,11 @@
 # 210322-1301 - Fixed issue with agent_hidden_sound
 # 210324-1604 - Added leave_3way_start_recording campaign options
 # 210327-2058 - Added system setting(agent_screen_timer) for selection of JavaScript timer: setTimeout or EventSource
+# 210330-2254 - Fixed issues with dashes as custom fields values throwing off delimiters
 #
 
-$version = '2.14-631c';
-$build = '210327-2058';
+$version = '2.14-632c';
+$build = '210330-2254';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=95;
 $one_mysql_log=0;
@@ -17151,7 +17152,7 @@ else
 		if (custom_field_names.length > 2)
 			{
 			var CFN_array=custom_field_names.split('|');
-			var CFV_array=custom_field_values.split('----------');
+			var CFV_array=custom_field_values.split('q--------q');
 			var CFT_array=custom_field_types.split('|');
 			var CFN_count=CFN_array.length;
 			var CFN_tick=0;
