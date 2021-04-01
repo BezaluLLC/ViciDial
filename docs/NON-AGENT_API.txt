@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-03-30
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-04-01
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -183,6 +183,7 @@ Changes:
 210322-1218 - Added display of bad wav file formats on sounds_list function
 210325-2042 - Added more data output fields to agent_stats_export function
 210330-1633 - Added ability to use custom_fields_copy on update_list on a deleted list_id
+210401-1058 - Added 'custom_fields_update' option for update_list function
 
 API Functions use the 'function' variable
 
@@ -1743,7 +1744,7 @@ custom_fields_add -	Must be one of these: 'Y','N', will default to 'N'. The fiel
 	field_rerank -		If there is an existing field of the same rank, move the existing ones down the list, 'YES','NO' default is 'NO'
 	field_max -		The maximum size of data allowed in the field
 	field_default -		The default value of the field
-	field_options -		The field options for this field
+	field_options -		The field options for this field, If not POSTing variables, to start a new line, use '%0A', for a pipe '|' use '%7C'
 	field_duplicate -	If this is a duplicate of another existing field for this list ID: 'Y','N' default is 'N'
 	field_description -	Description of the field
 	field_help -		The help text for this field as it appears to the agent in the custom form
@@ -1752,6 +1753,9 @@ custom_fields_add -	Must be one of these: 'Y','N', will default to 'N'. The fiel
 	name_position -		The position of the name of the field: 'TOP','LEFT' default is 'LEFT'
 	field_encrypt -		If this is to be an encrypted field(a VICIhost-only feature, if enabled): 'Y','N' default is 'N'
 	field_show_hide -	If the field is to be hidden(a VICIhost-only feature, if enabled): 'DISABLED','X_OUT_ALL','LAST_1','LAST_2','LAST_3','LAST_4','FIRST_1_LAST_4'
+custom_fields_update -	Must be one of these: 'Y','N', will default to 'N'. The fields shown above are all optional except for 'field_label' which is required for this to work
+	* For 'custom_fields_update' only, you can set the following fields to '--BLANK--' to have them changed to an empty '' value:
+		field_description, $field_help, $field_options, $field_default
 
 NOTES: 
  - in order to set a field to empty('') set it equal to --BLANK--, i.e. "&drop_inbound_group=--BLANK--"
@@ -1768,6 +1772,8 @@ http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&functio
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_list&list_id=1102&campaign_id=ASTRICON
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_list&list_id=99883&custom_copy_method=APPEND&custom_fields_copy=9988
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_list&list_id=9988&custom_fields_add=Y&field_label=new_api_field4&field_name=new+API+field4&field_size=20&field_type=TEXT&field_rank=16
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_list&list_id=9988&custom_fields_update=Y&field_label=Utility&field_options=1,1_1_hello%0A2,2_2_hello%0A3,3_3_hello
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_list&list_id=9988&custom_fields_update=Y&field_label=bill_period3&field_options=source=%3Ebill_start_month3%0Avalue=%3ESeptember%0Aoption=%3E%7Cselect%20bill-period-1%0Aoption=%3E1_month%7C1%20Month%0Aoption=%3E2_months%7C2%20Months%0Aoption=%3E3_months%7C3%20Months%0Avalue=%3E%0Aoption=%3E%7Cno%20match
 
 Example responses:
 ERROR: update_list USER DOES NOT HAVE PERMISSION TO UPDATE LISTS - 6666
@@ -1806,6 +1812,9 @@ NOTICE: update_list COPY CUSTOM FIELDS COMMAND SENT - 6666|1101|APPEND|ERROR: Fi
 NOTICE: update_list COPY CUSTOM FIELDS COMMAND SENT - 6666|1101|APPEND|SUCCESS: Fields copied|
 NOTICE: update_list CUSTOM FIELDS LIST ID TO ADD TO HAS NO CUSTOM FIELDS, THIS IS AN OPTIONAL FIELD - 6666|1101
 NOTICE: update_list REQUIRED CUSTOM FIELDS VARIABLES ARE MISSING, FIELD NOT ADDED, THIS IS AN OPTIONAL FIELD - 6666|1101||||||
+NOTICE: update_list CUSTOM FIELDS LIST ID TO UPDATE TO HAS NO CUSTOM FIELDS, THIS IS AN OPTIONAL FIELD - 6666|1101||||||
+NOTICE: update_list REQUIRED CUSTOM FIELDS VARIABLES ARE MISSING, FIELD NOT UPDATED, THIS IS AN OPTIONAL FIELD - 6666|1101|||
+NOTICE: update_list FIELD DOES NOT EXIST, FIELD NOT UPDATED, THIS IS AN OPTIONAL FIELD - 6666|1101|abc|||||
 NOTICE: update_list ADD CUSTOM FIELD COMMAND SENT - 6666|1101|new_field|TEXT|ERROR: Field not added|
 NOTICE: update_list ADD CUSTOM FIELD COMMAND SENT - 6666|1101|new_field|TEXT|SUCCESS: Field added|
 

@@ -173,10 +173,11 @@
 # 210328-2140 - Added more variable filtering
 # 210329-2016 - Fixed for consistent custom fields values filtering
 # 210330-1633 - Added ability to use custom_fields_copy on update_list on a deleted list_id
+# 210401-1058 - Added 'custom_fields_update' option for update_list function
 #
 
-$version = '2.14-150';
-$build = '210330-1633';
+$version = '2.14-151';
+$build = '210401-1058';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -631,7 +632,8 @@ if (isset($_GET["field_rerank"]))				{$field_rerank=$_GET["field_rerank"];}
 	elseif (isset($_POST["field_rerank"]))		{$field_rerank=$_POST["field_rerank"];}
 if (isset($_GET["custom_fields_add"]))				{$custom_fields_add=$_GET["custom_fields_add"];}
 	elseif (isset($_POST["custom_fields_add"]))		{$custom_fields_add=$_POST["custom_fields_add"];}
-
+if (isset($_GET["custom_fields_update"]))			{$custom_fields_update=$_GET["custom_fields_update"];}
+	elseif (isset($_POST["custom_fields_update"]))	{$custom_fields_update=$_POST["custom_fields_update"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -907,6 +909,7 @@ $list_exists_check = preg_replace('/[^0-9a-zA-Z]/','',$list_exists_check);
 $use_internal_webserver = preg_replace('/[^0-9a-zA-Z]/','',$use_internal_webserver);
 $field_rerank = preg_replace('/[^_0-9a-zA-Z]/','',$field_rerank);
 $custom_fields_add = preg_replace('/[^_0-9a-zA-Z]/','',$custom_fields_add);
+$custom_fields_update = preg_replace('/[^_0-9a-zA-Z]/','',$custom_fields_update);
 
 $USarea = 			substr($phone_number, 0, 3);
 $USprefix = 		substr($phone_number, 3, 3);
@@ -5247,7 +5250,7 @@ if ($function == 'update_list')
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$row=mysqli_fetch_row($rslt);
 				$list_exists=$row[0];
-				if ( ($list_exists < 1) and ($custom_fields_add != 'Y') and ( (strlen($custom_fields_copy) < 1) or (strlen($custom_fields_copy) > 14) ) )
+				if ( ($list_exists < 1) and ($custom_fields_add != 'Y') and ($custom_fields_update != 'Y') and ( (strlen($custom_fields_copy) < 1) or (strlen($custom_fields_copy) > 14) ) )
 					{
 					if ($insert_if_not_found == 'Y')
 						{
@@ -5375,6 +5378,161 @@ if ($function == 'update_list')
 							}
 						}
 					### END 'custom_fields_add' section
+
+
+					### BEGIN 'custom_fields_update' section
+					if ($custom_fields_update == 'Y')
+						{
+						$update_custom_fields_trigger=0;
+
+						if ($list_exists < 1)
+							{
+							$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$row=mysqli_fetch_row($rslt);
+							$list_exists=$row[0];
+							if ($DB>0) {echo "$list_exists|$stmt|\n";}
+							if ($list_exists < 1)
+								{
+								$result = 'NOTICE';
+								$result_reason = "update_list CUSTOM FIELDS LIST ID TO UPDATE TO HAS NO CUSTOM FIELDS, THIS IS AN OPTIONAL FIELD";
+								$data = "$list_id|$list_exists";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								}
+							}
+						if ($list_exists > 0)
+							{
+							$stmt="SELECT count(*) from vicidial_users where user='$user' and custom_fields_modify='1';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$row=mysqli_fetch_row($rslt);
+							$custom_fields_modify_exists=$row[0];
+							if ($DB>0) {echo "$custom_fields_modify_exists|$stmt|\n";}
+							if ($custom_fields_modify_exists < 1)
+								{
+								$result = 'NOTICE';
+								$result_reason = "update_list USER DOES NOT HAVE PERMISSION TO MODIFY CUSTOM FIELDS, THIS IS AN OPTIONAL FIELD";
+								$data = "$list_id|$custom_fields_copy|$custom_fields_modify_exists";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								}
+							else
+								{
+								if ($DB>0) {echo "Update custom field triggered|$update_custom_fields_trigger|\n";}
+								$update_custom_fields_trigger++;
+								}
+							}
+
+						if ( ($update_custom_fields_trigger > 0) and (strlen($list_id) > 1) )
+							{
+							if (strlen($field_label) < 1)
+								{
+								$result = 'NOTICE';
+								$result_reason = "update_list REQUIRED CUSTOM FIELDS VARIABLES ARE MISSING, FIELD NOT UPDATED, THIS IS AN OPTIONAL FIELD";
+								$data = "$list_id|$field_label|";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								}
+							else
+								{
+								# Gather existing settings for this custom field
+								$stmt="SELECT field_id,field_label,field_name,field_description,field_rank,field_help,field_type,field_options,field_size,field_max,field_default,field_cost,field_required,multi_position,name_position,field_order,field_encrypt,field_show_hide,field_duplicate from vicidial_lists_fields where list_id='$list_id' and field_label='$field_label';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								$fields_to_print = mysqli_num_rows($rslt);
+								if ($fields_to_print < 1) 
+									{
+									$result = 'NOTICE';
+									$result_reason = "update_list FIELD DOES NOT EXIST, FIELD NOT UPDATED, THIS IS AN OPTIONAL FIELD";
+									$data = "$list_id|$field_label|$field_name|$field_size|$field_type|$field_rank|";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									}
+								else
+									{
+									$rowx=mysqli_fetch_row($rslt);
+									$A_field_id =			$rowx[0];
+									$A_field_label =		$rowx[1];
+									$A_field_name =			$rowx[2];
+									$A_field_description =	$rowx[3];
+									$A_field_rank =			$rowx[4];
+									$A_field_help =			$rowx[5];
+									$A_field_type =			$rowx[6];
+									$A_field_options =		$rowx[7];
+									$A_field_size =			$rowx[8];
+									$A_field_max =			$rowx[9];
+									$A_field_default =		$rowx[10];
+									$A_field_required =		$rowx[12];
+									$A_multi_position =		$rowx[13];
+									$A_name_position =		$rowx[14];
+									$A_field_order =		$rowx[15];
+									$A_field_encrypt =		$rowx[16];
+									$A_field_show_hide =	$rowx[17];
+									$A_field_duplicate =	$rowx[18];
+
+									### BEGIN update custom fields ###
+
+									if (!preg_match("/^TOP$|^LEFT$/",$name_position)) {$name_position = $A_name_position;}
+									if (!preg_match("/^HORIZONTAL$|^VERTICAL$/",$multi_position)) {$multi_position = $A_multi_position;}
+									if (!preg_match("/^Y$|^N$/",$field_required)) {$field_required = $A_field_required;}
+									if (!preg_match("/^Y$|^N$/",$field_duplicate)) {$field_duplicate = $A_field_duplicate;}
+									if (!preg_match("/^YES$|^NO$/",$field_rerank)) {$field_rerank = 'NO';}
+									if (!preg_match("/^Y$|^N$/",$field_encrypt)) {$field_encrypt = $A_field_encrypt;}
+									if (!preg_match("/^DISABLED$|^X_OUT_ALL$|LAST_1|LAST_2|LAST_3|LAST_4|FIRST_1_LAST_4/",$field_show_hide)) {$field_show_hide = $A_field_show_hide;}
+									if (strlen($field_name) < 1) {$field_name = $A_field_name;}
+									if (strlen($field_description) < 1) {$field_description = $A_field_description;}
+									if (strlen($field_rank) < 1) {$field_rank = $A_field_rank;}
+									if (strlen($field_help) < 1) {$field_help = $A_field_help;}
+									if (strlen($field_type) < 1) {$field_type = $A_field_type;}
+									if (strlen($field_options) < 1) {$field_options = $A_field_options;}
+									if (strlen($field_size) < 1) {$field_size = $A_field_size;}
+									if (strlen($field_max) < 1) {$field_max = $A_field_max;}
+									if (strlen($field_default) < 1) {$field_default = $A_field_default;}
+									if (strlen($field_order) < 1) {$field_order = $A_field_order;}
+									if ($field_description == '--BLANK--') {$field_description = '';}
+									if ($field_help == '--BLANK--') {$field_help = '';}
+									if ($field_options == '--BLANK--') {$field_options = '';}
+									if ($field_default == '--BLANK--') {$field_default = '';}
+
+									$admin_lists_custom = 'admin_lists_custom.php';
+									$temp_webserver = (isset($_SERVER['HTTPS']) ? 's' : '') . "://$_SERVER[HTTP_HOST]";
+									if ($use_internal_webserver == 'Y') {$temp_webserver = "://$SSsounds_web_server";}
+									$url = "http$temp_webserver/$SSadmin_web_directory/" . $admin_lists_custom;
+									$url_post_fields = "action=MODIFY_CUSTOM_FIELD_SUBMIT&list_id=$list_id&field_id=$A_field_id&field_label=$field_label&field_name=$field_name&field_size=$field_size&field_type=$field_type&field_rank=$field_rank&field_order=$field_order&field_rerank=$field_rerank&field_max=$field_max&field_default=$field_default&field_options=$field_options&field_duplicate=$field_duplicate&field_description=$field_description&field_help=$field_help&field_required=$field_required&multi_position=$multi_position&name_position=$name_position&field_encrypt=$field_encrypt&field_show_hide=$field_show_hide";
+
+									if ($DB>0) {echo "Update custom fields url|$url|$url_post_fields|\n";}
+									# use cURL to call the copy custom fields code
+									$curl = curl_init();
+									
+									# Set some options - we are passing in a useragent too here
+									curl_setopt_array($curl, array(
+										CURLOPT_RETURNTRANSFER => 1,
+										CURLOPT_URL => $url,
+										CURLOPT_USERPWD => "$user:$pass",
+										CURLOPT_USERAGENT => 'non_agent_api.php',
+										CURLOPT_POST => 1,
+										CURLOPT_POSTFIELDS => "$url_post_fields"
+									));
+									
+									# Send the request & save response to $resp
+									$resp = curl_exec($curl);
+									$temp_response = 'NONE';
+									if (preg_match('/ERROR:/',$resp)) {$temp_response = 'ERROR: Field not updated';}
+									if (preg_match('/SUCCESS:/',$resp)) {$temp_response = 'SUCCESS: Field updated';}
+									
+									# Close request to clear up some resources
+									curl_close($curl);
+									### END copy custom fields ###
+
+									$result = 'NOTICE';
+									$result_reason = "update_list UPDATE CUSTOM FIELD COMMAND SENT";
+									$data = "$list_id|$field_label|$field_type|$temp_response|";
+									echo "$result: $result_reason - $user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									}
+								}
+							}
+						}
+					### END 'custom_fields_update' section
 
 					$campaignSQL='';
 					$scriptSQL='';
