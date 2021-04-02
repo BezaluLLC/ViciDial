@@ -52,6 +52,7 @@
 # 210211-0145 - Added SOURCESELECT field type, added basic Math equations to SCRIPT custom field types
 # 210211-1916 - Disable SCRIPT custom fields Math functions on older PHP versions
 # 210310-1322 - Added BUTTON field type
+# 210401-2132 - Fixed issue #1271, security_phrase field not populating in custom fields form
 #
 
 # $mysql_queries = 26
@@ -786,7 +787,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 
 					if ($A_field_default[$o]=='NULL') {$A_field_default[$o]='';}
 					if (strlen($A_field_value[$o]) < 1) {$A_field_value[$o] = $A_field_default[$o];}
-					$field_HTML .= "<input type=text size=$A_field_size[$o] maxlength=$A_field_max[$o] name=$A_field_label[$o] id=$A_field_label[$o] value=\""._QXZ("$A_field_value[$o]")."\" $change_trigger>\n";
+					$field_HTML .= "<input type=text size=$A_field_size[$o] maxlength=$A_field_max[$o] name=$A_field_label[$o] id=$A_field_label[$o] value=\"$A_field_value[$o]\" $change_trigger>\n";
 					if ( ($A_field_required[$o] == 'Y') or ( ($A_field_required[$o] == 'INBOUND_ONLY') and (preg_match("/^Y\d\d\d\d\d\d\d/",$call_id)) ) )
 						{$custom_required_fields .= "$A_field_label[$o]|";}
 					}
@@ -1191,7 +1192,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 			$date_of_birth		= trim($row[25]);
 			$alt_phone			= trim($row[26]);
 			$email				= trim($row[27]);
-			$security			= trim($row[28]);
+			$security_phrase	= trim($row[28]);
 			$comments			= trim($row[29]);
 			$called_count		= trim($row[30]);
 			$rank				= trim($row[32]);
