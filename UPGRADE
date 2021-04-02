@@ -614,6 +614,9 @@ OTHER CHANGES:
 	how the 'comments' lead field is filled-in when a new lead is inserted
 	because of an inbound phone call.
 
+172. Added options to add/update/delete custom fields within the 'update_list'
+	function of the Non-Agent API.
+
 
 
 

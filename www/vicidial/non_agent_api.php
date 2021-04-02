@@ -174,10 +174,11 @@
 # 210329-2016 - Fixed for consistent custom fields values filtering
 # 210330-1633 - Added ability to use custom_fields_copy on update_list on a deleted list_id
 # 210401-1058 - Added 'custom_fields_update' option for update_list function
+# 210402-1102 - Added 'custom_fields_delete' option for update_list function
 #
 
-$version = '2.14-151';
-$build = '210401-1058';
+$version = '2.14-152';
+$build = '210402-1102';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -634,6 +635,8 @@ if (isset($_GET["custom_fields_add"]))				{$custom_fields_add=$_GET["custom_fiel
 	elseif (isset($_POST["custom_fields_add"]))		{$custom_fields_add=$_POST["custom_fields_add"];}
 if (isset($_GET["custom_fields_update"]))			{$custom_fields_update=$_GET["custom_fields_update"];}
 	elseif (isset($_POST["custom_fields_update"]))	{$custom_fields_update=$_POST["custom_fields_update"];}
+if (isset($_GET["custom_fields_delete"]))			{$custom_fields_delete=$_GET["custom_fields_delete"];}
+	elseif (isset($_POST["custom_fields_delete"]))	{$custom_fields_delete=$_POST["custom_fields_delete"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -910,6 +913,7 @@ $use_internal_webserver = preg_replace('/[^0-9a-zA-Z]/','',$use_internal_webserv
 $field_rerank = preg_replace('/[^_0-9a-zA-Z]/','',$field_rerank);
 $custom_fields_add = preg_replace('/[^_0-9a-zA-Z]/','',$custom_fields_add);
 $custom_fields_update = preg_replace('/[^_0-9a-zA-Z]/','',$custom_fields_update);
+$custom_fields_delete = preg_replace('/[^_0-9a-zA-Z]/','',$custom_fields_delete);
 
 $USarea = 			substr($phone_number, 0, 3);
 $USprefix = 		substr($phone_number, 3, 3);
@@ -5250,7 +5254,7 @@ if ($function == 'update_list')
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$row=mysqli_fetch_row($rslt);
 				$list_exists=$row[0];
-				if ( ($list_exists < 1) and ($custom_fields_add != 'Y') and ($custom_fields_update != 'Y') and ( (strlen($custom_fields_copy) < 1) or (strlen($custom_fields_copy) > 14) ) )
+				if ( ($list_exists < 1) and ($custom_fields_add != 'Y') and ($custom_fields_update != 'Y') and ($custom_fields_delete != 'Y') and ( (strlen($custom_fields_copy) < 1) or (strlen($custom_fields_copy) > 14) ) )
 					{
 					if ($insert_if_not_found == 'Y')
 						{
@@ -5533,6 +5537,122 @@ if ($function == 'update_list')
 							}
 						}
 					### END 'custom_fields_update' section
+
+					### BEGIN 'custom_fields_delete' section
+					if ($custom_fields_delete == 'Y')
+						{
+						$delete_custom_fields_trigger=0;
+
+						if ($list_exists < 1)
+							{
+							$stmt="SELECT count(*) from vicidial_lists_fields where list_id='$list_id';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$row=mysqli_fetch_row($rslt);
+							$list_exists=$row[0];
+							if ($DB>0) {echo "$list_exists|$stmt|\n";}
+							if ($list_exists < 1)
+								{
+								$result = 'NOTICE';
+								$result_reason = "update_list CUSTOM FIELDS LIST ID TO DELETE TO HAS NO CUSTOM FIELDS, THIS IS AN OPTIONAL FIELD";
+								$data = "$list_id|$list_exists";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								}
+							}
+						if ($list_exists > 0)
+							{
+							$stmt="SELECT count(*) from vicidial_users where user='$user' and custom_fields_modify='1';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$row=mysqli_fetch_row($rslt);
+							$custom_fields_modify_exists=$row[0];
+							if ($DB>0) {echo "$custom_fields_modify_exists|$stmt|\n";}
+							if ($custom_fields_modify_exists < 1)
+								{
+								$result = 'NOTICE';
+								$result_reason = "update_list USER DOES NOT HAVE PERMISSION TO MODIFY CUSTOM FIELDS, THIS IS AN OPTIONAL FIELD";
+								$data = "$list_id|$custom_fields_copy|$custom_fields_modify_exists";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								}
+							else
+								{
+								if ($DB>0) {echo "Delete custom field triggered|$delete_custom_fields_trigger|\n";}
+								$delete_custom_fields_trigger++;
+								}
+							}
+
+						if ( ($delete_custom_fields_trigger > 0) and (strlen($list_id) > 1) )
+							{
+							if (strlen($field_label) < 1)
+								{
+								$result = 'NOTICE';
+								$result_reason = "update_list REQUIRED CUSTOM FIELDS VARIABLES ARE MISSING, FIELD NOT DELETED, THIS IS AN OPTIONAL FIELD";
+								$data = "$list_id|$field_label|";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								}
+							else
+								{
+								# Gather existing settings for this custom field
+								$stmt="SELECT field_id,field_label from vicidial_lists_fields where list_id='$list_id' and field_label='$field_label';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								$fields_to_print = mysqli_num_rows($rslt);
+								if ($fields_to_print < 1) 
+									{
+									$result = 'NOTICE';
+									$result_reason = "update_list FIELD DOES NOT EXIST, FIELD NOT DELETED, THIS IS AN OPTIONAL FIELD";
+									$data = "$list_id|$field_label|";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									}
+								else
+									{
+									$rowx=mysqli_fetch_row($rslt);
+									$A_field_id =			$rowx[0];
+									$A_field_label =		$rowx[1];
+
+									### BEGIN delete custom fields ###
+
+									$admin_lists_custom = 'admin_lists_custom.php';
+									$temp_webserver = (isset($_SERVER['HTTPS']) ? 's' : '') . "://$_SERVER[HTTP_HOST]";
+									if ($use_internal_webserver == 'Y') {$temp_webserver = "://$SSsounds_web_server";}
+									$url = "http$temp_webserver/$SSadmin_web_directory/" . $admin_lists_custom;
+									$url_post_fields = "action=DELETE_CUSTOM_FIELD&list_id=$list_id&field_id=$A_field_id&field_label=$field_label&ConFiRm=YES";
+
+									if ($DB>0) {echo "Delete custom fields url|$url|$url_post_fields|\n";}
+									# use cURL to call the copy custom fields code
+									$curl = curl_init();
+									
+									# Set some options - we are passing in a useragent too here
+									curl_setopt_array($curl, array(
+										CURLOPT_RETURNTRANSFER => 1,
+										CURLOPT_URL => $url,
+										CURLOPT_USERPWD => "$user:$pass",
+										CURLOPT_USERAGENT => 'non_agent_api.php',
+										CURLOPT_POST => 1,
+										CURLOPT_POSTFIELDS => "$url_post_fields"
+									));
+									
+									# Send the request & save response to $resp
+									$resp = curl_exec($curl);
+									$temp_response = 'NONE';
+									if (preg_match('/ERROR:/',$resp)) {$temp_response = 'ERROR: Field not deleted';}
+									if (preg_match('/SUCCESS:/',$resp)) {$temp_response = 'SUCCESS: Field deleted';}
+									
+									# Close request to clear up some resources
+									curl_close($curl);
+									### END copy custom fields ###
+
+									$result = 'NOTICE';
+									$result_reason = "update_list DELETE CUSTOM FIELD COMMAND SENT";
+									$data = "$list_id|$field_label|$field_id|$temp_response|";
+									echo "$result: $result_reason - $user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									}
+								}
+							}
+						}
+					### END 'custom_fields_delete' section
 
 					$campaignSQL='';
 					$scriptSQL='';
