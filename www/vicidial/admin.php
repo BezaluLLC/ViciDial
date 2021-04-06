@@ -2567,6 +2567,8 @@ if (isset($_GET["no_agent_delay"]))				{$no_agent_delay=$_GET["no_agent_delay"];
 	elseif (isset($_POST["no_agent_delay"]))	{$no_agent_delay=$_POST["no_agent_delay"];}
 if (isset($_GET["hopper_drop_run_trigger"]))			{$hopper_drop_run_trigger=$_GET["hopper_drop_run_trigger"];}
 	elseif (isset($_POST["hopper_drop_run_trigger"]))	{$hopper_drop_run_trigger=$_POST["hopper_drop_run_trigger"];}
+if (isset($_GET["hopper_drop_run_trigger_all"]))			{$hopper_drop_run_trigger_all=$_GET["hopper_drop_run_trigger_all"];}
+	elseif (isset($_POST["hopper_drop_run_trigger_all"]))	{$hopper_drop_run_trigger_all=$_POST["hopper_drop_run_trigger_all"];}
 if (isset($_GET["daily_call_count_limit"]))				{$daily_call_count_limit=$_GET["daily_call_count_limit"];}
 	elseif (isset($_POST["daily_call_count_limit"]))	{$daily_call_count_limit=$_POST["daily_call_count_limit"];}
 if (isset($_GET["daily_limit_manual"]))				{$daily_limit_manual=$_GET["daily_limit_manual"];}
@@ -3262,6 +3264,8 @@ $agent_hidden_sound = preg_replace('/[^-_0-9a-zA-Z]/','',$agent_hidden_sound);
 $leave_3way_start_recording = preg_replace('/[^-_0-9a-zA-Z]/','',$leave_3way_start_recording);
 $leave_3way_start_recording_exception = preg_replace('/[^-_0-9a-zA-Z]/','',$leave_3way_start_recording_exception);
 $agent_screen_timer = preg_replace('/[^-_0-9a-zA-Z]/','',$agent_screen_timer);
+$hopper_drop_run_trigger = preg_replace('/[^0-9a-zA-Z]/','',$hopper_drop_run_trigger);
+$hopper_drop_run_trigger_all = preg_replace('/[^0-9a-zA-Z]/','',$hopper_drop_run_trigger_all);
 
 if ($non_latin < 1)
 	{
@@ -3357,7 +3361,6 @@ if ($non_latin < 1)
 	$mute_recordings = preg_replace('/[^0-9a-zA-Z]/','',$mute_recordings);
 	$leave_vm_no_dispo = preg_replace('/[^0-9a-zA-Z]/','',$leave_vm_no_dispo);
 	$amd_agent_route_options = preg_replace('/[^0-9a-zA-Z]/','',$amd_agent_route_options);
-	$hopper_drop_run_trigger = preg_replace('/[^0-9a-zA-Z]/','',$hopper_drop_run_trigger);
 
 	### ALPHA-NUMERIC and spaces and hash and star and comma
 	$xferconf_a_dtmf = preg_replace('/[^ \,\*\#0-9a-zA-Z]/','',trim($xferconf_a_dtmf));
@@ -4045,7 +4048,6 @@ else
 	$mute_recordings = preg_replace('/[^0-9\p{L}]/u','',$mute_recordings);
 	$leave_vm_no_dispo = preg_replace('/[^0-9\p{L}]/u','',$leave_vm_no_dispo);
 	$amd_agent_route_options = preg_replace('/[^0-9\p{L}]/u','',$amd_agent_route_options);
-	$hopper_drop_run_trigger = preg_replace('/[^0-9\p{L}]/u','',$hopper_drop_run_trigger);
 
 	### ALPHA-NUMERIC and spaces and hash and star and comma
 	$xferconf_a_dtmf = preg_replace('/[^ \,\*\#0-9\p{L}]/u','',trim($xferconf_a_dtmf));
@@ -5564,12 +5566,13 @@ if ($SSscript_remove_js > 0)
 # 210321-0120 - Added classAudioFile PHP library
 # 210324-0954 - Added leave_3way_start_recording campaign options
 # 210325-2220 - Added populate_lead_comments in-group option
+# 210406-1821 - Added hopper_drop_run_trigger_all option, moved dialable_leads function to functions.php
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-807a';
-$build = '210325-2220';
+$admin_version = '2.14-808a';
+$build = '210406-1821';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -7369,13 +7372,14 @@ if ($ADD==73)
 
 		### call function to calculate and print dialable leads
 		$single_status=0;
-		dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,$fSQL);
+		$only_return=0;
+		dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,$fSQL,$only_return);
 
 		echo "<BR><BR>\n";
 		echo "<B>"._QXZ("Without Filter").":</B>\n";
 		echo "<BR><BR>\n";
 
-		dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,'');
+		dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,'',$only_return);
 
 		echo "<BR><BR>\n";
 		echo "</BODY></HTML>\n";
@@ -16314,8 +16318,13 @@ if ($ADD==41)
 					$hdrtSQL='';   $hdrtMESSAGE='';
 					if ($hopper_drop_run_trigger == 'Y')
 						{
-						$hdrtSQL = ",hopper_drop_run_trigger='$hopper_drop_run_trigger'";
+						$hdrtSQL = ",hopper_drop_run_trigger='Y'";
 						$hdrtMESSAGE='Hopper Drop-Run Triggered';
+						}
+					if ($hopper_drop_run_trigger_all == 'A')
+						{
+						$hdrtSQL = ",hopper_drop_run_trigger='A'";
+						$hdrtMESSAGE='Hopper All-Drops-Run Triggered';
 						}
 
 					$stmtA="UPDATE vicidial_campaigns set campaign_name='$campaign_name',active='$active',dial_status_a='$dial_status_a',dial_status_b='$dial_status_b',dial_status_c='$dial_status_c',dial_status_d='$dial_status_d',dial_status_e='$dial_status_e',lead_order='$lead_order',allow_closers='$allow_closers',hopper_level='$hopper_level', auto_trim_hopper='$auto_trim_hopper', use_auto_hopper='$use_auto_hopper', auto_hopper_multi='$auto_hopper_multi', $adlSQL next_agent_call='$next_agent_call', local_call_time='$local_call_time', voicemail_ext='$voicemail_ext', dial_timeout='$dial_timeout', dial_prefix='$dial_prefix', campaign_cid='$campaign_cid', campaign_vdad_exten='$campaign_vdad_exten', web_form_address='" . mysqli_real_escape_string($link, $web_form_address) . "', park_ext='$park_ext', park_file_name='$park_file_name', campaign_rec_exten='$campaign_rec_exten', campaign_recording='$campaign_recording', campaign_rec_filename='$campaign_rec_filename', campaign_script='$script_id', get_call_launch='$get_call_launch', am_message_exten='$am_message_exten', amd_send_to_vmx='$amd_send_to_vmx', xferconf_a_dtmf='$xferconf_a_dtmf',xferconf_a_number='$xferconf_a_number',xferconf_b_dtmf='$xferconf_b_dtmf',xferconf_b_number='$xferconf_b_number',lead_filter_id='$lead_filter_id',alt_number_dialing='$alt_number_dialing',scheduled_callbacks='$scheduled_callbacks',drop_action='$drop_action',drop_call_seconds='$drop_call_seconds',safe_harbor_exten='$safe_harbor_exten',wrapup_seconds='$wrapup_seconds',wrapup_message='$wrapup_message',closer_campaigns=$closer_campaignsSQL,use_internal_dnc='$use_internal_dnc',allcalls_delay='$allcalls_delay',omit_phone_code='$omit_phone_code',dial_method='$dial_method',available_only_ratio_tally='$available_only_ratio_tally',adaptive_dropped_percentage='$adaptive_dropped_percentage',adaptive_maximum_level='$adaptive_maximum_level',adaptive_latest_server_time='$adaptive_latest_server_time',adaptive_intensity='$adaptive_intensity',adaptive_dl_diff_target='$adaptive_dl_diff_target',concurrent_transfers='$concurrent_transfers',auto_alt_dial='$auto_alt_dial',agent_pause_codes_active='$agent_pause_codes_active',campaign_description='$campaign_description',campaign_changedate='$SQLdate',campaign_stats_refresh='$campaign_stats_refresh',disable_alter_custdata='$disable_alter_custdata',no_hopper_leads_logins='$no_hopper_leads_logins',list_order_mix='$list_order_mix',campaign_allow_inbound='$campaign_allow_inbound',manual_dial_list_id='$manual_dial_list_id',default_xfer_group='$default_xfer_group',xfer_groups='$XFERgroups_value',queue_priority='$queue_priority',drop_inbound_group='$drop_inbound_group',disable_alter_custphone='$disable_alter_custphone',display_queue_count='$display_queue_count',manual_dial_filter='$manual_dial_filter',agent_clipboard_copy='$agent_clipboard_copy',agent_extended_alt_dial='$agent_extended_alt_dial',use_campaign_dnc='$use_campaign_dnc',three_way_call_cid='$three_way_call_cid',three_way_dial_prefix='$three_way_dial_prefix',web_form_target='$web_form_target',vtiger_search_category='$vtiger_search_category',vtiger_create_call_record='$vtiger_create_call_record',vtiger_create_lead_record='$vtiger_create_lead_record',vtiger_screen_login='$vtiger_screen_login',cpd_amd_action='$cpd_amd_action',agent_allow_group_alias='$agent_allow_group_alias',default_group_alias='$default_group_alias',vtiger_search_dead='$vtiger_search_dead',vtiger_status_call='$vtiger_status_call',drop_lockout_time='$drop_lockout_time',quick_transfer_button='$quick_transfer_button',prepopulate_transfer_preset='$prepopulate_transfer_preset',drop_rate_group='$drop_rate_group',view_calls_in_queue='$view_calls_in_queue',view_calls_in_queue_launch='$view_calls_in_queue_launch',grab_calls_in_queue='$grab_calls_in_queue',call_requeue_button='$call_requeue_button',pause_after_each_call='$pause_after_each_call',no_hopper_dialing='$no_hopper_dialing',agent_dial_owner_only='$agent_dial_owner_only',agent_display_dialable_leads='$agent_display_dialable_leads',web_form_address_two='" . mysqli_real_escape_string($link, $web_form_address_two) . "',waitforsilence_options='$waitforsilence_options',agent_select_territories='$agent_select_territories',crm_popup_login='$crm_popup_login',crm_login_address='" . mysqli_real_escape_string($link, $crm_login_address) . "',timer_action='$timer_action',timer_action_message='$timer_action_message',timer_action_seconds='$timer_action_seconds',start_call_url='" . mysqli_real_escape_string($link, $start_call_url) . "',dispo_call_url='" . mysqli_real_escape_string($link, $dispo_call_url) . "',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',use_custom_cid='$use_custom_cid',scheduled_callbacks_alert='$scheduled_callbacks_alert',queuemetrics_callstatus_override='$queuemetrics_callstatus',extension_appended_cidname='$extension_appended_cidname',scheduled_callbacks_count='$scheduled_callbacks_count',manual_dial_override='$manual_dial_override',blind_monitor_warning='$blind_monitor_warning',blind_monitor_message='" . mysqli_real_escape_string($link, $blind_monitor_message) . "',blind_monitor_filename='$blind_monitor_filename',inbound_queue_no_dial='$inbound_queue_no_dial',timer_action_destination='$timer_action_destination',enable_xfer_presets='$enable_xfer_presets',hide_xfer_number_to_dial='$hide_xfer_number_to_dial',manual_dial_prefix='$manual_dial_prefix',customer_3way_hangup_logging='$customer_3way_hangup_logging',customer_3way_hangup_seconds='$customer_3way_hangup_seconds',customer_3way_hangup_action='$customer_3way_hangup_action',ivr_park_call='$ivr_park_call',ivr_park_call_agi='$ivr_park_call_agi',manual_preview_dial='$manual_preview_dial',realtime_agent_time_stats='$realtime_agent_time_stats',api_manual_dial='$api_manual_dial',manual_dial_call_time_check='$manual_dial_call_time_check',lead_order_randomize='$lead_order_randomize',lead_order_secondary='$lead_order_secondary',per_call_notes='$per_call_notes',my_callback_option='$my_callback_option',agent_lead_search='$agent_lead_search',agent_lead_search_method='$agent_lead_search_method',queuemetrics_phone_environment='$queuemetrics_phone_environment',auto_pause_precall='$auto_pause_precall',auto_resume_precall='$auto_resume_precall',auto_pause_precall_code='$auto_pause_precall_code',manual_dial_cid='$manual_dial_cid',post_phone_time_diff_alert='$post_phone_time_diff_alert',custom_3way_button_transfer='$custom_3way_button_transfer',available_only_tally_threshold='$available_only_tally_threshold',available_only_tally_threshold_agents='$available_only_tally_threshold_agents',dial_level_threshold='$dial_level_threshold',dial_level_threshold_agents='$dial_level_threshold_agents',safe_harbor_audio='$safe_harbor_audio',safe_harbor_menu_id='$safe_harbor_menu_id',callback_days_limit='$callback_days_limit',dl_diff_target_method='$dl_diff_target_method',disable_dispo_screen='$disable_dispo_screen',disable_dispo_status='$disable_dispo_status',screen_labels='$screen_labels',status_display_fields='$status_display_fields',na_call_url='" . mysqli_real_escape_string($link, $na_call_url) . "',pllb_grouping='$pllb_grouping',pllb_grouping_limit='$pllb_grouping_limit',call_count_limit='$call_count_limit',call_count_target='$call_count_target',callback_hours_block='$callback_hours_block',callback_list_calltime='$callback_list_calltime',user_group='$user_group',hopper_vlc_dup_check='$hopper_vlc_dup_check',in_group_dial='$in_group_dial',in_group_dial_select='$in_group_dial_select',safe_harbor_audio_field='$safe_harbor_audio_field',pause_after_next_call='$pause_after_next_call',owner_populate='$owner_populate',use_other_campaign_dnc='$use_other_campaign_dnc',allow_emails='$allow_emails',allow_chats='$allow_chats',amd_inbound_group='$amd_inbound_group',amd_callmenu='$amd_callmenu',manual_dial_lead_id='$manual_dial_lead_id',dead_max='$dead_max',dispo_max='$dispo_max',pause_max='$pause_max',dead_max_dispo='$dead_max_dispo',dispo_max_dispo='$dispo_max_dispo',max_inbound_calls='$max_inbound_calls',manual_dial_search_checkbox='$manual_dial_search_checkbox',hide_call_log_info='$hide_call_log_info',timer_alt_seconds='$timer_alt_seconds',wrapup_bypass='$wrapup_bypass',wrapup_after_hotkey='$wrapup_after_hotkey',callback_active_limit='$callback_active_limit',callback_active_limit_override='$callback_active_limit_override',comments_all_tabs='$comments_all_tabs',comments_dispo_screen='$comments_dispo_screen',comments_callback_screen='$comments_callback_screen',qc_comment_history='$qc_comment_history',show_previous_callback='$show_previous_callback',clear_script='$clear_script',cpd_unknown_action='$cpd_unknown_action',manual_dial_search_filter='$manual_dial_search_filter',web_form_address_three='" . mysqli_real_escape_string($link, $web_form_address_three) . "',manual_dial_override_field='$manual_dial_override_field',status_display_ingroup='$status_display_ingroup',customer_gone_seconds='$customer_gone_seconds',agent_display_fields='$agent_display_fields',am_message_wildcards='$am_message_wildcards',manual_dial_timeout='$manual_dial_timeout',routing_initiated_recordings='$routing_initiated_recordings',manual_dial_hopper_check='$manual_dial_hopper_check',callback_useronly_move_minutes='$callback_useronly_move_minutes',ofcom_uk_drop_calc='$ofcom_uk_drop_calc',manual_auto_next='$manual_auto_next',manual_auto_show='$manual_auto_show',allow_required_fields='$allow_required_fields',dead_to_dispo='$dead_to_dispo',agent_xfer_validation='$agent_xfer_validation',ready_max_logout='$ready_max_logout',callback_display_days='$callback_display_days',three_way_record_stop='$three_way_record_stop',hangup_xfer_record_start='$hangup_xfer_record_start',scheduled_callbacks_email_alert='$scheduled_callbacks_email_alert',max_inbound_calls_outcome='$max_inbound_calls_outcome',manual_auto_next_options='$manual_auto_next_options',agent_screen_time_display='$agent_screen_time_display',next_dial_my_callbacks='$next_dial_my_callbacks',inbound_no_agents_no_dial_container='$inbound_no_agents_no_dial_container',inbound_no_agents_no_dial_threshold='$inbound_no_agents_no_dial_threshold',cid_group_id='$cid_group_id',pause_max_dispo='$pause_max_dispo',script_top_dispo='$script_top_dispo',dead_trigger_seconds='$dead_trigger_seconds',dead_trigger_action='$dead_trigger_action',dead_trigger_repeat='$dead_trigger_repeat',dead_trigger_filename='$dead_trigger_filename',dead_trigger_url='" . mysqli_real_escape_string($link, $dead_trigger_url) . "',scheduled_callbacks_force_dial='$scheduled_callbacks_force_dial',scheduled_callbacks_auto_reschedule='$scheduled_callbacks_auto_reschedule',scheduled_callbacks_timezones_container='$scheduled_callbacks_timezones_container',three_way_volume_buttons='$three_way_volume_buttons',callback_dnc='$callback_dnc',manual_dial_validation='$manual_dial_validation',mute_recordings='$mute_recordings',auto_active_list_new='$auto_active_list_new',call_quota_lead_ranking='$call_quota_lead_ranking',sip_event_logging='$sip_event_logging',campaign_script_two='$campaign_script_two',leave_vm_no_dispo='$leave_vm_no_dispo',leave_vm_message_group_id='$leave_vm_message_group_id',dial_timeout_lead_container='$dial_timeout_lead_container',amd_type='$amd_type',vmm_daily_limit='$vmm_daily_limit',opensips_cid_name='$opensips_cid_name',amd_agent_route_options='$amd_agent_route_options',browser_alert_sound='$browser_alert_sound',browser_alert_volume='$browser_alert_volume',three_way_record_stop_exception='$three_way_record_stop_exception',pause_max_exceptions='$pause_max_exceptions',daily_call_count_limit='$daily_call_count_limit',daily_limit_manual='$daily_limit_manual',transfer_button_launch='$transfer_button_launch',shared_dial_rank='$shared_dial_rank',agent_search_method='$agent_search_method',clear_form='$clear_form',leave_3way_start_recording='$leave_3way_start_recording',leave_3way_start_recording_exception='$leave_3way_start_recording_exception'$hdrtSQL where campaign_id='$campaign_id';";
@@ -16338,9 +16347,16 @@ if ($ADD==41)
 						$rslt=mysql_to_mysqli($stmt, $link);
 						}
 
-					if ($hopper_drop_run_trigger == 'Y')
+					if ($hopper_drop_run_trigger_all == 'A')
 						{
-						echo "<br>"._QXZ("Hopper Drop-Run Triggered")."\n";
+						echo "<br>"._QXZ("Hopper All-Drops-Run Triggered")."\n";
+						}
+					else
+						{
+						if ($hopper_drop_run_trigger == 'Y')
+							{
+							echo "<br>"._QXZ("Hopper Drop-Run Triggered")."\n";
+							}
 						}
 
 					### LOG INSERTION Admin Log Table ###
@@ -25432,7 +25448,7 @@ if ($ADD==31)
 				{
 				echo "<tr bgcolor=#$SSstd_row3_background><td colspan=2><input type=hidden name=auto_active_list_new value='$auto_active_list_new'><input type=hidden name=call_quota_lead_ranking value='$call_quota_lead_ranking'></td></tr>\n";
 				}
-			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Hopper Drop-Run Trigger").": </td><td align=left><input type=checkbox name=hopper_drop_run_trigger value=\"Y\">$NWB#campaigns-hopper_drop_run_trigger$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Hopper Drop-Run Trigger").": </td><td align=left><input type=checkbox name=hopper_drop_run_trigger value=\"Y\"> &nbsp; "._QXZ("All Drops").": <input type=checkbox name=hopper_drop_run_trigger_all value=\"A\">$NWB#campaigns-hopper_drop_run_trigger$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Drop Lockout Time").": </td><td align=left><input type=text name=drop_lockout_time size=6 maxlength=6 value=\"$drop_lockout_time\"> $NWB#campaigns-drop_lockout_time$NWE</td></tr>\n";
 
@@ -27021,11 +27037,12 @@ if ($ADD==31)
 							{
 							### call function to calculate dialable leads
 							$single_status=1;
+							$only_return=0;
 							$dial_statuses=" $dispo -";
 							if ($statuses_complete_list[$dispo] == 'Y')
 								{$Xdialable_count=0;}
 							else
-								{$Xdialable_count = dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,$fSQL);}
+								{$Xdialable_count = dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,$fSQL,$only_return);}
 							$dialable_total = ($dialable_total + $Xdialable_count);
 
 							### get number of complete calls of this status for penetration calculations
@@ -27080,8 +27097,9 @@ if ($ADD==31)
 				{
 				### call function to calculate and print dialable leads
 				$single_status=0;
+				$only_return=0;
 				$dial_statuses = $dial_statuses_original;
-				dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,$fSQL);
+				dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,$fSQL,$only_return);
 				echo " - <font size=1><a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id&stage=hide_dialable\">"._QXZ("HIDE")."</a></font><BR><BR>";
 				}
 			else
@@ -28671,7 +28689,8 @@ if ($ADD==34)
 			{
 			### call function to calculate and print dialable leads
 			$single_status=0;
-			dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,$fSQL);
+			$only_return=0;
+			dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,$fSQL,$only_return);
 			echo " - <font size=1><a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id&stage=hide_dialable\">"._QXZ("HIDE")."</a></font><BR><BR>";
 			}
 		else
@@ -30069,12 +30088,13 @@ if ($ADD==311)
 					{
 					### call function to calculate dialable leads
 					$single_status=1;
+					$only_return=0;
 					$dial_statuses=" $dispo -";
 					$camp_lists=$list_id;
 					if ($statuses_complete_list[$dispo] == 'Y')
 						{$Xdialable_count=0;}
 					else
-						{$Xdialable_count = dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,$fSQL);}
+						{$Xdialable_count = dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,$fSQL,$only_return);}
 					$dialable_total = ($dialable_total + $Xdialable_count);
 
 					### get number of complete calls of this status for penetration calculations
@@ -47924,961 +47944,4 @@ else
 	}
 }
 
-
-##### CALCULATE DIALABLE LEADS #####
-function dialable_leads($DB,$link,$local_call_time,$dial_statuses,$camp_lists,$drop_lockout_time,$call_count_limit,$single_status,$fSQL)
-{
-##### BEGIN calculate what gmt_offset_now values are within the allowed local_call_time setting ###
-if (isset($camp_lists))
-	{
-	if (strlen($camp_lists)>1)
-		{
-		if (strlen($dial_statuses)>2)
-			{
-			$g=0;
-			$p='13';
-			$GMT_gmt[0] = '';
-			$GMT_hour[0] = '';
-			$GMT_day[0] = '';
-			$YMD =  date("Y-m-d");	
-			while ($p > -13)
-				{
-				$pzone=3600 * $p;
-				$pmin=(gmdate("i", time() + $pzone));
-				$phour=( (gmdate("G", time() + $pzone)) * 100);
-				$pday=gmdate("w", time() + $pzone);
-				$tz = sprintf("%.2f", $p);	
-				$GMT_gmt[$g] = "$tz";
-				$GMT_day[$g] = "$pday";
-				$GMT_hour[$g] = ($phour + $pmin);
-				$p = ($p - 0.25);
-				$g++;
-				}
-
-			$stmt="SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times FROM vicidial_call_times where call_time_id='$local_call_time';";
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_to_mysqli($stmt, $link);
-			$rowx=mysqli_fetch_row($rslt);
-			$Gct_default_start =	$rowx[3];
-			$Gct_default_stop =		$rowx[4];
-			$Gct_sunday_start =		$rowx[5];
-			$Gct_sunday_stop =		$rowx[6];
-			$Gct_monday_start =		$rowx[7];
-			$Gct_monday_stop =		$rowx[8];
-			$Gct_tuesday_start =	$rowx[9];
-			$Gct_tuesday_stop =		$rowx[10];
-			$Gct_wednesday_start =	$rowx[11];
-			$Gct_wednesday_stop =	$rowx[12];
-			$Gct_thursday_start =	$rowx[13];
-			$Gct_thursday_stop =	$rowx[14];
-			$Gct_friday_start =		$rowx[15];
-			$Gct_friday_stop =		$rowx[16];
-			$Gct_saturday_start =	$rowx[17];
-			$Gct_saturday_stop =	$rowx[18];
-			$Gct_state_call_times = $rowx[19];
-			$Gct_holidays =			$rowx[20];
-
-			### BEGIN Check for outbound holiday ###
-			$holiday_id = '';
-			if (strlen($Gct_holidays)>2)
-				{
-				$Gct_holidaysSQL = preg_replace("/\|/", "','", "$Gct_holidays");
-				$Gct_holidaysSQL = "'".$Gct_holidaysSQL."'";
-				
-				$stmt = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id IN($Gct_holidaysSQL) and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
-				$rslt=mysql_to_mysqli($stmt, $link);
-				if ($DB) {echo "$stmt\n";}
-				$sthCrows=mysqli_num_rows($rslt);
-				if ($sthCrows > 0)
-					{
-					$aryC=mysqli_fetch_row($rslt);
-					$holiday_id =				$aryC[0];
-					$holiday_date =				$aryC[1];
-					$holiday_name =				$aryC[2];
-					if($Gct_default_start < $aryC[3])		{$Gct_default_start = $aryC[3];}
-					if($Gct_default_stop > $aryC[4])		{$Gct_default_stop = $aryC[4];}						
-					if($Gct_sunday_start < $aryC[3])		{$Gct_sunday_start = $aryC[3];}
-					if($Gct_sunday_stop > $aryC[4])			{$Gct_sunday_stop = $aryC[4];}
-					if($Gct_monday_start < $aryC[3])		{$Gct_monday_start = $aryC[3];}
-					if($Gct_monday_stop >	$aryC[4])		{$Gct_monday_stop =	$aryC[4];}
-					if($Gct_tuesday_start < $aryC[3])		{$Gct_tuesday_start = $aryC[3];}
-					if($Gct_tuesday_stop > $aryC[4])		{$Gct_tuesday_stop = $aryC[4];}
-					if($Gct_wednesday_start < $aryC[3]) 	{$Gct_wednesday_start = $aryC[3];}
-					if($Gct_wednesday_stop > $aryC[4])		{$Gct_wednesday_stop = $aryC[4];}
-					if($Gct_thursday_start < $aryC[3])		{$Gct_thursday_start = $aryC[3];}
-					if($Gct_thursday_stop > $aryC[4])		{$Gct_thursday_stop = $aryC[4];}
-					if($Gct_friday_start < $aryC[3])		{$Gct_friday_start = $aryC[3];}
-					if($Gct_friday_stop > $aryC[4])			{$Gct_friday_stop = $aryC[4];}
-					if($Gct_saturday_start < $aryC[3])		{$Gct_saturday_start = $aryC[3];}
-					if($Gct_saturday_stop > $aryC[4])		{$Gct_saturday_stop = $aryC[4];}
-					if ($DB) {echo "CALL TIME HOLIDAY FOUND!   $local_call_time|$holiday_id|$holiday_date|$holiday_name|$Gct_default_start|$Gct_default_stop|\n";}
-					}
-				}
-			### END Check for outbound holiday ###
-
-			$ct_states = '';
-			$ct_state_gmt_SQL = '';
-			$ct_srs=0;
-			$b=0;
-			if (strlen($Gct_state_call_times)>2)
-				{
-				$state_rules = explode('|',$Gct_state_call_times);
-				$ct_srs = ((count($state_rules)) - 2);
-				}
-			while($ct_srs >= $b)
-				{
-				if (strlen($state_rules[$b])>1)
-					{
-					$stmt="SELECT state_call_time_id,state_call_time_state,state_call_time_name,state_call_time_comments,sct_default_start,sct_default_stop,sct_sunday_start,sct_sunday_stop,sct_monday_start,sct_monday_stop,sct_tuesday_start,sct_tuesday_stop,sct_wednesday_start,sct_wednesday_stop,sct_thursday_start,sct_thursday_stop,sct_friday_start,sct_friday_stop,sct_saturday_start,sct_saturday_stop from vicidial_state_call_times where state_call_time_id='$state_rules[$b]';";
-					$rslt=mysql_to_mysqli($stmt, $link);
-					$row=mysqli_fetch_row($rslt);
-					$Gstate_call_time_id =		$row[0];
-					$Gstate_call_time_state =	$row[1];
-					$Gsct_default_start =		$row[4];
-					$Gsct_default_stop =		$row[5];
-					$Gsct_sunday_start =		$row[6];
-					$Gsct_sunday_stop =			$row[7];
-					$Gsct_monday_start =		$row[8];
-					$Gsct_monday_stop =			$row[9];
-					$Gsct_tuesday_start =		$row[10];
-					$Gsct_tuesday_stop =		$row[11];
-					$Gsct_wednesday_start =		$row[12];
-					$Gsct_wednesday_stop =		$row[13];
-					$Gsct_thursday_start =		$row[14];
-					$Gsct_thursday_stop =		$row[15];
-					$Gsct_friday_start =		$row[16];
-					$Gsct_friday_stop =			$row[17];
-					$Gsct_saturday_start =		$row[18];
-					$Gsct_saturday_stop =		$row[19];
-					$Sct_holidays =				$row[20];
-					$ct_states .="'$Gstate_call_time_state',";
-
-					### BEGIN Check for outbound state holiday ###
-					$Sholiday_id = '';
-					if ((strlen($Sct_holidays)>2) or ((strlen($holiday_id)>2) and (strlen($Sholiday_id)<2))) 
-						{
-						# Apply state holiday
-						if (strlen($Sct_holidays)>2)
-							{								
-							$Sct_holidaysSQL = preg_replace("/\|/", "','", "$Sct_holidays");
-							$Sct_holidaysSQL = "'".$Sct_holidaysSQL."'";
-							$stmt = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id IN($Sct_holidaysSQL) and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
-							$holidaytype = "STATE CALL TIME HOLIDAY FOUND!   ";
-							}
-						# Apply call time wide holiday
-						elseif ((strlen($holiday_id)>2) and (strlen($Sholiday_id)<2))
-							{
-							$stmt = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id='$holiday_id' and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
-							$holidaytype = "NO STATE HOLIDAY APPLYING CALL TIME HOLIDAY!   ";
-							}				
-						$rslt=mysql_to_mysqli($stmt, $link);
-						if ($DB) {echo "$stmt\n";}
-						$sthCrows=mysqli_num_rows($rslt);
-						if ($sthCrows > 0)
-							{
-							$aryC=mysqli_fetch_row($rslt);
-							$Sholiday_id =				$aryC[0];
-							$Sholiday_date =			$aryC[1];
-							$Sholiday_name =			$aryC[2];
-							if ( ($Gsct_default_start < $aryC[3]) && ($Gsct_default_stop > 0) )		{$Gsct_default_start = $aryC[3];}
-							if ( ($Gsct_default_stop > $aryC[4]) && ($Gsct_default_stop > 0) )		{$Gsct_default_stop = $aryC[4];}
-							if ( ($Gsct_sunday_start < $aryC[3]) && ($Gsct_sunday_stop > 0) )		{$Gsct_sunday_start = $aryC[3];}
-							if ( ($Gsct_sunday_stop > $aryC[4]) && ($Gsct_sunday_stop > 0) )		{$Gsct_sunday_stop = $aryC[4];}
-							if ( ($Gsct_monday_start < $aryC[3]) && ($Gsct_monday_stop > 0) )		{$Gsct_monday_start = $aryC[3];}
-							if ( ($Gsct_monday_stop > $aryC[4]) && ($Gsct_monday_stop > 0) )		{$Gsct_monday_stop = $aryC[4];}
-							if ( ($Gsct_tuesday_start < $aryC[3]) && ($Gsct_tuesday_stop > 0) )		{$Gsct_tuesday_start = $aryC[3];}
-							if ( ($Gsct_tuesday_stop > $aryC[4]) && ($Gsct_tuesday_stop > 0) )		{$Gsct_tuesday_stop = $aryC[4];}
-							if ( ($Gsct_wednesday_start < $aryC[3]) && ($Gsct_wednesday_stop > 0) ) {$Gsct_wednesday_start = $aryC[3];}
-							if ( ($Gsct_wednesday_stop > $aryC[4]) && ($Gsct_wednesday_stop > 0) )	{$Gsct_wednesday_stop = $aryC[4];}
-							if ( ($Gsct_thursday_start < $aryC[3]) && ($Gsct_thursday_stop > 0) )	{$Gsct_thursday_start = $aryC[3];}
-							if ( ($Gsct_thursday_stop > $aryC[4]) && ($Gsct_thursday_stop > 0) )	{$Gsct_thursday_stop = $aryC[4];}
-							if ( ($Gsct_friday_start < $aryC[3]) && ($Gsct_friday_stop > 0) )		{$Gsct_friday_start = $aryC[3];}
-							if ( ($Gsct_friday_stop > $aryC[4]) && ($Gsct_friday_stop > 0) )		{$Gsct_friday_stop = $aryC[4];}
-							if ( ($Gsct_saturday_start < $aryC[3]) && ($Gsct_saturday_stop > 0) )	{$Gsct_saturday_start = $aryC[3];}
-							if ( ($Gsct_saturday_stop > $aryC[4]) && ($Gsct_saturday_stop > 0) )	{$Gsct_saturday_stop = $aryC[4];}
-							if ($DB) {echo "$holidaytype   |$Gstate_call_time_id|$Gstate_call_time_state|$Sholiday_id|$Sholiday_date|$Sholiday_name|$Gsct_default_start|$Gsct_default_stop|\n";}
-							}
-						}
-					$r=0;
-					$state_gmt='';
-					while($r < $g)
-						{
-						if ($GMT_day[$r]==0)	#### Sunday local time
-							{
-							if (($Gsct_sunday_start==0) and ($Gsct_sunday_stop==0))
-								{
-								if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
-									{$state_gmt.="'$GMT_gmt[$r]',";}
-								}
-							else
-								{
-								if ( ($GMT_hour[$r]>=$Gsct_sunday_start) and ($GMT_hour[$r]<$Gsct_sunday_stop) )
-									{$state_gmt.="'$GMT_gmt[$r]',";}
-								}
-							}
-						if ($GMT_day[$r]==1)	#### Monday local time
-							{
-							if (($Gsct_monday_start==0) and ($Gsct_monday_stop==0))
-								{
-								if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
-									{$state_gmt.="'$GMT_gmt[$r]',";}
-								}
-							else
-								{
-								if ( ($GMT_hour[$r]>=$Gsct_monday_start) and ($GMT_hour[$r]<$Gsct_monday_stop) )
-									{$state_gmt.="'$GMT_gmt[$r]',";}
-								}
-							}
-						if ($GMT_day[$r]==2)	#### Tuesday local time
-							{
-							if (($Gsct_tuesday_start==0) and ($Gsct_tuesday_stop==0))
-								{
-								if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
-									{$state_gmt.="'$GMT_gmt[$r]',";}
-								}
-							else
-								{
-								if ( ($GMT_hour[$r]>=$Gsct_tuesday_start) and ($GMT_hour[$r]<$Gsct_tuesday_stop) )
-									{$state_gmt.="'$GMT_gmt[$r]',";}
-								}
-							}
-						if ($GMT_day[$r]==3)	#### Wednesday local time
-							{
-							if (($Gsct_wednesday_start==0) and ($Gsct_wednesday_stop==0))
-								{
-								if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
-									{$state_gmt.="'$GMT_gmt[$r]',";}
-								}
-							else
-								{
-								if ( ($GMT_hour[$r]>=$Gsct_wednesday_start) and ($GMT_hour[$r]<$Gsct_wednesday_stop) )
-									{$state_gmt.="'$GMT_gmt[$r]',";}
-								}
-							}
-						if ($GMT_day[$r]==4)	#### Thursday local time
-							{
-							if (($Gsct_thursday_start==0) and ($Gsct_thursday_stop==0))
-								{
-								if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
-									{$state_gmt.="'$GMT_gmt[$r]',";}
-								}
-							else
-								{
-								if ( ($GMT_hour[$r]>=$Gsct_thursday_start) and ($GMT_hour[$r]<$Gsct_thursday_stop) )
-									{$state_gmt.="'$GMT_gmt[$r]',";}
-								}
-							}
-						if ($GMT_day[$r]==5)	#### Friday local time
-							{
-							if (($Gsct_friday_start==0) and ($Gsct_friday_stop==0))
-								{
-								if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
-									{$state_gmt.="'$GMT_gmt[$r]',";}
-								}
-							else
-								{
-								if ( ($GMT_hour[$r]>=$Gsct_friday_start) and ($GMT_hour[$r]<$Gsct_friday_stop) )
-									{$state_gmt.="'$GMT_gmt[$r]',";}
-								}
-							}
-						if ($GMT_day[$r]==6)	#### Saturday local time
-							{
-							if (($Gsct_saturday_start==0) and ($Gsct_saturday_stop==0))
-								{
-								if ( ($GMT_hour[$r]>=$Gsct_default_start) and ($GMT_hour[$r]<$Gsct_default_stop) )
-									{$state_gmt.="'$GMT_gmt[$r]',";}
-								}
-							else
-								{
-								if ( ($GMT_hour[$r]>=$Gsct_saturday_start) and ($GMT_hour[$r]<$Gsct_saturday_stop) )
-									{$state_gmt.="'$GMT_gmt[$r]',";}
-								}
-							}
-						$r++;
-						}
-					$state_gmt = "$state_gmt'99'";
-					$ct_state_gmt_SQL .= "or (state='$Gstate_call_time_state' and gmt_offset_now IN($state_gmt)) ";
-					}
-
-				$b++;
-				}
-			if (strlen($ct_states)>2)
-				{
-				$ct_states = preg_replace('/,$/i', '',$ct_states);
-				$ct_statesSQL = "and state NOT IN($ct_states)";
-				}
-			else
-				{
-				$ct_statesSQL = "";
-				}
-
-			$r=0;
-			$default_gmt='';
-			while($r < $g)
-				{
-				if ($GMT_day[$r]==0)	#### Sunday local time
-					{
-					if (($Gct_sunday_start==0) and ($Gct_sunday_stop==0))
-						{
-						if ( ($GMT_hour[$r]>=$Gct_default_start) and ($GMT_hour[$r]<$Gct_default_stop) )
-							{$default_gmt.="'$GMT_gmt[$r]',";}
-						}
-					else
-						{
-						if ( ($GMT_hour[$r]>=$Gct_sunday_start) and ($GMT_hour[$r]<$Gct_sunday_stop) )
-							{$default_gmt.="'$GMT_gmt[$r]',";}
-						}
-					}
-				if ($GMT_day[$r]==1)	#### Monday local time
-					{
-					if (($Gct_monday_start==0) and ($Gct_monday_stop==0))
-						{
-						if ( ($GMT_hour[$r]>=$Gct_default_start) and ($GMT_hour[$r]<$Gct_default_stop) )
-							{$default_gmt.="'$GMT_gmt[$r]',";}
-						}
-					else
-						{
-						if ( ($GMT_hour[$r]>=$Gct_monday_start) and ($GMT_hour[$r]<$Gct_monday_stop) )
-							{$default_gmt.="'$GMT_gmt[$r]',";}
-						}
-					}
-				if ($GMT_day[$r]==2)	#### Tuesday local time
-					{
-					if (($Gct_tuesday_start==0) and ($Gct_tuesday_stop==0))
-						{
-						if ( ($GMT_hour[$r]>=$Gct_default_start) and ($GMT_hour[$r]<$Gct_default_stop) )
-							{$default_gmt.="'$GMT_gmt[$r]',";}
-						}
-					else
-						{
-						if ( ($GMT_hour[$r]>=$Gct_tuesday_start) and ($GMT_hour[$r]<$Gct_tuesday_stop) )
-							{$default_gmt.="'$GMT_gmt[$r]',";}
-						}
-					}
-				if ($GMT_day[$r]==3)	#### Wednesday local time
-					{
-					if (($Gct_wednesday_start==0) and ($Gct_wednesday_stop==0))
-						{
-						if ( ($GMT_hour[$r]>=$Gct_default_start) and ($GMT_hour[$r]<$Gct_default_stop) )
-							{$default_gmt.="'$GMT_gmt[$r]',";}
-						}
-					else
-						{
-						if ( ($GMT_hour[$r]>=$Gct_wednesday_start) and ($GMT_hour[$r]<$Gct_wednesday_stop) )
-							{$default_gmt.="'$GMT_gmt[$r]',";}
-						}
-					}
-				if ($GMT_day[$r]==4)	#### Thursday local time
-					{
-					if (($Gct_thursday_start==0) and ($Gct_thursday_stop==0))
-						{
-						if ( ($GMT_hour[$r]>=$Gct_default_start) and ($GMT_hour[$r]<$Gct_default_stop) )
-							{$default_gmt.="'$GMT_gmt[$r]',";}
-						}
-					else
-						{
-						if ( ($GMT_hour[$r]>=$Gct_thursday_start) and ($GMT_hour[$r]<$Gct_thursday_stop) )
-							{$default_gmt.="'$GMT_gmt[$r]',";}
-						}
-					}
-				if ($GMT_day[$r]==5)	#### Friday local time
-					{
-					if (($Gct_friday_start==0) and ($Gct_friday_stop==0))
-						{
-						if ( ($GMT_hour[$r]>=$Gct_default_start) and ($GMT_hour[$r]<$Gct_default_stop) )
-							{$default_gmt.="'$GMT_gmt[$r]',";}
-						}
-					else
-						{
-						if ( ($GMT_hour[$r]>=$Gct_friday_start) and ($GMT_hour[$r]<$Gct_friday_stop) )
-							{$default_gmt.="'$GMT_gmt[$r]',";}
-						}
-					}
-				if ($GMT_day[$r]==6)	#### Saturday local time
-					{
-					if (($Gct_saturday_start==0) and ($Gct_saturday_stop==0))
-						{
-						if ( ($GMT_hour[$r]>=$Gct_default_start) and ($GMT_hour[$r]<$Gct_default_stop) )
-							{$default_gmt.="'$GMT_gmt[$r]',";}
-						}
-					else
-						{
-						if ( ($GMT_hour[$r]>=$Gct_saturday_start) and ($GMT_hour[$r]<$Gct_saturday_stop) )
-							{$default_gmt.="'$GMT_gmt[$r]',";}
-						}
-					}
-				$r++;
-				}
-
-			$default_gmt = "$default_gmt'99'";
-			$all_gmtSQL = "(gmt_offset_now IN($default_gmt) $ct_statesSQL) $ct_state_gmt_SQL";
-
-			$dial_statuses = preg_replace("/ -$/","",$dial_statuses);
-			$Dstatuses = explode(" ", $dial_statuses);
-			$Ds_to_print = (count($Dstatuses) - 0);
-			$Dsql = '';
-			$o=0;
-			while ($Ds_to_print > $o) 
-				{
-				$o++;
-				$Dsql .= "'$Dstatuses[$o]',";
-				}
-			$Dsql = preg_replace("/,$/","",$Dsql);
-			if (strlen($Dsql) < 2) {$Dsql = "''";}
-
-			$DLTsql='';
-			if ($drop_lockout_time > 0)
-				{
-				$DLseconds = ($drop_lockout_time * 3600);
-				$DLseconds = floor($DLseconds);
-				$DLseconds = intval("$DLseconds");
-				$DLTsql = "and ( ( (status IN('DROP','XDROP')) and (last_local_call_time < CONCAT(DATE_ADD(NOW(), INTERVAL -$DLseconds SECOND),' ',CURTIME()) ) ) or (status NOT IN('DROP','XDROP')) )";
-				}
-
-			$CCLsql='';
-			if ($call_count_limit > 0)
-				{
-				$CCLsql = "and (called_count < $call_count_limit)";
-				}
-
-			$EXPsql='';
-			$expired_lists='';
-			$REPORTdate = date("Y-m-d");
-			$stmt="SELECT list_id FROM vicidial_lists where list_id IN($camp_lists) and (active='Y') and (expiration_date < \"$REPORTdate\");";
-			#$DB=1;
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_to_mysqli($stmt, $link);
-			$rslt_rows = mysqli_num_rows($rslt);
-			$f=0;
-			while ($rslt_rows > $f)
-				{
-				$rowx=mysqli_fetch_row($rslt);
-				$expired_lists .= "'$rowx[0]',";
-				$f++;
-				}
-			$expired_lists = preg_replace("/,$/",'',$expired_lists);
-			if (strlen($expired_lists) < 2) {$expired_lists = "''";}
-			$EXPsql = "and list_id NOT IN($expired_lists)";
-
-
-			#################################								
-			# Camp List
-			$stmt="SELECT list_id FROM vicidial_lists where list_id IN($camp_lists) and active='Y';";
-			$rslt_list=mysql_to_mysqli($stmt, $link);
-			$camplists_ct = mysqli_num_rows($rslt_list);
-			if ($DB) {echo "$camplists_ct|$stmt\n";}
-			$k=0;
-			$camp_lists='';
-			while ($camplists_ct > $k)
-				{
-				$rowA = mysqli_fetch_row($rslt_list);
-				$camp_lists .=	"'$rowA[0]',";
-
-				##### Get Call List call time settings
-				##### BEGIN calculate what gmt_offset_now values are within the allowed local_call_time setting ###
-				$g=0;
-				$p='13';
-				$GMT_gmt[0] = '';
-				$GMT_hour[0] = '';
-				$GMT_day[0] = '';
-				$YMD =  date("Y-m-d");
-				while ($p > -13)
-					{
-					$pzone=3600 * $p;
-					$pmin=(gmdate("i", time() + $pzone));
-					$phour=( (gmdate("G", time() + $pzone)) * 100);
-					$pday=gmdate("w", time() + $pzone);
-					$tz = sprintf("%.2f", $p);	
-					$GMT_gmt[$g] = "$tz";
-					$GMT_day[$g] = "$pday";
-					$GMT_hour[$g] = ($phour + $pmin);
-					$p = ($p - 0.25);
-					$g++;
-					}
-
-				# Set List ID Variable
-				$cur_list_id = $rowA[0];			
-				$list_local_call_time = "";
-
-				# Pull the call times for the lists
-				$stmt="SELECT local_call_time FROM vicidial_lists where list_id='$cur_list_id';";
-				$rslt=mysql_to_mysqli($stmt, $link);
-				$rslt_ct = mysqli_num_rows($rslt);
-				if ($rslt_ct > 0)
-					{
-					#set Cur call_time
-					$row=mysqli_fetch_row($rslt);
-					$cur_call_time  =	$row[0];
-					}
-
-				# check that call time exists
-				if ($cur_call_time != "campaign") 
-					{
-					$stmt="SELECT count(*) from vicidial_call_times where call_time_id='$cur_call_time';";
-					$rslt=mysql_to_mysqli($stmt, $link);
-					$row=mysqli_fetch_row($rslt);
-					$call_time_exists  =	$row[0];
-					if ($call_time_exists < 1) 
-						{$cur_call_time = 'campaign';}
-					}
-
-				##### BEGIN local call time for list set different than campaign #####
-				if ($cur_call_time != "campaign")
-					{
-					##### BEGIN calculate what gmt_offset_now values are within the allowed local_call_time setting ###
-					$stmt = "SELECT call_time_id,call_time_name,call_time_comments,ct_default_start,ct_default_stop,ct_sunday_start,ct_sunday_stop,ct_monday_start,ct_monday_stop,ct_tuesday_start,ct_tuesday_stop,ct_wednesday_start,ct_wednesday_stop,ct_thursday_start,ct_thursday_stop,ct_friday_start,ct_friday_stop,ct_saturday_start,ct_saturday_stop,ct_state_call_times,ct_holidays FROM vicidial_call_times where call_time_id='$cur_call_time';";
-					if ($DB) {echo "$stmt\n";}
-					$rsltD=mysql_to_mysqli($stmt, $link);
-					$aryD=mysqli_fetch_row($rsltD);
-					$Gct_default_start =	$aryD[3];
-					$Gct_default_stop =		$aryD[4];
-					$Gct_sunday_start =		$aryD[5];
-					$Gct_sunday_stop =		$aryD[6];
-					$Gct_monday_start =		$aryD[7];
-					$Gct_monday_stop =		$aryD[8];
-					$Gct_tuesday_start =	$aryD[9];
-					$Gct_tuesday_stop =		$aryD[10];
-					$Gct_wednesday_start =	$aryD[11];
-					$Gct_wednesday_stop =	$aryD[12];
-					$Gct_thursday_start =	$aryD[13];
-					$Gct_thursday_stop =	$aryD[14];
-					$Gct_friday_start =		$aryD[15];
-					$Gct_friday_stop =		$aryD[16];
-					$Gct_saturday_start =	$aryD[17];
-					$Gct_saturday_stop =	$aryD[18];
-					$Gct_state_call_times = $aryD[19];
-					$Gct_holidays =			$aryD[20];
-
-					### BEGIN Check for outbound holiday ###
-					$holiday_id = '';
-					if (strlen($Gct_holidays)>2)
-						{
-						$Gct_holidaysSQL = preg_replace("/\|/", "','", "$Gct_holidays");
-						$Gct_holidaysSQL = "'".$Gct_holidaysSQL."'";
-						
-						$stmt = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id IN($Gct_holidaysSQL) and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
-						$rslt=mysql_to_mysqli($stmt, $link);
-						$sthCrows=mysqli_num_rows($rslt);
-						if ($sthCrows > 0)
-							{
-							$aryC=mysqli_fetch_row($rslt);
-							$holiday_id =				$aryC[0];
-							$holiday_date =				$aryC[1];
-							$holiday_name =				$aryC[2];
-							if ( ($Gct_default_start < $aryC[3]) && ($Gct_default_stop > 0) )		{$Gct_default_start = $aryC[3];}
-							if ( ($Gct_default_stop > $aryC[4]) && ($Gct_default_stop > 0) )		{$Gct_default_stop = $aryC[4];}
-							if ( ($Gct_sunday_start < $aryC[3]) && ($Gct_sunday_stop > 0) )			{$Gct_sunday_start = $aryC[3];}
-							if ( ($Gct_sunday_stop > $aryC[4]) && ($Gct_sunday_stop > 0) )			{$Gct_sunday_stop = $aryC[4];}
-							if ( ($Gct_monday_start < $aryC[3]) && ($Gct_monday_stop > 0) )			{$Gct_monday_start = $aryC[3];}
-							if ( ($Gct_monday_stop >	$aryC[4]) && ($Gct_monday_stop > 0) )		{$Gct_monday_stop =	$aryC[4];}
-							if ( ($Gct_tuesday_start < $aryC[3]) && ($Gct_tuesday_stop > 0) )		{$Gct_tuesday_start = $aryC[3];}
-							if ( ($Gct_tuesday_stop > $aryC[4]) && ($Gct_tuesday_stop > 0) )		{$Gct_tuesday_stop = $aryC[4];}
-							if ( ($Gct_wednesday_start < $aryC[3]) && ($Gct_wednesday_stop > 0) ) 	{$Gct_wednesday_start = $aryC[3];}
-							if ( ($Gct_wednesday_stop > $aryC[4]) && ($Gct_wednesday_stop > 0) )	{$Gct_wednesday_stop = $aryC[4];}
-							if ( ($Gct_thursday_start < $aryC[3]) && ($Gct_thursday_stop > 0) )		{$Gct_thursday_start = $aryC[3];}
-							if ( ($Gct_thursday_stop > $aryC[4]) && ($Gct_thursday_stop > 0) )		{$Gct_thursday_stop = $aryC[4];}
-							if ( ($Gct_friday_start < $aryC[3]) && ($Gct_friday_stop > 0) )			{$Gct_friday_start = $aryC[3];}
-							if ( ($Gct_friday_stop > $aryC[4]) && ($Gct_friday_stop > 0) )			{$Gct_friday_stop = $aryC[4];}
-							if ( ($Gct_saturday_start < $aryC[3]) && ($Gct_saturday_stop > 0) )		{$Gct_saturday_start = $aryC[3];}
-							if ( ($Gct_saturday_stop > $aryC[4]) && ($Gct_saturday_stop > 0) )		{$Gct_saturday_stop = $aryC[4];}
-							if ($DB) {echo "LIST CALL TIME HOLIDAY FOUND!   $local_call_time|$holiday_id|$holiday_date|$holiday_name|$Gct_default_start|$Gct_default_stop|\n";}
-							}
-						}
-					### END Check for outbound holiday ###
-
-					$ct_states = '';
-					$ct_state_gmt_SQL = '';
-					$ct_srs=0;
-					$b=0;
-					if (strlen($Gct_state_call_times)>2)
-						{
-						$state_rules = explode('|',$Gct_state_call_times);
-						$ct_srs = ((count($state_rules)) - 2);
-						}
-					while($ct_srs >= $b)
-						{
-						if (strlen($state_rules[$b])>1)
-							{
-							$stmt = "SELECT state_call_time_id,state_call_time_state,state_call_time_name,state_call_time_comments,sct_default_start,sct_default_stop,sct_sunday_start,sct_sunday_stop,sct_monday_start,sct_monday_stop,sct_tuesday_start,sct_tuesday_stop,sct_wednesday_start,sct_wednesday_stop,sct_thursday_start,sct_thursday_stop,sct_friday_start,sct_friday_stop,sct_saturday_start,sct_saturday_stop,ct_holidays from vicidial_state_call_times where state_call_time_id='$state_rules[$b]';";
-							$rslt=mysql_to_mysqli($stmt, $link);
-							$sthCrows=mysqli_num_rows($rslt);
-							if ($sthCrows > 0)
-								{
-								$aryC=mysqli_fetch_row($rslt);
-								$Gstate_call_time_id =		$aryC[0];
-								$Gstate_call_time_state =	$aryC[1];
-								$Gsct_default_start =		$aryC[4];
-								$Gsct_default_stop =		$aryC[5];
-								$Gsct_sunday_start =		$aryC[6];
-								$Gsct_sunday_stop =			$aryC[7];
-								$Gsct_monday_start =		$aryC[8];
-								$Gsct_monday_stop =			$aryC[9];
-								$Gsct_tuesday_start =		$aryC[10];
-								$Gsct_tuesday_stop =		$aryC[11];
-								$Gsct_wednesday_start =		$aryC[12];
-								$Gsct_wednesday_stop =		$aryC[13];
-								$Gsct_thursday_start =		$aryC[14];
-								$Gsct_thursday_stop =		$aryC[15];
-								$Gsct_friday_start =		$aryC[16];
-								$Gsct_friday_stop =			$aryC[17];
-								$Gsct_saturday_start =		$aryC[18];
-								$Gsct_saturday_stop =		$aryC[19];
-								$Sct_holidays =				$aryC[20];
-								$ct_states .="'$Gstate_call_time_state',";
-								}
-
-							### BEGIN Check for outbound state holiday ###
-							$Sholiday_id = '';
-							if ((strlen($Sct_holidays)>2) or ((strlen($holiday_id)>2) and (strlen($Sholiday_id)<2))) 
-								{
-								#Apply state holiday
-								if (strlen($Sct_holidays)>2)
-									{								
-									$Sct_holidaysSQL = preg_replace("/\|/", "','", "$Sct_holidays");
-									$Sct_holidaysSQL = "'".$Sct_holidaysSQL."'";
-									$stmt = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id IN($Sct_holidaysSQL) and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
-									$holidaytype = "LIST STATE CALL TIME HOLIDAY FOUND!   ";
-									}
-								#Apply call time wide holiday
-								elseif ((strlen($holiday_id)>2) and (strlen($Sholiday_id)<2))
-									{
-									$stmt = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop from vicidial_call_time_holidays where holiday_id='$holiday_id' and holiday_status='ACTIVE' and holiday_date='$YMD' order by holiday_id;";
-									$holidaytype = "LIST NO STATE HOLIDAY APPLYING CALL TIME HOLIDAY!   ";
-									}				
-								$rslt=mysql_to_mysqli($stmt, $link);
-								if ($DB) {echo "$stmt\n";}
-								$sthCrows=mysqli_num_rows($rslt);
-								if ($sthCrows > 0)
-									{
-									$aryC=mysqli_fetch_row($rslt);
-									$Sholiday_id =				$aryC[0];
-									$Sholiday_date =			$aryC[1];
-									$Sholiday_name =			$aryC[2];
-									if ( ($Gsct_default_start < $aryC[3]) && ($Gsct_default_stop > 0) )		{$Gsct_default_start = $aryC[3];}
-									if ( ($Gsct_default_stop > $aryC[4]) && ($Gsct_default_stop > 0) )		{$Gsct_default_stop = $aryC[4];}
-									if ( ($Gsct_sunday_start < $aryC[3]) && ($Gsct_sunday_stop > 0) )		{$Gsct_sunday_start = $aryC[3];}
-									if ( ($Gsct_sunday_stop > $aryC[4]) && ($Gsct_sunday_stop > 0) )		{$Gsct_sunday_stop = $aryC[4];}
-									if ( ($Gsct_monday_start < $aryC[3]) && ($Gsct_monday_stop > 0) )		{$Gsct_monday_start = $aryC[3];}
-									if ( ($Gsct_monday_stop >	$aryC[4]) && ($Gsct_monday_stop > 0) )		{$Gsct_monday_stop =	$aryC[4];}
-									if ( ($Gsct_tuesday_start < $aryC[3]) && ($Gsct_tuesday_stop > 0) )		{$Gsct_tuesday_start = $aryC[3];}
-									if ( ($Gsct_tuesday_stop > $aryC[4]) && ($Gsct_tuesday_stop > 0) )		{$Gsct_tuesday_stop = $aryC[4];}
-									if ( ($Gsct_wednesday_start < $aryC[3]) && ($Gsct_wednesday_stop > 0) ) {$Gsct_wednesday_start = $aryC[3];}
-									if ( ($Gsct_wednesday_stop > $aryC[4]) && ($Gsct_wednesday_stop > 0) )	{$Gsct_wednesday_stop = $aryC[4];}
-									if ( ($Gsct_thursday_start < $aryC[3]) && ($Gsct_thursday_stop > 0) )	{$Gsct_thursday_start = $aryC[3];}
-									if ( ($Gsct_thursday_stop > $aryC[4]) && ($Gsct_thursday_stop > 0) )	{$Gsct_thursday_stop = $aryC[4];}
-									if ( ($Gsct_friday_start < $aryC[3]) && ($Gsct_friday_stop > 0) )		{$Gsct_friday_start = $aryC[3];}
-									if ( ($Gsct_friday_stop > $aryC[4]) && ($Gsct_friday_stop > 0) )		{$Gsct_friday_stop = $aryC[4];}
-									if ( ($Gsct_saturday_start < $aryC[3]) && ($Gsct_saturday_stop > 0) )	{$Gsct_saturday_start = $aryC[3];}
-									if ( ($Gsct_saturday_stop > $aryC[4]) && ($Gsct_saturday_stop > 0) )	{$Gsct_saturday_stop = $aryC[4];}
-									if ($DB) {echo "$holidaytype   |$Gstate_call_time_id|$Gstate_call_time_state|$Sholiday_id|$Sholiday_date|$Sholiday_name|$Gsct_default_start|$Gsct_default_stop|\n";}
-									}
-								}
-							### END Check for outbound state holiday ###
-
-							$r=0;
-							$state_gmt='';
-							$del_state_gmt='';
-							while($r < $g)
-								{
-								if ($GMT_day[$r]==0)	#### Sunday local time
-									{
-									if (($Gsct_sunday_start==0) && ($Gsct_sunday_stop==0))
-										{
-										if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
-											{$state_gmt.="'$GMT_gmt[$r]',";}
-										}
-									else
-										{
-										if ( ($GMT_hour[$r]>=$Gsct_sunday_start) && ($GMT_hour[$r]<$Gsct_sunday_stop) )
-											{$state_gmt.="'$GMT_gmt[$r]',";}
-										}
-									}
-								if ($GMT_day[$r]==1)	#### Monday local time
-									{
-									if (($Gsct_monday_start==0) && ($Gsct_monday_stop==0))
-										{
-										if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
-											{$state_gmt.="'$GMT_gmt[$r]',";}
-										}
-									else
-										{
-										if ( ($GMT_hour[$r]>=$Gsct_monday_start) && ($GMT_hour[$r]<$Gsct_monday_stop) )
-											{$state_gmt.="'$GMT_gmt[$r]',";}
-										}
-									}
-								if ($GMT_day[$r]==2)	#### Tuesday local time
-									{
-									if (($Gsct_tuesday_start==0) && ($Gsct_tuesday_stop==0))
-										{
-										if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
-											{$state_gmt.="'$GMT_gmt[$r]',";}
-										}
-									else
-										{
-										if ( ($GMT_hour[$r]>=$Gsct_tuesday_start) && ($GMT_hour[$r]<$Gsct_tuesday_stop) )
-											{$state_gmt.="'$GMT_gmt[$r]',";}
-										}
-									}
-								if ($GMT_day[$r]==3)	#### Wednesday local time
-									{
-									if (($Gsct_wednesday_start==0) && ($Gsct_wednesday_stop==0))
-										{
-										if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
-											{$state_gmt.="'$GMT_gmt[$r]',";}
-										}
-									else
-										{
-										if ( ($GMT_hour[$r]>=$Gsct_wednesday_start) && ($GMT_hour[$r]<$Gsct_wednesday_stop) )
-											{$state_gmt.="'$GMT_gmt[$r]',";}
-										}
-									}
-								if ($GMT_day[$r]==4)	#### Thursday local time
-									{
-									if (($Gsct_thursday_start==0) && ($Gsct_thursday_stop==0))
-										{
-										if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
-											{$state_gmt.="'$GMT_gmt[$r]',";}
-										}
-									else
-										{
-										if ( ($GMT_hour[$r]>=$Gsct_thursday_start) && ($GMT_hour[$r]<$Gsct_thursday_stop) )
-											{$state_gmt.="'$GMT_gmt[$r]',";}
-										}
-									}
-								if ($GMT_day[$r]==5)	#### Friday local time
-									{
-									if (($Gsct_friday_start==0) && ($Gsct_friday_stop==0))
-										{
-										if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
-											{$state_gmt.="'$GMT_gmt[$r]',";}
-										}
-									else
-										{
-										if ( ($GMT_hour[$r]>=$Gsct_friday_start) && ($GMT_hour[$r]<$Gsct_friday_stop) )
-											{$state_gmt.="'$GMT_gmt[$r]',";}
-										}
-									}
-								if ($GMT_day[$r]==6)	#### Saturday local time
-									{
-									if (($Gsct_saturday_start==0) && ($Gsct_saturday_stop==0))
-										{
-										if ( ($GMT_hour[$r]>=$Gsct_default_start) && ($GMT_hour[$r]<$Gsct_default_stop) )
-											{$state_gmt.="'$GMT_gmt[$r]',";}
-										}
-									else
-										{
-										if ( ($GMT_hour[$r]>=$Gsct_saturday_start) && ($GMT_hour[$r]<$Gsct_saturday_stop) )
-											{$state_gmt.="'$GMT_gmt[$r]',";}
-										}
-									}
-								$r++;
-								}
-							$state_gmt = "$state_gmt'99'";
-		
-							$del_list_state_gmt_SQL .= "or (List_id=\"$cur_list_id\" and state='$Gstate_call_time_state' and gmt_offset_now NOT IN($state_gmt)) ";
-							$list_state_gmt_SQL .= "or (List_id=\"$cur_list_id\" and state='$Gstate_call_time_state' and gmt_offset_now IN($state_gmt)) ";
-							}
-
-						$b++;
-						}
-					if (strlen($ct_states)>2)
-						{
-						$ct_states = preg_replace("/,$/i",'',$ct_states);
-						$ct_statesSQL = "and state NOT IN($ct_states)";
-						}
-					else
-						{
-						$ct_statesSQL = "";
-						}
-
-					$r=0;
-					$dgA=0;
-					$list_default_gmt='';
-					while($r < $g)
-						{
-						if ($DB > 0) 
-							{echo "LCT_gmt: $r|$GMT_day[$r]|$GMT_gmt[$r]|$Gct_sunday_start|$Gct_sunday_stop|$GMT_hour[$r]|$Gct_default_start|$Gct_default_stop\n";}
-
-						if ($GMT_day[$r]==0)	#### Sunday local time
-							{
-							if (($Gct_sunday_start==0) && ($Gct_sunday_stop==0))
-								{
-								if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
-									{}
-								else
-									{$list_default_gmt.="'$GMT_gmt[$r]',";}
-								}
-							else
-								{
-								if ( ($GMT_hour[$r]>=$Gct_sunday_start) && ($GMT_hour[$r]<$Gct_sunday_stop) )
-									{}
-								else
-									{$list_default_gmt.="'$GMT_gmt[$r]',";}
-								}
-							}
-						if ($GMT_day[$r]==1)	#### Monday local time
-							{
-							if (($Gct_monday_start==0) && ($Gct_monday_stop==0))
-								{
-								if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
-									{}
-								else
-									{$list_default_gmt.="'$GMT_gmt[$r]',";}
-								}
-							else
-								{
-								if ( ($GMT_hour[$r]>=$Gct_monday_start) && ($GMT_hour[$r]<$Gct_monday_stop) )
-									{}
-								else
-									{$list_default_gmt.="'$GMT_gmt[$r]',";}
-								}
-							}
-						if ($GMT_day[$r]==2)	#### Tuesday local time
-							{
-							if (($Gct_tuesday_start==0) && ($Gct_tuesday_stop==0))
-								{
-								if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
-									{}
-								else
-									{$list_default_gmt.="'$GMT_gmt[$r]',";}
-								}
-							else
-								{
-								if ( ($GMT_hour[$r]>=$Gct_tuesday_start) && ($GMT_hour[$r]<$Gct_tuesday_stop) )
-									{}
-								else
-									{$list_default_gmt.="'$GMT_gmt[$r]',";}
-								}
-							}
-						if ($GMT_day[$r]==3)	#### Wednesday local time
-							{
-							if (($Gct_wednesday_start==0) && ($Gct_wednesday_stop==0))
-								{
-								if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
-									{}
-								else
-									{$list_default_gmt.="'$GMT_gmt[$r]',";}
-								}
-							else
-								{
-								if ( ($GMT_hour[$r]>=$Gct_wednesday_start) && ($GMT_hour[$r]<$Gct_wednesday_stop) )
-									{}
-								else
-									{$list_default_gmt.="'$GMT_gmt[$r]',";}
-								}
-							}
-						if ($GMT_day[$r]==4)	#### Thursday local time
-							{
-							if (($Gct_thursday_start==0) && ($Gct_thursday_stop==0))
-								{
-								if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
-									{}
-								else
-									{$list_default_gmt.="'$GMT_gmt[$r]',";}
-								}
-							else
-								{
-								if ( ($GMT_hour[$r]>=$Gct_thursday_start) && ($GMT_hour[$r]<$Gct_thursday_stop) )
-									{}
-								else
-									{$list_default_gmt.="'$GMT_gmt[$r]',";}
-								}
-							}
-						if ($GMT_day[$r]==5)	#### Friday local time
-							{
-							if (($Gct_friday_start==0) && ($Gct_friday_stop==0))
-								{
-								if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
-									{}
-								else
-									{$list_default_gmt.="'$GMT_gmt[$r]',";}
-								}
-							else
-								{
-								if ( ($GMT_hour[$r]>=$Gct_friday_start) && ($GMT_hour[$r]<$Gct_friday_stop) )
-									{}
-								else
-									{$list_default_gmt.="'$GMT_gmt[$r]',";}
-								}
-							}
-						if ($GMT_day[$r]==6)	#### Saturday local time
-							{
-							if (($Gct_saturday_start==0) && ($Gct_saturday_stop==0))
-								{
-								if ( ($GMT_hour[$r]>=$Gct_default_start) && ($GMT_hour[$r]<$Gct_default_stop) )
-									{}
-								else
-									{$list_default_gmt.="'$GMT_gmt[$r]',";}
-								}
-							else
-								{
-								if ( ($GMT_hour[$r]>=$Gct_saturday_start) && ($GMT_hour[$r]<$Gct_saturday_stop) )
-									{}
-								else
-									{$list_default_gmt.="'$GMT_gmt[$r]',";}
-								}
-							}
-						$r++;
-						}
-
-					$list_default_gmt = "$list_default_gmt'99'";
-					$LCTlist_id_sql .= " or ((list_id='$cur_list_id' and gmt_offset_now NOT IN($list_default_gmt) $ct_statesSQL) $list_state_gmt_SQL)";
-					}
-				##### END local call time for list set different than campaign #####
-
-				else
-					{
-					if (strlen($list_id_sql) < 3) 
-						{
-						$list_id_sql = "(list_id IN('$cur_list_id'";
-						}
-					else 
-						{
-						$list_id_sql .= ",'$cur_list_id'";
-						}
-					}
-
-				$k++;
-				}
-			$camp_lists = preg_replace("/.$/i","",$camp_lists);
-			if (strlen($camp_lists) < 4) {$camp_lists="''";}
-			if (strlen($list_id_sql) < 4) {$list_id_sql="list_id=''";}
-			else {$list_id_sql .= '))';}
-			if (strlen($LCTlist_id_sql) > 1) {$list_id_sql .= "$LCTlist_id_sql";}
-
-
-			$stmt="SELECT count(*) FROM vicidial_list where called_since_last_reset='N' and status IN($Dsql) and list_id IN($camp_lists) and ($list_id_sql) and ($all_gmtSQL) $CCLsql $DLTsql $fSQL $EXPsql";
-			#$DB=1;
-			if ($DB) {echo "$stmt\n";}
-			$rslt=mysql_to_mysqli($stmt, $link);
-			$rslt_rows = mysqli_num_rows($rslt);
-			if ($rslt_rows)
-				{
-				$rowx=mysqli_fetch_row($rslt);
-				$active_leads = "$rowx[0]";
-				}
-			else {$active_leads = '0';}
-
-			if ($DB > 0) {echo "|$DB|\n";}
-			if ($single_status > 0)
-				{return $active_leads;}
-			else
-				{echo _QXZ("This campaign has")." $active_leads "._QXZ("leads to be dialed in those lists")."\n";}
-			}
-		else
-			{
-			echo _QXZ("no dial statuses selected for this campaign")."\n";
-			}
-		}
-	else
-		{
-		echo _QXZ("no active lists selected for this campaign")."\n";
-		}
-	}
-else
-	{
-	echo _QXZ("no active lists selected for this campaign")."\n";
-	}
-##### END calculate what gmt_offset_now values are within the allowed local_call_time setting ###
-}
 ?>

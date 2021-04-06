@@ -175,10 +175,11 @@
 # 210330-1633 - Added ability to use custom_fields_copy on update_list on a deleted list_id
 # 210401-1058 - Added 'custom_fields_update' option for update_list function
 # 210402-1102 - Added 'custom_fields_delete' option for update_list function
+# 210406-1047 - Added 'dialable_count' option to list_info function
 #
 
-$version = '2.14-152';
-$build = '210402-1102';
+$version = '2.14-153';
+$build = '210406-1047';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -637,6 +638,8 @@ if (isset($_GET["custom_fields_update"]))			{$custom_fields_update=$_GET["custom
 	elseif (isset($_POST["custom_fields_update"]))	{$custom_fields_update=$_POST["custom_fields_update"];}
 if (isset($_GET["custom_fields_delete"]))			{$custom_fields_delete=$_GET["custom_fields_delete"];}
 	elseif (isset($_POST["custom_fields_delete"]))	{$custom_fields_delete=$_POST["custom_fields_delete"];}
+if (isset($_GET["dialable_count"]))				{$dialable_count=$_GET["dialable_count"];}
+	elseif (isset($_POST["dialable_count"]))	{$dialable_count=$_POST["dialable_count"];}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -914,6 +917,7 @@ $field_rerank = preg_replace('/[^_0-9a-zA-Z]/','',$field_rerank);
 $custom_fields_add = preg_replace('/[^_0-9a-zA-Z]/','',$custom_fields_add);
 $custom_fields_update = preg_replace('/[^_0-9a-zA-Z]/','',$custom_fields_update);
 $custom_fields_delete = preg_replace('/[^_0-9a-zA-Z]/','',$custom_fields_delete);
+$dialable_count = preg_replace('/[^_0-9a-zA-Z]/','',$dialable_count);
 
 $USarea = 			substr($phone_number, 0, 3);
 $USprefix = 		substr($phone_number, 3, 3);
@@ -6433,10 +6437,50 @@ if ($function == 'list_info')
 
 						$leads_counts_output .= $DL . "$all_leads_count" . $DL . "$new_leads_count";
 						}
+					$leads_dialable_output='';
+					if ($dialable_count == 'Y')
+						{
+						if ($header == 'YES')
+							{$output .= $DL . 'dialable_count';}
+
+						$stmt="SELECT dial_statuses,local_call_time,lead_filter_id,drop_lockout_time,call_count_limit from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$camps_to_print = mysqli_num_rows($rslt);
+						if ($camps_to_print > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$dial_statuses =		$row[0];
+							$local_call_time =		$row[1];
+							$lead_filter_id =		$row[2];
+							$drop_lockout_time =	$row[3];
+							$call_count_limit =		$row[4];
+							}
+
+						$stmt="SELECT lead_filter_sql from vicidial_lead_filters where lead_filter_id='$lead_filter_id';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$filters_to_print = mysqli_num_rows($rslt);
+						$filterSQL='';
+						if ($filters_to_print > 0) 
+							{
+							$rowx=mysqli_fetch_row($rslt);
+							$filterSQL = "$rowx[0]";
+							}
+						$filterSQL = preg_replace("/\\\\/","",$filterSQL);
+						$filterSQL = preg_replace('/^and|and$|^or|or$/i', '',$filterSQL);
+						if (strlen($filterSQL)>4)
+							{$fSQL = "and ($filterSQL)";}
+						else
+							{$fSQL = '';}
+
+						### call function to calculate and print dialable leads
+						$single_status=0;
+						$only_return=1;
+						$leads_dialable_output = dialable_leads($DB,$link,$local_call_time,$dial_statuses,"'$list_id'",$drop_lockout_time,$call_count_limit,$single_status,$fSQL,$only_return);
+						}
 					if ($header == 'YES')
 						{$output .= "\n";}
 
-					$output .= "$list_id" . $DL . "$list_name" . $DL . "$campaign_id" . $DL . "$active" . $DL . "$list_changedate" . $DL . "$list_lastcalldate" . $DL . "$expiration_date" . $DL . "$resets_today" . $leads_counts_output . "\n";
+					$output .= "$list_id" . $DL . "$list_name" . $DL . "$campaign_id" . $DL . "$active" . $DL . "$list_changedate" . $DL . "$list_lastcalldate" . $DL . "$expiration_date" . $DL . "$resets_today" . $leads_counts_output . $DL . $leads_dialable_output . "\n";
 
 					$result = 'SUCCESS';
 					$result_reason = "list_info LIST INFORMATION SENT";

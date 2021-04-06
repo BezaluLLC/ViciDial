@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-04-02
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-04-06
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -185,6 +185,7 @@ Changes:
 210330-1633 - Added ability to use custom_fields_copy on update_list on a deleted list_id
 210401-1058 - Added 'custom_fields_update' option for update_list function
 210402-1102 - Added 'custom_fields_delete' option for update_list function
+210406-1047 - Added 'dialable_count' option to list_info function
 
 API Functions use the 'function' variable
 
@@ -1843,6 +1844,7 @@ source -		description of what originated the API call (maximum 20 characters)
 
 SETTINGS FIELDS- (optional)
 leads_counts -		Y or N, will include the counts of all leads and NEW status leads in the response, default is 'N'
+dialable_count -	Y or N, will use the list's campaign settings to provide a count of how many are dialable right now, default is 'N'
 stage -			the format of the exported data: csv, tab, pipe(default)
 header -		include a header(YES) or not(NO). This is optional, default is not to include a header
 

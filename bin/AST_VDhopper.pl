@@ -22,7 +22,7 @@
 #  - S = Standard hopper load
 #  - D = Campaign Drop-Run
 #
-# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 50810-1613 - Added database server variable definitions lookup
@@ -100,10 +100,11 @@
 # 201111-1359 - Added support for hopper_drop_run_trigger
 # 201122-1039 - Added support for daily call count limits
 # 201220-1032 - Changes for shared agent campaigns
+# 210405-1008 - Added hopper_drop_run_trigger=A option
 #
 
 # constants
-$build = '201220-1032';
+$build = '210405-1008';
 $DB=0;  # Debug flag, set to 0 for no debug messages. Can be overriden with CLI --debug flag
 $US='__';
 $MT[0]='';
@@ -2658,10 +2659,40 @@ foreach(@campaign_id)
 		$hopperPRIORITY='0';
 
 		##### Load overrides if Hopper Drop-Run is triggered #####
-		if ($hopper_drop_run_trigger[$i] =~ /Y/)
+		if ($hopper_drop_run_trigger[$i] =~ /Y|A/)
 			{
+			if ($hopper_drop_run_trigger[$i] =~ /A/)
+				{
+				$ALL_drop_statuses="'DROP','PDROP','XDROP'";
+				$stmtA = "SELECT status FROM vicidial_statuses where status LIKE \"%DROP%\" or status_name LIKE \"%DROP%\";";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArowsA=$sthA->rows;
+				$rec_count=0;
+				while ($sthArowsA > $rec_count)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$ALL_drop_statuses .= ",'$aryA[0]'";
+					$rec_count++;
+					}
+				$sthA->finish();
+				$stmtA = "SELECT status FROM vicidial_campaign_statuses where status LIKE \"%DROP%\" or status_name LIKE \"%DROP%\";";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArowsA=$sthA->rows;
+				$rec_count=0;
+				while ($sthArowsA > $rec_count)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$ALL_drop_statuses .= ",'$aryA[0]'";
+					$rec_count++;
+					}
+				$sthA->finish();
+				}
+			else
+				{$ALL_drop_statuses="'DROP'";}
 			$cslrSQL='';
-			$STATUSsql[$i]="'DROP'";
+			$STATUSsql[$i] = $ALL_drop_statuses;
 			$list_order_mix[$i]='DISABLED';
 			$lead_order[$i]='DOWN LAST CALL TIME';
 			$hopper_level[$i]='20000';
@@ -2672,8 +2703,8 @@ foreach(@campaign_id)
 			$affected_rows = $dbhA->do($stmtA);
 			if ($DBX) {print "CAMPAIGN Hopper Drop-Run RESET: $affected_rows|$stmtA|\n";}
 
-			if ($DB) {print "Campaign Drop-Run triggered for $campaign_id[$i] |$STATUSsql[$i]|$list_order_mix[$i]|$affected_rows|\n";}
-			$hopper_begin_output .= "Campaign Drop-Run triggered for $campaign_id[$i] |$STATUSsql[$i]|$list_order_mix[$i]|$affected_rows| \n";
+			if ($DB) {print "Campaign Drop-Run triggered for $campaign_id[$i]($hopper_drop_run_trigger[$i]) |$STATUSsql[$i]|$list_order_mix[$i]|$affected_rows|\n";}
+			$hopper_begin_output .= "Campaign Drop-Run triggered for $campaign_id[$i]($hopper_drop_run_trigger[$i]) |$STATUSsql[$i]|$list_order_mix[$i]|$affected_rows| \n";
 			}
 
 		##### Get count of leads that are dialable #####
@@ -3371,13 +3402,13 @@ foreach(@campaign_id)
 					$insert_end_output .= "     DNC lead skipped:                               $DNCskip \n";
 					$insert_end_output .= "     Daily call count limit lead skipped:            $DCCLskip \n";
 					if ($DB) {print "$insert_end_output";}
-					$insert_end_outputSQL = ",adapt_output='$insert_end_output'";
+					$insert_end_outputSQL = ",adapt_output=\"$insert_end_output\"";
 					}
 				}
 			}
 		}
 	# update debug output
-	$stmtA = "UPDATE vicidial_campaign_stats_debug SET entry_time='$now_date',debug_output='$hopper_begin_output'$insert_end_outputSQL where campaign_id='$campaign_id[$i]' and server_ip='HOPPER';";
+	$stmtA = "UPDATE vicidial_campaign_stats_debug SET entry_time='$now_date',debug_output=\"$hopper_begin_output\"$insert_end_outputSQL where campaign_id='$campaign_id[$i]' and server_ip='HOPPER';";
 	$affected_rows = $dbhA->do($stmtA);
 
 	$i++;
