@@ -4537,6 +4537,24 @@ index (db_time),
 unique index visibleuser (user, visibility, event_end_epoch)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_peer_event_log (
+`peer_event_id` INT(9) UNSIGNED NOT NULL AUTO_INCREMENT,
+`event_type` ENUM('UNKNOWN','REGISTERED','UNREGISTERED','REACHABLE','LAGGED','UNREACHABLE','RTPDISCONNECT','CRITICALTIMEOUT') COLLATE utf8_unicode_ci DEFAULT 'UNKNOWN',
+`event_date` DATETIME(6) NOT NULL,
+`channel` VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT '',
+`server_ip` VARCHAR(15) COLLATE utf8_unicode_ci NOT NULL,
+`host_ip` VARCHAR(15) COLLATE utf8_unicode_ci DEFAULT '',
+`port` SMALLINT(6) DEFAULT NULL,
+`channel_type` ENUM('IAX2','SIP') COLLATE utf8_unicode_ci DEFAULT NULL,
+`peer` VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT '',
+`data` VARCHAR(255) COLLATE utf8_unicode_ci DEFAULT '',
+PRIMARY KEY (`peer_event_id`),
+KEY `event_date` (`event_date`),
+KEY `peer` (`peer`),
+KEY `channel` (`channel`)
+) ENGINE=MyISAM AUTO_INCREMENT=630320 DEFAULT CHARSET=utf8 
+COLLATE=utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -4792,6 +4810,9 @@ CREATE UNIQUE INDEX uniqueidtime_park on park_log_archive (uniqueid,parked_time)
 
 CREATE TABLE vicidial_agent_visibility_log_archive LIKE vicidial_agent_visibility_log;
 
+CREATE TABLE vicidial_peer_event_log_archive LIKE vicidial_peer_event_log;
+ALTER TABLE vicidial_peer_event_log_archive MODIFY peer_event_id INT(9) UNSIGNED NOT NULL;
+
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
 
@@ -4875,4 +4896,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1628',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1629',db_schema_update_date=NOW(),reload_timestamp=NOW();
