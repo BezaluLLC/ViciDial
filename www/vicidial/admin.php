@@ -5635,12 +5635,13 @@ if ($SSscript_remove_js > 0)
 # 210325-2220 - Added populate_lead_comments in-group option
 # 210406-1821 - Added hopper_drop_run_trigger_all option, moved dialable_leads function to functions.php
 # 210417-1027 - Added calls_waiting_vl_X campaign settings
+# 210421-2227 - Added more screen labels for non-form fields
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-809a';
-$build = '210417-1027';
+$admin_version = '2.14-810a';
+$build = '210421-2227';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
