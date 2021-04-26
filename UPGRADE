@@ -624,6 +624,11 @@ OTHER CHANGES:
 174. Added campaign options to add extra lead-field columns to the "Calls In
 	Queue" panel in the agent screen.
 
+175. Added Calls In Queue Count Display campaign options, allowing for two 
+	separate Calls Waiting counters at the top of the agent screen, each
+	with separate configurable labels and in-group/campaign parameters.
+	Also, this can be used with the alt_display.php script.
+
 
 
 

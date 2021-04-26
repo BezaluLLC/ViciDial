@@ -1063,7 +1063,9 @@ clear_form ENUM('DISABLED','ENABLED','ACKNOWLEDGE') default 'ACKNOWLEDGE',
 leave_3way_start_recording ENUM('DISABLED','ALL_CALLS','ALL_BUT_EXCEPTIONS','ONLY_EXCEPTIONS') default 'DISABLED',
 leave_3way_start_recording_exception VARCHAR(40) default 'DISABLED',
 calls_waiting_vl_one VARCHAR(25) default 'DISABLED',
-calls_waiting_vl_two VARCHAR(25) default 'DISABLED'
+calls_waiting_vl_two VARCHAR(25) default 'DISABLED',
+calls_inqueue_count_one VARCHAR(40) default 'DISABLED',
+calls_inqueue_count_two VARCHAR(40) default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -4928,4 +4930,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1631',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1632',db_schema_update_date=NOW(),reload_timestamp=NOW();
