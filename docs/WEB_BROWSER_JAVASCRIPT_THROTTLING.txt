@@ -51,7 +51,7 @@ AFTER CHROME 90 INSTRUCTIONS(after April 26th, 2021 builds):
 You will first need to enable enable "temporary-unexpire-flags-m88" or "temporary-unexpire-flags-m89", relaunch your Chrome browser, then follow the instructions for "BEFORE CHROME 90" below.
 - Open your Chrome Web Browser
 - in the Address bar at the top, put the following(without quotes), then press the "Enter" key: "chrome://flags/#temporary-unexpire-flags-m88"
-- You will see "Throttle Javascript timers in background" highlighted with a pull-down menu on the right side of the screen
+- You will see "Temporarily unexpire M89 flags" highlighted with a pull-down menu on the right side of the screen
 - Select the "Enabled" option from the pull-down menu
 - You will see a message at the bottom of your screen: "Your changes will take effect the next time you relaunch Google Chrome." with a button to "Relaunch"
 - Click on the "Relaunch" button and the old flags will now be visible in Chrome on this computer
