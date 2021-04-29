@@ -629,6 +629,10 @@ OTHER CHANGES:
 	with separate configurable labels and in-group/campaign parameters.
 	Also, this can be used with the alt_display.php script.
 
+176. Added new "Music on Hold Suggest" Phones setting for SIP and IAX phones.
+	It will define the Hold music played to a customer when the phone user
+	puts them on hold through the phone.
+
 
 
 

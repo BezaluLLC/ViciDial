@@ -63,4 +63,4 @@ Additional enhancements:
 http://server/agc/alt_display.php?user=6666&ACTION=top_panel
 http://server/agc/alt_display.php?user=6666&ACTION=top_panel_realtime
 http://server/agc/alt_display.php?user=6666&ACTION=agent_status
-http://server/agc/alt_display.php?user=6666&ACTION=top_panel_realtime&calls_in_queue_option=CAMPAIGN
+http://server/agc/alt_display.php?user=6666&ACTION=top_panel_realtime&calls_in_queue_option=CAMPAIGN&calls_in_queue_display=STACKED

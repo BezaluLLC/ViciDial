@@ -19,10 +19,11 @@
 # 200920-0906 - Added agent-lag-time to agent_status action
 # 201026-1504 - Fix for LIVE call issue in top_panel
 # 210426-0138 - Added calls_inqueue_count_ campaign settings options, and calls_in_queue_option=CAMPAIGN setting
+# 210428-2156 - Added calls_in_queue_display setting
 #
 
-$version = '2.14-4';
-$build = '210426-0138';
+$version = '2.14-5';
+$build = '210428-2156';
 $php_script = 'alt_display.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=11;
@@ -32,6 +33,7 @@ $VD_login=0;
 $SSagent_debug_logging=0;
 $pause_to_code_jump=0;
 $startMS = microtime();
+$STACKED_left=80;
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -45,6 +47,8 @@ if (isset($_GET["ACTION"]))						{$ACTION=$_GET["ACTION"];}
 	elseif (isset($_POST["ACTION"]))			{$ACTION=$_POST["ACTION"];}
 if (isset($_GET["calls_in_queue_option"]))				{$calls_in_queue_option=$_GET["calls_in_queue_option"];}
 	elseif (isset($_POST["calls_in_queue_option"]))		{$calls_in_queue_option=$_POST["calls_in_queue_option"];}
+if (isset($_GET["calls_in_queue_display"]))				{$calls_in_queue_display=$_GET["calls_in_queue_display"];}
+	elseif (isset($_POST["calls_in_queue_display"]))	{$calls_in_queue_display=$_POST["calls_in_queue_display"];}
 if (isset($_GET["DB"]))							{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))				{$DB=$_POST["DB"];}
 
@@ -52,6 +56,7 @@ $user = preg_replace("/\'|\"|\\\\|;/","",$user);
 $stage = preg_replace("/[^-_0-9a-zA-Z]/","",$stage);
 $ACTION = preg_replace('/[^-_0-9a-zA-Z]/','',$ACTION);
 $calls_in_queue_option = preg_replace('/[^-_0-9a-zA-Z]/','',$calls_in_queue_option);
+$calls_in_queue_display = preg_replace('/[^-_0-9a-zA-Z]/','',$calls_in_queue_display);
 $DB = preg_replace('/[^-_0-9a-zA-Z]/','',$DB);
 
 # default optional vars if not set
@@ -277,10 +282,11 @@ if ($ACTION == 'top_panel')
 			$CLtime = sprintf('%s:%s',$minutes,str_pad($seconds,2,'0',STR_PAD_LEFT));
 			echo "<font color=\"black\" size=2 face=\"arial,helvetica\">"._QXZ("Call Timer").": $CLtime</font> &nbsp; &nbsp; \n";
 			$stage = "LIVE $CLtime";
+			$STACKED_left = ($STACKED_left + 140);
 			}
 		if ($live_call == 'DEAD')
 			{
-			echo "<font color=\"red\" size=2 face=\"arial,helvetica\"><b>"._QXZ("DEAD CALL")."</font></b> &nbsp; &nbsp; \n";
+			echo "<font color=\"red\" size=2 face=\"arial,helvetica\"><b>"._QXZ("DEAD CALL")."</font></b> &nbsp; \n";
 
 			$call_length = ($VLAlast_state_change_epoch - $VLAlast_call_time_epoch);
 			$minutes = floor($call_length / 60);
@@ -292,9 +298,10 @@ if ($ACTION == 'top_panel')
 			$seconds = $hangup_length - ($minutes * 60);
 			$HUtime = sprintf('%s:%s',$minutes,str_pad($seconds,2,'0',STR_PAD_LEFT));
 
-			echo "<font color=\"black\" size=2 face=\"arial,helvetica\">"._QXZ("Call Time").": $CLtime</font> &nbsp; &nbsp; \n";
-			echo "<font color=\"black\" size=2 face=\"arial,helvetica\">"._QXZ("Dead Timer").": $HUtime</font> &nbsp; &nbsp; \n";
+			echo "<font color=\"black\" size=2 face=\"arial,helvetica\">"._QXZ("Call Time").": $CLtime</font> &nbsp; \n";
+			echo "<font color=\"black\" size=2 face=\"arial,helvetica\">"._QXZ("Dead Timer").": $HUtime</font> &nbsp; \n";
 			$stage = "DEAD $CLtime $HUtime";
+			$STACKED_left = ($STACKED_left + 230);
 			}
 		}
 	else
@@ -322,18 +329,6 @@ if ($ACTION == 'top_panel')
 		$AccampSQL = preg_replace('/AGENTDIRECT/i','', $AccampSQL);
 		$ADsql = "or ( (campaign_id LIKE \"%AGENTDIRECT%\") and (agent_only='$user') )";
 		}
-
-
-
-
-
-
-
-
-
-
-
-
 
 	### BEGIN check for calls_inqueue_count_ settings containers and calculate calls in queue ###
 	$RingCallsOne='';
@@ -689,7 +684,16 @@ if ($ACTION == 'top_panel')
 			if ( (strlen($RingCallsOne) > 10) or (strlen($RingCallsTwo) > 10) )
 				{
 				if ( (strlen($RingCallsOne) > 10) and (strlen($RingCallsTwo) > 10) )
-					{echo "$RingCallsOne &nbsp; &nbsp; $RingCallsTwo";}
+					{
+					if ($calls_in_queue_display == 'STACKED')
+						{
+						echo " &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
+						echo "<span style=\"position:absolute;left:".$STACKED_left."px;top:0px;z-index:100;\" id=\"CallsInQueue1\">$RingCallsOne</span>";
+						echo "<span style=\"position:absolute;left:".$STACKED_left."px;top:12px;z-index:101;\" id=\"CallsInQueue2\">$RingCallsTwo</span>";
+						}
+					else
+						{echo "$RingCallsOne &nbsp; &nbsp; $RingCallsTwo";}
+					}
 				else
 					{echo "$RingCallsOne$RingCallsTwo";}
 				}
@@ -792,7 +796,7 @@ if ($ACTION == 'top_panel_realtime')
 			}
 		if (xmlhttp) 
 			{ 
-			top_panel_query = "user=<?php echo $user ?>&ACTION=top_panel&calls_in_queue_option=<?php echo $calls_in_queue_option ?>";
+			top_panel_query = "user=<?php echo $user ?>&ACTION=top_panel&calls_in_queue_option=<?php echo $calls_in_queue_option ?>&calls_in_queue_display=<?php echo $calls_in_queue_display ?>";
 			xmlhttp.open('POST', 'alt_display.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(top_panel_query); 
