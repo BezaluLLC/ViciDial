@@ -51,10 +51,11 @@
 # 210315-1747 - Added campaign setting for clear_form
 # 210329-2025 - Fixed for consistent custom fields values filtering
 # 210404-1522 - Added only_field option for refresh of already-loaded custom form SOURCESELECT element
+# 210506-1825 - Fix for SELECTSOURCE reloading issue
 #
 
-$version = '2.14-41';
-$build = '210404-1522';
+$version = '2.14-42';
+$build = '210506-1825';
 $php_script = 'vdc_form_display.php';
 
 require_once("dbconnect_mysqli.php");
@@ -266,6 +267,8 @@ if (($server_port == '80') or ($server_port == '443') ) {$server_port='';}
 else {$server_port = "$CL$server_port";}
 $vdcPAGE = "$HTTPprotocol$server_name$server_port$script_name";
 $vdcURL = $vdcPAGE . '?' . $query_string;
+$PHP_SELF=$_SERVER['PHP_SELF'];
+$PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
 
 $vicidial_list_fields = '|lead_id|entry_date|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|';
 
@@ -905,7 +908,7 @@ if ($SUBMIT_only < 1)
 			{ 
 			LSview_query = "only_field=" + temp_field + "&source_field=" + temp_source + "&source_field_value=" + temp_source_value + "&stage=REFRESH_SINGLE_FIELD&<?php echo $only_field_query ?>";
 			//document.getElementById("debugbottomspan2").innerHTML = LSview_query;
-			xmlhttp.open('POST', 'vdc_form_display_encrypt.php'); 
+			xmlhttp.open('POST', '<?php echo $PHP_SELF ?>'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(LSview_query); 
 			xmlhttp.onreadystatechange = function() 
