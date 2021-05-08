@@ -908,7 +908,7 @@ if ($SUBMIT_only < 1)
 			{ 
 			LSview_query = "only_field=" + temp_field + "&source_field=" + temp_source + "&source_field_value=" + temp_source_value + "&stage=REFRESH_SINGLE_FIELD&<?php echo $only_field_query ?>";
 			//document.getElementById("debugbottomspan2").innerHTML = LSview_query;
-			xmlhttp.open('POST', '<?php echo $PHP_SELF ?>'); 
+			xmlhttp.open('POST', 'vdc_form_display.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(LSview_query); 
 			xmlhttp.onreadystatechange = function() 
@@ -922,7 +922,7 @@ if ($SUBMIT_only < 1)
 					if (custom_refresh_fields.match(REFRESHfieldREG))
 						{
 						//debug_append = debug_append + "\n" + temp_field + ' timeout: ' + task_timeout;
-						document.getElementById("debugbottomspan2").insertAdjacentHTML('beforeend',debug_append);
+						//document.getElementById("debugbottomspan2").insertAdjacentHTML('beforeend',debug_append);
 						setTimeout(field_refresh, 100, temp_field);
 						}
 					}
