@@ -176,10 +176,11 @@
 # 210401-1058 - Added 'custom_fields_update' option for update_list function
 # 210402-1102 - Added 'custom_fields_delete' option for update_list function
 # 210406-1047 - Added 'dialable_count' option to list_info function
+# 210517-1850 - Added phone_code as modifiable field in update_lead function
 #
 
-$version = '2.14-153';
-$build = '210406-1047';
+$version = '2.14-154';
+$build = '210517-1850';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -13184,6 +13185,7 @@ if ($function == 'update_lead')
 						if (strlen($rank)>0)				{$VL_update_SQL .= "rank=\"$rank\",";}
 						if (strlen($owner)>0)				{$VL_update_SQL .= "owner=\"$owner\",";}
 						if (strlen($called_count)>0)		{$VL_update_SQL .= "called_count=\"$called_count\",";}
+						if (strlen($phone_code)>0)			{$VL_update_SQL .= "phone_code=\"$phone_code\",";}
 						if ( (strlen($reset_lead) > 0 && $reset_lead == 'Y') )	{$VL_update_SQL .= "called_since_last_reset='N',";}
                         if ( (strlen($update_phone_number)>0 && $update_phone_number=='Y' && strlen($phone_number)>0) ) {$VL_update_SQL .= "phone_number='$phone_number',";}
 						if ( (strlen($entry_list_id)>0) and ($custom_fields!='Y') )	{$VL_update_SQL .= "entry_list_id=\"$entry_list_id\",";}
