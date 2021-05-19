@@ -5650,12 +5650,13 @@ if ($SSscript_remove_js > 0)
 # 210421-2227 - Added more screen labels for non-form fields
 # 210425-1506 - Added calls_inqueue_count_ campaign options
 # 210429-1624 - Added mohsuggest phone config option
+# 210519-1747 - Fix for Copy Phone conf rebuild, Require prompt be populated on Call Menu creation and modification
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-812a';
-$build = '210429-1624';
+$admin_version = '2.14-813a';
+$build = '210519-1747';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -10175,19 +10176,25 @@ if ($ADD==21222222222)
 								}
 							else
 								{
-								echo "<br><B>"._QXZ("PHONE COPIED").": $new_extension, $new_server_ip - <a href='admin.php?ADD=31111111111&extension=$new_extension&server_ip=$new_server_ip'>VIEW HERE</a></B>\n";
 								$ins_stmt="INSERT INTO phones select '$new_extension', '$new_dialplan_number', '$new_voicemail_id', phone_ip, computer_ip, '$new_server_ip', '$new_login', '$new_pass', status, active, phone_type, '$new_fullname', company, picture, messages, old_messages, protocol, local_gmt, ASTmgrUSERNAME, ASTmgrSECRET, login_user, login_pass, login_campaign, park_on_extension, conf_on_extension, VICIDIAL_park_on_extension, VICIDIAL_park_on_filename, monitor_prefix, recording_exten, voicemail_exten, voicemail_dump_exten, ext_context, dtmf_send_extension, call_out_number_group, client_browser, install_directory, local_web_callerID_URL, VICIDIAL_web_URL, AGI_call_logging_enabled, user_switching_enabled, conferencing_enabled, admin_hangup_enabled, admin_hijack_enabled, admin_monitor_enabled, call_parking_enabled, updater_check_enabled, AFLogging_enabled, QUEUE_ACTION_enabled, CallerID_popup_enabled, voicemail_button_enabled, enable_fast_refresh, fast_refresh_rate, enable_persistant_mysql, auto_dial_next_number, VDstop_rec_after_each_call, DBX_server, DBX_database, DBX_user, DBX_pass, DBX_port, DBY_server, DBY_database, DBY_user, DBY_pass, DBY_port, '$new_outbound_cid', enable_sipsak_messages, email, template_id, conf_override, phone_context, phone_ring_timeout, '$new_conf_secret', delete_vm_after_email, is_webphone, use_external_server_ip, codecs_list, codecs_with_template, webphone_dialpad, on_hook_agent, webphone_auto_answer, voicemail_timezone, voicemail_options, user_group, voicemail_greeting, voicemail_dump_exten_no_inst, voicemail_instructions, on_login_report, unavail_dialplan_fwd_exten, unavail_dialplan_fwd_context, nva_call_url, nva_search_method, nva_error_filename, nva_new_list_id, nva_new_phone_code, nva_new_status, webphone_dialbox, webphone_mute, webphone_volume, webphone_debug, outbound_alt_cid, conf_qualify, webphone_layout, mohsuggest from phones where extension='$source_extension' and server_ip='$source_server_ip'";
 								$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
 								$affected_rows = mysqli_affected_rows($link);
 								if ($affected_rows>0)
 									{
+									echo "<br><B>"._QXZ("PHONE COPIED").": $new_extension, $new_server_ip - <a href='admin.php?ADD=31111111111&extension=$new_extension&server_ip=$new_server_ip'>VIEW HERE</a></B>.  <BR><BR>Please allow up to 1 minute for the server dialplan to update with the new phone.\n";
+
+									$upd_stmt="UPDATE servers set rebuild_conf_files='Y' where server_ip='$new_server_ip';";
+									$upd_rslt=mysql_to_mysqli($upd_stmt, $link);
+									$affected_rowsS = mysqli_affected_rows($link);
+
 									### LOG INSERTION Admin Log Table ###
-									$SQL_log = "$ins_stmt";
+									$SQL_log = "$ins_stmt|$upd_stmt";
 									$SQL_log = preg_replace('/;/', '', $SQL_log);
 									$SQL_log = addslashes($SQL_log);
-									$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONES', event_type='COPY', record_id='$new_extension-$new_server_ip', event_code='ADMIN COPY PHONE', event_sql=\"$SQL_log\", event_notes='$affected_rows';";
+									$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='PHONES', event_type='COPY', record_id='$new_extension-$new_server_ip', event_code='ADMIN COPY PHONE', event_sql=\"$SQL_log\", event_notes='$affected_rows,$affected_rowsS';";
 									if ($DB) {echo "|$stmt|\n";}
 									$rslt=mysql_to_mysqli($stmt, $link);
+
 									}
 								else
 									{
@@ -13195,7 +13202,7 @@ if ($ADD==2511)
 				if ( (strlen($menu_id) < 2) or (preg_match('/\s/i',$menu_id)) )
 					{
 					echo "<br>"._QXZ("CALL MENU NOT ADDED - Please go back and look at the data you entered")."\n";
-					echo "<br>"._QXZ("Call Menu ID must be between 2 and 50 characters in length and contain no")." ' '.\n";
+					echo "<br>"._QXZ("Call Menu ID must be between 2 and 50 characters in length and contain no").".\n";
 					$ADD=1500;
 					}
 				else
@@ -17651,10 +17658,11 @@ if ($ADD==4511)
 		{
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		if (strlen($menu_id) < 1)
+		if (strlen($menu_id) < 1 || strlen($menu_prompt) < 1)
 			{
 			echo "<br>"._QXZ("CALL MENU NOT MODIFIED - Please go back and look at the data you entered")."\n";
-			echo "<br>menu_id "._QXZ("must be at least 1 character in length")."\n";
+			if (strlen($menu_id) < 1) {echo "<br>menu_id "._QXZ("must be at least 1 character in length")."\n";}
+			if (strlen($menu_prompt) < 1) {echo "<br>"._QXZ("Call Menu Prompt must be populated. Use sip-silence if you do not actually want to play a prompt")."\n";}
 			}
 		else
 			{
