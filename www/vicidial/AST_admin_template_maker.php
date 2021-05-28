@@ -456,7 +456,6 @@ function checkForm(form_name) {
 	if (form_name.template_name.value=="") {error_msg += " - <?php echo _QXZ("Template name is missing"); ?>\n";}
 	if (form_name.template_list_id.value=="") {error_msg += " - <?php echo _QXZ("List ID is missing"); ?>\n";}
 	if (form_name.standard_fields_layout.value=="" && form_name.custom_fields_layout.value=="") {error_msg += " - <?php echo _QXZ("There does not seem to be a layout"); ?>\n";}
-return false;
 	if (error_msg.length>=80) {alert(error_msg); return false;} else {return true;}
 }
 function checkEditedForm(form_name) {
