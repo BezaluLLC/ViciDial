@@ -54,6 +54,7 @@
 # 210310-1322 - Added BUTTON field type
 # 210401-2132 - Fixed issue #1271, security_phrase field not populating in custom fields form
 # 210404-0902 - Added function to refresh a single field
+# 210603-1616 - Fix for specific custom field values with a slash in them
 #
 
 # $mysql_queries = 26
@@ -688,7 +689,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 								if (strlen($A_field_value[$o]) > 0)
 									{
 									$temp_opt_val = $field_options_value_array[0];
-									if ( (preg_match("/^$temp_opt_val$/",$A_field_value[$o])) or (preg_match("/,$temp_opt_val$/",$A_field_value[$o])) or (preg_match("/$temp_opt_val,/",$A_field_value[$o])) )
+									if ( (preg_match("/^" . preg_quote($temp_opt_val, "/") . "$/",$A_field_value[$o])) or (preg_match("/," . preg_quote($temp_opt_val, "/") . "$/",$A_field_value[$o])) or (preg_match("/" . preg_quote($temp_opt_val, "/") . ",/",$A_field_value[$o])) )
 										{$field_selected = 'SELECTED';}
 									if ($default_field_flag > 0)
 										{$field_selected = '--A--gender'.$field_options_value_array[0].'SELECT--B--';}
@@ -706,7 +707,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 								if (strlen($A_field_value[$o]) > 0)
 									{
 									$temp_opt_val = $field_options_value_array[0];
-									if ( (preg_match("/^$temp_opt_val$/",$A_field_value[$o])) or (preg_match("/,$temp_opt_val$/",$A_field_value[$o])) or (preg_match("/$temp_opt_val,/",$A_field_value[$o])) )
+									if ( (preg_match("/^" . preg_quote($temp_opt_val, "/") . "$/",$A_field_value[$o])) or (preg_match("/," . preg_quote($temp_opt_val, "/") . "$/",$A_field_value[$o])) or (preg_match("/" . preg_quote($temp_opt_val, "/") . ",/",$A_field_value[$o])) )
 										{$field_selected = 'SELECTED';}
 									if ($DB > 0) {echo "DEBUG2: |$field_options_value_array[0]|$A_field_value[$o]|$field_selected|\n";}
 									}
@@ -724,7 +725,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 								if (strlen($A_field_value[$o]) > 0) 
 									{
 									$temp_opt_val = $field_options_value_array[0];
-									if ( (preg_match("/^$temp_opt_val$/",$A_field_value[$o])) or (preg_match("/,$temp_opt_val$/",$A_field_value[$o])) or (preg_match("/$temp_opt_val,/",$A_field_value[$o])) )
+									if ( (preg_match("/^" . preg_quote($temp_opt_val, "/") . "$/",$A_field_value[$o])) or (preg_match("/," . preg_quote($temp_opt_val, "/") . "$/",$A_field_value[$o])) or (preg_match("/" . preg_quote($temp_opt_val, "/") . ",/",$A_field_value[$o])) )
 										{$field_selected = 'CHECKED';}
 									if ($DB > 0) {echo "DEBUG3: |$temp_options_value|$A_field_value[$o]|$field_selected|\n";}
 									}
@@ -742,7 +743,7 @@ function custom_list_fields_values($lead_id,$list_id,$uniqueid,$user,$DB,$call_i
 								if ($A_multi_position[$o]=='VERTICAL')
 									{$field_HTML .= " &nbsp; ";}
 								$temp_opt_val = $field_options_value_array[0];
-								if (preg_match("/^$temp_opt_val$/",$list_id))
+								if (preg_match("/^" . preg_quote($temp_opt_val, "/") . "$/",$list_id))
 									{
 									$field_HTML .= "<button class='button_inactive' disabled onclick=\"nothing();\"> "._QXZ("$field_options_value_array[1]")." </button> \n";
 									}
