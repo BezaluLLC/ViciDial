@@ -422,7 +422,7 @@ if ($claim_QC && $auth==1)
 			}
 		if (!$qc_scorecard_id) 
 			{
-			echo _QXZ("Can't claim this - no QC scorecard found")."\n";
+			echo _QXZ("Cannot claim this - no QC scorecard found")."\n";
 			exit;
 			}
 
@@ -458,7 +458,7 @@ if ($claim_QC && $auth==1)
 		}
 	else 
 		{
-		echo _QXZ("Can't claim this - there's no QC display method")."\n";
+		echo _QXZ("Cannot claim this - there is no QC display method")."\n";
 		exit;
 		}
 

@@ -224,6 +224,9 @@ while ($i < $campaigns_to_print)
 	$campaign_name[$i] =$row[1];
 	$i++;
 	}
+
+$NWB = "<IMG SRC=\"help.png\" onClick=\"FillAndShowHelpDiv(event, '";
+$NWE = "')\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP>";
 ?>
 
 <HTML>
@@ -239,11 +242,16 @@ while ($i < $campaigns_to_print)
 
 <?php 
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
+echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"vicidial_stylesheet.php\">\n";
+echo "<script language=\"JavaScript\" src=\"help.js\"></script>\n";
 echo "<TITLE>"._QXZ("Campaign Debug")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<div id='HelpDisplayDiv' class='help_info' style='display:none;'></div>";
 
 	$short_header=1;
 
 	require("admin_header.php");
+
+echo "<b>"._QXZ("Campaign Debug")."</b> $NWB#campaign_debug$NWE\n";
 
 echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
