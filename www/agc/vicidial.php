@@ -666,10 +666,11 @@
 # 210330-2254 - Fixed issues with dashes as custom fields values throwing off delimiters
 # 210417-1109 - Added calls_waiting_vl_ campaign options
 # 210421-2110 - Added more screen labels
+# 210606-0955 - Cleanup of debugbottomspan, testing of TILTX features
 #
 
-$version = '2.14-634c';
-$build = '210421-2110';
+$version = '2.14-635c';
+$build = '210606-0955';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=95;
 $one_mysql_log=0;
@@ -9930,7 +9931,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 											}
 										}
 									agent_events('agent_alert', "SIP Action: " + MDactionOption + ' ' + MDactionDispo, aec);   aec++;
-									document.getElementById("debugbottomspan").innerHTML = "<br>|" + manDiaLlook_query + "|<br>\n" + debug_response + "<br>\n" + MDactionOption;
+								//	document.getElementById("debugbottomspan").innerHTML = "<br>|" + manDiaLlook_query + "|<br>\n" + debug_response + "<br>\n" + MDactionOption;
 									}
 								if (MDalert == 'CALL UNANSWERED')
 									{
@@ -18625,7 +18626,7 @@ function phone_number_format(formatphone) {
 				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
 					{
 				//	alert(xmlhttp.responseText);
-					document.getElementById("debugbottomspan").innerHTML = "CUSTOMER 3WAY HANGUP " + xmlhttp.responseText;
+				//	document.getElementById("debugbottomspan").innerHTML = "CUSTOMER 3WAY HANGUP " + xmlhttp.responseText;
 					}
 				}
 			delete xmlhttp;

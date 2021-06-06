@@ -506,10 +506,11 @@
 # 210330-2255 - Fixed issues with dashes as custom fields values throwing off delimiters
 # 210417-1109 - Added calls_waiting_vl_ options
 # 210421-2111 - Added more screen labels
+# 210606-0957 - Added TILTX features for pre-carrier call filtering
 #
 
-$version = '2.14-399';
-$build = '210421-2111';
+$version = '2.14-400';
+$build = '210606-0957';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=850;
@@ -7102,7 +7103,7 @@ if ($ACTION == 'manDiaLlookCaLL')
 					$end_epoch =	$row[2];
 
 					### Check carrier log for error
-					$stmt="SELECT dialstatus,hangup_cause,sip_hangup_cause,sip_hangup_reason FROM vicidial_carrier_log where uniqueid='$uniqueid' and server_ip='$server_ip' and channel='$channel' and dialstatus IN('BUSY','CHANUNAVAIL','CONGESTION') LIMIT 1;";
+					$stmt="SELECT dialstatus,hangup_cause,sip_hangup_cause,sip_hangup_reason FROM vicidial_carrier_log where uniqueid='$uniqueid' and server_ip='$server_ip' and channel='$channel' and dialstatus IN('BUSY','CHANUNAVAIL','CONGESTION','DNC','DISCONNECT') LIMIT 1;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00292',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}

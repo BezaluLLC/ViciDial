@@ -1683,3 +1683,21 @@ UPDATE system_settings SET db_schema_version='1632',db_schema_update_date=NOW() 
 ALTER TABLE phones ADD mohsuggest VARCHAR(100) default '';
 
 UPDATE system_settings SET db_schema_version='1633',db_schema_update_date=NOW() where db_schema_version < 1633;
+
+CREATE TABLE vicidial_tiltx_shaken_log (
+db_time DATETIME NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+url_log_id INT(9) UNSIGNED NOT NULL,
+caller_code VARCHAR(20),
+phone_number VARCHAR(19) default '',
+CIDnumber VARCHAR(19) default '',
+CallerIDToUse VARCHAR(19) default '',
+IsDNC TINYINT(1) default '0',
+IsDisconnected TINYINT(1) default '0',
+TILTXID VARCHAR(50),
+Identity TEXT,
+CAID VARCHAR(50),
+index (db_time)
+) ENGINE=MyISAM;
+
+UPDATE system_settings SET db_schema_version='1634',db_schema_update_date=NOW() where db_schema_version < 1634;

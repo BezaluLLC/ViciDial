@@ -4590,6 +4590,22 @@ KEY `channel` (`channel`)
 ) ENGINE=MyISAM AUTO_INCREMENT=630320 DEFAULT CHARSET=utf8 
 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE vicidial_tiltx_shaken_log (
+db_time DATETIME NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+url_log_id INT(9) UNSIGNED NOT NULL,
+caller_code VARCHAR(20),
+phone_number VARCHAR(19) default '',
+CIDnumber VARCHAR(19) default '',
+CallerIDToUse VARCHAR(19) default '',
+IsDNC TINYINT(1) default '0',
+IsDisconnected TINYINT(1) default '0',
+TILTXID VARCHAR(50),
+Identity TEXT,
+CAID VARCHAR(50),
+index (db_time)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -4931,4 +4947,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1633',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1634',db_schema_update_date=NOW(),reload_timestamp=NOW();
