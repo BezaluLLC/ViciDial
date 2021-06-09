@@ -1068,7 +1068,7 @@ calls_waiting_vl_two VARCHAR(25) default 'DISABLED',
 calls_inqueue_count_one VARCHAR(40) default 'DISABLED',
 calls_inqueue_count_two VARCHAR(40) default 'DISABLED',
 in_man_dial_next_ready_seconds SMALLINT(5) UNSIGNED default '0',
-in_man_dial_next_ready_seconds_override VARCHAR(40) default 'DISABLED',
+in_man_dial_next_ready_seconds_override VARCHAR(40) default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
