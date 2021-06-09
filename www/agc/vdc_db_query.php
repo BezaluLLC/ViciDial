@@ -507,10 +507,11 @@
 # 210417-1109 - Added calls_waiting_vl_ options
 # 210421-2111 - Added more screen labels
 # 210606-0957 - Added TILTX features for pre-carrier call filtering
+# 210609-1045 - Added in_man_dial_next_ready_seconds to update_settings function
 #
 
-$version = '2.14-400';
-$build = '210606-0957';
+$version = '2.14-401';
+$build = '210609-1045';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=850;
@@ -858,6 +859,15 @@ $Ssec = date("s");
 $Smon = date("m");
 $Smday = date("d");
 $Syear = date("Y");
+$hm = date("Hi");
+$wday = date("w");
+if ($wday == '0') {$now_weekday = 'SUNDAY';}
+if ($wday == '1') {$now_weekday = 'MONDAY';}
+if ($wday == '2') {$now_weekday = 'TUESDAY';}
+if ($wday == '3') {$now_weekday = 'WEDNESDAY';}
+if ($wday == '4') {$now_weekday = 'THURSDAY';}
+if ($wday == '5') {$now_weekday = 'FRIDAY';}
+if ($wday == '6') {$now_weekday = 'SATURDAY';}
 
 ### Grab Server GMT value from the database
 $stmt="SELECT local_gmt FROM servers where active='Y' limit 1;";
@@ -2070,7 +2080,7 @@ if ($ACTION == 'update_settings')
 
 
 			##### grab the data from vicidial_campaigns for the campaign
-			$stmt="SELECT wrapup_seconds,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,dial_timeout,wrapup_bypass,wrapup_message,wrapup_after_hotkey,manual_dial_timeout FROM vicidial_campaigns where campaign_id='$campaign' LIMIT 1;";
+			$stmt="SELECT wrapup_seconds,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,dial_timeout,wrapup_bypass,wrapup_message,wrapup_after_hotkey,manual_dial_timeout,in_man_dial_next_ready_seconds,in_man_dial_next_ready_seconds_override FROM vicidial_campaigns where campaign_id='$campaign' LIMIT 1;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00594',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -2089,6 +2099,8 @@ if ($ACTION == 'update_settings')
 				$wrapup_message =		trim("$row[8]");
 				$wrapup_after_hotkey =	trim("$row[9]");
 				$manual_dial_timeout =	trim("$row[10]");
+				$in_man_dial_next_ready_seconds =	trim("$row[11]");
+				$in_man_dial_next_ready_seconds_override =	trim("$row[12]");
 				}
 
 			if ( ($manual_dial_timeout < 1) or (strlen($manual_dial_timeout) < 1) )
@@ -2099,6 +2111,41 @@ if ($ACTION == 'update_settings')
 				{$pause_max=0;}
 			if ( ($pause_max > 9) and ($pause_max <= $dial_timeout) )
 				{$pause_max = ($dial_timeout + 10);}
+			if ( (!preg_match("/DISABLED/i",$in_man_dial_next_ready_seconds_override) && (strlen($in_man_dial_next_ready_seconds_override)>0) ) )
+				{
+				# example entry: "ALLDAYS,1200,1300,30", day-of-week,start-time,end-time,inman-ready-seconds-override
+				$stmt = "SELECT container_entry FROM vicidial_settings_containers where container_id='$in_man_dial_next_ready_seconds_override';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$SCinfo_ct = mysqli_num_rows($rslt);
+				if ($DB) {echo "$SCinfo_ct|$stmt\n";}
+				if ($SCinfo_ct > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$IMDcontainer_entry = $row[0];
+					$IMDcontainer_entry = preg_replace("/\r|\t|\'|\"/",'',$IMDcontainer_entry);
+					$IMDlines = explode("\n",$IMDcontainer_entry);
+					$IMDlines_ct = count($IMDlines);
+					$IMDc=0;
+					while ($IMDc < $IMDlines_ct)
+						{
+						if ( (!preg_match("/^;/",$IMDlines[$IMDc])) and (strlen($IMDlines[$IMDc]) > 10) )
+							{
+							$IMDline = preg_replace('/[^,0-9a-zA-Z]/','',$IMDlines[$IMDc]);
+							$IMDline = explode(',',$IMDline);
+							$temp_weekday =	$IMDline[0];
+							$temp_begin =	($IMDline[1] + 0);
+							$temp_end =		($IMDline[2] + 0);
+							$temp_sec =		($IMDline[3] + 0);   if ($temp_sec > 9999) {$temp_sec=9999;}
+							if ( ( ($temp_begin <= $hm) and ($temp_end >= $hm) ) and ( ($temp_weekday == 'ALLDAYS') or ($temp_weekday == "$now_weekday") ) )
+								{
+								$in_man_dial_next_ready_seconds = $temp_sec;
+								if ($DB) {echo "in_man_dial_next_ready_seconds_override: $IMDc|$IMDlines[$IMDc]|$temp_weekday|$temp_begin($hm)|$temp_end($hm)|$temp_sec|$in_man_dial_next_ready_seconds|";}
+								}
+							}
+						$IMDc++;
+						}
+					}
+				}
 
 			$SettingS_InfO .=	"SETTINGS GATHERED\n";
 			$SettingS_InfO .=	"wrapup_seconds: " . $wrapup_seconds . "\n";
@@ -2112,6 +2159,7 @@ if ($ACTION == 'update_settings')
 			$SettingS_InfO .=	"wrapup_message: " . $wrapup_message . "\n";
 			$SettingS_InfO .=	"wrapup_after_hotkey: " . $wrapup_after_hotkey . "\n";
 			$SettingS_InfO .=	"manual_dial_timeout: " . $manual_dial_timeout . "\n";
+			$SettingS_InfO .=	"in_man_dial_next_ready_seconds: " . $in_man_dial_next_ready_seconds . "\n";
 			$SettingS_InfO .=	"\n";
 			}
 		echo $SettingS_InfO;
