@@ -1,7 +1,7 @@
 <?php
 # deactivate_lead.php
 # 
-# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to be used in the "Dispo URL" field of a campaign
 # or in-group. It should take in the campaign_id to check for the same source_id
@@ -32,6 +32,7 @@
 # 141216-2130 - Added language settings lookups and user/pass variable standardization
 # 170526-2301 - Added additional variable filtering
 # 201117-2222 - Changes for better compatibility with non-latin data input
+# 210615-1036 - Default security fixes, CVE-2021-28854
 #
 
 $api_script = 'deactivate';
@@ -231,7 +232,8 @@ else
 
 if ($log_to_file > 0)
 	{
-	$fp = fopen ("./deactivate_lead.txt", "a");
-	fwrite ($fp, "$NOW_TIME|$lead_id|$search_field|$search_value|$campaign_check|$sale_status|$dispo|$new_status|$user|XXXX|$DB|$log_to_file|$MESSAGE|\n");
+	$fp = fopen ("./deactivate_lead.txt", "w");
+#	fwrite ($fp, "$NOW_TIME|$lead_id|$search_field|$search_value|$campaign_check|$sale_status|$dispo|$new_status|$user|XXXX|$DB|$log_to_file|$MESSAGE|\n");
+	fwrite ($fp, "$NOW_TIME|\n");
 	fclose($fp);
 	}

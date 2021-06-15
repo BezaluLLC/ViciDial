@@ -1,7 +1,7 @@
 <?php
 # update_cf_ivr.php
 # 
-# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is part of the API group and any modifications of data are
 # logged to the vicidial_api_log table.
@@ -11,6 +11,7 @@
 # CHANGES
 # 150814-1441 - First Build
 # 170526-2319 - Added additional variable filtering
+# 210615-1030 - Default security fixes, CVE-2021-28854
 #
 
 $api_script = 'update_cf_ivr';
@@ -192,7 +193,7 @@ else
 
 if ($log_to_file > 0)
 	{
-	$fp = fopen ("./update_cf.txt", "a");
-	fwrite ($fp, "$NOW_TIME|$k|$lead_id|$caller_id|$list_id|$field|$value|$user|XXXX|$DB|$log_to_file|$MESSAGE|\n");
+	$fp = fopen ("./update_cf.txt", "w");
+#	fwrite ($fp, "$NOW_TIME|$k|$lead_id|$caller_id|$list_id|$field|$value|$user|XXXX|$DB|$log_to_file|$MESSAGE|\n");
 	fclose($fp);
 	}

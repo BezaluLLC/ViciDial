@@ -668,10 +668,11 @@
 # 210421-2110 - Added more screen labels
 # 210606-0955 - Cleanup of debugbottomspan, testing of TILTX features
 # 210609-0942 - Added in_man_dial_next_ready_seconds campaign options
+# 210615-0959 - Default security fix, CVE-2021-28854
 #
 
-$version = '2.14-636c';
-$build = '210609-0942';
+$version = '2.14-637c';
+$build = '210615-0959';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=95;
 $one_mysql_log=0;
@@ -1518,7 +1519,7 @@ if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
 else
 	{
 	if ($WeBRooTWritablE > 0)
-		{$fp = fopen ("./vicidial_auth_entries.txt", "a");}
+		{$fp = fopen ("./vicidial_auth_entries.txt", "w");}
 	$VDloginDISPLAY=0;
 
 	if ( (strlen($VD_login)<2) or (strlen($VD_pass)<2) or (strlen($VD_campaign)<2) )
@@ -2046,7 +2047,7 @@ else
 
 			if ($WeBRooTWritablE > 0)
 				{
-				fwrite ($fp, "vdweb|GOOD|$date|$VD_login|XXXX|$ip|$browser|$LOGfullname|\n");
+				fwrite ($fp, "vdweb|GOOD|$date|$browser|\n");
 				fclose($fp);
 				}
 			$user_abb = "$VD_login$VD_login$VD_login$VD_login";
@@ -3132,7 +3133,7 @@ else
 			{
 			if ($WeBRooTWritablE > 0)
 				{
-				fwrite ($fp, "vdweb|FAIL|$date|$VD_login|XXXX|$ip|$browser|\n");
+				fwrite ($fp, "vdweb|FAIL|$date|$browser|\n");
 				fclose($fp);
 				}
 			$VDloginDISPLAY=1;

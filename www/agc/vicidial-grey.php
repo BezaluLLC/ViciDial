@@ -1,7 +1,7 @@
 <?php
 # vicidial-grey.php - the web-based version of the astVICIDIAL client application
 # 
-# Copyright (C) 2019  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Other scripts that this application depends on:
 # - vdc_db_query.php: Updates information in the database
@@ -527,6 +527,7 @@
 #               NOTE: THIS VERSION WILL EVENTUALLY BECOME UNSUPPORTED!!!!!!!!!!
 # 161102-1120 - Fixed QM partition problem
 # 190111-0908 - Fix for PHP7
+# 210615-1029 - Default security fixes, CVE-2021-28854
 #
 
 $version = '2.12-494c-grey';
@@ -1171,7 +1172,7 @@ if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
 else
 	{
 	if ($WeBRooTWritablE > 0)
-		{$fp = fopen ("./vicidial_auth_entries.txt", "a");}
+		{$fp = fopen ("./vicidial_auth_entries.txt", "w");}
 	$VDloginDISPLAY=0;
 
 	if ( (strlen($VD_login)<2) or (strlen($VD_pass)<2) or (strlen($VD_campaign)<2) )
@@ -1498,7 +1499,7 @@ else
 
 			if ($WeBRooTWritablE > 0)
 				{
-				fwrite ($fp, "vdweb|GOOD|$date|$VD_login|XXXX|$ip|$browser|$LOGfullname|\n");
+				fwrite ($fp, "vdweb|GOOD|$date|\n");
 				fclose($fp);
 				}
 			$user_abb = "$VD_login$VD_login$VD_login$VD_login";
@@ -2310,7 +2311,7 @@ else
 			{
 			if ($WeBRooTWritablE > 0)
 				{
-				fwrite ($fp, "vdweb|FAIL|$date|$VD_login|XXXX|$ip|$browser|\n");
+				fwrite ($fp, "vdweb|FAIL|$date|\n");
 				fclose($fp);
 				}
 			$VDloginDISPLAY=1;

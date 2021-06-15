@@ -508,10 +508,11 @@
 # 210421-2111 - Added more screen labels
 # 210606-0957 - Added TILTX features for pre-carrier call filtering
 # 210609-1045 - Added in_man_dial_next_ready_seconds to update_settings function
+# 210615-1014 - Default security fixes, CVE-2021-28854
 #
 
-$version = '2.14-401';
-$build = '210609-1045';
+$version = '2.14-402';
+$build = '210615-1014';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=850;
@@ -5370,8 +5371,10 @@ if ($ACTION == 'manDiaLnextCaLL')
 								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00672',$user,$server_ip,$session_name,$one_mysql_log);}
 							$vla_update_timer = mysqli_affected_rows($link);
 
-							$fp = fopen ("./call_url_log.txt", "a");
-							fwrite ($fp, "$VDCL_start_call_url\n$SCUoutput\n$durationLimit|$durationLimitSEC|$vla_update_timer|$minuteswarning|$uniqueid|\n");
+							$fp = fopen ("./call_url_log.txt", "w");
+						#	fwrite ($fp, "$VDCL_start_call_url\n$SCUoutput\n$durationLimit|$durationLimitSEC|$vla_update_timer|$minuteswarning|$uniqueid|\n");
+
+							fwrite ($fp, "$NOW_TIME|minuteswarning1|\n");
 							fclose($fp);
 							}
 						}
@@ -7081,8 +7084,9 @@ if ($ACTION == 'manDiaLonly')
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00684',$user,$server_ip,$session_name,$one_mysql_log);}
 					$vla_update_timer = mysqli_affected_rows($link);
 
-					$fp = fopen ("./call_url_log.txt", "a");
-					fwrite ($fp, "$VDCL_start_call_url\n$SCUoutput\n$durationLimit|$durationLimitSEC|$vla_update_timer|$minuteswarning|$uniqueid|\n");
+					$fp = fopen ("./call_url_log.txt", "w");
+				#	fwrite ($fp, "$VDCL_start_call_url\n$SCUoutput\n$durationLimit|$durationLimitSEC|$vla_update_timer|$minuteswarning|$uniqueid|\n");
+					fwrite ($fp, "$NOW_TIME|minuteswarning2|\n");
 					fclose($fp);
 					}
 				}
@@ -7424,8 +7428,9 @@ if ($stage == "start")
 		{
 		if ($WeBRooTWritablE > 0)
 			{
-			$fp = fopen ("./vicidial_debug.txt", "a");
-			fwrite ($fp, "$NOW_TIME|VL_LOG_0|$uniqueid|$lead_id|$user|$list_id|$campaign|$start_epoch|$phone_number|$agent_log_id|\n");
+			$fp = fopen ("./vicidial_debug.txt", "w");
+		#	fwrite ($fp, "$NOW_TIME|VL_LOG_0|$uniqueid|$lead_id|$user|$list_id|$campaign|$start_epoch|$phone_number|$agent_log_id|\n");
+			fwrite ($fp, "$NOW_TIME|VL_LOG_0|\n");
 			fclose($fp);
 			}
 
@@ -7560,8 +7565,9 @@ if ($stage == "end")
 
 	if ( (strlen($uniqueid)<1) and ($VLA_inOUT == 'INBOUND') )
 		{
-		$fp = fopen ("./vicidial_debug.txt", "a");
-		fwrite ($fp, "$NOW_TIME|INBND_LOG_0|$uniqueid|$lead_id|$user|$inOUT|$VLA_inOUT|$start_epoch|$phone_number|$agent_log_id|\n");
+		$fp = fopen ("./vicidial_debug.txt", "w");
+	#	fwrite ($fp, "$NOW_TIME|INBND_LOG_0|$uniqueid|$lead_id|$user|$inOUT|$VLA_inOUT|$start_epoch|$phone_number|$agent_log_id|\n");
+		fwrite ($fp, "$NOW_TIME|INBND_LOG_0|\n");
 		fclose($fp);
 		$uniqueid='6666.1';
 		}
@@ -7633,8 +7639,9 @@ if ($stage == "end")
 
 			if ( ($length_in_sec < 1) and ($VLA_inOUT == 'INBOUND') )
 				{
-				$fp = fopen ("./vicidial_debug.txt", "a");
-				fwrite ($fp, "$NOW_TIME|INBND_LOG_1|$uniqueid|$lead_id|$user|$inOUT|$length_in_sec|$VDterm_reason|$VDvicidial_id|$start_epoch|\n");
+				$fp = fopen ("./vicidial_debug.txt", "w");
+			#	fwrite ($fp, "$NOW_TIME|INBND_LOG_1|$uniqueid|$lead_id|$user|$inOUT|$length_in_sec|$VDterm_reason|$VDvicidial_id|$start_epoch|\n");
+				fwrite ($fp, "$NOW_TIME|INBND_LOG_1|\n");
 				fclose($fp);
 
 				##### start epoch in the vicidial_log table, couldn't find one in vicidial_closer_log
@@ -7683,8 +7690,9 @@ if ($stage == "end")
 				}
 			else
 				{
-				$fp = fopen ("./vicidial_debug.txt", "a");
-				fwrite ($fp, "$NOW_TIME|INBND_LOG_2|$uniqueid|$lead_id|$user|$inOUT|$length_in_sec|$VDterm_reason|$VDvicidial_id|$start_epoch|\n");
+				$fp = fopen ("./vicidial_debug.txt", "w");
+			#	fwrite ($fp, "$NOW_TIME|INBND_LOG_2|$uniqueid|$lead_id|$user|$inOUT|$length_in_sec|$VDterm_reason|$VDvicidial_id|$start_epoch|\n");
+				fwrite ($fp, "$NOW_TIME|INBND_LOG_2|\n");
 				fclose($fp);
 				}
 			}
@@ -8683,8 +8691,9 @@ if ($stage == "end")
 
 								if ($WeBRooTWritablE > 0)
 									{
-									$fp = fopen ("./vicidial_debug.txt", "a");
-									fwrite ($fp, "$NOW_TIME|INBND_LOG_3|$uniqueid|$lead_id|$user|$inOUT|$VLA_inOUT|$length_in_sec|$VDterm_reason|$VDvicidial_id|$vicidial_id|$start_epoch|$recording_id|\n");
+									$fp = fopen ("./vicidial_debug.txt", "w");
+								#	fwrite ($fp, "$NOW_TIME|INBND_LOG_3|$uniqueid|$lead_id|$user|$inOUT|$VLA_inOUT|$length_in_sec|$VDterm_reason|$VDvicidial_id|$vicidial_id|$start_epoch|$recording_id|\n");
+									fwrite ($fp, "$NOW_TIME|INBND_LOG_3|\n");
 									fclose($fp);
 									}
 								}
@@ -8770,8 +8779,9 @@ if ($stage == "end")
 
 	if ($log_no_enter > 0)
 		{
-		$fp = fopen ("./vicidial_debug.txt", "a");
-		fwrite ($fp, "$NOW_TIME|DIAL_LOG_1N|$uniqueid|$lead_id|$user|$inOUT|$VLA_inOUT|$start_epoch|$phone_number|$MDnextCID|$agentchannel|$loop_count|$total_rec|$total_hangup|$VDstop_rec_after_each_call\n");
+		$fp = fopen ("./vicidial_debug.txt", "w");
+	#	fwrite ($fp, "$NOW_TIME|DIAL_LOG_1N|$uniqueid|$lead_id|$user|$inOUT|$VLA_inOUT|$start_epoch|$phone_number|$MDnextCID|$agentchannel|$loop_count|$total_rec|$total_hangup|$VDstop_rec_after_each_call\n");
+		fwrite ($fp, "$NOW_TIME|DIAL_LOG_1N|\n");
 		fclose($fp);
 
 		exit;
@@ -9228,8 +9238,9 @@ if ($ACTION == 'VDADcheckINCOMING')
 					}
 				if ($WeBRooTWritablE > 0)
 					{
-					$fp = fopen ("./vicidial_debug.txt", "a");
-					fwrite ($fp, "$NOW_TIME|INBND|$callerid|$user|$user_group|$list_id|$lead_id|$phone_number|$uniqueid|$VDADchannel_group|$call_type|$dialed_number|$dialed_label|$INclosecallid|$INxfercallid|\n");
+					$fp = fopen ("./vicidial_debug.txt", "w");
+				#	fwrite ($fp, "$NOW_TIME|INBND|$callerid|$user|$user_group|$list_id|$lead_id|$phone_number|$uniqueid|$VDADchannel_group|$call_type|$dialed_number|$dialed_label|$INclosecallid|$INxfercallid|\n");
+					fwrite ($fp, "$NOW_TIME|INBND|\n");
 					fclose($fp);
 					}
 				}
@@ -10312,8 +10323,9 @@ if ($ACTION == 'VDADcheckINCOMING')
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00295',$user,$server_ip,$session_name,$one_mysql_log);}
 						$vla_update_timer = mysqli_affected_rows($link);
 
-						$fp = fopen ("./call_url_log.txt", "a");
-						fwrite ($fp, "$VDCL_start_call_url\n$SCUoutput\n$durationLimit|$durationLimitSEC|$vla_update_timer|$minuteswarning|$uniqueid|\n");
+						$fp = fopen ("./call_url_log.txt", "w");
+					#	fwrite ($fp, "$VDCL_start_call_url\n$SCUoutput\n$durationLimit|$durationLimitSEC|$vla_update_timer|$minuteswarning|$uniqueid|\n");
+						fwrite ($fp, "$NOW_TIME|minuteswarning3|\n");
 						fclose($fp);
 						}
 					}
@@ -11647,8 +11659,9 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00528',$user,$server_ip,$session_name,$one_mysql_log);}
 						$vla_update_timer = mysqli_affected_rows($link);
 
-						$fp = fopen ("./call_url_log.txt", "a");
-						fwrite ($fp, "$VDCL_start_call_url\n$SCUoutput\n$durationLimit|$durationLimitSEC|$vla_update_timer|$minuteswarning|$uniqueid|\n");
+						$fp = fopen ("./call_url_log.txt", "w");
+					#	fwrite ($fp, "$VDCL_start_call_url\n$SCUoutput\n$durationLimit|$durationLimitSEC|$vla_update_timer|$minuteswarning|$uniqueid|\n");
+						fwrite ($fp, "$NOW_TIME|minuteswarning4|\n");
 						fclose($fp);
 						}
 					}
@@ -11944,8 +11957,9 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 				}
 			if ($WeBRooTWritablE > 0)
 				{
-				$fp = fopen ("./vicidial_debug.txt", "a");
-				fwrite ($fp, "$NOW_TIME|INBND|$callerid|$user|$user_group|$list_id|$lead_id|$phone_number|$uniqueid|$VDADchannel_group|$call_type|$dialed_number|$dialed_label|$INclosecallid|$INxfercallid|\n");
+				$fp = fopen ("./vicidial_debug.txt", "w");
+			#	fwrite ($fp, "$NOW_TIME|INBND|$callerid|$user|$user_group|$list_id|$lead_id|$phone_number|$uniqueid|$VDADchannel_group|$call_type|$dialed_number|$dialed_label|$INclosecallid|$INxfercallid|\n");
+				fwrite ($fp, "$NOW_TIME|INBND|\n");
 				fclose($fp);
 				}
 
@@ -14700,8 +14714,9 @@ if ($ACTION == 'updateDISPO')
 			$SCUoutput='';
 			foreach ($SCUfile as $SCUline) 
 				{$SCUoutput .= "$SCUline";}
-			$fp = fopen ("./call_url_log.txt", "a");
-			fwrite ($fp, "$dispo_call_urlARY[$j]\n$SCUoutput\n");
+			$fp = fopen ("./call_url_log.txt", "w");
+		#	fwrite ($fp, "$dispo_call_urlARY[$j]\n$SCUoutput\n");
+			fwrite ($fp, "$NOW_TIME|vtiger|\n");
 			fclose($fp);
 			}
 
@@ -14713,8 +14728,9 @@ if ($ACTION == 'updateDISPO')
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00317',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
 			$bms_ct = mysqli_num_rows($rslt);
-			$fp = fopen ("./call_url_log.txt", "a");
-			fwrite ($fp, "$dispo_call_urlARY[$j]\n$stmt|$bms_ct\n");
+			$fp = fopen ("./call_url_log.txt", "w");
+		#	fwrite ($fp, "$dispo_call_urlARY[$j]\n$stmt|$bms_ct\n");
+			fwrite ($fp, "$NOW_TIME|vtiger2|\n");
 			fclose($fp);
 
 			if ($bms_ct > 0)
@@ -18945,8 +18961,9 @@ if ($ACTION == 'CALLSINQUEUEgrab')
 			$row=mysqli_fetch_row($rslt);
 			if ($WeBRooTWritablE > 0)
 				{
-				$fp = fopen ("./vicidial_debug.txt", "a");
-				fwrite ($fp, "$NOW_TIME|GRAB_CALL  |$stmtU|$VACaffected_rows|$stmtD|$row[0]|$row[1]|$row[2]|$row[3]|$row[4]|$row[5]|$row[6]|$row[7]|$row[8]|$row[9]|$row[10]|$row[11]|$row[12]|$row[13]|$row[14]|$row[15]|$row[16]|$row[17]|$row[18]|\n");
+				$fp = fopen ("./vicidial_debug.txt", "w");
+			#	fwrite ($fp, "$NOW_TIME|GRAB_CALL  |$stmtU|$VACaffected_rows|$stmtD|$row[0]|$row[1]|$row[2]|$row[3]|$row[4]|$row[5]|$row[6]|$row[7]|$row[8]|$row[9]|$row[10]|$row[11]|$row[12]|$row[13]|$row[14]|$row[15]|$row[16]|$row[17]|$row[18]|\n");
+				fwrite ($fp, "$NOW_TIME|GRAB_CALL|\n");
 				fclose($fp);
 				}
 			}

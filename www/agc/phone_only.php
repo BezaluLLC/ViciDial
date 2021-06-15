@@ -1,7 +1,7 @@
 <?php
 # phone_only.php - the web-based web-phone-only client application
 # 
-# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 110511-1336 - First Build
@@ -19,10 +19,11 @@
 # 170511-1107 - Added code for WebRTC phones
 # 181003-1736 - Added external_web_socket_url option
 # 200123-1639 - Added Webphone options
+# 210615-1028 - Default security fixes, CVE-2021-28854
 #
 
-$version = '2.14-15p';
-$build = '200123-1639';
+$version = '2.14-16p';
+$build = '210615-1028';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=74;
 $one_mysql_log=0;
@@ -356,7 +357,7 @@ if ( (strlen($phone_login) < 1) or (strlen($phone_pass) < 1) )
 else
 	{
 	if ($WeBRooTWritablE > 0)
-		{$fp = fopen ("./vicidial_auth_entries.txt", "a");}
+		{$fp = fopen ("./vicidial_auth_entries.txt", "w");}
 	$VDloginDISPLAY=0;
 
 	if ( (strlen($VD_login)<2) or (strlen($VD_pass)<2) )
@@ -396,7 +397,7 @@ else
 
 			if ($WeBRooTWritablE > 0)
 				{
-				fwrite ($fp, "vdweb|GOOD|$date|$VD_login|XXXX|$ip|$browser|$LOGfullname|\n");
+				fwrite ($fp, "vdweb|GOOD|$date|\n");
 				fclose($fp);
 				}
 			$user_abb = "$VD_login$VD_login$VD_login$VD_login";
@@ -408,7 +409,7 @@ else
 			{
 			if ($WeBRooTWritablE > 0)
 				{
-				fwrite ($fp, "vdweb|FAIL|$date|$VD_login|XXXX|$ip|$browser|\n");
+				fwrite ($fp, "vdweb|FAIL|$date|\n");
 				fclose($fp);
 				}
 			$VDloginDISPLAY=1;

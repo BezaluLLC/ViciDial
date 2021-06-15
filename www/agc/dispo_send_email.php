@@ -1,7 +1,7 @@
 <?php
 # dispo_send_email.php
 # 
-# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to be used in the "Dispo URL" field of a campaign
 # or in-group. It will send out an email to a fixed email address as defined
@@ -41,6 +41,7 @@
 # 191013-2113 - Fixes for PHP7
 # 200814-1829 - added email_body_html, email_body_utf8 flags
 # 201117-2104 - Changes for better compatibility with non-latin data input
+# 210615-1033 - Default security fixes, CVE-2021-28854
 #
 
 $api_script = 'send_email';
@@ -1368,7 +1369,8 @@ else
 
 if ($log_to_file > 0)
 	{
-	$fp = fopen ("./send_email.txt", "a");
-	fwrite ($fp, "$NOW_TIME|$k|$lead_id|$call_id|$container_id|$sale_status|$dispo|$user|XXXX|$DB|$log_to_file|$MESSAGE|\n");
+	$fp = fopen ("./send_email.txt", "w");
+#	fwrite ($fp, "$NOW_TIME|$k|$lead_id|$call_id|$container_id|$sale_status|$dispo|$user|XXXX|$DB|$log_to_file|$MESSAGE|\n");
+	fwrite ($fp, "$NOW_TIME|\n");
 	fclose($fp);
 	}

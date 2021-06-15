@@ -1,7 +1,7 @@
 <?php
 # manager_send.php    version 2.14
 # 
-# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to insert records into the vicidial_manager table to signal Actions to an asterisk server
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -145,10 +145,11 @@
 # 191013-2114 - Fixes for PHP7
 # 201107-2228 - Added campaign/in-group logging in park_log
 # 201117-1751 - Changes for better compatibility with non-latin data input
+# 210615-1016 - Default security fixes, CVE-2021-28854
 #
 
-$version = '2.14-92';
-$build = '201117-1751';
+$version = '2.14-93';
+$build = '210615-1016';
 $php_script = 'manager_send.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=143;
@@ -760,8 +761,9 @@ if ($ACTION=="Hangup")
 				echo _QXZ("Channel %1s in use by another agent on %2s, Hangup command not inserted",0,'',$channel,$call_server_ip)." $rowx[0]\n$stmt\n";
 				if ($WeBRooTWritablE > 0)
 					{
-					$fp = fopen ("./vicidial_debug.txt", "a");
-					fwrite ($fp, "$NOW_TIME|MDCHU|$user|$channel|$call_server_ip|$exten|\n");
+					$fp = fopen ("./vicidial_debug.txt", "w");
+				#	fwrite ($fp, "$NOW_TIME|MDCHU|$user|$channel|$call_server_ip|$exten|\n");
+					fwrite ($fp, "$NOW_TIME|MDCHU|\n");
 					fclose($fp);
 					}
 				}
@@ -1749,8 +1751,9 @@ if ($ACTION=="RedirectXtraCXNeW")
 			{
 			if ($WeBRooTWritablE > 0)
 				{
-				$fp = fopen ("./vicidial_debug.txt", "a");
-				fwrite ($fp, "$NOW_TIME|RDCXC|$filename|$user|$campaign|$channel|$extrachannel|$queryCID|$exten|$ext_context|ext_priority|\n");
+				$fp = fopen ("./vicidial_debug.txt", "w");
+			#	fwrite ($fp, "$NOW_TIME|RDCXC|$filename|$user|$campaign|$channel|$extrachannel|$queryCID|$exten|$ext_context|ext_priority|\n");
+				fwrite ($fp, "$NOW_TIME|RDCXC|\n");
 				fclose($fp);
 				}
 			}
@@ -1936,8 +1939,9 @@ if ($ACTION=="RedirectXtraCXNeW")
 			{
 			if ($WeBRooTWritablE > 0)
 				{
-				$fp = fopen ("./vicidial_debug.txt", "a");
-				fwrite ($fp, "$NOW_TIME|RDCXC|$filename|$user|$campaign|$DBout|\n");
+				$fp = fopen ("./vicidial_debug.txt", "w");
+			#	fwrite ($fp, "$NOW_TIME|RDCXC|$filename|$user|$campaign|$DBout|\n");
+				fwrite ($fp, "$NOW_TIME|RDCXC|\n");
 				fclose($fp);
 				}
 			}
@@ -1975,8 +1979,9 @@ if ($ACTION=="RedirectXtraNeW")
 				{
 				if ($WeBRooTWritablE > 0)
 					{
-					$fp = fopen ("./vicidial_debug.txt", "a");
-					fwrite ($fp, "$NOW_TIME|RDX|$filename|$user|$campaign|$channel|$extrachannel|$queryCID|$exten|$ext_context|ext_priority|$session_id|\n");
+					$fp = fopen ("./vicidial_debug.txt", "w");
+				#	fwrite ($fp, "$NOW_TIME|RDX|$filename|$user|$campaign|$channel|$extrachannel|$queryCID|$exten|$ext_context|ext_priority|$session_id|\n");
+					fwrite ($fp, "$NOW_TIME|RDX|\n");
 					fclose($fp);
 					}
 				}
@@ -2145,8 +2150,9 @@ if ($ACTION=="RedirectXtraNeW")
 				{
 				if ($WeBRooTWritablE > 0)
 					{
-					$fp = fopen ("./vicidial_debug.txt", "a");
-					fwrite ($fp, "$NOW_TIME|RDX|$filename|$user|$campaign|$DBout|\n");
+					$fp = fopen ("./vicidial_debug.txt", "w");
+				#	fwrite ($fp, "$NOW_TIME|RDX|$filename|$user|$campaign|$DBout|\n");
+					fwrite ($fp, "$NOW_TIME|RDX|\n");
 					fclose($fp);
 					}
 				}

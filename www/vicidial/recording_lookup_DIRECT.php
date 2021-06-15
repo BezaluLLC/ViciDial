@@ -68,11 +68,11 @@ else
 	exit;
 	}
 
-$fp = fopen ("/usr/local/apache2/htdocs/vicidial/auth_entries.txt", "a");
+$fp = fopen ("/usr/local/apache2/htdocs/vicidial/auth_entries.txt", "w");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
-fwrite ($fp, "AUTH|VDC   |$date|$auth|$ip|$phone|$format|$browser|\n");
+fwrite ($fp, "AUTH|VDC   |$date|\n");
 fclose($fp);
 
 if (strlen($format)<3) {$format='WAV';}

@@ -1,7 +1,7 @@
 <?php
 # dispo_add_FPG.php
 # 
-# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to be used in the "Dispo URL" field of a campaign
 # or in-group. It adds the phone_number of the call to a designated inbound 
@@ -21,6 +21,7 @@
 # CHANGES
 # 150724-1657 - First Build
 # 170526-2305 - Added additional variable filtering
+# 210615-1039 - Default security fixes, CVE-2021-28854
 #
 
 $api_script = 'add_FPG';
@@ -219,7 +220,8 @@ else
 
 if ($log_to_file > 0)
 	{
-	$fp = fopen ("./add_FPG.txt", "a");
-	fwrite ($fp, "$NOW_TIME|$k|$phone_number|$FPG_id|$sale_status|$dispo|$user|XXXX|$DB|$log_to_file|$MESSAGE|\n");
+	$fp = fopen ("./add_FPG.txt", "w");
+#	fwrite ($fp, "$NOW_TIME|$k|$phone_number|$FPG_id|$sale_status|$dispo|$user|XXXX|$DB|$log_to_file|$MESSAGE|\n");
+	fwrite ($fp, "$NOW_TIME|\n");
 	fclose($fp);
 	}

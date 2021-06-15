@@ -146,6 +146,10 @@ if (!file_exists('old_clear'))
 	fwrite($clear_file, '1');
 	fclose($clear_file);
 	}
+if (file_exists('project_auth_entries.txt'))
+	{
+	unlink('project_auth_entries.txt');
+	}
 ### END housecleaning of old static report files ###
 
 
@@ -5664,12 +5668,13 @@ if ($SSscript_remove_js > 0)
 # 210429-1624 - Added mohsuggest phone config option
 # 210519-1747 - Fix for Copy Phone conf rebuild, Require prompt be populated on Call Menu creation and modification
 # 210608-2108 - Added In-Group Drop Seconds Override Container and Inbound Manual Dial Agent Forced Ready features
+# 210615-1108 - Default security fixes, CVE-2021-28854
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-814a';
-$build = '210608-2108';
+$admin_version = '2.14-815a';
+$build = '210615-1108';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
