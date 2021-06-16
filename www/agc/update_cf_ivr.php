@@ -28,7 +28,6 @@ $BR = getenv ("HTTP_USER_AGENT");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
-$PHP_SELF=$_SERVER['PHP_SELF'];
 if (isset($_GET["caller_id"]))				{$caller_id=$_GET["caller_id"];}
 	elseif (isset($_POST["caller_id"]))		{$caller_id=$_POST["caller_id"];}
 if (isset($_GET["lead_id"]))				{$lead_id=$_GET["lead_id"];}

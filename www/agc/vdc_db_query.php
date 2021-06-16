@@ -1472,7 +1472,7 @@ if ($ACTION == 'LogiNCamPaigns')
 			{
 			$loginDATE = date("Ymd");
 			$VDdisplayMESSAGE.= "<BR><BR>"._QXZ("MANAGER OVERRIDE:")."<BR>\n";
-			$VDdisplayMESSAGE.= "<FORM ACTION=\"$PHP_SELF\" METHOD=POST>\n";
+			$VDdisplayMESSAGE.= "<FORM ACTION=\"\" METHOD=POST>\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=MGR_override VALUE=\"1\">\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=relogin VALUE=\"YES\">\n";
 			$VDdisplayMESSAGE.= "<INPUT TYPE=HIDDEN NAME=VD_login VALUE=\"$user\">\n";

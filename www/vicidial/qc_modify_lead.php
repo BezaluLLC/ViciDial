@@ -38,6 +38,7 @@ require("functions.php");
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
+$PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
 if (isset($_GET["vendor_id"]))				{$vendor_id=$_GET["vendor_id"];}
 	elseif (isset($_POST["vendor_id"]))		{$vendor_id=$_POST["vendor_id"];}
 if (isset($_GET["phone"]))				{$phone=$_GET["phone"];}
@@ -739,7 +740,7 @@ var timestamp=<?php echo $STARTtime; ?>;
 
 function StartRefresh()
 	{
-	setInterval("CheckIfLeadUpdated()", 3000);
+	setInterval("CheckIfLeadUpdated()", 15000);
 	}
 
 function CheckIfLeadUpdated()
@@ -768,6 +769,7 @@ function CheckIfLeadUpdated()
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		xmlhttp.send(lead_query); 
 		xmlhttp.onreadystatechange = function() { 
+			alert(xmlhttp.readyState+" - "+xmlhttp.responseText);
 			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 				QueryText = xmlhttp.responseText;
 				var QueryText_array=QueryText.split("\n");

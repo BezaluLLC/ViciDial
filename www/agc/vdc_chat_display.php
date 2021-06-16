@@ -62,6 +62,9 @@ if (isset($_GET["clickmute"]))						{$clickmute=$_GET["clickmute"];}
 if (isset($_GET["stage"]))							{$stage=$_GET["stage"];}
 	elseif (isset($_POST["stage"]))					{$stage=$_POST["stage"];}
 
+$PHP_SELF=$_SERVER['PHP_SELF'];
+$PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $VUselected_language = '';

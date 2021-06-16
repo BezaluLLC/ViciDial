@@ -58,6 +58,8 @@ $ACTION = preg_replace('/[^-_0-9a-zA-Z]/','',$ACTION);
 $calls_in_queue_option = preg_replace('/[^-_0-9a-zA-Z]/','',$calls_in_queue_option);
 $calls_in_queue_display = preg_replace('/[^-_0-9a-zA-Z]/','',$calls_in_queue_display);
 $DB = preg_replace('/[^-_0-9a-zA-Z]/','',$DB);
+$PHP_SELF=$_SERVER['PHP_SELF'];
+$PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
 
 # default optional vars if not set
 if (!isset($stage))   {$stage="default";}

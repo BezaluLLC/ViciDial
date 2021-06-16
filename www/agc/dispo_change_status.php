@@ -42,7 +42,6 @@ $BR = getenv ("HTTP_USER_AGENT");
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
-$PHP_SELF=$_SERVER['PHP_SELF'];
 if (isset($_GET["logged_status"]))			{$logged_status=$_GET["logged_status"];}
 	elseif (isset($_POST["logged_status"]))	{$logged_status=$_POST["logged_status"];}
 if (isset($_GET["logged_count"]))			{$logged_count=$_GET["logged_count"];}

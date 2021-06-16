@@ -76,6 +76,9 @@ $gsm='.gsm';
 $user = preg_replace("/\'|\"|\\\\|;| /","",$user);
 $pass = preg_replace("/\'|\"|\\\\|;| /","",$pass);
 
+$PHP_SELF=$_SERVER['PHP_SELF'];
+$PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
+
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
 $VUselected_language = '';

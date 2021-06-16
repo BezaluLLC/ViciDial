@@ -47,6 +47,7 @@ $linkAST=mysqli_connect("1.1.1.1", "cron", "1234", "asterisk");
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 $PHP_SELF=$_SERVER['PHP_SELF'];
+$PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
 if (isset($_GET["phone"]))				{$phone=$_GET["phone"];}
 	elseif (isset($_POST["phone"]))		{$phone=$_POST["phone"];}
 if (isset($_GET["format"]))				{$format=$_GET["format"];}

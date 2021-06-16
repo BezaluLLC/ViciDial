@@ -88,7 +88,6 @@ $minutes_old = mktime(date("H"), date("i")-2, date("s"), date("m"), date("d"),  
 $past_minutes_date = date("Y-m-d H:i:s",$minutes_old);
 $webphone_width = 460;
 $webphone_height = 500;
-$PHP_SELF=$_SERVER['PHP_SELF'];
 
 $random = (rand(1000000, 9999999) + 10000000);
 
@@ -179,6 +178,8 @@ $browser=preg_replace("/\'|\"|\\\\/","",$browser);
 $script_name = getenv("SCRIPT_NAME");
 $server_name = getenv("SERVER_NAME");
 $server_port = getenv("SERVER_PORT");
+$PHP_SELF=$_SERVER['PHP_SELF'];
+$PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
 if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
   else {$HTTPprotocol = 'http://';}
 if (($server_port == '80') or ($server_port == '443') ) {$server_port='';}

@@ -760,6 +760,8 @@ $browser=preg_replace("/\'|\"|\\\\/","",$browser);
 $script_name = getenv("SCRIPT_NAME");
 $server_name = getenv("SERVER_NAME");
 $server_port = getenv("SERVER_PORT");
+$PHP_SELF=$_SERVER['PHP_SELF'];
+$PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
 if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
   else {$HTTPprotocol = 'http://';}
 if (($server_port == '80') or ($server_port == '443') ) {$server_port='';}

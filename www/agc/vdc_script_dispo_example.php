@@ -267,6 +267,9 @@ $question = preg_replace("/\'|\"|\\\\|;/","",$question);
 $answer = preg_replace("/\'|\"|\\\\|;/","",$answer);
 $status = preg_replace("/\'|\"|\\\\|;/","",$status);
 
+$PHP_SELF=$_SERVER['PHP_SELF'];
+$PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
+
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
 $VUselected_language = '';

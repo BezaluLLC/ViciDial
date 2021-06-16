@@ -267,8 +267,6 @@ if (($server_port == '80') or ($server_port == '443') ) {$server_port='';}
 else {$server_port = "$CL$server_port";}
 $vdcPAGE = "$HTTPprotocol$server_name$server_port$script_name";
 $vdcURL = $vdcPAGE . '?' . $query_string;
-$PHP_SELF=$_SERVER['PHP_SELF'];
-$PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
 
 $vicidial_list_fields = '|lead_id|entry_date|vendor_lead_code|source_id|list_id|gmt_offset_now|called_since_last_reset|phone_code|phone_number|title|first_name|middle_initial|last_name|address1|address2|address3|city|state|province|postal_code|country_code|gender|date_of_birth|alt_phone|email|security_phrase|comments|called_count|last_local_call_time|rank|owner|';
 
