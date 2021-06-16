@@ -122,10 +122,11 @@
 # 200815-0930 - Added agent-paused 10 & 15 minute indicators
 # 201107-2253 - Added display of parked calls, inbound SLA stats and LIMITED report type
 # 210314-2040 - Added optional DID Description display for inbound calls
+# 210615-2241 - Fix for issue #1314
 #
 
-$version = '2.14-107';
-$build = '210314-2040';
+$version = '2.14-108';
+$build = '210615-2241';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -3482,6 +3483,9 @@ if ($talking_to_print > 0)
 		{
 		$n=0;
 		$custphone='';
+		$cust_state='';
+		$cust_entrydate='';
+		$cust_source='';
 		while ($n < $calls_to_list)
 			{
 			if ( (preg_match("/$VAClead_ids[$n]/", $Alead_id[$j])) and (strlen($VAClead_ids[$n]) == strlen($Alead_id[$j])) and (strlen($VAClead_ids[$n] > 1)) )
@@ -3521,7 +3525,7 @@ if ($talking_to_print > 0)
 				while(mb_strlen($extension, 'utf-8')>14) {$extension = mb_substr("$extension", 0, -1,'utf-8');}
 				}
 			}
-		
+
 		if ($CUSTINFOdisplay>0 && $Alead_id[$j]>0)
 			{
 			$custinfo_stmt="select * from vicidial_list where lead_id='".$Alead_id[$j]."' and phone_number='".$custphone."'";
