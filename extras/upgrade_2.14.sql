@@ -1708,3 +1708,8 @@ ALTER TABLE vicidial_campaigns ADD in_man_dial_next_ready_seconds SMALLINT(5) UN
 ALTER TABLE vicidial_campaigns ADD in_man_dial_next_ready_seconds_override VARCHAR(40) default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1635',db_schema_update_date=NOW() where db_schema_version < 1635;
+
+ALTER TABLE phones ADD peer_status ENUM('UNKNOWN','REGISTERED','UNREGISTERED','REACHABLE','LAGGED','UNREACHABLE') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'UNKNOWN';
+ALTER TABLE phones ADD ping_time SMALLINT(6) DEFAULT NULL;
+
+UPDATE system_settings SET db_schema_version='1636',db_schema_update_date=NOW() where db_schema_version < 1636;

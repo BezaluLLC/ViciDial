@@ -103,6 +103,8 @@ outbound_alt_cid VARCHAR(20) default '',
 conf_qualify ENUM('Y','N') default 'Y',
 webphone_layout VARCHAR(255) default '',
 mohsuggest VARCHAR(100) default '',
+peer_status ENUM('UNKNOWN','REGISTERED','UNREGISTERED','REACHABLE','LAGGED','UNREACHABLE') COLLATE utf8_unicode_ci NOT NULL DEFAULT 'UNKNOWN',
+ping_time SMALLINT(6) DEFAULT NULL,
 index (server_ip),
 index (voicemail_id),
 index (dialplan_number),
@@ -4950,4 +4952,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1635',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1636',db_schema_update_date=NOW(),reload_timestamp=NOW();
