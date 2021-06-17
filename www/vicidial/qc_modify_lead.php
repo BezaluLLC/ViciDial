@@ -740,7 +740,7 @@ var timestamp=<?php echo $STARTtime; ?>;
 
 function StartRefresh()
 	{
-	setInterval("CheckIfLeadUpdated()", 15000);
+	setInterval("CheckIfLeadUpdated()", 3000);
 	}
 
 function CheckIfLeadUpdated()
@@ -769,7 +769,6 @@ function CheckIfLeadUpdated()
 		xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		xmlhttp.send(lead_query); 
 		xmlhttp.onreadystatechange = function() { 
-			alert(xmlhttp.readyState+" - "+xmlhttp.responseText);
 			if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
 				QueryText = xmlhttp.responseText;
 				var QueryText_array=QueryText.split("\n");
