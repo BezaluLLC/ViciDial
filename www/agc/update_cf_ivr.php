@@ -12,9 +12,11 @@
 # 150814-1441 - First Build
 # 170526-2319 - Added additional variable filtering
 # 210615-1030 - Default security fixes, CVE-2021-28854
+# 210616-2041 - Added optional CORS support, see options.php for details
 #
 
 $api_script = 'update_cf_ivr';
+$php_script = 'update_cf_ivr.php';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -98,6 +100,13 @@ if ($qm_conf_ct > 0)
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
+	}
+
+# if options file exists, use the override values for the above variables
+#   see the options-example.php file for more information
+if (file_exists('options.php'))
+	{
+	require_once('options.php');
 	}
 
 if ($DB>0) {echo "$lead_id|$caller_id|$list_id|$field|$value|$user|$DB|$log_to_file|\n";}

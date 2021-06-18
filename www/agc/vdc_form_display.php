@@ -52,10 +52,11 @@
 # 210329-2025 - Fixed for consistent custom fields values filtering
 # 210404-1522 - Added only_field option for refresh of already-loaded custom form SOURCESELECT element
 # 210506-1825 - Fix for SELECTSOURCE reloading issue
+# 210616-2037 - Added optional CORS support, see options.php for details
 #
 
-$version = '2.14-42';
-$build = '210506-1825';
+$version = '2.14-43';
+$build = '210616-2037';
 $php_script = 'vdc_form_display.php';
 
 require_once("dbconnect_mysqli.php");
@@ -221,9 +222,15 @@ if (isset($_GET["orig_URL"]))			{$orig_URL=$_GET["orig_URL"];}
 if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))	{$DB=$_POST["DB"];}
 
-
 if ($bcrypt == 'OFF')
 	{$bcrypt=0;}
+
+# if options file exists, use the override values for the above variables
+#   see the options-example.php file for more information
+if (file_exists('options.php'))
+	{
+	require_once('options.php');
+	}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1

@@ -71,10 +71,12 @@
 # 190111-0902 - Fix for PHP7
 # 200319-1532 - Small fixes for conference tab issues
 # 210615-1037 - Default security fixes, CVE-2021-28854
+# 210616-2053 - Added optional CORS support, see options.php for details
 #
 
-$version = '2.2.6-4';
-$build = '210615-1037';
+$version = '2.2.6-5';
+$build = '210616-2053';
+$php_script = 'astguiclient.php';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -113,6 +115,12 @@ $phone_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$phone_pass);
 $user=preg_replace("/\'|\"|\\\\|;| /","",$user);
 $pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 
+# if options file exists, use the override values for the above variables
+#   see the options-example.php file for more information
+if (file_exists('options.php'))
+	{
+	require_once('options.php');
+	}
 
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####

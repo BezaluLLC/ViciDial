@@ -66,11 +66,11 @@
 # 170526-2310 - Added additional variable filtering
 # 180419-2257 - Added multi_trigger option
 # 210615-1038 - Default security fixes, CVE-2021-28854
+# 210616-2046 - Added optional CORS support, see options.php for details
 #
 
 $api_script = 'movelist';
-
-header ("Content-type: text/html; charset=utf-8");
+$php_script = 'dispo_move_list.php';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -148,6 +148,15 @@ $list_id = preg_replace('/[^_0-9]/', '', $list_id);
 $new_list_id = preg_replace('/[^_0-9]/', '', $new_list_id);
 $list_id_trigger = preg_replace('/[^_0-9]/', '', $list_id_trigger);
 $multi_trigger=preg_replace("/\'|\"|\\\\|;| /","",$multi_trigger);
+
+# if options file exists, use the override values for the above variables
+#   see the options-example.php file for more information
+if (file_exists('options.php'))
+	{
+	require_once('options.php');
+	}
+
+header ("Content-type: text/html; charset=utf-8");
 
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####

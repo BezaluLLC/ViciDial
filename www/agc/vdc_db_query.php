@@ -509,10 +509,11 @@
 # 210606-0957 - Added TILTX features for pre-carrier call filtering
 # 210609-1045 - Added in_man_dial_next_ready_seconds to update_settings function
 # 210615-1014 - Default security fixes, CVE-2021-28854
+# 210616-1906 - Added optional CORS support, see options.php for details
 #
 
-$version = '2.14-402';
-$build = '210615-1014';
+$version = '2.14-403';
+$build = '210616-1906';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=850;
@@ -827,6 +828,13 @@ if (isset($_GET["calls_waiting_vl_oneLABEL"]))			{$calls_waiting_vl_oneLABEL=$_G
 	elseif (isset($_POST["calls_waiting_vl_oneLABEL"]))	{$calls_waiting_vl_oneLABEL=$_POST["calls_waiting_vl_oneLABEL"];}
 if (isset($_GET["calls_waiting_vl_twoLABEL"]))			{$calls_waiting_vl_twoLABEL=$_GET["calls_waiting_vl_twoLABEL"];}
 	elseif (isset($_POST["calls_waiting_vl_twoLABEL"]))	{$calls_waiting_vl_twoLABEL=$_POST["calls_waiting_vl_twoLABEL"];}
+
+# if options file exists, use the override values for the above variables
+#   see the options-example.php file for more information
+if (file_exists('options.php'))
+	{
+	require_once('options.php');
+	}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1

@@ -42,11 +42,11 @@
 # 200814-1829 - added email_body_html, email_body_utf8 flags
 # 201117-2104 - Changes for better compatibility with non-latin data input
 # 210615-1033 - Default security fixes, CVE-2021-28854
+# 210616-2044 - Added optional CORS support, see options.php for details
 #
 
 $api_script = 'send_email';
-
-header ("Content-type: text/html; charset=utf-8");
+$php_script = 'dispo_send_email.php';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -149,6 +149,15 @@ $email_charset = 'iso-8859-1';
 # filter variables
 $user=preg_replace("/\'|\"|\\\\|;| /","",$user);
 $pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+
+# if options file exists, use the override values for the above variables
+#   see the options-example.php file for more information
+if (file_exists('options.php'))
+	{
+	require_once('options.php');
+	}
+
+header ("Content-type: text/html; charset=utf-8");
 
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####

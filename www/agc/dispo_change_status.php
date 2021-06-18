@@ -26,11 +26,11 @@
 # 171127-1736 - First Build
 # 201117-2217 - Changes for better compatibility with non-latin data input
 # 210615-1035 - Default security fixes, CVE-2021-28854
+# 210616-2047 - Added optional CORS support, see options.php for details
 #
 
 $api_script = 'dispo_change_status';
-
-header ("Content-type: text/html; charset=utf-8");
+$php_script = 'dispo_change_status.php';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -89,6 +89,15 @@ if ( ($archive_search != 'Y') and ($archive_search != 'N') )
 	{$archive_search = 'N';}
 if ( ($in_out_search != 'IN') and ($in_out_search != 'OUT') and ($in_out_search != 'BOTH') )
 	{$in_out_search = 'BOTH';}
+
+# if options file exists, use the override values for the above variables
+#   see the options-example.php file for more information
+if (file_exists('options.php'))
+	{
+	require_once('options.php');
+	}
+
+header ("Content-type: text/html; charset=utf-8");
 
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####

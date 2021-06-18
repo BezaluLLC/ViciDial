@@ -528,10 +528,12 @@
 # 161102-1120 - Fixed QM partition problem
 # 190111-0908 - Fix for PHP7
 # 210615-1029 - Default security fixes, CVE-2021-28854
+# 210616-1852 - Added optional CORS support, see options.php for details
 #
 
-$version = '2.12-494c-grey';
-$build = '190111-0908';
+$version = '2.12-495c-grey';
+$build = '210616-1852';
+$php_script = 'vicidial-grey.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=87;
 $one_mysql_log=0;

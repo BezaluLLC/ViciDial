@@ -669,10 +669,12 @@
 # 210606-0955 - Cleanup of debugbottomspan, testing of TILTX features
 # 210609-0942 - Added in_man_dial_next_ready_seconds campaign options
 # 210615-0959 - Default security fix, CVE-2021-28854
+# 210616-1852 - Added optional CORS support, see options.php for details
 #
 
-$version = '2.14-637c';
-$build = '210615-0959';
+$version = '2.14-638c';
+$build = '210616-1852';
+$php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=95;
 $one_mysql_log=0;

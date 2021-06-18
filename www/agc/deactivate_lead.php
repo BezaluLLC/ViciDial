@@ -33,11 +33,11 @@
 # 170526-2301 - Added additional variable filtering
 # 201117-2222 - Changes for better compatibility with non-latin data input
 # 210615-1036 - Default security fixes, CVE-2021-28854
+# 210616-2050 - Added optional CORS support, see options.php for details
 #
 
 $api_script = 'deactivate';
-
-header ("Content-type: text/html; charset=utf-8");
+$php_script = 'deactivate_lead.php';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -82,6 +82,15 @@ $search_value='';
 # filter variables
 $user = preg_replace("/\'|\"|\\\\|;| /","",$user);
 $pass = preg_replace("/\'|\"|\\\\|;| /","",$pass);
+
+# if options file exists, use the override values for the above variables
+#   see the options-example.php file for more information
+if (file_exists('options.php'))
+	{
+	require_once('options.php');
+	}
+
+header ("Content-type: text/html; charset=utf-8");
 
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####

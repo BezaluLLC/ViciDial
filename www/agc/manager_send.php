@@ -146,10 +146,11 @@
 # 201107-2228 - Added campaign/in-group logging in park_log
 # 201117-1751 - Changes for better compatibility with non-latin data input
 # 210615-1016 - Default security fixes, CVE-2021-28854
+# 210616-2051 - Added optional CORS support, see options.php for details
 #
 
-$version = '2.14-93';
-$build = '210615-1016';
+$version = '2.14-94';
+$build = '210616-2051';
 $php_script = 'manager_send.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=143;
@@ -257,6 +258,13 @@ if (isset($_GET["user_group"]))				{$user_group=$_GET["user_group"];}
 	elseif (isset($_POST["user_group"]))	{$user_group=$_POST["user_group"];}
 if (isset($_GET["group_id"]))			{$group_id=$_GET["group_id"];}
 	elseif (isset($_POST["group_id"]))	{$group_id=$_POST["group_id"];}
+
+# if options file exists, use the override values for the above variables
+#   see the options-example.php file for more information
+if (file_exists('options.php'))
+	{
+	require_once('options.php');
+	}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####

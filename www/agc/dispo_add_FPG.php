@@ -22,11 +22,11 @@
 # 150724-1657 - First Build
 # 170526-2305 - Added additional variable filtering
 # 210615-1039 - Default security fixes, CVE-2021-28854
+# 210616-2049 - Added optional CORS support, see options.php for details
 #
 
 $api_script = 'add_FPG';
-
-header ("Content-type: text/html; charset=utf-8");
+$php_script = 'dispo_add_FPG.php';
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -74,6 +74,15 @@ $pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 $phone_number = preg_replace('/[^-_0-9a-zA-Z]/','',$phone_number);
 $FPG_id = preg_replace("/\'|\"|\\\\|;| /","",$FPG_id);
 $lead_id = preg_replace('/[^0-9]/','',$lead_id);
+
+# if options file exists, use the override values for the above variables
+#   see the options-example.php file for more information
+if (file_exists('options.php'))
+	{
+	require_once('options.php');
+	}
+
+header ("Content-type: text/html; charset=utf-8");
 
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####

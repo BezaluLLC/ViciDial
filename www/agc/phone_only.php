@@ -20,10 +20,12 @@
 # 181003-1736 - Added external_web_socket_url option
 # 200123-1639 - Added Webphone options
 # 210615-1028 - Default security fixes, CVE-2021-28854
+# 210616-2043 - Added optional CORS support, see options.php for details
 #
 
-$version = '2.14-16p';
-$build = '210615-1028';
+$version = '2.14-17p';
+$build = '210616-2043';
+$php_script = 'phone_only.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=74;
 $one_mysql_log=0;

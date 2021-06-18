@@ -20,10 +20,11 @@
 # 201026-1504 - Fix for LIVE call issue in top_panel
 # 210426-0138 - Added calls_inqueue_count_ campaign settings options, and calls_in_queue_option=CAMPAIGN setting
 # 210428-2156 - Added calls_in_queue_display setting
+# 210616-1907 - Added optional CORS support, see options.php for details
 #
 
-$version = '2.14-5';
-$build = '210428-2156';
+$version = '2.14-6';
+$build = '210616-1907';
 $php_script = 'alt_display.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=11;
