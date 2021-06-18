@@ -123,12 +123,12 @@
 # 201107-2253 - Added display of parked calls, inbound SLA stats and LIMITED report type
 # 210314-2040 - Added optional DID Description display for inbound calls
 # 210615-2241 - Fix for issue #1314
+# 210618-1011 - Added CORS support
 #
 
-$version = '2.14-108';
-$build = '210615-2241';
-
-header ("Content-type: text/html; charset=utf-8");
+$version = '2.14-109';
+$build = '210618-1011';
+$php_script='AST_timeonVDADall.php';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -251,6 +251,12 @@ if (isset($_GET["parkSTATS"]))			{$parkSTATS=$_GET["parkSTATS"];}
 if (isset($_GET["SLAinSTATS"]))				{$SLAinSTATS=$_GET["SLAinSTATS"];}
 	elseif (isset($_POST["SLAinSTATS"]))	{$SLAinSTATS=$_POST["SLAinSTATS"];}
 
+if (file_exists('options.php'))
+	{
+	require('options.php');
+	}
+
+header ("Content-type: text/html; charset=utf-8");
 
 $report_name = 'Real-Time Main Report';
 $db_source = 'M';
@@ -293,11 +299,6 @@ $RS_ListenBarge =		'MONITOR|BARGE|WHISPER';
 $RS_agentWAIT =			3;
 $RS_INcolumnsHIDE =		0;
 $RS_DIDdesc =			0;
-
-if (file_exists('options.php'))
-	{
-	require('options.php');
-	}
 
 if (strlen($RS_report_default_format) > 3) {$SSreport_default_format = $RS_report_default_format;}
 if (strlen($report_display_type)<2) {$report_display_type = $SSreport_default_format;}

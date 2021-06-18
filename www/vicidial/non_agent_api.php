@@ -178,10 +178,12 @@
 # 210406-1047 - Added 'dialable_count' option to list_info function
 # 210517-1850 - Added phone_code as modifiable field in update_lead function
 # 210611-1610 - Added more variables for add_did/update_did functions
+# 210618-1000 - Added CORS support
 #
 
-$version = '2.14-155';
-$build = '210611-1610';
+$version = '2.14-156';
+$build = '210618-1000';
+$php_script='non_agent_api.php';
 $api_url_log = 0;
 
 $startMS = microtime();
@@ -647,6 +649,8 @@ if (isset($_GET["call_handle_method"]))				{$call_handle_method=$_GET["call_hand
 if (isset($_GET["agent_search_method"]))			{$agent_search_method=$_GET["agent_search_method"];}
 	elseif (isset($_POST["agent_search_method"]))	{$agent_search_method=$_POST["agent_search_method"];}
 
+if (file_exists('options.php'))
+	{require('options.php');}
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -2786,11 +2790,6 @@ if ($function == 'blind_monitor')
 
 
 ### BEGIN optional logging to vicidial_url_log for non-interface URL calls ###
-if (file_exists('options.php'))
-	{
-	require('options.php');
-	}
-
 if ($api_url_log > 0)
 	{
 	$ip = getenv("REMOTE_ADDR");

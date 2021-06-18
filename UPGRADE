@@ -646,7 +646,8 @@ OTHER CHANGES:
 	an override setting based upon the day of the week and time of day.
 
 180. Added CORS(Cross-Origin Resource Sharing) support for the VICIdial agent
-	PHP scripts. see the CORS_SUPPORT.txt doc for more information.
+	PHP scripts and select admin PHP scripts. see the CORS_SUPPORT.txt doc
+	for more information.
 
 
 
