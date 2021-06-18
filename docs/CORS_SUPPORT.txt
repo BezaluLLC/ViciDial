@@ -23,7 +23,7 @@ https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options
 
 VICIDIAL AGENT WEB SCREEN SCRIPTS SUPPORT:
 
-Support for CORS configuration for almost all of the PHP scripts in the "agc" web directory was added on 2021-06-17(svn/trunk revision 3459) with the addition of the "agentCORS.php" file and the addition of the following configurable variables to the "agc/options.php" file on your webserver:
+Support for CORS configuration for almost all of the PHP scripts in the "agc" web directory was added on 2021-06-17(svn/trunk revision 3461) with the addition of the "agentCORS.php" file and the addition of the following configurable variables to the "agc/options.php" file on your webserver:
      (NOTE: If you have never set up an "agc/options.php" file on your webserver before, just use a copy the file "agc/options-example.php")
 
 
@@ -52,7 +52,7 @@ NOTES:
 
 VICIDIAL ADMIN WEB SCREEN SCRIPTS SUPPORT:
 
-The implementation of CORS on tha admin side is very similar to the agent side, except only a limited number of admin PHP scripts are CORS-enabled at this time, and there is no '--ALL--' option for the $CORS_affected_scripts variable, so you must include every script you want to have CORS enabled on for the admin side in that variable. Support for CORS configuration for these limited admin "vicidial" web directory PHP scripts was added on 2021-06-18(svn/trunk revision 3460) with the addition of the "adminCORS.php" file and the addition of the following configurable variables to the "vicidial/options.php" file on your webserver:
+The implementation of CORS on tha admin side is very similar to the agent side, except only a limited number of admin PHP scripts are CORS-enabled at this time, and there is no '--ALL--' option for the $CORS_affected_scripts variable, so you must include every script you want to have CORS enabled on for the admin side in that variable. Support for CORS configuration for these limited admin "vicidial" web directory PHP scripts was added on 2021-06-18(svn/trunk revision 3461) with the addition of the "adminCORS.php" file and the addition of the following configurable variables to the "vicidial/options.php" file on your webserver:
      (NOTE: If you have never set up an "vicidial/options.php" file on your webserver before, just use a copy the file "vicidial/options-example.php")
 
 List of CORS-enabled admin("vicidial") PHP scripts:
