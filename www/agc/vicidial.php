@@ -671,10 +671,11 @@
 # 210615-0959 - Default security fix, CVE-2021-28854
 # 210616-1852 - Added optional CORS support, see options.php for details
 # 210623-0912 - Fix for Leave 3-Way Start Recording issue
+# 210623-0930 - Fix for WebForm 3 after API update fields issue
 #
 
-$version = '2.14-639c';
-$build = '210623-0912';
+$version = '2.14-640c';
+$build = '210623-0930';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=95;
@@ -10307,7 +10308,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							}
 						if (enable_third_webform > 0)
 							{
-                            document.getElementById("WebFormSpanTwo").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_three + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormThreeRefresH();\" onclick=\"webform_click_log('webform3');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform_three.gif"); ?>\" border=\"0\" alt=\"Web Form 3\" /></a>\n";
+                            document.getElementById("WebFormSpanThree").innerHTML = "<a href=\"" + TEMP_VDIC_web_form_address_three + "\" target=\"" + web_form_target + "\" onMouseOver=\"WebFormThreeRefresH();\" onclick=\"webform_click_log('webform3');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_webform_three.gif"); ?>\" border=\"0\" alt=\"Web Form 3\" /></a>\n";
 							}
 
 						agent_events('update_fields', event_data, aec);   aec++;
