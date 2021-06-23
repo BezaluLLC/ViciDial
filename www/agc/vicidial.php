@@ -670,10 +670,11 @@
 # 210609-0942 - Added in_man_dial_next_ready_seconds campaign options
 # 210615-0959 - Default security fix, CVE-2021-28854
 # 210616-1852 - Added optional CORS support, see options.php for details
+# 210623-0912 - Fix for Leave 3-Way Start Recording issue
 #
 
-$version = '2.14-638c';
-$build = '210616-1852';
+$version = '2.14-639c';
+$build = '210623-0912';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=95;
@@ -5432,6 +5433,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var leave_3way_start_recording='<?php echo $leave_3way_start_recording ?>';
 	var leave_3way_start_recording_exception='<?php echo $LTWSRcontainer_entry ?>';
 	var leave_3way_start_recording_trigger=0;
+	var leave_3way_start_recording_triggerCALL=0;
 	var leave_3way_start_recording_filename='';
 	var hangup_xfer_record_start='<?php echo $hangup_xfer_record_start ?>';
 	var hangup_both=0;
@@ -7821,13 +7823,18 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						DispO3wayCalLserverip = redirectserverip;
 						DispO3wayCalLxfernumber = document.vicidial_form.xfernumber.value;
 						DispO3wayCalLcamptail = '';
+						leave_3way_start_recording_triggerCALL = leave_3way_start_recording_trigger;
 
-						xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=" + redirecttype + "&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + redirectdestination + "&ext_context=" + ext_context + "&ext_priority=1&extrachannel=" + redirectXTRAvalue + "&lead_id=" + document.vicidial_form.lead_id.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&phone_number=" + document.vicidial_form.phone_number.value + "&filename=" + taskdebugnote + "&campaign=" + XfeR_GrouP + "&session_id=" + session_id + "&agentchannel=" + agentchannel + "&protocol=" + protocol + "&extension=" + extension + "&auto_dial_level=" + auto_dial_level + "&CalLCID=" + CalLCID + "&customerparked=" + customerparked + "&leave_3way_start_recording_trigger=" + leave_3way_start_recording_trigger + "&leave_3way_start_recording_filename=" + leave_3way_start_recording_filename;
+						xferredirect_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&ACTION=" + redirecttype + "&format=text&channel=" + redirectvalue + "&call_server_ip=" + redirectserverip + "&queryCID=" + queryCID + "&exten=" + redirectdestination + "&ext_context=" + ext_context + "&ext_priority=1&extrachannel=" + redirectXTRAvalue + "&lead_id=" + document.vicidial_form.lead_id.value + "&phone_code=" + document.vicidial_form.phone_code.value + "&phone_number=" + document.vicidial_form.phone_number.value + "&filename=" + taskdebugnote + "&campaign=" + XfeR_GrouP + "&session_id=" + session_id + "&agentchannel=" + agentchannel + "&protocol=" + protocol + "&extension=" + extension + "&auto_dial_level=" + auto_dial_level + "&CalLCID=" + CalLCID + "&customerparked=" + customerparked + "&leave_3way_start_recording_trigger=" + leave_3way_start_recording_triggerCALL + "&leave_3way_start_recording_filename=" + leave_3way_start_recording_filename;
 
 						if (taskdebugnote == 'FIRST') 
 							{
 							document.getElementById("DispoSelectHAspan").innerHTML = "<a href=\"#\" onclick=\"DispoLeavE3wayAgaiN()\"><?php echo _QXZ("Leave 3Way Call Again"); ?></a>";
 							}
+						}
+					else
+						{
+						leave_3way_start_recording_triggerCALL=0;
 						}
 					if (taskvar == 'ParK')
 						{
@@ -8219,7 +8226,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			"&list_id=" + document.vicidial_form.list_id.value + 
 			"&length_in_sec=0&phone_code=" + document.vicidial_form.phone_code.value + 
 			"&phone_number=" + lead_dial_number + 
-			"&exten=" + recording_exten + "&channel=" + lastcustchannel + "&start_epoch=" + MDlogEPOCH + "&auto_dial_level=" + auto_dial_level + "&VDstop_rec_after_each_call=" + VDstop_rec_after_each_call + "&conf_silent_prefix=" + conf_silent_prefix + "&protocol=" + protocol + "&extension=" + extension + "&ext_context=" + ext_context + "&conf_exten=" + session_id + "&user_abb=" + user_abb + "&agent_log_id=" + agent_log_id + "&MDnextCID=" + LasTCID + "&inOUT=" + inOUT + "&alt_dial=" + dialed_label + "&DB=0" + "&agentchannel=" + agentchannel + "&conf_dialed=" + conf_dialed + "&leaving_threeway=" + leaving_threeway + "&hangup_all_non_reserved=" + hangup_all_non_reserved + "&blind_transfer=" + blind_transfer + "&dial_method=" + dial_method + "&nodeletevdac=" + nodeletevdac + "&alt_num_status=" + alt_num_status + "&qm_extension=" + qm_extension + "&called_count=" + document.vicidial_form.called_count.value + "&leave_3way_start_recording_trigger=" + leave_3way_start_recording_trigger + "&leave_3way_start_recording_filename=" + leave_3way_start_recording_filename + "&channelrec=" + channelrec;
+			"&exten=" + recording_exten + "&channel=" + lastcustchannel + "&start_epoch=" + MDlogEPOCH + "&auto_dial_level=" + auto_dial_level + "&VDstop_rec_after_each_call=" + VDstop_rec_after_each_call + "&conf_silent_prefix=" + conf_silent_prefix + "&protocol=" + protocol + "&extension=" + extension + "&ext_context=" + ext_context + "&conf_exten=" + session_id + "&user_abb=" + user_abb + "&agent_log_id=" + agent_log_id + "&MDnextCID=" + LasTCID + "&inOUT=" + inOUT + "&alt_dial=" + dialed_label + "&DB=0" + "&agentchannel=" + agentchannel + "&conf_dialed=" + conf_dialed + "&leaving_threeway=" + leaving_threeway + "&hangup_all_non_reserved=" + hangup_all_non_reserved + "&blind_transfer=" + blind_transfer + "&dial_method=" + dial_method + "&nodeletevdac=" + nodeletevdac + "&alt_num_status=" + alt_num_status + "&qm_extension=" + qm_extension + "&called_count=" + document.vicidial_form.called_count.value + "&leave_3way_start_recording_trigger=" + leave_3way_start_recording_triggerCALL + "&leave_3way_start_recording_filename=" + leave_3way_start_recording_filename + "&channelrec=" + channelrec;
 			xmlhttp.open('POST', 'vdc_db_query.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 		//		document.getElementById("busycallsdebug").innerHTML = "vdc_db_query.php?" + manDiaLlog_query;
@@ -11294,6 +11301,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				SCRIPT2web_form_vars='';
 				MDcheck_for_answer=0;
 				leave_3way_start_recording_trigger=0;
+				leave_3way_start_recording_triggerCALL=0;
 				leave_3way_start_recording_filename='';
 				three_way_call_cid = orig_three_way_call_cid;
 				if (manual_dial_preview < 1)
@@ -14462,45 +14470,45 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		{
 		if ( (RedirecTxFEr < 1) && (leaving_threeway < 1) )
 			{
-	//	alert("RedirecTxFEr|" + RedirecTxFEr);
-		MD_channel_look=0;
-		var xmlhttp=false;
-		/*@cc_on @*/
-		/*@if (@_jscript_version >= 5)
-		// JScript gives us Conditional compilation, we can cope with old IE versions.
-		// and security blocked creation of the objects.
-		 try {
-		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
-		 } catch (e) {
-		  try {
-		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
-		  } catch (E) {
-		   xmlhttp = false;
-		  }
-		 }
-		@end @*/
-		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
-			{
-			xmlhttp = new XMLHttpRequest();
-			}
-		if (xmlhttp) 
-			{ 
-			var queryCID = "HTvdcW" + epoch_sec + user_abb;
-			custhangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=HangupConfDial&format=text&user=" + user + "&pass=" + pass + "&exten=" + session_id + "&ext_context=" + ext_context + "&queryCID=" + queryCID + "&log_campaign=" + campaign + "&qm_extension=" + qm_extension;
-			xmlhttp.open('POST', 'manager_send.php'); 
-			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
-			xmlhttp.send(custhangup_query); 
-			xmlhttp.onreadystatechange = function() 
-				{ 
-				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
-					{
-					Nactiveext = null;
-					Nactiveext = xmlhttp.responseText;
-				//	alert(xmlhttp.responseText + "\n" + tasktypecall + "\n" + leaving_threeway);
- 					}
+		//	alert("RedirecTxFEr|" + RedirecTxFEr);
+			MD_channel_look=0;
+			var xmlhttp=false;
+			/*@cc_on @*/
+			/*@if (@_jscript_version >= 5)
+			// JScript gives us Conditional compilation, we can cope with old IE versions.
+			// and security blocked creation of the objects.
+			 try {
+			  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+			 } catch (e) {
+			  try {
+			   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+			  } catch (E) {
+			   xmlhttp = false;
+			  }
+			 }
+			@end @*/
+			if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+				{
+				xmlhttp = new XMLHttpRequest();
 				}
-			delete xmlhttp;
-			}
+			if (xmlhttp) 
+				{ 
+				var queryCID = "HTvdcW" + epoch_sec + user_abb;
+				custhangup_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=HangupConfDial&format=text&user=" + user + "&pass=" + pass + "&exten=" + session_id + "&ext_context=" + ext_context + "&queryCID=" + queryCID + "&log_campaign=" + campaign + "&qm_extension=" + qm_extension;
+				xmlhttp.open('POST', 'manager_send.php'); 
+				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+				xmlhttp.send(custhangup_query); 
+				xmlhttp.onreadystatechange = function() 
+					{ 
+					if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+						{
+						Nactiveext = null;
+						Nactiveext = xmlhttp.responseText;
+					//	alert(xmlhttp.responseText + "\n" + tasktypecall + "\n" + leaving_threeway);
+						}
+					}
+				delete xmlhttp;
+				}
 			}
 		}
 
@@ -15539,6 +15547,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					SCRIPT2web_form_vars='';
 					MDcheck_for_answer=0;
 					leave_3way_start_recording_trigger=0;
+					leave_3way_start_recording_triggerCALL=0;
 					leave_3way_start_recording_filename='';
 					three_way_call_cid = orig_three_way_call_cid;
 					if (manual_auto_next > 0)
