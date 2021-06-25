@@ -510,10 +510,11 @@
 # 210609-1045 - Added in_man_dial_next_ready_seconds to update_settings function
 # 210615-1014 - Default security fixes, CVE-2021-28854
 # 210616-1906 - Added optional CORS support, see options.php for details
+# 210625-1351 - Added term_reason as a dispo_call_url variable
 #
 
-$version = '2.14-403';
-$build = '210616-1906';
+$version = '2.14-404';
+$build = '210625-1351';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=850;
@@ -14195,15 +14196,16 @@ if ($ACTION == 'updateDISPO')
 				{$url_call_notes =		urlencode(" ");}
 			}
 
-		if (preg_match('/--A--dialed_/i',$dispo_call_urlARY[$j]))
+		if (preg_match('/--A--dialed_|--A--term_reason--B--/i',$dispo_call_urlARY[$j]))
 			{
 			$dialed_number =	$phone_number;
 			$dialed_label =		'NONE';
+			$term_reason =		'NONE';
 
 			if ($call_type=='OUT')
 				{
 				### find the dialed number and label for this call
-				$stmt = "SELECT phone_number,alt_dial from vicidial_log where uniqueid='$uniqueid';";
+				$stmt = "SELECT phone_number,alt_dial,term_reason from vicidial_log where uniqueid='$uniqueid';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00341',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -14213,6 +14215,7 @@ if ($ACTION == 'updateDISPO')
 					$row=mysqli_fetch_row($rslt);
 					$dialed_number =	$row[0];
 					$dialed_label =		$row[1];
+					$term_reason =		$row[2];
 					}
 				}
 			}
@@ -14254,12 +14257,12 @@ if ($ACTION == 'updateDISPO')
 				}
 			}
 
-		if ((preg_match('/callid--B--/i',$dispo_call_urlARY[$j])) or (preg_match('/group--B--/i',$dispo_call_urlARY[$j])))
+		if ((preg_match('/callid--B--/i',$dispo_call_urlARY[$j])) or (preg_match('/group--B--|--A--term_reason--B--/i',$dispo_call_urlARY[$j])))
 			{
 			$INclosecallid='';
 			$INxfercallid='';
 			$VDADchannel_group=$campaign;
-			$stmt = "SELECT campaign_id,closecallid,xfercallid from vicidial_closer_log where uniqueid='$uniqueid' and user='$user' order by closecallid desc limit 1;";
+			$stmt = "SELECT campaign_id,closecallid,xfercallid,term_reason from vicidial_closer_log where uniqueid='$uniqueid' and user='$user' order by closecallid desc limit 1;";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00348',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -14270,6 +14273,7 @@ if ($ACTION == 'updateDISPO')
 				$VDADchannel_group =	$row[0];
 				$INclosecallid =		$row[1];
 				$INxfercallid =			$row[2];
+				$term_reason =			$row[3];
 				}
 			}
 
@@ -14455,6 +14459,7 @@ if ($ACTION == 'updateDISPO')
 						if ( (preg_match("/^callback_lead_status$/i",$temp_df[0])) and ($CallBackLeadStatus == $temp_df[1]) ) {$CallBackLeadStatus = $temp_df[2];   $lm++;}
 						if ( (preg_match("/^callback_datetime$/i",$temp_df[0])) and ($CallBackDatETimE == $temp_df[1]) )	{$CallBackDatETimE = $temp_df[2];   $lm++;}
 						if ( (preg_match("/^called_count$/i",$temp_df[0])) and ($called_count == $temp_df[1]) )				{$called_count = $temp_df[2];   $lm++;}
+						if ( (preg_match("/^term_reason$/i",$temp_df[0])) and ($term_reason == $temp_df[1]) )				{$term_reason = $temp_df[2];   $lm++;}
 
 						if ($DB) {echo "DF-Debug 2: $dct|$lm|$temp_df[0]|$temp_df[1]|$temp_df[2]|\n";}
 						$dct++;
@@ -14553,7 +14558,7 @@ if ($ACTION == 'updateDISPO')
 		$dispo_call_urlARY[$j] = preg_replace('/--A--callback_lead_status--B--/i',urlencode(trim($CallBackLeadStatus)),$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--callback_datetime--B--/i',urlencode(trim($CallBackDatETimE)),$dispo_call_urlARY[$j]);
 		$dispo_call_urlARY[$j] = preg_replace('/--A--called_count--B--/i',"$called_count",$dispo_call_urlARY[$j]);
-
+		$dispo_call_urlARY[$j] = preg_replace('/--A--term_reason--B--/i',"$term_reason",$dispo_call_urlARY[$j]);
 
 		if (strlen($FORMcustom_field_names)>2)
 			{
