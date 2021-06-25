@@ -179,10 +179,11 @@
 # 210517-1850 - Added phone_code as modifiable field in update_lead function
 # 210611-1610 - Added more variables for add_did/update_did functions
 # 210618-1000 - Added CORS support
+# 210625-1421 - Added BARGESWAP option to blind_monitor function
 #
 
-$version = '2.14-156';
-$build = '210618-1000';
+$version = '2.14-157';
+$build = '210625-1421';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -2713,9 +2714,13 @@ if ($function == 'blind_monitor')
 					if (strlen($D_s_ip[3])<3) {$D_s_ip[3] = "0$D_s_ip[3]";}
 					$monitor_dialstring = "$D_s_ip[0]$S$D_s_ip[1]$S$D_s_ip[2]$S$D_s_ip[3]$S";
 
-					$monitor_type='LISTEN'; $cid_prefix='BM';
+					$monitor_type='LISTEN'; $cid_prefix='BM'; $swap_chan=0;
 					if ( (preg_match('/MONITOR/',$stage)) or (strlen($stage)<1) ) {$stage = '0';}
-					if (preg_match('/BARGE/',$stage)) {$stage = $barge_prefix; $monitor_type='BARGE'; $cid_prefix='BB';}
+					if (preg_match('/BARGE/',$stage)) 
+						{
+						if (preg_match('/SWAP/',$stage)) {$swap_chan=1;}
+						$stage = $barge_prefix; $monitor_type='BARGE'; $cid_prefix='BB';
+						}
 					if (preg_match('/HIJACK/',$stage)) {$stage = ''; $monitor_type='HIJACK'; $cid_prefix='BB';}
 					if (preg_match('/WHISPER/',$stage)) 
 						{
@@ -2746,6 +2751,10 @@ if ($function == 'blind_monitor')
 
 					### insert a new lead in the system with this phone number
 					$stmt = "INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$monitor_server_ip','','Originate','$BMquery','Channel: Local/$monitor_dialstring$stage$session_id@default','Context: default','Exten: $dialplan_number','Priority: 1','Callerid: \"$BMquery\" <$outbound_cid>','','','','','');";
+					if ($swap_chan > 0)
+						{
+						$stmt = "INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$monitor_server_ip','','Originate','$BMquery','Channel: Local/$dialplan_number@default','Context: default','Exten: $monitor_dialstring$stage$session_id','Priority: 1','Callerid: \"$BMquery\" <$outbound_cid>','','','','','');";
+						}
 					if ($DB>0) {echo "DEBUG: blind_monitor query - $stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$affected_rows = mysqli_affected_rows($link);

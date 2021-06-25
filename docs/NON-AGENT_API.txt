@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-06-11
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-06-25
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -188,6 +188,8 @@ Changes:
 210406-1047 - Added 'dialable_count' option to list_info function
 210517-1850 - Added phone_code as modifiable field in update_lead function
 210611-1610 - Added more variables for add_did/update_did functions
+210618-1000 - Added CORS support
+210625-1421 - Added BARGESWAP option to blind_monitor function
 
 
 API Functions use the 'function' variable
@@ -296,7 +298,7 @@ phone_login -		alpha-numeric, no spaces or special characters allowed
 session_id -		must be all numbers, 7 digits
 server_ip -		must be all numbers and dots, max 15 characters
 source -		description of what originated the API call (maximum 20 characters)
-stage -			MONITOR, BARGE or HIJACK, default is MONITOR
+stage -			MONITOR, BARGE(or BARGESWAP) or HIJACK, default is MONITOR
 			 (HIJACK option is not currently functional)
 
 
