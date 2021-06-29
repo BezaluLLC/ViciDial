@@ -105,6 +105,7 @@
 # 201123-1704 - Added today called count display
 # 210304-1509 - Added option '5' for modify_lead for this page to work as read-only
 # 210421-2120 - Added more screen labels
+# 210629-1545 - Added KHOMP stats display
 #
 
 require("dbconnect_mysqli.php");
@@ -288,6 +289,11 @@ if ($qm_conf_ct > 0)
 	$SSsip_event_logging =		$row[12];
 	}
 ##### END SETTINGS LOOKUP #####
+### See if KHOMP is set up
+$stmt = "SELECT container_id FROM vicidial_settings_containers where container_id IN('KHOMPSETTINGS','KHOMPSTATUSMAP');";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$kh_conf_ct = mysqli_num_rows($rslt);
 ###########################################
 
 $DB=preg_replace('/[^0-9]/','',$DB);
@@ -1859,6 +1865,32 @@ else
 				}
 			}
 		$call_log .= "</tr>\n";
+
+		if ( ($CIDdisplay=="Yes") and ($kh_conf_ct >= 2) )
+			{
+			$stmtA="SELECT start_date,conclusion,pattern,UNIX_TIMESTAMP(answer_date),UNIX_TIMESTAMP(analyzer_date),hangup_auth_time,hangup_query_time,route_auth_time,route_query_time FROM vicidial_khomp_log WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and caller_code='$caller_code';";
+			$rsltA=mysql_to_mysqli($stmtA, $link);
+			$kh_to_print = mysqli_num_rows($rslt);
+			if ($kh_to_print > 0)
+				{
+				$rowA=mysqli_fetch_row($rsltA);
+				$KHstart_date =	$rowA[0];
+				$KHconclusion =	$rowA[1];
+				$KHpattern =	$rowA[2];
+				$KHanswer =		$rowA[3];
+				$KHanalyzer =	$rowA[4];
+				$KHproctime =	($KHanalyzer - $KHanswer);
+				$KHproctime =	sprintf("%.3f", $KHproctime);
+				if (strlen($rowA[0]) > 0)
+					{
+					$call_log .= "<TR>";
+					$call_log .= "<td></td>";
+					$call_log .= "<TD $bgcolor COLSPAN=12><font style=\"font-size:11px;font-family:sans-serif;\"> "._QXZ("KHOMP Start Date").": $KHstart_date &nbsp; &nbsp;  "._QXZ("Conclusion").": $KHconclusion &nbsp; &nbsp; "._QXZ("Pattern").": $KHpattern &nbsp; &nbsp; "._QXZ("Processing Time").": $KHproctime "._QXZ("sec")." &nbsp; &nbsp; "._QXZ("API Times").": $rowA[5] / $rowA[6] / $rowA[7] / $rowA[8] &nbsp; </font></TD>";
+					$call_log .= "</TR>";
+					$KHcount++;
+					}
+				}
+			}
 
 		$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and vicidial_id='$row[0]';";
 		$rsltA=mysql_to_mysqli($stmtA, $link);
