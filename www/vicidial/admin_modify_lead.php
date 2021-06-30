@@ -106,6 +106,7 @@
 # 210304-1509 - Added option '5' for modify_lead for this page to work as read-only
 # 210421-2120 - Added more screen labels
 # 210629-1545 - Added KHOMP stats display
+# 210630-0838 - Added display of vicidial_vmm_counts data, if $CIDdisplay=="Yes"
 #
 
 require("dbconnect_mysqli.php");
@@ -3168,6 +3169,65 @@ else
 			}
 
 		echo "</TABLE><BR><BR>\n";
+
+
+		if ($CIDdisplay=="Yes")
+			{
+			echo "<B>"._QXZ("VOICEMAIL MESSAGE DAILY COUNT LOGS FOR THIS LEAD").":</B>\n";
+			echo "<TABLE width=750 cellspacing=1 cellpadding=1>\n";
+			echo "<tr><td><font size=1># </td><td align=left><font size=2>"._QXZ("DATE")." </td><td align=left><font size=2>"._QXZ("MESSAGE STARTED COUNT")." </td><td align=left><font size=2> &nbsp; "._QXZ("MESSAGE COMPLETED COUNT")."</td></tr>\n";
+
+			$stmt="SELECT call_date,vmm_count,vmm_played from vicidial_vmm_counts where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by call_date desc limit 500;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$logs_to_print = mysqli_num_rows($rslt);
+			if ($DB) {echo "$logs_to_print|$stmt|\n";}
+
+			$u=0;
+			while ($logs_to_print > $u) 
+				{
+				$row=mysqli_fetch_row($rslt);
+				if (preg_match("/1$|3$|5$|7$|9$/i", $u))
+					{$bgcolor="bgcolor=\"#$SSstd_row2_background\"";} 
+				else
+					{$bgcolor="bgcolor=\"#$SSstd_row1_background\"";}
+
+				$u++;
+				echo "<tr $bgcolor>";
+				echo "<td><font size=1>$u</td>";
+				echo "<td align=left><font size=2> $row[0] </td>";
+				echo "<td align=left><font size=2> $row[1] </td>\n";
+				echo "<td align=left><font size=2> $row[2] &nbsp; </td>\n";
+				echo "</tr>\n";
+				}
+
+			if ($archive_log=="Yes") 
+				{
+				$stmt="SELECT call_date,vmm_count,vmm_played from vicidial_vmm_counts_archive where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by call_date desc limit 500;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$logs_to_print = mysqli_num_rows($rslt);
+				if ($DB) {echo "$logs_to_print|$stmt|\n";}
+
+				$u=0;
+				while ($logs_to_print > $u) 
+					{
+					$row=mysqli_fetch_row($rslt);
+					if (preg_match("/1$|3$|5$|7$|9$/i", $u))
+						{$bgcolor="bgcolor=\"#$SSstd_row2_background\"";} 
+					else
+						{$bgcolor="bgcolor=\"#$SSstd_row1_background\"";}
+
+					$u++;
+					echo "<tr $bgcolor>";
+					echo "<td><font size=1>$u</td>";
+					echo "<td align=left><font size=2 color='#FF0000'> $row[0] </td>";
+					echo "<td align=left><font size=2> $row[1] </td>\n";
+					echo "<td align=left><font size=2> $row[2] &nbsp; </td>\n";
+					echo "</tr>\n";
+					}
+				}
+
+			echo "</TABLE><BR><BR>\n";
+			}
 
 
 	##### BEGIN switch lead log entries #####

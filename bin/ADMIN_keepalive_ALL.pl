@@ -149,9 +149,10 @@
 # 210325-2145 - Fix for -adfill-delay= CLI flag, Issue #1266
 # 210429-1644 - Added mohsuggest config for SIP and IAX phones
 # 210605-1407 - Added purging of vicidial_tiltx_shaken_log log entries
+# 210630-1630 - Remove commas from mailbox name before writing to conf file, use "Full Name" for a phone's mailbox name, if set
 #
 
-$build = '210605-1407';
+$build = '210630-1630';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -3957,7 +3958,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		while ($sthArows > $i)
 			{
 			##### Get the distinct phone entries #####
-			$stmtA = "SELECT extension,pass,email,delete_vm_after_email,voicemail_timezone,voicemail_options FROM phones where active='Y' and voicemail_id='$voicemail[$i]';";
+			$stmtA = "SELECT extension,pass,email,delete_vm_after_email,voicemail_timezone,voicemail_options,fullname FROM phones where active='Y' and voicemail_id='$voicemail[$i]';";
 			#	print "$stmtA\n";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -3971,11 +3972,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				$delete_vm_after_email[$i] =	$aryA[3];
 				$voicemail_timezone[$i] =		$aryA[4];
 				$voicemail_options[$i] =		$aryA[5];
+				$fullname[$i] =					$aryA[6];
+					$fullname[$i] =~ s/,//gi;
+				if (length($fullname[$i]) < 1) {$fullname[$i] = "$extension[$i] Mailbox";}
 
 				if ($delete_vm_after_email[$i] =~ /Y/)
-					{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i],,|delete=yes|tz=$voicemail_timezone[$i]|$voicemail_options[$i]\n";}
+					{$vm  .= "$voicemail[$i] => $pass[$i],$fullname[$i],$email[$i],,|delete=yes|tz=$voicemail_timezone[$i]|$voicemail_options[$i]\n";}
 				else
-					{$vm  .= "$voicemail[$i] => $pass[$i],$extension[$i] Mailbox,$email[$i],,|delete=no|tz=$voicemail_timezone[$i]|$voicemail_options[$i]\n";}
+					{$vm  .= "$voicemail[$i] => $pass[$i],$fullname[$i],$email[$i],,|delete=no|tz=$voicemail_timezone[$i]|$voicemail_options[$i]\n";}
 				}
 			$sthA->finish();
 
@@ -3999,6 +4003,8 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			@aryA = $sthA->fetchrow_array;
 			$voicemail_id[$i] =				$aryA[0];
 			$fullname[$i] =					$aryA[1];
+				$fullname[$i] =~ s/,//gi;
+			if (length($fullname[$i]) < 1) {$fullname[$i] = "Mailbox $voicemail_id[$i]";}
 			$pass[$i] =						$aryA[2];
 			$email[$i] =					$aryA[3];
 			$delete_vm_after_email[$i] =	$aryA[4];
