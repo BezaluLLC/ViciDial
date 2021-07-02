@@ -180,10 +180,11 @@
 # 210611-1610 - Added more variables for add_did/update_did functions
 # 210618-1000 - Added CORS support
 # 210625-1421 - Added BARGESWAP option to blind_monitor function
+# 210701-2050 - Added ingroup_rank/ingroup_grade options to the update_user function
 #
 
-$version = '2.14-157';
-$build = '210625-1421';
+$version = '2.14-158';
+$build = '210701-2050';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -560,7 +561,7 @@ if (isset($_GET["remove_from_hopper"]))				{$remove_from_hopper=$_GET["remove_fr
 if (isset($_GET["dedupe_statuses"]))				{$dedupe_statuses=$_GET["dedupe_statuses"];}
 	elseif (isset($_POST["dedupe_statuses"]))		{$dedupe_statuses=$_POST["dedupe_statuses"];}
 if (isset($_GET["status_mismatch_action"]))				{$status_mismatch_action=$_GET["status_mismatch_action"];}
-	elseif (isset($_POST["status_mismatch_action"]))		{$status_mismatch_action=$_POST["status_mismatch_action"];}
+	elseif (isset($_POST["status_mismatch_action"]))	{$status_mismatch_action=$_POST["status_mismatch_action"];}
 if (isset($_GET["custom_order"]))				{$custom_order=$_GET["custom_order"];}
 	elseif (isset($_POST["custom_order"]))		{$custom_order=$_POST["custom_order"];}
 if (isset($_GET["custom_copy_method"]))				{$custom_copy_method=$_GET["custom_copy_method"];}
@@ -649,6 +650,14 @@ if (isset($_GET["call_handle_method"]))				{$call_handle_method=$_GET["call_hand
 	elseif (isset($_POST["call_handle_method"]))	{$call_handle_method=$_POST["call_handle_method"];}
 if (isset($_GET["agent_search_method"]))			{$agent_search_method=$_GET["agent_search_method"];}
 	elseif (isset($_POST["agent_search_method"]))	{$agent_search_method=$_POST["agent_search_method"];}
+if (isset($_GET["ingroup_rank"]))			{$ingroup_rank=$_GET["ingroup_rank"];}
+	elseif (isset($_POST["ingroup_rank"]))	{$ingroup_rank=$_POST["ingroup_rank"];}
+if (isset($_GET["ingroup_grade"]))			{$ingroup_grade=$_GET["ingroup_grade"];}
+	elseif (isset($_POST["ingroup_grade"]))	{$ingroup_grade=$_POST["ingroup_grade"];}
+if (isset($_GET["ingrp_rg_only"]))			{$ingrp_rg_only=$_GET["ingrp_rg_only"];}
+	elseif (isset($_POST["ingrp_rg_only"]))	{$ingrp_rg_only=$_POST["ingrp_rg_only"];}
+if (isset($_GET["group_id"]))				{$group_id=$_GET["group_id"];}
+	elseif (isset($_POST["group_id"]))		{$group_id=$_POST["group_id"];}
 
 if (file_exists('options.php'))
 	{require('options.php');}
@@ -911,6 +920,10 @@ if ($non_latin < 1)
 		{$field_options = preg_replace('/[^ \.\n\|\,-\_0-9a-zA-Z]/', '',$field_options);}
 	$field_help = preg_replace('/[^ \'\&\.\n\|\,-\_0-9a-zA-Z]/', '',$field_help);
 	$field_default = preg_replace('/[^ \.\n\,-\_0-9a-zA-Z]/', '',$field_default);
+	$ingroup_rank = preg_replace('/[^-_0-9]/','',$ingroup_rank);
+	$ingroup_grade = preg_replace('/[^0-9]/','',$ingroup_grade);
+	$group_id = preg_replace('/[^_0-9a-zA-Z]/','',$group_id);
+	$ingrp_rg_only = preg_replace('/[^0-9]/','',$ingrp_rg_only);
 	}
 else
 	{
@@ -3736,7 +3749,7 @@ if ($function == 'update_user')
 								}
 							$stmt="INSERT INTO vicidial_campaign_agents(user,campaign_id $rank_BEGIN_SQL $grade_BEGIN_SQL) SELECT '$agent_user',campaign_id $rank_MID_SQL $grade_MID_SQL from vicidial_campaigns $camp_rg_onlySQL ON DUPLICATE KEY UPDATE $rank_END_SQL $grade_END_SQL;";
 							$rslt=mysql_to_mysqli($stmt, $link);
-							$affected_rows = mysqli_affected_rows($linkB);
+							$affected_rows = mysqli_affected_rows($link);
 							if ($DB) {echo "|$stmt|$affected_rows|\n";}
 
 							### LOG INSERTION Admin Log Table ###
@@ -3748,8 +3761,75 @@ if ($function == 'update_user')
 							$rslt=mysql_to_mysqli($stmt, $link);
 
 							$result = 'NOTICE';
-							$result_reason = "update_user USER CAMPAIGN RANKS HAVE BEEN UPDATED";
+							$result_reason = "update_user USER CAMPAIGN RANKS/GRADES HAVE BEEN UPDATED";
 							$data = "$agent_user|$campaign_rank|$campaign_grade$camp_rg_onlyNOTE";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+
+						if ( (strlen($ingroup_rank) > 0) or (strlen($ingroup_grade) > 0) )
+							{
+							$rank_BEGIN_SQL='';
+							$rank_MID_SQL='';
+							$rank_END_SQL='';
+							$grade_BEGIN_SQL='';
+							$grade_MID_SQL='';
+							$grade_END_SQL='';
+							if (strlen($ingroup_rank) > 0)
+								{
+								if ( ($ingroup_rank > 9) or ($ingroup_rank < -9) )
+									{
+									$result = 'ERROR';
+									$result_reason = "update_user YOU MUST USE A VALID IN-GROUP RANK, THIS IS AN OPTIONAL FIELD";
+									$data = "$ingroup_rank";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								$rank_BEGIN_SQL=',group_rank,group_weight';
+								$rank_MID_SQL=",'$ingroup_rank','$ingroup_rank'";
+								$rank_END_SQL="group_rank='$ingroup_rank',group_weight='$ingroup_rank'";
+								}
+							if (strlen($ingroup_grade) > 0)
+								{
+								if ( ($ingroup_grade > 10) or ($ingroup_grade < 1) )
+									{
+									$result = 'ERROR';
+									$result_reason = "update_user YOU MUST USE A VALID IN-GROUP GRADE, THIS IS AN OPTIONAL FIELD";
+									$data = "$ingroup_grade";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								if (strlen($rank_END_SQL)>0)
+									{$grade_END_SQL .= ",";}
+								$grade_BEGIN_SQL=',group_grade';
+								$grade_MID_SQL=",'$ingroup_grade'";
+								$grade_END_SQL.="group_grade='$ingroup_grade'";
+								}
+							$ingrp_rg_onlySQL='';
+							$ingrp_rg_onlyNOTE='';
+							if ($ingrp_rg_only=='1')
+								{
+								$ingrp_rg_onlySQL = "where group_id='$group_id'";
+								$ingrp_rg_onlyNOTE = "|$group_id|$ingrp_rg_only";
+								}
+							$stmt="INSERT INTO vicidial_inbound_group_agents(user,group_id $rank_BEGIN_SQL $grade_BEGIN_SQL) SELECT '$agent_user',group_id $rank_MID_SQL $grade_MID_SQL from vicidial_inbound_groups $ingrp_rg_onlySQL ON DUPLICATE KEY UPDATE $rank_END_SQL $grade_END_SQL;";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$affected_rows = mysqli_affected_rows($link);
+							if ($DB) {echo "|$stmt|$affected_rows|\n";}
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$agent_user', event_code='ADMIN API UPDATE USER RANK', event_sql=\"$SQL_log\", event_notes='user: $agent_user|rank: $ingroup_rank|grade: $ingroup_grade|rows: $affected_rows$ingrp_rg_onlyNOTE';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+
+							$result = 'NOTICE';
+							$result_reason = "update_user USER IN-GROUP RANKS/GRADES HAVE BEEN UPDATED";
+							$data = "$agent_user|$ingroup_rank|$ingroup_grade$ingrp_rg_onlyNOTE";
 							echo "$result: $result_reason - $user|$data\n";
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 							}
