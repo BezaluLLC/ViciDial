@@ -1713,3 +1713,7 @@ ALTER TABLE phones ADD peer_status ENUM('UNKNOWN','REGISTERED','UNREGISTERED','R
 ALTER TABLE phones ADD ping_time SMALLINT(6) DEFAULT NULL;
 
 UPDATE system_settings SET db_schema_version='1636',db_schema_update_date=NOW() where db_schema_version < 1636;
+
+ALTER TABLE vicidial_campaigns ADD transfer_no_dispo ENUM('DISABLED','EXTERNAL_ONLY','LOCAL_ONLY','LEAVE3WAY_ONLY','LOCAL_AND_EXTERNAL','LOCAL_AND_LEAVE3WAY','LEAVE3WAY_AND_EXTERNAL','LOCAL_AND_EXTERNAL_AND_LEAVE3WAY') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1637',db_schema_update_date=NOW() where db_schema_version < 1637;

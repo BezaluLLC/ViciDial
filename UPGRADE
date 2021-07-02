@@ -649,6 +649,9 @@ OTHER CHANGES:
 	PHP scripts and select admin PHP scripts. see the CORS_SUPPORT.txt doc
 	for more information.
 
+181. Added Transfer No Dispo campaign setting, allowing for transferred calls
+	to not not immediately show the disposition panel on the agent screen.
+
 
 
 

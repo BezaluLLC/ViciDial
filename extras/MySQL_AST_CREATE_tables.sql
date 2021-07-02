@@ -1070,7 +1070,8 @@ calls_waiting_vl_two VARCHAR(25) default 'DISABLED',
 calls_inqueue_count_one VARCHAR(40) default 'DISABLED',
 calls_inqueue_count_two VARCHAR(40) default 'DISABLED',
 in_man_dial_next_ready_seconds SMALLINT(5) UNSIGNED default '0',
-in_man_dial_next_ready_seconds_override VARCHAR(40) default 'DISABLED'
+in_man_dial_next_ready_seconds_override VARCHAR(40) default 'DISABLED',
+transfer_no_dispo ENUM('DISABLED','EXTERNAL_ONLY','LOCAL_ONLY','LEAVE3WAY_ONLY','LOCAL_AND_EXTERNAL','LOCAL_AND_LEAVE3WAY','LEAVE3WAY_AND_EXTERNAL','LOCAL_AND_EXTERNAL_AND_LEAVE3WAY') default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -4952,4 +4953,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1636',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1637',db_schema_update_date=NOW(),reload_timestamp=NOW();
