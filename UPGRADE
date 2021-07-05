@@ -652,6 +652,8 @@ OTHER CHANGES:
 181. Added Transfer No Dispo campaign setting, allowing for transferred calls
 	to not immediately show the disposition panel on the agent screen.
 
+182. Added User override setting for campaign Manual Dial Filter option.
+
 
 
 

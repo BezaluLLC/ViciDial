@@ -674,10 +674,11 @@
 # 210623-0930 - Fix for WebForm 3 after API update fields issue
 # 210702-0945 - Added transfer_no_dispo campaign setting
 # 210705-0949 - Fixes for a couple of small issues(script two, manual dial ready timer)
+# 210705-1038 - Added User override for campaign manual_dial_filter setting
 #
 
-$version = '2.14-642c';
-$build = '210705-0949';
+$version = '2.14-643c';
+$build = '210705-1038';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=95;
@@ -1714,7 +1715,7 @@ else
 				}
 
 			##### grab the full name and other settings of the agent
-			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override,preset_contact_search,max_inbound_calls,wrapup_seconds_override,email,user_choose_language,ready_max_logout,mute_recordings,max_inbound_filter_enabled,status_group_id from vicidial_users where user='$VD_login' and active='Y' and api_only_user != '1';";
+			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override,preset_contact_search,max_inbound_calls,wrapup_seconds_override,email,user_choose_language,ready_max_logout,mute_recordings,max_inbound_filter_enabled,status_group_id,manual_dial_filter from vicidial_users where user='$VD_login' and active='Y' and api_only_user != '1';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01007',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysqli_fetch_row($rslt);
@@ -1754,6 +1755,7 @@ else
 			$VU_mute_recordings =					$row[33];
 			$VU_max_inbound_filter_enabled =		$row[34];
 			$VU_status_group_id =					$row[35];
+			$VU_manual_dial_filter =				$row[36];
 
 			if ( ($VU_alert_enabled > 0) and ($VU_allow_alerts > 0) ) {$VU_alert_enabled = 'ON';}
 			else {$VU_alert_enabled = 'OFF';}
@@ -2447,6 +2449,12 @@ else
 				$in_man_dial_next_ready_seconds = $row[170];
 				$in_man_dial_next_ready_seconds_override = $row[171];
 				$transfer_no_dispo =		$row[172];
+
+				if ( (strlen($VU_manual_dial_filter) > 0) and ($VU_manual_dial_filter != 'DISABLED') )
+					{
+					echo "<!-- MANUAL DIAL FILTER USER OVERRIDE: |$manual_dial_filter($VU_manual_dial_filter)| -->\n";
+					$manual_dial_filter = $VU_manual_dial_filter;
+					}
 
 				if ($dial_method != 'INBOUND_MAN') {$in_man_dial_next_ready_seconds=0;}
 

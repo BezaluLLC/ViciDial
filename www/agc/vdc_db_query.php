@@ -511,10 +511,11 @@
 # 210615-1014 - Default security fixes, CVE-2021-28854
 # 210616-1906 - Added optional CORS support, see options.php for details
 # 210625-1351 - Added term_reason as a dispo_call_url variable
+# 210705-1046 - Added User override for campaign manual_dial_filter setting
 #
 
-$version = '2.14-404';
-$build = '210625-1351';
+$version = '2.14-405';
+$build = '210705-1046';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=850;
@@ -5843,6 +5844,21 @@ if ($ACTION == 'manDiaLonly')
 			if ($extension_appended_cidname == 'Y')
 				{$use_eac++;}
 			}
+
+		# check for user overrides
+		$VU_manual_dial_filter='';
+		$stmt = "SELECT manual_dial_filter FROM vicidial_users where user='$user';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$vcstgs_ct = mysqli_num_rows($rslt);
+		if ($vcstgs_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$VU_manual_dial_filter =				$row[0];
+			}
+		if ( (strlen($VU_manual_dial_filter) > 0) and ($VU_manual_dial_filter != 'DISABLED') )
+			{$manual_dial_filter = $VU_manual_dial_filter;}
 
 		### Daily call count limit check ###
 		manual_dccl_check($lead_id, 0, 1);

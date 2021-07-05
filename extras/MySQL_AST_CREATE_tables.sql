@@ -690,7 +690,8 @@ max_inbound_filter_ingroups TEXT,
 max_inbound_filter_min_sec SMALLINT(5) default '-1',
 status_group_id VARCHAR(20) default '',
 mobile_number VARCHAR(20) default '',
-two_factor_override  ENUM('NOT_ACTIVE','ENABLED','DISABLED') default 'NOT_ACTIVE'
+two_factor_override  ENUM('NOT_ACTIVE','ENABLED','DISABLED') default 'NOT_ACTIVE',
+manual_dial_filter VARCHAR(50) default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -4953,4 +4954,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1637',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1638',db_schema_update_date=NOW(),reload_timestamp=NOW();
