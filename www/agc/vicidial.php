@@ -673,10 +673,11 @@
 # 210623-0912 - Fix for Leave 3-Way Start Recording issue
 # 210623-0930 - Fix for WebForm 3 after API update fields issue
 # 210702-0945 - Added transfer_no_dispo campaign setting
+# 210705-0949 - Fixes for a couple of small issues(script two, manual dial ready timer)
 #
 
-$version = '2.14-641c';
-$build = '210702-0945';
+$version = '2.14-642c';
+$build = '210705-0949';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=95;
@@ -8914,6 +8915,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							lead_change = xmlhttprequestselectupdate.responseText;
 						//	alert(checkVDAI_query);
 						//	alert(xmlhttprequestselectupdate.responseText);
+						//	document.getElementById("debugbottomspan").innerHTML = xmlhttprequestselectupdate.responseText; 
 							var change_array=lead_change.split("\n");
 							if (change_array[0] == '1')
 								{
@@ -9381,7 +9383,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 										{
 										RefresHScript('','YES');
 										}
-									if ( (CalL_ScripT_id_TWO.length > 0) && (SSenable_second_script > 0) )
+									if ( (CalL_ScripT_id_two.length > 0) && (SSenable_second_script > 0) )
 										{
 										var SCRIPT_web_form = 'http://127.0.0.1/testing.php';
 										var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','1');
@@ -20168,7 +20170,7 @@ function phone_number_format(formatphone) {
 							}
 						}
 					}
-				if (in_man_dial_next_ready_trigger > 0)
+				if ( (in_man_dial_next_ready_trigger > 0) && (VD_live_customer_call!=1) && (alt_dial_active!=1) && (MD_channel_look!=1) && (in_lead_preview_state!=1) )
 					{
 					in_man_dial_next_ready_count++;
 					document.getElementById("debugbottomspan").innerHTML = 'Inbound Manual Dial, Agent-Ready timer: ' + in_man_dial_next_ready_count + ' <> ' + in_man_dial_next_ready_seconds;

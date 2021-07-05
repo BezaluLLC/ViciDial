@@ -12023,7 +12023,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 				$script_recording_delay = $row[0];
 				}
 
-			$stmt = "SELECT group_name,group_color,web_form_address,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_xfer_group,ingroup_recording_override,ingroup_rec_filename,default_group_alias,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,uniqueid_status_display,uniqueid_status_prefix,timer_action_destination,web_form_address_three,status_group_id,ingroup_script,browser_alert_sound,browser_alert_volume from vicidial_inbound_groups where group_id='$VDADchannel_group';";
+			$stmt = "SELECT group_name,group_color,web_form_address,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_xfer_group,ingroup_recording_override,ingroup_rec_filename,default_group_alias,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,uniqueid_status_display,uniqueid_status_prefix,timer_action_destination,web_form_address_three,status_group_id,ingroup_script_two,browser_alert_sound,browser_alert_volume from vicidial_inbound_groups where group_id='$VDADchannel_group';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00468',$user,$server_ip,$session_name,$one_mysql_log);}
