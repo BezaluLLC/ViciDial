@@ -675,10 +675,11 @@
 # 210702-0945 - Added transfer_no_dispo campaign setting
 # 210705-0949 - Fixes for a couple of small issues(script two, manual dial ready timer)
 # 210705-1038 - Added User override for campaign manual_dial_filter setting
+# 210705-1626 - Added user_pass_webform and phone_login_webform options.php settings
 #
 
-$version = '2.14-643c';
-$build = '210705-1038';
+$version = '2.14-644c';
+$build = '210705-1626';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=95;
@@ -951,6 +952,8 @@ $link_to_grey_version	= '1';	# show link to old grey version of agent screen at 
 $no_empty_session_warnings=0;	# set to 1 to disable empty session warnings on agent screen
 $logged_in_refresh_link = '0';	# set to 1 to allow clickable "Logged in as..." link at top to force Javascript refresh
 $webphone_call_seconds	= '0';	# set to 1 or higher to have the agent phone(if set to webphone) called X seconds after login
+$user_pass_webform		= '0';	# set to 1 or 2 to return to default of including the 'user'(1) and 'pass'(2) by default in webform URLs
+$phone_login_webform	= '0';	# set to 1 or 2 to return to default of including the 'phone_login'(1) and 'phone_pass'(2) by default in webform URLs
 
 $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen, FOR DEBUG ONLY
 
@@ -5529,6 +5532,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var transfer_no_dispoTEMP = 0;
 	var in_man_dial_next_ready_count = 0;
 	var in_man_dial_next_ready_trigger = 0;
+	var user_pass_webform = '<?php echo $user_pass_webform ?>';
+	var phone_login_webform = '<?php echo $phone_login_webform ?>';
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -9325,7 +9330,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								var regWFAcustom = new RegExp("^VAR","ig");
 								if (VDIC_web_form_address.match(regWFAcustom))
 									{
-									TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','CUSTOM');
+									TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','CUSTOM','1');
 									TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAcustom, '');
 									}
 								else
@@ -9335,7 +9340,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 								if (VDIC_web_form_address_two.match(regWFAcustom))
 									{
-									TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','CUSTOM');
+									TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','CUSTOM','2');
 									TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAcustom, '');
 									}
 								else
@@ -9345,7 +9350,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 								if (VDIC_web_form_address_three.match(regWFAcustom))
 									{
-									TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM');
+									TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM','3');
 									TEMP_VDIC_web_form_address_three = TEMP_VDIC_web_form_address_three.replace(regWFAcustom, '');
 									}
 								else
@@ -9375,7 +9380,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									if (CalL_ScripT_id.length > 0)
 										{
 										var SCRIPT_web_form = 'http://127.0.0.1/testing.php';
-										var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','1');
+										var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','0');
 
 										if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
 											{
@@ -9394,7 +9399,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									if ( (CalL_ScripT_id_two.length > 0) && (SSenable_second_script > 0) )
 										{
 										var SCRIPT_web_form = 'http://127.0.0.1/testing.php';
-										var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','1');
+										var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','0');
 
 										if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
 											{
@@ -10303,7 +10308,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						var regWFAcustom = new RegExp("^VAR","ig");
 						if (VDIC_web_form_address.match(regWFAcustom))
 							{
-							TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','CUSTOM');
+							TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','CUSTOM','1');
 							TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAcustom, '');
 							}
 						else
@@ -10313,7 +10318,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 						if (VDIC_web_form_address_two.match(regWFAcustom))
 							{
-							TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','CUSTOM');
+							TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','CUSTOM','2');
 							TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAcustom, '');
 							}
 						else
@@ -10323,7 +10328,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 						if (VDIC_web_form_address_three.match(regWFAcustom))
 							{
-							TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM');
+							TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM','3');
 							TEMP_VDIC_web_form_address_three = TEMP_VDIC_web_form_address_three.replace(regWFAcustom, '');
 							}
 						else
@@ -10894,7 +10899,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								var regWFAcustom = new RegExp("^VAR","ig");
 								if (VDIC_web_form_address.match(regWFAcustom))
 									{
-									TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','CUSTOM');
+									TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','CUSTOM','1');
 									TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAcustom, '');
 									}
 								else
@@ -10904,7 +10909,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 								if (VDIC_web_form_address_two.match(regWFAcustom))
 									{
-									TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','CUSTOM');
+									TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','CUSTOM','2');
 									TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAcustom, '');
 									}
 								else
@@ -10914,7 +10919,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 								if (VDIC_web_form_address_three.match(regWFAcustom))
 									{
-									TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM');
+									TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM','3');
 									TEMP_VDIC_web_form_address_three = TEMP_VDIC_web_form_address_three.replace(regWFAcustom, '');
 									}
 								else
@@ -10975,7 +10980,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 										if ( (campaign_script.length > 0) || (CalL_ScripT_id.length > 0) )
 											{
 											var SCRIPT_web_form = 'http://127.0.0.1/testing.php';
-											var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','1');
+											var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','0');
 
 											if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
 												{
@@ -11071,7 +11076,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 										if ( (campaign_script.length > 0) || (CalL_ScripT_id.length > 0) )
 											{
 											var SCRIPT_web_form = 'http://127.0.0.1/testing.php';
-											var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','1');
+											var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','0');
 											RefresHScript();
 											RefresHScript2();
 											}
@@ -11573,7 +11578,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								if ( (campaign_script.length > 0) || (CalL_ScripT_id.length > 0) )
 									{
 									var SCRIPT_web_form = 'http://127.0.0.1/testing.php';
-									var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','1');
+									var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','0');
 
 									if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
 										{
@@ -12629,7 +12634,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							var regWFAcustom = new RegExp("^VAR","ig");
 							if (VDIC_web_form_address.match(regWFAcustom))
 								{
-								TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','CUSTOM');
+								TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','CUSTOM','1');
 								TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAcustom, '');
 								}
 							else
@@ -12639,7 +12644,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 							if (VDIC_web_form_address_two.match(regWFAcustom))
 								{
-								TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','CUSTOM');
+								TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','CUSTOM','2');
 								TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAcustom, '');
 								}
 							else
@@ -12649,7 +12654,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 							if (VDIC_web_form_address_three.match(regWFAcustom))
 								{
-								TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM');
+								TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM','3');
 								TEMP_VDIC_web_form_address_three = TEMP_VDIC_web_form_address_three.replace(regWFAcustom, '');
 								}
 							else
@@ -12679,7 +12684,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								if (CalL_ScripT_id.length > 0)
 									{
 									var SCRIPT_web_form = 'http://127.0.0.1/testing.php';
-									var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','1');
+									var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','0');
 
 									if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
 										{
@@ -12701,7 +12706,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								if ( (CalL_ScripT_id_two.length > 0) && (SSenable_second_script > 0) )
 									{
 									var SCRIPT_web_form = 'http://127.0.0.1/testing.php';
-									var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','1');
+									var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','0');
 
 									if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
 										{
@@ -13437,7 +13442,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							var regWFAcustom = new RegExp("^VAR","ig");
 							if (VDIC_web_form_address.match(regWFAcustom))
 								{
-								TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','CUSTOM');
+								TEMP_VDIC_web_form_address = URLDecode(VDIC_web_form_address,'YES','CUSTOM','1');
 								TEMP_VDIC_web_form_address = TEMP_VDIC_web_form_address.replace(regWFAcustom, '');
 								}
 							else
@@ -13447,7 +13452,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 							if (VDIC_web_form_address_two.match(regWFAcustom))
 								{
-								TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','CUSTOM');
+								TEMP_VDIC_web_form_address_two = URLDecode(VDIC_web_form_address_two,'YES','CUSTOM','2');
 								TEMP_VDIC_web_form_address_two = TEMP_VDIC_web_form_address_two.replace(regWFAcustom, '');
 								}
 							else
@@ -13457,7 +13462,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 							if (VDIC_web_form_address_three.match(regWFAcustom))
 								{
-								TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM');
+								TEMP_VDIC_web_form_address_three = URLDecode(VDIC_web_form_address_three,'YES','CUSTOM','3');
 								TEMP_VDIC_web_form_address_three = TEMP_VDIC_web_form_address_three.replace(regWFAcustom, '');
 								}
 							else
@@ -13491,7 +13496,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								if (CalL_ScripT_id.length > 0)
 									{
 									var SCRIPT_web_form = 'http://127.0.0.1/testing.php';
-									var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','1');
+									var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','0');
 
 									if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
 										{
@@ -13510,7 +13515,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								if ( (CalL_ScripT_id_two.length > 0) && (SSenable_second_script > 0) )
 									{
 									var SCRIPT_web_form = 'http://127.0.0.1/testing.php';
-									var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','1');
+									var TEMP_SCRIPT_web_form = URLDecode(SCRIPT_web_form,'YES','DEFAULT','0');
 
 									if ( (script_recording_delay > 0) && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
 										{
@@ -13634,7 +13639,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			WebFormRefresH('','','1');
 			WebFormTwoRefresH('','','1');
 			WebFormThreeRefresH('','','1');
-			var TEMP_script_vars = URLDecode('','YES','DEFAULT','1');
+			var TEMP_script_vars = URLDecode('','YES','DEFAULT','0');
 			load_script_contents('ScriptContents','');
 			}
 		}
@@ -13658,7 +13663,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				WebFormRefresH('','','1');
 				WebFormTwoRefresH('','','1');
 				WebFormThreeRefresH('','','1');
-				var TEMP_script_vars = URLDecode('','YES','DEFAULT','1');
+				var TEMP_script_vars = URLDecode('','YES','DEFAULT','0');
 				load_script_contents('Script2Contents','');
 				}
 			}
@@ -17228,6 +17233,19 @@ else
  // var regWF = new RegExp("\\`|\\~|\\:|\\;|\\#|\\'|\\\"|\\{|\\}|\\(|\\)|\\*|\\^|\\%|\\$|\\!|\\%|\\r|\\t|\\n|","ig");
 	var regWF = new RegExp("\\`|\\:|\\;|\\#|\\\"|\\{|\\}|\\^|\\$|\\r|\\t|\\n|","ig");
 
+	var UDCtemp_user='';
+	var UDCtemp_pass='';
+	var UDCtemp_orig_pass='';
+	if ( ( (user_pass_webform >= 1) && (webformnumber >= 1) ) || (webformnumber == '0') ) {UDCtemp_user = user;}
+	if ( ( (user_pass_webform >= 2) && (webformnumber >= 1) ) || (webformnumber == '0') ) {UDCtemp_pass = pass;}
+	if ( ( (user_pass_webform >= 2) && (webformnumber >= 1) ) || (webformnumber == '0') ) {UDCtemp_orig_pass = orig_pass;}
+	var UDCtemp_phone_login='';
+	var UDCtemp_orig_phone_login='';
+	var UDCtemp_phone_pass='';
+	if ( ( (phone_login_webform >= 1) && (webformnumber >= 1) ) || (webformnumber == '0') ) {UDCtemp_phone_login = phone_login;}
+	if ( ( (phone_login_webform >= 1) && (webformnumber >= 1) ) || (webformnumber == '0') ) {UDCtemp_orig_phone_login = original_phone_login;}
+	if ( ( (phone_login_webform >= 2) && (webformnumber >= 1) ) || (webformnumber == '0') ) {UDCtemp_phone_pass = phone_pass;}
+
 	var xtest;
 	xtest=unescape(encoded);
 	encoded=utf8_decode(xtest);
@@ -17238,6 +17256,7 @@ else
 		if (test_otcx.length > 0)
 			{document.vicidial_form.comments.value = document.vicidial_form.other_tab_comments.value}
 		}
+
 	if (urlschema == 'DEFAULT')
 		{
 		web_form_varsX = 
@@ -17265,13 +17284,13 @@ else
 		"&email=" + encodeURIComponent(document.vicidial_form.email.value) + 
 		"&security_phrase=" + encodeURIComponent(document.vicidial_form.security_phrase.value) + 
 		"&comments=" + encodeURIComponent(document.vicidial_form.comments.value) + 
-		"&user=" + user + 
-		"&pass=" + pass + 
-		"&orig_pass=" + orig_pass +
+		"&user=" + UDCtemp_user + 
+		"&pass=" + UDCtemp_pass + 
+		"&orig_pass=" + UDCtemp_orig_pass +
 		"&campaign=" + campaign + 
-		"&phone_login=" + phone_login + 
-		"&original_phone_login=" + original_phone_login +
-		"&phone_pass=" + phone_pass + 
+		"&phone_login=" + UDCtemp_phone_login + 
+		"&original_phone_login=" + UDCtemp_orig_phone_login +
+		"&phone_pass=" + UDCtemp_phone_pass + 
 		"&fronter=" + fronter + 
 		"&closer=" + user + 
 		"&group=" + group + 
@@ -19650,7 +19669,7 @@ function phone_number_format(formatphone) {
 			if ( (crm_popup_login == 'Y') && (crm_login_address.length > 4) )
 				{
 				var regWFAcustom = new RegExp("^VAR","ig");
-				var TEMP_crm_login_address = URLDecode(crm_login_address,'YES');
+				var TEMP_crm_login_address = URLDecode(crm_login_address,'YES','CUSTOM','0');
 				TEMP_crm_login_address = TEMP_crm_login_address.replace(regWFAcustom, '');
 				TEMP_crm_login_address = TEMP_crm_login_address.replace(regLOCALFQDN, FQDN);
 
