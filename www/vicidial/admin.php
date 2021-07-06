@@ -5675,12 +5675,13 @@ if ($SSscript_remove_js > 0)
 # 210624-1243 - Fix for Copy Phone issue
 # 210702-0848 - Added transfer_no_dispo campaign setting
 # 210705-1037 - Added User override for campaign manual_dial_filter setting
+# 210706-0128 - Added display of Call Time Holidays to the agent screen Scheduled Callbacks calendar
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-818a';
-$build = '210705-1037';
+$admin_version = '2.14-819a';
+$build = '210706-0128';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -25946,17 +25947,21 @@ if ($ADD==31)
 		echo "</select>$NWB#campaigns-local_call_time$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>\n";
-		$stmt="SELECT ct_state_call_times from vicidial_call_times where call_time_id='$local_call_time';";
+		$stmt="SELECT ct_state_call_times,ct_holidays from vicidial_call_times where call_time_id='$local_call_time';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$call_times_to_print = mysqli_num_rows($rslt);
 		if ($call_times_to_print > 0) 
 			{
 			$rowx=mysqli_fetch_row($rslt);
 			$ct_state_call_times =	$rowx[0];
+			$ct_holidays =			$rowx[1];
 			$state_rules = explode('|',$ct_state_call_times);
+			$holidays = explode('|',$ct_holidays);
 			$ct_srs = ((count($state_rules)) - 2);
+			$ct_hld = ((count($holidays)) - 2);
 			if ($ct_srs < 0) {$ct_srs=0;}
-			echo _QXZ("State rules defined for this call time").": $ct_srs\n";
+			if ($ct_hld < 0) {$ct_hld=0;}
+			echo "<font size=2>"._QXZ("State rules defined for this call time").": $ct_srs &nbsp; &nbsp; "._QXZ("Holidays defined for this call time").": $ct_hld\n";
 			}
 		else
 			{echo "<BLINK><B><font color=red>"._QXZ("Call time not found")."!: $local_call_time</font></B></BLINK>\n";}

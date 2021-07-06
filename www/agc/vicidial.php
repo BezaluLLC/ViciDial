@@ -676,13 +676,14 @@
 # 210705-0949 - Fixes for a couple of small issues(script two, manual dial ready timer)
 # 210705-1038 - Added User override for campaign manual_dial_filter setting
 # 210705-1626 - Added user_pass_webform and phone_login_webform options.php settings
+# 210706-0114 - Added display of Call Time Holidays to the Scheduled Callbacks calendar
 #
 
-$version = '2.14-644c';
-$build = '210705-1626';
+$version = '2.14-645c';
+$build = '210706-0114';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=95;
+$mysql_log_count=98;
 $one_mysql_log=0;
 $DB=0;
 
@@ -2274,7 +2275,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history,show_previous_callback,clear_script,manual_dial_search_filter,web_form_address_three,manual_dial_override_field,status_display_ingroup,customer_gone_seconds,agent_display_fields,manual_dial_timeout,manual_auto_next,manual_auto_show,allow_required_fields,dead_to_dispo,agent_xfer_validation,ready_max_logout,callback_display_days,three_way_record_stop,hangup_xfer_record_start,max_inbound_calls_outcome,manual_auto_next_options,agent_screen_time_display,pause_max_dispo,script_top_dispo,routing_initiated_recordings,dead_trigger_seconds,dead_trigger_action,dead_trigger_repeat,dead_trigger_filename,scheduled_callbacks_force_dial,callback_hours_block,callback_display_days,scheduled_callbacks_timezones_container,three_way_volume_buttons,manual_dial_validation,mute_recordings,leave_vm_no_dispo,leave_vm_message_group_id,campaign_script_two,browser_alert_sound,browser_alert_volume,three_way_record_stop_exception,pause_max_exceptions,transfer_button_launch,leave_3way_start_recording,leave_3way_start_recording_exception,calls_waiting_vl_one,calls_waiting_vl_two,in_man_dial_next_ready_seconds,in_man_dial_next_ready_seconds_override,transfer_no_dispo FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history,show_previous_callback,clear_script,manual_dial_search_filter,web_form_address_three,manual_dial_override_field,status_display_ingroup,customer_gone_seconds,agent_display_fields,manual_dial_timeout,manual_auto_next,manual_auto_show,allow_required_fields,dead_to_dispo,agent_xfer_validation,ready_max_logout,callback_display_days,three_way_record_stop,hangup_xfer_record_start,max_inbound_calls_outcome,manual_auto_next_options,agent_screen_time_display,pause_max_dispo,script_top_dispo,routing_initiated_recordings,dead_trigger_seconds,dead_trigger_action,dead_trigger_repeat,dead_trigger_filename,scheduled_callbacks_force_dial,callback_hours_block,callback_display_days,scheduled_callbacks_timezones_container,three_way_volume_buttons,manual_dial_validation,mute_recordings,leave_vm_no_dispo,leave_vm_message_group_id,campaign_script_two,browser_alert_sound,browser_alert_volume,three_way_record_stop_exception,pause_max_exceptions,transfer_button_launch,leave_3way_start_recording,leave_3way_start_recording_exception,calls_waiting_vl_one,calls_waiting_vl_two,in_man_dial_next_ready_seconds,in_man_dial_next_ready_seconds_override,transfer_no_dispo,local_call_time FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -2452,6 +2453,7 @@ else
 				$in_man_dial_next_ready_seconds = $row[170];
 				$in_man_dial_next_ready_seconds_override = $row[171];
 				$transfer_no_dispo =		$row[172];
+				$local_call_time =			$row[173];
 
 				if ( (strlen($VU_manual_dial_filter) > 0) and ($VU_manual_dial_filter != 'DISABLED') )
 					{
@@ -2467,7 +2469,7 @@ else
 					# Gather details on Leave 3-Way Start Recording Exception settings container
 					$stmt = "SELECT container_entry FROM vicidial_settings_containers where container_id='$leave_3way_start_recording_exception';";
 					$rslt=mysql_to_mysqli($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01096',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
 					$SCinfo_ct = mysqli_num_rows($rslt);
 					if ($SCinfo_ct > 0)
@@ -4544,6 +4546,43 @@ $cb_display_days=999;
 if ($callback_display_days > 0)
 	{$cb_display_days=$callback_display_days;}
 
+# gather any holidays associated with the Local Call Time that is set for this campaign
+$ct_holidays='';
+$ct_holiday_dates='|';
+$ct_holiday_dateARY=array();
+$ct_holiday_nameARY=array();
+$stmt = "SELECT ct_holidays FROM vicidial_call_times where call_time_id='$local_call_time';";
+$rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01097',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+if ($DB) {echo "$stmt\n";}
+$ct_conf_ct = mysqli_num_rows($rslt);
+if ($ct_conf_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$ct_holidays =		$row[0];
+	$ct_holidays = preg_replace("/^\||\|$/","','",$ct_holidays);
+	$ct_holidays = preg_replace("/\|/","','",$ct_holidays);
+	$ct_holidays = "'$ct_holidays'";
+	}
+if (strlen($ct_holidays) > 2)
+	{
+	$stmt = "SELECT holiday_date,holiday_name FROM vicidial_call_time_holidays where holiday_id IN($ct_holidays) and holiday_status='ACTIVE';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01098',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+	$hd_conf_ct = mysqli_num_rows($rslt);
+	if ($DB) {echo "$hd_conf_ct|$stmt\n";}
+	$hd_ct=0;
+	while ($hd_conf_ct > $hd_ct)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$ct_holiday_dates .= "$row[0]|";
+		$ct_holiday_dateARY[$hd_ct]=$row[0];
+		$ct_holiday_nameARY[$hd_ct]=$row[1];
+		$hd_ct++;
+		}
+	echo "<!-- ACTIVE HOLIDAYS: $ct_holiday_dates -->\n";
+	}
+
 $Cmonths = Array('0',_QXZ('January'),_QXZ('February'),_QXZ('March'),_QXZ('April'),_QXZ('May'),_QXZ('June'),_QXZ('July'),_QXZ('August'),_QXZ('September'),_QXZ('October'),_QXZ('November'),_QXZ('December'));
 $Cdays = Array(_QXZ('Sun'),_QXZ('Mon'),_QXZ('Tue'),_QXZ('Wed'),_QXZ('Thu'),_QXZ('Fri'),_QXZ('Sat'));
 
@@ -4569,8 +4608,11 @@ while ($CINC < 12)
 	$CfirstdayARY = getdate($Cstart);
 	#echo "|$Cmon|$Cmonth|$CINC|\n";
 	$CPRNTDAY = date("Y-m", $Cstart);
+	$hDAYcheck = date("Y-m-d", $Cstart);
 	$temp_Cmonths = $Cmonths[$CfirstdayARY['mon']];
 	$temp_Cfirstday = $CfirstdayARY['year'];
+	$future_color='#ffffff';
+	$holiday_bg='';
 
 	$CCAL_OUT .= "<table border=\"1\" cellpadding=\"1\" bordercolor=\"000000\" cellspacing=\"0\" bgcolor=\"white\">";
 	$CCAL_OUT .= "<tr>";
@@ -4584,7 +4626,7 @@ while ($CINC < 12)
 	foreach($Cdays as $Cday)
 		{
 		$CDCLR="#ffffff";
-		$CCAL_OUT .= "<td bordercolor=\"$CDCLR\">";
+		$CCAL_OUT .= "<td bordercolor=\"$CDCLR\" $holiday_bg>";
 		$CCAL_OUT .= "<div align=\"center\"><font color=\"#000066\"><b><font face=\"Arial, Helvetica, sans-serif\" size=\"1\">";
 		$CCAL_OUT .= _QXZ("$Cday", 3);
 		$CCAL_OUT .= "</font></b></font></div>";
@@ -4602,7 +4644,7 @@ while ($CINC < 12)
 			}
 		if($Ccount < $CfirstdayARY['wday'] || $Cdayarray['mon'] != $Cmonth)
 			{
-			$CCAL_OUT .= "<td bordercolor=\"#ffffff\"><font color=\"#000066\"><b><font face=\"Arial, Helvetica, sans-serif\" size=\"1\">&nbsp;</font></b></font></td>";
+			$CCAL_OUT .= "<td bordercolor=\"$future_color\" $holiday_bg><font color=\"#000066\"><b><font face=\"Arial, Helvetica, sans-serif\" size=\"1\">&nbsp;</font></b></font></td>";
 			}
 		else
 			{
@@ -4628,6 +4670,7 @@ while ($CINC < 12)
 				}
 			else
 				{
+				$holiday_hover='';
 				$CDCLR="#ffffff";
 				if ( ($Cdayarray['mday'] < $CTODAYmday) and ($CPRNTDAY == $CTODAY) )
 					{
@@ -4640,6 +4683,19 @@ while ($CINC < 12)
 					{
 					$CPRNTmday = $Cdayarray['mday'];
 					if ($CPRNTmday < 10) {$CPRNTmday = "0$CPRNTmday";}
+					if (preg_match("/\|$CPRNTDAY-$CPRNTmday\|/",$ct_holiday_dates)) 
+						{
+						$hd_loop=0;
+						while ($hd_loop < $hd_ct)
+							{
+							if ($ct_holiday_dateARY[$hd_loop] == "$CPRNTDAY-$CPRNTmday")
+								{
+								$holiday_hover="onMouseOver=\"holiday_display('$ct_holiday_nameARY[$hd_loop]');\"; onMouseOut=\"hideDiv('HolidayDisplayDiv');\"";
+								}
+							$CDCLR="#FFCC66";
+							$hd_loop++;
+							}
+						}
 					if ($limit_days > $live_days)
 						{
 						$CB_date_onclick="onclick=\"CB_date_pick('$CPRNTDAY-$CPRNTmday');return false;\"";
@@ -4651,7 +4707,7 @@ while ($CINC < 12)
 					$live_days++;
 					}
 
-				$CCAL_OUT .= "<td bgcolor=\"$CDCLR\" bordercolor=\"#ffffff\" $CB_date_onclick>";
+				$CCAL_OUT .= "<td bgcolor=\"$CDCLR\" bordercolor=\"$future_color\" $CB_date_onclick $holiday_hover>";
 				$CCAL_OUT .= "<div align=\"center\"><font face=\"Arial, Helvetica, sans-serif\" size=1>";
 				$CCAL_OUT .= "$CBL$Cdayarray[mday]$CEL";
 				$CCAL_OUT .= "</font></div>";
@@ -5791,9 +5847,41 @@ window.addEventListener('blur', function()
 	handleVisibilityChange(false);
 	}, false);
 
+// Detect if the browser is IE or not.
+// If it is not IE, we assume that the browser is NS.
+var IE = document.all?true:false
+// If NS -- that is, !IE -- then set up for mouse capture
+if (!IE) document.captureEvents(Event.MOUSEMOVE)
+
 // END Browser window visibility functions, for agent debug logging
 // ################################################################################
 
+
+// ################################################################################
+// Display Holiday name when hovering 
+function holiday_display(holiday_name)
+	{
+	document.getElementById("HolidayDisplayDiv").innerHTML="<table border=\"1\" cellpadding=\"3\" bordercolor=\"000000\" cellspacing=\"0\" bgcolor=\"#FFCC66\"><tr><td><b><font face=\"Arial,Helvetica\" size=2>" + holiday_name + "</font></b></td></td></table>";
+
+	if (IE) { // grab the x-y pos.s if browser is IE
+		tempX = event.clientX + document.body.scrollLeft+250
+		tempY = event.clientY + document.body.scrollTop
+	} else {  // grab the x-y pos.s if browser is NS
+		tempX = event.pageX
+		tempY = event.pageY
+	}  
+	// catch possible negative values in NS4
+	if (tempX < 0){tempX = 0}
+	if (tempY < 0){tempY = 0}  
+
+	tempX+=15;
+
+	document.getElementById("HolidayDisplayDiv").style.display="block";
+	document.getElementById("HolidayDisplayDiv").style.left = tempX + "px";
+	document.getElementById("HolidayDisplayDiv").style.top = tempY + "px";
+	showDiv('HolidayDisplayDiv');
+	//console.log('holiday:' + tempX + ' ' + tempY + ' ', holiday_name);
+	}
 
 // ################################################################################
 // Send Hangup command for Live call connected to phone now to Manager
@@ -22916,6 +23004,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 
+<div id="HolidayDisplayDiv" style="position:absolute;top:0;left:0;display:none;background-color:#ffffff;z-index:<?php $zi++; echo $zi ?>;"></div>
 
 <span style="position:absolute;left:0px;top:<?php echo $GHheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="GENDERhideFORieALT"></span>
 
