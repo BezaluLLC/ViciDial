@@ -657,6 +657,13 @@ OTHER CHANGES:
 183. Added display of active Call Time Holidays in the agent screen Scheduled 
 	Callbacks calendar panel.
 
+184. SECURITY NOTE: For agent screen Webform buttons, we have changed the 
+	default behavior to not include user credentials in non-custom URL
+	strings unless you set the new agc/options.php settings to do so:
+	"$user_pass_webform and "$phone_login_webform"
+	See the "agc/options-example.php" file for more information.
+	*This will not affect custom webform query strings that start with "VAR"
+
 
 
 
