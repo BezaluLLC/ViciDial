@@ -5676,12 +5676,13 @@ if ($SSscript_remove_js > 0)
 # 210702-0848 - Added transfer_no_dispo campaign setting
 # 210705-1037 - Added User override for campaign manual_dial_filter setting
 # 210706-0128 - Added display of Call Time Holidays to the agent screen Scheduled Callbacks calendar
+# 210707-0731 - Added display of phone codes and postal codes, linked from System Settings page
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-819a';
-$build = '210706-0128';
+$admin_version = '2.14-820a';
+$build = '210707-0731';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6726,6 +6727,8 @@ if ($ADD==999991)		{$hh='reports';		echo _QXZ("SERVERS VERSIONS");}
 if ($ADD==999990)		{$hh='reports';		echo _QXZ("SYSTEM SNAPSHOT STATS");}
 if ($ADD==999989)		{$hh='reports';		echo _QXZ("USER CHANGE LANGUAGE");}
 if ($ADD==999988)		{$hh='reports';		echo _QXZ("AVAILABLE TIMEZONES");}
+if ($ADD==999987)		{$hh='reports';		echo _QXZ("PHONE CODES");}
+if ($ADD==999986)		{$hh='reports';		echo _QXZ("POSTAL CODES");}
 
 echo "</title>\n";
 
@@ -48271,6 +48274,173 @@ if ($ADD==999988)
 	}
 date_default_timezone_set($orig_zone);
 ##### END available timezones display page #####
+
+
+######################
+# ADD=999987 - phone_codes display page
+######################
+if ($ADD==999987)
+	{
+	$orig_zone = date_default_timezone_get();
+
+	$PCfilterSQL='';
+	$PCfilterTEXT='';
+	if ( (strlen($stage) > 2) and (preg_match("/-/",$stage)) )
+		{
+		$PSstage = explode('-',$stage);
+		$PCfilterSQL = "and country_code='$PSstage[0]' and state='$PSstage[1]'";
+		$PCfilterTEXT = " ("._QXZ("Country Code").": $PSstage[0] &nbsp; "._QXZ("State").": $PSstage[1]) &nbsp; <a href=\"$PHP_SELF?ADD=999987\">"._QXZ("reset")."</a> ";
+		}
+	
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	# country_code | country | areacode | state | GMT_offset | DST  | DST_range | geographic_description | tz_code | php_tz
+	$stmt="SELECT count(*),tz_code,GMT_offset,country_code,country,country_name,areacode,state,geographic_description,dst,php_tz FROM vicidial_phone_codes p,vicidial_country_iso_tld i where i.iso3=p.country and php_tz!='' $PCfilterSQL group by country_code,areacode,state,tz_code,GMT_offset,dst,php_tz order by country_code,areacode,CAST(GMT_offset as SIGNED INTEGER) desc,tz_code,dst,php_tz;";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$zones_to_print = mysqli_num_rows($rslt);
+
+	echo "<br><b>"._QXZ("PHONE CODES")."</b><br>\n";
+	echo "<br><font size=1>$zones_to_print "._QXZ("RECORDS")." &nbsp; $PCfilterTEXT</font><br>\n";
+	echo "<center><TABLE width=1100 cellspacing=3>\n";
+	echo "<tr bgcolor=#$SSstd_row3_background>\n";
+	echo "<td align=center><B>"._QXZ("Code")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("Country")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("AreaCode")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("State")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("DST")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("Description")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("Offset")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("TZ Code")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("Current Time")."</B></td>\n";
+	echo "</tr>\n";
+
+	$o=0;
+	$row_color=0;   $last_country='';
+	while ($zones_to_print > $o) 
+		{
+		$rowx=mysqli_fetch_row($rslt);
+		date_default_timezone_set($rowx[10]);
+		$tz_time = date("Y-m-d H:i:s");
+
+		if ($rowx[3] != "$last_country") {$row_color++;   $last_country = $rowx[3];}
+		if (preg_match('/1$|3$|5$|7$|9$/i', $row_color))
+			{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
+		else
+			{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
+		echo "<tr $bgcolor>\n";
+
+		echo "<td align=center><font size=1>$rowx[3]</font></td>\n";
+		echo "<td align=center><font size=1>$rowx[4] - $rowx[5]</font></td>\n";
+		echo "<td align=center><font size=1>$rowx[6]</font></td>\n";
+		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=999987&stage=$rowx[3]-$rowx[7]\"><font color=black>$rowx[7]</font></a></font></td>\n";
+		echo "<td align=center><font size=1>$rowx[9]</font></td>\n";
+		echo "<td align=left><font size=1> &nbsp; $rowx[8] - $rowx[5]</font></td>\n";
+		echo "<td align=center><font size=1>$rowx[2]</font></td>\n";
+		echo "<td align=center><font size=1>$rowx[1]</font></td>\n";
+		echo "<td align=left><font size=1> &nbsp; $tz_time</font></td>\n";
+		echo "</tr>\n";
+		$o++;
+		}
+	echo "</TABLE></center></form>\n";
+	}
+date_default_timezone_set($orig_zone);
+##### END available phone_codes display page #####
+
+
+######################
+# ADD=999986 - postal_codes display page
+######################
+if ($ADD==999986)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	$limitSQL='';
+	$next_prev_HTML='';
+	$PCentries_per_page='2000';
+
+	$stmt="SELECT count(*) from vicidial_postal_codes;";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$pc_count = $row[0];
+
+	if ( ($pc_count > $PCentries_per_page) and ($status != 'display_all') )
+		{
+		if (strlen($start_count) < 1) {$start_count=0;}
+		$next_count = ($start_count + $PCentries_per_page);
+		$nextnext_count = ($next_count + $PCentries_per_page);
+		if ($next_count > $pc_count) 
+			{$next_count = $pc_count;}
+		else
+			{
+			if ($nextnext_count > $pc_count) 
+				{
+				$next_temp = ($pc_count - $next_count);
+				$nextHTML = "<a href=\"$PHP_SELF?ADD=999986&start_count=$next_count&stage=$stage\">"._QXZ("NEXT")." $next_temp</a> &nbsp; ";
+				}
+			else
+				{
+				$nextHTML = "<a href=\"$PHP_SELF?ADD=999986&start_count=$next_count&stage=$stage\">"._QXZ("NEXT")." $PCentries_per_page</a> &nbsp; ";
+				}
+			}
+		$next_prev_HTML .= _QXZ("RECORDS")." $start_count - $next_count &nbsp; <font size=1>"._QXZ("of")." $pc_count</font> &nbsp; &nbsp; ";
+		$limitSQL="limit $PCentries_per_page";
+		if ($start_count > 0)
+			{
+			$prev_count = ($start_count - $PCentries_per_page);
+			$limitSQL="limit $start_count,$PCentries_per_page";
+			$next_prev_HTML .= "<a href=\"$PHP_SELF?ADD=999986&start_count=$prev_count&stage=$stage\">"._QXZ("PREVIOUS")." $PCentries_per_page</a> &nbsp; ";
+			}
+		$next_prev_HTML .= $nextHTML;
+		$next_prev_HTML .= " &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp; </b><a href=\"$PHP_SELF?ADD=999986&status=display_all&stage=$stage\"><font size=1 color=black>"._QXZ("show all postal codes")."</font></a><b> &nbsp; ";
+		}
+
+	echo "<br><b>"._QXZ("POSTAL CODES")."</b><br>\n";
+	echo "<br>$next_prev_HTML\n";
+	echo "<center><TABLE width=$section_width cellspacing=3>\n";
+	echo "<tr bgcolor=#$SSstd_row3_background>\n";
+	echo "<td align=center><B>"._QXZ("Country")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("Postal Code")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("State")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("DST")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("Offset")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("Current Time")."</B></td>\n";
+	echo "</tr>\n";
+
+	# postal_code | state | GMT_offset | DST  | DST_range | country | country_code
+	$stmt="SELECT count(*),GMT_offset,country,country_name,postal_code,state,dst FROM vicidial_postal_codes p,vicidial_country_iso_tld i where i.iso3=p.country group by country_code,postal_code,state,GMT_offset,dst order by country_code,postal_code,CAST(GMT_offset as SIGNED INTEGER) desc,dst $limitSQL;";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$zones_to_print = mysqli_num_rows($rslt);
+	$o=0;
+	$row_color=0;   $last_country='';
+	while ($zones_to_print > $o) 
+		{
+		$rowx=mysqli_fetch_row($rslt);
+		$temp_postal_gmt_offset = $rowx[1];
+		if ($rowx[6] == 'Y') {$temp_postal_gmt_offset = ($temp_postal_gmt_offset + 1);}
+		$LOCALzone=(3600 * $temp_postal_gmt_offset);
+		$LOCALdate=gmdate("D j M Y H:i", time() + $LOCALzone);
+
+		if ($rowx[3] != "$last_country") {$row_color++;   $last_country = $rowx[3];}
+		if (preg_match('/1$|3$|5$|7$|9$/i', $row_color))
+			{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
+		else
+			{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
+		echo "<tr $bgcolor>\n";
+
+		echo "<td align=center><font size=1>$rowx[2] - $rowx[3]</font></td>\n";
+		echo "<td align=center><font size=1>$rowx[4]</font></td>\n";
+		echo "<td align=center><font size=1>$rowx[5]</font></td>\n";
+		echo "<td align=center><font size=1>$rowx[6]</font></td>\n";
+		echo "<td align=center><font size=1>$rowx[1]</font></td>\n";
+		echo "<td align=left><font size=1> &nbsp; $LOCALdate</font></td>\n";
+		echo "</tr>\n";
+		$o++;
+		}
+	echo "</TABLE></center></form>\n";
+	}
+##### END available postal_codes display page #####
 
 
 echo "</TD></TR></TABLE></center>\n";

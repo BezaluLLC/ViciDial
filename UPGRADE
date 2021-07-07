@@ -664,6 +664,9 @@ OTHER CHANGES:
 	See the "agc/options-example.php" file for more information.
 	*This will not affect custom webform query strings that start with "VAR"
 
+185. Added display of the Phone Codes and Postal Codes that are loaded into the
+	system. Linked from the System Settings page.
+
 
 
 
