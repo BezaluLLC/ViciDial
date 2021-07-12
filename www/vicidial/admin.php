@@ -5677,12 +5677,13 @@ if ($SSscript_remove_js > 0)
 # 210705-1037 - Added User override for campaign manual_dial_filter setting
 # 210706-0128 - Added display of Call Time Holidays to the agent screen Scheduled Callbacks calendar
 # 210707-0731 - Added display of phone codes and postal codes, linked from System Settings page
+# 210712-1733 - Allow brackets and spaces in Filter Phone Group numbers([ ])
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-820a';
-$build = '210707-0731';
+$admin_version = '2.14-821a';
+$build = '210712-1733';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -8636,11 +8637,11 @@ if ($ADD==171)
 	### filter for Letters DIGITS and NEWLINES
 	if ($non_latin < 1)
 		{
-		$phone_numbers = preg_replace('/[^\n0-9a-zA-Z]/', '',$phone_numbers);
+		$phone_numbers = preg_replace('/[^\n\[\] 0-9a-zA-Z]/', '',$phone_numbers);
 		}
 	else
 		{
-		$phone_numbers = preg_replace('/[^\n0-9\p{L}]/u', '',$phone_numbers);
+		$phone_numbers = preg_replace('/[^\n\[\] 0-9\p{L}]/u', '',$phone_numbers);
 		}
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
