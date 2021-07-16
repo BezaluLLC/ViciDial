@@ -667,6 +667,11 @@ OTHER CHANGES:
 185. Added display of the Phone Codes and Postal Codes that are loaded into the
 	system. Linked from the System Settings page.
 
+186. Added 24-Hour Called Count Limit campaign feature, allows you to limit the
+	number of calls to be placed to a phone number or lead in a 24-hour time
+	period. Also allows for state-based override settings. For more 
+	information, read the CALL_COUNT_LIMITS.txt doc.
+
 
 
 

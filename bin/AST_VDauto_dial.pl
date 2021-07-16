@@ -139,9 +139,10 @@
 # 210207-0952 - Added more logging, debug code and fixes for SHARED agent campaigns
 # 210423-2241 - Fix for campaign ID underscore issue #1265
 # 210606-1006 - Added TILTX features for pre-carrier call filtering
+# 210713-1322 - Added call_limit_24hour feature support
 #
 
-$build='210606-1006';
+$build='210713-1322';
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
 	{
@@ -313,7 +314,7 @@ $event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
 
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,outbound_autodial_active,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pause_type,enable_drop_lists,call_quota_lead_ranking,timeclock_end_of_day,allow_shared_dial FROM system_settings;";
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,outbound_autodial_active,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pause_type,enable_drop_lists,call_quota_lead_ranking,timeclock_end_of_day,allow_shared_dial,call_limit_24hour FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -334,6 +335,7 @@ if ($sthArows > 0)
 	$SScall_quota_lead_ranking =		$aryA[11];
 	$timeclock_end_of_day =				$aryA[12];
 	$allow_shared_dial =				$aryA[13];
+	$SScall_limit_24hour =				$aryA[14];
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -2084,6 +2086,23 @@ while($one_day_interval > 0)
 
 											if (length($alt_dial)<1) {$alt_dial='MAIN';}
 
+											$TFhourSTATE='';
+											if ($SScall_limit_24hour > 0) 
+												{
+												$TFH_areacode = substr($phone_number, 0, 3);
+												$stmtY = "SELECT state,country FROM vicidial_phone_codes where country_code='$phone_code' and areacode='$TFH_areacode';";
+												$sthY = $dbhA->prepare($stmtY) or die "preparing: ",$dbhA->errstr;
+												$sthY->execute or die "executing: $stmtY", $dbhA->errstr;
+												$sthYrows=$sthY->rows;
+												if ($sthYrows > 0)
+													{
+													@aryY = $sthY->fetchrow_array;
+													$TFhourSTATE =		$aryY[0];
+													$TFhourCOUNTRY =	$aryY[1];
+													}
+												$sthA->finish();
+												}
+
 											### whether to omit phone_code or not
 											if ($DBIPomitcode[$user_CIPct] > 0) 
 												{$Ndialstring = "$Local_out_prefix$phone_number";}
@@ -2107,7 +2126,11 @@ while($one_day_interval > 0)
 											$stmtC = "INSERT INTO vicidial_dial_log SET caller_code='$VqueryCID',lead_id='$lead_id',server_ip='$DBIPaddress[$user_CIPct]',call_date='$SQLdate',extension='$VDAD_dial_exten',channel='$local_DEF$Ndialstring$local_AMP$ext_context',timeout='$Local_dial_timeout',outbound_cid='$CIDstring',context='$ext_context';";
 											$affected_rowsC = $dbhA->do($stmtC);
 
-											$event_string = "|     number call dialed|$DBIPcampaign[$user_CIPct]|$VqueryCID|$affected_rowsA|$stmtA|$gmt_offset_now|$alt_dial|$affected_rowsB|$affected_rowsC|";
+										### insert log record into vicidial_lead_24hour_calls table 
+											$stmtD = "INSERT INTO vicidial_lead_24hour_calls SET lead_id='$lead_id',list_id='$list_id',call_date=NOW(),phone_number='$phone_number',phone_code='$phone_code',state='$TFhourSTATE',call_type='AUTO';";
+											$affected_rowsD = $dbhA->do($stmtD);
+
+											$event_string = "|     number call dialed|$DBIPcampaign[$user_CIPct]|$VqueryCID|$affected_rowsA|$stmtA|$gmt_offset_now|$alt_dial|$affected_rowsB|$affected_rowsC|$affected_rowsD|";
 											 &event_logger;
 
 											### sleep for a five hundredths of a second to not flood the server with new calls

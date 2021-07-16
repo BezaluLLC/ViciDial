@@ -677,10 +677,11 @@
 # 210705-1038 - Added User override for campaign manual_dial_filter setting
 # 210705-1626 - Added user_pass_webform and phone_login_webform options.php settings
 # 210706-0114 - Added display of Call Time Holidays to the Scheduled Callbacks calendar
+# 210715-1215 - Added 24-Hour Call Count Limit features
 #
 
-$version = '2.14-645c';
-$build = '210706-0114';
+$version = '2.14-646c';
+$build = '210715-1215';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -10652,7 +10653,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							var regMDFvarSYS = new RegExp("SYSTEM","ig");
 							var regMDFvarCB = new RegExp("CALLBACK","ig");
 							var regMDFvarTIME = new RegExp("OUTSIDE","ig");
-							if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarDCCL)) || (MDnextCID.match(regMDFvarCAMP)) || (MDnextCID.match(regMDFvarSYS)) ||(MDnextCID.match(regMDFvarCB)) || (MDnextCID.match(regMDFvarTIME)) )
+							var regMDFvarTFH = new RegExp("24-HOUR CALL LIMIT","ig");
+							if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarDCCL)) || (MDnextCID.match(regMDFvarCAMP)) || (MDnextCID.match(regMDFvarSYS)) ||(MDnextCID.match(regMDFvarCB)) || (MDnextCID.match(regMDFvarTIME)) || (MDnextCID.match(regMDFvarTFH)) )
 								{
 								button_click_log = button_click_log + "" + SQLdate + "-----DialNextFailed---" + MDnextCID + " " + "|";
 
@@ -10667,27 +10669,65 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 								if (MDnextCID.match(regMNCvar))
 									{
-									alert_box("<?php echo _QXZ("No more leads in the hopper for campaign:"); ?>\n" + campaign);   
+									alert_box("<?php echo _QXZ("No more leads in the hopper for campaign:"); ?>\n" + campaign);
 									alert_displayed=1;
 									in_lead_preview_state=0; // JCJ - This needs to be reset here otherwise the variable stays at 1 and thus manual dials can't be made even if the agent is paused.
 									}
 								if (MDnextCID.match(regMDFvarDNC))
-									{alert_box("<?php echo _QXZ("This phone number is in the DNC list:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
+									{
+									alert_box("<?php echo _QXZ("This phone number is in the DNC list:"); ?>\n" + mdnPhonENumbeR);
+									alert_displayed=1;
+									in_lead_preview_state=0;
+									}
 								if (MDnextCID.match(regMDFvarDCCL))
-									{alert_box("<?php echo _QXZ("This lead has exceeded its daily call count limit:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
+									{
+									alert_box("<?php echo _QXZ("This lead has exceeded its daily call count limit:"); ?>\n" + mdnPhonENumbeR);
+									alert_displayed=1;
+									in_lead_preview_state=0;
+									}
 								if (MDnextCID.match(regMDFvarCAMP))
-									{alert_box("<?php echo _QXZ("This phone number is not in the campaign lists:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
+									{
+									alert_box("<?php echo _QXZ("This phone number is not in the campaign lists:"); ?>\n" + mdnPhonENumbeR);
+									alert_displayed=1;
+									in_lead_preview_state=0;
+									}
 								if (MDnextCID.match(regMDFvarSYS))
-									{alert_box("<?php echo _QXZ("This phone number is not in the system lists:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
+									{
+									alert_box("<?php echo _QXZ("This phone number is not in the system lists:"); ?>\n" + mdnPhonENumbeR);
+									alert_displayed=1;
+									in_lead_preview_state=0;
+									}
 								if (MDnextCID.match(regMDFvarCB))
-									{alert_box("<?php echo _QXZ("This phone number is not a callback:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
+									{
+									alert_box("<?php echo _QXZ("This phone number is not a callback:"); ?>\n" + mdnPhonENumbeR);
+									alert_displayed=1;
+									in_lead_preview_state=0;
+									}
 								if (MDnextCID.match(regMDFvarTIME))
-									{alert_box("<?php echo _QXZ("This phone number is outside of the local call time:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
+									{
+									alert_box("<?php echo _QXZ("This phone number is outside of the local call time:"); ?>\n" + mdnPhonENumbeR);
+									alert_displayed=1;
+									in_lead_preview_state=0;
+									}
+								if (MDnextCID.match(regMDFvarTFH))
+									{
+									alert_box("<?php echo _QXZ("This phone number is at the 24-hour call count limit:"); ?>\n" + mdnPhonENumbeR);
+									alert_displayed=1;
+									in_lead_preview_state=0;
+									}
 
 								if (MDnextCID.match(regMNHDNCvar))
-									{alert_box("<?php echo _QXZ("The next lead is a DNC phone number, please try again:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
+									{
+									alert_box("<?php echo _QXZ("The next lead is a DNC phone number, please try again:"); ?>\n" + mdnPhonENumbeR);
+									alert_displayed=1;
+									in_lead_preview_state=0;
+									}
 								if (MDnextCID.match(regMNHDCCLvar))
-									{alert_box("<?php echo _QXZ("The next lead has exceeded its daily call count limit, please try again:"); ?>\n" + mdnPhonENumbeR);   alert_displayed=1;}
+									{
+									alert_box("<?php echo _QXZ("The next lead has exceeded its daily call count limit, please try again:"); ?>\n" + mdnPhonENumbeR);
+									alert_displayed=1;
+									in_lead_preview_state=0;
+									}
 
 								if (alert_displayed==0)						
 									{alert_box("<?php echo _QXZ("Unspecified error:"); ?>\n" + mdnPhonENumbeR + "|" + MDnextCID);   alert_displayed=1;}

@@ -150,9 +150,10 @@
 # 210429-1644 - Added mohsuggest config for SIP and IAX phones
 # 210605-1407 - Added purging of vicidial_tiltx_shaken_log log entries
 # 210630-1630 - Remove commas from mailbox name before writing to conf file, use "Full Name" for a phone's mailbox name, if set
+# 210712-2312 - Added purging of vicidial_lead_24hour_calls table
 #
 
-$build = '210630-1630';
+$build = '210712-2312';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -1989,6 +1990,21 @@ if ($timeclock_end_of_day_NOW > 0)
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		##### END vicidial_lead_messages end of day process removing records older than 1 day #####
+
+
+		##### BEGIN vicidial_lead_24hour_calls end of day process removing records older than 1 day #####
+		$stmtA = "DELETE FROM vicidial_lead_24hour_calls WHERE call_date < \"$RMSQLdate\";";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows = $sthA->rows;
+		$event_string = "$sthArows rows deleted from vicidial_lead_24hour_calls table";
+		if (!$Q) {print "$event_string \n";}
+		if ($teodDB) {&teod_logger;}
+
+		$stmtA = "optimize table vicidial_lead_24hour_calls;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		##### END vicidial_lead_24hour_calls end of day process removing records older than 1 day #####
 
 
 		##### BEGIN usacan_phone_dialcode_fix funciton #####

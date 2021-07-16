@@ -96,16 +96,17 @@
 # 190213-1207 - Added additional $VLforce_index flags, for high-volume dialing systems
 # 190524-1228 - Fix for lead filters with 'NONE' in the filter ID
 # 190703-1650 - Allow for single-quotes in state field
-# 200814-2132 - Added support for Internation DNC scrubbing
+# 200814-2132 - Added support for International DNC scrubbing
 # 201111-1359 - Added support for hopper_drop_run_trigger
 # 201122-1039 - Added support for daily call count limits
 # 201220-1032 - Changes for shared agent campaigns
 # 210405-1008 - Added hopper_drop_run_trigger=A option
 # 210407-1704 - Modified the Hopper Drop-Run process to modify the priority and source of DROPs already in the hopper
+# 210713-1317 - Added call_limit_24hour feature support
 #
 
 # constants
-$build = '210407-1704';
+$build = '210713-1317';
 $DB=0;  # Debug flag, set to 0 for no debug messages. Can be overriden with CLI --debug flag
 $US='__';
 $MT[0]='';
@@ -333,7 +334,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 ### Grab system_settings values from the database
 $anyone_callback_inactive_lists='default';
-$stmtA = "SELECT anyone_callback_inactive_lists,enable_international_dncs,daily_call_count_limit,use_non_latin FROM system_settings;";
+$stmtA = "SELECT anyone_callback_inactive_lists,enable_international_dncs,daily_call_count_limit,use_non_latin,call_limit_24hour,UNIX_TIMESTAMP(call_limit_24hour_reset),UNIX_TIMESTAMP(NOW()) FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -344,6 +345,9 @@ if ($sthArows > 0)
 	$enable_international_dncs =		$aryA[1];
 	$SSdaily_call_count_limit =			$aryA[2];
 	$non_latin = 						$aryA[3];
+	$SScall_limit_24hour =				$aryA[4];
+	$SScall_limit_24hour_reset =		$aryA[5];
+	$SScall_limit_24hour_now =			$aryA[6];
 	}
 $sthA->finish();
 
@@ -1101,17 +1105,42 @@ if ($hopper_dnc_count > 0)
 ##### END Auto-Alt-Dial DNC check and update or delete
 
 
+### BEGIN reset 24-Hour Call Count Limit skipped leads(skipped over 1 hour ago)
+if ($SScall_limit_24hour > 0)
+	{
+	$TEMPtime_since_reset = ($SScall_limit_24hour_now - $SScall_limit_24hour_reset);
+	if ($DBX) 
+		{
+		$event_string = "Checking for 24-Hour Call Limit skipped leads reset: |$TEMPtime_since_reset = ($SScall_limit_24hour_now - $SScall_limit_24hour_reset)|";
+		print "$event_string\n";
+		&event_logger;
+		}
+
+	if ($TEMPtime_since_reset > 3600) 
+		{
+		$stmtA = "UPDATE vicidial_list SET called_since_last_reset='N' where called_since_last_reset='D' and (modify_date <= (NOW() - INTERVAL 1 HOUR));";
+		$affected_rows = $dbhA->do($stmtA);
+
+		$stmtB = "UPDATE system_settings SET call_limit_24hour_reset=NOW();";
+		$affected_rowsB = $dbhA->do($stmtB);
+
+		if ($DB) {$event_string = "24-Hour Call Limit skipped leads reset: |$affected_rows|$affected_rowsB|   |$stmtA|$stmtB|";   print "$event_string\n";   &event_logger;}
+		}
+	}
+### END reset 24-Hour Call Count Limit skipped leads(skipped over 1 hour ago)
+
+
 ##### BEGIN check for active campaigns that need the hopper run for them
 @campaign_id=@MT; 
 $ANY_hopper_vlc_dup_check='N';
 
 if (length($CLIcampaign)>1)
 	{
-	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize,lead_order_secondary,call_count_limit,hopper_vlc_dup_check,use_other_campaign_dnc,callback_dnc,hopper_drop_run_trigger,daily_call_count_limit,daily_limit_manual from vicidial_campaigns where campaign_id IN('$CLIcampaign');";
+	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize,lead_order_secondary,call_count_limit,hopper_vlc_dup_check,use_other_campaign_dnc,callback_dnc,hopper_drop_run_trigger,daily_call_count_limit,daily_limit_manual,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override from vicidial_campaigns where campaign_id IN('$CLIcampaign');";
 	}
 else
 	{
-	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize,lead_order_secondary,call_count_limit,hopper_vlc_dup_check,use_other_campaign_dnc,callback_dnc,hopper_drop_run_trigger,daily_call_count_limit,daily_limit_manual from vicidial_campaigns where active='Y';";
+	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize,lead_order_secondary,call_count_limit,hopper_vlc_dup_check,use_other_campaign_dnc,callback_dnc,hopper_drop_run_trigger,daily_call_count_limit,daily_limit_manual,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override from vicidial_campaigns where active='Y';";
 	}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1153,6 +1182,11 @@ while ($sthArows > $rec_count)
 	$hopper_drop_run_trigger[$rec_count] =		$aryA[27];
 	$daily_call_count_limit[$rec_count] =		$aryA[28];
 	$daily_limit_manual[$rec_count] =			$aryA[29];
+	$call_limit_24hour_method[$rec_count] =		$aryA[30];
+	$call_limit_24hour_scope[$rec_count] =		$aryA[31];
+	$call_limit_24hour[$rec_count] =			$aryA[32];
+	$call_limit_24hour_override[$rec_count] =	$aryA[33];
+
 
 	if ($hopper_vlc_dup_check[$rec_count] =~ /Y/)
 		{$ANY_hopper_vlc_dup_check = 'Y';}
@@ -1315,6 +1349,7 @@ foreach(@campaign_id)
 	{
 	$DNCskip=0;
 	$DCCLskip=0;
+	$TFHCCLskip=0;
 	$hopper_begin_output='';
 	$insert_end_outputSQL='';
 	if ($no_hopper_dialing[$i] =~ /Y/)
@@ -2905,6 +2940,7 @@ foreach(@campaign_id)
 				@REC_leads_to_hopper=@MT;
 				@REC_lists_to_hopper=@MT;
 				@REC_phone_to_hopper=@MT;
+				@REC_phone_code_to_hopper=@MT;
 				@REC_gmt_to_hopper=@MT;
 				@REC_state_to_hopper=@MT;
 				@REC_status_to_hopper=@MT;
@@ -2919,7 +2955,7 @@ foreach(@campaign_id)
 					if ($hopper_vlc_dup_check[$i] =~ /Y/) 
 						{$vlc_dup_check_SQL = "and vendor_lead_code NOT IN($live_vlc$vlc_lists)";}
 
-					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list $VLforce_index where $recycle_SQL[$i] and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $dnc_blocked_lists_SQL $order_stmt limit $hopper_level[$i];";
+					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code,phone_code FROM vicidial_list $VLforce_index where $recycle_SQL[$i] and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $dnc_blocked_lists_SQL $order_stmt limit $hopper_level[$i];";
 					if ($DBX) {print "     |$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2938,6 +2974,7 @@ foreach(@campaign_id)
 						$REC_modify_to_hopper[$REC_rec_countLEADS] =	$aryA[6];
 						$REC_user_to_hopper[$REC_rec_countLEADS] =		$aryA[7];
 						$REC_vlc_to_hopper[$REC_rec_countLEADS] =		$aryA[8];
+						$REC_phone_code_to_hopper[$REC_rec_countLEADS] =$aryA[9];
 						$REC_source_to_hopper[$REC_rec_countLEADS] =	'R';
 						if ($DB_show_offset) {print "LEAD_ADD: $aryA[2] $aryA[3] $aryA[4]\n";}
 						$REC_rec_countLEADS++;
@@ -2960,6 +2997,7 @@ foreach(@campaign_id)
 				@NEW_leads_to_hopper=@MT;
 				@NEW_lists_to_hopper=@MT;
 				@NEW_phone_to_hopper=@MT;
+				@NEW_phone_code_to_hopper=@MT;
 				@NEW_gmt_to_hopper=@MT;
 				@NEW_state_to_hopper=@MT;
 				@NEW_status_to_hopper=@MT;
@@ -2976,7 +3014,7 @@ foreach(@campaign_id)
 					if ($hopper_vlc_dup_check[$i] =~ /Y/) 
 						{$vlc_dup_check_SQL = "and vendor_lead_code NOT IN($live_vlc$vlc_lists)";}
 
-					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list $VLforce_index where $cslrSQL status IN('NEW') and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $dnc_blocked_lists_SQL $order_stmt limit $NEW_level;";
+					$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code,phone_code FROM vicidial_list $VLforce_index where $cslrSQL status IN('NEW') and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $dnc_blocked_lists_SQL $order_stmt limit $NEW_level;";
 					if ($DBX) {print "     |$stmtA|\n";}
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2993,6 +3031,7 @@ foreach(@campaign_id)
 						$NEW_modify_to_hopper[$NEW_rec_countLEADS] =	$aryA[6];
 						$NEW_user_to_hopper[$NEW_rec_countLEADS] =		$aryA[7];
 						$NEW_vlc_to_hopper[$NEW_rec_countLEADS] =		$aryA[8];
+						$NEW_phone_code_to_hopper[$NEW_rec_countLEADS] =$aryA[9];
 						$NEW_source_to_hopper[$NEW_rec_countLEADS] =	'N';
 						if ($DB_show_offset) {print "LEAD_ADD: $aryA[2] $aryA[3] $aryA[4]\n";}
 						$NEW_rec_countLEADS++;
@@ -3017,6 +3056,7 @@ foreach(@campaign_id)
 				@gmt_to_hopper=@MT;
 				@state_to_hopper=@MT;
 				@phone_to_hopper=@MT;
+				@phone_code_to_hopper=@MT;
 				@status_to_hopper=@MT;
 				@modify_to_hopper=@MT;
 				@user_to_hopper=@MT;
@@ -3031,7 +3071,7 @@ foreach(@campaign_id)
 
 					if ($list_order_mix[$i] =~ /DISABLED/)
 						{
-						$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list $VLforce_index where $cslrSQL status IN($STATUSsql[$i]) and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $dnc_blocked_lists_SQL $order_stmt limit $OTHER_level;";
+						$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code,phone_code FROM vicidial_list $VLforce_index where $cslrSQL status IN($STATUSsql[$i]) and ($list_id_sql[$i]) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $dnc_blocked_lists_SQL $order_stmt limit $OTHER_level;";
 						if ($DBX) {print "     |$stmtA|\n";}
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -3053,6 +3093,7 @@ foreach(@campaign_id)
 									$gmt_to_hopper[$rec_countLEADS] =		$NEW_gmt_to_hopper[$NEW_in];
 									$state_to_hopper[$rec_countLEADS] =		$NEW_state_to_hopper[$NEW_in];
 									$phone_to_hopper[$rec_countLEADS] =		$NEW_phone_to_hopper[$NEW_in];
+									$phone_code_to_hopper[$rec_countLEADS] =$NEW_phone_code_to_hopper[$NEW_in];
 									$status_to_hopper[$rec_countLEADS] =	$NEW_status_to_hopper[$NEW_in];
 									$modify_to_hopper[$rec_countLEADS] =	$NEW_modify_to_hopper[$NEW_in];
 									$user_to_hopper[$rec_countLEADS] =		$NEW_user_to_hopper[$NEW_in];
@@ -3071,6 +3112,7 @@ foreach(@campaign_id)
 								$gmt_to_hopper[$rec_countLEADS] =		$REC_gmt_to_hopper[$REC_insert_count];
 								$state_to_hopper[$rec_countLEADS] =		$REC_state_to_hopper[$REC_insert_count];
 								$phone_to_hopper[$rec_countLEADS] =		$REC_phone_to_hopper[$REC_insert_count];
+								$phone_code_to_hopper[$rec_countLEADS] =$REC_phone_code_to_hopper[$REC_insert_count];
 								$status_to_hopper[$rec_countLEADS] =	$REC_status_to_hopper[$REC_insert_count];
 								$modify_to_hopper[$rec_countLEADS] =	$REC_modify_to_hopper[$REC_insert_count];
 								$user_to_hopper[$rec_countLEADS] =		$REC_user_to_hopper[$REC_insert_count];
@@ -3088,6 +3130,7 @@ foreach(@campaign_id)
 							$modify_to_hopper[$rec_countLEADS] =	$aryA[6];
 							$user_to_hopper[$rec_countLEADS] =		$aryA[7];
 							$vlc_to_hopper[$rec_countLEADS] =		$aryA[8];
+							$phone_code_to_hopper[$rec_countLEADS] =$aryA[9];
 							$source_to_hopper[$rec_countLEADS] =	$hopperSOURCE;
 							if ($DB_show_offset) {print "LEAD_ADD: $aryA[2] $aryA[3] $aryA[4]\n";}
 							$rec_countLEADS++;
@@ -3134,7 +3177,7 @@ foreach(@campaign_id)
 							if ($hopper_vlc_dup_check[$i] =~ /Y/) 
 								{$vlc_dup_check_SQL = "and vendor_lead_code NOT IN($live_vlc$vlc_lists)";}
 
-							$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code FROM vicidial_list $VLforce_index where $cslrSQL ($list_mix_dialableSQL) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $dnc_blocked_lists_SQL $order_stmt limit $LM_step_goal[$x];";
+							$stmtA = "SELECT lead_id,list_id,gmt_offset_now,phone_number,state,status,modify_date,user,vendor_lead_code,phone_code FROM vicidial_list $VLforce_index where $cslrSQL ($list_mix_dialableSQL) and lead_id NOT IN($lead_id_lists) $vlc_dup_check_SQL and ($all_gmtSQL[$i]) $lead_filter_sql[$i] $CCLsql[$i] $DLTsql[$i] $dnc_blocked_lists_SQL $order_stmt limit $LM_step_goal[$x];";
 							if ($DBX) {print "     |$stmtA|\n";}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -3157,7 +3200,7 @@ foreach(@campaign_id)
 										$order = ( ($x * 1000000) + $rec_count);
 										}
 									}
-								$LM_results[$z] = "$order$USX$aryA[0]$USX$aryA[1]$USX$aryA[2]$USX$aryA[3]$USX$aryA[4]$USX$aryA[5]$USX$aryA[6]$USX$aryA[7]$USX$aryA[8]";
+								$LM_results[$z] = "$order$USX$aryA[0]$USX$aryA[1]$USX$aryA[2]$USX$aryA[3]$USX$aryA[4]$USX$aryA[5]$USX$aryA[6]$USX$aryA[7]$USX$aryA[8]$USX$aryA[9]";
 							#	if ($DBX) {print "     $z|$LM_results[$z]\n";}
 
 								$rec_count++;
@@ -3181,6 +3224,7 @@ foreach(@campaign_id)
 								$gmt_to_hopper[$rec_countLEADS] =		$REC_gmt_to_hopper[$REC_insert_count];
 								$state_to_hopper[$rec_countLEADS] =		$REC_state_to_hopper[$REC_insert_count];
 								$phone_to_hopper[$rec_countLEADS] =		$REC_phone_to_hopper[$REC_insert_count];
+								$phone_code_to_hopper[$rec_countLEADS] =$REC_phone_code_to_hopper[$REC_insert_count];
 								$status_to_hopper[$rec_countLEADS] =	$REC_status_to_hopper[$REC_insert_count];
 								$modify_to_hopper[$rec_countLEADS] =	$REC_modify_to_hopper[$REC_insert_count];
 								$user_to_hopper[$rec_countLEADS] =		$REC_user_to_hopper[$REC_insert_count];
@@ -3198,6 +3242,7 @@ foreach(@campaign_id)
 							$modify_to_hopper[$rec_countLEADS] =	$aryA[7];
 							$user_to_hopper[$rec_countLEADS] =		$aryA[8];
 							$vlc_to_hopper[$rec_countLEADS] =		$aryA[9];
+							$phone_code_to_hopper[$rec_countLEADS] =$aryA[10];
 							$source_to_hopper[$rec_countLEADS] =	$hopperSOURCE;
 							if ($DB_show_offset) {print "LEAD_ADD: $aryA[3] $aryA[4] $aryA[5]\n";}
 							if ($DBX) {print "     $w|$LM_results[$w]\n";}
@@ -3217,6 +3262,7 @@ foreach(@campaign_id)
 					$gmt_to_hopper[$rec_countLEADS] =		$REC_gmt_to_hopper[$REC_insert_count];
 					$state_to_hopper[$rec_countLEADS] =		$REC_state_to_hopper[$REC_insert_count];
 					$phone_to_hopper[$rec_countLEADS] =		$REC_phone_to_hopper[$REC_insert_count];
+					$phone_code_to_hopper[$rec_countLEADS] =$REC_phone_code_to_hopper[$REC_insert_count];
 					$status_to_hopper[$rec_countLEADS] =	$REC_status_to_hopper[$REC_insert_count];
 					$modify_to_hopper[$rec_countLEADS] =	$REC_modify_to_hopper[$REC_insert_count];
 					$user_to_hopper[$rec_countLEADS] =		$REC_user_to_hopper[$REC_insert_count];
@@ -3242,6 +3288,8 @@ foreach(@campaign_id)
 						$DNCC=0;
 						$DNCL=0;
 						$DCCL=0;
+						$TFHCCLlead=0;
+						$TFHCCL=0;
 						## Check for system DNC for this lead
 						if ( ($use_internal_dnc[$i] =~ /Y/) || ($use_internal_dnc[$i] =~ /AREACODE/) )
 							{
@@ -3334,6 +3382,139 @@ foreach(@campaign_id)
 								}
 							}
 
+
+						## BEGIN Check for 24-Hour call count limit for this lead/phone_number	
+						if ( ($SScall_limit_24hour > 0) && ( ($call_limit_24hour_method[$i] =~ /PHONE_NUMBER/) || ($call_limit_24hour_method[$i] =~ /LEAD/) ) ) 
+							{
+							$limit_scopeSQL='';
+							if ($call_limit_24hour_scope[$i] =~ /CAMPAIGN_LISTS/) 
+								{
+								$limit_scopeCAMP='';
+								$stmtY = "SELECT list_id FROM vicidial_lists where campaign_id='$campaign_id[$i]';";
+								$sthY = $dbhA->prepare($stmtY) or die "preparing: ",$dbhA->errstr;
+								$sthY->execute or die "executing: $stmtY", $dbhA->errstr;
+								$sthYrows=$sthY->rows;
+								$rec_campLISTS=0;
+								while ($sthYrows > $rec_campLISTS)
+									{
+									@aryY = $sthY->fetchrow_array;
+									$limit_scopeCAMP .= "'$aryY[0]',";
+									$rec_campLISTS++;
+									}
+								if (length($limit_scopeCAMP) < 2) {$limit_scopeCAMP="'1'";}
+								else {chop($limit_scopeCAMP);}
+								$limit_scopeSQL = "and list_id IN($limit_scopeCAMP)";
+								}
+							if ($call_limit_24hour_method[$i] =~ /PHONE_NUMBER/)
+								{
+								$stmtA="SELECT count(*) FROM vicidial_lead_24hour_calls where phone_number='$phone_to_hopper[$h]' and phone_code='$phone_code_to_hopper[$h]' and (call_date >= NOW() - INTERVAL 1 DAY) $limit_scopeSQL;";
+								}
+							else
+								{
+								$stmtA="SELECT count(*) FROM vicidial_lead_24hour_calls where lead_id='$leads_to_hopper[$h]' and (call_date >= NOW() - INTERVAL 1 DAY) $limit_scopeSQL;";
+								}
+							if ($DB) {print "     Doing 24-Hour Call Count Check: $leads_to_hopper[$h]|$phone_code_to_hopper[$h]|$phone_to_hopper[$h] - $call_limit_24hour_method[$i]|$call_limit_24hour_scope[$i]\n";}
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							$TFhourCOUNT=0;
+							$TFhourSTATE='';
+							$TFhourCOUNTRY='';
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$TFhourCOUNT =		($TFhourCOUNT + $aryA[0]);
+								}
+							$sthA->finish();
+							$TEMPcall_limit_24hour = $call_limit_24hour[$i];
+							if ($DBX) {print "     24-Hour Call Limit Count DEBUG:     $TFhourCOUNT|$stmtA|\n";}
+
+							if ( ($call_limit_24hour_override[$i] !~ /^DISABLED$/) && (length($call_limit_24hour_override[$i]) > 0) ) 
+								{
+								$TFH_areacode = substr($phone_to_hopper[$h], 0, 3);
+								$stmtY = "SELECT state,country FROM vicidial_phone_codes where country_code='$phone_code_to_hopper[$h]' and areacode='$TFH_areacode';";
+								$sthY = $dbhA->prepare($stmtY) or die "preparing: ",$dbhA->errstr;
+								$sthY->execute or die "executing: $stmtY", $dbhA->errstr;
+								$sthYrows=$sthY->rows;
+								if ($sthYrows > 0)
+									{
+									@aryY = $sthY->fetchrow_array;
+									$TFhourSTATE =		$aryY[0];
+									$TFhourCOUNTRY =	$aryY[1];
+									}
+								$sthA->finish();
+
+								$TEMP_TFhour_OR_entry='';
+								$TFH_OR_method='state_areacode';
+								$stmtA = "SELECT container_entry FROM vicidial_settings_containers where container_id='$call_limit_24hour_override[$i]';";
+								$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+								$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+								$sthArows=$sthA->rows;
+								if ($DBX) {print "$sthArows|$stmtA\n";}
+								if ($sthArows > 0)
+									{
+									@aryA = $sthA->fetchrow_array;
+									$TEMP_TFhour_OR_entry = $aryA[0];
+									}
+								$sthA->finish();
+
+								if (length($TEMP_TFhour_OR_entry) > 2) 
+									{
+									@container_lines = split(/\n/,$TEMP_TFhour_OR_entry);
+									$c=0;
+									foreach(@container_lines)
+										{
+										$container_lines[$c] =~ s/;.*|\r|\t//gi;
+										$container_lines[$c] =~ s/ => |=> | =>/=>/gi;
+										if (length($container_lines[$c]) > 3)
+											{
+											# define core settings
+											if ($container_lines[$c] =~ /^method/i)
+												{
+												$container_lines[$c] =~ s/method=>//gi;
+												$TFH_OR_method = $container_lines[$c];
+												}
+											else
+												{
+												if ($container_lines[$c] =~ /^state/i)
+													{
+													$container_lines[$c] =~ s/state=>//gi;	# USA,GA,4
+													@TEMP_state_ARY = split(/,/,$container_lines[$c]);
+													
+													if ($TFhourCOUNTRY eq $TEMP_state_ARY[0]) 
+														{
+														$TEMP_state_ARY[2] =~ s/\D//gi;
+														if ( ($TFhourSTATE eq $TEMP_state_ARY[1]) && (length($TEMP_state_ARY[2]) > 0) )
+															{
+															if ($DB) {print "     24-Hour Call Count State Override Triggered: $TEMPcall_limit_24hour|$container_lines[$c]\n";}
+															$TEMPcall_limit_24hour = $TEMP_state_ARY[2];
+															}
+														}
+													}
+												}
+											}
+										if ($DBX) {print "     24-Hour Call Count State Override DEBUG: |$container_lines[$c]|\n";}
+										$c++;
+										}
+									}
+								}
+
+							if ( ($TFhourCOUNT > 0) && ($TFhourCOUNT >= $TEMPcall_limit_24hour) )
+								{
+								$TFHCCLlead=1;
+								$TFHCCL++;
+								$stmtA = "UPDATE vicidial_list SET called_since_last_reset='D' where lead_id='$leads_to_hopper[$h]';";
+								$affected_rows = $dbhA->do($stmtA);
+								if ($DBX) {print "Flagging 24-Hour Call Limit lead:     $affected_rows  $leads_to_hopper[$h] ($TFhourCOUNT >= $TEMPcall_limit_24hour)\n";}
+								}
+							else
+								{
+								if ($DBX) {print "     24-Hour Call Limit check passed:     $leads_to_hopper[$h] ($TFhourCOUNT < $TEMPcall_limit_24hour)\n";}
+								}
+							}
+						## END Check for 24-Hour call count limit for this lead/phone_number	
+
+
 						$VAC_exist=0;
 						$stmtA="SELECT count(*) FROM vicidial_auto_calls where lead_id='$leads_to_hopper[$h]';";
 						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -3375,14 +3556,14 @@ foreach(@campaign_id)
 
 						if ( ($VAC_exist > 0) || ($VLA_exist > 0) )
 							{
-							$detail_string = "LIVE CALL SKIPPING     |$VAC_exist|$VLA_exist|     |$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|$vlc_to_hopper[$h]|";
+							$detail_string = "LIVE CALL SKIPPING     |$VAC_exist|$VLA_exist|     |$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|$vlc_to_hopper[$h]|$phone_code_to_hopper[$h]|";
 							&detail_logger;
 							}
 						else
 							{
 							if ( ($VLC_exist > 0) && ($hopper_vlc_dup_check[$i] =~ /Y/) )
 								{
-								$detail_string = "VLC CALL SKIPPING     |$VLC_exist|$hopper_vlc_dup_check[$i]|     |$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|$vlc_to_hopper[$h]|";
+								$detail_string = "VLC CALL SKIPPING     |$VLC_exist|$hopper_vlc_dup_check[$i]|     |$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|$vlc_to_hopper[$h]|$phone_code_to_hopper[$h]|";
 								&detail_logger;
 								$vlc_dup_check_SKIP_COUNT++;
 								}
@@ -3390,7 +3571,7 @@ foreach(@campaign_id)
 								{
 								if ($DNClead == '0')
 									{
-									if ($DCCLlead == '0')
+									if ( ($DCCLlead == '0') && ($TFHCCLlead == '0') )
 										{
 										$stmtA = "INSERT INTO $vicidial_hopper (lead_id,campaign_id,status,user,list_id,gmt_offset_now,state,priority,source,vendor_lead_code) values('$leads_to_hopper[$h]','$campaign_id[$i]','READY','','$lists_to_hopper[$h]','$gmt_to_hopper[$h]',\"$state_to_hopper[$h]\",'$hopperPRIORITY','$source_to_hopper[$h]',\"$vlc_to_hopper[$h]\");";
 										$affected_rows = $dbhA->do($stmtA);
@@ -3398,13 +3579,16 @@ foreach(@campaign_id)
 										if ($DBX) {print "LEAD INSERTED: $affected_rows|$leads_to_hopper[$h]|\n";}
 										if ($DB_detail) 
 											{
-											$detail_string = "|$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|$vlc_to_hopper[$h]|$source_to_hopper[$h]|";
+											$detail_string = "|$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|$vlc_to_hopper[$h]|$source_to_hopper[$h]|$phone_code_to_hopper[$h]|";
 											&detail_logger;
 											}
 										}
 									else
 										{
-										$DCCLskip++;
+										if ($DCCLlead > 0)	{$DCCLskip++;}
+										if ($TFHCCLlead > 0) {$TFHCCLskip++;}
+										$detail_string = "DAILY/24-HOUR CALL COUNT LIMIT SKIPPING     |$DCCLlead|$TFHCCLlead|($TFhourCOUNT >= $TEMPcall_limit_24hour)|     |$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|$vlc_to_hopper[$h]|$source_to_hopper[$h]|$phone_code_to_hopper[$h]|";
+										&detail_logger;
 										}
 									}
 								else
@@ -3418,7 +3602,7 @@ foreach(@campaign_id)
 										if ($DBX) {print "LEAD INSERTED AS DNC: $affected_rows|$leads_to_hopper[$h]|\n";}
 										if ($DB_detail) 
 											{
-											$detail_string = "|$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|$vlc_to_hopper[$h]|$source_to_hopper[$h]|";
+											$detail_string = "|$campaign_id[$i]|$leads_to_hopper[$h]|$phone_to_hopper[$h]|$state_to_hopper[$h]|$gmt_to_hopper[$h]|$status_to_hopper[$h]|$modify_to_hopper[$h]|$user_to_hopper[$h]|$vlc_to_hopper[$h]|$source_to_hopper[$h]|$phone_code_to_hopper[$h]|";
 											&detail_logger;
 											}
 										}
@@ -3441,6 +3625,7 @@ foreach(@campaign_id)
 					$insert_end_output .= "     VLC Dup Check Rejected:                         $vlc_dup_check_SKIP_COUNT \n";
 					$insert_end_output .= "     DNC lead skipped:                               $DNCskip \n";
 					$insert_end_output .= "     Daily call count limit lead skipped:            $DCCLskip \n";
+					$insert_end_output .= "     24-Hour call count limit lead skipped:          $TFHCCLskip \n";
 					if ($DB) {print "$insert_end_output";}
 					$insert_end_outputSQL = ",adapt_output=\"$hopper_begin_output\n$insert_end_output\"";
 					}

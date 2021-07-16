@@ -334,7 +334,7 @@ vendor_lead_code VARCHAR(20),
 source_id VARCHAR(50),
 list_id BIGINT(14) UNSIGNED NOT NULL DEFAULT '0',
 gmt_offset_now DECIMAL(4,2) DEFAULT '0.00',
-called_since_last_reset ENUM('Y','N','Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10') default 'N',
+called_since_last_reset ENUM('Y','N','Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10','D') default 'N',
 phone_code VARCHAR(10),
 phone_number VARCHAR(18) NOT NULL,
 title VARCHAR(4),
@@ -1072,7 +1072,11 @@ calls_inqueue_count_one VARCHAR(40) default 'DISABLED',
 calls_inqueue_count_two VARCHAR(40) default 'DISABLED',
 in_man_dial_next_ready_seconds SMALLINT(5) UNSIGNED default '0',
 in_man_dial_next_ready_seconds_override VARCHAR(40) default 'DISABLED',
-transfer_no_dispo ENUM('DISABLED','EXTERNAL_ONLY','LOCAL_ONLY','LEAVE3WAY_ONLY','LOCAL_AND_EXTERNAL','LOCAL_AND_LEAVE3WAY','LEAVE3WAY_AND_EXTERNAL','LOCAL_AND_EXTERNAL_AND_LEAVE3WAY') default 'DISABLED'
+transfer_no_dispo ENUM('DISABLED','EXTERNAL_ONLY','LOCAL_ONLY','LEAVE3WAY_ONLY','LOCAL_AND_EXTERNAL','LOCAL_AND_LEAVE3WAY','LEAVE3WAY_AND_EXTERNAL','LOCAL_AND_EXTERNAL_AND_LEAVE3WAY') default 'DISABLED',
+call_limit_24hour_method ENUM('DISABLED','PHONE_NUMBER','LEAD') default 'DISABLED',
+call_limit_24hour_scope ENUM('SYSTEM_WIDE','CAMPAIGN_LISTS') default 'SYSTEM_WIDE',
+call_limit_24hour TINYINT(3) UNSIGNED default '0',
+call_limit_24hour_override VARCHAR(40) default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -1933,7 +1937,9 @@ label_last_local_call_time VARCHAR(60) default '',
 label_called_count VARCHAR(60) default '',
 label_rank VARCHAR(60) default '',
 label_owner VARCHAR(60) default '',
-label_entry_list_id VARCHAR(60) default ''
+label_entry_list_id VARCHAR(60) default '',
+call_limit_24hour ENUM('0','1') default '0',
+call_limit_24hour_reset DATETIME default '2000-01-01 00:00:01'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -4613,6 +4619,51 @@ CAID VARCHAR(50),
 index (db_time)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_lead_24hour_calls (
+lead_id INT(9) UNSIGNED NOT NULL,
+list_id BIGINT(14) UNSIGNED DEFAULT '0',
+call_date DATETIME,
+phone_number VARCHAR(18),
+phone_code VARCHAR(10),
+state VARCHAR(2),
+call_type ENUM('MANUAL','AUTO','') default '',
+index(lead_id),
+index(call_date),
+index(phone_number)
+) ENGINE=MyISAM;
+
+CREATE TABLE `vicidial_khomp_log` (
+`khomp_log_id` int(9) unsigned NOT NULL AUTO_INCREMENT,
+`caller_code` varchar(30) COLLATE utf8_unicode_ci NOT NULL,
+`lead_id` int(10) unsigned DEFAULT 0,
+`server_ip` varchar(15) COLLATE utf8_unicode_ci NOT NULL,
+`khomp_header` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+`khomp_id` varchar(256) COLLATE utf8_unicode_ci DEFAULT NULL,
+`khomp_id_format` enum('CALLERCODE','CALLERCODE_EXTERNIP','CALLERCODE_CAMP_EXTERNIP') COLLATE utf8_unicode_ci DEFAULT NULL,
+`sip_call_id` varchar(256) COLLATE utf8_unicode_ci DEFAULT NULL,
+`start_date` datetime(6) DEFAULT NULL,
+`audio_date` datetime(6) DEFAULT NULL,
+`answer_date` datetime(6) DEFAULT NULL,
+`end_date` datetime(6) DEFAULT NULL,
+`analyzer_date` datetime(6) DEFAULT NULL,
+`conclusion` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+`pattern` varchar(256) COLLATE utf8_unicode_ci DEFAULT NULL,
+`action` varchar(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+`hangup_origin` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+`hangup_cause_recv` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+`hangup_cause_sent` varchar(20) COLLATE utf8_unicode_ci DEFAULT NULL,
+`hangup_auth_time` varchar(20) COLLATE utf8_unicode_ci DEFAULT '0',
+`hangup_query_time` varchar(20) COLLATE utf8_unicode_ci DEFAULT '0',
+`route_auth_time` varchar(20) COLLATE utf8_unicode_ci DEFAULT '0',
+`route_query_time` varchar(20) COLLATE utf8_unicode_ci DEFAULT '0',
+`vici_action` varchar(10) COLLATE utf8_unicode_ci DEFAULT NULL,
+`vici_status` varchar(6) COLLATE utf8_unicode_ci DEFAULT NULL,
+PRIMARY KEY (`khomp_log_id`),
+KEY `caller_code` (`caller_code`),
+KEY `start_date` (`start_date`),
+KEY `khomp_id` (`khomp_id`)
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -4954,4 +5005,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1638',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1639',db_schema_update_date=NOW(),reload_timestamp=NOW();
