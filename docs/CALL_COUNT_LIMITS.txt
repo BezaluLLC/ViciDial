@@ -50,7 +50,7 @@ Another setting on the campaign detail page related to this 24-Hour Call Count L
 The last setting on the campaign detail page related to this 24-Hour Call Count Limits is "24-Hour Called Count Limit Override", where you can create a Settings Container of the "CALL_LIMITS_OVERRIDE" container type that will allow you to override the 24-Hour Called Count Limit for calls to specific states, based upon the area-code of the phone number being dialed. The area-code-to-state relationship is defined in the internal database which you can access by going to "Admin => System Settings => Phone Codes => Phone Codes". Default for this setting is DISABLED.
 
 Here is an example CALL_LIMITS_OVERRIDE Container Entry that will work with this setting:
-; Select one of the three methods below for how the state is determined:
+; Select one of the four methods below for how the state is determined:
 ; 'state_areacode' will look only at the phone_code(country code) and the area-code of the phone number to determine the state
 ; 'state_areacode_postcode' will do the same as above, but it will also check to see if the postal code mathes this state
 ; 'state_areacode_postcode_state' will do the same as above, but it will also check to see if the lead's "state" field mathes this state
