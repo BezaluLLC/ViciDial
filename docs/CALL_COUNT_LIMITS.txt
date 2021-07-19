@@ -1,11 +1,11 @@
-CALL COUNT LIMITS		Started: 2020-11-22	Updated: 2021-07-14
+CALL COUNT LIMITS		Started: 2020-11-22	Updated: 2021-07-18
 
 
 
 This document will go over the various "Call Count Limit" features available within VICIdial, including:
 - Lifetime Lead Call Count Limits
 - Daily Call Count Limits
-- 24-Hour Call Count Limits
+- 24-Hour Call Count Limits (added at svn/trunk revision 3484)
 
 
 
@@ -32,11 +32,12 @@ Daily Call Count Limits must be enabled on the "Admin -> System Settings" page(E
 There is also another setting on the campaign detail page related to this Daily Call Count Limit feature: Daily Call Limit Manual. If the Daily Call Count Limit is enabled, this setting will determine if manual dial calls will be counted and or restricted in the daily call count limit. The DISABLED option will not count manual dial calls or restrict them as part of the daily call count limits, only auto-dial calls would be counted restricted. If one of the COUNT options is used, then manual dial calls would be included in the daily call counts. If one of the RESTRICT options is used, then manual dial calls would be restricted as part of the daily call count limit. Default of this setting is DISABLED.
 
 NOTE: This feature may conflict with Auto-Alt-Dial features if they are enabled on a campaign.
+NOTE: This feature may conflict with Lead Recycling features if they are enabled on a campaign.
+NOTE: This feature will not affect ANYONE Scheduled Callbacks, they can be auto-dialed even if the resulting call will go beyond the daily call count limit.
 
 
 
-
-24-HOUR CALL COUNT LIMITS
+24-HOUR CALL COUNT LIMITS (added at svn/trunk revision 3484)
 
 24-Hour Call Count Limits must be enabled on the "Admin -> System Settings" page(Enable 24-Hour Called Count Limits) before you can configure them on a "Modify Campaign -> Detail" page. This setting will limit the number of calls that can be placed to a lead or a phone number within the last 24 hour, with the time being based on the database server-time. 
 
@@ -58,6 +59,7 @@ state => USA,GA,4
 
 NOTE: There is no manual dial override for this feature, it will affect all normal customer calls placed within this campaign.
 NOTE: If you use this feature with Lead Recycling enabled and the 24-Hour call limit is reached for a recycled lead, the recycling count for that lead will reset to 0 after the 24-Hour call count limit time expires.
+NOTE: If you use this feature with standard Auto-Alt-Dialing, you can add "TFHCCL" to the list of Auto-Alt-Dial statuses in your campaign if you want a rejected alternate phone number dials to trigger the dialing of the next alternate number(if available for the lead).
 
 
 Why was the "24-Hour Call Count Limits" feature created?
