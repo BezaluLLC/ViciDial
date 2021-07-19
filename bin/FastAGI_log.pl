@@ -89,6 +89,7 @@
 # 210314-1015 - Added enhanced_disconnect_logging=2 option
 # 210606-1007 - Added TILTX features for pre-carrier call filtering
 # 210718-0358 - Fixes for 24-Hour Call Count Limits with standard Auto-Alt-Dialing
+# 210719-1521 - Added additional state override methods for call_limit_24hour
 #
 
 # defaults for PreFork
@@ -1781,7 +1782,7 @@ sub process_request
 									{
 									$alt_dial_skip=0;
 									$VD_alt_phone='';
-									$stmtA="SELECT alt_phone,gmt_offset_now,state,list_id,phone_code FROM vicidial_list where lead_id='$VD_lead_id';";
+									$stmtA="SELECT alt_phone,gmt_offset_now,state,list_id,phone_code,postal_code FROM vicidial_list where lead_id='$VD_lead_id';";
 										if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 									$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 									$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1796,6 +1797,7 @@ sub process_request
 										$VD_state =				$aryA[2];
 										$VD_list_id =			$aryA[3];
 										$VD_phone_code =		$aryA[4];
+										$VD_postal_code =		$aryA[5];
 										$epc_countCAMPDATA++;
 										}
 									$sthA->finish();
@@ -1851,8 +1853,10 @@ sub process_request
 											$passed_24hour_call_count=1;
 											if ( ($SScall_limit_24hour > 0) && ($VD_call_limit_24hour_method =~ /PHONE_NUMBER|LEAD/) )
 												{
-												$temp_24hour_phone = $VD_alt_phone;
-												$temp_24hour_phone_code = $VD_phone_code;
+												$temp_24hour_phone =		$VD_alt_phone;
+												$temp_24hour_phone_code =	$VD_phone_code;
+												$temp_24hour_state =		$VD_state;
+												$temp_24hour_postal_code =	$VD_postal_code;
 												if ($DB > 0) {print "24-Hour Call Count Check: $SScall_limit_24hour|$VD_call_limit_24hour_method|$VD_lead_id|\n";}
 												&check_24hour_call_count;
 												}
@@ -1881,7 +1885,7 @@ sub process_request
 									{
 									$addr3_dial_skip=0;
 									$VD_address3='';
-									$stmtA="SELECT address3,gmt_offset_now,state,list_id,phone_code FROM vicidial_list where lead_id='$VD_lead_id';";
+									$stmtA="SELECT address3,gmt_offset_now,state,list_id,phone_code,postal_code FROM vicidial_list where lead_id='$VD_lead_id';";
 										if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 									$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 									$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1896,6 +1900,7 @@ sub process_request
 										$VD_state =				$aryA[2];
 										$VD_list_id =			$aryA[3];
 										$VD_phone_code =		$aryA[4];
+										$VD_postal_code =		$aryA[5];
 										$epc_countCAMPDATA++;
 										}
 									$sthA->finish();
@@ -1951,8 +1956,10 @@ sub process_request
 											$passed_24hour_call_count=1;
 											if ( ($SScall_limit_24hour > 0) && ($VD_call_limit_24hour_method =~ /PHONE_NUMBER|LEAD/) )
 												{
-												$temp_24hour_phone = $VD_address3;
-												$temp_24hour_phone_code = $VD_phone_code;
+												$temp_24hour_phone =		$VD_address3;
+												$temp_24hour_phone_code =	$VD_phone_code;
+												$temp_24hour_state =		$VD_state;
+												$temp_24hour_postal_code =	$VD_postal_code;
 												if ($DB > 0) {print "24-Hour Call Count Check: $SScall_limit_24hour|$VD_call_limit_24hour_method|$VD_lead_id|\n";}
 												&check_24hour_call_count;
 												}
@@ -1986,7 +1993,7 @@ sub process_request
 									if (length($Xlast)<1)
 										{$Xlast=0;}
 									$VD_altdialx='';
-									$stmtA="SELECT gmt_offset_now,state,list_id FROM vicidial_list where lead_id='$VD_lead_id';";
+									$stmtA="SELECT gmt_offset_now,state,list_id,postal_code FROM vicidial_list where lead_id='$VD_lead_id';";
 										if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 									$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 									$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1998,6 +2005,7 @@ sub process_request
 										$VD_gmt_offset_now =	$aryA[0];
 										$VD_state =				$aryA[1];
 										$VD_list_id =			$aryA[2];
+										$VD_postal_code =		$aryA[3];
 										$epc_countCAMPDATA++;
 										}
 									$sthA->finish();
@@ -2092,8 +2100,10 @@ sub process_request
 												$passed_24hour_call_count=1;
 												if ( ($SScall_limit_24hour > 0) && ($VD_call_limit_24hour_method =~ /PHONE_NUMBER|LEAD/) )
 													{
-													$temp_24hour_phone = $VD_altdial_phone;
-													$temp_24hour_phone_code = $VD_altdial_phone_code;
+													$temp_24hour_phone =		$VD_altdial_phone;
+													$temp_24hour_phone_code =	$VD_altdial_phone_code;
+													$temp_24hour_state =		$VD_state;
+													$temp_24hour_postal_code =	$VD_postal_code;
 													if ($DB > 0) {print "24-Hour Call Count Check: $SScall_limit_24hour|$VD_call_limit_24hour_method|$VD_lead_id|\n";}
 													&check_24hour_call_count;
 													}
@@ -2527,7 +2537,7 @@ sub check_24hour_call_count
 		{
 		$stmtA="SELECT count(*) FROM vicidial_lead_24hour_calls where lead_id='$VD_lead_id' and (call_date >= NOW() - INTERVAL 1 DAY) $limit_scopeSQL;";
 		}
-	if ($DB) {print "     Doing 24-Hour Call Count Check: $VD_lead_id|$temp_24hour_phone_code|$temp_24hour_phone - $VD_call_limit_24hour_method|$VD_call_limit_24hour_scope\n";}
+	if ($DB) {print "     Doing 24-Hour Call Count Check: $VD_lead_id|$temp_24hour_phone_code|$temp_24hour_phone|$temp_24hour_state|$temp_24hour_postal_code - $VD_call_limit_24hour_method|$VD_call_limit_24hour_scope|$VD_call_limit_24hour\n";}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 	$sthArows=$sthA->rows;
@@ -2560,6 +2570,9 @@ sub check_24hour_call_count
 
 		$TEMP_TFhour_OR_entry='';
 		$TFH_OR_method='state_areacode';
+		$TFH_OR_postcode_field_match=0;
+		$TFH_OR_state_field_match=0;
+		$TFH_OR_postcode_state='';
 		$stmtA = "SELECT container_entry FROM vicidial_settings_containers where container_id='$VD_call_limit_24hour_override';";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2585,8 +2598,37 @@ sub check_24hour_call_count
 					# define core settings
 					if ($container_lines[$c] =~ /^method/i)
 						{
-						$container_lines[$c] =~ s/method=>//gi;
+						#$container_lines[$c] =~ s/method=>//gi;
 						$TFH_OR_method = $container_lines[$c];
+						if ( ($TFH_OR_method =~ /state$/) && ($TFhourSTATE ne $temp_24hour_state) )
+							{
+							$TFH_OR_state_field_match=1;
+							}
+						if ( ($TFH_OR_method =~ /postcode/) && (length($temp_24hour_postal_code) > 0) )
+							{
+							if ($TFhourCOUNTRY == 'USA') 
+								{
+								$temp_24hour_postal_code =~ s/\D//gi;
+								$temp_24hour_postal_code = substr($temp_24hour_postal_code,0,5);
+								}
+							if ($TFhourCOUNTRY == 'CAN') 
+								{
+								$temp_24hour_postal_code =~ s/[^a-zA-Z0-9]//gi;
+								$temp_24hour_postal_code = substr($temp_24hour_postal_code,0,6);
+								}
+							$stmtA = "SELECT state FROM vicidial_postal_codes where postal_code='$temp_24hour_postal_code';";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							if ($DBX) {print "$sthArows|$stmtA\n";}
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$TFH_OR_postcode_state =		$aryA[0];
+								$TFH_OR_postcode_field_match=1;
+								}
+							$sthA->finish();
+							}
 						}
 					else
 						{
@@ -2602,6 +2644,24 @@ sub check_24hour_call_count
 									{
 									if ($DB) {print "     24-Hour Call Count State Override Triggered: $TEMPcall_limit_24hour|$container_lines[$c]\n";}
 									$TEMPcall_limit_24hour = $TEMP_state_ARY[2];
+									}
+								if ( ($TFH_OR_postcode_state eq $TEMP_state_ARY[1]) && (length($TEMP_state_ARY[2]) > 0) && ($TFH_OR_postcode_field_match > 0) )
+									{
+									if ($DBX) {print "     24-Hour Call Count State Override Match(postcode $TFH_OR_postcode_state): $TEMPcall_limit_24hour|$container_lines[$c]\n";}
+									if ($TEMP_state_ARY[2] < $TEMPcall_limit_24hour)
+										{
+										if ($DBX) {print "          POSTCODE field override of override triggered: ($TEMP_state_ARY[2] < $TEMPcall_limit_24hour)\n";}
+										$TEMPcall_limit_24hour = $TEMP_state_ARY[2];
+										}
+									}
+								if ( ($temp_24hour_state eq $TEMP_state_ARY[1]) && (length($TEMP_state_ARY[2]) > 0) && ($TFH_OR_state_field_match > 0) )
+									{
+									if ($DBX) {print "     24-Hour Call Count State Override Match(state $temp_24hour_state): $TEMPcall_limit_24hour|$container_lines[$c]\n";}
+									if ($TEMP_state_ARY[2] < $TEMPcall_limit_24hour)
+										{
+										if ($DBX) {print "          STATE field override of override triggered: ($TEMP_state_ARY[2] < $TEMPcall_limit_24hour)\n";}
+										$TEMPcall_limit_24hour = $TEMP_state_ARY[2];
+										}
 									}
 								}
 							}

@@ -514,13 +514,14 @@
 # 210705-1046 - Added User override for campaign manual_dial_filter setting
 # 210713-1344 - Added call_limit_24hour feature support
 # 210718-0936 - Fixes for 24-Hour Call Count Limits with standard Auto-Alt-Dialing
+# 210719-1120 - Added new state override options for 24-Hour Call Count Limits
 #
 
-$version = '2.14-407';
-$build = '210718-0936';
+$version = '2.14-408';
+$build = '210719-1120';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=863;
+$mysql_log_count=865;
 $one_mysql_log=0;
 $DB=0;
 $VD_login=0;
@@ -4238,7 +4239,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					}
 
 				### 24-Hour call count limit check ###
-				manual_tfhccl_check($lead_id, $agent_dialed_number, $phone_code, 0);
+				manual_tfhccl_check($lead_id, $agent_dialed_number, $phone_code, 0, $postal_code, $state, 'manDiaLnextCaLL');
 				}
 			#### END check for 24-hour call count limit ####
 
@@ -5929,7 +5930,7 @@ if ($ACTION == 'manDiaLonly')
 				}
 
 			### 24-Hour call count limit check ###
-			manual_tfhccl_check($lead_id, $phone_number, $phone_code, 0);
+			manual_tfhccl_check($lead_id, $phone_number, $phone_code, 0, $postal_code, $state, 'manDiaLonly');
 			}
 		#### END check for 24-hour call count limit ####
 
@@ -7881,7 +7882,7 @@ if ($stage == "end")
 				if ( (preg_match("/(NONE|MAIN)/i",$alt_dial)) and (preg_match("/(ALT_ONLY|ALT_AND_ADDR3|ALT_AND_EXTENDED)/i",$auto_alt_dial)) )
 					{
 					$alt_dial_skip=0;
-					$stmt="SELECT alt_phone,gmt_offset_now,state,vendor_lead_code,phone_code FROM vicidial_list where lead_id='$lead_id';";
+					$stmt="SELECT alt_phone,gmt_offset_now,state,vendor_lead_code,phone_code,postal_code,state FROM vicidial_list where lead_id='$lead_id';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00065',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
@@ -7895,6 +7896,8 @@ if ($stage == "end")
 						$state =			$row[2];
 						$vendor_lead_code =	$row[3];
 						$phone_code =		$row[4];
+						$postal_code =		$row[5];
+						$state =			$row[6];
 						}
 					else {$alt_phone = '';}
 					if (strlen($alt_phone)>5)
@@ -7945,7 +7948,7 @@ if ($stage == "end")
 						if ($VD_alt_dnc_count < 1)
 							{
 							### 24-Hour call count limit check ###
-							$passed_24hour_call_count = manual_tfhccl_check($lead_id, $alt_phone, $phone_code, 1);
+							$passed_24hour_call_count = manual_tfhccl_check($lead_id, $alt_phone, $phone_code, 1, $postal_code, $state, 'manDiaLlogCaLL_end_ALT');
 
 							if ($passed_24hour_call_count > 0)
 								{
@@ -8038,7 +8041,7 @@ if ($stage == "end")
 						if ($VD_alt_dnc_count < 1)
 							{
 							### 24-Hour call count limit check ###
-							$passed_24hour_call_count = manual_tfhccl_check($lead_id, $address3, $phone_code, 1);
+							$passed_24hour_call_count = manual_tfhccl_check($lead_id, $address3, $phone_code, 1, $postal_code, $state, 'manDiaLlogCaLL_end_ADDR3');
 
 							if ($passed_24hour_call_count > 0)
 								{
@@ -8171,7 +8174,7 @@ if ($stage == "end")
 								if ($alt_dial_phones_count == $Xlast) 
 									{$Xlast = 'LAST';}
 								### 24-Hour call count limit check ###
-								$passed_24hour_call_count = manual_tfhccl_check($lead_id, $VD_altdial_phone, $VD_altdial_phone_code, 1);
+								$passed_24hour_call_count = manual_tfhccl_check($lead_id, $VD_altdial_phone, $VD_altdial_phone_code, 1, $postal_code, $state, 'manDiaLlogCaLL_end_X');
 
 								if ($passed_24hour_call_count > 0)
 									{
@@ -20394,7 +20397,7 @@ function manual_dccl_check($temp_lead_id, $temp_no_hopper, $temp_dial_only)
 
 
 ##### 24-Hour call count limit check #####
-function manual_tfhccl_check($temp_lead_id, $temp_phone_number, $temp_phone_code, $temp_TFHCCLalt)
+function manual_tfhccl_check($temp_lead_id, $temp_phone_number, $temp_phone_code, $temp_TFHCCLalt, $temp_postcode, $temp_state, $temp_function)
 	{
 	global $SScall_limit_24hour, $call_limit_24hour_method, $call_limit_24hour_scope, $call_limit_24hour, $call_limit_24hour_override, $campaign, $user, $link, $NOW_TIME, $mel, $server_ip, $session_name, $one_mysql_log, $SSagent_debug_logging, $startMS, $ACTION, $php_script, $stage, $lead_id, $TFhourSTATE, $TFhourCOUNTRY;
 
@@ -20437,7 +20440,7 @@ function manual_tfhccl_check($temp_lead_id, $temp_phone_number, $temp_phone_code
 			{
 			$stmt="SELECT count(*) FROM vicidial_lead_24hour_calls where lead_id='$temp_lead_id' and (call_date >= NOW() - INTERVAL 1 DAY) $limit_scopeSQL;";
 			}
-		if ($DB) {echo "     Doing 24-Hour Call Count Check: $temp_lead_id|$agent_dialed_number - $call_limit_24hour_method  |$stmt|\n";}
+		if ($DB) {echo "     Doing 24-Hour Call Count Check: $temp_lead_id|$agent_dialed_number - $call_limit_24hour_method  |$temp_function|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00862',$user,$server_ip,$session_name,$one_mysql_log);}
 		$vlcamp_ct = mysqli_num_rows($rslt);
@@ -20448,11 +20451,15 @@ function manual_tfhccl_check($temp_lead_id, $temp_phone_number, $temp_phone_code
 			$TFhourCOUNT =	$row[0];
 			}
 		$TEMPcall_limit_24hour = $call_limit_24hour;
+		tfh_log("Starting 24-Hour Call Count Check: $temp_lead_id|$agent_dialed_number($TFhourCOUNTRY,$TFhourSTATE,$TFhourCOUNT) - $call_limit_24hour_method - $call_limit_24hour_scope - $call_limit_24hour  |$temp_TFHCCLalt|$temp_postcode|$temp_state|$temp_function|$stmt|");
 
 		if ( (!preg_match("/^DISABLED$/",$call_limit_24hour_override)) && (strlen($call_limit_24hour_override) > 0) ) 
 			{
 			$TEMP_TFhour_OR_entry='';
 			$TFH_OR_method='state_areacode';
+			$TFH_OR_postcode_field_match=0;
+			$TFH_OR_state_field_match=0;
+			$TFH_OR_postcode_state='';
 			$stmt = "SELECT container_entry FROM vicidial_settings_containers where container_id='$call_limit_24hour_override';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00863',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -20478,8 +20485,38 @@ function manual_tfhccl_check($temp_lead_id, $temp_phone_number, $temp_phone_code
 						# define core settings
 						if (preg_match("/^method/i",$container_lines[$c]))
 							{
-							$container_lines[$c] = preg_replace("/method=>/i;",'',$container_lines[$c]);
+							#$container_lines[$c] = preg_replace("/method=>/i",'',$container_lines[$c]);
 							$TFH_OR_method = $container_lines[$c];
+							tfh_log("METHOD defined:  $TFH_OR_method");
+							if ( (preg_match("/state$/",$TFH_OR_method)) and ($TFhourSTATE != $temp_state) )
+								{
+								$TFH_OR_state_field_match=1;
+								}
+							if ( (preg_match("/postcode/",$TFH_OR_method)) and (strlen($temp_postcode) > 0) )
+								{
+								if ($TFhourCOUNTRY == 'USA') 
+									{
+									$temp_postcode = preg_replace("/\D/",'',$temp_postcode);
+									$temp_postcode = substr($temp_postcode,0,5);
+									}
+								if ($TFhourCOUNTRY == 'CAN') 
+									{
+									$temp_postcode = preg_replace("/[^a-zA-Z0-9]/",'',$temp_postcode);
+									$temp_postcode = substr($temp_postcode,0,6);
+									}
+								$stmt = "SELECT state FROM vicidial_postal_codes where postal_code='$temp_postcode';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00864',$user,$server_ip,$session_name,$one_mysql_log);}
+								if ($DB) {echo "$stmt\n";}
+								$vpc_ct = mysqli_num_rows($rslt);
+								if ($vpc_ct > 0)
+									{
+									$row=mysqli_fetch_row($rslt);
+									$TFH_OR_postcode_state =		$row[0];
+									$TFH_OR_postcode_field_match=1;
+									tfh_log("POSTCODE field state lookup: $temp_postcode|$TFH_OR_postcode_state");
+									}
+								}
 							}
 						else
 							{
@@ -20491,16 +20528,38 @@ function manual_tfhccl_check($temp_lead_id, $temp_phone_number, $temp_phone_code
 								if ($TFhourCOUNTRY == $TEMP_state_ARY[0]) 
 									{
 									$TEMP_state_ARY[2] = preg_replace("/\D/",'',$TEMP_state_ARY[2]);
-									if ( ($TFhourSTATE == $TEMP_state_ARY[1]) && (strlen($TEMP_state_ARY[2]) > 0) )
+									if ( ($TFhourSTATE == $TEMP_state_ARY[1]) and (strlen($TEMP_state_ARY[2]) > 0) )
 										{
 										if ($DB) {echo "     24-Hour Call Count State Override Triggered: $TEMPcall_limit_24hour|$container_lines[$c]\n";}
+										tfh_log("24-Hour Call Count State Override Triggered: $TEMPcall_limit_24hour|$container_lines[$c]");
 										$TEMPcall_limit_24hour = $TEMP_state_ARY[2];
+										}
+									if ( ($TFH_OR_postcode_state == $TEMP_state_ARY[1]) and (strlen($TEMP_state_ARY[2]) > 0) and ($TFH_OR_postcode_field_match > 0) )
+										{
+										if ($DB) {echo "     24-Hour Call Count State Override Triggered(postcode $TFH_OR_postcode_state): $TEMPcall_limit_24hour|$container_lines[$c]\n";}
+										if ($TEMP_state_ARY[2] < $TEMPcall_limit_24hour)
+											{
+											if ($DB) {echo "          POSTCODE field override of override triggered: ($TEMP_state_ARY[2] < $TEMPcall_limit_24hour)\n";}
+											tfh_log("POSTCODE field override of override triggered: ($TEMPcall_limit_24hour < $TEMP_state_ARY[2])|");
+											$TEMPcall_limit_24hour = $TEMP_state_ARY[2];
+											}
+										}
+									if ( ($temp_state == $TEMP_state_ARY[1]) and (strlen($TEMP_state_ARY[2]) > 0) and ($TFH_OR_state_field_match > 0) )
+										{
+										if ($DB) {echo "     24-Hour Call Count State Override Triggered(state $temp_state): $TEMPcall_limit_24hour|$container_lines[$c]\n";}
+										if ($TEMP_state_ARY[2] < $TEMPcall_limit_24hour)
+											{
+											if ($DB) {echo "          STATE field override of override triggered: ($TEMP_state_ARY[2] < $TEMPcall_limit_24hour)\n";}
+											tfh_log("STATE field override of override triggered: ($TEMPcall_limit_24hour < $TEMP_state_ARY[2])|");
+											$TEMPcall_limit_24hour = $TEMP_state_ARY[2];
+											}
 										}
 									}
 								}
 							}
 						}
 					if ($DBX) {echo "     24-Hour Call Count State Override DEBUG: |$container_lines[$c]|\n";}
+					tfh_log("     24-Hour Call Count State Override DEBUG: |$container_lines[$c]");
 					$c++;
 					}
 				}
@@ -20508,14 +20567,23 @@ function manual_tfhccl_check($temp_lead_id, $temp_phone_number, $temp_phone_code
 
 		if ( ($TFhourCOUNT > 0) && ($TFhourCOUNT >= $TEMPcall_limit_24hour) )
 			{
+			tfh_log("24-Hour Call Count Over Limit: $temp_lead_id ($TFhourCOUNT >= $TEMPcall_limit_24hour)");
 			$passed_24hour_call_count=0;
 			if ($temp_TFHCCLalt < 1) 
 				{
-				$stmt = "UPDATE vicidial_list SET called_since_last_reset='D' where lead_id='$temp_lead_id';";
+				$stmt = "UPDATE vicidial_list SET called_since_last_reset='D',user='$user' where lead_id='$temp_lead_id';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00847',$user,$server_ip,$session_name,$one_mysql_log);}
 				$VLAEDaffected_rows = mysqli_affected_rows($link);
+				tfh_log("24-Hour Call Count Over Limit Lead Modify: $VLAEDaffected_rows|$stmt");
+
+				$stmt = "DELETE FROM vicidial_hopper WHERE lead_id='$temp_lead_id' and status='QUEUE' and user='$user';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00865',$user,$server_ip,$session_name,$one_mysql_log);}
+				$VHaffected_rows = mysqli_affected_rows($link);
+				tfh_log("24-Hour Call Count Over Limit Hopper Delete: $VHaffected_rows|$stmt");
 
 				echo "NUMBER OVER 24-HOUR CALL LIMIT, TRY AGAIN\n";
 				$stage .= "|24HRLIMIT|$agent_dialed_number|$temp_lead_id|$TFhourCOUNT|$TEMPcall_limit_24hour|";
@@ -20530,7 +20598,7 @@ function manual_tfhccl_check($temp_lead_id, $temp_phone_number, $temp_phone_code
 	return $passed_24hour_call_count;
 	}
 
-##### 24-Hour call count limit check #####
+##### Auto-Alt-Dialing debug log function #####
 function aad_log($aad_string)
 	{
 	global $NOW_TIME;
@@ -20538,4 +20606,14 @@ function aad_log($aad_string)
 	#fwrite ($aad_fp, "$NOW_TIME|$aad_string|\n");
 	#fclose($aad_fp);  
 	}
+
+##### 24-Hour call count limit check log function #####
+function tfh_log($tfh_string)
+	{
+	global $NOW_TIME;
+	#$aad_fp = fopen ("./24hour-call-count_log.txt", "a");
+	#fwrite ($aad_fp, "$NOW_TIME|$tfh_string|\n");
+	#fclose($aad_fp);  
+	}
+
 ?>

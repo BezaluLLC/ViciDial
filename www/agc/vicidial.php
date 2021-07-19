@@ -678,10 +678,11 @@
 # 210705-1626 - Added user_pass_webform and phone_login_webform options.php settings
 # 210706-0114 - Added display of Call Time Holidays to the Scheduled Callbacks calendar
 # 210715-1215 - Added 24-Hour Call Count Limit features
+# 210719-0907 - Added new state override options for 24-Hour Call Count Limits
 #
 
-$version = '2.14-646c';
-$build = '210715-1215';
+$version = '2.14-647c';
+$build = '210719-0907';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -10633,133 +10634,133 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					//	document.getElementById("debugbottomspan").innerHTML = manDiaLnext_query + "\n\n" + xmlhttp.responseText;
 						MDnextResponse = xmlhttp.responseText;
 
-						if (active_ingroup_dial.length > 0)
-							{
-							AutoDial_ReSume_PauSe("VDADready",'','','NO_STATUS_CHANGE');
-							AutoDialWaiting=1;
-							}
-						else
-							{
-							var MDnextResponse_array=MDnextResponse.split("\n");
-							MDnextCID = MDnextResponse_array[0];
-							LastCallCID = MDnextResponse_array[0];
+						var MDnextResponse_array=MDnextResponse.split("\n");
+						MDnextCID = MDnextResponse_array[0];
+						LastCallCID = MDnextResponse_array[0];
 
-							var regMNCvar = new RegExp("HOPPER EMPTY","ig");
-							var regMDFvarDNC = new RegExp("DNC","ig");
-							var regMDFvarDCCL = new RegExp("DAILY CALL LIMIT","ig");
-							var regMNHDNCvar = new RegExp("NO-HOPPER DNC","ig");
-							var regMNHDCCLvar = new RegExp("NO-HOPPER DAILY CALL LIMIT","ig");
-							var regMDFvarCAMP = new RegExp("CAMPLISTS","ig");
-							var regMDFvarSYS = new RegExp("SYSTEM","ig");
-							var regMDFvarCB = new RegExp("CALLBACK","ig");
-							var regMDFvarTIME = new RegExp("OUTSIDE","ig");
-							var regMDFvarTFH = new RegExp("24-HOUR CALL LIMIT","ig");
-							if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarDCCL)) || (MDnextCID.match(regMDFvarCAMP)) || (MDnextCID.match(regMDFvarSYS)) ||(MDnextCID.match(regMDFvarCB)) || (MDnextCID.match(regMDFvarTIME)) || (MDnextCID.match(regMDFvarTFH)) )
+						var regMNCvar = new RegExp("HOPPER EMPTY","ig");
+						var regMDFvarDNC = new RegExp("DNC","ig");
+						var regMDFvarDCCL = new RegExp("DAILY CALL LIMIT","ig");
+						var regMNHDNCvar = new RegExp("NO-HOPPER DNC","ig");
+						var regMNHDCCLvar = new RegExp("NO-HOPPER DAILY CALL LIMIT","ig");
+						var regMDFvarCAMP = new RegExp("CAMPLISTS","ig");
+						var regMDFvarSYS = new RegExp("SYSTEM","ig");
+						var regMDFvarCB = new RegExp("CALLBACK","ig");
+						var regMDFvarTIME = new RegExp("OUTSIDE","ig");
+						var regMDFvarTFH = new RegExp("24-HOUR CALL LIMIT","ig");
+						if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarDCCL)) || (MDnextCID.match(regMDFvarCAMP)) || (MDnextCID.match(regMDFvarSYS)) ||(MDnextCID.match(regMDFvarCB)) || (MDnextCID.match(regMDFvarTIME)) || (MDnextCID.match(regMDFvarTFH)) )
+							{
+							button_click_log = button_click_log + "" + SQLdate + "-----DialNextFailed---" + MDnextCID + " " + "|";
+
+							dial_next_failed=1;
+							var alert_displayed=0;
+							trigger_ready=1;
+							alt_phone_dialing=starting_alt_phone_dialing;
+							auto_dial_level=starting_dial_level;
+							MainPanelToFront();
+							CalLBacKsCounTCheck();
+							InternalChatsCheck(); 
+
+							if (MDnextCID.match(regMNCvar))
 								{
-								button_click_log = button_click_log + "" + SQLdate + "-----DialNextFailed---" + MDnextCID + " " + "|";
+								alert_box("<?php echo _QXZ("No more leads in the hopper for campaign:"); ?>\n" + campaign);
+								alert_displayed=1;
+								in_lead_preview_state=0; // JCJ - This needs to be reset here otherwise the variable stays at 1 and thus manual dials can't be made even if the agent is paused.
+								}
+							if (MDnextCID.match(regMDFvarDNC))
+								{
+								alert_box("<?php echo _QXZ("This phone number is in the DNC list:"); ?>\n" + mdnPhonENumbeR);
+								alert_displayed=1;
+								in_lead_preview_state=0;
+								}
+							if (MDnextCID.match(regMDFvarDCCL))
+								{
+								alert_box("<?php echo _QXZ("This lead has exceeded its daily call count limit:"); ?>\n" + mdnPhonENumbeR);
+								alert_displayed=1;
+								in_lead_preview_state=0;
+								}
+							if (MDnextCID.match(regMDFvarCAMP))
+								{
+								alert_box("<?php echo _QXZ("This phone number is not in the campaign lists:"); ?>\n" + mdnPhonENumbeR);
+								alert_displayed=1;
+								in_lead_preview_state=0;
+								}
+							if (MDnextCID.match(regMDFvarSYS))
+								{
+								alert_box("<?php echo _QXZ("This phone number is not in the system lists:"); ?>\n" + mdnPhonENumbeR);
+								alert_displayed=1;
+								in_lead_preview_state=0;
+								}
+							if (MDnextCID.match(regMDFvarCB))
+								{
+								alert_box("<?php echo _QXZ("This phone number is not a callback:"); ?>\n" + mdnPhonENumbeR);
+								alert_displayed=1;
+								in_lead_preview_state=0;
+								}
+							if (MDnextCID.match(regMDFvarTIME))
+								{
+								alert_box("<?php echo _QXZ("This phone number is outside of the local call time:"); ?>\n" + mdnPhonENumbeR);
+								alert_displayed=1;
+								in_lead_preview_state=0;
+								}
+							if (MDnextCID.match(regMDFvarTFH))
+								{
+								alert_box("<?php echo _QXZ("This phone number is at the 24-hour call count limit:"); ?>\n" + mdnPhonENumbeR);
+								alert_displayed=1;
+								in_lead_preview_state=0;
+								}
 
-								dial_next_failed=1;
-								var alert_displayed=0;
-								trigger_ready=1;
-								alt_phone_dialing=starting_alt_phone_dialing;
-								auto_dial_level=starting_dial_level;
-								MainPanelToFront();
-								CalLBacKsCounTCheck();
-								InternalChatsCheck(); 
+							if (MDnextCID.match(regMNHDNCvar))
+								{
+								alert_box("<?php echo _QXZ("The next lead is a DNC phone number, please try again:"); ?>\n" + mdnPhonENumbeR);
+								alert_displayed=1;
+								in_lead_preview_state=0;
+								}
+							if (MDnextCID.match(regMNHDCCLvar))
+								{
+								alert_box("<?php echo _QXZ("The next lead has exceeded its daily call count limit, please try again:"); ?>\n" + mdnPhonENumbeR);
+								alert_displayed=1;
+								in_lead_preview_state=0;
+								}
 
-								if (MDnextCID.match(regMNCvar))
-									{
-									alert_box("<?php echo _QXZ("No more leads in the hopper for campaign:"); ?>\n" + campaign);
-									alert_displayed=1;
-									in_lead_preview_state=0; // JCJ - This needs to be reset here otherwise the variable stays at 1 and thus manual dials can't be made even if the agent is paused.
-									}
-								if (MDnextCID.match(regMDFvarDNC))
-									{
-									alert_box("<?php echo _QXZ("This phone number is in the DNC list:"); ?>\n" + mdnPhonENumbeR);
-									alert_displayed=1;
-									in_lead_preview_state=0;
-									}
-								if (MDnextCID.match(regMDFvarDCCL))
-									{
-									alert_box("<?php echo _QXZ("This lead has exceeded its daily call count limit:"); ?>\n" + mdnPhonENumbeR);
-									alert_displayed=1;
-									in_lead_preview_state=0;
-									}
-								if (MDnextCID.match(regMDFvarCAMP))
-									{
-									alert_box("<?php echo _QXZ("This phone number is not in the campaign lists:"); ?>\n" + mdnPhonENumbeR);
-									alert_displayed=1;
-									in_lead_preview_state=0;
-									}
-								if (MDnextCID.match(regMDFvarSYS))
-									{
-									alert_box("<?php echo _QXZ("This phone number is not in the system lists:"); ?>\n" + mdnPhonENumbeR);
-									alert_displayed=1;
-									in_lead_preview_state=0;
-									}
-								if (MDnextCID.match(regMDFvarCB))
-									{
-									alert_box("<?php echo _QXZ("This phone number is not a callback:"); ?>\n" + mdnPhonENumbeR);
-									alert_displayed=1;
-									in_lead_preview_state=0;
-									}
-								if (MDnextCID.match(regMDFvarTIME))
-									{
-									alert_box("<?php echo _QXZ("This phone number is outside of the local call time:"); ?>\n" + mdnPhonENumbeR);
-									alert_displayed=1;
-									in_lead_preview_state=0;
-									}
-								if (MDnextCID.match(regMDFvarTFH))
-									{
-									alert_box("<?php echo _QXZ("This phone number is at the 24-hour call count limit:"); ?>\n" + mdnPhonENumbeR);
-									alert_displayed=1;
-									in_lead_preview_state=0;
-									}
+							if (alert_displayed==0)						
+								{alert_box("<?php echo _QXZ("Unspecified error:"); ?>\n" + mdnPhonENumbeR + "|" + MDnextCID);   alert_displayed=1;}
 
-								if (MDnextCID.match(regMNHDNCvar))
+							if (starting_dial_level == 0)
+								{
+								document.getElementById("DiaLControl").innerHTML = "<a href=\"#\" onclick=\"ManualDialNext('','','','','','0','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_dialnextnumber.gif"); ?>\" border=\"0\" alt=\"Dial Next Number\" /></a>";
+								}
+							else
+								{
+								if (dial_method == "INBOUND_MAN")
 									{
-									alert_box("<?php echo _QXZ("The next lead is a DNC phone number, please try again:"); ?>\n" + mdnPhonENumbeR);
-									alert_displayed=1;
-									in_lead_preview_state=0;
-									}
-								if (MDnextCID.match(regMNHDCCLvar))
-									{
-									alert_box("<?php echo _QXZ("The next lead has exceeded its daily call count limit, please try again:"); ?>\n" + mdnPhonENumbeR);
-									alert_displayed=1;
-									in_lead_preview_state=0;
-									}
+									auto_dial_level=starting_dial_level;
 
-								if (alert_displayed==0)						
-									{alert_box("<?php echo _QXZ("Unspecified error:"); ?>\n" + mdnPhonENumbeR + "|" + MDnextCID);   alert_displayed=1;}
-
-								if (starting_dial_level == 0)
-									{
-									document.getElementById("DiaLControl").innerHTML = "<a href=\"#\" onclick=\"ManualDialNext('','','','','','0','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_dialnextnumber.gif"); ?>\" border=\"0\" alt=\"Dial Next Number\" /></a>";
-									}
-								else
-									{
-									if (dial_method == "INBOUND_MAN")
+									if ( (in_man_dial_next_ready_seconds > 0) && (in_man_dial_next_ready_count < in_man_dial_next_ready_seconds) )
 										{
-										auto_dial_level=starting_dial_level;
-
-										if ( (in_man_dial_next_ready_seconds > 0) && (in_man_dial_next_ready_count < in_man_dial_next_ready_seconds) )
-											{
-											in_man_dial_next_ready_trigger = 0;
-											in_man_dial_next_ready_count = 0;
-											document.getElementById("DiaLControl").innerHTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif"); ?>\" border=\"0\" alt=\"You are paused\" /></a><br /><img src=\"./images/<?php echo _QXZ("vdc_LB_dialnextnumber_OFF.gif"); ?>\" border=\"0\" alt=\"Dial Next Number\" />";
-											}
-										else
-											{
-											document.getElementById("DiaLControl").innerHTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif"); ?>\" border=\"0\" alt=\"You are paused\" /></a><br /><a href=\"#\" onclick=\"ManualDialNext('','','','','','0','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_dialnextnumber.gif"); ?>\" border=\"0\" alt=\"Dial Next Number\" /></a>";
-											}
+										in_man_dial_next_ready_trigger = 0;
+										in_man_dial_next_ready_count = 0;
+										document.getElementById("DiaLControl").innerHTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif"); ?>\" border=\"0\" alt=\"You are paused\" /></a><br /><img src=\"./images/<?php echo _QXZ("vdc_LB_dialnextnumber_OFF.gif"); ?>\" border=\"0\" alt=\"Dial Next Number\" />";
 										}
 									else
 										{
-										document.getElementById("DiaLControl").innerHTML = DiaLControl_auto_HTML;
+										document.getElementById("DiaLControl").innerHTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif"); ?>\" border=\"0\" alt=\"You are paused\" /></a><br /><a href=\"#\" onclick=\"ManualDialNext('','','','','','0','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_dialnextnumber.gif"); ?>\" border=\"0\" alt=\"Dial Next Number\" /></a>";
 										}
-									document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
-									reselect_alt_dial = 0;
 									}
+								else
+									{
+									document.getElementById("DiaLControl").innerHTML = DiaLControl_auto_HTML;
+									}
+								document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
+								reselect_alt_dial = 0;
+								}
+							}
+						else
+							{
+							if (active_ingroup_dial.length > 0)
+								{
+								AutoDial_ReSume_PauSe("VDADready",'','','NO_STATUS_CHANGE');
+								AutoDialWaiting=1;
 								}
 							else
 								{
@@ -11649,7 +11650,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				if ( (script_recording_delay < 1) && (routing_initiated_recording == 'Y') && ( (LIVE_campaign_recording == 'ALLCALLS') || (LIVE_campaign_recording == 'ALLFORCE') ) )
 					{temp_rir='Y';}
 
-				manDiaLonly_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLonly&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&lead_id=" + document.vicidial_form.lead_id.value + "&phone_number=" + manDiaLonly_num + "&phone_code=" + document.vicidial_form.phone_code.value + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + manual_dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&omit_phone_code=" + omit_phone_code + "&usegroupalias=" + usegroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + dialed_number + "&agent_dialed_type=" + dialed_label + "&dial_method=" + dial_method + "&agent_log_id=" + agent_log_id + "&security=" + document.vicidial_form.security_phrase.value + "&qm_extension=" + qm_extension + "&old_CID=" + LastCallCID + "&cid_lock=" + cid_lock + "&routing_initiated_recording=" + temp_rir + "&exten=" + recording_exten + "&recording_filename=" + LIVE_campaign_rec_filename + "&channel=" + channelrec + "&vendor_lead_code=" + document.vicidial_form.search_vendor_lead_code.value + "&phone_login=" + phone_login + "&state=" + encodeURIComponent(document.vicidial_form.state.value);
+				manDiaLonly_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=manDiaLonly&conf_exten=" + session_id + "&user=" + user + "&pass=" + pass + "&lead_id=" + document.vicidial_form.lead_id.value + "&phone_number=" + manDiaLonly_num + "&phone_code=" + document.vicidial_form.phone_code.value + "&campaign=" + campaign + "&ext_context=" + ext_context + "&dial_timeout=" + manual_dial_timeout + "&dial_prefix=" + call_prefix + "&campaign_cid=" + call_cid + "&omit_phone_code=" + omit_phone_code + "&usegroupalias=" + usegroupalias + "&account=" + active_group_alias + "&agent_dialed_number=" + dialed_number + "&agent_dialed_type=" + dialed_label + "&dial_method=" + dial_method + "&agent_log_id=" + agent_log_id + "&security=" + document.vicidial_form.security_phrase.value + "&qm_extension=" + qm_extension + "&old_CID=" + LastCallCID + "&cid_lock=" + cid_lock + "&routing_initiated_recording=" + temp_rir + "&exten=" + recording_exten + "&recording_filename=" + LIVE_campaign_rec_filename + "&channel=" + channelrec + "&vendor_lead_code=" + document.vicidial_form.search_vendor_lead_code.value + "&phone_login=" + phone_login + "&state=" + encodeURIComponent(document.vicidial_form.state.value) + "&postal_code=" + encodeURIComponent(document.vicidial_form.search_postal_code.value);
 				xmlhttp.open('POST', 'vdc_db_query.php'); 
 				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 				xmlhttp.send(manDiaLonly_query);
