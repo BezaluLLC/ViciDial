@@ -679,10 +679,11 @@
 # 210706-0114 - Added display of Call Time Holidays to the Scheduled Callbacks calendar
 # 210715-1215 - Added 24-Hour Call Count Limit features
 # 210719-0907 - Added new state override options for 24-Hour Call Count Limits
+# 210720-0850 - Fixes for inconsistent hangup_xfer_record_start behavior
 #
 
-$version = '2.14-647c';
-$build = '210719-0907';
+$version = '2.14-648c';
+$build = '210720-0850';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -5592,6 +5593,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var in_man_dial_next_ready_trigger = 0;
 	var user_pass_webform = '<?php echo $user_pass_webform ?>';
 	var phone_login_webform = '<?php echo $phone_login_webform ?>';
+	var recording_active=0;
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -7607,6 +7609,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			{ 
 			if (taskconfrectype == 'MonitorConf')
 				{
+				recording_active=1;
 				var REGrecCLEANvlc = new RegExp(" ","g");
 				var recVendorLeadCode = document.vicidial_form.vendor_lead_code.value;
 				recVendorLeadCode = recVendorLeadCode.replace(REGrecCLEANvlc, '');
@@ -7657,6 +7660,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				}
 			if (taskconfrectype == 'StopMonitorConf')
 				{
+				recording_active=0;
 				filename = taskconffile;
 				var query_recording_exten = session_id;
 				var channelrec = "Local/" + conf_silent_prefix + '' + taskconfrec + "@" + ext_context;
@@ -14538,7 +14542,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		xfer_in_call=0;
 		if (HANclick=='YES')
 			{button_click_log = button_click_log + "" + SQLdate + "-----xfercall_send_hangup---" + xferchannel + "|";}
-		if ( (hangup_xfer_record_start == 'Y') && (hangup_both < 1) )
+		if ( (hangup_xfer_record_start == 'Y') && (hangup_both < 1) && (leaving_threeway < 1) && (recording_active < 1) )
 			{
 			conf_send_recording('MonitorConf', session_id,'','','','');
 			}
@@ -15373,6 +15377,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		customer_3way_hangup_counter=0;
 		customer_3way_hangup_counter_trigger=0;
 		waiting_on_dispo=1;
+		recording_active=0;
 		var VDDCU_recording_id=document.getElementById("RecorDID").innerHTML;
 		var VDDCU_recording_filename=last_recording_filename;
 		var dispo_urls='';
