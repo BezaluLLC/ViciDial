@@ -672,6 +672,9 @@ OTHER CHANGES:
 	period. Also allows for state-based override settings. For more 
 	information, read the CALL_COUNT_LIMITS.txt doc.
 
+187. Added CID Group Failover setting for campaigns, to allow for backup CID
+	Group to use if no AREACODE or STATE match found from first CID Group.
+
 
 
 

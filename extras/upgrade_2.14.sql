@@ -1778,3 +1778,7 @@ ALTER TABLE system_settings ADD call_limit_24hour ENUM('0','1') default '0';
 ALTER TABLE system_settings ADD call_limit_24hour_reset DATETIME default '2000-01-01 00:00:01';
 
 UPDATE system_settings SET db_schema_version='1639',db_schema_update_date=NOW() where db_schema_version < 1639;
+
+ALTER TABLE vicidial_campaigns ADD cid_group_id_two VARCHAR(20) default '---DISABLED---';
+
+UPDATE system_settings SET db_schema_version='1640',db_schema_update_date=NOW() where db_schema_version < 1640;
