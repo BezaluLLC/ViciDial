@@ -244,6 +244,7 @@
 # 210103-1024 - Added agent_search_method override
 # 210325-2200 - Added populate_lead_comments option
 # 210609-0941 - Added drop_call_seconds_override option
+# 210804-0711 - Fix for closing time action issue #1321
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -6144,7 +6145,9 @@ if ($closing_check > 0)
 	# - VMAIL_NO_INST
 	# - EXTEN
 	# - CALLMENU
+	# - CID_CALLBACK
 	# - INGROUP
+	# - CALLBACK_QUEUE
 
 	if ($closing_time_action_SETTING =~ /PRESS_/)
 		{
@@ -6194,12 +6197,12 @@ if ($closing_check > 0)
 
 			if ($pin =~ /1/)
 				{
-				if ($closing_time_action_SETTING =~ /PRESS_VMAIL/)			{$closing_time_action = 'VOICEMAIL';   $HT_status='QVMAIL';}
+				if ($closing_time_action_SETTING =~ /PRESS_VMAIL/)			{$closing_time_action = 'VMAIL';   $HT_status='QVMAIL';}
 				if ($closing_time_action_SETTING =~ /PRESS_VMAIL_NO_INST/)	{$closing_time_action = 'VMAIL_NO_INST';   $HT_status='QVMAIL';}
-				if ($closing_time_action_SETTING =~ /PRESS_EXTEN/)			{$closing_time_action = 'EXTENSION';   $HT_status='CLOSOP';}
-				if ($closing_time_action_SETTING =~ /PRESS_CALLMENU/)		{$closing_time_action = 'CALL_MENU';   $HT_status='CLOSOP';}
-				if ($closing_time_action_SETTING =~ /PRESS_CID_CALLBACK/)	{$closing_time_action = 'CALLERID_CALLBACK';   $HT_status='CLOSOP';}
-				if ($closing_time_action_SETTING =~ /PRESS_INGROUP/)		{$closing_time_action = 'IN_GROUP';   $HT_status='CLOSOP';}
+				if ($closing_time_action_SETTING =~ /PRESS_EXTEN/)			{$closing_time_action = 'EXTEN';   $HT_status='CLOSOP';}
+				if ($closing_time_action_SETTING =~ /PRESS_CALLMENU/)		{$closing_time_action = 'CALLMENU';   $HT_status='CLOSOP';}
+				if ($closing_time_action_SETTING =~ /PRESS_CID_CALLBACK/)	{$closing_time_action = 'CID_CALLBACK';   $HT_status='CLOSOP';}
+				if ($closing_time_action_SETTING =~ /PRESS_INGROUP/)		{$closing_time_action = 'INGROUP';   $HT_status='CLOSOP';}
 				if ($closing_time_action_SETTING =~ /PRESS_CALLBACK_QUEUE/)	{$closing_time_action = 'CALLBACK_QUEUE';   $HT_status='CLOSOP';}
 				}
 
@@ -6236,7 +6239,7 @@ if ($closing_check > 0)
 		}
 	### END closing-time option press 1 options ###
 
-	if ($closing_time_action =~ /EXTENSION/)
+	if ($closing_time_action =~ /EXTEN/)
 		{
 		if (length($closing_time_option_exten)>0)
 			{
@@ -6266,7 +6269,7 @@ if ($closing_check > 0)
 			}
 		}
 
-	if ($closing_time_action =~ /VOICEMAIL|VMAIL_NO_INST/)
+	if ($closing_time_action =~ /VMAIL|VMAIL_NO_INST/)
 		{
 		if ( ($channel_group =~ /AGENTDIRECT/i) && (length($agent_only) > 1) && ($closing_time_option_voicemail =~ /AGENTVMAIL/) )
 			{
@@ -6293,7 +6296,7 @@ if ($closing_check > 0)
 		if (length($closing_time_option_voicemail)>0)
 			{$DROPexten = "$voicemail_dump_exten$closing_time_option_voicemail";}
 		}
-	if ($closing_time_action =~ /CALL_MENU/)
+	if ($closing_time_action =~ /CALLMENU/)
 		{
 		$newcallerid = "\"$VCcallerid <$transfer_cid>\"";
 		if ($action_xfer_cid =~ /CLOSER/)
@@ -6320,14 +6323,14 @@ if ($closing_check > 0)
 				}
 			}
 		}
-	if ($closing_time_action =~ /IN_GROUP/)
+	if ($closing_time_action =~ /INGROUP/)
 		{ # 90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*"
 		$CT_prefix='90009';
 		if ( ($inbound_answer_config > 0) && ($answer_signal =~ /NONE/i) )
 			{$CT_prefix='98009';}
 		$DROPexten = "$CT_prefix*$closing_time_option_xfer_group$S$S$insert_lead_id$S$S$phone_number$S$fronter$S";
 		}
-	if ($closing_time_action =~ /CALLERID_CALLBACK/)
+	if ($closing_time_action =~ /CID_CALLBACK/)
 		{
 		##### CID Callback Number Validation if enabled #####
 		$cid_cb_number = $phone_number;

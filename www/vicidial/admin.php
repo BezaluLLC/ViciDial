@@ -5700,12 +5700,13 @@ if ($SSscript_remove_js > 0)
 # 210712-1733 - Allow brackets and spaces in Filter Phone Group numbers([ ])
 # 210715-1248 - Added call_limit_24hour campaign settings
 # 210729-2127 - Added CID Group Failover campaign setting(cid_group_id_two)
+# 210804-0712 - Fix for closing time action issue #1321
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-823a';
-$build = '210729-2127';
+$admin_version = '2.14-824a';
+$build = '210804-0712';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -32495,7 +32496,23 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("CID Callback Number Error Filename").": </td><td align=left><input type=text name=cid_cb_error_filename id=cid_cb_error_filename size=50 maxlength=255 value=\"$cid_cb_error_filename\"> <a href=\"javascript:launch_chooser('cid_cb_error_filename','date');\">"._QXZ("audio chooser")."</a> $NWB#inbound_groups-cid_cb_error_filename$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Closing Time Action").": </td><td align=left><select size=1 name=closing_time_action><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='PRESS_VMAIL'>"._QXZ("PRESS_VMAIL")."</option><option value='PRESS_VMAIL_NO_INST'>"._QXZ("PRESS_VMAIL_NO_INST")."</option><option value='PRESS_EXTEN'>"._QXZ("PRESS_EXTEN")."</option><option value='PRESS_CALLMENU'>"._QXZ("PRESS_CALLMENU")."</option><option value='PRESS_CID_CALLBACK'>"._QXZ("PRESS_CID_CALLBACK")."</option><option value='PRESS_INGROUP'>"._QXZ("PRESS_INGROUP")."</option><option value='PRESS_CALLBACK_QUEUE'>"._QXZ("PRESS_CALLBACK_QUEUE")."</option><option value='VMAIL'>"._QXZ("VMAIL")."</option><option value='VMAIL_NO_INST'>"._QXZ("VMAIL_NO_INST")."</option><option value='EXTEN'>"._QXZ("EXTEN")."</option><option value='CALLMENU'>"._QXZ("CALLMENU")."</option><option value='INGROUP'>"._QXZ("INGROUP")."</option><option value='$closing_time_action' SELECTED>"._QXZ("$closing_time_action")."</option></select>$NWB#inbound_groups-closing_time_action$NWE</td></tr>\n";
+		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Closing Time Action").": </td><td align=left><select size=1 name=closing_time_action>
+		<option value='DISABLED'>"._QXZ("DISABLED")."</option>
+		<option value='PRESS_VMAIL'>"._QXZ("PRESS_VMAIL")."</option>
+		<option value='PRESS_VMAIL_NO_INST'>"._QXZ("PRESS_VMAIL_NO_INST")."</option>
+		<option value='PRESS_EXTEN'>"._QXZ("PRESS_EXTEN")."</option>
+		<option value='PRESS_CALLMENU'>"._QXZ("PRESS_CALLMENU")."</option>
+		<option value='PRESS_CID_CALLBACK'>"._QXZ("PRESS_CID_CALLBACK")."</option>
+		<option value='PRESS_INGROUP'>"._QXZ("PRESS_INGROUP")."</option>
+		<option value='PRESS_CALLBACK_QUEUE'>"._QXZ("PRESS_CALLBACK_QUEUE")."</option>
+		<option value='VMAIL'>"._QXZ("VMAIL")."</option>
+		<option value='VMAIL_NO_INST'>"._QXZ("VMAIL_NO_INST")."</option>
+		<option value='EXTEN'>"._QXZ("EXTEN")."</option>
+		<option value='CALLMENU'>"._QXZ("CALLMENU")."</option>
+		<option value='CID_CALLBACK'>"._QXZ("CID_CALLBACK")."</option>
+		<option value='INGROUP'>"._QXZ("INGROUP")."</option>
+		<option value='CALLBACK_QUEUE'>"._QXZ("CALLBACK_QUEUE")."</option>
+		<option value='$closing_time_action' SELECTED>"._QXZ("$closing_time_action")."</option></select>$NWB#inbound_groups-closing_time_action$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#99FFCC><td align=right>"._QXZ("Closing Time Now Trigger").": </td><td align=left><select size=1 name=closing_time_now_trigger><option value='N'>"._QXZ("N")."</option><option value='Y'>"._QXZ("Y")."</option><option value='$closing_time_now_trigger' SELECTED>"._QXZ("$closing_time_now_trigger")."</option></select>$NWB#inbound_groups-closing_time_now_trigger$NWE</td></tr>\n";
 
