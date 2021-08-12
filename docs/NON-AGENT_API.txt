@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-07-01
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-08-12
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -191,6 +191,7 @@ Changes:
 210618-1000 - Added CORS support
 210625-1421 - Added BARGESWAP option to blind_monitor function
 210701-2050 - Added ingroup_rank/ingroup_grade options to the update_user function
+210812-2640 - Added update of live agent records for ingroup_rank/ingroup_grade in the update_user function
 
 
 API Functions use the 'function' variable

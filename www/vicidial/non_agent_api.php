@@ -181,10 +181,11 @@
 # 210618-1000 - Added CORS support
 # 210625-1421 - Added BARGESWAP option to blind_monitor function
 # 210701-2050 - Added ingroup_rank/ingroup_grade options to the update_user function
+# 210812-2640 - Added update of live agent records for ingroup_rank/ingroup_grade in the update_user function
 #
 
-$version = '2.14-158';
-$build = '210701-2050';
+$version = '2.14-159';
+$build = '210812-2640';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -3745,6 +3746,7 @@ if ($function == 'update_user')
 							if ($camp_rg_only=='1')
 								{
 								$camp_rg_onlySQL = "where campaign_id='$campaign_id'";
+								$camp_rg_only_andSQL = "and campaign_id='$campaign_id'";
 								$camp_rg_onlyNOTE = "|$campaign_id|$camp_rg_only";
 								}
 							$stmt="INSERT INTO vicidial_campaign_agents(user,campaign_id $rank_BEGIN_SQL $grade_BEGIN_SQL) SELECT '$agent_user',campaign_id $rank_MID_SQL $grade_MID_SQL from vicidial_campaigns $camp_rg_onlySQL ON DUPLICATE KEY UPDATE $rank_END_SQL $grade_END_SQL;";
@@ -3752,11 +3754,16 @@ if ($function == 'update_user')
 							$affected_rows = mysqli_affected_rows($link);
 							if ($DB) {echo "|$stmt|$affected_rows|\n";}
 
+							$stmtB="UPDATE vicidial_live_agents set campaign_weight='$campaign_rank', campaign_grade='$campaign_grade' where user='$agent_user' $camp_rg_only_andSQL;";
+							$rslt=mysql_to_mysqli($stmtB, $link);
+							$affected_rowsB = mysqli_affected_rows($link);
+							if ($DB) {echo "|$stmtB|$affected_rowsB|\n";}
+
 							### LOG INSERTION Admin Log Table ###
-							$SQL_log = "$stmt|";
+							$SQL_log = "$stmt|$stmtB|";
 							$SQL_log = preg_replace('/;/', '', $SQL_log);
 							$SQL_log = addslashes($SQL_log);
-							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$agent_user', event_code='ADMIN API UPDATE USER RANK', event_sql=\"$SQL_log\", event_notes='user: $agent_user|rank: $campaign_rank|grade: $campaign_grade|rows: $affected_rows$camp_rg_onlyNOTE';";
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$agent_user', event_code='ADMIN API UPDATE USER RANK', event_sql=\"$SQL_log\", event_notes='user: $agent_user|rank: $campaign_rank|grade: $campaign_grade|rows: $affected_rows|$affected_rowsB|$camp_rg_onlyNOTE';";
 							if ($DB) {echo "|$stmt|\n";}
 							$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -3812,6 +3819,7 @@ if ($function == 'update_user')
 							if ($ingrp_rg_only=='1')
 								{
 								$ingrp_rg_onlySQL = "where group_id='$group_id'";
+								$ingrp_rg_only_andSQL = "and group_id='$group_id'";
 								$ingrp_rg_onlyNOTE = "|$group_id|$ingrp_rg_only";
 								}
 							$stmt="INSERT INTO vicidial_inbound_group_agents(user,group_id $rank_BEGIN_SQL $grade_BEGIN_SQL) SELECT '$agent_user',group_id $rank_MID_SQL $grade_MID_SQL from vicidial_inbound_groups $ingrp_rg_onlySQL ON DUPLICATE KEY UPDATE $rank_END_SQL $grade_END_SQL;";
@@ -3819,11 +3827,16 @@ if ($function == 'update_user')
 							$affected_rows = mysqli_affected_rows($link);
 							if ($DB) {echo "|$stmt|$affected_rows|\n";}
 
+							$stmtB="UPDATE vicidial_live_inbound_agents set group_weight='$ingroup_rank', group_grade='$ingroup_grade' where user='$agent_user' $ingrp_rg_only_andSQL;";
+							$rslt=mysql_to_mysqli($stmtB, $link);
+							$affected_rowsB = mysqli_affected_rows($link);
+							if ($DB) {echo "|$stmtB|$affected_rowsB|\n";}
+
 							### LOG INSERTION Admin Log Table ###
-							$SQL_log = "$stmt|";
+							$SQL_log = "$stmt|$stmtB|";
 							$SQL_log = preg_replace('/;/', '', $SQL_log);
 							$SQL_log = addslashes($SQL_log);
-							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$agent_user', event_code='ADMIN API UPDATE USER RANK', event_sql=\"$SQL_log\", event_notes='user: $agent_user|rank: $ingroup_rank|grade: $ingroup_grade|rows: $affected_rows$ingrp_rg_onlyNOTE';";
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$agent_user', event_code='ADMIN API UPDATE USER RANK', event_sql=\"$SQL_log\", event_notes='user: $agent_user|rank: $ingroup_rank|grade: $ingroup_grade|rows: $affected_rows|$affected_rowsB|$ingrp_rg_onlyNOTE';";
 							if ($DB) {echo "|$stmt|\n";}
 							$rslt=mysql_to_mysqli($stmt, $link);
 

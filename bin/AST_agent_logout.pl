@@ -21,7 +21,7 @@
 #	15 16 * * 6 /usr/share/astguiclient/AST_agent_logout.pl --debugX
 #
 #	## Every minute between 9:15AM and 10:15PM Monday-Friday with settings container defined
-#	* 9,10,11,12,13,14,15,16,17,18,19,20,21,22 * * 1,2,3,4,5 /usr/share/astguiclient/AST_agent_logout.pl --debugX --container=XXX
+#	* 9,10,11,12,13,14,15,16,17,18,19,20,21,22 * * 1,2,3,4,5 /usr/share/astguiclient/AST_agent_logout.pl --container=XXX
 #
 # EXAMPLE Settings Container Entry:
 #   dial_prefix => 444
