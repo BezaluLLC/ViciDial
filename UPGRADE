@@ -675,6 +675,10 @@ OTHER CHANGES:
 187. Added CID Group Failover setting for campaigns, to allow for backup CID
 	Group to use if no AREACODE or STATE match found from first CID Group.
 
+188. Added agc/dispo_list_quota.php script to deactivate lists once a limit of
+	the number of leads matching set statuses is reached. See the comments
+	in the code for more details.
+
 
 
 

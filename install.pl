@@ -44,6 +44,7 @@
 # 160101-0907 - Changed ip_relay code to look for installed package
 # 170915-1458 - Added Asterisk 13 compability pieces
 # 190530-1511 - Added 'S' keepalive option
+# 210813-0925 - Added Asteirsk 16 option
 #
 
 ############################################
@@ -207,7 +208,7 @@ if (length($ARGV[0])>1)
 		print "     8 - ip_relay (used for blind agent monitoring)\n";
 		print "     9 - Timeclock auto-logout\n";
 		print "     E - Email processor, (If multi-server system, this must only be on one server)\n";
-		print "     S - SIP Logger (Patched Asterisk 13 required)\n";
+		print "     S - SIP Logger (Patched Asterisk 13 or higher required)\n";
 		print "  [--asterisk_version] = set the asterisk version you want to install for\n";
 		print "  [--copy_sample_conf_files] = copies the sample conf files to /etc/asterisk/\n";
 		print "  [--web-languages] = copy language translations (WARNING! may not work on trunk installs)\n";
@@ -1822,7 +1823,7 @@ else
 			print " 8 - ip_relay (used for blind agent monitoring)\n";
 			print " 9 - Timeclock auto logout\n";
 			print " E - Email processor, (If multi-server system, this must only be on one server)\n";
-			print " S - SIP Logger (Patched Asterisk 13 required)\n";
+			print " S - SIP Logger (Patched Asterisk 13 or higher required)\n";
 			print "Enter active keepalives or press enter for default: [$VARactive_keepalives] ";
 			$PROMPTactive_keepalives = <STDIN>;
 			chomp($PROMPTactive_keepalives);
@@ -1850,6 +1851,7 @@ else
 			print " 1.8\n";
 			print " 11.X\n";
 			print " 13.X\n";
+			print " 16.X\n";
 			print "Enter asterisk version or press enter for default: [$VARasterisk_version] ";
 			$PROMPTasterisk_version = <STDIN>;
 			chomp($PROMPTasterisk_version);
@@ -2428,7 +2430,7 @@ print conf "#  7 - AST_VDauto_dial_FILL (only for multi-server, this must only b
 print conf "#  8 - ip_relay (used for blind agent monitoring)\n";
 print conf "#  9 - Timeclock auto logout, (If multi-server system, this must only be on one server)\n";
 print conf "#  E - Email processor, (If multi-server system, this must only be on one server)\n";
-print conf "#  S - SIP Logger (Patched Asterisk 13 required)\n";
+print conf "#  S - SIP Logger (Patched Asterisk 13 or higher required)\n";
 print conf "VARactive_keepalives => $VARactive_keepalives\n";
 print conf "\n";
 print conf "# Asterisk version VICIDIAL is installed for\n";
@@ -2655,7 +2657,7 @@ if ( ($PROMPTcopy_conf_files =~ /y/i) || ($CLIcopy_conf_files =~ /y/i) )
 			}
 		else
 			{
-			if ($VARasterisk_version =~ /^13/)
+			if ($VARasterisk_version =~ /^13|^16/)
 				{
 				`cp -f ./docs/conf_examples/extensions.conf.sample-13 /etc/asterisk/extensions.conf`;
 				`cp -f ./docs/conf_examples/iax.conf.sample-1.4 /etc/asterisk/iax.conf`;
