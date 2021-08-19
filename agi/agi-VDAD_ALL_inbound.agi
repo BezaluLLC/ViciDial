@@ -245,6 +245,7 @@
 # 210325-2200 - Added populate_lead_comments option
 # 210609-0941 - Added drop_call_seconds_override option
 # 210804-0711 - Fix for closing time action issue #1321
+# 210819-0029 - Added vicidial_inbound_caller_codes logging
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -492,6 +493,9 @@ if ($callerid !~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d|^Y\d\d\d\d\d\d\d\d\d\
 	if ( (!$callerid) or ($callerid =~ /unknown/) )
 		{$callerid = $calleridname;}
 	}
+$prev_callerid = $callerid;
+if ($calleridname =~ /^J\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
+	{$prev_callerid = $calleridname;}
 
 ##### find out if this call is already in the vicidial_log_extended table
 #$VLEcount=0;
@@ -1772,6 +1776,11 @@ if ( ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $c
 			$dbhP=$dbhA;   $mysql_count='02145';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 		if ($AGILOG) {$agi_string = "--  AH VLE insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
 		$VLEcount++;
+
+		$stmtA = "INSERT INTO vicidial_inbound_caller_codes set uniqueid='$uniqueid',server_ip='$VARserver_ip',call_date='$now_date',lead_id = '$insert_lead_id',caller_code='$NACqueryCID',prev_caller_code='$prev_callerid',group_id='$channel_group';";
+		$affected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "--  AH VICC insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
 		}
 
 	if ($enable_drop_lists > 0) 
@@ -2345,6 +2354,11 @@ if ($VLEcount < 1)
 		$dbhP=$dbhA;   $mysql_count='02147';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 	if ($AGILOG) {$agi_string = "--  ENTER QUEUE VLE insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
 	$VLEcount++;
+
+	$stmtA = "INSERT INTO vicidial_inbound_caller_codes set uniqueid='$uniqueid',server_ip='$VARserver_ip',call_date='$now_date',lead_id = '$insert_lead_id',caller_code='$callerid',prev_caller_code='$prev_callerid',group_id='$channel_group';";
+	$affected_rows = $dbhA->do($stmtA);
+		$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+	if ($AGILOG) {$agi_string = "--  ENTER QUEUE VICC insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
 	}
 
 
@@ -4730,6 +4744,11 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					$dbhP=$dbhA;   $mysql_count='02146';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 				if ($AGILOG) {$agi_string = "--  ACFLTR VLE insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
 				$VLEcount++;
+
+				$stmtA = "INSERT INTO vicidial_inbound_caller_codes set uniqueid='$uniqueid',server_ip='$VARserver_ip',call_date='$now_date',lead_id = '$insert_lead_id',caller_code='$NACqueryCID',prev_caller_code='$prev_callerid',group_id='$channel_group';";
+				$affected_rows = $dbhA->do($stmtA);
+					$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+				if ($AGILOG) {$agi_string = "--  ACFLTR VICC insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
 				}
 
 			if ($enable_drop_lists > 0) 
@@ -8581,6 +8600,11 @@ sub no_agent_no_queue_process
 				$dbhP=$dbhA;   $mysql_count='02146';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
 			if ($AGILOG) {$agi_string = "--  NANQUE VLE insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
 			$VLEcount++;
+
+			$stmtA = "INSERT INTO vicidial_inbound_caller_codes set uniqueid='$uniqueid',server_ip='$VARserver_ip',call_date='$now_date',lead_id = '$insert_lead_id',caller_code='$NACqueryCID',prev_caller_code='$prev_callerid',group_id='$channel_group';";
+			$affected_rows = $dbhA->do($stmtA);
+				$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$affected_rows;   &mysql_error_logging;
+			if ($AGILOG) {$agi_string = "--  NANQUE VICC insert: |$affected_rows|\n|$stmtA|";   &agi_output;}
 			}
 
 		if ($enable_drop_lists > 0) 
