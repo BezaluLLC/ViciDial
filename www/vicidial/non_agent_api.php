@@ -182,10 +182,11 @@
 # 210625-1421 - Added BARGESWAP option to blind_monitor function
 # 210701-2050 - Added ingroup_rank/ingroup_grade options to the update_user function
 # 210812-2640 - Added update of live agent records for ingroup_rank/ingroup_grade in the update_user function
+# 210823-0918 - Fix for security issue
 #
 
-$version = '2.14-159';
-$build = '210812-2640';
+$version = '2.14-160';
+$build = '210823-0918';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -708,6 +709,7 @@ if ($non_latin < 1)
 	$DB=preg_replace('/[^0-9]/','',$DB);
 	$user=preg_replace('/[^-_0-9a-zA-Z]/','',$user);
 	$pass=preg_replace('/[^-_0-9a-zA-Z]/','',$pass);
+	$agent_user=preg_replace('/[^-_0-9a-zA-Z]/','',$agent_user);
 	$function = preg_replace('/[^-\_0-9a-zA-Z]/', '',$function);
 	$format = preg_replace('/[^0-9a-zA-Z]/','',$format);
 	$entry_list_id = preg_replace('/[^0-9]/','',$entry_list_id);
@@ -928,11 +930,12 @@ if ($non_latin < 1)
 	}
 else
 	{
-	$user = preg_replace("/'|\"|\\\\|;|#/","",$user);
-	$pass = preg_replace("/'|\"|\\\\|;|#/","",$pass);
-	$source = preg_replace("/'|\"|\\\\|;|#/","",$source);
-	$source_user = preg_replace("/'|\"|\\\\|;|#/","",$source_user);
-	$menu_id = preg_replace("/'|\"|\\\\|;|#/",'',$menu_id);
+	$user = preg_replace('/[^-_0-9\p{L}]/u',"",$user);
+	$pass = preg_replace('/[^-_0-9\p{L}]/u',"",$pass);
+	$agent_user=preg_replace('/[^-_0-9\p{L}]/u','',$agent_user);
+	$source = preg_replace('/[^-_0-9\p{L}]/u',"",$source);
+	$source_user = preg_replace('/[^-_0-9\p{L}]/u',"",$source_user);
+	$menu_id = preg_replace('/[^-_0-9\p{L}]/u','',$menu_id);
 	}
 $list_id = preg_replace('/[^-_0-9a-zA-Z]/','',$list_id);
 $list_id_field = preg_replace('/[^0-9]/','',$list_id_field);
