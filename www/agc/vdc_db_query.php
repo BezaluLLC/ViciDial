@@ -516,10 +516,11 @@
 # 210718-0936 - Fixes for 24-Hour Call Count Limits with standard Auto-Alt-Dialing
 # 210719-1120 - Added new state override options for 24-Hour Call Count Limits
 # 210729-2136 - Added cid_group_id_two campaign setting
+# 210822-2111 - Fix for manual dial lead search with phone_code, Issue #1322
 #
 
-$version = '2.14-409';
-$build = '210729-2136';
+$version = '2.14-410';
+$build = '210822-2111';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=865;
@@ -2341,7 +2342,9 @@ if ($ACTION == 'manDiaLnextCaLL')
 						}
 					else
 						{
-						$stmt="SELECT lead_id FROM vicidial_list where phone_number='$phone_number' $manual_dial_search_filterSQL order by modify_date desc LIMIT 1;";
+						$phone_codeSQL='';
+						if (strlen($phone_code) > 0) {$phone_codeSQL = "and phone_code='$phone_code'";}
+						$stmt="SELECT lead_id FROM vicidial_list where phone_number='$phone_number' $phone_codeSQL $manual_dial_search_filterSQL order by modify_date desc LIMIT 1;";
 						$rslt=mysql_to_mysqli($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00362',$user,$server_ip,$session_name,$one_mysql_log);}
 						if ($DB) {echo "$stmt\n";}
@@ -2349,7 +2352,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 						if ( ($man_leadID_ct < 1) and ( (preg_match("/WITH_ALT/",$manual_dial_search_filter)) or (preg_match("/NONE_WITH_ALT/",$manual_dial_filter)) ) )
 							{
-							$stmt="SELECT lead_id FROM vicidial_list where alt_phone='$phone_number' $manual_dial_search_filterSQL order by modify_date desc LIMIT 1;";
+							$stmt="SELECT lead_id FROM vicidial_list where alt_phone='$phone_number' $phone_codeSQL $manual_dial_search_filterSQL order by modify_date desc LIMIT 1;";
 							$rslt=mysql_to_mysqli($stmt, $link);
 								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00617',$user,$server_ip,$session_name,$one_mysql_log);}
 							if ($DB) {echo "$stmt\n";}
@@ -2358,7 +2361,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 							if ( ($man_leadID_ct < 1) and ( (preg_match("/WITH_ALT_ADDR3/",$manual_dial_search_filter)) or (preg_match("/NONE_WITH_ALT_ADDR3/",$manual_dial_filter)) ) )
 								{
-								$stmt="SELECT lead_id FROM vicidial_list where address3='$phone_number' $manual_dial_search_filterSQL order by modify_date desc LIMIT 1;";
+								$stmt="SELECT lead_id FROM vicidial_list where address3='$phone_number' $phone_codeSQL $manual_dial_search_filterSQL order by modify_date desc LIMIT 1;";
 								$rslt=mysql_to_mysqli($stmt, $link);
 									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00618',$user,$server_ip,$session_name,$one_mysql_log);}
 								if ($DB) {echo "$stmt\n";}
