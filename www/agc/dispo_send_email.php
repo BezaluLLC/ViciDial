@@ -44,6 +44,7 @@
 # 210615-1033 - Default security fixes, CVE-2021-28854
 # 210616-2044 - Added optional CORS support, see options.php for details
 # 210823-1623 - Fix for security issue, removed absolute path attachments, now must be in "agc/attachments" directory
+# 210823-1947 - Fix to allow for legacy attachment file locations in "agc" directory
 #
 
 $api_script = 'send_email';
@@ -148,6 +149,7 @@ $email_format = 'TEXT';
 $email_charset = 'iso-8859-1';
 #$email_attachment_path = '/dev/null';
 $email_attachment_path = './attachments';
+$email_attachment_path_legacy = '.';
 
 # filter variables
 $user=preg_replace("/\'|\"|\\\\|;| |\|/","",$user);
@@ -791,8 +793,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_1) > 4)
 							{
 							$PATHemail_attachment_1 = "$email_attachment_path/$email_attachment_1";
-							if (file_exists($PATHemail_attachment_1))
+							$PATHLEGemail_attachment_1 = "$email_attachment_path_legacy/$email_attachment_1";
+							if ( (file_exists($PATHemail_attachment_1)) or (file_exists($PATHLEGemail_attachment_1)) )
 								{
+								if (!file_exists($PATHemail_attachment_1)) {$PATHemail_attachment_1 = $PATHLEGemail_attachment_1;}
 								$filename_1 = basename($email_attachment_1);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_1);
@@ -828,8 +832,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_2) > 4)
 							{
 							$PATHemail_attachment_2 = "$email_attachment_path/$email_attachment_2";
-							if (file_exists($PATHemail_attachment_2))
+							$PATHLEGemail_attachment_2 = "$email_attachment_path_legacy/$email_attachment_2";
+							if ( (file_exists($PATHemail_attachment_2)) or (file_exists($PATHLEGemail_attachment_2)) )
 								{
+								if (!file_exists($PATHemail_attachment_2)) {$PATHemail_attachment_2 = $PATHLEGemail_attachment_2;}
 								$filename_2 = basename($email_attachment_2);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_2);
@@ -865,8 +871,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_3) > 4)
 							{
 							$PATHemail_attachment_3 = "$email_attachment_path/$email_attachment_3";
-							if (file_exists($PATHemail_attachment_3))
+							$PATHLEGemail_attachment_3 = "$email_attachment_path_legacy/$email_attachment_3";
+							if ( (file_exists($PATHemail_attachment_3)) or (file_exists($PATHLEGemail_attachment_3)) )
 								{
+								if (!file_exists($PATHemail_attachment_3)) {$PATHemail_attachment_3 = $PATHLEGemail_attachment_3;}
 								$filename_3 = basename($email_attachment_3);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_3);
@@ -902,8 +910,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_4) > 4)
 							{
 							$PATHemail_attachment_4 = "$email_attachment_path/$email_attachment_4";
-							if (file_exists($PATHemail_attachment_4))
+							$PATHLEGemail_attachment_4 = "$email_attachment_path_legacy/$email_attachment_4";
+							if ( (file_exists($PATHemail_attachment_4)) or (file_exists($PATHLEGemail_attachment_4)) )
 								{
+								if (!file_exists($PATHemail_attachment_4)) {$PATHemail_attachment_4 = $PATHLEGemail_attachment_4;}
 								$filename_4 = basename($email_attachment_4);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_4);
@@ -939,8 +949,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_5) > 4)
 							{
 							$PATHemail_attachment_5 = "$email_attachment_path/$email_attachment_5";
-							if (file_exists($PATHemail_attachment_5))
+							$PATHLEGemail_attachment_5 = "$email_attachment_path_legacy/$email_attachment_5";
+							if ( (file_exists($PATHemail_attachment_5)) or (file_exists($PATHLEGemail_attachment_5)) )
 								{
+								if (!file_exists($PATHemail_attachment_5)) {$PATHemail_attachment_5 = $PATHLEGemail_attachment_5;}
 								$filename_5 = basename($email_attachment_5);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_5);
@@ -976,8 +988,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_6) > 4)
 							{
 							$PATHemail_attachment_6 = "$email_attachment_path/$email_attachment_6";
-							if (file_exists($PATHemail_attachment_6))
+							$PATHLEGemail_attachment_6 = "$email_attachment_path_legacy/$email_attachment_6";
+							if ( (file_exists($PATHemail_attachment_6)) or (file_exists($PATHLEGemail_attachment_6)) )
 								{
+								if (!file_exists($PATHemail_attachment_6)) {$PATHemail_attachment_6 = $PATHLEGemail_attachment_6;}
 								$filename_6 = basename($email_attachment_6);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_6);
@@ -1013,8 +1027,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_7) > 4)
 							{
 							$PATHemail_attachment_7 = "$email_attachment_path/$email_attachment_7";
-							if (file_exists($PATHemail_attachment_7))
+							$PATHLEGemail_attachment_7 = "$email_attachment_path_legacy/$email_attachment_7";
+							if ( (file_exists($PATHemail_attachment_7)) or (file_exists($PATHLEGemail_attachment_7)) )
 								{
+								if (!file_exists($PATHemail_attachment_7)) {$PATHemail_attachment_7 = $PATHLEGemail_attachment_7;}
 								$filename_7 = basename($email_attachment_7);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_7);
@@ -1050,8 +1066,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_8) > 4)
 							{
 							$PATHemail_attachment_8 = "$email_attachment_path/$email_attachment_8";
-							if (file_exists($PATHemail_attachment_8))
+							$PATHLEGemail_attachment_8 = "$email_attachment_path_legacy/$email_attachment_8";
+							if ( (file_exists($PATHemail_attachment_8)) or (file_exists($PATHLEGemail_attachment_8)) )
 								{
+								if (!file_exists($PATHemail_attachment_8)) {$PATHemail_attachment_8 = $PATHLEGemail_attachment_8;}
 								$filename_8 = basename($email_attachment_8);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_8);
@@ -1087,8 +1105,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_9) > 4)
 							{
 							$PATHemail_attachment_9 = "$email_attachment_path/$email_attachment_9";
-							if (file_exists($PATHemail_attachment_9))
+							$PATHLEGemail_attachment_9 = "$email_attachment_path_legacy/$email_attachment_9";
+							if ( (file_exists($PATHemail_attachment_9)) or (file_exists($PATHLEGemail_attachment_9)) )
 								{
+								if (!file_exists($PATHemail_attachment_9)) {$PATHemail_attachment_9 = $PATHLEGemail_attachment_9;}
 								$filename_9 = basename($email_attachment_9);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_9);
@@ -1124,8 +1144,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_10) > 4)
 							{
 							$PATHemail_attachment_10 = "$email_attachment_path/$email_attachment_10";
-							if (file_exists($PATHemail_attachment_10))
+							$PATHLEGemail_attachment_10 = "$email_attachment_path_legacy/$email_attachment_10";
+							if ( (file_exists($PATHemail_attachment_10)) or (file_exists($PATHLEGemail_attachment_10)) )
 								{
+								if (!file_exists($PATHemail_attachment_10)) {$PATHemail_attachment_10 = $PATHLEGemail_attachment_10;}
 								$filename_10 = basename($email_attachment_10);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_10);
@@ -1161,8 +1183,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_11) > 4)
 							{
 							$PATHemail_attachment_11 = "$email_attachment_path/$email_attachment_11";
-							if (file_exists($PATHemail_attachment_11))
+							$PATHLEGemail_attachment_11 = "$email_attachment_path_legacy/$email_attachment_11";
+							if ( (file_exists($PATHemail_attachment_11)) or (file_exists($PATHLEGemail_attachment_11)) )
 								{
+								if (!file_exists($PATHemail_attachment_11)) {$PATHemail_attachment_11 = $PATHLEGemail_attachment_11;}
 								$filename_11 = basename($email_attachment_11);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_11);
@@ -1198,8 +1222,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_12) > 4)
 							{
 							$PATHemail_attachment_12 = "$email_attachment_path/$email_attachment_12";
-							if (file_exists($PATHemail_attachment_12))
+							$PATHLEGemail_attachment_12 = "$email_attachment_path_legacy/$email_attachment_12";
+							if ( (file_exists($PATHemail_attachment_12)) or (file_exists($PATHLEGemail_attachment_12)) )
 								{
+								if (!file_exists($PATHemail_attachment_12)) {$PATHemail_attachment_12 = $PATHLEGemail_attachment_12;}
 								$filename_12 = basename($email_attachment_12);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_12);
@@ -1235,8 +1261,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_13) > 4)
 							{
 							$PATHemail_attachment_13 = "$email_attachment_path/$email_attachment_13";
-							if (file_exists($PATHemail_attachment_13))
+							$PATHLEGemail_attachment_13 = "$email_attachment_path_legacy/$email_attachment_13";
+							if ( (file_exists($PATHemail_attachment_13)) or (file_exists($PATHLEGemail_attachment_13)) )
 								{
+								if (!file_exists($PATHemail_attachment_13)) {$PATHemail_attachment_13 = $PATHLEGemail_attachment_13;}
 								$filename_13 = basename($email_attachment_13);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_13);
@@ -1272,8 +1300,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_14) > 4)
 							{
 							$PATHemail_attachment_14 = "$email_attachment_path/$email_attachment_14";
-							if (file_exists($PATHemail_attachment_14))
+							$PATHLEGemail_attachment_14 = "$email_attachment_path_legacy/$email_attachment_14";
+							if ( (file_exists($PATHemail_attachment_14)) or (file_exists($PATHLEGemail_attachment_14)) )
 								{
+								if (!file_exists($PATHemail_attachment_14)) {$PATHemail_attachment_14 = $PATHLEGemail_attachment_14;}
 								$filename_14 = basename($email_attachment_14);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_14);
@@ -1309,8 +1339,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_15) > 4)
 							{
 							$PATHemail_attachment_15 = "$email_attachment_path/$email_attachment_15";
-							if (file_exists($PATHemail_attachment_15))
+							$PATHLEGemail_attachment_15 = "$email_attachment_path_legacy/$email_attachment_15";
+							if ( (file_exists($PATHemail_attachment_15)) or (file_exists($PATHLEGemail_attachment_15)) )
 								{
+								if (!file_exists($PATHemail_attachment_15)) {$PATHemail_attachment_15 = $PATHLEGemail_attachment_15;}
 								$filename_15 = basename($email_attachment_15);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_15);
@@ -1346,8 +1378,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_16) > 4)
 							{
 							$PATHemail_attachment_16 = "$email_attachment_path/$email_attachment_16";
-							if (file_exists($PATHemail_attachment_16))
+							$PATHLEGemail_attachment_16 = "$email_attachment_path_legacy/$email_attachment_16";
+							if ( (file_exists($PATHemail_attachment_16)) or (file_exists($PATHLEGemail_attachment_16)) )
 								{
+								if (!file_exists($PATHemail_attachment_16)) {$PATHemail_attachment_16 = $PATHLEGemail_attachment_16;}
 								$filename_16 = basename($email_attachment_16);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_16);
@@ -1383,8 +1417,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_17) > 4)
 							{
 							$PATHemail_attachment_17 = "$email_attachment_path/$email_attachment_17";
-							if (file_exists($PATHemail_attachment_17))
+							$PATHLEGemail_attachment_17 = "$email_attachment_path_legacy/$email_attachment_17";
+							if ( (file_exists($PATHemail_attachment_17)) or (file_exists($PATHLEGemail_attachment_17)) )
 								{
+								if (!file_exists($PATHemail_attachment_17)) {$PATHemail_attachment_17 = $PATHLEGemail_attachment_17;}
 								$filename_17 = basename($email_attachment_17);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_17);
@@ -1420,8 +1456,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_18) > 4)
 							{
 							$PATHemail_attachment_18 = "$email_attachment_path/$email_attachment_18";
-							if (file_exists($PATHemail_attachment_18))
+							$PATHLEGemail_attachment_18 = "$email_attachment_path_legacy/$email_attachment_18";
+							if ( (file_exists($PATHemail_attachment_18)) or (file_exists($PATHLEGemail_attachment_18)) )
 								{
+								if (!file_exists($PATHemail_attachment_18)) {$PATHemail_attachment_18 = $PATHLEGemail_attachment_18;}
 								$filename_18 = basename($email_attachment_18);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_18);
@@ -1457,8 +1495,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_19) > 4)
 							{
 							$PATHemail_attachment_19 = "$email_attachment_path/$email_attachment_19";
-							if (file_exists($PATHemail_attachment_19))
+							$PATHLEGemail_attachment_19 = "$email_attachment_path_legacy/$email_attachment_19";
+							if ( (file_exists($PATHemail_attachment_19)) or (file_exists($PATHLEGemail_attachment_19)) )
 								{
+								if (!file_exists($PATHemail_attachment_19)) {$PATHemail_attachment_19 = $PATHLEGemail_attachment_19;}
 								$filename_19 = basename($email_attachment_19);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_19);
@@ -1494,8 +1534,10 @@ if ($match_found > 0)
 						if (strlen($email_attachment_20) > 4)
 							{
 							$PATHemail_attachment_20 = "$email_attachment_path/$email_attachment_20";
-							if (file_exists($PATHemail_attachment_20))
+							$PATHLEGemail_attachment_20 = "$email_attachment_path_legacy/$email_attachment_20";
+							if ( (file_exists($PATHemail_attachment_20)) or (file_exists($PATHLEGemail_attachment_20)) )
 								{
+								if (!file_exists($PATHemail_attachment_20)) {$PATHemail_attachment_20 = $PATHLEGemail_attachment_20;}
 								$filename_20 = basename($email_attachment_20);
 								// Read the file content
 								$file_size = filesize($PATHemail_attachment_20);
