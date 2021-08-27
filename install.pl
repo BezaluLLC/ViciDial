@@ -2,7 +2,7 @@
 
 # install.pl version 2.14
 #
-# Copyright (C) 2019  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 
 # CHANGES
@@ -45,6 +45,7 @@
 # 170915-1458 - Added Asterisk 13 compability pieces
 # 190530-1511 - Added 'S' keepalive option
 # 210813-0925 - Added Asteirsk 16 option
+# 210827-0926 - Added PJSIP default conf files to Asterisk 16 install
 #
 
 ############################################
@@ -82,7 +83,7 @@ $VARDB_port =	'3306';
 # default keepalive processes: 
 $VARactive_keepalives =		'1234568';
 # default Asterisk version: 
-$VARasterisk_version =		'1.4';
+$VARasterisk_version =		'13.X';
 # default recording FTP archive variables:
 $VARFTP_host = '10.0.0.4';
 $VARFTP_user = 'cron';
@@ -2657,21 +2658,34 @@ if ( ($PROMPTcopy_conf_files =~ /y/i) || ($CLIcopy_conf_files =~ /y/i) )
 			}
 		else
 			{
-			if ($VARasterisk_version =~ /^13|^16/)
+			if ($VARasterisk_version =~ /^13/)
 				{
 				`cp -f ./docs/conf_examples/extensions.conf.sample-13 /etc/asterisk/extensions.conf`;
 				`cp -f ./docs/conf_examples/iax.conf.sample-1.4 /etc/asterisk/iax.conf`;
-				`cp -f ./docs/conf_examples/sip.conf.sample-1.4 /etc/asterisk/sip.conf`;
+				`cp -f ./docs/conf_examples/sip.conf.sample-13 /etc/asterisk/sip.conf`;
 				`cp -f ./docs/conf_examples/manager.conf.sample-13 /etc/asterisk/manager.conf`;
 				`cp -f ./docs/conf_examples/voicemail.conf.sample-1.8 /etc/asterisk/voicemail.conf`;
 				}
 			else
 				{
-				`cp -f ./docs/conf_examples/extensions.conf.sample-1.4 /etc/asterisk/extensions.conf`;
-				`cp -f ./docs/conf_examples/iax.conf.sample-1.4 /etc/asterisk/iax.conf`;
-				`cp -f ./docs/conf_examples/sip.conf.sample-1.4 /etc/asterisk/sip.conf`;
-				`cp -f ./docs/conf_examples/manager.conf.sample /etc/asterisk/manager.conf`;
-				`cp -f ./docs/conf_examples/voicemail.conf.sample /etc/asterisk/voicemail.conf`;
+				if ($VARasterisk_version =~ /^16/)
+					{
+					`cp -f ./docs/conf_examples/extensions.conf.sample-13 /etc/asterisk/extensions.conf`;
+					`cp -f ./docs/conf_examples/iax.conf.sample-1.4 /etc/asterisk/iax.conf`;
+					`cp -f ./docs/conf_examples/sip.conf.sample-13 /etc/asterisk/sip.conf`;
+					`cp -f ./docs/conf_examples/manager.conf.sample-13 /etc/asterisk/manager.conf`;
+					`cp -f ./docs/conf_examples/voicemail.conf.sample-1.8 /etc/asterisk/voicemail.conf`;
+					`cp -f ./docs/conf_examples/pjsip.conf.sample-16 /etc/asterisk/pjsip.conf`;
+					`cp -f ./docs/conf_examples/pjsip_wizard.conf.sample-16 /etc/asterisk/pjsip_wizard.conf`;
+					}
+				else
+					{
+					`cp -f ./docs/conf_examples/extensions.conf.sample-1.4 /etc/asterisk/extensions.conf`;
+					`cp -f ./docs/conf_examples/iax.conf.sample-1.4 /etc/asterisk/iax.conf`;
+					`cp -f ./docs/conf_examples/sip.conf.sample-1.4 /etc/asterisk/sip.conf`;
+					`cp -f ./docs/conf_examples/manager.conf.sample /etc/asterisk/manager.conf`;
+					`cp -f ./docs/conf_examples/voicemail.conf.sample /etc/asterisk/voicemail.conf`;
+					}
 				}
 			}
 		}
