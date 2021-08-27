@@ -10147,15 +10147,20 @@ if ($ADD==11111111111)
 #		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>Company: </td><td align=left><input type=text name=company size=10 maxlength=10>$NWB#phones-company$NWE</td></tr>\n";
 #		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>Picture: </td><td align=left><input type=text name=picture size=20 maxlength=19>$NWB#phones-picture$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Client Protocol").": </td><td align=left><select size=1 name=protocol>";
+		$SIP_selected=0;
 		if ($dps["protocol"])
 			{
-			echo "<option value='".$dps["protocol"]."' selected>".$dps["protocol"]."</option><option>SIP</option>";
+			echo "<option value='".$dps["protocol"]."' SELECTED>".$dps["protocol"]."</option>";
+			if ( ($SSallowed_sip_stacks == 'SIP') or ($SSallowed_sip_stacks == 'SIP_and_PJSIP') ) {echo "<option>SIP</option>";}
+			$SIP_selected++;
 			}
 		else
 			{
-			echo "<option SELECTED>SIP</option>";
+			if ( ($SSallowed_sip_stacks == 'SIP') or ($SSallowed_sip_stacks == 'SIP_and_PJSIP') ) {echo "<option SELECTED>SIP</option>";   $SIP_selected++;}
 			}
-		if ( ($SSallowed_sip_stacks == 'PJSIP') or ($SSallowed_sip_stacks == 'SIP_and_PJSIP') ) {echo "<option>PJSIP</option>";}
+		$PJSIP_selected='';
+		if ($SIP_selected < 1) {$PJSIP_selected = ' SELECTED';}
+		if ( ($SSallowed_sip_stacks == 'PJSIP') or ($SSallowed_sip_stacks == 'SIP_and_PJSIP') ) {echo "<option$PJSIP_selected>PJSIP</option>";}
 		echo "<option>Zap</option><option>IAX2</option><option value='EXTERNAL'>"._QXZ("EXTERNAL")."</option><option>DAHDI</option></select>$NWB#phones-protocol$NWE</td></tr>\n";
 		if ($dps["local_gmt"])
 			{
