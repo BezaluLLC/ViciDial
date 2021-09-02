@@ -5707,12 +5707,13 @@ if ($SSscript_remove_js > 0)
 # 210804-0712 - Fix for closing time action issue #1321
 # 210812-1609 - Added 'Phone Stats' to report permissions list
 # 210827-0753 - Added allowed_sip_stacks system setting and PJSIP Phone and Carrier options
+# 210901-2051 - Fix for User Modify page issue
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-826a';
-$build = '210827-0753';
+$admin_version = '2.14-827a';
+$build = '210901-2051';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -24593,18 +24594,18 @@ if ($ADD==3)
 				else
 					{echo "<tr bgcolor=#$SSstd_row2_background><td colspan=2><input type=hidden name=admin_cf_show_hidden value=\"$admin_cf_show_hidden\"></td></tr>\n";}
 
+				echo "<tr bgcolor=#$SSmenu_background><td colspan=2 align=center><font color=white><B>"._QXZ("SECURITY OPTIONS, Only enable if needed").":</td></tr>\n";
 				if ($SSallow_ip_lists > 0)
 					{
-					echo "<tr bgcolor=#$SSmenu_background><td colspan=2 align=center><font color=white><B>"._QXZ("SECURITY OPTIONS, Only enable if needed").":</td></tr>\n";
 					echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Modify IP Lists").": </td><td align=left><select size=1 name=modify_ip_lists><option>0</option><option>1</option><option SELECTED>$modify_ip_lists</option></select>$NWB#users-modify_ip_lists$NWE</td></tr>\n";
 					echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Ignore IP List").": </td><td align=left><select size=1 name=ignore_ip_list><option>0</option><option>1</option><option SELECTED>$ignore_ip_list</option></select>$NWB#users-ignore_ip_lists$NWE</td></tr>\n";
 					# <option value=\"ENABLED\">"._QXZ("ENABLED")."</option>
-					echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Two Factor Auth Override").": </td><td align=left><select size=1 name=two_factor_override><option value=\"NOT_ACTIVE\">"._QXZ("NOT_ACTIVE")."</option><option value=\"DISABLED\">"._QXZ("DISABLED")."</option><option SELECTED value=\"$two_factor_override\">"._QXZ("$two_factor_override")."</option></select>$NWB#users-two_factor_override$NWE</td></tr>\n";
 					}
 				else
 					{
 					echo "<tr bgcolor=#$SSstd_row2_background><td align=right></td><td align=left><input type=hidden name=modify_ip_lists value=$modify_ip_lists><input type=hidden name=ignore_ip_list value=$ignore_ip_list></td></tr>\n";
 					}
+				echo "<tr bgcolor=#$SSstd_row2_background><td align=right>"._QXZ("Two Factor Auth Override").": </td><td align=left><select size=1 name=two_factor_override><option value=\"NOT_ACTIVE\">"._QXZ("NOT_ACTIVE")."</option><option value=\"DISABLED\">"._QXZ("DISABLED")."</option><option SELECTED value=\"$two_factor_override\">"._QXZ("$two_factor_override")."</option></select>$NWB#users-two_factor_override$NWE</td></tr>\n";
 
 				echo "<tr bgcolor=#$SSmenu_background><td colspan=2 align=center><font color=white><B>"._QXZ("API USER OPTIONS, Only enable if needed").":</td></tr>\n";
 
