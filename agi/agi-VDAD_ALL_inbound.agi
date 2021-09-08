@@ -246,6 +246,7 @@
 # 210609-0941 - Added drop_call_seconds_override option
 # 210804-0711 - Fix for closing time action issue #1321
 # 210819-0029 - Added vicidial_inbound_caller_codes logging
+# 210908-0851 - Added OWNERCUSTOMx options for call_handle_method
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -526,11 +527,11 @@ if ($extension =~ /^999\d\d\*|^998\d\d\*/)
 	### Grab DID values from the database
 	if ($route_type =~ /FILTER/) 
 		{
-		$stmtA = "SELECT filter_call_handle_method,filter_agent_search_method,filter_group_id,did_pattern,filter_list_id,filter_phone_code,filter_campaign_id,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_action,filter_voicemail_ext,filter_extension,filter_exten_context,filter_phone,filter_server_ip,filter_entry_list_id FROM vicidial_inbound_dids where did_id = '$did_id';";
+		$stmtA = "SELECT filter_call_handle_method,filter_agent_search_method,filter_group_id,did_pattern,filter_list_id,filter_phone_code,filter_campaign_id,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_action,filter_voicemail_ext,filter_extension,filter_exten_context,filter_phone,filter_server_ip,filter_entry_list_id,custom_one,custom_two,custom_three,custom_four,custom_five FROM vicidial_inbound_dids where did_id = '$did_id';";
 		}
 	else
 		{
-		$stmtA = "SELECT call_handle_method,agent_search_method,group_id,did_pattern,list_id,phone_code,campaign_id,user,user_unavailable_action,user_route_settings_ingroup,did_route,voicemail_ext,extension,exten_context,phone,server_ip,entry_list_id FROM vicidial_inbound_dids where did_id = '$did_id';";
+		$stmtA = "SELECT call_handle_method,agent_search_method,group_id,did_pattern,list_id,phone_code,campaign_id,user,user_unavailable_action,user_route_settings_ingroup,did_route,voicemail_ext,extension,exten_context,phone,server_ip,entry_list_id,custom_one,custom_two,custom_three,custom_four,custom_five FROM vicidial_inbound_dids where did_id = '$did_id';";
 		}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -556,6 +557,11 @@ if ($extension =~ /^999\d\d\*|^998\d\d\*/)
 		$did_phone =					$aryA[14];
 		$did_phone_server_ip =			$aryA[15];
 		$entry_list_id =				$aryA[16];
+		$custom_one =					$aryA[17];
+		$custom_two =					$aryA[18];
+		$custom_three =					$aryA[19];
+		$custom_four =					$aryA[20];
+		$custom_five =					$aryA[21];
 		if ($did_route =~ /AGENT/)
 			{$channel_group = $user_route_settings_ingroup;}
 		else
@@ -1364,14 +1370,28 @@ if ($call_handle_method =~ /LOOKUP/)
 				}
 			}
 
+		# populate owner field match requirements, if any
+		$ownerSQL='';
+		if ($call_handle_method =~ /OWNERCUSTOM/)
+			{
+			$temp_owner = '';
+			if ($call_handle_method =~ /OWNERCUSTOM1/) {$temp_owner = $custom_one;}
+			if ($call_handle_method =~ /OWNERCUSTOM2/) {$temp_owner = $custom_two;}
+			if ($call_handle_method =~ /OWNERCUSTOM3/) {$temp_owner = $custom_three;}
+			if ($call_handle_method =~ /OWNERCUSTOM4/) {$temp_owner = $custom_four;}
+			if ($call_handle_method =~ /OWNERCUSTOM5/) {$temp_owner = $custom_five;}
+			if ($call_handle_method =~ /OWNERCUSTOMX/) {$temp_owner = $vid_enter_filename;}
+			$ownerSQL = "and owner='$temp_owner'";
+			}
+
 		$cbc=0;
 		if ($call_handle_method =~ /^VID/) 
 			{
-			$stmtA= "SELECT lead_id,called_count,list_id from vicidial_list where vendor_lead_code='$vendor_id' $listSQL order by last_local_call_time desc limit 1;";
+			$stmtA= "SELECT lead_id,called_count,list_id from vicidial_list where vendor_lead_code='$vendor_id' $listSQL $ownerSQL order by last_local_call_time desc limit 1;";
 			}
 		else 
 			{
-			$stmtA= "SELECT lead_id,called_count,list_id from vicidial_list where phone_number='$phone_number' $listSQL order by last_local_call_time desc limit 1;";
+			$stmtA= "SELECT lead_id,called_count,list_id from vicidial_list where phone_number='$phone_number' $listSQL $ownerSQL order by last_local_call_time desc limit 1;";
 			}
 		if ($AGILOG) {$agi_string = "VDAD vicidial_list search |$phone_number|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1397,7 +1417,7 @@ if ($call_handle_method =~ /LOOKUP/)
 			$VLfound=0;
 			if ($call_handle_method =~ /ALT/) 
 				{
-				$stmtA= "SELECT lead_id,called_count,list_id from vicidial_list where alt_phone='$phone_number' $listSQL order by last_local_call_time desc limit 1;";
+				$stmtA= "SELECT lead_id,called_count,list_id from vicidial_list where alt_phone='$phone_number' $listSQL $ownerSQL order by last_local_call_time desc limit 1;";
 					if ($AGILOG) {$agi_string = "VDAD vicidial_list ALT search |$phone_number|$stmtA|";   &agi_output;}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1416,7 +1436,7 @@ if ($call_handle_method =~ /LOOKUP/)
 				}
 			if ( ($call_handle_method =~ /ADDR3/) && ($VLfound < 1) )
 				{
-				$stmtA= "SELECT lead_id,called_count,list_id from vicidial_list where address3='$phone_number' $listSQL order by last_local_call_time desc limit 1;";
+				$stmtA= "SELECT lead_id,called_count,list_id from vicidial_list where address3='$phone_number' $listSQL $ownerSQL order by last_local_call_time desc limit 1;";
 					if ($AGILOG) {$agi_string = "VDAD vicidial_list ADDR3 search |$phone_number|$stmtA|";   &agi_output;}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;

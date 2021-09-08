@@ -2215,7 +2215,7 @@ user VARCHAR(20),
 user_unavailable_action ENUM('IN_GROUP','EXTEN','VOICEMAIL','PHONE','VMAIL_NO_INST') default 'VOICEMAIL',
 user_route_settings_ingroup VARCHAR(20) default 'AGENTDIRECT',
 group_id VARCHAR(20),
-call_handle_method VARCHAR(20) default 'CID',
+call_handle_method VARCHAR(40) default 'CID',
 agent_search_method ENUM('LO','LB','SO') default 'LB',
 list_id BIGINT(14) UNSIGNED default '999',
 campaign_id VARCHAR(8),
@@ -2235,7 +2235,7 @@ filter_user VARCHAR(20),
 filter_user_unavailable_action ENUM('IN_GROUP','EXTEN','VOICEMAIL','PHONE','VMAIL_NO_INST') default 'VOICEMAIL',
 filter_user_route_settings_ingroup VARCHAR(20) default 'AGENTDIRECT',
 filter_group_id VARCHAR(20),
-filter_call_handle_method VARCHAR(20) default 'CID',
+filter_call_handle_method VARCHAR(40) default 'CID',
 filter_agent_search_method ENUM('LO','LB','SO') default 'LB',
 filter_list_id BIGINT(14) UNSIGNED default '999',
 filter_campaign_id VARCHAR(8),
@@ -5023,4 +5023,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1643',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1644',db_schema_update_date=NOW(),reload_timestamp=NOW();

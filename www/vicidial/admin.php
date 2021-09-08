@@ -5708,12 +5708,13 @@ if ($SSscript_remove_js > 0)
 # 210812-1609 - Added 'Phone Stats' to report permissions list
 # 210827-0753 - Added allowed_sip_stacks system setting and PJSIP Phone and Carrier options
 # 210901-2051 - Fix for User Modify page issue
+# 210907-1901 - Added new OWNERCUSTOMx handle methods for menu options
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-827a';
-$build = '210901-2051';
+$admin_version = '2.14-828a';
+$build = '210907-1901';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -32214,7 +32215,7 @@ if ($ADD==3111)
 			echo " <select size=1 name=IGgroup_id_no_agent_action id=IGgroup_id_no_agent_action onChange=\"dynamic_call_action_link('IGgroup_id_no_agent_action','INGROUP');\">";
 			echo "$ingroup_list<option SELECTED>$IGgroup_id</option></select>";
 			echo " &nbsp; "._QXZ("Handle Method").": <select size=1 name=IGhandle_method_$j id=IGhandle_method_$j>";
-			echo "$IGhandle_method_list<option SELECTED>$IGhandle_method</option></select>\n";
+			echo "<option SELECTED>$IGhandle_method</option>$IGhandle_method_list</select>\n";
 			echo "<BR>"._QXZ("Search Method").": <select size=1 name=IGsearch_method_$j id=IGsearch_method_$j>";
 			echo "$IGsearch_method_list<option SELECTED>$IGsearch_method</option></select>\n";
 			echo " &nbsp; "._QXZ("List ID").": <input type=text size=5 maxlength=19 name=IGlist_id_$j id=IGlist_id_$j value=\"$IGlist_id\">";
@@ -32295,7 +32296,7 @@ if ($ADD==3111)
 			echo " <select size=1 name=IGgroup_id_areacode_filter_action id=IGgroup_id_areacode_filter_action onChange=\"dynamic_call_action_link('IGgroup_id_areacode_filter_action','INGROUP');\">";
 			echo "$ingroup_list<option SELECTED>$IGgroup_id</option></select>";
 			echo " &nbsp; "._QXZ("Handle Method").": <select size=1 name=IGhandle_method_$j id=IGhandle_method_$j>";
-			echo "$IGhandle_method_list<option SELECTED>$IGhandle_method</option></select>\n";
+			echo "<option SELECTED>$IGhandle_method</option>$IGhandle_method_list</select>\n";
 			echo "<BR>"._QXZ("Search Method").": <select size=1 name=IGsearch_method_$j id=IGsearch_method_$j>";
 			echo "$IGsearch_method_list<option SELECTED>$IGsearch_method</option></select>\n";
 			echo " &nbsp; "._QXZ("List ID").": <input type=text size=5 maxlength=19 name=IGlist_id_$j id=IGlist_id_$j value=\"$IGlist_id\">";
@@ -35104,7 +35105,94 @@ if ($ADD==3311)
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"$PHP_SELF?ADD=3111&group_id=$group_id\">"._QXZ("In-Group ID")."</a>: </td><td align=left><select size=1 name=group_id>";
 			echo "$Dgroups_menu";
 			echo "</select>$NWB#inbound_dids-group_id$NWE</td></tr>\n";
-			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("In-Group Call Handle Method").": </td><td align=left><select size=1 name=call_handle_method><option value='CID'>"._QXZ("CID")."</option><option value='CIDLOOKUP'>"._QXZ("CIDLOOKUP")."</option><option value='CIDLOOKUPRL'>"._QXZ("CIDLOOKUPRL")."</option><option value='CIDLOOKUPRC'>"._QXZ("CIDLOOKUPRC")."</option><option value='CIDLOOKUPALT'>"._QXZ("CIDLOOKUPALT")."</option><option value='CIDLOOKUPRLALT'>"._QXZ("CIDLOOKUPRLALT")."</option><option value='CIDLOOKUPRCALT'>"._QXZ("CIDLOOKUPRCALT")."</option><option value='CIDLOOKUPADDR3'>"._QXZ("CIDLOOKUPADDR3")."</option><option value='CIDLOOKUPRLADDR3'>"._QXZ("CIDLOOKUPRLADDR3")."</option><option value='CIDLOOKUPRCADDR3'>"._QXZ("CIDLOOKUPRCADDR3")."</option><option value='CIDLOOKUPALTADDR3'>"._QXZ("CIDLOOKUPALTADDR3")."</option><option value='CIDLOOKUPRLALTADDR3'>"._QXZ("CIDLOOKUPRLALTADDR3")."</option><option value='CIDLOOKUPRCALTADDR3'>"._QXZ("CIDLOOKUPRCALTADDR3")."</option><option value='ANI'>"._QXZ("ANI")."</option><option value='ANILOOKUP'>"._QXZ("ANILOOKUP")."</option><option value='ANILOOKUPRL'>"._QXZ("ANILOOKUPRL")."</option><option value='VIDPROMPT'>"._QXZ("VIDPROMPT")."</option><option value='VIDPROMPTLOOKUP'>"._QXZ("VIDPROMPTLOOKUP")."</option><option value='VIDPROMPTLOOKUPRL'>"._QXZ("VIDPROMPTLOOKUPRL")."</option><option value='VIDPROMPTLOOKUPRC'>"._QXZ("VIDPROMPTLOOKUPRC")."</option><option value='CLOSER'>"._QXZ("CLOSER")."</option><option value='3DIGITID'>"._QXZ("3DIGITID")."</option><option value='4DIGITID'>"._QXZ("4DIGITID")."</option><option value='5DIGITID'>"._QXZ("5DIGITID")."</option><option value='10DIGITID'>"._QXZ("10DIGITID")."</option><option value='$call_handle_method' SELECTED>"._QXZ("$call_handle_method")."</option></select>$NWB#inbound_dids-call_handle_method$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("In-Group Call Handle Method").": </td><td align=left><select size=1 name=call_handle_method>
+			<option value='$call_handle_method' SELECTED>"._QXZ("$call_handle_method")."</option>
+			<option value='CID'>"._QXZ("CID")."</option>
+			<option value='CIDLOOKUP'>"._QXZ("CIDLOOKUP")."</option>
+			<option value='CIDLOOKUPRL'>"._QXZ("CIDLOOKUPRL")."</option>
+			<option value='CIDLOOKUPRC'>"._QXZ("CIDLOOKUPRC")."</option>
+			<option value='CIDLOOKUPALT'>"._QXZ("CIDLOOKUPALT")."</option>
+			<option value='CIDLOOKUPRLALT'>"._QXZ("CIDLOOKUPRLALT")."</option>
+			<option value='CIDLOOKUPRCALT'>"._QXZ("CIDLOOKUPRCALT")."</option>
+			<option value='CIDLOOKUPADDR3'>"._QXZ("CIDLOOKUPADDR3")."</option>
+			<option value='CIDLOOKUPRLADDR3'>"._QXZ("CIDLOOKUPRLADDR3")."</option>
+			<option value='CIDLOOKUPRCADDR3'>"._QXZ("CIDLOOKUPRCADDR3")."</option>
+			<option value='CIDLOOKUPALTADDR3'>"._QXZ("CIDLOOKUPALTADDR3")."</option>
+			<option value='CIDLOOKUPRLALTADDR3'>"._QXZ("CIDLOOKUPRLALTADDR3")."</option>
+			<option value='CIDLOOKUPRCALTADDR3'>"._QXZ("CIDLOOKUPRCALTADDR3")."</option>
+			<option value='ANI'>"._QXZ("ANI")."</option>
+			<option value='ANILOOKUP'>"._QXZ("ANILOOKUP")."</option>
+			<option value='ANILOOKUPRL'>"._QXZ("ANILOOKUPRL")."</option>
+			<option value='VIDPROMPT'>"._QXZ("VIDPROMPT")."</option>
+			<option value='VIDPROMPTLOOKUP'>"._QXZ("VIDPROMPTLOOKUP")."</option>
+			<option value='VIDPROMPTLOOKUPRL'>"._QXZ("VIDPROMPTLOOKUPRL")."</option>
+			<option value='VIDPROMPTLOOKUPRC'>"._QXZ("VIDPROMPTLOOKUPRC")."</option>
+			<option value='CLOSER'>"._QXZ("CLOSER")."</option>
+			<option value='3DIGITID'>"._QXZ("3DIGITID")."</option>
+			<option value='4DIGITID'>"._QXZ("4DIGITID")."</option>
+			<option value='5DIGITID'>"._QXZ("5DIGITID")."</option>
+			<option value='10DIGITID'>"._QXZ("10DIGITID")."</option>
+			<option value='CIDLOOKUPOWNERCUSTOM1'>"._QXZ("CIDLOOKUPOWNERCUSTOM1")."</option>
+			<option value='CIDLOOKUPRLOWNERCUSTOM1'>"._QXZ("CIDLOOKUPRLOWNERCUSTOM1")."</option>
+			<option value='CIDLOOKUPRCOWNERCUSTOM1'>"._QXZ("CIDLOOKUPRCOWNERCUSTOM1")."</option>
+			<option value='CIDLOOKUPALTOWNERCUSTOM1'>"._QXZ("CIDLOOKUPALTOWNERCUSTOM1")."</option>
+			<option value='CIDLOOKUPRLALTOWNERCUSTOM1'>"._QXZ("CIDLOOKUPRLALTOWNERCUSTOM1")."</option>
+			<option value='CIDLOOKUPRCALTOWNERCUSTOM1'>"._QXZ("CIDLOOKUPRCALTOWNERCUSTOM1")."</option>
+			<option value='CIDLOOKUPADDR3OWNERCUSTOM1'>"._QXZ("CIDLOOKUPADDR3OWNERCUSTOM1")."</option>
+			<option value='CIDLOOKUPRLADDR3OWNERCUSTOM1'>"._QXZ("CIDLOOKUPRLADDR3OWNERCUSTOM1")."</option>
+			<option value='CIDLOOKUPRCADDR3OWNERCUSTOM1'>"._QXZ("CIDLOOKUPRCADDR3OWNERCUSTOM1")."</option>
+			<option value='CIDLOOKUPALTADDR3OWNERCUSTOM1'>"._QXZ("CIDLOOKUPALTADDR3OWNERCUSTOM1")."</option>
+			<option value='CIDLOOKUPRLALTADDR3OWNERCUSTOM1'>"._QXZ("CIDLOOKUPRLALTADDR3OWNERCUSTOM1")."</option>
+			<option value='CIDLOOKUPRCALTADDR3OWNERCUSTOM1'>"._QXZ("CIDLOOKUPRCALTADDR3OWNERCUSTOM1")."</option>
+			<option value='CIDLOOKUPOWNERCUSTOM2'>"._QXZ("CIDLOOKUPOWNERCUSTOM2")."</option>
+			<option value='CIDLOOKUPRLOWNERCUSTOM2'>"._QXZ("CIDLOOKUPRLOWNERCUSTOM2")."</option>
+			<option value='CIDLOOKUPRCOWNERCUSTOM2'>"._QXZ("CIDLOOKUPRCOWNERCUSTOM2")."</option>
+			<option value='CIDLOOKUPALTOWNERCUSTOM2'>"._QXZ("CIDLOOKUPALTOWNERCUSTOM2")."</option>
+			<option value='CIDLOOKUPRLALTOWNERCUSTOM2'>"._QXZ("CIDLOOKUPRLALTOWNERCUSTOM2")."</option>
+			<option value='CIDLOOKUPRCALTOWNERCUSTOM2'>"._QXZ("CIDLOOKUPRCALTOWNERCUSTOM2")."</option>
+			<option value='CIDLOOKUPADDR3OWNERCUSTOM2'>"._QXZ("CIDLOOKUPADDR3OWNERCUSTOM2")."</option>
+			<option value='CIDLOOKUPRLADDR3OWNERCUSTOM2'>"._QXZ("CIDLOOKUPRLADDR3OWNERCUSTOM2")."</option>
+			<option value='CIDLOOKUPRCADDR3OWNERCUSTOM2'>"._QXZ("CIDLOOKUPRCADDR3OWNERCUSTOM2")."</option>
+			<option value='CIDLOOKUPALTADDR3OWNERCUSTOM2'>"._QXZ("CIDLOOKUPALTADDR3OWNERCUSTOM2")."</option>
+			<option value='CIDLOOKUPRLALTADDR3OWNERCUSTOM2'>"._QXZ("CIDLOOKUPRLALTADDR3OWNERCUSTOM2")."</option>
+			<option value='CIDLOOKUPRCALTADDR3OWNERCUSTOM2'>"._QXZ("CIDLOOKUPRCALTADDR3OWNERCUSTOM2")."</option>
+			<option value='CIDLOOKUPOWNERCUSTOM3'>"._QXZ("CIDLOOKUPOWNERCUSTOM3")."</option>
+			<option value='CIDLOOKUPRLOWNERCUSTOM3'>"._QXZ("CIDLOOKUPRLOWNERCUSTOM3")."</option>
+			<option value='CIDLOOKUPRCOWNERCUSTOM3'>"._QXZ("CIDLOOKUPRCOWNERCUSTOM3")."</option>
+			<option value='CIDLOOKUPALTOWNERCUSTOM3'>"._QXZ("CIDLOOKUPALTOWNERCUSTOM3")."</option>
+			<option value='CIDLOOKUPRLALTOWNERCUSTOM3'>"._QXZ("CIDLOOKUPRLALTOWNERCUSTOM3")."</option>
+			<option value='CIDLOOKUPRCALTOWNERCUSTOM3'>"._QXZ("CIDLOOKUPRCALTOWNERCUSTOM3")."</option>
+			<option value='CIDLOOKUPADDR3OWNERCUSTOM3'>"._QXZ("CIDLOOKUPADDR3OWNERCUSTOM3")."</option>
+			<option value='CIDLOOKUPRLADDR3OWNERCUSTOM3'>"._QXZ("CIDLOOKUPRLADDR3OWNERCUSTOM3")."</option>
+			<option value='CIDLOOKUPRCADDR3OWNERCUSTOM3'>"._QXZ("CIDLOOKUPRCADDR3OWNERCUSTOM3")."</option>
+			<option value='CIDLOOKUPALTADDR3OWNERCUSTOM3'>"._QXZ("CIDLOOKUPALTADDR3OWNERCUSTOM3")."</option>
+			<option value='CIDLOOKUPRLALTADDR3OWNERCUSTOM3'>"._QXZ("CIDLOOKUPRLALTADDR3OWNERCUSTOM3")."</option>
+			<option value='CIDLOOKUPRCALTADDR3OWNERCUSTOM3'>"._QXZ("CIDLOOKUPRCALTADDR3OWNERCUSTOM3")."</option>
+			<option value='CIDLOOKUPOWNERCUSTOM4'>"._QXZ("CIDLOOKUPOWNERCUSTOM4")."</option>
+			<option value='CIDLOOKUPRLOWNERCUSTOM4'>"._QXZ("CIDLOOKUPRLOWNERCUSTOM4")."</option>
+			<option value='CIDLOOKUPRCOWNERCUSTOM4'>"._QXZ("CIDLOOKUPRCOWNERCUSTOM4")."</option>
+			<option value='CIDLOOKUPALTOWNERCUSTOM4'>"._QXZ("CIDLOOKUPALTOWNERCUSTOM4")."</option>
+			<option value='CIDLOOKUPRLALTOWNERCUSTOM4'>"._QXZ("CIDLOOKUPRLALTOWNERCUSTOM4")."</option>
+			<option value='CIDLOOKUPRCALTOWNERCUSTOM4'>"._QXZ("CIDLOOKUPRCALTOWNERCUSTOM4")."</option>
+			<option value='CIDLOOKUPADDR3OWNERCUSTOM4'>"._QXZ("CIDLOOKUPADDR3OWNERCUSTOM4")."</option>
+			<option value='CIDLOOKUPRLADDR3OWNERCUSTOM4'>"._QXZ("CIDLOOKUPRLADDR3OWNERCUSTOM4")."</option>
+			<option value='CIDLOOKUPRCADDR3OWNERCUSTOM4'>"._QXZ("CIDLOOKUPRCADDR3OWNERCUSTOM4")."</option>
+			<option value='CIDLOOKUPALTADDR3OWNERCUSTOM4'>"._QXZ("CIDLOOKUPALTADDR3OWNERCUSTOM4")."</option>
+			<option value='CIDLOOKUPRLALTADDR3OWNERCUSTOM4'>"._QXZ("CIDLOOKUPRLALTADDR3OWNERCUSTOM4")."</option>
+			<option value='CIDLOOKUPRCALTADDR3OWNERCUSTOM4'>"._QXZ("CIDLOOKUPRCALTADDR3OWNERCUSTOM4")."</option>
+			<option value='CIDLOOKUPOWNERCUSTOM5'>"._QXZ("CIDLOOKUPOWNERCUSTOM5")."</option>
+			<option value='CIDLOOKUPRLOWNERCUSTOM5'>"._QXZ("CIDLOOKUPRLOWNERCUSTOM5")."</option>
+			<option value='CIDLOOKUPRCOWNERCUSTOM5'>"._QXZ("CIDLOOKUPRCOWNERCUSTOM5")."</option>
+			<option value='CIDLOOKUPALTOWNERCUSTOM5'>"._QXZ("CIDLOOKUPALTOWNERCUSTOM5")."</option>
+			<option value='CIDLOOKUPRLALTOWNERCUSTOM5'>"._QXZ("CIDLOOKUPRLALTOWNERCUSTOM5")."</option>
+			<option value='CIDLOOKUPRCALTOWNERCUSTOM5'>"._QXZ("CIDLOOKUPRCALTOWNERCUSTOM5")."</option>
+			<option value='CIDLOOKUPADDR3OWNERCUSTOM5'>"._QXZ("CIDLOOKUPADDR3OWNERCUSTOM5")."</option>
+			<option value='CIDLOOKUPRLADDR3OWNERCUSTOM5'>"._QXZ("CIDLOOKUPRLADDR3OWNERCUSTOM5")."</option>
+			<option value='CIDLOOKUPRCADDR3OWNERCUSTOM5'>"._QXZ("CIDLOOKUPRCADDR3OWNERCUSTOM5")."</option>
+			<option value='CIDLOOKUPALTADDR3OWNERCUSTOM5'>"._QXZ("CIDLOOKUPALTADDR3OWNERCUSTOM5")."</option>
+			<option value='CIDLOOKUPRLALTADDR3OWNERCUSTOM5'>"._QXZ("CIDLOOKUPRLALTADDR3OWNERCUSTOM5")."</option>
+			<option value='CIDLOOKUPRCALTADDR3OWNERCUSTOM5'>"._QXZ("CIDLOOKUPRCALTADDR3OWNERCUSTOM5")."</option>
+			</select>$NWB#inbound_dids-call_handle_method$NWE</td></tr>\n";
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("In-Group Agent Search Method").": </td><td align=left><select size=1 name=agent_search_method><option value=\"LB\">LB - "._QXZ("Load Balanced")."</option><option value=\"LO\">LO - "._QXZ("Load Balanced Overflow")."</option><option value=\"SO\">SO - "._QXZ("Server Only")."</option><option SELECTED>$agent_search_method</option></select>$NWB#inbound_dids-agent_search_method$NWE</td></tr>\n";
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("In-Group List ID").": </td><td align=left><input type=text name=list_id size=19 maxlength=19 value=\"$list_id\">$NWB#inbound_dids-list_id$NWE</td></tr>\n";
 
@@ -35175,7 +35263,93 @@ if ($ADD==3311)
 		echo "<tr bgcolor=#CCFFFF><td align=right><a href=\"$PHP_SELF?ADD=3111&group_id=$filter_group_id\">"._QXZ("Filter In-Group ID")."</a>: </td><td align=left><select size=1 name=filter_group_id>";
 		echo "$FDgroups_menu";
 		echo "</select>$NWB#inbound_dids-group_id$NWE</td></tr>\n";
-		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter In-Group Call Handle Method").": </td><td align=left><select size=1 name=filter_call_handle_method><option value='CID'>"._QXZ("CID")."</option><option value='CIDLOOKUP'>"._QXZ("CIDLOOKUP")."</option><option value='CIDLOOKUPRL'>"._QXZ("CIDLOOKUPRL")."</option><option value='CIDLOOKUPRC'>"._QXZ("CIDLOOKUPRC")."</option><option value='CIDLOOKUPALT'>"._QXZ("CIDLOOKUPALT")."</option><option value='CIDLOOKUPRLALT'>"._QXZ("CIDLOOKUPRLALT")."</option><option value='CIDLOOKUPRCALT'>"._QXZ("CIDLOOKUPRCALT")."</option><option value='CIDLOOKUPADDR3'>"._QXZ("CIDLOOKUPADDR3")."</option><option value='CIDLOOKUPRLADDR3'>"._QXZ("CIDLOOKUPRLADDR3")."</option><option value='CIDLOOKUPRCADDR3'>"._QXZ("CIDLOOKUPRCADDR3")."</option><option value='CIDLOOKUPALTADDR3'>"._QXZ("CIDLOOKUPALTADDR3")."</option><option value='CIDLOOKUPRLALTADDR3'>"._QXZ("CIDLOOKUPRLALTADDR3")."</option><option value='CIDLOOKUPRCALTADDR3'>"._QXZ("CIDLOOKUPRCALTADDR3")."</option><option value='ANI'>"._QXZ("ANI")."</option><option value='ANILOOKUP'>"._QXZ("ANILOOKUP")."</option><option value='ANILOOKUPRL'>"._QXZ("ANILOOKUPRL")."</option><option value='VIDPROMPT'>"._QXZ("VIDPROMPT")."</option><option value='VIDPROMPTLOOKUP'>"._QXZ("VIDPROMPTLOOKUP")."</option><option value='VIDPROMPTLOOKUPRL'>"._QXZ("VIDPROMPTLOOKUPRL")."</option><option value='VIDPROMPTLOOKUPRC'>"._QXZ("VIDPROMPTLOOKUPRC")."</option><option value='CLOSER'>"._QXZ("CLOSER")."</option><option value='3DIGITID'>"._QXZ("3DIGITID")."</option><option value='4DIGITID'>"._QXZ("4DIGITID")."</option><option value='5DIGITID'>"._QXZ("5DIGITID")."</option><option value='10DIGITID'>"._QXZ("10DIGITID")."</option><option value='$filter_call_handle_method' SELECTED>"._QXZ("$filter_call_handle_method")."</option></select>$NWB#inbound_dids-call_handle_method$NWE</td></tr>\n";
+		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter In-Group Call Handle Method").": </td><td align=left><select size=1 name=filter_call_handle_method>
+		<option value='$filter_call_handle_method' SELECTED>"._QXZ("$filter_call_handle_method")."</option>
+		<option value='CID'>"._QXZ("CID")."</option>
+		<option value='CIDLOOKUP'>"._QXZ("CIDLOOKUP")."</option>
+		<option value='CIDLOOKUPRL'>"._QXZ("CIDLOOKUPRL")."</option>
+		<option value='CIDLOOKUPRC'>"._QXZ("CIDLOOKUPRC")."</option>
+		<option value='CIDLOOKUPALT'>"._QXZ("CIDLOOKUPALT")."</option>
+		<option value='CIDLOOKUPRLALT'>"._QXZ("CIDLOOKUPRLALT")."</option>
+		<option value='CIDLOOKUPRCALT'>"._QXZ("CIDLOOKUPRCALT")."</option>
+		<option value='CIDLOOKUPADDR3'>"._QXZ("CIDLOOKUPADDR3")."</option>
+		<option value='CIDLOOKUPRLADDR3'>"._QXZ("CIDLOOKUPRLADDR3")."</option>
+		<option value='CIDLOOKUPRCADDR3'>"._QXZ("CIDLOOKUPRCADDR3")."</option>
+		<option value='CIDLOOKUPALTADDR3'>"._QXZ("CIDLOOKUPALTADDR3")."</option>
+		<option value='CIDLOOKUPRLALTADDR3'>"._QXZ("CIDLOOKUPRLALTADDR3")."</option>
+		<option value='CIDLOOKUPRCALTADDR3'>"._QXZ("CIDLOOKUPRCALTADDR3")."</option>
+		<option value='ANI'>"._QXZ("ANI")."</option>
+		<option value='ANILOOKUP'>"._QXZ("ANILOOKUP")."</option>
+		<option value='ANILOOKUPRL'>"._QXZ("ANILOOKUPRL")."</option>
+		<option value='VIDPROMPT'>"._QXZ("VIDPROMPT")."</option>
+		<option value='VIDPROMPTLOOKUP'>"._QXZ("VIDPROMPTLOOKUP")."</option>
+		<option value='VIDPROMPTLOOKUPRL'>"._QXZ("VIDPROMPTLOOKUPRL")."</option>
+		<option value='VIDPROMPTLOOKUPRC'>"._QXZ("VIDPROMPTLOOKUPRC")."</option>
+		<option value='CLOSER'>"._QXZ("CLOSER")."</option>
+		<option value='3DIGITID'>"._QXZ("3DIGITID")."</option>
+		<option value='4DIGITID'>"._QXZ("4DIGITID")."</option>
+		<option value='5DIGITID'>"._QXZ("5DIGITID")."</option>
+		<option value='10DIGITID'>"._QXZ("10DIGITID")."</option>
+		<option value='CIDLOOKUPOWNERCUSTOM1'>"._QXZ("CIDLOOKUPOWNERCUSTOM1")."</option>
+		<option value='CIDLOOKUPRLOWNERCUSTOM1'>"._QXZ("CIDLOOKUPRLOWNERCUSTOM1")."</option>
+		<option value='CIDLOOKUPRCOWNERCUSTOM1'>"._QXZ("CIDLOOKUPRCOWNERCUSTOM1")."</option>
+		<option value='CIDLOOKUPALTOWNERCUSTOM1'>"._QXZ("CIDLOOKUPALTOWNERCUSTOM1")."</option>
+		<option value='CIDLOOKUPRLALTOWNERCUSTOM1'>"._QXZ("CIDLOOKUPRLALTOWNERCUSTOM1")."</option>
+		<option value='CIDLOOKUPRCALTOWNERCUSTOM1'>"._QXZ("CIDLOOKUPRCALTOWNERCUSTOM1")."</option>
+		<option value='CIDLOOKUPADDR3OWNERCUSTOM1'>"._QXZ("CIDLOOKUPADDR3OWNERCUSTOM1")."</option>
+		<option value='CIDLOOKUPRLADDR3OWNERCUSTOM1'>"._QXZ("CIDLOOKUPRLADDR3OWNERCUSTOM1")."</option>
+		<option value='CIDLOOKUPRCADDR3OWNERCUSTOM1'>"._QXZ("CIDLOOKUPRCADDR3OWNERCUSTOM1")."</option>
+		<option value='CIDLOOKUPALTADDR3OWNERCUSTOM1'>"._QXZ("CIDLOOKUPALTADDR3OWNERCUSTOM1")."</option>
+		<option value='CIDLOOKUPRLALTADDR3OWNERCUSTOM1'>"._QXZ("CIDLOOKUPRLALTADDR3OWNERCUSTOM1")."</option>
+		<option value='CIDLOOKUPRCALTADDR3OWNERCUSTOM1'>"._QXZ("CIDLOOKUPRCALTADDR3OWNERCUSTOM1")."</option>
+		<option value='CIDLOOKUPOWNERCUSTOM2'>"._QXZ("CIDLOOKUPOWNERCUSTOM2")."</option>
+		<option value='CIDLOOKUPRLOWNERCUSTOM2'>"._QXZ("CIDLOOKUPRLOWNERCUSTOM2")."</option>
+		<option value='CIDLOOKUPRCOWNERCUSTOM2'>"._QXZ("CIDLOOKUPRCOWNERCUSTOM2")."</option>
+		<option value='CIDLOOKUPALTOWNERCUSTOM2'>"._QXZ("CIDLOOKUPALTOWNERCUSTOM2")."</option>
+		<option value='CIDLOOKUPRLALTOWNERCUSTOM2'>"._QXZ("CIDLOOKUPRLALTOWNERCUSTOM2")."</option>
+		<option value='CIDLOOKUPRCALTOWNERCUSTOM2'>"._QXZ("CIDLOOKUPRCALTOWNERCUSTOM2")."</option>
+		<option value='CIDLOOKUPADDR3OWNERCUSTOM2'>"._QXZ("CIDLOOKUPADDR3OWNERCUSTOM2")."</option>
+		<option value='CIDLOOKUPRLADDR3OWNERCUSTOM2'>"._QXZ("CIDLOOKUPRLADDR3OWNERCUSTOM2")."</option>
+		<option value='CIDLOOKUPRCADDR3OWNERCUSTOM2'>"._QXZ("CIDLOOKUPRCADDR3OWNERCUSTOM2")."</option>
+		<option value='CIDLOOKUPALTADDR3OWNERCUSTOM2'>"._QXZ("CIDLOOKUPALTADDR3OWNERCUSTOM2")."</option>
+		<option value='CIDLOOKUPRLALTADDR3OWNERCUSTOM2'>"._QXZ("CIDLOOKUPRLALTADDR3OWNERCUSTOM2")."</option>
+		<option value='CIDLOOKUPRCALTADDR3OWNERCUSTOM2'>"._QXZ("CIDLOOKUPRCALTADDR3OWNERCUSTOM2")."</option>
+		<option value='CIDLOOKUPOWNERCUSTOM3'>"._QXZ("CIDLOOKUPOWNERCUSTOM3")."</option>
+		<option value='CIDLOOKUPRLOWNERCUSTOM3'>"._QXZ("CIDLOOKUPRLOWNERCUSTOM3")."</option>
+		<option value='CIDLOOKUPRCOWNERCUSTOM3'>"._QXZ("CIDLOOKUPRCOWNERCUSTOM3")."</option>
+		<option value='CIDLOOKUPALTOWNERCUSTOM3'>"._QXZ("CIDLOOKUPALTOWNERCUSTOM3")."</option>
+		<option value='CIDLOOKUPRLALTOWNERCUSTOM3'>"._QXZ("CIDLOOKUPRLALTOWNERCUSTOM3")."</option>
+		<option value='CIDLOOKUPRCALTOWNERCUSTOM3'>"._QXZ("CIDLOOKUPRCALTOWNERCUSTOM3")."</option>
+		<option value='CIDLOOKUPADDR3OWNERCUSTOM3'>"._QXZ("CIDLOOKUPADDR3OWNERCUSTOM3")."</option>
+		<option value='CIDLOOKUPRLADDR3OWNERCUSTOM3'>"._QXZ("CIDLOOKUPRLADDR3OWNERCUSTOM3")."</option>
+		<option value='CIDLOOKUPRCADDR3OWNERCUSTOM3'>"._QXZ("CIDLOOKUPRCADDR3OWNERCUSTOM3")."</option>
+		<option value='CIDLOOKUPALTADDR3OWNERCUSTOM3'>"._QXZ("CIDLOOKUPALTADDR3OWNERCUSTOM3")."</option>
+		<option value='CIDLOOKUPRLALTADDR3OWNERCUSTOM3'>"._QXZ("CIDLOOKUPRLALTADDR3OWNERCUSTOM3")."</option>
+		<option value='CIDLOOKUPRCALTADDR3OWNERCUSTOM3'>"._QXZ("CIDLOOKUPRCALTADDR3OWNERCUSTOM3")."</option>
+		<option value='CIDLOOKUPOWNERCUSTOM4'>"._QXZ("CIDLOOKUPOWNERCUSTOM4")."</option>
+		<option value='CIDLOOKUPRLOWNERCUSTOM4'>"._QXZ("CIDLOOKUPRLOWNERCUSTOM4")."</option>
+		<option value='CIDLOOKUPRCOWNERCUSTOM4'>"._QXZ("CIDLOOKUPRCOWNERCUSTOM4")."</option>
+		<option value='CIDLOOKUPALTOWNERCUSTOM4'>"._QXZ("CIDLOOKUPALTOWNERCUSTOM4")."</option>
+		<option value='CIDLOOKUPRLALTOWNERCUSTOM4'>"._QXZ("CIDLOOKUPRLALTOWNERCUSTOM4")."</option>
+		<option value='CIDLOOKUPRCALTOWNERCUSTOM4'>"._QXZ("CIDLOOKUPRCALTOWNERCUSTOM4")."</option>
+		<option value='CIDLOOKUPADDR3OWNERCUSTOM4'>"._QXZ("CIDLOOKUPADDR3OWNERCUSTOM4")."</option>
+		<option value='CIDLOOKUPRLADDR3OWNERCUSTOM4'>"._QXZ("CIDLOOKUPRLADDR3OWNERCUSTOM4")."</option>
+		<option value='CIDLOOKUPRCADDR3OWNERCUSTOM4'>"._QXZ("CIDLOOKUPRCADDR3OWNERCUSTOM4")."</option>
+		<option value='CIDLOOKUPALTADDR3OWNERCUSTOM4'>"._QXZ("CIDLOOKUPALTADDR3OWNERCUSTOM4")."</option>
+		<option value='CIDLOOKUPRLALTADDR3OWNERCUSTOM4'>"._QXZ("CIDLOOKUPRLALTADDR3OWNERCUSTOM4")."</option>
+		<option value='CIDLOOKUPRCALTADDR3OWNERCUSTOM4'>"._QXZ("CIDLOOKUPRCALTADDR3OWNERCUSTOM4")."</option>
+		<option value='CIDLOOKUPOWNERCUSTOM5'>"._QXZ("CIDLOOKUPOWNERCUSTOM5")."</option>
+		<option value='CIDLOOKUPRLOWNERCUSTOM5'>"._QXZ("CIDLOOKUPRLOWNERCUSTOM5")."</option>
+		<option value='CIDLOOKUPRCOWNERCUSTOM5'>"._QXZ("CIDLOOKUPRCOWNERCUSTOM5")."</option>
+		<option value='CIDLOOKUPALTOWNERCUSTOM5'>"._QXZ("CIDLOOKUPALTOWNERCUSTOM5")."</option>
+		<option value='CIDLOOKUPRLALTOWNERCUSTOM5'>"._QXZ("CIDLOOKUPRLALTOWNERCUSTOM5")."</option>
+		<option value='CIDLOOKUPRCALTOWNERCUSTOM5'>"._QXZ("CIDLOOKUPRCALTOWNERCUSTOM5")."</option>
+		<option value='CIDLOOKUPADDR3OWNERCUSTOM5'>"._QXZ("CIDLOOKUPADDR3OWNERCUSTOM5")."</option>
+		<option value='CIDLOOKUPRLADDR3OWNERCUSTOM5'>"._QXZ("CIDLOOKUPRLADDR3OWNERCUSTOM5")."</option>
+		<option value='CIDLOOKUPRCADDR3OWNERCUSTOM5'>"._QXZ("CIDLOOKUPRCADDR3OWNERCUSTOM5")."</option>
+		<option value='CIDLOOKUPALTADDR3OWNERCUSTOM5'>"._QXZ("CIDLOOKUPALTADDR3OWNERCUSTOM5")."</option>
+		<option value='CIDLOOKUPRLALTADDR3OWNERCUSTOM5'>"._QXZ("CIDLOOKUPRLALTADDR3OWNERCUSTOM5")."</option>
+		<option value='CIDLOOKUPRCALTADDR3OWNERCUSTOM5'>"._QXZ("CIDLOOKUPRCALTADDR3OWNERCUSTOM5")."</option>		</select>$NWB#inbound_dids-call_handle_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter In-Group Agent Search Method").": </td><td align=left><select size=1 name=filter_agent_search_method><option value=\"LB\">LB - "._QXZ("Load Balanced")."</option><option value=\"LO\">LO - "._QXZ("Load Balanced Overflow")."</option><option value=\"SO\">SO - "._QXZ("Server Only")."</option><option SELECTED>$filter_agent_search_method</option></select>$NWB#inbound_dids-agent_search_method$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter In-Group List ID").": </td><td align=left><input type=text name=filter_list_id size=19 maxlength=19 value=\"$filter_list_id\">$NWB#inbound_dids-list_id$NWE</td></tr>\n";
 
@@ -35678,7 +35852,7 @@ if ($ADD==3511)
 		echo "<br>"._QXZ("MODIFY A CALL MENU RECORD").": $menu_id<form action=$PHP_SELF method=POST name=admin_form id=admin_form>\n";
 		echo "<input type=hidden name=ADD value=4511>\n";
 		echo "<input type=hidden name=menu_id value=\"$menu_id\">\n";
-		echo "<center><TABLE width=$temp_section_width cellspacing=3>\n";
+		echo "<center><TABLE width=1000 cellspacing=3>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Menu ID").": </td><td align=left>$menu_id $NWB#call_menu-menu_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Menu Name").": </td><td align=left><input type=text name=menu_name size=40 maxlength=50 value=\"$menu_name\">$NWB#call_menu-menu_name$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
@@ -35881,7 +36055,7 @@ if ($ADD==3511)
 				echo " <select size=1 name=option_route_value_$j id=option_route_value_$j onChange=\"call_menu_link('$j','INGROUP');\">";
 				echo "$ingroup_list<option SELECTED>$option_route_value</option><option>DYNAMIC_INGROUP_VAR</option></select>";
 				echo " &nbsp; "._QXZ("Handle Method").": <select size=1 name=IGhandle_method_$j id=IGhandle_method_$j>";
-				echo "$IGhandle_method_list<option SELECTED>$IGhandle_method</option></select> $NWB#call_menu-ingroup_settings$NWE\n";
+				echo "<option SELECTED>$IGhandle_method</option>$IGhandle_method_list</select> $NWB#call_menu-ingroup_settings$NWE\n";
 				echo "<BR>"._QXZ("Search Method").": <select size=1 name=IGsearch_method_$j id=IGsearch_method_$j>";
 				echo "$IGsearch_method_list<option SELECTED>$IGsearch_method</option></select>\n";
 				echo " &nbsp; "._QXZ("List ID").": <input type=text size=5 maxlength=19 name=IGlist_id_$j id=IGlist_id_$j value=\"$IGlist_id\">";
