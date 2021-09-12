@@ -1377,7 +1377,8 @@ agent_search_method VARCHAR(2) default '',
 qc_scorecard_id VARCHAR(20) DEFAULT '',
 qc_statuses_id VARCHAR(20) DEFAULT '',
 populate_lead_comments VARCHAR(40) default 'CALLERID_NAME',
-drop_call_seconds_override VARCHAR(40) default 'DISABLED'
+drop_call_seconds_override VARCHAR(40) default 'DISABLED',
+populate_lead_owner VARCHAR(20) default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -5023,4 +5024,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1644',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1645',db_schema_update_date=NOW(),reload_timestamp=NOW();
