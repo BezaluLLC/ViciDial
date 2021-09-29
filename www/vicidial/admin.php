@@ -45879,7 +45879,8 @@ if ($ADD==720000000000000)
 			if (preg_match('/CATEGOR/i', $row[4])) {$record_link = "$PHP_SELF?ADD=331111111111111";}
 			if (preg_match('/GROUPALIAS/i', $row[4])) {$record_link = "$PHP_SELF?ADD=33111111111&group_alias_id=$row[6]";}
 			if (preg_match('/LEADS/i',$row[4])) {$record_link = "admin_modify_lead.php?lead_id=$row[6]\" onclick=\"javascript:window.open('admin_modify_lead.php?lead_id=$row[6]', '_blank');return false;";}
-			if (preg_match('/EMAIL/i',$row[4])) {$record_link = "./admin_email_accounts.php?eact=UPDATE&email_account_id=$row[6]";}
+			if (preg_match('/VOICEMAIL/i', $row[4])) {$record_link="$PHP_SELF?ADD=371111111111&voicemail_id=$row[6]";}
+			if (preg_match('/^EMAIL$/i',$row[4])) {$record_link = "./admin_email_accounts.php?eact=UPDATE&email_account_id=$row[6]";}
 
 			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
 				{$bgcolor='class="records_list_x"';} 
