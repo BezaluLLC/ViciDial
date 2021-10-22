@@ -71,12 +71,22 @@
 # 210821-1520 - Added AHT to CUSTOM INDICATOR section
 # 210914-1020 - Fixed bug for default start/end times on call times when all days have custom s/e time
 # 210923-2247 - Added OCR, SL-1 & SL-2 stats to CUSTOM INDICATOR section
+# 211022-0734 - Added IR_SLA_all_statuses options.php setting
 #
 
 $startMS = microtime();
 
 require("dbconnect_mysqli.php");
 require("functions.php");
+
+# Inbound reports, use all statuses for SLA calculation
+$IR_SLA_all_statuses=0;
+# if options file exists, use the override values for the above variables
+#   see the options-example.php file for more information
+if (file_exists('options.php'))
+	{
+	require_once('options.php');
+	}
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -1343,12 +1353,33 @@ if (strlen($group_SQL)>3)
 		if ($DB) {$MAIN.="$stmt\n";}
 		$row=mysqli_fetch_row($rslt);
 		$answer_sec_pct_rt_stat_one = $row[0];
+		$all_sec_pct_rt_stat_one = $row[0];
 
 		$stmt = "SELECT count(*) from ".$vicidial_closer_log_table." where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and queue_seconds <= $Sanswer_sec_pct_rt_stat_two and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL');";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$row=mysqli_fetch_row($rslt);
 		$answer_sec_pct_rt_stat_two = $row[0];
+		$all_sec_pct_rt_stat_two = $row[0];
+
+		$SL_numerator = 'Answered';
+
+		if ($IR_SLA_all_statuses > 0)
+			{
+			$SL_numerator = 'All';
+
+			$stmt = "SELECT count(*) from ".$vicidial_closer_log_table." where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and queue_seconds <= $Sanswer_sec_pct_rt_stat_one;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			if ($DB) {$MAIN.="$stmt\n";}
+			$row=mysqli_fetch_row($rslt);
+			$all_sec_pct_rt_stat_one = $row[0];
+
+			$stmt = "SELECT count(*) from ".$vicidial_closer_log_table." where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and queue_seconds <= $Sanswer_sec_pct_rt_stat_two;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			if ($DB) {$MAIN.="$stmt\n";}
+			$row=mysqli_fetch_row($rslt);
+			$all_sec_pct_rt_stat_two = $row[0];
+			}
 
 		$PCTanswer_sec_pct_rt_stat_one = (MathZDC($answer_sec_pct_rt_stat_one, $ANSWEREDcalls) * 100);
 		$PCTanswer_sec_pct_rt_stat_one = round($PCTanswer_sec_pct_rt_stat_one, 0);
@@ -1357,9 +1388,9 @@ if (strlen($group_SQL)>3)
 		$PCTanswer_sec_pct_rt_stat_two = round($PCTanswer_sec_pct_rt_stat_two, 0);
 		#$PCTanswer_sec_pct_rt_stat_two = sprintf("%10s", $PCTanswer_sec_pct_rt_stat_two);
 
-		$PCTallcall_sec_pct_rt_stat_one = (MathZDC($answer_sec_pct_rt_stat_one, $TOTALcalls) * 100);
+		$PCTallcall_sec_pct_rt_stat_one = (MathZDC($all_sec_pct_rt_stat_one, $TOTALcalls) * 100);
 		$PCTallcall_sec_pct_rt_stat_one = round($PCTallcall_sec_pct_rt_stat_one, 0);
-		$PCTallcall_sec_pct_rt_stat_two = (MathZDC($answer_sec_pct_rt_stat_two, $TOTALcalls) * 100);
+		$PCTallcall_sec_pct_rt_stat_two = (MathZDC($all_sec_pct_rt_stat_two, $TOTALcalls) * 100);
 		$PCTallcall_sec_pct_rt_stat_two = round($PCTallcall_sec_pct_rt_stat_two, 0);
 
 		$stmt="SELECT uniqueid from ".$vicidial_closer_log_table." where campaign_id IN($group_SQL) and call_date >= '$query_date_BEGIN' and call_date <= '$query_date_END' $calldate_call_time_clause and status NOT IN('DROP','XDROP','HXFER','QVMAIL','HOLDTO','LIVE','QUEUE','TIMEOT','AFTHRS','NANQUE','INBND','MAXCAL') and uniqueid!='';";
@@ -1445,13 +1476,13 @@ if ($DID!='Y')
 	{
 	$MAIN.="TMR1 "._QXZ("(Answered within %1s seconds/Answered)",50,'',$Sanswer_sec_pct_rt_stat_one).": $PCTanswer_sec_pct_rt_stat_one%\n";
 	$MAIN.="TMR2 "._QXZ("(Answered within %1s seconds/Answered)",50,'',$Sanswer_sec_pct_rt_stat_two).": $PCTanswer_sec_pct_rt_stat_two%\n";
-	$MAIN.="SL-1 "._QXZ("(Answered within %1s seconds/All Calls)",50,'',$Sanswer_sec_pct_rt_stat_one).": $PCTallcall_sec_pct_rt_stat_one%\n";
-	$MAIN.="SL-2 "._QXZ("(Answered within %1s seconds/All Calls)",50,'',$Sanswer_sec_pct_rt_stat_two).": $PCTallcall_sec_pct_rt_stat_two%\n";
+	$MAIN.="SL-1 "._QXZ("(%2s within %1s seconds/All Calls)",50,'',$Sanswer_sec_pct_rt_stat_one,$SL_numerator).": $PCTallcall_sec_pct_rt_stat_one%\n";
+	$MAIN.="SL-2 "._QXZ("(%2s within %1s seconds/All Calls)",50,'',$Sanswer_sec_pct_rt_stat_two,$SL_numerator).": $PCTallcall_sec_pct_rt_stat_two%\n";
 
 	$CSV_text1.="\"TMR1 "._QXZ("(Answered within %1s seconds/Answered)",0,'',$Sanswer_sec_pct_rt_stat_one).":\",\"$PCTanswer_sec_pct_rt_stat_one%\"\n";
 	$CSV_text1.="\"TMR2 "._QXZ("(Answered within %1s seconds/Answered)",0,'',$Sanswer_sec_pct_rt_stat_two).":\",\"$PCTanswer_sec_pct_rt_stat_two%\"\n";
-	$CSV_text1.="\"SL-1 "._QXZ("(Answered within %1s seconds/All Calls)",0,'',$Sanswer_sec_pct_rt_stat_one).":\",\"$PCTallcall_sec_pct_rt_stat_one%\"\n";
-	$CSV_text1.="\"SL-2 "._QXZ("(Answered within %1s seconds/All Calls)",0,'',$Sanswer_sec_pct_rt_stat_two).":\",\"$PCTallcall_sec_pct_rt_stat_two%\"\n";
+	$CSV_text1.="\"SL-1 "._QXZ("(%2s within %1s seconds/All Calls)",0,'',$Sanswer_sec_pct_rt_stat_one,$SL_numerator).":\",\"$PCTallcall_sec_pct_rt_stat_one%\"\n";
+	$CSV_text1.="\"SL-2 "._QXZ("(%2s within %1s seconds/All Calls)",0,'',$Sanswer_sec_pct_rt_stat_two,$SL_numerator).":\",\"$PCTallcall_sec_pct_rt_stat_two%\"\n";
 	}
 
 
