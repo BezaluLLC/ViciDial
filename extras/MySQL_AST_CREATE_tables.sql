@@ -1077,7 +1077,8 @@ call_limit_24hour_method ENUM('DISABLED','PHONE_NUMBER','LEAD') default 'DISABLE
 call_limit_24hour_scope ENUM('SYSTEM_WIDE','CAMPAIGN_LISTS') default 'SYSTEM_WIDE',
 call_limit_24hour TINYINT(3) UNSIGNED default '0',
 call_limit_24hour_override VARCHAR(40) default 'DISABLED',
-cid_group_id_two VARCHAR(20) default '---DISABLED---'
+cid_group_id_two VARCHAR(20) default '---DISABLED---',
+incall_tally_threshold_seconds SMALLINT(5) UNSIGNED default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -5024,4 +5025,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1645',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1646',db_schema_update_date=NOW(),reload_timestamp=NOW();

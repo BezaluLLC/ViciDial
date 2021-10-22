@@ -1822,3 +1822,7 @@ UPDATE system_settings SET db_schema_version='1644',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_inbound_groups ADD populate_lead_owner VARCHAR(20) default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1645',db_schema_update_date=NOW() where db_schema_version < 1645;
+
+ALTER TABLE vicidial_campaigns ADD incall_tally_threshold_seconds SMALLINT(5) UNSIGNED default '0';
+
+UPDATE system_settings SET db_schema_version='1646',db_schema_update_date=NOW() where db_schema_version < 1646;

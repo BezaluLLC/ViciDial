@@ -686,6 +686,9 @@ OTHER CHANGES:
 
 191. Added 'batch_update_lead' Non-Agent API function
 
+192. Added 'Agent In-Call Tally Seconds Threshold' campaign setting, to better
+	handle dialing volume on campaigns with long agent talk time.
+
 
 
 
