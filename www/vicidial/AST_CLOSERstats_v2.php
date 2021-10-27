@@ -72,6 +72,7 @@
 # 210914-1020 - Fixed bug for default start/end times on call times when all days have custom s/e time
 # 210923-2247 - Added OCR, SL-1 & SL-2 stats to CUSTOM INDICATOR section
 # 211022-0734 - Added IR_SLA_all_statuses options.php setting
+# 211027-1050 - Added optional campaign selection(camp_select), for calculation of OCR only
 #
 
 $startMS = microtime();
@@ -94,12 +95,16 @@ $PHP_SELF=$_SERVER['PHP_SELF'];
 $PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
 if (isset($_GET["group"]))				{$group=$_GET["group"];}
 	elseif (isset($_POST["group"]))		{$group=$_POST["group"];}
+if (isset($_GET["campaigns"]))			{$campaigns=$_GET["campaigns"];}
+	elseif (isset($_POST["campaigns"]))	{$campaigns=$_POST["campaigns"];}
 if (isset($_GET["query_date"]))				{$query_date=$_GET["query_date"];}
 	elseif (isset($_POST["query_date"]))	{$query_date=$_POST["query_date"];}
 if (isset($_GET["end_date"]))			{$end_date=$_GET["end_date"];}
 	elseif (isset($_POST["end_date"]))	{$end_date=$_POST["end_date"];}
 if (isset($_GET["shift"]))				{$shift=$_GET["shift"];}
 	elseif (isset($_POST["shift"]))		{$shift=$_POST["shift"];}
+if (isset($_GET["camp_select"]))			{$camp_select=$_GET["camp_select"];}
+	elseif (isset($_POST["camp_select"]))	{$camp_select=$_POST["camp_select"];}
 if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))	{$submit=$_POST["submit"];}
 if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
@@ -197,6 +202,7 @@ else
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
+$camp_select = preg_replace('/[^-_0-9a-zA-Z]/', '', $camp_select);
 
 $stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
@@ -314,6 +320,70 @@ $STARTtime = date("U");
 if (!isset($group)) {$group = array();}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
+if (!isset($campaigns)) {$campaigns = array();}
+
+$i=0;
+$campaigns_string='|';
+$campaigns_ct = count($campaigns);
+while($i < $campaigns_ct)
+	{
+	$campaigns_string .= "$campaigns[$i]|";
+	$i++;
+	}
+
+$LOGallowed_campaignsSQL='';
+$whereLOGallowed_campaignsSQL='';
+if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
+	{
+	$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+	$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+	$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+	}
+$regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
+
+if ($DB) {echo "campaigns_string: $campaigns_ct|$campaigns_string|\n";}
+$stmt="select campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
+$rslt=mysql_to_mysqli($stmt, $link);
+if ($DB) {echo "$stmt\n";}
+$campaigns_to_print = mysqli_num_rows($rslt);
+$i=0;
+$campaigns_allowed=array();
+$campaigns_names=array();
+while ($i < $campaigns_to_print)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$campaigns_allowed[$i] =		$row[0];
+	$campaigns_names[$i] =	$row[1];
+	if (preg_match('/\-ALL/',$campaigns_string) )
+		{$campaigns[$i] = $campaigns_allowed[$i];}
+	$i++;
+	}
+
+$i=0;
+$campaigns_string='|';
+$campaigns_ct = count($campaigns);
+while($i < $campaigns_ct)
+	{
+	if ( (preg_match("/ $campaigns[$i] /",$regexLOGallowed_campaigns)) or (preg_match("/-ALL/",$LOGallowed_campaigns)) )
+		{
+		$campaigns_string .= "$campaigns[$i]|";
+		$campaigns_SQL .= "'$campaigns[$i]',";
+		$campaignsQS .= "&campaigns[]=$campaigns[$i]";
+		}	
+	$i++;
+	}
+if ( (preg_match('/\-\-ALL\-\-/',$campaigns_string) ) or ($campaigns_ct < 1) or (strlen($campaigns_string) < 2) )
+	{
+	$campaigns_SQL = "$LOGallowed_campaignsSQL";
+	$campaigns_SQLand='';
+	}
+else
+	{
+	$campaigns_SQL = preg_replace('/,$/i', '',$campaigns_SQL);
+	$campaigns_SQLand = "campaign_id IN($campaigns_SQL) and";
+	$campaigns_SQL = "where campaign_id IN($campaigns_SQL)";
+	}
 
 $stmt="select group_id,group_name,8 from vicidial_inbound_groups where group_handling='PHONE' $LOGadmin_viewable_groupsSQL order by group_id;";
 if ($DID=='Y')
@@ -417,7 +487,7 @@ else
 
 $AMP='&';
 $QM='?';
-$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $DID, $EMAIL, $CHAT, $file_download, $report_display_type|', url='".$LOGfull_url."?DB=".$DB."&DID=".$DID."&EMAIL=".$EMAIL."&CHAT=".$CHAT."&query_date=".$query_date."&end_date=".$end_date."&shift=".$shift."&report_display_type=".$report_display_type."$groupQS', webserver='$webserver_id';";
+$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group[0], $query_date, $end_date, $shift, $DID, $EMAIL, $CHAT, $file_download, $report_display_type|', url='".$LOGfull_url."?DB=".$DB."&DID=".$DID."&EMAIL=".$EMAIL."&CHAT=".$CHAT."&query_date=".$query_date."&end_date=".$end_date."&shift=".$shift."&report_display_type=".$report_display_type."&camp_select=".$camp_select."$groupQS$campaignsQS', webserver='$webserver_id';";
 if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $report_log_id = mysqli_insert_id($link);
@@ -505,6 +575,7 @@ $MAIN.="<INPUT TYPE=HIDDEN NAME=DB VALUE=\"$DB\">\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=DID VALUE=\"$DID\">\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=EMAIL VALUE=\"$EMAIL\">\n";
 $MAIN.="<INPUT TYPE=HIDDEN NAME=CHAT VALUE=\"$CHAT\">\n";
+$MAIN.="<INPUT TYPE=HIDDEN NAME=camp_select VALUE=\"$camp_select\">\n";
 $MAIN.=_QXZ("Date Range").":<BR>\n";
 $MAIN.="<INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
 
@@ -559,6 +630,26 @@ while ($groups_to_print > $o)
 	}
 $MAIN.="</SELECT>\n";
 $MAIN.="</TD><TD ROWSPAN=2 VALIGN=TOP>\n";
+
+if ($camp_select > 0)
+	{
+	$MAIN.="</TD><TD VALIGN=TOP> "._QXZ("Campaigns").":<BR>";
+	$MAIN.="<SELECT multiple SIZE=5 NAME=campaigns[] id='campaigns'>\n";
+	if  (preg_match('/\-\-ALL\-\-/',$campaigns_string))
+		{$MAIN.="<option value=\"--ALL--\" selected>-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
+	else
+		{$MAIN.="<option value=\"--ALL--\">-- "._QXZ("ALL CAMPAIGNS")." --</option>\n";}
+	$o=0;
+	while ($campaigns_to_print > $o)
+		{
+		if (preg_match("/$campaigns_allowed[$o]\|/i",$campaigns_string)) {$MAIN.="<option selected value=\"$campaigns_allowed[$o]\">$campaigns_allowed[$o] - $campaigns_names[$o]</option>\n";}
+		  else {$MAIN.="<option value=\"$campaigns_allowed[$o]\">$campaigns_allowed[$o] - $campaigns_names[$o]</option>\n";}
+		$o++;
+		}
+	$MAIN.="</SELECT>\n";
+	$MAIN.="</TD><TD VALIGN=TOP>";
+	}
+
 $MAIN.="<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; ";
 if ($DID!='Y')
 	{
@@ -938,17 +1029,17 @@ $last_shift_record=(4*$time_END_array[0])+(ceil($time_END_array[1]/15));
 
 if ($CHAT=='Y') 
 	{
-	$MAIN.=_QXZ("Inbound Chat Stats").": $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&CHAT=Y&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
+	$MAIN.=_QXZ("Inbound Chat Stats").": $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&CHAT=Y&query_date=$query_date&end_date=$end_date$groupQS$campaignsQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1&search_archived_data=$search_archived_data&camp_select=$camp_select\">"._QXZ("DOWNLOAD")."</a>\n";
 	$CSV_text1.="\""._QXZ("Inbound Chat Stats").":\",\"$group_string\",\"$NOW_TIME\"\n";
 	}
 elseif ($EMAIL=='Y') 
 	{
-	$MAIN.=_QXZ("Inbound Email Stats").": $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&EMAIL=Y&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
+	$MAIN.=_QXZ("Inbound Email Stats").": $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&EMAIL=Y&query_date=$query_date&end_date=$end_date$groupQS$campaignsQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1&search_archived_data=$search_archived_data&camp_select=$camp_select\">"._QXZ("DOWNLOAD")."</a>\n";
 	$CSV_text1.="\""._QXZ("Inbound Email Stats").":\",\"$group_string\",\"$NOW_TIME\"\n";
 	}
 else
 	{
-	$MAIN.=_QXZ("Inbound Call Stats").": $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
+	$MAIN.=_QXZ("Inbound Call Stats").": $group_string          $NOW_TIME        <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS$campaignsQS&shift=$shift&SUBMIT=$SUBMIT&file_download=1&search_archived_data=$search_archived_data&camp_select=$camp_select\">"._QXZ("DOWNLOAD")."</a>\n";
 	$CSV_text1.="\""._QXZ("Inbound Call Stats").":\",\"$group_string\",\"$NOW_TIME\"\n";
 	}
 
@@ -1407,7 +1498,10 @@ if (strlen($group_SQL)>3)
 			}
 		if (strlen($uniqueidSQL) < 2) {$uniqueidSQL="'X'";}
 
-		$stmt = "SELECT count(*),sum(talk_sec + dispo_sec),sum(talk_sec + dispo_sec + wait_sec) from ".$vicidial_agent_log_table." where uniqueid IN($uniqueidSQL) and event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' and talk_sec < 65000 and dispo_sec < 65000 and wait_sec < 65000;";
+		$OCR_SQL = "uniqueid IN($uniqueidSQL) and";
+		if ($camp_select > 0)
+			{$OCR_SQL = "$campaigns_SQLand";}
+		$stmt = "SELECT count(*),sum(talk_sec + dispo_sec),sum(talk_sec + dispo_sec + wait_sec) from ".$vicidial_agent_log_table." where $OCR_SQL event_time >= '$query_date_BEGIN' and event_time <= '$query_date_END' and talk_sec < 65000 and dispo_sec < 65000 and wait_sec < 65000;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$MAIN.="$stmt\n";}
 		$row=mysqli_fetch_row($rslt);
@@ -1419,7 +1513,7 @@ if (strlen($group_SQL)>3)
 		$TALK_DISPO_HOLDseconds = round($AHTaverage, 0);
 
 		$OCRaverage = (MathZDC($AHTtime, $AHTwait));
-		$OCRate = round($OCRaverage, 2);
+		$OCRate = (round($OCRaverage, 2) * 100);
 		}
 	}
 
@@ -1430,14 +1524,14 @@ if ($CHAT=='Y')
 	$MAIN.="GDE  "._QXZ("(Answered/Total chats taken in to this In-Group)",50).": $ANSWEREDpercent%\n";
 	$MAIN.="ACR  "._QXZ("(Dropped/Answered)",50).":  $DROP_ANSWEREDpercent%\n";
 	$MAIN.="AHT  "._QXZ("(Agent-Answered chats / Handle Time sec)",50).": $TALK_DISPO_HOLDseconds sec\n";
-	$MAIN.="OCR  "._QXZ("Occupancy Rate = (Handle Time / Handle + Wait sec)",50).": $OCRate\n";
+	$MAIN.="OCR  "._QXZ("Occupancy Rate = (Handle Time / Handle + Wait sec)",50).": $OCRate%\n";
 	$MAIN.="      *"._QXZ("Handle Time = (Talk+Hold+Dead+Dispo sec)",50)."\n";
 
 	$CSV_text1.="\n\""._QXZ("CUSTOM INDICATORS")."\"\n";
 	$CSV_text1.="\"GDE "._QXZ("(Answered/Total chats taken in to this In-Group)").":\",\"$ANSWEREDpercent%\"\n";
 	$CSV_text1.="\"ACR "._QXZ("(Dropped/Answered)").":\",\"$DROP_ANSWEREDpercent%\"\n";
 	$CSV_text1.="\"AHT "._QXZ("(Agent-Answered chats / Talk+Hold+Dead+Dispo sec)").":\",\"$TALK_DISPO_HOLDseconds sec\"\n";
-	$CSV_text1.="\"OCR "._QXZ("Occupancy Rate = (Handle Time / Handle + Wait sec)").":\",\"$OCRate\"\n";
+	$CSV_text1.="\"OCR "._QXZ("Occupancy Rate = (Handle Time / Handle + Wait sec)").":\",\"$OCRate%\"\n";
 	}
 elseif ($EMAIL=='Y')
 	{
@@ -1446,14 +1540,14 @@ elseif ($EMAIL=='Y')
 	$MAIN.="GDE  "._QXZ("(Answered/Total emails taken in to this In-Group)",50).": $ANSWEREDpercent%\n";
 	$MAIN.="ACR  "._QXZ("(Dropped/Answered)",50).":  $DROP_ANSWEREDpercent%\n";
 	$MAIN.="AHT  "._QXZ("(Agent-Answered emails / Handle Time sec)",50).": $TALK_DISPO_HOLDseconds sec\n";
-	$MAIN.="OCR  "._QXZ("Occupancy Rate = (Handle Time / Handle + Wait sec)",50).": $OCRate\n";
+	$MAIN.="OCR  "._QXZ("Occupancy Rate = (Handle Time / Handle + Wait sec)",50).": $OCRate%\n";
 	$MAIN.="      *"._QXZ("Handle Time = (Talk+Hold+Dead+Dispo sec)",50)."\n";
 
 	$CSV_text1.="\n\""._QXZ("CUSTOM INDICATORS")."\"\n";
 	$CSV_text1.="\"GDE "._QXZ("(Answered/Total emails taken in to this In-Group)").":\",\"$ANSWEREDpercent%\"\n";
 	$CSV_text1.="\"ACR "._QXZ("(Dropped/Answered)").":\",\"$DROP_ANSWEREDpercent%\"\n";
 	$CSV_text1.="\"AHT "._QXZ("(Agent-Answered emails / Talk+Hold+Dead+Dispo sec)").":\",\"$TALK_DISPO_HOLDseconds sec\"\n";
-	$CSV_text1.="\"OCR "._QXZ("Occupancy Rate = (Handle Time / Handle + Wait sec)").":\",\"$OCRate\"\n";
+	$CSV_text1.="\"OCR "._QXZ("Occupancy Rate = (Handle Time / Handle + Wait sec)").":\",\"$OCRate%\"\n";
 	}
 else
 	{
@@ -1462,14 +1556,14 @@ else
 	$MAIN.="GDE  "._QXZ("(Answered/Total calls taken in to this In-Group)",50).": $ANSWEREDpercent%\n";
 	$MAIN.="ACR  "._QXZ("(Dropped/Answered)",50).": $DROP_ANSWEREDpercent%\n";
 	$MAIN.="AHT  "._QXZ("(Agent-Answered calls / Handle Time sec)",50).": $TALK_DISPO_HOLDseconds sec\n";
-	$MAIN.="OCR  "._QXZ("Occupancy Rate = (Handle Time / Handle + Wait sec)",50).": $OCRate\n";
+	$MAIN.="OCR  "._QXZ("Occupancy Rate = (Handle Time / Handle + Wait sec)",50).": $OCRate%\n";
 	$MAIN.="      *"._QXZ("Handle Time = (Talk+Hold+Dead+Dispo sec)",50)."\n";
 
 	$CSV_text1.="\n\""._QXZ("CUSTOM INDICATORS")."\"\n";
 	$CSV_text1.="\"GDE "._QXZ("(Answered/Total calls taken in to this In-Group)").":\",\"$ANSWEREDpercent%\"\n";
 	$CSV_text1.="\"ACR "._QXZ("(Dropped/Answered)").":\",\"$DROP_ANSWEREDpercent%\"\n";
 	$CSV_text1.="\"AHT "._QXZ("(Agent-Answered calls / Talk+Hold+Dead+Dispo sec)").":\",\"$TALK_DISPO_HOLDseconds sec\"\n";
-	$CSV_text1.="\"OCR "._QXZ("Occupancy Rate = (Handle Time / Handle + Wait sec)").":\",\"$OCRate\"\n";
+	$CSV_text1.="\"OCR "._QXZ("Occupancy Rate = (Handle Time / Handle + Wait sec)").":\",\"$OCRate%\"\n";
 	}
 
 if ($DID!='Y')
@@ -1610,7 +1704,7 @@ else
 $TOTALcalls = 0;
 
 $ASCII_text="\n";
-$ASCII_text.="---------- $rpt_type_verbiage "._QXZ("HOLD TIME BREAKDOWN IN SECONDS",36)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=2&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
+$ASCII_text.="---------- $rpt_type_verbiage "._QXZ("HOLD TIME BREAKDOWN IN SECONDS",36)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS$campaignsQS&shift=$shift&SUBMIT=$SUBMIT&file_download=2&search_archived_data=$search_archived_data&camp_select=$camp_select\">"._QXZ("DOWNLOAD")."</a>\n";
 $ASCII_text.="+-------------------------------------------------------------------------------------------+------------+\n";
 $ASCII_text.="|     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | "._QXZ("TOTAL", 10)." |\n";
 $ASCII_text.="+-------------------------------------------------------------------------------------------+------------+\n";
@@ -2433,7 +2527,7 @@ else
 $TOTALcalls = 0;
 
 $ASCII_text="\n";
-$ASCII_text.="---------- $rpt_type_verbiage "._QXZ("HANGUP REASON STATS",25)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=3&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
+$ASCII_text.="---------- $rpt_type_verbiage "._QXZ("HANGUP REASON STATS",25)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS$campaignsQS&shift=$shift&SUBMIT=$SUBMIT&file_download=3&search_archived_data=$search_archived_data&camp_select=$camp_select\">"._QXZ("DOWNLOAD")."</a>\n";
 $ASCII_text.="+----------------------+------------+\n";
 $ASCII_text.="| "._QXZ("HANGUP REASON",20)." | $rpt_type_verbiages     |\n";
 $ASCII_text.="+----------------------+------------+\n";
@@ -2582,7 +2676,7 @@ else
 $TOTALcalls = 0;
 
 $ASCII_text="\n";
-$ASCII_text.="---------- $rpt_type_verbiage "._QXZ("STATUS STATS",18)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=4&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
+$ASCII_text.="---------- $rpt_type_verbiage "._QXZ("STATUS STATS",18)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS$campaignsQS&shift=$shift&SUBMIT=$SUBMIT&file_download=4&search_archived_data=$search_archived_data&camp_select=$camp_select\">"._QXZ("DOWNLOAD")."</a>\n";
 $ASCII_text.="+--------+----------------------+----------------------+------------+------------+----------+-----------+\n";
 $ASCII_text.="| "._QXZ("STATUS",6)." | "._QXZ("DESCRIPTION",20)." | "._QXZ("CATEGORY",20)." | $rpt_type_verbiages     | "._QXZ("TOTAL TIME",10)." | "._QXZ("AVG TIME",8)." |$rpt_type_verbiages/"._QXZ("HOUR",4)."|\n";
 $ASCII_text.="+--------+----------------------+----------------------+------------+------------+----------+-----------+\n";
@@ -2799,7 +2893,7 @@ else
 #########  STATUS CATEGORY STATS
 
 $ASCII_text="\n";
-$ASCII_text.="---------- "._QXZ("CUSTOM STATUS CATEGORY STATS",34)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=5&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
+$ASCII_text.="---------- "._QXZ("CUSTOM STATUS CATEGORY STATS",34)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS$campaignsQS&shift=$shift&SUBMIT=$SUBMIT&file_download=5&search_archived_data=$search_archived_data&camp_select=$camp_select\">"._QXZ("DOWNLOAD")."</a>\n";
 $ASCII_text.="+----------------------+------------+--------------------------------+\n";
 $ASCII_text.="| "._QXZ("CATEGORY",20)." | $rpt_type_verbiages     | "._QXZ("DESCRIPTION",30)." |\n";
 $ASCII_text.="+----------------------+------------+--------------------------------+\n";
@@ -2946,7 +3040,7 @@ else
 $TOTALcalls = 0;
 
 $ASCII_text="\n";
-$ASCII_text.="---------- $rpt_type_verbiage "._QXZ("INITIAL QUEUE POSITION BREAKDOWN",38)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=6&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
+$ASCII_text.="---------- $rpt_type_verbiage "._QXZ("INITIAL QUEUE POSITION BREAKDOWN",38)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS$campaignsQS&shift=$shift&SUBMIT=$SUBMIT&file_download=6&search_archived_data=$search_archived_data&camp_select=$camp_select\">"._QXZ("DOWNLOAD")."</a>\n";
 $ASCII_text.="+-------------------------------------------------------------------------------------+------------+\n";
 $ASCII_text.="|     1     2     3     4     5     6     7     8     9    10    15    20    25   +25 | "._QXZ("TOTAL",10)." |\n";
 $ASCII_text.="+-------------------------------------------------------------------------------------+------------+\n";
@@ -3177,7 +3271,7 @@ $TOTtime=0;
 $TOTavg=0;
 
 $ASCII_text="\n";
-$ASCII_text.="---------- "._QXZ("AGENT STATS",17)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=7&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
+$ASCII_text.="---------- "._QXZ("AGENT STATS",17)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS$campaignsQS&shift=$shift&SUBMIT=$SUBMIT&file_download=7&search_archived_data=$search_archived_data&camp_select=$camp_select\">"._QXZ("DOWNLOAD")."</a>\n";
 $ASCII_text.="+--------------------------+------------+------------+---------+\n";
 $ASCII_text.="| "._QXZ("AGENT",24)." | $rpt_type_verbiages     | "._QXZ("TIME H:M:S",10)." | "._QXZ("AVERAGE",8)."|\n";
 $ASCII_text.="+--------------------------+------------+------------+---------+\n";
@@ -3355,7 +3449,7 @@ $CSV_text7.="\""._QXZ("TOTAL Agents").": $TOTagents\",\"$TOTcalls\",\"$TOTtime\"
 #########  TIME STATS
 
 $MAIN.="\n";
-$MAIN.="---------- "._QXZ("TIME STATS",16)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=9&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
+$MAIN.="---------- "._QXZ("TIME STATS",16)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS$campaignsQS&shift=$shift&SUBMIT=$SUBMIT&file_download=9&search_archived_data=$search_archived_data&camp_select=$camp_select\">"._QXZ("DOWNLOAD")."</a>\n";
 
 $CSV_text9.="\""._QXZ("TIME STATS")."\"\n\n";
 
@@ -3648,7 +3742,7 @@ else
 
 ##### Answered wait time breakdown
 $MAIN.="\n";
-$MAIN.="---------- $rpt_type_verbiage "._QXZ("ANSWERED TIME BREAKDOWN IN SECONDS", 40)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS&shift=$shift&SUBMIT=$SUBMIT&file_download=8&search_archived_data=$search_archived_data\">"._QXZ("DOWNLOAD")."</a>\n";
+$MAIN.="---------- $rpt_type_verbiage "._QXZ("ANSWERED TIME BREAKDOWN IN SECONDS", 40)." <a href=\"$PHP_SELF?DB=$DB&DID=$DID&query_date=$query_date&end_date=$end_date$groupQS$campaignsQS&shift=$shift&SUBMIT=$SUBMIT&file_download=8&search_archived_data=$search_archived_data&camp_select=$camp_select\">"._QXZ("DOWNLOAD")."</a>\n";
 $MAIN.="+------+-------------------------------------------------------------------------------------------+------------+\n";
 $MAIN.="| "._QXZ("HOUR",4)." |     0     5    10    15    20    25    30    35    40    45    50    55    60    90   +90 | "._QXZ("TOTAL",10)." |\n";
 $MAIN.="+------+-------------------------------------------------------------------------------------------+------------+\n";
@@ -3802,8 +3896,5 @@ if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 
 exit;
-
-
-
 
 ?>
