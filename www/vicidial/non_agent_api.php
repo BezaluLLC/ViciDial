@@ -11538,6 +11538,8 @@ if ($function == 'lead_all_info')
 			{
 			$call_search_SQL='';
 			$search_ready=0;
+			$no_list_counter=0;
+			$no_list_output='';
 			$call_id = preg_replace("/\n|\r|\t| /",'',$call_id);
 
 			if ( (strlen($lead_id) < 1) and ( (strlen($phone_number) < 6) or (strlen($phone_number) > 19) ) )
@@ -11606,7 +11608,6 @@ if ($function == 'lead_all_info')
 				$lead_loop_ct=0;
 				while ($lead_exists > $lead_loop_ct)
 					{
-					$row=mysqli_fetch_row($rslt);
 					$lead_list_id =			$ARY_lead_list_id[$lead_loop_ct];
 					$lead_entry_list_id =	$ARY_lead_entry_list_id[$lead_loop_ct];
 					$lead_lead_id =			$ARY_lead_lead_id[$lead_loop_ct];
@@ -11616,10 +11617,10 @@ if ($function == 'lead_all_info')
 					if ($DB) {echo "DEBUG: $lead_loop_ct|$lead_list_id|$lead_entry_list_id|$lead_lead_id|\n";}
 	
 					$stmt="SELECT count(*) from vicidial_lists where list_id='$lead_list_id' $LOGallowed_campaignsSQL;";
-					if ($DB) {$MAIN.="|$stmt|\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$row=mysqli_fetch_row($rslt);
 					$list_exists =	$row[0];
+					if ($DB) {echo "DEBUG: $list_exists|$stmt|\n";}
 
 					if ($list_exists > 0)
 						{
@@ -11813,6 +11814,11 @@ if ($function == 'lead_all_info')
 							exit;
 							}
 						}
+					else
+						{
+						$no_list_counter++;
+						$no_list_output = "$lead_list_id";
+						}
 					if ( ($list_exists < 1) and ($api_list_restrict > 0) )
 						{
 						$result = 'ERROR';
@@ -11835,6 +11841,18 @@ if ($function == 'lead_all_info')
 					}
 				if (strlen($output) > 10)
 					{echo "$output";}
+				else
+					{
+					if ($no_list_counter > 0)
+						{
+						$result = 'ERROR';
+						$result_reason = "lead_all_info LIST NOT FOUND";
+						$data = "$user|$lead_id|$phone_number|$no_list_output";
+						echo "$result: $result_reason: $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
 				}
 			}
 		}
