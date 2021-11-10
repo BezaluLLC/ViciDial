@@ -1380,7 +1380,7 @@ qc_statuses_id VARCHAR(20) DEFAULT '',
 populate_lead_comments VARCHAR(40) default 'CALLERID_NAME',
 drop_call_seconds_override VARCHAR(40) default 'DISABLED',
 populate_lead_owner VARCHAR(20) default 'DISABLED',
-in_queue_nanque ENUM('N','Y','NO_PAUSED','NO_PAUSED_EXCEPTIONS','NO_READY') default 'N'
+in_queue_nanque ENUM('N','Y','NO_PAUSED','NO_PAUSED_EXCEPTIONS','NO_READY') default 'N',
 in_queue_nanque_exceptions VARCHAR(40) default ''
 ) ENGINE=MyISAM;
 
