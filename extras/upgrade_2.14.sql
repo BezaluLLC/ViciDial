@@ -1831,3 +1831,7 @@ ALTER TABLE vicidial_inbound_groups ADD in_queue_nanque ENUM('N','Y','NO_PAUSED'
 ALTER TABLE vicidial_inbound_groups ADD in_queue_nanque_exceptions VARCHAR(40) default '';
 
 UPDATE system_settings SET db_schema_version='1647',db_schema_update_date=NOW() where db_schema_version < 1647;
+
+ALTER TABLE vicidial_url_multi ADD url_call_length SMALLINT(5) default '0';
+
+UPDATE system_settings SET db_schema_version='1648',db_schema_update_date=NOW() where db_schema_version < 1648;

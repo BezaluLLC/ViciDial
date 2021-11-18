@@ -3671,6 +3671,7 @@ url_statuses VARCHAR(1000) default '',
 url_description VARCHAR(255) default '',
 url_address TEXT,
 url_lists VARCHAR(1000) default '',
+url_call_length SMALLINT(5) default '0',
 PRIMARY KEY (url_id),
 KEY vicidial_url_multi_campaign_id_key (campaign_id)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
@@ -5028,4 +5029,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1647',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1648',db_schema_update_date=NOW(),reload_timestamp=NOW();
