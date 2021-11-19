@@ -186,10 +186,11 @@
 # 210917-1615 - Added batch_update_lead function
 # 211027-0845 - Added lead_search function
 # 211107-1556 - Added optional phone_number search for lead_all_info function
+# 211118-1946 - Added 'delete_cf_data' setting to the update_lead function
 #
 
-$version = '2.14-163';
-$build = '211107-1556';
+$version = '2.14-164';
+$build = '211118-1946';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -665,6 +666,8 @@ if (isset($_GET["group_id"]))				{$group_id=$_GET["group_id"];}
 	elseif (isset($_POST["group_id"]))		{$group_id=$_POST["group_id"];}
 if (isset($_GET["lead_ids"]))				{$lead_ids=$_GET["lead_ids"];}
 	elseif (isset($_POST["lead_ids"]))		{$lead_ids=$_POST["lead_ids"];}
+if (isset($_GET["delete_cf_data"]))				{$delete_cf_data=$_GET["delete_cf_data"];}
+	elseif (isset($_POST["delete_cf_data"]))	{$delete_cf_data=$_POST["delete_cf_data"];}
 
 
 if (file_exists('options.php'))
@@ -959,6 +962,7 @@ $custom_fields_delete = preg_replace('/[^_0-9a-zA-Z]/','',$custom_fields_delete)
 $dialable_count = preg_replace('/[^_0-9a-zA-Z]/','',$dialable_count);
 $call_handle_method = preg_replace('/[^_0-9a-zA-Z]/','',$call_handle_method);
 $agent_search_method = preg_replace('/[^_0-9a-zA-Z]/','',$agent_search_method);
+$delete_cf_data = preg_replace('/[^A-Z]/','',$delete_cf_data);
 
 $USarea = 			substr($phone_number, 0, 3);
 $USprefix = 		substr($phone_number, 3, 3);
@@ -13876,6 +13880,39 @@ if ($function == 'update_lead')
 									}
 								}
 
+							if ($delete_cf_data=='Y')
+								{
+								$CFentry_list_id='';
+								if (strlen($entry_list_id) > 0)
+									{$CFentry_list_id=$entry_list_id;}
+								if (strlen($force_entry_list_id) > 0)
+									{$CFentry_list_id=$force_entry_list_id;}
+								if (strlen($CFentry_list_id) < 1)
+									{$CFentry_list_id=$search_entry_list[$n];}
+								$stmt="SHOW TABLES LIKE \"custom_$CFentry_list_id\";";
+								if ($DB>0) {echo "$stmt\n";}
+								$rslt=mysql_to_mysqli($stmt, $link);
+								$tablecount_to_print = mysqli_num_rows($rslt);
+								if ($tablecount_to_print > 0) 
+									{
+									$stmt = "DELETE from custom_$CFentry_list_id where lead_id='$search_lead_id[$n]';";
+									if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
+									$rslt=mysql_to_mysqli($stmt, $link);
+									$VCFaffected_rows = mysqli_affected_rows($link);
+									}
+
+								$stmt = "UPDATE vicidial_list SET entry_list_id=0 where lead_id='$search_lead_id[$n]';";
+								$result_reason = "update_lead CUSTOM FIELDS DATA HAS BEEN DELETED";
+								if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
+								$rslt=mysql_to_mysqli($stmt, $link);
+								$VLaffected_rows = mysqli_affected_rows($link);
+
+								$result = 'NOTICE';
+								echo "$result: $result_reason - $user|$search_lead_id[$n]|$CFentry_list_id|$VLaffected_rows|$VCFaffected_rows\n";
+								$data = "$phone_number|$search_lead_list[$n]|$search_lead_id[$n]|$CFentry_list_id|$VLaffected_rows|$VCFaffected_rows";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								}
+
 							if ( (strlen($VL_update_SQL)>6) or ($delete_lead=='Y') )
 								{
 								if ($delete_lead=='Y')
@@ -13893,7 +13930,7 @@ if ($function == 'update_lead')
 									$stmt = "DELETE from vicidial_list where lead_id='$search_lead_id[$n]';";
 									$result_reason = "update_lead LEAD HAS BEEN DELETED $VCBaffected_rows|$VCBAaffected_rows";
 									}
-								else
+								if (strlen($VL_update_SQL)>6)
 									{
 									$stmt = "UPDATE vicidial_list SET $VL_update_SQL where lead_id='$search_lead_id[$n]';";
 									$result_reason = "update_lead LEAD HAS BEEN UPDATED";
@@ -13903,7 +13940,7 @@ if ($function == 'update_lead')
 								$VLaffected_rows = mysqli_affected_rows($link);
 
 								$result = 'SUCCESS';
-								echo "$result: $result_reason - $user|$search_lead_id[$n]|$VLaffected_rows\n";
+								echo "$result: $result_reason - $user|$search_lead_id[$n]|$VLaffected_rows|$VCBAaffected_rows|$VCBAaffected_rows|\n";
 								$data = "$phone_number|$search_lead_list[$n]|$search_lead_id[$n]|$gmt_offset";
 								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 								}
@@ -14091,7 +14128,7 @@ if ($function == 'update_lead')
 											{
 											$result = 'NOTICE';
 											$result_reason = "update_lead CUSTOM FIELDS ENTRY DELETED";
-											echo "$result: $result_reason - $phone_number|$search_lead_id[$n]|$search_lead_list[$n]|$search_entry_list[$n]|$lead_custom_list|$custom_update_count\n";
+											echo "$result: $result_reason - $phone_number|$search_lead_id[$n]|$search_lead_list[$n]|$search_entry_list[$n]|$lead_custom_list|$VCLDaffected_rows\n";
 											$data = "$phone_number|$search_lead_id[$n]|$search_lead_list[$n]|$VCLDaffected_rows";
 											api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 											}
