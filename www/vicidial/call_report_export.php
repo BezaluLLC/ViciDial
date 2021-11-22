@@ -61,6 +61,7 @@
 # 200115-1151 - Added ALTERNATE_2 export option with alternate header option in options.php
 # 200709-2106 - Added EXTENDED_4 export option with logged list_id from time of call
 # 210911-1907 - Fix for --ALL-- selection user-group permission issue
+# 211119-1500 - Fix for status names 
 #
 
 $startMS = microtime();
@@ -714,6 +715,7 @@ if ($run_export > 0)
 				$row[29] = preg_replace("/\n|\r/",'!N',$row[29]);
 
 				$export_status[$k] =		$row[2];
+				$export_campaign_id[$k] =	$row[5];
 				$export_list_id[$k] =		$row[8];
 				$export_lead_id[$k] =		$row[35];
 				$export_uniqueid[$k] =		$row[36];
@@ -834,11 +836,11 @@ if ($run_export > 0)
 		{
 		if ( ($export_fields == 'EXTENDED') or ($export_fields == 'EXTENDED_2') or ($export_fields == 'EXTENDED_3') or ($export_fields == 'EXTENDED_4') )
 			{
-			$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid, ifnull(val.dispo_sec+val.dead_sec,0)$export_fields_SQL from vicidial_users vu,vicidial_list vi,".$vicidial_closer_log_table." vl LEFT OUTER JOIN ".$vicidial_agent_log_table." val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where ".$date_field." >= '$query_date 00:00:00' and ".$date_field." <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by ".$date_field." limit 1000000;";
+			$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid,val.campaign_id, ifnull(val.dispo_sec+val.dead_sec,0)$export_fields_SQL from vicidial_users vu,vicidial_list vi,".$vicidial_closer_log_table." vl LEFT OUTER JOIN ".$vicidial_agent_log_table." val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where ".$date_field." >= '$query_date 00:00:00' and ".$date_field." <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by ".$date_field." limit 1000000;";
 			}
 		else
 			{
-			$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid$export_fields_SQL from vicidial_users vu,".$vicidial_closer_log_table." vl,vicidial_list vi where ".$date_field." >= '$query_date 00:00:00' and ".$date_field." <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by ".$date_field." limit 1000000;";
+			$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid,val.campaign_id$export_fields_SQL from vicidial_users vu,vicidial_list vi,".$vicidial_closer_log_table." vl LEFT OUTER JOIN ".$vicidial_agent_log_table." val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where ".$date_field." >= '$query_date 00:00:00' and ".$date_field." <= '$end_date 23:59:59' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_group_SQL $status_SQL order by ".$date_field." limit 1000000;";
 			}
 		$rslt=mysql_to_mysqli($stmtA, $link);
 		if ($DB) {$DBout .= "$stmtA\n";}
@@ -859,12 +861,13 @@ if ($run_export > 0)
 				$row[29] = preg_replace("/\n|\r/",'!N',$row[29]);
 
 				$export_status[$k] =		$row[2];
+				$export_campaign_id[$k] =	$row[39];
 				$export_list_id[$k] =		$row[8];
 				$export_lead_id[$k] =		$row[35];
 				$export_vicidial_id[$k] =	$row[36];
 				$export_entry_list_id[$k] =	$row[37];
 				$export_uniqueid[$k] =		$row[38];
-				$export_wrapup_time[$k] =		$row[39];
+				$export_wrapup_time[$k] =		$row[40];
 				$export_queue_time[$k] =		$row[32];
 
 				if ($LOGadmin_hide_phone_data != '0')
@@ -1069,7 +1072,7 @@ if ($run_export > 0)
 				}
 			else
 				{
-				$stmt = "SELECT status_name FROM vicidial_campaign_statuses where status='$export_status[$i]';";
+				$stmt = "SELECT status_name, if(campaign_id='$export_campaign_id[$i]', 0, 1) as priority FROM vicidial_campaign_statuses where status='$export_status[$i]' order by priority asc;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($DB) {echo "$stmt\n";}
 				$ex_list_ct = mysqli_num_rows($rslt);
@@ -1857,3 +1860,4 @@ if ($file_exported > 0)
 exit;
 
 ?>
+
