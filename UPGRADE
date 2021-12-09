@@ -697,6 +697,10 @@ OTHER CHANGES:
 194. Added MIN LENGTH to the Dispo Call URL ALT admin screen, allowing for a
 	minimum call time threshold before a Dispo Call URL will trigger.
 
+195. Added User Location to the Modify User page. Also added Queue Groups Admin
+	pages, allowing you to define multiple campaigns and/or in-groups in a 
+	single Queue Group to be used in some reports.
+
 
 
 

@@ -89,6 +89,7 @@
 # 210306-0902 - Changes for new QC module
 # 210707-0730 - Added header links for timezones, phone codes and postal codes
 # 210907-1904 - Added new OWNERCUSTOMx handle methods for menu options
+# 211208-1920 - Added Queue Groups to admin sidebar and sub-menu
 #
 
 $stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add,allow_chats,enable_languages,admin_row_click,admin_screen_colors,user_new_lead_limit,user_territories_active,qc_features_active,agent_soundboards,enable_drop_lists,allow_ip_lists from system_settings;";
@@ -2334,6 +2335,7 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 		$sg_sh="CLASS=\"subhead_style\"";
 		$cg_sh="CLASS=\"subhead_style\"";
 		$vmmg_sh="CLASS=\"subhead_style\"";
+		$qg_sh="CLASS=\"subhead_style\"";
 		$emails_sh="CLASS=\"subhead_style\"";
 		$ar_sh="CLASS=\"subhead_style\"";
 		$il_sh="CLASS=\"subhead_style\"";
@@ -2361,6 +2363,7 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 		if ($sh=='sg') {$sg_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='cg') {$cg_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='vmmg') {$vmmg_sh="CLASS=\"subhead_style_selected\"";}
+		if ($sh=='qg') {$qg_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='emails') {$emails_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='ar') {$ar_sh="CLASS=\"subhead_style_selected\"";}
 		if ($sh=='il') {$il_sh="CLASS=\"subhead_style_selected\"";}
@@ -2483,6 +2486,11 @@ if ($subcamp_font_size < 4) {$subcamp_font_size='11';}
 			</TR>
 
 		<?php }
+		?>
+		</TR><TR <?php echo $qg_sh ?><?php if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$ADMIN?ADD=198000000000';\"";} ?>><TD ALIGN=LEFT <?php echo $qg_sh ?>> &nbsp; 
+		<a href="<?php echo $ADMIN ?>?ADD=198000000000" STYLE="text-decoration:none;"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> &nbsp; <img src="images/icon_queuegroups.png" border=0 alt=\"Queue Groups\" width=14 height=14 valign=middle> <?php echo _QXZ("Queue Groups"); ?> </a></TD>
+		</TR>
+		<?php
 			}
 		}
 	else
@@ -2674,6 +2682,10 @@ if ($SSenable_languages == '1')
 	if (strlen($vmmg_sh) > 25) { 
 		?>
 	<TR BGCOLOR=<?php echo $vmmg_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=197000000000"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("VM Message Groups"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=197111111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Add A VM Message Group"); ?> </a><?php } ?></TD></TR>
+	<?php }
+	if (strlen($qg_sh) > 25) { 
+		?>
+	<TR BGCOLOR=<?php echo $qg_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=198000000000"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Queue Groups"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=198111111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Add A Queue Group"); ?> </a><?php } ?></TD></TR>
 	<?php }
 	if ( (strlen($status_sh) > 25) and (!preg_match('/campaign|user/i',$hh) ) ) { 
 		?>

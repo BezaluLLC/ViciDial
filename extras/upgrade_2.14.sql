@@ -1835,3 +1835,18 @@ UPDATE system_settings SET db_schema_version='1647',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_url_multi ADD url_call_length SMALLINT(5) default '0';
 
 UPDATE system_settings SET db_schema_version='1648',db_schema_update_date=NOW() where db_schema_version < 1648;
+
+ALTER TABLE vicidial_users ADD user_location VARCHAR(100) default '';
+
+INSERT INTO vicidial_settings_containers(container_id,container_notes,container_type,user_group,container_entry) VALUES ('USER_LOCATIONS_SYSTEM','User Locations List','OTHER','---ALL---',';location|description\n|default\n');
+
+CREATE TABLE vicidial_queue_groups (
+queue_group VARCHAR(20) NOT NULL,
+queue_group_name VARCHAR(40) NOT NULL,
+included_campaigns TEXT,
+included_inbound_groups TEXT,
+user_group VARCHAR(20) default '---ALL---',
+active ENUM('Y','N')
+) ENGINE=MyISAM;
+
+UPDATE system_settings SET db_schema_version='1649',db_schema_update_date=NOW() where db_schema_version < 1649;
