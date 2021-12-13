@@ -5745,12 +5745,13 @@ if ($SSscript_remove_js > 0)
 # 211027-1031 - Added lead_search Non-Agent API function
 # 211106-1500 - Added In-Group in_queue_nanque settings
 # 211208-1646 - Added user_location to User Modify page, Added Queue Groups to Admin pages
+# 211213-1619 - Fix for new phone inserts template_id issue on some MySQL setups
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-834a';
-$build = '211208-1646';
+$admin_version = '2.14-835a';
+$build = '211213-1619';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -14328,7 +14329,7 @@ if ($ADD==21111111111)
 									}
 								}
 
-							$stmt="INSERT INTO phones (extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,protocol,local_gmt,outbound_cid,conf_secret,user_group$SQLfields) values('$extension','$dialplan_number','$voicemail_id','$phone_ip','$computer_ip','$server_ip','$login','$pass','$status','$active','$phone_type','$fullname','$company','$picture','$protocol','$local_gmt','$outbound_cid','$conf_secret','$user_group'$SQLvalues);";
+							$stmt="INSERT INTO phones (extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,protocol,local_gmt,outbound_cid,conf_secret,user_group,template_id$SQLfields) values('$extension','$dialplan_number','$voicemail_id','$phone_ip','$computer_ip','$server_ip','$login','$pass','$status','$active','$phone_type','$fullname','$company','$picture','$protocol','$local_gmt','$outbound_cid','$conf_secret','$user_group',''$SQLvalues);";
 							#print_r($dps);
 							#echo "$stmt<BR>"; die;
 							$rslt=mysql_to_mysqli($stmt, $link);
