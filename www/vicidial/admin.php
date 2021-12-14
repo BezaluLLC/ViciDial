@@ -5746,12 +5746,13 @@ if ($SSscript_remove_js > 0)
 # 211106-1500 - Added In-Group in_queue_nanque settings
 # 211208-1646 - Added user_location to User Modify page, Added Queue Groups to Admin pages
 # 211213-1619 - Fix for new phone inserts template_id issue on some MySQL setups
+# 211214-1157 - Fix for Queue Groups link issue #1343
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-835a';
-$build = '211213-1619';
+$admin_version = '2.14-836a';
+$build = '211214-1157';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -47432,9 +47433,9 @@ if ($ADD==999998)
 		echo "<TD><a href=\"$PHP_SELF?ADD=195000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("IP Lists")." </SPAN></a></TD>\n";
 		echo "</TR>\n";
 		}
-	echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=195000000000';\"";} echo ">\n";
-	echo "<TD><a href=\"$PHP_SELF?ADD=195000000000\"><img src=\"images/icon_queuegroups.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
-	echo "<TD><a href=\"$PHP_SELF?ADD=195000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Queue Groups")." </SPAN></a></TD>\n";
+	echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=198000000000';\"";} echo ">\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=198000000000\"><img src=\"images/icon_queuegroups.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=198000000000\" STYLE=\"text-decoration:none;\"><SPAN $subhead_font> "._QXZ("Queue Groups")." </SPAN></a></TD>\n";
 	echo "</TR>\n";
 
 	echo "</TABLE>\n";
