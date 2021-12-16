@@ -1850,3 +1850,9 @@ active ENUM('Y','N')
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1649',db_schema_update_date=NOW() where db_schema_version < 1649;
+
+ALTER TABLE vicidial_user_groups ADD allowed_queue_groups TEXT;
+ALTER TABLE vicidial_user_groups ADD reports_header_override ENUM('DISABLED','LOGO_ONLY_SMALL','LOGO_ONLY_LARGE','ALT_1','ALT_2','ALT_3','ALT_4') default 'DISABLED';
+ALTER TABLE vicidial_user_groups ADD admin_home_url VARCHAR(255) default '';
+
+UPDATE system_settings SET db_schema_version='1650',db_schema_update_date=NOW() where db_schema_version < 1650;

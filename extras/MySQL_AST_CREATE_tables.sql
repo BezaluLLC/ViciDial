@@ -754,7 +754,10 @@ agent_xfer_park_3way ENUM('Y','N') default 'Y',
 admin_ip_list VARCHAR(30) default '',
 agent_ip_list VARCHAR(30) default '',
 api_ip_list VARCHAR(30) default '',
-webphone_layout VARCHAR(255) default ''
+webphone_layout VARCHAR(255) default '',
+allowed_queue_groups TEXT,
+reports_header_override ENUM('DISABLED','LOGO_ONLY_SMALL','LOGO_ONLY_LARGE','ALT_1','ALT_2','ALT_3','ALT_4') default 'DISABLED',
+admin_home_url VARCHAR(255) default ''
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns (
@@ -5040,4 +5043,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1649',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1650',db_schema_update_date=NOW(),reload_timestamp=NOW();

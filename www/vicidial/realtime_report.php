@@ -53,12 +53,13 @@
 # 200815-0928 - Added agent-paused 10 & 15 minute indicators
 # 201107-2254 - Added optional display of parked calls stats, inbound SLA and LIMITED report type
 # 210314-2039 - Added DID Description for inbound calls
+# 211216-0846 - Added new User Group options
 #
 
 $startMS = microtime();
 
-$version = '2.14-40';
-$build = '210314-2039';
+$version = '2.14-41';
+$build = '211216-0846';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -555,14 +556,17 @@ if ($auth)
 	$LOGmodify_contacts			=$row[81];
 	$LOGmodify_same_user_level	=$row[82];
 
-	$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times from vicidial_user_groups where user_group='$LOGuser_group';";
+	$stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times,reports_header_override,admin_home_url from vicidial_user_groups where user_group='$LOGuser_group';";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$row=mysqli_fetch_row($rslt);
 	$LOGallowed_campaigns =			$row[0];
 	$LOGallowed_reports =			$row[1];
 	$LOGadmin_viewable_groups =		$row[2];
 	$LOGadmin_viewable_call_times =	$row[3];
-	
+	$LOGreports_header_override	=	$row[4];
+	$LOGadmin_home_url =			$row[5];
+	if (strlen($LOGadmin_home_url) > 5) {$SSadmin_home_url = $LOGadmin_home_url;}
+
 	$LOGadmin_viewable_groupsSQL='';
 	$valLOGadmin_viewable_groupsSQL='';
 	$vmLOGadmin_viewable_groupsSQL='';
