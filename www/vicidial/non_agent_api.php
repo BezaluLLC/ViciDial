@@ -187,10 +187,11 @@
 # 211027-0845 - Added lead_search function
 # 211107-1556 - Added optional phone_number search for lead_all_info function
 # 211118-1946 - Added 'delete_cf_data' setting to the update_lead function
+# 211217-0733 - Fixes for PHP8, issue #1341
 #
 
-$version = '2.14-164';
-$build = '211118-1946';
+$version = '2.14-165';
+$build = '211217-0733';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -15477,16 +15478,16 @@ if ($function == 'call_status_stats')
 				$campaign_rslt=mysql_to_mysqli($campaign_stmt, $link);
 				while ($row=mysqli_fetch_row($campaign_rslt)) 
 					{
-					$outbound_array{"$row[0]"}[0]=0;
-					$outbound_array{"$row[0]"}[1]=0;
+					$outbound_array["$row[0]"][0]=0;
+					$outbound_array["$row[0]"][1]=0;
 					}
 				} 
 			else 
 				{
 				for ($i=0; $i<count($campaign_array); $i++) 
 					{
-					$outbound_array{"$campaign_array[$i]"}[0]=0;
-					$outbound_array{"$campaign_array[$i]"}[1]=0;
+					$outbound_array["$campaign_array[$i]"][0]=0;
+					$outbound_array["$campaign_array[$i]"][1]=0;
 					}
 				}
 			ksort($outbound_array);
@@ -15533,8 +15534,8 @@ if ($function == 'call_status_stats')
 			$ingroup_SQL=" and campaign_id in ('".implode("', '", $ingroup_array)."') ";
 			for ($i=0; $i<count($ingroup_array); $i++) 
 				{
-				$inbound_array{"$ingroup_array[$i]"}[0]=0;
-				$inbound_array{"$ingroup_array[$i]"}[1]=0;
+				$inbound_array["$ingroup_array[$i]"][0]=0;
+				$inbound_array["$ingroup_array[$i]"][1]=0;
 				}
 			ksort($inbound_array);
 
@@ -15545,18 +15546,18 @@ if ($function == 'call_status_stats')
 			for ($i=0; $i<24; $i++) 
 				{
 				$hrkey=substr("0$i", -2);
-				$total_hr_array{"$hrkey"}=0;
+				$total_hr_array["$hrkey"]=0;
 				}
 
 			while($outb_row=mysqli_fetch_row($outb_rslt)) 
 				{
-				$outbound_array{"$outb_row[0]"}[0]+=$outb_row[3];
+				$outbound_array["$outb_row[0]"][0]+=$outb_row[3];
 				if (in_array($outb_row[1], $human_ans_array)) 
 					{
-					$outbound_array{"$outb_row[0]"}[1]+=$outb_row[3];
+					$outbound_array["$outb_row[0]"][1]+=$outb_row[3];
 					}
-				$temp_stat_array{"$outb_row[0]"}{"$outb_row[1]"}+=$outb_row[3];
-				$temp_hour_array{"$outb_row[0]"}{"$outb_row[2]"}+=$outb_row[3];
+				$temp_stat_array["$outb_row[0]"]["$outb_row[1]"]+=$outb_row[3];
+				$temp_hour_array["$outb_row[0]"]["$outb_row[2]"]+=$outb_row[3];
 				}
 
 			$inb_stmt="select campaign_id, status, substr(call_date, 12, 2) as hour, count(*) from vicidial_closer_log where call_date>='$query_date $query_time' and call_date<='$end_date $end_time' $ingroup_SQL $status_SQL group by campaign_id, status, hour order by campaign_id, status, hour";
@@ -15564,13 +15565,13 @@ if ($function == 'call_status_stats')
 			$inb_rslt=mysql_to_mysqli($inb_stmt, $link);
 			while($inb_row=mysqli_fetch_row($inb_rslt)) 
 				{
-				$inbound_array{"$inb_row[0]"}[0]+=$inb_row[3];
+				$inbound_array["$inb_row[0]"][0]+=$inb_row[3];
 				if (in_array($inb_row[1], $human_ans_array)) 
 					{
-					$inbound_array{"$inb_row[0]"}[1]+=$inb_row[3];
+					$inbound_array["$inb_row[0]"][1]+=$inb_row[3];
 					}
-				$temp_stat_array{"$inb_row[0]"}{"$inb_row[1]"}+=$inb_row[3];
-				$temp_hour_array{"$inb_row[0]"}{"$inb_row[2]"}+=$inb_row[3];
+				$temp_stat_array["$inb_row[0]"]["$inb_row[1]"]+=$inb_row[3];
+				$temp_hour_array["$inb_row[0]"]["$inb_row[2]"]+=$inb_row[3];
 				}
 			}
 			
@@ -15581,24 +15582,25 @@ if ($function == 'call_status_stats')
 				for ($i=0; $i<24; $i++) 
 					{
 					$hrkey=substr("0$i", -2);
-					$hrs=$temp_hour_array{"$key"}{"$hrkey"}+=0;
+					$hrs=$temp_hour_array["$key"]["$hrkey"]+=0;
 					$hour_str.="$hrkey-$hrs,";
 					}
 				$hour_str=substr($hour_str, 0, -1);
 
-				$temp_ary_ct = count($temp_stat_array{"$key"});
+				if (is_null($temp_stat_array["$key"])) $temp_stat_array["$key"] = array();
+				$temp_ary_ct = count($temp_stat_array["$key"]);
 				if ($temp_ary_ct > 0)
 					{
-					ksort($temp_stat_array{"$key"});
+					ksort($temp_stat_array["$key"]);
 #					while(list($statkey, $statval)=each($temp_stat_array{"$key"})) 
-					foreach($temp_stat_array{"$key"} as $statkey => $statval)
+					foreach($temp_stat_array["$key"] as $statkey => $statval)
 						{
-						$status_str.=$statkey."-".$temp_stat_array{"$key"}{"$statkey"}.",";
+						$status_str.=$statkey."-".$temp_stat_array["$key"]["$statkey"].",";
 						}
 					}
 				$status_str=substr($status_str, 0, -1);
 
-				echo $key."|".$outbound_array{$key}[0]."|".$outbound_array{$key}[1]."|".$hour_str."|".$status_str."|\n";
+				echo $key."|".$outbound_array[$key][0]."|".$outbound_array[$key][1]."|".$hour_str."|".$status_str."|\n";
 			}
 
 #			while(list($key, $val)=each($inbound_array)) {
@@ -15608,24 +15610,25 @@ if ($function == 'call_status_stats')
 				for ($i=0; $i<24; $i++) 
 					{
 					$hrkey=substr("0$i", -2);
-					$hrs=$temp_hour_array{"$key"}{"$hrkey"}+=0;
+					$hrs=$temp_hour_array["$key"]["$hrkey"]+=0;
 					$hour_str.="$hrkey-$hrs,";
 					}
 				$hour_str=substr($hour_str, 0, -1);
 
-				$temp_ary_ct = count($temp_stat_array{"$key"});
+				if (is_null($temp_stat_array["$key"])) $temp_stat_array["$key"] = array();
+				$temp_ary_ct = count($temp_stat_array["$key"]);
 				if ($temp_ary_ct > 0)
 					{
-					ksort($temp_stat_array{"$key"});
+					ksort($temp_stat_array["$key"]);
 					# while(list($statkey, $statval)=each($temp_stat_array{"$key"})) 
-					foreach($temp_stat_array{"$key"} as $statkey => $statval)
+					foreach($temp_stat_array["$key"] as $statkey => $statval)
 						{
-						$status_str.=$statkey."-".$temp_stat_array{"$key"}{"$statkey"}.",";
+						$status_str.=$statkey."-".$temp_stat_array["$key"]["$statkey"].",";
 						}
 					}
 				$status_str=substr($status_str, 0, -1);
 
-				echo $key."|".$inbound_array{$key}[0]."|".$inbound_array{$key}[1]."|".$hour_str."|".$status_str."|\n";
+				echo $key."|".$inbound_array[$key][0]."|".$inbound_array[$key][1]."|".$hour_str."|".$status_str."|\n";
 			}
 
 		$result = 'SUCCESS';
@@ -15645,7 +15648,7 @@ if ($function == 'call_status_stats')
 ################################################################################
 if ($function == 'call_dispo_report')
 	{
-	if(strlen($campaigns)<2 && strlen($ingroups)<2 && strlen($did_ids)<2 && strlen($did_patterns)<2)
+	if(strlen($campaigns)<2 && strlen($ingroups)<2 && strlen($did_ids)<1 && strlen($did_patterns)<2)
 		{
 		$result = 'ERROR';
 		$result_reason = "call_dispo_report INVALID OR MISSING CAMPAIGNS, INGROUPS, OR DIDS";
@@ -15740,7 +15743,8 @@ if ($function == 'call_dispo_report')
 						}
 					}
 				}
-			
+
+			if (is_null($did_id_array)) $did_id_array = array();
 			if (count($did_id_array)>0 && $skip_inbound) # DON'T DO A REPORT FOR INGROUPS AND DIDS YET.
 				{
 				$did_SQL="and did_id in ('".implode("', '", $did_id_array)."')";
@@ -15772,7 +15776,8 @@ if ($function == 'call_dispo_report')
 					}
 				}
 
-			if (count($status_array)>0) 
+			if (is_null($status_array)) $status_array = array();
+			if ($status_array && count($status_array)>0) 
 				{
 				$status_SQL=" and status in ('".implode("', '", $status_array)."') ";
 				if (in_array("ALLSTATUSES", $status_array) || preg_match('/\-\-\-ALL\-\-\-/', $statuses) || in_array("ALLCATEGORIES", $categories_array) || preg_match('/\-\-\-ALL\-\-\-/', $categories)) 
@@ -15798,7 +15803,8 @@ if ($function == 'call_dispo_report')
 						}
 					}
 				}
-			if (count($user_array)>0) 
+			if (is_null($user_array)) $user_array = array();
+			if ($user_array && count($user_array)>0) 
 				{
 				$user_SQL=" and user in ('".implode("', '", $user_array)."') ";
 				if (in_array("ALLUSERS", $user_array) || preg_match('/\-\-\-ALL\-\-\-/', $users) || in_array("ALLGROUPS", $user_group_array) || preg_match('/\-\-\-ALL\-\-\-/', $user_groups)) 
@@ -15821,7 +15827,7 @@ if ($function == 'call_dispo_report')
 				$rslt=mysql_to_mysqli($stmt, $link);
 				while ($row=mysqli_fetch_row($rslt)) 
 					{
-					$outbound_ct_array{"$row[0]"}{"TOTAL CALLS"}+=$row[2];
+					$outbound_ct_array["$row[0]"]["TOTAL CALLS"]+=$row[2];
 					$grand_total_calls+=$row[2];
 					if ($status_breakdown) 
 						{
@@ -15829,8 +15835,8 @@ if ($function == 'call_dispo_report')
 							{
 							array_push($status_ct_array, "$row[1]");
 							}
-						$outbound_ct_array{"$row[0]"}{"$row[1]"}+=$row[2];
-						$grand_total_array{"$row[1]"}+=$row[2];
+						$outbound_ct_array["$row[0]"]["$row[1]"]+=$row[2];
+						$grand_total_array["$row[1]"]+=$row[2];
 						}
 					}
 				}
@@ -15841,7 +15847,7 @@ if ($function == 'call_dispo_report')
 				$rslt=mysql_to_mysqli($stmt, $link);
 				while ($row=mysqli_fetch_row($rslt)) 
 					{
-					$inbound_ct_array{"$row[0]"}{"TOTAL CALLS"}+=$row[2];
+					$inbound_ct_array["$row[0]"]["TOTAL CALLS"]+=$row[2];
 					$grand_total_calls+=$row[2];
 					if ($status_breakdown) 
 						{
@@ -15849,8 +15855,8 @@ if ($function == 'call_dispo_report')
 							{
 							array_push($status_ct_array, "$row[1]");
 							}
-						$inbound_ct_array{"$row[0]"}{"$row[1]"}+=$row[2];
-						$grand_total_array{"$row[1]"}+=$row[2];
+						$inbound_ct_array["$row[0]"]["$row[1]"]+=$row[2];
+						$grand_total_array["$row[1]"]+=$row[2];
 						}
 					}
 				}
@@ -15861,7 +15867,7 @@ if ($function == 'call_dispo_report')
 				$rslt=mysql_to_mysqli($stmt, $link);
 				while ($row=mysqli_fetch_row($rslt)) 
 					{
-					$did_ct_array{"$row[1]"}{"TOTAL CALLS"}+=$row[4];
+					$did_ct_array["$row[1]"]["TOTAL CALLS"]+=$row[4];
 					$grand_total_calls+=$row[4];
 					if ($status_breakdown) 
 						{
@@ -15869,12 +15875,13 @@ if ($function == 'call_dispo_report')
 							{
 							array_push($status_ct_array, "$row[3]");
 							}
-						$did_ct_array{"$row[1]"}{"$row[3]"}+=$row[4];
-						$grand_total_array{"$row[3]"}+=$row[4];
+						$did_ct_array["$row[1]"]["$row[3]"]+=$row[4];
+						$grand_total_array["$row[3]"]+=$row[4];
 						}
 					}
 				}
 
+			if (is_null($status_ct_array)) $status_ct_array = array();
 			$rpt_str.="CAMPAIGN,TOTAL CALLS";
 			if ($status_breakdown) 
 				{
@@ -15887,18 +15894,18 @@ if ($function == 'call_dispo_report')
 #			while (list($key, $val)=each($outbound_ct_array)) 
 			foreach($outbound_ct_array as $key => $val)
 				{
-				$total_calls=$outbound_ct_array{$key}{"TOTAL CALLS"};
-				$rpt_str.="$key,".$outbound_ct_array{$key}{"TOTAL CALLS"};
-				unset($outbound_ct_array{$key}{"TOTAL CALLS"});
+				$total_calls=$outbound_ct_array[$key]["TOTAL CALLS"];
+				$rpt_str.="$key,".$outbound_ct_array[$key]["TOTAL CALLS"];
+				unset($outbound_ct_array[$key]["TOTAL CALLS"]);
 				if ($status_breakdown) 
 					{
 					for ($i=0; $i<count($status_ct_array); $i++) 
 						{
-						$outbound_ct_array{$key}{"$status_ct_array[$i]"}+=0;
+						$outbound_ct_array[$key]["$status_ct_array[$i]"]+=0;
 						}
-					ksort($outbound_ct_array{$key});
+					ksort($outbound_ct_array[$key]);
 #					while (list($key2, $val2)=each($outbound_ct_array{$key})) 
-					foreach($outbound_ct_array{$key} as $key2 => $val2)
+					foreach($outbound_ct_array[$key] as $key2 => $val2)
 						{
 						$rpt_str.=",$val2";
 						if ($show_percentages) 
@@ -15914,18 +15921,18 @@ if ($function == 'call_dispo_report')
 #			while (list($key, $val)=each($inbound_ct_array)) 
 			foreach($inbound_ct_array as $key => $val)
 				{
-				$total_calls=$inbound_ct_array{$key}{"TOTAL CALLS"};
-				$rpt_str.="$key,".$inbound_ct_array{$key}{"TOTAL CALLS"};
-				unset($inbound_ct_array{$key}{"TOTAL CALLS"});
+				$total_calls=$inbound_ct_array[$key]["TOTAL CALLS"];
+				$rpt_str.="$key,".$inbound_ct_array[$key]["TOTAL CALLS"];
+				unset($inbound_ct_array[$key]["TOTAL CALLS"]);
 				if ($status_breakdown) 
 					{
 					for ($i=0; $i<count($status_ct_array); $i++) 
 						{
-						$inbound_ct_array{$key}{"$status_ct_array[$i]"}+=0;
+						$inbound_ct_array[$key]["$status_ct_array[$i]"]+=0;
 						}
-					ksort($inbound_ct_array{$key});
+					ksort($inbound_ct_array[$key]);
 #					while (list($key2, $val2)=each($inbound_ct_array{$key})) 
-					foreach($inbound_ct_array{$key} as $key2 => $val2)
+					foreach($inbound_ct_array[$key] as $key2 => $val2)
 						{
 						$rpt_str.=",$val2";
 						if ($show_percentages) 
@@ -15941,18 +15948,18 @@ if ($function == 'call_dispo_report')
 #			while (list($key, $val)=each($did_ct_array)) 
 			foreach($did_ct_array as $key => $val)
 				{
-				$total_calls=$did_ct_array{$key}{"TOTAL CALLS"};
-				$rpt_str.="$key,".$did_ct_array{$key}{"TOTAL CALLS"};
-				unset($did_ct_array{$key}{"TOTAL CALLS"});
+				$total_calls=$did_ct_array[$key]["TOTAL CALLS"];
+				$rpt_str.="$key,".$did_ct_array[$key]["TOTAL CALLS"];
+				unset($did_ct_array[$key]["TOTAL CALLS"]);
 				if ($status_breakdown) 
 					{
 					for ($i=0; $i<count($status_ct_array); $i++) 
 						{
-						$did_ct_array{$key}{"$status_ct_array[$i]"}+=0;
+						$did_ct_array[$key]["$status_ct_array[$i]"]+=0;
 						}
-					ksort($did_ct_array{$key});
+					ksort($did_ct_array[$key]);
 #					while (list($key2, $val2)=each($did_ct_array{$key})) 
-					foreach($did_ct_array{$key} as $key2 => $val2)
+					foreach($did_ct_array[$key] as $key2 => $val2)
 						{
 						$rpt_str.=",$val2";
 						if ($show_percentages) 

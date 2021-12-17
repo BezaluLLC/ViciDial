@@ -5756,12 +5756,13 @@ if ($SSscript_remove_js > 0)
 # 211213-1619 - Fix for new phone inserts template_id issue on some MySQL setups
 # 211214-1157 - Fix for Queue Groups link issue #1343
 # 211215-1806 - Added some User Group settings
+# 211217-0732 - Fixes for PHP8, issue #1341
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-837a';
-$build = '211215-1806';
+$admin_version = '2.14-838a';
+$build = '211217-0732';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -7130,6 +7131,7 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 	if ($ADD==41)
 		{
 		$p=0;
+		if (is_null($XFERgroups)) $XFERgroups = array();
 		$XFERgroup_ct = count($XFERgroups);
 		while ($p < $XFERgroup_ct)
 			{
@@ -17156,6 +17158,7 @@ if ($ADD==48)
 		else
 			{
 			$p=0;
+			if (is_null($qc_statuses)) $qc_statuses = array();
 			$qc_statuses_ct = count($qc_statuses);
 			while ($p < $qc_statuses_ct)
 				{
@@ -17163,6 +17166,7 @@ if ($ADD==48)
 				$p++;
 				}
 			$p=0;
+			if (is_null($qc_lists)) $qc_lists = array();
 			$qc_lists_ct = count($qc_lists);
 			while ($p < $qc_lists_ct)
 				{
@@ -17754,6 +17758,7 @@ if ($ADD==4111 || $ADD==4811 || $ADD==4911)
 				else
 					{
 					$p=0;
+					if (is_null($qc_statuses)) $qc_statuses = array();
 					$qc_statuses_ct = count($qc_statuses);
 					while ($p < $qc_statuses_ct)
 						{
@@ -17761,6 +17766,7 @@ if ($ADD==4111 || $ADD==4811 || $ADD==4911)
 						$p++;
 						}
 					$p=0;
+					if (is_null($qc_lists)) $qc_lists = array();
 					$qc_lists_ct = count($qc_lists);
 					while ($p < $qc_lists_ct)
 						{
