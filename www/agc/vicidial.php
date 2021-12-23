@@ -682,10 +682,11 @@
 # 210720-0850 - Fixes for inconsistent hangup_xfer_record_start behavior
 # 210913-0831 - Fix for alternate number auto-dial logging issues
 # 211223-0824 - Fix for API hangup post-call survey issue #1338
+# 211223-0906 - Fix for API transfer if AGENTDIRECT selected, issue #1330
 #
 
-$version = '2.14-650c';
-$build = '211223-0824';
+$version = '2.14-651c';
+$build = '211223-0906';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -7768,7 +7769,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			{
 			CalLCID = MDnextCID;
 			}
-		if ( ( (taskvar == 'XfeRLOCAL') || (taskvar == 'XfeRINTERNAL') ) && (XfeR_GrouP.match(/AGENTDIRECT/i)) && (ADvalue.length < 2) )
+		if ( ( (taskvar == 'XfeRLOCAL') || (taskvar == 'XfeRINTERNAL') ) && (XfeR_GrouP.match(/AGENTDIRECT/i)) && (ADvalue.length < 2) && (API_selected_xfergroup.length < 2) )
 			{
 			alert_box("<?php echo _QXZ("YOU MUST SELECT AN AGENT TO TRANSFER TO WHEN USING AGENTDIRECT"); ?>");
 			button_click_log = button_click_log + "" + SQLdate + "-----XferAgentFailed---" + ADvalue + "|";
