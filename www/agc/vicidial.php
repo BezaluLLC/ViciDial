@@ -681,10 +681,11 @@
 # 210719-0907 - Added new state override options for 24-Hour Call Count Limits
 # 210720-0850 - Fixes for inconsistent hangup_xfer_record_start behavior
 # 210913-0831 - Fix for alternate number auto-dial logging issues
+# 211223-0824 - Fix for API hangup post-call survey issue #1338
 #
 
-$version = '2.14-649c';
-$build = '210913-0831';
+$version = '2.14-650c';
+$build = '211223-0824';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -7116,7 +7117,17 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							WaitingForNextStep=0;
 							custchannellive=0;
 
-							dialedcall_send_hangup();
+							if ( (inbound_post_call_survey=='ENABLED') && (inbound_survey_participate=='Y') )
+								{
+								document.vicidial_form.xfernumber.value = '83068888888888883999';
+								document.vicidial_form.xferoverride.checked=true;
+								mainxfer_send_redirect('XfeRBLIND','" + lastcustchannel + "','" + lastcustserverip + "','','','','YES');
+								button_click_log = button_click_log + "" + SQLdate + "-----APIhangupSurveyOR---" + inbound_post_call_survey + " " + inbound_survey_participate + " " + document.vicidial_form.xfernumber.value + "|";
+								}
+							else
+								{
+								dialedcall_send_hangup();
+								}
 							}
 						if ( (APIStatuS.length < 1000) && (APIStatuS.length > 0) && (AgentDispoing > 1) && (APIStatuS != '::::::::::') )
 							{
