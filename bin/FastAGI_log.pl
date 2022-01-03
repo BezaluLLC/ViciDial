@@ -25,7 +25,7 @@
 # exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
 # 
 #
-# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 61010-1007 - First test build
@@ -92,6 +92,7 @@
 # 210719-1521 - Added additional state override methods for call_limit_24hour
 # 210827-0936 - Added PJSIP compatibility
 # 210907-0841 - Added KHOMP code (install JSON::PP Perl module and remove '#UC#' in the code to enable)
+# 220103-1520 - Added timeout fix for manual dial calls, set the CAMPDTO dialplan variable
 #
 
 # defaults for PreFork
@@ -715,7 +716,7 @@ sub process_request
 				$sthA->finish();
 
 				### get campaign settings
-				$stmtA = "SELECT amd_type,campaign_vdad_exten FROM vicidial_campaigns where campaign_id = '$campaign';";
+				$stmtA = "SELECT amd_type,campaign_vdad_exten,dial_timeout,manual_dial_timeout FROM vicidial_campaigns where campaign_id = '$campaign';";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
@@ -724,6 +725,8 @@ sub process_request
 					@aryA = $sthA->fetchrow_array;
 					$amd_type =     $aryA[0];
 					$campaign_vdad_exten =	$aryA[1];
+					$dial_timeout =			$aryA[2];
+					$man_dial_timeout =		$aryA[3];
 					}
 				$sthA->finish();
 				
@@ -734,6 +737,16 @@ sub process_request
 					if ($AGILOG) {$agi_string = "|CAMPCUST: $CAMPCUST|$callerid|";   &agi_output;}
 					}
 
+				### on manual dial calls set the CAMPDTO dialplan variable
+				if ($callerid =~ /^M/)
+					{
+					if (length($man_dial_timeout) > 0)
+						{
+						$dial_timeout = $man_dial_timeout;
+						}
+					$AGI->exec("EXEC Set(_CAMPDTO=$dial_timeout)");
+					if ($AGILOG) {$agi_string = "|CAMPDTO: $dial_timeout|$callerid|";   &agi_output;}
+					}
 
 				### BEGIN OpenSIPs CallerIDname code ###
 				### get system_settings
