@@ -1,7 +1,7 @@
 <?php
 # admin_bulk_tools.php
 #
-# Copyright (C) 2021  Mike Coate, Mike Cargile, Matt Florell	<vicidial@gmail.com>	LICENSE: AGPLv2
+# Copyright (C) 2022  Mike Coate, Mike Cargile, Matt Florell	<vicidial@gmail.com>	LICENSE: AGPLv2
 #
 # This is the admin screen for various bulk copy/delete tools.
 #
@@ -30,13 +30,14 @@
 # 200816-0930 - Added CID Groups to several labels
 # 210312-1429 - Added DID bulk delete text area, filtered out did_system_filter as selectable
 # 210315-1644 - Added CID bulk delete text area and ---ALL-- option
+# 220112-1806 - Added CAN(Canadian) states lookup for STATEFILL feature and CID-STATE feature
 #
 
 require("dbconnect_mysqli.php");
 require("functions.php");
 
-$version = '2.14-24';
-$build = '210315-1644';
+$version = '2.14-25';
+$build = '220112-1806';
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
@@ -418,12 +419,12 @@ if ($form_to_run == "ACCID")
 		while ($i < count($ACCIDto_insert_raw))
 			{
 			$STATEFILLareacode[$i] = substr($ACCIDto_insert_raw[$i], 0, 3);
-			$SQL = "SELECT state FROM vicidial_phone_codes WHERE country='USA' AND areacode='$STATEFILLareacode[$i]';";
+			$SQL = "SELECT state FROM vicidial_phone_codes WHERE country IN('USA','CAN') AND areacode='$STATEFILLareacode[$i]';";
 			if ($DB) {echo "$SQL|";}
 			$SQL_rslt = mysql_to_mysqli($SQL, $link);
 			$state = mysqli_fetch_row($SQL_rslt);
 			
-			$SQL = "SELECT areacode FROM vicidial_phone_codes WHERE country='USA' AND state='$state[0]';";
+			$SQL = "SELECT areacode FROM vicidial_phone_codes WHERE country IN('USA','CAN') AND state='$state[0]';";
 			if ($DB) {echo "$SQL|";}
 			$SQL_rslt = mysql_to_mysqli($SQL, $link);
 			$areacode_count = mysqli_num_rows($SQL_rslt);
@@ -462,7 +463,7 @@ if ($form_to_run == "ACCID")
 			$areacode[$i] = substr($ACCIDto_insert_raw[$i], 0, 3);
 			if ($CGT == 'STATE')
 				{
-				$SQL = "SELECT state FROM vicidial_phone_codes WHERE country='USA' AND areacode='$areacode[$i]';";
+				$SQL = "SELECT state FROM vicidial_phone_codes WHERE country IN('USA','CAN') AND areacode='$areacode[$i]';";
 				if ($DB) {echo "$SQL|";}
 				$SQL_rslt = mysql_to_mysqli($SQL, $link);
 				$row=mysqli_fetch_row($SQL_rslt);
