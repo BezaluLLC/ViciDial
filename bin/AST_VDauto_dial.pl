@@ -25,7 +25,7 @@
 # It is good practice to keep this program running by placing the associated 
 # KEEPALIVE script running every minute to ensure this program is always running
 #
-# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50125-1201 - Changed dial timeout to 120 seconds from 180 seconds
@@ -146,9 +146,10 @@
 # 210827-1044 - Fix for Extended auto-alt-dialing issue #1323
 # 210901-1020 - Another fix for Extended auto-alt-dialing issue #1323
 # 211022-1637 - Added incall_tally_threshold_seconds campaign feature
+# 220118-0938 - Added $ADB auto-alt-dial extra debug output option, fix for extended auto-alt-dial issue #1337
 #
 
-$build='211022-1637';
+$build='220118-0938';
 $script='AST_VDauto_dial';
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -166,6 +167,7 @@ if (length($ARGV[0])>1)
 		print "  [-t] = test\n";
 		print "  [-debug] = verbose debug messages\n";
 		print "  [-debugX] = Extra verbose debug messages\n";
+		print "  [--alt-debug] = Extra verbose Alt-Dialing debug messages\n";
 		print "  [--delay=XXX] = delay of XXX seconds per loop, default 2.5 seconds\n";
 		print "\n";
 		exit;
@@ -190,6 +192,10 @@ if (length($ARGV[0])>1)
 		if ($args =~ /-debugX/i)
 			{
 			$DBX=1; # Extra Debug flag, set to 0 for no debug messages, On an active system this will generate hundreds of lines of output per minute
+			}
+		if ($args =~ /--alt-debug/i)
+			{
+			$ADB=1; # Alt-dial Debug flag, set to 0 for no alt-dial debug messages.
 			}
 		if ($args =~ /-t/i)
 			{
@@ -1851,6 +1857,7 @@ while($one_day_interval > 0)
 
 											if ( ($alt_dial =~ /ALT|ADDR3|X/) && ($DBIPautoaltdial[$user_CIPct] =~ /ALT|ADDR|X/) )
 												{
+												if ($ADB > 0) {$aad_string = "ALT-51: $lead_id|$alt_dial|$DBIPautoaltdial[$user_CIPct]|";   &aad_output;}
 												if ( ($alt_dial =~ /ALT/) && ($DBIPautoaltdial[$user_CIPct] =~ /ALT/) )
 													{
 													$alt_phone =~ s/\D//gi;
@@ -1863,7 +1870,8 @@ while($one_day_interval > 0)
 													}
 												if  ( ($alt_dial =~ /X/) && ($DBIPautoaltdial[$user_CIPct] =~ /X/) )
 													{
-													if ($alt_dial =~ /LAST/) 
+													if ($ADB > 0) {$aad_string = "ALT-52: $lead_id|$alt_dial|$DBIPautoaltdial[$user_CIPct]|";   &aad_output;}
+													if ($alt_dial =~ /LAST|99999/) 
 														{
 														$stmtA = "SELECT phone_code,phone_number FROM vicidial_list_alt_phones where lead_id='$lead_id' order by alt_phone_count desc limit 1;";
 														}
@@ -1885,6 +1893,7 @@ while($one_day_interval > 0)
 														}
 													$sthA->finish();
 													}
+												if ($ADB > 0) {$aad_string = "ALT-53: $lead_id|$alt_dial|$DBIPautoaltdial[$user_CIPct]|$phone_number|";   &aad_output;}
 
 												$stmtA = "UPDATE vicidial_list set called_since_last_reset='$CSLR',called_count='$called_count',user='VDAD',last_local_call_time='$LLCT_DATE' where lead_id='$lead_id'";
 												}
@@ -3057,6 +3066,7 @@ while($one_day_interval > 0)
 
 							##### BEGIN AUTO ALT PHONE DIAL SECTION #####
 								$event_string = "|$stmtA|$VD_auto_alt_dial|$VD_auto_alt_dial_statuses|$CLnew_status|$CLlead_id|$CLalt_dial";   &event_logger;
+							if ($ADB > 0) {$aad_string = "ALT-01: $CLlead_id|$VD_auto_alt_dial|$CLalt_dial|$VD_auto_alt_dial_statuses|";   &aad_output;}
 							if ( ($VD_auto_alt_dial_statuses =~ / $CLnew_status /) && ($CLlead_id > 0) )
 								{
 								$alt_skip_reason='';   $addr3_skip_reason='';
@@ -3084,6 +3094,7 @@ while($one_day_interval > 0)
 										}
 									$sthA->finish();
 										$event_string = "|$stmtA|$VD_alt_phone|";   &event_logger;
+									if ($ADB > 0) {$aad_string = "ALT-02: $CLlead_id|$CLalt_dial|$VD_alt_phone|";   &aad_output;}
 									if (length($VD_alt_phone)>5)
 										{
 										if ( ($VD_use_internal_dnc =~ /Y/) || ($VD_use_internal_dnc =~ /AREACODE/) )
@@ -3160,10 +3171,12 @@ while($one_day_interval > 0)
 										{$alt_dial_skip=1;   $alt_skip_reason='ALT phone invalid';}
 									if ($alt_dial_skip > 0)
 										{
+										if ($ADB > 0) {$aad_string = "ALT-03: $CLlead_id|$CLalt_dial|ALT-skip|$alt_skip_reason|";   &aad_output;}
 										$CLalt_dial='ALT';
 										$aad_string = "$CLlead_id|$VD_alt_phone|$CLcampaign_id|ALT|0|hopper skip|$alt_skip_reason|";   &aad_output;
 										}
 									}
+								if ($ADB > 0) {$aad_string = "ALT-04: $CLlead_id|$VD_auto_alt_dial|$CLalt_dial|";   &aad_output;}
 								if ( ( ($VD_auto_alt_dial =~ /ADDR3_ONLY/) && ($CLalt_dial =~ /NONE|MAIN/) ) || ( ($VD_auto_alt_dial =~ /ALT_AND_ADDR3/) && ($CLalt_dial =~ /ALT/) ) )
 									{
 									$addr3_dial_skip=0;
@@ -3185,6 +3198,7 @@ while($one_day_interval > 0)
 										}
 									$sthA->finish();
 										$event_string = "|$stmtA|$VD_address3|";   &event_logger;
+									if ($ADB > 0) {$aad_string = "ALT-05: $CLlead_id|$CLalt_dial|$VD_address3|";   &aad_output;}
 									if (length($VD_address3)>5)
 										{
 										if ( ($VD_use_internal_dnc =~ /Y/) || ($VD_use_internal_dnc =~ /AREACODE/) )
@@ -3261,10 +3275,12 @@ while($one_day_interval > 0)
 										{$addr3_dial_skip=1;   $addr3_skip_reason='ADDR3 phone invalid';}
 									if ($addr3_dial_skip > 0)
 										{
+										if ($ADB > 0) {$aad_string = "ALT-06: $CLlead_id|$CLalt_dial|ADDR3-skip|$addr3_skip_reason|";   &aad_output;}
 										$CLalt_dial='ADDR3';
-										if ($AGILOG) {$aad_string = "$CLlead_id|$VD_address3|$CLcampaign_id|ADDR3|0|hopper skip|$addr3_skip_reason|";   &aad_output;}
+										if ($SYSLOG) {$aad_string = "$CLlead_id|$VD_address3|$CLcampaign_id|ADDR3|0|hopper skip|$addr3_skip_reason|";   &aad_output;}
 										}
 									}
+								if ($ADB > 0) {$aad_string = "ALT-07: $CLlead_id|$VD_auto_alt_dial|$CLalt_dial|";   &aad_output;}
 								if ( ( ($VD_auto_alt_dial =~ /EXTENDED_ONLY/) && ($CLalt_dial =~ /NONE|MAIN/) ) || ( ($VD_auto_alt_dial =~ /ALT_AND_EXTENDED/) && ($CLalt_dial =~ /ALT/) ) || ( ($VD_auto_alt_dial =~ /ADDR3_AND_EXTENDED|ALT_AND_ADDR3_AND_EXTENDED/) && ($CLalt_dial =~ /ADDR3/) ) || ( ($VD_auto_alt_dial =~ /EXTENDED/) && ($CLalt_dial =~ /^X/) && ($CLalt_dial !~ /XLAST/) ) )
 									{
 									if ($CLalt_dial =~ /ADDR3/) {$Xlast=0;}
@@ -3273,6 +3289,7 @@ while($one_day_interval > 0)
 										$Xlast = $CLalt_dial;
 										if ($CLalt_dial =~ /LAST/) {$Xlast=66000;}
 										}
+									if ($ADB > 0) {$aad_string = "ALT-08: $CLlead_id|$VD_auto_alt_dial|$CLalt_dial|$Xlast|";   &aad_output;}
 									$Xlast =~ s/\D//gi;
 									if (length($Xlast)<1)
 										{$Xlast=0;}
@@ -3304,6 +3321,7 @@ while($one_day_interval > 0)
 									$sthA->finish();
 										$event_string = "|$stmtA|$alt_dial_phones_count";   &event_logger;
 
+									if ($ADB > 0) {$aad_string = "ALT-09: $CLlead_id|$CLalt_dial|$Xlast|$alt_dial_phones_count|";   &aad_output;}
 									while ( ($alt_dial_phones_count > 0) && ($alt_dial_phones_count > $Xlast) && ($Xlast != 'LAST') )
 										{
 										$Xlast++;
@@ -3320,9 +3338,10 @@ while($one_day_interval > 0)
 											$VD_phone_code = 		$aryA[3];
 											}
 										else
-											{$Xlast=9999999999;}
+											{$Xlast=99999;}
 											$event_string = "|$stmtA|$VD_altdial_phone|$Xlast|";   &event_logger;
 										$sthA->finish();
+										if ($ADB > 0) {$aad_string = "ALT-10: $CLlead_id|$CLalt_dial|$Xlast|$VD_altdial_phone|";   &aad_output;}
 
 										$DNCC=0;
 										$DNCL=0;
@@ -3396,6 +3415,7 @@ while($one_day_interval > 0)
 													$event_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;
 													$aad_string = "$CLlead_id|$VD_altdial_phone|$CLcampaign_id|X$Xlast|15|hopper insert|";   &aad_output;
 													$DNC_hopper_trigger=0;
+													if ($ADB > 0) {$aad_string = "ALT-11: $CLlead_id|$CLalt_dial|X$Xlast|$VD_altdial_phone|";   &aad_output;}
 													}
 												else
 													{$DNC_hopper_trigger=1;}
@@ -3412,17 +3432,20 @@ while($one_day_interval > 0)
 													$affected_rows = $dbhA->do($stmtA);
 													$event_string = "--    VDH record DNC inserted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;
 													$aad_string = "$CLlead_id|$VD_altdial_phone|$CLcampaign_id|X$Xlast|15|hopper DNC insert|";   &aad_output;
-													$Xlast=9999999999;
+													if ($ADB > 0) {$aad_string = "ALT-12: $CLlead_id|$CLalt_dial|X$Xlast|$VD_altdial_phone|";   &aad_output;}
+													$Xlast=99999;
 													}
 												else
 													{
 													$event_string = "--    VDH record DNC not-inserted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;
 													$aad_string = "$CLlead_id|$VD_altdial_phone|$CLcampaign_id|X$Xlast|15|hopper DNC skip|";   &aad_output;
+													if ($ADB > 0) {$aad_string = "ALT-13: $CLlead_id|$CLalt_dial|X$Xlast|$VD_altdial_phone|";   &aad_output;}
 													}
 												}
 											}
 										}
 									}
+								if ($ADB > 0) {$aad_string = "ALT-14: $CLlead_id|$CLalt_dial|END|";   &aad_output;}
 								}
 							##### END AUTO ALT PHONE DIAL SECTION #####
 							}
@@ -5691,7 +5714,7 @@ sub jam_event_logger
 
 sub aad_output
 	{
-	if ($SYSLOG > 0)
+	if ( ($SYSLOG > 0) || ($ADB > 0) )
 		{
 		### open the log file for writing ###
 		open(Aout, ">>$AADLOGfile") || die "Can't open $AADLOGfile: $!\n";
