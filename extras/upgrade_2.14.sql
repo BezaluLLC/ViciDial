@@ -1856,3 +1856,9 @@ ALTER TABLE vicidial_user_groups ADD reports_header_override ENUM('DISABLED','LO
 ALTER TABLE vicidial_user_groups ADD admin_home_url VARCHAR(255) default '';
 
 UPDATE system_settings SET db_schema_version='1650',db_schema_update_date=NOW() where db_schema_version < 1650;
+
+ALTER TABLE vicidial_campaigns ADD auto_alt_threshold TINYINT(3) UNSIGNED default '0';
+
+ALTER TABLE vicidial_lists ADD auto_alt_threshold TINYINT(3) default '-1';
+
+UPDATE system_settings SET db_schema_version='1651',db_schema_update_date=NOW() where db_schema_version < 1651;

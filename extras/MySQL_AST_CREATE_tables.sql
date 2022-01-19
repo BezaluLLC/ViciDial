@@ -1082,7 +1082,8 @@ call_limit_24hour_scope ENUM('SYSTEM_WIDE','CAMPAIGN_LISTS') default 'SYSTEM_WID
 call_limit_24hour TINYINT(3) UNSIGNED default '0',
 call_limit_24hour_override VARCHAR(40) default 'DISABLED',
 cid_group_id_two VARCHAR(20) default '---DISABLED---',
-incall_tally_threshold_seconds SMALLINT(5) UNSIGNED default '0'
+incall_tally_threshold_seconds SMALLINT(5) UNSIGNED default '0',
+auto_alt_threshold TINYINT(3) UNSIGNED default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -1126,7 +1127,8 @@ inbound_drop_voicemail VARCHAR(20),
 inbound_after_hours_voicemail VARCHAR(20),
 qc_scorecard_id VARCHAR(20) DEFAULT '',
 qc_statuses_id VARCHAR(20) DEFAULT '',
-qc_web_form_address VARCHAR(255) DEFAULT ''
+qc_web_form_address VARCHAR(255) DEFAULT '',
+auto_alt_threshold TINYINT(3) default '-1'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_statuses (
@@ -5043,4 +5045,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1650',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1651',db_schema_update_date=NOW(),reload_timestamp=NOW();

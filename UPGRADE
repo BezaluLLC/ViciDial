@@ -701,6 +701,11 @@ OTHER CHANGES:
 	pages, allowing you to define multiple campaigns and/or in-groups in a 
 	single Queue Group to be used in some reports.
 
+196. Added Campaign and List options for "Auto Alt-Number Dialing Threshold"
+	allowing you to stop auto-dialing alternate phone numbers for a lead 
+	after a set number of call attempts, and thereafter only dialing the 
+	main phone number for the lead.
+
 
 
 

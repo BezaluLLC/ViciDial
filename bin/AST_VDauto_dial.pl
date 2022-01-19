@@ -147,9 +147,10 @@
 # 210901-1020 - Another fix for Extended auto-alt-dialing issue #1323
 # 211022-1637 - Added incall_tally_threshold_seconds campaign feature
 # 220118-0938 - Added $ADB auto-alt-dial extra debug output option, fix for extended auto-alt-dial issue #1337
+# 220118-2206 - Added auto_alt_threshold campaign & list settings
 #
 
-$build='220118-0938';
+$build='220118-2206';
 $script='AST_VDauto_dial';
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -945,7 +946,7 @@ while($one_day_interval > 0)
 
 			### grab the dial_level and multiply by active agents to get your goalcalls
 			$DBIPadlevel[$user_CIPct]=0;
-			$stmtA = "SELECT auto_dial_level,local_call_time,dial_timeout,dial_prefix,campaign_cid,active,campaign_vdad_exten,closer_campaigns,omit_phone_code,available_only_ratio_tally,auto_alt_dial,campaign_allow_inbound,queue_priority,dial_method,use_custom_cid,inbound_queue_no_dial,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,adaptive_dl_diff_target,dl_diff_target_method,inbound_no_agents_no_dial_container,inbound_no_agents_no_dial_threshold,cid_group_id,scheduled_callbacks_auto_reschedule,call_quota_lead_ranking,dial_timeout_lead_container,drop_call_seconds,drop_action,drop_inbound_group,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override,cid_group_id_two,incall_tally_threshold_seconds FROM vicidial_campaigns where campaign_id='$DBIPcampaign[$user_CIPct]'";
+			$stmtA = "SELECT auto_dial_level,local_call_time,dial_timeout,dial_prefix,campaign_cid,active,campaign_vdad_exten,closer_campaigns,omit_phone_code,available_only_ratio_tally,auto_alt_dial,campaign_allow_inbound,queue_priority,dial_method,use_custom_cid,inbound_queue_no_dial,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,adaptive_dl_diff_target,dl_diff_target_method,inbound_no_agents_no_dial_container,inbound_no_agents_no_dial_threshold,cid_group_id,scheduled_callbacks_auto_reschedule,call_quota_lead_ranking,dial_timeout_lead_container,drop_call_seconds,drop_action,drop_inbound_group,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override,cid_group_id_two,incall_tally_threshold_seconds,auto_alt_threshold FROM vicidial_campaigns where campaign_id='$DBIPcampaign[$user_CIPct]'";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -994,6 +995,7 @@ while($one_day_interval > 0)
 				$DBIPcall_limit_24hour_override[$user_CIPct] =	$aryA[34];
 				$DBIPcid_group_id_two[$user_CIPct] =	$aryA[35];
 				$DBIPincall_tally_threshold_seconds[$user_CIPct] =	$aryA[36];
+				$DBIPauto_alt_threshold[$user_CIPct] =			$aryA[37];
 
 				# check for Dial Timeout Lead override
 				if ( (length($DBIPdial_timeout_lead_container[$user_CIPct]) > 1) && ($DBIPdial_timeout_lead_container[$user_CIPct] !~ /^DISABLED$/i) )
@@ -1817,8 +1819,9 @@ while($one_day_interval > 0)
 										if ($rec_countCUSTDATA)
 											{
 											$campaign_cid_override='';
+											$auto_alt_threshold=-1;
 											### gather list_id overrides
-											$stmtA = "SELECT campaign_cid_override FROM vicidial_lists where list_id='$list_id';";
+											$stmtA = "SELECT campaign_cid_override,auto_alt_threshold FROM vicidial_lists where list_id='$list_id';";
 											$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 											$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 											$sthArowsL=$sthA->rows;
@@ -1826,8 +1829,18 @@ while($one_day_interval > 0)
 												{
 												@aryA = $sthA->fetchrow_array;
 												$campaign_cid_override =	$aryA[0];
+												$auto_alt_threshold =		$aryA[1];
 												}
 											$sthA->finish();
+
+											$temp_auto_alt_threshold = $DBIPauto_alt_threshold[$user_CIPct];
+											if ($auto_alt_threshold > -1 ) {$temp_auto_alt_threshold = $auto_alt_threshold;}
+											$auto_alt_lead_disabled=0;
+											if ( ($temp_auto_alt_threshold > 0) && ($called_count >= $temp_auto_alt_threshold) ) 
+												{
+												$auto_alt_lead_disabled=1;
+												if ($ADB > 0) {$aad_string = "ALT-50: $lead_id|$alt_dial|$DBIPautoaltdial[$user_CIPct]|$DBIPauto_alt_threshold[$user_CIPct]|$auto_alt_threshold|($called_count <> $temp_auto_alt_threshold)|auto_alt_lead_disabled: $auto_alt_lead_disabled|";   &aad_output;}
+												}
 
 											### update called_count
 											$called_count++;
@@ -2458,6 +2471,7 @@ while($one_day_interval > 0)
 					$CLlead_id = ($CLlead_id + 0);
 					}
 
+				$CLauto_alt_threshold=0;
 				if ($CLcall_type =~ /IN/)
 					{
 					$stmtA = "SELECT drop_call_seconds FROM vicidial_inbound_groups where group_id='$CLcampaign_id';";
@@ -2465,7 +2479,7 @@ while($one_day_interval > 0)
 					}
 				else
 					{
-					$stmtA = "SELECT dial_timeout,drop_call_seconds FROM vicidial_campaigns where campaign_id='$CLcampaign_id';";
+					$stmtA = "SELECT dial_timeout,drop_call_seconds,auto_alt_threshold FROM vicidial_campaigns where campaign_id='$CLcampaign_id';";
 					$timeout_leeway = 7;
 					}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -2476,6 +2490,7 @@ while($one_day_interval > 0)
 					@aryA = $sthA->fetchrow_array;
 					$CLdial_timeout	=		$aryA[0];
 					$CLdrop_call_seconds =	$aryA[1];
+					$CLauto_alt_threshold =	$aryA[2];
 					}
 				$sthA->finish();
 
@@ -2507,6 +2522,43 @@ while($one_day_interval > 0)
 
 							$CLstage =~ s/LIVE|-//gi;
 							if ($CLstage < 0.25) {$CLstage=0;}
+
+							$xCLlist_id=0;
+							$called_count=0;
+							$stmtA="SELECT list_id,called_count from vicidial_list where lead_id='$CLlead_id' limit 1;";
+								if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArowsVLL=$sthA->rows;
+							if ($sthArowsVLL > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$xCLlist_id = 	$aryA[0];
+								$called_count = $aryA[1];
+								}
+							$sthA->finish();
+
+							$LISTauto_alt_threshold=-1;
+							$stmtA="SELECT auto_alt_threshold from vicidial_lists where list_id='$xCLlist_id' limit 1;";
+								if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArowsVLL=$sthA->rows;
+							if ($sthArowsVLL > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$LISTauto_alt_threshold = 	$aryA[0];
+								}
+							$sthA->finish();
+
+							$temp_auto_alt_threshold = $CLauto_alt_threshold;
+							if ($LISTauto_alt_threshold > -1 ) {$temp_auto_alt_threshold = $LISTauto_alt_threshold;}
+							$auto_alt_lead_disabled=0;
+							if ( ($temp_auto_alt_threshold > 0) && ($called_count >= $temp_auto_alt_threshold) ) 
+								{
+								$auto_alt_lead_disabled=1;
+								if ($ADB > 0) {$aad_string = "ALT-00: $CLlead_id|$VD_auto_alt_dial|$CLauto_alt_threshold|$LISTauto_alt_threshold|($called_count <> $temp_auto_alt_threshold)|auto_alt_lead_disabled: $auto_alt_lead_disabled|";   &aad_output;}
+								}
 
 							if ($CLstatus =~ /BUSY/) {$CLnew_status = 'B';}
 							else
@@ -2578,21 +2630,6 @@ while($one_day_interval > 0)
 								$end_epoch = $now_date_epoch;
 								if ($insertVLcount < 1)
 									{
-									$xCLlist_id=0;
-									$called_count=0;
-									$stmtA="SELECT list_id,called_count from vicidial_list where lead_id='$CLlead_id' limit 1;";
-										if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
-									$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-									$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-									$sthArowsVLL=$sthA->rows;
-									if ($sthArowsVLL > 0)
-										{
-										@aryA = $sthA->fetchrow_array;
-										$xCLlist_id = 	$aryA[0];
-										$called_count = $aryA[1];
-										}
-									$sthA->finish();
-
 									$stmtA = "INSERT INTO vicidial_log (uniqueid,lead_id,campaign_id,call_date,start_epoch,status,phone_code,phone_number,user,processed,length_in_sec,end_epoch,alt_dial,list_id,called_count) values('$CLuniqueid','$CLlead_id','$CLcampaign_id','$SQLdate','$now_date_epoch','$CLnew_status','$CLphone_code','$CLphone_number','$insertVLuser','N','$CLstage','$end_epoch','$CLalt_dial','$xCLlist_id','$called_count')";
 										if($M){print STDERR "\n|$stmtA|\n";}
 									$affected_rows = $dbhA->do($stmtA);
@@ -2728,7 +2765,7 @@ while($one_day_interval > 0)
 							$VD_auto_alt_dial = 'NONE';
 							$VD_auto_alt_dial_statuses='';
 							$VD_call_quota_lead_ranking='DISABLED';
-							$stmtA="SELECT auto_alt_dial,auto_alt_dial_statuses,use_internal_dnc,use_campaign_dnc,use_other_campaign_dnc,call_quota_lead_ranking,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override FROM vicidial_campaigns where campaign_id='$CLcampaign_id';";
+							$stmtA="SELECT auto_alt_dial,auto_alt_dial_statuses,use_internal_dnc,use_campaign_dnc,use_other_campaign_dnc,call_quota_lead_ranking,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override,auto_alt_threshold FROM vicidial_campaigns where campaign_id='$CLcampaign_id';";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
@@ -2745,6 +2782,7 @@ while($one_day_interval > 0)
 								$VD_call_limit_24hour_scope =		$aryA[7];
 								$VD_call_limit_24hour =				$aryA[8];
 								$VD_call_limit_24hour_override =	$aryA[9];
+								$VD_auto_alt_threshold =			$aryA[10];
 								}
 							$sthA->finish();
 
@@ -3066,8 +3104,8 @@ while($one_day_interval > 0)
 
 							##### BEGIN AUTO ALT PHONE DIAL SECTION #####
 								$event_string = "|$stmtA|$VD_auto_alt_dial|$VD_auto_alt_dial_statuses|$CLnew_status|$CLlead_id|$CLalt_dial";   &event_logger;
-							if ($ADB > 0) {$aad_string = "ALT-01: $CLlead_id|$VD_auto_alt_dial|$CLalt_dial|$VD_auto_alt_dial_statuses|";   &aad_output;}
-							if ( ($VD_auto_alt_dial_statuses =~ / $CLnew_status /) && ($CLlead_id > 0) )
+							if ($ADB > 0) {$aad_string = "ALT-01: $CLlead_id|$VD_auto_alt_dial|$CLalt_dial|$VD_auto_alt_dial_statuses|$auto_alt_lead_disabled|";   &aad_output;}
+							if ( ($VD_auto_alt_dial_statuses =~ / $CLnew_status /) && ($CLlead_id > 0) && ($auto_alt_lead_disabled < 1) )
 								{
 								$alt_skip_reason='';   $addr3_skip_reason='';
 								if ( ($VD_auto_alt_dial =~ /ALT_ONLY|ALT_AND_ADDR3|ALT_AND_EXTENDED/) && ($CLalt_dial =~ /NONE|MAIN/) )

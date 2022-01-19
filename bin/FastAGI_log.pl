@@ -94,6 +94,7 @@
 # 210907-0841 - Added KHOMP code (install JSON::PP Perl module and remove '#UC#' in the code to enable)
 # 220103-1520 - Added timeout fix for manual dial calls, set the CAMPDTO dialplan variable
 # 220118-0937 - Added $ADB auto-alt-dial extra debug output option, fix for extended auto-alt-dial issue #1337
+# 220118-2207 - Added auto_alt_threshold campaign & list settings
 #
 
 # defaults for PreFork
@@ -222,7 +223,6 @@ else
 
 sub process_request 
 	{
-	$ADB=0;
 	use Asterisk::AGI;
 	$AGI = new Asterisk::AGI;
 
@@ -1185,6 +1185,7 @@ sub process_request
 
 				if ($AGILOG) {$agi_string = "VD_hangup : $callerid $channel $priority $CIDlead_id";   &agi_output;}
 
+				$CLauto_alt_threshold=0;
 				if ($callerid =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
 					{
 					$campaign='';
@@ -1219,14 +1220,15 @@ sub process_request
 						}
 
 					### get campaign settings
-					$stmtA = "SELECT amd_type FROM vicidial_campaigns where campaign_id = '$campaign';";
+					$stmtA = "SELECT amd_type,auto_alt_threshold FROM vicidial_campaigns where campaign_id = '$campaign';";
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 					$sthArows=$sthA->rows;
 					if ($sthArows > 0)
 						{
 						@aryA = $sthA->fetchrow_array;
-						$amd_type =     $aryA[0];
+						$amd_type =				$aryA[0];
+						$CLauto_alt_threshold = $aryA[1];
 						}
 					$sthA->finish();
 
@@ -2054,7 +2056,7 @@ sub process_request
 							$VD_auto_alt_dial = 'NONE';
 							$VD_auto_alt_dial_statuses='';
 							$VD_call_quota_lead_ranking='DISABLED';
-							$stmtA="SELECT auto_alt_dial,auto_alt_dial_statuses,use_internal_dnc,use_campaign_dnc,use_other_campaign_dnc,call_quota_lead_ranking,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override FROM vicidial_campaigns where campaign_id='$VD_campaign_id';";
+							$stmtA="SELECT auto_alt_dial,auto_alt_dial_statuses,use_internal_dnc,use_campaign_dnc,use_other_campaign_dnc,call_quota_lead_ranking,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override,auto_alt_threshold FROM vicidial_campaigns where campaign_id='$VD_campaign_id';";
 								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2073,7 +2075,30 @@ sub process_request
 								$VD_call_limit_24hour_scope =		$aryA[7];
 								$VD_call_limit_24hour =				$aryA[8];
 								$VD_call_limit_24hour_override =	$aryA[9];
+								$CLauto_alt_threshold =				$aryA[10];
 								$epc_countCAMPDATA++;
+								}
+
+							$LISTauto_alt_threshold=-1;
+							$stmtA="SELECT auto_alt_threshold from vicidial_lists where list_id='$VD_list_id' limit 1;";
+								if ($DB) {$event_string = "|$stmtA|";   &event_logger;}
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArowsVLL=$sthA->rows;
+							if ($sthArowsVLL > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$LISTauto_alt_threshold = 	$aryA[0];
+								}
+							$sthA->finish();
+
+							$temp_auto_alt_threshold = $CLauto_alt_threshold;
+							if ($LISTauto_alt_threshold > -1 ) {$temp_auto_alt_threshold = $LISTauto_alt_threshold;}
+							$auto_alt_lead_disabled=0;
+							if ( ($temp_auto_alt_threshold > 0) && ($called_count >= $temp_auto_alt_threshold) ) 
+								{
+								$auto_alt_lead_disabled=1;
+								if ($ADB > 0) {$aad_string = "ALT-20: $CLlead_id|$VD_alt_dial|$VD_auto_alt_dial|$CLauto_alt_threshold|$LISTauto_alt_threshold|($called_count <> $temp_auto_alt_threshold)|auto_alt_lead_disabled: $auto_alt_lead_disabled|";   &aad_output;}
 								}
 
 							##### BEGIN Call Quota Lead Ranking logging #####
@@ -2090,8 +2115,8 @@ sub process_request
 							##### BEGIN AUTO ALT PHONE DIAL SECTION #####
 							$sthA->finish();
 				#			if ($AGILOG) {$agi_string = "AUTO-ALT TEST: |$VD_status|$VDL_status|$VD_auto_alt_dial_statuses|$VD_auto_alt_dial|";   &agi_output;}
-							if ($ADB > 0) {$aad_string = "ALT-21: $VD_lead_id|$VD_status|$VDL_status|$VD_auto_alt_dial_statuses|$VD_auto_alt_dial|";   &aad_output;}
-							if ($VD_auto_alt_dial_statuses =~ / $VD_status | $VDL_status /)
+							if ($ADB > 0) {$aad_string = "ALT-21: $VD_lead_id|$VD_alt_dial|$VD_status|$VDL_status|$VD_auto_alt_dial_statuses|$VD_auto_alt_dial|";   &aad_output;}
+							if ( ($VD_auto_alt_dial_statuses =~ / $VD_status | $VDL_status /) && ($auto_alt_lead_disabled < 1) )
 								{
 								$alt_skip_reason='';   $addr3_skip_reason='';
 								if ($AGILOG) {$agi_string = "AUTO-ALT MATCH: |$VD_status|$VDL_status|$VD_auto_alt_dial_statuses|$VD_auto_alt_dial|$VD_alt_dial|$VD_alt_dial_log|";   &agi_output;}
