@@ -1,7 +1,7 @@
 <?php
 # non_agent_api.php
 # 
-# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with all non-agent-screen VICIDIAL functions
@@ -188,10 +188,11 @@
 # 211107-1556 - Added optional phone_number search for lead_all_info function
 # 211118-1946 - Added 'delete_cf_data' setting to the update_lead function
 # 211217-0733 - Fixes for PHP8, issue #1341
+# 220120-0914 - Added download_invalid_files user function for audio store file listings
 #
 
-$version = '2.14-165';
-$build = '211217-0733';
+$version = '2.14-166';
+$build = '220120-0914';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -1126,7 +1127,7 @@ if ($auth < 1)
 	exit;
 	}
 
-$stmt="SELECT api_list_restrict,api_allowed_functions,user_group,selected_language,delete_inbound_dids from vicidial_users where user='$user' and active='Y';";
+$stmt="SELECT api_list_restrict,api_allowed_functions,user_group,selected_language,delete_inbound_dids,download_invalid_files,user_level from vicidial_users where user='$user' and active='Y';";
 if ($DB>0) {echo "DEBUG: auth query - $stmt\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
@@ -1135,6 +1136,8 @@ $api_allowed_functions =	$row[1];
 $LOGuser_group =			$row[2];
 $VUselected_language =		$row[3];
 $VUdelete_inbound_dids =	$row[4];
+$VUdownload_invalid_files = $row[5];
+$VUuser_level =				$row[6];
 
 if ( ($api_list_restrict > 0) and ( ($function == 'add_lead') or ($function == 'update_lead') or ($function == 'batch_update_lead') or ($function == 'update_list') or ($function == 'list_info') or ($function == 'list_custom_fields') or ($function == 'lead_search') ) )
 	{
@@ -1374,6 +1377,7 @@ if ($function == 'sounds_list')
 							}
 						$sf++;
 						$BWB='';   $BWE='';
+						$PLAYlink = "<a href=\"$admDIR/$admin_web_dir$sounds_web_directory/$file_names[$m]\" target=\"_blank\"><font size=1 face=\"Arial,Helvetica\">"._QXZ("PLAY")."</a>";
 						if ( (preg_match('/\.wav$/', $file_names[$m])) and (strlen($bad_wavs) > 2) )
 							{
 							$temp_filename = $file_names[$m];
@@ -1381,13 +1385,17 @@ if ($function == 'sounds_list')
 								{
 								$BWB='<font color=red><b>';
 								$BWE=" &nbsp; &nbsp; "._QXZ("BAD WAV FORMAT")."</b></font>";
+								if ( ($VUdownload_invalid_files < 1) or ($VUuser_level < 9) )
+									{
+									$PLAYlink = "<DEL><font size=1 face=\"Arial,Helvetica\">"._QXZ("PLAY")."</DEL>";
+									}
 								}
 							}
 						echo "<tr><td><font size=1 face=\"Arial,Helvetica\">$sf</td>\n";
 						echo "<td><a href=\"javascript:choose_file('$file_namesPROMPT[$m]','$comments');\"><font size=1 face=\"Arial,Helvetica\">$BWB$file_names[$m]$BWE</a></td>\n";
 						echo "<td><font size=1 face=\"Arial,Helvetica\">$file_dates[$m]</td>\n";
 						echo "<td><font size=1 face=\"Arial,Helvetica\">$file_sizes[$m]</td>\n";
-						echo "<td><a href=\"$admDIR/$admin_web_dir$sounds_web_directory/$file_names[$m]\" target=\"_blank\"><font size=1 face=\"Arial,Helvetica\">"._QXZ("PLAY")."</a></td></tr>\n";
+						echo "<td>$PLAYlink</td></tr>\n";
 						}
 					}
 				$k++;

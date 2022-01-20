@@ -1862,3 +1862,7 @@ ALTER TABLE vicidial_campaigns ADD auto_alt_threshold TINYINT(3) UNSIGNED defaul
 ALTER TABLE vicidial_lists ADD auto_alt_threshold TINYINT(3) default '-1';
 
 UPDATE system_settings SET db_schema_version='1651',db_schema_update_date=NOW() where db_schema_version < 1651;
+
+ALTER TABLE vicidial_users ADD download_invalid_files ENUM('0','1') default '0';
+
+UPDATE system_settings SET db_schema_version='1652',db_schema_update_date=NOW() where db_schema_version < 1652;

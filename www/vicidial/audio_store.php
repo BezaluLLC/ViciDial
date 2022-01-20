@@ -1,7 +1,7 @@
 <?php
 # audio_store.php
 # 
-# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Central Audio Storage script
 # 
@@ -33,16 +33,23 @@
 # 201002-1536 - Allowed for secure sounds_web_server setting
 # 210321-0131 - Added classAudioFile PHP library for WAV file format validation
 # 210322-1220 - Added checking of .wav files for asterisk-compatible format
+# 220120-0927 - Added audio_store_GSM_allowed option. Disable GSM file uploads by default
 #
 
-$version = '2.14-25';
-$build = '210322-1220';
+$version = '2.14-26';
+$build = '220120-0927';
 
 $MT[0]='';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
 require ('classAudioFile.php');
+
+$audio_store_GSM_allowed=0;
+if (file_exists('options.php'))
+	{
+	require('options.php');
+	}
 
 $server_name = getenv("SERVER_NAME");
 $PHP_SELF=$_SERVER['PHP_SELF'];
@@ -655,7 +662,7 @@ if ($action == "MANUALUPLOAD")
 		$audiofile_name = preg_replace("/\!/",'',$audiofile_name);
 		$audiofile_name = preg_replace("/\%/",'',$audiofile_name);
 		$audiofile_name = preg_replace("/\^/",'',$audiofile_name);
-		if (preg_match("/\.wav$|\.gsm$/", $audiofile_name))
+		if ( (preg_match("/\.wav$/", $audiofile_name)) or ( (preg_match("/\.gsm$/", $audiofile_name)) and ($audio_store_GSM_allowed > 0) ) )
 			{
 			copy($AF_path, "$WeBServeRRooT/$sounds_web_directory/$audiofile_name");
 			chmod("$WeBServeRRooT/$sounds_web_directory/$audiofile_name", 0766);
@@ -724,7 +731,10 @@ if ($action == "MANUALUPLOAD")
 			}
 		else
 			{
-			echo _QXZ("ERROR").": "._QXZ("only wav and gsm files are allowed in the audio store")."\n";
+			if ( (preg_match("/\.gsm$/", $audiofile_name)) and ($audio_store_GSM_allowed < 1) )
+				{echo _QXZ("ERROR").": "._QXZ("only wav files are allowed in the audio store")."\n";}
+			else
+				{echo _QXZ("ERROR").": "._QXZ("only wav and gsm files are allowed in the audio store")."\n";}
 			}
 		}
 	else
