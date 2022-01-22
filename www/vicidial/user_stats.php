@@ -1,7 +1,7 @@
 <?php
 # user_stats.php
 # 
-# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -64,6 +64,7 @@
 # 200702-1710 - Added ANI to INBOUND/CLOSER records for NVAuser, added secondary check to find lead ID for DIDs 
 # 210317-0058 - Changed lead-modify page links to javascript because of Chrome
 # 210319-1338 - Added HELP pop-ups for each section, added agent browser visibility log stats to agent activity section, reformatted most sections
+# 220122-1701 - Added more variable filtering
 #
 
 $startMS = microtime();
@@ -197,11 +198,13 @@ if ($non_latin < 1)
 	{
 	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
 	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	$NVAuser = preg_replace('/[^-_0-9a-zA-Z]/','',$NVAuser);
 	}
 else
 	{
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	$NVAuser = preg_replace('/[^-_0-9\p{L}]/u','',$NVAuser);
 	}
 $did_id = preg_replace("/'|\"|\\\\|;/","",$did_id);
 $did = preg_replace("/'|\"|\\\\|;/","",$did);
@@ -209,7 +212,10 @@ $begin_date = preg_replace("/'|\"|\\\\|;/","",$begin_date);
 $end_date = preg_replace("/'|\"|\\\\|;/","",$end_date);
 $user = preg_replace("/'|\"|\\\\|;/","",$user);
 $call_status = preg_replace("/'|\"|\\\\|;/","",$call_status);
-$NVAuser = preg_replace("/'|\"|\\\\|;/","",$NVAuser);
+$file_download = preg_replace('/[^-_0-9a-zA-Z]/', '', $file_download);
+$pause_code_rpt = preg_replace('/[^-_0-9a-zA-Z]/', '', $pause_code_rpt);
+$park_rpt = preg_replace('/[^-_0-9a-zA-Z]/', '', $park_rpt);
+$search_archived_data = preg_replace('/[^-_0-9a-zA-Z]/', '', $search_archived_data);
 
 if ($call_status != "") 
 	{

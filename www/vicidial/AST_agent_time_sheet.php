@@ -1,7 +1,7 @@
 <?php 
 # AST_agent_time_sheet.php
 # 
-# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -27,6 +27,7 @@
 # 160325-1428 - Changes for sidebar update
 # 170409-1539 - Added IP List validation code
 # 170711-1102 - Added screen colors and fixed default date variable
+# 220122-1700 - Added more variable filtering
 #
 
 $startMS = microtime();
@@ -100,18 +101,20 @@ else
 	}
 #############
 
-$user=$agent;
-
 if ($non_latin < 1)
 	{
 	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
 	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	$agent = preg_replace('/[^-_0-9a-zA-Z]/','',$agent);
 	}
 else
 	{
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	$agent = preg_replace('/[^-_0-9\p{L}]/u','',$agent);
 	}
+
+$user=$agent;
 
 $stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
@@ -180,10 +183,10 @@ else
 	exit;
 	}
 
-$agent = preg_replace('/[^-_0-9a-zA-Z]/', '', $agent);
 $query_date = preg_replace('/[^-_0-9a-zA-Z]/', '', $query_date);
 $calls_summary = preg_replace('/[^-_0-9a-zA-Z]/', '', $calls_summary);
 $file_download = preg_replace('/[^-_0-9a-zA-Z]/', '', $file_download);
+$search_archived_data = preg_replace('/[^-_0-9a-zA-Z]/', '', $search_archived_data);
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
