@@ -1,7 +1,7 @@
 <?php 
 # force_agent_logout.php
 # 
-# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # NOTE: It is required that you add a Settings Container with the ID of 'AGENT_LOGOUT_OPTIONS' for this utility to work
 #
@@ -10,6 +10,7 @@
 #
 # CHANGES
 # 201025-2320 - First build
+# 220124-2127 - Changed to allow user_level 7 users with the proper permissions to use this page
 #
 
 $startMS = microtime();
@@ -89,19 +90,19 @@ if ($sl_ct > 0)
 $auth=0;
 $reports_auth=0;
 $admin_auth=0;
-$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'',1,0);
+$auth_message = user_authorization($PHP_AUTH_USER,$PHP_AUTH_PW,'REPORTS',1,0);
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
 if ($auth > 0)
 	{
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and view_reports='1';";
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level >= 7 and view_reports='1';";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$row=mysqli_fetch_row($rslt);
 	$admin_auth=$row[0];
 
-	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level > 7 and modify_users='1';";
+	$stmt="SELECT count(*) from vicidial_users where user='$PHP_AUTH_USER' and user_level >= 7 and modify_users='1';";
 	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$row=mysqli_fetch_row($rslt);
@@ -156,6 +157,13 @@ if ($LOGmodify_users < 1)
 	echo _QXZ("You do not have permissions to modify users").": |$PHP_AUTH_USER|\n";
 	exit;
 	}
+
+$stmt="SELECT reports_header_override,admin_home_url from vicidial_user_groups where user_group='$LOGuser_group';";
+$rslt=mysql_to_mysqli($stmt, $link);
+$row=mysqli_fetch_row($rslt);
+$LOGreports_header_override	=	$row[0];
+$LOGadmin_home_url =			$row[1];
+if (strlen($LOGadmin_home_url) > 5) {$SSadmin_home_url = $LOGadmin_home_url;}
 
 
 ##### BEGIN log visit to the vicidial_report_log table #####
