@@ -1,7 +1,7 @@
 <?php
 # admin_url_multi.php
 # 
-# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen will control the *url* settings needed when the Campaign or 
 # In-Group or List URL setting is set to "ALT". This screen allows for multiple 
@@ -17,10 +17,11 @@
 # 170409-1545 - Added IP List validation code
 # 180503-2215 - Added new help display
 # 211117-2006 - Added minimum call length field
+# 220127-1900 - Added display of the URL ID
 #
 
-$admin_version = '2.14-7';
-$build = '211117-2006';
+$admin_version = '2.14-8';
+$build = '220127-1900';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -445,12 +446,12 @@ if ($action == "BLANK")
 	echo "<TABLE><TR><TD>\n";
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 	echo "<br>"._QXZ("Alternate URL Form");
-	echo "<center><TABLE width=920 cellspacing=3>\n";
+	echo "<center><TABLE width=1020 cellspacing=3>\n";
 	echo "<tr><td align=center colspan=2>\n";
 	echo "<br><b>"._QXZ("Alternate %1s URLs for %2s",0,'',$url_type,$entry_type).": <a href=\"./admin.php?$mod_link$campaign_id\">$campaign_id</a></b> &nbsp; $NWB#alt_multi_urls$NWE\n";
 
-	echo "<TABLE width=900 cellspacing=3>\n";
-	echo "<tr><td><font size=2><b>#</td><td><font size=2><b>"._QXZ("ACTIVE")."</td><td><font size=2><b>"._QXZ("RANK")."</td><td><font size=2><b>"._QXZ("STATUSES")."</td><td><font size=2><b>"._QXZ("LISTS")."</td><td><font size=2><b>"._QXZ("MIN LENGTH")."</td><td><font size=2><b>"._QXZ("DESCRIPTION")."</td><td><font size=2><b>"._QXZ("SUBMIT")."</td></tr>\n";
+	echo "<TABLE width=1000 cellspacing=3>\n";
+	echo "<tr><td><font size=2><b>#</td><td NOWRAP><font size=1>URL ID</td><td><font size=2><b>"._QXZ("ACTIVE")."</td><td><font size=2><b>"._QXZ("RANK")."</td><td><font size=2><b>"._QXZ("STATUSES")."</td><td><font size=2><b>"._QXZ("LISTS")."</td><td><font size=2><b>"._QXZ("MIN LENGTH")."</td><td><font size=2><b>"._QXZ("DESCRIPTION")."</td><td><font size=2><b>"._QXZ("SUBMIT")."</td></tr>\n";
 
 	$stmt="SELECT url_id,active,url_rank,url_statuses,url_description,url_address,url_lists,url_call_length from vicidial_url_multi where campaign_id='$campaign_id' and entry_type='$entry_type' and url_type='$url_type' order by url_rank limit 1000;";
 	if ($DB) {echo "$stmt\n";}
@@ -485,8 +486,9 @@ if ($action == "BLANK")
 		echo "<input type=hidden name=url_id value=\"$Rurl_id\">\n";
 		echo "<input type=hidden name=action value=URL_MULTI_MODIFY>\n";
 		echo "<td><font size=1>$o</td>";
+		echo "<td align=right><font size=1>$Rurl_id &nbsp;</td>";
 		echo "<td><font size=1><select size=1 name=active><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED>$Ractive</option></select></td>";
-		echo "<td><font size=1><input type=text size=4 maxlength=3 name=url_rank value=\"$Rurl_rank\"></td>";
+		echo "<td><font size=1><input type=text size=3 maxlength=3 name=url_rank value=\"$Rurl_rank\"></td>";
 		echo "<td><font size=1><input type=text size=24 maxlength=1000 name=url_statuses value=\"$Rurl_statuses\"></td>";
 		echo "<td><font size=1><input type=text size=24 maxlength=1000 name=url_lists value=\"$Rurl_lists\"></td>";
 		echo "<td><font size=1><input type=text size=5 maxlength=5 name=url_call_length value=\"$Rurl_call_length\"></td>";
@@ -500,7 +502,7 @@ if ($action == "BLANK")
 		echo "</td>";
 		echo "</tr>";
 		echo "<tr $bgcolor>";
-		echo "<td colspan=7 NOWRAP><font size=1>"._QXZ("URL").":<input type=text size=110 maxlength=5000 name=url_address value=\"$Rurl_address\"></td>";
+		echo "<td colspan=8 NOWRAP><font size=1>"._QXZ("URL").":<input type=text size=125 maxlength=5000 name=url_address value=\"$Rurl_address\"></td>";
 		echo "</form>\n";
 		echo "</tr>\n";
 		}

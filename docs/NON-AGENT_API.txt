@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2021-11-18
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2022-01-27
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -62,6 +62,7 @@ add_dnc_phone - adds a phone number to one of the DNC lists
 add_fpg_phone - adds a phone number to a Filter Phone Group
 campaigns_list - displays information about all campaigns in the system
 hopper_list - displays information about leads in the hopper for a campaign
+update_alt_url - updates alternate dispo call url entries for a campaign
 
 
 New scripts:
@@ -197,6 +198,7 @@ Changes:
 210917-1615 - Added batch_update_lead function
 211107-1556 - Added optional phone_number search for lead_all_info function
 211118-1946 - Added 'delete_cf_data' setting to the update_lead function
+220126-2116 - Added dispo_call_url and alt URL options for update_campaign. Added 'update_alt_url' function
 
 
 API Functions use the 'function' variable
@@ -2244,6 +2246,8 @@ xferconf_two -		Transfer - Conf Number 2: 1-50 characters
 xferconf_three -	Transfer - Conf Number 3: 1-50 characters
 xferconf_four -		Transfer - Conf Number 4: 1-50 characters
 xferconf_five -		Transfer - Conf Number 5: 1-50 characters
+dispo_call_url -	URL for the Dispo URL(If using a full non-local URL must include 'http://' or 'https://') Must be URL-encoded if sending request as a URL
+	EXAMPLE URL-ENCODED URL: "http://vicidial.org/query.php?var1=X&var2=y" = "http%3A%2F%2Fvicidial.org%2Fquery.php%3Fvar1%3DX%26var2%3Dy"
 NOTES: 
  - please use no special characters like apostrophes, quotes or amphersands
 
@@ -2251,6 +2255,8 @@ Example URL strings for API calls:
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_campaign&campaign_id=TESTOUT&campaign_name=Updated+test+API+campaign&auto_dial_level=3.0
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_campaign&campaign_id=TESTOUT&active=N
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_campaign&campaign_id=TESTOUT&reset_hopper=Y
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_campaign&campaign_id=TESTOUT&dispo_call_url=http%3A%2F%2Fvicidial.org%2Fquery.php%3Fvar1%3DX%26var2%3Dy
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_campaign&campaign_id=TESTOUT&dispo_call_url=ALT
 
 Example responses:
 ERROR: update_campaign USER DOES NOT HAVE PERMISSION TO UPDATE CAMPAIGNS - 6666
@@ -2275,6 +2281,75 @@ ERROR: update_campaign ACTIVE MUST BE Y OR N, THIS IS AN OPTIONAL FIELD - 6666|U
 NOTICE: update_campaign NO UPDATES DEFINED - 6666|
 NOTICE: update_campaign HOPPER HAS BEEN RESET - 6666|1101|324
 SUCCESS: update_campaign CAMPAIGN HAS BEEN UPDATED - 6666|1101
+
+
+
+
+
+--------------------------------------------------------------------------------
+update_alt_url - updates alternate dispo call url entries for a campaign
+
+NOTE: api user for this function must have user_level set to 8 or higher and "modify campaigns" enabled
+
+REQUIRED FIELDS-
+campaign_id -		2-8 characters
+source -		description of what originated the API call (maximum 20 characters)
+entry_type -		One of these: 'campaign'
+url_type -		One of these: 'dispo','start','addlead','noagent'
+alt_url_id -		Digits only, 'NEW' or 'LIST'. Must be a valid alt URL ID for this campaign, or set to 'NEW' to add a new ALT URL
+			   NOTE: If only one Alt URL exists for this campaign and type, then this field can be left blank
+			   NOTE: 'stage'(csv, tab, pipe[default]) and 'header'(YES, NO) options are available for an alt_url_id of 'LIST'
+
+EDITABLE FIELDS- 
+active -		One of these: 'Y','N', default is 'N'
+url_rank -		Digits only
+url_statuses -		FOR DISPO URLs ONLY! List of dispo statuses this URL is active for, separated by spaces, i.e.: "SALE1 SALE2" or can be set to "---ALL---"
+url_description -	Text description of the alt URL
+url_lists -		Lists that the URL is active for, separated by spaces, i.e.: "101 102" or can be set to blank "" for all lists
+url_call_length -	Digits only. Only calls that are this minimum length in seconds and higher, default is 0
+url_address -		URL for the Alt URL(If using a full non-local URL must include 'http://' or 'https://') Must be URL-encoded if sending request as a URL
+	EXAMPLE URL-ENCODED URL: "http://vicidial.org/query.php?var1=X&var2=y" = "http%3A%2F%2Fvicidial.org%2Fquery.php%3Fvar1%3DX%26var2%3Dy"
+NOTES: 
+ - Please use no special characters like apostrophes, quotes or amphersands
+ - A value of '--BLANK--' can be used on the url_description and url_lists options above to set their values to empty
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_alt_url&campaign_id=ALTTEST&entry_type=campaign&url_type=dispo&alt_url_id=3&active=N
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_alt_url&campaign_id=ALTTEST&entry_type=campaign&url_type=dispo&alt_url_id=3&url_rank=2
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_alt_url&campaign_id=ALTTEST&entry_type=campaign&url_type=dispo&alt_url_id=3&url_statuses=SALE+PSALE
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_alt_url&campaign_id=ALTTEST&entry_type=campaign&url_type=dispo&alt_url_id=3&url_description=Updated+SALE+URL
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_alt_url&campaign_id=ALTTEST&entry_type=campaign&url_type=dispo&alt_url_id=3&url_lists=101+102
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_alt_url&campaign_id=ALTTEST&entry_type=campaign&url_type=dispo&alt_url_id=3&url_call_length=2
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_alt_url&campaign_id=ALTTEST&entry_type=campaign&url_type=dispo&alt_url_id=3&url_address=http%3A%2F%2Fvicidial.org%2Fquery.php%3Fvar1%3DX%26var2%3Dy
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_alt_url&campaign_id=ALTTEST&entry_type=campaign&url_type=dispo&alt_url_id=LIST
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_alt_url&campaign_id=ALTTEST&entry_type=campaign&url_type=dispo&alt_url_id=NEW&url_statuses=PRQUAL&url_description=Testing&url_address=http%3A%2F%2Fvicidial.org%2Fquery.php%3Fvar1%3DX%26var2%3Dy
+
+
+Example responses:
+ERROR: update_alt_url USER DOES NOT HAVE PERMISSION TO UPDATE CAMPAIGNS - 6666
+ERROR: update_alt_url YOU MUST USE ALL REQUIRED FIELDS - 6666|1
+ERROR: update_alt_url NOT AN ALLOWED CAMPAIGN ID - 98762
+ERROR: update_alt_url CAMPAIGN DOES NOT EXIST - 6666|1000
+ERROR: update_alt_url NO VALID URL TYPE DEFINED: - 6666|||
+ERROR: update_alt_url NO ENTRY TYPE DEFINED - 6666||
+ERROR: update_alt_url CAMPAIGNS dispo URL IS NOT SET TO ALT - 6666|dispo|campaign|TESTCAMP
+ERROR: update_alt_url ALT URL ID DOES NOT EXIST - 6666|2|dispo|campaign|TESTCAMP|2
+ERROR: update_alt_url ACTIVE MUST BE Y OR N, THIS IS AN OPTIONAL FIELD - 6666|U
+ERROR: update_alt_url URL ADDRESS IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|
+ERROR: update_alt_url URL RANK IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|999999
+ERROR: update_alt_url URL CAL LENGTH IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|999999
+ERROR: update_alt_url URL STATUSES IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|
+ERROR: update_alt_url URL DESCRIPTION IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|
+ERROR: update_alt_url URL LISTS IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|
+NOTICE: update_campaign NO UPDATES DEFINED - 6666|
+SUCCESS: update_alt_url ALT URL HAS BEEN UPDATED - 6666|1|dispo|campaign|TESTCAMP
+SUCCESS: update_alt_url ALT URL HAS BEEN ADDED - 6666|NEW URL ID: 2|dispo|campaign|TESTCAMP
+NOTICE: update_alt_url LIST, No Records Found - 6666|dispo|campaign|TESTCAMP|0
+
+A LIST response will not show "SUCCESS", but instead will just print the results in the following format:
+url_id|campaign_id|entry_type|active|url_type|url_rank|url_statuses|url_description|url_lists|url_call_length|url_address
+3|ALTTEST|campaign|Y|dispo|2|SALE PSALE|Updated SALE URL||2|http://vicidial.org/query.php?var1=X&var2=y
+
 
 
 

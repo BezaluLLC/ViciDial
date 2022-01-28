@@ -189,10 +189,11 @@
 # 211118-1946 - Added 'delete_cf_data' setting to the update_lead function
 # 211217-0733 - Fixes for PHP8, issue #1341
 # 220120-0914 - Added download_invalid_files user function for audio store file listings
+# 220126-2116 - Added dispo_call_url and alt URL options for update_campaign. Added 'update_alt_url' function
 #
 
-$version = '2.14-166';
-$build = '220120-0914';
+$version = '2.14-167';
+$build = '220126-2116';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -670,6 +671,26 @@ if (isset($_GET["lead_ids"]))				{$lead_ids=$_GET["lead_ids"];}
 	elseif (isset($_POST["lead_ids"]))		{$lead_ids=$_POST["lead_ids"];}
 if (isset($_GET["delete_cf_data"]))				{$delete_cf_data=$_GET["delete_cf_data"];}
 	elseif (isset($_POST["delete_cf_data"]))	{$delete_cf_data=$_POST["delete_cf_data"];}
+if (isset($_GET["dispo_call_url"]))				{$dispo_call_url=$_GET["dispo_call_url"];}
+	elseif (isset($_POST["dispo_call_url"]))	{$dispo_call_url=$_POST["dispo_call_url"];}
+if (isset($_GET["entry_type"]))				{$entry_type=$_GET["entry_type"];}
+	elseif (isset($_POST["entry_type"]))	{$entry_type=$_POST["entry_type"];}
+if (isset($_GET["alt_url_id"]))				{$alt_url_id=$_GET["alt_url_id"];}
+	elseif (isset($_POST["alt_url_id"]))	{$alt_url_id=$_POST["alt_url_id"];}
+if (isset($_GET["url_address"]))			{$url_address=$_GET["url_address"];}
+	elseif (isset($_POST["url_address"]))	{$url_address=$_POST["url_address"];}
+if (isset($_GET["url_type"]))				{$url_type=$_GET["url_type"];}
+	elseif (isset($_POST["url_type"]))		{$url_type=$_POST["url_type"];}
+if (isset($_GET["url_rank"]))				{$url_rank=$_GET["url_rank"];}
+	elseif (isset($_POST["url_rank"]))		{$url_rank=$_POST["url_rank"];}
+if (isset($_GET["url_statuses"]))			{$url_statuses=$_GET["url_statuses"];}
+	elseif (isset($_POST["url_statuses"]))	{$url_statuses=$_POST["url_statuses"];}
+if (isset($_GET["url_description"]))			{$url_description=$_GET["url_description"];}
+	elseif (isset($_POST["url_description"]))	{$url_description=$_POST["url_description"];}
+if (isset($_GET["url_lists"]))				{$url_lists=$_GET["url_lists"];}
+	elseif (isset($_POST["url_lists"]))		{$url_lists=$_POST["url_lists"];}
+if (isset($_GET["url_call_length"]))			{$url_call_length=$_GET["url_call_length"];}
+	elseif (isset($_POST["url_call_length"]))	{$url_call_length=$_POST["url_call_length"];}
 
 
 if (file_exists('options.php'))
@@ -938,6 +959,8 @@ if ($non_latin < 1)
 	$ingroup_grade = preg_replace('/[^0-9]/','',$ingroup_grade);
 	$group_id = preg_replace('/[^_0-9a-zA-Z]/','',$group_id);
 	$ingrp_rg_only = preg_replace('/[^0-9]/','',$ingrp_rg_only);
+	$url_statuses = preg_replace('/[^- 0-9a-zA-Z]/', '',$url_statuses);
+	$url_description = preg_replace('/[^ \.\,-\_0-9a-zA-Z]/','',$url_description);
 	}
 else
 	{
@@ -950,6 +973,8 @@ else
 	$phone_number = preg_replace('/[^\,0-9]/','',$phone_number);
 	$vendor_lead_code = preg_replace('/;|#/','',$vendor_lead_code);
 		$vendor_lead_code = preg_replace('/\+/',' ',$vendor_lead_code);
+	$url_statuses = preg_replace('/[^- 0-9\p{L}]/u', '',$url_statuses);
+	$url_description = preg_replace('/[^ \.\,-\_0-9\p{L}]/u','',$url_description);
 	}
 $list_id = preg_replace('/[^-_0-9a-zA-Z]/','',$list_id);
 $list_id_field = preg_replace('/[^0-9]/','',$list_id_field);
@@ -965,6 +990,12 @@ $dialable_count = preg_replace('/[^_0-9a-zA-Z]/','',$dialable_count);
 $call_handle_method = preg_replace('/[^_0-9a-zA-Z]/','',$call_handle_method);
 $agent_search_method = preg_replace('/[^_0-9a-zA-Z]/','',$agent_search_method);
 $delete_cf_data = preg_replace('/[^A-Z]/','',$delete_cf_data);
+$entry_type = preg_replace('/[^_0-9a-zA-Z]/','',$entry_type);
+$alt_url_id = preg_replace('/[^0-9A-Z]/','',$alt_url_id);
+$url_type = preg_replace('/[^_0-9a-zA-Z]/','',$url_type);
+$url_rank = preg_replace('/[^0-9]/','',$url_rank);
+$url_lists = preg_replace('/[^- 0-9A-Z]/', '',$url_lists);
+$url_call_length = preg_replace('/[^0-9]/','',$url_call_length);
 
 $USarea = 			substr($phone_number, 0, 3);
 $USprefix = 		substr($phone_number, 3, 3);
@@ -7404,6 +7435,7 @@ if ($function == 'update_campaign')
 					$xferconf_threeSQL='';
 					$xferconf_fourSQL='';
 					$xferconf_fiveSQL='';
+					$dispo_call_urlSQL='';
 
 					if (strlen($auto_dial_level) > 0)
 						{
@@ -7649,8 +7681,27 @@ if ($function == 'update_campaign')
 								{$xferconf_fiveSQL = " ,xferconf_e_number='$xferconf_five'";}
 							}
 						}
+					if (strlen($dispo_call_url) > 0)
+						{
+						if ($dispo_call_url == '--BLANK--')
+							{$dispo_call_urlSQL = " ,dispo_call_url=''";}
+						else
+							{
+							if ( (strlen($dispo_call_url) < 3) or (strlen($dispo_call_url) > 65000) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_campaign DISPO CALL URL IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$dispo_call_url";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$dispo_call_urlSQL = " ,dispo_call_url='" . mysqli_real_escape_string($link, $dispo_call_url) . "'";}
+							}
+						}
 
-					$updateSQL = "$campaignnameSQL$activeSQL$dialtimeoutSQL$hopperlevelSQL$campaignvdadextenSQL$adaptivemaximumlevelSQL$dialmethodSQL$autodiallevelSQL$campaigncidSQL$campaignfilterSQL$xferconf_oneSQL$xferconf_twoSQL$xferconf_threeSQL$xferconf_fourSQL$xferconf_fiveSQL";
+					$updateSQL = "$campaignnameSQL$activeSQL$dialtimeoutSQL$hopperlevelSQL$campaignvdadextenSQL$adaptivemaximumlevelSQL$dialmethodSQL$autodiallevelSQL$campaigncidSQL$campaignfilterSQL$xferconf_oneSQL$xferconf_twoSQL$xferconf_threeSQL$xferconf_fourSQL$xferconf_fiveSQL$dispo_call_urlSQL";
 
 					if (strlen($updateSQL)< 3)
 						{
@@ -7709,6 +7760,440 @@ if ($function == 'update_campaign')
 	}
 ################################################################################
 ### END update_campaign
+################################################################################
+
+
+
+
+
+################################################################################
+### update_alt_url - updates alternate dispo call url entries for a campaign
+################################################################################
+if ($function == 'update_alt_url')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_campaigns='1' and user_level >= 8 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "update_alt_url USER DOES NOT HAVE PERMISSION TO UPDATE CAMPAIGNS";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($campaign_id)<2) or (strlen($campaign_id)>20) )
+				{
+				$result = 'ERROR';
+				$result_reason = "update_alt_url YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$campaign_id|$campaign_name|$campaign_id";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+				$LOGadmin_viewable_groups =		$row[1];
+
+				$LOGallowed_campaignsSQL='';
+				$whereLOGallowed_campaignsSQL='';
+				if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
+					{
+					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+					$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					}
+
+				$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$camp_exists=$row[0];
+				if ($camp_exists < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "update_alt_url CAMPAIGN DOES NOT EXIST";
+					$data = "$campaign_id";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					if ($alt_url_id == 'LIST')
+						{
+						$output='';
+						$DLset=0;
+						if ($stage == 'csv')
+							{$DL = ',';   $DLset++;}
+						if ($stage == 'tab')
+							{$DL = "\t";   $DLset++;}
+						if ($stage == 'pipe')
+							{$DL = '|';   $DLset++;}
+						if ($DLset < 1)
+							{$DL='|';}
+						if ($header == 'YES')
+							{$output .= 'url_id' . $DL . 'campaign_id' . $DL . 'entry_type' . $DL . 'active' . $DL . 'url_type' . $DL . 'url_rank' . $DL . 'url_statuses' . $DL . 'url_description' . $DL . 'url_lists' . $DL . 'url_call_length' . $DL . "url_address\n";}
+
+						$stmt="SELECT url_id,campaign_id,entry_type,active,url_type,url_rank,url_statuses,url_description,url_lists,url_call_length,url_address from vicidial_url_multi where campaign_id='$campaign_id' and entry_type='$entry_type' and url_type='$url_type' order by url_id limit 1000;";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$vum_recs = mysqli_num_rows($rslt);
+						if ($DB>0) {echo "$vum_recs|$stmt|\n";}
+						$M=0;
+						while ($vum_recs > $M)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$url_id =			$row[0];
+							$campaign_id =		$row[1];
+							$entry_type =		$row[2];
+							$active =			$row[3];
+							$url_type =			$row[4];
+							$url_rank =			$row[5];
+							$url_statuses =		$row[6];
+							$url_description =	$row[7];
+							$url_lists =		$row[8];
+							$url_call_length =	$row[9];
+							$url_address =		$row[10];
+
+							$output .= "$url_id" . $DL . "$campaign_id" . $DL . "$entry_type" . $DL . "$active" . $DL . "$url_type" . $DL . "$url_rank" . $DL . "$url_statuses" . $DL . "$url_description" . $DL . "$url_lists" . $DL . "$url_call_length" . $DL . "$url_address\n";
+
+							$M++;
+							}
+						if ($M < 1)
+							{echo "NOTICE: update_alt_url LIST, No Records Found - $user|$url_type|$entry_type|$campaign_id|0\n";}
+						else
+							{echo $output;}
+
+						$result = 'SUCCESS';
+						$result_reason = "update_alt_url ALT URL LIST DISPLAYED";
+						$data = "$url_type|$entry_type|$campaign_id|$M";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+
+						exit;
+						}
+					if ($entry_type == 'campaign')
+						{
+						$event_section = 'CAMPAIGNS';
+						if ($url_type == 'dispo')
+							{$validate_stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' and dispo_call_url='ALT';";}
+						elseif ($url_type == 'start')
+							{$validate_stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' and start_call_url='ALT';";}
+						elseif ($url_type == 'noagent')
+							{$validate_stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' and na_call_url='ALT';";}
+						else
+							{
+							$result = 'ERROR';
+							$result_reason = "update_alt_url NO VALID URL TYPE DEFINED:";
+							$data = "$url_type|$entry_type|$campaign_id";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						}
+					elseif ($entry_type == 'ingroup')
+						{
+						$event_section = 'INGROUPS';
+						if ($url_type == 'dispo')
+							{$validate_stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$campaign_id' and dispo_call_url='ALT';";}
+						elseif ($url_type == 'start')
+							{$validate_stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$campaign_id' and start_call_url='ALT';";}
+						elseif ($url_type == 'noagent')
+							{$validate_stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$campaign_id' and na_call_url='ALT';";}
+						elseif ($url_type == 'addlead')
+							{$validate_stmt="SELECT count(*) from vicidial_inbound_groups where group_id='$campaign_id' and add_lead_url='ALT';";}
+						else
+							{
+							$result = 'ERROR';
+							$result_reason = "update_alt_url NO VALID URL TYPE DEFINED:";
+							$data = "$url_type|$entry_type|$campaign_id";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						}
+					elseif ($entry_type == 'list')
+						{
+						$event_section = 'LISTS';
+						if ($url_type == 'noagent')
+							{$validate_stmt="SELECT count(*) from vicidial_lists where list_id='$campaign_id' and na_call_url='ALT';";}
+						else
+							{
+							$result = 'ERROR';
+							$result_reason = "update_alt_url NO VALID URL TYPE DEFINED:";
+							$data = "$url_type|$entry_type|$campaign_id";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						}
+					else
+						{
+						$result = 'ERROR';
+						$result_reason = "update_alt_url NO ENTRY TYPE DEFINED:";
+						$data = "$entry_type|$campaign_id";
+						echo "$result: $result_reason: |$user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					
+					# find if the campaign/in-group/list field type is set to use ALT URLs
+					$rslt=mysql_to_mysqli($validate_stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					$camp_exists=$row[0];
+					if ($camp_exists < 1)
+						{
+						$result = 'ERROR';
+						$result_reason = "update_alt_url $event_section $url_type URL IS NOT SET TO ALT";
+						$data = "$url_type|$entry_type|$campaign_id";
+						echo "$result: $result_reason: |$user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+
+					if ($alt_url_id != 'NEW')
+						{
+						$stmt="SELECT count(*) from vicidial_url_multi where campaign_id='$campaign_id' and entry_type='$entry_type' and url_type='$url_type' and url_id='$alt_url_id';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$row=mysqli_fetch_row($rslt);
+						$alt_id_exists=$row[0];
+						if ($alt_id_exists < 1)
+							{
+							$stmt="SELECT url_id from vicidial_url_multi where campaign_id='$campaign_id' and entry_type='$entry_type' and url_type='$url_type' order by url_id limit 2;";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$vum_recs = mysqli_num_rows($rslt);
+							if ($vum_recs < 2)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$alt_url_id =		$row[0];
+								}
+							else
+								{
+								$result = 'ERROR';
+								$result_reason = "update_alt_url ALT URL ID DOES NOT EXIST";
+								$data = "$alt_url_id|$url_type|$entry_type|$campaign_id|$vum_recs";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							}
+						}
+
+					$activeSQL='';
+					$url_addressSQL='';
+					$url_rankSQL='';
+					$url_statusesSQL='';
+					$url_descriptionSQL='';
+					$url_listsSQL='';
+					$url_call_lengthSQL='';
+
+					if (strlen($active) > 0)
+						{
+						if ( ($active != 'Y') and ($active != 'N') )
+							{
+							$result = 'ERROR';
+							$result_reason = "update_alt_url ACTIVE MUST BE Y OR N, THIS IS AN OPTIONAL FIELD";
+							$data = "$active";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$activeSQL = " ,active='$active'";}
+						}
+					if (strlen($url_address) > 0)
+						{
+						if ($url_address == '--BLANK--')
+							{$url_addressSQL = " ,url_address=''";}
+						else
+							{
+							if ( (strlen($url_address) < 5) or (strlen($url_address) > 65000) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_alt_url URL ADDRESS IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$url_address";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$url_addressSQL = " ,url_address='" . mysqli_real_escape_string($link, $url_address) . "'";}
+							}
+						}
+					if (strlen($url_rank) > 0)
+						{
+						if (strlen($url_rank) > 5)
+							{
+							$result = 'ERROR';
+							$result_reason = "update_alt_url URL RANK IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+							$data = "$url_rank";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$url_rankSQL = " ,url_rank='$url_rank'";}
+						}
+					if (strlen($url_call_length) > 0)
+						{
+						if (strlen($url_call_length) > 5)
+							{
+							$result = 'ERROR';
+							$result_reason = "update_alt_url URL CAL LENGTH IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+							$data = "$url_call_length";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$url_call_lengthSQL = " ,url_call_length='$url_call_length'";}
+						}
+					if (strlen($url_statuses) > 0)
+						{
+						if (strlen($url_statuses) > 1000)
+							{
+							$result = 'ERROR';
+							$result_reason = "update_alt_url URL STATUSES IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+							$data = "$url_statuses";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$url_statusesSQL = " ,url_statuses='$url_statuses'";}
+						}
+					if (strlen($url_description) > 0)
+						{
+						if ($url_description == '--BLANK--')
+							{$url_descriptionSQL = " ,url_description=''";}
+						else
+							{
+							if (strlen($url_description) > 255)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_alt_url URL DESCRIPTION IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$url_description";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$url_descriptionSQL = " ,url_description='$url_description'";}
+							}
+						}
+					if (strlen($url_lists) > 0)
+						{
+						if ($url_lists == '--BLANK--')
+							{$url_listsSQL = " ,url_lists=''";}
+						else
+							{
+							if (strlen($url_lists) > 1000)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_alt_url URL LISTS IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$url_lists";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$url_listsSQL = " ,url_lists='$url_lists'";}
+							}
+						}
+
+					$updateSQL = "$activeSQL$url_rankSQL$url_statusesSQL$url_descriptionSQL$url_listsSQL$url_call_lengthSQL$url_addressSQL";
+
+					if (strlen($updateSQL)< 3)
+						{
+						$result = 'NOTICE';
+						$result_reason = "update_alt_url NO UPDATES DEFINED";
+						$data = "$updateSQL";
+						echo "$result: $result_reason: |$user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					else
+						{
+						if ($alt_url_id == 'NEW')
+							{
+							$updateSQLx = ltrim($updateSQL, ' ,');
+							$stmt="INSERT INTO vicidial_url_multi SET campaign_id='$campaign_id',entry_type='$entry_type',url_type='$url_type', $updateSQLx;";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$add_count = mysqli_affected_rows($link);
+							$new_url_id = mysqli_insert_id($link);
+							if ($DB) {echo "$add_count|$new_url_id|$stmt|\n";}
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='$event_section', event_type='ADD', record_id='$campaign_id', event_code='ADMIN API UPDATE ALT URL', event_sql=\"$SQL_log\", event_notes='campaign: $campaign_id|url_id: $new_url_id|entry_type: $entry_type|url_type:$url_type';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+
+							$result = 'SUCCESS';
+							$result_reason = "update_alt_url ALT URL HAS BEEN ADDED";
+							$data = "NEW URL ID: $new_url_id|$url_type|$entry_type|$campaign_id";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						else
+							{
+							$updateSQLx = ltrim($updateSQL, ' ,');
+							$stmt="UPDATE vicidial_url_multi SET $updateSQLx WHERE campaign_id='$campaign_id' and url_id='$alt_url_id';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							if ($DB) {echo "|$stmt|\n";}
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='$event_section', event_type='MODIFY', record_id='$campaign_id', event_code='ADMIN API UPDATE ALT URL', event_sql=\"$SQL_log\", event_notes='campaign: $campaign_id|url_id: $alt_url_id|entry_type: $entry_type|url_type:$url_type';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+
+							$result = 'SUCCESS';
+							$result_reason = "update_alt_url ALT URL HAS BEEN UPDATED";
+							$data = "$alt_url_id|$url_type|$entry_type|$campaign_id";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						}
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END update_alt_url
 ################################################################################
 
 

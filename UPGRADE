@@ -706,6 +706,8 @@ OTHER CHANGES:
 	after a set number of call attempts, and thereafter only dialing the 
 	main phone number for the lead.
 
+197. Added 'update_alt_url' Non-Agent API function
+
 
 
 

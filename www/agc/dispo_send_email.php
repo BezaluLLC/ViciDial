@@ -1,7 +1,7 @@
 <?php
 # dispo_send_email.php
 # 
-# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to be used in the "Dispo URL" field of a campaign
 # or in-group. It will send out an email to a fixed email address as defined
@@ -45,6 +45,7 @@
 # 210616-2044 - Added optional CORS support, see options.php for details
 # 210823-1623 - Fix for security issue, removed absolute path attachments, now must be in "agc/attachments" directory
 # 210823-1947 - Fix to allow for legacy attachment file locations in "agc" directory
+# 220127-0942 - Added email_header_attach and allow_sendmail_bypass options.php settings
 #
 
 $api_script = 'send_email';
@@ -150,6 +151,9 @@ $email_charset = 'iso-8859-1';
 #$email_attachment_path = '/dev/null';
 $email_attachment_path = './attachments';
 $email_attachment_path_legacy = '.';
+$email_header_attach='0';
+$sendmail_bypass=0;
+$allow_sendmail_bypass='';
 
 # filter variables
 $user=preg_replace("/\'|\"|\\\\|;| |\|/","",$user);
@@ -163,6 +167,9 @@ if (file_exists('options.php'))
 	}
 
 header ("Content-type: text/html; charset=utf-8");
+
+$EHA='';
+if ($email_header_attach > 0) {$EHA="\n\n";}
 
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
@@ -378,6 +385,8 @@ if ($match_found > 0)
 							{$email_charset = 'utf-8';}
 						if (preg_match("/^email_body_begin/",$line))
 							{$email_body = $line;   $email_body = trim(preg_replace("/.*=/",'',$email_body)) . "\n";   $email_body_gather++;}
+						if ( (preg_match("/^sendmail_bypass/",$line)) and (strlen($allow_sendmail_bypass) > 2) )
+							{$sendmail_bypass=1;}
 						}
 					else
 						{
@@ -808,7 +817,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_1 .= "Content-Type: application/xml; name=\"".$filename_1."\"".PHP_EOL;
 								$attachment_1 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_1 .= "Content-Disposition: attachment; filename=\"".$filename_1."\"".PHP_EOL.PHP_EOL;
+								$attachment_1 .= "Content-Disposition: attachment; filename=\"".$filename_1."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_1 .= $content.PHP_EOL;
 								$attachment_1 .= "--".$boundary;
 
@@ -847,7 +856,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_2 .= "Content-Type: application/xml; name=\"".$filename_2."\"".PHP_EOL;
 								$attachment_2 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_2 .= "Content-Disposition: attachment; filename=\"".$filename_2."\"".PHP_EOL.PHP_EOL;
+								$attachment_2 .= "Content-Disposition: attachment; filename=\"".$filename_2."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_2 .= $content.PHP_EOL;
 								$attachment_2 .= "--".$boundary;
 
@@ -886,7 +895,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_3 .= "Content-Type: application/xml; name=\"".$filename_3."\"".PHP_EOL;
 								$attachment_3 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_3 .= "Content-Disposition: attachment; filename=\"".$filename_3."\"".PHP_EOL.PHP_EOL;
+								$attachment_3 .= "Content-Disposition: attachment; filename=\"".$filename_3."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_3 .= $content.PHP_EOL;
 								$attachment_3 .= "--".$boundary;
 
@@ -925,7 +934,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_4 .= "Content-Type: application/xml; name=\"".$filename_4."\"".PHP_EOL;
 								$attachment_4 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_4 .= "Content-Disposition: attachment; filename=\"".$filename_4."\"".PHP_EOL.PHP_EOL;
+								$attachment_4 .= "Content-Disposition: attachment; filename=\"".$filename_4."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_4 .= $content.PHP_EOL;
 								$attachment_4 .= "--".$boundary;
 
@@ -964,7 +973,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_5 .= "Content-Type: application/xml; name=\"".$filename_5."\"".PHP_EOL;
 								$attachment_5 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_5 .= "Content-Disposition: attachment; filename=\"".$filename_5."\"".PHP_EOL.PHP_EOL;
+								$attachment_5 .= "Content-Disposition: attachment; filename=\"".$filename_5."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_5 .= $content.PHP_EOL;
 								$attachment_5 .= "--".$boundary;
 
@@ -1003,7 +1012,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_6 .= "Content-Type: application/xml; name=\"".$filename_6."\"".PHP_EOL;
 								$attachment_6 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_6 .= "Content-Disposition: attachment; filename=\"".$filename_6."\"".PHP_EOL.PHP_EOL;
+								$attachment_6 .= "Content-Disposition: attachment; filename=\"".$filename_6."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_6 .= $content.PHP_EOL;
 								$attachment_6 .= "--".$boundary;
 
@@ -1042,7 +1051,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_7 .= "Content-Type: application/xml; name=\"".$filename_7."\"".PHP_EOL;
 								$attachment_7 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_7 .= "Content-Disposition: attachment; filename=\"".$filename_7."\"".PHP_EOL.PHP_EOL;
+								$attachment_7 .= "Content-Disposition: attachment; filename=\"".$filename_7."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_7 .= $content.PHP_EOL;
 								$attachment_7 .= "--".$boundary;
 
@@ -1081,7 +1090,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_8 .= "Content-Type: application/xml; name=\"".$filename_8."\"".PHP_EOL;
 								$attachment_8 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_8 .= "Content-Disposition: attachment; filename=\"".$filename_8."\"".PHP_EOL.PHP_EOL;
+								$attachment_8 .= "Content-Disposition: attachment; filename=\"".$filename_8."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_8 .= $content.PHP_EOL;
 								$attachment_8 .= "--".$boundary;
 
@@ -1120,7 +1129,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_9 .= "Content-Type: application/xml; name=\"".$filename_9."\"".PHP_EOL;
 								$attachment_9 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_9 .= "Content-Disposition: attachment; filename=\"".$filename_9."\"".PHP_EOL.PHP_EOL;
+								$attachment_9 .= "Content-Disposition: attachment; filename=\"".$filename_9."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_9 .= $content.PHP_EOL;
 								$attachment_9 .= "--".$boundary;
 
@@ -1159,7 +1168,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_10 .= "Content-Type: application/xml; name=\"".$filename_10."\"".PHP_EOL;
 								$attachment_10 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_10 .= "Content-Disposition: attachment; filename=\"".$filename_10."\"".PHP_EOL.PHP_EOL;
+								$attachment_10 .= "Content-Disposition: attachment; filename=\"".$filename_10."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_10 .= $content.PHP_EOL;
 								$attachment_10 .= "--".$boundary;
 
@@ -1198,7 +1207,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_11 .= "Content-Type: application/xml; name=\"".$filename_11."\"".PHP_EOL;
 								$attachment_11 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_11 .= "Content-Disposition: attachment; filename=\"".$filename_11."\"".PHP_EOL.PHP_EOL;
+								$attachment_11 .= "Content-Disposition: attachment; filename=\"".$filename_11."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_11 .= $content.PHP_EOL;
 								$attachment_11 .= "--".$boundary;
 
@@ -1237,7 +1246,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_12 .= "Content-Type: application/xml; name=\"".$filename_12."\"".PHP_EOL;
 								$attachment_12 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_12 .= "Content-Disposition: attachment; filename=\"".$filename_12."\"".PHP_EOL.PHP_EOL;
+								$attachment_12 .= "Content-Disposition: attachment; filename=\"".$filename_12."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_12 .= $content.PHP_EOL;
 								$attachment_12 .= "--".$boundary;
 
@@ -1276,7 +1285,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_13 .= "Content-Type: application/xml; name=\"".$filename_13."\"".PHP_EOL;
 								$attachment_13 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_13 .= "Content-Disposition: attachment; filename=\"".$filename_13."\"".PHP_EOL.PHP_EOL;
+								$attachment_13 .= "Content-Disposition: attachment; filename=\"".$filename_13."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_13 .= $content.PHP_EOL;
 								$attachment_13 .= "--".$boundary;
 
@@ -1315,7 +1324,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_14 .= "Content-Type: application/xml; name=\"".$filename_14."\"".PHP_EOL;
 								$attachment_14 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_14 .= "Content-Disposition: attachment; filename=\"".$filename_14."\"".PHP_EOL.PHP_EOL;
+								$attachment_14 .= "Content-Disposition: attachment; filename=\"".$filename_14."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_14 .= $content.PHP_EOL;
 								$attachment_14 .= "--".$boundary;
 
@@ -1354,7 +1363,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_15 .= "Content-Type: application/xml; name=\"".$filename_15."\"".PHP_EOL;
 								$attachment_15 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_15 .= "Content-Disposition: attachment; filename=\"".$filename_15."\"".PHP_EOL.PHP_EOL;
+								$attachment_15 .= "Content-Disposition: attachment; filename=\"".$filename_15."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_15 .= $content.PHP_EOL;
 								$attachment_15 .= "--".$boundary;
 
@@ -1393,7 +1402,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_16 .= "Content-Type: application/xml; name=\"".$filename_16."\"".PHP_EOL;
 								$attachment_16 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_16 .= "Content-Disposition: attachment; filename=\"".$filename_16."\"".PHP_EOL.PHP_EOL;
+								$attachment_16 .= "Content-Disposition: attachment; filename=\"".$filename_16."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_16 .= $content.PHP_EOL;
 								$attachment_16 .= "--".$boundary;
 
@@ -1432,7 +1441,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_17 .= "Content-Type: application/xml; name=\"".$filename_17."\"".PHP_EOL;
 								$attachment_17 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_17 .= "Content-Disposition: attachment; filename=\"".$filename_17."\"".PHP_EOL.PHP_EOL;
+								$attachment_17 .= "Content-Disposition: attachment; filename=\"".$filename_17."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_17 .= $content.PHP_EOL;
 								$attachment_17 .= "--".$boundary;
 
@@ -1471,7 +1480,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_18 .= "Content-Type: application/xml; name=\"".$filename_18."\"".PHP_EOL;
 								$attachment_18 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_18 .= "Content-Disposition: attachment; filename=\"".$filename_18."\"".PHP_EOL.PHP_EOL;
+								$attachment_18 .= "Content-Disposition: attachment; filename=\"".$filename_18."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_18 .= $content.PHP_EOL;
 								$attachment_18 .= "--".$boundary;
 
@@ -1510,7 +1519,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_19 .= "Content-Type: application/xml; name=\"".$filename_19."\"".PHP_EOL;
 								$attachment_19 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_19 .= "Content-Disposition: attachment; filename=\"".$filename_19."\"".PHP_EOL.PHP_EOL;
+								$attachment_19 .= "Content-Disposition: attachment; filename=\"".$filename_19."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_19 .= $content.PHP_EOL;
 								$attachment_19 .= "--".$boundary;
 
@@ -1549,7 +1558,7 @@ if ($match_found > 0)
 								// Edit content type for different file extensions
 								$attachment_20 .= "Content-Type: application/xml; name=\"".$filename_20."\"".PHP_EOL;
 								$attachment_20 .= "Content-Transfer-Encoding: base64".PHP_EOL;
-								$attachment_20 .= "Content-Disposition: attachment; filename=\"".$filename_20."\"".PHP_EOL.PHP_EOL;
+								$attachment_20 .= "Content-Disposition: attachment; filename=\"".$filename_20."\"$EHA".PHP_EOL.PHP_EOL;
 								$attachment_20 .= $content.PHP_EOL;
 								$attachment_20 .= "--".$boundary;
 
@@ -1636,19 +1645,27 @@ if ($match_found > 0)
 						$header = preg_replace("/\n\n|\r\r|\r\n\r\n/","\n",$header);
 
 						// Send email
-						if (mail($email_to, $email_subject, $email_body, $header)) 
-							{echo "Sent";} 
-						else 
+						if ( ($sendmail_bypass > 0) and (strlen($allow_sendmail_bypass) > 2) )
 							{
-							echo "Error";
-							if ($DB) 
+							passthru("$allow_sendmail_bypass -t -i <<END_MESSAGE_XYZ1838127361\nTo: $email_to\nSubject: $email_subject\n$header\n\n$email_body \r\n\r\nEND_MESSAGE_XYZ1838127361\n > /tmp/mail-debug");
+							echo "Sent";
+							}
+						else
+							{
+							if (mail($email_to, $email_subject, $email_body, $header)) 
+								{echo "Sent";} 
+							else 
 								{
-								echo "\n";
-							#	echo "email_to: $email_to \n";
-							#	echo "email_subject: $email_subject \n";
-							#	echo "headers:\n";
-							#	echo "$header\n";
-							#	echo "\n";
+								echo "Error";
+								if ($DB) 
+									{
+									echo "\n";
+								#	echo "email_to: $email_to \n";
+								#	echo "email_subject: $email_subject \n";
+								#	echo "headers:\n";
+								#	echo "$header\n";
+								#	echo "\n";
+									}
 								}
 							}
 						}
