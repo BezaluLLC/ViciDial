@@ -46,6 +46,7 @@
 # 210823-1623 - Fix for security issue, removed absolute path attachments, now must be in "agc/attachments" directory
 # 210823-1947 - Fix to allow for legacy attachment file locations in "agc" directory
 # 220127-0942 - Added email_header_attach and allow_sendmail_bypass options.php settings
+# 220213-0849 - Added code for Pause Max Email functionality
 #
 
 $api_script = 'send_email';
@@ -201,7 +202,7 @@ if ($qm_conf_ct > 0)
 ###########################################
 
 $call_id = preg_replace('/[^-_0-9a-zA-Z]/', '', $call_id);
-$lead_id = preg_replace('/[^_0-9]/', '', $lead_id);
+$lead_id = preg_replace('/[^_0-9a-zA-Z]/', '', $lead_id);
 $call_notes=preg_replace("/\\\\/","",$call_notes);
 $stage = preg_replace('/[^-_0-9a-zA-Z]/', '', $stage);
 $additional_notes=preg_replace("/\\\\/","",$additional_notes);
@@ -286,27 +287,48 @@ if ($match_found > 0)
 		{
 		if (strlen($user) > 11) {$user = preg_replace("/NOAGENTURL/",'',$user);}
 		$PADlead_id = sprintf("%010s", $lead_id);
-		if ( (strlen($pass) > 15) and (preg_match("/$PADlead_id$/",$pass)) )
-			{
-			$four_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-4,date("i"),date("s"),date("m"),date("d"),date("Y")));
 
-			$stmt="SELECT count(*) from vicidial_log_extended where caller_code='$pass' and call_date > \"$four_hours_ago\";";
+		if ( (preg_match("/PAUSEMAX/",$lead_id)) and (preg_match("/$user$/",$pass)) )
+			{
+			$one_minute_ago = date("Y-m-d H:i:s", mktime(date("H"),date("i")-1,date("s"),date("m"),date("d"),date("Y")));
+
+			$stmt="SELECT count(*) from vicidial_user_log where user='$user' and event_date > \"$one_minute_ago\" and event='TIMEOUTLOGOUT';";
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
-				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60003',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysqli_fetch_row($rslt);
 			$authlive=$row[0];
 			$auth=$row[0];
 			if ($authlive < 1)
 				{
-				echo _QXZ("Call Not Found:")." 2|$user|$pass|$authlive|\n";
+				echo _QXZ("User Not Found:")." 3|$user|$authlive|\n";
 				exit;
 				}
 			}
 		else
 			{
-			echo _QXZ("Invalid Call ID:")." 1|$user|$pass|$PADlead_id|\n";
-			exit;
+			if ( (strlen($pass) > 15) and (preg_match("/$PADlead_id$/",$pass)) )
+				{
+				$four_hours_ago = date("Y-m-d H:i:s", mktime(date("H")-4,date("i"),date("s"),date("m"),date("d"),date("Y")));
+
+				$stmt="SELECT count(*) from vicidial_log_extended where caller_code='$pass' and call_date > \"$four_hours_ago\";";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60003',$user,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysqli_fetch_row($rslt);
+				$authlive=$row[0];
+				$auth=$row[0];
+				if ($authlive < 1)
+					{
+					echo _QXZ("Call Not Found:")." 2|$user|$pass|$authlive|\n";
+					exit;
+					}
+				}
+			else
+				{
+				echo _QXZ("Invalid Call ID:")." 1|$user|$pass|$PADlead_id|\n";
+				exit;
+				}
 			}
 		}
 	else

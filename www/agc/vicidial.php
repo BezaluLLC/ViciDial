@@ -1,7 +1,7 @@
 <?php
 # vicidial.php - the web-based version of the astVICIDIAL client application
 # 
-# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Other scripts that this application depends on:
 # - vdc_db_query.php: Updates information in the database
@@ -683,10 +683,12 @@
 # 210913-0831 - Fix for alternate number auto-dial logging issues
 # 211223-0824 - Fix for API hangup post-call survey issue #1338
 # 211223-0906 - Fix for API transfer if AGENTDIRECT selected, issue #1330
+# 220128-0030 - Added more logging of dial alerts, force PauseCode MDSKIP when skipping previewed lead
+# 220212-0813 - Added pause_max_url triggering
 #
 
-$version = '2.14-651c';
-$build = '211223-0906';
+$version = '2.14-653c';
+$build = '220212-0813';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -2281,7 +2283,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history,show_previous_callback,clear_script,manual_dial_search_filter,web_form_address_three,manual_dial_override_field,status_display_ingroup,customer_gone_seconds,agent_display_fields,manual_dial_timeout,manual_auto_next,manual_auto_show,allow_required_fields,dead_to_dispo,agent_xfer_validation,ready_max_logout,callback_display_days,three_way_record_stop,hangup_xfer_record_start,max_inbound_calls_outcome,manual_auto_next_options,agent_screen_time_display,pause_max_dispo,script_top_dispo,routing_initiated_recordings,dead_trigger_seconds,dead_trigger_action,dead_trigger_repeat,dead_trigger_filename,scheduled_callbacks_force_dial,callback_hours_block,callback_display_days,scheduled_callbacks_timezones_container,three_way_volume_buttons,manual_dial_validation,mute_recordings,leave_vm_no_dispo,leave_vm_message_group_id,campaign_script_two,browser_alert_sound,browser_alert_volume,three_way_record_stop_exception,pause_max_exceptions,transfer_button_launch,leave_3way_start_recording,leave_3way_start_recording_exception,calls_waiting_vl_one,calls_waiting_vl_two,in_man_dial_next_ready_seconds,in_man_dial_next_ready_seconds_override,transfer_no_dispo,local_call_time FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history,show_previous_callback,clear_script,manual_dial_search_filter,web_form_address_three,manual_dial_override_field,status_display_ingroup,customer_gone_seconds,agent_display_fields,manual_dial_timeout,manual_auto_next,manual_auto_show,allow_required_fields,dead_to_dispo,agent_xfer_validation,ready_max_logout,callback_display_days,three_way_record_stop,hangup_xfer_record_start,max_inbound_calls_outcome,manual_auto_next_options,agent_screen_time_display,pause_max_dispo,script_top_dispo,routing_initiated_recordings,dead_trigger_seconds,dead_trigger_action,dead_trigger_repeat,dead_trigger_filename,scheduled_callbacks_force_dial,callback_hours_block,callback_display_days,scheduled_callbacks_timezones_container,three_way_volume_buttons,manual_dial_validation,mute_recordings,leave_vm_no_dispo,leave_vm_message_group_id,campaign_script_two,browser_alert_sound,browser_alert_volume,three_way_record_stop_exception,pause_max_exceptions,transfer_button_launch,leave_3way_start_recording,leave_3way_start_recording_exception,calls_waiting_vl_one,calls_waiting_vl_two,in_man_dial_next_ready_seconds,in_man_dial_next_ready_seconds_override,transfer_no_dispo,local_call_time,pause_max_url FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -2460,6 +2462,7 @@ else
 				$in_man_dial_next_ready_seconds_override = $row[171];
 				$transfer_no_dispo =		$row[172];
 				$local_call_time =			$row[173];
+				$pause_max_url =			$row[174];
 
 				if ( (strlen($VU_manual_dial_filter) > 0) and ($VU_manual_dial_filter != 'DISABLED') )
 					{
@@ -2588,6 +2591,9 @@ else
 						echo "<!-- PAUSE MAX EXEPTION CODES: |$pause_max_exceptions($PMEcontainer_entry)| -->\n";
 						}
 					}
+				$pause_max_url_trigger=0;
+				if ( (strlen($pause_max_url) > 5) and ($pause_max > 10) ) {$pause_max_url_trigger=1;}
+
 				if ( ($queuemetrics_pe_phone_append > 0) and (strlen($qm_phone_environment)>0) )
 					{$qm_phone_environment .= "-$qm_extension";}
 
@@ -5597,6 +5603,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var user_pass_webform = '<?php echo $user_pass_webform ?>';
 	var phone_login_webform = '<?php echo $phone_login_webform ?>';
 	var recording_active=0;
+	var pause_max_url_trigger = '<?php echo $pause_max_url_trigger ?>';
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -6851,7 +6858,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								api_logout_flag=1;
 								button_click_log = button_click_log + "" + SQLdate + "-----api_logout---" + AGLogiN + " " + api_logout_flag + "|";
 								if ( (MD_channel_look < 1) && (VD_live_customer_call < 1) && (alt_dial_status_display < 1) )
-									{LogouT('API','');}
+									{LogouT('API','','');}
 								}
 							}
 						var VLAStatuS_array = check_time_array[4].split("Status: ");
@@ -9864,6 +9871,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								var XDerrorDescSIP = MDlookResponse_array[4];
 								var DiaLAlerTMessagE = "<?php echo _QXZ("Call Rejected:"); ?> " + XDchannel + "\n" + XDerrorDesc + "\n" + XDerrorDescSIP;
 								TimerActionRun("DiaLAlerT",DiaLAlerTMessagE,0);
+								button_click_log = button_click_log + "" + SQLdate + "-----DiaLAlerT---Call-Rejected" + XDerrorDesc + "|";
 								agent_events('agent_alert', "Call Rejected: " + XDerrorDesc + ' ' + XDerrorDescSIP, aec);   aec++;
 								}
 							if ( (XDchannel.match(regMDL)) && (asterisk_version != '1.0.8') && (asterisk_version != '1.0.9') && (MD_ring_secondS < 10) )
@@ -9924,6 +9932,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								var MDerrorDescSIP = MDlookResponse_array[4];
 								var DiaLAlerTMessagE = "<?php echo _QXZ("Call Rejected:"); ?> " + MDchannel + "\n" + MDerrorDesc + "\n" + MDerrorDescSIP;
 								TimerActionRun("DiaLAlerT",DiaLAlerTMessagE,0);
+								button_click_log = button_click_log + "" + SQLdate + "-----DiaLAlerT---Call-Rejected" + MDerrorDesc + "|";
 								agent_events('agent_alert', "Call Rejected: " + MDerrorDesc + ' ' + MDerrorDescSIP, aec);   aec++;
 								}
 							if ( (MDchannel.match(regMDL)) && (asterisk_version != '1.0.8') && (asterisk_version != '1.0.9') )
@@ -11496,6 +11505,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					hideDiv("DiaLLeaDPrevieW");
 					}
 			//	document.getElementById('vcFormIFrame').src='./vdc_form_display.php?lead_id=&list_id=&stage=WELCOME';
+				PauseCodeSelect_submit('MDSKIP');
 				}
 			}
 		}
@@ -15903,7 +15913,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							showDiv('LogouTBox');
 							}
 						else
-							{LogouT('API','');}
+							{LogouT('API','','');}
 						}
 					if (focus_blur_enabled==1)
 						{
@@ -16951,7 +16961,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				{
 				AutoDial_ReSume_PauSe("VDADpause",'','','',"LOGOUT");
 				}
-			LogouT('CLOSE','');
+			LogouT('CLOSE','','');
 		// removing alert because onbeforeunload function invalidates it
 		//	alert("<?php echo _QXZ("PLEASE CLICK THE LOGOUT LINK TO LOG OUT NEXT TIME."); ?>\n");
 			}
@@ -16971,16 +16981,16 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				pausetrigger='PAUSE';
 			//	AutoDial_ReSume_PauSe("VDADpause",'','','',"LOGOUT");
 				}
-			LogouT('NORMAL',pausetrigger);
+			LogouT('NORMAL',pausetrigger,'');
 			}
 		}
 
 
 // ################################################################################
 // Log the user out of the system, if active call or active dial is occuring, don't let them.
-	function LogouT(tempreason,temppause)
+	function LogouT(tempreason,temppause,temp_pause_max_url_trigger)
 		{
-		button_click_log = button_click_log + "" + SQLdate + "-----LogouT---" + tempreason + " " + temppause + "|";
+		button_click_log = button_click_log + "" + SQLdate + "-----LogouT---" + tempreason + " " + temppause + " " + temp_pause_max_url_trigger + "|";
 		if (isVisible)
 			{
 			onHidden('1');
@@ -17034,7 +17044,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						}
 					if (xmlhttp) 
 						{
-						VDlogout_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=userLOGout&format=text&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&agent_log_id=" + agent_log_id + "&no_delete_sessions=" + no_delete_sessions + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&LogouTKicKAlL=" + LogouTKicKAlL + "&ext_context=" + ext_context + "&qm_extension=" + qm_extension + "&stage=" + tempreason + "&pause_trigger=" + temppause + "&dial_method=" + dial_method;
+						VDlogout_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=userLOGout&format=text&user=" + user + "&pass=" + pass + "&campaign=" + campaign + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&agent_log_id=" + agent_log_id + "&no_delete_sessions=" + no_delete_sessions + "&phone_ip=" + phone_ip + "&enable_sipsak_messages=" + enable_sipsak_messages + "&LogouTKicKAlL=" + LogouTKicKAlL + "&ext_context=" + ext_context + "&qm_extension=" + qm_extension + "&stage=" + tempreason + "&pause_trigger=" + temppause + "&dial_method=" + dial_method + "&pause_max_url_trigger=" + temp_pause_max_url_trigger;
 						xmlhttp.open('POST', 'vdc_db_query.php'); 
 						xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 						xmlhttp.send(VDlogout_query); 
@@ -20442,7 +20452,7 @@ function phone_number_format(formatphone) {
 					{trigger_shift_logout =(trigger_shift_logout - 1);}
 				else
 					{
-					LogouT('SHIFT','');
+					LogouT('SHIFT','','');
 					trigger_shift_logout=0;
 					}
 				}
@@ -20694,14 +20704,14 @@ function phone_number_format(formatphone) {
 
 			if ( (ready_max_logout > 0) && (VDRP_stage_seconds > ready_max_logout) )
 				{
-				LogouT('READY_TIMEOUT','');
+				LogouT('READY_TIMEOUT','','');
 				}
 			}
 		if (pause_max_finish > 0)
 			{
 			if (pause_max_finish < 2)
 				{
-				LogouT('TIMEOUT','');
+				LogouT('TIMEOUT','',pause_max_url_trigger);
 				}
 			pause_max_finish--;
 			}
@@ -22345,7 +22355,7 @@ if ($agent_display_dialable_leads > 0)
 </span>
 
 <span style="position:absolute;left:0px;top:0px;z-index:<?php $zi++; echo $zi ?>;" id="AgenTDisablEBoX">
-    <table border="0" bgcolor="#FFFFFF" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center"><font class="sd_text"><?php echo _QXZ("Your session has been disabled"); ?><br /><a href="#" onclick="LogouT('DISABLED','');return false;"><?php echo _QXZ("CLICK HERE TO RESET YOUR SESSION"); ?></a></font><br /><br /><!--<a href="#" onclick="hideDiv('AgenTDisablEBoX');return false;">Go Back</a>-->
+    <table border="0" bgcolor="#FFFFFF" width="<?php echo $CAwidth ?>px" height="<?php echo $WRheight ?>px"><tr><td align="center"><font class="sd_text"><?php echo _QXZ("Your session has been disabled"); ?><br /><a href="#" onclick="LogouT('DISABLED','','');return false;"><?php echo _QXZ("CLICK HERE TO RESET YOUR SESSION"); ?></a></font><br /><br /><!--<a href="#" onclick="hideDiv('AgenTDisablEBoX');return false;">Go Back</a>-->
     </td></tr></table>
 </span>
 

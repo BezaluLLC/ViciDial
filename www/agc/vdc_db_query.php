@@ -521,10 +521,11 @@
 # 210827-0749 - Added PJSIP compatibility
 # 211117-2033 - Added ALT Dispo Call URL url_call_length setting
 # 220119-1014 - Added auto_alt_threshold feature
+# 220212-0919 - Added pause_max_url_trigger input
 #
 
-$version = '2.14-414';
-$build = '220119-1014';
+$version = '2.14-415';
+$build = '220212-0919';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=876;
@@ -839,6 +840,8 @@ if (isset($_GET["calls_waiting_vl_oneLABEL"]))			{$calls_waiting_vl_oneLABEL=$_G
 	elseif (isset($_POST["calls_waiting_vl_oneLABEL"]))	{$calls_waiting_vl_oneLABEL=$_POST["calls_waiting_vl_oneLABEL"];}
 if (isset($_GET["calls_waiting_vl_twoLABEL"]))			{$calls_waiting_vl_twoLABEL=$_GET["calls_waiting_vl_twoLABEL"];}
 	elseif (isset($_POST["calls_waiting_vl_twoLABEL"]))	{$calls_waiting_vl_twoLABEL=$_POST["calls_waiting_vl_twoLABEL"];}
+if (isset($_GET["pause_max_url_trigger"]))			{$pause_max_url_trigger=$_GET["pause_max_url_trigger"];}
+	elseif (isset($_POST["pause_max_url_trigger"]))	{$pause_max_url_trigger=$_POST["pause_max_url_trigger"];}
 
 # if options file exists, use the override values for the above variables
 #   see the options-example.php file for more information
@@ -1158,6 +1161,7 @@ $customer_sec = preg_replace('/[^-_0-9]/','',$customer_sec);
 $leave_3way_start_recording_trigger = preg_replace('/[^0-9]/','',$leave_3way_start_recording_trigger);
 $leave_3way_start_recording_filename = preg_replace('/[^-_0-9a-zA-Z]/','',$leave_3way_start_recording_filename);
 $channelrec = preg_replace("/\'|\"|\\\\|;/","",$channelrec);
+$pause_max_url_trigger = preg_replace('/[^0-9]/','',$pause_max_url_trigger);
 
 if ($non_latin < 1)
 	{
@@ -16349,6 +16353,116 @@ if ($ACTION == 'userLOGout')
 						}
 					}
 				mysqli_close($linkB);
+				}
+			}
+
+
+		##### send URL request if Pause Max URL is set and triggered
+		if ($pause_max_url_trigger > 0)
+			{
+			$stmt="SELECT pause_max_url FROM vicidial_campaigns where campaign_id='$campaign';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($rslt) 
+				{
+				$row=mysqli_fetch_row($rslt);
+				$pause_max_url = "$row[0]";
+				if ($format=='debug') {echo "\n<!-- $row[0] -->";}
+
+				if (strlen($pause_max_url) > 5)
+					{
+					if ( (preg_match('/--A--user_custom_/i',$pause_max_url)) or (preg_match('/--A--fullname/i',$pause_max_url)) or (preg_match('/--A--user_group/i',$pause_max_url)) or (preg_match('/--A--agent_email--B--/i',$pause_max_url)) )
+						{
+						$stmt = "SELECT custom_one,custom_two,custom_three,custom_four,custom_five,full_name,user_group,email from vicidial_users where user='$user';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						$VUC_ct = mysqli_num_rows($rslt);
+						if ($VUC_ct > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$user_custom_one =		urlencode(trim($row[0]));
+							$user_custom_two =		urlencode(trim($row[1]));
+							$user_custom_three =	urlencode(trim($row[2]));
+							$user_custom_four =		urlencode(trim($row[3]));
+							$user_custom_five =		urlencode(trim($row[4]));
+							$fullname =				urlencode(trim($row[5]));
+							$user_group =			urlencode(trim($row[6]));
+							$agent_email =			urlencode(trim($row[7]));
+							}
+						}
+
+					$pause_max_url = preg_replace('/^VAR/','',$pause_max_url);
+					$pause_max_url = preg_replace('/--A--user--B--/i',"$user",$pause_max_url);
+					$pause_max_url = preg_replace('/--A--pass--B--/i',"$orig_pass",$pause_max_url);
+					$pause_max_url = preg_replace('/--A--campaign--B--/i',"$campaign",$pause_max_url);
+					$pause_max_url = preg_replace('/--A--phone_login--B--/i',"$phone_login",$pause_max_url);
+					$pause_max_url = preg_replace('/--A--original_phone_login--B--/i',"$original_phone_login",$pause_max_url);
+					$pause_max_url = preg_replace('/--A--phone_pass--B--/i',"$phone_pass",$pause_max_url);
+					$pause_max_url = preg_replace('/--A--SQLdate--B--/i',urlencode(trim($SQLdate)),$pause_max_url);
+					$pause_max_url = preg_replace('/--A--epoch--B--/i',"$epoch",$pause_max_url);
+					$pause_max_url = preg_replace('/--A--server_ip--B--/i',"$server_ip",$pause_max_url);
+					$pause_max_url = preg_replace('/--A--SIPexten--B--/i',urlencode(trim($exten)),$pause_max_url);
+					$pause_max_url = preg_replace('/--A--session_id--B--/i',"$conf_exten",$pause_max_url);
+					$pause_max_url = preg_replace('/--A--fullname--B--/i',"$fullname",$pause_max_url);
+					$pause_max_url = preg_replace('/--A--user_custom_one--B--/i',"$user_custom_one",$pause_max_url);
+					$pause_max_url = preg_replace('/--A--user_custom_two--B--/i',"$user_custom_two",$pause_max_url);
+					$pause_max_url = preg_replace('/--A--user_custom_three--B--/i',"$user_custom_three",$pause_max_url);
+					$pause_max_url = preg_replace('/--A--user_custom_four--B--/i',"$user_custom_four",$pause_max_url);
+					$pause_max_url = preg_replace('/--A--user_custom_five--B--/i',"$user_custom_five",$pause_max_url);
+					$pause_max_url = preg_replace('/--A--agent_log_id--B--/i',"$CALL_agent_log_id",$pause_max_url);
+					$pause_max_url = preg_replace('/--A--user_group--B--/i',urlencode(trim($user_group)),$pause_max_url);
+					$pause_max_url = preg_replace('/--A--agent_email--B--/i',urlencode(trim($agent_email)),$pause_max_url);
+
+					### insert a new url log entry
+					$SQL_log = "$pause_max_url";
+					$SQL_log = preg_replace('/;/','',$SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt = "INSERT INTO vicidial_url_log SET uniqueid='$uniqueid',url_date='$NOW_TIME',url_type='pause_max',url='$SQL_log',url_response='';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					$affected_rows = mysqli_affected_rows($link);
+					$url_id = mysqli_insert_id($link);
+
+					$URLstart_sec = date("U");
+
+					### grab the call_start_url ###
+					if ($DB > 0) {echo "$pause_max_url<BR>\n";}
+					$SCUfile = file("$pause_max_url");
+					if ( !($SCUfile) )
+						{
+						$error_array = error_get_last();
+						$error_type = $error_array["type"];
+						$error_message = $error_array["message"];
+						$error_line = $error_array["line"];
+						$error_file = $error_array["file"];
+						}
+
+					if ($DB > 0) {echo "$SCUfile[0]<BR>\n";}
+
+					### update url log entry
+					$URLend_sec = date("U");
+					$URLdiff_sec = ($URLend_sec - $URLstart_sec);
+					if ($SCUfile)
+						{
+						$SCUfile_contents = implode("", $SCUfile);
+						$SCUfile_contents = preg_replace('/;/','',$SCUfile_contents);
+						$SCUfile_contents = addslashes($SCUfile_contents);
+						}
+					else
+						{
+						$SCUfile_contents = "PHP ERROR: Type=$error_type - Message=$error_message - Line=$error_line - File=$error_file";
+						}
+					$stmt = "UPDATE vicidial_url_log SET response_sec='$URLdiff_sec',url_response='$SCUfile_contents' where url_log_id='$url_id';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					$affected_rows = mysqli_affected_rows($link);
+
+					$stage .= "|SCU|$URLdiff_sec";
+					}
 				}
 			}
 
