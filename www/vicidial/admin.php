@@ -4910,11 +4910,36 @@ $pause_max_url = preg_replace('/\'/', '',$pause_max_url);
 
 ### VARIABLES optionally filtered: ###
 
-# $script_text
+# $script_text JS filtering
+$rjs_debug='';
 if ($SSscript_remove_js > 0)
 	{
-	$script_text = preg_replace('/<script\b[^>]*>(.*?)<\/script\s*>/is','',$script_text);
-#	$script_text = "PROCESSED:".date("U")."\n".$script_text;
+	$rjs=0;   $rjs_ct=0;
+	$temp_length_a = strlen($script_text);
+	if ($temp_length_a > 7)
+		{
+		while ( ($rjs < 10000000000) and (preg_match("/<script\b[^>]*>/is",$script_text)) )
+			{
+			$temp_length_a = strlen($script_text);
+			$script_text = preg_replace('/<script\b[^>]*>(.*?)<\/script\s*>/is','',$script_text);
+			$temp_length_b = strlen($script_text);
+			if ($temp_length_a != $temp_length_b) {$rjs_ct++;}
+			else {$rjs=99999999999;}
+			$rjs++;
+			}
+		$rjsb=0;
+		while ( ($rjsb < 10000000000) and (preg_match("/<script\b[^>]*>/is",$script_text)) )
+			{
+			$temp_length_a = strlen($script_text);
+			$script_text = preg_replace('/<script\b[^>]*>/is','',$script_text);
+			$temp_length_b = strlen($script_text);
+			if ($temp_length_a != $temp_length_b) {$rjs_ct++;}
+			else {$rjsb=99999999999;}
+			$rjsb++;
+			}
+		if ( ($rjs > 0) or ($rjs > 0) ) {$rjs_debug = "\n<BR><BR>Script Text JS Filtered: $rjs_ct<BR>\n";}
+	#	$script_text = "PROCESSED:".date("U")."\n".$script_text;
+		}
 	}
 ##### END VARIABLE FILTERING FOR SECURITY #####
 
@@ -5777,12 +5802,13 @@ if ($SSscript_remove_js > 0)
 # 220122-1659 - Added more variable filtering, updated copyright year to 2022
 # 220127-2915 - Added update_alt_url Non-Agent API function
 # 220212-0758 - Added pause_max_url campaign setting
+# 220215-1011 - Fix for XSS multi-script security issue
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-843a';
-$build = '220212-0758';
+$admin_version = '2.14-844a';
+$build = '220215-1011';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -18611,7 +18637,7 @@ if ($ADD==4111111)
 			$stmt="UPDATE vicidial_scripts set script_name='$script_name', script_comments='$script_comments', script_text='" . mysqli_real_escape_string($link, $script_text) . "', active='$active',user_group='$user_group',script_color='$script_color' where script_id='$script_id';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 
-			echo "<br><B>"._QXZ("SCRIPT MODIFIED")."</B>\n";
+			echo "<br><B>"._QXZ("SCRIPT MODIFIED")."</B>$rjs_debug\n";
 
 			### LOG INSERTION Admin Log Table ###
 			$SQL_log = "$stmt|";
