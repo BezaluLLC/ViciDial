@@ -4937,7 +4937,17 @@ if ($SSscript_remove_js > 0)
 			else {$rjsb=99999999999;}
 			$rjsb++;
 			}
-		if ( ($rjs > 0) or ($rjs > 0) ) {$rjs_debug = "\n<BR><BR>Script Text JS Filtered: $rjs_ct<BR>\n";}
+		$rjsc=0;
+		while ( ($rjsc < 10000000000) and (preg_match("/javascript:|onabort|onactivate|onafterprint|onafterupdate|onbeforeactivate|onbeforecopy|onbeforecut|onbeforedeactivate|onbeforeeditfocus|onbeforepaste|onbeforeprint|onbeforeunload|onbeforeupdate|onblur|onbounce|oncellchange|onchange|onclick|oncontextmenu|oncontrolselect|oncopy|oncut|ondataavaible|ondatasetchanged|ondatasetcomplete|ondblclick|ondeactivate|ondrag|ondragdrop|ondragend|ondragenter|ondragleave|ondragover|ondragstart|ondrop|onerror|onerrorupdate|onfilterupdate|onfinish|onfocus|onfocusin|onfocusout|onhelp|onkeydown|onkeypress|onkeyup|onlayoutcomplete|onload|onlosecapture|onmousedown|onmouseenter|onmouseleave|onmousemove|onmoveout|onmouseover|onmouseup|onmousewheel|onmove|onmoveend|onmovestart|onpaste|onpropertychange|onreadystatechange|onreset|onresize|onresizeend|onresizestart|onrowexit|onrowsdelete|onrowsinserted|onscroll|onselect|onselectionchange|onselectstart|onstart|onstop|onsubmit|onunload/is",$script_text)) )
+			{
+			$temp_length_a = strlen($script_text);
+			$script_text = preg_replace('/javascript:|onabort|onactivate|onafterprint|onafterupdate|onbeforeactivate|onbeforecopy|onbeforecut|onbeforedeactivate|onbeforeeditfocus|onbeforepaste|onbeforeprint|onbeforeunload|onbeforeupdate|onblur|onbounce|oncellchange|onchange|onclick|oncontextmenu|oncontrolselect|oncopy|oncut|ondataavaible|ondatasetchanged|ondatasetcomplete|ondblclick|ondeactivate|ondrag|ondragdrop|ondragend|ondragenter|ondragleave|ondragover|ondragstart|ondrop|onerror|onerrorupdate|onfilterupdate|onfinish|onfocus|onfocusin|onfocusout|onhelp|onkeydown|onkeypress|onkeyup|onlayoutcomplete|onload|onlosecapture|onmousedown|onmouseenter|onmouseleave|onmousemove|onmoveout|onmouseover|onmouseup|onmousewheel|onmove|onmoveend|onmovestart|onpaste|onpropertychange|onreadystatechange|onreset|onresize|onresizeend|onresizestart|onrowexit|onrowsdelete|onrowsinserted|onscroll|onselect|onselectionchange|onselectstart|onstart|onstop|onsubmit|onunload/is','',$script_text);
+			$temp_length_b = strlen($script_text);
+			if ($temp_length_a != $temp_length_b) {$rjs_ct++;}
+			else {$rjsc=99999999999;}
+			$rjsc++;
+			}
+		if ($rjs_ct > 0) {$rjs_debug = "\n<BR><BR>Script Text JS Filtered: $rjs_ct<BR>\n";}
 	#	$script_text = "PROCESSED:".date("U")."\n".$script_text;
 		}
 	}
@@ -5803,12 +5813,13 @@ if ($SSscript_remove_js > 0)
 # 220127-2915 - Added update_alt_url Non-Agent API function
 # 220212-0758 - Added pause_max_url campaign setting
 # 220215-1011 - Fix for XSS multi-script security issue
+# 220215-1431 - Additional XSS script text variable filtering
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-844a';
-$build = '220215-1011';
+$admin_version = '2.14-845a';
+$build = '220215-1431';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
