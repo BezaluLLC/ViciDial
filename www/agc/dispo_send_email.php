@@ -47,6 +47,7 @@
 # 210823-1947 - Fix to allow for legacy attachment file locations in "agc" directory
 # 220127-0942 - Added email_header_attach and allow_sendmail_bypass options.php settings
 # 220213-0849 - Added code for Pause Max Email functionality
+# 220216-0027 - Fix for very large emails using allow_sendmail_bypass
 #
 
 $api_script = 'send_email';
@@ -1669,8 +1670,20 @@ if ($match_found > 0)
 						// Send email
 						if ( ($sendmail_bypass > 0) and (strlen($allow_sendmail_bypass) > 2) )
 							{
-							passthru("$allow_sendmail_bypass -t -i <<END_MESSAGE_XYZ1838127361\nTo: $email_to\nSubject: $email_subject\n$header\n\n$email_body \r\n\r\nEND_MESSAGE_XYZ1838127361\n > /tmp/mail-debug");
-							echo "Sent";
+							#	passthru("$allow_sendmail_bypass -t -i <<END_MESSAGE_XYZ1838127361\nTo: $email_to\nSubject: $email_subject\n$header\n\n$email_body \r\n\r\nEND_MESSAGE_XYZ1838127361\n > /tmp/mail-debug");
+
+							$command = "To: $email_to\nSubject: $email_subject\n$header\n\n$email_body \r\n\r\n";
+
+							$filetimestamp = date("YmdHis");
+							$random = (rand(1000000, 9999999) + 10000000);
+							$temp_mail_file = "MAIL_" . $lead_id . '_' . $filetimestamp . '_' . $random . '.txt';
+							$fp = fopen ("/tmp/$temp_mail_file", "w");
+							fwrite ($fp, "$command");
+							fclose($fp);
+
+							$result = passthru("/usr/bin/cat /tmp/$temp_mail_file | $allow_sendmail_bypass -t -i");
+
+							echo "Sent |$result|";
 							}
 						else
 							{
