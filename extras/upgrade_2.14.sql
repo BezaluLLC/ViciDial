@@ -1870,3 +1870,10 @@ UPDATE system_settings SET db_schema_version='1652',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD pause_max_url TEXT;
 
 UPDATE system_settings SET db_schema_version='1653',db_schema_update_date=NOW() where db_schema_version < 1653;
+
+ALTER TABLE system_settings MODIFY script_remove_js ENUM('1','0','2','3','4','5','6') default '1';
+ALTER TABLE system_settings ADD agent_hide_hangup ENUM('1','0','2','3','4','5','6') default '0';
+
+ALTER TABLE vicidial_campaigns ADD agent_hide_hangup ENUM('Y','N') default 'N';
+
+UPDATE system_settings SET db_schema_version='1654',db_schema_update_date=NOW() where db_schema_version < 1654;

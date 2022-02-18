@@ -1085,7 +1085,8 @@ call_limit_24hour_override VARCHAR(40) default 'DISABLED',
 cid_group_id_two VARCHAR(20) default '---DISABLED---',
 incall_tally_threshold_seconds SMALLINT(5) UNSIGNED default '0',
 auto_alt_threshold TINYINT(3) UNSIGNED default '0',
-pause_max_url TEXT
+pause_max_url TEXT,
+agent_hide_hangup ENUM('Y','N') default 'N'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -1878,7 +1879,7 @@ admin_row_click ENUM('0', '1') default '1',
 admin_screen_colors VARCHAR(20) default 'default',
 ofcom_uk_drop_calc ENUM('1','0') default '0',
 agent_screen_colors VARCHAR(20) default 'default',
-script_remove_js ENUM('1','0') default '1',
+script_remove_js ENUM('1','0','2','3','4','5','6') default '1',
 manual_auto_next ENUM('1','0') default '0',
 user_new_lead_limit ENUM('1','0') default '0',
 agent_xfer_park_3way ENUM('1','0') default '0',
@@ -1953,7 +1954,8 @@ label_owner VARCHAR(60) default '',
 label_entry_list_id VARCHAR(60) default '',
 call_limit_24hour ENUM('0','1') default '0',
 call_limit_24hour_reset DATETIME default '2000-01-01 00:00:01',
-allowed_sip_stacks ENUM('SIP','PJSIP','SIP_and_PJSIP') default 'SIP'
+allowed_sip_stacks ENUM('SIP','PJSIP','SIP_and_PJSIP') default 'SIP',
+agent_hide_hangup ENUM('1','0','2','3','4','5','6') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -5047,4 +5049,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1653',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1654',db_schema_update_date=NOW(),reload_timestamp=NOW();
