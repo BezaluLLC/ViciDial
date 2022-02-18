@@ -1,7 +1,7 @@
 <?php
 # admin_lists_custom.php
 # 
-# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen manages the custom lists fields in ViciDial
 #
@@ -56,10 +56,11 @@
 # 210211-0032 - Added SOURCESELECT field type
 # 210304-2039 - Added option to "re-rank" field ranks when adding/updating a field in the middle of the form
 # 210311-2338 - Added BUTTON field type and 2FA
+# 220217-2004 - Added input variable filtering
 #
 
-$admin_version = '2.14-47';
-$build = '210311-2338';
+$admin_version = '2.14-48';
+$build = '220217-2004';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -122,6 +123,8 @@ if (isset($_GET["SUBMIT"]))						{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))			{$SUBMIT=$_POST["SUBMIT"];}
 if (isset($_GET["field_rerank"]))				{$field_rerank=$_GET["field_rerank"];}
 	elseif (isset($_POST["field_rerank"]))		{$field_rerank=$_POST["field_rerank"];}
+
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####

@@ -57,6 +57,7 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 
 if (!isset($RR))			{$gRRroup=4;}
 if (!isset($types))			{$types='SHOW ALL CAMPAIGNS';}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 
 $report_name = 'Real-Time Campaign Summary';

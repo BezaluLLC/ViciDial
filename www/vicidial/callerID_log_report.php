@@ -47,6 +47,7 @@ if (isset($_GET["file_download"]))			{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $report_name = 'Caller ID Log Report';
 $db_source = 'M';

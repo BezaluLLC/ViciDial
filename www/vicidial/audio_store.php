@@ -83,6 +83,7 @@ if (isset($_GET["lead_file"]))				{$lead_file=$_GET["lead_file"];}
 if (isset($_GET["force_allow"]))			{$force_allow=$_GET["force_allow"];}
 	elseif (isset($_POST["force_allow"]))	{$force_allow=$_POST["force_allow"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1

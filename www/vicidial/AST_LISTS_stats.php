@@ -48,6 +48,8 @@ if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_
 if (isset($_GET["campaigns_or_lists_rpt"]))				{$campaigns_or_lists_rpt=$_GET["campaigns_or_lists_rpt"];}
 	elseif (isset($_POST["campaigns_or_lists_rpt"]))	{$campaigns_or_lists_rpt=$_POST["campaigns_or_lists_rpt"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 $report_name = 'Lists Statuses Report';
 $db_source = 'M';
 $JS_text="<script language='Javascript'>\n";

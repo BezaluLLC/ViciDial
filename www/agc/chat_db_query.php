@@ -102,6 +102,8 @@ if (isset($_GET["chat_xfer_type"]))					{$chat_xfer_type=$_GET["chat_xfer_type"]
 if (isset($_GET["chat_xfer_value"]))					{$chat_xfer_value=$_GET["chat_xfer_value"];}
 	elseif (isset($_POST["chat_xfer_value"]))			{$chat_xfer_value=$_POST["chat_xfer_value"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 if (!$user) {echo "No user, no using."; exit;}
 
 if (file_exists('options.php'))

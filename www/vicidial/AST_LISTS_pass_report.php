@@ -57,6 +57,7 @@ if (isset($_GET["use_lists"]))			{$use_lists=$_GET["use_lists"];}
 if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
 	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $report_name = 'Lists Pass Report';
 $db_source = 'M';

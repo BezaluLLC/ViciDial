@@ -102,6 +102,8 @@ if (isset($_GET["update_status"]))				{$update_status=$_GET["update_status"];}
 if (isset($_GET["update_dialstatus"]))				{$update_dialstatus=$_GET["update_dialstatus"];}
 	elseif (isset($_POST["update_dialstatus"]))	{$update_dialstatus=$_POST["update_dialstatus"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 $SQLdate = date("Y-m-d H:i:s");
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");

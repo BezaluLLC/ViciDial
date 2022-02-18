@@ -61,6 +61,8 @@ if (isset($_GET["purge_uncalled_records"]))			{$purge_uncalled_records=$_GET["pu
 if (isset($_GET["revert_status"]))			{$revert_status=$_GET["revert_status"];}
 	elseif (isset($_POST["revert_status"]))	{$revert_status=$_POST["revert_status"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,enable_languages,language_method,qc_features_active FROM system_settings;";

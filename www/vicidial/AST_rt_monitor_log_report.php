@@ -65,6 +65,7 @@ if (!isset($report_display_type)) {$report_display_type = "HTML";}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 if (!isset($order_by)) {$order_by="monitor_start_time-asc";} 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $report_name = 'Real-Time Monitoring Log Report';
 $db_source = 'M';

@@ -223,6 +223,8 @@ if (isset($_GET["orig_URL"]))			{$orig_URL=$_GET["orig_URL"];}
 if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))	{$DB=$_POST["DB"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 if ($bcrypt == 'OFF')
 	{$bcrypt=0;}
 

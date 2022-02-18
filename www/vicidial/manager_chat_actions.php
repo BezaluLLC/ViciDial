@@ -44,6 +44,8 @@ if (isset($_GET["reload_chat_span"]))			{$reload_chat_span=$_GET["reload_chat_sp
 if (isset($_GET["action"]))						{$action=$_GET["action"];}
 	elseif (isset($_POST["action"]))			{$action=$_POST["action"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,allow_chats,enable_languages,language_method,default_language FROM system_settings;";

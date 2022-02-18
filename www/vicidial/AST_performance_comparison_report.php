@@ -61,6 +61,7 @@ if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search
 	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $report_name = 'Performance Comparison Report';
 $db_source = 'M';

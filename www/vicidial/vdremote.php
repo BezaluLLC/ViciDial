@@ -67,6 +67,7 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
 if (!isset($force_logout)) {$force_logout = 0;}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 if (file_exists('options.php'))
 	{require('options.php');}

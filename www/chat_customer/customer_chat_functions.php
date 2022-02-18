@@ -51,6 +51,7 @@ if (isset($_GET["available_agents"]))				{$available_agents=$_GET["available_age
 if (isset($_GET["show_email"]))						{$show_email=$_GET["show_email"];}
 	elseif (isset($_POST["show_email"]))			{$show_email=$_POST["show_email"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 $chat_member_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/',"",$chat_member_name);
 if (!$user) {echo "No user, no using."; exit;}
 

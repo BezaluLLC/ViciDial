@@ -63,6 +63,7 @@ if (isset($_GET["DB"]))						{$DB=$_GET["DB"];}
 if (isset($_GET["log_to_file"]))			{$log_to_file=$_GET["log_to_file"];}
 	elseif (isset($_POST["log_to_file"]))	{$log_to_file=$_POST["log_to_file"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 #$DB = '1';	# DEBUG override
 $US = '_';

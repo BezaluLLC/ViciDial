@@ -125,6 +125,7 @@ if (isset($_GET["list_id_trigger"]))			{$list_id_trigger=$_GET["list_id_trigger"
 if (isset($_GET["multi_trigger"]))			{$multi_trigger=$_GET["multi_trigger"];}
 	elseif (isset($_POST["multi_trigger"]))	{$multi_trigger=$_POST["multi_trigger"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 #$DB = '1';	# DEBUG override
 $US = '_';

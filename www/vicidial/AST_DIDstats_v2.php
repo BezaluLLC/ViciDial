@@ -45,6 +45,7 @@ if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search
 	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
 if (strlen($shift)<2) {$shift='--';}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $report_name = 'Inbound DID Summary Report';
 $db_source = 'M';

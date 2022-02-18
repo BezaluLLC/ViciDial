@@ -236,6 +236,9 @@ if (strlen($appointment_time) < 1)
 $appointment_timeARRAY = explode(":",$appointment_time);
 $appointment_hour = $appointment_timeARRAY[0];
 $appointment_min = $appointment_timeARRAY[1];
+
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 ##### END Put custom fields here #####
 
 # if options file exists, use the override values for the above variables

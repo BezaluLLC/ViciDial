@@ -62,6 +62,7 @@ if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($bottom_graph)<2) {$bottom_graph='NO';}
 if (strlen($carrier_stats)<2) {$carrier_stats='NO';}
 if (strlen($include_rollover)<2) {$include_rollover='NO';}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $report_name = 'Called Counts List IDs Report';
 $db_source = 'M';

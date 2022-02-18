@@ -60,6 +60,7 @@ if (isset($_GET["show_defunct_users"]))				{$show_defunct_users=$_GET["show_defu
 
 if (strlen($shift)<2) {$shift='--';}
 if ($search_archived_data=="checked") {$agent_log_table="vicidial_agent_log_archive";} else {$agent_log_table="vicidial_agent_log";}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $TIME_HF_agentperfdetail = 'HF';
 $TIME_H_agentperfdetail = 'H';

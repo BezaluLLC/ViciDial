@@ -84,6 +84,8 @@ if (isset($_GET["user"]))					{$user=$_GET["user"];}
 if (isset($_GET["SUBMIT"]))					{$SUBMIT=$_GET["SUBMIT"];}
 	elseif (isset($_POST["SUBMIT"]))		{$SUBMIT=$_POST["SUBMIT"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 $report_name = 'CallCard Search';
 $SEARCHONLY=0;
 

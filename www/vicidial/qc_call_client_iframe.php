@@ -132,6 +132,8 @@ if (isset($_POST["appointment_date"]))			{$appointment_date=$_POST["appointment_
 if (isset($_POST["appointment_time"]))			{$appointment_time=$_POST["appointment_time"];}
 	elseif (isset($_GET["appointment_time"]))	{$appointment_time=$_GET["appointment_time"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");

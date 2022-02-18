@@ -1,7 +1,7 @@
 <?php
 # callbacks_bulk_change.php
 # 
-# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 120819-0119 - First build
@@ -15,6 +15,7 @@
 # 170409-1547 - Added IP List validation code
 # 170822-2255 - Added screen color settings
 # 170829-0040 - Added screen color settings
+# 220217-2220 - Added input variable filtering
 #
 
 require("dbconnect_mysqli.php");
@@ -43,6 +44,8 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 if (isset($_GET["convert_to_anyone"]))			{$convert_to_anyone=$_GET["convert_to_anyone"];}
 	elseif (isset($_POST["convert_to_anyone"]))	{$convert_to_anyone=$_POST["convert_to_anyone"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,enable_languages,language_method FROM system_settings;";
@@ -65,11 +68,19 @@ if ($non_latin < 1)
 	{
 	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
 	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	$old_user = preg_replace('/[^-_0-9a-zA-Z]/', '', $old_user);
+	$new_user = preg_replace('/[^-_0-9a-zA-Z]/', '', $new_user);
+	$group = preg_replace('/[^-_0-9a-zA-Z]/', '', $group);
+	$stage = preg_replace('/[^-_0-9a-zA-Z]/', '', $stage);
 	}
 else
 	{
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	$old_user = preg_replace('/[^-_0-9a-zA-Z]/', '', $old_user);
+	$new_user = preg_replace('/[^-_0-9\p{L}]/u', '', $new_user);
+	$group = preg_replace('/[^-_0-9\p{L}]/u', '', $group);
+	$stage = preg_replace('/[^-_0-9\p{L}]/u', '', $stage);
 	}
 
 $StarTtimE = date("U");

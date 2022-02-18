@@ -77,6 +77,7 @@ if (isset($_GET["show_defunct_users"]))				{$show_defunct_users=$_GET["show_defu
 	elseif (isset($_POST["show_defunct_users"]))	{$show_defunct_users=$_POST["show_defunct_users"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 if ($search_archived_data=="checked") {$agent_log_table="vicidial_agent_log_archive";} else {$agent_log_table="vicidial_agent_log";}
 
 $report_name = 'Agent Status Detail';

@@ -843,6 +843,8 @@ if (isset($_GET["calls_waiting_vl_twoLABEL"]))			{$calls_waiting_vl_twoLABEL=$_G
 if (isset($_GET["pause_max_url_trigger"]))			{$pause_max_url_trigger=$_GET["pause_max_url_trigger"];}
 	elseif (isset($_POST["pause_max_url_trigger"]))	{$pause_max_url_trigger=$_POST["pause_max_url_trigger"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 # if options file exists, use the override values for the above variables
 #   see the options-example.php file for more information
 if (file_exists('options.php'))

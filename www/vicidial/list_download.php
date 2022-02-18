@@ -64,6 +64,7 @@ if (isset($_GET["download_type"]))			{$download_type=$_GET["download_type"];}
 
 if (strlen($shift)<2) {$shift='ALL';}
 if ($group_id=='SYSTEM_INTERNAL') {$download_type='systemdnc';}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $report_name = 'Download List';
 $db_source = 'M';

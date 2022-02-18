@@ -154,6 +154,8 @@ if (isset($_GET["phone_number"]))			{$phone_number=$_GET["phone_number"];}
 if (isset($_GET["visibility"]))				{$visibility=$_GET["visibility"];}
 	elseif (isset($_POST["visibility"]))	{$visibility=$_POST["visibility"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 if ($bcrypt == 'OFF')
 	{$bcrypt=0;}
 

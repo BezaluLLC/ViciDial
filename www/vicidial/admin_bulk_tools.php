@@ -87,6 +87,7 @@ if (isset($_POST["USERdelete_from"]))				{$USERdelete_from=$_POST["USERdelete_fr
 if (isset($_POST["USERdelete_from_CONFIRMED"]))		{$USERdelete_from_CONFIRMED=$_POST["USERdelete_from_CONFIRMED"];}
 if (isset($_POST["DIDto_delete_TB"]))				{$DIDto_delete_TB=$_POST["DIDto_delete_TB"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 if ($DB) {echo "$form_to_run|";}
 

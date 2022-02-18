@@ -125,10 +125,11 @@
 # 210615-2241 - Fix for issue #1314
 # 210618-1011 - Added CORS support
 # 210625-1432 - Added options.php RS_BargeSwap variable
+# 220217-2045 - Added input variable filters
 #
 
-$version = '2.14-110';
-$build = '210625-1432';
+$version = '2.14-111';
+$build = '220217-2045';
 $php_script='AST_timeonVDADall.php';
 
 require("dbconnect_mysqli.php");
@@ -251,6 +252,8 @@ if (isset($_GET["parkSTATS"]))			{$parkSTATS=$_GET["parkSTATS"];}
 	elseif (isset($_POST["parkSTATS"]))	{$parkSTATS=$_POST["parkSTATS"];}
 if (isset($_GET["SLAinSTATS"]))				{$SLAinSTATS=$_GET["SLAinSTATS"];}
 	elseif (isset($_POST["SLAinSTATS"]))	{$SLAinSTATS=$_POST["SLAinSTATS"];}
+
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 # defaults
 $RS_BargeSwap=0;
@@ -413,6 +416,46 @@ else
 	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
 	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
 	}
+$RR = preg_replace('/[^0-9]/', '', $RR);
+$inbound = preg_replace('/[^-_0-9a-zA-Z]/', '', $inbound);
+$group = preg_replace('/[^-_0-9a-zA-Z]/', '', $group);
+$groups[0] = preg_replace('/[^-_0-9a-zA-Z]/', '', $groups[0]);
+$usergroup = preg_replace('/[^-_0-9a-zA-Z]/', '', $usergroup);
+$DB = preg_replace('/[^0-9]/', '', $DB);
+$adastats = preg_replace('/[^-_0-9a-zA-Z]/', '', $adastats);
+$SIPmonitorLINK = preg_replace('/[^-_0-9a-zA-Z]/', '', $SIPmonitorLINK);
+$IAXmonitorLINK = preg_replace('/[^-_0-9a-zA-Z]/', '', $IAXmonitorLINK);
+$UGdisplay = preg_replace('/[^-_0-9a-zA-Z]/', '', $UGdisplay);
+$UidORname = preg_replace('/[^-_0-9a-zA-Z]/', '', $UidORname);
+$orderby = preg_replace('/[^-_0-9a-zA-Z]/', '', $orderby);
+$SERVdisplay = preg_replace('/[^-_0-9a-zA-Z]/', '', $SERVdisplay);
+$CALLSdisplay = preg_replace('/[^-_0-9a-zA-Z]/', '', $CALLSdisplay);
+$PHONEdisplay = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHONEdisplay);
+$CUSTPHONEdisplay = preg_replace('/[^-_0-9a-zA-Z]/', '', $CUSTPHONEdisplay);
+$CUSTINFOdisplay = preg_replace('/[^-_0-9a-zA-Z]/', '', $CUSTINFOdisplay);
+if ($CUSTINFOdisplay==1)	{$CUSTPHONEdisplay=0;}	# only one of these should be on at one time
+if ($CUSTPHONEdisplay==1)	{$CUSTINFOdisplay=0;}	# only one of these should be on at one time
+$NOLEADSalert = preg_replace('/[^-_0-9a-zA-Z]/', '', $NOLEADSalert);
+$DROPINGROUPstats = preg_replace('/[^-_0-9a-zA-Z]/', '', $DROPINGROUPstats);
+$ALLINGROUPstats = preg_replace('/[^-_0-9a-zA-Z]/', '', $ALLINGROUPstats);
+$with_inbound = preg_replace('/[^-_0-9a-zA-Z]/', '', $with_inbound);
+$monitor_active = preg_replace('/[^-_0-9a-zA-Z]/', '', $monitor_active);
+$monitor_phone = preg_replace('/[^-_0-9a-zA-Z]/', '', $monitor_phone);
+$CARRIERstats = preg_replace('/[^-_0-9a-zA-Z]/', '', $CARRIERstats);
+$PRESETstats = preg_replace('/[^-_0-9a-zA-Z]/', '', $PRESETstats);
+$AGENTtimeSTATS = preg_replace('/[^-_0-9a-zA-Z]/', '', $AGENTtimeSTATS);
+$parkSTATS = preg_replace('/[^-_0-9a-zA-Z]/', '', $parkSTATS);
+$SLAinSTATS = preg_replace('/[^-_0-9a-zA-Z]/', '', $SLAinSTATS);
+$INGROUPcolorOVERRIDE = preg_replace('/[^-_0-9a-zA-Z]/', '', $INGROUPcolorOVERRIDE);
+$droppedOFtotal = preg_replace('/[^-_0-9a-zA-Z]/', '', $droppedOFtotal);
+$report_display_type = preg_replace('/[^-_0-9a-zA-Z]/', '', $report_display_type);
+$mobile_device = preg_replace('/[^-_0-9a-zA-Z]/', '', $mobile_device);
+$RTajax = preg_replace('/[^-_0-9a-zA-Z]/', '', $RTajax);
+$RTpass = preg_replace('/[^-_0-9a-zA-Z]/', '', $RTpass);
+$RTuser = preg_replace('/[^-_0-9a-zA-Z]/', '', $RTuser);
+$server_ip = preg_replace('/[^-\._0-9a-zA-Z]/', '', $server_ip);
+$SUBMIT = preg_replace('/[^-_0-9a-zA-Z]/', '', $SUBMIT);
+$submit = preg_replace('/[^-_0-9a-zA-Z]/', '', $submit);
 
 $stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}

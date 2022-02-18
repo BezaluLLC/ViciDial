@@ -258,6 +258,8 @@ if (isset($_GET["cid_choice"]))				{$cid_choice=$_GET["cid_choice"];}
 if (isset($_GET["outbound_cid"]))			{$outbound_cid=$_GET["outbound_cid"];}
 	elseif (isset($_POST["outbound_cid"]))	{$outbound_cid=$_POST["outbound_cid"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 # if options file exists, use the override values for the above variables
 #   see the options-example.php file for more information
 if (file_exists('options.php'))

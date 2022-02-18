@@ -73,6 +73,7 @@ if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search
 if (isset($_GET["show_all_users"]))			{$show_all_users=$_GET["show_all_users"];}
 	elseif (isset($_POST["show_all_users"]))	{$show_all_users=$_POST["show_all_users"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $report_name = 'Team Performance Detail';
 $db_source = 'M';

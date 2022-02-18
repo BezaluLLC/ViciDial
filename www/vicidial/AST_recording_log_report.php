@@ -54,6 +54,8 @@ if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 $report_name="Recording Access Log Report";
 $NOW_DATE = date("Y-m-d");
 if (!isset($users)) {$users=array();}

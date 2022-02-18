@@ -154,6 +154,7 @@ if (!file_exists('old_clear'))
 
 if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))	{$DB=$_POST["DB"];}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 
 #############################################

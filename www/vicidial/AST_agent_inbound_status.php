@@ -47,6 +47,7 @@ if (isset($_GET["show_defunct_users"]))				{$show_defunct_users=$_GET["show_defu
 
 if (strlen($shift)<2) {$shift='ALL';}
 if ($search_archived_data=="checked") {$closer_log_table="vicidial_closer_log_archive";} else {$closer_log_table="vicidial_closer_log";}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $report_name = 'Agent Inbound Status Summary';
 $db_source = 'M';

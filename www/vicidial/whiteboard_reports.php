@@ -58,6 +58,8 @@ if (isset($_GET["target_per_team"]))			{$target_per_team=$_GET["target_per_team"
 if (isset($_GET["rpt_type"]))					{$rpt_type=$_GET["rpt_type"];}
 	elseif (isset($_POST["rpt_type"]))			{$rpt_type=$_POST["rpt_type"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 $report_name="Real-Time Whiteboard Report";
 
 #############################################

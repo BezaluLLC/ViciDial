@@ -62,6 +62,8 @@ if (isset($_GET["upd_domain"]))				{$upd_domain=$_GET["upd_domain"];}
 if (isset($_GET["upd_custom_reports_user_groups"]))				{$upd_custom_reports_user_groups=$_GET["upd_custom_reports_user_groups"];}
 	elseif (isset($_POST["upd_custom_reports_user_groups"]))	{$upd_custom_reports_user_groups=$_POST["upd_custom_reports_user_groups"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,custom_fields_enabled,enable_languages,language_method,active_modules FROM system_settings;";

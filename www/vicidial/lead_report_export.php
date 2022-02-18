@@ -102,6 +102,7 @@ if (isset($_GET["exclude_call_log_data"]))			{$exclude_call_log_data=$_GET["excl
 
 
 if (strlen($shift)<2) {$shift='ALL';}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $report_name = 'Export Leads Report';
 $db_source = 'M';

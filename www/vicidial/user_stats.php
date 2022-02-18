@@ -115,6 +115,7 @@ if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search
 if (isset($_GET["NVAuser"]))			{$NVAuser=$_GET["NVAuser"];}
 	elseif (isset($_POST["NVAuser"]))	{$NVAuser=$_POST["NVAuser"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####

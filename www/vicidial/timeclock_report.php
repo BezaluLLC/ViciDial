@@ -69,6 +69,7 @@ if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_d
 
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($order)<2) {$order='hours_down';}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $report_name = 'User Timeclock Report';
 $db_source = 'M';

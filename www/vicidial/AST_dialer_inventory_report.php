@@ -70,6 +70,7 @@ $STARTtime = date("U");
 if (!isset($group)) {$group = array();}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 
 $report_name = 'Dialer Inventory Report';

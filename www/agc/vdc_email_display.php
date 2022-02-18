@@ -64,6 +64,8 @@ if (isset($_GET["REPLY"]))	{$REPLY=$_GET["REPLY"];}
 if (isset($_GET["agent_email"]))	{$agent_email=$_GET["agent_email"];}
 	elseif (isset($_POST["agent_email"]))	{$agent_email=$_POST["agent_email"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 $PHP_SELF=$_SERVER['PHP_SELF'];
 $PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
 

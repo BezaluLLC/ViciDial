@@ -54,6 +54,7 @@ if (isset($_GET["submit_chat"]))						{$submit_chat=$_GET["submit_chat"];}
 	elseif (isset($_POST["submit_chat"]))				{$submit_chat=$_POST["submit_chat"];}
 if (!$allow_replies) {$allow_replies="N";}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####

@@ -207,6 +207,8 @@ $appointment_timeARRAY = explode(":",$appointment_time);
 $appointment_hour = $appointment_timeARRAY[0];
 $appointment_min = $appointment_timeARRAY[1];
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 # if options file exists, use the override values for the above variables
 #   see the options-example.php file for more information
 if (file_exists('options.php'))

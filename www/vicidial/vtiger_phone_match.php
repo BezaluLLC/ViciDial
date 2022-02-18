@@ -28,6 +28,8 @@ if (isset($_GET["phone"]))				{$phone=$_GET["phone"];}
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 ###############################################################
 ##### START SYSTEM_SETTINGS VTIGER CONNECTION INFO LOOKUP #####
 $stmt = "SELECT enable_vtiger_integration,vtiger_server_ip,vtiger_dbname,vtiger_login,vtiger_pass,vtiger_url,use_non_latin FROM system_settings;";

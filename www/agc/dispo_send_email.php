@@ -136,6 +136,7 @@ if (isset($_GET["email_attachment_19"]))			{$email_attachment_19=$_GET["email_at
 if (isset($_GET["email_attachment_20"]))			{$email_attachment_20=$_GET["email_attachment_20"];}
 	elseif (isset($_POST["email_attachment_20"]))	{$email_attachment_20=$_POST["email_attachment_20"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 #$DB = '1';	# DEBUG override
 $US = '_';

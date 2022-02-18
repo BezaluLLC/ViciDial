@@ -46,6 +46,7 @@ if (strlen($shift)<2) {$shift='ALL';}
 $report_name = 'Agent DID Report';
 $db_source = 'M';
 if ($file_download>0) {$DB="";}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####

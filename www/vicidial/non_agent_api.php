@@ -724,6 +724,8 @@ if ($qm_conf_ct > 0)
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
+$DB=preg_replace('/[^0-9]/','',$DB);
+
 if ($non_latin < 1)
 	{
 	$users=preg_replace('/[^-_0-9a-zA-Z\,]/','',$users);
@@ -738,7 +740,6 @@ if ($non_latin < 1)
 	$status_breakdown = preg_replace('/[^1Y]/','',$status_breakdown);
 	$show_percentages = preg_replace('/[^1Y]/','',$show_percentages);
 
-	$DB=preg_replace('/[^0-9]/','',$DB);
 	$user=preg_replace('/[^-_0-9a-zA-Z]/','',$user);
 	$pass=preg_replace('/[^-_0-9a-zA-Z]/','',$pass);
 	$agent_user=preg_replace('/[^-_0-9a-zA-Z]/','',$agent_user);

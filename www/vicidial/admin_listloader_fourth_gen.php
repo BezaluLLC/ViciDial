@@ -204,6 +204,8 @@ if (isset($_GET["international_dnc_scrub"]))			{$international_dnc_scrub=$_GET["
 if (strlen($dedupe_statuses_override)>0) {
 	$dedupe_statuses=explode(",", $dedupe_statuses_override);
 }
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 # if the didnt select an over ride wipe out in_file
 if ( $list_id_override == "in_file" ) { $list_id_override = ""; }
 if ( $phone_code_override == "in_file" ) { $phone_code_override = ""; }

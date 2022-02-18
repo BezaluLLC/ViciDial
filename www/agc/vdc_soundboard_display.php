@@ -52,6 +52,7 @@ if (isset($_GET["bgcolor"]))			{$bgcolor=$_GET["bgcolor"];}
 if (isset($_GET["bcrypt"]))				{$bcrypt=$_GET["bcrypt"];}
 	elseif (isset($_POST["bcrypt"]))	{$bcrypt=$_POST["bcrypt"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 if ($bcrypt == 'OFF')
 	{$bcrypt=0;}

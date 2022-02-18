@@ -2704,6 +2704,7 @@ if (isset($_GET["pause_max_url"]))			{$pause_max_url=$_GET["pause_max_url"];}
 if (isset($_GET["agent_hide_hangup"]))			{$agent_hide_hangup=$_GET["agent_hide_hangup"];}
 	elseif (isset($_POST["agent_hide_hangup"]))	{$agent_hide_hangup=$_POST["agent_hide_hangup"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 if (isset($script_id)) {$script_id= mb_strtoupper($script_id,'utf-8');}
 if (isset($lead_filter_id)) {$lead_filter_id = mb_strtoupper($lead_filter_id,'utf-8');}
@@ -5819,12 +5820,13 @@ if ($SSscript_remove_js > 0)
 # 220215-1011 - Fix for XSS multi-script security issue
 # 220215-1431 - Additional XSS script text variable filtering
 # 220217-1727 - Added agent_hide_hangup system and campaign settings
+# 220217-2022 - Added input variable filtering
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-846a';
-$build = '220217-1727';
+$admin_version = '2.14-847a';
+$build = '220217-2022';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");

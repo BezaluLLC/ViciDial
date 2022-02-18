@@ -37,6 +37,8 @@ if (isset($_GET["in_filter_override"]))				{$in_filter_override=$_GET["in_filter
 if (isset($_GET["in_cache_override"]))			{$in_cache_override=$_GET["in_cache_override"];}
 	elseif (isset($_POST["in_cache_override"]))	{$in_cache_override=$_POST["in_cache_override"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable FROM system_settings;";

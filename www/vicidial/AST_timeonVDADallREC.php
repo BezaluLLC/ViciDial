@@ -84,6 +84,7 @@ if (!isset($UGdisplay))		{$UGdisplay=0;}	# 0=no, 1=yes
 if (!isset($UidORname))		{$UidORname=0;}	# 0=id, 1=name
 if (!isset($orderby))		{$orderby='timeup';}
 if (!isset($SERVdisplay))	{$SERVdisplay=1;}	# 0=no, 1=yes
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 function get_server_load($windows = false) {
 $os = strtolower(PHP_OS);

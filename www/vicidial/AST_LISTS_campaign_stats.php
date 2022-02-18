@@ -60,6 +60,8 @@ if (isset($_GET["report_display_type"]))				{$report_display_type=$_GET["report_
 if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
 	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 $report_name = 'Lists Campaign Statuses Report';
 $db_source = 'M';
 

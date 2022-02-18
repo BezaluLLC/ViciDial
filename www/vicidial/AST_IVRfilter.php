@@ -61,6 +61,8 @@ if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 if ($hourly_breakdown) 
 	{
 	$date_int=3600;

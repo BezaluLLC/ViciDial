@@ -246,6 +246,7 @@ if ($archive_search=="Yes") {$vl_table="vicidial_list_archive";}
 else {$vl_table="vicidial_list"; $archive_search="No";}
 $altCIDdisplay="Yes";
 if ($CIDdisplay=="Yes") {$altCIDdisplay="No";} 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");

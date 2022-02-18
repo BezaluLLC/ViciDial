@@ -45,6 +45,8 @@ if (isset($_GET["report_type"]))			{$report_type=$_GET["report_type"];}
 if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search_archived_data"];}
 	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 $report_name = 'Callmenu Survey Report';
 $db_source = 'M';
 

@@ -64,6 +64,7 @@ if (isset($_GET["report_display_type"]))			{$report_display_type=$_GET["report_d
 	elseif (isset($_POST["report_display_type"]))	{$report_display_type=$_POST["report_display_type"];}
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($stage)<2) {$stage='ID';}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 require("screen_colors.php");
 

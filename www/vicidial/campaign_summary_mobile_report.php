@@ -38,6 +38,8 @@ if (isset($_GET["file_download"]))				{$file_download=$_GET["file_download"];}
 if (isset($_GET["browser_dimension"]))	{$browser_dimension=$_GET["browser_dimension"];}
 	elseif (isset($_POST["browser_dimension"]))	{$browser_dimension=$_POST["browser_dimension"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method FROM system_settings;";

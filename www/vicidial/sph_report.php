@@ -58,6 +58,7 @@ if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($role)<2) {$role='ALL';}
 if (strlen($order)<2) {$order='sales_down';}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####

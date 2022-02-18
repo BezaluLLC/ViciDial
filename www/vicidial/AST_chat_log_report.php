@@ -64,8 +64,8 @@ if (isset($_GET["download_user"]))				{$download_user=$_GET["download_user"];}
 if (isset($_GET["download_manager"]))				{$download_manager=$_GET["download_manager"];}
 	elseif (isset($_POST["download_manager"]))	{$download_manager=$_POST["download_manager"];}
 
-
 if (strlen($shift)<2) {$shift='ALL';}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $report_name = 'Agent-Manager Chat Log';
 $db_source = 'M';

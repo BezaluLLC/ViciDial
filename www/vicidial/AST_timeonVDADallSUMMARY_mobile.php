@@ -42,6 +42,7 @@ if (isset($_GET["browser_dimension"]))	{$browser_dimension=$_GET["browser_dimens
 if (!isset($browser_dimension))			{$browser_dimension=800;}
 if (!isset($types))			{$types='LIST ALL CAMPAIGNS';}
 $cell_dimension=floor($browser_dimension/10);
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $report_name = 'Real-Time Campaign Summary';
 $db_source = 'M';

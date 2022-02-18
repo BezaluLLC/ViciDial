@@ -66,6 +66,8 @@ if (isset($_GET["search_archived_data"]))					{$search_archived_data=$_GET["sear
 if (isset($_GET["file_download"]))			{$file_download=$_GET["file_download"];}
 	elseif (isset($_POST["file_download"]))	{$file_download=$_POST["file_download"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 $report_name = 'Quality Control Report';
 $db_source = 'M';
 $report_display_type="HTML";

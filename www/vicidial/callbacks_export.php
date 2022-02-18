@@ -54,6 +54,8 @@ if (isset($_GET["callback_time_start"]))			{$callback_time_start=$_GET["callback
 if (isset($_GET["callback_time_end"]))			{$callback_time_end=$_GET["callback_time_end"];}
 	elseif (isset($_POST["callback_time_end"]))	{$callback_time_end=$_POST["callback_time_end"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,enable_languages,language_method,qc_features_active FROM system_settings;";

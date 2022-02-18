@@ -267,6 +267,8 @@ if (isset($_GET["LOGINvarFIVE"]))			{$LOGINvarFIVE=$_GET["LOGINvarFIVE"];}
 if (isset($_GET["script_span"]))			{$script_span=$_GET["script_span"];}
 	elseif (isset($_POST["script_span"]))	{$script_span=$_POST["script_span"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 # if options file exists, use the override values for the above variables
 #   see the options-example.php file for more information
 if (file_exists('options.php'))

@@ -58,6 +58,7 @@ if (!isset($query_date_D)) {$query_date_D=$NOW_DATE;}
 if (!isset($end_date_D)) {$end_date_D=$NOW_DATE;}
 if (!isset($query_date_T)) {$query_date_T="00:00:00";}
 if (!isset($end_date_T)) {$end_date_T="23:59:59";}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####

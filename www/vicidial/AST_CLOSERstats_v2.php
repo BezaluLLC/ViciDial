@@ -127,6 +127,7 @@ if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search
 
 $MT[0]='0';
 if (strlen($shift)<2) {$shift='ALL';}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $report_name = 'Inbound Report';
 $db_source = 'M';

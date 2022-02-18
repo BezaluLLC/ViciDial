@@ -80,6 +80,7 @@ if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search
 $MT[0]='0';
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($exclude_rollover)<2) {$exclude_rollover='NO';}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $report_name = 'Inbound Summary Hourly Report';
 $db_source = 'M';

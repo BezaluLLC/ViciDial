@@ -29,6 +29,8 @@ if (isset($_GET["email_row_id"]))	{$email_row_id=$_GET["email_row_id"];}
 if (isset($_GET["email_log_id"]))	{$email_log_id=$_GET["email_log_id"];}
 	elseif (isset($_POST["email_log_id"]))	{$email_log_id=$_POST["email_log_id"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
 header ("Pragma: no-cache");                          // HTTP/1.0

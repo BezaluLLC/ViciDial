@@ -48,6 +48,7 @@ if (isset($_GET["extension"]))			{$extension=$_GET["extension"];}
 if (isset($_GET["stage"]))				{$stage=$_GET["stage"];}
 	elseif (isset($_POST["stage"]))		{$stage=$_POST["stage"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 $call = preg_replace('/[^0-9a-zA-Z]/', '', $call);
 $user = preg_replace('/[^0-9a-zA-Z]/', '', $user);
 $extension = preg_replace("/'|\"|\\\\|;/", '', $extension);

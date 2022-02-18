@@ -106,6 +106,7 @@ if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search
 
 if (strlen($shift)<2) {$shift='ALL';}
 if (strlen($stage)<2) {$stage='NAME';}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 if ($search_archived_data=="checked") 
 	{

@@ -146,6 +146,8 @@ if (isset($_POST["upd_customer"]))			{$upd_customer=$_POST["upd_customer"];}
 if (isset($_POST["view_epoch"]))			{$view_epoch=$_POST["view_epoch"];}
 	elseif (isset($_GET["view_epoch"]))	{$view_epoch=$_GET["view_epoch"];}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+
 $defaultappointment = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
