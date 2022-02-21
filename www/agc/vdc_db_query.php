@@ -522,10 +522,11 @@
 # 211117-2033 - Added ALT Dispo Call URL url_call_length setting
 # 220119-1014 - Added auto_alt_threshold feature
 # 220212-0919 - Added pause_max_url_trigger input
+# 220219-0134 - Added allow_web_debug system setting
 #
 
-$version = '2.14-415';
-$build = '220212-0919';
+$version = '2.14-416';
+$build = '220219-0134';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=876;
@@ -844,6 +845,8 @@ if (isset($_GET["pause_max_url_trigger"]))			{$pause_max_url_trigger=$_GET["paus
 	elseif (isset($_POST["pause_max_url_trigger"]))	{$pause_max_url_trigger=$_POST["pause_max_url_trigger"];}
 
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+$user=preg_replace("/\'|\"|\\\\|;| /","",$user);
+$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 
 # if options file exists, use the override values for the above variables
 #   see the options-example.php file for more information
@@ -868,6 +871,12 @@ $agents='@agents';
 $US='_';
 while (strlen($CIDdate) > 9) {$CIDdate = substr("$CIDdate", 1);}
 $check_time = ($StarTtime - 86400);
+
+# default optional vars if not set
+if (!isset($format))   {$format="text";}
+	if ($format == 'debug')	{$DB=1;}
+if (!isset($ACTION))   {$ACTION="refresh";}
+if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 $secX = date("U");
 $epoch = $secX;
@@ -1032,10 +1041,10 @@ $sip_hangup_cause_dictionary = array(
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,agent_debug_logging,default_language,active_modules,allow_chats,default_phone_code,user_new_lead_limit,sip_event_logging,call_quota_lead_ranking,daily_call_count_limit,call_limit_24hour FROM system_settings;";
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,agent_debug_logging,default_language,active_modules,allow_chats,default_phone_code,user_new_lead_limit,sip_event_logging,call_quota_lead_ranking,daily_call_count_limit,call_limit_24hour,allow_web_debug FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);}
-if ($DB) {echo "$stmt\n";}
+#if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -1063,7 +1072,9 @@ if ($qm_conf_ct > 0)
 	$SScall_quota_lead_ranking =			$row[20];
 	$SSdaily_call_count_limit =				$row[21];
 	$SScall_limit_24hour =					$row[22];
+	$SSallow_web_debug =					$row[23];
 	}
+if ($SSallow_web_debug < 1) {$DB=0;   $format='text';}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
@@ -1164,11 +1175,42 @@ $leave_3way_start_recording_trigger = preg_replace('/[^0-9]/','',$leave_3way_sta
 $leave_3way_start_recording_filename = preg_replace('/[^-_0-9a-zA-Z]/','',$leave_3way_start_recording_filename);
 $channelrec = preg_replace("/\'|\"|\\\\|;/","",$channelrec);
 $pause_max_url_trigger = preg_replace('/[^0-9]/','',$pause_max_url_trigger);
+$ACTION = preg_replace('/[^-_0-9a-zA-Z]/','',$ACTION);
+$vendor_lead_code = preg_replace("/\"|\\\\|;/",'-',$vendor_lead_code);
+$title = preg_replace("/\"|\\\\|;/",'-',$title);
+$first_name = preg_replace("/\"|\\\\|;/",'-',$first_name);
+$middle_initial = preg_replace("/\"|\\\\|;/",'-',$middle_initial);
+$last_name = preg_replace("/\"|\\\\|;/",'-',$last_name);
+$address1 = preg_replace("/\"|\\\\|;/",'-',$address1);
+$address2 = preg_replace("/\"|\\\\|;/",'-',$address2);
+$address3 = preg_replace("/\"|\\\\|;/",'-',$address3);
+$city = preg_replace("/\"|\\\\|;/",'-',$city);
+$state = preg_replace("/\"|\\\\|;/",'-',$state);
+$province = preg_replace("/\"|\\\\|;/",'-',$province);
+$postal_code = preg_replace("/\"|\\\\|;/",'-',$postal_code);
+$country_code = preg_replace("/\"|\\\\|;/",'-',$country_code);
+$date_of_birth = preg_replace("/\'|\"|\\\\|;/",'-',$date_of_birth);
+$email = preg_replace("/\"|\\\\|;/",'-',$email);
+$security_phrase = preg_replace("/\"|\\\\|;/",'-',$security_phrase);
+$comments = preg_replace("/\"|\\\\|;/",'-',$comments);
+$phone_ip = preg_replace("/\'|\"|\\\\|;/","",$phone_ip);
+$FORMcustom_field_names = preg_replace("/\'|\"|\\\\|;/",'-',$FORMcustom_field_names);
+
+# input variables that are encoded or escaped or filtered in their only function:
+# $call_notes
+# $dispo_comments
+# $cbcomment_comments
+# $bu_name
+# $department
+# $job_title
+# $location
+# $inbound_email_groups
+# $inbound_chat_groups
 
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
-	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+	$pass=preg_replace("/[^-\.\+\/\=_0-9a-zA-Z]/","",$pass);
 	$orig_pass=preg_replace("/[^-_0-9a-zA-Z]/","",$orig_pass);
 	$phone_code = preg_replace("/[^0-9a-zA-Z]/","",$phone_code);
 	$phone_number = preg_replace("/[^0-9a-zA-Z]/","",$phone_number);
@@ -1198,9 +1240,9 @@ if ($non_latin < 1)
 	}
 else
 	{
-	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
-	$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
-	$orig_pass = preg_replace("/\'|\"|\\\\|;/","",$orig_pass);
+	$user = preg_replace('/[^-_0-9\p{L}]/u','',$user);
+	$pass = preg_replace('/[^-\.\+\/\=_0-9\p{L}]/u','',$pass);
+	$orig_pass = preg_replace('/[^-_0-9\p{L}]/u','',$orig_pass);
 	$status = preg_replace("/\'|\"|\\\\|;/","",$status);
 	$MgrApr_user = preg_replace("/\'|\"|\\\\|;/","",$MgrApr_user);
 	$MgrApr_pass = preg_replace("/\'|\"|\\\\|;/","",$MgrApr_pass);
@@ -1227,11 +1269,6 @@ else
 	}
 
 
-# default optional vars if not set
-if (!isset($format))   {$format="text";}
-	if ($format == 'debug')	{$DB=1;}
-if (!isset($ACTION))   {$ACTION="refresh";}
-if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (strlen($SSagent_debug_logging) > 1)
 	{
 	if ($SSagent_debug_logging == "$user")
@@ -16235,7 +16272,6 @@ if ($ACTION == 'userLOGout')
 			if ( ($enable_sipsak_messages > 0) and ($allow_sipsak_messages > 0) and (preg_match("/SIP/i",$protocol)) )
 				{
 				$extension = preg_replace("/\'|\"|\\\\|;/","",$extension);
-				$phone_ip = preg_replace("/\'|\"|\\\\|;/","",$phone_ip);
 				$SIPSAK_message = 'LOGGED OUT';
 				passthru("/usr/local/bin/sipsak -M -O desktop -B \"$SIPSAK_message\" -r 5060 -s sip:$extension@$phone_ip > /dev/null");
 				}
@@ -16619,7 +16655,6 @@ if ($ACTION == 'PauseCodeSubmit')
 			if ( ($enable_sipsak_messages > 0) and ($allow_sipsak_messages > 0) and (preg_match("/SIP/i",$protocol)) )
 				{
 				$extension = preg_replace("/\'|\"|\\\\|;/","",$extension);
-				$phone_ip = preg_replace("/\'|\"|\\\\|;/","",$phone_ip);
 				$SIPSAK_prefix = 'BK-';
 				passthru("/usr/local/bin/sipsak -M -O desktop -B \"$SIPSAK_prefix$status\" -r 5060 -s sip:$extension@$phone_ip > /dev/null");
 				}

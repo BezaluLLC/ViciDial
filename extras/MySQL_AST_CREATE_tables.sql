@@ -1955,7 +1955,8 @@ label_entry_list_id VARCHAR(60) default '',
 call_limit_24hour ENUM('0','1') default '0',
 call_limit_24hour_reset DATETIME default '2000-01-01 00:00:01',
 allowed_sip_stacks ENUM('SIP','PJSIP','SIP_and_PJSIP') default 'SIP',
-agent_hide_hangup ENUM('1','0','2','3','4','5','6') default '0'
+agent_hide_hangup ENUM('1','0','2','3','4','5','6') default '0',
+allow_web_debug ENUM('0','1','2','3','4','5','6') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -5049,4 +5050,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1654',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1655',db_schema_update_date=NOW(),reload_timestamp=NOW();

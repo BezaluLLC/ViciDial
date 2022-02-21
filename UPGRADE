@@ -710,6 +710,10 @@ OTHER CHANGES:
 
 198. Added "Pause Max URL" Campaign feature
 
+199. Added "Allow Web DB Debug" System Settings feature, to allow use of the $DB
+	variable on the web screens for troubleshooting issues. 
+	It is disabled by default.
+
 
 
 

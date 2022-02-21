@@ -48,6 +48,7 @@
 # 220127-0942 - Added email_header_attach and allow_sendmail_bypass options.php settings
 # 220213-0849 - Added code for Pause Max Email functionality
 # 220216-0027 - Fix for very large emails using allow_sendmail_bypass
+# 220219-0135 - Added allow_web_debug system setting
 #
 
 $api_script = 'send_email';
@@ -176,6 +177,21 @@ if ($email_header_attach > 0) {$EHA="\n\n";}
 
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
+$stmt = "SELECT use_non_latin,enable_languages,language_method,allow_web_debug FROM system_settings;";
+$rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60002',$user,$server_ip,$session_name,$one_mysql_log);}
+#if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysqli_num_rows($rslt);
+if ($qm_conf_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$non_latin =				$row[0];
+	$SSenable_languages =		$row[1];
+	$SSlanguage_method =		$row[2];
+	$SSallow_web_debug =		$row[3];
+	}
+if ($SSallow_web_debug < 1) {$DB=0;}
+
 $VUselected_language = '';
 $stmt="SELECT selected_language from vicidial_users where user='$user';";
 if ($DB) {echo "|$stmt|\n";}
@@ -186,19 +202,6 @@ if ($sl_ct > 0)
 	{
 	$row=mysqli_fetch_row($rslt);
 	$VUselected_language =		$row[0];
-	}
-
-$stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
-$rslt=mysql_to_mysqli($stmt, $link);
-	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'60002',$user,$server_ip,$session_name,$one_mysql_log);}
-if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysqli_num_rows($rslt);
-if ($qm_conf_ct > 0)
-	{
-	$row=mysqli_fetch_row($rslt);
-	$non_latin =				$row[0];
-	$SSenable_languages =		$row[1];
-	$SSlanguage_method =		$row[2];
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
@@ -251,18 +254,30 @@ $email_attachment_18=preg_replace("/etc\//","",$email_attachment_18);
 $email_attachment_19=preg_replace("/etc\//","",$email_attachment_19);
 $email_attachment_20=preg_replace("/etc\//","",$email_attachment_20);
 
-
-$email_to=preg_replace("/\\\\/","",$email_to);
+$email_to = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$email_to);
+$log_to_file = preg_replace('/[^-_0-9a-zA-Z]/', '', $log_to_file);
+$called_count = preg_replace('/[^-_0-9a-zA-Z]/', '', $called_count);
+$called_count_trigger = preg_replace('/[^-_0-9a-zA-Z]/', '', $called_count_trigger);
 
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
+	$pass=preg_replace("/[^-\.\+\/\=_0-9a-zA-Z]/","",$pass);
 	$container_id = preg_replace('/[^-_0-9a-zA-Z]/', '', $container_id);
+	$sale_status = preg_replace('/[^-_0-9a-zA-Z]/', '', $sale_status);
+	$dispo = preg_replace('/[^-_0-9a-zA-Z]/', '', $dispo);
+	$channel_group = preg_replace('/[^-_0-9a-zA-Z]/', '', $channel_group);
 	}
 else
 	{
+	$user = preg_replace('/[^-_0-9\p{L}]/u','',$user);
+	$pass = preg_replace('/[^-\.\+\/\=_0-9\p{L}]/u','',$pass);
 	$container_id = preg_replace('/[^-_0-9\p{L}]/u', '', $container_id);
+	$sale_status = preg_replace('/[^-_0-9\p{L}]/u', '', $sale_status);
+	$dispo = preg_replace('/[^-_0-9\p{L}]/u', '', $dispo);
+	$channel_group = preg_replace('/[^-_0-9\p{L}]/u', '', $channel_group);
 	}
+
 
 if ($DB>0) {echo "$lead_id|$container_id|$call_id|$sale_status|$dispo|$new_status|$called_count|$called_count_trigger|$user|$pass|$DB|$log_to_file|\n";}
 

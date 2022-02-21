@@ -65,6 +65,7 @@
 # 210317-0058 - Changed lead-modify page links to javascript because of Chrome
 # 210319-1338 - Added HELP pop-ups for each section, added agent browser visibility log stats to agent activity section, reformatted most sections
 # 220122-1701 - Added more variable filtering
+# 220221-0916 - Added allow_web_debug system setting
 #
 
 $startMS = microtime();
@@ -117,11 +118,17 @@ if (isset($_GET["NVAuser"]))			{$NVAuser=$_GET["NVAuser"];}
 
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
+$STARTtime = date("U");
+$TODAY = date("Y-m-d");
+
+if ( (!isset($begin_date)) or (strlen($begin_date) < 10) ) {$begin_date = $TODAY;}
+if ( (!isset($end_date)) or (strlen($end_date) < 10) ) {$end_date = $TODAY;}
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active,webroot_writable,allow_emails,level_8_disable_add,enable_languages,language_method,log_recording_access,admin_screen_colors,mute_recordings FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,user_territories_active,webroot_writable,allow_emails,level_8_disable_add,enable_languages,language_method,log_recording_access,admin_screen_colors,mute_recordings,allow_web_debug FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {$MAIN.="$stmt\n";}
+#if ($DB) {$MAIN.="$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -139,7 +146,9 @@ if ($qm_conf_ct > 0)
 	$log_recording_access =			$row[10];
 	$SSadmin_screen_colors =		$row[11];
 	$SSmute_recordings =			$row[12];
+	$SSallow_web_debug =			$row[13];
 	}
+if ($SSallow_web_debug < 1) {$DB=0;}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
@@ -189,34 +198,33 @@ else
 	}
 #############
 
-$STARTtime = date("U");
-$TODAY = date("Y-m-d");
-
-if ( (!isset($begin_date)) or (strlen($begin_date) < 10) ) {$begin_date = $TODAY;}
-if ( (!isset($end_date)) or (strlen($end_date) < 10) ) {$end_date = $TODAY;}
+$did_id = preg_replace('/[^-\+\_0-9a-zA-Z]/',"",$did_id);
+$did = preg_replace('/[^-\+\_0-9a-zA-Z]/',"",$did);
+$begin_date = preg_replace('/[^- \:\_0-9a-zA-Z]/',"",$begin_date);
+$end_date = preg_replace('/[^- \:\_0-9a-zA-Z]/',"",$end_date);
+$file_download = preg_replace('/[^-_0-9a-zA-Z]/', '', $file_download);
+$pause_code_rpt = preg_replace('/[^-_0-9a-zA-Z]/', '', $pause_code_rpt);
+$park_rpt = preg_replace('/[^-_0-9a-zA-Z]/', '', $park_rpt);
+$search_archived_data = preg_replace('/[^-_0-9a-zA-Z]/', '', $search_archived_data);
+$submit = preg_replace('/[^-_0-9a-zA-Z]/', '', $submit);
+$SUBMIT = preg_replace('/[^-_0-9a-zA-Z]/', '', $SUBMIT);
 
 if ($non_latin < 1)
 	{
 	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
 	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 	$NVAuser = preg_replace('/[^-_0-9a-zA-Z]/','',$NVAuser);
+	$user = preg_replace('/[^-_0-9a-zA-Z]/', '', $user);
+	$call_status = preg_replace('/[^-_0-9a-zA-Z]/', '', $call_status);
 	}
 else
 	{
-	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
-	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_PW);
 	$NVAuser = preg_replace('/[^-_0-9\p{L}]/u','',$NVAuser);
+	$user = preg_replace('/[^-_0-9\p{L}]/u', '', $user);
+	$call_status = preg_replace('/[^-_0-9\p{L}]/u', '', $call_status);
 	}
-$did_id = preg_replace("/'|\"|\\\\|;/","",$did_id);
-$did = preg_replace("/'|\"|\\\\|;/","",$did);
-$begin_date = preg_replace("/'|\"|\\\\|;/","",$begin_date);
-$end_date = preg_replace("/'|\"|\\\\|;/","",$end_date);
-$user = preg_replace("/'|\"|\\\\|;/","",$user);
-$call_status = preg_replace("/'|\"|\\\\|;/","",$call_status);
-$file_download = preg_replace('/[^-_0-9a-zA-Z]/', '', $file_download);
-$pause_code_rpt = preg_replace('/[^-_0-9a-zA-Z]/', '', $pause_code_rpt);
-$park_rpt = preg_replace('/[^-_0-9a-zA-Z]/', '', $park_rpt);
-$search_archived_data = preg_replace('/[^-_0-9a-zA-Z]/', '', $search_archived_data);
 
 if ($call_status != "") 
 	{

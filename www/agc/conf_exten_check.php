@@ -1,7 +1,7 @@
 <?php
 # conf_exten_check.php    version 2.14
 # 
-# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to send whether the meetme conference has live channels connected and which they are
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -90,10 +90,11 @@
 # 210425-2357 - Added calls_inqueue_count_ calculation
 # 210616-1905 - Added optional CORS support, see options.php for details
 # 210825-0907 - Fix for XSS security issue
+# 220219-2328 - Added allow_web_debug system setting
 #
 
-$version = '2.14-64';
-$build = '210825-0907';
+$version = '2.14-65';
+$build = '220219-2328';
 $php_script = 'conf_exten_check.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=51;
@@ -156,8 +157,11 @@ if (isset($_GET["visibility"]))				{$visibility=$_GET["visibility"];}
 
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
-if ($bcrypt == 'OFF')
-	{$bcrypt=0;}
+# default optional vars if not set
+if (!isset($format))   {$format="text";}
+if (!isset($ACTION))   {$ACTION="refresh";}
+if (!isset($client))   {$client="agc";}
+if ($bcrypt == 'OFF')  {$bcrypt=0;}
 
 # if options file exists, use the override values for the above variables
 #   see the options-example.php file for more information
@@ -176,6 +180,22 @@ $pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
+$stmt = "SELECT use_non_latin,enable_languages,language_method,agent_debug_logging,allow_web_debug FROM system_settings;";
+$rslt=mysql_to_mysqli($stmt, $link);
+	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03001',$user,$server_ip,$session_name,$one_mysql_log);}
+#if ($DB) {echo "$stmt\n";}
+$qm_conf_ct = mysqli_num_rows($rslt);
+if ($qm_conf_ct > 0)
+	{
+	$row=mysqli_fetch_row($rslt);
+	$non_latin =				$row[0];
+	$SSenable_languages =		$row[1];
+	$SSlanguage_method =		$row[2];
+	$SSagent_debug_logging =	$row[3];
+	$SSallow_web_debug =		$row[4];
+	}
+if ($SSallow_web_debug < 1) {$DB=0;   $format='text';}
+
 $VUselected_language = '';
 $stmt="SELECT selected_language from vicidial_users where user='$user';";
 if ($DB) {echo "|$stmt|\n";}
@@ -187,27 +207,8 @@ if ($sl_ct > 0)
 	$row=mysqli_fetch_row($rslt);
 	$VUselected_language =		$row[0];
 	}
-
-$stmt = "SELECT use_non_latin,enable_languages,language_method,agent_debug_logging FROM system_settings;";
-$rslt=mysql_to_mysqli($stmt, $link);
-	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03001',$user,$server_ip,$session_name,$one_mysql_log);}
-if ($DB) {echo "$stmt\n";}
-$qm_conf_ct = mysqli_num_rows($rslt);
-if ($qm_conf_ct > 0)
-	{
-	$row=mysqli_fetch_row($rslt);
-	$non_latin =				$row[0];
-	$SSenable_languages =		$row[1];
-	$SSlanguage_method =		$row[2];
-	$SSagent_debug_logging =	$row[3];
-	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
-
-if ($non_latin < 1)
-	{
-	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
-	}
 
 $session_name = preg_replace('/[^-\.\:\_0-9a-zA-Z]/','',$session_name);
 $server_ip = preg_replace('/[^-\.\:\_0-9a-zA-Z]/','',$server_ip);
@@ -216,17 +217,35 @@ $exten = preg_replace("/\'|\"|\\\\|;/","",$exten);
 $clicks = preg_replace("/\'|\"|\\\\|;/","",$clicks);
 $customer_chat_id = preg_replace("/[^0-9a-zA-Z]/","",$customer_chat_id);
 $visibility = preg_replace("/\'|\"|\\\\|;/","",$visibility);
+$MDnextCID = preg_replace("/[^-_0-9a-zA-Z]/","",$MDnextCID);
+$live_call_seconds = preg_replace("/[^-_0-9a-zA-Z]/","",$live_call_seconds);
+$bcrypt = preg_replace("/[^-_0-9a-zA-Z]/","",$bcrypt);
+$format = preg_replace("/[^-_0-9a-zA-Z]/","",$format);
+$ACTION = preg_replace("/[^-_0-9a-zA-Z]/","",$ACTION);
+$auto_dial_level = preg_replace("/[^-\._0-9a-zA-Z]/","",$auto_dial_level);
+$check_for_answer = preg_replace("/[^-_0-9a-zA-Z]/","",$check_for_answer);
+$client = preg_replace("/[^-_0-9a-zA-Z]/","",$client);
+$campagentstdisp = preg_replace("/[^-_0-9a-zA-Z]/","",$campagentstdisp);
+$phone_number = preg_replace("/[^-_0-9a-zA-Z]/","",$phone_number);
+$xferchannel = preg_replace("/\'|\"|\\\\|;/","",$xferchannel);
 
-# default optional vars if not set
-if (!isset($format))   {$format="text";}
-if (!isset($ACTION))   {$ACTION="refresh";}
-if (!isset($client))   {$client="agc";}
+if ($non_latin < 1)
+	{
+	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
+	$pass=preg_replace("/[^-\.\+\/\=_0-9a-zA-Z]/","",$pass);
+	$campaign = preg_replace("/[^-_0-9a-zA-Z]/","",$campaign);
+	}
+else
+	{
+	$user = preg_replace('/[^-_0-9\p{L}]/u','',$user);
+	$pass = preg_replace('/[^-\.\+\/\=_0-9\p{L}]/u','',$pass);
+	$campaign = preg_replace('/[^-_0-9\p{L}]/u', '', $campaign);
+	}
+
 if (strlen($SSagent_debug_logging) > 1)
 	{
-	if ($SSagent_debug_logging == "$user")
-		{$SSagent_debug_logging=1;}
-	else
-		{$SSagent_debug_logging=0;}
+	if ($SSagent_debug_logging == "$user") {$SSagent_debug_logging=1;}
+	else {$SSagent_debug_logging=0;}
 	}
 
 $Alogin='N';
@@ -287,6 +306,10 @@ if ($format=='debug')
 	echo "</title>\n";
 	echo "</head>\n";
 	echo "<BODY BGCOLOR=white marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+	if ($DB > 0)
+		{
+		echo "|session_name: $session_name|server_ip: $server_ip|conf_exten: $conf_exten|exten: $exten|clicks: $clicks|customer_chat_id: $customer_chat_id|visibility: $visibility|MDnextCID: $MDnextCID|live_call_seconds: $live_call_seconds|bcrypt: $bcrypt|format: $format|ACTION: $ACTION|auto_dial_level: $auto_dial_level|check_for_answer: $check_for_answer|client: $client|campagentstdisp: $campagentstdisp|phone_number: $phone_number|xferchannel: $xferchannel\n";
+		}
 	}
 
 

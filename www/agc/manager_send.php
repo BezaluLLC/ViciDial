@@ -1,7 +1,7 @@
 <?php
 # manager_send.php    version 2.14
 # 
-# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed purely to insert records into the vicidial_manager table to signal Actions to an asterisk server
 # This script depends on the server_ip being sent and also needs to have a valid user/pass from the vicidial_users table
@@ -149,10 +149,11 @@
 # 210616-2051 - Added optional CORS support, see options.php for details
 # 210823-0916 - Fix for security issue
 # 210825-0911 - Fix for XSS security issue
+# 220220-0904 - Added allow_web_debug system setting
 #
 
-$version = '2.14-96';
-$build = '210825-0911';
+$version = '2.14-97';
+$build = '220220-0904';
 $php_script = 'manager_send.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=143;
@@ -268,12 +269,16 @@ if (file_exists('options.php'))
 	require_once('options.php');
 	}
 
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+$user=preg_replace("/\'|\"|\\\\|;| /","",$user);
+$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,allow_sipsak_messages,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,agent_debug_logging FROM system_settings;";
+$stmt = "SELECT use_non_latin,allow_sipsak_messages,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,agent_debug_logging,allow_web_debug FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02001',$user,$server_ip,$session_name,$one_mysql_log);}
-if ($DB) {echo "$stmt\n";}
+#if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -285,7 +290,9 @@ if ($qm_conf_ct > 0)
 	$meetme_enter_login_filename =		$row[4];
 	$meetme_enter_leave3way_filename =	$row[5];
 	$SSagent_debug_logging =			$row[6];
+	$SSallow_web_debug =				$row[7];
 	}
+if ($SSallow_web_debug < 1) {$DB=0;}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
@@ -294,8 +301,6 @@ header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
 header ("Pragma: no-cache");                          // HTTP/1.0
 
 # filter variables
-$user=preg_replace("/\'|\"|\\\\|;| /","",$user);
-$pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
 $session_name = preg_replace('/[^-\.\:\_0-9a-zA-Z]/','',$session_name);
 $server_ip = preg_replace('/[^-\.\:\_0-9a-zA-Z]/','',$server_ip);
 $lead_id = preg_replace('/[^0-9]/','',$lead_id);
@@ -332,10 +337,14 @@ $queryCID = preg_replace("/\'|\"|\\\\|;/","",$queryCID);
 $secondS = preg_replace('/[^0-9]/','',$secondS);
 $stage = preg_replace("/\'|\"|\\\\|;/","",$stage);
 $usegroupalias = preg_replace('/[^0-9]/','',$usegroupalias);
+$phone_ip = preg_replace('/[^-\.\:\_0-9a-zA-Z]/','',$phone_ip);
+$allow_sipsak_messages = preg_replace('/[^-_0-9a-zA-Z]/','',$allow_sipsak_messages);
+$alertCID = preg_replace('/[^-_0-9a-zA-Z]/','',$alertCID);
 
 if ($non_latin < 1)
 	{
 	$user=preg_replace("/[^-_0-9a-zA-Z]/","",$user);
+	$pass=preg_replace("/[^-\.\+\/\=_0-9a-zA-Z]/","",$pass);
 	$campaign = preg_replace('/[^-_0-9a-zA-Z]/','',$campaign);
 	$phone_number = preg_replace('/[^-_0-9a-zA-Z]/','',$phone_number);
 	$uniqueid = preg_replace('/[^-_\.0-9a-zA-Z]/','',$uniqueid);
@@ -347,6 +356,8 @@ if ($non_latin < 1)
 	}
 else
 	{
+	$user = preg_replace('/[^-_0-9\p{L}]/u','',$user);
+	$pass = preg_replace('/[^-\.\+\/\=_0-9\p{L}]/u','',$pass);
 	$campaign = preg_replace('/[^-_0-9\p{L}]/u','',$campaign);
 	$phone_number = preg_replace('/[^-_0-9\p{L}]/u','',$phone_number);
 	$uniqueid = preg_replace('/[^-_\.0-9\p{L}]/u','',$uniqueid);
