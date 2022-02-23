@@ -1,7 +1,7 @@
 <?php
 # admin_user_list_new.php
 # 
-# Copyright (C) 2018  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # this screen will control the optional user list new limit override settings 
 #
@@ -11,10 +11,11 @@
 # 161031-1500 - Added overall user option
 # 170409-1546 - Added IP List validation code
 # 180503-2215 - Added new help display
+# 220222-2008 - Added allow_web_debug system setting
 #
 
-$admin_version = '2.14-3';
-$build = '170409-1546';
+$admin_version = '2.14-5';
+$build = '220222-2008';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -46,9 +47,9 @@ $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,enable_languages,language_method,qc_features_active,user_territories_active,user_new_lead_limit FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,enable_languages,language_method,qc_features_active,user_territories_active,user_new_lead_limit,allow_web_debug FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+#if ($DB) {echo "$stmt\n";}
 $ss_conf_ct = mysqli_num_rows($rslt);
 if ($ss_conf_ct > 0)
 	{
@@ -60,22 +61,29 @@ if ($ss_conf_ct > 0)
 	$SSqc_features_active =			$row[4];
 	$SSuser_territories_active =	$row[5];
 	$SSuser_new_lead_limit =		$row[6];
+	$SSallow_web_debug =			$row[7];
 	}
+if ($SSallow_web_debug < 1) {$DB=0;}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+$list_id = preg_replace('/[^-_0-9a-zA-Z]/','',$list_id);
+$user_override = preg_replace('/[^-0-9]/','',$user_override);
+$action = preg_replace('/[^-_0-9a-zA-Z]/','',$action);
+$stage = preg_replace('/[^-_0-9a-zA-Z]/','',$stage);
+$SUBMIT = preg_replace('/[^-_0-9a-zA-Z]/','',$SUBMIT);
 
 if ($non_latin < 1)
 	{
 	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
 	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
 	$user = preg_replace('/[^-_0-9a-zA-Z]/','',$user);
-	$list_id = preg_replace('/[^-_0-9a-zA-Z]/','',$list_id);
-	$user_override = preg_replace('/[^-0-9]/','',$user_override);
 	}	# end of non_latin
 else
 	{
-	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_PW);
+	$user = preg_replace('/[^-_0-9\p{L}]/u', '', $user);
 	}
 
 $STARTtime = date("U");

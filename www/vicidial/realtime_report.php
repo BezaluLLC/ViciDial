@@ -55,12 +55,13 @@
 # 210314-2039 - Added DID Description for inbound calls
 # 211216-0846 - Added new User Group options
 # 220217-2046 - Added input variable filters
+# 220221-1514 - Added allow_web_debug system setting
 #
 
 $startMS = microtime();
 
-$version = '2.14-42';
-$build = '220217-2046';
+$version = '2.14-43';
+$build = '220221-1514';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -151,9 +152,9 @@ $db_source = 'M';
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,agent_whisper_enabled,report_default_format,enable_pause_code_limits FROM system_settings;";
+$stmt = "SELECT use_non_latin,outbound_autodial_active,slave_db_server,reports_use_slave_db,enable_languages,language_method,agent_whisper_enabled,report_default_format,enable_pause_code_limits,allow_web_debug FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+#if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -167,7 +168,9 @@ if ($qm_conf_ct > 0)
 	$agent_whisper_enabled =		$row[6];
 	$SSreport_default_format =		$row[7];
 	$SSenable_pause_code_limits =	$row[8];
+	$SSallow_web_debug =			$row[9];
 	}
+if ($SSallow_web_debug < 1) {$DB=0;}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
@@ -339,8 +342,8 @@ if ($non_latin < 1)
 	}
 else
 	{
-	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
-	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_PW);
 	}
 $RR = preg_replace('/[^0-9]/', '', $RR);
 $inbound = preg_replace('/[^-_0-9a-zA-Z]/', '', $inbound);
@@ -382,6 +385,10 @@ $RTuser = preg_replace('/[^-_0-9a-zA-Z]/', '', $RTuser);
 $server_ip = preg_replace('/[^-\._0-9a-zA-Z]/', '', $server_ip);
 $SUBMIT = preg_replace('/[^-_0-9a-zA-Z]/', '', $SUBMIT);
 $submit = preg_replace('/[^-_0-9a-zA-Z]/', '', $submit);
+
+# Variables filtered further down in the code
+# $user_group_filter
+# $ingroup_filter
 
 $stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
@@ -669,7 +676,7 @@ $group_string='|';
 $group_ct = count($groups);
 while($i < $group_ct)
 	{
-	$groups[$i] = preg_replace('/[^-_0-9a-zA-Z]/', '', $groups[$i]);
+	$groups[$i] = preg_replace('/[^-_0-9\p{L}]/u', '', $groups[$i]);
 	if ( (preg_match("/ $groups[$i] /",$regexLOGallowed_campaigns)) or (preg_match("/ALL-/",$LOGallowed_campaigns)) )
 		{
 		$group_string .= "$groups[$i]|";
@@ -686,7 +693,7 @@ $user_group_string='|';
 $user_group_ct = count($user_group_filter);
 while($i < $user_group_ct)
 	{
-	$user_group_filter[$i] = preg_replace('/[^-_0-9a-zA-Z]/', '', $user_group_filter[$i]);
+	$user_group_filter[$i] = preg_replace('/[^-_0-9\p{L}]/u', '', $user_group_filter[$i]);
 #	if ( (preg_match("/ $user_group_filter[$i] /",$regexLOGallowed_campaigns)) or (preg_match("/ALL-/",$LOGallowed_campaigns)) )
 #		{
 		$user_group_string .= "$user_group_filter[$i]|";
@@ -703,7 +710,7 @@ $ingroup_string='|';
 $ingroup_ct = count($ingroup_filter);
 while($i < $ingroup_ct)
 	{
-	$ingroup_filter[$i] = preg_replace('/[^-_0-9a-zA-Z]/', '', $ingroup_filter[$i]);
+	$ingroup_filter[$i] = preg_replace('/[^-_0-9\p{L}]/u', '', $ingroup_filter[$i]);
 	$ingroup_string .= "$ingroup_filter[$i]|";
 	$ingroup_SQL .= "'$ingroup_filter[$i]',";
 	$usergroupQS .= "&ingroup_filter[]=$ingroup_filter[$i]";

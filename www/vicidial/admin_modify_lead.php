@@ -8,7 +8,7 @@
 # just needs to enter the leadID and then they can view and modify the 
 # information in the record for that lead
 #
-# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -107,6 +107,7 @@
 # 210421-2120 - Added more screen labels
 # 210629-1545 - Added KHOMP stats display
 # 210630-0838 - Added display of vicidial_vmm_counts data, if $CIDdisplay=="Yes"
+# 220222-1454 - Added allow_web_debug system setting
 #
 
 require("dbconnect_mysqli.php");
@@ -120,8 +121,6 @@ if (isset($_GET["vendor_id"]))				{$vendor_id=$_GET["vendor_id"];}
 	elseif (isset($_POST["vendor_id"]))		{$vendor_id=$_POST["vendor_id"];}
 if (isset($_GET["source_id"]))				{$source_id=$_GET["source_id"];}
 	elseif (isset($_POST["source_id"]))		{$source_id=$_POST["source_id"];}
-if (isset($_GET["phone"]))				{$phone=$_GET["phone"];}
-	elseif (isset($_POST["phone"]))		{$phone=$_POST["phone"];}
 if (isset($_GET["old_phone"]))				{$old_phone=$_GET["old_phone"];}
 	elseif (isset($_POST["old_phone"]))		{$old_phone=$_POST["old_phone"];}
 if (isset($_GET["lead_id"]))				{$lead_id=$_GET["lead_id"];}
@@ -269,9 +268,9 @@ if ($nonselectable_statuses > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable,allow_emails,enable_languages,language_method,active_modules,log_recording_access,admin_screen_colors,enable_gdpr_download_deletion,source_id_display,mute_recordings,sip_event_logging FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable,allow_emails,enable_languages,language_method,active_modules,log_recording_access,admin_screen_colors,enable_gdpr_download_deletion,source_id_display,mute_recordings,sip_event_logging,allow_web_debug FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+#if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -289,7 +288,9 @@ if ($qm_conf_ct > 0)
 	$SSsource_id_display =		$row[10];
 	$SSmute_recordings =		$row[11];
 	$SSsip_event_logging =		$row[12];
+	$SSallow_web_debug =		$row[13];
 	}
+if ($SSallow_web_debug < 1) {$DB=0;}
 ##### END SETTINGS LOOKUP #####
 ### See if KHOMP is set up
 $stmt = "SELECT container_id FROM vicidial_settings_containers where container_id IN('KHOMPSETTINGS','KHOMPSTATUSMAP');";
@@ -322,6 +323,31 @@ $called_count=preg_replace('/[^0-9]/','',$called_count);
 $local_gmt=preg_replace('/[^-\.0-9]/','',$local_gmt);
 $callback = preg_replace('/[^A-Z]/','',$callback);
 $callback_type = preg_replace('/[^A-Z]/','',$callback_type);
+$end_call=preg_replace('/[^0-9]/','',$end_call);
+$server_ip = preg_replace('/[^-\.\:\_0-9a-zA-Z]/','',$server_ip);
+$extension = preg_replace("/\<|\>|\'|\"|\\\\|;/",'',$extension);
+$channel = preg_replace("/\<|\>|\'|\"|\\\\|;/",'',$channel);
+$submit = preg_replace('/[^- \.\_0-9a-zA-Z]/','',$submit);
+$SUBMIT = preg_replace('/[^- \.\_0-9a-zA-Z]/','',$SUBMIT);
+$modify_logs=preg_replace('/[^0-9]/','',$modify_logs);
+$modify_closer_logs=preg_replace('/[^0-9]/','',$modify_closer_logs);
+$modify_agent_logs=preg_replace('/[^0-9]/','',$modify_agent_logs);
+$add_closer_record=preg_replace('/[^0-9]/','',$add_closer_record);
+$call_began = preg_replace('/[^- \:\_0-9a-zA-Z]/','',$call_began);
+$parked_time = preg_replace('/[^- \:\_0-9a-zA-Z]/','',$parked_time);
+$callback_id = preg_replace('/[^-_0-9a-zA-Z]/','',$callback_id);
+$CBchangeUSERtoANY = preg_replace('/[^-_0-9a-zA-Z]/','',$CBchangeUSERtoANY);
+$CBchangeANYtoUSER = preg_replace('/[^-_0-9a-zA-Z]/','',$CBchangeANYtoUSER);
+$CBchangeDATE = preg_replace('/[^-_0-9a-zA-Z]/','',$CBchangeDATE);
+$archive_search = preg_replace('/[^-_0-9a-zA-Z]/','',$archive_search);
+$archive_log = preg_replace('/[^-_0-9a-zA-Z]/','',$archive_log);
+$gdpr_action = preg_replace('/[^-_0-9a-zA-Z]/','',$gdpr_action);
+$CIDdisplay = preg_replace('/[^-_0-9a-zA-Z]/','',$CIDdisplay);
+$appointment_date = preg_replace('/[^- \:\_0-9a-zA-Z]/','',$appointment_date);
+$appointment_time = preg_replace('/[^- \:\_0-9a-zA-Z]/','',$appointment_time);
+
+# Variables filtered further down in the code
+# $vendor_id
 
 if ($non_latin < 1)
 	{
@@ -345,6 +371,7 @@ if ($non_latin < 1)
 	$alt_phone = preg_replace('/[^- \'\+\_\.0-9a-zA-Z]/','',$alt_phone);
 	$email = preg_replace('/[^- \'\+\.\:\/\@\%\_0-9a-zA-Z]/','',$email);
 	$security_phrase = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$security_phrase);
+	$security = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$security);
 	$campaign_id = preg_replace('/[^-\_0-9a-zA-Z]/', '',$campaign_id);
 	$multi_alt_phones = preg_replace('/[^- \+\!\:\_0-9a-zA-Z]/','',$multi_alt_phones);
 	$source = preg_replace('/[^0-9a-zA-Z]/','',$source);
@@ -361,6 +388,11 @@ if ($non_latin < 1)
 	$modify_log_submit = preg_replace('/[^-_0-9a-zA-Z]/','',$modify_log_submit);
 	$modify_log_table = preg_replace('/[^-_0-9a-zA-Z]/','',$modify_log_table);
 	$vicidial_id = preg_replace('/[^-\+\.\:\_0-9a-zA-Z]/','',$vicidial_id);
+	$dispo = preg_replace('/[^-_0-9a-zA-Z]/','',$dispo);
+	$status = preg_replace('/[^-_0-9a-zA-Z]/','',$status);
+	$CBstatus = preg_replace('/[^-_0-9a-zA-Z]/','',$CBstatus);
+	$tsr = preg_replace('/[^-_0-9a-zA-Z]/','',$tsr);
+	$CBuser = preg_replace('/[^-_0-9a-zA-Z]/','',$CBuser);
 	}
 else
 	{
@@ -384,6 +416,7 @@ else
 	$alt_phone = preg_replace('/[^- \'\+\_\.0-9\p{L}]/u','',$alt_phone);
 	$email = preg_replace('/[^- \'\+\.\:\/\@\%\_0-9\p{L}]/u','',$email);
 	$security_phrase = preg_replace('/[^- \'\+\.\:\/\@\_0-9\p{L}]/u','',$security_phrase);
+	$security = preg_replace('/[^- \'\+\.\:\/\@\_0-9\p{L}]/u','',$security);
 	$campaign_id = preg_replace('/[^-\_0-9\p{L}]/u', '',$campaign_id);
 	$multi_alt_phones = preg_replace('/[^- \+\!\:\_0-9\p{L}]/u','',$multi_alt_phones);
 	$source = preg_replace('/[^0-9\p{L}]/u','',$source);
@@ -400,6 +433,11 @@ else
 	$modify_log_submit = preg_replace('/[^-_0-9\p{L}]/u','',$modify_log_submit);
 	$modify_log_table = preg_replace('/[^-_0-9\p{L}]/u','',$modify_log_table);
 	$vicidial_id = preg_replace('/[^-\+\.\:\_0-9\p{L}]/u','',$vicidial_id);
+	$dispo = preg_replace('/[^-_0-9\p{L}]/u','',$dispo);
+	$status = preg_replace('/[^-_0-9\p{L}]/u','',$status);
+	$CBstatus = preg_replace('/[^-_0-9\p{L}]/u','',$CBstatus);
+	$tsr = preg_replace('/[^-_0-9\p{L}]/u','',$tsr);
+	$CBuser = preg_replace('/[^-_0-9\p{L}]/u','',$CBuser);
 	}
 
 $first_name = preg_replace('/\+/',' ',$first_name);

@@ -18,10 +18,11 @@
 # 180503-2215 - Added new help display
 # 211117-2006 - Added minimum call length field
 # 220127-1900 - Added display of the URL ID
+# 220222-1959 - Added allow_web_debug system setting
 #
 
-$admin_version = '2.14-8';
-$build = '220127-1900';
+$admin_version = '2.14-9';
+$build = '220222-1959';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -67,9 +68,9 @@ $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,enable_languages,language_method,qc_features_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,enable_languages,language_method,qc_features_active,allow_web_debug FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+#if ($DB) {echo "$stmt\n";}
 $ss_conf_ct = mysqli_num_rows($rslt);
 if ($ss_conf_ct > 0)
 	{
@@ -79,39 +80,41 @@ if ($ss_conf_ct > 0)
 	$SSenable_languages =			$row[2];
 	$SSlanguage_method =			$row[3];
 	$SSqc_features_active =			$row[4];
+	$SSallow_web_debug =			$row[5];
 	}
+if ($SSallow_web_debug < 1) {$DB=0;}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+$url_id = preg_replace('/[^0-9]/','',$url_id);
+$active = preg_replace('/[^A-Z]/','',$active);
+$url_call_length = preg_replace('/[^0-9]/','',$url_call_length);
+$url_rank = preg_replace('/[^-0-9]/','',$url_rank);
+$SUBMIT = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$SUBMIT);
+$action = preg_replace('/[^-_0-9a-zA-Z]/','',$action);
+$url_address = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$url_address);
 
 if ($non_latin < 1)
 	{
 	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
 	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
-	$url_id = preg_replace('/[^0-9]/','',$url_id);
 	$campaign_id = preg_replace('/[^-_0-9a-zA-Z]/','',$campaign_id);
 	$entry_type = preg_replace('/[^_0-9a-zA-Z]/','',$entry_type);
-	$active = preg_replace('/[^A-Z]/','',$active);
 	$url_type = preg_replace('/[^_0-9a-zA-Z]/','',$url_type);
-	$url_rank = preg_replace('/[^-0-9]/','',$url_rank);
 	$url_statuses = preg_replace('/[^- _0-9a-zA-Z]/','',$url_statuses);
 	$url_lists = preg_replace('/[^- _0-9]/','',$url_lists);
 	$url_description = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$url_description);
-	$url_call_length = preg_replace('/[^0-9]/','',$url_call_length);
 	}	# end of non_latin
 else
 	{
-	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
-	$url_id = preg_replace('/[^0-9]/','',$url_id);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_PW);
 	$campaign_id = preg_replace('/[^-_0-9\p{L}]/u','',$campaign_id);
 	$entry_type = preg_replace('/[^_0-9\p{L}]/u','',$entry_type);
-	$active = preg_replace('/[^A-Z]/','',$active);
 	$url_type = preg_replace('/[^_0-9\p{L}]/u','',$url_type);
-	$url_rank = preg_replace('/[^-0-9]/','',$url_rank);
 	$url_statuses = preg_replace('/[^- _0-9\p{L}]/u','',$url_statuses);
 	$url_lists = preg_replace('/[^- _0-9]/','',$url_lists);
 	$url_description = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$url_description);
-	$url_call_length = preg_replace('/[^0-9]/','',$url_call_length);
 	}
 
 $STARTtime = date("U");
