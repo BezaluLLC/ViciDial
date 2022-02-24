@@ -34,10 +34,11 @@
 # 210321-0131 - Added classAudioFile PHP library for WAV file format validation
 # 210322-1220 - Added checking of .wav files for asterisk-compatible format
 # 220120-0927 - Added audio_store_GSM_allowed option. Disable GSM file uploads by default
+# 220222-2348 - Added allow_web_debug system setting
 #
 
-$version = '2.14-26';
-$build = '220120-0927';
+$version = '2.14-27';
+$build = '220222-2348';
 
 $MT[0]='';
 
@@ -91,9 +92,9 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory,outbound_autodial_active,enable_languages,language_method,active_modules,contacts_enabled,allow_emails,qc_features_active FROM system_settings;";
+$stmt = "SELECT use_non_latin,sounds_central_control_active,sounds_web_server,sounds_web_directory,outbound_autodial_active,enable_languages,language_method,active_modules,contacts_enabled,allow_emails,qc_features_active,allow_web_debug FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+#if ($DB) {echo "$stmt\n";}
 $ss_conf_ct = mysqli_num_rows($rslt);
 if ($ss_conf_ct > 0)
 	{
@@ -109,9 +110,38 @@ if ($ss_conf_ct > 0)
 	$SScontacts_enabled =				$row[8];
 	$SSemail_enabled =					$row[9];
 	$SSqc_features_active =				$row[10];
+	$SSallow_web_debug =				$row[11];
 	}
+if ($SSallow_web_debug < 1) {$DB=0;}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+$action = preg_replace('/[^-_0-9a-zA-Z]/','',$action);
+$SUBMIT = preg_replace('/[^-_0-9a-zA-Z]/','',$SUBMIT);
+$overwrite = preg_replace('/[^-_0-9a-zA-Z]/','',$overwrite);
+$force_allow = preg_replace('/[^-_0-9a-zA-Z]/','',$force_allow);
+
+# Variables filter further down in the code
+#	$audiofile_name
+
+if ($non_latin < 1)
+	{
+	$delete_file = preg_replace('/[^-\._0-9a-zA-Z]/','',$delete_file);
+	$submit_file = preg_replace('/[^-\._0-9a-zA-Z]/','',$submit_file);
+	$master_audiofile = preg_replace('/[^-\._0-9a-zA-Z]/','',$master_audiofile);
+	$new_audiofile = preg_replace('/[^-\._0-9a-zA-Z]/','',$new_audiofile);
+	$lead_file = preg_replace('/[^-\._0-9a-zA-Z]/','',$lead_file);
+	$audio_server_ip = preg_replace('/[^-\.\:\_0-9a-zA-Z]/','',$audio_server_ip);
+	}
+else
+	{
+	$delete_file = preg_replace('/[^-\._0-9\p{L}]/u','',$delete_file);
+	$submit_file = preg_replace('/[^-\._0-9\p{L}]/u','',$submit_file);
+	$master_audiofile = preg_replace('/[^-\._0-9\p{L}]/u','',$master_audiofile);
+	$new_audiofile = preg_replace('/[^-\._0-9\p{L}]/u','',$new_audiofile);
+	$lead_file = preg_replace('/[^-\._0-9\p{L}]/u','',$lead_file);
+	$audio_server_ip = preg_replace('/[^-\.\:\_0-9\p{L}]/u','',$audio_server_ip);
+	}
 
 ### check if sounds server matches this server IP, if not then exit with an error
 $sounds_web_server = str_replace(array('http://','https://'), '', $sounds_web_server);
@@ -177,6 +207,7 @@ if (strlen($audio_server_ip) > 6)
 		{$formIPvalid=1;}
 	}
 $ip = getenv("REMOTE_ADDR");
+
 if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 	{
 	$user_set=1;
@@ -189,10 +220,9 @@ if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 		}
 	else
 		{
-		$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
-		$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+		$PHP_AUTH_USER = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_USER);
+		$PHP_AUTH_PW = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_PW);
 		}
-	$delete_file = preg_replace('/[^-\._0-9a-zA-Z]/','',$delete_file);
 
 	$stmt="SELECT selected_language,qc_enabled from vicidial_users where user='$PHP_AUTH_USER';";
 	if ($DB) {echo "|$stmt|\n";}

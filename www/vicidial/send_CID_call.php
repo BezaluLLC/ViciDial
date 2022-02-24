@@ -3,7 +3,7 @@
 #
 # Send calls with custom callerID numbers from web form
 # 
-# Copyright (C) 2017  Matt Florell <vicidial@gmail.com>    LICENSE: GPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: GPLv2
 #
 # CHANGES
 #
@@ -16,6 +16,7 @@
 # 141007-2151 - Finalized adding QXZ translation to all admin files
 # 141229-2008 - Added code for on-the-fly language translations display
 # 170409-1533 - Added IP List validation code
+# 220223-0820 - Added allow_web_debug system setting
 #
 
 require("dbconnect_mysqli.php");
@@ -43,9 +44,9 @@ $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,enable_languages,language_method FROM system_settings;";
+$stmt = "SELECT use_non_latin,enable_languages,language_method,allow_web_debug FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+#if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -53,9 +54,17 @@ if ($qm_conf_ct > 0)
 	$non_latin =				$row[0];
 	$SSenable_languages =		$row[1];
 	$SSlanguage_method =		$row[2];
+	$SSallow_web_debug =		$row[3];
 	}
+if ($SSallow_web_debug < 1) {$DB=0;}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+$sender = preg_replace('/[^0-9]/','',$sender);
+$receiver = preg_replace('/[^0-9]/','',$receiver);
+$cid_number = preg_replace('/[^0-9]/','',$cid_number);
+$server_ip = preg_replace('/[^-\:\.\_0-9a-zA-Z]/','',$server_ip);
+$SUBMIT = preg_replace('/[^-_0-9a-zA-Z]/', '', $SUBMIT);
 
 if ($non_latin < 1)
 	{
@@ -64,13 +73,9 @@ if ($non_latin < 1)
 	}
 else
 	{
-	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
-	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_PW);
 	}
-$sender = preg_replace('/[^0-9]/','',$sender);
-$receiver = preg_replace('/[^0-9]/','',$receiver);
-$cid_number = preg_replace('/[^0-9]/','',$cid_number);
-$server_ip = preg_replace('/[^\.0-9]/','',$server_ip);
 
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");

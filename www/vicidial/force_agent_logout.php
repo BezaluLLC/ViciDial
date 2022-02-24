@@ -11,6 +11,7 @@
 # CHANGES
 # 201025-2320 - First build
 # 220124-2127 - Changed to allow user_level 7 users with the proper permissions to use this page
+# 220223-2155 - Added allow_web_debug system setting
 #
 
 $startMS = microtime();
@@ -27,8 +28,6 @@ $PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
 $ip = getenv("REMOTE_ADDR");
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
-if (isset($_GET["group"]))				{$group=$_GET["group"];}
-	elseif (isset($_POST["group"]))		{$group=$_POST["group"];}
 if (isset($_GET["logout_agent"]))			{$logout_agent=$_GET["logout_agent"];}
 	elseif (isset($_POST["logout_agent"]))	{$logout_agent=$_POST["logout_agent"];}
 if (isset($_GET["list_id"]))			{$list_id=$_GET["list_id"];}
@@ -44,9 +43,9 @@ $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,enable_languages,language_method,pass_hash_enabled FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,enable_languages,language_method,pass_hash_enabled,allow_web_debug FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
-if ($DB) {echo "$stmt\n";}
+#if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -58,9 +57,16 @@ if ($qm_conf_ct > 0)
 	$SSenable_languages =			$row[4];
 	$SSlanguage_method =			$row[5];
 	$SSpass_hash_enabled =			$row[6];
+	$SSallow_web_debug =			$row[7];
 	}
+if ($SSallow_web_debug < 1) {$DB=0;}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+$list_id = preg_replace('/[^0-9]/', '', $list_id);
+$server_ip = preg_replace('/[^-._0-9a-zA-Z]/', '', $server_ip);
+$submit = preg_replace('/[^-_0-9a-zA-Z]/', '', $submit);
+$SUBMIT = preg_replace('/[^-_0-9a-zA-Z]/', '', $SUBMIT);
 
 if ($non_latin < 1)
 	{
@@ -70,14 +76,10 @@ if ($non_latin < 1)
 	}
 else
 	{
-	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
-	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
-	$logout_agent = preg_replace("/'|\"|\\\\|;/","",$logout_agent);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_PW);
+	$logout_agent = preg_replace('/[^-_0-9\p{L}]/u',"",$logout_agent);
 	}
-
-$list_id = preg_replace('/[^0-9]/', '', $list_id);
-$group = preg_replace('/[^-_0-9a-zA-Z]/', '', $group);
-$server_ip = preg_replace('/[^-._0-9a-zA-Z]/', '', $server_ip);
 
 $stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
