@@ -53,6 +53,7 @@
 # 201117-2353 - Changes for better compatibility with non-latin data input
 # 210316-2344 - Changed lead-modify page links to javascript because of Chrome
 # 220222-1947 - Added allow_web_debug system setting
+# 220303-0124 - Fix for Issue #1353
 #
 
 require("dbconnect_mysqli.php");
@@ -155,7 +156,7 @@ $log_lead_id = preg_replace('/[^0-9]/','',$log_lead_id);
 $log_lead_id_archive = preg_replace('/[^0-9]/','',$log_lead_id_archive);
 $submit = preg_replace('/[^-_0-9a-zA-Z]/', '', $submit);
 $SUBMIT = preg_replace('/[^-_0-9a-zA-Z]/', '', $SUBMIT);
-$vendor_id = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$status);
+$vendor_id = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$vendor_id);
 $first_name = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$first_name);
 $last_name = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$last_name);
 $email = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$email);
