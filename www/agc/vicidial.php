@@ -687,10 +687,11 @@
 # 220212-0813 - Added pause_max_url triggering
 # 220217-1938 - Added agent_hide_hangup campaign feature
 # 220219-0133 - Added allow_web_debug system setting
+# 220303-2018 - Changes to some input variable filters
 #
 
-$version = '2.14-655c';
-$build = '220219-0133';
+$version = '2.14-656c';
+$build = '220303-2018';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -764,18 +765,7 @@ if (!isset($flag_channels))
 	$flag_string='';
 	}
 
-### security strip all non-alphanumeric characters out of the variables ###
 $DB=preg_replace("/[^0-9a-z]/","",$DB);
-$VD_login=preg_replace("/\'|\"|\\\\|;| /","",$VD_login);
-$VD_pass=preg_replace("/\'|\"|\\\\|;| /","",$VD_pass);
-$VD_language = preg_replace("/\'|\"|\\\\|;/","",$VD_language);
-$set_pass=preg_replace("/\'|\"|\\\\|;| /","",$set_pass);
-$new_pass1=preg_replace("/\'|\"|\\\\|;| /","",$new_pass1);
-$new_pass2=preg_replace("/\'|\"|\\\\|;| /","",$new_pass2);
-$JS_browser_width=preg_replace("/[^0-9a-z]/","",$JS_browser_width);
-$JS_browser_height=preg_replace("/[^0-9a-z]/","",$JS_browser_height);
-$relogin=preg_replace("/[^0-9a-zA-Z]/","",$relogin);
-$MGR_override=preg_replace("/[^0-9a-zA-Z]/","",$MGR_override);
 
 $forever_stop=0;
 
@@ -883,6 +873,17 @@ if ($sl_ct > 0)
 	}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+$VD_login=preg_replace("/\<|\>|\'|\"|\\\\|;| /","",$VD_login);
+$VD_pass=preg_replace("/\<|\>|\'|\"|\\\\|;| /","",$VD_pass);
+$VD_language = preg_replace("/\<|\>|\'|\"|\\\\|;| /","",$VD_language);
+$set_pass=preg_replace("/\<|\>|\'|\"|\\\\|;| /","",$set_pass);
+$new_pass1=preg_replace("/\<|\>|\'|\"|\\\\|;| /","",$new_pass1);
+$new_pass2=preg_replace("/\<|\>|\'|\"|\\\\|;| /","",$new_pass2);
+$JS_browser_width=preg_replace("/[^0-9a-z]/","",$JS_browser_width);
+$JS_browser_height=preg_replace("/[^0-9a-z]/","",$JS_browser_height);
+$relogin=preg_replace("/[^0-9a-zA-Z]/","",$relogin);
+$MGR_override=preg_replace("/[^0-9a-zA-Z]/","",$MGR_override);
 
 if ($non_latin < 1)
 	{
@@ -1156,8 +1157,8 @@ if ($campaign_login_list > 0)
 		if (isset($_GET["MGR_pass$loginDATE"]))					{$MGR_pass=$_GET["MGR_pass$loginDATE"];}
 				elseif (isset($_POST["MGR_pass$loginDATE"]))	{$MGR_pass=$_POST["MGR_pass$loginDATE"];}
 
-		$MGR_login = preg_replace("/\'|\"|\\\\|;/","",$MGR_login);
-		$MGR_pass = preg_replace("/\'|\"|\\\\|;/","",$MGR_pass);
+		$MGR_login = preg_replace("/\<|\>|\'|\"|\\\\|;| /","",$MGR_login);
+		$MGR_pass = preg_replace("/\<|\>|\'|\"|\\\\|;| /","",$MGR_pass);
 
 		$MGR_auth=0;
 		$auth_message = user_authorization($MGR_login,$MGR_pass,'MGR',0,0,0,0,'vicidial_mgr_ovrd');

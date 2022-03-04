@@ -1261,6 +1261,7 @@ if ($OK_to_process)
 										{
 										if (isset($_GET["$field_name_id"]))				{$form_field_value=$_GET["$field_name_id"];}
 											elseif (isset($_POST["$field_name_id"]))	{$form_field_value=$_POST["$field_name_id"];}
+										$form_field_value = preg_replace("/\<|\>|\"|\\\\|;/","",$form_field_value);
 
 										if ($form_field_value >= 0)
 											{

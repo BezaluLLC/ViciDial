@@ -383,6 +383,7 @@ else
 					}
 				if (isset($_GET["$Ruser$US$Rlist_id[$o]"]))						{$Ruser_overrideNEW=$_GET["$Ruser$US$Rlist_id[$o]"];}
 					elseif (isset($_POST["$Ruser$US$Rlist_id[$o]"]))			{$Ruser_overrideNEW=$_POST["$Ruser$US$Rlist_id[$o]"];}
+				$Ruser_overrideNEW = preg_replace('/[^-_0-9\p{L}]/u', '', $Ruser_overrideNEW);
 				if ( ($Ruser_overrideNEW == $Ruser_override) or (strlen($Ruser_overrideNEW) < 1) )
 					{
 					$vulnl_nochng++;
@@ -534,6 +535,7 @@ if ( ($list_id != '---ALL---') and ($list_id != 'NONE') )
 					}
 				if (isset($_GET["$Ruser[$o]$US$Rlist_id"]))						{$Ruser_overrideNEW=$_GET["$Ruser[$o]$US$Rlist_id"];}
 					elseif (isset($_POST["$Ruser[$o]$US$Rlist_id"]))			{$Ruser_overrideNEW=$_POST["$Ruser[$o]$US$Rlist_id"];}
+				$Ruser_overrideNEW = preg_replace('/[^-_0-9\p{L}]/u', '', $Ruser_overrideNEW);
 				if ( ($Ruser_overrideNEW == $Ruser_override) or (strlen($Ruser_overrideNEW) < 1) )
 					{
 					$vulnl_nochng++;
@@ -672,6 +674,7 @@ if ($list_id == 'NONE')
 				}
 			if (isset($_GET["$Ruser[$o]$US$Rlist_id"]))						{$Ruser_overrideNEW=$_GET["$Ruser[$o]$US$Rlist_id"];}
 				elseif (isset($_POST["$Ruser[$o]$US$Rlist_id"]))			{$Ruser_overrideNEW=$_POST["$Ruser[$o]$US$Rlist_id"];}
+			$Ruser_overrideNEW = preg_replace('/[^-_0-9\p{L}]/u', '', $Ruser_overrideNEW);
 			if ( ($Ruser_overrideNEW == $Ruser_override) or (strlen($Ruser_overrideNEW) < 1) )
 				{
 				$vulnl_nochng++;

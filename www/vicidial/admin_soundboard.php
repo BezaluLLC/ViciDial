@@ -819,13 +819,13 @@ if ($ADD==462111111111)
 					$HORDfilename = '--HORD--' . $avatarfiles[$o] . '--' . $avatarlevel[$o] . '--' . $avatarranks[$o] . '--' . $avatarparent[$o];
 					$TYPEfilename = '--TYPE--' . $avatarfiles[$o] . '--' . $avatarlevel[$o] . '--' . $avatarranks[$o] . '--' . $avatarparent[$o];
 					$FONTfilename = '--FONT--' . $avatarfiles[$o] . '--' . $avatarlevel[$o] . '--' . $avatarranks[$o] . '--' . $avatarparent[$o];
-					if (isset($_GET["$Ffilename"]))			{$new_rank=$_GET["$Ffilename"];}
+					if (isset($_GET["$Ffilename"]))				{$new_rank=$_GET["$Ffilename"];}
 						elseif (isset($_POST["$Ffilename"]))	{$new_rank=$_POST["$Ffilename"];}
 					if (isset($_GET["$NAMEfilename"]))			{$new_name=$_GET["$NAMEfilename"];}
 						elseif (isset($_POST["$NAMEfilename"]))	{$new_name=$_POST["$NAMEfilename"];}
-					if (isset($_GET["$LEVELfilename"]))			{$new_level=$_GET["$LEVELfilename"];}
+					if (isset($_GET["$LEVELfilename"]))				{$new_level=$_GET["$LEVELfilename"];}
 						elseif (isset($_POST["$LEVELfilename"]))	{$new_level=$_POST["$LEVELfilename"];}
-					if (isset($_GET["$OLDRANKfilename"]))				{$old_rank=$_GET["$OLDRANKfilename"];}
+					if (isset($_GET["$OLDRANKfilename"]))			{$old_rank=$_GET["$OLDRANKfilename"];}
 						elseif (isset($_POST["$OLDRANKfilename"]))	{$old_rank=$_POST["$OLDRANKfilename"];}
 					if (isset($_GET["$HORDfilename"]))			{$new_h_ord=$_GET["$HORDfilename"];}
 						elseif (isset($_POST["$HORDfilename"]))	{$new_h_ord=$_POST["$HORDfilename"];}
@@ -834,6 +834,14 @@ if ($ADD==462111111111)
 					if (isset($_GET["$FONTfilename"]))			{$new_font_size=$_GET["$FONTfilename"];}
 						elseif (isset($_POST["$FONTfilename"]))	{$new_font_size=$_POST["$FONTfilename"];}
 	
+					$new_rank = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$new_rank);
+					$new_name = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$new_name);
+					$new_level = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$new_level);
+					$old_rank = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$old_rank);
+					$new_h_ord = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$new_h_ord);
+					$new_button_type = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$new_button_type);
+					$new_font_size = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$new_font_size);
+
 					if ($DB)
 						{
 						echo "update variable debug: ($avatarfiles[$o])\n";

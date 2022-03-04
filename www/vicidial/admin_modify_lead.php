@@ -396,8 +396,8 @@ if ($non_latin < 1)
 	}
 else
 	{
-	$PHP_AUTH_USER = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_USER);
-	$PHP_AUTH_PW = preg_replace("/'|\"|\\\\|;/","",$PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_PW);
 	$user=preg_replace('/[^-_0-9\p{L}]/u','',$user);
 	$pass=preg_replace('/[^-_0-9\p{L}]/u','',$pass);
 	$function = preg_replace('/[^-\_0-9\p{L}]/u', '',$function);

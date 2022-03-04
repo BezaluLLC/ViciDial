@@ -17401,6 +17401,10 @@ if ($ADD==49)
 			if (isset($_GET[$Fvcl_name]))						{$vcl_name=$_GET[$Fvcl_name];}
 				elseif (isset($_POST[$Fvcl_name]))				{$vcl_name=$_POST[$Fvcl_name];}
 			$list_mix_container = preg_replace("/:$/","",$list_mix_container);
+			$list_mix_container = preg_replace("/\<|\>|\'|\"|\\\\|;/", '', $list_mix_container);
+			$mix_method = preg_replace("/\<|\>|\'|\"|\\\\|;/", '', $mix_method);
+			$status = preg_replace("/\<|\>|\'|\"|\\\\|;/", '', $status);
+			$vcl_name = preg_replace("/\<|\>|\'|\"|\\\\|;/", '', $vcl_name);
 
 			 if ( (strlen($campaign_id) < 2) or (strlen($vcl_id) < 1) or (strlen($list_mix_container) < 6) or (strlen($vcl_name) < 2) )
 				{
@@ -19475,6 +19479,7 @@ if ($ADD==461111111111)
 					$Ffilename = $mohfiles[$o];
 					if (isset($_GET[$Ffilename]))			{$new_rank=$_GET[$Ffilename];}
 						elseif (isset($_POST[$Ffilename]))	{$new_rank=$_POST[$Ffilename];}
+					$new_rank = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$new_rank);
 
 					$stmt="UPDATE vicidial_music_on_hold_files set rank='$new_rank' where moh_id='$moh_id' and filename='$mohfiles[$o]';";
 					$rslt=mysql_to_mysqli($stmt, $link);

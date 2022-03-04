@@ -263,6 +263,8 @@ if ($action == "ALT_MULTI_SUBMIT")
 				elseif (isset($_POST["$campaign_id$US$owner"]))		{$owner_check=$_POST["$campaign_id$US$owner"];}
 			if (isset($_GET["rank_$campaign_id$US$owner"]))				{$owner_rank=$_GET["rank_$campaign_id$US$owner"];}
 				elseif (isset($_POST["rank_$campaign_id$US$owner"]))	{$owner_rank=$_POST["rank_$campaign_id$US$owner"];}
+			$owner_check = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$owner_check);
+			$owner_rank = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$owner_rank);
 
 			if ($owner_check=='YES')
 				{$new_filter_sql .= "'$owner_raw',";}
