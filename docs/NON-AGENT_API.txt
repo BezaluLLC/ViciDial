@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2022-01-27
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2022-03-07
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -62,7 +62,8 @@ add_dnc_phone - adds a phone number to one of the DNC lists
 add_fpg_phone - adds a phone number to a Filter Phone Group
 campaigns_list - displays information about all campaigns in the system
 hopper_list - displays information about leads in the hopper for a campaign
-update_alt_url - updates alternate dispo call url entries for a campaign
+update_alt_url - updates/adds/displays alternate dispo call url entries for a campaign
+update_presets - updates/adds/displays campaign preset entries
 
 
 New scripts:
@@ -199,6 +200,7 @@ Changes:
 211107-1556 - Added optional phone_number search for lead_all_info function
 211118-1946 - Added 'delete_cf_data' setting to the update_lead function
 220126-2116 - Added dispo_call_url and alt URL options for update_campaign. Added 'update_alt_url' function
+220307-0937 - Added 'update_presets' function
 
 
 API Functions use the 'function' variable
@@ -2287,7 +2289,7 @@ SUCCESS: update_campaign CAMPAIGN HAS BEEN UPDATED - 6666|1101
 
 
 --------------------------------------------------------------------------------
-update_alt_url - updates alternate dispo call url entries for a campaign
+update_alt_url - updates/adds/displays alternate dispo call url entries for a campaign
 
 NOTE: api user for this function must have user_level set to 8 or higher and "modify campaigns" enabled
 
@@ -2350,6 +2352,55 @@ A LIST response will not show "SUCCESS", but instead will just print the results
 url_id|campaign_id|entry_type|active|url_type|url_rank|url_statuses|url_description|url_lists|url_call_length|url_address
 3|ALTTEST|campaign|Y|dispo|2|SALE PSALE|Updated SALE URL||2|http://vicidial.org/query.php?var1=X&var2=y
 
+
+
+
+
+--------------------------------------------------------------------------------
+update_presets - updates/adds/displays campaign preset entries
+
+NOTE: api user for this function must have user_level set to 8 or higher and "modify campaigns" enabled
+
+REQUIRED FIELDS-
+campaign_id -		2-8 characters
+source -		description of what originated the API call (maximum 20 characters)
+preset_name -		name of the preset in the system
+			   NOTE: If only one preset exists for this campaign, then this field can be left blank
+action -		'UPDATE', 'NEW' or 'LIST' (default is 'UPDATE')
+			   NOTE: 'stage'(csv, tab, pipe[default]) and 'header'(YES, NO) options are available for an action of 'LIST'
+
+EDITABLE FIELDS- 
+preset_hide_number -	One of these: 'Y','N', default is 'N'
+preset_number -		Digits only (must be from 1 to 50 digits in length)
+preset_dtmf -		Digits and certain characters only ('0123456789PSQ' [P = #-pound, S = *-star, Q = half-second-quiet])
+
+NOTES: 
+ - Please use no special characters like apostrophes, quotes or amphersands
+ - A value of '--BLANK--' can be used on the preset_dtmf option above to set its value to empty
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_presets&campaign_id=ALTTEST&preset_name=SALES&preset_number=3125551212&preset_hide_number=N&action=NEW
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_presets&campaign_id=ALTTEST&preset_number=3125551213&preset_hide_number=N&preset_dtmf=1234
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_presets&campaign_id=ALTTEST&action=LIST
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_presets&campaign_id=ALTTEST&preset_name=SUPPORT+LINE&preset_number=3125551214&preset_hide_number=Y&preset_dtmf=1&action=NEW
+
+
+Example responses:
+ERROR: update_presets USER DOES NOT HAVE PERMISSION TO UPDATE CAMPAIGNS - 6666
+ERROR: update_presets YOU MUST USE ALL REQUIRED FIELDS - 6666|1
+ERROR: update_presets NOT AN ALLOWED CAMPAIGN ID - 98762
+ERROR: update_presets CAMPAIGN DOES NOT EXIST - 6666|1000
+ERROR: update_presets PRESET NAME DOES NOT EXIST - 6666|2|dispo|campaign|TESTCAMP|2
+ERROR: update_presets PRESET HIDE NUMBER MUST BE Y OR N, THIS IS AN OPTIONAL FIELD - 6666|U
+ERROR: update_presets PRESET DTMF IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|
+NOTICE: update_campaign NO UPDATES DEFINED - 6666|
+SUCCESS: update_presets PRESET HAS BEEN UPDATED - 6666|1|campaign|TESTCAMP
+SUCCESS: update_presets PRESET HAS BEEN ADDED - 6666|NEW PRESET: SUPPORT LINE|campaign|TESTCAMP
+NOTICE: update_presets LIST, No Records Found - 6666|TESTCAMP|0
+
+A LIST response will not show "SUCCESS", but instead will just print the results in the following format:
+preset_name|campaign_id|preset_number|preset_hide_number|preset_dtmf
+SALES|ALTTEST|3125551213|N|1234
 
 
 

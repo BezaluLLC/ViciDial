@@ -191,10 +191,11 @@
 # 220120-0914 - Added download_invalid_files user function for audio store file listings
 # 220126-2116 - Added dispo_call_url and alt URL options for update_campaign. Added 'update_alt_url' function
 # 220223-0838 - Added allow_web_debug system setting
+# 220307-0937 - Added 'update_presets' function
 #
 
-$version = '2.14-168';
-$build = '220223-0838';
+$version = '2.14-169';
+$build = '220307-0937';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -686,7 +687,16 @@ if (isset($_GET["url_lists"]))				{$url_lists=$_GET["url_lists"];}
 	elseif (isset($_POST["url_lists"]))		{$url_lists=$_POST["url_lists"];}
 if (isset($_GET["url_call_length"]))			{$url_call_length=$_GET["url_call_length"];}
 	elseif (isset($_POST["url_call_length"]))	{$url_call_length=$_POST["url_call_length"];}
-
+if (isset($_GET["preset_name"]))			{$preset_name=$_GET["preset_name"];}
+	elseif (isset($_POST["preset_name"]))	{$preset_name=$_POST["preset_name"];}
+if (isset($_GET["preset_number"]))			{$preset_number=$_GET["preset_number"];}
+	elseif (isset($_POST["preset_number"]))	{$preset_number=$_POST["preset_number"];}
+if (isset($_GET["preset_dtmf"]))			{$preset_dtmf=$_GET["preset_dtmf"];}
+	elseif (isset($_POST["preset_dtmf"]))	{$preset_dtmf=$_POST["preset_dtmf"];}
+if (isset($_GET["preset_hide_number"]))				{$preset_hide_number=$_GET["preset_hide_number"];}
+	elseif (isset($_POST["preset_hide_number"]))	{$preset_hide_number=$_POST["preset_hide_number"];}
+if (isset($_GET["action"]))				{$action=$_GET["action"];}
+	elseif (isset($_POST["action"]))	{$action=$_POST["action"];}
 
 $DB=preg_replace('/[^0-9]/','',$DB);
 
@@ -836,6 +846,10 @@ $query_time=preg_replace('/[^:0-9]/','',$query_time);
 $gmt_offset_now = preg_replace('/[^-\_\.0-9]/','',$gmt_offset_now);
 $date=preg_replace('/[^-0-9]/','',$date);
 $header = preg_replace('/[^0-9a-zA-Z]/','',$header);
+$preset_hide_number = preg_replace('/[^0-9a-zA-Z]/','',$preset_hide_number);
+$preset_number = preg_replace('/[^\*\#\.\_0-9a-zA-Z]/','',$preset_number);
+$preset_dtmf = preg_replace('/[^- \,\*\#0-9a-zA-Z]/','',$preset_dtmf);
+$action = preg_replace('/[^0-9a-zA-Z]/','',$action);
 
 if ($non_latin < 1)
 	{
@@ -987,6 +1001,7 @@ if ($non_latin < 1)
 	$group_id = preg_replace('/[^_0-9a-zA-Z]/','',$group_id);
 	$url_statuses = preg_replace('/[^- 0-9a-zA-Z]/', '',$url_statuses);
 	$url_description = preg_replace('/[^ \.\,-\_0-9a-zA-Z]/','',$url_description);
+	$preset_name = preg_replace('/[^- \_0-9a-zA-Z]/','',$preset_name);
 	}
 else
 	{
@@ -1138,6 +1153,7 @@ else
 	$group_id = preg_replace('/[^_0-9\p{L}]/u','',$group_id);
 	$url_statuses = preg_replace('/[^- 0-9\p{L}]/u', '',$url_statuses);
 	$url_description = preg_replace('/[^ \.\,-\_0-9\p{L}]/u','',$url_description);
+	$preset_name = preg_replace('/[^- \_0-9\p{L}]/u','',$preset_name);
 	}
 
 $USarea = 			substr($phone_number, 0, 3);
@@ -7910,7 +7926,7 @@ if ($function == 'update_campaign')
 
 
 ################################################################################
-### update_alt_url - updates alternate dispo call url entries for a campaign
+### update_alt_url - updates/adds/displays alternate dispo call url entries for a campaign
 ################################################################################
 if ($function == 'update_alt_url')
 	{
@@ -8337,6 +8353,285 @@ if ($function == 'update_alt_url')
 	}
 ################################################################################
 ### END update_alt_url
+################################################################################
+
+
+
+
+
+################################################################################
+### update_presets - updates/adds/displays campaign preset entries
+################################################################################
+if ($function == 'update_presets')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_campaigns='1' and user_level >= 8 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "update_presets USER DOES NOT HAVE PERMISSION TO UPDATE CAMPAIGNS";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($campaign_id)<2) or (strlen($campaign_id)>8) )
+				{
+				$result = 'ERROR';
+				$result_reason = "update_presets YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$campaign_id|$campaign_name|$campaign_id";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+				$LOGadmin_viewable_groups =		$row[1];
+
+				$LOGallowed_campaignsSQL='';
+				$whereLOGallowed_campaignsSQL='';
+				if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
+					{
+					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+					$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					}
+
+				$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$camp_exists=$row[0];
+				if ($camp_exists < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "update_presets CAMPAIGN DOES NOT EXIST";
+					$data = "$campaign_id";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					if ($action == 'LIST')
+						{
+						$output='';
+						$DLset=0;
+						if ($stage == 'csv')
+							{$DL = ',';   $DLset++;}
+						if ($stage == 'tab')
+							{$DL = "\t";   $DLset++;}
+						if ($stage == 'pipe')
+							{$DL = '|';   $DLset++;}
+						if ($DLset < 1)
+							{$DL='|';}
+						if ($header == 'YES')
+							{$output .= 'preset_name' . $DL . 'campaign_id' . $DL . 'preset_number' . $DL . 'preset_hide_number' . $DL . "preset_dtmf\n";}
+
+						$stmt="SELECT preset_name,campaign_id,preset_number,preset_hide_number,preset_dtmf from vicidial_xfer_presets where campaign_id='$campaign_id' order by preset_name limit 1000;";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$vum_recs = mysqli_num_rows($rslt);
+						if ($DB>0) {echo "$vum_recs|$stmt|\n";}
+						$M=0;
+						while ($vum_recs > $M)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$preset_name =			$row[0];
+							$campaign_id =			$row[1];
+							$preset_number =		$row[2];
+							$preset_hide_number =	$row[3];
+							$preset_dtmf =			$row[4];
+
+							$output .= "$preset_name" . $DL . "$campaign_id" . $DL . "$preset_number" . $DL . "$preset_hide_number" . $DL . "$preset_dtmf\n";
+
+							$M++;
+							}
+						if ($M < 1)
+							{echo "NOTICE: update_presets LIST, No Records Found - $user|$campaign_id|0\n";}
+						else
+							{echo $output;}
+
+						$result = 'SUCCESS';
+						$result_reason = "update_presets PRESET LIST DISPLAYED";
+						$data = "$campaign_id|$M";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+
+						exit;
+						}
+
+					if ($action != 'NEW')
+						{
+						$stmt="SELECT count(*) from vicidial_xfer_presets where campaign_id='$campaign_id' and preset_name='$preset_name';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$row=mysqli_fetch_row($rslt);
+						$alt_id_exists=$row[0];
+						if ($alt_id_exists < 1)
+							{
+							$stmt="SELECT preset_name from vicidial_xfer_presets where campaign_id='$campaign_id' order by preset_name limit 2;";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$vum_recs = mysqli_num_rows($rslt);
+							if ($vum_recs < 2)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$preset_name =		$row[0];
+								}
+							else
+								{
+								$result = 'ERROR';
+								$result_reason = "update_presets PRESET NAME DOES NOT EXIST";
+								$data = "$preset_name|$campaign_id|$vum_recs";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							}
+						}
+
+					$preset_numberSQL='';
+					$preset_dtmfSQL='';
+					$preset_hide_numberSQL='';
+
+					if (strlen($preset_hide_number) > 0)
+						{
+						if ( ($preset_hide_number != 'Y') and ($preset_hide_number != 'N') )
+							{
+							$result = 'ERROR';
+							$result_reason = "update_presets PRESET HIDE NUMBER MUST BE Y OR N, THIS IS AN OPTIONAL FIELD";
+							$data = "$preset_hide_number";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$preset_hide_numberSQL = " ,preset_hide_number='$preset_hide_number'";}
+						}
+					if (strlen($preset_number) > 0)
+						{
+						if ( (strlen($preset_number) > 50) or (strlen($preset_number) < 1) )
+							{
+							$result = 'ERROR';
+							$result_reason = "update_presets PRESET NUMBER IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+							$data = "$preset_number";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{$preset_numberSQL = " ,preset_number='$preset_number'";}
+						}
+					if (strlen($preset_dtmf) > 0)
+						{
+						if ($preset_dtmf == '--BLANK--')
+							{$preset_dtmfSQL = " ,preset_dtmf=''";}
+						else
+							{
+							if (strlen($preset_dtmf) > 50)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_presets PRESET DTMF IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$preset_dtmf";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$preset_dtmfSQL = " ,preset_dtmf='$preset_dtmf'";}
+							}
+						}
+
+					$updateSQL = "$preset_numberSQL$preset_dtmfSQL$preset_hide_numberSQL";
+
+					if (strlen($updateSQL)< 3)
+						{
+						$result = 'NOTICE';
+						$result_reason = "update_presets NO UPDATES DEFINED";
+						$data = "$updateSQL";
+						echo "$result: $result_reason: |$user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					else
+						{
+						if ($action == 'NEW')
+							{
+							$updateSQLx = ltrim($updateSQL, ' ,');
+							$stmt="INSERT INTO vicidial_xfer_presets SET campaign_id='$campaign_id',preset_name='$preset_name', $updateSQLx;";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$add_count = mysqli_affected_rows($link);
+							if ($DB) {echo "$add_count|$preset_name|$stmt|\n";}
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='$event_section', event_type='ADD', record_id='$campaign_id', event_code='ADMIN API UPDATE PRESET', event_sql=\"$SQL_log\", event_notes='campaign: $campaign_id|preset_name: $preset_name';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+
+							$result = 'SUCCESS';
+							$result_reason = "update_presets PRESET HAS BEEN ADDED";
+							$data = "NEW PRESET: $preset_name|$campaign_id";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						else
+							{
+							$updateSQLx = ltrim($updateSQL, ' ,');
+							$stmt="UPDATE vicidial_xfer_presets SET $updateSQLx WHERE campaign_id='$campaign_id' and preset_name='$preset_name';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							if ($DB) {echo "|$stmt|\n";}
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='$event_section', event_type='MODIFY', record_id='$campaign_id', event_code='ADMIN API UPDATE PRESET', event_sql=\"$SQL_log\", event_notes='campaign: $campaign_id|preset_name: $preset_name';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+
+							$result = 'SUCCESS';
+							$result_reason = "update_presets PRESET HAS BEEN UPDATED";
+							$data = "$preset_name|$campaign_id";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						}
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END update_presets
 ################################################################################
 
 
