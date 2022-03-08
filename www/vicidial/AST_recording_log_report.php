@@ -13,6 +13,7 @@
 # 180507-2315 - Added new help display
 # 191013-0830 - Fixes for PHP7
 # 220302-0912 - Added allow_web_debug system setting
+# 220307-2323 - Fix for display issue
 #
 
 $startMS = microtime();
@@ -388,25 +389,30 @@ else
 	}
 
 $i=0;
-$user_group_string='|';
-$user_group_ct = count($user_group);
-while($i < $user_group_ct)
+$user_groups_string='|';
+$user_groups_ct = count($user_groups);
+while($i < $user_groups_ct)
 	{
-	$user_group[$i] = preg_replace('/[^-_0-9\p{L}]/u', '', $user_group[$i]);
-	$user_group_string .= "$user_group[$i]|";
-	$user_groupQS .= "&user_group[]=$user_group[$i]";
-	$user_group_SQL=" user_group in ('".implode("','", $user_group)."') and vra.user=vu.user and ";
+	$user_groups[$i] = preg_replace('/[^-_0-9\p{L}]/u', '', $user_groups[$i]);
+	$user_groups_string .= "$user_groups[$i]|";
+#	$user_groupQS .= "&user_group[]=$user_groups[$i]";
 	$i++;
 	}
-
-if ( (preg_match('/\-\-ALL\-\-/',$user_group_string) ) or ($user_group_ct < 1) )
-	{$user_group_SQL = "";}
-else
+if ($user_groups_ct > 0)
 	{
-	$ASCII_rpt_header.="   "._QXZ("User groups").": ".implode(", ", $user_group)."\n";
-	$CSV_text.="\""._QXZ("User groups").":\",\"".implode(", ", $user_group)."\"\n";
-	$GRAPH_header.="<th class='column_header grey_graph_cell'>"._QXZ("SELECTED USER GROUPS")."</th>";
+	$user_group_SQL=" user_group in ('".implode("','", $user_groups)."') and vra.user=vu.user and ";
 	}
+if (preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups))
+	{$user_group_SQL = "";}
+
+if ( (preg_match('/\-\-ALL\-\-/',$user_groups_string) ) or ($user_groups_ct < 1) )
+	{$user_group_SQL = "";}
+#else
+#	{
+#	$ASCII_rpt_header.="   "._QXZ("User groups").": ".implode(", ", $user_groups)."\n";
+#	$CSV_text.="\""._QXZ("User groups").":\",\"".implode(", ", $user_groups)."\"\n";
+#	$GRAPH_header.="<th class='column_header grey_graph_cell'>"._QXZ("SELECTED USER GROUPS")."</th>";
+#	}
 
 
 ##### BEGIN Define colors and logo #####
