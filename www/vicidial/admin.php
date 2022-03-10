@@ -3411,6 +3411,7 @@ $last_run = preg_replace('/[^-_0-9a-zA-Z]/','',$last_run);
 $closing_time_option_xfer_group = preg_replace('/[^-_0-9a-zA-Z]/','',$closing_time_option_xfer_group);
 $user_account_emails = preg_replace('/[^-_0-9a-zA-Z]/','',$user_account_emails);
 $outbound_cid_any = preg_replace('/[^-_0-9a-zA-Z]/','',$outbound_cid_any);
+$enable_xfer_presets = preg_replace('/[^0-9a-zA-Z]/','',$enable_xfer_presets);
 
 if ($non_latin < 1)
 	{
@@ -3459,7 +3460,6 @@ if ($non_latin < 1)
 	$agent_call_log_view_override = preg_replace('/[^0-9a-zA-Z]/','',$agent_call_log_view_override);
 	$queuemetrics_loginout = preg_replace('/[^0-9a-zA-Z]/','',$queuemetrics_loginout);
 	$queuemetrics_callstatus = preg_replace('/[^0-9a-zA-Z]/','',$queuemetrics_callstatus);
-	$enable_xfer_presets = preg_replace('/[^0-9a-zA-Z]/','',$enable_xfer_presets);
 	$hide_xfer_number_to_dial = preg_replace('/[^0-9a-zA-Z]/','',$hide_xfer_number_to_dial);
 	$manual_dial_prefix = preg_replace('/[^0-9a-zA-Z]/','',$manual_dial_prefix);
 	$customer_3way_hangup_logging = preg_replace('/[^0-9a-zA-Z]/','',$customer_3way_hangup_logging);
@@ -4176,7 +4176,6 @@ else
 	$agent_call_log_view_override = preg_replace('/[^0-9\p{L}]/u','',$agent_call_log_view_override);
 	$queuemetrics_loginout = preg_replace('/[^0-9\p{L}]/u','',$queuemetrics_loginout);
 	$queuemetrics_callstatus = preg_replace('/[^0-9\p{L}]/u','',$queuemetrics_callstatus);
-	$enable_xfer_presets = preg_replace('/[^0-9\p{L}]/u','',$enable_xfer_presets);
 	$hide_xfer_number_to_dial = preg_replace('/[^0-9\p{L}]/u','',$hide_xfer_number_to_dial);
 	$manual_dial_prefix = preg_replace('/[^0-9\p{L}]/u','',$manual_dial_prefix);
 	$customer_3way_hangup_logging = preg_replace('/[^0-9\p{L}]/u','',$customer_3way_hangup_logging);
@@ -5883,12 +5882,13 @@ if ($SSscript_remove_js > 0)
 # 220217-2022 - Added input variable filtering
 # 220218-1656 - Added allow_web_debug system setting to disable $DB output by default
 # 220307-1151 - Added 'update_presets' Non-Agent API function
+# 220310-1007 - Added STAGING option for campaign presets
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-849a';
-$build = '220307-1151';
+$admin_version = '2.14-850a';
+$build = '220310-1007';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -25949,7 +25949,7 @@ if ($ADD==31)
 		echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_survey_color\"><a href=\"$PHP_SELF?ADD=31&SUB=20A&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Survey")."</font></a></TD>";
 		}
 	echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_pause_color\"><a href=\"$PHP_SELF?ADD=31&SUB=27&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Pause Codes")."</font></a></TD>";
-	if ($enable_xfer_presets == 'ENABLED')
+	if ( ($enable_xfer_presets == 'ENABLED') or ($enable_xfer_presets == 'STAGING') )
 		{
 		echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_preset_color\"><a href=\"$PHP_SELF?ADD=31&SUB=201&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Presets")."</font></a></TD>";
 		}
@@ -26974,7 +26974,7 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Transfer-Conf Number")." 5: </td><td align=left><input type=text name=xferconf_e_number size=20 maxlength=50 value=\"$xferconf_e_number\">$NWB#campaigns-xferconf_a_dtmf$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Enable Transfer Presets").": </td><td align=left><select size=1 name=enable_xfer_presets><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='ENABLED'>"._QXZ("ENABLED")."</option><option value='CONTACTS'>"._QXZ("CONTACTS")."</option><option value='$enable_xfer_presets' SELECTED>"._QXZ("$enable_xfer_presets")."</option></select>$NWB#campaigns-enable_xfer_presets$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Enable Transfer Presets").": </td><td align=left><select size=1 name=enable_xfer_presets><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='ENABLED'>"._QXZ("ENABLED")."</option><option value='STAGING'>"._QXZ("STAGING")."</option><option value='CONTACTS'>"._QXZ("CONTACTS")."</option><option value='$enable_xfer_presets' SELECTED>"._QXZ("$enable_xfer_presets")."</option></select>$NWB#campaigns-enable_xfer_presets$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Hide Transfer Number to Dial").": </td><td align=left><select size=1 name=hide_xfer_number_to_dial><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='ENABLED'>"._QXZ("ENABLED")."</option><option value='$hide_xfer_number_to_dial' SELECTED>"._QXZ("$hide_xfer_number_to_dial")."</option></select>$NWB#campaigns-hide_xfer_number_to_dial$NWE</td></tr>\n";
 
@@ -28773,11 +28773,31 @@ if ($ADD==31)
 	##### CAMPAIGN PRESETS #####
 	if ($SUB==201)
 		{
+		$preset_status=_QXZ("set to ").'<font color=purple><b>INACTIVE</b></font>';
+		$stmt="SELECT enable_xfer_presets,campaign_name from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL limit 1;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$campaigns_to_print = mysqli_num_rows($rslt);
+		if ($DB > 0) {echo "DEBUG: |$campaigns_to_print|$stmt|\n";}
+		if ($campaigns_to_print > 0) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			$enable_xfer_presets =		$row[0];
+			$campaign_name =			$row[1];
+			if ($enable_xfer_presets == 'ENABLED') {$preset_status=_QXZ("set to ").'<font color=darkgreen><b>ENABLED</b></font>';}
+			if ($enable_xfer_presets == 'STAGING') {$preset_status=_QXZ("set to ").'<font color=red><b>STAGING</b></font>';}
+			if ($enable_xfer_presets == 'CONTACTS') {$preset_status=_QXZ("set to ").'<font color=red><b>CONTACTS</b></font>';}
+			}
+		else
+			{
+			echo "<br>"._QXZ("CAMPAIGN DOES NOT EXIST")." - $campaign_id<BR>\n";
+			exit;
+			}
+
 		$stmt="SELECT preset_name,preset_number,preset_dtmf,preset_hide_number from vicidial_xfer_presets where campaign_id='$campaign_id' $LOGallowed_campaignsSQL order by preset_name;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$presets_to_print = mysqli_num_rows($rslt);
 
-		echo "<br><br><b>$presets_to_print "._QXZ("PRESETS FOR THIS CAMPAIGN").": &nbsp; $NWB#xfer_presets$NWE</b><br>\n";
+		echo "<br><br><b>$presets_to_print "._QXZ("PRESETS FOR THIS CAMPAIGN")." ($campaign_id - $campaign_name): $preset_status &nbsp; $NWB#xfer_presets$NWE</b><br>\n";
 
 		echo "<br>"._QXZ("ADD NEW PRESET")." -<BR><form action=$PHP_SELF method=POST><font size=2>\n";
 		echo "<input type=hidden name=ADD value=201>\n";
@@ -30397,7 +30417,7 @@ if ($ADD==301)
 	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 	echo "<br>"._QXZ("CAMPAIGN PRESET LISTINGS").":\n";
-	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<center><TABLE width=900 cellspacing=0 cellpadding=1>\n";
 	echo "<tr>\n";
 	echo "<td><B>"._QXZ("CAMPAIGN")."</B></td>\n";
 	echo "<td><B>"._QXZ("NAME")."</B></td>\n";
@@ -30408,7 +30428,7 @@ if ($ADD==301)
 	$stmt="SELECT campaign_id,campaign_name,enable_xfer_presets from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$campaigns_to_print = mysqli_num_rows($rslt);
-
+	if ($DB > 0) {echo "DEBUG: |$campaigns_to_print|$stmt|\n";}
 	$o=0;
 	while ($campaigns_to_print > $o) 
 		{
@@ -30423,7 +30443,7 @@ if ($ADD==301)
 	$k=0;
 	while ($campaigns_to_print > $o) 
 		{
-		if ($enable_xfer_presets_list[$o] == 'ENABLED')
+		if ( ($enable_xfer_presets_list[$o] == 'ENABLED') or ($enable_xfer_presets_list[$o] == 'STAGING') )
 			{
 			if (preg_match('/1$|3$|5$|7$|9$/i', $k))
 				{$bgcolor='class="records_list_x"';} 

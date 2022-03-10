@@ -192,10 +192,11 @@
 # 220126-2116 - Added dispo_call_url and alt URL options for update_campaign. Added 'update_alt_url' function
 # 220223-0838 - Added allow_web_debug system setting
 # 220307-0937 - Added 'update_presets' function
+# 220310-0825 - Added DELETE action to the 'update_presets' function
 #
 
-$version = '2.14-169';
-$build = '220307-0937';
+$version = '2.14-170';
+$build = '220310-0825';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -8570,13 +8571,37 @@ if ($function == 'update_presets')
 
 					$updateSQL = "$preset_numberSQL$preset_dtmfSQL$preset_hide_numberSQL";
 
-					if (strlen($updateSQL)< 3)
+					if ( (strlen($updateSQL)< 3) or ($action == 'DELETE') )
 						{
-						$result = 'NOTICE';
-						$result_reason = "update_presets NO UPDATES DEFINED";
-						$data = "$updateSQL";
-						echo "$result: $result_reason: |$user|$data\n";
-						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						if ($action == 'DELETE')
+							{
+							$stmt="DELETE FROM vicidial_xfer_presets WHERE campaign_id='$campaign_id' and preset_name='$preset_name';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$del_count = mysqli_affected_rows($link);
+							if ($DB) {echo "$del_count|$preset_name|$stmt|\n";}
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='$event_section', event_type='DELETE', record_id='$campaign_id', event_code='ADMIN API DELETE PRESET', event_sql=\"$SQL_log\", event_notes='campaign: $campaign_id|preset_name: $preset_name';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+
+							$result = 'SUCCESS';
+							$result_reason = "update_presets PRESET HAS BEEN DELETED";
+							$data = "$preset_name|$campaign_id";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						else
+							{
+							$result = 'NOTICE';
+							$result_reason = "update_presets NO UPDATES DEFINED";
+							$data = "$updateSQL";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
 						}
 					else
 						{

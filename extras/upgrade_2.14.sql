@@ -1881,3 +1881,21 @@ UPDATE system_settings SET db_schema_version='1654',db_schema_update_date=NOW() 
 ALTER TABLE system_settings ADD allow_web_debug ENUM('0','1','2','3','4','5','6') default '0';
 
 UPDATE system_settings SET db_schema_version='1655',db_schema_update_date=NOW() where db_schema_version < 1655;
+
+ALTER TABLE vicidial_campaigns MODIFY enable_xfer_presets ENUM('DISABLED','ENABLED','STAGING','CONTACTS') default 'DISABLED';
+
+CREATE TABLE vicidial_sync_log (
+user VARCHAR(20) default '',
+start_time DATETIME NOT NULL,
+db_time DATETIME NOT NULL,
+run_time VARCHAR(20) default '0',
+php_script VARCHAR(40) NOT NULL,
+action VARCHAR(100) default '',
+lead_id INT(10) UNSIGNED default '0',
+stage VARCHAR(200) default '',
+session_name VARCHAR(40) default '',
+last_sql TEXT,
+KEY ajax_dbtime_key (db_time)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+UPDATE system_settings SET db_schema_version='1656',db_schema_update_date=NOW() where db_schema_version < 1656;

@@ -153,9 +153,10 @@
 # 210712-2312 - Added purging of vicidial_lead_24hour_calls table
 # 210827-0939 - Added PJSIP compatibility
 # 210924-2333 - Fix for calls_today issue at timeclock-end-of-day
+# 220310-0959 - Added purging of vicidial_sync_log table
 #
 
-$build = '210924-2333';
+$build = '220310-0959';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -1857,6 +1858,24 @@ if ($timeclock_end_of_day_NOW > 0)
 		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
 		$sthA->finish();
 		##### END vicidial_ajax_log end of day process removing records older than 7 days #####
+
+
+		##### BEGIN vicidial_sync_log end of day process removing records older than 7 days #####
+		$stmtA = "DELETE from vicidial_sync_log where db_time < \"$SDSQLdate\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_sync_log records older than 7 days purged|\n";}
+		if ($teodDB) {$event_string = "vicidial_sync_log records older than 7 days purged: |$stmtA|$affected_rows|";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_sync_log;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+		##### END vicidial_sync_log end of day process removing records older than 7 days #####
 
 
 		##### BEGIN vicidial_vdad_log end of day process removing records older than 7 days #####

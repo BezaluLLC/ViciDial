@@ -689,10 +689,11 @@
 # 220219-0133 - Added allow_web_debug system setting
 # 220303-2018 - Changes to some input variable filters
 # 220309-2215 - Fix for issue with pausing when calling agent phone again while already paused
+# 220310-0935 - Added more time-sync detailed logging
 #
 
-$version = '2.14-657c';
-$build = '220309-2215';
+$version = '2.14-658c';
+$build = '220310-0935';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -5618,6 +5619,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var recording_active=0;
 	var pause_max_url_trigger = '<?php echo $pause_max_url_trigger ?>';
 	var agent_hide_hangup_ACTIVE = '<?php $agent_hide_hangup_ACTIVE ?>';
+	var agent_datetime='';
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -6801,6 +6803,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 							var Alogin_array = check_time_array[2].split("Logged-in: ");
 							var AGLogiN = Alogin_array[1];
+							var AGLogiN_notes_array = check_time_array[33].split("Alogin_notes: ");
+							var AGLogiN_notes = AGLogiN_notes_array[1];
 							var CamPCalLs_array = check_time_array[3].split("CampCalls: ");
 							var CamPCalLs = CamPCalLs_array[1];
 							var DiaLCalLs_array = check_time_array[5].split("DiaLCalls: ");
@@ -6844,33 +6848,33 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								}
 							if ( (AGLogiN == 'DEAD_VLA') && ( (vicidial_agent_disable == 'LIVE_AGENT') || (vicidial_agent_disable == 'ALL') ) )
 								{
-								button_click_log = button_click_log + "" + SQLdate + "-----agent_disabled---" + AGLogiN + " " + vicidial_agent_disable + "|";
+								button_click_log = button_click_log + "" + SQLdate + "-----agent_disabled---" + AGLogiN + " " + vicidial_agent_disable + " " + AGLogiN_notes + " AGENT-TIME--" + agent_datetime + "|";
 								showDiv('AgenTDisablEBoX');
 								refresh_interval = 7300000;
 								agent_events('session_disabled', 'LIVE_AGENT', aec);   aec++;
 								}
 							if ( (AGLogiN == 'DEAD_EXTERNAL') && ( (vicidial_agent_disable == 'EXTERNAL') || (vicidial_agent_disable == 'ALL') ) )
 								{
-								button_click_log = button_click_log + "" + SQLdate + "-----agent_disabled---" + AGLogiN + " " + vicidial_agent_disable + "|";
+								button_click_log = button_click_log + "" + SQLdate + "-----agent_disabled---" + AGLogiN + " " + vicidial_agent_disable + " " + AGLogiN_notes + " AGENT-TIME--" + agent_datetime + "|";
 								showDiv('AgenTDisablEBoX');
 								refresh_interval = 7300000;
 								agent_events('session_disabled', 'DEAD_EXTERNAL', aec);   aec++;
 								}
 							if ( (AGLogiN == 'TIME_SYNC') && (vicidial_agent_disable == 'ALL') )
 								{
-								button_click_log = button_click_log + "" + SQLdate + "-----system_disabled---" + AGLogiN + " " + vicidial_agent_disable + "|";
+								button_click_log = button_click_log + "" + SQLdate + "-----system_disabled---" + AGLogiN + " " + vicidial_agent_disable + " " + AGLogiN_notes + " AGENT-TIME--" + agent_datetime + "|";
 								showDiv('SysteMDisablEBoX');
 								agent_events('time_sync', '', aec);   aec++;
 								}
 							if (AGLogiN == 'SHIFT_LOGOUT')
 								{
-								button_click_log = button_click_log + "" + SQLdate + "-----shift_logout---" + AGLogiN + "|";
+								button_click_log = button_click_log + "" + SQLdate + "-----shift_logout---" + AGLogiN + " " + AGLogiN_notes + "|";
 								shift_logout_flag=1;
 								}
 							if (AGLogiN == 'API_LOGOUT')
 								{
 								api_logout_flag=1;
-								button_click_log = button_click_log + "" + SQLdate + "-----api_logout---" + AGLogiN + " " + api_logout_flag + "|";
+								button_click_log = button_click_log + "" + SQLdate + "-----api_logout---" + AGLogiN + " " + api_logout_flag + " " + AGLogiN_notes + "|";
 								if ( (MD_channel_look < 1) && (VD_live_customer_call < 1) && (alt_dial_status_display < 1) )
 									{LogouT('API','','');}
 								}
@@ -20590,6 +20594,8 @@ function phone_number_format(formatphone) {
 			}
 
 		document.getElementById("status").innerHTML = status_date + " " + status_time  + display_message;
+		agent_datetime = status_date + " " + status_time;
+
 		if (VD_live_customer_call==1)
 			{
 			var customer_gmt = parseFloat(document.vicidial_form.gmt_offset_now.value);

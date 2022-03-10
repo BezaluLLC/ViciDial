@@ -915,7 +915,7 @@ blind_monitor_message VARCHAR(255) default 'Someone is blind monitoring your ses
 blind_monitor_filename VARCHAR(100) default '',
 inbound_queue_no_dial ENUM('DISABLED','ENABLED','ALL_SERVERS','ENABLED_WITH_CHAT','ALL_SERVERS_WITH_CHAT') default 'DISABLED',
 timer_action_destination VARCHAR(30) default '',
-enable_xfer_presets ENUM('DISABLED','ENABLED','CONTACTS') default 'DISABLED',
+enable_xfer_presets ENUM('DISABLED','ENABLED','STAGING','CONTACTS') default 'DISABLED',
 hide_xfer_number_to_dial ENUM('DISABLED','ENABLED') default 'DISABLED',
 manual_dial_prefix VARCHAR(20) default '',
 customer_3way_hangup_logging ENUM('DISABLED','ENABLED') default 'ENABLED',
@@ -3714,6 +3714,20 @@ last_sql TEXT,
 KEY ajax_dbtime_key (db_time)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE vicidial_sync_log (
+user VARCHAR(20) default '',
+start_time DATETIME NOT NULL,
+db_time DATETIME NOT NULL,
+run_time VARCHAR(20) default '0',
+php_script VARCHAR(40) NOT NULL,
+action VARCHAR(100) default '',
+lead_id INT(10) UNSIGNED default '0',
+stage VARCHAR(200) default '',
+session_name VARCHAR(40) default '',
+last_sql TEXT,
+KEY ajax_dbtime_key (db_time)
+) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 CREATE TABLE vicidial_settings_containers (
 container_id VARCHAR(40) PRIMARY KEY NOT NULL,
 container_notes VARCHAR(255) default '',
@@ -5050,4 +5064,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1655',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1656',db_schema_update_date=NOW(),reload_timestamp=NOW();
