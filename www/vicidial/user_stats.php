@@ -66,6 +66,7 @@
 # 210319-1338 - Added HELP pop-ups for each section, added agent browser visibility log stats to agent activity section, reformatted most sections
 # 220122-1701 - Added more variable filtering
 # 220221-0916 - Added allow_web_debug system setting
+# 220310-1427 - Fix for LOGOUT/LOGIN events sharing the same timedate
 #
 
 $startMS = microtime();
@@ -788,7 +789,7 @@ else
 		$CSV_text2.="\""._QXZ("Agent Login and Logout Time")."\"\n";
 		$CSV_text2.="\"\",\""._QXZ("EVENT")."\",\""._QXZ("DATE")."\",\""._QXZ("CAMPAIGN")."\",\""._QXZ("GROUP")."\",\""._QXZ("HOURS:MM:SS")."\",\""._QXZ("SESSION")."\",\""._QXZ("SERVER")."\",\""._QXZ("PHONE")."\",\""._QXZ("COMPUTER")."\",\""._QXZ("PHONE_LOGIN")."\",\""._QXZ("PHONE_IP")."\"\n";
 
-		$stmt="SELECT event,event_epoch,event_date,campaign_id,user_group,session_id,server_ip,extension,computer_ip,phone_login,phone_ip from ".$vicidial_user_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and event_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by event_date;";
+		$stmt="SELECT event,event_epoch,event_date,campaign_id,user_group,session_id,server_ip,extension,computer_ip,phone_login,phone_ip,if(event='LOGOUT' or event='TIMEOUTLOGOUT', 1, 0) as LOGpriority from ".$vicidial_user_log_table." where user='" . mysqli_real_escape_string($link, $user) . "' and event_date >= '" . mysqli_real_escape_string($link, $begin_date) . " 0:00:01'  and event_date <= '" . mysqli_real_escape_string($link, $end_date) . " 23:59:59' order by event_date, LOGpriority asc;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$events_to_print = mysqli_num_rows($rslt);
 
