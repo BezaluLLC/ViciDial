@@ -688,10 +688,11 @@
 # 220217-1938 - Added agent_hide_hangup campaign feature
 # 220219-0133 - Added allow_web_debug system setting
 # 220303-2018 - Changes to some input variable filters
+# 220309-2215 - Fix for issue with pausing when calling agent phone again while already paused
 #
 
-$version = '2.14-656c';
-$build = '220303-2018';
+$version = '2.14-657c';
+$build = '220309-2215';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -16538,7 +16539,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				}
 			delete xmlhttp;
 			}
-		if ( (auto_dial_level > 0) && (tempstate != 'LOGIN') )
+		if ( (auto_dial_level > 0) && (tempstate != 'LOGIN') && (VDRP_stage != 'PAUSED') )
 			{
 			AutoDial_ReSume_PauSe("VDADpause");
 			}
