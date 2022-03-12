@@ -108,6 +108,7 @@
 # 210629-1545 - Added KHOMP stats display
 # 210630-0838 - Added display of vicidial_vmm_counts data, if $CIDdisplay=="Yes"
 # 220222-1454 - Added allow_web_debug system setting
+# 220312-0953 - Added vicidial_dial_cid_log data
 #
 
 require("dbconnect_mysqli.php");
@@ -1857,13 +1858,13 @@ else
 		$call_log .= "<td align=right><font size=2> $row[3] </td>\n";
 		$call_log .= "<td align=right><font size=2> $row[2] </td>\n";
 		$call_log .= "<td align=right><font size=2> $row[1] </td>\n";
-		$call_log .= "<td align=right><font size=2> $row[15] </td>\n";
-		$call_log .= "<td align=right><font size=2>&nbsp; $row[10] </td>\n";
+		$call_log .= "<td align=center><font size=2> $row[15] </td>\n";
+		$call_log .= "<td align=left><font size=2>&nbsp; $row[10] </font><font size=1>$row[16] </td>\n";
 
 		if ($CIDdisplay=="Yes")
 			{
 			$caller_code='';
-			$stmtA="SELECT caller_code,server_ip FROM vicidial_log_extended WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and uniqueid='$row[0]';";
+			$stmtA="SELECT caller_code,server_ip FROM vicidial_log_extended WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and uniqueid='$row[0]' limit 1;";
 			$rsltA=mysql_to_mysqli($stmtA, $link);
 			$cc_to_print = mysqli_num_rows($rsltA);
 			if ($cc_to_print > 0)
@@ -1872,8 +1873,8 @@ else
 				$caller_code =	$rowA[0];
 				$VLEserver_ip = $rowA[1];
 				}
-			$outbound_cid='';
-			$stmtA="SELECT outbound_cid,server_ip FROM vicidial_dial_log WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and caller_code='$caller_code';";
+			$outbound_cid='';   $VDLcall_date='0';
+			$stmtA="SELECT outbound_cid,server_ip,call_date FROM vicidial_dial_log WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and caller_code='$caller_code' limit 1;";
 			$rsltA=mysql_to_mysqli($stmtA, $link);
 			$cid_to_print = mysqli_num_rows($rsltA);
 			if ($cid_to_print > 0)
@@ -1882,14 +1883,27 @@ else
 				$outbound_cid = $rowA[0];
 				$outbound_cid = preg_replace("/\".*\" /",'',$outbound_cid);
 				$VDLserver_ip = $rowA[1];
+				$VDLcall_date = $rowA[2];
 				}
+			$outbound_cid_num='';   $outbound_cid_type='';
+			$stmtA="SELECT outbound_cid,outbound_cid_type FROM vicidial_dial_cid_log WHERE call_date='$VDLcall_date' and caller_code='$caller_code' limit 1;";
+			$rsltA=mysql_to_mysqli($stmtA, $link);
+			$vdl_to_print = mysqli_num_rows($rsltA);
+			if ($vdl_to_print > 0)
+				{
+				$rowA=mysqli_fetch_row($rsltA);
+				$outbound_cid_num = $rowA[0];
+				$outbound_cid_num = preg_replace("/\".*\" /",'',$outbound_cid_num);
+				$outbound_cid_type = $rowA[1];
+				}
+
 			if ($SSsip_event_logging > 0)
 				{
-				$call_log .= "<td align=right nowrap><font size=2>&nbsp; $outbound_cid  <span onClick=\"ShowCallDetail(event,'$caller_code','$SSframe_background')\"><font color=blue><u>$caller_code</u></font></span></td><td align=right><font size=2>&nbsp; $row[0]</td><td align=right><font size=2>&nbsp; $rowA[1]</td>\n";
+				$call_log .= "<td align=left nowrap><font size=2>&nbsp; $outbound_cid  <span onClick=\"ShowCallDetail(event,'$caller_code','$SSframe_background')\"><font color=blue><u>$caller_code</u></font></span> <font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $row[0]</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
 				}
 			else
 				{
-				$call_log .= "<td align=right nowrap><font size=2>&nbsp; $outbound_cid $caller_code</td><td align=right><font size=2>&nbsp; $row[0]</td><td align=right><font size=2>&nbsp; $rowA[1]</td>\n";
+				$call_log .= "<td align=left nowrap><font size=2>&nbsp; $outbound_cid $caller_code </font><font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $row[0]</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
 				}
 			$AMDSTATUS='';	$AMDRESPONSE='';
 			$stmtA="SELECT AMDSTATUS,AMDRESPONSE FROM vicidial_amd_log WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and caller_code='$caller_code';";
@@ -2110,8 +2124,8 @@ else
 			$call_log .= "<td align=right><font size=2> $row[3] </td>\n";
 			$call_log .= "<td align=right><font size=2> $row[2] </td>\n";
 			$call_log .= "<td align=right><font size=2> $row[1] </td>\n";
-			$call_log .= "<td align=right><font size=2> $row[15] </td>\n";
-			$call_log .= "<td align=right><font size=2>&nbsp; $row[10] </td>\n";
+			$call_log .= "<td align=center><font size=2> $row[15] </td>\n";
+			$call_log .= "<td align=right><font size=2>&nbsp; $row[10] </font><font size=1>$row[16] </td>\n";
 
 			if ($CIDdisplay=="Yes")
 				{
@@ -2125,8 +2139,8 @@ else
 					$caller_code = $rowA[0];
 					$VLEserver_ip = $rowA[1];
 					}
-				$outbound_cid='';
-				$stmtA="SELECT outbound_cid,server_ip FROM vicidial_dial_log_archive WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and caller_code='$caller_code';";
+				$outbound_cid='';   $VDLcall_date='0';
+				$stmtA="SELECT outbound_cid,server_ip,call_date FROM vicidial_dial_log_archive WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and caller_code='$caller_code' limit 1;";
 				$rsltA=mysql_to_mysqli($stmtA, $link);
 				$cid_to_print = mysqli_num_rows($rsltA);
 				if ($cid_to_print > 0)
@@ -2135,14 +2149,27 @@ else
 					$outbound_cid = $rowA[0];
 					$outbound_cid = preg_replace("/\".*\" /",'',$outbound_cid);
 					$VDLserver_ip = $rowA[1];
+					$VDLcall_date = $rowA[2];
 					}
+				$outbound_cid_num='';   $outbound_cid_type='';
+				$stmtA="SELECT outbound_cid,outbound_cid_type FROM vicidial_dial_cid_log_archive WHERE call_date='$VDLcall_date' and caller_code='$caller_code' limit 1;";
+				$rsltA=mysql_to_mysqli($stmtA, $link);
+				$vdl_to_print = mysqli_num_rows($rsltA);
+				if ($vdl_to_print > 0)
+					{
+					$rowA=mysqli_fetch_row($rsltA);
+					$outbound_cid_num = $rowA[0];
+					$outbound_cid_num = preg_replace("/\".*\" /",'',$outbound_cid_num);
+					$outbound_cid_type = $rowA[1];
+					}
+
 				if ($SSsip_event_logging > 0)
 					{
-					$call_log .= "<td align=right nowrap><font size=2>&nbsp; $outbound_cid  <span onClick=\"ShowCallDetail(event,'$caller_code','$SSframe_background')\"><font color=blue><u>$caller_code</u></font></span></td><td align=right><font size=2>&nbsp; $row[0]</td><td align=right><font size=2>&nbsp; $rowA[1]</td>\n";
+					$call_log .= "<td align=right nowrap><font size=2>&nbsp; $outbound_cid  <span onClick=\"ShowCallDetail(event,'$caller_code','$SSframe_background')\"><font color=blue><u>$caller_code</u></font></span> <font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $row[0]</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
 					}
 				else
 					{
-					$call_log .= "<td align=right nowrap><font size=2>&nbsp; $outbound_cid $caller_code</td><td align=right><font size=2>&nbsp; $row[0]</td><td align=right><font size=2>&nbsp; $rowA[1]</td>\n";
+					$call_log .= "<td align=right nowrap><font size=2>&nbsp; $outbound_cid $caller_code </font><font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $row[0]</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
 					}
 				}
 			$call_log .= "</tr>\n";
@@ -3099,7 +3126,7 @@ else
 			$out_log_width=1300;
 			if ($AMDcount > 0) {$out_log_width=1500;}
 			echo "<TABLE width=$out_log_width cellspacing=0 cellpadding=1>\n";
-			echo "<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("LENGTH")."</td><td align=left><font size=2> "._QXZ("STATUS")."</td><td align=left><font size=2> "._QXZ("TSR")."</td><td align=right><font size=2> "._QXZ("CAMPAIGN")."</td><td align=right><font size=2> "._QXZ("LIST")."</td><td align=right><font size=2> "._QXZ("LEAD")."</td><td align=right><font size=2> "._QXZ("HANGUP REASON")."</td><td align=right><font size=2> "._QXZ("PHONE")."</td><td align=center><font size=2> <a href=\"$PHP_SELF?lead_id=$lead_id&archive_search=$archive_search&archive_log=$archive_log&CIDdisplay=$altCIDdisplay\">"._QXZ("CALLER ID")."</a></td><td align=right><font size=2> <a href=\"$PHP_SELF?lead_id=$lead_id&archive_search=$archive_search&archive_log=$archive_log&CIDdisplay=$altCIDdisplay\">"._QXZ("UNIQUEID")."</a></td><td align=right><font size=2> <a href=\"$PHP_SELF?lead_id=$lead_id&archive_search=$archive_search&archive_log=$archive_log&CIDdisplay=$altCIDdisplay\">"._QXZ("SERVER IP")."</a></td>";
+			echo "<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("LENGTH")."</td><td align=left><font size=2> "._QXZ("STATUS")."</td><td align=left><font size=2> "._QXZ("TSR")."</td><td align=right><font size=2> "._QXZ("CAMPAIGN")."</td><td align=right><font size=2> "._QXZ("LIST")."</td><td align=right><font size=2> "._QXZ("LEAD")."</td><td align=right><font size=2> "._QXZ("HANGUP REASON")."</td><td align=center><font size=2> "._QXZ("PHONE")."</td><td align=center><font size=2> <a href=\"$PHP_SELF?lead_id=$lead_id&archive_search=$archive_search&archive_log=$archive_log&CIDdisplay=$altCIDdisplay\">"._QXZ("CALLER ID")."</a></td><td align=right><font size=2> <a href=\"$PHP_SELF?lead_id=$lead_id&archive_search=$archive_search&archive_log=$archive_log&CIDdisplay=$altCIDdisplay\">"._QXZ("UNIQUEID")."</a></td><td align=right><font size=2> <a href=\"$PHP_SELF?lead_id=$lead_id&archive_search=$archive_search&archive_log=$archive_log&CIDdisplay=$altCIDdisplay\">"._QXZ("SERVER IP")."</a></td>";
 			if ($AMDcount > 0)
 				{echo "<td align=right><font size=2> "._QXZ("AMD STATUS")."</td><td align=right><font size=2> "._QXZ("AMD RESPONSE")."</td>";}
 			echo "</tr>\n";
@@ -3107,7 +3134,7 @@ else
 		else
 			{
 			echo "<TABLE width=850 cellspacing=0 cellpadding=1>\n";
-			echo "<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("LENGTH")."</td><td align=left><font size=2> "._QXZ("STATUS")."</td><td align=left><font size=2> "._QXZ("TSR")."</td><td align=right><font size=2> "._QXZ("CAMPAIGN")."</td><td align=right><font size=2> "._QXZ("LIST")."</td><td align=right><font size=2> "._QXZ("LEAD")."</td><td align=right><font size=2> "._QXZ("HANGUP REASON")."</td><td align=right><font size=2> "._QXZ("PHONE")."</td><td align=right><font size=2> <a href=\"$PHP_SELF?lead_id=$lead_id&archive_search=$archive_search&archive_log=$archive_log&CIDdisplay=$altCIDdisplay\">"._QXZ("CALLER ID")."</a></td></tr>\n";
+			echo "<tr><td><font size=1># </td><td><font size=2>"._QXZ("DATE/TIME")." </td><td align=left><font size=2>"._QXZ("LENGTH")."</td><td align=left><font size=2> "._QXZ("STATUS")."</td><td align=left><font size=2> "._QXZ("TSR")."</td><td align=right><font size=2> "._QXZ("CAMPAIGN")."</td><td align=right><font size=2> "._QXZ("LIST")."</td><td align=right><font size=2> "._QXZ("LEAD")."</td><td align=right><font size=2> "._QXZ("HANGUP REASON")."</td><td align=center><font size=2> "._QXZ("PHONE")."</td><td align=right><font size=2> <a href=\"$PHP_SELF?lead_id=$lead_id&archive_search=$archive_search&archive_log=$archive_log&CIDdisplay=$altCIDdisplay\">"._QXZ("CALLER ID")."</a></td></tr>\n";
 			}
 
 		echo "$call_log\n";

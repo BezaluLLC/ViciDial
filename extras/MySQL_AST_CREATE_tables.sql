@@ -1131,7 +1131,8 @@ inbound_after_hours_voicemail VARCHAR(20),
 qc_scorecard_id VARCHAR(20) DEFAULT '',
 qc_statuses_id VARCHAR(20) DEFAULT '',
 qc_web_form_address VARCHAR(255) DEFAULT '',
-auto_alt_threshold TINYINT(3) default '-1'
+auto_alt_threshold TINYINT(3) default '-1',
+cid_group_id VARCHAR(20) default '---DISABLED---'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_statuses (
@@ -4719,6 +4720,17 @@ user_group VARCHAR(20) default '---ALL---',
 active ENUM('Y','N')
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_dial_cid_log (
+caller_code VARCHAR(30) NOT NULL,
+call_date DATETIME,
+call_type ENUM('OUT','OUTBALANCE','MANUAL','OVERRIDE','3WAY') default 'OUT',
+call_alt VARCHAR(20) default '',
+outbound_cid VARCHAR(20) default '',
+outbound_cid_type VARCHAR(20) default '',
+index (caller_code),
+index (call_date)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -4979,6 +4991,9 @@ ALTER TABLE vicidial_peer_event_log_archive MODIFY peer_event_id INT(9) UNSIGNED
 
 CREATE TABLE vicidial_inbound_caller_codes_archive LIKE vicidial_inbound_caller_codes;
 
+CREATE TABLE vicidial_dial_cid_log_archive LIKE vicidial_dial_cid_log;
+CREATE UNIQUE INDEX caller_code_date on vicidial_dial_cid_log_archive (caller_code,call_date);
+
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
 
@@ -5064,4 +5079,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1656',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1657',db_schema_update_date=NOW(),reload_timestamp=NOW();

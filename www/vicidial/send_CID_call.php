@@ -17,6 +17,7 @@
 # 141229-2008 - Added code for on-the-fly language translations display
 # 170409-1533 - Added IP List validation code
 # 220223-0820 - Added allow_web_debug system setting
+# 220312-0942 - Added vicidial_dial_cid_log logging
 #
 
 require("dbconnect_mysqli.php");
@@ -187,6 +188,11 @@ else
 	$rslt=mysql_to_mysqli($stmt, $link);
 
 	$stmt = "INSERT INTO vicidial_dial_log SET caller_code='TESTCIDCALL098765432',lead_id='0',server_ip='$server_ip',call_date='$NOW_TIME',extension='91$receiver',channel='Local/91$sender$Local_end',timeout='$Local_dial_timeout',outbound_cid='\"$cid_number\" <$cid_number>',context='default';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+
+	### log outbound call in the dial cid log
+	$stmt = "INSERT INTO vicidial_dial_cid_log SET caller_code='TESTCIDCALL098765432',call_date='$NOW_TIME',call_type='MANUAL',call_alt='MAIN', outbound_cid='$cid_number',outbound_cid_type='SEND_CID_CALL_PAGE';";
+	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 
 	### LOG INSERTION Admin Log Table ###

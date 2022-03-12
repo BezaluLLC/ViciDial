@@ -523,10 +523,11 @@
 # 220119-1014 - Added auto_alt_threshold feature
 # 220212-0919 - Added pause_max_url_trigger input
 # 220219-0134 - Added allow_web_debug system setting
+# 220311-1709 - Added List CID Group Override option
 #
 
-$version = '2.14-416';
-$build = '220219-0134';
+$version = '2.14-417';
+$build = '220311-1709';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=876;
@@ -4419,13 +4420,14 @@ if ($ACTION == 'manDiaLnextCaLL')
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00788',$user,$server_ip,$session_name,$one_mysql_log);}
 
 			$campaign_cid_override='';
+			$LIST_cid_group_override='';
 			$LISTweb_form_address='';
 			$LISTweb_form_address_two='';
 			$LISTweb_form_address_three='';
 			### check if there is a list_id override
 			if (strlen($list_id) > 1)
 				{
-				$stmt = "SELECT campaign_cid_override,web_form_address,web_form_address_two,web_form_address_three,list_description,default_xfer_group FROM vicidial_lists where list_id='$list_id';";
+				$stmt = "SELECT campaign_cid_override,web_form_address,web_form_address_two,web_form_address_three,list_description,default_xfer_group,cid_group_id FROM vicidial_lists where list_id='$list_id';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00245',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -4439,6 +4441,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$LISTweb_form_address_three =	$row[3];
 					$list_description =				$row[4];
 					$LISTdefault_xfer_group =		$row[5];
+					$LIST_cid_group_override =		$row[6];
 					if ( (strlen($LISTdefault_xfer_group)>0) and (!preg_match("/---NONE---/",$LISTdefault_xfer_group)) )
 						{$default_xfer_group = $LISTdefault_xfer_group;}
 					}
@@ -4585,7 +4588,75 @@ if ($ACTION == 'manDiaLnextCaLL')
 					manual_dnc_check($agent_dialed_number, $no_hopper_dialing_used, 0);
 					}
 
-				if (strlen($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;   $CCIDtype='LIST_CID';}
+				$temp_CID='';
+				if ( (strlen($LIST_cid_group_override) > 0) and ($LIST_cid_group_override != '---DISABLED---') )
+					{
+					$stmt = "SELECT cid_group_type FROM vicidial_cid_groups where cid_group_id='$LIST_cid_group_override';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$cidg_ct = mysqli_num_rows($rslt);
+					if ($cidg_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$cid_group_type =	$row[0];
+						$temp_vcca='';
+						$temp_ac='';
+
+						if ($cid_group_type == 'AREACODE')
+							{
+							$temp_ac_two = substr("$agent_dialed_number", 0, 2);
+							$temp_ac_three = substr("$agent_dialed_number", 0, 3);
+							$temp_ac_four = substr("$agent_dialed_number", 0, 4);
+							$temp_ac_five = substr("$agent_dialed_number", 0, 5);
+							$stmt = "SELECT outbound_cid,areacode FROM vicidial_campaign_cid_areacodes where campaign_id='$LIST_cid_group_override' and areacode IN('$temp_ac_two','$temp_ac_three','$temp_ac_four','$temp_ac_five') and active='Y' order by CAST(areacode as SIGNED INTEGER) asc, call_count_today desc limit 100000;";
+							}
+						if ($cid_group_type == 'STATE')
+							{
+							$temp_state = $state;
+							$stmt = "SELECT outbound_cid,areacode FROM vicidial_campaign_cid_areacodes where campaign_id='$LIST_cid_group_override' and areacode IN('$temp_state') and active='Y' order by call_count_today desc limit 100000;";
+							}
+						if ($cid_group_type == 'NONE')
+							{
+							$stmt = "SELECT outbound_cid,areacode FROM vicidial_campaign_cid_areacodes where campaign_id='$LIST_cid_group_override' and active='Y' order by call_count_today desc limit 100000;";
+							}
+						$rslt=mysql_to_mysqli($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($DB) {echo "$stmt\n";}
+						$vcca_ct = mysqli_num_rows($rslt);
+						$act=0;
+						while ($vcca_ct > $act)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$temp_vcca =	$row[0];
+							$temp_ac =		$row[1];
+							$act++;
+							}
+						if ($act > 0) 
+							{
+							$stmt="UPDATE vicidial_campaign_cid_areacodes SET call_count_today=(call_count_today + 1) where campaign_id='$LIST_cid_group_override' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
+								if ($format=='debug') {echo "\n<!-- $stmt -->";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
+							if ($cid_group_type == 'NONE')
+								{
+								$stmt="UPDATE vicidial_cid_groups SET cid_auto_rotate_calls=(cid_auto_rotate_calls + 1) where cid_group_id='$LIST_cid_group_override';";
+									if ($format=='debug') {echo "\n<!-- $stmt -->";}
+								$rslt=mysql_to_mysqli($stmt, $link);
+									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+								}
+							}
+						}
+					$temp_CID = preg_replace("/\D/",'',$temp_vcca);
+					}
+				if ( (strlen($campaign_cid_override) > 6) or (strlen($temp_CID) > 6) )
+					{
+					if (strlen($temp_CID) > 6) 
+						{$CCID = "$temp_CID";   $CCID_on++;   $CCIDtype='LIST_CID_GROUP';}
+					else
+						{$CCID = "$campaign_cid_override";   $CCID_on++;   $CCIDtype='LIST_CID';}
+					}
 				else
 					{
 					if ($uccid_ct > 0)
@@ -4941,14 +5012,20 @@ if ($ACTION == 'manDiaLnextCaLL')
 					}
 				#### END check for manual_dial_cid == 'AGENT_PHONE_OVERRIDE'
 
-				#### BEGIN check for API forced CID override ####
+				#### BEGIN check for API forced CID or Agent-Selected Group Alias override ####
 				if ( ($usegroupalias > 0) and ($account=='-FORCE-') and (strlen($campaign_cid) > 6) )
 					{
 					$FORCEoutbound_cid = preg_replace("/\D/",'',$campaign_cid);
 					if (strlen($FORCEoutbound_cid) > 6) 
 						{$CCID = "$FORCEoutbound_cid";   $CCID_on++;   $CCIDtype='API_CID';}
 					}
-				#### END check for API forced CID override ####
+				if ( ($usegroupalias > 0) and (strlen($account)>0) and (strlen($campaign_cid) > 6) )
+					{
+					$FORCEoutbound_cid = preg_replace("/\D/",'',$campaign_cid);
+					if (strlen($FORCEoutbound_cid) > 6) 
+						{$CCID = "$FORCEoutbound_cid";   $CCID_on++;   $CCIDtype='AGENT_CHOOSE_CID';}
+					}
+				#### END check for API forced CID or Agent-Selected Group Alias override ####
 
 				if ($CCID_on) {$CIDstring = "\"$MqueryCID$EAC\" <$CCID>";}
 				else {$CIDstring = "$MqueryCID$EAC";}
@@ -4971,6 +5048,12 @@ if ($ACTION == 'manDiaLnextCaLL')
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00852',$user,$server_ip,$session_name,$one_mysql_log);}
+
+				### log outbound call in the dial cid log
+				$stmt = "INSERT INTO vicidial_dial_cid_log SET caller_code='$MqueryCID',call_date='$NOW_TIME',call_type='MANUAL',call_alt='$agent_dialed_type', outbound_cid='$CCID',outbound_cid_type='$CCIDtype';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				$calls_todaySQL = ",calls_today='$calls_today'";
 				### Skip logging and list overrides if dial in-group is used
@@ -6325,7 +6408,7 @@ if ($ACTION == 'manDiaLonly')
 
 				if (strlen($list_id) > 1)
 					{
-					$stmt = "SELECT campaign_cid_override,web_form_address,web_form_address_two,web_form_address_three,list_description FROM vicidial_lists where list_id='$list_id';";
+					$stmt = "SELECT campaign_cid_override,web_form_address,web_form_address_two,web_form_address_three,list_description,cid_group_id FROM vicidial_lists where list_id='$list_id';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00247',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
@@ -6338,12 +6421,81 @@ if ($ACTION == 'manDiaLonly')
 						$LISTweb_form_address_two =		$row[2];
 						$LISTweb_form_address_three =	$row[3];
 						$list_description =				$row[4];
+						$LIST_cid_group_override =		$row[5];
 						}
 					}
 				}
 			}
 
-		if (strlen($campaign_cid_override) > 6) {$CCID = "$campaign_cid_override";   $CCID_on++;   $CCIDtype='LIST_CID';}
+		$temp_CID='';
+		if ( (strlen($LIST_cid_group_override) > 0) and ($LIST_cid_group_override != '---DISABLED---') )
+			{
+			$stmt = "SELECT cid_group_type FROM vicidial_cid_groups where cid_group_id='$LIST_cid_group_override';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			if ($DB) {echo "$stmt\n";}
+			$cidg_ct = mysqli_num_rows($rslt);
+			if ($cidg_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$cid_group_type =	$row[0];
+				$temp_vcca='';
+				$temp_ac='';
+
+				if ($cid_group_type == 'AREACODE')
+					{
+					$temp_ac_two = substr("$agent_dialed_number", 0, 2);
+					$temp_ac_three = substr("$agent_dialed_number", 0, 3);
+					$temp_ac_four = substr("$agent_dialed_number", 0, 4);
+					$temp_ac_five = substr("$agent_dialed_number", 0, 5);
+					$stmt = "SELECT outbound_cid,areacode FROM vicidial_campaign_cid_areacodes where campaign_id='$LIST_cid_group_override' and areacode IN('$temp_ac_two','$temp_ac_three','$temp_ac_four','$temp_ac_five') and active='Y' order by CAST(areacode as SIGNED INTEGER) asc, call_count_today desc limit 100000;";
+					}
+				if ($cid_group_type == 'STATE')
+					{
+					$temp_state = $state;
+					$stmt = "SELECT outbound_cid,areacode FROM vicidial_campaign_cid_areacodes where campaign_id='$LIST_cid_group_override' and areacode IN('$temp_state') and active='Y' order by call_count_today desc limit 100000;";
+					}
+				if ($cid_group_type == 'NONE')
+					{
+					$stmt = "SELECT outbound_cid,areacode FROM vicidial_campaign_cid_areacodes where campaign_id='$LIST_cid_group_override' and active='Y' order by call_count_today desc limit 100000;";
+					}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$vcca_ct = mysqli_num_rows($rslt);
+				$act=0;
+				while ($vcca_ct > $act)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$temp_vcca =	$row[0];
+					$temp_ac =		$row[1];
+					$act++;
+					}
+				if ($act > 0) 
+					{
+					$stmt="UPDATE vicidial_campaign_cid_areacodes SET call_count_today=(call_count_today + 1) where campaign_id='$LIST_cid_group_override' and areacode='$temp_ac' and outbound_cid='$temp_vcca';";
+						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
+					if ($cid_group_type == 'NONE')
+						{
+						$stmt="UPDATE vicidial_cid_groups SET cid_auto_rotate_calls=(cid_auto_rotate_calls + 1) where cid_group_id='$LIST_cid_group_override';";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						}
+					}
+				}
+			$temp_CID = preg_replace("/\D/",'',$temp_vcca);
+			}
+		if ( (strlen($campaign_cid_override) > 6) or (strlen($temp_CID) > 6) )
+			{
+			if (strlen($temp_CID) > 6) 
+				{$CCID = "$temp_CID";   $CCID_on++;   $CCIDtype='LIST_CID_GROUP';}
+			else
+				{$CCID = "$campaign_cid_override";   $CCID_on++;   $CCIDtype='LIST_CID';}
+			}
 		else
 			{
 			### check for custom cid use
@@ -6575,14 +6727,20 @@ if ($ACTION == 'manDiaLonly')
 			}
 		#### END check for manual_dial_cid == 'AGENT_PHONE_OVERRIDE'
 
-		#### BEGIN check for API forced CID override ####
+		#### BEGIN check for API forced CID or Agent-Selected Group Alias override ####
 		if ( ($usegroupalias > 0) and ($account=='-FORCE-') and (strlen($campaign_cid) > 6) )
 			{
 			$FORCEoutbound_cid = preg_replace("/\D/",'',$campaign_cid);
 			if (strlen($FORCEoutbound_cid) > 6) 
 				{$CCID = "$FORCEoutbound_cid";   $CCID_on++;   $CCIDtype='API_CID';}
 			}
-		#### END check for API forced CID override ####
+		if ( ($usegroupalias > 0) and (strlen($account)>0) and (strlen($campaign_cid) > 6) )
+			{
+			$FORCEoutbound_cid = preg_replace("/\D/",'',$campaign_cid);
+			if (strlen($FORCEoutbound_cid) > 6) 
+				{$CCID = "$FORCEoutbound_cid";   $CCID_on++;   $CCIDtype='AGENT_CHOOSE_CID';}
+			}
+		#### END check for API forced CID or Agent-Selected Group Alias override ####
 
 		#### BEGIN run manual_dial_hopper_check process if enabled
 		if ($manual_dial_hopper_check == 'Y')
@@ -6687,6 +6845,12 @@ if ($ACTION == 'manDiaLonly')
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00855',$user,$server_ip,$session_name,$one_mysql_log);}
+
+		### log outbound call in the dial cid log
+		$stmt = "INSERT INTO vicidial_dial_cid_log SET caller_code='$MqueryCID',call_date='$NOW_TIME',call_type='MANUAL',call_alt='$agent_dialed_type', outbound_cid='$CCID',outbound_cid_type='$CCIDtype';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 
 		### update the agent status to INCALL in vicidial_live_agents
 		$stmt = "UPDATE vicidial_live_agents set status='INCALL',last_call_time='$NOW_TIME',callerid='$MqueryCID',lead_id='$lead_id',comments='MANUAL',calls_today='$calls_today',external_hangup=0,external_status='',external_pause='',external_dial='',last_state_change='$NOW_TIME',pause_code='',preview_lead_id='0' where user='$user' and server_ip='$server_ip';";

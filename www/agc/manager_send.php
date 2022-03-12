@@ -150,10 +150,11 @@
 # 210823-0916 - Fix for security issue
 # 210825-0911 - Fix for XSS security issue
 # 220220-0904 - Added allow_web_debug system setting
+# 220312-0936 - Added vicidial_dial_cid_log logging
 #
 
-$version = '2.14-97';
-$build = '220220-0904';
+$version = '2.14-98';
+$build = '220312-0936';
 $php_script = 'manager_send.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=143;
@@ -620,6 +621,12 @@ if ($ACTION=="Originate")
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02119',$user,$server_ip,$session_name,$one_mysql_log);}
+
+		### log outbound call in the dial cid log
+		$stmt = "INSERT INTO vicidial_dial_cid_log SET caller_code='$queryCID',call_date='$NOW_TIME',call_type='MANUAL',call_alt='$agent_dialed_type', outbound_cid='$outbound_cid',outbound_cid_type='AGENT';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 
 		if ( (strlen($lead_id) > 0) and (strlen($session_id) > 0) and (preg_match("/^DC/",$queryCID)) )
 			{

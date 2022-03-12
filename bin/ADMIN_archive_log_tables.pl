@@ -64,6 +64,7 @@
 # 210819-0826 - Added vicidial_inbound_caller_codes archiving
 # 210912-1546 - Added --api-log-days=X and --api-only flags
 # 220309-2246 - Added --api-archive-days=X and --api-archive-only flags
+# 220312-0859 - Added vicidial_dial_cid_log table archiving, same as vicidial_dial_log
 #
 
 $CALC_TEST=0;
@@ -672,6 +673,35 @@ if (!$T)
 			}
 		##### END vicidial_dial_log_archive trim processing #####
 
+		##### BEGIN vicidial_dial_cid_log_archive trim processing #####
+		$stmtA = "SELECT count(*) from vicidial_dial_cid_log_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vicidial_dial_cid_log_archive_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if (!$Q) {print "Trimming vicidial_dial_cid_log_archive table...  ($vicidial_dial_cid_log_archive_count)\n";}
+		
+		$rv = $sthA->err();
+		if (!$rv) 
+			{
+			$stmtA = "DELETE FROM vicidial_dial_cid_log_archive WHERE call_date < '$del_time';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows = $sthA->rows;
+			if (!$Q) {print "$sthArows rows deleted from vicidial_dial_cid_log_archive table \n";}
+
+			$stmtA = "optimize table vicidial_dial_cid_log_archive;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			}
+		##### END vicidial_dial_cid_log_archive trim processing #####
+
 
 		if ($only_trim_archive > 1)
 			{
@@ -1221,6 +1251,53 @@ if (!$T)
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			}
 		##### END vicidial_dial_log DAILY processing #####
+
+
+		##### BEGIN vicidial_dial_cid_log DAILY processing #####
+		$stmtA = "SELECT count(*) from vicidial_dial_cid_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vicidial_dial_cid_log_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		$stmtA = "SELECT count(*) from vicidial_dial_cid_log_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vicidial_dial_cid_log_archive_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if (!$Q) {print "\nProcessing vicidial_dial_cid_log table...  ($vicidial_dial_cid_log_count|$vicidial_dial_cid_log_archive_count)\n";}
+		$stmtA = "INSERT IGNORE INTO vicidial_dial_cid_log_archive SELECT * from vicidial_dial_cid_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		
+		$sthArows = $sthA->rows;
+		if (!$Q) {print "$sthArows rows inserted into vicidial_dial_cid_log_archive table \n";}
+		
+		$rv = $sthA->err();
+		if (!$rv) 
+			{
+			$stmtA = "DELETE FROM vicidial_dial_cid_log WHERE call_date < '$del_time';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows = $sthA->rows;
+			if (!$Q) {print "$sthArows rows deleted from vicidial_dial_cid_log table \n";}
+
+			$stmtA = "optimize table vicidial_dial_cid_log;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			}
+		##### END vicidial_dial_cid_log DAILY processing #####
 
 
 		##### BEGIN vicidial_api_log DAILY processing #####
@@ -2224,6 +2301,58 @@ if (!$T)
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		}
 
+
+	##### vicidial_dial_cid_log
+	$stmtA = "SELECT count(*) from vicidial_dial_cid_log;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$vicidial_dial_cid_log_count =	$aryA[0];
+		}
+	$sthA->finish();
+
+	$stmtA = "SELECT count(*) from vicidial_dial_cid_log_archive;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$vicidial_dial_cid_log_archive_count =	$aryA[0];
+		}
+	$sthA->finish();
+
+	if (!$Q) {print "\nProcessing vicidial_dial_cid_log table...  ($vicidial_dial_cid_log_count|$vicidial_dial_cid_log_archive_count)\n";}
+	$stmtA = "INSERT IGNORE INTO vicidial_dial_cid_log_archive SELECT * from vicidial_dial_cid_log;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	
+	$sthArows = $sthA->rows;
+	if (!$Q) {print "$sthArows rows inserted into vicidial_dial_cid_log_archive table \n";}
+	
+	$rv = $sthA->err();
+	if (!$rv) 
+		{	
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_dial_cid_log;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_dial_cid_log WHERE call_date < '$del_time';";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows = $sthA->rows;
+		if (!$Q) {print "$sthArows rows deleted from vicidial_dial_cid_log table \n";}
+
+		$stmtA = "optimize table vicidial_dial_cid_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+
+		$stmtA = "optimize table vicidial_dial_cid_log_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		}
 
 
 	##### vicidial_api_log

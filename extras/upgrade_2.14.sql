@@ -1899,3 +1899,21 @@ KEY ajax_dbtime_key (db_time)
 ) ENGINE=MyISAM CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
 UPDATE system_settings SET db_schema_version='1656',db_schema_update_date=NOW() where db_schema_version < 1656;
+
+ALTER TABLE vicidial_lists ADD cid_group_id VARCHAR(20) default '---DISABLED---';
+
+CREATE TABLE vicidial_dial_cid_log (
+caller_code VARCHAR(30) NOT NULL,
+call_date DATETIME,
+call_type ENUM('OUT','OUTBALANCE','MANUAL','OVERRIDE','3WAY') default 'OUT',
+call_alt VARCHAR(20) default '',
+outbound_cid VARCHAR(20) default '',
+outbound_cid_type VARCHAR(20) default '',
+index (caller_code),
+index (call_date)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_dial_cid_log_archive LIKE vicidial_dial_cid_log;
+CREATE UNIQUE INDEX caller_code_date on vicidial_dial_cid_log_archive (caller_code,call_date);
+
+UPDATE system_settings SET db_schema_version='1657',db_schema_update_date=NOW() where db_schema_version < 1657;

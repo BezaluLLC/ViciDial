@@ -193,10 +193,11 @@
 # 220223-0838 - Added allow_web_debug system setting
 # 220307-0937 - Added 'update_presets' function
 # 220310-0825 - Added DELETE action to the 'update_presets' function
+# 220312-0944 - Added vicidial_dial_cid_log logging
 #
 
-$version = '2.14-170';
-$build = '220310-0825';
+$version = '2.14-171';
+$build = '220312-0944';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -2994,6 +2995,11 @@ if ($function == 'blind_monitor')
 						$man_id = mysqli_insert_id($link);
 
 						$stmt = "INSERT INTO vicidial_dial_log SET caller_code='$BMquery',lead_id='0',server_ip='$monitor_server_ip',call_date='$NOW_TIME',extension='$dialplan_number',channel='Local/$monitor_dialstring$stage$session_id@default',timeout='0',outbound_cid='\"$BMquery\" <$outbound_cid>',context='default';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+
+						### log outbound call in the dial cid log
+						$stmt = "INSERT INTO vicidial_dial_cid_log SET caller_code='$BMquery',call_date='$NOW_TIME',call_type='MANUAL',call_alt='MAIN', outbound_cid='$outbound_cid',outbound_cid_type='MONITOR_AGENT';";
+						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $link);
 
 						$stmt = "INSERT INTO vicidial_rt_monitor_log SET manager_user='$user',manager_server_ip='$monitor_server_ip',manager_phone='$phone_login',manager_ip='$ip',agent_user='$AGENTuser',agent_server_ip='$server_ip',agent_status='$AGENTstatus',agent_session='$session_id',lead_id='$AGENTlead_id',campaign_id='$AGENTcampaign',caller_code='$BMquery',monitor_start_time=NOW(),monitor_type='$monitor_type';";

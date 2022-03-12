@@ -5883,12 +5883,14 @@ if ($SSscript_remove_js > 0)
 # 220218-1656 - Added allow_web_debug system setting to disable $DB output by default
 # 220307-1151 - Added 'update_presets' Non-Agent API function
 # 220310-1007 - Added STAGING option for campaign presets
+# 220311-0808 - Added List setting for Campaign CID Group Override
+# 220312-0937 - Added vicidial_dial_cid_log logging
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-850a';
-$build = '220310-1007';
+$admin_version = '2.14-852a';
+$build = '220312-0937';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -16626,7 +16628,7 @@ if ($ADD==41)
 					$rslt=mysql_to_mysqli($stmt, $link);
 
 					### gather list_id overrides
-					$stmt="SELECT campaign_cid_override FROM vicidial_lists where list_id='$manual_dial_list_id' $LOGallowed_campaignsSQL;";
+					$stmt="SELECT campaign_cid_override,cid_group_id FROM vicidial_lists where list_id='$manual_dial_list_id' $LOGallowed_campaignsSQL;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
 					$CIDor_ct = mysqli_num_rows($rslt);
@@ -16634,7 +16636,8 @@ if ($ADD==41)
 					if ($CIDor_ct > 0)
 						{
 						$row=mysqli_fetch_row($rslt);
-						$campaign_cid_override = $row[0];
+						$campaign_cid_override =		$row[0];
+						$campaign_cid_group_override =	$row[1];
 						}
 
 					### gather server information
@@ -16692,6 +16695,12 @@ if ($ADD==41)
 					### insert a record in the vicidial_dial_log table 
 					$stmtD = "INSERT INTO vicidial_dial_log SET caller_code='$VqueryCID',lead_id='$lead_id',server_ip='$old_server_ip',call_date='$SQLdate',extension='$VDAD_dial_exten',channel='$local_DEF$Ndialstring$local_AMP$ext_context',timeout='$Local_dial_timeout',outbound_cid='$CIDstring',context='$ext_context';";
 					$rslt=mysql_to_mysqli($stmtD, $link);
+
+					### log outbound call in the dial cid log
+					$stmt = "INSERT INTO vicidial_dial_cid_log SET caller_code='$VqueryCID',call_date='$SQLdate',call_type='MANUAL',call_alt='MAIN', outbound_cid='$CCID',outbound_cid_type='CAMPAIGN_TEST';";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 
 					### LOG INSERTION Admin Log Table, for campaign ###
 					$SQL_log = "$stmtA|$stmtB|$stmtC|";
@@ -17746,7 +17755,7 @@ if ($ADD==411)
 
 				echo "<br><B>"._QXZ("LIST MODIFIED").": $list_id</B>\n";
 
-				$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate',reset_time='$reset_time',agent_script_override='$agent_script_override',inbound_list_script_override='$inbound_list_script_override',campaign_cid_override='$campaign_cid_override',am_message_exten_override='$am_message_exten_override',drop_inbound_group_override='$drop_inbound_group_override',xferconf_a_number='$xferconf_a_number',xferconf_b_number='$xferconf_b_number',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',web_form_address='" . mysqli_real_escape_string($link, $web_form_address) . "',web_form_address_two='" . mysqli_real_escape_string($link, $web_form_address_two) . "',time_zone_setting='$time_zone_setting',inventory_report='$inventory_report',expiration_date='$expiration_date',na_call_url='" . mysqli_real_escape_string($link, $na_call_url) . "',local_call_time='$local_call_time',web_form_address_three='" . mysqli_real_escape_string($link, $web_form_address_three) . "',status_group_id='$status_group_id',user_new_lead_limit='$user_new_lead_limit',default_xfer_group='$default_xfer_group',qc_scorecard_id='$qc_scorecard_id' $daily_reset_limitSQL,auto_active_list_rank='$auto_active_list_rank',qc_statuses_id='$qc_statuses_id',qc_web_form_address='" . mysqli_real_escape_string($link, $qc_web_form_address) . "',inbound_drop_voicemail='$inbound_drop_voicemail',inbound_after_hours_voicemail='$inbound_after_hours_voicemail',auto_alt_threshold='$auto_alt_threshold' where list_id='$list_id';";
+				$stmt="UPDATE vicidial_lists set list_name='$list_name',campaign_id='$campaign_id',active='$active',list_description='$list_description',list_changedate='$SQLdate',reset_time='$reset_time',agent_script_override='$agent_script_override',inbound_list_script_override='$inbound_list_script_override',campaign_cid_override='$campaign_cid_override',am_message_exten_override='$am_message_exten_override',drop_inbound_group_override='$drop_inbound_group_override',xferconf_a_number='$xferconf_a_number',xferconf_b_number='$xferconf_b_number',xferconf_c_number='$xferconf_c_number',xferconf_d_number='$xferconf_d_number',xferconf_e_number='$xferconf_e_number',web_form_address='" . mysqli_real_escape_string($link, $web_form_address) . "',web_form_address_two='" . mysqli_real_escape_string($link, $web_form_address_two) . "',time_zone_setting='$time_zone_setting',inventory_report='$inventory_report',expiration_date='$expiration_date',na_call_url='" . mysqli_real_escape_string($link, $na_call_url) . "',local_call_time='$local_call_time',web_form_address_three='" . mysqli_real_escape_string($link, $web_form_address_three) . "',status_group_id='$status_group_id',user_new_lead_limit='$user_new_lead_limit',default_xfer_group='$default_xfer_group',qc_scorecard_id='$qc_scorecard_id' $daily_reset_limitSQL,auto_active_list_rank='$auto_active_list_rank',qc_statuses_id='$qc_statuses_id',qc_web_form_address='" . mysqli_real_escape_string($link, $qc_web_form_address) . "',inbound_drop_voicemail='$inbound_drop_voicemail',inbound_after_hours_voicemail='$inbound_after_hours_voicemail',auto_alt_threshold='$auto_alt_threshold',cid_group_id='$cid_group_id' where list_id='$list_id';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 
 				## QC Addition for Audited Comments
@@ -30589,7 +30598,7 @@ if ($ADD==311)
 				}
 			}
 
-		$stmt="SELECT vicidial_lists.list_id,list_name,campaign_id,active,list_description,list_changedate,list_lastcalldate,reset_time,agent_script_override,campaign_cid_override,am_message_exten_override,drop_inbound_group_override,xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two,time_zone_setting,inventory_report,IFNULL(audit_comments,0),expiration_date,DATE_FORMAT(expiration_date,'%Y%m%d'),na_call_url,local_call_time,web_form_address_three,status_group_id,user_new_lead_limit,inbound_list_script_override,default_xfer_group,daily_reset_limit,resets_today,auto_active_list_rank,inbound_drop_voicemail,inbound_after_hours_voicemail,qc_scorecard_id,qc_statuses_id,qc_web_form_address,auto_alt_threshold from vicidial_lists left outer join vicidial_lists_custom on vicidial_lists.list_id=vicidial_lists_custom.list_id where vicidial_lists.list_id='$list_id' $LOGallowed_campaignsSQL;";
+		$stmt="SELECT vicidial_lists.list_id,list_name,campaign_id,active,list_description,list_changedate,list_lastcalldate,reset_time,agent_script_override,campaign_cid_override,am_message_exten_override,drop_inbound_group_override,xferconf_a_number,xferconf_b_number,xferconf_c_number,xferconf_d_number,xferconf_e_number,web_form_address,web_form_address_two,time_zone_setting,inventory_report,IFNULL(audit_comments,0),expiration_date,DATE_FORMAT(expiration_date,'%Y%m%d'),na_call_url,local_call_time,web_form_address_three,status_group_id,user_new_lead_limit,inbound_list_script_override,default_xfer_group,daily_reset_limit,resets_today,auto_active_list_rank,inbound_drop_voicemail,inbound_after_hours_voicemail,qc_scorecard_id,qc_statuses_id,qc_web_form_address,auto_alt_threshold,cid_group_id from vicidial_lists left outer join vicidial_lists_custom on vicidial_lists.list_id=vicidial_lists_custom.list_id where vicidial_lists.list_id='$list_id' $LOGallowed_campaignsSQL;";
 
 		$rslt=mysql_to_mysqli($stmt, $link);
                 if ($DB) {echo "$stmt\n";}
@@ -30633,6 +30642,7 @@ if ($ADD==311)
 		$qc_statuses_id =			$row[37];
 		$qc_web_form_address =		$row[38];
 		$auto_alt_threshold =		$row[39];
+		$cid_group_id =				$row[40];
 
 		# grab names of global statuses and statuses in the selected campaign
 		$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,min_sec,max_sec,answering_machine from vicidial_statuses order by status;";
@@ -30827,6 +30837,43 @@ if ($ADD==311)
 			}
 
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>$DID_edit_link_BEGIN"._QXZ("Campaign CID Override")."$DID_edit_link_END: </td><td align=left><input type=text name=campaign_cid_override size=20 maxlength=20 value=\"$campaign_cid_override\">$NWB#lists-campaign_cid_override$NWE</td></tr>\n";
+
+		if ($SScampaign_cid_areacodes_enabled == '1')
+			{
+			##### get vicidial_cid_groups listings for dynamic pulldown list
+			$stmt="SELECT cid_group_id,cid_group_type,cid_group_notes from vicidial_cid_groups $whereLOGadmin_viewable_groupsSQL order by cid_group_id;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$cid_groups_to_print = mysqli_num_rows($rslt);
+			$cid_groups_menu='';
+			$cid_groups_selected=0;
+			$o=0;
+			while ($cid_groups_to_print > $o) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$cid_groups_menu .= "<option ";
+				if ($cid_group_id == "$rowx[0]") 
+					{
+					$cid_groups_menu .= "SELECTED ";
+					$cid_groups_selected++;
+					}
+				$cid_groups_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1] - $rowx[2]</option>\n";
+				$o++;
+				}
+
+			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>";
+			if ($cid_groups_selected > 0)
+				{echo "<a href=\"$PHP_SELF?ADD=396111111111&cid_group_id=$cid_group_id\">"._QXZ("Campaign CID Group Override")."</a>";}
+			else
+				{echo _QXZ("Campaign CID Group Override");}
+			echo ": </td><td align=left><select size=1 name=cid_group_id>";
+			echo "<option value=\"---DISABLED---\">---"._QXZ("DISABLED")."---</option>";
+			echo "$cid_groups_menu";
+			echo "</select>$NWB#lists-cid_group_id$NWE</td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#$SSstd_row3_background><td align=right><input type=hidden name=cid_group_id value=\"$cid_group_id\"></td></tr>";
+			}
 
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Answering Machine Message Override").": </td><td align=left><input type=text name=am_message_exten_override id=am_message_exten_override size=50 maxlength=100 value=\"$am_message_exten_override\"> <a href=\"javascript:launch_chooser('am_message_exten_override','date');\">"._QXZ("audio chooser")."</a> $NWB#lists-am_message_exten_override$NWE</td></tr>\n";
 
@@ -41537,6 +41584,22 @@ if ($ADD==396111111111)
 			{
 			$row=mysqli_fetch_row($rslt);
 			echo "<TR><TD><a href=\"$PHP_SELF?ADD=31&campaign_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+			$o++;
+			}
+
+		echo "</TABLE><BR><BR>\n";
+
+		echo "<B>"._QXZ("LISTS USING THIS CID GROUP").":</B><BR>\n";
+		echo "<TABLE>\n";
+
+		$stmt="SELECT list_id,list_name from vicidial_lists where cid_group_id='$cid_group_id' $LOGallowed_campaignsSQL;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$lists_to_print = mysqli_num_rows($rslt);
+		$o=0;
+		while ($lists_to_print > $o) 
+			{
+			$row=mysqli_fetch_row($rslt);
+			echo "<TR><TD><a href=\"$PHP_SELF?ADD=311&list_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
 			$o++;
 			}
 
