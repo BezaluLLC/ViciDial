@@ -149,9 +149,10 @@
 # 220118-0938 - Added $ADB auto-alt-dial extra debug output option, fix for extended auto-alt-dial issue #1337
 # 220118-2206 - Added auto_alt_threshold campaign & list settings
 # 220311-1920 - Added List CID Group Override option
+# 220328-1310 - Small change made per Issue #1337
 #
 
-$build='220311-1920';
+$build='220328-1310';
 $script='AST_VDauto_dial';
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -3434,7 +3435,7 @@ while($one_day_interval > 0)
 										$event_string = "|$stmtA|$alt_dial_phones_count";   &event_logger;
 
 									if ($ADB > 0) {$aad_string = "ALT-09: $CLlead_id|$CLalt_dial|$Xlast|$alt_dial_phones_count|";   &aad_output;}
-									while ( ($alt_dial_phones_count > 0) && ($alt_dial_phones_count > $Xlast) && ($Xlast != 'LAST') )
+									while ( ($alt_dial_phones_count > 0) && ($alt_dial_phones_count > $Xlast) && ($Xlast ne 'LAST') )
 										{
 										$Xlast++;
 										$stmtA="SELECT alt_phone_id,phone_number,active,phone_code FROM vicidial_list_alt_phones where lead_id='$CLlead_id' and alt_phone_count='$Xlast';";
