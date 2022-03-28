@@ -5885,12 +5885,13 @@ if ($SSscript_remove_js > 0)
 # 220310-1007 - Added STAGING option for campaign presets
 # 220311-0808 - Added List setting for Campaign CID Group Override
 # 220312-0937 - Added vicidial_dial_cid_log logging
+# 220328-1420 - Disallow adding 'INCALL','QUEUE' statuses in Auto-Alt-Dial and Lead Recycling
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-852a';
-$build = '220312-0937';
+$admin_version = '2.14-853a';
+$build = '220328-1420';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -25808,7 +25809,7 @@ if ($ADD==31)
 	$QCL_to_print = (count($QClists) -0);
 
 	##### get status listings for dynamic pulldown
-	$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,min_sec,max_sec,answering_machine from vicidial_statuses order by status;";
+	$stmt="SELECT status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,min_sec,max_sec,answering_machine from vicidial_statuses where status NOT IN('INCALL','QUEUE') order by status;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$statuses_to_print = mysqli_num_rows($rslt);
 	$statuses_list='';
@@ -25877,7 +25878,7 @@ if ($ADD==31)
 		{$VMMGmenus_menu .= "<option value=\"---NONE---\">---"._QXZ("NONE")."---</option>\n";}
 
 
-	$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,min_sec,max_sec,answering_machine from vicidial_campaign_statuses where campaign_id IN($camp_status_groups'$campaign_id') $LOGallowed_campaignsSQL order by status;";
+	$stmt="SELECT status,status_name,selectable,campaign_id,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,min_sec,max_sec,answering_machine from vicidial_campaign_statuses where campaign_id IN($camp_status_groups'$campaign_id') and status NOT IN('INCALL','QUEUE') $LOGallowed_campaignsSQL order by status;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$Cstatuses_to_print = mysqli_num_rows($rslt);
 	if ($DB) {echo "$Cstatuses_to_print|$stmt|\n";}
