@@ -54,6 +54,7 @@
 # 210316-2344 - Changed lead-modify page links to javascript because of Chrome
 # 220222-1947 - Added allow_web_debug system setting
 # 220303-0124 - Fix for Issue #1353
+# 220331-0926 - Small fix for $phone variable filtering
 #
 
 require("dbconnect_mysqli.php");
@@ -147,7 +148,7 @@ if ($SSallow_web_debug < 1) {$DB=0;}
 if ($archive_search=="Yes") {$vl_table="vicidial_list_archive";} 
 else {$vl_table="vicidial_list"; $archive_search="No";}
 
-$phone = preg_replace('/[^-_0-9a-zA-Z]/','',$phone);
+$phone = preg_replace('/[^0-9]/','',$phone);
 $log_phone = preg_replace('/[^-_0-9a-zA-Z]/', '', $log_phone);
 $log_phone_archive = preg_replace('/[^-_0-9a-zA-Z]/', '', $log_phone_archive);
 $list_id = preg_replace('/[^0-9]/','',$list_id);
