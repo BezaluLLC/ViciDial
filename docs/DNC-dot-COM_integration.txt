@@ -1,18 +1,22 @@
-DNC.COM INTEGRATION	  Started: 2015-12-02	Updated: 2017-09-25
+DNC.COM INTEGRATION	  Started: 2015-12-02	Updated: 2022-04-21
 
 NOTE: for DNC.COM integration of batch cellphone filtering, see this document:
 	CELLPHONE_USA_TCPA_FCC_COMPLIANCE.txt
 
 
-We have added a utility to allow for direct filtering of lists on your Vicidial system with a DNC.COM account, to allow for state, federal(FTC) and internal DNC lists as well as TCPA and Litigator Scrub direct through DNC.COM. We have also added a new inbound scrubbing option for calls coming in through DIDs on your system.
+We have added a utility to allow for direct filtering of inactive lists on your Vicidial system with a DNC.COM account, to allow for state, federal(FTC) and internal DNC lists as well as TCPA and Litigator Scrub direct through DNC.COM. We have also added a new inbound scrubbing option for calls coming in through DIDs on your system.
 
 DNC.COM is also offering a Free 15 day trial to VICIdial users of their Real-time Integrated TCPA and DNC Safe Harbor lead scrubbing. For more information on this free offer, contact us (http://www.vicidial.com/?page_id=7). 
 
 
 ########## OUTBOUND LIST FILTERING ############################################
 
+NOTE: Outbound list filtering is currently only available in a batch mode application, it does NOT look phone numbers up as they are dialed.
+
 The script that allows for this must be run from the Linux command-line(CLI):
-	AST_DNCcom_filter.pl
+	AST_DNCcom_filter.pl --lists=LISTID1-LISTID2
+
+The DNC.com List Filtering is designed to work in batch mode, usually set up in the crontab of one of your system's dialers. We recommend running this script after-hours, or only during calling hours on inavtive lists.
 
 In order for this script to work, you must have a Settings Container set up within Vicidial with the ID of "DNCDOTCOM". This settings container should be customized for your specific DNC.COM account, and how you want it to function.
 
