@@ -160,16 +160,15 @@ if (file_exists('project_auth_entries.txt'))
 ######################################################################################################
 ######################################################################################################
 
-
 if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))	{$DB=$_POST["DB"];}
-if (isset($_GET["access_recordings"]))	{$access_recordings=$_GET["access_recordings"];}
+if (isset($_GET["access_recordings"]))			{$access_recordings=$_GET["access_recordings"];}
 	elseif (isset($_POST["access_recordings"]))	{$access_recordings=$_POST["access_recordings"];}
-if (isset($_GET["active"]))	{$active=$_GET["active"];}
+if (isset($_GET["active"]))				{$active=$_GET["active"];}
 	elseif (isset($_POST["active"]))	{$active=$_POST["active"];}
-if (isset($_GET["adaptive_dl_diff_target"]))	{$adaptive_dl_diff_target=$_GET["adaptive_dl_diff_target"];}
+if (isset($_GET["adaptive_dl_diff_target"]))			{$adaptive_dl_diff_target=$_GET["adaptive_dl_diff_target"];}
 	elseif (isset($_POST["adaptive_dl_diff_target"]))	{$adaptive_dl_diff_target=$_POST["adaptive_dl_diff_target"];}
-if (isset($_GET["adaptive_dropped_percentage"]))	{$adaptive_dropped_percentage=$_GET["adaptive_dropped_percentage"];}
+if (isset($_GET["adaptive_dropped_percentage"]))		{$adaptive_dropped_percentage=$_GET["adaptive_dropped_percentage"];}
 	elseif (isset($_POST["adaptive_dropped_percentage"])){$adaptive_dropped_percentage=$_POST["adaptive_dropped_percentage"];}
 if (isset($_GET["adaptive_intensity"]))	{$adaptive_intensity=$_GET["adaptive_intensity"];}
 	elseif (isset($_POST["adaptive_intensity"]))	{$adaptive_intensity=$_POST["adaptive_intensity"];}
@@ -2849,6 +2848,7 @@ if ( ($qm_conf_ct > 0) and (strlen($SSpass_key)<16) )
 		$i++;
 		}
 	$stmt="UPDATE system_settings set pass_key='$SSpass_key' where ( (pass_key is NULL) or (pass_key='') );";
+	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	}
 if ($non_latin > 0)
@@ -5886,12 +5886,13 @@ if ($SSscript_remove_js > 0)
 # 220311-0808 - Added List setting for Campaign CID Group Override
 # 220312-0937 - Added vicidial_dial_cid_log logging
 # 220328-1420 - Disallow adding 'INCALL','QUEUE' statuses in Auto-Alt-Dial and Lead Recycling
+# 220429-1111 - Code cleanup and more optional DB output for queries
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-853a';
-$build = '220328-1420';
+$admin_version = '2.14-854a';
+$build = '220429-1111';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -5956,6 +5957,7 @@ if ($force_logout)
 		if ($SStwo_factor_auth_hours > 0)
 			{
 			$stmt="UPDATE vicidial_two_factor_auth SET auth_stage='2' where user='$PHP_AUTH_USER' and auth_stage='1';";
+			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 			}
 		echo "<html>\n";
@@ -6021,8 +6023,8 @@ if ($force_logout)
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $stmt = "SELECT use_non_latin,auto_dial_limit,user_territories_active,allow_custom_dialplan,callcard_enabled,admin_modify_refresh,nocache_admin,webroot_writable,allow_emails,manual_dial_validation FROM system_settings;";
-$rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
+$rslt=mysql_to_mysqli($stmt, $link);
 $qm_conf_ct = mysqli_num_rows($rslt);
 if ($qm_conf_ct > 0)
 	{
@@ -6168,6 +6170,7 @@ if ( ($qc_auth > 0) and ($auth < 1) )
         }
 
 $stmt="SELECT user_id,user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,shift_override_flag,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,callcard_admin,force_change_password,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,modify_contacts,modify_same_user_level,alter_admin_interface_options,modify_custom_dialplans,modify_languages,selected_language,user_choose_language,modify_colors,api_only_user,modify_auto_reports,modify_ip_lists,export_gdpr_leads,mobile_number,two_factor_override from vicidial_users where user='$PHP_AUTH_USER';";
+if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGfull_name				=$row[3];
@@ -6232,6 +6235,7 @@ $LOGmobile_number			=$row[93];
 $LOGtwo_factor_override		=$row[94];
 
 $stmt="SELECT allowed_campaigns,allowed_reports,admin_viewable_groups,admin_viewable_call_times,qc_allowed_campaigns,qc_allowed_inbound_groups,reports_header_override,admin_home_url,allowed_queue_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
@@ -6296,6 +6300,7 @@ $UUgroups_list='';
 if ($admin_viewable_groupsALL > 0)
 	{$UUgroups_list .= "<option value=\"---ALL---\">"._QXZ("All Admin User Groups")."</option>\n";}
 $stmt="SELECT user_group,group_name from vicidial_user_groups $whereLOGadmin_viewable_groupsSQL order by user_group;";
+if ($DB) {echo "|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $UUgroups_to_print = mysqli_num_rows($rslt);
 $o=0;
@@ -6334,8 +6339,8 @@ $VALID_2FA=1;
 if ( ($SStwo_factor_auth_hours > 0) and ($SStwo_factor_container != '') and ($SStwo_factor_container != '---DISABLED---') )
 	{
 	$stmt="SELECT count(*) from vicidial_two_factor_auth where user='$PHP_AUTH_USER' and auth_stage='1' and auth_exp_date > NOW();";
-	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
 	$auth_check_to_print = mysqli_num_rows($rslt);
 	if ($auth_check_to_print < 1)
 		{$VALID_2FA=0;}
@@ -6391,8 +6396,8 @@ $SSweb_logo='default_old';
 if ($SSadmin_screen_colors != 'default')
 	{
 	$stmt = "SELECT menu_background,frame_background,std_row1_background,std_row2_background,std_row3_background,std_row4_background,std_row5_background,alt_row1_background,alt_row2_background,alt_row3_background,web_logo,button_color FROM vicidial_screen_colors where colors_id='$SSadmin_screen_colors';";
-	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
 	$colors_ct = mysqli_num_rows($rslt);
 	if ($colors_ct > 0)
 		{
@@ -6981,8 +6986,8 @@ if ( ($ADD==999993) or ($ADD==999992) or ($ADD==730000000000000) or ($ADD==83000
 	if (strlen($LOGserver_name)<1) {$LOGserver_name='X';}
 
 	$stmt="SELECT webserver_id FROM vicidial_webservers where webserver='$LOGserver_name' and hostname='$LOGhostname' LIMIT 1;";
-	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
+	$rslt=mysql_to_mysqli($stmt, $link);
 	$webserver_id_ct = mysqli_num_rows($rslt);
 	if ($webserver_id_ct > 0)
 		{
@@ -7000,9 +7005,9 @@ if ( ($ADD==999993) or ($ADD==999992) or ($ADD==730000000000000) or ($ADD==83000
 		}
 
 	$stmt="INSERT INTO vicidial_report_log set event_date=NOW(), user='$PHP_AUTH_USER', ip_address='$LOGip', report_name='$report_name', browser='$LOGbrowser', referer='$LOGhttp_referer', notes='$LOGserver_name:$LOGserver_port $LOGscript_name |$group, $query_date, $end_date, $shift, $stage, $report_display_type|', url='$LOGfull_url', webserver='$webserver_id';";
-	if ($DB) {echo "|$stmt|\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$report_log_id = mysqli_insert_id($link);
+	if ($DB) {echo "$report_log_id|$stmt|\n";}
 	##### END log visit to the vicidial_report_log table #####
 	}
 
@@ -7012,6 +7017,7 @@ if ( ($ADD>2) and ($ADD < 99998) )
 	$stmt="SELECT script_id,script_name from vicidial_scripts $whereLOGadmin_viewable_groupsSQL order by script_id;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$scripts_to_print = mysqli_num_rows($rslt);
+	if ($DB) {echo "$scripts_to_print|$stmt|\n";}
 	$scripts_list="<option value=\"\">"._QXZ("NONE")."</option>\n";
 
 	$o=0;
@@ -7027,6 +7033,7 @@ if ( ($ADD>2) and ($ADD < 99998) )
 	$stmt="SELECT lead_filter_id,lead_filter_name,lead_filter_sql from vicidial_lead_filters $whereLOGadmin_viewable_groupsSQL order by lead_filter_id;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$filters_to_print = mysqli_num_rows($rslt);
+	if ($DB) {echo "$filters_to_print|$stmt|\n";}
 	$filters_list="<option value=\"\">"._QXZ("NONE")."</option>\n";
 
 	$o=0;
@@ -7043,6 +7050,7 @@ if ( ($ADD>2) and ($ADD < 99998) )
 	$stmt="SELECT call_time_id,call_time_name from vicidial_call_times $whereLOGadmin_viewable_call_timesSQL order by call_time_id;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$times_to_print = mysqli_num_rows($rslt);
+	if ($DB) {echo "$times_to_print|$stmt|\n";}
 
 	$o=0;
 	while ($times_to_print > $o)
@@ -7076,6 +7084,7 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 	$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$campaigns_to_print = mysqli_num_rows($rslt);
+	if ($DB) {echo "$campaigns_to_print|$stmt|\n";}
 	$campaigns_list='';
 	$campaigns_value='';
 	$RANKcampaigns_list='';
@@ -7108,6 +7117,7 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 		$stmt="SELECT campaign_rank,calls_today,group_web_vars,campaign_grade,hopper_calls_today,hopper_calls_hour from vicidial_campaign_agents where user='$user' and campaign_id='$campaign_id_values[$o]' $LOGallowed_campaignsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$ranks_to_print = mysqli_num_rows($rslt);
+		if ($DB) {echo "$ranks_to_print|$stmt|\n";}
 		if ($ranks_to_print > 0)
 			{
 			$row=mysqli_fetch_row($rslt);
