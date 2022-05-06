@@ -1917,3 +1917,7 @@ CREATE TABLE vicidial_dial_cid_log_archive LIKE vicidial_dial_cid_log;
 CREATE UNIQUE INDEX caller_code_date on vicidial_dial_cid_log_archive (caller_code,call_date);
 
 UPDATE system_settings SET db_schema_version='1657',db_schema_update_date=NOW() where db_schema_version < 1657;
+
+ALTER TABLE vicidial_campaigns ADD ig_xfer_list_sort ENUM('GROUP_ID_UP','GROUP_ID_DOWN','GROUP_NAME_UP','GROUP_NAME_DOWN','PRIORITY_UP','PRIORITY_DOWN') default 'GROUP_ID_UP';
+
+UPDATE system_settings SET db_schema_version='1658',db_schema_update_date=NOW() where db_schema_version < 1658;
