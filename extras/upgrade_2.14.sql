@@ -1926,3 +1926,7 @@ ALTER TABLE vicidial_inbound_dids ADD pre_filter_recent_call VARCHAR(20) default
 ALTER TABLE vicidial_inbound_dids ADD pre_filter_recent_extension VARCHAR(50) default '';
 
 UPDATE system_settings SET db_schema_version='1659',db_schema_update_date=NOW() where db_schema_version < 1659;
+
+ALTER TABLE vicidial_campaigns ADD script_tab_frame_size VARCHAR(10) default 'DEFAULT';
+
+UPDATE system_settings SET db_schema_version='1660',db_schema_update_date=NOW() where db_schema_version < 1660;
