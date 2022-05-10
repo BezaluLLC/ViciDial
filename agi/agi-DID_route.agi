@@ -58,7 +58,7 @@ $at='@';
 $S='*';
 $US='_';
 $route_type='DID';
-$DBX=1;		# set to 1 for extra debugging output
+$DBX=0;		# set to 1 for extra debugging output
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 $year = ($year + 1900);
