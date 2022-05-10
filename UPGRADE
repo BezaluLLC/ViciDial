@@ -716,6 +716,12 @@ OTHER CHANGES:
 
 200. Added List CID Group Override to the List Modification admin screen.
 
+201. Added "Pre-Filter Recent Call" DID feature, to be able to filter out 
+	inbound calls based on the caller phone number and whether it had been 
+	called(or had called in) within the last X number of days.
+
+202. Added the "Inbound DID Detail Report" to the Admin Utilities page.
+
 
 
 

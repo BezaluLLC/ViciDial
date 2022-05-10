@@ -125,9 +125,9 @@ $PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
 $QUERY_STRING = getenv("QUERY_STRING");
 $groups=array();
 
-$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary, Real-Time Whiteboard Report, Inbound Report, Inbound Report by DID, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound DID Summary Report, Agent DID Report, Inbound IVR Report, Inbound Forecasting Report, Advanced Forecasting Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Callmenu Survey Report, Outbound Lead Source Report, Fronter - Closer Report, Fronter - Closer Detail Report, Lists Campaign Statuses Report, Lists Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report, Agent Time Detail, Agent Status Detail, Agent Inbound Status Summary, Agent Performance Detail, Team Performance Detail, Performance Comparison Report, Single Agent Daily, Single Agent Daily Time, User Group Login Report, User Group Hourly Report, User Group Detail Hourly Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report, Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Carrier Log Report, Campaign Debug, Shared Debug, Asterisk Debug, Hangup Cause Report, Lists Pass Report, Called Counts List IDs Report, Agent Debug Log Report, Agent Parked Call Report, Agent-Manager Chat Log, Recording Access Log Report, API Log Report, Real-Time Monitoring Log Report, AMD Log Report, SIP Event Report, Caller ID Log Report, Quality Control Report, Settings Compare, Phone Stats';
+$Vreports = 'NONE, Real-Time Main Report, Real-Time Campaign Summary, Real-Time Whiteboard Report, Inbound Report, Inbound Report by DID, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound DID Summary Report, Agent DID Report, Inbound DID Detail Report, Inbound IVR Report, Inbound Forecasting Report, Advanced Forecasting Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Callmenu Survey Report, Outbound Lead Source Report, Fronter - Closer Report, Fronter - Closer Detail Report, Lists Campaign Statuses Report, Lists Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report, Agent Time Detail, Agent Status Detail, Agent Inbound Status Summary, Agent Performance Detail, Team Performance Detail, Performance Comparison Report, Single Agent Daily, Single Agent Daily Time, User Group Login Report, User Group Hourly Report, User Group Detail Hourly Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report, Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Carrier Log Report, Campaign Debug, Shared Debug, Asterisk Debug, Hangup Cause Report, Lists Pass Report, Called Counts List IDs Report, Agent Debug Log Report, Agent Parked Call Report, Agent-Manager Chat Log, Recording Access Log Report, API Log Report, Real-Time Monitoring Log Report, AMD Log Report, SIP Event Report, Caller ID Log Report, Quality Control Report, Settings Compare, Phone Stats';
 
-$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary, Real-Time Whiteboard Report, Inbound Report, Inbound Report by DID, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound DID Summary Report, Agent DID Report, Inbound Email Report, Inbound Chat Report, Inbound IVR Report, Inbound Forecasting Report, Advanced Forecasting Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Callmenu Survey Report, Outbound Lead Source Report, Fronter - Closer Report, Fronter - Closer Detail Report, Lists Campaign Statuses Report, Lists Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report, Agent Time Detail, Agent Status Detail, Agent Inbound Status Summary, Agent Performance Detail, Team Performance Detail, Performance Comparison Report, Single Agent Daily, Single Agent Daily Time, User Group Login Report, User Group Hourly Report, User Group Detail Hourly Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report, Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Custom Reports Links, CallCard Search, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Lists Pass Report, Called Counts List IDs Report, Front Page System Summary, Report Page Servers Summary, Admin Utilities Page, Agent Debug Log Report, Agent Parked Call Report, Agent-Manager Chat Log, Recording Access Log Report, API Log Report, Real-Time Monitoring Log Report, AMD Log Report, SIP Event Report, Caller ID Log Report, Quality Control Report, Settings Compare, Phone Stats, VERM QA Links';
+$UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summary, Real-Time Whiteboard Report, Inbound Report, Inbound Report by DID, Inbound Service Level Report, Inbound Summary Hourly Report, Inbound Daily Report, Inbound DID Report, Inbound DID Summary Report, Agent DID Report, Inbound DID Detail Report, Inbound Email Report, Inbound Chat Report, Inbound IVR Report, Inbound Forecasting Report, Advanced Forecasting Report, Outbound Calling Report, Outbound Summary Interval Report, Outbound IVR Report, Callmenu Survey Report, Outbound Lead Source Report, Fronter - Closer Report, Fronter - Closer Detail Report, Lists Campaign Statuses Report, Lists Statuses Report, Campaign Status List Report, Export Calls Report, Export Leads Report, Agent Time Detail, Agent Status Detail, Agent Inbound Status Summary, Agent Performance Detail, Team Performance Detail, Performance Comparison Report, Single Agent Daily, Single Agent Daily Time, User Group Login Report, User Group Hourly Report, User Group Detail Hourly Report, User Timeclock Report, User Group Timeclock Status Report, User Timeclock Detail Report, Server Performance Report, Administration Change Log, List Update Stats, User Stats, User Time Sheet, Download List, Dialer Inventory Report, Custom Reports Links, CallCard Search, Maximum System Stats, Maximum Stats Detail, Search Leads Logs, Email Log Report, Lists Pass Report, Called Counts List IDs Report, Front Page System Summary, Report Page Servers Summary, Admin Utilities Page, Agent Debug Log Report, Agent Parked Call Report, Agent-Manager Chat Log, Recording Access Log Report, API Log Report, Real-Time Monitoring Log Report, AMD Log Report, SIP Event Report, Caller ID Log Report, Quality Control Report, Settings Compare, Phone Stats, VERM QA Links';
 
 $Vtables = 'NONE,log_noanswer,did_agent_log,contact_information';
 
@@ -2706,6 +2706,10 @@ if (isset($_GET["allow_web_debug"]))			{$allow_web_debug=$_GET["allow_web_debug"
 	elseif (isset($_POST["allow_web_debug"]))	{$allow_web_debug=$_POST["allow_web_debug"];}
 if (isset($_GET["ig_xfer_list_sort"]))			{$ig_xfer_list_sort=$_GET["ig_xfer_list_sort"];}
 	elseif (isset($_POST["ig_xfer_list_sort"]))	{$ig_xfer_list_sort=$_POST["ig_xfer_list_sort"];}
+if (isset($_GET["pre_filter_recent_call"]))				{$pre_filter_recent_call=$_GET["pre_filter_recent_call"];}
+	elseif (isset($_POST["pre_filter_recent_call"]))	{$pre_filter_recent_call=$_POST["pre_filter_recent_call"];}
+if (isset($_GET["pre_filter_recent_extension"]))			{$pre_filter_recent_extension=$_GET["pre_filter_recent_extension"];}
+	elseif (isset($_POST["pre_filter_recent_extension"]))	{$pre_filter_recent_extension=$_POST["pre_filter_recent_extension"];}
 
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
@@ -3838,6 +3842,8 @@ if ($non_latin < 1)
 	$call_limit_24hour_override = preg_replace('/[^-_0-9a-zA-Z]/','',$call_limit_24hour_override);
 	$in_queue_nanque_exceptions = preg_replace('/[^-_0-9a-zA-Z]/','',$in_queue_nanque_exceptions);
 	$queue_group = preg_replace('/[^-_0-9a-zA-Z]/','',$queue_group);
+	$pre_filter_recent_call = preg_replace('/[^-_0-9a-zA-Z]/','',$pre_filter_recent_call);
+	$pre_filter_recent_extension = preg_replace('/[^-_0-9a-zA-Z]/','',$pre_filter_recent_extension);
 
 	### ALPHA-NUMERIC and underscore 
 	$qc_statuses_id = preg_replace('/[^_0-9a-zA-Z]/','',$qc_statuses_id);
@@ -4554,6 +4560,8 @@ else
 	$call_limit_24hour_override = preg_replace('/[^-_0-9\p{L}]/u','',$call_limit_24hour_override);
 	$in_queue_nanque_exceptions = preg_replace('/[^-_0-9\p{L}]/u','',$in_queue_nanque_exceptions);
 	$queue_group = preg_replace('/[^-_0-9\p{L}]/u','',$queue_group);
+	$pre_filter_recent_call = preg_replace('/[^-_0-9\p{L}]/u','',$pre_filter_recent_call);
+	$pre_filter_recent_extension = preg_replace('/[^-_0-9\p{L}]/u','',$pre_filter_recent_extension);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
 	$menu_timeout_prompt = preg_replace('/[^-\/\|\._0-9\p{L}]/u','',$menu_timeout_prompt);
@@ -5891,12 +5899,13 @@ if ($SSscript_remove_js > 0)
 # 220328-1420 - Disallow adding 'INCALL','QUEUE' statuses in Auto-Alt-Dial and Lead Recycling
 # 220429-1111 - Code cleanup and more optional DB output for queries
 # 220506-0905 - Added ig_xfer_list_sort campaign setting
+# 220510-0822 - Added pre_filter_recent_call DID settings and Inbound DID Detail Report
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-855a';
-$build = '220506-0905';
+$admin_version = '2.14-856a';
+$build = '220510-0822';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -11156,6 +11165,7 @@ if ($ADD==192111111111)
 		<option value='CALLS_IN_QUEUE_COUNT'>"._QXZ("CALLS_IN_QUEUE_COUNT")."</option>
 		<option value='CAMPAIGN_LIST'>"._QXZ("CAMPAIGN_LIST")."</option>
 		<option value='DIAL_TIMEOUTS'>"._QXZ("DIAL_TIMEOUTS")."</option>
+		<option value='DID_RECENT_CALL'>"._QXZ("DID_RECENT_CALL")."</option>
 		<option value='DISPO_FILTER'>"._QXZ("DISPO_FILTER")."</option>
 		<option value='EMAIL_TEMPLATE'>"._QXZ("EMAIL_TEMPLATE")."</option>
 		<option value='INGROUP_LIST'>"._QXZ("INGROUP_LIST")."</option>
@@ -13565,7 +13575,7 @@ if ($ADD==2411)
 				}
 			else
 				{
-				$stmtA="INSERT INTO vicidial_inbound_dids (did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension,did_carrier_description,inbound_route_answer) SELECT \"$did_pattern\",\"$did_description\",did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension,did_carrier_description,inbound_route_answer from vicidial_inbound_dids where did_id=\"$source_did\";";
+				$stmtA="INSERT INTO vicidial_inbound_dids (did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension,did_carrier_description,inbound_route_answer,pre_filter_recent_call,pre_filter_recent_extension) SELECT \"$did_pattern\",\"$did_description\",did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension,did_carrier_description,inbound_route_answer,pre_filter_recent_call,pre_filter_recent_extension from vicidial_inbound_dids where did_id=\"$source_did\";";
 				$rslt=mysql_to_mysqli($stmtA, $link);
 
 				$stmt="SELECT did_id from vicidial_inbound_dids where did_pattern='$did_pattern';";
@@ -18130,7 +18140,7 @@ if ($ADD==4311)
 				}
 			echo "<br><B>"._QXZ("DID MODIFIED").": $did_pattern</B>\n";
 
-			$stmt="UPDATE vicidial_inbound_dids set did_pattern='$did_pattern',did_description='$did_description',did_active='$did_active',did_route='$did_route',extension='$extension',exten_context='$exten_context',voicemail_ext='$voicemail_ext',phone='$phone',server_ip='$server_ip',user='$user',user_unavailable_action='$user_unavailable_action',user_route_settings_ingroup='$user_route_settings_ingroup',group_id='$group_id',call_handle_method='$call_handle_method',agent_search_method='$agent_search_method',list_id='$list_id',campaign_id='$campaign_id',phone_code='$phone_code',menu_id='$menu_id',record_call='$record_call',filter_inbound_number='$filter_inbound_number',filter_phone_group_id='$filter_phone_group_id',filter_url='" . mysqli_real_escape_string($link, $filter_url) . "',filter_action='$filter_action',filter_extension='$filter_extension',filter_exten_context='$filter_exten_context',filter_voicemail_ext='$filter_voicemail_ext',filter_phone='$filter_phone',filter_server_ip='$filter_server_ip',filter_user='$filter_user',filter_user_unavailable_action='$filter_user_unavailable_action',filter_user_route_settings_ingroup='$filter_user_route_settings_ingroup',filter_group_id='$filter_group_id',filter_call_handle_method='$filter_call_handle_method',filter_agent_search_method='$filter_agent_search_method',filter_list_id='$filter_list_id',filter_campaign_id='$filter_campaign_id',filter_phone_code='$filter_phone_code',filter_menu_id='$filter_menu_id',filter_clean_cid_number='$filter_clean_cid_number',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five',user_group='$user_group',filter_dnc_campaign='$filter_dnc_campaign',filter_url_did_redirect='$filter_url_did_redirect',no_agent_ingroup_redirect='$no_agent_ingroup_redirect',no_agent_ingroup_id='$no_agent_ingroup_id',no_agent_ingroup_extension='$no_agent_ingroup_extension',pre_filter_phone_group_id='$pre_filter_phone_group_id',pre_filter_extension='$pre_filter_extension',max_queue_ingroup_calls='$max_queue_ingroup_calls',max_queue_ingroup_id='$max_queue_ingroup_id',max_queue_ingroup_extension='$max_queue_ingroup_extension',did_carrier_description='$did_carrier_description',inbound_route_answer='$inbound_route_answer'$did_entry_list_idSQL where did_id='$did_id';";
+			$stmt="UPDATE vicidial_inbound_dids set did_pattern='$did_pattern',did_description='$did_description',did_active='$did_active',did_route='$did_route',extension='$extension',exten_context='$exten_context',voicemail_ext='$voicemail_ext',phone='$phone',server_ip='$server_ip',user='$user',user_unavailable_action='$user_unavailable_action',user_route_settings_ingroup='$user_route_settings_ingroup',group_id='$group_id',call_handle_method='$call_handle_method',agent_search_method='$agent_search_method',list_id='$list_id',campaign_id='$campaign_id',phone_code='$phone_code',menu_id='$menu_id',record_call='$record_call',filter_inbound_number='$filter_inbound_number',filter_phone_group_id='$filter_phone_group_id',filter_url='" . mysqli_real_escape_string($link, $filter_url) . "',filter_action='$filter_action',filter_extension='$filter_extension',filter_exten_context='$filter_exten_context',filter_voicemail_ext='$filter_voicemail_ext',filter_phone='$filter_phone',filter_server_ip='$filter_server_ip',filter_user='$filter_user',filter_user_unavailable_action='$filter_user_unavailable_action',filter_user_route_settings_ingroup='$filter_user_route_settings_ingroup',filter_group_id='$filter_group_id',filter_call_handle_method='$filter_call_handle_method',filter_agent_search_method='$filter_agent_search_method',filter_list_id='$filter_list_id',filter_campaign_id='$filter_campaign_id',filter_phone_code='$filter_phone_code',filter_menu_id='$filter_menu_id',filter_clean_cid_number='$filter_clean_cid_number',custom_one='$custom_one',custom_two='$custom_two',custom_three='$custom_three',custom_four='$custom_four',custom_five='$custom_five',user_group='$user_group',filter_dnc_campaign='$filter_dnc_campaign',filter_url_did_redirect='$filter_url_did_redirect',no_agent_ingroup_redirect='$no_agent_ingroup_redirect',no_agent_ingroup_id='$no_agent_ingroup_id',no_agent_ingroup_extension='$no_agent_ingroup_extension',pre_filter_phone_group_id='$pre_filter_phone_group_id',pre_filter_extension='$pre_filter_extension',max_queue_ingroup_calls='$max_queue_ingroup_calls',max_queue_ingroup_id='$max_queue_ingroup_id',max_queue_ingroup_extension='$max_queue_ingroup_extension',did_carrier_description='$did_carrier_description',inbound_route_answer='$inbound_route_answer',pre_filter_recent_call='$pre_filter_recent_call',pre_filter_recent_extension='$pre_filter_recent_extension'$did_entry_list_idSQL where did_id='$did_id';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 
 			### LOG INSERTION Admin Log Table ###
@@ -35511,7 +35521,7 @@ if ($ADD==3311)
 		$didSQL = "did_id='$did_id'";
 		if ( (strlen($did_id)<1) and (strlen($did_pattern)>0) )
 			{$didSQL = "did_pattern='$did_pattern'";}
-		$stmt="SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension,did_carrier_description,inbound_route_answer from vicidial_inbound_dids where $didSQL $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT did_id,did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension,did_carrier_description,inbound_route_answer,pre_filter_recent_call,pre_filter_recent_extension from vicidial_inbound_dids where $didSQL $LOGadmin_viewable_groupsSQL;";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -35578,6 +35588,8 @@ if ($ADD==3311)
 		$max_queue_ingroup_extension = $row[58];
 		$did_carrier_description = $row[59];
 		$inbound_route_answer =	$row[60];
+		$pre_filter_recent_call =	$row[61];
+		$pre_filter_recent_extension =	$row[62];
 
 		$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns $whereLOGallowed_campaignsSQL order by campaign_id;";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -35927,6 +35939,39 @@ if ($ADD==3311)
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"$PHP_SELF?ADD=3711&filter_phone_group_id=$pre_filter_phone_group_id\">"._QXZ("Pre-Filter Phone Group ID").":</a> </td><td align=left><select size=1 name=pre_filter_phone_group_id>$Fgroups_list<option value='$pre_filter_phone_group_id' SELECTED>"._QXZ("$pre_filter_phone_group_id")."</option><option value=\"\">---"._QXZ("NONE")."---</option></select>$NWB#inbound_dids-pre_filter_phone_group_id$NWE</td></tr>\n";
 
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Pre-Filter Phone Group DID").": </td><td align=left><input type=text name=pre_filter_extension size=40 maxlength=50 value=\"$pre_filter_extension\">$NWB#inbound_dids-pre_filter_extension$NWE</td></tr>\n";
+
+
+			##### get container listings for dynamic DID_RECENT_CALL container pulldown menu
+			$stmt="SELECT container_id,container_notes from vicidial_settings_containers where container_type='DID_RECENT_CALL' $LOGadmin_viewable_groupsSQL order by container_id;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$dtlc_to_print = mysqli_num_rows($rslt);
+			$pre_filter_recent_call_menu='';
+			$dtlc_selected=0;
+			$o=0;
+			while ($dtlc_to_print > $o) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				if (mb_strlen($rowx[1],'utf-8')>40)
+					{$rowx[1] = mb_substr($rowx[1],0,40,'utf-8') . '...';}
+				$pre_filter_recent_call_menu .= "<option ";
+				if ($pre_filter_recent_call == "$rowx[0]") 
+					{
+					$pre_filter_recent_call_menu .= "SELECTED ";
+					$dtlc_selected++;
+					}
+				$pre_filter_recent_call_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+				$o++;
+				}
+
+			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>";
+			if ($dtlc_selected > 0)
+				{echo "<a href=\"$PHP_SELF?ADD=392111111111&container_id=$pre_filter_recent_call\">"._QXZ("Pre-Filter Recent Call")."</a>";}
+			else
+				{echo _QXZ("Pre-Filter Recent Call");}
+			echo ": </td><td align=left nowrap><select size=1 name=pre_filter_recent_call><option value=''>"._QXZ("DISABLED")."</option>$pre_filter_recent_call_menu</select>$NWB#inbound_dids-pre_filter_recent_call$NWE</td></tr>\n";
+
+			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Pre-Filter Recent Call DID").": </td><td align=left><input type=text name=pre_filter_recent_extension size=40 maxlength=50 value=\"$pre_filter_recent_extension\">$NWB#inbound_dids-pre_filter_recent_extension$NWE</td></tr>\n";
+
 			}
 
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Filter Inbound Number").": </td><td align=left><select size=1 name=filter_inbound_number><option value=\"DISABLED\">"._QXZ("DISABLED")."</option><option value=\"GROUP\">"._QXZ("GROUP")."</option><option value=\"URL\">"._QXZ("URL")."</option><option value=\"DNC_INTERNAL\">"._QXZ("DNC_INTERNAL")."</option><option value=\"DNC_CAMPAIGN\">"._QXZ("DNC_CAMPAIGN")."</option><option value=\"GROUP_AREACODE\">"._QXZ("GROUP_AREACODE")."</option><option value=\"$filter_inbound_number\" SELECTED>"._QXZ("$filter_inbound_number")."</option></select>$NWB#inbound_dids-filter_inbound_number$NWE</td></tr>\n";
@@ -40751,6 +40796,7 @@ if ($ADD==392111111111)
 		<option value='CALLS_IN_QUEUE_COUNT'>"._QXZ("CALLS_IN_QUEUE_COUNT")."</option>
 		<option value='CAMPAIGN_LIST'>"._QXZ("CAMPAIGN_LIST")."</option>
 		<option value='DIAL_TIMEOUTS'>"._QXZ("DIAL_TIMEOUTS")."</option>
+		<option value='DID_RECENT_CALL'>"._QXZ("DID_RECENT_CALL")."</option>
 		<option value='DISPO_FILTER'>"._QXZ("DISPO_FILTER")."</option>
 		<option value='EMAIL_TEMPLATE'>"._QXZ("EMAIL_TEMPLATE")."</option>
 		<option value='INGROUP_LIST'>"._QXZ("INGROUP_LIST")."</option>
@@ -40819,6 +40865,23 @@ if ($ADD==392111111111)
 				{
 				$row=mysqli_fetch_row($rslt);
 				echo "<TR><TD><a href=\"$PHP_SELF?ADD=3111&group_id=$row[0]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
+				$o++;
+				}
+
+			echo "</TABLE><BR>\n";
+
+			echo "<B>"._QXZ("INBOUND DIDS USING THIS SETTINGS CONTAINER").":</B><BR>\n";
+			echo "<TABLE>\n";
+
+			$stmt="SELECT did_pattern,did_description,did_id from vicidial_inbound_dids where ( (pre_filter_recent_call='$container_id') or (pre_filter_recent_call='$container_id') ) $LOGadmin_viewable_groupsSQL;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$did_to_print = mysqli_num_rows($rslt);
+			if ($DB > 0) {echo "$did_to_print|$stmt<br>\n";}
+			$o=0;
+			while ($did_to_print > $o) 
+				{
+				$row=mysqli_fetch_row($rslt);
+				echo "<TR><TD><a href=\"$PHP_SELF?ADD=3311&did_id=$row[2]\">$row[0] </a></TD><TD> $row[1]<BR></TD></TR>\n";
 				$o++;
 				}
 
@@ -48638,6 +48701,7 @@ if ($ADD==999994)
 		echo "<LI><a href=\"AST_hangup_cause_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Hangup Cause Report")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_SIP_event_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("SIP Event Report")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_AMD_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("AMD Log Report")."</a></FONT>\n";
+		echo "<LI><a href=\"AST_DIDdetail.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Inbound DID Detail Report")."</a></FONT>\n";
 		if ($KHOMP_enabled > 0)
 			{echo "<LI><a href=\"KHOMP_admin.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Dialer KHOMP Admin Tool")."</a></FONT>\n";}
 		echo "<LI><a href=\"asterisk_debug.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Asterisk Debug Page")."</a></FONT>\n";

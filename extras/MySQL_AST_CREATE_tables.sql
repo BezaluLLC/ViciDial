@@ -2279,6 +2279,8 @@ max_queue_ingroup_id VARCHAR(20) default '',
 max_queue_ingroup_extension VARCHAR(50) default '9998811112',
 did_carrier_description VARCHAR(255) default '',
 inbound_route_answer ENUM('Y','N') DEFAULT 'Y',
+pre_filter_recent_call VARCHAR(20) default '',
+pre_filter_recent_extension VARCHAR(50) default '',
 unique index (did_pattern),
 index (group_id)
 ) ENGINE=MyISAM;
@@ -5080,4 +5082,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1658',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1659',db_schema_update_date=NOW(),reload_timestamp=NOW();
