@@ -693,7 +693,8 @@ mobile_number VARCHAR(20) default '',
 two_factor_override  ENUM('NOT_ACTIVE','ENABLED','DISABLED') default 'NOT_ACTIVE',
 manual_dial_filter VARCHAR(50) default 'DISABLED',
 user_location VARCHAR(100) default '',
-download_invalid_files ENUM('0','1') default '0'
+download_invalid_files ENUM('0','1') default '0',
+user_group_two VARCHAR(20) default ''
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -5083,4 +5084,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1660',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1661',db_schema_update_date=NOW(),reload_timestamp=NOW();

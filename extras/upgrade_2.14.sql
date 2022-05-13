@@ -1930,3 +1930,7 @@ UPDATE system_settings SET db_schema_version='1659',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD script_tab_frame_size VARCHAR(10) default 'DEFAULT';
 
 UPDATE system_settings SET db_schema_version='1660',db_schema_update_date=NOW() where db_schema_version < 1660;
+
+ALTER TABLE vicidial_users ADD user_group_two VARCHAR(20) default '';
+
+UPDATE system_settings SET db_schema_version='1661',db_schema_update_date=NOW() where db_schema_version < 1661;

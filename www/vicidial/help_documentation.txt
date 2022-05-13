@@ -1,4 +1,4 @@
-# version: 20220508100901
+# version: 20220513083301
 users-user	User ID	<QXZ>This field is where you put the users ID number, can be up to 8 digits in length, Must be at least 2 characters in length.</QXZ>
 users-pass	Password	<QXZ>This field is where you put the users password. Must be at least 2 characters in length. Only letters and numbers are allowed in user passwords. A medium strength user password will be at least 10 characters in length, and a strong user password will be at least 20 characters in length and have letters as well as at least one number. It is recommended that you use a longer password if possible, stringing together several unrelated words with no spaces, and a number somewhere in the string. The maximum size of a password is 100 characters.</QXZ>
 users-force_change_password	Force Change Password	<QXZ>If this option is set to Y then the user will be prompted to change their password the next time they log in to the administration webpage or the agent screen. Default is N.</QXZ>
@@ -12,6 +12,7 @@ users-active	Active	<QXZ>This field defines whether the user is active in the sy
 users-voicemail_id	Voicemail ID	<QXZ>This is the voicemail box that calls will be directed to in an AGENTDIRECT in-group at the drop time if the in-group has the drop method set to VOICEMAIL and the Voicemail field set to AGENTVMAIL.</QXZ>
 users-optional	User Code and Territory	<QXZ>These are optional fields.</QXZ>
 users-user_location	User Location	<QXZ>This menu allows you to choose the location for this user. This location can be used by some reports in the system. The options for this menu are defined in the USER_LOCATIONS_SYSTEM Settings Container in the Admin - Settings Containers web admin page. The format for this container is -location|description- without the dashes. Locations and their Descriptions must each be less than 100 characters in length. default is -blank-.</QXZ>
+users-user_group_two	VERM Secondary User Group	<QXZ>Optional secondary User Group designation only used by the VERM reporting module. Setting this to a User Group will not affect admin or agent operations or permissions in any way, it is only for specific reporting functions within specific reports. Default is -blank- for undefined.</QXZ>
 users-email	Email	<QXZ>This field can be used by some scripts and functions, like dispo_send_email.php and two-factor-authentication, referenced by the --A--agent_email--B-- variable.</QXZ>
 users-mobile_number	Mobile Number	<QXZ>This field can be used by two-factor-authentication, if your system is configured for it.</QXZ>
 users-user_nickname	User Nickname	<QXZ>Optional alternative name used for agent when chatting with customers in the customer website chat feature. Only used if populated.</QXZ>
