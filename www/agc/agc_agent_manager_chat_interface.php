@@ -18,6 +18,7 @@
 # 201117-2239 - Changes for better compatibility with non-latin data input
 # 210616-2056 - Added optional CORS support, see options.php for details
 # 220220-0855 - Added allow_web_debug system setting
+# 220518-2210 - Small fix for encrypted auth
 #
 
 $admin_version = '2.14-12';
@@ -94,7 +95,7 @@ if (file_exists('options.php'))
 	}
 
 $auth=0;
-$auth_message = user_authorization($user,$pass,'',0,0,0,0,'chat');
+$auth_message = user_authorization($user,$pass,'',0,1,0,0,'chat');
 if ($auth_message == 'GOOD')
 	{$auth=1;}
 
