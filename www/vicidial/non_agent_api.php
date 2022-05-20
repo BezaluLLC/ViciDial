@@ -194,10 +194,11 @@
 # 220307-0937 - Added 'update_presets' function
 # 220310-0825 - Added DELETE action to the 'update_presets' function
 # 220312-0944 - Added vicidial_dial_cid_log logging
+# 220519-2206 - Small fix for 'update_lead' delete_lead feature
 #
 
-$version = '2.14-171';
-$build = '220312-0944';
+$version = '2.14-172';
+$build = '220519-2206';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -14878,6 +14879,11 @@ if ($function == 'update_lead')
 
 							if ( (strlen($VL_update_SQL)>6) or ($delete_lead=='Y') )
 								{
+								if (strlen($VL_update_SQL)>6)
+									{
+									$stmt = "UPDATE vicidial_list SET $VL_update_SQL where lead_id='$search_lead_id[$n]';";
+									$result_reason = "update_lead LEAD HAS BEEN UPDATED";
+									}
 								if ($delete_lead=='Y')
 									{
 									$stmt = "INSERT INTO vicidial_callbacks_archive SELECT * from vicidial_callbacks where lead_id='$search_lead_id[$n]';";
@@ -14892,11 +14898,6 @@ if ($function == 'update_lead')
 
 									$stmt = "DELETE from vicidial_list where lead_id='$search_lead_id[$n]';";
 									$result_reason = "update_lead LEAD HAS BEEN DELETED $VCBaffected_rows|$VCBAaffected_rows";
-									}
-								if (strlen($VL_update_SQL)>6)
-									{
-									$stmt = "UPDATE vicidial_list SET $VL_update_SQL where lead_id='$search_lead_id[$n]';";
-									$result_reason = "update_lead LEAD HAS BEEN UPDATED";
 									}
 								if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
 								$rslt=mysql_to_mysqli($stmt, $link);
