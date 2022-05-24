@@ -693,10 +693,11 @@
 # 220506-0902 - Added ig_xfer_list_sort campaign setting
 # 220510-1625 - Added script_tab_frame_size campaign setting
 # 220518-2209 - Small fix for encrypted auth
+# 220524-1846 - Fix for rare Dead audio trigger and blind monitor trigger issue #1361
 #
 
-$version = '2.14-661c';
-$build = '220518-2209';
+$version = '2.14-662c';
+$build = '220524-1846';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -6475,18 +6476,18 @@ function holiday_display(holiday_name)
 
 			if (consult_custom_go > 0)
 				{
-				basic_originate_call(manual_string,'NO','YES',dial_conf_exten,'NO',taskFromConf,threeway_cid,sending_group_alias,'',sending_preset_name,call_variables);
+				basic_originate_call(manual_string,'NO','YES',dial_conf_exten,'NO',taskFromConf,threeway_cid,sending_group_alias,'',sending_preset_name,call_variables,'');
 				}
 			}
 		else
-			{basic_originate_call(manual_string,'NO','NO','','','',threeway_cid,sending_group_alias,sending_preset_name,call_variables);}
+			{basic_originate_call(manual_string,'NO','NO','','','',threeway_cid,sending_group_alias,'',sending_preset_name,call_variables,'');}
 
 		MD_ring_secondS=0;
 		}
 
 // ################################################################################
 // Send Originate command to manager to place a phone call
-	function basic_originate_call(tasknum,taskprefix,taskreverse,taskdialvalue,tasknowait,taskconfxfer,taskcid,taskusegroupalias,taskalert,taskpresetname,taskvariables) 
+	function basic_originate_call(tasknum,taskprefix,taskreverse,taskdialvalue,tasknowait,taskconfxfer,taskcid,taskusegroupalias,taskalert,taskpresetname,taskvariables,taskplay) 
 		{
 		if (taskalert == '1')
 			{
@@ -6497,50 +6498,53 @@ function holiday_display(holiday_name)
 			}
 		else
 			{var alertquery = 'alertCID=0';}
-		var usegroupalias=0;
-		var consultativexfer_checked = 0;
-		if (document.vicidial_form.consultativexfer.checked==true)
-			{consultativexfer_checked = 1;}
-		var regCXFvars = new RegExp("CXFER","g");
-		var tasknum_string = tasknum.toString();
-		if ( (tasknum_string.match(regCXFvars)) || (consultativexfer_checked > 0) )
+
+		if ( (taskplay != 'DEAD') && (taskplay != 'BLIND') )
 			{
-			if (tasknum_string.match(regCXFvars))
+			var usegroupalias=0;
+			var consultativexfer_checked = 0;
+			if (document.vicidial_form.consultativexfer.checked==true)
+				{consultativexfer_checked = 1;}
+			var regCXFvars = new RegExp("CXFER","g");
+			var tasknum_string = tasknum.toString();
+			if ( (tasknum_string.match(regCXFvars)) || (consultativexfer_checked > 0) )
 				{
-				var Ctasknum = tasknum_string.replace(regCXFvars, '');
+				if (tasknum_string.match(regCXFvars))
+					{
+					var Ctasknum = tasknum_string.replace(regCXFvars, '');
+					if (Ctasknum.length < 2)
+						{Ctasknum = '90009';}
+					var agentdirect = '';
+					}
+				else
+					{
+					Ctasknum = '90009';
+					var agentdirect = tasknum_string;
+					}
+				var XfeRSelecT = document.getElementById("XfeRGrouP");
+				var XfeR_GrouP = XfeRSelecT.value;
+				if (API_selected_xfergroup.length > 1)
+					{var XfeR_GrouP = API_selected_xfergroup;}
+				tasknum = Ctasknum + "*" + XfeR_GrouP + '*CXFER*' + document.vicidial_form.lead_id.value + '**' + dialed_number + '*' + user + '*' + agentdirect + '*' + VD_live_call_secondS + '*';
+
+				if (consult_custom_sent < 1)
+					{CustomerData_update('NO');}
+				}
+			var regAXFvars = new RegExp("AXFER","g");
+			if (tasknum_string.match(regAXFvars))
+				{
+				var Ctasknum = tasknum_string.replace(regAXFvars, '');
 				if (Ctasknum.length < 2)
-					{Ctasknum = '90009';}
-				var agentdirect = '';
+					{Ctasknum = '83009';}
+				var closerxfercamptail = '_L';
+				if (closerxfercamptail.length < 3)
+					{closerxfercamptail = 'IVR';}
+				tasknum = Ctasknum + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value + '*' + campaign + '*' + closerxfercamptail + '*' + user + '**' + VD_live_call_secondS + '*';
+
+				if (consult_custom_sent < 1)
+					{CustomerData_update('NO');}
 				}
-			else
-				{
-				Ctasknum = '90009';
-				var agentdirect = tasknum_string;
-				}
-			var XfeRSelecT = document.getElementById("XfeRGrouP");
-			var XfeR_GrouP = XfeRSelecT.value;
-			if (API_selected_xfergroup.length > 1)
-				{var XfeR_GrouP = API_selected_xfergroup;}
-			tasknum = Ctasknum + "*" + XfeR_GrouP + '*CXFER*' + document.vicidial_form.lead_id.value + '**' + dialed_number + '*' + user + '*' + agentdirect + '*' + VD_live_call_secondS + '*';
-
-			if (consult_custom_sent < 1)
-				{CustomerData_update('NO');}
 			}
-		var regAXFvars = new RegExp("AXFER","g");
-		if (tasknum_string.match(regAXFvars))
-			{
-			var Ctasknum = tasknum_string.replace(regAXFvars, '');
-			if (Ctasknum.length < 2)
-				{Ctasknum = '83009';}
-			var closerxfercamptail = '_L';
-			if (closerxfercamptail.length < 3)
-				{closerxfercamptail = 'IVR';}
-			tasknum = Ctasknum + '*' + document.vicidial_form.phone_number.value + '*' + document.vicidial_form.lead_id.value + '*' + campaign + '*' + closerxfercamptail + '*' + user + '**' + VD_live_call_secondS + '*';
-
-			if (consult_custom_sent < 1)
-				{CustomerData_update('NO');}
-			}
-
 
 		var xmlhttp=false;
 		/*@cc_on @*/
@@ -9699,7 +9703,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					{
 					agent_dialed_number=1;
 					agent_dialed_type='MANUAL_OVERRIDE';
-					basic_originate_call(session_id,'NO','YES',MDDiaLOverridEform,'YES','','1','0');
+					basic_originate_call(session_id,'NO','YES',MDDiaLOverridEform,'YES','','1','0','','','','');
 					}
 				else
 					{
@@ -16398,7 +16402,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		var session_id_dial = session_id;
 		if (taskquiet == 'YES')
 			{session_id_dial = '7' + session_id};
-		basic_originate_call(CalL_XC_a_NuMber,'NO','YES',session_id_dial,'YES','','1','0');
+		basic_originate_call(CalL_XC_a_NuMber,'NO','YES',session_id_dial,'YES','','1','0','','','','');
 		}
 	function DtMf_PreSet_b_DiaL(taskquiet,DTBclick)
 		{
@@ -16409,7 +16413,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		var session_id_dial = session_id;
 		if (taskquiet == 'YES')
 			{session_id_dial = '7' + session_id};
-		basic_originate_call(CalL_XC_b_NuMber,'NO','YES',session_id_dial,'YES','','1','0');
+		basic_originate_call(CalL_XC_b_NuMber,'NO','YES',session_id_dial,'YES','','1','0','','','','');
 		}
 	function DtMf_PreSet_c_DiaL(taskquiet)
 		{
@@ -16417,7 +16421,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		var session_id_dial = session_id;
 		if (taskquiet == 'YES')
 			{session_id_dial = '7' + session_id};
-		basic_originate_call(CalL_XC_c_NuMber,'NO','YES',session_id_dial,'YES','','1','0');
+		basic_originate_call(CalL_XC_c_NuMber,'NO','YES',session_id_dial,'YES','','1','0','','','','');
 		}
 	function DtMf_PreSet_d_DiaL(taskquiet)
 		{
@@ -16425,7 +16429,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		var session_id_dial = session_id;
 		if (taskquiet == 'YES')
 			{session_id_dial = '7' + session_id};
-		basic_originate_call(CalL_XC_d_NuMber,'NO','YES',session_id_dial,'YES','','1','0');
+		basic_originate_call(CalL_XC_d_NuMber,'NO','YES',session_id_dial,'YES','','1','0','','','','');
 		}
 	function DtMf_PreSet_e_DiaL(taskquiet)
 		{
@@ -16433,7 +16437,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		var session_id_dial = session_id;
 		if (taskquiet == 'YES')
 			{session_id_dial = '7' + session_id};
-		basic_originate_call(CalL_XC_e_NuMber,'NO','YES',session_id_dial,'YES','','1','0');
+		basic_originate_call(CalL_XC_e_NuMber,'NO','YES',session_id_dial,'YES','','1','0','','','','');
 		}
 	function hangup_timer_xfer()
 		{
@@ -20165,7 +20169,7 @@ function phone_number_format(formatphone) {
 								{
 								if ( (dead_trigger_first_ran < 2) || ( (dead_trigger_first_ran > 1) && ( (dead_trigger_repeat=='REPEAT_ALL') || (dead_trigger_repeat=='REPEAT_AUDIO') ) ) )
 									{
-									basic_originate_call(dead_trigger_filename,'NO','YES',session_id,'YES','','1','0','1');
+									basic_originate_call(dead_trigger_filename,'NO','YES',session_id,'YES','','1','0','1','','','DEAD');
 									agent_events('dead_trigger_audio', CheckDEADcallCOUNT, aec);   aec++;
 									button_click_log = button_click_log + "" + SQLdate + "-----DeadTriggerAudio---" + dead_trigger_action + " " + dead_trigger_count + " " + dead_trigger_first_ran + " " + CheckDEADcallCOUNT + "|";
 									}
@@ -20354,7 +20358,7 @@ function phone_number_format(formatphone) {
 							}
 						if ( (blind_monitor_filename.length > 0) && ( (blind_monitor_warning=='AUDIO') || (blind_monitor_warning=='ALERT_AUDIO')|| (blind_monitor_warning=='NOTICE_AUDIO') || (blind_monitor_warning=='ALL') ) )
 							{
-							basic_originate_call(blind_monitor_filename,'NO','YES',session_id,'YES','','1','0','1');
+							basic_originate_call(blind_monitor_filename,'NO','YES',session_id,'YES','','1','0','1','','','BLIND');
 							}
 						blind_monitoring_now_trigger=0;
 						}
