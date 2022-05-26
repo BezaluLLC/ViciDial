@@ -155,9 +155,10 @@
 # 210924-2333 - Fix for calls_today issue at timeclock-end-of-day
 # 220310-0959 - Added purging of vicidial_sync_log table
 # 220312-0819 - Added CID Group Auto-Rotate to check for List use
+# 220526-1444 - Fix for CID auto-rotate functions
 #
 
-$build = '220312-0819';
+$build = '220526-1444';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -4989,9 +4990,9 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 	if ($DBX) {print "$stmtA\n";}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
+	$sthArowsCIDG=$sthA->rows;
 	$i=0;
-	while ($sthArows > $i)
+	while ($sthArowsCIDG > $i)
 		{
 		@aryA = $sthA->fetchrow_array;
 		$cid_group_id[$i] =					$aryA[0];
@@ -5008,7 +5009,7 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 	if ($DB) {print "   CID Groups with Auto-Rotate enabled: $i\n";}
 
 	$i=0;
-	while ($sthArows > $i)
+	while ($sthArowsCIDG > $i)
 		{
 		$Rcampaign_calldate='';
 		$Rcampaign_id='';
