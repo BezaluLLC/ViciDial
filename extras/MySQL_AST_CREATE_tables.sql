@@ -1089,7 +1089,8 @@ auto_alt_threshold TINYINT(3) UNSIGNED default '0',
 pause_max_url TEXT,
 agent_hide_hangup ENUM('Y','N') default 'N',
 ig_xfer_list_sort ENUM('GROUP_ID_UP','GROUP_ID_DOWN','GROUP_NAME_UP','GROUP_NAME_DOWN','PRIORITY_UP','PRIORITY_DOWN') default 'GROUP_ID_UP',
-script_tab_frame_size VARCHAR(10) default 'DEFAULT'
+script_tab_frame_size VARCHAR(10) default 'DEFAULT',
+max_logged_in_agents SMALLINT(5) UNSIGNED default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -1135,7 +1136,8 @@ qc_scorecard_id VARCHAR(20) DEFAULT '',
 qc_statuses_id VARCHAR(20) DEFAULT '',
 qc_web_form_address VARCHAR(255) DEFAULT '',
 auto_alt_threshold TINYINT(3) default '-1',
-cid_group_id VARCHAR(20) default '---DISABLED---'
+cid_group_id VARCHAR(20) default '---DISABLED---',
+dial_prefix VARCHAR(20) default ''
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_statuses (
@@ -1960,7 +1962,8 @@ call_limit_24hour ENUM('0','1') default '0',
 call_limit_24hour_reset DATETIME default '2000-01-01 00:00:01',
 allowed_sip_stacks ENUM('SIP','PJSIP','SIP_and_PJSIP') default 'SIP',
 agent_hide_hangup ENUM('1','0','2','3','4','5','6') default '0',
-allow_web_debug ENUM('0','1','2','3','4','5','6') default '0'
+allow_web_debug ENUM('0','1','2','3','4','5','6') default '0',
+max_logged_in_agents ENUM('0','1','2','3','4','5','6','7') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -5084,4 +5087,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1661',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1662',db_schema_update_date=NOW(),reload_timestamp=NOW();

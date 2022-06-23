@@ -694,10 +694,11 @@
 # 220510-1625 - Added script_tab_frame_size campaign setting
 # 220518-2209 - Small fix for encrypted auth
 # 220524-1846 - Fix for rare Dead audio trigger and blind monitor trigger issue #1361
+# 220623-0911 - Added max_logged_in_agents campaign setting and list dial_prefix override
 #
 
-$version = '2.14-662c';
-$build = '220524-1846';
+$version = '2.14-663c';
+$build = '220623-0911';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -796,7 +797,7 @@ $random = (rand(1000000, 9999999) + 10000000);
 
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script,agent_push_events,agent_push_url,agent_logout_link,agentonly_callback_campaign_lock,manual_dial_validation,mute_recordings,enable_second_script,enable_first_webform,recording_buttons,outbound_cid_any,browser_call_alerts,manual_dial_phone_strip,require_password_length,pass_hash_enabled,agent_hidden_sound_seconds,agent_hidden_sound,agent_hidden_sound_volume,agent_screen_timer,agent_hide_hangup,allow_web_debug FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script,agent_push_events,agent_push_url,agent_logout_link,agentonly_callback_campaign_lock,manual_dial_validation,mute_recordings,enable_second_script,enable_first_webform,recording_buttons,outbound_cid_any,browser_call_alerts,manual_dial_phone_strip,require_password_length,pass_hash_enabled,agent_hidden_sound_seconds,agent_hidden_sound,agent_hidden_sound_volume,agent_screen_timer,agent_hide_hangup,allow_web_debug,max_logged_in_agents FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 #if ($DB) {echo "$stmt\n";}
@@ -856,6 +857,7 @@ if ($qm_conf_ct > 0)
 	$SSagent_screen_timer =				$row[49];
 	$SSagent_hide_hangup =				$row[50];
 	$SSallow_web_debug =				$row[51];
+	$SSmax_logged_in_agents =			$row[52];
 	if ( ($SSagent_hidden_sound == '---NONE---') or ($SSagent_hidden_sound == '') ) {$SSagent_hidden_sound_seconds=0;}
 	}
 else
@@ -1576,6 +1578,43 @@ else
 				{
 				$auth=0;
 				$auth_message='ERRCASE';
+				}
+			}
+		# check for campaign max agents
+		if($auth>0)
+			{
+			if ($SSmax_logged_in_agents > 0) 
+				{
+				$stmt="SELECT max_logged_in_agents from vicidial_campaigns where campaign_id='$VD_campaign' $LOGallowed_campaignsSQL;";
+				if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$camps_to_print = mysqli_num_rows($rslt);
+				if ($camps_to_print > 0) 
+					{
+					$max_logged_in_agents=999999999;
+					$rowx=mysqli_fetch_row($rslt);
+					$rowx[0]=preg_replace("/[^0-9]/","",$rowx[0]);
+					if (strlen($rowx[0]) > 0)
+						{$max_logged_in_agents = $rowx[0];}
+
+					$stmt = "SELECT count(*) FROM vicidial_live_agents where campaign_id='$VD_campaign' and user!='$VD_login';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$mvla_ct = mysqli_num_rows($rslt);
+					if ($mvla_ct > 0)
+						{
+						$rowx=mysqli_fetch_row($rslt);
+						$vla_camp_agents =	$rowx[0];
+						}
+
+					if ($max_logged_in_agents <= $vla_camp_agents)
+						{
+						$auth=0;
+						$auth_message='ERRCAMPAGENTS';
+						}
+					}
 				}
 			}
 
@@ -3219,6 +3258,8 @@ else
 				{$VDdisplayMESSAGE = _QXZ("You are already logged in, please log out of your other session first")."<br />";}
 			if ($auth_message == 'ERRAGENTS')
 				{$VDdisplayMESSAGE = _QXZ("Too many agents logged in, please contact your administrator")."<br />";}
+			if ($auth_message == 'ERRCAMPAGENTS')
+				{$VDdisplayMESSAGE = _QXZ("Too many agents logged in to this campaign, please contact your manager")."<br />";}
 			if ($auth_message == 'ERRCASE')
 				{$VDdisplayMESSAGE = _QXZ("Login incorrect, user names are case sensitive")."<br />";}
 			if ($auth_message == 'IPBLOCK')

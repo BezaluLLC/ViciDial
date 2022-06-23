@@ -1934,3 +1934,11 @@ UPDATE system_settings SET db_schema_version='1660',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_users ADD user_group_two VARCHAR(20) default '';
 
 UPDATE system_settings SET db_schema_version='1661',db_schema_update_date=NOW() where db_schema_version < 1661;
+
+ALTER TABLE vicidial_lists ADD dial_prefix VARCHAR(20) default '';
+
+ALTER TABLE system_settings ADD max_logged_in_agents ENUM('0','1','2','3','4','5','6','7') default '0';
+
+ALTER TABLE vicidial_campaigns ADD max_logged_in_agents SMALLINT(5) UNSIGNED default '0';
+
+UPDATE system_settings SET db_schema_version='1662',db_schema_update_date=NOW() where db_schema_version < 1662;

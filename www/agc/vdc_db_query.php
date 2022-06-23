@@ -524,10 +524,11 @@
 # 220212-0919 - Added pause_max_url_trigger input
 # 220219-0134 - Added allow_web_debug system setting
 # 220311-1709 - Added List CID Group Override option
+# 220623-1005 - Added List Dial Prefix Override option
 #
 
-$version = '2.14-417';
-$build = '220311-1709';
+$version = '2.14-418';
+$build = '220623-1005';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=876;
@@ -4424,10 +4425,11 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$LISTweb_form_address='';
 			$LISTweb_form_address_two='';
 			$LISTweb_form_address_three='';
+			$LISTdial_prefix='';
 			### check if there is a list_id override
 			if (strlen($list_id) > 1)
 				{
-				$stmt = "SELECT campaign_cid_override,web_form_address,web_form_address_two,web_form_address_three,list_description,default_xfer_group,cid_group_id FROM vicidial_lists where list_id='$list_id';";
+				$stmt = "SELECT campaign_cid_override,web_form_address,web_form_address_two,web_form_address_three,list_description,default_xfer_group,cid_group_id,dial_prefix FROM vicidial_lists where list_id='$list_id';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00245',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -4442,6 +4444,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 					$list_description =				$row[4];
 					$LISTdefault_xfer_group =		$row[5];
 					$LIST_cid_group_override =		$row[6];
+					$LISTdial_prefix =				$row[7];
 					if ( (strlen($LISTdefault_xfer_group)>0) and (!preg_match("/---NONE---/",$LISTdefault_xfer_group)) )
 						{$default_xfer_group = $LISTdefault_xfer_group;}
 					}
@@ -4579,6 +4582,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 				if ($DTL_override > 4) {$Local_dial_timeout = $DTL_override;}
 				$Local_dial_timeout = ($Local_dial_timeout * 1000);
 				if (strlen($dial_prefix) > 0) {$Local_out_prefix = "$dial_prefix";}
+				if (strlen($LISTdial_prefix) > 0) {$Local_out_prefix = "$LISTdial_prefix";}
 				if (strlen($campaign_cid) > 6) {$CCID = "$campaign_cid";   $CCID_on++;   $CCIDtype='CAMPAIGN_CID';}
 				### check for custom cid use
 
@@ -4854,7 +4858,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						}
 					}
 
-				if (preg_match("/x/i",$dial_prefix)) {$Local_out_prefix = '';}
+				if (preg_match("/x/i",$Local_out_prefix)) {$Local_out_prefix = '';}
 
 				$PADlead_id = sprintf("%010s", $lead_id);
 					while (strlen($PADlead_id) > 10) {$PADlead_id = substr("$PADlead_id", 1);}
@@ -6388,7 +6392,7 @@ if ($ACTION == 'manDiaLonly')
 		$Local_dial_timeout = ($Local_dial_timeout * 1000);
 		if (strlen($dial_prefix) > 0) {$Local_out_prefix = "$dial_prefix";}
 		if (strlen($campaign_cid) > 6) {$CCID = "$campaign_cid";   $CCID_on++;   $CCIDtype='CAMPAIGN_CID';}
-		if (preg_match("/x/i",$dial_prefix)) {$Local_out_prefix = '';}
+		if (preg_match("/x/i",$Local_out_prefix)) {$Local_out_prefix = '';}
 		$campaign_cid_override='';
 		### check if there is a list_id override
 		if (strlen($lead_id) > 1)
@@ -6408,7 +6412,7 @@ if ($ACTION == 'manDiaLonly')
 
 				if (strlen($list_id) > 1)
 					{
-					$stmt = "SELECT campaign_cid_override,web_form_address,web_form_address_two,web_form_address_three,list_description,cid_group_id FROM vicidial_lists where list_id='$list_id';";
+					$stmt = "SELECT campaign_cid_override,web_form_address,web_form_address_two,web_form_address_three,list_description,cid_group_id,dial_prefix FROM vicidial_lists where list_id='$list_id';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00247',$user,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
@@ -6422,6 +6426,9 @@ if ($ACTION == 'manDiaLonly')
 						$LISTweb_form_address_three =	$row[3];
 						$list_description =				$row[4];
 						$LIST_cid_group_override =		$row[5];
+						$LISTdial_prefix =				$row[6];
+						if (strlen($LISTdial_prefix) > 0) {$Local_out_prefix = "$LISTdial_prefix";}
+						if (preg_match("/x/i",$Local_out_prefix)) {$Local_out_prefix = '';}
 						}
 					}
 				}
