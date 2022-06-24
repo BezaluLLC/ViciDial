@@ -1609,7 +1609,7 @@ else
 						$vla_camp_agents =	$rowx[0];
 						}
 
-					if ($max_logged_in_agents <= $vla_camp_agents)
+					if ( ($max_logged_in_agents <= $vla_camp_agents) and ($max_logged_in_agents > 0) )
 						{
 						$auth=0;
 						$auth_message='ERRCAMPAGENTS';
