@@ -525,10 +525,11 @@
 # 220219-0134 - Added allow_web_debug system setting
 # 220311-1709 - Added List CID Group Override option
 # 220623-1005 - Added List Dial Prefix Override option
+# 220625-1630 - Fix for Manual Dial NONE_WITH_ options dialing proper number
 #
 
-$version = '2.14-418';
-$build = '220623-1005';
+$version = '2.14-419';
+$build = '220625-1630';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=876;
@@ -2406,7 +2407,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00617',$user,$server_ip,$session_name,$one_mysql_log);}
 							if ($DB) {echo "$stmt\n";}
 							$man_leadID_ct = mysqli_num_rows($rslt);
-							if ($man_leadID_ct > 0) {$MDF_search_flag='ALT';   $agent_dialed_type='ALT';}
+							if ($man_leadID_ct > 0) {$MDF_search_flag='ALT';   $agent_dialed_type='ALT';	$agent_dialed_number=$phone_number;}
 
 							if ( ($man_leadID_ct < 1) and ( (preg_match("/WITH_ALT_ADDR3/",$manual_dial_search_filter)) or (preg_match("/NONE_WITH_ALT_ADDR3/",$manual_dial_filter)) ) )
 								{
@@ -2415,7 +2416,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 									if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00618',$user,$server_ip,$session_name,$one_mysql_log);}
 								if ($DB) {echo "$stmt\n";}
 								$man_leadID_ct = mysqli_num_rows($rslt);
-								if ($man_leadID_ct > 0) {$MDF_search_flag='ADDR3';   $agent_dialed_type='ADDR3';}
+								if ($man_leadID_ct > 0) {$MDF_search_flag='ADDR3';   $agent_dialed_type='ADDR3';	$agent_dialed_number=$phone_number;}
 								}
 							}
 						}
