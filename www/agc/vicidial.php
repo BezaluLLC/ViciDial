@@ -695,10 +695,11 @@
 # 220518-2209 - Small fix for encrypted auth
 # 220524-1846 - Fix for rare Dead audio trigger and blind monitor trigger issue #1361
 # 220623-0911 - Added max_logged_in_agents campaign setting and list dial_prefix override
+# 220725-0839 - Fix for rare Agent Pause Max issue with previewed manual dial calls that don't answer
 #
 
-$version = '2.14-663c';
-$build = '220623-0911';
+$version = '2.14-664c';
+$build = '220725-0839';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -11912,6 +11913,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			//	CalL_ScripT_color='';
 				xfer_agent_selected=0;
 				three_way_call_cid = orig_three_way_call_cid;
+				VDRP_stage_seconds=0;
 				}
 			}
 		}
@@ -11923,7 +11925,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		{
 		if (APRclick=='YES')
 			{button_click_log = button_click_log + "" + SQLdate + "-----AutoDial_ReSume_PauSe---" + taskaction + " " + taskagentlog + " " + taskstatuschange + " " + temp_reason + " " + temp_auto + " " + temp_auto_code + "|";}
-		if (VD_live_customer_call==1)
+		if ( (VD_live_customer_call==1) || (MD_channel_look==1) )
 			{
 			alert_box("<?php echo _QXZ("STILL A LIVE CALL! You must hang it up first."); ?>\n" + VD_live_customer_call + "\n" + VDRP_stage);
 			button_click_log = button_click_log + "" + SQLdate + "-----ON_CALL_pause_resume_stopped---" + VD_live_customer_call + " " + VDRP_stage + "|";
@@ -14455,6 +14457,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				cid_lock=0;
 				MD_dial_timed_out=0;
 				MDcheck_for_answer=0;
+				VDRP_stage_seconds=0;
 
 			//	UPDATE VICIDIAL_LOG ENTRY FOR THIS CALL PROCESS
 				DialLog("end",nodeletevdac);
@@ -17091,7 +17094,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			{alert("<?php echo _QXZ("You cannot log out during a Dial attempt. Wait 50 seconds for the dial to fail out if it is not answered"); ?>");}
 		else
 			{
-			if (VD_live_customer_call==1)
+			if ( (VD_live_customer_call==1) || (MD_channel_look==1) )
 				{
 				alert("<?php echo _QXZ("STILL A LIVE CALL! Hang it up then you can log out."); ?>\n" + VD_live_customer_call);
 				}
@@ -20732,7 +20735,7 @@ function phone_number_format(formatphone) {
 			var customer_local_time = customer_date + " " + customer_time;
 			document.getElementById("custdatetime").innerHTML = customer_local_time;
 			}
-		if ( (VDRP_stage=='PAUSED') && (VD_live_customer_call < 1) )
+		if ( (VDRP_stage=='PAUSED') && (VD_live_customer_call < 1) && (MD_channel_look!=1) )
 			{
 			VDRP_stage_seconds++;
 		//	document.getElementById("debugbottomspan").innerHTML = "PAUSED SECONDS " + VDRP_stage_seconds;
