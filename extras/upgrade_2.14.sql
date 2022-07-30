@@ -1942,3 +1942,9 @@ ALTER TABLE system_settings ADD max_logged_in_agents ENUM('0','1','2','3','4','5
 ALTER TABLE vicidial_campaigns ADD max_logged_in_agents SMALLINT(5) UNSIGNED default '0';
 
 UPDATE system_settings SET db_schema_version='1662',db_schema_update_date=NOW() where db_schema_version < 1662;
+
+ALTER TABLE system_settings ADD user_codes_admin ENUM('0','1','2','3','4','5','6','7') default '0';
+
+INSERT INTO vicidial_settings_containers(container_id,container_notes,container_type,user_group,container_entry) VALUES ('USER_CODES_SYSTEM','User Codes List','OTHER','---ALL---','');
+
+UPDATE system_settings SET db_schema_version='1663',db_schema_update_date=NOW() where db_schema_version < 1663;
