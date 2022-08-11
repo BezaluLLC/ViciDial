@@ -5919,12 +5919,13 @@ if ($SSscript_remove_js > 0)
 # 220513-0819 - Added user_group_two to User Modify screen
 # 220623-0824 - Added max_logged_in_agents campaign/system settings and dial_prefix list setting
 # 220730-0859 - Added user_codes_admin user/system setting
+# 220811-0854 - Added webphone inticator"(w)" to Phone Listing page
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-860a';
-$build = '220730-0859';
+$admin_version = '2.14-861a';
+$build = '220811-0854';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -45351,7 +45352,7 @@ if ($ADD==10000000000)
 			}
 		}
 
-	$stmt="SELECT extension,protocol,server_ip,dialplan_number,voicemail_id,status,fullname,messages,old_messages,user_group from phones $whereLOGadmin_viewable_groupsSQL $SQLorder $limitSQL";
+	$stmt="SELECT extension,protocol,server_ip,dialplan_number,voicemail_id,status,fullname,messages,old_messages,user_group,is_webphone from phones $whereLOGadmin_viewable_groupsSQL $SQLorder $limitSQL";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$phones_to_print = mysqli_num_rows($rslt);
 
@@ -45379,8 +45380,10 @@ if ($ADD==10000000000)
 			{$bgcolor='class="records_list_x"';} 
 		else
 			{$bgcolor='class="records_list_y"';}
+		$TEMPprotocol = $row[1];
+		if ( ($row[10] == 'Y') or ($row[10] == 'Y_API_LAUNCH') ) {$TEMPprotocol = "$row[1]<i>(w)</i>";}
 		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=31111111111&extension=$row[0]&server_ip=$row[2]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=31111111111&extension=$row[0]&server_ip=$row[2]\"><font size=1 color=black>$row[0]</font></a></td>
-		<td><font size=1>$row[1]</td>
+		<td><font size=1>$TEMPprotocol</td>
 		<td><font size=1>"._QXZ("$row[2]")."</td>
 		<td><font size=1>$row[3]</td>
 		<td><font size=1>$row[4]</td>
