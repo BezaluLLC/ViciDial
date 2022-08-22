@@ -30,6 +30,7 @@
 # 220122-1700 - Added more variable filtering
 # 220221-0938 - Added allow_web_debug system setting
 # 220811-1440 - Modified for date ranges instead of single-day
+# 220822-1728 - Changed total login time calculation to work for multi-day ranges
 #
 
 $startMS = microtime();
@@ -496,7 +497,7 @@ if ($calls_summary)
 	$pfWAIT_AVG_MS =		sprintf("%6s", $WAIT_AVG_MS);
 	$pfWRAPUP_AVG_MS =		sprintf("%6s", $WRAPUP_AVG_MS);
 
-	$MAIN.=_QXZ("TOTAL CALLS TAKEN",17).": $row[0]     <a href='$PHP_SELF?calls_summary=$calls_summary&agent=$agent&query_date=$query_date&file_download=1&search_archived_data=$search_archived_data'>["._QXZ("DOWNLOAD")."]</a>\n";
+	$MAIN.=_QXZ("TOTAL CALLS TAKEN",17).": $row[0]     <a href='$PHP_SELF?calls_summary=$calls_summary&agent=$agent&query_date=$query_date&end_date=$end_date&file_download=1&search_archived_data=$search_archived_data'>["._QXZ("DOWNLOAD")."]</a>\n";
 	$MAIN.=_QXZ("TALK TIME:",24)." $pfTALK_TIME_HMS "._QXZ("AVERAGE",11,"r").": $pfTALK_AVG_MS\n";
 	$MAIN.=_QXZ("PAUSE TIME:",24)." $pfPAUSE_TIME_HMS "._QXZ("AVERAGE",11,"r").": $pfPAUSE_AVG_MS\n";
 	$MAIN.=_QXZ("WAIT TIME:",24)." $pfWAIT_TIME_HMS "._QXZ("AVERAGE",11,"r").": $pfWAIT_AVG_MS\n";
@@ -513,7 +514,7 @@ if ($calls_summary)
 	}
 else
 	{
-	$MAIN.="<a href=\"$PHP_SELF?calls_summary=1&agent=$agent&query_date=$query_date\">"._QXZ("Call Activity Summary")."</a>\n\n";
+	$MAIN.="<a href=\"$PHP_SELF?calls_summary=1&agent=$agent&query_date=$query_date&end_date=$end_date\">"._QXZ("Call Activity Summary")."</a>\n\n";
 
 	}
 
@@ -537,7 +538,14 @@ $end = $row[1];
 
 $CSV_login.="\"\",\""._QXZ("LAST LOG ACTIVITY").":\",\"$row[0]\"\n";
 
-$login_time = ($end - $start);
+# $login_time = ($end - $start);
+
+$total_stmt="select sum(talk_sec+pause_sec+wait_sec+dispo_sec) from ".$vicidial_agent_log_table." where event_time <= '" . mysqli_real_escape_string($link, $end_date_END) . "' and event_time >= '" . mysqli_real_escape_string($link, $query_date_BEGIN) . "' and user='" . mysqli_real_escape_string($link, $agent) . "' and pause_sec<48800 and wait_sec<48800 and talk_sec<48800 and dispo_sec<48800 limit 1;";
+$total_rslt=mysql_to_mysqli($total_stmt, $link);
+if ($DB) {$MAIN.="$total_stmt\n";}
+$total_row=mysqli_fetch_row($total_rslt);
+$login_time=$total_row[0];
+
 $LOGIN_TIME_HMS =		sec_convert($login_time,'H'); 
 $pfLOGIN_TIME_HMS =		sprintf("%8s", $LOGIN_TIME_HMS);
 
@@ -576,7 +584,8 @@ $CSV_text2.="\"\",\""._QXZ("ID")."\",\""._QXZ("EDIT")."\",\""._QXZ("EVENT")."\",
 
 	$total_logs=0;
 	$o=0;
-	while ($events_to_print > $o) {
+	while ($events_to_print > $o) 
+		{
 		$row=mysqli_fetch_row($rslt);
 		if ( ($row[0]=='START') or ($row[0]=='LOGIN') )
 			{$bgcolor='bgcolor="#'.$SSstd_row3_background.'"';} 
@@ -618,10 +627,17 @@ $CSV_text2.="\"\",\""._QXZ("ID")."\",\""._QXZ("EDIT")."\",\""._QXZ("EVENT")."\",
 			$CSV_text2.="\"\",\"$row[5]\",\"$manager_edit\",\"$row[0]\",\"$TC_log_date\",\"$row[4]\",\"$row[2]\",\"$event_hours_minutes\"\n";
 			}
 		$o++;
-	}
+		}
 if (strlen($login_sec)<1)
 	{
-	$login_sec = ($STARTtime - $row[1]);
+	if ($events_to_print==0) 
+		{
+		$login_sec=0;
+		}
+	else
+		{
+		$login_sec = ($STARTtime - $row[1]);
+		}
 	$total_login_time = ($total_login_time + $login_sec);
 		if ($DB) {$MAIN.=_QXZ("LOGIN ONLY")." - $total_login_time - $login_sec";}
 	}
