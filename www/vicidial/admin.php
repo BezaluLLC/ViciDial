@@ -3437,7 +3437,7 @@ if ($non_latin < 1)
 	{
 	### ALPHA-NUMERIC ONLY ###
 	$is_webphone = preg_replace('/[^-_0-9a-zA-Z]/','',$is_webphone);
-	$agent_script_override = preg_replace('/[^0-9a-zA-Z]/','',$agent_script_override);
+	$agent_script_override = preg_replace('/[^-_0-9a-zA-Z]/','',$agent_script_override);
 	$campaign_script = preg_replace('/[^0-9a-zA-Z]/','',$campaign_script);
 	$submit = preg_replace('/[^0-9a-zA-Z]/','',$submit);
 	$campaign_cid = preg_replace('/[^0-9a-zA-Z]/','',$campaign_cid);
@@ -3519,7 +3519,7 @@ if ($non_latin < 1)
 	$dead_to_dispo = preg_replace('/[^0-9a-zA-Z]/','',$dead_to_dispo);
 	$routing_prefix = preg_replace('/[^0-9a-zA-Z]/','',$routing_prefix);
 	$inbound_survey = preg_replace('/[^0-9a-zA-Z]/','',$inbound_survey);
-	$inbound_list_script_override = preg_replace('/[^0-9a-zA-Z]/','',$inbound_list_script_override);
+	$inbound_list_script_override = preg_replace('/[^-_0-9a-zA-Z]/','',$inbound_list_script_override);
 	$pause_max_dispo = preg_replace('/[^0-9a-zA-Z]/','',$pause_max_dispo);
 	$areacode = preg_replace('/[^0-9a-zA-Z]/','',$areacode);
 	$require_mgr_approval = preg_replace('/[^0-9a-zA-Z]/','',$require_mgr_approval);
@@ -4156,7 +4156,7 @@ else
 	{
 	### ALPHA-NUMERIC ONLY ###
 	$is_webphone = preg_replace('/[^-_0-9\p{L}]/u','',$is_webphone);
-	$agent_script_override = preg_replace('/[^0-9\p{L}]/u','',$agent_script_override);
+	$agent_script_override = preg_replace('/[^-_0-9\p{L}]/u','',$agent_script_override);
 	$campaign_script = preg_replace('/[^0-9\p{L}]/u','',$campaign_script);
 	$submit = preg_replace('/[^0-9\p{L}]/u','',$submit);
 	$campaign_cid = preg_replace('/[^0-9\p{L}]/u','',$campaign_cid);
@@ -4238,7 +4238,7 @@ else
 	$dead_to_dispo = preg_replace('/[^0-9\p{L}]/u','',$dead_to_dispo);
 	$routing_prefix = preg_replace('/[^0-9\p{L}]/u','',$routing_prefix);
 	$inbound_survey = preg_replace('/[^0-9\p{L}]/u','',$inbound_survey);
-	$inbound_list_script_override = preg_replace('/[^0-9\p{L}]/u','',$inbound_list_script_override);
+	$inbound_list_script_override = preg_replace('/[^-_0-9\p{L}]/u','',$inbound_list_script_override);
 	$pause_max_dispo = preg_replace('/[^0-9\p{L}]/u','',$pause_max_dispo);
 	$areacode = preg_replace('/[^0-9\p{L}]/u','',$areacode);
 	$require_mgr_approval = preg_replace('/[^0-9\p{L}]/u','',$require_mgr_approval);
@@ -5920,12 +5920,13 @@ if ($SSscript_remove_js > 0)
 # 220623-0824 - Added max_logged_in_agents campaign/system settings and dial_prefix list setting
 # 220730-0859 - Added user_codes_admin user/system setting
 # 220811-0854 - Added webphone inticator"(w)" to Phone Listing page
+# 220824-1452 - Fix for Script override input variable filtering issues
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-861a';
-$build = '220811-0854';
+$admin_version = '2.14-862a';
+$build = '220824-1452';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
