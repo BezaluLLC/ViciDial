@@ -166,7 +166,9 @@ gather_asterisk_output ENUM('Y','N') default 'N',
 web_socket_url VARCHAR(255) default '',
 conf_qualify ENUM('Y','N') default 'Y',
 routing_prefix VARCHAR(10) default '13',
-external_web_socket_url VARCHAR(255) default ''
+external_web_socket_url VARCHAR(255) default '',
+conf_engine ENUM('MEETME','CONFBRIDGE') COLLATE utf8_unicode_ci DEFAULT 'MEETME',
+conf_update_interval SMALLINT(6) NOT NULL DEFAULT '60'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX server_id on servers (server_id);
@@ -4740,6 +4742,16 @@ index (caller_code),
 index (call_date)
 ) ENGINE=MyISAM;
 
+CREATE TABLE `vicidial_confbridges` (   
+`conf_exten` INT(7) UNSIGNED NOT NULL,
+`server_ip` VARCHAR(15) COLLATE utf8_unicode_ci NOT NULL,
+`extension` VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+`leave_3way` ENUM('0','1') COLLATE utf8_unicode_ci DEFAULT '0',
+`leave_3way_datetime` DATETIME DEFAULT NULL,
+UNIQUE KEY `serverconf` (`server_ip`,`conf_exten`),
+UNIQUE KEY `conf_exten` (`conf_exten`,`server_ip`) 
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -5089,4 +5101,4 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1663',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1664',db_schema_update_date=NOW(),reload_timestamp=NOW();

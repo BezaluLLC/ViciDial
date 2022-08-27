@@ -1948,3 +1948,18 @@ ALTER TABLE system_settings ADD user_codes_admin ENUM('0','1','2','3','4','5','6
 INSERT INTO vicidial_settings_containers(container_id,container_notes,container_type,user_group,container_entry) VALUES ('USER_CODES_SYSTEM','User Codes List','OTHER','---ALL---','');
 
 UPDATE system_settings SET db_schema_version='1663',db_schema_update_date=NOW() where db_schema_version < 1663;
+
+ALTER TABLE servers ADD `conf_engine` ENUM('MEETME','CONFBRIDGE') COLLATE utf8_unicode_ci DEFAULT 'MEETME';
+ALTER TABLE servers ADD `conf_update_interval` SMALLINT(6) NOT NULL DEFAULT 60;
+
+CREATE TABLE `vicidial_confbridges` (   
+`conf_exten` INT(7) UNSIGNED NOT NULL,
+`server_ip` VARCHAR(15) COLLATE utf8_unicode_ci NOT NULL,
+`extension` VARCHAR(100) COLLATE utf8_unicode_ci DEFAULT NULL,
+`leave_3way` ENUM('0','1') COLLATE utf8_unicode_ci DEFAULT '0',
+`leave_3way_datetime` DATETIME DEFAULT NULL,
+UNIQUE KEY `serverconf` (`server_ip`,`conf_exten`),
+UNIQUE KEY `conf_exten` (`conf_exten`,`server_ip`) 
+) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+UPDATE system_settings SET db_schema_version='1664',db_schema_update_date=NOW() where db_schema_version < 1664;

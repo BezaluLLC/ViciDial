@@ -1,0 +1,125 @@
+--- manager_send.php.old	2022-08-26 16:03:28.232951728 -0400
++++ manager_send.php	2022-08-23 15:55:47.677934909 -0400
+@@ -1763,6 +1763,7 @@
+ 	$row='';   $rowx='';
+ 	$channel_liveX=1;
+ 	$channel_liveY=1;
++	$conf_table = 'vicidial_conferences';
+ 	if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($session_id)<3) or ( ( (strlen($extrachannel)<3) or (strlen($exten)<1) ) and (!preg_match("/NEXTAVAILABLE/",$exten)) ) )
+ 		{
+ 		$channel_liveX=0;
+@@ -1790,19 +1791,26 @@
+ 		{
+ 		if (preg_match("/NEXTAVAILABLE/",$exten))
+ 			{
+-			$stmtA="SELECT count(*) FROM vicidial_conferences where server_ip='$server_ip' and ((extension='') or (extension is null)) and conf_exten != '$session_id';";
++			# figure out which table to look in
++			$stmtA="SELECT conf_engine FROM servers WHERE server_ip='$server_ip';";
++				if ($format=='debug') {echo "\n<!-- $stmtA -->";}
++			$rslt=mysql_to_mysqli($stmtA, $link);
++			$row=mysqli_fetch_row($rslt);
++			if ($row[0] == "CONFBRIDGE") { $conf_table = 'vicidial_confbridges'; }
++
++			$stmtA="SELECT count(*) FROM $conf_table where server_ip='$server_ip' and ((extension='') or (extension is null)) and conf_exten != '$session_id';";
+ 				if ($format=='debug') {echo "\n<!-- $stmtA -->";}
+ 			$rslt=mysql_to_mysqli($stmtA, $link);
+ 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtA,'02029',$user,$server_ip,$session_name,$one_mysql_log);}
+ 			$row=mysqli_fetch_row($rslt);
+ 			if ($row[0] > 1)
+ 				{
+-				$stmtB="UPDATE vicidial_conferences set extension='$protocol/$extension$NOWnum', leave_3way='0' where server_ip='$server_ip' and ((extension='') or (extension is null)) and conf_exten != '$session_id' limit 1;";
++				$stmtB="UPDATE $conf_table set extension='$protocol/$extension$NOWnum', leave_3way='0' where server_ip='$server_ip' and ((extension='') or (extension is null)) and conf_exten != '$session_id' limit 1;";
+ 					if ($format=='debug') {echo "\n<!-- $stmtB -->";}
+ 				$rslt=mysql_to_mysqli($stmtB, $link);
+ 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtB,'02030',$user,$server_ip,$session_name,$one_mysql_log);}
+ 
+-				$stmtC="SELECT conf_exten from vicidial_conferences where server_ip='$server_ip' and extension='$protocol/$extension$NOWnum' and conf_exten != '$session_id';";
++				$stmtC="SELECT conf_exten from $conf_table where server_ip='$server_ip' and extension='$protocol/$extension$NOWnum' and conf_exten != '$session_id';";
+ 					if ($format=='debug') {echo "\n<!-- $stmtC -->";}
+ 				$rslt=mysql_to_mysqli($stmtC, $link);
+ 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtC,'02031',$user,$server_ip,$session_name,$one_mysql_log);}
+@@ -1814,12 +1822,12 @@
+ 					$extension = "$extension$user";
+ 					}
+ 
+-				$stmtD="UPDATE vicidial_conferences set extension='$protocol/$extension' where server_ip='$server_ip' and conf_exten='$exten' limit 1;";
++				$stmtD="UPDATE $conf_table set extension='$protocol/$extension' where server_ip='$server_ip' and conf_exten='$exten' limit 1;";
+ 					if ($format=='debug') {echo "\n<!-- $stmtD -->";}
+ 				$rslt=mysql_to_mysqli($stmtD, $link);
+ 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtD,'02032',$user,$server_ip,$session_name,$one_mysql_log);}
+ 
+-				$stmtE="UPDATE vicidial_conferences set leave_3way='1', leave_3way_datetime='$NOW_TIME', extension='3WAY_$user' where server_ip='$server_ip' and conf_exten='$session_id';";
++				$stmtE="UPDATE $conf_table set leave_3way='1', leave_3way_datetime='$NOW_TIME', extension='3WAY_$user' where server_ip='$server_ip' and conf_exten='$session_id';";
+ 					if ($format=='debug') {echo "\n<!-- $stmtE -->";}
+ 				$rslt=mysql_to_mysqli($stmtE, $link);
+ 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmtE,'02033',$user,$server_ip,$session_name,$one_mysql_log);}
+@@ -1857,7 +1865,7 @@
+ 			else
+ 				{
+ 				$channel_liveX=0;
+-				echo _QXZ("Cannot find empty vicidial_conference on %1s, Redirect command not inserted",0,'',$server_ip)."\n|$stmt|";
++				echo _QXZ("Cannot find empty $conf_table on %1s, Redirect command not inserted",0,'',$server_ip)."\n|$stmt|";
+ 				if (preg_match("/SECOND|FIRST|DEBUG/",$filename)) {$DBout .= "Cannot find empty conference on $server_ip";}
+ 				$stage .= "|ERROR $server_ip|";
+ 				}
+@@ -1989,6 +1997,7 @@
+ 		$row='';   $rowx='';
+ 		$channel_liveX=1;
+ 		$channel_liveY=1;
++		$conf_table = 'vicidial_conferences';
+ 		if ( (strlen($channel)<3) or (strlen($queryCID)<15) or (strlen($ext_context)<1) or (strlen($ext_priority)<1) or (strlen($session_id)<3) or ( ( (strlen($extrachannel)<3) or (strlen($exten)<1) ) and (!preg_match("/NEXTAVAILABLE/",$exten)) ) )
+ 			{
+ 			$channel_liveX=0;
+@@ -2018,31 +2027,38 @@
+ 			{
+ 			if (preg_match("/NEXTAVAILABLE/",$exten))
+ 				{
+-				$stmt="SELECT count(*) FROM vicidial_conferences where server_ip='$server_ip' and ((extension='') or (extension is null)) and conf_exten != '$session_id';";
++				# figure out which table to look in
++	                        $stmtA="SELECT conf_engine FROM servers WHERE server_ip='$server_ip';";
++	                                if ($format=='debug') {echo "\n<!-- $stmtA -->";}
++	                        $rslt=mysql_to_mysqli($stmtA, $link);
++	                        $row=mysqli_fetch_row($rslt);
++	                        if ($row[0] == "CONFBRIDGE") { $conf_table = 'vicidial_confbridges'; }
++
++				$stmt="SELECT count(*) FROM $conf_table where server_ip='$server_ip' and ((extension='') or (extension is null)) and conf_exten != '$session_id';";
+ 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+ 				$rslt=mysql_to_mysqli($stmt, $link);
+ 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02045',$user,$server_ip,$session_name,$one_mysql_log);}
+ 				$row=mysqli_fetch_row($rslt);
+ 				if ($row[0] > 1)
+ 					{
+-					$stmt="UPDATE vicidial_conferences set extension='$protocol/$extension$NOWnum', leave_3way='0' where server_ip='$server_ip' and ((extension='') or (extension is null)) and conf_exten != '$session_id' limit 1;";
++					$stmt="UPDATE $conf_table set extension='$protocol/$extension$NOWnum', leave_3way='0' where server_ip='$server_ip' and ((extension='') or (extension is null)) and conf_exten != '$session_id' limit 1;";
+ 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+ 					$rslt=mysql_to_mysqli($stmt, $link);
+ 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02046',$user,$server_ip,$session_name,$one_mysql_log);}
+ 
+-					$stmt="SELECT conf_exten from vicidial_conferences where server_ip='$server_ip' and extension='$protocol/$extension$NOWnum' and conf_exten != '$session_id';";
++					$stmt="SELECT conf_exten from $conf_table where server_ip='$server_ip' and extension='$protocol/$extension$NOWnum' and conf_exten != '$session_id';";
+ 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+ 					$rslt=mysql_to_mysqli($stmt, $link);
+ 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02047',$user,$server_ip,$session_name,$one_mysql_log);}
+ 					$row=mysqli_fetch_row($rslt);
+ 					$exten = $row[0];
+ 
+-					$stmt="UPDATE vicidial_conferences set extension='$protocol/$extension' where server_ip='$server_ip' and conf_exten='$exten' limit 1;";
++					$stmt="UPDATE $conf_table set extension='$protocol/$extension' where server_ip='$server_ip' and conf_exten='$exten' limit 1;";
+ 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+ 					$rslt=mysql_to_mysqli($stmt, $link);
+ 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02048',$user,$server_ip,$session_name,$one_mysql_log);}
+ 
+-					$stmt="UPDATE vicidial_conferences set leave_3way='1', leave_3way_datetime='$NOW_TIME', extension='3WAY_$user' where server_ip='$server_ip' and conf_exten='$session_id';";
++					$stmt="UPDATE $conf_table set leave_3way='1', leave_3way_datetime='$NOW_TIME', extension='3WAY_$user' where server_ip='$server_ip' and conf_exten='$session_id';";
+ 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
+ 					$rslt=mysql_to_mysqli($stmt, $link);
+ 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02049',$user,$server_ip,$session_name,$one_mysql_log);}
+@@ -2076,7 +2092,7 @@
+ 				else
+ 					{
+ 					$channel_liveX=0;
+-					echo "Cannot find empty vicidial_conference on $server_ip, Redirect command not inserted\n|$stmt|";
++					echo "Cannot find empty $conf_table on $server_ip, Redirect command not inserted\n|$stmt|";
+ 					if (preg_match("/SECOND|FIRST|DEBUG/",$filename)) {$DBout .= "Cannot find empty conference on $server_ip";}
+ 					$stage .= "|ERROR $server_ip|";
+ 					}
