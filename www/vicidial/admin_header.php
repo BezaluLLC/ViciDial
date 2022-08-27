@@ -1,7 +1,7 @@
 <?php
 # admin_header.php - VICIDIAL administration header
 #
-# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 # 
 
 # CHANGES
@@ -91,6 +91,7 @@
 # 210907-1904 - Added new OWNERCUSTOMx handle methods for menu options
 # 211208-1920 - Added Queue Groups to admin sidebar and sub-menu
 # 211215-2225 - Added User Group options for altered header display
+# 220827-0941 - Added ConfBridge top menu options
 #
 
 $stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add,allow_chats,enable_languages,admin_row_click,admin_screen_colors,user_new_lead_limit,user_territories_active,qc_features_active,agent_soundboards,enable_drop_lists,allow_ip_lists from system_settings;";
@@ -2619,7 +2620,7 @@ if ($SSenable_languages == '1')
 		<?php }
 	if (strlen($conference_sh) > 25) { 
 		?>
-	<TR BGCOLOR=<?php echo $conference_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1000000000000"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Show Conferences"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1111111111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Add A New Conference"); ?> </a> &nbsp; |<?php } ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10000000000000"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Show VICIDIAL Conferences"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=11111111111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Add A New VICIDIAL Conference"); ?> </a><?php } ?></TD></TR>
+	<TR BGCOLOR=<?php echo $conference_color ?>><TD ALIGN=LEFT COLSPAN=2> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1000000000000"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Show Conferences"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=1111111111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Add A New Conference"); ?> </a> &nbsp; |<?php } ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=10000000000000"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Show VICIDIAL Conferences"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=11111111111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Add A New VICIDIAL Conference"); ?> </a><?php } ?> | &nbsp; <a href="<?php echo $ADMIN ?>?ADD=12000000000000"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Show ConfBridges"); ?> </a> &nbsp; |<?php if ($add_copy_disabled < 1) { ?> &nbsp; <a href="<?php echo $ADMIN ?>?ADD=12111111111111"><FONT STYLE="font-family:HELVETICA;font-size:<?php echo $subcamp_font_size ?>;color:BLACK;"> <?php echo _QXZ("Add ConfBridge"); ?> </a><?php } ?> </TD></TR>
 		<?php }
 	if ( (strlen($server_sh) > 25) and (strlen($admin_hh) > 25) ) { 
 		?>

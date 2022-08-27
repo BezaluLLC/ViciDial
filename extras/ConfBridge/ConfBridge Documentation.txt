@@ -6,6 +6,9 @@ VICIdial ConfBridge Support:		STARTED: 2022-06-22	UPDATED: 2022-08-27
 !!! NOTE: VICIdial ConfBridge support requires Asterisk 16 or higher to be installed on your dialers. Code development and testing was done with VICIbox 10 and the optional Asterisk 16 package available through VICIbox 10 !!!
 
 
+BETA support for ConfBridge is included in the VICIdial svn/trunk codebase as of revision 3624.
+
+
 - Background 
 For the past 19 years, the core of Vicidial has been based around the MeetMe conferencing engine built into Asterisk. When an agent logs into Vicidial their phone gets called by Vicidial. When that call connects the agent gets placed into a MeetMe conference. For the most part they stay within that conference the entire time they are logged into Vicidial. It is only when they leave a consultative transfer that they get moved to a different MeetMe conference. When an agent places a Manual dial phone call, the outbound call gets connected to their MeetMe phone conference. When an auto dial phone call answers it goes through the outbound routing agi and ultimately gets routed into an agent's MeetMe phone conference. When an inbound call gets past to the inbound routing AGI script it ultimately gets routed to an agent's MeetMe phone conference. Vicidial initiates call recordings by attaching a monitoring extension to an agents MeetMe phone conference. As such Vicidial at its most basic level is designed to place channels into and remove them from MeetMe phone conferences.
 
@@ -556,3 +559,11 @@ Webservers:
 - vicidial.php.diff
 - vdc_db_query.php.diff
 - manager_send.php.diff
+
+
+
+- Web Admin changes:
+
+The admin web screens had been modified to show ConfBridges on servers and management of ConfBridges in the database.
+
+Also, the "Server Modify" page now has settings for the Conferencing Engine and the Conf Update Interval.

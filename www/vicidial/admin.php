@@ -16,7 +16,7 @@ require("functions.php");
 ######################################################################################################
 ######################################################################################################
 
-$page_width='770';
+$page_width='870';
 $section_width='750';
 $header_font_size='12';
 $subheader_font_size='11';
@@ -2718,6 +2718,10 @@ if (isset($_GET["max_logged_in_agents"]))				{$max_logged_in_agents=$_GET["max_l
 	elseif (isset($_POST["max_logged_in_agents"]))	{$max_logged_in_agents=$_POST["max_logged_in_agents"];}
 if (isset($_GET["user_codes_admin"]))				{$user_codes_admin=$_GET["user_codes_admin"];}
 	elseif (isset($_POST["user_codes_admin"]))	{$user_codes_admin=$_POST["user_codes_admin"];}
+if (isset($_GET["conf_engine"]))			{$conf_engine=$_GET["conf_engine"];}
+	elseif (isset($_POST["conf_engine"]))	{$conf_engine=$_POST["conf_engine"];}
+if (isset($_GET["conf_update_interval"]))			{$conf_update_interval=$_GET["conf_update_interval"];}
+	elseif (isset($_POST["conf_update_interval"]))	{$conf_update_interval=$_POST["conf_update_interval"];}
 
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
@@ -3219,6 +3223,7 @@ $allow_web_debug = preg_replace('/[^0-9]/','',$allow_web_debug);
 $force_logout = preg_replace('/[^0-9]/','',$force_logout);
 $log_recording_access = preg_replace('/[^0-9]/','',$log_recording_access);
 $dial_level_override = preg_replace('/[^0-9]/','',$dial_level_override);
+$conf_update_interval = preg_replace('/[^0-9]/','',$conf_update_interval);
 
 $user_new_lead_limit = preg_replace('/[^-0-9]/','',$user_new_lead_limit);
 $drop_call_seconds = preg_replace('/[^-0-9]/','',$drop_call_seconds);
@@ -3432,12 +3437,12 @@ $ig_xfer_list_sort = preg_replace('/[^-_0-9a-zA-Z]/','',$ig_xfer_list_sort);
 $script_tab_frame_size = preg_replace('/[^-_0-9a-zA-Z]/','',$script_tab_frame_size);
 $max_logged_in_agents = preg_replace('/[^-_0-9a-zA-Z]/','',$max_logged_in_agents);
 $user_codes_admin = preg_replace('/[^-_0-9a-zA-Z]/','',$user_codes_admin);
+$conf_engine = preg_replace('/[^-_0-9a-zA-Z]/','',$conf_engine);
 
 if ($non_latin < 1)
 	{
 	### ALPHA-NUMERIC ONLY ###
 	$is_webphone = preg_replace('/[^-_0-9a-zA-Z]/','',$is_webphone);
-	$agent_script_override = preg_replace('/[^-_0-9a-zA-Z]/','',$agent_script_override);
 	$campaign_script = preg_replace('/[^0-9a-zA-Z]/','',$campaign_script);
 	$submit = preg_replace('/[^0-9a-zA-Z]/','',$submit);
 	$campaign_cid = preg_replace('/[^0-9a-zA-Z]/','',$campaign_cid);
@@ -3519,7 +3524,6 @@ if ($non_latin < 1)
 	$dead_to_dispo = preg_replace('/[^0-9a-zA-Z]/','',$dead_to_dispo);
 	$routing_prefix = preg_replace('/[^0-9a-zA-Z]/','',$routing_prefix);
 	$inbound_survey = preg_replace('/[^0-9a-zA-Z]/','',$inbound_survey);
-	$inbound_list_script_override = preg_replace('/[^-_0-9a-zA-Z]/','',$inbound_list_script_override);
 	$pause_max_dispo = preg_replace('/[^0-9a-zA-Z]/','',$pause_max_dispo);
 	$areacode = preg_replace('/[^0-9a-zA-Z]/','',$areacode);
 	$require_mgr_approval = preg_replace('/[^0-9a-zA-Z]/','',$require_mgr_approval);
@@ -3858,6 +3862,8 @@ if ($non_latin < 1)
 	$pre_filter_recent_call = preg_replace('/[^-_0-9a-zA-Z]/','',$pre_filter_recent_call);
 	$pre_filter_recent_extension = preg_replace('/[^-_0-9a-zA-Z]/','',$pre_filter_recent_extension);
 	$user_group_two = preg_replace('/[^-_0-9a-zA-Z]/','',$user_group_two);
+	$agent_script_override = preg_replace('/[^-_0-9a-zA-Z]/','',$agent_script_override);
+	$inbound_list_script_override = preg_replace('/[^-_0-9a-zA-Z]/','',$inbound_list_script_override);
 
 	### ALPHA-NUMERIC and underscore 
 	$qc_statuses_id = preg_replace('/[^_0-9a-zA-Z]/','',$qc_statuses_id);
@@ -4156,7 +4162,6 @@ else
 	{
 	### ALPHA-NUMERIC ONLY ###
 	$is_webphone = preg_replace('/[^-_0-9\p{L}]/u','',$is_webphone);
-	$agent_script_override = preg_replace('/[^-_0-9\p{L}]/u','',$agent_script_override);
 	$campaign_script = preg_replace('/[^0-9\p{L}]/u','',$campaign_script);
 	$submit = preg_replace('/[^0-9\p{L}]/u','',$submit);
 	$campaign_cid = preg_replace('/[^0-9\p{L}]/u','',$campaign_cid);
@@ -4238,7 +4243,6 @@ else
 	$dead_to_dispo = preg_replace('/[^0-9\p{L}]/u','',$dead_to_dispo);
 	$routing_prefix = preg_replace('/[^0-9\p{L}]/u','',$routing_prefix);
 	$inbound_survey = preg_replace('/[^0-9\p{L}]/u','',$inbound_survey);
-	$inbound_list_script_override = preg_replace('/[^-_0-9\p{L}]/u','',$inbound_list_script_override);
 	$pause_max_dispo = preg_replace('/[^0-9\p{L}]/u','',$pause_max_dispo);
 	$areacode = preg_replace('/[^0-9\p{L}]/u','',$areacode);
 	$require_mgr_approval = preg_replace('/[^0-9\p{L}]/u','',$require_mgr_approval);
@@ -4576,6 +4580,8 @@ else
 	$queue_group = preg_replace('/[^-_0-9\p{L}]/u','',$queue_group);
 	$pre_filter_recent_call = preg_replace('/[^-_0-9\p{L}]/u','',$pre_filter_recent_call);
 	$pre_filter_recent_extension = preg_replace('/[^-_0-9\p{L}]/u','',$pre_filter_recent_extension);
+	$agent_script_override = preg_replace('/[^-_0-9\p{L}]/u','',$agent_script_override);
+	$inbound_list_script_override = preg_replace('/[^-_0-9\p{L}]/u','',$inbound_list_script_override);
 	$user_group_two = preg_replace('/[^-_0-9\p{L}]/u','',$user_group_two);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and dot
@@ -5921,12 +5927,13 @@ if ($SSscript_remove_js > 0)
 # 220730-0859 - Added user_codes_admin user/system setting
 # 220811-0854 - Added webphone inticator"(w)" to Phone Listing page
 # 220824-1452 - Fix for Script override input variable filtering issues
+# 220827-0855 - Added BETA support for ConfBridge in Servers and Conferences
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-862a';
-$build = '220824-1452';
+$admin_version = '2.14-863a';
+$build = '220827-0855';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6618,6 +6625,7 @@ if ($ADD==197111111111)	{$hh='admin';	$sh='vmmg';	echo _QXZ("ADD VM MESSAGE GROU
 if ($ADD==198111111111)	{$hh='admin';	$sh='qg';	echo _QXZ("ADD QUEUE GROUP");}
 if ($ADD==1111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("ADD NEW CONFERENCE");}
 if ($ADD==11111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("ADD NEW AGENT CONFERENCE");}
+if ($ADD==12111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("ADD NEW AGENT CONFBRIDGE");}
 if ($ADD=='2')			{$hh='users';		$sh='new';	echo _QXZ("New User Addition");}
 if ($ADD=='2A')			{$hh='users';		$sh='copy';	echo _QXZ("New Copied User Addition");}
 if ($ADD==20)			{$hh='campaigns';	$sh='basic';	echo _QXZ("New Copied Campaign Addition");}
@@ -6676,6 +6684,7 @@ if ($ADD==297111111111)	{$hh='admin';	$sh='vmmg';	echo _QXZ("ADDING NEW VM MESSA
 if ($ADD==298111111111)	{$hh='admin';	$sh='qg';	echo _QXZ("ADDING NEW QUEUE GROUP");}
 if ($ADD==2111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("ADDING NEW CONFERENCE");}
 if ($ADD==21111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("ADDING NEW AGENT CONFERENCE");}
+if ($ADD==22111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("ADDING NEW AGENT CONFBRIDGE");}
 if ($ADD==221111111111111)	{$hh='admin';	$sh='status';	echo _QXZ("ADDING SYSTEM STATUSES");}
 if ($ADD==231111111111111)	{$hh='admin';	$sh='status';	echo _QXZ("ADDING STATUS CATEGORY");}
 if ($ADD==241111111111111)	{$hh='admin';	$sh='status';	echo _QXZ("ADDING QC STATUS CODE");}
@@ -6761,6 +6770,7 @@ if ($ADD==397111111111)	{$hh='admin';	$sh='vmmg';	echo _QXZ("MODIFY VM MESSAGE G
 if ($ADD==398111111111)	{$hh='admin';	$sh='qg';	echo _QXZ("MODIFY QUEUE GROUP");}
 if ($ADD==3111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("MODIFY CONFERENCE");}
 if ($ADD==31111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("MODIFY AGENT CONFERENCE");}
+if ($ADD==32111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("MODIFY AGENT CONFBRIDGE");}
 if ($ADD==311111111111111)	{$hh='admin';	$sh='settings';	echo _QXZ("MODIFY SYSTEM SETTINGS");}
 if ($ADD==321111111111111)	{$hh='admin';	$sh='status';	echo _QXZ("MODIFY SYSTEM STATUSES");}
 if ($ADD==331111111111111)	{$hh='admin';	$sh='status';	echo _QXZ("MODIFY STATUS CATEGORY");}
@@ -6816,6 +6826,7 @@ if ($ADD==497111111111)	{$hh='admin';	$sh='vmmg';	echo _QXZ("MODIFY VM MESSAGE G
 if ($ADD==498111111111)	{$hh='admin';	$sh='qg';	echo _QXZ("MODIFY QUEUE GROUP");}
 if ($ADD==4111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("MODIFY CONFERENCE");}
 if ($ADD==41111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("MODIFY CONFERENCE");}
+if ($ADD==42111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("MODIFY CONFBRIDGE");}
 if ($ADD==411111111111111)	{$hh='admin';	$sh='settings';	echo _QXZ("MODIFY SYSTEM SETTINGS");}
 if ($ADD==421111111111111)	{$hh='admin';	$sh='status';	echo _QXZ("MODIFY SYSTEM STATUSES");}
 if ($ADD==431111111111111)	{$hh='admin';	$sh='status';	echo _QXZ("MODIFY STATUS CATEGORIES");}
@@ -6862,6 +6873,7 @@ if ($ADD==597111111111)	{$hh='admin';	$sh='vmmg';	echo _QXZ("DELETE VM MESSAGE G
 if ($ADD==598111111111)	{$hh='admin';	$sh='qg';	echo _QXZ("DELETE QUEUE GROUP");}
 if ($ADD==5111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("DELETE CONFERENCE");}
 if ($ADD==51111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("DELETE AGENT CONFERENCE");}
+if ($ADD==52111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("DELETE AGENT CONFBRIDGE");}
 if ($ADD==6)			{$hh='users';		$sh='list';	echo _QXZ("Delete User");}
 if ($ADD==61)			{$hh='campaigns';	$sh='detail';	echo _QXZ("Delete Campaign");}
 if ($ADD==62)			{$hh='campaigns';	$sh='detail';	echo _QXZ("Logout Agents");}
@@ -6911,6 +6923,7 @@ if ($ADD==697111111111)	{$hh='admin';	$sh='vmmg';	echo _QXZ("DELETE VM MESSAGE G
 if ($ADD==698111111111)	{$hh='admin';	$sh='qg';	echo _QXZ("DELETE QUEUE GROUP");}
 if ($ADD==6111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("DELETE CONFERENCE");}
 if ($ADD==61111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("DELETE AGENT CONFERENCE");}
+if ($ADD==62111111111111)	{$hh='admin';	$sh='conference';	echo _QXZ("DELETE AGENT CONFBRIDGE");}
 if ($ADD==73)			{$hh='campaigns';	echo _QXZ("Dialable Lead Count");}
 if ($ADD==7111111)		{$hh='scripts';	$sh='list';	echo _QXZ("Preview Script");}
 if ($ADD==700000000000000)	{$hh='reports';	echo _QXZ("ADMIN CHANGE LOG");}
@@ -6966,6 +6979,7 @@ if ($ADD==197000000000)	{$hh='admin';	$sh='vmmg';	echo _QXZ("VM MESSAGE GROUPS L
 if ($ADD==198000000000)	{$hh='admin';	$sh='qg';	echo _QXZ("QUEUE GROUPS LIST");}
 if ($ADD==1000000000000)	{$hh='admin';	$sh='conference';	echo _QXZ("CONFERENCE LIST");}
 if ($ADD==10000000000000)	{$hh='admin';	$sh='conference';	echo _QXZ("AGENT CONFERENCE LIST");}
+if ($ADD==12000000000000)	{$hh='admin';	$sh='conference';	echo _QXZ("AGENT CONFBRIDGE LIST");}
 if ($ADD==100000000000000)	{$hh='qc';	$sh='campaign';	echo _QXZ("Quality Control");}
 if ($ADD==881)          {$hh='qc';		$sh='enter';	echo _QXZ("Quality Control Campaign")," $campaign_id";}
 if ($ADD==550)			{$hh='users';		$sh='search';	echo _QXZ("Search Form");}
@@ -11476,6 +11490,34 @@ if ($ADD==11111111111111)
 	}
 
 
+######################
+# ADD=12111111111111 display the ADD NEW VICIDIAL CONFBRIDGE SCREEN
+######################
+if ($ADD==12111111111111)
+	{
+	if ($LOGast_admin_access==1)
+		{
+		echo "<TABLE><TR><TD>\n";
+		echo "<img src=\"images/icon_conferences.png\" alt=\"ConfBridges\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		echo "<br>"._QXZ("ADD A NEW AGENT CONFBRIDGE")."<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=22111111111111>\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("ConfBridge Number").": </td><td align=left><input type=text name=conf_exten size=8 maxlength=7> ("._QXZ("digits only").")$NWB#conferences-conf_exten$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Server IP").": </td><td align=left><select size=1 name=server_ip>\n";
+		echo "$servers_list";
+		echo "</select>$NWB#conferences-server_ip$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input style='background-color:#$SSbutton_color' type=submit name=submit value='"._QXZ("SUBMIT")."'</td></tr>\n";
+		echo "</TABLE></center>\n";
+		}
+	else
+		{
+		echo _QXZ("You do not have permission to view this page")."\n";
+		exit;
+		}
+	}
+
+
 
 
 
@@ -14904,7 +14946,7 @@ if ($ADD==240111111111)
 				{
 				echo "<br>"._QXZ("COPIED CARRIER ADDED")."\n";
 
-				$stmt="INSERT INTO vicidial_server_carriers (carrier_id,carrier_name,registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,server_ip,active,carrier_description,user_group) SELECT \"$carrier_id\",\"$carrier_name\",registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,\"$server_ip\",\"N\",carrier_description,user_group from vicidial_server_carriers where carrier_id=\"$source_carrier\";";
+				$stmt="INSERT INTO vicidial_server_carriers (carrier_id,carrier_name,registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,server_ip,active,carrier_description,user_group,conf_engine,conf_update_interval) SELECT \"$carrier_id\",\"$carrier_name\",registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,\"$server_ip\",\"N\",carrier_description,user_group,conf_engine,conf_update_interval from vicidial_server_carriers where carrier_id=\"$source_carrier\";";
 				$rslt=mysql_to_mysqli($stmt, $link);
 
 				$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
@@ -15598,6 +15640,48 @@ if ($ADD==21111111111111)
 			}
 		}
 	$ADD=31111111111111;
+	}
+
+
+######################
+# ADD=22111111111111 adds new vicidial confbridge to the system
+######################
+if ($ADD==22111111111111)
+	{
+	if ($add_copy_disabled > 0)
+		{
+		echo "<br>"._QXZ("You do not have permission to add records on this system")." -system_settings-\n";
+		}
+	else
+		{
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+		$stmt="SELECT count(*) from vicidial_confbridges where conf_exten='$conf_exten' and server_ip='$server_ip';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] > 0)
+			{echo "<br>"._QXZ("AGENT CONFBRIDGE NOT ADDED - there is already an agent conference in the system with this ID and server")."\n";}
+		else
+			{
+			if ( (strlen($conf_exten) < 1) or (strlen($server_ip) < 7) )
+				{echo "<br>"._QXZ("AGENT CONFBRIDGE NOT ADDED - Please go back and look at the data you entered")."\n";}
+			else
+				{
+				echo "<br>"._QXZ("AGENT CONFBRIDGE ADDED")."\n";
+
+				$stmt="INSERT INTO vicidial_confbridges (conf_exten,server_ip) values('$conf_exten','$server_ip');";
+				$rslt=mysql_to_mysqli($stmt, $link);
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='VICICONF', event_type='ADD', record_id='$conf_exten', event_code='ADMIN ADD VICIDIAL CONFBRIDGE', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				}
+			}
+		}
+	$ADD=32111111111111;
 	}
 
 
@@ -19289,7 +19373,7 @@ if ($ADD==411111111111)
 					$custom_dialplanSQL='';
 					if ($LOGmodify_custom_dialplans > 0)
 						{$custom_dialplanSQL = ",custom_dialplan_entry='$custom_dialplan_entry'";}
-					$stmt="UPDATE servers set server_id='$server_id',server_description='$server_description',server_ip='$server_ip',active='$active',asterisk_version='$asterisk_version', max_vicidial_trunks='$max_vicidial_trunks', telnet_host='$telnet_host', telnet_port='$telnet_port', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', ASTmgrUSERNAMEupdate='$ASTmgrUSERNAMEupdate', ASTmgrUSERNAMElisten='$ASTmgrUSERNAMElisten', ASTmgrUSERNAMEsend='$ASTmgrUSERNAMEsend', local_gmt='$local_gmt', voicemail_dump_exten='$voicemail_dump_exten', answer_transfer_agent='$answer_transfer_agent', ext_context='$ext_context', sys_perf_log='$sys_perf_log', vd_server_logs='$vd_server_logs', agi_output='$agi_output', vicidial_balance_active='$vicidial_balance_active',balance_trunks_offlimits='$balance_trunks_offlimits',recording_web_link='$recording_web_link',alt_server_ip='$alt_server_ip',active_asterisk_server='$active_asterisk_server',generate_vicidial_conf='$generate_vicidial_conf',rebuild_conf_files='$rebuild_conf_files',outbound_calls_per_second='$outbound_calls_per_second',sounds_update='$sounds_update',vicidial_recording_limit='$vicidial_recording_limit',carrier_logging_active='$carrier_logging_active',vicidial_balance_rank='$vicidial_balance_rank',rebuild_music_on_hold='$rebuild_music_on_hold',active_agent_login_server='$active_agent_login_server',conf_secret='$conf_secret',external_server_ip='$external_server_ip',active_twin_server_ip='$active_twin_server_ip',user_group='$user_group',auto_restart_asterisk='$auto_restart_asterisk',asterisk_temp_no_restart='$asterisk_temp_no_restart',voicemail_dump_exten_no_inst='$voicemail_dump_exten_no_inst',gather_asterisk_output='$gather_asterisk_output',conf_qualify='$conf_qualify',web_socket_url='" . mysqli_real_escape_string($link, $web_socket_url) . "',routing_prefix='$routing_prefix',external_web_socket_url='" . mysqli_real_escape_string($link, $external_web_socket_url) . "'$custom_dialplanSQL where server_id='$old_server_id';";
+					$stmt="UPDATE servers set server_id='$server_id',server_description='$server_description',server_ip='$server_ip',active='$active',asterisk_version='$asterisk_version', max_vicidial_trunks='$max_vicidial_trunks', telnet_host='$telnet_host', telnet_port='$telnet_port', ASTmgrUSERNAME='$ASTmgrUSERNAME', ASTmgrSECRET='$ASTmgrSECRET', ASTmgrUSERNAMEupdate='$ASTmgrUSERNAMEupdate', ASTmgrUSERNAMElisten='$ASTmgrUSERNAMElisten', ASTmgrUSERNAMEsend='$ASTmgrUSERNAMEsend', local_gmt='$local_gmt', voicemail_dump_exten='$voicemail_dump_exten', answer_transfer_agent='$answer_transfer_agent', ext_context='$ext_context', sys_perf_log='$sys_perf_log', vd_server_logs='$vd_server_logs', agi_output='$agi_output', vicidial_balance_active='$vicidial_balance_active',balance_trunks_offlimits='$balance_trunks_offlimits',recording_web_link='$recording_web_link',alt_server_ip='$alt_server_ip',active_asterisk_server='$active_asterisk_server',generate_vicidial_conf='$generate_vicidial_conf',rebuild_conf_files='$rebuild_conf_files',outbound_calls_per_second='$outbound_calls_per_second',sounds_update='$sounds_update',vicidial_recording_limit='$vicidial_recording_limit',carrier_logging_active='$carrier_logging_active',vicidial_balance_rank='$vicidial_balance_rank',rebuild_music_on_hold='$rebuild_music_on_hold',active_agent_login_server='$active_agent_login_server',conf_secret='$conf_secret',external_server_ip='$external_server_ip',active_twin_server_ip='$active_twin_server_ip',user_group='$user_group',auto_restart_asterisk='$auto_restart_asterisk',asterisk_temp_no_restart='$asterisk_temp_no_restart',voicemail_dump_exten_no_inst='$voicemail_dump_exten_no_inst',gather_asterisk_output='$gather_asterisk_output',conf_qualify='$conf_qualify',web_socket_url='" . mysqli_real_escape_string($link, $web_socket_url) . "',routing_prefix='$routing_prefix',external_web_socket_url='" . mysqli_real_escape_string($link, $external_web_socket_url) . "',conf_engine='$conf_engine',conf_update_interval='$conf_update_interval'$custom_dialplanSQL where server_id='$old_server_id';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 
 					$stmtA="UPDATE servers SET rebuild_conf_files='Y',rebuild_music_on_hold='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";
@@ -20487,6 +20571,50 @@ if ($ADD==41111111111111)
 		exit;
 		}
 	$ADD=31111111111111;	# go to vicidial conference modification form below
+	}
+
+
+######################
+# ADD=42111111111111 modify vicidial confbridge record in the system
+######################
+if ($ADD==42111111111111)
+	{
+	if ($LOGast_admin_access==1)
+		{
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		$stmt="SELECT count(*) from vicidial_confbridges where conf_exten='$conf_exten' and server_ip='$server_ip';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ( ($row[0] > 0) and ( ($conf_exten != $old_conf_exten) or ($server_ip != $old_server_ip) ) )
+			{echo "<br>"._QXZ("AGENT CONFBRIDGE NOT MODIFIED - there is already a Conference in the system with this extension-server")."\n";}
+		else
+			{
+			if ( (strlen($conf_exten) < 1) or (strlen($server_ip) < 7) )
+				{echo "<br>"._QXZ("AGENT CONFBRIDGE NOT MODIFIED - Please go back and look at the data you entered")."\n";}
+			else
+				{
+				echo "<br>"._QXZ("AGENT CONFBRIDGE MODIFIED").": $conf_exten\n";
+
+				$stmt="UPDATE vicidial_confbridges set conf_exten='$conf_exten',extension='$extension' where conf_exten='$old_conf_exten' and server_ip='$server_ip';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+
+				### LOG INSERTION Admin Log Table ###
+				$SQL_log = "$stmt|";
+				$SQL_log = preg_replace('/;/', '', $SQL_log);
+				$SQL_log = addslashes($SQL_log);
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='VICICONF', event_type='MODIFY', record_id='$conf_exten', event_code='ADMIN MODIFY VICIDIAL CONFBRIDGE', event_sql=\"$SQL_log\", event_notes='';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				}
+			}
+		}
+	else
+		{
+		echo _QXZ("You do not have permission to view this page")."\n";
+		exit;
+		}
+	$ADD=32111111111111;	# go to vicidial confbridge modification form below
 	}
 
 
@@ -21739,9 +21867,31 @@ if ($ADD==51111111111111)
 	else
 		{
 		echo "<br><B>"._QXZ("AGENT CONFERENCE DELETION CONFIRMATION").": $conf_exten - $server_ip</B>\n";
-		echo "<br><br><a href=\"$PHP_SELF?ADD=61111111111111&conf_exten=$conf_exten&server_ip=$server_ip&CoNfIrM=YES\">"._QXZ("Click here to delete phone")." $conf_exten - $server_ip</a><br><br><br>\n";
+		echo "<br><br><a href=\"$PHP_SELF?ADD=61111111111111&conf_exten=$conf_exten&server_ip=$server_ip&CoNfIrM=YES\">"._QXZ("Click here to delete Conference")." $conf_exten - $server_ip</a><br><br><br>\n";
 		}
 	$ADD='31111111111111';		# go to vicidial conference modification below
+	}
+
+
+######################
+# ADD=52111111111111 confirmation before deletion of vicidial confbridge record
+######################
+if ($ADD==52111111111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( (strlen($conf_exten) < 2) or (strlen($server_ip) < 7) or ($LOGast_delete_phones < 1) )
+		{
+		echo "<br>"._QXZ("AGENT CONFBRIDGE NOT DELETED - Please go back and look at the data you entered")."\n";
+		echo "<br>"._QXZ("ConfBridge must be at least 2 characters in length")."\n";
+		echo "<br>"._QXZ("Server IP be at least 7 characters in length")."\n";
+		}
+	else
+		{
+		echo "<br><B>"._QXZ("AGENT CONFBRIDGE DELETION CONFIRMATION").": $conf_exten - $server_ip</B>\n";
+		echo "<br><br><a href=\"$PHP_SELF?ADD=62111111111111&conf_exten=$conf_exten&server_ip=$server_ip&CoNfIrM=YES\">"._QXZ("Click here to delete ConfBridge")." $conf_exten - $server_ip</a><br><br><br>\n";
+		}
+	$ADD='32111111111111';		# go to vicidial confbridge modification below
 	}
 
 
@@ -24329,6 +24479,39 @@ if ($ADD==61111111111111)
 		echo "<br><br>\n";
 		}
 	$ADD='10000000000000';		# go to vicidial conference list
+	}
+
+
+######################
+# ADD=62111111111111 delete vicidial confbridge record
+######################
+if ($ADD==62111111111111)
+	{
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	if ( (strlen($conf_exten) < 2) or (strlen($server_ip) < 7) or ($CoNfIrM != 'YES') or ($LOGast_delete_phones < 1) )
+		{
+		echo "<br>"._QXZ("AGENT CONFBRIDGE NOT DELETED - Please go back and look at the data you entered")."\n";
+		echo "<br>"._QXZ("ConfBridge must be at least 2 characters in length")."\n";
+		echo "<br>"._QXZ("Server IP must be at least 7 characters in length")."\n";
+		}
+	else
+		{
+		$stmt="DELETE from vicidial_confbridges where conf_exten='$conf_exten' and server_ip='$server_ip' limit 1;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+
+		### LOG INSERTION Admin Log Table ###
+		$SQL_log = "$stmt|";
+		$SQL_log = preg_replace('/;/', '', $SQL_log);
+		$SQL_log = addslashes($SQL_log);
+		$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='CONFERENCES', event_type='DELETE', record_id='$conf_exten', event_code='ADMIN DELETE CONFBRIDGE', event_sql=\"$SQL_log\", event_notes='';";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+
+		echo "<br><B>"._QXZ("AGENT CONFBRIDGE DELETION COMPLETED").": $conf_exten - $server_ip</B>\n";
+		echo "<br><br>\n";
+		}
+	$ADD='12000000000000';		# go to vicidial confbridge list
 	}
 
 
@@ -39530,7 +39713,7 @@ if ($ADD==311111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,local_gmt,voicemail_dump_exten,answer_transfer_agent,ext_context,sys_perf_log,vd_server_logs,agi_output,vicidial_balance_active,balance_trunks_offlimits,recording_web_link,alt_server_ip,active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,outbound_calls_per_second,sysload,channels_total,cpu_idle_percent,disk_usage,sounds_update,vicidial_recording_limit,carrier_logging_active,vicidial_balance_rank,rebuild_music_on_hold,active_agent_login_server,conf_secret,external_server_ip,custom_dialplan_entry,active_twin_server_ip,user_group,system_uptime,auto_restart_asterisk,asterisk_temp_no_restart,voicemail_dump_exten_no_inst,gather_asterisk_output,web_socket_url,conf_qualify,routing_prefix,external_web_socket_url from servers where ( (server_id='$server_id') or (server_ip='$server_ip') ) $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT server_id,server_description,server_ip,active,asterisk_version,max_vicidial_trunks,telnet_host,telnet_port,ASTmgrUSERNAME,ASTmgrSECRET,ASTmgrUSERNAMEupdate,ASTmgrUSERNAMElisten,ASTmgrUSERNAMEsend,local_gmt,voicemail_dump_exten,answer_transfer_agent,ext_context,sys_perf_log,vd_server_logs,agi_output,vicidial_balance_active,balance_trunks_offlimits,recording_web_link,alt_server_ip,active_asterisk_server,generate_vicidial_conf,rebuild_conf_files,outbound_calls_per_second,sysload,channels_total,cpu_idle_percent,disk_usage,sounds_update,vicidial_recording_limit,carrier_logging_active,vicidial_balance_rank,rebuild_music_on_hold,active_agent_login_server,conf_secret,external_server_ip,custom_dialplan_entry,active_twin_server_ip,user_group,system_uptime,auto_restart_asterisk,asterisk_temp_no_restart,voicemail_dump_exten_no_inst,gather_asterisk_output,web_socket_url,conf_qualify,routing_prefix,external_web_socket_url,conf_engine,conf_update_interval from servers where ( (server_id='$server_id') or (server_ip='$server_ip') ) $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		$server_id =					$row[0];
@@ -39585,6 +39768,8 @@ if ($ADD==311111111111)
 		$conf_qualify =					$row[49];
 		$routing_prefix =				$row[50];
 		$external_web_socket_url =		$row[51];
+		$conf_engine = 					$row[52];
+		$conf_update_interval = 		$row[53];
 
 		$stmt="SELECT count(*) from vicidial_live_agents where server_ip='$server_ip';";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -39658,6 +39843,8 @@ if ($ADD==311111111111)
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Web Socket URL").": </td><td align=left><input type=text name=web_socket_url size=30 maxlength=255 value=\"$web_socket_url\">$NWB#servers-web_socket_url$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("External Web Socket URL").": </td><td align=left><input type=text name=external_web_socket_url size=30 maxlength=255 value=\"$external_web_socket_url\">$NWB#servers-external_web_socket_url$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active Twin Server IP").": </td><td align=left><input type=text name=active_twin_server_ip size=16 maxlength=15 value=\"$active_twin_server_ip\">$NWB#servers-active_twin_server_ip$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Conferencing Engine").": </td><td align=left><select size=1 name=conf_engine><option value='MEETME'>"._QXZ("MEETME")."</option><option value='CONFBRIDGE'>"._QXZ("CONFBRIDGE")."</option><option selected value='$conf_engine'>"._QXZ("$conf_engine")."</option></select>$NWB#servers-conf_engine$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Conf Update Interval").": </td><td align=left><input type=text name=conf_update_interval size=5 maxlength=6 value=\"$conf_update_interval\">$NWB#servers-conf_update_interval$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active Asterisk Server").": </td><td align=left><select size=1 name=active_asterisk_server><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option selected value='$active_asterisk_server'>"._QXZ("$active_asterisk_server")."</option></select>$NWB#servers-active_asterisk_server$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Auto-Restart Asterisk").": </td><td align=left> &nbsp; &nbsp; <select size=1 name=auto_restart_asterisk><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option selected value='$auto_restart_asterisk'>"._QXZ("$auto_restart_asterisk")."</option></select>$NWB#servers-auto_restart_asterisk$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Temp No-Restart Asterisk").": </td><td align=left> &nbsp; &nbsp; <select size=1 name=asterisk_temp_no_restart><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option selected value='$asterisk_temp_no_restart'>"._QXZ("$asterisk_temp_no_restart")."</option></select>$NWB#servers-asterisk_temp_no_restart$NWE</td></tr>\n";
@@ -39850,6 +40037,37 @@ if ($ADD==311111111111)
 				{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 
 			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=31111111111111&conf_exten=$rowx[0]&server_ip=$server_ip\">$rowx[0]</a></td><td><font size=1>$rowx[1]</td></tr>\n";
+			}
+
+		echo "</table></center><br>\n";
+
+
+		### list of vicidial confbridges on this server
+		echo "<center>\n";
+		echo "<br><b>"._QXZ("AGENT CONFBRIDGES WITHIN THIS SERVER").":</b><br>\n";
+		echo "<TABLE width=400 cellspacing=3>\n";
+		echo "<tr><td>"._QXZ("VD CONFBRIDGE")."</td><td>"._QXZ("EXTENSION")."</td></tr>\n";
+
+		$active_vdconfs = 0;
+		$stmt="SELECT conf_exten,extension from vicidial_confbridges where server_ip='$server_ip'";
+		$rsltx=mysql_to_mysqli($stmt, $link);
+		$lists_to_print = mysqli_num_rows($rsltx);
+		if ($DB > 0) {echo "|$lists_to_print|$stmt|\n";}
+		$camp_lists='';
+
+		$o=0;
+		while ($lists_to_print > $o) 
+			{
+			$rowx=mysqli_fetch_row($rsltx);
+			$o++;
+			$active_vdconfs++;
+
+			if (preg_match('/1$|3$|5$|7$|9$/i', $o))
+				{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
+			else
+				{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
+
+			echo "<tr $bgcolor><td><font size=1><a href=\"$PHP_SELF?ADD=32111111111111&conf_exten=$rowx[0]&server_ip=$server_ip\">$rowx[0]</a></td><td><font size=1>$rowx[1]</td></tr>\n";
 			}
 
 		echo "</table></center><br>\n";
@@ -41994,6 +42212,56 @@ if ($ADD==31111111111111)
 		if ($LOGast_delete_phones > 0)
 			{
 			echo "<br><br><a href=\"$PHP_SELF?ADD=51111111111111&conf_exten=$conf_exten&server_ip=$server_ip\">"._QXZ("DELETE THIS AGENT CONFERENCE")."</a>\n";
+			}
+		}
+	else
+		{
+		echo _QXZ("You do not have permission to view this page")."\n";
+		exit;
+		}
+	}
+
+
+######################
+# ADD=32111111111111 modify vicidial ConfBridge record in the system
+######################
+if ($ADD==32111111111111)
+	{
+	if ($LOGast_admin_access==1)
+		{
+		if ( ($SSadmin_modify_refresh > 1) and ($modify_refresh_set < 1) )
+			{
+			$modify_url = "$PHP_SELF?ADD=32111111111111&conf_exten=$conf_exten&server_ip=$server_ip";
+			$modify_footer_refresh=1;
+			}
+		echo "<TABLE><TR><TD>\n";
+		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+		$stmt="SELECT conf_exten,server_ip,extension,leave_3way,leave_3way_datetime from vicidial_confbridges where conf_exten='$conf_exten' and server_ip='$server_ip';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$conf_exten = $row[0];
+		$server_ip = $row[1];
+
+		echo "<br>"._QXZ("MODIFY AN AGENT CONFBRIDGE RECORD").": $row[0]<form action=$PHP_SELF method=POST>\n";
+		echo "<input type=hidden name=ADD value=42111111111111>\n";
+		echo "<input type=hidden name=old_conf_exten value=\"$row[0]\">\n";
+		echo "<input type=hidden name=old_server_ip value=\"$row[1]\">\n";
+		echo "<center><TABLE width=$section_width cellspacing=3>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("ConfBridge").": </td><td align=left><input type=text name=conf_exten size=10 maxlength=7 value=\"$row[0]\">$NWB#conferences-conf_exten$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"$PHP_SELF?ADD=311111111111&server_ip=$row[1]\">"._QXZ("Server IP")."</a>: </td><td align=left><select size=1 name=server_ip>\n";
+
+		echo "$servers_list";
+		echo "<option SELECTED>$row[1]</option>\n";
+		echo "</select>$NWB#conferences-server_ip$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Current Extension").": </td><td align=left><input type=text name=extension size=20 maxlength=20 value=\"$row[2]\"></td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input style='background-color:#$SSbutton_color' type=submit name=submit value='"._QXZ("SUBMIT")."'</td></tr>\n";
+		echo "</TABLE></center>\n";
+
+		echo "<center><b>\n";
+		if ($LOGast_delete_phones > 0)
+			{
+			echo "<br><br><a href=\"$PHP_SELF?ADD=52111111111111&conf_exten=$conf_exten&server_ip=$server_ip\">"._QXZ("DELETE THIS AGENT CONFBRIDGE")."</a>\n";
 			}
 		}
 	else
@@ -46441,6 +46709,45 @@ if ($ADD==10000000000000)
 		echo "<td><font size=1> $row[1]</td>";
 		echo "<td><font size=1> $row[2]</td>";
 		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=31111111111111&conf_exten=$row[0]&server_ip=$row[1]\">"._QXZ("MODIFY")."</a></td></tr>\n";
+		$o++;
+		}
+
+	echo "</TABLE></center>\n";
+	}
+
+
+######################
+# ADD=12000000000000 display all vicidial confbridges
+######################
+if ($ADD==12000000000000)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<img src=\"images/icon_conferences.png\" width=42 height=42 align=left> <FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	$stmt="SELECT conf_exten,server_ip,extension from vicidial_confbridges order by conf_exten";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$vicidialconf_to_print = mysqli_num_rows($rslt);
+
+	echo "<br>"._QXZ("AGENT CONFBRIDGE LISTINGS").":\n";
+	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<tr bgcolor=black>";
+	echo "<td><font size=1 color=white align=left><B>"._QXZ("CONFBRIDGE")."</B></td>";
+	echo "<td><font size=1 color=white><B>"._QXZ("SERVER IP")."</B></td>";
+	echo "<td><font size=1 color=white><B>"._QXZ("EXTENSION")."</B></td>";
+	echo "<td align=center><font size=1 color=white><B>"._QXZ("MODIFY")."</B></td></tr>\n";
+
+	$o=0;
+	while ($vicidialconf_to_print > $o) 
+		{
+		$row=mysqli_fetch_row($rslt);
+		if (preg_match('/1$|3$|5$|7$|9$/i', $o))
+			{$bgcolor='class="records_list_x"';} 
+		else
+			{$bgcolor='class="records_list_y"';}
+		echo "<tr $bgcolor"; if ($SSadmin_row_click > 0) {echo " onclick=\"window.document.location='$PHP_SELF?ADD=32111111111111&conf_exten=$row[0]&server_ip=$row[1]'\"";} echo "><td><a href=\"$PHP_SELF?ADD=32111111111111&conf_exten=$row[0]&server_ip=$row[1]\"><font size=1 color=black>$row[0]</a></td>";
+		echo "<td><font size=1> $row[1]</td>";
+		echo "<td><font size=1> $row[2]</td>";
+		echo "<td align=center><font size=1><a href=\"$PHP_SELF?ADD=32111111111111&conf_exten=$row[0]&server_ip=$row[1]\">"._QXZ("MODIFY")."</a></td></tr>\n";
 		$o++;
 		}
 
