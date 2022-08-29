@@ -2,7 +2,7 @@
 
 # install.pl version 2.14
 #
-# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 
 # CHANGES
@@ -46,6 +46,7 @@
 # 190530-1511 - Added 'S' keepalive option
 # 210813-0925 - Added Asteirsk 16 option
 # 210827-0926 - Added PJSIP default conf files to Asterisk 16 install
+# 220827-2239 - Added VERM web directory
 #
 
 ############################################
@@ -2570,6 +2571,7 @@ if ($NOWEB < 1)
 	if (!-e "$PATHweb/vicidial/agent_reports/")		{`mkdir -p $PATHweb/vicidial/agent_reports/`;}
 	if (!-e "$PATHweb/vicidial/server_reports/")	{`mkdir -p $PATHweb/vicidial/server_reports/`;}
 	if (!-e "$PATHweb/chat_customer/")				{`mkdir -p $PATHweb/chat_customer/`;}
+	if (!-e "$PATHweb/VERM/")						{`mkdir -p $PATHweb/VERM/`;}
 
 	print "Copying web files...\n";
 	# save custom.css if its not empty
@@ -2582,12 +2584,14 @@ if ($NOWEB < 1)
 	`cp -f ./www/vicidial/robots.txt $PATHweb/vicidial/server_reports/`;
 	if (-e "$PATHweb/agc/css/custom.css.save_user_changes") {`mv $PATHweb/agc/css/custom.css.save_user_changes $PATHweb/agc/css/custom.css`;}
 	`cp -f ./www/vicidial/robots.txt $PATHweb/chat_customer/`;
+	`cp -f ./www/vicidial/robots.txt $PATHweb/VERM/`;
 
 	print "setting web scripts to executable...\n";
 	`chmod 0777 $PATHweb/`;
 	`chmod -R 0755 $PATHweb/agc/`;
 	`chmod -R 0755 $PATHweb/vicidial/`;
 	`chmod -R 0755 $PATHweb/chat_customer/`;
+	`chmod -R 0755 $PATHweb/VERM/`;
 	`chmod 0777 $PATHweb/agc/`;
 	`chmod 0777 $PATHweb/vicidial/`;
 	`chmod 0777 $PATHweb/vicidial/ploticus/`;
@@ -2603,6 +2607,9 @@ if ($NOWEB < 1)
 	`rm -f $PATHweb/vicidial/listloader_super.pl`;
 	`rm -f $PATHweb/vicidial/listloader.pl`;
 	`chmod 0777 $PATHweb/chat_customer/`;
+	`cp -f /dev/null $PATHweb/VERM/project_auth_entries.txt`;
+	`chmod 0777 $PATHweb/VERM/project_auth_entries.txt`;
+	`chmod 0777 $PATHweb/VERM/`;
 	}
 
 if ( ($PROMPTcopy_web_lang =~ /y/i) || ($CLIcopy_web_lang =~ /y/i) )
@@ -2632,6 +2639,7 @@ if ($PATHconf !~ /\/etc\/astguiclient.conf/)
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/listloader_rowdisplay.pl `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/vicidial/spreadsheet_sales_viewer.pl `;
 	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/chat_customer/dbconnect_mysqli.php `;
+	`sed -i 's/$PATHconfDEFAULT/$PATHconfEREG/g' $PATHweb/VERM/dbconnect_mysqli.php `;
 	}
 
 if ( ($PROMPTcopy_conf_files =~ /y/i) || ($CLIcopy_conf_files =~ /y/i) )
