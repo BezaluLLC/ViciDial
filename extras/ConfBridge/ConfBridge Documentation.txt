@@ -89,7 +89,7 @@ In the /etc/asterisk/confbridge.conf add:
 
 	#include "confbridge-vicidial.conf"
 
-to the bottom of the file. There create the /etc/asterisk/confbridge-vicidial.conf file with the following contents:
+to the bottom of the file. Then create the /etc/asterisk/confbridge-vicidial.conf file with the following contents:
 
 	; Bridge Profile for agent conferences
 	[vici_agent_bridge]
@@ -130,7 +130,7 @@ to the bottom of the file. There create the /etc/asterisk/confbridge-vicidial.co
 	startmuted=no
 	marked=yes
 	dtmf_passthrough=yes
-	hearjoin=yes
+	hear_own_join_sound=yes
 	dsp_drop_silence=yes
 
 	; User Profile for admin channels
