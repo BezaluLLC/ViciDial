@@ -1,4 +1,4 @@
-VICIdial ConfBridge Support:		STARTED: 2022-06-22	UPDATED: 2022-08-27
+VICIdial ConfBridge Support:		STARTED: 2022-06-22	UPDATED: 2022-08-29
 
 
 !!! NOTE: VICIdial ConfBridge support is currently in BETA mode and is not recommended for systems that require a stable and tested codebase !!!
@@ -567,3 +567,16 @@ Webservers:
 The admin web screens had been modified to show ConfBridges on servers and management of ConfBridges in the database.
 
 Also, the "Server Modify" page now has settings for the Conferencing Engine and the Conf Update Interval.
+
+
+
+- Screen Session:
+
+A new screen session has been added called 'AST_conf_update_screen.pl'. This screen session replaces both the AST_conf_update.pl and AST_conf_update_3way.pl scripts. It checks both MeetMe and ConfBridge conferences for unnecessary channels and removes them. For instance if an agent does a Leave 3way and a few minutes later one of the remaining channels hangs up. This script will remove the remaining channel and free the conference for use by Vicidial. This screen session is optional for use with MeetMe but is required to be used with ConfBridge.
+
+To enable this screen session you need to add a 'C' to the 'VARactive_keepalives' variable in the '/etc/astguiclient.conf' on your dialers, and comment out the following line from your crontab:
+
+                ### updater for conference validator
+                * * * * * /usr/share/astguiclient/AST_conf_update.pl
+
+You can configure the refresh interval for how often the screen session checks for unnecessary channels by changing "Conf Update Interval" in Admin -> Servers.

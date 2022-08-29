@@ -47,6 +47,7 @@
 # 210813-0925 - Added Asteirsk 16 option
 # 210827-0926 - Added PJSIP default conf files to Asterisk 16 install
 # 220827-2239 - Added VERM web directory
+# 220829-1434 - Added 'C' keepalive option
 #
 
 ############################################
@@ -209,6 +210,7 @@ if (length($ARGV[0])>1)
 		print "     7 - AST_VDauto_dial_FILL (only for multi-server, this must only be on one server)\n";
 		print "     8 - ip_relay (used for blind agent monitoring)\n";
 		print "     9 - Timeclock auto-logout\n";
+		print "     C - ConfBridge process, (see the ConfBridge documentation for more info)\n";
 		print "     E - Email processor, (If multi-server system, this must only be on one server)\n";
 		print "     S - SIP Logger (Patched Asterisk 13 or higher required)\n";
 		print "  [--asterisk_version] = set the asterisk version you want to install for\n";
@@ -1824,6 +1826,7 @@ else
 			print " 7 - AST_VDauto_dial_FILL (only for multi-server, this must only be on one server)\n";
 			print " 8 - ip_relay (used for blind agent monitoring)\n";
 			print " 9 - Timeclock auto logout\n";
+			print " C - ConfBridge process, (see the ConfBridge documentation for more info)\n";
 			print " E - Email processor, (If multi-server system, this must only be on one server)\n";
 			print " S - SIP Logger (Patched Asterisk 13 or higher required)\n";
 			print "Enter active keepalives or press enter for default: [$VARactive_keepalives] ";
@@ -2431,6 +2434,7 @@ print conf "#  6 - FastAGI_log\n";
 print conf "#  7 - AST_VDauto_dial_FILL (only for multi-server, this must only be on one server)\n";
 print conf "#  8 - ip_relay (used for blind agent monitoring)\n";
 print conf "#  9 - Timeclock auto logout, (If multi-server system, this must only be on one server)\n";
+print conf "#  C - ConfBridge process, (see the ConfBridge documentation for more info)\n";
 print conf "#  E - Email processor, (If multi-server system, this must only be on one server)\n";
 print conf "#  S - SIP Logger (Patched Asterisk 13 or higher required)\n";
 print conf "VARactive_keepalives => $VARactive_keepalives\n";
