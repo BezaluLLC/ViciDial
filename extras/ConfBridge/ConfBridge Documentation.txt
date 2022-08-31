@@ -1,4 +1,4 @@
-VICIdial ConfBridge Support:		STARTED: 2022-06-22	UPDATED: 2022-08-30
+VICIdial ConfBridge Support:		STARTED: 2022-06-22	UPDATED: 2022-08-31
 
 
 !!! NOTE: VICIdial ConfBridge support is currently in BETA mode and is not recommended for systems that require a stable and tested codebase !!!
@@ -552,6 +552,7 @@ Dialers:
 - ADMIN_update_server_ip.pl.diff
 - AST_DB_optimize.pl.diff
 - AST_reset_mysql_vars.pl.diff
+- AST_VDremote_agents.pl.diff
 - AST_conf_update_screen.pl
 
 Webservers:
