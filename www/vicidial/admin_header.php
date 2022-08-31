@@ -93,9 +93,10 @@
 # 211215-2225 - Added User Group options for altered header display
 # 220827-0941 - Added ConfBridge top menu options
 # 220829-1017 - Changed 'admin.php' links to "$ADMIN" variable
+# 220830-2303 - Fix for ADMIN change, issue #1370
 #
 
-$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add,allow_chats,enable_languages,admin_row_click,admin_screen_colors,user_new_lead_limit,user_territories_active,qc_features_active,agent_soundboards,enable_drop_lists,allow_ip_lists from system_settings;";
+$stmt="SELECT admin_home_url,enable_tts_integration,callcard_enabled,custom_fields_enabled,allow_emails,level_8_disable_add,allow_chats,enable_languages,admin_row_click,admin_screen_colors,user_new_lead_limit,user_territories_active,qc_features_active,agent_soundboards,enable_drop_lists,allow_ip_lists,admin_web_directory from system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $admin_home_url_LU =		$row[0];
@@ -114,8 +115,10 @@ $SSqc_features_active =		$row[12];
 $SSagent_soundboards =		$row[13];
 $SSenable_drop_lists =		$row[14];
 $SSallow_ip_lists =			$row[15];
+$SSadmin_web_directory =	$row[16];
 
 if (strlen($SSadmin_home_url) > 5) {$admin_home_url_LU = $SSadmin_home_url;}
+if(!isset($ADMIN)){$ADMIN = "../$SSadmin_web_directory/admin.php";}
 
 $SSmenu_background='015B91';
 $SSframe_background='D9E6FE';
