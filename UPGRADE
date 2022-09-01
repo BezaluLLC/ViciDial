@@ -722,6 +722,14 @@ OTHER CHANGES:
 
 202. Added the "Inbound DID Detail Report" to the Admin Utilities page.
 
+203. Added Beta support for ConfBridge Asterisk Conferencing engine. See the
+	"/extras/ConfBridge" directory for more information.
+
+204. Added Beta support for VERM(the VICIdial Enhanced Reporting Module),
+	accessible from the "Reports -> Admin Utilities" page.
+
+205. Added User Group "Script Override" option, with per-campaign activation.
+
 
 
 

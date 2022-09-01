@@ -526,10 +526,11 @@
 # 220311-1709 - Added List CID Group Override option
 # 220623-1005 - Added List Dial Prefix Override option
 # 220625-1630 - Fix for Manual Dial NONE_WITH_ options dialing proper number
+# 220831-1654 - Added User Group script override option
 #
 
-$version = '2.14-419';
-$build = '220625-1630';
+$version = '2.14-420';
+$build = '220831-1654';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=876;
@@ -2292,6 +2293,44 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$VLAEDXaffected_rows = mysqli_affected_rows($link);
 			}
 
+		$local_call_time='24hours';
+		##### gather local call time, user_group_script settings from campaign
+		$stmt="SELECT local_call_time,user_group_script FROM vicidial_campaigns where campaign_id='$campaign';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00353',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$camp_lct_ct = mysqli_num_rows($rslt);
+		if ($camp_lct_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$local_call_time =			$row[0];
+			$user_group_script =		$row[1];
+			}
+
+		$stmt="SELECT user_group,territory FROM vicidial_users where user='$user';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00241',$user,$server_ip,$session_name,$one_mysql_log);}
+		$userterr_ct = mysqli_num_rows($rslt);
+		if ($DB) {echo "$userterr_ct|$stmt\n";}
+		if ($userterr_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$user_group =	$row[0];
+			$territory =	$row[1];
+			}
+
+		$UGscript_id='';
+		$stmt="SELECT script_id FROM vicidial_user_groups where user_group='$user_group';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		$userterr_ct = mysqli_num_rows($rslt);
+		if ($DB) {echo "$userterr_ct|$stmt\n";}
+		if ($userterr_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$UGscript_id =	$row[0];
+			}
+
 		$script_recording_delay=0;
 		##### find if script contains recording fields
 		$stmt="SELECT count(*) FROM vicidial_scripts vs,vicidial_campaigns vc WHERE campaign_id='$campaign' and ( (vs.script_id=vc.campaign_script) or (vs.script_id=vc.campaign_script_two) ) and script_text LIKE \"%--A--recording_%\";";
@@ -2468,19 +2507,6 @@ if ($ACTION == 'manDiaLnextCaLL')
 				$state='';
 				if (strlen($phone_code)<1)
 					{$phone_code=$default_phone_code;}
-
-				$local_call_time='24hours';
-				##### gather local call time setting from campaign
-				$stmt="SELECT local_call_time FROM vicidial_campaigns where campaign_id='$campaign';";
-				$rslt=mysql_to_mysqli($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00353',$user,$server_ip,$session_name,$one_mysql_log);}
-				if ($DB) {echo "$stmt\n";}
-				$camp_lct_ct = mysqli_num_rows($rslt);
-				if ($camp_lct_ct > 0)
-					{
-					$row=mysqli_fetch_row($rslt);
-					$local_call_time =			$row[0];
-					}
 
 				### get current gmt_offset of the phone_number
 				$USarea = substr($phone_number, 0, 3);
@@ -3879,18 +3905,6 @@ if ($ACTION == 'manDiaLnextCaLL')
 							$camp_lists = preg_replace("/.$/i","",$camp_lists);
 							if (strlen($camp_lists) < 4) {$camp_lists="''";}
 							if (strlen($list_id_sql) < 4) {$list_id_sql="list_id=''";}
-
-							$stmt="SELECT user_group,territory FROM vicidial_users where user='$user';";
-							$rslt=mysql_to_mysqli($stmt, $link);
-								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00241',$user,$server_ip,$session_name,$one_mysql_log);}
-							$userterr_ct = mysqli_num_rows($rslt);
-							if ($DB) {echo "$userterr_ct|$stmt\n";}
-							if ($userterr_ct > 0)
-								{
-								$row=mysqli_fetch_row($rslt);
-								$user_group =	$row[0];
-								$territory =	$row[1];
-								}
 
 							$adooSQL = '';
 							if (preg_match("/TERRITORY/i",$agent_dial_owner_only)) 
@@ -5691,6 +5705,24 @@ if ($ACTION == 'manDiaLnextCaLL')
 						$VDCL_campaign_script =	$row[0];
 						$list_description =		$row[1];
 						}
+					}
+				}
+
+			# check for User Group override of agent script, and if that feature is enabled for this campaign
+			if ( ($user_group_script == 'ENABLED') and (strlen($UGscript_id) > 0) )
+				{
+				$VDCL_campaign_script = $UGscript_id;
+				$script_recording_delay=0;
+				##### find if script contains recording fields
+				$stmt="SELECT count(*) FROM vicidial_scripts WHERE script_id='$UGscript_id' and script_text LIKE \"%--A--recording_%\";";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$ug_vc_ct = mysqli_num_rows($rslt);
+				if ($ug_vc_ct > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$script_recording_delay = $row[0];
 					}
 				}
 
@@ -9676,7 +9708,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 					$CBcomments =		trim("$row[3]");
 					}
 				}
-			$stmt="SELECT owner_populate FROM vicidial_campaigns where campaign_id='$campaign';";
+			$stmt="SELECT owner_populate,user_group_script FROM vicidial_campaigns where campaign_id='$campaign';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00444',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -9684,7 +9716,8 @@ if ($ACTION == 'VDADcheckINCOMING')
 			if ($camp_op_ct > 0)
 				{
 				$row=mysqli_fetch_row($rslt);
-				$owner_populate =				$row[0];
+				$owner_populate =			$row[0];
+				$user_group_script =		$row[1];
 				}
 			$ownerSQL='';
 			if ( ($owner_populate=='ENABLED') and ( (strlen($owner) < 1) or ($owner=='NULL') ) )
@@ -9724,6 +9757,18 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$row=mysqli_fetch_row($rslt);
 				$user_group =		trim("$row[0]");
 				$fullname =			$row[1];
+				}
+
+			$UGscript_id='';
+			$stmt="SELECT script_id FROM vicidial_user_groups where user_group='$user_group';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			$userterr_ct = mysqli_num_rows($rslt);
+			if ($DB) {echo "$userterr_ct|$stmt\n";}
+			if ($userterr_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$UGscript_id =	$row[0];
 				}
 
 			$stmt = "SELECT campaign_id,phone_number,alt_dial,call_type from vicidial_auto_calls where callerid = '$callerid' order by call_time desc limit 1;";
@@ -9911,6 +9956,24 @@ if ($ACTION == 'VDADcheckINCOMING')
 						}
 					}
 
+				# check for User Group override of agent script, and if that feature is enabled for this campaign
+				if ( ($user_group_script == 'ENABLED') and (strlen($UGscript_id) > 0) )
+					{
+					$VDCL_campaign_script = $UGscript_id;
+					$script_recording_delay=0;
+					##### find if script contains recording fields
+					$stmt="SELECT count(*) FROM vicidial_scripts WHERE script_id='$UGscript_id' and script_text LIKE \"%--A--recording_%\";";
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$ug_vc_ct = mysqli_num_rows($rslt);
+					if ($ug_vc_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$script_recording_delay = $row[0];
+						}
+					}
+
 				$VDCL_ingroup_script_color='';
 				if ( (strlen($VDCL_campaign_script)>1) and ($VDCL_campaign_script != 'NONE') )
 					{
@@ -10016,6 +10079,24 @@ if ($ACTION == 'VDADcheckINCOMING')
 					$script_recording_delay = $row[0];
 					}
 
+				# check for User Group override of agent script, and if that feature is enabled for this campaign
+				if ( ($user_group_script == 'ENABLED') and (strlen($UGscript_id) > 0) )
+					{
+					$VDCL_ingroup_script = $UGscript_id;
+					$script_recording_delay=0;
+					##### find if script contains recording fields
+					$stmt="SELECT count(*) FROM vicidial_scripts WHERE script_id='$UGscript_id' and script_text LIKE \"%--A--recording_%\";";
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$ug_vc_ct = mysqli_num_rows($rslt);
+					if ($ug_vc_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$script_recording_delay = $row[0];
+						}
+					}
+
 				$stmt = "SELECT group_name,group_color,web_form_address,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_xfer_group,ingroup_recording_override,ingroup_rec_filename,default_group_alias,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,uniqueid_status_display,uniqueid_status_prefix,timer_action_destination,web_form_address_three,status_group_id,inbound_survey,ingroup_script_two,browser_alert_sound,browser_alert_volume from vicidial_inbound_groups where group_id='$VDADchannel_group';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -10118,6 +10199,25 @@ if ($ACTION == 'VDADcheckINCOMING')
 								$script_recording_delay = $row[0];
 								}
 							}
+
+						# check for User Group override of agent script, and if that feature is enabled for this campaign
+						if ( ($user_group_script == 'ENABLED') and (strlen($UGscript_id) > 0) )
+							{
+							$VDCL_ingroup_script = $UGscript_id;
+							$script_recording_delay=0;
+							##### find if script contains recording fields
+							$stmt="SELECT count(*) FROM vicidial_scripts WHERE script_id='$UGscript_id' and script_text LIKE \"%--A--recording_%\";";
+							$rslt=mysql_to_mysqli($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+							if ($DB) {echo "$stmt\n";}
+							$ug_vc_ct = mysqli_num_rows($rslt);
+							if ($ug_vc_ct > 0)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$script_recording_delay = $row[0];
+								}
+							}
+
 						if ( ( (preg_match('/NONE/',$VDCL_ingroup_script_two)) and (strlen($VDCL_ingroup_script_two) < 5) ) or (strlen($VDCL_ingroup_script_two) < 1) )
 							{
 							$VDCL_ingroup_script_two =		$row[16];
@@ -10227,6 +10327,24 @@ if ($ACTION == 'VDADcheckINCOMING')
 						{
 						$row=mysqli_fetch_row($rslt);
 						$script_recording_delay = $row[0];
+						}
+
+					# check for User Group override of agent script, and if that feature is enabled for this campaign
+					if ( ($user_group_script == 'ENABLED') and (strlen($UGscript_id) > 0) )
+						{
+						$VDCL_ingroup_script = $UGscript_id;
+						$script_recording_delay=0;
+						##### find if script contains recording fields
+						$stmt="SELECT count(*) FROM vicidial_scripts WHERE script_id='$UGscript_id' and script_text LIKE \"%--A--recording_%\";";
+						$rslt=mysql_to_mysqli($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						if ($DB) {echo "$stmt\n";}
+						$ug_vc_ct = mysqli_num_rows($rslt);
+						if ($ug_vc_ct > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$script_recording_delay = $row[0];
+							}
 						}
 
 					$stmt = "SELECT group_web_vars from vicidial_campaign_agents where campaign_id='$VDADchannel_group' and user='$user';";
@@ -11418,6 +11536,18 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 				$fullname =			$row[1];
 				}
 
+			$UGscript_id='';
+			$stmt="SELECT script_id FROM vicidial_user_groups where user_group='$user_group';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			$userterr_ct = mysqli_num_rows($rslt);
+			if ($DB) {echo "$userterr_ct|$stmt\n";}
+			if ($userterr_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$UGscript_id =	$row[0];
+				}
+
 			if ($other_start_epoch > 1000)
 				{$queue_seconds = ($StarTtime - $other_start_epoch);}
 
@@ -11495,7 +11625,7 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 
 				$status_group_gather_data = status_group_gather($row[27],'INGROUP');
 
-				$stmt = "SELECT campaign_script,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_group_alias,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,timer_action_destination,campaign_script_two,browser_alert_sound,browser_alert_volume from vicidial_campaigns where campaign_id='$campaign';";
+				$stmt = "SELECT campaign_script,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_group_alias,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,timer_action_destination,campaign_script_two,browser_alert_sound,browser_alert_volume,user_group_script from vicidial_campaigns where campaign_id='$campaign';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00501',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -11531,7 +11661,15 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 						{$VDCL_xferconf_e_number =	$row[13];}
 					if (strlen($VDCL_timer_action_destination) < 1)
 						{$VDCL_timer_action_destination =	$row[14];}
+					$user_group_script =	$row[18];
 					}
+
+				# check for User Group override of agent script, and if that feature is enabled for this campaign
+				if ( ($user_group_script == 'ENABLED') and (strlen($UGscript_id) > 0) )
+					{
+					$VDCL_ingroup_script = $UGscript_id;
+					}
+
 				$stmt = "SELECT group_web_vars from vicidial_inbound_group_agents where group_id='$VDADchannel_group' and user='$user';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -11567,7 +11705,7 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 				}
 			else
 				{
-				$stmt = "SELECT campaign_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_group_alias,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,timer_action_destination,campaign_script_two from vicidial_campaigns where campaign_id='$VDADchannel_group';";
+				$stmt = "SELECT campaign_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_group_alias,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,timer_action_destination,campaign_script_two,user_group_script from vicidial_campaigns where campaign_id='$VDADchannel_group';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00505',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -11591,6 +11729,7 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 					$VDCL_xferconf_d_number =		$row[13];
 					$VDCL_xferconf_e_number =		$row[14];
 					$VDCL_timer_action_destination = $row[15];
+					$user_group_script =			$row[17];
 					}
 
 				$stmt = "SELECT group_web_vars from vicidial_campaign_agents where campaign_id='$VDADchannel_group' and user='$user';";
@@ -11603,6 +11742,12 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 					$row=mysqli_fetch_row($rslt);
 					$VDCL_group_web_vars =	$row[0];
 					}
+				}
+
+			# check for User Group override of agent script, and if that feature is enabled for this campaign
+			if ( ($user_group_script == 'ENABLED') and (strlen($UGscript_id) > 0) )
+				{
+				$VDCL_ingroup_script = $UGscript_id;
 				}
 
 			$VDCL_ingroup_script_color='';
@@ -12463,7 +12608,7 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 					$CBcomments =		trim("$row[3]");
 					}
 				}
-			$stmt="SELECT owner_populate FROM vicidial_campaigns where campaign_id='$campaign';";
+			$stmt="SELECT owner_populate,user_group_script FROM vicidial_campaigns where campaign_id='$campaign';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00459',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -12471,7 +12616,8 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 			if ($camp_op_ct > 0)
 				{
 				$row=mysqli_fetch_row($rslt);
-				$owner_populate =				$row[0];
+				$owner_populate =			$row[0];
+				$user_group_script =		$row[1];
 				}
 			$ownerSQL='';
 			if ( ($owner_populate=='ENABLED') and ( (strlen($owner) < 1) or ($owner=='NULL') ) )
@@ -12511,6 +12657,18 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 				$row=mysqli_fetch_row($rslt);
 				$user_group =		trim("$row[0]");
 				$fullname =			$row[1];
+				}
+
+			$UGscript_id='';
+			$stmt="SELECT script_id FROM vicidial_user_groups where user_group='$user_group';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+			$userterr_ct = mysqli_num_rows($rslt);
+			if ($DB) {echo "$userterr_ct|$stmt\n";}
+			if ($userterr_ct > 0)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$UGscript_id =	$row[0];
 				}
 
 			$dialed_number = $phone_number;
@@ -12714,6 +12872,24 @@ if ($ACTION == 'LeaDSearcHSelecTUpdatE')
 					}
 
 				$Ctype = 'I';
+				}
+
+			# check for User Group override of agent script, and if that feature is enabled for this campaign
+			if ( ($user_group_script == 'ENABLED') and (strlen($UGscript_id) > 0) )
+				{
+				$VDCL_ingroup_script = $UGscript_id;
+				$script_recording_delay=0;
+				##### find if script contains recording fields
+				$stmt="SELECT count(*) FROM vicidial_scripts WHERE script_id='$UGscript_id' and script_text LIKE \"%--A--recording_%\";";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$ug_vc_ct = mysqli_num_rows($rslt);
+				if ($ug_vc_ct > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$script_recording_delay = $row[0];
+					}
 				}
 
 			$VDCL_ingroup_script_color='';

@@ -761,7 +761,8 @@ api_ip_list VARCHAR(30) default '',
 webphone_layout VARCHAR(255) default '',
 allowed_queue_groups TEXT,
 reports_header_override ENUM('DISABLED','LOGO_ONLY_SMALL','LOGO_ONLY_LARGE','ALT_1','ALT_2','ALT_3','ALT_4') default 'DISABLED',
-admin_home_url VARCHAR(255) default ''
+admin_home_url VARCHAR(255) default '',
+script_id VARCHAR(20) default ''
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns (
@@ -1092,7 +1093,8 @@ pause_max_url TEXT,
 agent_hide_hangup ENUM('Y','N') default 'N',
 ig_xfer_list_sort ENUM('GROUP_ID_UP','GROUP_ID_DOWN','GROUP_NAME_UP','GROUP_NAME_DOWN','PRIORITY_UP','PRIORITY_DOWN') default 'GROUP_ID_UP',
 script_tab_frame_size VARCHAR(10) default 'DEFAULT',
-max_logged_in_agents SMALLINT(5) UNSIGNED default '0'
+max_logged_in_agents SMALLINT(5) UNSIGNED default '0',
+user_group_script ENUM('DISABLED','ENABLED') default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -5147,4 +5149,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1665',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1666',db_schema_update_date=NOW(),reload_timestamp=NOW();
