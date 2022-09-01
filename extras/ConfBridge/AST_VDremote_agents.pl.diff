@@ -1,5 +1,5 @@
 --- AST_VDremote_agents.pl.old	2022-08-31 10:14:56.754198885 -0400
-+++ AST_VDremote_agents.pl	2022-08-31 10:14:32.350279855 -0400
++++ AST_VDremote_agents.pl	2022-08-31 21:44:54.969475700 -0400
 @@ -194,7 +194,7 @@
  ###########################################
  
@@ -21,7 +21,7 @@
  					{
  					$TESTrun++;
  					$DBremote_conf_exten[$user_counter] = ($user_counter + 8600051);
-+					if ($conf_engine eq 'CONFBRIDGE') { $DBremote_conf_exten[$user_counter] = ($user_counter + 29600051); }
++					if ($conf_engine eq 'CONFBRIDGE') { $DBremote_conf_exten[$user_counter] = ($user_counter + 9600051); }
  					}
  				$DBremote_closer[$user_counter] =		$closer_campaigns;
  				$DBremote_random[$user_counter] =		$random;

@@ -50,13 +50,13 @@ The following extensions needed to be added to the Asterisk /etc/asterisk/extens
 	exten => _49600XXX,n,ConfBridge(${EXTEN:1},vici_agent_bridge,vici_monitor_user)
 	exten => _49600XXX,n,Hangup()
 
-	; used to barge into a conference
+	; used to record into a conference
 	exten => _59600XXX,1,Answer()
 	exten => _59600XXX,n,Playback(sip-silence)
 	exten => _59600XXX,n,ConfBridge(${EXTEN:1},vici_agent_bridge,vici_recording_user)
 	exten => _59600XXX,n,Hangup()
 
-	; used to record a conference
+	; used to barge a conference
 	exten => _69600XXX,1,Answer()
 	exten => _69600XXX,n,Playback(sip-silence)
 	exten => _69600XXX,n,ConfBridge(${EXTEN:1},vici_agent_bridge,vici_barge_user)
@@ -547,7 +547,7 @@ NOTE: The "AST_conf_update_screen.pl" script is a new perl script, not a patch f
 Here is the list of files for specific default directories:
 
 Dialers:
-/usr/share/astguiclient - 
+/usr/share/astguiclient/ - 
 - ADMIN_keepalive_ALL.pl.diff
 - ADMIN_update_server_ip.pl.diff
 - AST_DB_optimize.pl.diff
@@ -556,11 +556,12 @@ Dialers:
 - AST_conf_update_screen.pl
 
 Webservers:
-/srv/www/htdocs/agc - 
+/srv/www/htdocs/agc/ - 
 - vicidial.php.diff
 - vdc_db_query.php.diff
 - manager_send.php.diff
-
+/srv/www/htdocs/vicidial/ - 
+- non_agent_api.php.diff
 
 
 - Web Admin changes:
