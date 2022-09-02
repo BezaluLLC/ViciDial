@@ -195,10 +195,11 @@
 # 220310-0825 - Added DELETE action to the 'update_presets' function
 # 220312-0944 - Added vicidial_dial_cid_log logging
 # 220519-2206 - Small fix for 'update_lead' delete_lead feature
+# 220902-0823 - Added dial_status_add/dial_status_remove options to update_campaign function
 #
 
-$version = '2.14-172';
-$build = '220519-2206';
+$version = '2.14-173';
+$build = '220902-0823';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -700,6 +701,10 @@ if (isset($_GET["preset_hide_number"]))				{$preset_hide_number=$_GET["preset_hi
 	elseif (isset($_POST["preset_hide_number"]))	{$preset_hide_number=$_POST["preset_hide_number"];}
 if (isset($_GET["action"]))				{$action=$_GET["action"];}
 	elseif (isset($_POST["action"]))	{$action=$_POST["action"];}
+if (isset($_GET["dial_status_add"]))			{$dial_status_add=$_GET["dial_status_add"];}
+	elseif (isset($_POST["dial_status_add"]))	{$dial_status_add=$_POST["dial_status_add"];}
+if (isset($_GET["dial_status_remove"]))				{$dial_status_remove=$_GET["dial_status_remove"];}
+	elseif (isset($_POST["dial_status_remove"]))	{$dial_status_remove=$_POST["dial_status_remove"];}
 
 $DB=preg_replace('/[^0-9]/','',$DB);
 
@@ -1005,6 +1010,8 @@ if ($non_latin < 1)
 	$url_statuses = preg_replace('/[^- 0-9a-zA-Z]/', '',$url_statuses);
 	$url_description = preg_replace('/[^ \.\,-\_0-9a-zA-Z]/','',$url_description);
 	$preset_name = preg_replace('/[^- \_0-9a-zA-Z]/','',$preset_name);
+	$dial_status_add=preg_replace('/[^-_0-9a-zA-Z]/','',$dial_status_add);
+	$dial_status_remove=preg_replace('/[^-_0-9a-zA-Z]/','',$dial_status_remove);
 	}
 else
 	{
@@ -1157,6 +1164,8 @@ else
 	$url_statuses = preg_replace('/[^- 0-9\p{L}]/u', '',$url_statuses);
 	$url_description = preg_replace('/[^ \.\,-\_0-9\p{L}]/u','',$url_description);
 	$preset_name = preg_replace('/[^- \_0-9\p{L}]/u','',$preset_name);
+	$dial_status_add=preg_replace('/[^-_0-9\p{L}]/u','',$dial_status_add);
+	$dial_status_remove=preg_replace('/[^-_0-9\p{L}]/u','',$dial_status_remove);
 	}
 
 $USarea = 			substr($phone_number, 0, 3);
@@ -7603,6 +7612,7 @@ if ($function == 'update_campaign')
 					$xferconf_fourSQL='';
 					$xferconf_fiveSQL='';
 					$dispo_call_urlSQL='';
+					$dial_statusesSQL='';
 
 					if (strlen($auto_dial_level) > 0)
 						{
@@ -7867,8 +7877,85 @@ if ($function == 'update_campaign')
 								{$dispo_call_urlSQL = " ,dispo_call_url='" . mysqli_real_escape_string($link, $dispo_call_url) . "'";}
 							}
 						}
+					if (strlen($dial_status_add) > 0)
+						{
+						if (strlen($dial_status_add) > 6)
+							{
+							$result = 'ERROR';
+							$result_reason = "update_campaign DIAL STATUS ADD IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+							$data = "$dial_status_add";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{
+							$stmt="SELECT dial_statuses from vicidial_campaigns where campaign_id='$campaign_id';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$row=mysqli_fetch_row($rslt);
+							$temp_dial_statuses = $row[0];
+							if (strlen($temp_dial_statuses) > 248)
+								{
+								$result = 'ERROR';
+								$result_reason = "update_campaign DIAL STATUS ADD FAILURE, TOO MANY EXISTING DIAL STATUSES, THIS IS AN OPTIONAL FIELD";
+								$data = "$dial_status_add";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							if (strlen($temp_dial_statuses)<2) {$temp_dial_statuses = ' -';}
+							$dial_statusesSQL = " $dial_status_add$temp_dial_statuses";
+							}
+						}
 
-					$updateSQL = "$campaignnameSQL$activeSQL$dialtimeoutSQL$hopperlevelSQL$campaignvdadextenSQL$adaptivemaximumlevelSQL$dialmethodSQL$autodiallevelSQL$campaigncidSQL$campaignfilterSQL$xferconf_oneSQL$xferconf_twoSQL$xferconf_threeSQL$xferconf_fourSQL$xferconf_fiveSQL$dispo_call_urlSQL";
+					if (strlen($dial_status_remove) > 0)
+						{
+						if (strlen($dial_status_remove) > 6)
+							{
+							$result = 'ERROR';
+							$result_reason = "update_campaign DIAL STATUS REMOVE IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+							$data = "$dial_status_remove";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{
+							if (strlen($dial_statusesSQL) > 0)
+								{$temp_dial_statuses = $dial_statusesSQL;}
+							else
+								{
+								$stmt="SELECT dial_statuses from vicidial_campaigns where campaign_id='$campaign_id';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								$row=mysqli_fetch_row($rslt);
+								$temp_dial_statuses = $row[0];
+								if ( (strlen($temp_dial_statuses) < 1) or ($temp_dial_statuses == ' -') )
+									{
+									$result = 'ERROR';
+									$result_reason = "update_campaign DIAL STATUS REMOVE FAILURE, NO EXISTING DIAL STATUSES SET, THIS IS AN OPTIONAL FIELD";
+									$data = "$dial_status_remove";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								}
+							if (!preg_match("/\s$dial_status_remove\s/i",$temp_dial_statuses))
+								{
+								$result = 'ERROR';
+								$result_reason = "update_campaign DIAL STATUS REMOVE FAILURE, NOT AN EXISTING DIAL STATUS, THIS IS AN OPTIONAL FIELD";
+								$data = "$dial_status_remove";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							$dial_statusesSQL = preg_replace("/\s$dial_status_remove\s/i", " ",$temp_dial_statuses);
+							}
+						}
+					if (strlen($dial_statusesSQL) > 0)
+						{$dial_statusesSQL = ",dial_statuses='$dial_statusesSQL'";}
+
+
+					$updateSQL = "$campaignnameSQL$activeSQL$dialtimeoutSQL$hopperlevelSQL$campaignvdadextenSQL$adaptivemaximumlevelSQL$dialmethodSQL$autodiallevelSQL$campaigncidSQL$campaignfilterSQL$xferconf_oneSQL$xferconf_twoSQL$xferconf_threeSQL$xferconf_fourSQL$xferconf_fiveSQL$dial_statusesSQL$dispo_call_urlSQL";
 
 					if (strlen($updateSQL)< 3)
 						{
