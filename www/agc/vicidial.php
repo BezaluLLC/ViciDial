@@ -698,10 +698,11 @@
 # 220725-0839 - Fix for rare Agent Pause Max issue with previewed manual dial calls that don't answer
 # 220901-0853 - Added user_group_script campaign user_group_script option
 # 220901-1330 - Fix for issues with manager validation where manager has a long password
+# 220908-0819 - Small change for user_group_script override
 #
 
-$version = '2.14-666c';
-$build = '220901-1330';
+$version = '2.14-667c';
+$build = '220908-0819';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -2523,6 +2524,26 @@ else
 				$ig_xfer_list_sort =		$row[176];
 				$script_tab_frame_size =	$row[177];
 				$user_group_script =		$row[178];
+
+				if ( (strlen($UGscript_id) > 0) and ($user_group_script == 'ENABLED') )
+					{
+					echo "<!-- SCRIPT USER GROUP OVERRIDE: |$campaign_script|$user_group_script($UGscript_id)| -->\n";
+					$campaign_script = $UGscript_id;
+					}
+				##### grab the datails of the campaign script in the system
+				$camp_script_name='Agent Script';   $camp_script_color='#FFF5EC';
+				$stmt="SELECT script_name,script_color FROM vicidial_scripts WHERE script_id='$campaign_script';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$script_ct = mysqli_num_rows($rslt);
+				if ($script_ct > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$camp_script_name =		$row[0];
+					if (strlen($row[1]) > 0)
+						{$camp_script_color =	$row[1];}
+					}
 
 				$agent_hide_hangup_ACTIVE=0;   $agent_hide_hangup_ACTIVE_style='';
 				if ( ($agent_hide_hangup == 'Y') and ($SSagent_hide_hangup > 0) )
@@ -4420,7 +4441,7 @@ else
 		$server_ip_dialstring = "$D_s_ip[0]$S$D_s_ip[1]$S$D_s_ip[2]$S$D_s_ip[3]$S";
 
 		##### grab the datails of all active scripts in the system
-		$stmt="SELECT script_id,script_name FROM vicidial_scripts WHERE active='Y' order by script_id limit 1000;";
+		$stmt="SELECT script_id,script_name,script_color FROM vicidial_scripts WHERE active='Y' order by script_id limit 1000;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01051',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 		if ($DB) {echo "$stmt\n";}
@@ -4431,12 +4452,15 @@ else
 			$row=mysqli_fetch_row($rslt);
 			$MMscriptid[$e] =$row[0];
 			$MMscriptname[$e] = urlencode($row[1]);
+			$MMscriptcolor[$e] = urlencode($row[2]);
 			$MMscriptids = "$MMscriptids'$MMscriptid[$e]',";
 			$MMscriptnames = "$MMscriptnames'$MMscriptname[$e]',";
+			$MMscriptcolors = "$MMscriptcolors'$MMscriptcolor[$e]',";
 			$e++;
 			}
 		$MMscriptids = substr("$MMscriptids", 0, -1); 
 		$MMscriptnames = substr("$MMscriptnames", 0, -1); 
+		$MMscriptcolors = substr("$MMscriptcolors", 0, -1); 
 
 
 		##### BEGIN vicidial_list FIELD LENGTH LOOKUP #####
@@ -5056,6 +5080,14 @@ if ( ($calls_waiting_vl_two != 'DISABLED') and (strlen($calls_waiting_vl_two) > 
 	while ($MM_scripts > $h)
 		{
 		echo "scriptnames['$MMscriptid[$h]'] = \"$MMscriptname[$h]\";\n";
+		$h++;
+		}
+	?>
+	var scriptcolors = new Array();
+	<?php $h=0;
+	while ($MM_scripts > $h)
+		{
+		echo "scriptcolors['$MMscriptid[$h]'] = \"$MMscriptcolor[$h]\";\n";
 		$h++;
 		}
 	?>
@@ -21445,7 +21477,7 @@ function phone_number_format(formatphone) {
 	div.scroll_callback {height: 400px; width: <?php echo $MNwidth ?>px; overflow: scroll;}
 	div.scroll_callback_auto {height: 400px; width: <?php echo $MNwidth ?>px; overflow: auto;}
 	div.scroll_script {height: <?php echo $SSheight ?>px; width: <?php echo $SEwidth ?>px; background: transparent; overflow: auto; font-size: 12px;  font-family: sans-serif;}
-	div.noscroll_script {height: <?php echo $SSheight ?>px; width: <?php echo $SEwidth ?>px; background: #FFF5EC; overflow: hidden; font-size: 12px;  font-family: sans-serif;}
+	div.noscroll_script {height: <?php echo $SSheight ?>px; width: <?php echo $SEwidth ?>px; background: <?php echo $camp_script_color ?>; overflow: hidden; font-size: 12px;  font-family: sans-serif;}
 	div.scroll_form {height: <?php echo $SSheight ?>px; width: <?php echo $SDwidth ?>px; background: transparent; overflow: auto; font-size: 12px;  font-family: sans-serif;}
 	div.noscroll_form {height: <?php echo $SSheight ?>px; width: <?php echo $SDwidth ?>px; background: #FFF5EC; overflow: hidden; font-size: 12px;  font-family: sans-serif;}
 -->
