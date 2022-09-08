@@ -1,4 +1,4 @@
-VICIdial ConfBridge Support:		STARTED: 2022-06-22	UPDATED: 2022-08-31
+VICIdial ConfBridge Support:		STARTED: 2022-06-22	UPDATED: 2022-09-08
 
 
 !!! NOTE: VICIdial ConfBridge support is currently in BETA mode and is not recommended for systems that require a stable and tested codebase !!!
@@ -26,13 +26,13 @@ The following extensions needed to be added to the Asterisk /etc/asterisk/extens
 	; ConfBridge Extensions
 	; --------------------------
 
-	; use to send a agent channel into the conference
+	; use to send a customer channel into the conference
 	exten => _9600XXX,1,Answer()
 	exten => _9600XXX,n,Playback(sip-silence)
 	exten => _9600XXX,n,ConfBridge(${EXTEN},vici_agent_bridge,vici_customer_user)
 	exten => _9600XXX,n,Hangup()
 
-	; used to send an customer channel into the conference
+	; used to send an agent channel into the conference
 	exten => _29600XXX,1,Answer()
 	exten => _29600XXX,n,Playback(sip-silence)
 	exten => _29600XXX,n,ConfBridge(${EXTEN:1},vici_agent_bridge,vici_agent_user)
@@ -79,6 +79,13 @@ The following extensions needed to be added to the Asterisk /etc/asterisk/extens
 	exten => _99600XXX,2,Hangup()
 	exten => _55559600XXX,1,ConfKick(${EXTEN:4},all)
 	exten => _55559600XXX,2,Hangup()
+
+	; used to send an ringall agent channel into the conference
+	exten => _19600XXX,1,Answer()
+	exten => _19600XXX,n,Playback(sip-silence)
+	exten => _19600XXX,n,ConfBridge(${EXTEN:1},vici_agent_bridge,vici_ringall_user)
+	exten => _19600XXX,n,Hangup()
+
 
 One key difference between how Vicidial handles MeetMe and ConfBridge conferences is the way various types of channels enter a conference. Each channel type now has its own conference user profile. Most noteably the customer's channel is placed into the conference with a different user profile than the agent. With MeetMe these two types of channel used the same extension to enter the conference. These seperations should allow for more advanced features to be added in the future.
 
@@ -189,7 +196,7 @@ to the bottom of the file. Then create the /etc/asterisk/confbridge-vicidial.con
 	type=user
 	admin=no
 	quiet=yes
-	startmuted=yes
+	startmuted=no
 	marked=no
 	dtmf_passthrough=no
 	dsp_drop_silence=yes
@@ -203,8 +210,19 @@ to the bottom of the file. Then create the /etc/asterisk/confbridge-vicidial.con
 	marked=no
 	dtmf_passthrough=yes
 	dsp_drop_silence=yes
-	
-		
+
+	; User Profile for RINGALL agent channels
+	[vici_ringall_user]
+	type=user
+	admin=no
+	quiet=no
+	startmuted=no
+	marked=yes
+	dtmf_passthrough=yes
+	announce_only_user=no
+	hear_own_join_sound=no
+	dsp_drop_silence=yes
+
 
 - Database changes
 To accomodate the change to ConfBridge two fields were added to the "servers" table in Vicidial and another table was added. Here are the two fields added to the servers table:
@@ -554,6 +572,9 @@ Dialers:
 - AST_reset_mysql_vars.pl.diff
 - AST_VDremote_agents.pl.diff
 - AST_conf_update_screen.pl
+/var/lib/asterisk/agi-bin/ - 
+- agi-VDAD_RINGALL.agi.diff
+- agi-VDAD_ALL_inbound.agi.diff
 
 Webservers:
 /srv/www/htdocs/agc/ - 
