@@ -699,10 +699,11 @@
 # 220901-0853 - Added user_group_script campaign user_group_script option
 # 220901-1330 - Fix for issues with manager validation where manager has a long password
 # 220908-0819 - Small change for user_group_script override
+# 220916-0906 - Added INSERT_before_body_close options.php setting, Issue #1375
 #
 
-$version = '2.14-667c';
-$build = '220908-0819';
+$version = '2.14-668c';
+$build = '220916-0906';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -1408,6 +1409,7 @@ if ($relogin == 'YES')
     echo "<tr><td align=\"left\" colspan=\"2\"><font class=\"body_tiny\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
     echo "</table></center>\n";
     echo "</form>\n\n";
+	echo "$INSERT_before_body_close";
 	echo "</body>\n\n";
 	echo "</html>\n\n";
 	exit;
@@ -1454,6 +1456,7 @@ if ($user_login_first == 1)
         echo "<tr><td align=\"left\" colspan=\"2\"><font class=\"body_tiny\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
         echo "</table>\n";
         echo "</form>\n\n";
+		echo "$INSERT_before_body_close";
 		echo "</body>\n\n";
 		echo "</html>\n\n";
 		exit;
@@ -1510,6 +1513,7 @@ if ($user_login_first == 1)
                 echo "<tr><td align=\"left\" colspan=\"2\"><font class=\"body_tiny\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
                 echo "</table></center>\n";
                 echo "</form>\n\n";
+				echo "$INSERT_before_body_close";
 				echo "</body>\n\n";
 				echo "</html>\n\n";
 				exit;
@@ -1552,6 +1556,7 @@ if ( (strlen($phone_login)<2) or (strlen($phone_pass)<2) )
     echo "<tr><td align=\"left\" colspan=\"2\"><font class=\"body_tiny\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
     echo "</table></center>\n";
     echo "</form>\n\n";
+	echo "$INSERT_before_body_close";
 	echo "</body>\n\n";
 	echo "</html>\n\n";
 	exit;
@@ -1729,6 +1734,7 @@ else
 						echo "<tr><td align=\"left\" colspan=\"2\"><font class=\"body_tiny\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
 						echo "</table></center>\n";
 						echo "</form>\n\n";
+						echo "$INSERT_before_body_close";
 						echo "</body>\n\n";
 						echo "</html>\n\n";
 						exit;
@@ -1777,6 +1783,7 @@ else
 				echo "<tr><td align=\"left\" colspan=\"2\"><font class=\"body_tiny\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
 				echo "</table></center>\n";
 				echo "</form>\n\n";
+				echo "$INSERT_before_body_close";
 				echo "</body>\n\n";
 				echo "</html>\n\n";
 				exit;
@@ -2168,6 +2175,7 @@ else
                 echo "<input type=\"submit\" name=\"SUBMIT\" value=\""._QXZ("SUBMIT")."\" /> &nbsp; \n";
 				echo "<span id=\"LogiNReseT\"></span>\n";
                 echo "</form>\n\n";
+				echo "$INSERT_before_body_close";
 				echo "</body>\n\n";
 				echo "</html>\n\n";
 				exit;
@@ -3331,6 +3339,7 @@ else
         echo "<tr><td align=\"left\" colspan=\"2\"><font class=\"body_tiny\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
         echo "</table>\n";
         echo "</form>\n\n";
+		echo "$INSERT_before_body_close";
 		echo "</body>\n\n";
 		echo "</html>\n\n";
 		exit;
@@ -3434,6 +3443,7 @@ else
         echo "<tr><td align=\"left\" colspan=\"2\"><font class=\"body_tiny\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
         echo "</table></center>\n";
         echo "</form>\n\n";
+		echo "$INSERT_before_body_close";
 		echo "</body>\n\n";
 		echo "</html>\n\n";
 		exit;
@@ -4319,6 +4329,7 @@ else
             echo "<input type=\"submit\" name=\"SUBMIT\" value=\""._QXZ("SUBMIT")."\" /> &nbsp; \n";
 			echo "<span id=\"LogiNReseT\"></span>\n";
             echo "</form>\n\n";
+			echo "$INSERT_before_body_close";
 			echo "</body>\n\n";
 			echo "</html>\n\n";
 			exit;
@@ -4352,6 +4363,7 @@ else
             echo "<input type=\"submit\" name=\"SUBMIT\" value=\""._QXZ("SUBMIT")."\" /> &nbsp; \n";
 			echo "<span id=\"LogiNReseT\"></span>\n";
 			echo "</FORM>\n\n";
+			echo "$INSERT_before_body_close";
 			echo "</body>\n\n";
 			echo "</html>\n\n";
 			exit;
@@ -23297,7 +23309,7 @@ if ( ($SSbrowser_call_alerts > 0) or ($SSagent_hidden_sound_seconds > 0) )
 	echo "\n";
 	}
 ?>
-
+<?php echo "$INSERT_before_body_close"; ?>
 </body>
 </html>
 
