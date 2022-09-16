@@ -154,7 +154,7 @@ to the bottom of the file. Then create the /etc/asterisk/confbridge-vicidial.con
 	[vici_monitor_user]
 	type=user
 	admin=no
-	quiet=no
+	quiet=yes
 	startmuted=yes
 	marked=no
 	dtmf_passthrough=no
