@@ -1,4 +1,4 @@
-VICIdial ConfBridge Support:		STARTED: 2022-06-22	UPDATED: 2022-09-08
+VICIdial ConfBridge Support:		STARTED: 2022-06-22	UPDATED: 2022-09-16
 
 
 !!! NOTE: VICIdial ConfBridge support is currently in BETA mode and is not recommended for systems that require a stable and tested codebase !!!
@@ -222,6 +222,19 @@ to the bottom of the file. Then create the /etc/asterisk/confbridge-vicidial.con
 	announce_only_user=no
 	hear_own_join_sound=no
 	dsp_drop_silence=yes
+
+In the /etc/asterisk/manager.conf add:
+
+	[confcron]
+	secret = 1234
+	read = command,reporting
+	write = command,reporting
+
+	eventfilter=Event: Meetme
+	eventfilter=Event: Confbridge
+
+to the bottom of the file.
+
 
 
 - Database changes
