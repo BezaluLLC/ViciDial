@@ -696,7 +696,11 @@ two_factor_override  ENUM('NOT_ACTIVE','ENABLED','DISABLED') default 'NOT_ACTIVE
 manual_dial_filter VARCHAR(50) default 'DISABLED',
 user_location VARCHAR(100) default '',
 download_invalid_files ENUM('0','1') default '0',
-user_group_two VARCHAR(20) default ''
+user_group_two VARCHAR(20) default '',
+failed_login_attempts_today MEDIUMINT(8) UNSIGNED default '0',
+failed_login_count_today SMALLINT(6) UNSIGNED default '0',
+failed_last_ip_today VARCHAR(50) default '',
+failed_last_type_today VARCHAR(20) default ''
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -4795,6 +4799,18 @@ CREATE TABLE `wallboard_reports` (
 PRIMARY KEY (`wallboard_report_id`)
 ) ENGINE=MyISAM DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
 
+CREATE TABLE vicidial_user_logins_daily (
+user VARCHAR(20),
+login_day DATE,
+last_login_date DATETIME default '2001-01-01 00:00:01',
+last_ip VARCHAR(50) default '',
+failed_login_attempts_today MEDIUMINT(8) UNSIGNED default '0',
+failed_login_count_today SMALLINT(6) UNSIGNED default '0',
+failed_last_ip_today VARCHAR(50) default '',
+failed_last_type_today VARCHAR(20) default '',
+index (user)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -4936,6 +4952,7 @@ CREATE INDEX comment_a on live_inbound_log (comment_a);
 CREATE UNIQUE INDEX vicidial_campaign_statuses_key on vicidial_campaign_statuses(status, campaign_id);
 CREATE INDEX vlecc on vicidial_log_extended (caller_code);
 CREATE UNIQUE INDEX vvmmcount on vicidial_vmm_counts (lead_id,call_date);
+CREATE UNIQUE INDEX vicidial_user_logins_daily_user on vicidial_user_logins_daily(login_day, user);
 
 CREATE INDEX vlali on vicidial_live_agents (lead_id);
 CREATE INDEX vlaus on vicidial_live_agents (user);
@@ -5149,4 +5166,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1666',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1667',db_schema_update_date=NOW(),reload_timestamp=NOW();

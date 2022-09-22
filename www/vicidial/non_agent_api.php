@@ -196,10 +196,11 @@
 # 220312-0944 - Added vicidial_dial_cid_log logging
 # 220519-2206 - Small fix for 'update_lead' delete_lead feature
 # 220902-0823 - Added dial_status_add/dial_status_remove options to update_campaign function
+# 220920-0814 - Added more "XDAY" options to add_lead duplicate checks
 #
 
-$version = '2.14-173';
-$build = '220902-0823';
+$version = '2.14-174';
+$build = '220920-0814';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -14018,9 +14019,17 @@ if ($function == 'add_lead')
 
 				### START checking for duplicate if defined ###
 				$multidaySQL='';
-				if (preg_match("/30DAY|60DAY|90DAY|180DAY|360DAY/i",$duplicate_check))
+				if (preg_match("/1DAY|2DAY|3DAY|7DAY|14DAY|15DAY|21DAY|28DAY|30DAY|60DAY|90DAY|180DAY|360DAY/i",$duplicate_check))
 					{
 					$day_val=30;
+					if (preg_match("/1DAY/i",$duplicate_check)) {$day_val=1;}
+					if (preg_match("/2DAY/i",$duplicate_check)) {$day_val=2;}
+					if (preg_match("/3DAY/i",$duplicate_check)) {$day_val=3;}
+					if (preg_match("/7DAY/i",$duplicate_check)) {$day_val=7;}
+					if (preg_match("/14DAY/i",$duplicate_check)) {$day_val=14;}
+					if (preg_match("/15DAY/i",$duplicate_check)) {$day_val=15;}
+					if (preg_match("/21DAY/i",$duplicate_check)) {$day_val=21;}
+					if (preg_match("/28DAY/i",$duplicate_check)) {$day_val=28;}
 					if (preg_match("/30DAY/i",$duplicate_check)) {$day_val=30;}
 					if (preg_match("/60DAY/i",$duplicate_check)) {$day_val=60;}
 					if (preg_match("/90DAY/i",$duplicate_check)) {$day_val=90;}

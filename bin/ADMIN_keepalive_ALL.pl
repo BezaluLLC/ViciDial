@@ -156,9 +156,10 @@
 # 220310-0959 - Added purging of vicidial_sync_log table
 # 220312-0819 - Added CID Group Auto-Rotate to check for List use
 # 220526-1444 - Fix for CID auto-rotate functions
+# 220921-1255 - Added vicidial_user_logins_daily TEOD population
 #
 
-$build = '220526-1444';
+$build = '220921-1255';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -1667,6 +1668,32 @@ if ($timeclock_end_of_day_NOW > 0)
 		$sthArows = $sthA->rows;
 		if (!$Q) {print "$sthArows vicidial_inbound_groups rows closing_time_now_trigger value reset \n";}
 		if ($teodDB) {$event_string = "$sthArows vicidial_inbound_groups rows closing_time_now_trigger value reset";   &teod_logger;}
+
+		# population of vicidial_user_logins_daily table and reset of vicidial_users table
+		if (!$Q) {print "\nProcessing vicidial_user_logins_daily/vicidial_users tables...\n";}
+		$stmtA = "INSERT IGNORE INTO vicidial_user_logins_daily(user,login_day,last_login_date,last_ip,failed_login_attempts_today,failed_login_count_today,failed_last_ip_today,failed_last_type_today) SELECT user,'$today_date',last_login_date,last_ip,failed_login_attempts_today,failed_login_count_today,failed_last_ip_today,failed_last_type_today from vicidial_users where last_login_date >= \"$RMSQLdate\";";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows = $sthA->rows;
+		$event_string = "$sthArows rows inserted into vicidial_user_logins_daily table";
+		if (!$Q) {print "$event_string \n";}
+		if ($teodDB) {&teod_logger;}
+
+		$rv = $sthA->err();
+		if (!$rv) 
+			{	
+			$stmtA = "UPDATE vicidial_users SET failed_login_attempts_today=0,failed_login_count_today=0,failed_last_ip_today='',failed_last_type_today='';";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows = $sthA->rows;
+			$event_string = "$sthArows rows reset in vicidial_users table";
+			if (!$Q) {print "$event_string \n";}
+			if ($teodDB) {&teod_logger;}
+
+			$stmtA = "optimize table vicidial_users;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			}
 
 		##### BEGIN max stats end of day process #####
 		# set OPEN max stats records to CLOSING for processing

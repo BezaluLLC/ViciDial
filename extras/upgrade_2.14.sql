@@ -2018,3 +2018,24 @@ ALTER TABLE vicidial_user_groups ADD script_id VARCHAR(20) default '';
 ALTER TABLE vicidial_campaigns ADD user_group_script ENUM('DISABLED','ENABLED') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1666',db_schema_update_date=NOW() where db_schema_version < 1666;
+
+ALTER TABLE vicidial_users ADD failed_login_attempts_today MEDIUMINT(8) UNSIGNED default '0';
+ALTER TABLE vicidial_users ADD failed_login_count_today SMALLINT(6) UNSIGNED default '0';
+ALTER TABLE vicidial_users ADD failed_last_ip_today VARCHAR(50) default '';
+ALTER TABLE vicidial_users ADD failed_last_type_today VARCHAR(20) default '';
+
+CREATE TABLE vicidial_user_logins_daily (
+user VARCHAR(20),
+login_day DATE,
+last_login_date DATETIME default '2001-01-01 00:00:01',
+last_ip VARCHAR(50) default '',
+failed_login_attempts_today MEDIUMINT(8) UNSIGNED default '0',
+failed_login_count_today SMALLINT(6) UNSIGNED default '0',
+failed_last_ip_today VARCHAR(50) default '',
+failed_last_type_today VARCHAR(20) default '',
+index (user)
+) ENGINE=MyISAM;
+
+CREATE UNIQUE INDEX vicidial_user_logins_daily_user on vicidial_user_logins_daily(login_day, user);
+
+UPDATE system_settings SET db_schema_version='1667',db_schema_update_date=NOW() where db_schema_version < 1667;
