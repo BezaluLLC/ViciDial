@@ -4,7 +4,8 @@
 # Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
-# 110514-1231 - First build
+# 220921-2203 - First build
+# 220922-1031 - Fix for user group permissions
 #
 
 $startMS = microtime();
@@ -173,6 +174,24 @@ if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
 	}
 $regexLOGallowed_campaigns = " $LOGallowed_campaigns ";
 
+$admin_viewable_groupsALL=0;
+$LOGadmin_viewable_groupsSQL='';
+$whereLOGadmin_viewable_groupsSQL='';
+$valLOGadmin_viewable_groupsSQL='';
+$vmLOGadmin_viewable_groupsSQL='';
+if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+	{
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+	$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+	$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$valLOGadmin_viewable_groupsSQL = "and val.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	$vmLOGadmin_viewable_groupsSQL = "and vm.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+	}
+else 
+	{$admin_viewable_groupsALL=1;}
+$regexLOGadmin_viewable_groups = " $LOGadmin_viewable_groups ";
+
 if ( (!preg_match("/$report_name/",$LOGallowed_reports)) and (!preg_match("/ALL REPORTS/",$LOGallowed_reports)) )
 	{
     Header("WWW-Authenticate: Basic realm=\"CONTACT-CENTER-ADMIN\"");
@@ -237,7 +256,7 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_
 	$MAIN.="<!-- Using slave server $slave_db_server $db_source -->\n";
 	}
 
-$stmt="select user,full_name from vicidial_users order by user;";
+$stmt="select user,full_name from vicidial_users $whereLOGadmin_viewable_groupsSQL order by user;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $campaigns_to_print = mysqli_num_rows($rslt);
@@ -269,7 +288,7 @@ $NWE = "')\" WIDTH=20 HEIGHT=20 BORDER=0 ALT=\"HELP\" ALIGN=TOP>";
 echo "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 echo "<link rel=\"stylesheet\" type=\"text/css\" href=\"vicidial_stylesheet.php\">\n";
 echo "<script language=\"JavaScript\" src=\"help.js\"></script>\n";
-echo "<TITLE>"._QXZ("Campaign Debug")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
+echo "<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marginheight=0 marginwidth=0 leftmargin=0 topmargin=0>\n";
 echo "<div id='HelpDisplayDiv' class='help_info' style='display:none;'></div>";
 
 	$short_header=1;
@@ -312,16 +331,16 @@ if (!$user)
 else
 	{
 	$multi_user=0;
-	$stmt="select user,login_day,last_login_date,last_ip,failed_login_attempts_today,failed_login_count_today,failed_last_ip_today,failed_last_type_today from vicidial_user_logins_daily where user='" . mysqli_real_escape_string($link, $user) . "' order by login_day desc limit 1000;";
+	$stmt="select vuld.user,vuld.login_day,vuld.last_login_date,vuld.last_ip,vuld.failed_login_attempts_today,vuld.failed_login_count_today,vuld.failed_last_ip_today,vuld.failed_last_type_today from vicidial_user_logins_daily vuld, vicidial_users vm where vuld.user='" . mysqli_real_escape_string($link, $user) . "' and vm.user=vuld.user $vmLOGadmin_viewable_groupsSQL order by login_day desc limit 1000;";
 	if ($user == '--MOST-RECENT-ACTIVE-ARCHIVE--')
 		{
 		$multi_user=1;
-		$stmt="select user,login_day,last_login_date,last_ip,failed_login_attempts_today,failed_login_count_today,failed_last_ip_today,failed_last_type_today from vicidial_user_logins_daily order by login_day desc, last_login_date desc limit 1000;";
+		$stmt="select vuld.user,vuld.login_day,vuld.last_login_date,vuld.last_ip,vuld.failed_login_attempts_today,vuld.failed_login_count_today,vuld.failed_last_ip_today,vuld.failed_last_type_today from vicidial_user_logins_daily vuld, vicidial_users vm where vm.user=vuld.user $vmLOGadmin_viewable_groupsSQL order by login_day desc, last_login_date desc limit 1000;";
 		}
 	if ($user == '--MOST-RECENT-ACTIVE-TODAY--')
 		{
 		$multi_user=1;
-		$stmt="select user,'TODAY',last_login_date,last_ip,failed_login_attempts_today,failed_login_count_today,failed_last_ip_today,failed_last_type_today from vicidial_users where last_login_date >= \"$last_midnight\" order by last_login_date desc limit 1000;";
+		$stmt="select user,'TODAY',last_login_date,last_ip,failed_login_attempts_today,failed_login_count_today,failed_last_ip_today,failed_last_type_today from vicidial_users where last_login_date >= \"$last_midnight\" $LOGadmin_viewable_groupsSQL order by last_login_date desc limit 1000;";
 		}
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
@@ -350,7 +369,7 @@ else
 		}
 	if ($multi_user < 1)
 		{
-		$stmt="select user,'TODAY',last_login_date,last_ip,failed_login_attempts_today,failed_login_count_today,failed_last_ip_today,failed_last_type_today from vicidial_users where user='" . mysqli_real_escape_string($link, $user) . "' and last_login_date >= \"$last_midnight\" order by last_login_date desc limit 1000;";
+		$stmt="select user,'TODAY',last_login_date,last_ip,failed_login_attempts_today,failed_login_count_today,failed_last_ip_today,failed_last_type_today from vicidial_users where user='" . mysqli_real_escape_string($link, $user) . "' and last_login_date >= \"$last_midnight\"  $LOGadmin_viewable_groupsSQL order by last_login_date desc limit 1000;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$shortages_to_print = mysqli_num_rows($rslt);

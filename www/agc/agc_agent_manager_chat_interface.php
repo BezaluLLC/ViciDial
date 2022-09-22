@@ -19,10 +19,11 @@
 # 210616-2056 - Added optional CORS support, see options.php for details
 # 220220-0855 - Added allow_web_debug system setting
 # 220518-2210 - Small fix for encrypted auth
+# 220922-1027 - Added BLANK action for first agent screen page load
 #
 
-$admin_version = '2.14-12';
-$build = '220220-0855';
+$admin_version = '2.14-13';
+$build = '220922-1027';
 $php_script = 'agc_agent_manager_chat_interface.php';
 
 $sh="managerchats"; 
@@ -92,6 +93,12 @@ else
 if (file_exists('options.php'))
 	{
 	require_once('options.php');
+	}
+
+if ($action == 'BLANK')
+	{
+	header ("Content-type: text/html; charset=utf-8");
+	exit;
 	}
 
 $auth=0;

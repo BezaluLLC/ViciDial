@@ -700,10 +700,11 @@
 # 220901-1330 - Fix for issues with manager validation where manager has a long password
 # 220908-0819 - Small change for user_group_script override
 # 220916-0906 - Added INSERT_before_body_close options.php setting, Issue #1375
+# 220922-1032 - Fix for loading internal chat while agent screen is still loading
 #
 
-$version = '2.14-668c';
-$build = '220916-0906';
+$version = '2.14-669c';
+$build = '220922-1032';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -20920,7 +20921,10 @@ function phone_number_format(formatphone) {
 			divref.visibility = 'hidden';
 			if (divvar == 'InternalChatPanel') // Clear the manager chat panel to prevent incoming messages from immediately being marked as read
 				{
-				document.getElementById('InternalChatIFrame').src='./agc_agent_manager_chat_interface.php?user='+user+'&pass='+pass;
+				if (check_n > 3)
+					{
+					document.getElementById('InternalChatIFrame').src='./agc_agent_manager_chat_interface.php?user='+user+'&pass='+pass;
+					}
 				}
 			}
 		}
@@ -22290,7 +22294,7 @@ if ($agent_display_dialable_leads > 0)
 	if ($webphone_location == 'bar')
         {echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
 	?>
-    <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_form" id="InternalChatContents"><iframe src="./agc_agent_manager_chat_interface.php?user=<?php echo $VD_login; ?>&pass=<?php echo $VD_pass; ?>" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="InternalChatIFrame" name="InternalChatIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:<?php $zi++; echo $zi ?>"> </iframe></div></font></td></tr></table>
+    <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_form" id="InternalChatContents"><iframe src="./agc_agent_manager_chat_interface.php?action=BLANK" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="InternalChatIFrame" name="InternalChatIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:<?php $zi++; echo $zi ?>"> </iframe></div></font></td></tr></table>
 </span>
 
 

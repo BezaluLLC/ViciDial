@@ -139,7 +139,7 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 
 			if ($failed_login_count < $LOCK_trigger_attempts)
 				{
-				$stmt="UPDATE vicidial_users set failed_login_count=(failed_login_count+1),failed_login_attempts_today=(failed_login_attempts_today+1),failed_login_count_today=(failed_login_count_today+1),failed_last_ip_today='$ip',failed_last_type_today='cBAD' where user='$user';";
+				$stmt="UPDATE vicidial_users set failed_login_count=(failed_login_count+1),failed_login_attempts_today=(failed_login_attempts_today+1),failed_login_count_today=(failed_login_count_today+1),failed_last_ip_today='$ip',failed_last_type_today='01cBAD' where user='$user';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05011',$user,$server_ip,$session_name,$one_mysql_log);}
 				}
@@ -147,14 +147,14 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 				{
 				if ($LOCK_over > $last_login_date)
 					{
-					$stmt="UPDATE vicidial_users set last_login_date=NOW(),failed_login_count=1,failed_last_ip_today='$ip',failed_login_attempts_today=(failed_login_attempts_today+1),failed_login_count_today=(failed_login_count_today+1),failed_last_type_today='cBAD' where user='$user';";
+					$stmt="UPDATE vicidial_users set last_login_date=NOW(),failed_login_count=1,failed_last_ip_today='$ip',failed_login_attempts_today=(failed_login_attempts_today+1),failed_login_count_today=(failed_login_count_today+1),failed_last_type_today='02cBAD' where user='$user';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05012',$user,$server_ip,$session_name,$one_mysql_log);}
 					}
 				else
 					{
 					$auth_key='LOCK';
-					$stmt="UPDATE vicidial_users set failed_login_attempts_today=(failed_login_attempts_today+1),failed_last_type_today='cLOCK' where user='$user';";
+					$stmt="UPDATE vicidial_users set failed_login_attempts_today=(failed_login_attempts_today+1),failed_last_type_today='03cLOCK' where user='$user';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05027',$user,$server_ip,$session_name,$one_mysql_log);}
 					}
@@ -330,7 +330,7 @@ function user_authorization($user,$pass,$user_option,$user_update,$bcrypt,$retur
 			}
 		else
 			{
-			$stmt="UPDATE vicidial_users set failed_login_attempts_today=(failed_login_attempts_today+1),failed_last_type_today='c$auth_key' where user='$user';";
+			$stmt="UPDATE vicidial_users set failed_login_attempts_today=(failed_login_attempts_today+1),failed_last_type_today='04c$auth_key' where user='$user';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'05028',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
