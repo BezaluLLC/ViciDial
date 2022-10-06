@@ -31,6 +31,7 @@
 # 220221-0938 - Added allow_web_debug system setting
 # 220811-1440 - Modified for date ranges instead of single-day
 # 220822-1728 - Changed total login time calculation to work for multi-day ranges
+# 221005-1647 - Added JS calendar functionality for date fields
 #
 
 $startMS = microtime();
@@ -387,6 +388,11 @@ $HEADER.="   .purple {color: white; background-color: purple}\n";
 $HEADER.="-->\n";
 $HEADER.=" </STYLE>\n";
 
+
+$HEADER.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
+$HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
+
+
 $HEADER.="<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=utf-8\">\n";
 $HEADER.="<TITLE>"._QXZ("$report_name");
 
@@ -416,11 +422,63 @@ $MAIN.="<TABLE WIDTH=$page_width BGCOLOR=\"#$SSframe_background\" cellpadding=2 
 
 $MAIN.=_QXZ("Agent Time Sheet for").": <B>$user</B>\n";
 $MAIN.="<BR>\n";
-$MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET> &nbsp; &nbsp; \n";
+$MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name='vicidial_report'> &nbsp; &nbsp; \n";
 $MAIN.="<table border='0' width='350' cellpadding='3' cellspacing='0'>";
-$MAIN.="<tr><td align='right'>"._QXZ("Date").":</td><td align='left'><INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\"></td>\n";
-	$MAIN.="<td align='right'>"._QXZ("To").":</td><td align='left'><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\"></td></tr>";
+$MAIN.="<tr><td align='right'>"._QXZ("Date").":</td>";
+$MAIN.="<td align='left'><INPUT TYPE=TEXT NAME=query_date SIZE=10 MAXLENGTH=10 VALUE=\"$query_date\">";
+	$MAIN.="<script language=\"JavaScript\">\n";
+	$MAIN.="function openNewWindow(url)\n";
+	$MAIN.="  {\n";
+	$MAIN.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+	$MAIN.="  }\n";
+	$MAIN.="var o_cal = new tcal ({\n";
+	$MAIN.="	// form name\n";
+	$MAIN.="	'formname': 'vicidial_report',\n";
+	$MAIN.="	// input name\n";
+	$MAIN.="	'controlname': 'query_date'\n";
+	$MAIN.="});\n";
+	$MAIN.="o_cal.a_tpl.yearscroll = false;\n";
+	$MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
+	$MAIN.="</script>\n";
+$MAIN.="</td>\n";
+$MAIN.="<td align='right'>"._QXZ("To").":</td>";
+$MAIN.="<td align='left'><INPUT TYPE=TEXT NAME=end_date SIZE=10 MAXLENGTH=10 VALUE=\"$end_date\">";
+	$MAIN.="<script language=\"JavaScript\">\n";
+	$MAIN.="function openNewWindow(url)\n";
+	$MAIN.="  {\n";
+	$MAIN.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+	$MAIN.="  }\n";
+	$MAIN.="var o_cal = new tcal ({\n";
+	$MAIN.="	// form name\n";
+	$MAIN.="	'formname': 'vicidial_report',\n";
+	$MAIN.="	// input name\n";
+	$MAIN.="	'controlname': 'end_date'\n";
+	$MAIN.="});\n";
+	$MAIN.="o_cal.a_tpl.yearscroll = false;\n";
+	$MAIN.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
+	$MAIN.="</script>\n";
+$MAIN.="</td></tr>";
 $MAIN.="<tr><td align='right'>"._QXZ("User ID").":</td><td align='left' colspan='3'><INPUT TYPE=TEXT NAME=agent SIZE=20 MAXLENGTH=20 VALUE=\"$agent\"></td></tr>\n";
+
+
+
+
+
+$HTML_text.="<script language=\"JavaScript\">\n";
+$HTML_text.="function openNewWindow(url)\n";
+$HTML_text.="  {\n";
+$HTML_text.="  window.open (url,\"\",'width=620,height=300,scrollbars=yes,menubar=yes,address=yes');\n";
+$HTML_text.="  }\n";
+$HTML_text.="var o_cal = new tcal ({\n";
+$HTML_text.="	// form name\n";
+$HTML_text.="	'formname': 'vicidial_report',\n";
+$HTML_text.="	// input name\n";
+$HTML_text.="	'controlname': 'end_date'\n";
+$HTML_text.="});\n";
+$HTML_text.="o_cal.a_tpl.yearscroll = false;\n";
+$HTML_text.="// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
+$HTML_text.="</script>\n";
+
 
 if ($archives_available=="Y") 
 	{
