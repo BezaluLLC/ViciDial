@@ -701,10 +701,11 @@
 # 220908-0819 - Small change for user_group_script override
 # 220916-0906 - Added INSERT_before_body_close options.php setting, Issue #1375
 # 220922-1032 - Fix for loading internal chat while agent screen is still loading
+# 221012-1723 - Fix for webform URLs updates with correct recording variables
 #
 
-$version = '2.14-669c';
-$build = '220922-1032';
+$version = '2.14-670c';
+$build = '221012-1723';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -7862,6 +7863,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							RefresHScript();
 							delayed_script_load='NO';
 							}
+						WebFormRefresH('','','1');
+						WebFormTwoRefresH('','','1');
+						WebFormThreeRefresH('','','1');
 
 						var RecDispNamE = RClookFILE_array[1];
 						last_recording_filename = RClookFILE_array[1];
