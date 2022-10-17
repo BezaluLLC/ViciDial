@@ -5934,12 +5934,13 @@ if ($SSscript_remove_js > 0)
 # 220829-1036 - Added testing code for VERM(VICIdial Enhanced Reporting Module)
 # 220831-0850 - Added Campaign user_group_script override option, with User Group script option
 # 220921-1319 - Added more User failed login details for level 9 users
+# 221017-0822 - Fix for Copy Carrier issue #1384
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-866a';
-$build = '220921-1319';
+$admin_version = '2.14-867a';
+$build = '221017-0822';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -10943,6 +10944,7 @@ if ($ADD==140111111111)
 
 		echo "<br>"._QXZ("ADD COPIED CARRIER")."<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=240111111111>\n";
+		echo "<input type=hidden name=DB value='$DB'>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Carrier ID").": </td><td align=left><input type=text name=carrier_id size=15 maxlength=15>$NWB#server_carriers-carrier_id$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Carrier Name").": </td><td align=left><input type=text name=carrier_name size=40 maxlength=50>$NWB#server_carriers-carrier_name$NWE</td></tr>\n";
@@ -14952,13 +14954,15 @@ if ($ADD==240111111111)
 				{
 				echo "<br>"._QXZ("COPIED CARRIER ADDED")."\n";
 
-				$stmt="INSERT INTO vicidial_server_carriers (carrier_id,carrier_name,registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,server_ip,active,carrier_description,user_group,conf_engine,conf_update_interval) SELECT \"$carrier_id\",\"$carrier_name\",registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,\"$server_ip\",\"N\",carrier_description,user_group,conf_engine,conf_update_interval from vicidial_server_carriers where carrier_id=\"$source_carrier\";";
+				$stmt="INSERT INTO vicidial_server_carriers (carrier_id,carrier_name,registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,server_ip,active,carrier_description,user_group) SELECT \"$carrier_id\",\"$carrier_name\",registration_string,template_id,account_entry,protocol,globals_string,dialplan_entry,\"$server_ip\",\"N\",carrier_description,user_group from vicidial_server_carriers where carrier_id=\"$source_carrier\";";
 				$rslt=mysql_to_mysqli($stmt, $link);
+				if ($DB) {echo "|$stmt|\n";}
 
 				$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y' and server_ip='$server_ip';";
 				if ($server_ip == '0.0.0.0')
 					{$stmtA="UPDATE servers SET rebuild_conf_files='Y' where generate_vicidial_conf='Y' and active_asterisk_server='Y';";}
 				$rslt=mysql_to_mysqli($stmtA, $link);
+				if ($DB) {echo "|$stmt|\n";}
 
 				### LOG INSERTION Admin Log Table ###
 				$SQL_log = "$stmt|$stmtA|";
