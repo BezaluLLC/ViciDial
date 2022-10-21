@@ -17,7 +17,7 @@ require("functions.php");
 ######################################################################################################
 
 $page_width='870';
-$section_width='750';
+$section_width='850';
 $header_font_size='12';
 $subheader_font_size='11';
 $subcamp_font_size='11';
@@ -5939,12 +5939,13 @@ if ($SSscript_remove_js > 0)
 # 220921-1319 - Added more User failed login details for level 9 users
 # 221017-0822 - Fix for Copy Carrier issue #1384
 # 221020-1632 - Added login_kickall system setting
+# 221021-1038 - Added webphone_settings option to phones, pointed to a settings container
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-868a';
-$build = '221020-1632';
+$admin_version = '2.14-869a';
+$build = '221021-1038';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -11225,6 +11226,7 @@ if ($ADD==192111111111)
 		<option value='READ_ONLY'>"._QXZ("READ_ONLY")."</option>
 		<option value='SIP_EVENT_ACTIONS'>"._QXZ("SIP_EVENT_ACTIONS")."</option>
 		<option value='TIMEZONE_LIST'>"._QXZ("TIMEZONE_LIST")."</option>
+		<option value='WEBPHONE_SETTINGS'>"._QXZ("WEBPHONE_SETTINGS")."</option>
 		<option value='WEEKDAY_TIMERANGE_SECONDS'>"._QXZ("WEEKDAY_TIMERANGE_SECONDS")."</option>
 		</select>$NWB#settings_containers-container_type$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
@@ -39442,7 +39444,7 @@ if ($ADD==31111111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,is_webphone,use_external_server_ip,codecs_list,codecs_with_template,webphone_dialpad,on_hook_agent,webphone_auto_answer,voicemail_timezone,voicemail_options,user_group,voicemail_greeting,voicemail_dump_exten_no_inst,voicemail_instructions,on_login_report,unavail_dialplan_fwd_exten,unavail_dialplan_fwd_context,nva_call_url,nva_search_method,nva_error_filename,nva_new_list_id,nva_new_phone_code,nva_new_status,webphone_dialbox,webphone_mute,webphone_volume,webphone_debug,outbound_alt_cid,conf_qualify,webphone_layout,mohsuggest from phones where extension='$extension' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT extension,dialplan_number,voicemail_id,phone_ip,computer_ip,server_ip,login,pass,status,active,phone_type,fullname,company,picture,messages,old_messages,protocol,local_gmt,ASTmgrUSERNAME,ASTmgrSECRET,login_user,login_pass,login_campaign,park_on_extension,conf_on_extension,VICIDIAL_park_on_extension,VICIDIAL_park_on_filename,monitor_prefix,recording_exten,voicemail_exten,voicemail_dump_exten,ext_context,dtmf_send_extension,call_out_number_group,client_browser,install_directory,local_web_callerID_URL,VICIDIAL_web_URL,AGI_call_logging_enabled,user_switching_enabled,conferencing_enabled,admin_hangup_enabled,admin_hijack_enabled,admin_monitor_enabled,call_parking_enabled,updater_check_enabled,AFLogging_enabled,QUEUE_ACTION_enabled,CallerID_popup_enabled,voicemail_button_enabled,enable_fast_refresh,fast_refresh_rate,enable_persistant_mysql,auto_dial_next_number,VDstop_rec_after_each_call,DBX_server,DBX_database,DBX_user,DBX_pass,DBX_port,DBY_server,DBY_database,DBY_user,DBY_pass,DBY_port,outbound_cid,enable_sipsak_messages,email,template_id,conf_override,phone_context,phone_ring_timeout,conf_secret,delete_vm_after_email,is_webphone,use_external_server_ip,codecs_list,codecs_with_template,webphone_dialpad,on_hook_agent,webphone_auto_answer,voicemail_timezone,voicemail_options,user_group,voicemail_greeting,voicemail_dump_exten_no_inst,voicemail_instructions,on_login_report,unavail_dialplan_fwd_exten,unavail_dialplan_fwd_context,nva_call_url,nva_search_method,nva_error_filename,nva_new_list_id,nva_new_phone_code,nva_new_status,webphone_dialbox,webphone_mute,webphone_volume,webphone_debug,outbound_alt_cid,conf_qualify,webphone_layout,mohsuggest,webphone_settings from phones where extension='$extension' and server_ip='$server_ip' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 
@@ -39473,14 +39475,44 @@ if ($ADD==31111111111)
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Agent Screen Login").": </td><td align=left><input type=text name=login size=15 maxlength=15 value=\"$row[6]\">$NWB#phones-login$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Login Password").": </td><td align=left><input type=text name=pass size=40 maxlength=100 value=\"$row[7]\">$NWB#phones-pass$NWE</td></tr>\n";
 		echo "<tr bgcolor=#CCFFFF><td align=right>"._QXZ("Registration Password").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=reg_pass name=conf_secret size=40 maxlength=100 value=\"$row[72]\" onkeyup=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\">$NWB#phones-conf_secret$NWE &nbsp; &nbsp; <font size=1>"._QXZ("Strength").":</font> <IMG id=reg_pass_img src='images/pixel.gif' style=\"vertical-align:middle;\" onLoad=\"return pwdChanged('reg_pass','reg_pass_img','pass_length','$SSrequire_password_length');\"> &nbsp; <font size=1> "._QXZ("Length").": <span id=pass_length name=pass_length>0</span></font></td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Set As Webphone").": </td><td align=left><select size=1 name=is_webphone><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option>Y_API_LAUNCH</option><option selected value='$row[74]'>"._QXZ("$row[74]")."</option></select>$NWB#phones-is_webphone$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Webphone Dialpad").": </td><td align=left><select size=1 name=webphone_dialpad><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='TOGGLE'>"._QXZ("TOGGLE")."</option><option value='TOGGLE_OFF'>"._QXZ("TOGGLE_OFF")."</option><option value=\"$row[78]\" SELECTED>"._QXZ("$row[78]")."</option></select>$NWB#phones-webphone_dialpad$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Webphone Auto-Answer").": </td><td align=left><select size=1 name=webphone_auto_answer><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED value='$row[80]'>"._QXZ("$row[80]")."</option></select>$NWB#phones-webphone_auto_answer$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Webphone Dialbox").": </td><td align=left><select size=1 name=webphone_dialbox><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED value='$row[96]'>"._QXZ("$row[96]")."</option></select>$NWB#phones-webphone_dialbox$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Webphone Mute").": </td><td align=left><select size=1 name=webphone_mute><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED value='$row[97]'>"._QXZ("$row[97]")."</option></select>$NWB#phones-webphone_mute$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Webphone Volume").": </td><td align=left><select size=1 name=webphone_volume><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED value='$row[98]'>"._QXZ("$row[98]")."</option></select>$NWB#phones-webphone_volume$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Webphone Debug").": </td><td align=left><select size=1 name=webphone_debug><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED value='$row[99]'>"._QXZ("$row[99]")."</option></select>$NWB#phones-webphone_debug$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Webphone Layout").": </td><td align=left><input type=text name=webphone_layout size=60 maxlength=255 value=\"$row[102]\">$NWB#phones-webphone_layout$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Set As Webphone").": </td><td align=left><select size=1 name=is_webphone><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option>Y_API_LAUNCH</option><option selected value='$row[74]'>"._QXZ("$row[74]")."</option></select>$NWB#phones-is_webphone$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Webphone Dialpad").": </td><td align=left><select size=1 name=webphone_dialpad><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='TOGGLE'>"._QXZ("TOGGLE")."</option><option value='TOGGLE_OFF'>"._QXZ("TOGGLE_OFF")."</option><option value=\"$row[78]\" SELECTED>"._QXZ("$row[78]")."</option></select>$NWB#phones-webphone_dialpad$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Webphone Auto-Answer").": </td><td align=left><select size=1 name=webphone_auto_answer><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED value='$row[80]'>"._QXZ("$row[80]")."</option></select>$NWB#phones-webphone_auto_answer$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Webphone Dialbox").": </td><td align=left><select size=1 name=webphone_dialbox><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED value='$row[96]'>"._QXZ("$row[96]")."</option></select>$NWB#phones-webphone_dialbox$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Webphone Mute").": </td><td align=left><select size=1 name=webphone_mute><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED value='$row[97]'>"._QXZ("$row[97]")."</option></select>$NWB#phones-webphone_mute$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Webphone Volume").": </td><td align=left><select size=1 name=webphone_volume><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED value='$row[98]'>"._QXZ("$row[98]")."</option></select>$NWB#phones-webphone_volume$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Webphone Debug").": </td><td align=left><select size=1 name=webphone_debug><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED value='$row[99]'>"._QXZ("$row[99]")."</option></select>$NWB#phones-webphone_debug$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Webphone Layout").": </td><td align=left><input type=text name=webphone_layout size=60 maxlength=255 value=\"$row[102]\">$NWB#phones-webphone_layout$NWE</td></tr>\n";
+
+		##### get container listings for dynamic WEBPHONE_SETTINGS container pulldown menu
+		$stmt="SELECT container_id,container_notes from vicidial_settings_containers where container_type='WEBPHONE_SETTINGS' $LOGadmin_viewable_groupsSQL order by container_id;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$pws_to_print = mysqli_num_rows($rslt);
+		$webphone_settings_menu='';
+		$pws_selected=0;
+		$o=0;
+		while ($pws_to_print > $o) 
+			{
+			$rowx=mysqli_fetch_row($rslt);
+			if (mb_strlen($rowx[1],'utf-8')>40)
+				{$rowx[1] = mb_substr($rowx[1],0,40,'utf-8') . '...';}
+			$webphone_settings_menu .= "<option ";
+			if ($row[104] == "$rowx[0]") 
+				{
+				$webphone_settings_menu .= "SELECTED ";
+				$pws_selected++;
+				}
+			$webphone_settings_menu .= "value=\"$rowx[0]\">$rowx[0] - $rowx[1]</option>\n";
+			$o++;
+			}
+
+		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>";
+		if ($pws_selected > 0)
+			{echo "<a href=\"$PHP_SELF?ADD=392111111111&container_id=$row[104]\">"._QXZ("Webphone Extra Settings")."</a>";}
+		else
+			{echo _QXZ("Webphone Extra Settings");}
+		echo ": </td><td align=left nowrap><select size=1 name=webphone_settings><option value=''>"._QXZ("DISABLED")."</option>$webphone_settings_menu</select>$NWB#phones-webphone_settings$NWE</td></tr>\n";
+
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Use External Server IP").": </td><td align=left><select size=1 name=use_external_server_ip><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option selected value='$row[75]'>"._QXZ("$row[75]")."</option></select>$NWB#phones-use_external_server_ip$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Status").": </td><td align=left><select size=1 name=status><option value='ACTIVE'>"._QXZ("ACTIVE")."</option><option value='SUSPENDED'>"._QXZ("SUSPENDED")."</option><option value='CLOSED'>"._QXZ("CLOSED")."</option><option value='PENDING'>"._QXZ("PENDING")."</option><option value='ADMIN'>"._QXZ("ADMIN")."</option><option value='$row[8]' selected>"._QXZ("$row[8]")."</option></select>$NWB#phones-status$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active Account").": </td><td align=left><select size=1 name=active><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$row[9]' selected>"._QXZ("$row[9]")."</option></select>$NWB#phones-active$NWE</td></tr>\n";
@@ -41295,6 +41327,7 @@ if ($ADD==392111111111)
 		<option value='READ_ONLY'>"._QXZ("READ_ONLY")."</option>
 		<option value='SIP_EVENT_ACTIONS'>"._QXZ("SIP_EVENT_ACTIONS")."</option>
 		<option value='TIMEZONE_LIST'>"._QXZ("TIMEZONE_LIST")."</option>
+		<option value='WEBPHONE_SETTINGS'>"._QXZ("WEBPHONE_SETTINGS")."</option>
 		<option value='WEEKDAY_TIMERANGE_SECONDS'>"._QXZ("WEEKDAY_TIMERANGE_SECONDS")."</option>
 		<option SELECTED value='$container_type'>"._QXZ("$container_type")."</option>
 		</select>$NWB#settings_containers-container_type$NWE</td></tr>\n";
@@ -41372,7 +41405,26 @@ if ($ADD==392111111111)
 				}
 
 			echo "</TABLE><BR>\n";
+			}
 
+		if (preg_match("/WEBPHONE_SETTINGS/",$container_type))
+			{
+			echo "<B>"._QXZ("PHONES USING THIS SETTINGS CONTAINER").":</B><BR>\n";
+			echo "<TABLE>\n";
+
+			$stmt="SELECT extension,server_ip from phones where (webphone_settings='$container_id') $LOGadmin_viewable_groupsSQL order by server_ip,extension;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$p_to_print = mysqli_num_rows($rslt);
+			if ($DB > 0) {echo "$p_to_print|$stmt<br>\n";}
+			$o=0;
+			while ($p_to_print > $o) 
+				{
+				$row=mysqli_fetch_row($rslt);
+				echo "<TR><TD><a href=\"$PHP_SELF?ADD=31111111111&extension=$row[0]&server_ip=$row[1]\"><font size=2>$row[0] - $row[1]</a></TD><TD><font size=2> $row[1]<BR></TD></TR>\n";
+				$o++;
+				}
+
+			echo "</TABLE><BR>\n";
 			}
 
 		if ($LOGast_delete_phones > 0)

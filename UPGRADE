@@ -730,6 +730,9 @@ OTHER CHANGES:
 
 205. Added User Group "Script Override" option, with per-campaign activation.
 
+206. Added "Webphone Settings" option to Phones, allows for more WebRTC config
+	options to be set through a Settings Container.
+
 
 
 
