@@ -1972,7 +1972,8 @@ allowed_sip_stacks ENUM('SIP','PJSIP','SIP_and_PJSIP') default 'SIP',
 agent_hide_hangup ENUM('1','0','2','3','4','5','6') default '0',
 allow_web_debug ENUM('0','1','2','3','4','5','6') default '0',
 max_logged_in_agents ENUM('0','1','2','3','4','5','6','7') default '0',
-user_codes_admin ENUM('0','1','2','3','4','5','6','7') default '0'
+user_codes_admin ENUM('0','1','2','3','4','5','6','7') default '0',
+login_kickall ENUM('0','1','2','3','4','5','6','7') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -5166,4 +5167,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1667',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1668',db_schema_update_date=NOW(),reload_timestamp=NOW();

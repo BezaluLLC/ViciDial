@@ -702,10 +702,11 @@
 # 220916-0906 - Added INSERT_before_body_close options.php setting, Issue #1375
 # 220922-1032 - Fix for loading internal chat while agent screen is still loading
 # 221012-1723 - Fix for webform URLs updates with correct recording variables
+# 221020-1651 - Added login_kickall system setting
 #
 
-$version = '2.14-670c';
-$build = '221012-1723';
+$version = '2.14-671c';
+$build = '221020-1651';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -804,7 +805,7 @@ $random = (rand(1000000, 9999999) + 10000000);
 
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script,agent_push_events,agent_push_url,agent_logout_link,agentonly_callback_campaign_lock,manual_dial_validation,mute_recordings,enable_second_script,enable_first_webform,recording_buttons,outbound_cid_any,browser_call_alerts,manual_dial_phone_strip,require_password_length,pass_hash_enabled,agent_hidden_sound_seconds,agent_hidden_sound,agent_hidden_sound_volume,agent_screen_timer,agent_hide_hangup,allow_web_debug,max_logged_in_agents FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script,agent_push_events,agent_push_url,agent_logout_link,agentonly_callback_campaign_lock,manual_dial_validation,mute_recordings,enable_second_script,enable_first_webform,recording_buttons,outbound_cid_any,browser_call_alerts,manual_dial_phone_strip,require_password_length,pass_hash_enabled,agent_hidden_sound_seconds,agent_hidden_sound,agent_hidden_sound_volume,agent_screen_timer,agent_hide_hangup,allow_web_debug,max_logged_in_agents,login_kickall FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 #if ($DB) {echo "$stmt\n";}
@@ -865,6 +866,7 @@ if ($qm_conf_ct > 0)
 	$SSagent_hide_hangup =				$row[50];
 	$SSallow_web_debug =				$row[51];
 	$SSmax_logged_in_agents =			$row[52];
+	$SSlogin_kickall =					$row[53];
 	if ( ($SSagent_hidden_sound == '---NONE---') or ($SSagent_hidden_sound == '') ) {$SSagent_hidden_sound_seconds=0;}
 	}
 else
@@ -4013,6 +4015,23 @@ else
 				echo "<!-- sending login sipsak message: $SIPSAK_prefix$VD_campaign -->\n";
 				passthru("/usr/local/bin/sipsak -M -O desktop -B \"$SIPSAK_prefix$VD_campaign\" -r 5060 -s sip:$extension@$phone_ip > /dev/null");
 				$SIqueryCID = "$SIPSAK_prefix$VD_campaign$DS$CIDdate";
+				}
+
+			if ($SSlogin_kickall > 0)
+				{
+				$local_DEF = 'Local/5555';
+				$local_AMP = '@';
+				$kick_local_channel = "$local_DEF$session_id$local_AMP$ext_context";
+				$queryCID = "ULKA3459$StarTtime";
+
+				$login_kickall_stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$queryCID','Channel: $kick_local_channel','Context: $ext_context','Exten: 8300','Priority: 1','Callerid: $queryCID','','','','$VD_login','$phone_login');";
+				if ($DB) {echo "$login_kickall_stmt\n";}
+				$rslt=mysql_to_mysqli($login_kickall_stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$affected_rows = mysqli_affected_rows($link);
+				echo "<!-- kickall command issued: $session_id from phone: $phone_login -->\n";
+
+				sleep(2);
 				}
 
 			$WebPhonEurl='';

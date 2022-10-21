@@ -2039,3 +2039,7 @@ index (user)
 CREATE UNIQUE INDEX vicidial_user_logins_daily_user on vicidial_user_logins_daily(login_day, user);
 
 UPDATE system_settings SET db_schema_version='1667',db_schema_update_date=NOW() where db_schema_version < 1667;
+
+ALTER TABLE system_settings ADD login_kickall ENUM('0','1','2','3','4','5','6','7') default '0';
+
+UPDATE system_settings SET db_schema_version='1668',db_schema_update_date=NOW() where db_schema_version < 1668;
