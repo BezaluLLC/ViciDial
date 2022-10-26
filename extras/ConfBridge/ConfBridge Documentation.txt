@@ -1,4 +1,4 @@
-VICIdial ConfBridge Support:		STARTED: 2022-06-22	UPDATED: 2022-09-16
+VICIdial ConfBridge Support:		STARTED: 2022-06-22	UPDATED: 2022-10-26
 
 
 !!! NOTE: VICIdial ConfBridge support is currently in BETA mode and is not recommended for systems that require a stable and tested codebase !!!
@@ -104,7 +104,7 @@ to the bottom of the file. Then create the /etc/asterisk/confbridge-vicidial.con
 	max_members=10
 	record_conference=no
 	internal_sample_rate=8000
-	mixing_interval=40
+	mixing_interval=20
 	video_mode=none
 	sound_join=enter
 	sound_leave=leave
@@ -236,6 +236,18 @@ In the /etc/asterisk/manager.conf add:
 to the bottom of the file.
 
 
+
+- Timing changes
+
+Unlike MeetMe which gets its timing directly from the DADHI kernel driver, ConfBridge gets its timing from the Asterisk Timing interface. By default this uses res_timing_timerfd.so and not res_timing_dahdi.so. To switch ConfBridge over to use DAHDI for its timing the following needs to be added to /etc/asterisk/modules.conf:
+
+	noload => res_timing_timerfd.so
+	noload => res_timing_kqueue.so
+	noload => res_timing_pthread.so
+
+This is important because the res_timing_timerfd.so module which is the default is affected whenever Asterisk forks itself like whenever an AGI script it executed. This can cause audio frames to be skipped by ConfBridge. Vicidial uses AGI scripts heavily.
+
+	
 
 - Database changes
 To accomodate the change to ConfBridge two fields were added to the "servers" table in Vicidial and another table was added. Here are the two fields added to the servers table:
