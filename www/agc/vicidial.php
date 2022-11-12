@@ -704,10 +704,11 @@
 # 221012-1723 - Fix for webform URLs updates with correct recording variables
 # 221020-1651 - Added login_kickall system setting
 # 221021-1022 - Added webphone_settings phones option
+# 221112-1638 - Fix for dispo timer issue #1387
 #
 
-$version = '2.14-672c';
-$build = '221021-1022';
+$version = '2.14-673c';
+$build = '221112-1638';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -15058,7 +15059,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				}
 
 			HidEGenDerPulldown();
-			AgentDispoing = 1;
+			if ((taskDSstage == 'ReSET') && (DSCclick!='YES'))
+				{AgentDispoing = 1;}
 			var CBflag = '';
 			var MINMAXbegin='';
 			var MINMAXend='';
