@@ -157,9 +157,10 @@
 # 220312-0819 - Added CID Group Auto-Rotate to check for List use
 # 220526-1444 - Fix for CID auto-rotate functions
 # 220921-1255 - Added vicidial_user_logins_daily TEOD population
+# 221116-1157 - Added vicidial_long_extensions TEOD truncating
 #
 
-$build = '220921-1255';
+$build = '221116-1157';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -1335,6 +1336,21 @@ if ($timeclock_end_of_day_NOW > 0)
 		if ($teodDB) {$event_string = "vicidial_agent_dial_campaigns records reset: $affected_rows";   &teod_logger;}
 
 		$stmtA = "optimize table vicidial_agent_dial_campaigns;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "delete from vicidial_long_extensions where call_date < \"$RMSQLdate\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_long_extensions records deleted|\n";}
+		if ($teodDB) {$event_string = "vicidial_long_extensions records reset: $affected_rows";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_long_extensions;";
 		if($DBX){print STDERR "\n|$stmtA|\n";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;

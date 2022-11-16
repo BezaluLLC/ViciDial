@@ -82,7 +82,7 @@
 #exten => _99909*.,2,AGI(agi-VDAD_ALL_inbound.agi)
 #exten => _99909*.,3,Hangup
 #
-# Copyright (C) 2021  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 70828-0924 - First Build
@@ -249,6 +249,7 @@
 # 210908-0851 - Added OWNERCUSTOMx options for call_handle_method
 # 210911-2008 - Added populate_lead_owner in-group option
 # 211106-1523 - Added in_queue_nanque options
+# 221116-1050 - Fix for long in-group dialstring extensions
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -607,33 +608,58 @@ $originalCID = $callerid;
 
 if ($call_handle_method =~ /^CLOSER/)
 	{
-	### allow for internal PRI/IAX/SIP transfer data string "90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*"
-	if ($extension =~ /^900\d\d\*|^9900\d\d\*|^980\d\d\*|^9980\d\d\*/)
+	### allow for internal PRI/IAX/SIP transfer data string "90009*CL_uk3survy_*8301*10000123*universal*7275551212*1234*12*"
+	# LE: 8305888888888888090009*TEST_INGROUP_1234567**1010133**9998885112*12345678901234567890*12345678901234567890**1*8600052
+	if ($extension =~ /^900\d\d\*|^9900\d\d\*|^980\d\d\*|^9980\d\d\*|^8305888888888888\d90009|^8305888888888888\d98009/)
 		{
-		### BEGIN check for truncated extension ###
-		$LENGTHextension = length($extension);
-		$LENGTHcmd_line_b=0;
-		if ($callerid =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d|^Y\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
+		if ($AGILOG) {$agi_string = "CLOSER checking for long-extension: ($extension)";   &agi_output;}
+
+		if ($extension =~ /\*\*LEXTEN\*\d/) 
 			{
-			$stmtA = "SELECT cmd_line_b FROM vicidial_manager where callerid='$callerid' and action='Originate' and ( (cmd_line_b LIKE \"Exten: 8305888888888888_90009%\") or (cmd_line_b LIKE \"Exten: 8305888888888888_98009%\") ) order by man_id desc limit 1;";
+			@LE_vars = split(/\*/, $extension);
+			$le_id =		$LE_vars[3];	# le_id to search for
+
+			$stmtA = "SELECT extension FROM vicidial_long_extensions where le_id='$le_id' and call_date > DATE_SUB(NOW(), interval 1 hour) limit 1;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
 				$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
 			if ($sthArows > 0)
 				{
-				@aryA = $sthA->fetchrow_array;	
-				$cmd_line_b	=	$aryA[0];
-				$cmd_line_b =~ s/^Exten: 8305888888888888\d90009/990009/gi;
-				$cmd_line_b =~ s/^Exten: 8305888888888888\d98009/998009/gi;
-				$LENGTHcmd_line_b = length($cmd_line_b);
+				@aryA = $sthA->fetchrow_array;
+				if ($AGILOG) {$agi_string = "CLOSER long-extension found: $le_id|($extension <> $aryA[0])";   &agi_output;}
+				$extension	=	$aryA[0];
+				$extension =~ s/\@.*//gi;
 				}
 			$sthA->finish();
-
-			if ($LENGTHcmd_line_b > $LENGTHextension) 
+			}
+		else
+			{
+			### BEGIN check for truncated extension ###
+			$LENGTHextension = length($extension);
+			$LENGTHcmd_line_b=0;
+			if ($callerid =~ /^V\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d|^Y\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
 				{
-				if ($AGILOG) {$agi_string = "CLOSER extension override: ($LENGTHcmd_line_b <> $LENGTHextension)|$cmd_line_b|";   &agi_output;}
-				$extension = $cmd_line_b;
+				$stmtA = "SELECT cmd_line_b FROM vicidial_manager where callerid='$callerid' and action='Originate' and ( (cmd_line_b LIKE \"Exten: 8305888888888888_90009%\") or (cmd_line_b LIKE \"Exten: 8305888888888888_98009%\") ) order by man_id desc limit 1;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;	
+					$cmd_line_b	=	$aryA[0];
+					$cmd_line_b =~ s/^Exten: 8305888888888888\d90009/990009/gi;
+					$cmd_line_b =~ s/^Exten: 8305888888888888\d98009/998009/gi;
+					$LENGTHcmd_line_b = length($cmd_line_b);
+					}
+				$sthA->finish();
+
+				if ($LENGTHcmd_line_b > $LENGTHextension) 
+					{
+					if ($AGILOG) {$agi_string = "CLOSER extension override: ($LENGTHcmd_line_b <> $LENGTHextension)|$cmd_line_b|";   &agi_output;}
+					$extension = $cmd_line_b;
+					}
 				}
 			}
 		### END check for truncated extension ###

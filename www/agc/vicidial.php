@@ -705,10 +705,11 @@
 # 221020-1651 - Added login_kickall system setting
 # 221021-1022 - Added webphone_settings phones option
 # 221112-1638 - Fix for dispo timer issue #1387
+# 221116-1059 - Fix for long in-group dialstring extensions
 #
 
-$version = '2.14-673c';
-$build = '221112-1638';
+$version = '2.14-674c';
+$build = '221116-1059';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -6676,6 +6677,7 @@ function holiday_display(holiday_name)
 				var XfeR_GrouP = XfeRSelecT.value;
 				if (API_selected_xfergroup.length > 1)
 					{var XfeR_GrouP = API_selected_xfergroup;}
+				// 		 "90009*$group*CXFER*$lead_id**$phone_number*$user*$agent_only*$seconds*";
 				tasknum = Ctasknum + "*" + XfeR_GrouP + '*CXFER*' + document.vicidial_form.lead_id.value + '**' + dialed_number + '*' + user + '*' + agentdirect + '*' + VD_live_call_secondS + '*';
 
 				if (consult_custom_sent < 1)

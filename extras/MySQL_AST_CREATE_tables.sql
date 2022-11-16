@@ -4813,6 +4813,14 @@ failed_last_type_today VARCHAR(20) default '',
 index (user)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_long_extensions (
+le_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+extension VARCHAR(1000),
+call_date DATETIME default '2001-01-01 00:00:01',
+source VARCHAR(20) default '',
+index (call_date)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -5169,4 +5177,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1669',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1670',db_schema_update_date=NOW(),reload_timestamp=NOW();
