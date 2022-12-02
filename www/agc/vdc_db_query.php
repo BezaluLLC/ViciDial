@@ -528,10 +528,11 @@
 # 220625-1630 - Fix for Manual Dial NONE_WITH_ options dialing proper number
 # 220831-1654 - Added User Group script override option
 # 221116-1052 - Fix for long in-group dialstring extensions
+# 221202-1645 - Change in CIDname prefix for clearing session command to differentiate from other processes
 #
 
-$version = '2.14-421';
-$build = '221116-1052';
+$version = '2.14-422';
+$build = '221202-1645';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=902;
@@ -16536,7 +16537,7 @@ if ($ACTION == 'userLOGout')
 			$row=mysqli_fetch_row($rslt);
 			$agent_channel = "$row[0]";
 			if ($format=='debug') {echo "\n<!-- $row[0] -->";}
-			$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Hangup','ULGH3459$StarTtime','Channel: $agent_channel','','','','','','','','','');";
+			$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Hangup','ULVD3452$StarTtime','Channel: $agent_channel','','','','','','','','','');";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00134',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -16547,7 +16548,7 @@ if ($ACTION == 'userLOGout')
 			$local_DEF = 'Local/5555';
 			$local_AMP = '@';
 			$kick_local_channel = "$local_DEF$conf_exten$local_AMP$ext_context";
-			$queryCID = "ULGH3458$StarTtime";
+			$queryCID = "ULVC3453$StarTtime";
 
 			$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$queryCID','Channel: $kick_local_channel','Context: $ext_context','Exten: 8300','Priority: 1','Callerid: $queryCID','','','','$channel','$exten');";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
