@@ -1385,6 +1385,11 @@ else
 	{
 	$LOGINformSUBtrigger='';
 	$LoginLoadingBox='';
+?>
+	// -->
+	</script>
+
+<?php
 	}
 
 $grey_link='';
