@@ -4141,7 +4141,10 @@ queue_priority TINYINT(2) default '0',
 call_date DATETIME,
 gmt_offset_now DECIMAL(4,2) DEFAULT '0.00',
 modify_date TIMESTAMP,
-index (icbq_status)
+index (icbq_status),
+index (group_id),
+index (icbq_date),
+index (call_date)
 ) ENGINE=MyISAM;
 
 CREATE TABLE recording_log_deletion_queue (
@@ -5177,4 +5180,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1670',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1671',db_schema_update_date=NOW(),reload_timestamp=NOW();

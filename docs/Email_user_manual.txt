@@ -1,4 +1,4 @@
-EMAIL HANDLING DOC		Started: 2012-12-23	Updated: 2022-12-05
+EMAIL HANDLING DOC		Started: 2012-12-23	Updated: 2022-12-08
 
 (example of how to set up an email account with Gmail is at the bottom)
 
@@ -302,3 +302,5 @@ You have to give your server a Fully Qualified Domain Name(FQDN), if only locall
 2. Edit the "/etc/hostname" file on that server and enter in the FQDN that you have added to DNS
 3. Edit the "/etc/hosts" file on that server and enter in the new FQDN and the local IP Address, with another entry for the real-world IP Address if there is one
 4. Reboot your server.
+
+You may also need to define your FQDN in your email configuration files, for example if you are using Postfix for email, in the “/etc/postfix/main.cf" you will need to change the “myhostname” setting to your FQDN(i.e.: “myhostname = dialer01.dialer-domain.com”). Also, if you are using a mail relay server, you will need to set the “relayhost” setting as well(i.e.: “relayhost = mail.relay-domain.com:587”).

@@ -2059,3 +2059,13 @@ index (call_date)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1670',db_schema_update_date=NOW() where db_schema_version < 1670;
+
+CREATE INDEX vicq_group_id on vicidial_inbound_callback_queue(group_id);
+CREATE INDEX vicq_icbq_date on vicidial_inbound_callback_queue(icbq_date);
+CREATE INDEX vicq_call_date on vicidial_inbound_callback_queue(call_date);
+
+CREATE INDEX vicqa_group_id on vicidial_inbound_callback_queue_archive(group_id);
+CREATE INDEX vicqa_icbq_date on vicidial_inbound_callback_queue_archive(icbq_date);
+CREATE INDEX vicqa_call_date on vicidial_inbound_callback_queue_archive(call_date);
+
+UPDATE system_settings SET db_schema_version='1671',db_schema_update_date=NOW() where db_schema_version < 1671;
