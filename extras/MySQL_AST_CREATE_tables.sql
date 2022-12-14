@@ -1223,7 +1223,7 @@ php_tz VARCHAR(100) default ''
 CREATE TABLE vicidial_inbound_groups (
 group_id VARCHAR(20) PRIMARY KEY NOT NULL,
 group_name VARCHAR(30),
-group_color VARCHAR(7),
+group_color VARCHAR(20),
 active ENUM('Y','N'),
 web_form_address TEXT,
 voicemail_ext VARCHAR(10),
@@ -1520,7 +1520,7 @@ script_comments VARCHAR(255),
 script_text TEXT,
 active ENUM('Y','N'),
 user_group VARCHAR(20) default '---ALL---',
-script_color VARCHAR(7) default 'white'
+script_color VARCHAR(20) default 'white'
 ) ENGINE=MyISAM;
 
 CREATE TABLE phone_favorites (
@@ -5180,4 +5180,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1671',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1672',db_schema_update_date=NOW(),reload_timestamp=NOW();

@@ -2069,3 +2069,9 @@ CREATE INDEX vicqa_icbq_date on vicidial_inbound_callback_queue_archive(icbq_dat
 CREATE INDEX vicqa_call_date on vicidial_inbound_callback_queue_archive(call_date);
 
 UPDATE system_settings SET db_schema_version='1671',db_schema_update_date=NOW() where db_schema_version < 1671;
+
+ALTER TABLE vicidial_inbound_groups MODIFY group_color VARCHAR(20);
+
+ALTER TABLE vicidial_scripts MODIFY script_color VARCHAR(20) default 'white';
+
+UPDATE system_settings SET db_schema_version='1672',db_schema_update_date=NOW() where db_schema_version < 1672;

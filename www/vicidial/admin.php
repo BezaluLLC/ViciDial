@@ -135,6 +135,8 @@ $APIfunctions = 'ALL_FUNCTIONS add_group_alias add_lead add_list add_phone add_p
 
 $browser_alert_sounds_list = 'bark_dog,beep_double,beep_five,beep_up,bell_double,bell_school,bird,blaster1,blaster2,buzz1,buzz2,cash_register,chat_alert,click_single,click_double,click_quiet,close_encounter,confirmation,ding,droplet,droplet_double,elephant,email_alert,hold_tone,horn_bike,horn_car,horn_car_triple,horn_clown,horn_double,horn_train,meow_cat,scream_wilhelm,silence_quick,siren,slide_down,slide_up,swish,teleport1,teleport2,ticking_two,ticking_four,ticking_six,whip,whistle_up,whistle_two,whistle_three,whoosh,xylophone1,xylophone2,xylophone3,xylophone4';
 
+$HTMLcolors = 'IndianRed,CD5C5C|LightCoral,F08080|Salmon,FA8072|DarkSalmon,E9967A|LightSalmon,FFA07A|Crimson,DC143C|Red,FF0000|FireBrick,B22222|DarkRed,8B0000|Pink,FFC0CB|LightPink,FFB6C1|HotPink,FF69B4|DeepPink,FF1493|MediumVioletRed,C71585|PaleVioletRed,DB7093|LightSalmon,FFA07A|Coral,FF7F50|Tomato,FF6347|OrangeRed,FF4500|DarkOrange,FF8C00|Orange,FFA500|Gold,FFD700|Yellow,FFFF00|LightYellow,FFFFE0|LemonChiffon,FFFACD|LightGoldenrodYellow,FAFAD2|PapayaWhip,FFEFD5|Moccasin,FFE4B5|PeachPuff,FFDAB9|PaleGoldenrod,EEE8AA|Khaki,F0E68C|DarkKhaki,BDB76B|Lavender,E6E6FA|Thistle,D8BFD8|Plum,DDA0DD|Violet,EE82EE|Orchid,DA70D6|Fuchsia,FF00FF|Magenta,FF00FF|MediumOrchid,BA55D3|MediumPurple,9370DB|RebeccaPurple,663399|BlueViolet,8A2BE2|DarkViolet,9400D3|DarkOrchid,9932CC|DarkMagenta,8B008B|Purple,800080|Indigo,4B0082|SlateBlue,6A5ACD|DarkSlateBlue,483D8B|MediumSlateBlue,7B68EE|GreenYellow,ADFF2F|Chartreuse,7FFF00|LawnGreen,7CFC00|Lime,00FF00|LimeGreen,32CD32|PaleGreen,98FB98|LightGreen,90EE90|MediumSpringGreen,00FA9A|SpringGreen,00FF7F|MediumSeaGreen,3CB371|SeaGreen,2E8B57|ForestGreen,228B22|Green,008000|DarkGreen,006400|YellowGreen,9ACD32|OliveDrab,6B8E23|Olive,808000|DarkOliveGreen,556B2F|MediumAquamarine,66CDAA|DarkSeaGreen,8FBC8B|LightSeaGreen,20B2AA|DarkCyan,008B8B|Teal,008080|Aqua,00FFFF|Cyan,00FFFF|LightCyan,E0FFFF|PaleTurquoise,AFEEEE|Aquamarine,7FFFD4|Turquoise,40E0D0|MediumTurquoise,48D1CC|DarkTurquoise,00CED1|CadetBlue,5F9EA0|SteelBlue,4682B4|LightSteelBlue,B0C4DE|PowderBlue,B0E0E6|LightBlue,ADD8E6|SkyBlue,87CEEB|LightSkyBlue,87CEFA|DeepSkyBlue,00BFFF|DodgerBlue,1E90FF|CornflowerBlue,6495ED|MediumSlateBlue,7B68EE|RoyalBlue,4169E1|Blue,0000FF|MediumBlue,0000CD|DarkBlue,00008B|Navy,000080|MidnightBlue,191970|Cornsilk,FFF8DC|BlanchedAlmond,FFEBCD|Bisque,FFE4C4|NavajoWhite,FFDEAD|Wheat,F5DEB3|BurlyWood,DEB887|Tan,D2B48C|RosyBrown,BC8F8F|SandyBrown,F4A460|Goldenrod,DAA520|DarkGoldenrod,B8860B|Peru,CD853F|Chocolate,D2691E|SaddleBrown,8B4513|Sienna,A0522D|Brown,A52A2A|Maroon,800000|White,FFFFFF|Snow,FFFAFA|HoneyDew,F0FFF0|MintCream,F5FFFA|Azure,F0FFFF|AliceBlue,F0F8FF|GhostWhite,F8F8FF|WhiteSmoke,F5F5F5|SeaShell,FFF5EE|Beige,F5F5DC|OldLace,FDF5E6|FloralWhite,FFFAF0|Ivory,FFFFF0|AntiqueWhite,FAEBD7|Linen,FAF0E6|LavenderBlush,FFF0F5|MistyRose,FFE4E1|Gainsboro,DCDCDC|LightGray,D3D3D3|Silver,C0C0C0|DarkGray,A9A9A9|Gray,808080|DimGray,696969|LightSlateGray,778899|SlateGray,708090|DarkSlateGray,2F4F4F|Black,000000';
+
 ### BEGIN housecleaning of old static report files, if not done before ###
 if (!file_exists('old_clear'))
 	{
@@ -5940,12 +5942,13 @@ if ($SSscript_remove_js > 0)
 # 221017-0822 - Fix for Copy Carrier issue #1384
 # 221020-1632 - Added login_kickall system setting
 # 221021-1038 - Added webphone_settings option to phones, pointed to a settings container
+# 221214-1153 - Added $HTMLcolors validation for color form entry fields
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-869a';
-$build = '221021-1038';
+$admin_version = '2.14-870a';
+$build = '221214-1153';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -9327,7 +9330,7 @@ if ($ADD==1111)
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group ID").": </td><td align=left><input type=text name=group_id size=20 maxlength=20> ("._QXZ("no spaces").")$NWB#inbound_groups-group_id$NWE</td></tr>\n";
 			}
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Name").": </td><td align=left><input type=text name=group_name size=30 maxlength=30>$NWB#inbound_groups-group_name$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Color").": </td><td align=left id=\"group_color_td\"><input type=text name=group_color size=7 maxlength=7>$NWB#inbound_groups-group_color$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Color")." <font size=2>(<a href=\"javascript:launch_color_chooser('group_color','color','1');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left id=\"group_color_td\"><input type=text name=group_color id=group_color size=7 maxlength=20> $NWB#inbound_groups-group_color$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option></select>$NWB#inbound_groups-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
@@ -9417,7 +9420,7 @@ if ($ADD==1811)
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group ID").": </td><td align=left><input type=text name=group_id size=20 maxlength=20> ("._QXZ("no spaces").")$NWB#inbound_groups-group_id$NWE</td></tr>\n";
 			}
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Name").": </td><td align=left><input type=text name=group_name size=30 maxlength=30>$NWB#inbound_groups-group_name$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Color").": </td><td align=left id=\"group_color_td\"><input type=text name=group_color size=7 maxlength=7>$NWB#inbound_groups-group_color$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Color")." <font size=2>(<a href=\"javascript:launch_color_chooser('group_color','color','1');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left id=\"group_color_td\"><input type=text name=group_color id=group_color size=7 maxlength=20> $NWB#inbound_groups-group_color$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option></select>$NWB#inbound_groups-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
@@ -9497,7 +9500,7 @@ if ($ADD==18111)
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group ID").": </td><td align=left><input type=text name=group_id size=20 maxlength=20> ("._QXZ("no spaces").")$NWB#inbound_groups-group_id$NWE</td></tr>\n";
 			}
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Name").": </td><td align=left><input type=text name=group_name size=30 maxlength=30>$NWB#inbound_groups-group_name$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Color").": </td><td align=left id=\"group_color_td\"><input type=text name=group_color size=7 maxlength=7>$NWB#inbound_groups-group_color$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Color")." <font size=2>(<a href=\"javascript:launch_color_chooser('group_color','color','1');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left id=\"group_color_td\"><input type=text name=group_color id=group_color size=7 maxlength=20> $NWB#inbound_groups-group_color$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option></select>$NWB#inbound_groups-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Default List ID").": </td><td align=left><input type=text name=hold_time_option_callback_list_id size=19 maxlength=19 value=0>$NWB#inbound_groups-default_list_id$NWE</td></tr>";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
@@ -13111,6 +13114,12 @@ if ($ADD==2111)
 					}
 				else
 					{
+					if ( (!preg_match("/\|$group_color,/i",$HTMLcolors)) and ( (strlen($group_color) > 7) or (strlen($group_color) < 7) or (!preg_match("/^#/",$group_color)) ) )
+						{
+						if (!preg_match("/^#/",$group_color)) {$group_color = "#$group_color";}
+						if (strlen($group_color) > 7) {$group_color = substr($group_color,0,7);}
+						while (strlen($group_color) < 7) {$group_color .= '0';}
+						}
 					$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,web_form_address_two,start_call_url,dispo_call_url,add_lead_url,na_call_url,user_group,group_handling,web_form_address_three,place_in_line_caller_number_filename,place_in_line_you_next_filename) values('$group_id','$group_name','$group_color','$active','" . mysqli_real_escape_string($link, $web_form_address) . "','$voicemail_ext','$next_agent_call','$fronter_display','$script_id','$get_call_launch','','','','','','$user_group','$group_handling','','','');";
 					$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -13186,6 +13195,12 @@ if ( ($ADD==2811) and ($SSallow_emails>0) )
 					}
 				else
 					{
+					if ( (!preg_match("/\|$group_color,/i",$HTMLcolors)) and ( (strlen($group_color) > 7) or (strlen($group_color) < 7) or (!preg_match("/^#/",$group_color)) ) )
+						{
+						if (!preg_match("/^#/",$group_color)) {$group_color = "#$group_color";}
+						if (strlen($group_color) > 7) {$group_color = substr($group_color,0,7);}
+						while (strlen($group_color) < 7) {$group_color .= '0';}
+						}
 					$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,web_form_address_two,start_call_url,dispo_call_url,add_lead_url,na_call_url,user_group,group_handling,web_form_address_three,place_in_line_caller_number_filename,place_in_line_you_next_filename) values('$group_id','$group_name','$group_color','$active','" . mysqli_real_escape_string($link, $web_form_address) . "','$voicemail_ext','$next_agent_call','$fronter_display','$script_id','EMAIL','','','','','','$user_group','$group_handling','','','');";
 					$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -13261,6 +13276,12 @@ if ( ($ADD==28111) and ($SSallow_chats>0) )
 					}
 				else
 					{
+					if ( (!preg_match("/\|$group_color,/i",$HTMLcolors)) and ( (strlen($group_color) > 7) or (strlen($group_color) < 7) or (!preg_match("/^#/",$group_color)) ) )
+						{
+						if (!preg_match("/^#/",$group_color)) {$group_color = "#$group_color";}
+						if (strlen($group_color) > 7) {$group_color = substr($group_color,0,7);}
+						while (strlen($group_color) < 7) {$group_color .= '0';}
+						}
 					$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,web_form_address_two,start_call_url,dispo_call_url,add_lead_url,na_call_url,user_group,group_handling,hold_time_option_callback_list_id,web_form_address_three,place_in_line_caller_number_filename,place_in_line_you_next_filename) values('$group_id','$group_name','$group_color','$active','" . mysqli_real_escape_string($link, $web_form_address) . "','$voicemail_ext','$next_agent_call','$fronter_display','$script_id','CHAT','','','','','','$user_group','$group_handling','$hold_time_option_callback_list_id','','','');";
 					$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -13336,6 +13357,12 @@ if ($ADD==2011)
 					}
 				else
 					{
+					if ( (!preg_match("/\|$group_color,/i",$HTMLcolors)) and ( (strlen($group_color) > 7) or (strlen($group_color) < 7) or (!preg_match("/^#/",$group_color)) ) )
+						{
+						if (!preg_match("/^#/",$group_color)) {$group_color = "#$group_color";}
+						if (strlen($group_color) > 7) {$group_color = substr($group_color,0,7);}
+						while (strlen($group_color) < 7) {$group_color .= '0';}
+						}
 					$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,timer_action_destination,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,na_call_url,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,user_group,max_calls_method,max_calls_count,max_calls_action,dial_ingroup_cid,group_handling,web_form_address_three,populate_lead_ingroup,drop_lead_reset,after_hours_lead_reset,nanq_lead_reset,wait_time_lead_reset,hold_time_lead_reset,status_group_id,routing_initiated_recordings,on_hook_cid_number,customer_chat_screen_colors,customer_chat_survey_link,customer_chat_survey_text,populate_lead_province,areacode_filter,areacode_filter_seconds,areacode_filter_action,areacode_filter_action_value,populate_state_areacode,inbound_survey,inbound_survey_filename,inbound_survey_accept_digit,inbound_survey_question_filename,inbound_survey_callmenu,icbq_expiration_hours,closing_time_action,closing_time_now_trigger,closing_time_filename,closing_time_end_filename,closing_time_lead_reset,closing_time_option_exten,closing_time_option_callmenu,closing_time_option_voicemail,closing_time_option_xfer_group,closing_time_option_callback_list_id,icbq_call_time_id,add_lead_timezone,icbq_dial_filter,populate_lead_source,populate_lead_vendor,park_file_name,waiting_call_url_on,waiting_call_url_off,enter_ingroup_url,cid_cb_confirm_number,cid_cb_invalid_filter_phone_group,cid_cb_valid_length,cid_cb_valid_filename,cid_cb_confirmed_filename,cid_cb_enter_filename,cid_cb_you_entered_filename,cid_cb_press_to_confirm_filename,cid_cb_invalid_filename,cid_cb_reenter_filename,cid_cb_error_filename,place_in_line_caller_number_filename,place_in_line_you_next_filename,ingroup_script_two,browser_alert_sound,browser_alert_volume,answer_signal,no_agent_delay,agent_search_method,qc_scorecard_id,qc_statuses_id,populate_lead_comments,drop_call_seconds_override,populate_lead_owner,in_queue_nanque,in_queue_nanque_exceptions) SELECT \"$group_id\",\"$group_name\",group_color,\"N\",web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,timer_action_destination,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,na_call_url,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,user_group,max_calls_method,max_calls_count,max_calls_action,dial_ingroup_cid,group_handling,web_form_address_three,populate_lead_ingroup,drop_lead_reset,after_hours_lead_reset,nanq_lead_reset,wait_time_lead_reset,hold_time_lead_reset,status_group_id,routing_initiated_recordings,on_hook_cid_number,customer_chat_screen_colors,customer_chat_survey_link,customer_chat_survey_text,populate_lead_province,areacode_filter,areacode_filter_seconds,areacode_filter_action,areacode_filter_action_value,populate_state_areacode,inbound_survey,inbound_survey_filename,inbound_survey_accept_digit,inbound_survey_question_filename,inbound_survey_callmenu,icbq_expiration_hours,closing_time_action,closing_time_now_trigger,closing_time_filename,closing_time_end_filename,closing_time_lead_reset,closing_time_option_exten,closing_time_option_callmenu,closing_time_option_voicemail,closing_time_option_xfer_group,closing_time_option_callback_list_id,icbq_call_time_id,add_lead_timezone,icbq_dial_filter,populate_lead_source,populate_lead_vendor,park_file_name,waiting_call_url_on,waiting_call_url_off,enter_ingroup_url,cid_cb_confirm_number,cid_cb_invalid_filter_phone_group,cid_cb_valid_length,cid_cb_valid_filename,cid_cb_confirmed_filename,cid_cb_enter_filename,cid_cb_you_entered_filename,cid_cb_press_to_confirm_filename,cid_cb_invalid_filename,cid_cb_reenter_filename,cid_cb_error_filename,place_in_line_caller_number_filename,place_in_line_you_next_filename,ingroup_script_two,browser_alert_sound,browser_alert_volume,answer_signal,no_agent_delay,agent_search_method,qc_scorecard_id,qc_statuses_id,populate_lead_comments,drop_call_seconds_override,populate_lead_owner,in_queue_nanque,in_queue_nanque_exceptions from vicidial_inbound_groups where group_id=\"$source_group_id\";";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$affected_rows = mysqli_affected_rows($link);
@@ -13430,6 +13457,12 @@ if ( ($ADD==2911) and ($SSallow_emails>0) )
 					}
 				else
 					{
+					if ( (!preg_match("/\|$group_color,/i",$HTMLcolors)) and ( (strlen($group_color) > 7) or (strlen($group_color) < 7) or (!preg_match("/^#/",$group_color)) ) )
+						{
+						if (!preg_match("/^#/",$group_color)) {$group_color = "#$group_color";}
+						if (strlen($group_color) > 7) {$group_color = substr($group_color,0,7);}
+						while (strlen($group_color) < 7) {$group_color .= '0';}
+						}
 					$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,timer_action_destination,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,na_call_url,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,user_group,max_calls_method,max_calls_count,max_calls_action,dial_ingroup_cid,group_handling,web_form_address_three,populate_lead_ingroup,drop_lead_reset,after_hours_lead_reset,nanq_lead_reset,wait_time_lead_reset,hold_time_lead_reset,status_group_id,routing_initiated_recordings,on_hook_cid_number,customer_chat_screen_colors,customer_chat_survey_link,customer_chat_survey_text,populate_lead_province,areacode_filter,areacode_filter_seconds,areacode_filter_action,areacode_filter_action_value,populate_state_areacode,inbound_survey,inbound_survey_filename,inbound_survey_accept_digit,inbound_survey_question_filename,inbound_survey_callmenu,icbq_expiration_hours,closing_time_action,closing_time_now_trigger,closing_time_filename,closing_time_end_filename,closing_time_lead_reset,closing_time_option_exten,closing_time_option_callmenu,closing_time_option_voicemail,closing_time_option_xfer_group,closing_time_option_callback_list_id,icbq_call_time_id,add_lead_timezone,icbq_dial_filter,populate_lead_source,populate_lead_vendor,park_file_name,waiting_call_url_on,waiting_call_url_off,enter_ingroup_url,cid_cb_confirm_number,cid_cb_invalid_filter_phone_group,cid_cb_valid_length,cid_cb_valid_filename,cid_cb_confirmed_filename,cid_cb_enter_filename,cid_cb_you_entered_filename,cid_cb_press_to_confirm_filename,cid_cb_invalid_filename,cid_cb_reenter_filename,cid_cb_error_filename,place_in_line_caller_number_filename,place_in_line_you_next_filename,ingroup_script_two,browser_alert_sound,browser_alert_volume,answer_signal,no_agent_delay,agent_search_method,qc_scorecard_id,qc_statuses_id,populate_lead_comments,drop_call_seconds_override,populate_lead_owner,in_queue_nanque,in_queue_nanque_exceptions) SELECT \"$group_id\",\"$group_name\",group_color,\"N\",web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,timer_action_destination,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,na_call_url,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,user_group,max_calls_method,max_calls_count,max_calls_action,dial_ingroup_cid,group_handling,web_form_address_three,populate_lead_ingroup,drop_lead_reset,after_hours_lead_reset,nanq_lead_reset,wait_time_lead_reset,hold_time_lead_reset,status_group_id,routing_initiated_recordings,on_hook_cid_number,customer_chat_screen_colors,customer_chat_survey_link,customer_chat_survey_text,populate_lead_province,areacode_filter,areacode_filter_seconds,areacode_filter_action,areacode_filter_action_value,populate_state_areacode,inbound_survey,inbound_survey_filename,inbound_survey_accept_digit,inbound_survey_question_filename,inbound_survey_callmenu,icbq_expiration_hours,closing_time_action,closing_time_now_trigger,closing_time_filename,closing_time_end_filename,closing_time_lead_reset,closing_time_option_exten,closing_time_option_callmenu,closing_time_option_voicemail,closing_time_option_xfer_group,closing_time_option_callback_list_id,icbq_call_time_id,add_lead_timezone,icbq_dial_filter,populate_lead_source,populate_lead_vendor,park_file_name,waiting_call_url_on,waiting_call_url_off,enter_ingroup_url,cid_cb_confirm_number,cid_cb_invalid_filter_phone_group,cid_cb_valid_length,cid_cb_valid_filename,cid_cb_confirmed_filename,cid_cb_enter_filename,cid_cb_you_entered_filename,cid_cb_press_to_confirm_filename,cid_cb_invalid_filename,cid_cb_reenter_filename,cid_cb_error_filename,place_in_line_caller_number_filename,place_in_line_you_next_filename,ingroup_script_two,browser_alert_sound,browser_alert_volume,answer_signal,no_agent_delay,agent_search_method,qc_scorecard_id,qc_statuses_id,populate_lead_comments,drop_call_seconds_override,populate_lead_owner,in_queue_nanque,in_queue_nanque_exceptions from vicidial_inbound_groups where group_id=\"$source_group_id\";";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$affected_rows = mysqli_affected_rows($link);
@@ -13524,6 +13557,12 @@ if ( ($ADD==29111) and ($SSallow_chats>0) )
 					}
 				else
 					{
+					if ( (!preg_match("/\|$group_color,/i",$HTMLcolors)) and ( (strlen($group_color) > 7) or (strlen($group_color) < 7) or (!preg_match("/^#/",$group_color)) ) )
+						{
+						if (!preg_match("/^#/",$group_color)) {$group_color = "#$group_color";}
+						if (strlen($group_color) > 7) {$group_color = substr($group_color,0,7);}
+						while (strlen($group_color) < 7) {$group_color .= '0';}
+						}
 					$stmt="INSERT INTO vicidial_inbound_groups (group_id,group_name,group_color,active,web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,timer_action_destination,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,na_call_url,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,user_group,max_calls_method,max_calls_count,max_calls_action,dial_ingroup_cid,group_handling,web_form_address_three,populate_lead_ingroup,drop_lead_reset,after_hours_lead_reset,nanq_lead_reset,wait_time_lead_reset,hold_time_lead_reset,status_group_id,routing_initiated_recordings,on_hook_cid_number,customer_chat_screen_colors,customer_chat_survey_link,customer_chat_survey_text,populate_lead_province,areacode_filter,areacode_filter_seconds,areacode_filter_action,areacode_filter_action_value,populate_state_areacode,inbound_survey,inbound_survey_filename,inbound_survey_accept_digit,inbound_survey_question_filename,inbound_survey_callmenu,icbq_expiration_hours,closing_time_action,closing_time_now_trigger,closing_time_filename,closing_time_end_filename,closing_time_lead_reset,closing_time_option_exten,closing_time_option_callmenu,closing_time_option_voicemail,closing_time_option_xfer_group,closing_time_option_callback_list_id,icbq_call_time_id,add_lead_timezone,icbq_dial_filter,populate_lead_source,populate_lead_vendor,park_file_name,waiting_call_url_on,waiting_call_url_off,enter_ingroup_url,cid_cb_confirm_number,cid_cb_invalid_filter_phone_group,cid_cb_valid_length,cid_cb_valid_filename,cid_cb_confirmed_filename,cid_cb_enter_filename,cid_cb_you_entered_filename,cid_cb_press_to_confirm_filename,cid_cb_invalid_filename,cid_cb_reenter_filename,cid_cb_error_filename,place_in_line_caller_number_filename,place_in_line_you_next_filename,ingroup_script_two,browser_alert_sound,browser_alert_volume,answer_signal,no_agent_delay,agent_search_method,qc_scorecard_id,qc_statuses_id,populate_lead_comments,drop_call_seconds_override,populate_lead_owner,in_queue_nanque,in_queue_nanque_exceptions) SELECT \"$group_id\",\"$group_name\",group_color,\"N\",web_form_address,voicemail_ext,next_agent_call,fronter_display,ingroup_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,drop_call_seconds,drop_action,drop_exten,call_time_id,after_hours_action,after_hours_message_filename,after_hours_exten,after_hours_voicemail,welcome_message_filename,moh_context,onhold_prompt_filename,prompt_interval,agent_alert_exten,agent_alert_delay,default_xfer_group,queue_priority,drop_inbound_group,ingroup_recording_override,ingroup_rec_filename,afterhours_xfer_group,qc_enabled,qc_statuses,qc_shift_id,qc_get_record_launch,qc_show_recording,qc_web_form_address,qc_script,play_place_in_line,play_estimate_hold_time,hold_time_option,hold_time_option_seconds,hold_time_option_exten,hold_time_option_voicemail,hold_time_option_xfer_group,hold_time_option_callback_filename,hold_time_option_callback_list_id,hold_recall_xfer_group,no_delay_call_route,play_welcome_message,answer_sec_pct_rt_stat_one,answer_sec_pct_rt_stat_two,default_group_alias,no_agent_no_queue,no_agent_action,no_agent_action_value,web_form_address_two,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,ignore_list_script_override,extension_appended_cidname,uniqueid_status_display,uniqueid_status_prefix,hold_time_option_minimum,hold_time_option_press_filename,hold_time_option_callmenu,onhold_prompt_no_block,onhold_prompt_seconds,hold_time_option_no_block,hold_time_option_prompt_seconds,hold_time_second_option,hold_time_third_option,wait_hold_option_priority,wait_time_option,wait_time_second_option,wait_time_third_option,wait_time_option_seconds,wait_time_option_exten,wait_time_option_voicemail,wait_time_option_xfer_group,wait_time_option_callmenu,wait_time_option_callback_filename,wait_time_option_callback_list_id,wait_time_option_press_filename,wait_time_option_no_block,wait_time_option_prompt_seconds,timer_action_destination,calculate_estimated_hold_seconds,add_lead_url,eht_minimum_prompt_filename,eht_minimum_prompt_no_block,eht_minimum_prompt_seconds,on_hook_ring_time,na_call_url,on_hook_cid,action_xfer_cid,drop_callmenu,after_hours_callmenu,user_group,max_calls_method,max_calls_count,max_calls_action,dial_ingroup_cid,group_handling,web_form_address_three,populate_lead_ingroup,drop_lead_reset,after_hours_lead_reset,nanq_lead_reset,wait_time_lead_reset,hold_time_lead_reset,status_group_id,routing_initiated_recordings,on_hook_cid_number,customer_chat_screen_colors,customer_chat_survey_link,customer_chat_survey_text,populate_lead_province,areacode_filter,areacode_filter_seconds,areacode_filter_action,areacode_filter_action_value,populate_state_areacode,inbound_survey,inbound_survey_filename,inbound_survey_accept_digit,inbound_survey_question_filename,inbound_survey_callmenu,icbq_expiration_hours,closing_time_action,closing_time_now_trigger,closing_time_filename,closing_time_end_filename,closing_time_lead_reset,closing_time_option_exten,closing_time_option_callmenu,closing_time_option_voicemail,closing_time_option_xfer_group,closing_time_option_callback_list_id,icbq_call_time_id,add_lead_timezone,icbq_dial_filter,populate_lead_source,populate_lead_vendor,park_file_name,waiting_call_url_on,waiting_call_url_off,enter_ingroup_url,cid_cb_confirm_number,cid_cb_invalid_filter_phone_group,cid_cb_valid_length,cid_cb_valid_filename,cid_cb_confirmed_filename,cid_cb_enter_filename,cid_cb_you_entered_filename,cid_cb_press_to_confirm_filename,cid_cb_invalid_filename,cid_cb_reenter_filename,cid_cb_error_filename,place_in_line_caller_number_filename,place_in_line_you_next_filename,ingroup_script_two,browser_alert_sound,browser_alert_volume,answer_signal,no_agent_delay,agent_search_method,qc_scorecard_id,qc_statuses_id,populate_lead_comments,drop_call_seconds_override,populate_lead_owner,in_queue_nanque,in_queue_nanque_exceptions from vicidial_inbound_groups where group_id=\"$source_group_id\";";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$affected_rows = mysqli_affected_rows($link);
@@ -14189,6 +14228,12 @@ if ($ADD==2111111)
 				}
 			else
 				{
+				if ( (!preg_match("/\|$script_color,/i",$HTMLcolors)) and (strlen($script_color) > 0) and ( (strlen($script_color) > 7) or (strlen($script_color) < 7) or (!preg_match("/^#/",$script_color)) ) )
+					{
+					if (!preg_match("/^#/",$script_color)) {$script_color = "#$script_color";}
+					if (strlen($script_color) > 7) {$script_color = substr($rowx[1],0,7);}
+					while (strlen($script_color) < 7) {$script_color .= '0';}
+					}
 				$stmt="INSERT INTO vicidial_scripts(script_id, script_name, script_comments, script_text, active, user_group, script_color) values('$script_id','$script_name','$script_comments','" . mysqli_real_escape_string($link, $script_text) . "','$active','$user_group','');";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($DB > 0) {echo "|$stmt|";}
@@ -18068,6 +18113,12 @@ if ($ADD==4111 || $ADD==4811 || $ADD==4911)
 				}
 			else
 				{
+				if ( (!preg_match("/\|$group_color,/i",$HTMLcolors)) and ( (strlen($group_color) > 7) or (strlen($group_color) < 7) or (!preg_match("/^#/",$group_color)) ) )
+					{
+					if (!preg_match("/^#/",$group_color)) {$group_color = "#$group_color";}
+					if (strlen($group_color) > 7) {$group_color = substr($group_color,0,7);}
+					while (strlen($group_color) < 7) {$group_color .= '0';}
+					}
 				if ($form_end != 'END')
 					{
 					echo "<br>"._QXZ("GROUP NOT MODIFIED - Please wait for the whole page to load before submitting the form")."\n";
@@ -18908,6 +18959,12 @@ if ($ADD==4111111)
 			}
 		else
 			{
+			if ( (!preg_match("/\|$script_color,/i",$HTMLcolors)) and ( (strlen($script_color) > 7) or (strlen($script_color) < 7) or (!preg_match("/^#/",$script_color)) ) )
+				{
+				if (!preg_match("/^#/",$script_color)) {$script_color = "#$script_color";}
+				if (strlen($script_color) > 7) {$script_color = substr($rowx[1],0,7);}
+				while (strlen($script_color) < 7) {$script_color .= '0';}
+				}
 			$stmt="UPDATE vicidial_scripts set script_name='$script_name', script_comments='$script_comments', script_text='" . mysqli_real_escape_string($link, $script_text) . "', active='$active',user_group='$user_group',script_color='$script_color' where script_id='$script_id';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -19964,6 +20021,62 @@ if ($ADD==482111111111)
 			{echo "<br>"._QXZ("SCREEN COLORS NOT MODIFIED - Please go back and look at the data you entered")."\n";}
 		else
 			{
+			if ( (strlen($menu_background) > 6) or (strlen($menu_background) < 6) )
+				{
+				if (strlen($menu_background) > 6) {$menu_background = substr($menu_background,0,6);}
+				while (strlen($menu_background) < 6) {$menu_background .= '0';}
+				}
+			if ( (strlen($frame_background) > 6) or (strlen($frame_background) < 6) )
+				{
+				if (strlen($frame_background) > 6) {$frame_background = substr($frame_background,0,6);}
+				while (strlen($frame_background) < 6) {$frame_background .= '0';}
+				}
+			if ( (strlen($std_row1_background) > 6) or (strlen($std_row1_background) < 6) )
+				{
+				if (strlen($std_row1_background) > 6) {$std_row1_background = substr($std_row1_background,0,6);}
+				while (strlen($std_row1_background) < 6) {$std_row1_background .= '0';}
+				}
+			if ( (strlen($std_row2_background) > 6) or (strlen($std_row2_background) < 6) )
+				{
+				if (strlen($std_row2_background) > 6) {$std_row2_background = substr($std_row2_background,0,6);}
+				while (strlen($std_row2_background) < 6) {$std_row2_background .= '0';}
+				}
+			if ( (strlen($std_row3_background) > 6) or (strlen($std_row3_background) < 6) )
+				{
+				if (strlen($std_row3_background) > 6) {$std_row3_background = substr($std_row3_background,0,6);}
+				while (strlen($std_row3_background) < 6) {$std_row3_background .= '0';}
+				}
+			if ( (strlen($std_row4_background) > 6) or (strlen($std_row4_background) < 6) )
+				{
+				if (strlen($std_row4_background) > 6) {$std_row4_background = substr($std_row4_background,0,6);}
+				while (strlen($std_row4_background) < 6) {$std_row4_background .= '0';}
+				}
+			if ( (strlen($std_row5_background) > 6) or (strlen($std_row5_background) < 6) )
+				{
+				if (strlen($std_row5_background) > 6) {$std_row5_background = substr($std_row5_background,0,6);}
+				while (strlen($std_row5_background) < 6) {$std_row5_background .= '0';}
+				}
+			if ( (strlen($alt_row1_background) > 6) or (strlen($alt_row1_background) < 6) )
+				{
+				if (strlen($alt_row1_background) > 6) {$alt_row1_background = substr($alt_row1_background,0,6);}
+				while (strlen($alt_row1_background) < 6) {$alt_row1_background .= '0';}
+				}
+			if ( (strlen($alt_row2_background) > 6) or (strlen($alt_row2_background) < 6) )
+				{
+				if (strlen($alt_row2_background) > 6) {$alt_row2_background = substr($alt_row2_background,0,6);}
+				while (strlen($alt_row2_background) < 6) {$alt_row2_background .= '0';}
+				}
+			if ( (strlen($alt_row3_background) > 6) or (strlen($alt_row3_background) < 6) )
+				{
+				if (strlen($alt_row3_background) > 6) {$alt_row3_background = substr($alt_row3_background,0,6);}
+				while (strlen($alt_row3_background) < 6) {$alt_row3_background .= '0';}
+				}
+			if ( (strlen($button_color) > 6) or (strlen($button_color) < 6) )
+				{
+				if (strlen($button_color) > 6) {$button_color = substr($button_color,0,6);}
+				while (strlen($button_color) < 6) {$button_color .= '0';}
+				}
+
 			$stmt="UPDATE vicidial_screen_colors set colors_name='$colors_name',active='$active',menu_background='$menu_background',frame_background='$frame_background',std_row1_background='$std_row1_background',std_row2_background='$std_row2_background',std_row3_background='$std_row3_background',std_row4_background='$std_row4_background',std_row5_background='$std_row5_background',alt_row1_background='$alt_row1_background',alt_row2_background='$alt_row2_background',alt_row3_background='$alt_row3_background',button_color='$button_color',user_group='$user_group',web_logo='$web_logo' where colors_id='$colors_id';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -32925,7 +33038,7 @@ if ($ADD==3111)
 		echo "<center><TABLE width=900 cellspacing=3>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group ID").": </td><td align=left><b>$query_group_id</b>$NWB#inbound_groups-group_id$NWE $allowed_campaigns_warning</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Name").": </td><td align=left><input type=text name=group_name size=30 maxlength=30 value=\"$group_name\">$NWB#inbound_groups-group_name$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Color").": </td><td align=left bgcolor=\"$group_color\" id=\"group_color_td\"><input type=text name=group_color size=7 maxlength=7 value=\"$group_color\">$NWB#inbound_groups-group_color$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Color")." <font size=2>(<a href=\"javascript:launch_color_chooser('group_color','color','1');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left bgcolor=\"$group_color\" id=\"group_color_td\"><input type=text name=group_color id=group_color size=7 maxlength=20 value=\"$group_color\"> $NWB#inbound_groups-group_color$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$active' SELECTED>"._QXZ("$active")."</option></select>$NWB#inbound_groups-active$NWE</td></tr>\n";
 
 		$stmt="SELECT count(*) from vicidial_inbound_callback_queue where group_id='$group_id' and icbq_status='LIVE';";
@@ -34496,7 +34609,7 @@ if ($ADD==3811)
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group ID").": </td><td align=left><b>$query_group_id</b>$NWB#inbound_groups-group_id$NWE $allowed_campaigns_warning</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Name").": </td><td align=left><input type=text name=group_name size=30 maxlength=30 value=\"$group_name\">$NWB#inbound_groups-group_name$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Color").": </td><td align=left bgcolor=\"$group_color\" id=\"group_color_td\"><input type=text name=group_color size=7 maxlength=7 value=\"$group_color\">$NWB#inbound_groups-group_color$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Color")." <font size=2>(<a href=\"javascript:launch_color_chooser('group_color','color','1');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left bgcolor=\"$group_color\" id=\"group_color_td\"><input type=text name=group_color id=group_color size=7 maxlength=20 value=\"$group_color\"> $NWB#inbound_groups-group_color$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$active' SELECTED>"._QXZ("$active")."</option></select>$NWB#inbound_groups-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("In-Group Email Date").": </td><td align=left>$group_calldate$NWB#inbound_groups-group_emaildate$NWE</td></tr>\n";
 
@@ -35334,7 +35447,7 @@ if ($ADD==3911)
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group ID").": </td><td align=left><b>$query_group_id</b>$NWB#inbound_groups-group_id$NWE $allowed_campaigns_warning</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Name").": </td><td align=left><input type=text name=group_name size=30 maxlength=30 value=\"$group_name\">$NWB#inbound_groups-group_name$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Color").": </td><td align=left bgcolor=\"$group_color\" id=\"group_color_td\"><input type=text name=group_color size=7 maxlength=7 value=\"$group_color\">$NWB#inbound_groups-group_color$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Group Color")." <font size=2>(<a href=\"javascript:launch_color_chooser('group_color','color','1');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left bgcolor=\"$group_color\" id=\"group_color_td\"><input type=text name=group_color id=group_color size=7 maxlength=20 value=\"$group_color\"> $NWB#inbound_groups-group_color$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option SELECTED value='$active'>"._QXZ("$active")."</option></select>$NWB#inbound_groups-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("In-Group Chat Date").": </td><td align=left>$group_calldate$NWB#inbound_groups-group_chatdate$NWE</td></tr>\n";
 
@@ -38280,7 +38393,7 @@ if ($ADD==3111111)
 		echo "<option SELECTED value=\"$user_group\">".(preg_match('/\-\-ALL\-\-/', $user_group) ? _QXZ("$user_group") : $user_group)."</option>\n";
 		echo "</select>$NWB#scripts-user_group$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active><option value='Y' SELECTED>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$active' selected>"._QXZ("$active")."</option></select>$NWB#scripts-active$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Script Color").": </td><td align=left bgcolor=\"$script_color\" id=\"group_color_td\"><input type=text name=script_color size=7 maxlength=7 value=\"$script_color\">$NWB#scripts-script_color$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Script Color")." <font size=2>(<a href=\"javascript:launch_color_chooser('script_color','color','1');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left bgcolor=\"$script_color\" id=\"script_color_td\"><input type=text name=script_color id=script_color size=7 maxlength=20 value=\"$script_color\"> $NWB#scripts-script_color$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Script Text").": <BR><BR><B><a href=\"javascript:openNewWindow('$PHP_SELF?ADD=7111111&script_id=$script_id')\">"._QXZ("Preview Script")."</a></B> </td><td align=left>";
 		# BEGIN Insert Field
 		echo "<select id=\"selectedField\" name=\"selectedField\">";
@@ -41104,25 +41217,25 @@ if ($ADD==382111111111)
 		echo "<option SELECTED value=\"$user_group\">".(preg_match('/\-\-ALL\-\-/', $user_group) ? _QXZ("$user_group") : $user_group)."</option>\n";
 		echo "</select>$NWB#screen_colors-user_group$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Menu Background").": </td><td align=left bgcolor=#$menu_background colspan=2><input type=text name=menu_background size=7 maxlength=6 value=\"$menu_background\">$NWB#screen_colors-menu_background$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Menu Background")." <font size=2>(<a href=\"javascript:launch_color_chooser('menu_background','color','2');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left bgcolor=\"$menu_background\" id=\"menu_background_td\" colspan=2><input type=text name=menu_background id=menu_background size=7 maxlength=6 value=\"$menu_background\"> $NWB#screen_colors-menu_background$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Frame Background").": </td><td align=left bgcolor=#$frame_background colspan=2><input type=text name=frame_background size=7 maxlength=6 value=\"$frame_background\">$NWB#screen_colors-frame_background$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Frame Background")." <font size=2>(<a href=\"javascript:launch_color_chooser('frame_background','color','2');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left bgcolor=\"$frame_background\" id=\"frame_background_td\" colspan=2><input type=text name=frame_background id=frame_background size=7 maxlength=6 value=\"$frame_background\"> $NWB#screen_colors-frame_background$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Standard Row 1 Background").": </td><td align=left bgcolor=#$std_row1_background colspan=2><input type=text name=std_row1_background size=7 maxlength=6 value=\"$std_row1_background\">$NWB#screen_colors-std_row_background$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Standard Row 1 Background")." <font size=2>(<a href=\"javascript:launch_color_chooser('std_row1_background','color','2');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left bgcolor=\"$std_row1_background\" id=\"std_row1_background_td\" colspan=2><input type=text name=std_row1_background id=std_row1_background size=7 maxlength=6 value=\"$std_row1_background\"> $NWB#screen_colors-std_row_background$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Standard Row 2 Background").": </td><td align=left bgcolor=#$std_row2_background colspan=2><input type=text name=std_row2_background size=7 maxlength=6 value=\"$std_row2_background\">$NWB#screen_colors-std_row_background$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Standard Row 2 Background")." <font size=2>(<a href=\"javascript:launch_color_chooser('std_row2_background','color','2');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left bgcolor=\"$std_row2_background\" id=\"std_row2_background_td\" colspan=2><input type=text name=std_row2_background id=std_row2_background size=7 maxlength=6 value=\"$std_row2_background\"> $NWB#screen_colors-std_row_background$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Standard Row 3 Background").": </td><td align=left bgcolor=#$std_row3_background colspan=2><input type=text name=std_row3_background size=7 maxlength=6 value=\"$std_row3_background\">$NWB#screen_colors-std_row_background$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Standard Row 3 Background")." <font size=2>(<a href=\"javascript:launch_color_chooser('std_row3_background','color','2');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left bgcolor=\"$std_row3_background\" id=\"std_row3_background_td\" colspan=2><input type=text name=std_row3_background id=std_row3_background size=7 maxlength=6 value=\"$std_row3_background\"> $NWB#screen_colors-std_row_background$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Standard Row 4 Background").": </td><td align=left bgcolor=#$std_row4_background colspan=2><input type=text name=std_row4_background size=7 maxlength=6 value=\"$std_row4_background\">$NWB#screen_colors-std_row_background$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Standard Row 4 Background")." <font size=2>(<a href=\"javascript:launch_color_chooser('std_row4_background','color','2');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left bgcolor=\"$std_row4_background\" id=\"std_row4_background_td\" colspan=2><input type=text name=std_row4_background id=std_row4_background size=7 maxlength=6 value=\"$std_row4_background\"> $NWB#screen_colors-std_row_background$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Standard Row 5 Background").": </td><td align=left bgcolor=#$std_row5_background colspan=2><input type=text name=std_row5_background size=7 maxlength=6 value=\"$std_row5_background\">$NWB#screen_colors-std_row_background$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Standard Row 5 Background")." <font size=2>(<a href=\"javascript:launch_color_chooser('std_row5_background','color','2');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left bgcolor=\"$std_row5_background\" id=\"std_row5_background_td\" colspan=2><input type=text name=std_row5_background id=std_row5_background size=7 maxlength=6 value=\"$std_row5_background\"> $NWB#screen_colors-std_row_background$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Alternate Row 1 Background").": </td><td align=left bgcolor=#$alt_row1_background colspan=2><input type=text name=alt_row1_background size=7 maxlength=6 value=\"$alt_row1_background\">$NWB#screen_colors-alt_row_background$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Alternate Row 1 Background")." <font size=2>(<a href=\"javascript:launch_color_chooser('alt_row1_background','color','2');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left bgcolor=\"$alt_row1_background\" id=\"alt_row1_background_td\" colspan=2><input type=text name=alt_row1_background id=alt_row1_background size=7 maxlength=6 value=\"$alt_row1_background\"> $NWB#screen_colors-alt_row_background$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Alternate Row 2 Background").": </td><td align=left bgcolor=#$alt_row2_background colspan=2><input type=text name=alt_row2_background size=7 maxlength=6 value=\"$alt_row2_background\">$NWB#screen_colors-alt_row_background$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Alternate Row 2 Background")." <font size=2>(<a href=\"javascript:launch_color_chooser('alt_row2_background','color','2');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left bgcolor=\"$alt_row2_background\" id=\"alt_row2_background_td\" colspan=2><input type=text name=alt_row2_background id=alt_row2_background size=7 maxlength=6 value=\"$alt_row2_background\"> $NWB#screen_colors-alt_row_background$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Alternate Row 3 Background").": </td><td align=left bgcolor=#$alt_row3_background colspan=2><input type=text name=alt_row3_background size=7 maxlength=6 value=\"$alt_row3_background\">$NWB#screen_colors-alt_row_background$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Alternate Row 3 Background")." <font size=2>(<a href=\"javascript:launch_color_chooser('alt_row3_background','color','2');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left bgcolor=\"$alt_row3_background\" id=\"alt_row3_background_td\" colspan=2><input type=text name=alt_row3_background id=alt_row3_background size=7 maxlength=6 value=\"$alt_row3_background\"> $NWB#screen_colors-alt_row_background$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background valign=top><td align=right valign=top>"._QXZ("Web Logo").": </td><td align=left valign=top><select size=1 name=web_logo>\n";
 
@@ -41168,7 +41281,7 @@ if ($ADD==382111111111)
 		echo "<option SELECTED value=\"$web_logo\">$web_logo</option>\n";
 		echo "</select>$NWB#screen_colors-web_logo$NWE &nbsp; &nbsp; </td><td align=left valign=top bgcolor=#$menu_background><img src=\"$selected_logo\"></td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Button Color").": </td><td align=left bgcolor=#$button_color colspan=2><input type=text name=button_color size=7 maxlength=6 value=\"$button_color\">$NWB#screen_colors-alt_row_background$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Button Color")." <font size=2>(<a href=\"javascript:launch_color_chooser('button_color','color','2');\">"._QXZ("color chooser")."</a>)</font>: </td><td align=left bgcolor=\"$button_color\" id=\"button_color_td\" colspan=2><input type=text name=button_color id=button_color size=7 maxlength=6 value=\"$button_color\"> $NWB#screen_colors-alt_row_background$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=3><input style='background-color:#$SSbutton_color' type=submit name=submit value='"._QXZ("SUBMIT")."'</td></tr>\n";
 		echo "</TABLE></center>\n";
