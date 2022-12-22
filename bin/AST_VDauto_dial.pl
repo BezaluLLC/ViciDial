@@ -151,6 +151,7 @@
 # 220311-1920 - Added List CID Group Override option
 # 220328-1310 - Small change made per Issue #1337
 # 220623-1621 - Added List dial_prefix override
+# 221221-2135 - Added enhanced_disconnect_logging=3 support, issue #1367
 #
 
 $build='220328-1310';
@@ -2584,7 +2585,7 @@ while($one_day_interval > 0)
 		#		$event_string = "|     vac test: |$auto_call_id|$CLstatus|$KLcalltime[$kill_vac]|$CLlead_id|$KLcallerid[$kill_vac]|$end_epoch|$KLchannel[$kill_vac]|$CLcall_type|$CLdial_timeout|$CLdrop_call_seconds|$call_timeout|$dialtime_log|$dialtime_catch|$PARKchannel|";
 		#		&event_logger;
 
-				if ( ( ($dialtime_log >= $call_timeout) || ($dialtime_catch >= $call_timeout) || ($CLstatus =~ /BUSY|DISCONNECT|XFER|CLOSER/) ) && ($PARKchannel < 1) )
+				if ( ( ($dialtime_log >= $call_timeout) || ($dialtime_catch >= $call_timeout) || ($CLstatus =~ /BUSY|DISCONNECT|XFER|CLOSER|CARRIERFAIL/) ) && ($PARKchannel < 1) )
 					{
 					if ( ($CLcall_type !~ /IN/) && ($CLstatus !~ /IVR/) )
 						{
@@ -2639,7 +2640,7 @@ while($one_day_interval > 0)
 								if ($ADB > 0) {$aad_string = "ALT-00: $CLlead_id|$VD_auto_alt_dial|$CLauto_alt_threshold|$LISTauto_alt_threshold|($called_count <> $temp_auto_alt_threshold)|auto_alt_lead_disabled: $auto_alt_lead_disabled|";   &aad_output;}
 								}
 
-							if ($CLstatus =~ /BUSY/) {$CLnew_status = 'B';}
+							if ($CLstatus =~ /BUSY/) {$CLnew_status = 'AB';}
 							else
 								{
 								$new_status_set=0;
@@ -2738,7 +2739,7 @@ while($one_day_interval > 0)
 									}
 								}
 
-							if ($CLlead_id > 0)
+							if ($CLlead_id > 0 && $CLstatus != 'CARRIERFAIL')
 								{
 								$stmtA = "UPDATE vicidial_list set status='$CLnew_status' where lead_id='$CLlead_id'";
 								$affected_rows = $dbhA->do($stmtA);
