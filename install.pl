@@ -48,6 +48,7 @@
 # 210827-0926 - Added PJSIP default conf files to Asterisk 16 install
 # 220827-2239 - Added VERM web directory
 # 220829-1434 - Added 'C' keepalive option
+# 221228-2049 - Added KhompEnabled option
 #
 
 ############################################
@@ -107,6 +108,8 @@ $VARfastagi_log_max_spare_servers = '8';
 $VARfastagi_log_max_requests =	'1000';
 $VARfastagi_log_checkfordead =	'30';
 $VARfastagi_log_checkforwait =	'60';
+# default for 3rd-party add-ons
+$VARKhompEnabled =		'0';
 
 ############################################
 
@@ -1093,6 +1096,9 @@ if (-e "$PATHconf")
 			{$VARfastagi_log_checkfordead = $line;   $VARfastagi_log_checkfordead =~ s/.*=//gi;}
 		if ( ($line =~ /^VARfastagi_log_checkforwait/) && ($CLIVARfastagi_log_checkforwait < 1) )
 			{$VARfastagi_log_checkforwait = $line;   $VARfastagi_log_checkforwait =~ s/.*=//gi;}
+		if ( ($line =~ /^KhompEnabled/) && ($CLIVARKhompEnabled < 1) )
+			{$VARKhompEnabled = $line;   $VARKhompEnabled =~ s/.*=//gi;}
+
 		$i++;
 		}
 	}
@@ -1212,6 +1218,8 @@ else
 					{$VARfastagi_log_checkfordead = $line;   $VARfastagi_log_checkfordead =~ s/.*=//gi;}
 				if ( ($line =~ /^VARfastagi_log_checkforwait/) && ($CLIVARfastagi_log_checkforwait < 1) )
 					{$VARfastagi_log_checkforwait = $line;   $VARfastagi_log_checkforwait =~ s/.*=//gi;}
+				if ( ($line =~ /^KhompEnabled/) && ($CLIVARKhompEnabled < 1) )
+					{$VARKhompEnabled = $line;   $VARKhompEnabled =~ s/.*=//gi;}
 				$i++;
 				}
 			}
@@ -2319,6 +2327,25 @@ else
 			}
 		##### END fastagi_log_checkforwait prompting and check  #####
 
+		##### BEGIN KhompEnabled prompting and check #####
+		$continue='NO';
+		while ($continue =~/NO/)
+			{
+			print("\nKhomp Enabled: [$VARKhompEnabled] ");
+			$PROMPTKhompEnabled = <STDIN>;
+			chomp($PROMPTKhompEnabled);
+			if (length($PROMPTKhompEnabled)>0)
+				{
+				$PROMPTKhompEnabled =~ s/ |\n|\r|\t|\/$//gi;
+				$VARKhompEnabled=$PROMPTKhompEnabled;
+				$continue='YES';
+				}
+			else
+				{
+				$continue='YES';
+				}
+			}
+		##### END KhompEnabled prompting and check  #####
 
 		print "\n";
 		print "  defined conf file:        $PATHconf\n";
@@ -2359,6 +2386,7 @@ else
 		print "  defined fastagi_log_max_requests:      $VARfastagi_log_max_requests\n";
 		print "  defined fastagi_log_checkfordead:      $VARfastagi_log_checkfordead\n";
 		print "  defined fastagi_log_checkforwait:      $VARfastagi_log_checkforwait\n";
+		print "  defined KhompEnabled:      $VARKhompEnabled\n";
 		print "\n";
 
 		print("Are these settings correct?(y/n): [y] ");
@@ -2468,6 +2496,9 @@ print conf "VARfastagi_log_checkforwait => $VARfastagi_log_checkforwait\n";
 print conf "\n";
 print conf "# Expected DB Schema version for this install\n";
 print conf "ExpectedDBSchema => $ExpectedDBSchema\n";
+print conf "\n";
+print conf "# 3rd-party add-ons for this install\n";
+print conf "KhompEnabled => $VARKhompEnabled\n";
 close(conf);
 
 
@@ -2542,6 +2573,15 @@ if ($WEBONLY < 1)
 
 	print "setting agi-bin scripts to executable...\n";
 	`chmod 0755 $PATHagi/*`;
+
+	if ( ($VARKhompEnabled eq '1') || ($VARKhompEnabled eq 'YES') ) 
+		{
+		print "Enabling Khomp in FastAGI_log.pl and agi-VDAD_ALL_outbound-orig.agi scripts... \n";
+		`cp -f $PATHhome/FastAGI_log.pl $PATHhome/FastAGI_log-orig.pl `;
+		`cp -f $PATHagi/agi-VDAD_ALL_outbound.agi $PATHagi/agi-VDAD_ALL_outbound-orig.agi `;
+		`sed -i 's/#UC#//g' $PATHhome/FastAGI_log.pl `;
+		`sed -i 's/#UC#//g' $PATHagi/agi-VDAD_ALL_outbound.agi `;
+		}
 
 	print "Copying sounds to $PATHsounds...\n";
 	`cp -fR ./sounds/* $PATHsounds/`;
