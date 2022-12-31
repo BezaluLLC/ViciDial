@@ -35,6 +35,7 @@ $domain   =		"http://phonecodes.vicidial.com";
 $URL1     =		"$domain/phone_codes_GMT-latest-24.txt";
 $URL2     =		"$domain/GMT_USA_zip-latest.txt";
 $URL3     =		"$domain/country_ISO_TLD-latest.txt";
+$URL4	  =		"$domain/GMT_USA_zip-cities-latest.txt";
 
 
 ### begin parsing run-time options ###
@@ -57,6 +58,7 @@ if (length($ARGV[0])>1)
 		print "  [--use-local-files] = Do not download files, use local copies\n";
 		print "  [--load-NANPA-prefix] = Only loads the special NANPA list into the database\n";
 		print "     NOTE: NANPA data must be purchased from 'http://vicidial.org/store.php'\n";
+		print "  [--load-zip-cities] = Load the optional USA Zipcode-Cities data into the database\n";
 		print "  [--purge-table] = Purges the table to be inserted before inserting\n";
 		print "\n";
 		print "       Files used by this script are:\n";
@@ -107,6 +109,11 @@ if (length($ARGV[0])>1)
 			{
 			$nanpa_load=1;
 			print "\n----- NANPA PHONE PREFIX DATA LOAD -----\n\n";
+			}
+		if ($args =~ /--load-zip-cities/i)
+			{
+			$postal_city_load=1;
+			print "\n----- ZIP-CITIES DATA LOAD -----\n\n";
 			}
 		if ($args =~ /--purge-table/i)
 			{
@@ -330,11 +337,15 @@ else
 		`mv -f $PATHhome/phone_codes_GMT-latest-24.txt $PATHhome/phone_codes_GMT-latest-24-old.txt`;
 		`mv -f $PATHhome/GMT_USA_zip-latest.txt $PATHhome/GMT_USA_zip-latest-old.txt`;
 		`mv -f $PATHhome/country_ISO_TLD-latest.txt $PATHhome/country_ISO_TLD-latest-old.txt`;
+		if ($postal_city_load > 0) 
+			{`mv -f $PATHhome/GMT_USA_zip-cities-latest.txt $PATHhome/GMT_USA_zip-cities-latest-old.txt`;}
 
 		# get files
 		`wget $URL1`;
 		`wget $URL2`;
 		`wget $URL3`;
+		if ($postal_city_load > 0) 
+			{`wget $URL4`;}
 		}
 
 	#### BEGIN vicidial_phone_codes population from phone_codes_GMT-latest-24.txt file ####
@@ -435,6 +446,58 @@ else
 	$ins_stmt="insert into vicidial_postal_codes VALUES ";
 	print STDERR "$pc\n";
 	#### END vicidial_postal_codes population ####
+
+
+	#### BEGIN -optional- vicidial_postal_codes_cities population ####
+	if ($postal_city_load > 0)
+		{
+		open(zipcityfile, "$PATHhome/GMT_USA_zip-cities-latest.txt") || die "can't open $PATHhome/GMT_USA_zip-cities-latest.txt: $!\n";
+		@zipcityfile = <zipcityfile>;
+		close(zipcityfile);
+		if ( ($purge_table > 0) && ($#zipcityfile > 10) )
+			{
+			print "\n----- PURGING DATA IN vicidial_postal_codes_cities TABLE -----\n\n";
+
+			$stmtA = "DELETE from vicidial_postal_codes_cities;";
+					if($DB){print STDERR "\n|$stmtA|\n";}
+			$affected_rows = $dbhA->do($stmtA);
+			$stmtA = "OPTIMIZE table vicidial_postal_codes_cities;";
+					if($DB){print STDERR "\n|$stmtA|\n";}
+			$affected_rows = $dbhA->do($stmtA);
+			}
+		$pc=0;
+		$ins_stmt="insert into vicidial_postal_codes_cities VALUES ";
+		foreach (@zipcityfile) 
+			{
+			@row=split(/\t/, $zipcityfile[$pc]);
+			$pc++;
+			$row[0] =~ s/\r|\n|\t| $//gi;
+			$row[1] =~ s/\r|\n|\t| $//gi;
+			$row[2] =~ s/\r|\n|\t| $//gi;
+			$row[3] =~ s/\r|\n|\t| $//gi;
+			$row[4] =~ s/\r|\n|\t| $//gi;
+			$row[5] =~ s/\r|\n|\t| $//gi;
+			$row[6] =~ s/\r|\n|\t| $//gi;
+			$row[7] =~ s/\r|\n|\t| $//gi;
+			$row[8] =~ s/\r|\n|\t| $//gi;
+			$ins_stmt.="('$row[0]', '$row[1]', '$row[2]', '$row[3]', '$row[4]', '$row[5]', '$row[6]', '$row[7]', '$row[8]'), ";
+			if ($pc =~ /00$/) 
+				{
+				chop($ins_stmt);
+				chop($ins_stmt);
+				$affected_rows = $dbhA->do($ins_stmt) || die "can't execute query: |$ins_stmt| $!\n";
+				$ins_stmt="insert into vicidial_postal_codes_cities VALUES ";
+				print STDERR "$pc\r";
+				}
+			}
+
+		chop($ins_stmt);
+		chop($ins_stmt);
+		$affected_rows = $dbhA->do($ins_stmt);
+		$ins_stmt="insert into vicidial_postal_codes_cities VALUES ";
+		print STDERR "$pc\n";
+		}
+	#### END -optional- vicidial_postal_codes_cities population ####
 
 
 	#### BEGIN vicidial_country_iso_tld population from GMT_USA_zip-latest.txt file ####

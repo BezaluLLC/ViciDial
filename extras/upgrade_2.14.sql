@@ -2075,3 +2075,18 @@ ALTER TABLE vicidial_inbound_groups MODIFY group_color VARCHAR(20);
 ALTER TABLE vicidial_scripts MODIFY script_color VARCHAR(20) default 'white';
 
 UPDATE system_settings SET db_schema_version='1672',db_schema_update_date=NOW() where db_schema_version < 1672;
+
+CREATE TABLE vicidial_postal_codes_cities (
+postal_code VARCHAR(10) NOT NULL,
+state VARCHAR(4),
+city VARCHAR(60),
+county VARCHAR(60),
+latitude VARCHAR(17),
+longitude VARCHAR(17),
+areacode CHAR(3),
+country_code SMALLINT(5) UNSIGNED,
+country CHAR(3),
+index (postal_code)
+) ENGINE=MyISAM;
+
+UPDATE system_settings SET db_schema_version='1673',db_schema_update_date=NOW() where db_schema_version < 1673;

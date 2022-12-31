@@ -2576,7 +2576,7 @@ if ($WEBONLY < 1)
 
 	if ( ($VARKhompEnabled eq '1') || ($VARKhompEnabled eq 'YES') ) 
 		{
-		print "Enabling Khomp in FastAGI_log.pl and agi-VDAD_ALL_outbound-orig.agi scripts... \n";
+		print "Enabling Khomp in FastAGI_log.pl and agi-VDAD_ALL_outbound.agi scripts... \n";
 		`cp -f $PATHhome/FastAGI_log.pl $PATHhome/FastAGI_log-orig.pl `;
 		`cp -f $PATHagi/agi-VDAD_ALL_outbound.agi $PATHagi/agi-VDAD_ALL_outbound-orig.agi `;
 		`sed -i 's/#UC#//g' $PATHhome/FastAGI_log.pl `;

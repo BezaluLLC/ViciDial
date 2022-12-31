@@ -2728,6 +2728,12 @@ if (isset($_GET["user_group_script"]))			{$user_group_script=$_GET["user_group_s
 	elseif (isset($_POST["user_group_script"]))	{$user_group_script=$_POST["user_group_script"];}
 if (isset($_GET["login_kickall"]))			{$login_kickall=$_GET["login_kickall"];}
 	elseif (isset($_POST["login_kickall"]))	{$login_kickall=$_POST["login_kickall"];}
+if (isset($_GET["city_rule"]))			{$city_rule=$_GET["city_rule"];}
+	elseif (isset($_POST["city_rule"]))	{$city_rule=$_POST["city_rule"];}
+if (isset($_GET["county_rule"]))			{$county_rule=$_GET["county_rule"];}
+	elseif (isset($_POST["county_rule"]))	{$county_rule=$_POST["county_rule"];}
+if (isset($_GET["ac_rule"]))			{$ac_rule=$_GET["ac_rule"];}
+	elseif (isset($_POST["ac_rule"]))	{$ac_rule=$_POST["ac_rule"];}
 
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
@@ -4100,6 +4106,9 @@ if ($non_latin < 1)
 	$user_location = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$user_location);
 	$queue_group_name = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$queue_group_name);
 	$qc_scorecard_id = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$qc_scorecard_id);
+	$city_rule = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$city_rule);
+	$county_rule = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$county_rule);
+	$ac_rule = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$ac_rule);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
 	$call_out_number_group = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$call_out_number_group);
@@ -4816,6 +4825,9 @@ else
 	$user_location = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$user_location);
 	$queue_group_name = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$queue_group_name);
 	$qc_scorecard_id = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$qc_scorecard_id);
+	$city_rule = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$city_rule);
+	$county_rule = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$county_rule);
+	$ac_rule = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$ac_rule);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot
 	$call_out_number_group = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$call_out_number_group);
@@ -5943,12 +5955,13 @@ if ($SSscript_remove_js > 0)
 # 221020-1632 - Added login_kickall system setting
 # 221021-1038 - Added webphone_settings option to phones, pointed to a settings container
 # 221214-1153 - Added $HTMLcolors validation for color form entry fields
+# 221230-2231 - Added Postal Codes Cities display
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-870a';
-$build = '221214-1153';
+$admin_version = '2.14-871a';
+$build = '221230-2231';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -7017,6 +7030,7 @@ if ($ADD==999989)		{$hh='reports';		echo _QXZ("USER CHANGE LANGUAGE");}
 if ($ADD==999988)		{$hh='reports';		echo _QXZ("AVAILABLE TIMEZONES");}
 if ($ADD==999987)		{$hh='reports';		echo _QXZ("PHONE CODES");}
 if ($ADD==999986)		{$hh='reports';		echo _QXZ("POSTAL CODES");}
+if ($ADD==999985)		{$hh='reports';		echo _QXZ("POSTAL CODES CITIES");}
 
 echo "</title>\n";
 
@@ -42532,6 +42546,11 @@ if ($ADD==311111111111111)
 		$row=mysqli_fetch_row($rslt);
 		$vicidial_postal_codes_count =	$row[0];
 
+		$stmt="SELECT count(*) from vicidial_postal_codes_cities;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$vicidial_postal_codes_cities_count =	$row[0];
+
 		$stmt="SELECT count(*) from vicidial_nanpa_prefix_codes;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
@@ -42854,7 +42873,7 @@ if ($ADD==311111111111111)
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Install Date").": </td><td align=left> $install_date</td></tr>\n";
 		$pcblinkB=''; $pcblinkE='';
 		if ($vicidial_phone_codes_count < 1000) {$pcblinkB='<b><font color=red><blink>'; $pcblinkE='</blink></font></b>';}
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"$PHP_SELF?ADD=999988\">"._QXZ("Phone Codes")."</a>: </td><td align=left> $pcblinkB$vicidial_phone_codes_count - $vicidial_postal_codes_count - $vicidial_nanpa_prefix_codes_count$pcblinkE - $nanpa_prefix_exchanges_master_count - $nanpa_prefix_exchanges_fast_count - $nanpa_wired_to_wireless_count - $nanpa_wireless_to_wired_count</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"$PHP_SELF?ADD=999988\">"._QXZ("Phone Codes")."</a>: </td><td align=left> $pcblinkB$vicidial_phone_codes_count - $vicidial_postal_codes_count - $vicidial_postal_codes_cities_count - $vicidial_nanpa_prefix_codes_count$pcblinkE - $nanpa_prefix_exchanges_master_count - $nanpa_prefix_exchanges_fast_count - $nanpa_wired_to_wireless_count - $nanpa_wireless_to_wired_count</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Today System Stats").": </td><td align=left> $ALLtotal_calls - $ALLmax_inbound - $ALLmax_outbound - $ALLchannels_count - $ALLcalls_count - $ALLagent_count</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Use Non-Latin")."(UTF-8): </td><td align=left><select size=1 name=use_non_latin><option>1</option><option>0</option><option selected>$use_non_latin</option></select>$NWB#settings-use_non_latin$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Enable Languages").": </td><td align=left><select size=1 name=enable_languages><option>1</option><option>0</option><option selected>$enable_languages</option></select>$NWB#settings-enable_languages$NWE</td></tr>\n";
@@ -50614,6 +50633,122 @@ if ($ADD==999986)
 	echo "</TABLE></center></form>\n";
 	}
 ##### END available postal_codes display page #####
+
+
+######################
+# ADD=999985 - postal_codes_cities display page
+######################
+if ($ADD==999985)
+	{
+	echo "<TABLE><TR><TD>\n";
+	echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+	$limitSQL='';
+	$next_prev_HTML='';
+	$PCentries_per_page='1000';
+
+	$stageSQL='';
+	$stateSQL='';
+	$citySQL='';
+	$countySQL='';
+	$acSQL='';
+	if (strlen($stage) > 0)			{$stageSQL = "and postal_code='$stage'";}
+	if (strlen($state_rule) > 0)	{$stateSQL = "and state='$state_rule'";}
+	if (strlen($city_rule) > 0)		{$citySQL = "and city='$city_rule'";}
+	if (strlen($county_rule) > 0)	{$countySQL = "and county='$county_rule'";}
+	if (strlen($ac_rule) > 0)		{$acSQL = "and areacode='$ac_rule'";}
+
+	$stmt="SELECT count(*) from vicidial_postal_codes_cities where postal_code!='' $stageSQL $stateSQL $citySQL $countySQL $acSQL;";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$pc_count = $row[0];
+
+	if ( ($pc_count > $PCentries_per_page) and ($status != 'display_all') )
+		{
+		if (strlen($start_count) < 1) {$start_count=0;}
+		$next_count = ($start_count + $PCentries_per_page);
+		$nextnext_count = ($next_count + $PCentries_per_page);
+		if ($next_count > $pc_count) 
+			{$next_count = $pc_count;}
+		else
+			{
+			if ($nextnext_count > $pc_count) 
+				{
+				$next_temp = ($pc_count - $next_count);
+				$nextHTML = "<a href=\"$PHP_SELF?ADD=999985&start_count=$next_count&stage=$stage&city_rule=$city_rule&county_rule=$county_rule&state_rule=$state_rule&ac_rule=$ac_rule\">"._QXZ("NEXT")." $next_temp</a> &nbsp; ";
+				}
+			else
+				{
+				$nextHTML = "<a href=\"$PHP_SELF?ADD=999985&start_count=$next_count&stage=$stage&city_rule=$city_rule&county_rule=$county_rule&state_rule=$state_rule&ac_rule=$ac_rule\">"._QXZ("NEXT")." $PCentries_per_page</a> &nbsp; ";
+				}
+			}
+		$next_prev_HTML .= _QXZ("RECORDS")." $start_count - $next_count &nbsp; <font size=1>"._QXZ("of")." $pc_count</font> &nbsp; &nbsp; ";
+		$limitSQL="limit $PCentries_per_page";
+		if ($start_count > 0)
+			{
+			$prev_count = ($start_count - $PCentries_per_page);
+			$limitSQL="limit $start_count,$PCentries_per_page";
+			$next_prev_HTML .= "<a href=\"$PHP_SELF?ADD=999985&start_count=$prev_count&stage=$stage&city_rule=$city_rule&county_rule=$county_rule&state_rule=$state_rule&ac_rule=$ac_rule\">"._QXZ("PREVIOUS")." $PCentries_per_page</a> &nbsp; ";
+			}
+		$next_prev_HTML .= $nextHTML;
+		$next_prev_HTML .= " &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp; </b><a href=\"$PHP_SELF?ADD=999985&status=display_all&stage=$stage&city_rule=$city_rule&county_rule=$county_rule&state_rule=$state_rule&ac_rule=$ac_rule\"><font size=1 color=black>"._QXZ("show all postal codes")."</font></a><b> &nbsp; ";
+		}
+	else
+		{$next_prev_HTML .= _QXZ("RECORDS")." 1 - $pc_count &nbsp; <font size=1>"._QXZ("of")." $pc_count</font> &nbsp; &nbsp; ";}
+
+	echo "<table border=0 width=900><tr><td valign=middle>";
+	echo "<br><b>"._QXZ("POSTAL CODES CITIES")."</b><br>\n";
+	echo "<br></td><td valign=middle align=right><font size=1> &nbsp; <br></font><form>"._QXZ("Search")."-";
+	echo "<input type=hidden name=ADD value=\"$ADD\">";
+	echo "&nbsp; <font size=2>"._QXZ("postal").":</font><input type=text size=5 maxlength=10 name=stage value=\"$stage\" class=\"cust_form\">";
+	echo "&nbsp; <font size=2>"._QXZ("city").":</font><input type=text size=15 maxlength=60 name=city_rule value=\"$city_rule\" class=\"cust_form\">";
+	echo "&nbsp; <font size=2>"._QXZ("county").":</font><input type=text size=15 maxlength=60 name=county_rule value=\"$county_rule\" class=\"cust_form\">";
+	echo "&nbsp; <font size=2>"._QXZ("state").":</font><input type=text size=2 maxlength=4 name=state_rule value=\"$state_rule\" class=\"cust_form\">";
+	echo "&nbsp; <font size=2>"._QXZ("ac").":</font><input type=text size=3 maxlength=4 name=ac_rule value=\"$ac_rule\" class=\"cust_form\">";
+	echo "<input type=submit value=submit>";
+	echo "</form></td></tr></table>";
+	echo "<br>$next_prev_HTML\n";
+	echo "<center><TABLE width=$section_width cellspacing=3>\n";
+	echo "<tr bgcolor=#$SSstd_row3_background>\n";
+	echo "<td align=center><B>"._QXZ("Country")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("Postal Code")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("State")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("County")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("City")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("Areacode")."</B></td>\n";
+	echo "<td align=center><B>"._QXZ("Latitude x Longitude")."</B></td>\n";
+	echo "</tr>\n";
+
+	# postal_code | state | city | county | latitude | longitude | areacode | country_code | country
+	$stmt="SELECT count(*),city,country,country_name,postal_code,state,county,areacode,latitude,longitude FROM vicidial_postal_codes_cities p,vicidial_country_iso_tld i where i.iso3=p.country $stageSQL $stateSQL $citySQL $countySQL $acSQL group by country_code,postal_code,state,city,county,areacode,latitude,longitude order by country_code,postal_code $limitSQL;";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$zones_to_print = mysqli_num_rows($rslt);
+	if ($DB > 0) {echo "$zones_to_print|$stmt\n";}
+	$o=0;
+	$row_color=0;   $last_country='';
+	while ($zones_to_print > $o) 
+		{
+		$rowx=mysqli_fetch_row($rslt);
+		if ($rowx[3] != "$last_country") {$row_color++;   $last_country = $rowx[3];}
+		if (preg_match('/1$|3$|5$|7$|9$/i', $row_color))
+			{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';} 
+		else
+			{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
+		echo "<tr $bgcolor>\n";
+
+		echo "<td align=center><font size=1>$rowx[2] - $rowx[3]</font></td>\n";
+		echo "<td align=center><font size=1>$rowx[4]</font></td>\n";
+		echo "<td align=center><font size=1>$rowx[5]</font></td>\n";
+		echo "<td align=center><font size=1>$rowx[6]</font></td>\n";
+		echo "<td align=center><font size=1>$rowx[1]</font></td>\n";
+		echo "<td align=center><font size=1>$rowx[7]</font></td>\n";
+		echo "<td align=left><font size=1> &nbsp; $rowx[8] x $rowx[9] - (<a href=\"https://www.openstreetmap.org/?mlat=$rowx[8]&mlon=$rowx[9]\">OpenSM</a> | <a href=\"https://www.google.com/maps/search/$rowx[8],$rowx[9]\">google</a> | <a href=\"https://www.bing.com/maps/?v=2&cp=$rowx[8]~$rowx[9]&style=r&lvl=12&sp=Point.$rowx[8]_$rowx[9]_$rowx[4]-postal-code\">bing</a>)</font></td>\n";
+		echo "</tr>\n";
+		$o++;
+		}
+	echo "</TABLE></center></form>\n";
+	}
+##### END available postal_codes_cities display page #####
 
 
 echo "</TD></TR></TABLE></center>\n";

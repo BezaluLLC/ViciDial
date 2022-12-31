@@ -4824,6 +4824,19 @@ source VARCHAR(20) default '',
 index (call_date)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_postal_codes_cities (
+postal_code VARCHAR(10) NOT NULL,
+state VARCHAR(4),
+city VARCHAR(60),
+county VARCHAR(60),
+latitude VARCHAR(17),
+longitude VARCHAR(17),
+areacode CHAR(3),
+country_code SMALLINT(5) UNSIGNED,
+country CHAR(3),
+index (postal_code)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -5180,4 +5193,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1672',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1673',db_schema_update_date=NOW(),reload_timestamp=NOW();
