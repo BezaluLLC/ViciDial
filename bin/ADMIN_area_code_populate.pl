@@ -2,7 +2,7 @@
 #
 # ADMIN_area_code_populate.pl    version 2.14
 #
-# Copyright (C) 2018  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Description:
 # server application that allows load areacodes into to asterisk list database
@@ -25,8 +25,9 @@
 # 160611-0933 - Added more documentation
 # 170614-2146 - Added some dirty input filtering and more debug output
 # 180825-2038 - Added php_tz field to vicidial_phone_codes table
+# 221230-1107 - Added --load-zip-cities option
+# 230102-0816 - Added --NA-toll-free=X and --NA-test=X options
 #
-
 
 # default path to astguiclient configuration file:
 $PATHconf =		"/etc/astguiclient.conf";
@@ -59,6 +60,9 @@ if (length($ARGV[0])>1)
 		print "  [--load-NANPA-prefix] = Only loads the special NANPA list into the database\n";
 		print "     NOTE: NANPA data must be purchased from 'http://vicidial.org/store.php'\n";
 		print "  [--load-zip-cities] = Load the optional USA Zipcode-Cities data into the database\n";
+		print "  [--NA-toll-free=X] = Load optional USA-Canada toll-free areacodes into the database with X as the offset\n";
+		print "     NOTE: for Eastern time, set X to '-5', for Pacific, set to '-8', etc...\n";
+		print "  [--NA-test=X] = Load optional USA-Canada testing areacodes(999,998,997) into the database with X as the offset\n";
 		print "  [--purge-table] = Purges the table to be inserted before inserting\n";
 		print "\n";
 		print "       Files used by this script are:\n";
@@ -114,6 +118,22 @@ if (length($ARGV[0])>1)
 			{
 			$postal_city_load=1;
 			print "\n----- ZIP-CITIES DATA LOAD -----\n\n";
+			}
+		if ($args =~ /--NA-toll-free=/i)
+			{
+			@data_in = split(/--NA-toll-free=/,$args);
+			$NA_toll_free = $data_in[1];
+			$NA_toll_free =~ s/[^-0-9]//gi;
+			$NA_toll_free = ($NA_toll_free + 0);
+			print "     North American Toll-Free areacode entries, with offset = $NA_toll_free \n\n";
+			}
+		if ($args =~ /--NA-test=/i)
+			{
+			@data_in = split(/--NA-test=/,$args);
+			$NA_test = $data_in[1];
+			$NA_test =~ s/[^-0-9]//gi;
+			$NA_test = ($NA_test + 0);
+			print "     North American Testing areacode entries, with offset = $NA_test \n\n";
 			}
 		if ($args =~ /--purge-table/i)
 			{
@@ -399,6 +419,49 @@ else
 	$affected_rows = $dbhA->do($ins_stmt);
 	$ins_stmt="insert into vicidial_phone_codes VALUES ";
 	print STDERR "$pc\n";
+
+	if (length($NA_toll_free) > 0) 
+		{
+		$NA_tf_abbr='EST';   $NA_tf_phptz='America/New_York';   $NA_tf_state='NY';
+		if ($NA_toll_free == '-6') {$NA_tf_abbr='CST';   $NA_tf_phptz='America/Chicago';   $NA_tf_state='IL';}
+		if ($NA_toll_free == '-7') {$NA_tf_abbr='MST';   $NA_tf_phptz='America/Denver';   $NA_tf_state='CO';}
+		if ($NA_toll_free == '-8') {$NA_tf_abbr='PST';   $NA_tf_phptz='America/Los_Angeles';   $NA_tf_state='CA';}
+		$NA_toll_freeSQL="INSERT INTO vicidial_phone_codes VALUES ";
+		$NA_toll_freeSQL.="('1', 'USA', '800', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz'), ";
+		$NA_toll_freeSQL.="('1', 'USA', '833', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz'), ";
+		$NA_toll_freeSQL.="('1', 'USA', '844', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz'), ";
+		$NA_toll_freeSQL.="('1', 'USA', '855', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz'), ";
+		$NA_toll_freeSQL.="('1', 'USA', '866', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz'), ";
+		$NA_toll_freeSQL.="('1', 'USA', '877', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz'), ";
+		$NA_toll_freeSQL.="('1', 'USA', '888', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz'), ";
+		$NA_toll_freeSQL.="('1', 'USA', '822', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz'), ";
+		$NA_toll_freeSQL.="('1', 'USA', '880', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz'), ";
+		$NA_toll_freeSQL.="('1', 'USA', '881', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz'), ";
+		$NA_toll_freeSQL.="('1', 'USA', '882', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz'), ";
+		$NA_toll_freeSQL.="('1', 'USA', '883', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz'), ";
+		$NA_toll_freeSQL.="('1', 'USA', '884', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz'), ";
+		$NA_toll_freeSQL.="('1', 'USA', '885', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz'), ";
+		$NA_toll_freeSQL.="('1', 'USA', '886', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz'), ";
+		$NA_toll_freeSQL.="('1', 'USA', '887', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz'), ";
+		$NA_toll_freeSQL.="('1', 'USA', '889', '$NA_tf_state', '$NA_toll_free', 'Y', 'SSM-FSN', 'NA Toll Free', '$NA_tf_abbr', '$NA_tf_phptz')";
+
+		$affected_rows = $dbhA->do($NA_toll_freeSQL) || die "can't execute query: |$NA_toll_freeSQL| $!\n";
+		print STDERR "$affected_rows NA Toll-Free areacodes inserted\n";
+		}
+	if (length($NA_test) > 0) 
+		{
+		$NA_test_abbr='EST';   $NA_test_phptz='America/New_York';   $NA_test_state='NY';
+		if ($NA_toll_free == '-6') {$NA_test_abbr='CST';   $NA_test_phptz='America/Chicago';   $NA_test_state='IL';}
+		if ($NA_toll_free == '-7') {$NA_test_abbr='MST';   $NA_test_phptz='America/Denver';   $NA_test_state='CO';}
+		if ($NA_toll_free == '-8') {$NA_test_abbr='PST';   $NA_test_phptz='America/Los_Angeles';   $NA_test_state='CA';}
+		$NA_testSQL="INSERT INTO vicidial_phone_codes VALUES ";
+		$NA_testSQL.="('1', 'USA', '999', '$NA_test_state', '$NA_test', 'Y', 'SSM-FSN', 'Testing NA', '$NA_test_abbr', '$NA_test_phptz'), ";
+		$NA_testSQL.="('1', 'USA', '998', '$NA_test_state', '$NA_test', 'Y', 'SSM-FSN', 'Testing NA', '$NA_test_abbr', '$NA_test_phptz'), ";
+		$NA_testSQL.="('1', 'USA', '997', '$NA_test_state', '$NA_test', 'Y', 'SSM-FSN', 'Testing NA', '$NA_test_abbr', '$NA_test_phptz')";
+
+		$affected_rows = $dbhA->do($NA_testSQL) || die "can't execute query: |$NA_testSQL| $!\n";
+		print STDERR "$affected_rows NA Testing areacodes inserted\n";
+		}
 	#### END vicidial_phone_codes population ####
 
 
