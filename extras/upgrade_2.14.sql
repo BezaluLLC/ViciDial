@@ -2090,3 +2090,7 @@ index (postal_code)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1673',db_schema_update_date=NOW() where db_schema_version < 1673;
+
+ALTER TABLE vicidial_inbound_groups MODIFY on_hook_cid VARCHAR(30) default 'CUSTOMER_PHONE_RINGAGENT';
+
+UPDATE system_settings SET db_schema_version='1674',db_schema_update_date=NOW() where db_schema_version < 1674;

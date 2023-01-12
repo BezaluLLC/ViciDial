@@ -1324,7 +1324,7 @@ eht_minimum_prompt_no_block ENUM('N','Y') default 'N',
 eht_minimum_prompt_seconds SMALLINT(5) default '10',
 on_hook_ring_time SMALLINT(5) default '15',
 na_call_url TEXT,
-on_hook_cid VARCHAR(30) default 'GENERIC',
+on_hook_cid VARCHAR(30) default 'CUSTOMER_PHONE_RINGAGENT',
 group_calldate DATETIME,
 action_xfer_cid VARCHAR(18) default 'CUSTOMER',
 drop_callmenu VARCHAR(50) default '',
@@ -5193,4 +5193,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1673',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1674',db_schema_update_date=NOW(),reload_timestamp=NOW();
