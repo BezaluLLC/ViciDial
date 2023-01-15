@@ -7,7 +7,7 @@
 #
 # /usr/share/astguiclient/AST_VDsales_export.pl --campaign=GOODB-GROUP1-GROUP3-GROUP4-SPECIALS-DNC_BEDS --output-format=fixed-as400 --sale-statuses=SALE --debug --filename=BEDSsaleMMDD.txt --date=yesterday --email-list=test@gmail.com --email-sender=test@test.com
 #
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61219-1118 - First version
@@ -35,6 +35,7 @@
 # 140403-1603 - Added --skip-rec-xtra option to not perform additional recording lookups beyond vicidial_id
 # 160722-1140 - Added --nodatedir option
 # 220307-0915 - Added 'tab-CSScustomUSA' format
+# 230115-1523 - Added --filedate-calldate option
 #
 
 $txt = '.txt';
@@ -65,6 +66,7 @@ $INcalls=0;
 $INtalk=0;
 $INtalkmin=0;
 $email_post_audio=0;
+$filedate_calldate=0;
 $http_user='';
 $http_pass='';
 $NODATEDIR = 0;	# Don't use dated directories for audio (default)
@@ -168,6 +170,7 @@ if (length($ARGV[0])>1)
 		{
 		print "allowed run time options:\n";
 		print "  [--date=YYYY-MM-DD] = date override\n";
+		print "  [--filedate-calldate] = override filedate of today with the date of the calls\n";
 		print "  [--hour-offset=X] = print datetime strings with this hour offset\n";
 		print "  [--filename=XXX] = Name to be used for file, variables: YYYY=year, MM=month, DD=day, HH=hour, II=minute, SS=second\n";
 		print "  [--campaign=XXX] = Campaign that sales will be pulled from\n";
@@ -228,6 +231,11 @@ if (length($ARGV[0])>1)
 		if ($args =~ /-totals-only/i)
 			{$totals_only=1;}
 
+		if ($args =~ /--filedate-calldate/i)
+			{
+			$filedate_calldate=1;
+			if (!$Q) {print "\n----- FILEDATE CALLDATE OVERRIDE: $filedate_calldate -----\n\n";}
+			}
 		if ($args =~ /--hour-offset=/i)
 			{
 			@data_in = split(/--hour-offset=/,$args);
@@ -431,6 +439,8 @@ if (length($ARGV[0])>1)
 				{`mkdir -p $tempdir`;}
 			## remove old audio files from directory
 			`$findbin $tempdir/ -maxdepth 1 -type f -mtime +0 -print | xargs rm -f`;
+			print "$findbin $tempdir/ -maxdepth 1 -type f -mtime +0 -print | xargs rm -f\n";
+		#	exit; -mtime +0
 			}
 		if ($args =~ /-ftp-norun/i)
 			{
@@ -617,6 +627,8 @@ if (!$Q)
 	print "\n";
 	}
 
+if ($filedate_calldate > 0) 
+	{$filedate = "$year$mon$mday";}
 $outfile = "$campaign$US$filedate$US$sale_statuses$txt";
 if ($filename_override > 0) {$outfile = $filename;}
 

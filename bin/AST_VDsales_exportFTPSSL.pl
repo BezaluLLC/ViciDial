@@ -47,6 +47,7 @@
 # 160722-1140 - Added --nodatedir option
 # 220307-0915 - Added 'tab-CSScustomUSA' format
 # 230115-0856 - Added FTPSSL transmission of files
+# 230115-1524 - Added --filedate-calldate option
 #
 
 $txt = '.txt';
@@ -77,6 +78,7 @@ $INcalls=0;
 $INtalk=0;
 $INtalkmin=0;
 $email_post_audio=0;
+$filedate_calldate=0;
 $http_user='';
 $http_pass='';
 $NODATEDIR = 0;	# Don't use dated directories for audio (default)
@@ -180,6 +182,7 @@ if (length($ARGV[0])>1)
 		{
 		print "allowed run time options: (NOTE: This script is for FTPS[SSL/TLS] transport only!)\n";
 		print "  [--date=YYYY-MM-DD] = date override\n";
+		print "  [--filedate-calldate] = override filedate of today with the date of the calls\n";
 		print "  [--hour-offset=X] = print datetime strings with this hour offset\n";
 		print "  [--filename=XXX] = Name to be used for file, variables: YYYY=year, MM=month, DD=day, HH=hour, II=minute, SS=second\n";
 		print "  [--campaign=XXX] = Campaign that sales will be pulled from\n";
@@ -240,6 +243,11 @@ if (length($ARGV[0])>1)
 		if ($args =~ /-totals-only/i)
 			{$totals_only=1;}
 
+		if ($args =~ /--filedate-calldate/i)
+			{
+			$filedate_calldate=1;
+			if (!$Q) {print "\n----- FILEDATE CALLDATE OVERRIDE: $filedate_calldate -----\n\n";}
+			}
 		if ($args =~ /--hour-offset=/i)
 			{
 			@data_in = split(/--hour-offset=/,$args);
@@ -442,9 +450,9 @@ if (length($ARGV[0])>1)
 			if (!-e "$tempdir") 
 				{`mkdir -p $tempdir`;}
 			## remove old audio files from directory
-			`$findbin $tempdir/ -maxdepth 1 -type f -mtime -1 -print | xargs rm -f`;
-			print "$findbin $tempdir/ -maxdepth 1 -type f -mtime -1 -print | xargs rm -f\n";
-		#	exit;
+			`$findbin $tempdir/ -maxdepth 1 -type f -mtime +0 -print | xargs rm -f`;
+			print "$findbin $tempdir/ -maxdepth 1 -type f -mtime +0 -print | xargs rm -f\n";
+		#	exit; -mtime +0
 			}
 		if ($args =~ /-ftp-norun/i)
 			{
@@ -631,6 +639,8 @@ if (!$Q)
 	print "\n";
 	}
 
+if ($filedate_calldate > 0) 
+	{$filedate = "$year$mon$mday";}
 $outfile = "$campaign$US$filedate$US$sale_statuses$txt";
 if ($filename_override > 0) {$outfile = $filename;}
 
@@ -978,7 +988,7 @@ if ($ftp_audio_transfer > 0)
 		{
 		if ( (length($FILES[$i]) > 4) && (!-d "$tempdir/$FILES[$i]") )
 			{
-			if (!$Q) {print "Sending File Over FTPS: $outfile   ($VARREPORT_user @ $VARREPORT_host)\n";}
+			if (!$Q) {print "Sending File Over FTPS: $FILES[$i]   ($VARREPORT_user @ $VARREPORT_host)\n";}
 
 			# Some versions of the FTPSSL perl module require you to hard code the encryption value: IMP_CRYPT or EXP_CRYPT
 			# $ftps = Net::FTPSSL->new("$VARREPORT_host", Port => $VARREPORT_port, Encryption => $VARFTP_encrypt, Debug => $FTPdb);
