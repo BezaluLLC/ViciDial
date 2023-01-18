@@ -2094,3 +2094,10 @@ UPDATE system_settings SET db_schema_version='1673',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_inbound_groups MODIFY on_hook_cid VARCHAR(30) default 'CUSTOMER_PHONE_RINGAGENT';
 
 UPDATE system_settings SET db_schema_version='1674',db_schema_update_date=NOW() where db_schema_version < 1674;
+
+ALTER TABLE vicidial_campaigns ADD agent_hangup_route ENUM('HANGUP','MESSAGE','EXTENSION','IN_GROUP','CALLMENU') default 'HANGUP';
+ALTER TABLE vicidial_campaigns ADD agent_hangup_value TEXT;
+ALTER TABLE vicidial_campaigns ADD agent_hangup_ig_override ENUM('Y','N') default 'N';
+UPDATE vicidial_campaigns SET agent_hangup_value='' where agent_hangup_value IS NULL;
+
+UPDATE system_settings SET db_schema_version='1675',db_schema_update_date=NOW() where db_schema_version < 1675;

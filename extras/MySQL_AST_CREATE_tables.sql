@@ -1099,7 +1099,10 @@ agent_hide_hangup ENUM('Y','N') default 'N',
 ig_xfer_list_sort ENUM('GROUP_ID_UP','GROUP_ID_DOWN','GROUP_NAME_UP','GROUP_NAME_DOWN','PRIORITY_UP','PRIORITY_DOWN') default 'GROUP_ID_UP',
 script_tab_frame_size VARCHAR(10) default 'DEFAULT',
 max_logged_in_agents SMALLINT(5) UNSIGNED default '0',
-user_group_script ENUM('DISABLED','ENABLED') default 'DISABLED'
+user_group_script ENUM('DISABLED','ENABLED') default 'DISABLED',
+agent_hangup_route ENUM('HANGUP','MESSAGE','EXTENSION','IN_GROUP','CALLMENU') default 'HANGUP',
+agent_hangup_value TEXT,
+agent_hangup_ig_override ENUM('Y','N') default 'N'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -5193,4 +5196,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1674',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1675',db_schema_update_date=NOW(),reload_timestamp=NOW();
