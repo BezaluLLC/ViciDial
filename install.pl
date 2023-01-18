@@ -2,7 +2,7 @@
 
 # install.pl version 2.14
 #
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 
 # CHANGES
@@ -49,6 +49,7 @@
 # 220827-2239 - Added VERM web directory
 # 220829-1434 - Added 'C' keepalive option
 # 221228-2049 - Added KhompEnabled option
+# 230117-2220 - Added --khomp-enable CLI flag
 #
 
 ############################################
@@ -239,6 +240,7 @@ if (length($ARGV[0])>1)
 		print "  [--fastagi_log_checkforwait=60] = define FastAGI log check-for-wait seconds\n";
 		print "  [--build_multiserver_conf] = generates conf file examples for extensions.conf and iax.conf\n";
 		print "  [--build_phones_conf] = generates conf file examples for extensions.conf, sip.conf and iax.conf\n";
+		print "  [--khomp-enable] = build khomp-activated scripts during install\n";
 		print "\n";
 
 		exit;
@@ -624,6 +626,13 @@ if (length($ARGV[0])>1)
 		else
 			{
 			$CLIcopy_web_lang='n';
+			}
+
+		if ($args =~ /--khomp-enable/i) # khomp enable flag
+			{
+			$CLIVARKhompEnabled=1;
+			$VARKhompEnabled=1;
+			print "  CLI Khomp enabled:    YES ($CLIVARKhompEnabled|$VARKhompEnabled)\n";
 			}
 
 		if ($args =~ /--fastagi_log_min_servers=/i) # CLI defined fastagi min servers
