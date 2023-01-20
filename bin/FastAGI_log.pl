@@ -25,7 +25,7 @@
 # exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
 # 
 #
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 61010-1007 - First test build
@@ -96,6 +96,7 @@
 # 220118-0937 - Added $ADB auto-alt-dial extra debug output option, fix for extended auto-alt-dial issue #1337
 # 220118-2207 - Added auto_alt_threshold campaign & list settings
 # 221221-2134 - Added enhanced_disconnect_logging=3 support , issue #1367
+# 230120-1557 - Added CAMPDTO dialplan variable for ^DC 3-way agent screen calls
 #
 
 # defaults for PreFork
@@ -744,7 +745,7 @@ sub process_request
 					}
 
 				### on manual dial calls set the CAMPDTO dialplan variable
-				if ($callerid =~ /^M/)
+				if ($callerid =~ /^M|^DC/)
 					{
 					if (length($man_dial_timeout) > 0)
 						{
