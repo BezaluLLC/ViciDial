@@ -49146,7 +49146,7 @@ if ($ADD==99999701)
 				$stmt = "INSERT INTO vicidial_agent_function_log set agent_log_id='0',user='$user',function='2FA_send',event_time=NOW(),campaign_id='-ADMIN-',user_group='$LOGuser_group',lead_id='0',uniqueid='ERROR',caller_code='$ip',stage='$stage',comments='EMAIL: $LOGemail';";
 
 				$error_msg = error_get_last()['message'];
-				echo "error_msg";
+				echo "$error_msg";
 				}
 
 			### LOG INSERTION Admin Log Table ###

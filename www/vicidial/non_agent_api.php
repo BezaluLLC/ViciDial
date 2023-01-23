@@ -199,10 +199,11 @@
 # 220920-0814 - Added more "XDAY" options to add_lead duplicate checks
 # 221108-1849 - Added include_ip option for agent_status function
 # 230118-0833 - Added ingroup_list and callmenu_list functions
+# 230122-1821 - Added reset_password option to update_user function
 #
 
-$version = '2.14-176';
-$build = '230118-0833';
+$version = '2.14-177';
+$build = '230122-1821';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -358,8 +359,6 @@ if (isset($_GET["hotkeys_active"]))				{$hotkeys_active=$_GET["hotkeys_active"];
 	elseif (isset($_POST["hotkeys_active"]))	{$hotkeys_active=$_POST["hotkeys_active"];}
 if (isset($_GET["voicemail_id"]))			{$voicemail_id=$_GET["voicemail_id"];}
 	elseif (isset($_POST["voicemail_id"]))	{$voicemail_id=$_POST["voicemail_id"];}
-if (isset($_GET["email"]))					{$email=$_GET["email"];}
-	elseif (isset($_POST["email"]))			{$email=$_POST["email"];}
 if (isset($_GET["custom_one"]))				{$custom_one=$_GET["custom_one"];}
 	elseif (isset($_POST["custom_one"]))	{$custom_one=$_POST["custom_one"];}
 if (isset($_GET["custom_two"]))				{$custom_two=$_GET["custom_two"];}
@@ -710,6 +709,8 @@ if (isset($_GET["dial_status_remove"]))				{$dial_status_remove=$_GET["dial_stat
 	elseif (isset($_POST["dial_status_remove"]))	{$dial_status_remove=$_POST["dial_status_remove"];}
 if (isset($_GET["include_ip"]))				{$include_ip=$_GET["include_ip"];}
 	elseif (isset($_POST["include_ip"]))	{$include_ip=$_POST["include_ip"];}
+if (isset($_GET["reset_password"]))				{$reset_password=$_GET["reset_password"];}
+	elseif (isset($_POST["reset_password"]))	{$reset_password=$_POST["reset_password"];}
 
 $DB=preg_replace('/[^0-9]/','',$DB);
 
@@ -864,6 +865,7 @@ $preset_number = preg_replace('/[^\*\#\.\_0-9a-zA-Z]/','',$preset_number);
 $preset_dtmf = preg_replace('/[^- \,\*\#0-9a-zA-Z]/','',$preset_dtmf);
 $action = preg_replace('/[^0-9a-zA-Z]/','',$action);
 $include_ip = preg_replace('/[^0-9a-zA-Z]/','',$include_ip);
+$reset_password = preg_replace('/[^0-9]/','',$reset_password);
 
 if ($non_latin < 1)
 	{
@@ -4332,6 +4334,87 @@ if ($function == 'update_user')
 							$data = "$agent_user|$ingroup_rank|$ingroup_grade$ingrp_rg_onlyNOTE";
 							echo "$result: $result_reason - $user|$data\n";
 							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+
+						if ( (strlen($reset_password) > 0) and ($reset_password > 7) )
+							{
+							### BEGIN reset_password section ###
+							if (strlen($email) < 5)
+								{
+								$stmt="SELECT email from vicidial_users where user='$agent_user';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								$row=mysqli_fetch_row($rslt);
+								$email =	$row[0];
+								}
+							if (!filter_var($email, FILTER_VALIDATE_EMAIL))
+								{
+								$result = 'NOTICE';
+								$result_reason = "update_user USER PASSWORD RESET FAILED: NO VALID EMAIL PROVIDED";
+								$data = "$agent_user|$email";
+								echo "$result: $result_reason - $user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								}
+							else
+								{
+								$temp_pass = '';
+								$possible = "0123456789ABCDEFGHIJKLMNPQRSTUVWXYZ";  
+								$i = 0; 
+								while ($i < $reset_password) 
+									{ 
+									$char = substr($possible, mt_rand(0, strlen($possible)-1), 1);
+									$temp_pass .= $char;
+									$i++;
+									}
+
+								$email_message = "Here is your new temporary password: $temp_pass";
+								$email_subject = "User Account Reset";
+							
+								$success = mail($email, $email_subject, $email_message);
+								if ($success)
+									{
+									$pass_hash='';
+									$pass_hashSQL='';
+									if ($SSpass_hash_enabled > 0)
+										{
+										if (strlen($temp_pass) > 1)
+											{
+											$temp_pass = preg_replace("/\'|\"|\\\\|;| /","",$temp_pass);
+											$pass_hash = exec("../agc/bp.pl --pass=$temp_pass");
+											$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
+											$pass_hashSQL = ",pass_hash='$pass_hash'";
+											}
+										$temp_pass='';
+										}
+
+									$stmt="UPDATE vicidial_users SET force_change_password='Y',pass='$temp_pass' $pass_hashSQL WHERE user='$agent_user';";
+									$rslt=mysql_to_mysqli($stmt, $link);
+									if ($DB) {echo "|$stmt|\n";}
+
+									### LOG INSERTION Admin Log Table ###
+									$SQL_log = "$stmt|";
+									$SQL_log = preg_replace('/;/', '', $SQL_log);
+									$SQL_log = addslashes($SQL_log);
+									$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$agent_user', event_code='ADMIN API RESET PASS', event_sql=\"$SQL_log\", event_notes='user: $agent_user';";
+									if ($DB) {echo "|$stmt|\n";}
+									$rslt=mysql_to_mysqli($stmt, $link);
+
+									$result = 'NOTICE';
+									$result_reason = "update_user USER PASSWORD HAS BEEN RESET";
+									$data = "$agent_user|$email";
+									echo "$result: $result_reason - $user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									}
+								else
+									{
+									$error_msg = error_get_last()['message'];
+									$result = 'NOTICE';
+									$result_reason = "update_user USER PASSWORD RESET FAILED: EMAIL FAILURE";
+									$data = "$agent_user|$email|$error_msg";
+									echo "$result: $result_reason - $user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									}
+								}
+							### END reset_password section ###
 							}
 
 						$updateSQL = "$passSQL$pass_hashSQL$full_nameSQL$user_levelSQL$user_groupSQL$phone_loginSQL$phone_passSQL$hotkeys_activeSQL$voicemail_idSQL$emailSQL$custom_oneSQL$custom_twoSQL$custom_threeSQL$custom_fourSQL$custom_fiveSQL$activeSQL$wrapup_seconds_overrideSQL";
