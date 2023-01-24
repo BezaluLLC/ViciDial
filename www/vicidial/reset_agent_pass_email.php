@@ -14,6 +14,8 @@
 #
 
 $startMS = microtime();
+$email_from='';
+$fullname_clean=0;
 
 $report_name='Reset Agent Pass';
 
@@ -310,6 +312,10 @@ if ($SC_count > 0)
 				{$reset_user_groups = $line;   $reset_user_groups = trim(preg_replace("/.*=>/",'',$reset_user_groups));}
 		#	if (preg_match("/^RESET_PASSWORD/",$line))
 		#		{$reset_password = $line;   $reset_password = trim(preg_replace("/.*=>/",'',$reset_password));}
+			if (preg_match("/^RESET_EMAIL_FROM/",$line))
+				{$email_from = $line;   $email_from = trim(preg_replace("/.*=>/",'',$email_from));}
+			if (preg_match("/^RESET_FULLNAME_CLEAN/",$line))
+				{$fullname_clean=1;}
 
 			$p++;
 			}
@@ -410,6 +416,8 @@ else
 	$row=mysqli_fetch_row($rslt);
 	$DBemail =		$row[0];
 	$DBfull_name =	$row[1];
+	if ($fullname_clean > 0)
+		{$DBfull_name = preg_replace("/.*\_/",'',$DBfull_name);}
 
 	if (strlen($email) < 5)
 		{
@@ -440,11 +448,22 @@ else
 			$i++;
 			}
 
-		$email_message = "Dear $DBfull_name,\n\nYour password has been successfully reset. Please use the following temporary password when logging into the Vox application next time.\nTemporary Password: $temp_pass\n\nAfter entry of your temporary password, you will be required to enter a new password of your choosing that must adhere to password requirements.\n\nPlease let your supervisor know if you encounter any issues or have any questions.\n\nThank you.";
+
+		// To send HTML mail, the Content-type header must be set
+		$headers  = 'MIME-Version: 1.0' . "\r\n";
+		$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+ 
+		if (strlen($email_from) > 4)
+			{
+			// Create email headers
+			$headers .= 'From: ' . $email_from . "\r\n" . 'Reply-To: ' . $email_from . "\r\n" . 'X-Mailer: PHP/' . phpversion();
+			}
+
+		$email_message = "Dear $DBfull_name,<br>\n<br>\nYour password has been successfully reset. Please use the following temporary password when logging into the Vox application next time.<br>\nTemporary Password: $temp_pass<br>\n<br>\nAfter entry of your temporary password, you will be required to enter a new password of your choosing that must adhere to password requirements.<br>\n<br>\nPlease let your supervisor know if you encounter any issues or have any questions.<br>\n<br>\nThank you.";
 
 		$email_subject = "User Account Reset";
 
-		$success = mail($email, $email_subject, $email_message);
+		$success = mail($email, $email_subject, $email_message, $headers);
 		if ($success)
 			{
 			$pass_hash='';
