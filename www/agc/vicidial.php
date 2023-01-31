@@ -1,7 +1,7 @@
 <?php
 # vicidial.php - the web-based version of the astVICIDIAL client application
 # 
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Other scripts that this application depends on:
 # - vdc_db_query.php: Updates information in the database
@@ -709,10 +709,11 @@
 # 221116-2159 - Fix for recording buttons ALLFORCE issue #1389
 # 221206-1520 - Added login form multi-submit prevention ($login_submit_once), Added dialRegExten_enabled webphone option
 # 230118-0947 - Added agent_hangup_route features
+# 230131-0826 - Added filtering of 3-way number to dial to remove non-diable characters
 #
 
-$version = '2.14-677c';
-$build = '230118-0947';
+$version = '2.14-678c';
+$build = '230131-0826';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -6586,6 +6587,7 @@ function holiday_display(holiday_name)
 			var manual_string = manual_number.toString();
 			var dial_conf_exten = session_id;
 
+			manual_string = manual_string.replace(/\||`|&|\'|\"|\\\\|;| /ig,'');
 			var testXFregstr = 'x' + manual_string + 'x'
 			var regXFSRvars = new RegExp(testXFregstr,"g");
 			// test for three_way_record_stop and exception
