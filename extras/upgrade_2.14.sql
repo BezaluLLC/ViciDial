@@ -2101,3 +2101,41 @@ ALTER TABLE vicidial_campaigns ADD agent_hangup_ig_override ENUM('Y','N') defaul
 UPDATE vicidial_campaigns SET agent_hangup_value='' where agent_hangup_value IS NULL;
 
 UPDATE system_settings SET db_schema_version='1675',db_schema_update_date=NOW() where db_schema_version < 1675;
+
+CREATE TABLE gateway_recording_log (
+gateway_recording_id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+recording_log_id INT(10) UNSIGNED default '0',
+call_direction ENUM('INBOUND','OUTBOUND','NA') default 'NA',
+call_id VARCHAR(40) default '',
+lead_id INT(9) UNSIGNED,
+uniqueid VARCHAR(20) NOT NULL,
+server_ip VARCHAR(15),
+caller_id_number VARCHAR(18),
+caller_id_name VARCHAR(20),
+extension VARCHAR(100),
+start_time DATETIME,
+end_time DATETIME,
+length_in_sec MEDIUMINT(8) UNSIGNED default '0',
+filename VARCHAR(100),
+location VARCHAR(255),
+index(start_time),
+index(call_id),
+index(lead_id)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_did_gateway_log (
+uniqueid VARCHAR(20) NOT NULL,
+channel VARCHAR(100) NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+caller_id_number VARCHAR(18),
+caller_id_name VARCHAR(20),
+extension VARCHAR(100),
+call_date DATETIME,
+VICIrecGatewayID VARCHAR(30) default '',
+index (uniqueid),
+index (VICIrecGatewayID),
+index (extension),
+index (call_date)
+) ENGINE=MyISAM;
+
+UPDATE system_settings SET db_schema_version='1676',db_schema_update_date=NOW() where db_schema_version < 1676;

@@ -1,4 +1,4 @@
-CALLER ID NAME CODES DOC	Started: 2013-07-15	Updated: 2022-12-02
+CALLER ID NAME CODES DOC	Started: 2013-07-15	Updated: 2023-02-01
 
 
 This document is meant for reference only, and it does not contain all CID name codes possible, but more will be added over time.
@@ -36,3 +36,4 @@ BW - Real-time screen blind whisper (BW149425456200006666)
 E - Inbound Email, tracking only (E0001797980001237995)
 ACagcW - Noone in session call agent phone (ACagcW15167259066666)
 AM - Agent mute of recording (AM273955W0001922575W)
+G - Recording Gateway inbound call (G2010021380000000023)

@@ -740,6 +740,9 @@ OTHER CHANGES:
 	NOTE: After upgrading your system, be sure to set each dialer to 
 	"Rebuild conf files" = 'Y' for this feature to work properly.
 
+208. Added instructions and scripts for creating a Gateway Recording server
+	See the GATEWAY_RECORDING_SERVER.txt doc for more info.
+
 
 
 
