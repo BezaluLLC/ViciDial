@@ -743,6 +743,11 @@ OTHER CHANGES:
 208. Added instructions and scripts for creating a Gateway Recording server
 	See the GATEWAY_RECORDING_SERVER.txt doc for more info.
 
+209. Added the ability to have multiple "No Agent Call URL" entries for a 
+	single Campaign/In-Group/List, by putting "ALT" in the No Agent Call URL
+	field on the Campaign, In-Group, List modify screen. Just like how it 
+	works with Dispo Call URL currently.
+
 
 
 

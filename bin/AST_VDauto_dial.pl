@@ -25,7 +25,7 @@
 # It is good practice to keep this program running by placing the associated 
 # KEEPALIVE script running every minute to ensure this program is always running
 #
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50125-1201 - Changed dial timeout to 120 seconds from 180 seconds
@@ -152,9 +152,10 @@
 # 220328-1310 - Small change made per Issue #1337
 # 220623-1621 - Added List dial_prefix override
 # 221221-2135 - Added enhanced_disconnect_logging=3 support, issue #1367
+# 230204-2144 - Added ability to use ALT na_call_url entries
 #
 
-$build='220328-1310';
+$build='230204-2144';
 $script='AST_VDauto_dial';
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -4508,7 +4509,7 @@ while($one_day_interval > 0)
 													}
 												$NCUcamp_loop++;
 												}
-											if (length($NCUncurl_value) > 10)
+											if ( (length($NCUncurl_value) > 10) || ($NCUncurl_value =~ /^ALT$/) )
 												{
 												$event_string = "        NCU url defined, launching web GET:   $NCUcallerid[$vle_count]|$NCUstatus[$vle_count]";
 												 &event_logger;
@@ -4528,9 +4529,12 @@ while($one_day_interval > 0)
 												$launch .= " --alt_dial=" . $NCUaltdial[$vle_count];
 												$launch .= " --call_id=" . $NCUcallerid[$vle_count];
 												$launch .= " --list_id=" . $NCUlist[$vle_count];
+												$launch .= " --status=" . $NCUstatus[$vle_count];
 												$launch .= " --function=NA_CALL_URL";
 
 												system($launch . ' &');
+
+												if ($DBX > 0) {print "     NCU debugX: |$NCUlist[$vle_count]|$NCUcampaign[$vle_count]|$launch|$NCUncurl_value|\n";}
 
 												$event_string = "        NCU url sent processed:   $NCUcallerid[$vle_count]|$NCUcampaign[$vle_count]|$NCUuser[$vle_count]";
 												 &event_logger;

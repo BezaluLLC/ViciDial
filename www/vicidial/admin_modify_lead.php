@@ -8,7 +8,7 @@
 # just needs to enter the leadID and then they can view and modify the 
 # information in the record for that lead
 #
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -111,6 +111,7 @@
 # 220312-0953 - Added vicidial_dial_cid_log data
 # 220427-1132 - Fixes for lead not found, Issue #1358
 # 220520-1319 - Fix for admin hide phone data issue #1359
+# 230204-0011 - Fix for inbound Call ID display
 #
 
 require("dbconnect_mysqli.php");
@@ -2075,7 +2076,7 @@ else
 				$VDLserver_ip = $rowA[1];
 				}
 			$caller_code='';
-			$stmtA="SELECT caller_code,server_ip FROM vicidial_log_extended WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and uniqueid='$row[18]';";
+			$stmtA="SELECT caller_code,server_ip FROM vicidial_inbound_caller_codes WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and uniqueid='$row[18]' and group_id='$row[3]';";
 			$rsltA=mysql_to_mysqli($stmtA, $link);
 			$cc_to_print = mysqli_num_rows($rsltA);
 			if ($cc_to_print > 0)
@@ -2303,7 +2304,7 @@ else
 					$VDLserver_ip = $rowA[1];
 					}
 				$caller_code='';
-				$stmtA="SELECT caller_code,server_ip FROM vicidial_log_extended_archive WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and uniqueid='$row[18]';";
+				$stmtA="SELECT caller_code,server_ip FROM vicidial_inbound_caller_codes_archive WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and uniqueid='$row[18]' and group_id='$row[3]';";
 				$rsltA=mysql_to_mysqli($stmtA, $link);
 				$cc_to_print = mysqli_num_rows($rsltA);
 				if ($cc_to_print > 0)

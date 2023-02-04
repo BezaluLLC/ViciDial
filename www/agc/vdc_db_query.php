@@ -1,7 +1,7 @@
 <?php
 # vdc_db_query.php
 # 
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to exchange information between vicidial.php and the database server for various actions
 # 
@@ -529,10 +529,11 @@
 # 220831-1654 - Added User Group script override option
 # 221116-1052 - Fix for long in-group dialstring extensions
 # 221202-1645 - Change in CIDname prefix for clearing session command to differentiate from other processes
+# 230204-1618 - Small fix for dispo url processed logging
 #
 
-$version = '2.14-422';
-$build = '221202-1645';
+$version = '2.14-423';
+$build = '230204-1618';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=902;
@@ -15435,7 +15436,7 @@ if ($ACTION == 'updateDISPO')
 				}
 			}
 
-		$stmt="UPDATE vicidial_log_extended set dispo_url_processed='Y' where uniqueid='$uniqueid';";
+		$stmt="UPDATE vicidial_log_extended set dispo_url_processed='Y' where uniqueid='$uniqueid' and caller_code='$MDnextCID';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00423',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -15969,7 +15970,7 @@ if ($ACTION == 'DEADtriggerURL')
 			}
 		}
 
-	$stmt="UPDATE vicidial_log_extended set dispo_url_processed='Y' where uniqueid='$uniqueid';";
+	$stmt="UPDATE vicidial_log_extended set dispo_url_processed='Y' where uniqueid='$uniqueid' and caller_code='$MDnextCID';";
 	if ($DB) {echo "$stmt\n";}
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00754',$user,$server_ip,$session_name,$one_mysql_log);}

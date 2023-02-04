@@ -5968,12 +5968,13 @@ if ($SSscript_remove_js > 0)
 # 221214-1153 - Added $HTMLcolors validation for color form entry fields
 # 221230-2231 - Added Postal Codes Cities display
 # 230117-0838 - Added Agent Call Hangup Routing options, changed year to 2023
+# 230204-1642 - Added No Agent Call URL "ALT" multi-url options
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-872a';
-$build = '230117-0838';
+$admin_version = '2.14-873a';
+$build = '230204-1642';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -28323,7 +28324,23 @@ if ($ADD==31)
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Dispo Call URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=5000 value=\"$dispo_call_url\">$NWB#campaigns-dispo_call_url$NWE</td></tr>\n";
 			}
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("No Agent Call URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=5000 value=\"$na_call_url\">$NWB#campaigns-na_call_url$NWE</td></tr>\n";
+		if ($na_call_url == 'ALT')
+			{
+			$stmt="SELECT count(*) from vicidial_url_multi where campaign_id='$campaign_id' and entry_type='campaign' and url_type='noagent';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vum_to_print = mysqli_num_rows($rslt);
+			if ($vum_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$vum_count = $rowx[0]; 
+				}
+
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"admin_url_multi.php?DB=$DB&campaign_id=$campaign_id&entry_type=campaign&url_type=noagent\">"._QXZ("No Agent Call URL")."</a>: </td><td align=left><input type=text name=na_call_url size=10 maxlength=5000 value=\"$na_call_url\">$NWB#campaigns-na_call_url$NWE <a href=\"admin_url_multi.php?DB=$DB&campaign_id=$campaign_id&entry_type=campaign&url_type=noagent\"> "._QXZ("Alternate No Agent URLs Defined").": $vum_count</a></td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("No Agent Call URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=5000 value=\"$na_call_url\">$NWB#campaigns-na_call_url$NWE</td></tr>\n";
+			}
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Extension Append CID").": </td><td align=left><select size=1 name=extension_appended_cidname><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='Y_USER'>"._QXZ("Y_USER")."</option><option value='Y_WITH_CAMPAIGN'>"._QXZ("Y_WITH_CAMPAIGN")."</option><option value='Y_USER_WITH_CAMPAIGN'>"._QXZ("Y_USER_WITH_CAMPAIGN")."</option><option value='$extension_appended_cidname' SELECTED>"._QXZ("$extension_appended_cidname")."</option></select>$NWB#campaigns-extension_appended_cidname$NWE</td></tr>\n";
 
@@ -31585,7 +31602,23 @@ if ($ADD==311)
 			echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Web Form Three").": </td><td align=left><input type=text name=web_form_address_three size=70 maxlength=9999 value=\"$web_form_address_three\">$NWB#lists-web_form_address$NWE</td></tr>\n";
 			}
 
-		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("No Agent Call URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=9999 value=\"$na_call_url\">$NWB#lists-na_call_url$NWE</td></tr>\n";
+		if ($na_call_url == 'ALT')
+			{
+			$stmt="SELECT count(*) from vicidial_url_multi where campaign_id='$list_id' and entry_type='list' and url_type='noagent';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vum_to_print = mysqli_num_rows($rslt);
+			if ($vum_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$vum_count = $rowx[0]; 
+				}
+
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"admin_url_multi.php?DB=$DB&campaign_id=$list_id&entry_type=list&url_type=noagent\">"._QXZ("No Agent Call URL")."</a>: </td><td align=left><input type=text name=na_call_url size=10 maxlength=5000 value=\"$na_call_url\">$NWB#lists-na_call_url$NWE <a href=\"admin_url_multi.php?DB=$DB&campaign_id=$list_id&entry_type=list&url_type=noagent\"> "._QXZ("Alternate No Agent URLs Defined").": $vum_count</a></td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("No Agent Call URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=5000 value=\"$na_call_url\">$NWB#lists-na_call_url$NWE</td></tr>\n";
+			}
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Auto Alt Threshold Override").": </td><td align=left><input type=text name=auto_alt_threshold size=3 maxlength=3 value=\"$auto_alt_threshold\"><i>"._QXZ("number only")."</i> $NWB#lists-auto_alt_threshold$NWE</td></tr>\n";
 
@@ -33900,8 +33933,23 @@ if ($ADD==3111)
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Dispo Call URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=5000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_call_url$NWE</td></tr>\n";
 			}
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("No Agent Call URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=5000 value=\"$na_call_url\">$NWB#inbound_groups-na_call_url$NWE</td></tr>\n";
+		if ($na_call_url == 'ALT')
+			{
+			$stmt="SELECT count(*) from vicidial_url_multi where campaign_id='$group_id' and entry_type='ingroup' and url_type='noagent';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vum_to_print = mysqli_num_rows($rslt);
+			if ($vum_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$vum_count = $rowx[0]; 
+				}
 
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"admin_url_multi.php?DB=$DB&campaign_id=$group_id&entry_type=ingroup&url_type=noagent\">"._QXZ("No Agent Call URL")."</a>: </td><td align=left><input type=text name=na_call_url size=10 maxlength=5000 value=\"$na_call_url\">$NWB#inbound_groups-na_call_url$NWE <a href=\"admin_url_multi.php?DB=$DB&campaign_id=$group_id&entry_type=ingroup&url_type=noagent\"> "._QXZ("Alternate No Agent URLs Defined").": $vum_count</a></td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("No Agent Call URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=5000 value=\"$na_call_url\">$NWB#inbound_groups-na_call_url$NWE</td></tr>\n";
+			}
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right nowrap>"._QXZ("Waiting Call URL On").": </td><td align=left><input type=text name=waiting_call_url_on size=70 maxlength=5000 value=\"$waiting_call_url_on\">$NWB#inbound_groups-waiting_call_url_on$NWE</td></tr>\n";
 
@@ -35650,7 +35698,23 @@ if ($ADD==3911)
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Dispo Chat URL").": </td><td align=left><input type=text name=dispo_call_url size=70 maxlength=5000 value=\"$dispo_call_url\">$NWB#inbound_groups-dispo_chat_url$NWE</td></tr>\n";
 			}
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("No Agent Chat URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=5000 value=\"$na_call_url\">$NWB#inbound_groups-na_chat_url$NWE</td></tr>\n";
+		if ($na_call_url == 'ALT')
+			{
+			$stmt="SELECT count(*) from vicidial_url_multi where campaign_id='$group_id' and entry_type='ingroup' and url_type='noagent';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vum_to_print = mysqli_num_rows($rslt);
+			if ($vum_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$vum_count = $rowx[0]; 
+				}
+
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"admin_url_multi.php?DB=$DB&campaign_id=$group_id&entry_type=ingroup&url_type=noagent\">"._QXZ("No Agent Chat URL")."</a>: </td><td align=left><input type=text name=na_call_url size=10 maxlength=5000 value=\"$na_call_url\">$NWB#inbound_groups-na_chat_url$NWE <a href=\"admin_url_multi.php?DB=$DB&campaign_id=$group_id&entry_type=ingroup&url_type=noagent\"> "._QXZ("Alternate No Agent URLs Defined").": $vum_count</a></td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("No Agent Chat URL").": </td><td align=left><input type=text name=na_call_url size=70 maxlength=5000 value=\"$na_call_url\">$NWB#inbound_groups-na_chat_url$NWE</td></tr>\n";
+			}
 /*
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>Extension Append CID: </td><td align=left><select size=1 name=extension_appended_cidname><option>"._QXZ("Y")."</option><option>N</option><option SELECTED>$extension_appended_cidname</option></select>$NWB#inbound_groups-extension_appended_cidname$NWE</td></tr>\n";
 */
