@@ -112,6 +112,7 @@
 # 220427-1132 - Fixes for lead not found, Issue #1358
 # 220520-1319 - Fix for admin hide phone data issue #1359
 # 230204-0011 - Fix for inbound Call ID display
+# 230205-2135 - Small fix for ignore_group_on_search issue
 #
 
 require("dbconnect_mysqli.php");
@@ -1834,7 +1835,7 @@ else
 
 			echo "</span>\n";
 			echo "<BR><BR><b>"._QXZ("lead does not exist").": $lead_id</b><BR><BR>\n";
-			if (!preg_match('/\-ALL/i', $LOGallowed_campaigns))
+			if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) and ($LOGignore_group_on_search != '1') )
 				{
 				echo "</BODY>\n";
 				echo "</html>\n";
