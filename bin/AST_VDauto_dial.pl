@@ -153,9 +153,10 @@
 # 220623-1621 - Added List dial_prefix override
 # 221221-2135 - Added enhanced_disconnect_logging=3 support, issue #1367
 # 230204-2144 - Added ability to use ALT na_call_url entries
+# 230215-1534 - Fix for AGENTDIRECT No-Agent Call URL calls, Issue #1396
 #
 
-$build='230204-2144';
+$build='230215-1534';
 $script='AST_VDauto_dial';
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -4495,7 +4496,7 @@ while($one_day_interval > 0)
 									{
 									if ($NCUincall !~ /\|$NCUstatus[$vle_count]\|/i)
 										{
-										if ($NCUuser[$vle_count] =~ /VDAD|VDCL/i)
+										if ( ($NCUuser[$vle_count] =~ /VDAD|VDCL/i) || ( ($NCUcalltype[$vle_count] =~ /IN/) && ($NCUcampaign[$vle_count] =~ /AGENTDIRECT/i) && ($NCUstatus[$vle_count] =~ /ACFLTR|AFTHRS|CLOSOP|^DROP$|HOLDTO|^HXFER$|IQNANQ|MAXCAL|NANQUE|QVMAIL|TIMEOT|WAITTO/) ) )
 											{
 											$NCUncurl_value='';
 											$NCUcamp_match=0;
