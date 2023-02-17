@@ -459,7 +459,7 @@ if ( ($without_db < 1) && ($conf_only < 1) )
 					{
 					$log_tables .= " $aryA[0]";
 					}
-				elsif ($aryA[0] =~ /server|^phones|conferences|stats|vicidial_list$|^custom|_email_list|_email_attachments/) 
+				elsif ($aryA[0] =~ /server|^phones|conferences|stats|vicidial_list$|^custom|_email_list|_email_attachments|_notes$/) 
 					{
 					$regular_tables .= " $aryA[0]";
 					}				
