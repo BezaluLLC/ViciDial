@@ -154,9 +154,10 @@
 # 221221-2135 - Added enhanced_disconnect_logging=3 support, issue #1367
 # 230204-2144 - Added ability to use ALT na_call_url entries
 # 230215-1534 - Fix for AGENTDIRECT No-Agent Call URL calls, Issue #1396
+# 230223-0826 - Fix for enhanced_disconnect_logging=3 issue
 #
 
-$build='230215-1534';
+$build='230223-0826';
 $script='AST_VDauto_dial';
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -2741,12 +2742,17 @@ while($one_day_interval > 0)
 									}
 								}
 
-							if ($CLlead_id > 0 && $CLstatus != 'CARRIERFAIL')
+							if ( ($CLlead_id > 0) && ($CLstatus !~ /CARRIERFAIL/i) )
 								{
 								$stmtA = "UPDATE vicidial_list set status='$CLnew_status' where lead_id='$CLlead_id'";
 								$affected_rows = $dbhA->do($stmtA);
 
 								$event_string = "|     dead call vac lead marked $CLnew_status|$CLlead_id|$CLphone_number|$CLstatus|";
+								 &event_logger;
+								}
+							else
+								{
+								$event_string = "|     dead call vac lead NOT UPDATED $CLnew_status|$CLlead_id|$CLphone_number|$CLstatus|";
 								 &event_logger;
 								}
 
