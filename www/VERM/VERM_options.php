@@ -126,6 +126,9 @@ if (mysqli_num_rows($options_rslt)>0)
 			if ($setting_name=="show_full_agent_info" && $setting_value)
 				{$show_full_agent_info=$setting_value;}
 
+			if ($setting_name=="auto_download_limit" && $setting_value)
+				{$auto_download_limit=$setting_value;}
+
 			if ($setting_name=="exc_addtl_statuses" && $setting_value)
 				{
 				$exc_statuses=explode(",", $setting_value);

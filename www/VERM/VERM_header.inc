@@ -105,7 +105,6 @@ $HTML_header="<html>\n";
 $HTML_header.="<TITLE>"._QXZ("$report_name").": $report_full_names_array[$report_type]</TITLE>\n";
 $HTML_header.="<HEAD>\n";
 $HTML_header.="<link rel=\"stylesheet\" type=\"text/css\" href=\"VERM_stylesheet.php\">\n";
-$HTML_header.="<script src=\"jquery.min.js\"></script>\n";
 $HTML_header.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 $HTML_header.="<script language=\"JavaScript\" src=\"help.js\"></script>\n";
 $HTML_header.="<script language=\"JavaScript\" src=\"VERM_custom_form_functions.php\"></script>\n";
