@@ -711,10 +711,11 @@
 # 230118-0947 - Added agent_hangup_route features
 # 230131-0826 - Added filtering of 3-way number to dial to remove non-diable characters
 # 230220-1802 - Fix for In-Group manual dial issue
+# 230304-0806 - Fix for AgentHangupCallRoute on ringing calls
 #
 
-$version = '2.14-679c';
-$build = '230220-1802';
+$version = '2.14-680c';
+$build = '230304-0806';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -14409,31 +14410,38 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		{
 		if ( (agent_hangup_value.length > 0) && ( (agent_hangup_route=='MESSAGE') || (agent_hangup_route=='EXTENSION') || (agent_hangup_route=='IN_GROUP') || (agent_hangup_route=='CALLMENU') ) )
 			{
-			button_click_log = button_click_log + "" + SQLdate + "-----AgentHangupCallRoute---" + agent_hangup_route + " " + agent_hangup_value + " " + document.vicidial_form.xfernumber.value + "|";
+			button_click_log = button_click_log + "" + SQLdate + "-----AgentHangupCallRoute---" + VD_live_customer_call + " " + agent_hangup_route + " " + agent_hangup_value + " " + document.vicidial_form.xfernumber.value + "|";
 
-			if (agent_hangup_route=='MESSAGE')
+			if (VD_live_customer_call==1)
 				{
-				document.vicidial_form.xfernumber.value = '83046777777777*' + agent_hangup_value;
-				document.vicidial_form.xferoverride.checked=true;
-				mainxfer_send_redirect('XfeRBLIND',lastcustchannel,lastcustserverip);
+				if (agent_hangup_route=='MESSAGE')
+					{
+					document.vicidial_form.xfernumber.value = '83046777777777*' + agent_hangup_value;
+					document.vicidial_form.xferoverride.checked=true;
+					mainxfer_send_redirect('XfeRBLIND',lastcustchannel,lastcustserverip);
+					}
+				if (agent_hangup_route=='EXTENSION')
+					{
+					document.vicidial_form.xfernumber.value = agent_hangup_value;
+					document.vicidial_form.xferoverride.checked=true;
+					mainxfer_send_redirect('XfeRBLIND',lastcustchannel,lastcustserverip);
+					}
+				if (agent_hangup_route=='CALLMENU')
+					{
+					API_selected_callmenu = agent_hangup_value;
+					document.vicidial_form.xfernumber.value = agent_hangup_value;
+					mainxfer_send_redirect('XfeRBLIND',lastcustchannel,lastcustserverip);
+					}
+				if (agent_hangup_route=='IN_GROUP')
+					{
+					API_selected_xfergroup = agent_hangup_value;
+					document.vicidial_form.xfernumber.value = agent_hangup_value;
+					mainxfer_send_redirect('XfeRLOCAL',lastcustchannel,lastcustserverip);
+					}
 				}
-			if (agent_hangup_route=='EXTENSION')
+			else
 				{
-				document.vicidial_form.xfernumber.value = agent_hangup_value;
-				document.vicidial_form.xferoverride.checked=true;
-				mainxfer_send_redirect('XfeRBLIND',lastcustchannel,lastcustserverip);
-				}
-			if (agent_hangup_route=='CALLMENU')
-				{
-				API_selected_callmenu = agent_hangup_value;
-				document.vicidial_form.xfernumber.value = agent_hangup_value;
-				mainxfer_send_redirect('XfeRBLIND',lastcustchannel,lastcustserverip);
-				}
-			if (agent_hangup_route=='IN_GROUP')
-				{
-				API_selected_xfergroup = agent_hangup_value;
-				document.vicidial_form.xfernumber.value = agent_hangup_value;
-				mainxfer_send_redirect('XfeRLOCAL',lastcustchannel,lastcustserverip);
+				dialedcall_send_hangup(dispowindow,hotkeysused,altdispo,nodeletevdac,DSHclick);
 				}
 			}
 		else
