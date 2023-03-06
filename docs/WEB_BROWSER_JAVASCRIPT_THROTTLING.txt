@@ -1,4 +1,4 @@
-WEB BROWSER JAVASCRIPT THROTTLING	Started: 2021-03-25	Updated: 2023-02-21
+WEB BROWSER JAVASCRIPT THROTTLING	Started: 2021-03-25	Updated: 2023-03-06
 
 
 
@@ -103,6 +103,8 @@ We have tested the following settings and found them to be effective on all clie
 - Set "Agent Hidden Browser Sound" to 'click_quiet'
 - Set "volume" to '25'
 - Set "Agent Hidden Browser Sound Seconds" to '20' (for Chrome builds 110+ may need to set this to '10' or even '5')
+
+Another option for using this setting without any click sound at all is to use the "20Hz_tone" sound(added in svn/trunk rev. 3693). This audio is inaudible to most people and the file is 5 seconds long, so if you use a 5 second delay it will be constantly playing in the background.
 
 Adding this new feature also required us to add Agent Screen Visibility Logging to VICIdial, so you can now also view statistics of how long your agents' screens were visible to them in the Agent Time Detail report and the User Stats report.
 
