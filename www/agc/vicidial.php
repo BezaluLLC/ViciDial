@@ -713,10 +713,11 @@
 # 230220-1802 - Fix for In-Group manual dial issue
 # 230304-0806 - Fix for AgentHangupCallRoute on ringing calls
 # 230306-1335 - Added 20Hz_tone browser sound, Issue #1448
+# 230306-2034 - Added setTimeoutAudioLoop agent_screen_timer option, Issue #1448
 #
 
-$version = '2.14-681c';
-$build = '230306-1335';
+$version = '2.14-682c';
+$build = '230306-2034';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -6020,6 +6021,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 		image_LB_mute_recording_AVAILABLE.src="./images/<?php echo _QXZ("vdc_LB_mute_recording_AVAILABLE.gif") ?>";
 	var image_LB_mute_recording_ON = new Image();
 		image_LB_mute_recording_ON.src="./images/<?php echo _QXZ("vdc_LB_mute_recording_ON.gif") ?>";
+	var set_timeout_audio_loop = false;
 
 <?php
 	if ($window_validation > 0)
@@ -6267,6 +6269,12 @@ function holiday_display(holiday_name)
 // Play MP3 audio file upon call arriving in agent screen or agent hiding screen, if enabled in system settings and campaign/in-group
 	function play_browser_sound(temp_sound,temp_volume)
 		{
+		// Do not play sounds if the setTimeoutAudioLoop method is active, Issue #1448
+		if (set_timeout_audio_loop == true)
+			{
+			// Exit!
+			return;
+			}
 		if ( (temp_sound != '---NONE---') && (temp_sound != '---DISABLED---') && (temp_sound != '') )
 			{
 			var temp_selected_element = 'BAS_' + temp_sound;
@@ -20914,6 +20922,11 @@ function phone_number_format(formatphone) {
 			}
 		<?php 
 			}
+		else if ($SSagent_screen_timer == 'setTimeoutAudioLoop')
+			{
+			echo "\n		set_timeout_audio_loop = true;\n";
+			echo "\n		setTimeout(\"all_refresh()\", refresh_interval);\n";
+			}
 		else
 			{
 			echo "\n		setTimeout(\"all_refresh()\", refresh_interval);\n";
@@ -23577,8 +23590,18 @@ if ($agent_display_dialable_leads > 0)
 
 <audio id='ChatAudioAlertFile'><source src="sounds/chat_alert.mp3" type="audio/mpeg"></audio>
 <audio id='EmailAudioAlertFile'><source src="sounds/email_alert.mp3" type="audio/mpeg"></audio>
+<?php
+if ($SSagent_screen_timer == 'setTimeoutAudioLoop')
+	{
+	echo "<audio id='setTimeoutAudioLoopPlay' loop><source src=\"sounds/20Hz_tone.mp3\" type=\"audio/mpeg\"></audio>";
+	echo "<script>";
+	echo "var ALP_audio = document.getElementById('setTimeoutAudioLoopPlay');";
+	echo "var ALP_js_volume = (1 * .01);";
+	echo "ALP_audio.volume = ALP_js_volume;";
+	echo "ALP_audio.play()";
+	echo "</script>";
+	}
 
-<?php 
 if ( ($SSbrowser_call_alerts > 0) or ($SSagent_hidden_sound_seconds > 0) )
 	{
 	$bas=0;   $bas_embed_output='';

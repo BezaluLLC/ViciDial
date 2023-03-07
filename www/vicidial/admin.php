@@ -5971,12 +5971,13 @@ if ($SSscript_remove_js > 0)
 # 230204-1642 - Added No Agent Call URL "ALT" multi-url options
 # 230227-1150 - Updated VERM code and notices
 # 230306-1336 - Added 20Hz_tone browser sound, Issue #1448
+# 230306-2050 - Added setTimeoutAudioLoop agent_screen_timer option, Issue #1448
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-875a';
-$build = '230306-1336';
+$admin_version = '2.14-876a';
+$build = '230306-2050';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -43141,6 +43142,8 @@ if ($ADD==311111111111111)
 		$bav=100;
 		while ($bav >= 0)
 			{
+			if ($bav == 0)
+				{echo "<option>1</option>";}
 			echo "<option>$bav</option>";
 			$bav = ($bav - 5);
 			}
@@ -43412,7 +43415,7 @@ if ($ADD==311111111111111)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Agent Screen Debug Logging").": </td><td align=left><input type=text name=agent_debug_logging size=20 maxlength=20 value=\"$agent_debug_logging\">$NWB#settings-agent_debug_logging$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Agent Screen Timer").": </td><td align=left><select size=1 name=agent_screen_timer><option>setTimeout</option><option>EventSource</option><option selected>$agent_screen_timer</option></select>$NWB#settings-agent_screen_timer$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Agent Screen Timer").": </td><td align=left><select size=1 name=agent_screen_timer><option>setTimeout</option><option>setTimeoutAudioLoop</option><option>EventSource</option><option selected>$agent_screen_timer</option></select>$NWB#settings-agent_screen_timer$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Enhanced Disconnect Logging").": </td><td align=left><select size=1 name=enhanced_disconnect_logging><option>6</option><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option><option>0</option><option selected>$enhanced_disconnect_logging</option></select>$NWB#settings-enhanced_disconnect_logging$NWE</td></tr>\n";
 
