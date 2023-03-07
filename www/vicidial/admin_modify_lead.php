@@ -113,6 +113,7 @@
 # 220520-1319 - Fix for admin hide phone data issue #1359
 # 230204-0011 - Fix for inbound Call ID display
 # 230205-2135 - Small fix for ignore_group_on_search issue
+# 230307-1326 - Small fix for closer calls DID display, Issue #1447
 #
 
 require("dbconnect_mysqli.php");
@@ -2067,7 +2068,7 @@ else
 		if ($CIDdisplay=="Yes")
 			{
 			$extension='';
-			$stmtA="SELECT extension,server_ip FROM vicidial_did_log WHERE uniqueid='$row[18]' and call_date < \"$row[4]\" order by call_date desc;";
+			$stmtA="SELECT extension,server_ip FROM vicidial_did_log WHERE uniqueid='$row[18]' and call_date <= \"$row[4]\" order by call_date desc;";
 			$rsltA=mysql_to_mysqli($stmtA, $link);
 			$cid_to_print = mysqli_num_rows($rsltA);
 			if ($cid_to_print > 0)
@@ -2295,7 +2296,7 @@ else
 			if ($CIDdisplay=="Yes")
 				{
 				$extension='';
-				$stmtA="SELECT extension,server_ip FROM vicidial_did_log_archive WHERE uniqueid='$row[18]' and call_date < \"$row[4]\" order by call_date desc;";
+				$stmtA="SELECT extension,server_ip FROM vicidial_did_log_archive WHERE uniqueid='$row[18]' and call_date <= \"$row[4]\" order by call_date desc;";
 				$rsltA=mysql_to_mysqli($stmtA, $link);
 				$cid_to_print = mysqli_num_rows($rsltA);
 				if ($cid_to_print > 0)
