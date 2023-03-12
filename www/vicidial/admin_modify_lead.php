@@ -114,6 +114,7 @@
 # 230204-0011 - Fix for inbound Call ID display
 # 230205-2135 - Small fix for ignore_group_on_search issue
 # 230307-1326 - Small fix for closer calls DID display, Issue #1447
+# 230309-1444 - Added Inbound Call Menu Log display as part of IVR Log section
 #
 
 require("dbconnect_mysqli.php");
@@ -260,6 +261,7 @@ $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
 $AMDcount=0;
+$uniqueidLIST="'XYZ'";
 
 $htmlconvert=1;
 $nonselectable_statuses=0;
@@ -1985,6 +1987,7 @@ else
 			}
 
 		$campaign_id = $row[3];
+		$uniqueidLIST .= ",'$row[0]'";
 		}
 
 	##### grab vicidial_agent_log records #####
@@ -2107,6 +2110,7 @@ else
 			}
 
 		$campaign_id = $row[3];
+		$uniqueidLIST .= ",'$row[18]'";
 		}
 
 
@@ -2213,6 +2217,7 @@ else
 				}
 
 			$campaign_id = $row[3];
+			$uniqueidLIST .= ",'$row[0]'";
 			}
 
 		##### grab vicidial_agent_log_archive records #####
@@ -2335,6 +2340,7 @@ else
 				}
 
 			$campaign_id = $row[3];
+			$uniqueidLIST .= ",'$row[18]'";
 			}
 		}
 	########## END ARCHIVE LOG SEARCH ##########
@@ -3283,6 +3289,35 @@ else
 			echo "</tr>\n";
 			}
 
+		if ($CIDdisplay=="Yes")
+			{
+			$stmt="SELECT start_time,caller_id,channel,server_ip,comment_d,uniqueid from live_inbound_log where uniqueid IN($uniqueidLIST) order by start_time desc limit 500;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$logs_to_print = mysqli_num_rows($rslt);
+			if ($DB) {echo "$logs_to_print|$stmt|\n";}
+
+			if ($logs_to_print > 0)
+				{echo "<tr bgcolor=white><td align=left colspan=5><font size=2> "._QXZ("Inbound Call IVR entries").": </td></tr>";}
+
+			$u=0;
+			while ($logs_to_print > $u) 
+				{
+				$row=mysqli_fetch_row($rslt);
+				if (preg_match("/1$|3$|5$|7$|9$/i", $u))
+					{$bgcolor="bgcolor=\"#$SSstd_row2_background\"";} 
+				else
+					{$bgcolor="bgcolor=\"#$SSstd_row1_background\"";}
+
+				$u++;
+				echo "<tr $bgcolor>";
+				echo "<td><font size=1>$u</td>";
+				echo "<td align=left><font size=2> $row[5] </td>";
+				echo "<td align=left><font size=2> $row[0] </td>\n";
+				echo "<td align=left><font size=2> $row[4] </td>\n";
+				echo "<td align=left><font size=2> $row[1] &nbsp;</td>\n";
+				echo "</tr>\n";
+				}
+			}
 		echo "</TABLE><BR><BR>\n";
 
 

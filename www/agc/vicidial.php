@@ -1137,6 +1137,7 @@ echo '<?xml version="1.0" encoding="UTF-8"?>
 <link rel="stylesheet" type="text/css" href="css/style.css" />
 <link rel="stylesheet" type="text/css" href="css/custom.css" />
 <script language="JavaScript" src="calendar_db.js"></script>
+<script language="JavaScript" src="confetti.php"></script>
 <link rel="stylesheet" href="calendar.css" />
 ';
 echo "<!-- VERSION: $version     "._QXZ("BUILD:")." $build -->\n";
@@ -1287,6 +1288,17 @@ if ($LogiNAJAX > 0)
 
 		document.vicidial_form.JS_browser_width.value = BrowseWidth;
 		document.vicidial_form.JS_browser_height.value = BrowseHeight;
+
+		var canvas = document.getElementById("confetti-canvas");
+		if (canvas != null) 
+			{
+			canvas.width = BrowseWidth;
+			canvas.height = BrowseHeight;
+	//		window.addEventListener("resize", function() {
+	//			canvas.width = window.innerWidth;
+	//			canvas.height = window.innerHeight;
+	//		}, true);
+			}		
 		}
 
 	// ################################################################################
@@ -2293,19 +2305,23 @@ else
 				$VARSELstatuses='';
 				$VARSELstatuses_ct=0;
 				$VARCBstatuses='';
+				$VARSALEstatuses='';
 				$VARMINstatuses='';
 				$VARMAXstatuses='';
 				$VARCBstatusesLIST='';
+				$VARSALEstatusesLIST='';
 				$cVARstatuses='';
 				$cVARstatusnames='';
 				$cVARSELstatuses='';
 				$cVARSELstatuses_ct=0;
 				$cVARCBstatuses='';
+				$cVARSALEstatuses='';
 				$cVARMINstatuses='';
 				$cVARMAXstatuses='';
 				$cVARCBstatusesLIST='';
+				$cVARSALEstatusesLIST='';
 				##### grab the statuses that can be used for dispositioning by an agent for all calls
-				$stmt="SELECT status,status_name,scheduled_callback,selectable,min_sec,max_sec FROM vicidial_statuses WHERE status != 'NEW' order by status limit 500;";
+				$stmt="SELECT status,status_name,scheduled_callback,selectable,min_sec,max_sec,sale FROM vicidial_statuses WHERE status != 'NEW' order by status limit 500;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01010',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -2320,24 +2336,28 @@ else
 					$SELstatuses[$i] =	$row[3];
 					$MINsec[$i] =		$row[4];
 					$MAXsec[$i] =		$row[5];
+					$SALEstatuses[$i] =	$row[6];
 					if ($TEST_all_statuses > 0) {$SELstatuses[$i]='Y';}
 					$VARstatuses = "$VARstatuses'$statuses[$i]',";
 					$VARstatusnames = "$VARstatusnames'$status_names[$i]',";
 					$VARSELstatuses = "$VARSELstatuses'$SELstatuses[$i]',";
 					$VARCBstatuses = "$VARCBstatuses'$CBstatuses[$i]',";
+					$VARSALEstatuses = "$VARSALEtatuses'$SALEstatuses[$i]',";
 					$VARMINstatuses = "$VARMINstatuses'$MINsec[$i]',";
 					$VARMAXstatuses = "$VARMAXstatuses'$MAXsec[$i]',";
 					if ($CBstatuses[$i] == 'Y')
 						{$VARCBstatusesLIST .= " $statuses[$i]";}
 					if ($SELstatuses[$i] == 'Y')
 						{$VARSELstatuses_ct++;}
+					if ($SALEstatuses[$i] == 'Y')
+						{$VARSALEstatusesLIST .= " $statuses[$i]";}
 					$i++;
 					}
 
 				##### grab the additional user statuses that can be used for dispositioning by an agent for all calls
 				if (strlen($VU_status_group_id) > 0)
 					{
-					$stmt="SELECT status,status_name,scheduled_callback,selectable,min_sec,max_sec FROM vicidial_campaign_statuses WHERE status != 'NEW' and campaign_id='$VU_status_group_id' order by status limit 500;";
+					$stmt="SELECT status,status_name,scheduled_callback,selectable,min_sec,max_sec,sale FROM vicidial_campaign_statuses WHERE status != 'NEW' and campaign_id='$VU_status_group_id' order by status limit 500;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01093',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
@@ -2352,24 +2372,28 @@ else
 						$SELstatuses[$i] =	$row[3];
 						$MINsec[$i] =		$row[4];
 						$MAXsec[$i] =		$row[5];
+						$SALEstatuses[$i] =	$row[6];
 						if ($TEST_all_statuses > 0) {$SELstatuses[$i]='Y';}
 						$VARstatuses = "$VARstatuses'$statuses[$i]',";
 						$VARstatusnames = "$VARstatusnames'$status_names[$i]',";
 						$VARSELstatuses = "$VARSELstatuses'$SELstatuses[$i]',";
 						$VARCBstatuses = "$VARCBstatuses'$CBstatuses[$i]',";
+						$VARSALEstatuses = "$VARSALEstatuses'$SALEstatuses[$i]',";
 						$VARMINstatuses = "$VARMINstatuses'$MINsec[$i]',";
 						$VARMAXstatuses = "$VARMAXstatuses'$MAXsec[$i]',";
 						if ($CBstatuses[$i] == 'Y')
 							{$VARCBstatusesLIST .= " $statuses[$i]";}
 						if ($SELstatuses[$i] == 'Y')
 							{$VARSELstatuses_ct++;}
+						if ($SALEstatuses[$i] == 'Y')
+							{$VARSALEstatusesLIST .= " $statuses[$i]";}
 						$i++;
 						$k++;
 						}
 					}
 
 				##### grab the campaign-specific statuses that can be used for dispositioning by an agent
-				$stmt="SELECT status,status_name,scheduled_callback,selectable,min_sec,max_sec FROM vicidial_campaign_statuses WHERE status != 'NEW' and campaign_id='$VD_campaign' order by status limit 500;";
+				$stmt="SELECT status,status_name,scheduled_callback,selectable,min_sec,max_sec,sale FROM vicidial_campaign_statuses WHERE status != 'NEW' and campaign_id='$VD_campaign' order by status limit 500;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01011',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -2384,17 +2408,21 @@ else
 					$SELstatuses[$i] =	$row[3];
 					$MINsec[$i] =		$row[4];
 					$MAXsec[$i] =		$row[5];
+					$SALEstatuses[$i] =	$row[6];
 					if ($TEST_all_statuses > 0) {$SELstatuses[$i]='Y';}
 					$cVARstatuses = "$cVARstatuses'$statuses[$i]',";
 					$cVARstatusnames = "$cVARstatusnames'$status_names[$i]',";
 					$cVARSELstatuses = "$cVARSELstatuses'$SELstatuses[$i]',";
 					$cVARCBstatuses = "$cVARCBstatuses'$CBstatuses[$i]',";
+					$cVARSALEstatuses = "$cVARSALEstatuses'$SALEstatuses[$i]',";
 					$cVARMINstatuses = "$cVARMINstatuses'$MINsec[$i]',";
 					$cVARMAXstatuses = "$cVARMAXstatuses'$MAXsec[$i]',";
 					if ($CBstatuses[$i] == 'Y')
 						{$cVARCBstatusesLIST .= " $statuses[$i]";}
 					if ($SELstatuses[$i] == 'Y')
 						{$cVARSELstatuses_ct++;}
+					if ($SALEstatuses[$i] == 'Y')
+						{$cVARSALEstatusesLIST .= " $statuses[$i]";}
 					$i++;
 					$j++;
 					}
@@ -2403,17 +2431,21 @@ else
 				$VARstatusnames = substr("$VARstatusnames", 0, -1);
 				$VARSELstatuses = substr("$VARSELstatuses", 0, -1);
 				$VARCBstatuses = substr("$VARCBstatuses", 0, -1);
+				$VARSALEstatuses = substr("$VARSALEstatuses", 0, -1);
 				$VARMINstatuses = substr("$VARMINstatuses", 0, -1);
 				$VARMAXstatuses = substr("$VARMAXstatuses", 0, -1);
 				$VARCBstatusesLIST .= " ";
+				$VARSALEstatusesLIST .= " ";
 				$cVARstatuses = substr("$cVARstatuses", 0, -1);
 				$cVARstatusnames = substr("$cVARstatusnames", 0, -1);
 				$cVARSELstatuses = substr("$cVARSELstatuses", 0, -1);
 				$cVARCBstatuses = substr("$cVARCBstatuses", 0, -1);
+				$cVARSALEstatuses = substr("$cVARSALEstatuses", 0, -1);
 				$cVARMINstatuses = substr("$cVARMINstatuses", 0, -1);
 				$cVARMAXstatuses = substr("$cVARMAXstatuses", 0, -1);
 				$cVARCBstatusesLIST .= " ";
-
+				$cVARSALEstatusesLIST .= " ";
+				
 				##### grab the campaign-specific HotKey statuses that can be used for dispositioning by an agent
 				$stmt="SELECT hotkey,status,status_name FROM vicidial_campaign_hotkeys WHERE selectable='Y' and status != 'NEW' and campaign_id='$VD_campaign' order by hotkey limit 9;";
 				$rslt=mysql_to_mysqli($stmt, $link);
@@ -2446,7 +2478,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history,show_previous_callback,clear_script,manual_dial_search_filter,web_form_address_three,manual_dial_override_field,status_display_ingroup,customer_gone_seconds,agent_display_fields,manual_dial_timeout,manual_auto_next,manual_auto_show,allow_required_fields,dead_to_dispo,agent_xfer_validation,ready_max_logout,callback_display_days,three_way_record_stop,hangup_xfer_record_start,max_inbound_calls_outcome,manual_auto_next_options,agent_screen_time_display,pause_max_dispo,script_top_dispo,routing_initiated_recordings,dead_trigger_seconds,dead_trigger_action,dead_trigger_repeat,dead_trigger_filename,scheduled_callbacks_force_dial,callback_hours_block,callback_display_days,scheduled_callbacks_timezones_container,three_way_volume_buttons,manual_dial_validation,mute_recordings,leave_vm_no_dispo,leave_vm_message_group_id,campaign_script_two,browser_alert_sound,browser_alert_volume,three_way_record_stop_exception,pause_max_exceptions,transfer_button_launch,leave_3way_start_recording,leave_3way_start_recording_exception,calls_waiting_vl_one,calls_waiting_vl_two,in_man_dial_next_ready_seconds,in_man_dial_next_ready_seconds_override,transfer_no_dispo,local_call_time,pause_max_url,agent_hide_hangup,ig_xfer_list_sort,script_tab_frame_size,user_group_script,agent_hangup_route,agent_hangup_value,agent_hangup_ig_override FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history,show_previous_callback,clear_script,manual_dial_search_filter,web_form_address_three,manual_dial_override_field,status_display_ingroup,customer_gone_seconds,agent_display_fields,manual_dial_timeout,manual_auto_next,manual_auto_show,allow_required_fields,dead_to_dispo,agent_xfer_validation,ready_max_logout,callback_display_days,three_way_record_stop,hangup_xfer_record_start,max_inbound_calls_outcome,manual_auto_next_options,agent_screen_time_display,pause_max_dispo,script_top_dispo,routing_initiated_recordings,dead_trigger_seconds,dead_trigger_action,dead_trigger_repeat,dead_trigger_filename,scheduled_callbacks_force_dial,callback_hours_block,callback_display_days,scheduled_callbacks_timezones_container,three_way_volume_buttons,manual_dial_validation,mute_recordings,leave_vm_no_dispo,leave_vm_message_group_id,campaign_script_two,browser_alert_sound,browser_alert_volume,three_way_record_stop_exception,pause_max_exceptions,transfer_button_launch,leave_3way_start_recording,leave_3way_start_recording_exception,calls_waiting_vl_one,calls_waiting_vl_two,in_man_dial_next_ready_seconds,in_man_dial_next_ready_seconds_override,transfer_no_dispo,local_call_time,pause_max_url,agent_hide_hangup,ig_xfer_list_sort,script_tab_frame_size,user_group_script,agent_hangup_route,agent_hangup_value,agent_hangup_ig_override,show_confetti FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -2633,6 +2665,7 @@ else
 				$agent_hangup_route =		$row[179];
 				$agent_hangup_value =		$row[180];
 				$agent_hangup_ig_override =	$row[181];
+				$show_confetti =			$row[182];
 
 				if ( (strlen($UGscript_id) > 0) and ($user_group_script == 'ENABLED') )
 					{
@@ -5198,36 +5231,44 @@ if ( ($calls_waiting_vl_two != 'DISABLED') and (strlen($calls_waiting_vl_two) > 
 	VARstatusnames = new Array();
 	VARSELstatuses = new Array();
 	VARCBstatuses = new Array();
+	VARSALEstatuses = new Array();
 	VARMINstatuses = new Array();
 	VARMAXstatuses = new Array();
 	var VARCBstatusesLIST = '';
+	var VARSALEstatusesLIST = '';
 	var VD_statuses_ct = 0;
 	var VARSELstatuses_ct = 0;
 	gVARstatuses = new Array();
 	gVARstatusnames = new Array();
 	gVARSELstatuses = new Array();
 	gVARCBstatuses = new Array();
+	gVARSALEstatuses = new Array();
 	gVARMINstatuses = new Array();
 	gVARMAXstatuses = new Array();
 	var gVARCBstatusesLIST = '';
+	var gVARSALEstatusesLIST = '';
 	var gVD_statuses_ct = 0;
 	var gVARSELstatuses_ct = 0;
 	sVARstatuses = new Array(<?php echo $VARstatuses ?>);
 	sVARstatusnames = new Array(<?php echo $VARstatusnames ?>);
 	sVARSELstatuses = new Array(<?php echo $VARSELstatuses ?>);
 	sVARCBstatuses = new Array(<?php echo $VARCBstatuses ?>);
+	sVARSALEstatuses = new Array(<?php echo $VARSALEstatuses ?>);
 	sVARMINstatuses = new Array(<?php echo $VARMINstatuses ?>);
 	sVARMAXstatuses = new Array(<?php echo $VARMAXstatuses ?>);
 	var sVARCBstatusesLIST = '<?php echo $VARCBstatusesLIST ?>';
+	var sVARSALEstatusesLIST = '<?php echo $VARSALEstatusesLIST ?>';
 	var sVD_statuses_ct = '<?php echo $VD_statuses_ct ?>';
 	var sVARSELstatuses_ct = '<?php echo $VARSELstatuses_ct ?>';
 	cVARstatuses = new Array(<?php echo $cVARstatuses ?>);
 	cVARstatusnames = new Array(<?php echo $cVARstatusnames ?>);
 	cVARSELstatuses = new Array(<?php echo $cVARSELstatuses ?>);
 	cVARCBstatuses = new Array(<?php echo $cVARCBstatuses ?>);
+	cVARSALEstatuses = new Array(<?php echo $cVARSALEstatuses ?>);
 	cVARMINstatuses = new Array(<?php echo $cVARMINstatuses ?>);
 	cVARMAXstatuses = new Array(<?php echo $cVARMAXstatuses ?>);
 	var cVARCBstatusesLIST = '<?php echo $cVARCBstatusesLIST ?>';
+	var cVARSALEstatusesLIST = '<?php echo $cVARSALEstatusesLIST ?>';
 	var cVD_statuses_ct = '<?php echo $VD_statuses_camp ?>';
 	var cVARSELstatuses_ct = '<?php echo $cVARSELstatuses_ct ?>';
 	VARingroups = new Array(<?php echo $VARingroups ?>);
@@ -5925,6 +5966,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var agent_hangup_route='<?php echo $agent_hangup_route ?>';
 	var agent_hangup_value='<?php echo $agent_hangup_value ?>';
 	var agent_hangup_ig_override='<?php echo $agent_hangup_ig_override ?>';
+	var show_confetti='<?php echo $show_confetti ?>';
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -9587,18 +9629,22 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								VARstatusnames = [];
 								VARSELstatuses = [];
 								VARCBstatuses = [];
+								VARSALEstatuses = [];
 								VARMINstatuses = [];
 								VARMAXstatuses = [];
 								VARCBstatusesLIST = '';
+								VARSALEstatusesLIST = '';
 								VD_statuses_ct = 0;
 								VARSELstatuses_ct = 0;
 								gVARstatuses = [];
 								gVARstatusnames = [];
 								gVARSELstatuses = [];
 								gVARCBstatuses = [];
+								gVARSALEstatuses = [];
 								gVARMINstatuses = [];
 								gVARMAXstatuses = [];
 								gVARCBstatusesLIST = '';
+								gVARSALEstatusesLIST = '';
 								gVD_statuses_ct = 0;
 								gVARSELstatuses_ct = 0;
 
@@ -9617,8 +9663,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 										gVARCBstatuses[loop_gct] =	gVARstatusesDETAILS[2];
 										gVARMINstatuses[loop_gct] =	gVARstatusesDETAILS[3];
 										gVARMAXstatuses[loop_gct] =	gVARstatusesDETAILS[4];
+										gVARSALEstatuses[loop_gct] =	gVARstatusesDETAILS[5];
 										if (gVARCBstatuses[loop_gct] == 'Y')
 											{gVARCBstatusesLIST = gVARCBstatusesLIST + " " + gVARstatusesDETAILS[0];}
+										if (gVARSALEstatuses[loop_gct] == 'Y')
+											{gVARSALEstatusesLIST = gVARSALEstatusesLIST + " " + gVARstatusesDETAILS[0];}
 										gVD_statuses_ct++;
 										gVARSELstatuses_ct++;
 
@@ -9631,9 +9680,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									gVARstatusnames = cVARstatusnames;
 									gVARSELstatuses = cVARSELstatuses;
 									gVARCBstatuses = cVARCBstatuses;
+									gVARSALEstatuses = cVARSALEstatuses;
 									gVARMINstatuses = cVARMINstatuses;
 									gVARMAXstatuses = cVARMAXstatuses;
 									gVARCBstatusesLIST = cVARCBstatusesLIST;
+									gVARSALEstatusesLIST = cVARSALEstatusesLIST;
 									gVD_statuses_ct = cVD_statuses_ct;
 									gVARSELstatuses_ct = cVARSELstatuses_ct;
 									}
@@ -9642,9 +9693,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								VARstatusnames = sVARstatusnames.concat(gVARstatusnames);
 								VARSELstatuses = sVARSELstatuses.concat(gVARSELstatuses);
 								VARCBstatuses = sVARCBstatuses.concat(gVARCBstatuses);
+								VARSALEstatuses = sVARSALEstatuses.concat(gVARSALEstatuses);
 								VARMINstatuses = sVARMINstatuses.concat(gVARMINstatuses);
 								VARMAXstatuses = sVARMAXstatuses.concat(gVARMAXstatuses);
 								VARCBstatusesLIST = sVARCBstatusesLIST + ' ' + gVARCBstatusesLIST + ' ';
+								VARSALEstatusesLIST = sVARSALEstatusesLIST + ' ' + gVARSALEstatusesLIST + ' ';
 								VD_statuses_ct = (Number(sVD_statuses_ct) + Number(gVD_statuses_ct));
 								VARSELstatuses_ct = (Number(sVARSELstatuses_ct) + Number(gVARSELstatuses_ct));
 
@@ -11261,18 +11314,22 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								VARstatusnames = [];
 								VARSELstatuses = [];
 								VARCBstatuses = [];
+								VARSALEstatuses = [];
 								VARMINstatuses = [];
 								VARMAXstatuses = [];
 								VARCBstatusesLIST = '';
+								VARSALEstatusesLIST = '';
 								VD_statuses_ct = 0;
 								VARSELstatuses_ct = 0;
 								gVARstatuses = [];
 								gVARstatusnames = [];
 								gVARSELstatuses = [];
 								gVARCBstatuses = [];
+								gVARSALEstatuses = [];
 								gVARMINstatuses = [];
 								gVARMAXstatuses = [];
 								gVARCBstatusesLIST = '';
+								gVARSALEstatusesLIST = '';
 								gVD_statuses_ct = 0;
 								gVARSELstatuses_ct = 0;
 
@@ -11291,8 +11348,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 										gVARCBstatuses[loop_gct] =	gVARstatusesDETAILS[2];
 										gVARMINstatuses[loop_gct] =	gVARstatusesDETAILS[3];
 										gVARMAXstatuses[loop_gct] =	gVARstatusesDETAILS[4];
+										gVARSALEstatuses[loop_gct] =	gVARstatusesDETAILS[5];
 										if (gVARCBstatuses[loop_gct] == 'Y')
 											{gVARCBstatusesLIST = gVARCBstatusesLIST + " " + gVARstatusesDETAILS[0];}
+										if (gVARSALEstatuses[loop_gct] == 'Y')
+											{gVARSALEstatusesLIST = gVARSALEstatusesLIST + " " + gVARstatusesDETAILS[0];}
 										gVD_statuses_ct++;
 										gVARSELstatuses_ct++;
 
@@ -11308,6 +11368,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									gVARMINstatuses = cVARMINstatuses;
 									gVARMAXstatuses = cVARMAXstatuses;
 									gVARCBstatusesLIST = cVARCBstatusesLIST;
+									gVARSALEstatusesLIST = cVARSALEstatusesLIST;
 									gVD_statuses_ct = cVD_statuses_ct;
 									gVARSELstatuses_ct = cVARSELstatuses_ct;
 									}
@@ -11319,6 +11380,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								VARMINstatuses = sVARMINstatuses.concat(gVARMINstatuses);
 								VARMAXstatuses = sVARMAXstatuses.concat(gVARMAXstatuses);
 								VARCBstatusesLIST = sVARCBstatusesLIST + ' ' + gVARCBstatusesLIST + ' ';
+								VARSALEstatusesLIST = sVARSALEstatusesLIST + ' ' + gVARSALEstatusesLIST + ' ';
 								VD_statuses_ct = (Number(sVD_statuses_ct) + Number(gVD_statuses_ct));
 								VARSELstatuses_ct = (Number(sVARSELstatuses_ct) + Number(gVARSELstatuses_ct));
 
@@ -12827,18 +12889,22 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							VARstatusnames = [];
 							VARSELstatuses = [];
 							VARCBstatuses = [];
+							VARSALEstatuses = [];
 							VARMINstatuses = [];
 							VARMAXstatuses = [];
 							VARCBstatusesLIST = '';
+							VARSALEstatusesLIST = '';
 							VD_statuses_ct = 0;
 							VARSELstatuses_ct = 0;
 							gVARstatuses = [];
 							gVARstatusnames = [];
 							gVARSELstatuses = [];
 							gVARCBstatuses = [];
+							gVARSALEstatuses = [];
 							gVARMINstatuses = [];
 							gVARMAXstatuses = [];
 							gVARCBstatusesLIST = '';
+							gVARSALEstatusesLIST = '';
 							gVD_statuses_ct = 0;
 							gVARSELstatuses_ct = 0;
 
@@ -12857,8 +12923,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									gVARCBstatuses[loop_gct] =	gVARstatusesDETAILS[2];
 									gVARMINstatuses[loop_gct] =	gVARstatusesDETAILS[3];
 									gVARMAXstatuses[loop_gct] =	gVARstatusesDETAILS[4];
+									gVARSALEstatuses[loop_gct] =	gVARstatusesDETAILS[5];
 									if (gVARCBstatuses[loop_gct] == 'Y')
 										{gVARCBstatusesLIST = gVARCBstatusesLIST + " " + gVARstatusesDETAILS[0];}
+									if (gVARSALEstatuses[loop_gct] == 'Y')
+										{gVARSALEstatusesLIST = gVARSALEstatusesLIST + " " + gVARstatusesDETAILS[0];}
 									gVD_statuses_ct++;
 									gVARSELstatuses_ct++;
 
@@ -12874,6 +12943,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								gVARMINstatuses = cVARMINstatuses;
 								gVARMAXstatuses = cVARMAXstatuses;
 								gVARCBstatusesLIST = cVARCBstatusesLIST;
+								gVARSALEstatusesLIST = cVARSALEstatusesLIST;
 								gVD_statuses_ct = cVD_statuses_ct;
 								gVARSELstatuses_ct = cVARSELstatuses_ct;
 								}
@@ -12885,6 +12955,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							VARMINstatuses = sVARMINstatuses.concat(gVARMINstatuses);
 							VARMAXstatuses = sVARMAXstatuses.concat(gVARMAXstatuses);
 							VARCBstatusesLIST = sVARCBstatusesLIST + ' ' + gVARCBstatusesLIST + ' ';
+							VARSALEstatusesLIST = sVARSALEstatusesLIST + ' ' + gVARSALEstatusesLIST + ' ';
 							VD_statuses_ct = (Number(sVD_statuses_ct) + Number(gVD_statuses_ct));
 							VARSELstatuses_ct = (Number(sVARSELstatuses_ct) + Number(gVARSELstatuses_ct));
 
@@ -13653,16 +13724,20 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							VARCBstatuses = [];
 							VARMINstatuses = [];
 							VARMAXstatuses = [];
+							VARSALEstatuses = [];
 							VARCBstatusesLIST = '';
+							VARSALEstatusesLIST = '';
 							VD_statuses_ct = 0;
 							VARSELstatuses_ct = 0;
 							gVARstatuses = [];
 							gVARstatusnames = [];
 							gVARSELstatuses = [];
 							gVARCBstatuses = [];
+							gVARSALEstatuses = [];
 							gVARMINstatuses = [];
 							gVARMAXstatuses = [];
 							gVARCBstatusesLIST = '';
+							gVARSALEstatusesLIST = '';
 							gVD_statuses_ct = 0;
 							gVARSELstatuses_ct = 0;
 
@@ -13681,8 +13756,11 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									gVARCBstatuses[loop_gct] =	gVARstatusesDETAILS[2];
 									gVARMINstatuses[loop_gct] =	gVARstatusesDETAILS[3];
 									gVARMAXstatuses[loop_gct] =	gVARstatusesDETAILS[4];
+									gVARSALEstatuses[loop_gct] =	gVARstatusesDETAILS[5];
 									if (gVARCBstatuses[loop_gct] == 'Y')
 										{gVARCBstatusesLIST = gVARCBstatusesLIST + " " + gVARstatusesDETAILS[0];}
+									if (gVARSALEstatuses[loop_gct] == 'Y')
+										{gVARSALEstatusesLIST = gVARSALEstatusesLIST + " " + gVARstatusesDETAILS[0];}
 									gVD_statuses_ct++;
 									gVARSELstatuses_ct++;
 
@@ -13698,6 +13776,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								gVARMINstatuses = cVARMINstatuses;
 								gVARMAXstatuses = cVARMAXstatuses;
 								gVARCBstatusesLIST = cVARCBstatusesLIST;
+								gVARSALEstatusesLIST = cVARSALEstatusesLIST;
 								gVD_statuses_ct = cVD_statuses_ct;
 								gVARSELstatuses_ct = cVARSELstatuses_ct;
 								}
@@ -13709,6 +13788,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							VARMINstatuses = sVARMINstatuses.concat(gVARMINstatuses);
 							VARMAXstatuses = sVARMAXstatuses.concat(gVARMAXstatuses);
 							VARCBstatusesLIST = sVARCBstatusesLIST + ' ' + gVARCBstatusesLIST + ' ';
+							VARSALEstatusesLIST = sVARSALEstatusesLIST + ' ' + gVARSALEstatusesLIST + ' ';
 							VD_statuses_ct = (Number(sVD_statuses_ct) + Number(gVD_statuses_ct));
 							VARSELstatuses_ct = (Number(sVARSELstatuses_ct) + Number(gVARSELstatuses_ct));
 
@@ -15878,6 +15958,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				document.getElementById("CusTInfOSpaN").innerHTML = "";
 				document.getElementById("CusTInfOSpaN").style.background = panel_bgcolor;
 				var regCBstatus = new RegExp(' ' + DispoChoice + ' ',"ig");
+
 				if ( (VARCBstatusesLIST.match(regCBstatus)) && (DispoChoice.length > 0) && (scheduled_callbacks > 0) && (DispoChoice != 'CBHOLD') )
 					{
 					var INTLastCallbackCount = parseInt(LastCallbackCount);
@@ -16010,6 +16091,16 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							}
 						delete xmlhttp;
 						}
+
+					// console.log(DispoChoice+" -- "+show_confetti+" -- "+show_confetti.indexOf('CALLBACKS')+"\n\n"+VARCBstatusesLIST);
+					if ( (DispoChoice.length > 0) && ( (show_confetti.indexOf('CALLBACKS')>=0 && (VARCBstatusesLIST.match(regCBstatus) || DispoChoice=="CBHOLD")) || (show_confetti.indexOf('SALES')>=0 && VARSALEstatusesLIST.match(regCBstatus)) ) )
+							{
+							// console.log(confettiDuration+" -- "+maxParticleCount+" -- "+particleSpeed);
+							startConfetti();
+							// setTimeout( function() { FetchData(); }, 1000);
+							setTimeout(() => {stopConfetti();}, confettiDuration*1000)
+							}
+
 					// CLEAR ALL FORM VARIABLES
 					document.vicidial_form.lead_id.value		='';
 					document.vicidial_form.vendor_lead_code.value='';
@@ -21798,6 +21889,7 @@ $zi=2;
 
 ?>
 <body onload="begin_all_refresh();"  onunload="BrowserCloseLogout();">
+<!-- <canvas id="confetti-canvas" style="display:block;z-index:999999;pointer-events:none"></canvas> //-->
 
 <form name=vicidial_form id=vicidial_form onsubmit="return false;">
 
@@ -23622,6 +23714,6 @@ if ( ($SSbrowser_call_alerts > 0) or ($SSagent_hidden_sound_seconds > 0) )
 
 <?php
 
-exit; 
+exit;
 
 ?>

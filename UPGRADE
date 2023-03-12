@@ -772,6 +772,17 @@ OTHER CHANGES:
 	modify the User Code field on the User Modify page, and it will change 
 	the User Code field to a pulldown menu.
 
+217. Added "Show Confetti" campaign setting, allowing for confetti to be shown
+	to agents when they disposition a call as a SALE and/or a CALLBACK
+	flagged status.
+
+218. Added "Abandon Check Queue" feature, to catch dropped Call Menu calls that
+	are tagged with a Lead ID. For more information, see the bottom of the
+	INBOUND_CALLBACK_QUEUE.txt document.
+
+219. Added "Asterisk Restart URL" to the Modify Servers page, this can send a 
+	URL request any time Asterisk is auto-restarted on that server.
+
 
 
 
