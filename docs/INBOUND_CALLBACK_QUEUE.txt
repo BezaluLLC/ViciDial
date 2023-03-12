@@ -1,4 +1,4 @@
-INBOUND CALLBACK QUEUE		Started: 2018-01-15	Updated: 2018-02-06
+INBOUND CALLBACK QUEUE		Started: 2018-01-15	Updated: 2023-03-12
 
 
 The purpose of this feature is to allow for callers to leave the queue and be called back when their place in line is reached. Included in this new set of features are the new Closed Time features to In-Groups that allow all callers in queue to be presented with a press-1 option when the in-group closing time for the day has been reached. Also, an in-group feature was added to manually force the end of all queueing of calls for an in-group for the rest of the day.
