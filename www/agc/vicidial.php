@@ -714,10 +714,11 @@
 # 230304-0806 - Fix for AgentHangupCallRoute on ringing calls
 # 230306-1335 - Added 20Hz_tone browser sound, Issue #1448
 # 230306-2034 - Added setTimeoutAudioLoop agent_screen_timer option, Issue #1448
+# 230407-1839 - Fix for input variable filter issue
 #
 
-$version = '2.14-682c';
-$build = '230306-2034';
+$version = '2.14-683c';
+$build = '230407-1839';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -792,6 +793,7 @@ if (!isset($flag_channels))
 	}
 
 $DB=preg_replace("/[^0-9a-z]/","",$DB);
+$VD_login = preg_replace('/[^-_0-9\p{L}]/u','',$VD_login);
 
 $forever_stop=0;
 
