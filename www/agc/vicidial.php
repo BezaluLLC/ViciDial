@@ -715,10 +715,11 @@
 # 230306-1335 - Added 20Hz_tone browser sound, Issue #1448
 # 230306-2034 - Added setTimeoutAudioLoop agent_screen_timer option, Issue #1448
 # 230407-1839 - Fix for input variable filter issue
+# 230412-1018 - Added code for send_notification API function
 #
 
-$version = '2.14-683c';
-$build = '230407-1839';
+$version = '2.14-684c';
+$build = '230412-1018';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=98;
@@ -818,7 +819,7 @@ $random = (rand(1000000, 9999999) + 10000000);
 
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script,agent_push_events,agent_push_url,agent_logout_link,agentonly_callback_campaign_lock,manual_dial_validation,mute_recordings,enable_second_script,enable_first_webform,recording_buttons,outbound_cid_any,browser_call_alerts,manual_dial_phone_strip,require_password_length,pass_hash_enabled,agent_hidden_sound_seconds,agent_hidden_sound,agent_hidden_sound_volume,agent_screen_timer,agent_hide_hangup,allow_web_debug,max_logged_in_agents,login_kickall FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script,agent_push_events,agent_push_url,agent_logout_link,agentonly_callback_campaign_lock,manual_dial_validation,mute_recordings,enable_second_script,enable_first_webform,recording_buttons,outbound_cid_any,browser_call_alerts,manual_dial_phone_strip,require_password_length,pass_hash_enabled,agent_hidden_sound_seconds,agent_hidden_sound,agent_hidden_sound_volume,agent_screen_timer,agent_hide_hangup,allow_web_debug,max_logged_in_agents,login_kickall,agent_notifications FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 #if ($DB) {echo "$stmt\n";}
@@ -880,6 +881,7 @@ if ($qm_conf_ct > 0)
 	$SSallow_web_debug =				$row[51];
 	$SSmax_logged_in_agents =			$row[52];
 	$SSlogin_kickall =					$row[53];
+	$SSagent_notifications =			$row[54];
 	if ( ($SSagent_hidden_sound == '---NONE---') or ($SSagent_hidden_sound == '') ) {$SSagent_hidden_sound_seconds=0;}
 	}
 else
@@ -5969,6 +5971,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var agent_hangup_value='<?php echo $agent_hangup_value ?>';
 	var agent_hangup_ig_override='<?php echo $agent_hangup_ig_override ?>';
 	var show_confetti='<?php echo $show_confetti ?>';
+	var agent_notifications='<?php echo $SSagent_notifications ?>';
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -8908,6 +8911,87 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		}
 
 
+	function AlerTDisplaY()
+		{
+		// Store defaults from settings container
+		var default_confettiDuration = confettiDuration; 
+		var default_maxParticleCount = maxParticleCount; 
+		var default_particleSpeed = particleSpeed; 
+
+		var xmlhttp=false;
+		/*@cc_on @*/
+		/*@if (@_jscript_version >= 5)
+		// JScript gives us Conditional compilation, we can cope with old IE versions.
+		// and security blocked creation of the objects.
+		 try {
+		  xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+		 } catch (e) {
+		  try {
+		   xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+		  } catch (E) {
+		   xmlhttp = false;
+		  }
+		 }
+		@end @*/
+		if (!xmlhttp && typeof XMLHttpRequest!='undefined')
+			{
+			xmlhttp = new XMLHttpRequest();
+			}
+		if (xmlhttp) 
+			{ 
+			AlerT_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&user_group=" + VU_user_group + "&campaign=" + campaign + "&ACTION=AlertDisplay";
+			// alert(AlerT_query);
+			xmlhttp.open('POST', 'conf_exten_check.php'); 
+			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+			xmlhttp.send(AlerT_query); 
+			xmlhttp.onreadystatechange = function() 
+				{ 
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
+					{
+
+					var AlerTrslt = xmlhttp.responseText;
+					if (AlerTrslt.length>0)
+					{
+						// alert(AlerTrslt);
+					}
+
+					var AlerT_array=AlerTrslt.split("|");
+					var AlerT = AlerT_array[0];
+
+					if (AlerT>0)
+						{
+						var AlerT_text = AlerT_array[1];
+						var AlerT_size = AlerT_array[2];
+						var AlerT_font = AlerT_array[3];
+						var AlerT_color = AlerT_array[4];
+						var AlerT_weight = AlerT_array[5];
+						var show_confetti = AlerT_array[6];
+						var confetti_options = AlerT_array[7];
+
+						if (AlerT_text.length>0)
+							{
+							alert_box(AlerT_text, AlerT_size, AlerT_font, AlerT_color, AlerT_weight);
+							}
+						
+						if (show_confetti=="Y")
+							{
+							confetti_options_array=confetti_options.split(",");
+							confettiDuration=confetti_options_array[0];
+							maxParticleCount=confetti_options_array[1];
+							particleSpeed=confetti_options_array[2];
+
+							startConfetti();
+							setTimeout(() => {stopConfetti(); confettiDuration=default_confettiDuration; maxParticleCount=default_maxParticleCount; particleSpeed=default_particleSpeed;}, confettiDuration*1000)
+							}
+						}
+
+					}
+				}
+			delete xmlhttp;
+			}
+		}
+
+
 // ################################################################################
 // Request number of USERONLY callbacks for this agent
 	function CalLBacKsCounTCheck()
@@ -9196,7 +9280,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 // ################################################################################
 // closes callback list screen
-	function alert_box(temp_message)
+	function alert_box(temp_message, message_size, message_font, message_color, message_weight)
 		{
 		var ABtop='200px';
 		var ABleft='200px';
@@ -9211,6 +9295,30 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			}
 		document.getElementById("AlertBox").style.top = ABtop;
 		document.getElementById("AlertBox").style.left = ABleft;
+
+		if (message_size && message_font && message_color && message_weight)
+			{
+			var tag_BEGIN="";
+			var tag_END="";
+
+			if (message_weight.match(/bold/))
+				{
+				tag_BEGIN+="<B>";
+				tag_END="</B>"+tag_END;
+				}
+			if (message_weight.match(/italic/))
+				{
+				tag_BEGIN+="<I>";
+				tag_END="</I>"+tag_END;
+				}
+			if (message_weight.match(/underline/))
+				{
+				tag_BEGIN+="<U>";
+				tag_END="</U>"+tag_END;
+				}
+			
+			temp_message="<p style=\"font-size:"+message_size+"px;font-family:'"+message_font+"';color:"+message_color+"\">"+tag_BEGIN+temp_message+tag_END+"</p>";
+			}
 
 		document.getElementById("AlertBoxContent").innerHTML = temp_message;
 
@@ -20402,6 +20510,7 @@ function phone_number_format(formatphone) {
 		else
 			{
 			var WaitingForNextStep=0;
+			if (agent_notifications > 0) {AlerTDisplaY();}
 			if ( (CloserSelecting==1) || (TerritorySelecting==1) )	{WaitingForNextStep=1;}
 			if (open_dispo_screen==1)
 				{
@@ -21890,7 +21999,7 @@ function phone_number_format(formatphone) {
 $zi=2;
 
 ?>
-<body onload="begin_all_refresh();"  onunload="BrowserCloseLogout();">
+<body onload="begin_all_refresh();"  onunload="BrowserCloseLogout();"> <!-- alert_box('BIG ALERT', '36', 'Courier', '#FF0', 'bold|italics'); //-->
 <!-- <canvas id="confetti-canvas" style="display:block;z-index:999999;pointer-events:none"></canvas> //-->
 
 <form name=vicidial_form id=vicidial_form onsubmit="return false;">

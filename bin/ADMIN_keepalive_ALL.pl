@@ -161,9 +161,10 @@
 # 230118-1623 - Added Playback audio then hangup extension
 # 230309-0926 - Added ara_url for server asterisk reboots, daily rolling of vicidial_abandon_check_queue table
 # 230331-2155 - Fix for issue #1458
+# 230412-1405 - Added daily rolling of vicidial_agent_notifications table, truncating of vicidial_agent_notifications_queue table
 #
 
-$build = '230331-2155';
+$build = '230412-1405';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -1488,6 +1489,21 @@ if ($timeclock_end_of_day_NOW > 0)
 		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
 		$sthA->finish();
 
+		$stmtA = "delete from vicidial_agent_notifications_queue where queue_date < \"$TDSQLdate\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_agent_notifications_queue old records deleted|\n";}
+		if ($teodDB) {$event_string = "vicidial_agent_notifications_queue old records deleted($TDSQLdate): $affected_rows";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_agent_notifications_queue;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
 		# set past holidays to EXPIRED status
 		$stmtA = "UPDATE vicidial_call_time_holidays SET holiday_status='EXPIRED' where holiday_date < \"$RMdate\" and holiday_status!='EXPIRED';";
 		if($DBX){print STDERR "\n|$stmtA|\n";}
@@ -1702,6 +1718,33 @@ if ($timeclock_end_of_day_NOW > 0)
 			if ($teodDB) {&teod_logger;}
 
 			$stmtA = "optimize table vicidial_abandon_check_queue;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			}
+
+
+		# roll of vicidial_agent_notifications records, keep only 1 day of records in active table
+		if (!$Q) {print "\nProcessing vicidial_agent_notifications table...\n";}
+		$stmtA = "INSERT IGNORE INTO vicidial_agent_notifications_archive SELECT * from vicidial_agent_notifications;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows = $sthA->rows;
+		$event_string = "$sthArows rows inserted into vicidial_agent_notifications_archive table";
+		if (!$Q) {print "$event_string \n";}
+		if ($teodDB) {&teod_logger;}
+
+		$rv = $sthA->err();
+		if (!$rv) 
+			{	
+			$stmtA = "DELETE FROM vicidial_agent_notifications WHERE notification_date < \"$RMSQLdate\";";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows = $sthA->rows;
+			$event_string = "$sthArows rows deleted from vicidial_agent_notifications table";
+			if (!$Q) {print "$event_string \n";}
+			if ($teodDB) {&teod_logger;}
+
+			$stmtA = "optimize table vicidial_agent_notifications;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			}
@@ -5019,6 +5062,36 @@ if ($active_asterisk_server =~ /Y/)
 #####  END Confirm Asterisk is running, and if not restart it from the screen
 ################################################################################
 
+
+
+
+
+################################################################################
+#####  BEGIN Clearing old/dead agent notifications
+################################################################################
+# only run this on active voicemail server
+if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_server)) eq (length($server_ip))) )
+	{
+	$stmtA="UPDATE vicidial_agent_notifications set notification_status='DEAD' where notification_date <= NOW()-INTERVAL 1 MINUTE and notification_status='QUEUED';";
+	$affected_rows = $dbhA->do($stmtA);
+
+	$stmtC="UPDATE vicidial_agent_notifications set notification_status='DEAD' where notification_date <= NOW()-INTERVAL 1 HOUR and notification_status='READY';";
+	$affected_rowsC = $dbhA->do($stmtC);
+
+	$stmtB="DELETE FROM vicidial_agent_notifications_queue where queue_date <= NOW()-INTERVAL 1 MINUTE;";
+	$affected_rowsB = $dbhA->do($stmtB);
+
+	if ($DB) {print "Clearing old/dead agent notifications: $affected_rows $affected_rowsB $affected_rowsC \n";}
+
+	if ( ($teodDB) && ( ($affected_rows > 0) || ($affected_rowsB > 0) || ($affected_rowsC > 0) ) )
+		{
+		$event_string = "Clearing old/dead agent notifications: $affected_rows $affected_rowsB $affected_rowsC";
+		&teod_logger;
+		}
+	}
+################################################################################
+#####  END Clearing old/dead agent notifications
+################################################################################
 
 
 

@@ -2171,3 +2171,38 @@ CREATE TABLE vicidial_abandon_check_queue_archive LIKE vicidial_abandon_check_qu
 ALTER TABLE vicidial_abandon_check_queue_archive MODIFY abandon_check_id INT(9) UNSIGNED NOT NULL;
 
 UPDATE system_settings SET db_schema_version='1678',db_schema_update_date=NOW() where db_schema_version < 1678;
+
+ALTER TABLE system_settings ADD agent_notifications ENUM('0','1','2','3','4','5','6','7') default '0';
+
+CREATE TABLE vicidial_agent_notifications (
+notification_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+entry_date DATETIME DEFAULT current_timestamp(),
+recipient VARCHAR(20) DEFAULT NULL,
+recipient_type ENUM('USER','USER_GROUP','CAMPAIGN') DEFAULT NULL,
+notification_date DATETIME DEFAULT current_timestamp(),
+notification_retry ENUM('Y','N') DEFAULT 'N',
+notification_text TEXT DEFAULT NULL,
+text_size TINYINT(3) UNSIGNED DEFAULT 12,
+text_font VARCHAR(30) DEFAULT 'Arial',
+text_weight VARCHAR(30) DEFAULT 'bold',
+text_color VARCHAR(15) DEFAULT NULL,
+show_confetti ENUM('Y','N') DEFAULT 'N',
+confetti_options VARCHAR(15) DEFAULT NULL,
+notification_status ENUM('QUEUED','READY','SENT','DEAD') DEFAULT NULL,
+PRIMARY KEY (notification_id),
+KEY recipient (recipient),
+KEY notification_date (notification_date)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_agent_notifications_archive LIKE vicidial_agent_notifications;
+ALTER TABLE vicidial_agent_notifications_archive MODIFY notification_id INT(10) UNSIGNED NOT NULL;
+
+CREATE TABLE vicidial_agent_notifications_queue (
+queue_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+notification_id INT(10) UNSIGNED DEFAULT NULL,
+queue_date DATETIME DEFAULT current_timestamp(),
+user VARCHAR(20) DEFAULT NULL,
+PRIMARY KEY (queue_id)
+) ENGINE=MyISAM;
+
+UPDATE system_settings SET db_schema_version='1679',db_schema_update_date=NOW() where db_schema_version < 1679;
