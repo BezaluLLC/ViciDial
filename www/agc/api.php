@@ -108,10 +108,11 @@
 # 210819-0902 - Updated change_ingroups for changes in vicidial_live_inbound_agents insert/update
 # 220220-0847 - Added allow_web_debug system setting
 # 230412-0945 - Added send_notification function
+# 230413-1957 - Fix for send_notification user group permissions
 #
 
-$version = '2.14-73';
-$build = '230412-0945';
+$version = '2.14-74';
+$build = '230413-1957';
 $php_script = 'api.php';
 
 $startMS = microtime();
@@ -5115,6 +5116,74 @@ if ($function == 'send_notification')
 
 		if ($recipient && $recipient_type)
 			{
+			### Check that recipient exists in respective table
+			switch($recipient_type) 
+				{
+				case "CAMPAIGN":
+					$tbl_name="vicidial_campaigns";
+					$col_name="campaign_id";
+					break;
+				case "USER_GROUP":
+					$tbl_name="vicidial_user_groups";
+					$col_name="user_group";
+					break;
+				case "USER":
+					$tbl_name="vicidial_users";
+					$col_name="user";
+					break;
+				}
+			$exist_stmt="select $col_name from $tbl_name where $col_name='$recipient'";
+			if ($DB) {echo $exist_stmt."<BR>\n";}
+			$exist_rslt=mysql_to_mysqli($exist_stmt, $link);
+			$exist_ct = mysqli_num_rows($exist_rslt);
+			if ($exist_ct==0)
+				{
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("$recipient DOES NOT EXIST in $tbl_name");
+				echo "$result: $result_reason - $value|$recipient\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+
+			# For campaign alerts, verify the user has access to said campaign
+			if($recipient_type=="CAMPAIGN" || $recipient_type=="USER_GROUP")
+				{
+				$stmt="SELECT allowed_campaigns, admin_viewable_groups from vicidial_user_groups where user_group='$VUuser_group';";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$ss_conf_ct = mysqli_num_rows($rslt);
+				if ($ss_conf_ct > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$LOGallowed_campaigns =			$row[0];
+					$LOGadmin_viewable_groups =			$row[1];
+					if ($recipient_type=="CAMPAIGN" && (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) && !preg_match("/ $recipient /i", $LOGallowed_campaigns) )
+						{
+						$result = _QXZ("ERROR");
+						$result_reason = _QXZ("ACCESS TO CAMPAIGN $recipient NOT ALLOWED FOR USER $user ($LOGallowed_campaigns)");
+						echo "$result: $result_reason - $value|$recipient\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					else if ($recipient_type=="USER_GROUP" && (!preg_match('/\-\-\-ALL/i', $LOGadmin_viewable_groups)) && !preg_match("/ $recipient /i", $LOGadmin_viewable_groups) )
+						{
+						$result = _QXZ("ERROR");
+						$result_reason = _QXZ("ACCESS TO USER GROUP $recipient NOT ALLOWED FOR USER $user");
+						echo "$result: $result_reason - $value|$recipient\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				else
+					{
+					$result = _QXZ("ERROR");
+					$result_reason = _QXZ("user_group DOES NOT EXIST");
+					echo "$result: $result_reason - $value|$VUuser_group\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				}
+
 			if(!$notification_date) {$notification_date=date("Y-m-d H:i:s");}
 			if (preg_match('/Y/i', $notification_retry)) 
 				{

@@ -1,4 +1,4 @@
-AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2023-04-12
+AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2023-04-13
 
 This document describes the functions of an API(Application Programming Interface)
 for the VICIDIAL Agent screen. This functionality will be rather limited at first
@@ -1078,6 +1078,10 @@ RESPONSES:
 ERROR: Agent API Notifications are disabled on this system - 0
 ERROR: Missing recipient or recipient_type: (<recipient>|<recipient_type>)
 ERROR: Invalid request, missing variables
+ERROR: ACCESS TO CAMPAIGN TESTCAMP NOT ALLOWED FOR USER 6666
+ERROR: ACCESS TO USER GROUP ADMIN NOT ALLOWED FOR USER 6666
+ERROR: user_group DOES NOT EXIST - ADMIN|6666
+ERROR: 6667 DOES NOT EXIST in vicidial_users
 SUCCESS: notification queued
 ** Additionally, there are "NOTICE" messages that will be included in the response if the notification date is improperly formatted/missing, or if the recipient_type is not included.
 
