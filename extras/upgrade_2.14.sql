@@ -2206,3 +2206,7 @@ PRIMARY KEY (queue_id)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1679',db_schema_update_date=NOW() where db_schema_version < 1679;
+
+INSERT INTO vicidial_statuses (status,status_name) VALUES ('ADAIR', 'Dead Air Auto');
+
+UPDATE system_settings SET db_schema_version='1680',db_schema_update_date=NOW() where db_schema_version < 1680;
