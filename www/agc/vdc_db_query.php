@@ -531,10 +531,11 @@
 # 221202-1645 - Change in CIDname prefix for clearing session command to differentiate from other processes
 # 230204-1618 - Small fix for dispo url processed logging
 # 230309-1005 - Added abandon_check_queue feature
+# 230418-0852 - Changed LogiNCamPaigns to require user auth for campaign list
 #
 
-$version = '2.14-424';
-$build = '230309-1005';
+$version = '2.14-425';
+$build = '230418-0852';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=902;
@@ -1364,10 +1365,15 @@ if ($format=='debug')
 ################################################################################
 if ($ACTION == 'LogiNCamPaigns')
 	{
-	if ( (strlen($user)<1) )
+	$auth=0;
+	$auth_message = user_authorization($user,$pass,'',0,0,0,0,'vdc_db_query');
+	if ($auth_message == 'GOOD')
+		{$auth=1;}
+
+	if( (strlen($user)<2) or (strlen($pass)<2) or ($auth==0))
 		{
 		echo "<select size=1 name=VD_campaign id=VD_campaign>\n";
-		echo "<option value=\"\">-- ERROR --</option>\n";
+		echo "<option value=\"\">-- "._QXZ("ERROR Invalid Username or Password")." --</option>\n";
 		echo "</select>\n";
 		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
@@ -1471,7 +1477,7 @@ if ($ACTION == 'LogiNCamPaigns')
 		else
 			{
 			echo "<select size=1 name=VD_campaign id=VD_campaign>\n";
-			echo "<option value=\"\">-- "._QXZ("USER LOGIN ERROR")." --</option>\n";
+			echo "<option value=\"\">-- "._QXZ("ERROR Invalid Username or Password")." --</option>\n";
 			echo "</select>\n";
 			if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 			exit;
