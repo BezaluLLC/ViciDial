@@ -716,13 +716,14 @@
 # 230306-2034 - Added setTimeoutAudioLoop agent_screen_timer option, Issue #1448
 # 230407-1839 - Fix for input variable filter issue
 # 230412-1018 - Added code for send_notification API function
+# 230418-1425 - Added vicidial_user_dial_log logging
 #
 
-$version = '2.14-684c';
-$build = '230412-1018';
+$version = '2.14-685c';
+$build = '230418-1425';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=98;
+$mysql_log_count=102;
 $one_mysql_log=0;
 $DB=0;
 
@@ -1693,7 +1694,7 @@ else
 				$stmt="SELECT max_logged_in_agents from vicidial_campaigns where campaign_id='$VD_campaign' $LOGallowed_campaignsSQL;";
 				if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 				$rslt=mysql_to_mysqli($stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01099',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$camps_to_print = mysqli_num_rows($rslt);
 				if ($camps_to_print > 0) 
 					{
@@ -1705,7 +1706,7 @@ else
 
 					$stmt = "SELECT count(*) FROM vicidial_live_agents where campaign_id='$VD_campaign' and user!='$VD_login';";
 					$rslt=mysql_to_mysqli($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01100',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
 					$mvla_ct = mysqli_num_rows($rslt);
 					if ($mvla_ct > 0)
@@ -2680,7 +2681,7 @@ else
 				$camp_script_name='Agent Script';   $camp_script_color='#FFF5EC';
 				$stmt="SELECT script_name,script_color FROM vicidial_scripts WHERE script_id='$campaign_script';";
 				$rslt=mysql_to_mysqli($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01101',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
 				$script_ct = mysqli_num_rows($rslt);
 				if ($script_ct > 0)
@@ -4174,7 +4175,7 @@ else
 				$login_kickall_stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$queryCID','Channel: $kick_local_channel','Context: $ext_context','Exten: 8300','Priority: 1','Callerid: $queryCID','','','','$VD_login','$phone_login');";
 				if ($DB) {echo "$login_kickall_stmt\n";}
 				$rslt=mysql_to_mysqli($login_kickall_stmt, $link);
-					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01102',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$affected_rows = mysqli_affected_rows($link);
 				echo "<!-- kickall command issued: $session_id from phone: $phone_login -->\n";
 
@@ -4189,6 +4190,12 @@ else
 			### insert a NEW record to the vicidial_manager table to be processed
 			$agent_login_data="||$NOW_TIME|NEW|N|$server_ip||Originate|$SIqueryCID|Channel: $SIP_user_DiaL|Context: $login_context|Exten: $session_id|Priority: 1|Callerid: \"$SIqueryCID\" <$campaign_cid>|||||";
 			$agent_login_stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$SIqueryCID','Channel: $TEMP_SIP_user_DiaL','Context: $login_context','Exten: $session_id','Priority: 1','Callerid: \"$SIqueryCID\" <$campaign_cid>','','','','','');";
+
+			### log outbound call in the vicidial_user_dial_log
+			$stmt = "INSERT INTO vicidial_user_dial_log SET caller_code='$SIqueryCID',user='$user',call_date='$NOW_TIME',call_type='APL',notes='$session_id $login_context $TEMP_SIP_user_DiaL';";
+			if ($DB) {echo "$stmt\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+
 			if ( ($is_webphone != 'Y') and ($is_webphone != 'Y_API_LAUNCH') )
 				{
 				if ($DB) {echo "$agent_login_stmt\n";}

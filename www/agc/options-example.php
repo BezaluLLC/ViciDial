@@ -26,6 +26,7 @@
 # 220916-0901 - Added INSERT_before_body_close option, Issue #1375
 # 221206-1458 - Added login_submit_once option
 # 230418-1008 - Added astguiclient_disabled option
+# 230418-1548 - Added dial_override_limit option
 #
 
 $conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
@@ -74,6 +75,7 @@ $email_header_attach	= '0';	# set to 1 to force blank line after attachments in 
 $allow_sendmail_bypass	= '';	# some setups require bypassing PHP's mail() function to send properly, set this to 'sendmail' path: '/usr/sbin/sendmail'
 $login_submit_once		= '1';	# set to 0 to remove the "disable the login submit button after submitting" feature
 $astguiclient_disabled	= '1';	# set to 0 to allow use of the astguiclient.php script
+$dial_override_limit	= '6';	# number of dial-override calls per minute that will lock user account, set to 0 to disable dial_override limit
 
 $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
 

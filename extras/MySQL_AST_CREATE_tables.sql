@@ -4923,6 +4923,17 @@ user VARCHAR(20) DEFAULT NULL,
 PRIMARY KEY (queue_id)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_user_dial_log (
+caller_code VARCHAR(30) NOT NULL,
+user VARCHAR(20) default '',
+call_date DATETIME,
+call_type VARCHAR(10) default '',
+notes VARCHAR(100) default '',
+index (caller_code),
+index (user),
+index (call_date)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -5193,6 +5204,9 @@ ALTER TABLE vicidial_abandon_check_queue_archive MODIFY abandon_check_id INT(9) 
 CREATE TABLE vicidial_agent_notifications_archive LIKE vicidial_agent_notifications;
 ALTER TABLE vicidial_agent_notifications_archive MODIFY notification_id INT(10) UNSIGNED NOT NULL;
 
+CREATE TABLE vicidial_user_dial_log_archive LIKE vicidial_user_dial_log;
+CREATE UNIQUE INDEX vdudl on vicidial_user_dial_log_archive (caller_code,call_date,user);
+
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
 
@@ -5287,4 +5301,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1680',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1681',db_schema_update_date=NOW(),reload_timestamp=NOW();

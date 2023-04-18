@@ -2210,3 +2210,19 @@ UPDATE system_settings SET db_schema_version='1679',db_schema_update_date=NOW() 
 INSERT INTO vicidial_statuses (status,status_name) VALUES ('ADAIR', 'Dead Air Auto');
 
 UPDATE system_settings SET db_schema_version='1680',db_schema_update_date=NOW() where db_schema_version < 1680;
+
+CREATE TABLE vicidial_user_dial_log (
+caller_code VARCHAR(30) NOT NULL,
+user VARCHAR(20) default '',
+call_date DATETIME,
+call_type VARCHAR(10) default '',
+notes VARCHAR(100) default '',
+index (caller_code),
+index (user),
+index (call_date)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_user_dial_log_archive LIKE vicidial_user_dial_log;
+CREATE UNIQUE INDEX vdudl on vicidial_user_dial_log_archive (caller_code,call_date,user);
+
+UPDATE system_settings SET db_schema_version='1681',db_schema_update_date=NOW() where db_schema_version < 1681;
