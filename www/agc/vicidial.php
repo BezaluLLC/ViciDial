@@ -4192,7 +4192,7 @@ else
 			$agent_login_stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$SIqueryCID','Channel: $TEMP_SIP_user_DiaL','Context: $login_context','Exten: $session_id','Priority: 1','Callerid: \"$SIqueryCID\" <$campaign_cid>','','','','','');";
 
 			### log outbound call in the vicidial_user_dial_log
-			$stmt = "INSERT INTO vicidial_user_dial_log SET caller_code='$SIqueryCID',user='$user',call_date='$NOW_TIME',call_type='APL',notes='$session_id $login_context $TEMP_SIP_user_DiaL';";
+			$stmt = "INSERT INTO vicidial_user_dial_log SET caller_code='$SIqueryCID',user='$VD_login',call_date='$NOW_TIME',call_type='APL',notes='$session_id $login_context $TEMP_SIP_user_DiaL';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 
