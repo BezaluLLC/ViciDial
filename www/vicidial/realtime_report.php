@@ -59,6 +59,7 @@
 # 221105-0826 - Added webphone_settings to webphone launch data, issue #1385
 # 230308-0215 - Added option to show customer phone code
 # 230421-0106 - Added AGENTlatency display
+# 230421-1625 - Added RS_UGlatencyRESTRICT options.php setting
 #
 
 $startMS = microtime();
@@ -617,6 +618,19 @@ if ($auth)
 	else 
 		{$admin_viewable_groupsALL=1;}
 
+	$RS_UGlatencyALLOWED=0;
+	if (strlen($RS_UGlatencyRESTRICT) > 0)
+		{
+		$latencyUGary = preg_split('/\|/',$RS_UGlatencyRESTRICT);
+
+		foreach( $latencyUGary as $lineUGR )
+			{
+			if ($lineUGR == $LOGuser_group)
+				{$RS_UGlatencyALLOWED++;}
+			}
+		}
+	else
+		{$RS_UGlatencyALLOWED=1;}
 	}
 
 #  and (preg_match("/MONITOR|BARGE|HIJACK|WHISPER/",$monitor_active) ) )
@@ -1107,23 +1121,26 @@ $select_list .= ">"._QXZ("YES")."</option>";
 $select_list .= "</SELECT></TD></TR>";
 
 $select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Agent Latency").":  </TD><TD align=left><SELECT SIZE=1 NAME=AGENTlatency ID=AGENTlatency>";
-$select_list .= "<option value='0'";
-	if ($AGENTlatency < 1) {$select_list .= " selected";} 
-$select_list .= ">"._QXZ("NO")."</option>";
-$select_list .= "<option value='1'";
-	if ($AGENTlatency=='1') {$select_list .= " selected";} 
-$select_list .= ">"._QXZ("YES")."</option>";
-$select_list .= "<option value='2'";
-	if ($AGENTlatency=='2') {$select_list .= " selected";} 
-$select_list .= ">"._QXZ("ALL")."</option>";
-$select_list .= "<option value='3'";
-	if ($AGENTlatency=='3') {$select_list .= " selected";} 
-$select_list .= ">"._QXZ("DAY")."</option>";
-$select_list .= "<option value='4'";
-	if ($AGENTlatency=='4') {$select_list .= " selected";} 
-$select_list .= ">"._QXZ("NOW")."</option>";
-$select_list .= "</SELECT></TD></TR>";
+if ($RS_UGlatencyALLOWED > 0)
+	{
+	$select_list .= _QXZ("Agent Latency").":  </TD><TD align=left><SELECT SIZE=1 NAME=AGENTlatency ID=AGENTlatency>";
+	$select_list .= "<option value='0'";
+		if ($AGENTlatency < 1) {$select_list .= " selected";} 
+	$select_list .= ">"._QXZ("NO")."</option>";
+	$select_list .= "<option value='1'";
+		if ($AGENTlatency=='1') {$select_list .= " selected";} 
+	$select_list .= ">"._QXZ("YES")."</option>";
+	$select_list .= "<option value='2'";
+		if ($AGENTlatency=='2') {$select_list .= " selected";} 
+	$select_list .= ">"._QXZ("ALL")."</option>";
+	$select_list .= "<option value='3'";
+		if ($AGENTlatency=='3') {$select_list .= " selected";} 
+	$select_list .= ">"._QXZ("DAY")."</option>";
+	$select_list .= "<option value='4'";
+		if ($AGENTlatency=='4') {$select_list .= " selected";} 
+	$select_list .= ">"._QXZ("NOW")."</option>";
+	$select_list .= "</SELECT></TD></TR>";
+	}
 
 $select_list .= "<TR><TD align=right>";
 $select_list .= _QXZ("Parked Call Stats").":  </TD><TD align=left><SELECT SIZE=1 NAME=parkSTATS ID=parkSTATS>";

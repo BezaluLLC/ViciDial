@@ -129,10 +129,11 @@
 # 220221-1535 - Added allow_web_debug system setting
 # 230308-0215 - Added option to show customer phone code
 # 230421-0107 - Added AGENTlatency display
+# 230421-1636 - Added RS_UGlatencyRESTRICT options.php setting
 #
 
-$version = '2.14-114';
-$build = '230421-0107';
+$version = '2.14-115';
+$build = '230421-1636';
 $php_script='AST_timeonVDADall.php';
 
 require("dbconnect_mysqli.php");
@@ -620,6 +621,20 @@ if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGa
 else 
 	{$admin_viewable_groupsALL=1;}
 
+$RS_UGlatencyALLOWED=0;
+if (strlen($RS_UGlatencyRESTRICT) > 0)
+	{
+	$latencyUGary = preg_split('/\|/',$RS_UGlatencyRESTRICT);
+
+	foreach( $latencyUGary as $lineUGR )
+		{
+		if ($lineUGR == $LOGuser_group)
+			{$RS_UGlatencyALLOWED++;}
+		}
+	}
+else
+	{$RS_UGlatencyALLOWED=1;}
+
 #  and (preg_match("/MONITOR|BARGE|HIJACK|WHISPER/",$monitor_active) ) )
 if ( (!isset($monitor_phone)) or (strlen($monitor_phone)<1) )
 	{
@@ -1078,24 +1093,27 @@ $select_list .= "<option value=\"1\"";
 $select_list .= ">"._QXZ("YES")."</option>";
 $select_list .= "</SELECT></TD></TR>";
 
-$select_list .= "<TR><TD align=right>";
-$select_list .= _QXZ("Agent Latency").":  </TD><TD align=left><SELECT SIZE=1 NAME=AGENTlatency>";
-$select_list .= "<option value=\"0\"";
-	if ($AGENTlatency < 1) {$select_list .= " selected";} 
-$select_list .= ">"._QXZ("NO")."</option>";
-$select_list .= "<option value=\"1\"";
-	if ($AGENTlatency=='1') {$select_list .= " selected";} 
-$select_list .= ">"._QXZ("YES")."</option>";
-$select_list .= "<option value=\"2\"";
-	if ($AGENTlatency=='2') {$select_list .= " selected";} 
-$select_list .= ">"._QXZ("ALL")."</option>";
-$select_list .= "<option value=\"3\"";
-	if ($AGENTlatency=='3') {$select_list .= " selected";} 
-$select_list .= ">"._QXZ("DAY")."</option>";
-$select_list .= "<option value=\"4\"";
-	if ($AGENTlatency=='4') {$select_list .= " selected";} 
-$select_list .= ">"._QXZ("NOW")."</option>";
-$select_list .= "</SELECT></TD></TR>";
+if ($RS_UGlatencyALLOWED > 0)
+	{
+	$select_list .= "<TR><TD align=right>";
+	$select_list .= _QXZ("Agent Latency").":  </TD><TD align=left><SELECT SIZE=1 NAME=AGENTlatency>";
+	$select_list .= "<option value=\"0\"";
+		if ($AGENTlatency < 1) {$select_list .= " selected";} 
+	$select_list .= ">"._QXZ("NO")."</option>";
+	$select_list .= "<option value=\"1\"";
+		if ($AGENTlatency=='1') {$select_list .= " selected";} 
+	$select_list .= ">"._QXZ("YES")."</option>";
+	$select_list .= "<option value=\"2\"";
+		if ($AGENTlatency=='2') {$select_list .= " selected";} 
+	$select_list .= ">"._QXZ("ALL")."</option>";
+	$select_list .= "<option value=\"3\"";
+		if ($AGENTlatency=='3') {$select_list .= " selected";} 
+	$select_list .= ">"._QXZ("DAY")."</option>";
+	$select_list .= "<option value=\"4\"";
+		if ($AGENTlatency=='4') {$select_list .= " selected";} 
+	$select_list .= ">"._QXZ("NOW")."</option>";
+	$select_list .= "</SELECT></TD></TR>";
+	}
 
 $select_list .= "<TR><TD align=right>";
 $select_list .= _QXZ("Parked Call Stats").":  </TD><TD align=left><SELECT SIZE=1 NAME=parkSTATS ID=parkSTATS>";
@@ -3153,7 +3171,7 @@ if ($report_display_type=='TEXT')
 		}
 	$HDlatency =			'';
 	$HTlatency =			'';
-	if ($AGENTlatency != 0) 
+	if ( ($AGENTlatency != 0) and ($RS_UGlatencyALLOWED > 0) )
 		{
 		$HDlatency =			'---------+';
 		$HTlatency =			" "._QXZ("LATENCY",7)." |";
@@ -3273,7 +3291,7 @@ if ( ($report_display_type=='HTML') or ($report_display_type=='LIMITED') )
 		}
 	$HDlatency =			'';
 	$HTlatency =			'';
-	if ($AGENTlatency != 0)
+	if ( ($AGENTlatency != 0) and ($RS_UGlatencyALLOWED > 0) )
 		{
 		$HDlatency =			'';
 		$HTlatency =			"<td NOWRAP><font class='top_head_key'>&nbsp; "._QXZ("LATENCY",7)." </td>";
@@ -3494,7 +3512,7 @@ if ($talking_to_print > 0)
 			### END 3-WAY Check ###
 
 			### Latency Check ###
-			if ($AGENTlatency != 0) 
+			if ( ($AGENTlatency != 0) and ($RS_UGlatencyALLOWED > 0) )
 				{
 				$latencystmt="SELECT latency_min_avg,latency_min_peak,latency_hour_avg,latency_hour_peak,latency_today_avg,latency_today_peak,latency from vicidial_live_agents_details where user='$Auser[$va]';";
 				$latencyrslt=mysql_to_mysqli($latencystmt, $link);
@@ -4093,7 +4111,7 @@ if ($talking_to_print > 0)
 				}
 
 			$LATENCY='';
-			if ($AGENTlatency != 0) 
+			if ( ($AGENTlatency != 0) and ($RS_UGlatencyALLOWED > 0) )
 				{
 				$LTC=$G; $LTCG=$EG;
 				if ($INORcolor > 0)
@@ -4292,7 +4310,7 @@ if ($talking_to_print > 0)
 				}
 
 			$LATENCY='';
-			if ($AGENTlatency != 0) 
+			if ( ($AGENTlatency != 0) and ($RS_UGlatencyALLOWED > 0) )
 				{
 				$LTC=$G; $LTCG=$EG;
 				if ($INORcolor > 0)
