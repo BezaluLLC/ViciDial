@@ -717,10 +717,11 @@
 # 230407-1839 - Fix for input variable filter issue
 # 230412-1018 - Added code for send_notification API function
 # 230418-1425 - Added vicidial_user_dial_log logging
+# 230420-2015 - Added latency calculation and logging, Issue #1457
 #
 
-$version = '2.14-685c';
-$build = '230418-1425';
+$version = '2.14-686c';
+$build = '230420-2015';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=102;
@@ -4389,6 +4390,11 @@ else
 				$affected_rows = mysqli_affected_rows($link);
 				echo "<!-- new vicidial_live_agents record inserted: |$affected_rows| -->\n";
 
+				$stmt="INSERT IGNORE INTO vicidial_live_agents_details set latency='0',web_ip='$ip',update_date=NOW(),user='$VD_login';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
 				if ($enable_queuemetrics_logging > 0)
 					{
 					$QM_LOGIN = 'AGENTLOGIN';
@@ -6076,7 +6082,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var image_LB_mute_recording_ON = new Image();
 		image_LB_mute_recording_ON.src="./images/<?php echo _QXZ("vdc_LB_mute_recording_ON.gif") ?>";
 	var set_timeout_audio_loop = false;
-
+	var latency = 0;
 <?php
 	if ($window_validation > 0)
 		{
@@ -7144,11 +7150,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			//alert ("1");
 			if (!xmlhttprequestcheckconf && typeof XMLHttpRequest!='undefined')
 				{
+				var request_start_time = Date.now();
 				xmlhttprequestcheckconf = new XMLHttpRequest();
 				}
 			if (xmlhttprequestcheckconf) 
 				{
-				checkconf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&client=vdc&conf_exten=" + taskconfnum + "&auto_dial_level=" + auto_dial_level + "&campagentstdisp=" + campagentstdisp + "&customer_chat_id=" + document.vicidial_form.customer_chat_id.value + "&live_call_seconds=" + VD_live_call_secondS + "&active_ingroup_dial=" + active_ingroup_dial + "&xferchannel=" + document.vicidial_form.xferchannel.value + "&check_for_answer=" + MDcheck_for_answer + "&MDnextCID=" + MDnextCID + "&campaign=" + campaign + "&phone_number=" + dialed_number + "&visibility=" + visibility_log + "&clicks=" + button_click_log;
+				checkconf_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&user=" + user + "&pass=" + pass + "&client=vdc&conf_exten=" + taskconfnum + "&auto_dial_level=" + auto_dial_level + "&campagentstdisp=" + campagentstdisp + "&customer_chat_id=" + document.vicidial_form.customer_chat_id.value + "&live_call_seconds=" + VD_live_call_secondS + "&active_ingroup_dial=" + active_ingroup_dial + "&xferchannel=" + document.vicidial_form.xferchannel.value + "&check_for_answer=" + MDcheck_for_answer + "&MDnextCID=" + MDnextCID + "&campaign=" + campaign + "&phone_number=" + dialed_number + "&visibility=" + visibility_log + "&latency=" + latency + "&clicks=" + button_click_log;
 				button_click_log='';
 				visibility_log='';
 				xmlhttprequestcheckconf.open('POST', 'conf_exten_check.php'); 
@@ -7158,6 +7165,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					{
 					if (xmlhttprequestcheckconf && xmlhttprequestcheckconf.readyState == 4 && xmlhttprequestcheckconf.status == 200) 
 						{
+						var request_end_time = Date.now();
+						// Calculate latency
+						latency = parseInt(request_end_time) - parseInt(request_start_time);
+
 						var check_conf = null;
 						var LMAforce = taskforce;
 						check_conf = xmlhttprequestcheckconf.responseText;
@@ -7970,8 +7981,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									{blind_monitoring_now=0;}
 								}
 							}
-							delete xmlhttprequestcheckconf;
-							xmlhttprequestcheckconf = undefined; 
+						delete xmlhttprequestcheckconf;
+						xmlhttprequestcheckconf = undefined; 
 						}
 					else if (xmlhttprequestcheckconf && xmlhttprequestcheckconf.readyState == 4 && xmlhttprequestcheckconf.status != 200) 
 						{
@@ -8955,7 +8966,6 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				{ 
 				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
 					{
-
 					var AlerTrslt = xmlhttp.responseText;
 					if (AlerTrslt.length>0)
 					{

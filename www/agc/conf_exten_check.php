@@ -94,10 +94,11 @@
 # 220310-0934 - Added more time-sync detailed logging
 # 230220-1759 - Fix for In-Group manual dial issue
 # 230412-1020 - Added code for send_notification API function
+# 230420-2020 - Added latency logging
 #
 
-$version = '2.14-68';
-$build = '230412-1020';
+$version = '2.14-69';
+$build = '230420-2020';
 $php_script = 'conf_exten_check.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=51;
@@ -106,6 +107,7 @@ $DB=0;
 $VD_login=0;
 $SSagent_debug_logging=0;
 $startMS = microtime();
+$ip = getenv("REMOTE_ADDR");
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -159,6 +161,8 @@ if (isset($_GET["visibility"]))				{$visibility=$_GET["visibility"];}
 	elseif (isset($_POST["visibility"]))	{$visibility=$_POST["visibility"];}
 if (isset($_GET["active_ingroup_dial"]))			{$active_ingroup_dial=$_GET["active_ingroup_dial"];}
 	elseif (isset($_POST["active_ingroup_dial"]))	{$active_ingroup_dial=$_POST["active_ingroup_dial"];}
+if (isset($_GET["latency"]))			{$latency=$_GET["latency"];}
+	elseif (isset($_POST["latency"]))	{$latency=$_POST["latency"];}
 
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
@@ -234,6 +238,7 @@ $client = preg_replace("/[^-_0-9a-zA-Z]/","",$client);
 $campagentstdisp = preg_replace("/[^-_0-9a-zA-Z]/","",$campagentstdisp);
 $phone_number = preg_replace("/[^-_0-9a-zA-Z]/","",$phone_number);
 $xferchannel = preg_replace("/\'|\"|\\\\|;/","",$xferchannel);
+$latency = preg_replace("/[^-_0-9a-zA-Z]/","",$latency);
 
 if ($non_latin < 1)
 	{
@@ -832,6 +837,18 @@ if ($ACTION == 'refresh')
 					$retry_count++;
 					}
 
+				### update the vicidial_live_agents_details record
+				$stmt="UPDATE vicidial_live_agents_details set latency='$latency',web_ip='$ip',update_date=NOW() where user='$user';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
+				### insert a vicidial_agent_latency_log record
+				$stmt="INSERT INTO vicidial_agent_latency_log SET latency='$latency',web_ip='$ip',user='$user',log_date=NOW();";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
 				if ( ( ($Acomments != 'CHAT') and ($Acomments != 'EMAIL') and (strlen($active_ingroup_dial) < 1) ) or ($live_call_seconds > 4) )
 					{
 					##### BEGIN DEAD logging section #####
@@ -918,6 +935,18 @@ if ($ACTION == 'refresh')
 					$one_mysql_log=0;
 					$retry_count++;
 					}
+
+				### update the vicidial_live_agents_details record
+				$stmt="UPDATE vicidial_live_agents_details set latency='$latency',web_ip='$ip',update_date=NOW() where user='$user';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
+				### insert a vicidial_agent_latency_log record
+				$stmt="INSERT INTO vicidial_agent_latency_log SET latency='$latency',web_ip='$ip',user='$user',log_date=NOW();";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03XXX',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				##### BEGIN DEAD logging section #####
 				if ($Acomments != 'EMAIL')
@@ -1478,7 +1507,7 @@ if ($ACTION == 'refresh')
 		}
 
 	echo "$countecho\n";
-	$stage = "$Astatus|$Aagent_log_id$DEADlog";
+	$stage = "$Astatus|$Aagent_log_id|".$latency."ms|$DEADlog";
 
 	}
 

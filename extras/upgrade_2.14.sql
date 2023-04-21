@@ -2226,3 +2226,46 @@ CREATE TABLE vicidial_user_dial_log_archive LIKE vicidial_user_dial_log;
 CREATE UNIQUE INDEX vdudl on vicidial_user_dial_log_archive (caller_code,call_date,user);
 
 UPDATE system_settings SET db_schema_version='1681',db_schema_update_date=NOW() where db_schema_version < 1681;
+
+CREATE TABLE vicidial_live_agents_details (
+user VARCHAR(20) NOT NULL PRIMARY KEY,
+update_date DATETIME,
+web_ip VARCHAR(45) default '',
+latency MEDIUMINT(7) default '0',
+latency_min_avg MEDIUMINT(7) default '0',
+latency_min_peak MEDIUMINT(7) default '0',
+latency_hour_avg MEDIUMINT(7) default '0',
+latency_hour_peak MEDIUMINT(7) default '0',
+latency_today_avg MEDIUMINT(7) default '0',
+latency_today_peak MEDIUMINT(7) default '0',
+index (user),
+index (update_date)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_agent_latency_log (
+user VARCHAR(20) NOT NULL,
+log_date DATETIME,
+latency MEDIUMINT(7) default '0',
+web_ip VARCHAR(45) default '',
+index (user),
+index (log_date)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_agent_latency_summary_log (
+user VARCHAR(20) NOT NULL,
+log_date DATETIME,
+web_ip VARCHAR(45) default '',
+latency_avg MEDIUMINT(7) default '0',
+latency_peak MEDIUMINT(7) default '0',
+latency_count SMALLINT(4) default '0',
+index (user),
+index (log_date)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_agent_latency_log_archive LIKE vicidial_agent_latency_log;
+CREATE UNIQUE INDEX vdalla on vicidial_agent_latency_log_archive (user,log_date);
+
+CREATE TABLE vicidial_agent_latency_summary_log_archive LIKE vicidial_agent_latency_summary_log;
+CREATE UNIQUE INDEX vdalsla on vicidial_agent_latency_summary_log_archive (user,log_date,web_ip);
+
+UPDATE system_settings SET db_schema_version='1682',db_schema_update_date=NOW() where db_schema_version < 1682;
