@@ -5996,12 +5996,13 @@ if ($SSscript_remove_js > 0)
 # 230407-1038 - Added VERM report links to main admin Reports page
 # 230412-0946 - Added send_notification Agent-API function, agent_notifications system_setting
 # 230421-0847 - Added Agent Latency Report
+# 230421-1739 - Fix for QC issue #1352
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-881a';
-$build = '230421-0847';
+$admin_version = '2.14-882a';
+$build = '230421-1739';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -50184,10 +50185,12 @@ if ($ADD==999990)
 			echo "<td align='center'><font style=\"font-family:HELVETICA;font-size:14;color:white;font-weight:bold;\"><B>&nbsp; "._QXZ("Campaign")."</font></td>";
 			echo "<td align='center'><font style=\"font-family:HELVETICA;font-size:14;color:white;font-weight:bold;\"><B>&nbsp; "._QXZ("Unclaimed Calls")."</font></td>";
 			echo "<td align='center'><font style=\"font-family:HELVETICA;font-size:14;color:white;font-weight:bold;\"><B>&nbsp; "._QXZ("In Review")."</font></td>";
-			echo "<td align='center'><font style=\"font-family:HELVETICA;font-size:14;color:white;font-weight:bold;\"><B>&nbsp; "._QXZ("Completed today")."</font></td>";
+			echo "<td align='center'><font style=\"font-family:HELVETICA;font-size:14;color:white;font-weight:bold;\"><B>&nbsp; "._QXZ("Finished today")."</font></td>";
 			echo "</tr>";
 
-			$stmt="SELECT campaign_id, qc_statuses from vicidial_campaigns where active = 'Y' and qc_enabled='Y' $LOGqc_allowed_campaignsSQL order by campaign_id";
+			# $stmt="SELECT campaign_id, qc_statuses from vicidial_campaigns where active = 'Y' and qc_enabled='Y' $LOGqc_allowed_campaignsSQL order by campaign_id";
+			$stmt="SELECT campaign_id,campaign_name,qc_statuses_id from vicidial_campaigns where active = 'Y' and qc_statuses_id!='' and qc_scorecard_id!='' $LOGqc_allowed_campaignsSQL order by campaign_name";
+
 		if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 			$vicidialconf_to_print = mysqli_num_rows($rslt);
@@ -50196,25 +50199,43 @@ if ($ADD==999990)
 				while ($row=mysqli_fetch_array($rslt)) 
 					{
 					$campaign_id=$row[0];
-					$qc_status_list=substr($row[1],0,strlen($row[1])-2);
-					$qc_statuses=explode(' ',$qc_status_list);
 
-					$qc_ct_stmt="select count(*) from vicidial_list inner join vicidial_lists on vicidial_list.list_id=vicidial_lists.list_id and status in ('".implode("','", $qc_statuses)."') where campaign_id='$campaign_id'"; 
-		if ($DB) {echo "|$qc_ct_stmt|\n";}
+					$qc_status_list=array();
+					$qc_status_container_stmt="select container_entry from vicidial_settings_containers where container_id='$row[2]'";
+					$qc_status_container_rslt=mysql_to_mysqli($qc_status_container_stmt, $link);
+					while ($qcsc_row=mysqli_fetch_row($qc_status_container_rslt))
+						{
+						$container_text=preg_split('/\r|\n/', $qcsc_row[0]);
+						for ($q=0; $q<count($container_text); $q++)
+							{
+							$line=trim($container_text[$q]);
+							if (!preg_match('/^[\#|\;]/', $line) && strlen($line)>0)
+								{
+								$qc_status_list=preg_split('/,/', $line); 
+								break;
+								}
+							}
+						}
+
+					$total_qc_count=0;
+					$qc_ct_stmt="select count(*) From vicidial_agent_log where campaign_id='$campaign_id' and status in ('".implode("','", $qc_status_list)."') and event_time+INTERVAL (pause_sec+wait_sec) SECOND>=now()-INTERVAL $SSqc_expire_days DAY"; 
+					if ($DB) {echo "|$qc_ct_stmt|<BR>\n";}
 					$qc_ct_rslt=mysql_to_mysqli($qc_ct_stmt, $link);
 					$qc_ct_row=mysqli_fetch_row($qc_ct_rslt);
 					$total_qc_count=$qc_ct_row[0];
+				
+					$qc_grabbed_stmt="select count(*) From quality_control_queue where campaign_id='$campaign_id' and call_date>=now()-INTERVAL $SSqc_expire_days DAY and qc_status='CLAIMED'";
+					if ($DB) {echo "|$qc_grabbed_stmt|<BR>\n";}
+					$qc_grabbed_rslt=mysql_to_mysqli($qc_grabbed_stmt, $link);
+					$qc_grabbed_row=mysqli_fetch_row($qc_grabbed_rslt);
+					$total_inreview_count=$qc_grabbed_row[0];
 
-					$qc_inreview_stmt="select count(*) From quality_control_queue where campaign_id='$campaign_id' and qc_status='CLAIMED'";
-					$qc_inreview_rslt=mysql_to_mysqli($qc_inreview_stmt, $link);
-					$qc_inreview_row=mysqli_fetch_row($qc_inreview_rslt);
-					$total_inreview_count=$qc_inreview_row[0];
-
-					$qc_finish_stmt="select count(*), sum(if(date_completed>date(now()), 1, 0)) From quality_control_queue where campaign_id='$campaign_id' and qc_status='FINISHED'";
-					$qc_finish_rslt=mysql_to_mysqli($qc_finish_stmt, $link);
-					$qc_finish_row=mysqli_fetch_row($qc_finish_rslt);
-					$total_finish_count=$qc_finish_row[0];
-					$today_finish_count=$qc_finish_row[1];
+					$qc_finished_stmt="select count(*), sum(if(call_date>=date(now()),1,0)) as finished_today From quality_control_queue where campaign_id='$campaign_id' and call_date>=now()-INTERVAL $SSqc_expire_days DAY and qc_status='FINISHED'";
+					if ($DB) {echo "|$qc_finished_stmt|<BR>\n";}
+					$qc_finished_rslt=mysql_to_mysqli($qc_finished_stmt, $link);
+					$qc_finished_row=mysqli_fetch_row($qc_finished_rslt);
+					$total_finish_count=$qc_finished_row[0];
+					$today_finish_count=$qc_finished_row[1];
 
 					echo "<tr bgcolor='#$SSstd_row2_background'>";
 				#	echo "<td align='left'><font size=1>".$row["campaign_id"]."</font></td>";
