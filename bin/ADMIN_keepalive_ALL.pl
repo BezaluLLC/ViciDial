@@ -2194,7 +2194,7 @@ if ($timeclock_end_of_day_NOW > 0)
 			
 			if ($sum_inserts > 0) 
 				{
-				$stmtA = "INSERT INTO vicidial_agent_latency_summary_log(user,log_date,web_ip,latency_count,latency_peak,latency_avg) SELECT user,'$RMSQLdate','---ALL---',sum(latency_count),max(latency_peak),sum(latency_avg * latency_count) / sum(latency_count) from vicidial_agent_latency_summary_log where log_date = \"$RMSQLdate\" group by user order by user;;";
+				$stmtA = "INSERT INTO vicidial_agent_latency_summary_log(user,log_date,web_ip,latency_count,latency_peak,latency_avg) SELECT user,'$RMSQLdate','---ALL---',sum(latency_count),max(latency_peak),sum(latency_avg * latency_count) / sum(latency_count) from vicidial_agent_latency_summary_log where log_date = \"$RMSQLdate\" group by user order by user;";
 				$affected_rows = $dbhA->do($stmtA) or die  "Couldn't execute query: |$stmtA|\n";
 				$event_string = "vicidial_agent_latency_summary_log ALL insert query: |$affected_rows|$stmtA|";
 				if ($DBX) {print "$event_string\n";}
