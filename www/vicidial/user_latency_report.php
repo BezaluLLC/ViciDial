@@ -5,6 +5,7 @@
 #
 # CHANGES
 # 230421-0843 - First build
+# 230422-0820 - Header fixes and no-records output
 #
 
 $startMS = microtime();
@@ -326,7 +327,13 @@ if (!$user)
 
 else
 	{
+	$LATheaders = _QXZ("User Latency Summary").": ("._QXZ("in milliseconds").")\n";
+	$LATheaders .= "| "._QXZ("USER", 20)." ! "._QXZ("DATE/TIME", 19)." ! "._QXZ("LAST WEB IP", 20)." ! "._QXZ("LATENCY NOW", 11)."! "._QXZ("1 min Avg", 10)." ! "._QXZ("1 min Peak", 10)." ! "._QXZ("1 hr Avg", 10)." ! "._QXZ("1 hr Peak", 10)." | "._QXZ("day Avg", 10)." ! "._QXZ("day Peak", 10)." |\n";
+	$LATheaders .= "+----------------------+---------------------+----------------------+------------+------------+------------+------------+------------+------------+------------+\n";
+
 	$multi_user=0;
+	$latencies_to_print=0;
+	$Hlatencies_to_print=0;
 	$stmt="SELECT vlad.user,vlad.update_date,vlad.web_ip,vlad.latency,vlad.latency_min_avg,vlad.latency_min_peak,vlad.latency_hour_avg,vlad.latency_hour_peak,vlad.latency_today_avg,vlad.latency_today_peak from vicidial_live_agents_details vlad where vlad.user='" . mysqli_real_escape_string($link, $user) . "' $vmLOGadmin_viewable_groupsSQL order by user limit 1000;";
 	if ($user == '--ACTIVE-USERS-TODAY--')
 		{
@@ -337,11 +344,7 @@ else
 	if ($DB) {echo "$stmt\n";}
 	$latencies_to_print = mysqli_num_rows($rslt);
 	if ($latencies_to_print > 0)
-		{
-		echo _QXZ("User Latency Summary").": ("._QXZ("in milliseconds").")\n";
-		echo "| "._QXZ("USER", 20)." ! "._QXZ("DATE/TIME", 19)." ! "._QXZ("LAST WEB IP", 20)." ! "._QXZ("LATENCY NOW", 11)."! "._QXZ("1 min Avg", 10)." ! "._QXZ("1 min Peak", 10)." ! "._QXZ("1 hr Avg", 10)." ! "._QXZ("1 hr Peak", 10)." | "._QXZ("day Avg", 10)." ! "._QXZ("day Peak", 10)." |\n";
-		echo "+----------------------+---------------------+----------------------+------------+------------+------------+------------+------------+------------+------------+\n";
-		}
+		{echo $LATheaders;}
 
 	$i=0;   $archive_output='';
 	while ($latencies_to_print > $i)
@@ -369,9 +372,11 @@ else
 		$stmt="select user,log_date,web_ip,latency_avg,latency_peak from vicidial_agent_latency_summary_log where user='" . mysqli_real_escape_string($link, $user) . "' $LOGadmin_viewable_groupsSQL order by log_date desc,web_ip limit 1000;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
-		$latencies_to_print = mysqli_num_rows($rslt);
+		$Hlatencies_to_print = mysqli_num_rows($rslt);
 		$i=0;
-		while ($latencies_to_print > $i)
+		if ( ($latencies_to_print < 1) and ($Hlatencies_to_print > 0) )
+			{echo $LATheaders;}
+		while ($Hlatencies_to_print > $i)
 			{
 			$row=mysqli_fetch_row($rslt);
 
@@ -389,6 +394,9 @@ else
 			$i++;
 			}
 		}
+	if ( ($latencies_to_print < 1) and ($Hlatencies_to_print < 1) )
+		{echo _QXZ("No records to report");}
+
 	echo "\n";
 	}
 
