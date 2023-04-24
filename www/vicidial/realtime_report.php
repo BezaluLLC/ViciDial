@@ -1871,8 +1871,15 @@ function update_variables(task_option,task_choice,force_reload)
 		?>
 		var AGENTtimeSTATSFORM = document.getElementById('AGENTtimeSTATS');
 		AGENTtimeSTATS = AGENTtimeSTATSFORM[AGENTtimeSTATSFORM.selectedIndex].value;
+		<?php
+		if ($RS_UGlatencyALLOWED > 0)
+			{
+			?>
 		var AGENTlatencyFORM = document.getElementById('AGENTlatency');
 		AGENTlatency = AGENTlatencyFORM[AGENTlatencyFORM.selectedIndex].value;
+			<?php
+			}
+		?>
 		var parkSTATSFORM = document.getElementById('parkSTATS');
 		parkSTATS = parkSTATSFORM[parkSTATSFORM.selectedIndex].value;
 		var SLAinSTATSFORM = document.getElementById('SLAinSTATS');
