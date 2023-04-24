@@ -4114,10 +4114,10 @@ if ($talking_to_print > 0)
 			if ( ($AGENTlatency != 0) and ($RS_UGlatencyALLOWED > 0) )
 				{
 				$LTC=$G; $LTCG=$EG;
-				if ($INORcolor > 0)
-					{
-					$LTC='<SPAN class="csc'.$INORcolor.'"><B>'; $LTCG='</B></SPAN>';
-					}
+			#	if ($INORcolor > 0)
+			#		{
+			#		$LTC='<SPAN class="csc'.$INORcolor.'"><B>'; $LTCG='</B></SPAN>';
+			#		}
 				if (preg_match("/^1/",$AGENTlatency))
 					{
 					$latency_print = sprintf("%-5s", $Alatency_min_avg[$i]);
@@ -4313,10 +4313,10 @@ if ($talking_to_print > 0)
 			if ( ($AGENTlatency != 0) and ($RS_UGlatencyALLOWED > 0) )
 				{
 				$LTC=$G; $LTCG=$EG;
-				if ($INORcolor > 0)
-					{
-					$LTC='<SPAN class="csc'.$INORcolor.'"><B>'; $LTCG='</B></SPAN>';
-					}
+			#	if ($INORcolor > 0)
+			#		{
+			#		$LTC='<SPAN class="csc'.$INORcolor.'"><B>'; $LTCG='</B></SPAN>';
+			#		}
 				if (preg_match("/^1/",$AGENTlatency))
 					{
 					$LATENCY = "<td NOWRAP align=right> $LTC$Alatency_min_avg[$i]ms$LTCG </td>";
