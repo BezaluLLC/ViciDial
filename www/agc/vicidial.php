@@ -718,6 +718,7 @@
 # 230412-1018 - Added code for send_notification API function
 # 230418-1425 - Added vicidial_user_dial_log logging
 # 230420-2015 - Added latency calculation and logging, Issue #1457
+# 230424-1754 - Changed phone login to readonly when password is forced to change
 #
 
 $version = '2.14-686c';
@@ -1448,11 +1449,26 @@ if ($relogin == 'YES')
 		echo "<input type=\"hidden\" name=\"VD_login\" id=\"VD_login\" value=\"$VD_login\" />\n";
 		echo "<input type=\"hidden\" name=\"VD_pass\" id=\"VD_pass\" value=\"$VD_pass\" />\n";
 		}
+	if (preg_match("/^READONLY_PHONE$/",$hide_relogin_fields))
+		{
+		echo "<input type=\"hidden\" name=\"hide_relogin_fields\" id=\"hide_relogin_fields\" value=\"\" />\n"; # RESET, as this is one-time
+		echo "<input type=\"hidden\" name=\"phone_login\" id=\"phone_login\" value=\"$phone_login\" />\n";
+		echo "<input type=\"hidden\" name=\"phone_pass\" id=\"phone_pass\" value=\"$phone_pass\" />\n";
+		}
 	echo "<br /><br /><br /><center><table width=\"460px\" cellpadding=\"3\" cellspacing=\"0\" bgcolor=\"#$SSframe_background\"><tr bgcolor=\"white\">";
 	echo "<td align=\"left\" valign=\"bottom\" bgcolor=\"#$SSmenu_background\" width=\"170\"><img src=\"$selected_logo\" border=\"0\" height=\"45\" width=\"170\" alt=\"Agent Screen\" /></td>";
 	echo "<td align=\"center\" valign=\"middle\" bgcolor=\"#$SSmenu_background\"> <font class=\"sh_text_white\">"._QXZ("Re-Login")."</font> </td>";
 	echo "</tr>\n";
 	echo "<tr><td align=\"left\" colspan=\"2\"><font size=\"1\"> &nbsp; </font></td></tr>\n";
+	if (preg_match("/^READONLY_PHONE$/",$hide_relogin_fields))
+		{
+		echo "<tr><td align=\"right\"><font class=\"skb_text\">"._QXZ("Phone Login:")."</font> </td>";
+		echo "<td align=\"left\"><b>$phone_login</b></td></tr>\n";
+		echo "<tr><td align=\"right\"><font class=\"skb_text\">"._QXZ("User Login").":</font>  </td>";
+		echo "<td align=\"left\"><input type=\"text\" name=\"VD_login\" size=\"20\" maxlength=\"20\" value=\"$VD_login\" /></td></tr>\n";
+		echo "<tr><td align=\"right\"><font class=\"skb_text\">"._QXZ("User Password:")."</font>  </td>";
+		echo "<td align=\"left\"><input type=\"password\" name=\"VD_pass\" size=\"20\" maxlength=\"100\" value=\"$VD_pass\" /></td></tr>\n";
+		}
 	if (preg_match("/^READONLY_LOGIN$/",$hide_relogin_fields))
 		{
 		echo "<tr><td align=\"right\"><font class=\"skb_text\">"._QXZ("User Login").":</font>  </td>";
@@ -1465,7 +1481,7 @@ if ($relogin == 'YES')
 		echo "<tr><td align=\"right\"><font class=\"skb_text\">"._QXZ("Phone Login:")."</font> </td>";
 		echo "<td align=\"left\"><b>$phone_login</b></td></tr>\n";
 		}
-	if (!preg_match("/^YES$|^READONLY_LOGIN$|^READONLY_LOGINPHONE$/",$hide_relogin_fields))
+	if (!preg_match("/^YES$|^READONLY_LOGIN$|^READONLY_PHONE$|^READONLY_LOGINPHONE$/",$hide_relogin_fields))
 		{
 		echo "<tr><td align=\"right\"><font class=\"skb_text\">"._QXZ("Phone Login:")."</font> </td>";
 		echo "<td align=\"left\"><input type=\"text\" name=\"phone_login\" size=\"20\" maxlength=\"20\" value=\"$phone_login\" /></td></tr>\n";
@@ -1822,7 +1838,8 @@ else
 						echo "<input type=\"hidden\" name=\"LOGINvarTHREE\" id=\"LOGINvarTHREE\" value=\"$LOGINvarTHREE\" />\n";
 						echo "<input type=\"hidden\" name=\"LOGINvarFOUR\" id=\"LOGINvarFOUR\" value=\"$LOGINvarFOUR\" />\n";
 						echo "<input type=\"hidden\" name=\"LOGINvarFIVE\" id=\"LOGINvarFIVE\" value=\"$LOGINvarFIVE\" />\n";
-						echo "<input type=\"hidden\" name=\"hide_relogin_fields\" id=\"hide_relogin_fields\" value=\"$hide_relogin_fields\" />\n";
+						# echo "<input type=\"hidden\" name=\"hide_relogin_fields\" id=\"hide_relogin_fields\" value=\"$hide_relogin_fields\" />\n";
+						echo "<input type=\"hidden\" name=\"hide_relogin_fields\" id=\"hide_relogin_fields\" value=\"READONLY_PHONE\" />\n";
 						echo "<br /><br /><br /><center><table width=\"660px\" cellpadding=\"3\" cellspacing=\"0\" bgcolor=\"#$SSframe_background\"><tr bgcolor=\"white\">";
 						echo "<td align=\"left\" valign=\"bottom\" bgcolor=\"#$SSmenu_background\" width=\"170\"><img src=\"$selected_logo\" border=\"0\" height=\"45\" width=\"170\" alt=\"Agent Screen\" /></td>";
 						echo "<td align=\"center\" valign=\"middle\" bgcolor=\"#$SSmenu_background\"> <font class=\"sh_text_white\">"._QXZ("Password has been changed successfully")."</font> </td>";
