@@ -719,10 +719,11 @@
 # 230418-1425 - Added vicidial_user_dial_log logging
 # 230420-2015 - Added latency calculation and logging, Issue #1457
 # 230424-1754 - Changed phone login to readonly when password is forced to change
+# 230513-2010 - Fix for manual dial call error handling
 #
 
-$version = '2.14-686c';
-$build = '230420-2015';
+$version = '2.14-687c';
+$build = '230513-2010';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=102;
@@ -11241,7 +11242,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						var regMDFvarCB = new RegExp("CALLBACK","ig");
 						var regMDFvarTIME = new RegExp("OUTSIDE","ig");
 						var regMDFvarTFH = new RegExp("24-HOUR CALL LIMIT","ig");
-						if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarDCCL)) || (MDnextCID.match(regMDFvarCAMP)) || (MDnextCID.match(regMDFvarSYS)) ||(MDnextCID.match(regMDFvarCB)) || (MDnextCID.match(regMDFvarTIME)) || (MDnextCID.match(regMDFvarTFH)) )
+						var regMDFvarERR = new RegExp("ERROR","ig");
+						if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarDCCL)) || (MDnextCID.match(regMDFvarCAMP)) || (MDnextCID.match(regMDFvarSYS)) ||(MDnextCID.match(regMDFvarCB)) || (MDnextCID.match(regMDFvarTIME)) || (MDnextCID.match(regMDFvarTFH)) || (MDnextCID.match(regMDFvarERR)) )
 							{
 							button_click_log = button_click_log + "" + SQLdate + "-----DialNextFailed---" + MDnextCID + " " + "|";
 
@@ -11299,6 +11301,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							if (MDnextCID.match(regMDFvarTFH))
 								{
 								alert_box("<?php echo _QXZ("This phone number is at the 24-hour call count limit:"); ?>\n" + mdnPhonENumbeR);
+								alert_displayed=1;
+								in_lead_preview_state=0;
+								}
+							if (MDnextCID.match(regMDFvarERR))
+								{
+								alert_box("<?php echo _QXZ("ERROR"); ?>:\n" + MDnextCID);
 								alert_displayed=1;
 								in_lead_preview_state=0;
 								}

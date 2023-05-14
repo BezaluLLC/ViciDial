@@ -533,10 +533,11 @@
 # 230309-1005 - Added abandon_check_queue feature
 # 230418-0852 - Changed LogiNCamPaigns to require user auth for campaign list
 # 230418-1354 - Added vicidial_user_dial_log logging
+# 230513-2043 - Fix for manual dial errors
 #
 
-$version = '2.14-426';
-$build = '230418-1354';
+$version = '2.14-427';
+$build = '230513-2043';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=911;
@@ -2279,7 +2280,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 		{
 		##### grab number of calls today in this campaign and increment
 		$eac_phone='';
-		$stmt="SELECT calls_today,extension,external_dial,status FROM vicidial_live_agents WHERE user='$user' and campaign_id='$campaign';";
+		$stmt="SELECT calls_today,extension,external_dial,status,callerid,lead_id FROM vicidial_live_agents WHERE user='$user';";
 		if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00015',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -2292,10 +2293,23 @@ if ($ACTION == 'manDiaLnextCaLL')
 			$eac_phone =	$row[1];
 			$ed_vla =		$row[2];
 			$vla_status =	$row[3];
+			$vla_callerid =	$row[4];
+			$vla_lead_id =	$row[5];
 			}
 		else
 			{$calls_today ='0';}
 		$calls_today++;
+
+		# check if agent is INCALL, and if so, send error and exit
+		if ($vla_status == 'INCALL')
+			{
+			$channel_live=0;
+			echo "ERROR: ALREADY INCALL\n";
+			echo _QXZ("Agent is already in call %1s for lead %2s",0,'',$vla_callerid,$vla_lead_id)."\n";
+			$stage.=" ERROR $vla_status $vla_callerid $vla_lead_id";
+			if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
+			exit;
+			}
 
 		if (preg_match("/^MANUALNEXT/",$ed_vla))
 			{
