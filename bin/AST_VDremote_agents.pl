@@ -812,7 +812,7 @@ while($one_day_interval > 0)
 							}
 						$sthA->finish();
 
-						$stmtA = "INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,campaign_id,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,channel,uniqueid,callerid,user_level,comments,last_state_change,outbound_autodial,ra_user,on_hook_agent,on_hook_ring_time,last_inbound_call_time,last_inbound_call_finish) values('$DBremote_user[$h]','$server_ip','$DBremote_conf_exten[$h]','R/$DBremote_user[$h]','READY','$DBremote_campaign[$h]','$DBremote_random[$h]','$SQLdate','$FDtsSQLdate','$SQLdate','$DBremote_closer[$h]','','','','$DBuser_level[$h]','REMOTE','$SQLdate','$CAMPAIGN_autodial[$h]','$DBuser_start[$h]','$DBon_hook_agent[$h]','$DBon_hook_ring_time[$h]','$SQLdate','$SQLdate');";
+						$stmtA = "INSERT INTO vicidial_live_agents (user,server_ip,conf_exten,extension,status,campaign_id,random_id,last_call_time,last_update_time,last_call_finish,closer_campaigns,channel,uniqueid,callerid,user_level,comments,last_state_change,outbound_autodial,ra_user,on_hook_agent,on_hook_ring_time,last_inbound_call_time,last_inbound_call_finish,lead_id) values('$DBremote_user[$h]','$server_ip','$DBremote_conf_exten[$h]','R/$DBremote_user[$h]','READY','$DBremote_campaign[$h]','$DBremote_random[$h]','$SQLdate','$FDtsSQLdate','$SQLdate','$DBremote_closer[$h]','','','','$DBuser_level[$h]','REMOTE','$SQLdate','$CAMPAIGN_autodial[$h]','$DBuser_start[$h]','$DBon_hook_agent[$h]','$DBon_hook_ring_time[$h]','$SQLdate','$SQLdate','0');";
 						$affected_rows = $dbhA->do($stmtA);
 						if ($DBX) {print STDERR "$DBremote_user[$h] NEW INSERT\n";}
 						if ($TESTrun > 0)
@@ -831,7 +831,7 @@ while($one_day_interval > 0)
 							if ($number_of_lines > $LSC_count)
 								{
 								$SIqueryCID = "T$CIDdate$DBremote_conf_exten[$h]";
-								$stmtA="INSERT INTO vicidial_manager values('','','$SQLdate','NEW','N','$server_ip','','Originate','$SIqueryCID','Channel: $local_DEF$DBremote_conf_exten[$h]$local_AMP$ext_context','Context: $ext_context','Exten: 999999999999','Priority: 1','Callerid: $SIqueryCID','','','','','');";
+								$stmtA="INSERT INTO vicidial_manager set uniqueid = '', entry_date = '$SQLdate', status = 'NEW', response = 'N', server_ip = '$server_ip', channel = '', action = 'Originate', callerid = '$SIqueryCID', cmd_line_b = 'Channel: $local_DEF$DBremote_conf_exten[$h]$local_AMP$ext_context', cmd_line_c = 'Context: $ext_context', cmd_line_d = 'Exten: 999999999999', cmd_line_e = 'Priority: 1', cmd_line_f = 'Callerid: $SIqueryCID', cmd_line_g = '', cmd_line_h = '', cmd_line_i = '', cmd_line_j = '', cmd_line_k = '';";								
 								$affected_rows = $dbhA->do($stmtA);
 								if ($DBX) {print STDERR "   TESTrun CALL PLACED: 999999999999 $DBremote_conf_exten[$h] $DBremote_user[$h] NEW INSERT: |$affected_rows|\n";}
 								}

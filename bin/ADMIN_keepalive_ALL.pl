@@ -163,9 +163,10 @@
 # 230331-2155 - Fix for issue #1458
 # 230412-1405 - Added daily rolling of vicidial_agent_notifications table, truncating of vicidial_agent_notifications_queue table
 # 230420-2321 - Added latency live agent detail updates and log rolling nightly
+# 230511-0825 - Added log_latency_gaps trigger, demographic_quotas trigger
 #
 
-$build = '230420-2321';
+$build = '230511-0825';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -460,7 +461,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 
 ##### Get the settings from system_settings #####
-$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats,enable_auto_reports,enable_drop_lists,expired_lists_inactive,sip_event_logging,call_quota_lead_ranking,inbound_answer_config FROM system_settings;";
+$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats,enable_auto_reports,enable_drop_lists,expired_lists_inactive,sip_event_logging,call_quota_lead_ranking,inbound_answer_config,log_latency_gaps,demographic_quotas FROM system_settings;";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -487,6 +488,8 @@ if ($sthArows > 0)
 	$SSsip_event_logging =				$aryA[16];
 	$SScall_quota_lead_ranking =		$aryA[17];
 	$SSinbound_answer_config =			$aryA[18];
+	$SSlog_latency_gaps =				$aryA[19];
+	$SSdemographic_quotas =				$aryA[20];
 	}
 $sthA->finish();
 if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
@@ -5557,10 +5560,58 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 			}
 		$i++;
 		}
+
+	# trigger the latency gaps logging process if enabled
+	if ($SSlog_latency_gaps > 0) 
+		{
+		$LL_email='';
+		if ($SSlog_latency_gaps < 2) 
+			{$LL_email='--email-gaps-notice';}
+		if ($DB) {print "running agent latency gaps logging process...\n";}
+		`/usr/bin/screen -d -m -S Gaps$reset_test $PATHhome/AST_latency_gaps.pl -q --container=AGENT_LATENCY_LOGGING --live $LL_email 2>/dev/null 1>&2`;
+		}
 	}
 ################################################################################
 #####  END latency log live agent details updates
 ################################################################################
+
+
+
+
+################################################################################
+#####  START launch Demographic Quotas process, if enabled on any active campaigns
+################################################################################
+# only run this on active voicemail server
+if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_server)) eq (length($server_ip))) && ($SSdemographic_quotas > 0) )
+	{
+	##### look for active campaigns with DQ enabled on them #####
+	$demographic_quotas=0;
+	$stmtA = "SELECT count(*) FROM vicidial_campaigns where active='Y' and demographic_quotas='ENABLED';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($DBX) {print "$sthArows|$stmtA|\n";}
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$demographic_quotas =		$aryA[0];
+		}
+	$sthA->finish();
+
+	if ($demographic_quotas > 0) 
+		{
+		if ($DB) {print "Demographic Quotas campaigns enabled on this system, launching process: $demographic_quotas \n";}
+		`/usr/bin/screen -d -m -S DQrun$reset_test $PATHhome/AST_VDdemographic_quotas.pl 2>/dev/null 1>&2`;
+		}
+	else
+		{
+		if ($DB) {print "No Demographic Quotas campaigns enabled on this system: $demographic_quotas \n";}
+		}
+	}
+################################################################################
+#####  START launch Demographic Quotas process, if enabled on any active campaigns
+################################################################################
+
 
 
 

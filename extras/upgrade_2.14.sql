@@ -2269,3 +2269,58 @@ CREATE TABLE vicidial_agent_latency_summary_log_archive LIKE vicidial_agent_late
 CREATE UNIQUE INDEX vdalsla on vicidial_agent_latency_summary_log_archive (user,log_date,web_ip);
 
 UPDATE system_settings SET db_schema_version='1682',db_schema_update_date=NOW() where db_schema_version < 1682;
+
+ALTER TABLE system_settings ADD demographic_quotas ENUM('0','1','2','3','4','5','6','7') default '0';
+ALTER TABLE system_settings ADD log_latency_gaps ENUM('0','1','2','3','4','5','6','7') default '1';
+
+ALTER TABLE vicidial_campaigns ADD demographic_quotas ENUM('DISABLED','ENABLED','INVALID','COMPLETE') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD demographic_quotas_container VARCHAR(40) default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD demographic_quotas_rerank ENUM('NO','NOW','HOUR','MINUTE','NOW_HOUR') default 'NO';
+ALTER TABLE vicidial_campaigns ADD demographic_quotas_last_rerank DATETIME default '2000-01-01 00:00:00';
+ALTER TABLE vicidial_campaigns ADD demographic_quotas_list_resets ENUM('AUTO','MANUAL') default 'MANUAL';
+
+CREATE TABLE vicidial_demographic_quotas_goals (
+vdqg_id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+campaign_id VARCHAR(8) default '',
+demographic_quotas_container VARCHAR(40) default '',
+quota_field VARCHAR(20) default '',
+quota_field_order TINYINT(3) default '0',
+quota_value VARCHAR(100) default '',
+quota_value_order TINYINT(3) default '0',
+quota_goal MEDIUMINT(7) default '0',
+quota_count MEDIUMINT(7) default '0',
+quota_leads_total MEDIUMINT(7) default '0',
+quota_leads_active MEDIUMINT(7) default '0',
+quota_status VARCHAR(10) default 'ACTIVE',
+quota_modify_date DATETIME,
+last_lead_id INT(9) UNSIGNED default '0',
+last_list_id BIGINT(14) UNSIGNED default '0',
+last_call_date DATETIME,
+last_status VARCHAR(6) default '',
+index(campaign_id),
+index(quota_field),
+index(quota_value),
+unique index vdqgi (campaign_id,quota_field,quota_field_order,quota_value,quota_value_order)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_latency_gaps (
+user VARCHAR(20) default '',
+user_ip VARCHAR(45) default '',
+gap_date DATETIME,
+gap_length MEDIUMINT(5) UNSIGNED default '0',
+last_login_date DATETIME,
+check_date DATETIME,
+index(user),
+index(gap_date),
+index(check_date),
+unique index vlgi (user,gap_date)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_latency_gaps_archive LIKE vicidial_latency_gaps;
+CREATE UNIQUE INDEX vdlga on vicidial_latency_gaps_archive (user,gap_date);
+
+INSERT INTO vicidial_settings_containers(container_id,container_notes,container_type,user_group,container_entry) VALUES ('HOPPER_CLI_FLAGS', 'Comand-line flags for hopper process', 'PERL_CLI', '---ALL---', '');
+
+INSERT INTO vicidial_settings_containers(container_id,container_notes,container_type,user_group,container_entry) VALUES ('AGENT_LATENCY_LOGGING','Default agent latency logging settings','PERL_CLI','---ALL---','minimum_gap => 30\r\nemail_sender => \r\nemail_list => \r\nemail_subject => Agent Network Alert');
+
+UPDATE system_settings SET db_schema_version='1683',db_schema_update_date=NOW() where db_schema_version < 1683;

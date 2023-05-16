@@ -790,7 +790,12 @@ OTHER CHANGES:
 	of calls with no audio data. This is a campaign feature.
 
 222. Added agent screen latency logging, viewable in the Real-Time Report and
-	the new Agent Latency Report.
+	the new Agent Latency Report and Latency Gaps Report.
+
+223. Added Demographic Quotas, allowing for setting of quota goals for leads 
+	based upon lead field values for demographic parameters like: gender,
+	age-group, political-party, etc... For more information on this set of
+	features, read the DEMOGRAPHIC_QUOTAS.txt document.
 
 
 
