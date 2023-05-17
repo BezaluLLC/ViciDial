@@ -5,6 +5,7 @@
 #
 # CHANGES
 # 230430-1952 - First build
+# 230516-2024 - Fix for graphs
 #
 
 $startMS = microtime();
@@ -254,10 +255,6 @@ $HEADER.="-->\n";
 $HEADER.=" </STYLE>\n";
 $HEADER.="<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 $HEADER.="<link rel=\"stylesheet\" href=\"calendar.css\">\n";
-$HEADER.="<link rel=\"stylesheet\" href=\"horizontalbargraph.css\">\n";
-$HEADER.="<link rel=\"stylesheet\" href=\"verticalbargraph.css\">\n";
-$HEADER.="<script language=\"JavaScript\" src=\"wz_jsgraphics.js\"></script>\n";
-$HEADER.="<script language=\"JavaScript\" src=\"line.js\"></script>\n";
 $HEADER.="<script type=\"text/javascript\" src=\"dygraph.js\"></script>\n";
 $HEADER.="<script type=\"text/javascript\" src=\"dygraph_vici.js\"></script>\n";
 $HEADER.="<link rel=\"stylesheet\" type=\"text/css\" href=\"dygraph.css\" />\n";
