@@ -124,4 +124,7 @@ $Xframe_options				= 'N';	# Not part of CORS, but can prevent Iframe/embed/etc..
 $CORS_debug					= 0;	# 0 = no, 1 = yes (default is no) This will generate a lot of log entries in a CORSdebug_log.txt file
 #	require_once('agentCORS.php');
 
+$customer_chat_refresh_seconds	= 1;	# How often (in seconds) to refresh customer ang agent chat window
+$manager_chat_refresh_seconds	= 1;	# How often (in seconds) to refresh manager chat window
+
 ?>

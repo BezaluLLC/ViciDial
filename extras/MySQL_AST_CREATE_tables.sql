@@ -1109,7 +1109,12 @@ demographic_quotas ENUM('DISABLED','ENABLED','INVALID','COMPLETE') default 'DISA
 demographic_quotas_container VARCHAR(40) default 'DISABLED',
 demographic_quotas_rerank ENUM('NO','NOW','HOUR','MINUTE','NOW_HOUR') default 'NO',
 demographic_quotas_last_rerank DATETIME default '2000-01-01 00:00:00',
-demographic_quotas_list_resets ENUM('AUTO','MANUAL') default 'MANUAL'
+demographic_quotas_list_resets ENUM('AUTO','MANUAL') default 'MANUAL',
+custom_one TEXT,
+custom_two TEXT,
+custom_three TEXT,
+custom_four TEXT,
+custom_five TEXT
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -1415,7 +1420,12 @@ populate_lead_comments VARCHAR(40) default 'CALLERID_NAME',
 drop_call_seconds_override VARCHAR(40) default 'DISABLED',
 populate_lead_owner VARCHAR(20) default 'DISABLED',
 in_queue_nanque ENUM('N','Y','NO_PAUSED','NO_PAUSED_EXCEPTIONS','NO_READY') default 'N',
-in_queue_nanque_exceptions VARCHAR(40) default ''
+in_queue_nanque_exceptions VARCHAR(40) default '',
+custom_one TEXT,
+custom_two TEXT,
+custom_three TEXT,
+custom_four TEXT,
+custom_five TEXT
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -5039,6 +5049,18 @@ ALTER TABLE vicidial_hopper ENGINE=MEMORY;
 
 UPDATE system_settings SET auto_user_add_value='1101';
 
+UPDATE vicidial_campaigns SET custom_one='' WHERE custom_one IS NULL;
+UPDATE vicidial_campaigns SET custom_two='' WHERE custom_two IS NULL;
+UPDATE vicidial_campaigns SET custom_three='' WHERE custom_three IS NULL;
+UPDATE vicidial_campaigns SET custom_four='' WHERE custom_four IS NULL;
+UPDATE vicidial_campaigns SET custom_five='' WHERE custom_five IS NULL;
+
+UPDATE vicidial_inbound_groups SET custom_one='' WHERE custom_one IS NULL;
+UPDATE vicidial_inbound_groups SET custom_two='' WHERE custom_two IS NULL;
+UPDATE vicidial_inbound_groups SET custom_three='' WHERE custom_three IS NULL;
+UPDATE vicidial_inbound_groups SET custom_four='' WHERE custom_four IS NULL;
+UPDATE vicidial_inbound_groups SET custom_five='' WHERE custom_five IS NULL;
+
 INSERT INTO vicidial_music_on_hold SET moh_id='default',moh_name='Default Music On Hold',active='Y',random='N';
 INSERT INTO vicidial_music_on_hold_files SET moh_id='default',filename='conf',rank='1';
 
@@ -5391,4 +5413,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1683',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1684',db_schema_update_date=NOW(),reload_timestamp=NOW();

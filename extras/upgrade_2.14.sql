@@ -2324,3 +2324,29 @@ INSERT INTO vicidial_settings_containers(container_id,container_notes,container_
 INSERT INTO vicidial_settings_containers(container_id,container_notes,container_type,user_group,container_entry) VALUES ('AGENT_LATENCY_LOGGING','Default agent latency logging settings','PERL_CLI','---ALL---','minimum_gap => 30\r\nemail_sender => \r\nemail_list => \r\nemail_subject => Agent Network Alert');
 
 UPDATE system_settings SET db_schema_version='1683',db_schema_update_date=NOW() where db_schema_version < 1683;
+
+ALTER TABLE vicidial_campaigns ADD custom_one TEXT;
+ALTER TABLE vicidial_campaigns ADD custom_two TEXT;
+ALTER TABLE vicidial_campaigns ADD custom_three TEXT;
+ALTER TABLE vicidial_campaigns ADD custom_four TEXT;
+ALTER TABLE vicidial_campaigns ADD custom_five TEXT;
+
+ALTER TABLE vicidial_inbound_groups ADD custom_one TEXT;
+ALTER TABLE vicidial_inbound_groups ADD custom_two TEXT;
+ALTER TABLE vicidial_inbound_groups ADD custom_three TEXT;
+ALTER TABLE vicidial_inbound_groups ADD custom_four TEXT;
+ALTER TABLE vicidial_inbound_groups ADD custom_five TEXT;
+
+UPDATE vicidial_campaigns SET custom_one='' WHERE custom_one IS NULL;
+UPDATE vicidial_campaigns SET custom_two='' WHERE custom_two IS NULL;
+UPDATE vicidial_campaigns SET custom_three='' WHERE custom_three IS NULL;
+UPDATE vicidial_campaigns SET custom_four='' WHERE custom_four IS NULL;
+UPDATE vicidial_campaigns SET custom_five='' WHERE custom_five IS NULL;
+
+UPDATE vicidial_inbound_groups SET custom_one='' WHERE custom_one IS NULL;
+UPDATE vicidial_inbound_groups SET custom_two='' WHERE custom_two IS NULL;
+UPDATE vicidial_inbound_groups SET custom_three='' WHERE custom_three IS NULL;
+UPDATE vicidial_inbound_groups SET custom_four='' WHERE custom_four IS NULL;
+UPDATE vicidial_inbound_groups SET custom_five='' WHERE custom_five IS NULL;
+
+UPDATE system_settings SET db_schema_version='1684',db_schema_update_date=NOW() where db_schema_version < 1684;
