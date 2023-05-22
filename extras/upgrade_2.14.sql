@@ -2350,3 +2350,9 @@ UPDATE vicidial_inbound_groups SET custom_four='' WHERE custom_four IS NULL;
 UPDATE vicidial_inbound_groups SET custom_five='' WHERE custom_five IS NULL;
 
 UPDATE system_settings SET db_schema_version='1684',db_schema_update_date=NOW() where db_schema_version < 1684;
+
+ALTER TABLE vicidial_users ADD modify_dial_prefix ENUM('0','1','2','3','4','5','6') default '0';
+
+UPDATE vicidial_users, system_settings SET modify_dial_prefix='1' where campaign_detail='1' and user_level >= 8 and active='Y' and db_schema_version < 1685;
+
+UPDATE system_settings SET db_schema_version='1685',db_schema_update_date=NOW() where db_schema_version < 1685;

@@ -702,7 +702,8 @@ user_group_two VARCHAR(20) default '',
 failed_login_attempts_today MEDIUMINT(8) UNSIGNED default '0',
 failed_login_count_today SMALLINT(6) UNSIGNED default '0',
 failed_last_ip_today VARCHAR(50) default '',
-failed_last_type_today VARCHAR(20) default ''
+failed_last_type_today VARCHAR(20) default '',
+modify_dial_prefix ENUM('0','1','2','3','4','5','6') default '0'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -5413,4 +5414,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1684',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1685',db_schema_update_date=NOW(),reload_timestamp=NOW();
