@@ -535,10 +535,11 @@
 # 230418-1354 - Added vicidial_user_dial_log logging
 # 230513-2043 - Fix for manual dial errors
 # 230518-1033 - Added in-group and campaign custom fields 1-5, for script/webform/dispo-call-url use
+# 230523-0827 - Added User inbound_credits feature
 #
 
-$version = '2.14-428';
-$build = '230518-1033';
+$version = '2.14-429';
+$build = '230523-0827';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=913;
@@ -1054,7 +1055,7 @@ $sip_hangup_cause_dictionary = array(
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,agent_debug_logging,default_language,active_modules,allow_chats,default_phone_code,user_new_lead_limit,sip_event_logging,call_quota_lead_ranking,daily_call_count_limit,call_limit_24hour,allow_web_debug,abandon_check_queue FROM system_settings;";
+$stmt = "SELECT use_non_latin,timeclock_end_of_day,agentonly_callback_campaign_lock,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass,tables_use_alt_log_db,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,agent_debug_logging,default_language,active_modules,allow_chats,default_phone_code,user_new_lead_limit,sip_event_logging,call_quota_lead_ranking,daily_call_count_limit,call_limit_24hour,allow_web_debug,abandon_check_queue,inbound_credits FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00001',$user,$server_ip,$session_name,$one_mysql_log);}
 #if ($DB) {echo "$stmt\n";}
@@ -1087,6 +1088,7 @@ if ($qm_conf_ct > 0)
 	$SScall_limit_24hour =					$row[22];
 	$SSallow_web_debug =					$row[23];
 	$SSabandon_check_queue =				$row[24];
+	$SSinbound_credits =					$row[25];
 	}
 if ($SSallow_web_debug < 1) {$DB=0;   $format='text';}
 ##### END SETTINGS LOOKUP #####
@@ -1646,7 +1648,7 @@ if ($ACTION == 'regCLOSER')
 	else
 		{
 		$orig_closer_choice = $closer_choice;
-		$stmt = "SELECT max_inbound_calls,max_inbound_filter_enabled,max_inbound_filter_ingroups FROM vicidial_users where user='$user';";
+		$stmt = "SELECT max_inbound_calls,max_inbound_filter_enabled,max_inbound_filter_ingroups,inbound_credits FROM vicidial_users where user='$user';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00587',$user,$server_ip,$session_name,$one_mysql_log);}
 		if ($format=='debug') {echo "\n<!-- $rowx[0]|$stmt -->";}
@@ -1657,6 +1659,7 @@ if ($ACTION == 'regCLOSER')
 			$VU_max_inbound_calls =				$row[0];
 			$VU_max_inbound_filter_enabled =	$row[1];
 			$VU_max_inbound_filter_ingroups =	$row[2];
+			$VU_inbound_credits =				$row[3];
 			}
 		$stmt = "SELECT max_inbound_calls,max_inbound_calls_outcome FROM vicidial_campaigns where campaign_id='$campaign';";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -1670,6 +1673,7 @@ if ($ACTION == 'regCLOSER')
 			$max_inbound_calls_outcome =	$row[1];
 			}
 
+		$max_inbound_triggered=0;
 		if ( ($VU_max_inbound_calls > 0) or ($CP_max_inbound_calls > 0) )
 			{
 			$max_inbound_calls = $CP_max_inbound_calls;
@@ -1689,8 +1693,16 @@ if ($ACTION == 'regCLOSER')
 					{$max_inbound_count =		$row[1];}
 
 				if ($max_inbound_count >= $max_inbound_calls)
-					{$closer_choice = "MAXLOCK-";}
+					{
+					$max_inbound_triggered++;
+					$closer_choice = "MAXLOCK-";
+					}
 				}
+			}
+		if ($max_inbound_triggered < 1)
+			{
+			if ( ($VU_inbound_credits >= 0) and ($VU_inbound_credits < 1) and ($SSinbound_credits > 0) )
+				{$closer_choice = "CDTLOCK-";}
 			}
 
 		if ($closer_blended > 0)
@@ -1701,10 +1713,10 @@ if ($ACTION == 'regCLOSER')
 			{$vla_autodial = 'N';}
 
 		$standard_closer_update=1;
-		if ( ($closer_choice == "MGRLOCK-") or ($closer_choice == "MAXLOCK-") )
+		if ( ($closer_choice == "MGRLOCK-") or ($closer_choice == "MAXLOCK-") or ($closer_choice == "CDTLOCK-") )
 			{
 			$standard_closer_update=0;
-			if ($closer_choice == "MAXLOCK-")
+			if ( ($closer_choice == "MAXLOCK-") or ($closer_choice == "CDTLOCK-") )
 				{
 				if (preg_match("/ALLOW_AGENTDIRECT/",$max_inbound_calls_outcome))
 					{
@@ -13458,7 +13470,7 @@ if ($ACTION == 'updateDISPO')
 		}
 
 	$user_group='';
-	$stmt="SELECT user_group,max_inbound_filter_enabled,max_inbound_filter_ingroups,max_inbound_filter_statuses,max_inbound_filter_min_sec,max_inbound_calls FROM vicidial_users where user='$user' LIMIT 1;";
+	$stmt="SELECT user_group,max_inbound_filter_enabled,max_inbound_filter_ingroups,max_inbound_filter_statuses,max_inbound_filter_min_sec,max_inbound_calls,inbound_credits FROM vicidial_users where user='$user' LIMIT 1;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00152',$user,$server_ip,$session_name,$one_mysql_log);}
 	if ($DB) {echo "$stmt\n";}
@@ -13472,6 +13484,7 @@ if ($ACTION == 'updateDISPO')
 		$max_inbound_filter_statuses =	$row[3];
 		$max_inbound_filter_min_sec =	$row[4];
 		$VU_max_inbound_calls =			$row[5];
+		$VU_inbound_credits =			$row[6];
 		}
 
 	$stmt = "SELECT dispo_call_url,queuemetrics_callstatus_override,comments_dispo_screen,comments_callback_screen,vc.campaign_id,vc.custom_one,vc.custom_two,vc.custom_three,vc.custom_four,vc.custom_five from vicidial_campaigns vc,vicidial_live_agents vla where vla.campaign_id=vc.campaign_id and vla.user='$user';";

@@ -721,13 +721,14 @@
 # 230424-1754 - Changed phone login to readonly when password is forced to change
 # 230513-2010 - Fix for manual dial call error handling
 # 230518-0912 - Added in-group and campaign custom fields 1-5, for script/webform/dispo-call-url use, chat fixes
+# 230523-0826 - Added User inbound_credits feature
 #
 
-$version = '2.14-688c';
-$build = '230518-0912';
+$version = '2.14-689c';
+$build = '230523-0826';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
-$mysql_log_count=102;
+$mysql_log_count=103;
 $one_mysql_log=0;
 $DB=0;
 
@@ -824,7 +825,7 @@ $random = (rand(1000000, 9999999) + 10000000);
 
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script,agent_push_events,agent_push_url,agent_logout_link,agentonly_callback_campaign_lock,manual_dial_validation,mute_recordings,enable_second_script,enable_first_webform,recording_buttons,outbound_cid_any,browser_call_alerts,manual_dial_phone_strip,require_password_length,pass_hash_enabled,agent_hidden_sound_seconds,agent_hidden_sound,agent_hidden_sound_volume,agent_screen_timer,agent_hide_hangup,allow_web_debug,max_logged_in_agents,login_kickall,agent_notifications FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script,agent_push_events,agent_push_url,agent_logout_link,agentonly_callback_campaign_lock,manual_dial_validation,mute_recordings,enable_second_script,enable_first_webform,recording_buttons,outbound_cid_any,browser_call_alerts,manual_dial_phone_strip,require_password_length,pass_hash_enabled,agent_hidden_sound_seconds,agent_hidden_sound,agent_hidden_sound_volume,agent_screen_timer,agent_hide_hangup,allow_web_debug,max_logged_in_agents,login_kickall,agent_notifications,inbound_credits FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 #if ($DB) {echo "$stmt\n";}
@@ -887,6 +888,7 @@ if ($qm_conf_ct > 0)
 	$SSmax_logged_in_agents =			$row[52];
 	$SSlogin_kickall =					$row[53];
 	$SSagent_notifications =			$row[54];
+	$SSinbound_credits =				$row[55];
 	if ( ($SSagent_hidden_sound == '---NONE---') or ($SSagent_hidden_sound == '') ) {$SSagent_hidden_sound_seconds=0;}
 	}
 else
@@ -1919,7 +1921,7 @@ else
 				}
 
 			##### grab the full name and other settings of the agent
-			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override,preset_contact_search,max_inbound_calls,wrapup_seconds_override,email,user_choose_language,ready_max_logout,mute_recordings,max_inbound_filter_enabled,status_group_id,manual_dial_filter from vicidial_users where user='$VD_login' and active='Y' and api_only_user != '1';";
+			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override,preset_contact_search,max_inbound_calls,wrapup_seconds_override,email,user_choose_language,ready_max_logout,mute_recordings,max_inbound_filter_enabled,status_group_id,manual_dial_filter,inbound_credits from vicidial_users where user='$VD_login' and active='Y' and api_only_user != '1';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01007',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysqli_fetch_row($rslt);
@@ -1960,6 +1962,7 @@ else
 			$VU_max_inbound_filter_enabled =		$row[34];
 			$VU_status_group_id =					$row[35];
 			$VU_manual_dial_filter =				$row[36];
+			$VU_inbound_credits =					$row[37];
 
 			if ( ($VU_alert_enabled > 0) and ($VU_allow_alerts > 0) ) {$VU_alert_enabled = 'ON';}
 			else {$VU_alert_enabled = 'OFF';}
@@ -3238,10 +3241,30 @@ else
 							if ($max_inbound_count >= $max_inbound_calls)
 								{
 								if (preg_match("/ALLOW_AGENTDIRECT/",$max_inbound_calls_outcome))
-									{$closer_campaigns = $ADcloser_campaigns;}
+									{
+									$closer_campaigns = $ADcloser_campaigns;
+									echo "<!-- Max Inbound Calls trigger(AD allowed): |$max_inbound_count|$max_inbound_calls|$max_inbound_calls_outcome| -->\n";
+									}
 								else
-									{$closer_campaigns = "''";}
+									{
+									$closer_campaigns = "''";
+									echo "<!-- Max Inbound Calls trigger: |$max_inbound_count|$max_inbound_calls| -->\n";
+									}
 								}
+							}
+						}
+					### validate that the agent has inbound_credits available, if that feature is enabled
+					if ( ($VU_inbound_credits >= 0) and ($VU_inbound_credits < 1) && ($SSinbound_credits > 0) )
+						{
+						if (preg_match("/ALLOW_AGENTDIRECT/",$max_inbound_calls_outcome))
+							{
+							$closer_campaigns = $ADcloser_campaigns;
+							echo "<!-- Inbound Calls Credits zero trigger(AD allowed): |$VU_inbound_credits|$SSinbound_credits|$max_inbound_calls_outcome| -->\n";
+							}
+						else
+							{
+							$closer_campaigns = "''";
+							echo "<!-- Inbound Calls Credits zero trigger: |$VU_inbound_credits|$SSinbound_credits| -->\n";
 							}
 						}
 
@@ -4418,7 +4441,7 @@ else
 				$stmt="INSERT IGNORE INTO vicidial_live_agents_details set latency='0',web_ip='$ip',update_date=NOW(),user='$VD_login';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_to_mysqli($stmt, $link);
-					if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'03103',$user,$server_ip,$session_name,$one_mysql_log);}
 
 				if ($enable_queuemetrics_logging > 0)
 					{

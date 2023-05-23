@@ -703,7 +703,8 @@ failed_login_attempts_today MEDIUMINT(8) UNSIGNED default '0',
 failed_login_count_today SMALLINT(6) UNSIGNED default '0',
 failed_last_ip_today VARCHAR(50) default '',
 failed_last_type_today VARCHAR(20) default '',
-modify_dial_prefix ENUM('0','1','2','3','4','5','6') default '0'
+modify_dial_prefix ENUM('0','1','2','3','4','5','6') default '0',
+inbound_credits MEDIUMINT(7) default '-1'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -1999,7 +2000,8 @@ login_kickall ENUM('0','1','2','3','4','5','6','7') default '0',
 abandon_check_queue ENUM('0','1','2','3','4','5','6','7') default '0',
 agent_notifications ENUM('0','1','2','3','4','5','6','7') default '0',
 demographic_quotas ENUM('0','1','2','3','4','5','6','7') default '0',
-log_latency_gaps ENUM('0','1','2','3','4','5','6','7') default '1'
+log_latency_gaps ENUM('0','1','2','3','4','5','6','7') default '1',
+inbound_credits ENUM('0','1','2','3','4','5','6','7') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -5414,4 +5416,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1685',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1686',db_schema_update_date=NOW(),reload_timestamp=NOW();

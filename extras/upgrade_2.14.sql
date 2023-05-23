@@ -2356,3 +2356,9 @@ ALTER TABLE vicidial_users ADD modify_dial_prefix ENUM('0','1','2','3','4','5','
 UPDATE vicidial_users, system_settings SET modify_dial_prefix='1' where campaign_detail='1' and user_level >= 8 and active='Y' and db_schema_version < 1685;
 
 UPDATE system_settings SET db_schema_version='1685',db_schema_update_date=NOW() where db_schema_version < 1685;
+
+ALTER TABLE system_settings ADD inbound_credits ENUM('0','1','2','3','4','5','6','7') default '0';
+
+ALTER TABLE vicidial_users ADD inbound_credits MEDIUMINT(7) default '-1';
+
+UPDATE system_settings SET db_schema_version='1686',db_schema_update_date=NOW() where db_schema_version < 1686;

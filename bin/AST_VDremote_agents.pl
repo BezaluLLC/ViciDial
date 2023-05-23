@@ -11,7 +11,7 @@
 # agents that should appear to be logged in so that the calls can be transferred 
 # out to them properly.
 #
-# Copyright (C) 2019  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50215-0954 - First version of script
@@ -54,6 +54,7 @@
 # 170527-2348 - Fix for rare inbound logging issue #1017
 # 190716-1628 - Added code for Call Quotas
 # 191017-1909 - Added code for filtered maximum inbound calls
+# 230523-0825 - Added User inbound_credits feature
 #
 
 ### begin parsing run-time options ###
@@ -180,7 +181,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 #############################################
 ##### Gather system_settings #####
-$stmtA = "SELECT sip_event_logging,call_quota_lead_ranking FROM system_settings;";
+$stmtA = "SELECT sip_event_logging,call_quota_lead_ranking,inbound_credits FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -189,6 +190,7 @@ if ($sthArows > 0)
 	@aryA = $sthA->fetchrow_array;
 	$SSsip_event_logging =			$aryA[0];
 	$SScall_quota_lead_ranking =	$aryA[1];
+	$SSinbound_credits =			$aryA[2];
 	}
 $sthA->finish();
 ###########################################
@@ -378,7 +380,7 @@ while($one_day_interval > 0)
 					{
 					### Gather user details for max inbound calls
 					$max_inbound_calls=0;
-					$stmtJ = "SELECT max_inbound_calls,max_inbound_filter_enabled,max_inbound_filter_ingroups FROM vicidial_users where user='$QHuser[$w]';";
+					$stmtJ = "SELECT max_inbound_calls,max_inbound_filter_enabled,max_inbound_filter_ingroups,inbound_credits FROM vicidial_users where user='$QHuser[$w]';";
 					$sthA = $dbhA->prepare($stmtJ) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtJ ", $dbhA->errstr;
 					$sthArowsMIC=$sthA->rows;
@@ -388,6 +390,7 @@ while($one_day_interval > 0)
 						$VU_max_inbound_calls =				$aryA[0];
 						$VU_max_inbound_filter_enabled =	$aryA[1];
 						$VU_max_inbound_filter_ingroups =	$aryA[2];
+						$VU_inbound_credits =				$aryA[3];
 						}
 					$channel_group = $QHcampaign_id[$w];
 					$calls_today_filteredSQL = ",calls_today_filtered=(calls_today_filtered + 1),last_call_time_filtered='$SQLdate'";
@@ -434,6 +437,7 @@ while($one_day_interval > 0)
 						$CP_max_inbound_calls = $aryA[0];
 						}
 
+					$max_inbound_triggered=0;
 					if ( ($VU_max_inbound_calls > 0) || ($CP_max_inbound_calls > 0) )
 						{
 						$max_inbound_calls = $CP_max_inbound_calls;
@@ -455,6 +459,7 @@ while($one_day_interval > 0)
 							}
 						if ($max_inbound_count >= $max_inbound_calls)
 							{
+							$max_inbound_triggered++;
 							$stmtJ = "UPDATE vicidial_live_agents set closer_campaigns='' where user='$QHuser[$w]';";
 							$affected_rows = $dbhA->do($stmtJ);
 
@@ -471,7 +476,26 @@ while($one_day_interval > 0)
 							}
 						}
 					##### END check for user max inbound calls #####
+					if ($max_inbound_triggered < 1) 
+						{
+						if ( ($VU_inbound_credits >= 0) && ($VU_inbound_credits < 1) && ($SSinbound_credits > 0) )
+							{
+							$max_inbound_triggered++;
+							$stmtJ = "UPDATE vicidial_live_agents set closer_campaigns='' where user='$QHuser[$w]';";
+							$affected_rows = $dbhA->do($stmtJ);
 
+							$stmtJ = "DELETE FROM vicidial_live_inbound_agents where user='$QHuser[$w]';";
+							$affected_rows = $dbhA->do($stmtJ);
+
+							$stmtJ = "UPDATE vicidial_remote_agents set closer_campaigns='' where user_start='$QHuser[$w]';";
+							$affected_rows = $dbhA->do($stmtJ);
+
+							$stmtJ = "INSERT INTO vicidial_admin_log set event_date=NOW(), user='$QHuser[$w]', ip_address='$VARserver_ip', event_section='USERS', event_type='MODIFY', record_id='$QHuser[$w]', event_code='INBOUND CREDITS REMOTE AGENT', event_sql='DELETE FROM vicidial_live_inbound_agents where user=$QHuser[$w]', event_notes='|$VU_inbound_credits|$QHuser[$w]|$QHcall_id[$w]|RA|';";
+							$affected_rows = $dbhA->do($stmtJ);
+
+							$event_string = "--    INBOUND CALLS CREDITS TRIGGER: |$VU_inbound_credits|$QHuser[$w]|$QHcall_id[$w]|";   &event_logger;
+							}
+						}
 
 					$stmtG = "SELECT start_call_url,'DISABLED' FROM vicidial_inbound_groups where group_id='$QHcampaign_id[$w]';";
 					}
