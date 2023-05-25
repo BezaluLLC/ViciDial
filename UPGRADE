@@ -797,6 +797,12 @@ OTHER CHANGES:
 	age-group, political-party, etc... For more information on this set of
 	features, read the DEMOGRAPHIC_QUOTAS.txt document.
 
+224. Added Inbound Calls Credits, allowing per-User setting of a number of 
+	inbound calls that can be handled, until reset by a manager.
+
+225. Added List Weekday Resets, allowing for automatic list resets scheduled by
+	day-of-the-week on a per-list basis.
+
 
 
 

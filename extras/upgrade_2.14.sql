@@ -2362,3 +2362,11 @@ ALTER TABLE system_settings ADD inbound_credits ENUM('0','1','2','3','4','5','6'
 ALTER TABLE vicidial_users ADD inbound_credits MEDIUMINT(7) default '-1';
 
 UPDATE system_settings SET db_schema_version='1686',db_schema_update_date=NOW() where db_schema_version < 1686;
+
+ALTER TABLE system_settings ADD weekday_resets ENUM('0','1','2','3','4','5','6','7') default '0';
+
+ALTER TABLE vicidial_lists ADD weekday_resets_container VARCHAR(40) default 'DISABLED';
+
+INSERT INTO vicidial_settings_containers(container_id,container_notes,container_type,user_group,container_entry) VALUES ('EXAMPLE_LIST_WEEKDAY_RESETS','Example Weekday List Resets Container settings','LIST_WEEKDAY_RESETS','---ALL---','; weekday => reset-times in 24-hour time separated by dashes\r\nmonday => 0830-1230-1800\r\ntuesday => 0900-1400-1830\r\nwednesday => 0930-1200-1730-1900\r\nthursday => 1030-1330-1900\r\nfriday => 0800-1300-1530\r\nsaturday => 0930-1100\r\nsunday => 1000');
+
+UPDATE system_settings SET db_schema_version='1687',db_schema_update_date=NOW() where db_schema_version < 1687;

@@ -164,9 +164,10 @@
 # 230412-1405 - Added daily rolling of vicidial_agent_notifications table, truncating of vicidial_agent_notifications_queue table
 # 230420-2321 - Added latency live agent detail updates and log rolling nightly
 # 230511-0825 - Added log_latency_gaps trigger, demographic_quotas trigger
+# 230524-2144 - Added weekday_resets
 #
 
-$build = '230511-0825';
+$build = '230524-2144';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -461,7 +462,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 
 ##### Get the settings from system_settings #####
-$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats,enable_auto_reports,enable_drop_lists,expired_lists_inactive,sip_event_logging,call_quota_lead_ranking,inbound_answer_config,log_latency_gaps,demographic_quotas FROM system_settings;";
+$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats,enable_auto_reports,enable_drop_lists,expired_lists_inactive,sip_event_logging,call_quota_lead_ranking,inbound_answer_config,log_latency_gaps,demographic_quotas,weekday_resets FROM system_settings;";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -490,6 +491,7 @@ if ($sthArows > 0)
 	$SSinbound_answer_config =			$aryA[18];
 	$SSlog_latency_gaps =				$aryA[19];
 	$SSdemographic_quotas =				$aryA[20];
+	$SSweekday_resets =					$aryA[21];
 	}
 $sthA->finish();
 if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
@@ -5966,7 +5968,7 @@ if ($AST_VDadapt > 0)
 		}
 	$sthA->finish();
 
-	if ($DBX) {print "RESET LIST:   $i|$reset_test";}
+	if ($DBX) {print "RESET LIST:   $i|$reset_test\n";}
 
 	$i=0;
 	while ($sthBrows > $i)
@@ -5987,7 +5989,7 @@ if ($AST_VDadapt > 0)
 
 			$stmtA="INSERT INTO vicidial_admin_log set event_date='$now_date', user='VDAD', ip_address='1.1.1.1', event_section='LISTS', event_type='RESET', record_id='$list_id[$i]', event_code='ADMIN RESET LIST', event_sql=\"$SQL_log\", event_notes='$affected_rowsB leads reset, list resets today: $resets_today[$i]';";
 			$Iaffected_rows = $dbhA->do($stmtA);
-			if ($DB) {print "FINISHED:   $affected_rows|$Iaffected_rows|$stmtA";}
+			if ($DB) {print "FINISHED:   $affected_rows|$Iaffected_rows|$stmtA\n";}
 			}
 		else
 			{
@@ -5995,12 +5997,115 @@ if ($AST_VDadapt > 0)
 
 			$stmtA="INSERT INTO vicidial_admin_log set event_date='$now_date', user='VDAD', ip_address='1.1.1.1', event_section='LISTS', event_type='RESET', record_id='$list_id[$i]', event_code='ADMIN RESET LIST FAILED', event_sql=\"Reset Limit Reached $daily_reset_limit[$i] / $resets_today[$i]\", event_notes='Reset failed';";
 			$Iaffected_rows = $dbhA->do($stmtA);
-			if ($DB) {print "FINISHED:   $affected_rows|$Iaffected_rows|$stmtA";}
+			if ($DB) {print "FINISHED:   $affected_rows|$Iaffected_rows|$stmtA\n";}
 			}
 
 		$i++;
 		}
-	
+
+	##### BEGIN Check weekday_resets #####
+	if ($SSweekday_resets > 0) 
+		{
+		$weekday_resets_ct=0;
+		$stmtA = "SELECT list_id,daily_reset_limit,resets_today,weekday_resets_container FROM vicidial_lists where weekday_resets_container NOT IN('','DISABLED');";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthBrows=$sthA->rows;
+		$i=0;
+		while ($sthBrows > $i)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$L_list_id[$i] =					$aryA[0];
+			$L_daily_reset_limit[$i] = 			$aryA[1];
+			$L_resets_today[$i] = 				$aryA[2];
+			$L_weekday_resets_container[$i] = 	$aryA[3];
+			$i++;
+			}
+		$sthA->finish();
+
+		if ($DBX) {print "WEEKDAY RESET LISTS TO CHECK:   $i\n";}
+
+		$i=0;
+		while ($sthBrows > $i)
+			{
+			if ( ($L_daily_reset_limit[$i] > $L_resets_today[$i]) || ($L_daily_reset_limit[$i] < 0) ) 
+				{
+				### list resets not over limit, check the settings container to see if we should reset the list
+				$reset_this_list=0;
+				$stmtA = "SELECT container_entry FROM vicidial_settings_containers where container_id='$L_weekday_resets_container[$i]';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthSCrows=$sthA->rows;
+				if ($DB) {print "Checking Weekday Reset Container for list ID: $L_list_id[$i] - |$sthSCrows|$stmtA|\n";}
+				if ($sthSCrows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$TEMPcontainer_entry = $aryA[0];
+					$TEMPcontainer_entry =~ s/\\//gi;
+					if (length($TEMPcontainer_entry) > 5) 
+						{
+						@container_lines = split(/\n/,$TEMPcontainer_entry);
+						$c=0;
+						foreach(@container_lines)
+							{
+							$container_lines[$c] =~ s/;.*|\r|\t| //gi;
+							if (length($container_lines[$c]) > 5)
+								{
+								# define call_quota_run_time settings
+								if ( ($wday eq '1') && ($container_lines[$c] =~ /^monday/i) && ($container_lines[$c] =~ /$reset_test/) )
+									{$reset_this_list++;   print "   DB: List monday reset found: $i|$c|$container_lines[$c]|$reset_test|$wday|\n";}
+								if ( ($wday eq '2') && ($container_lines[$c] =~ /^tuesday/i) && ($container_lines[$c] =~ /$reset_test/) )
+									{$reset_this_list++;   print "   DB: List tuesday reset found: $i|$c|$container_lines[$c]|$reset_test|$wday|\n";}
+								if ( ($wday eq '3') && ($container_lines[$c] =~ /^wednesday/i) && ($container_lines[$c] =~ /$reset_test/) )
+									{$reset_this_list++;   print "   DB: List wednesday reset found: $i|$c|$container_lines[$c]|$reset_test|$wday|\n";}
+								if ( ($wday eq '4') && ($container_lines[$c] =~ /^thursday/i) && ($container_lines[$c] =~ /$reset_test/) )
+									{$reset_this_list++;   print "   DB: List thursday reset found: $i|$c|$container_lines[$c]|$reset_test|$wday|\n";}
+								if ( ($wday eq '5') && ($container_lines[$c] =~ /^friday/i) && ($container_lines[$c] =~ /$reset_test/) )
+									{$reset_this_list++;   print "   DB: List friday reset found: $i|$c|$container_lines[$c]|$reset_test|$wday|\n";}
+								if ( ($wday eq '6') && ($container_lines[$c] =~ /^saturday/i) && ($container_lines[$c] =~ /$reset_test/) )
+									{$reset_this_list++;   print "   DB: List saturday reset found: $i|$c|$container_lines[$c]|$reset_test|$wday|\n";}
+								if ( ($wday eq '0') && ($container_lines[$c] =~ /^sunday/i) && ($container_lines[$c] =~ /$reset_test/) )
+									{$reset_this_list++;   print "   DB: List sunday reset found: $i|$c|$container_lines[$c]|$reset_test|$wday|\n";}
+								}
+							$c++;
+							}
+						}
+					}
+				$sthA->finish();
+
+				if ($reset_this_list > 0) 
+					{
+					$stmtA="UPDATE vicidial_lists set resets_today=(resets_today + 1) where list_id='$L_list_id[$i]';";
+					$affected_rows = $dbhA->do($stmtA);
+
+					$stmtB="UPDATE vicidial_list set called_since_last_reset='N' where list_id='$L_list_id[$i]';";
+					$affected_rowsB = $dbhA->do($stmtB);
+
+					$SQL_log = "$stmtA|$stmtB|";
+					$SQL_log =~ s/;|\\|\'|\"//gi;
+					$L_resets_today[$i] = ($L_resets_today[$i] + 1);
+
+					if ($DB) {print "List Weekday Reset DONE: $L_list_id[$i]($affected_rows|$affected_rowsB)\n";}
+
+					$stmtA="INSERT INTO vicidial_admin_log set event_date='$now_date', user='VDAD', ip_address='1.1.1.1', event_section='LISTS', event_type='RESET', record_id='$L_list_id[$i]', event_code='ADMIN RESET LIST', event_sql=\"$SQL_log\", event_notes='$affected_rowsB leads reset, list resets today: $L_resets_today[$i], weekday reset';";
+					$Iaffected_rows = $dbhA->do($stmtA);
+					if ($DB) {print "FINISHED:   $affected_rows|$Iaffected_rows|$stmtA";}
+					}
+				else
+					{
+					if ($DBX) {print "List No Weekday Reset found: $L_list_id[$i]|$L_weekday_resets_container[$i] \n";}
+					}
+				}
+			else
+				{
+				if ($DBX) {print "List Reset Over Limit: $L_list_id[$i](Reset Limit $L_daily_reset_limit[$i] / $L_resets_today[$i])\n";}
+				}
+			$i++;
+			}
+		if ($DB) {print "Weekday resets complete: $weekday_resets_ct/$i \n";}
+		}
+	##### END Check weekday_resets #####
+
 	### set expired lists to inactive, only run at 12 minutes past the hour
 	if ( ($SSexpired_lists_inactive > 0) && ($min =~ /12/) )
 		{
