@@ -30,6 +30,7 @@
 # 180601-0929 - Added full_name and launch_user variable options
 # 210519-2208 - Added DB disconnect and reconnect to save DB connections on long response time URLs
 # 230204-2145 - Added ability to use ALT na_call_url entries, added status input
+# 230531-1139 - Added option to send any URL as POST if "POST" is at the end of the $function var
 #
 
 $|++;
@@ -1023,6 +1024,8 @@ if (length($lead_id) > 0)
 			}
 		$sthA->finish();
 
+		if (length($VAR_dispo) < 1) {$VAR_dispo = $VAR_status;}
+
 		if ($sc_call_url =~ /--A--user_custom_|--A--full_name--B--/)
 			{
 			$stmtA = "SELECT custom_one,custom_two,custom_three,custom_four,custom_five,user_group,full_name from vicidial_users where user='$user';";
@@ -1389,19 +1392,32 @@ if (length($lead_id) > 0)
 	$url =~ s/'/\\'/gi;
 	$url =~ s/"/\\"/gi;
 
+	$post_data='';   $post_note='';
+	if ( ($function =~ /POST$/) && ($url =~ /\?/) )
+		{
+		@url_split = split(/\?/,$url);
+		$url =		$url_split[0];
+		$postvars = $url_split[1];
+		$post_data = "--post-data=\"$postvars\"";
+		if ($DB) {print "Send-as-POST: |$url|$post_data| \n";}
+		$post_note='|HTTP-POST';
+		}
+
 	my $secW = time();
 
 	# disconnect from the database to free up the DB connection
 	$dbhA->disconnect();
 
 	# request the web URL
-	`$wgetbin --no-check-certificate --output-document=/tmp/ASUBtmpD$US$url_id$US$secX --output-file=/tmp/ASUBtmpF$US$url_id$US$secX $url `;
+	`$wgetbin --no-check-certificate --output-document=/tmp/ASUBtmpD$US$url_id$US$secX --output-file=/tmp/ASUBtmpF$US$url_id$US$secX $url $post_data `;
+
+	# $post_note .= "|$wgetbin --no-check-certificate --output-document=/tmp/ASUBtmpD$US$url_id$US$secX --output-file=/tmp/ASUBtmpF$US$url_id$US$secX $url $post_data ";
 
 	# reconnect to the database to log response and response time
 	$dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
 	 or die "Couldn't connect to database: " . DBI->errstr;
 
-	$event_string="$function|$wgetbin --no-check-certificate --output-document=/tmp/ASUBtmpD$US$url_id$US$secX --output-file=/tmp/ASUBtmpF$US$url_id$US$secX $url|";
+	$event_string="$function|$wgetbin --no-check-certificate --output-document=/tmp/ASUBtmpD$US$url_id$US$secX --output-file=/tmp/ASUBtmpF$US$url_id$US$secX $url $post_data|";
 	&event_logger;
 
 	my $secY = time();
@@ -1441,7 +1457,7 @@ if (length($lead_id) > 0)
 
 
 	### update url log entry
-	$stmtA = "UPDATE vicidial_url_log SET url_response='$Wdocline_cat|$Wfileline_cat',response_sec='$response_sec' where url_log_id='$url_id';";
+	$stmtA = "UPDATE vicidial_url_log SET url_response='$Wdocline_cat|$Wfileline_cat$post_note',response_sec='$response_sec' where url_log_id='$url_id';";
 	$affected_rows = $dbhA->do($stmtA);
 	if ($DB) {print "$affected_rows|$stmtA\n";}
 	}
