@@ -803,6 +803,9 @@ OTHER CHANGES:
 225. Added List Weekday Resets, allowing for automatic list resets scheduled by
 	day-of-the-week on a per-list basis.
 
+226. Added Second Agent Alert Trigger In-Group settings, allowing for a second
+	audio alert to be played to the agent on repeat calls.
+
 
 
 

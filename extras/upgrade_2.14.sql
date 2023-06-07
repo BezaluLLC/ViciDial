@@ -2370,3 +2370,10 @@ ALTER TABLE vicidial_lists ADD weekday_resets_container VARCHAR(40) default 'DIS
 INSERT INTO vicidial_settings_containers(container_id,container_notes,container_type,user_group,container_entry) VALUES ('EXAMPLE_LIST_WEEKDAY_RESETS','Example Weekday List Resets Container settings','LIST_WEEKDAY_RESETS','---ALL---','; weekday => reset-times in 24-hour time separated by dashes\r\nmonday => 0830-1230-1800\r\ntuesday => 0900-1400-1830\r\nwednesday => 0930-1200-1730-1900\r\nthursday => 1030-1330-1900\r\nfriday => 0800-1300-1530\r\nsaturday => 0930-1100\r\nsunday => 1000');
 
 UPDATE system_settings SET db_schema_version='1687',db_schema_update_date=NOW() where db_schema_version < 1687;
+
+ALTER TABLE vicidial_inbound_groups ADD second_alert_trigger VARCHAR(20) default 'DISABLED';
+ALTER TABLE vicidial_inbound_groups ADD second_alert_trigger_seconds INT(6) default '600';
+ALTER TABLE vicidial_inbound_groups ADD second_alert_filename VARCHAR(100) default '';
+ALTER TABLE vicidial_inbound_groups ADD second_alert_delay INT(6) default '1000';
+
+UPDATE system_settings SET db_schema_version='1688',db_schema_update_date=NOW() where db_schema_version < 1688;
