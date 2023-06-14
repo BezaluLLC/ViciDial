@@ -8137,7 +8137,19 @@ if ($stage == "start")
 			echo "LOG NOT ENTERED\n";
 			}
 
-		$stmt = "UPDATE vicidial_auto_calls SET uniqueid='$uniqueid' where lead_id='$lead_id';";
+		$lead_callerid='';
+		$stmt="SELECT callerid FROM vicidial_live_agents WHERE user='$user';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+		if ($DB) {echo "$stmt\n";}
+		$CID_exists_ct = mysqli_num_rows($rslt);
+		if ($CID_exists_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$lead_callerid =		$row[0];
+			}
+
+		$stmt = "UPDATE vicidial_auto_calls SET uniqueid='$uniqueid' where lead_id='$lead_id' and callerid='$lead_callerid';";
 		if ($DB) {echo "$stmt\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00058',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -16540,11 +16552,15 @@ if ( ($ACTION == 'VDADpause') or ($ACTION == 'VDADready') or ($pause_trigger == 
 			{
 			$vla_autodialSQL='';
 			$vla_pausecodeSQL='';
+			$vla_statusSQL='';
 			if (preg_match('/INBOUND_MAN/',$dial_method))
 				{$vla_autodialSQL = ",outbound_autodial='N'";}
 			if ($ACTION == 'VDADready')
-				{$vla_pausecodeSQL = ",pause_code='',external_pause_code=''";}
-			$stmt="UPDATE vicidial_live_agents set uniqueid=0,callerid='',channel='', random_id='$random',comments='',last_state_change='$NOW_TIME' $vla_autodialSQL $vla_pausecodeSQL where user='$user' and server_ip='$server_ip';";
+				{
+				$vla_pausecodeSQL = ",pause_code='',external_pause_code=''";
+				$vla_statusSQL = "and status != 'QUEUE'";
+				}
+			$stmt="UPDATE vicidial_live_agents set uniqueid=0,callerid='',channel='', random_id='$random',comments='',last_state_change='$NOW_TIME' $vla_autodialSQL $vla_pausecodeSQL where user='$user' and server_ip='$server_ip' $vla_statusSQL;";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00165',$user,$server_ip,$session_name,$one_mysql_log);}

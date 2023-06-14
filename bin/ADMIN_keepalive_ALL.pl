@@ -165,9 +165,10 @@
 # 230420-2321 - Added latency live agent detail updates and log rolling nightly
 # 230511-0825 - Added log_latency_gaps trigger, demographic_quotas trigger
 # 230524-2144 - Added weekday_resets
+# 230609-1137 - Added VIDPROMPTSPECIAL call menu In-Group dialplan entries
 #
 
-$build = '230524-2144';
+$build = '230609-1137';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -4069,6 +4070,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$call_menu_options_ext = '';
 		$cm_invalid_set=0;
 		$cm_timeout_set=0;
+		$VIDSPECIAL_flag=0;
 		if ($DBX>0) {print "$sthArowsJ|$stmtA\n";}
 		while ($sthArowsJ > $j)
 			{
@@ -4225,16 +4227,25 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 					$IGvid_id_number_filename =	$IGoption_route_value_context[6];
 					$IGvid_confirm_filename =	$IGoption_route_value_context[7];
 					$IGvid_validate_digits =	$IGoption_route_value_context[8];
+					$IGvid_container =			$IGoption_route_value_context[9];
 
 					if ($dtmf_log[$i] > 0) 
 						{$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm.agi,$tracking_group[$i]-----$option_value[$j]-----$dtmf_field[$i]-----$alt_dtmf_log[$i]-----$question[$i])\n";   $PRI++;}
-					if ($option_route_value[$j] =~ /DYNAMIC_INGROUP_VAR/) 
+					if ($IGhandle_method =~ /VIDPROMPTSPECIAL/) 
 						{
-						$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(agi-VDAD_ALL_inbound.agi,$IGhandle_method-----$IGsearch_method-----\$\{ingroupvar\}-----$menu_id[$i]--------------------$IGlist_id-----$IGphone_code-----$IGcampaign_id---------------$IGvid_enter_filename-----$IGvid_id_number_filename-----$IGvid_confirm_filename-----$IGvid_validate_digits)\n";   $PRI++;
+						$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(cm_VID_SPECIAL.agi,$IGhandle_method---$IGsearch_method---$IGlist_id---$IGphone_code---$IGcampaign_id---$IGvid_enter_filename---$IGvid_id_number_filename---$IGvid_confirm_filename---$IGvid_validate_digits---$IGvid_container)\n";   $PRI++;
+						$VIDSPECIAL_flag++;
 						}
 					else
 						{
-						$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(agi-VDAD_ALL_inbound.agi,$IGhandle_method-----$IGsearch_method-----$option_route_value[$j]-----$menu_id[$i]--------------------$IGlist_id-----$IGphone_code-----$IGcampaign_id---------------$IGvid_enter_filename-----$IGvid_id_number_filename-----$IGvid_confirm_filename-----$IGvid_validate_digits)\n";   $PRI++;
+						if ($option_route_value[$j] =~ /DYNAMIC_INGROUP_VAR/) 
+							{
+							$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(agi-VDAD_ALL_inbound.agi,$IGhandle_method-----$IGsearch_method-----\$\{ingroupvar\}-----$menu_id[$i]--------------------$IGlist_id-----$IGphone_code-----$IGcampaign_id---------------$IGvid_enter_filename-----$IGvid_id_number_filename-----$IGvid_confirm_filename-----$IGvid_validate_digits)\n";   $PRI++;
+							}
+						else
+							{
+							$call_menu_line .= "exten => $option_value[$j],$PRI,AGI(agi-VDAD_ALL_inbound.agi,$IGhandle_method-----$IGsearch_method-----$option_route_value[$j]-----$menu_id[$i]--------------------$IGlist_id-----$IGphone_code-----$IGcampaign_id---------------$IGvid_enter_filename-----$IGvid_id_number_filename-----$IGvid_confirm_filename-----$IGvid_validate_digits)\n";   $PRI++;
+							}
 						}
 					$call_menu_line .= "exten => $option_value[$j],$PRI,Hangup()\n";
 					}
@@ -4465,6 +4476,12 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$call_menu_ext .= "\n";
 		$call_menu_ext .= "$call_menu_options_ext";
 		$call_menu_ext .= "\n";
+
+		if ($VIDSPECIAL_flag > 0) 
+			{
+			$call_menu_ext .= "exten => A1B1C123,1,AGI(agi-VDAD_ALL_inbound.agi,CLOSER-----\$\{igsearchmethod\}-----\$\{ingroupvar\}-----$menu_id[$i]--------------------\$\{iglistid\}-----\$\{igphonecode\}-----\$\{igcampaignid\}------------------------------)\n";   $PRI++;
+			$call_menu_ext .= "exten => A2B2C234,1,AGI(agi-VDAD_ALL_inbound.agi,CID-----\$\{igsearchmethod\}-----\$\{ingroupvar\}-----$menu_id[$i]--------------------\$\{iglistid\}-----\$\{igphonecode\}-----\$\{igcampaignid\}----------\$\{igvendorid\}--------------------)\n";   $PRI++;
+			}
 
 		if (length($call_menu_timeout_ext) < 1)
 			{

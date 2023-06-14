@@ -806,6 +806,11 @@ OTHER CHANGES:
 226. Added Second Agent Alert Trigger In-Group settings, allowing for a second
 	audio alert to be played to the agent on repeat calls.
 
+227. Added VIDPROMPTSPECIAL Call Menu Handle Methods when sending calls to 
+	In-Groups. Allows for list-based In-Group routing based on settings in
+	a Settings Container. Also allows for separate routing of not-found
+	leads.
+
 
 
 

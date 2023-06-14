@@ -201,10 +201,11 @@
 # 230118-0833 - Added ingroup_list and callmenu_list functions
 # 230122-1821 - Added reset_password option to update_user function
 # 230308-1758 - Fix for update_lead list-restrict phone number update issue
+# 230614-0828 - Added container_list function
 #
 
-$version = '2.14-178';
-$build = '230308-1758';
+$version = '2.14-179';
+$build = '230614-0828';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -837,7 +838,7 @@ $dial_method = preg_replace('/[^-_0-9a-zA-Z]/','',$dial_method);
 $dial_timeout = preg_replace('/[^0-9]/','',$dial_timeout);
 $lookup_state = preg_replace('/[^A-Z]/','',$lookup_state);
 $detail = preg_replace('/[^A-Z]/','',$detail);
-$type = preg_replace('/[^A-Z]/','',$type);
+$type = preg_replace('/[^-_0-9a-zA-Z]/','',$type);
 $force_entry_list_id = preg_replace('/[^0-9]/','',$force_entry_list_id);
 $file_download = preg_replace('/[^0-9]/','',$file_download);
 $agent_choose_ingroups = preg_replace('/[^0-9]/','',$agent_choose_ingroups);
@@ -2078,7 +2079,7 @@ if ($function == 'ingroup_list')
 
 
 ################################################################################
-### callmenu_list - sends a list of the inbound groups in the system
+### callmenu_list - sends a list of the call menus in the system
 ################################################################################
 if ($function == 'callmenu_list')
 	{
@@ -2197,6 +2198,138 @@ if ($function == 'callmenu_list')
 ################################################################################
 ### END callmenu_list
 ################################################################################
+
+
+
+
+################################################################################
+### container_list - sends a list of the settings containers in the system
+################################################################################
+if ($function == 'container_list')
+	{
+	if (strlen($type) < 1)
+		{
+		$result = 'ERROR';
+		$result_reason = "container_list NO CONTAINER TYPE DEFINED";
+		echo "$result: $result_reason: |$user|$type|\n";
+		$data = "$allowed_user";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	$stmt="SELECT count(*) from vicidial_users where user='$user' and user_level > 6 and active='Y';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$row=mysqli_fetch_row($rslt);
+	$allowed_user=$row[0];
+	if ($allowed_user < 1)
+		{
+		$result = 'ERROR';
+		$result_reason = "container_list USER DOES NOT HAVE PERMISSION TO VIEW CALL MENUS LIST";
+		echo "$result: $result_reason: |$user|$allowed_user|\n";
+		$data = "$allowed_user";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+		if ($DB>0) {echo "|$stmt|\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$LOGallowed_campaigns =			$row[0];
+		$LOGadmin_viewable_groups =		$row[1];
+
+		$LOGadmin_viewable_groupsSQL='';
+		$whereLOGadmin_viewable_groupsSQL='';
+		if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+			{
+			$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+			$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+			$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+			$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+			}
+
+		$server_name = getenv("SERVER_NAME");
+		$server_port = getenv("SERVER_PORT");
+		if (preg_match("/443/i",$server_port)) {$HTTPprotocol = 'https://';}
+		  else {$HTTPprotocol = 'http://';}
+		$admDIR = "$HTTPprotocol$server_name:$server_port";
+
+		echo "\n";
+		echo "<HTML><head><title>NON-AGENT API</title>\n";
+		echo "<script language=\"Javascript\">\n";
+		echo "function choose_file(filename,fieldname)\n";
+		echo "	{\n";
+		echo "	if (filename.length > 0)\n";
+		echo "		{\n";
+		echo "		parent.document.getElementById(fieldname).value = filename;\n";
+		echo "		document.getElementById(\"selectframe\").innerHTML = '';\n";
+		echo "		document.getElementById(\"selectframe\").style.visibility = 'hidden';\n";
+		echo "		parent.close_chooser();\n";
+		echo "		}\n";
+		echo "	}\n";
+		echo "function close_file()\n";
+		echo "	{\n";
+		echo "	document.getElementById(\"selectframe\").innerHTML = '';\n";
+		echo "	document.getElementById(\"selectframe\").style.visibility = 'hidden';\n";
+		echo "	parent.close_chooser();\n";
+		echo "	}\n";
+		echo "</script>\n";
+		echo "</head>\n\n";
+
+		echo "<body>\n";
+		echo "<a href=\"javascript:close_file();\"><font size=1 face=\"Arial,Helvetica\">"._QXZ("close frame")."</font></a>\n";
+		echo "<div id='selectframe' style=\"height:400px;width:710px;overflow:scroll;\">\n";
+		echo "<table border=0 cellpadding=1 cellspacing=2 width=690 bgcolor=white><tr>\n";
+		echo "<td width=30>#</td>\n";
+		echo "<td colspan=2>"._QXZ("Settings Containers").": <br>"._QXZ("$type")." "._QXZ("type")."</td>\n";
+		echo "<td>"._QXZ("Container Notes")."</td>\n";
+	#	echo "<td>"._QXZ("Color")."</td>\n";
+		echo "</tr>\n";
+
+		$rowx=array();
+		$group_id=array();
+		$fullname=array();
+
+		$stmt="SELECT container_id,container_notes from vicidial_settings_containers where container_type='$type' $LOGadmin_viewable_groupsSQL order by container_id";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$vm_to_print = mysqli_num_rows($rslt);
+		$k=0;
+		$sf=0;
+		while ($vm_to_print > $k) 
+			{
+			$rowx=mysqli_fetch_row($rslt);
+			$group_id[$k] =	$rowx[0];
+			$fullname[$k] =		$rowx[1];
+			$sf++;
+			if (preg_match("/1$|3$|5$|7$|9$/i", $sf))
+				{$bgcolor='bgcolor="#E6E6E6"';} 
+			else
+				{$bgcolor='bgcolor="#F6F6F6"';}
+			echo "<tr $bgcolor><td width=30><font size=1 face=\"Arial,Helvetica\">$sf</td>\n";
+			echo "<td colspan=2><a href=\"javascript:choose_file('$group_id[$k]','$comments');\"><font size=2 face=\"Arial,Helvetica\">$group_id[$k]</a></td>\n";
+			echo "<td><font size=2 face=\"Arial,Helvetica\">$fullname[$k]</td></tr>\n";
+
+			$k++;
+			}
+	#	echo "<tr><td>$stmt</td></tr\n";
+		echo "</table></div></body></HTML>\n";
+
+		exit;
+		}
+	}
+################################################################################
+### END container_list
+################################################################################
+
 
 
 
