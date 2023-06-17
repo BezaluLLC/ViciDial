@@ -3900,7 +3900,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					$dropSQL='';
 					$drop_statuses='';
 					if ($second_alert_trigger =~ /TO|TIMEOUT/i) {$drop_statuses .= "TIMEOT|";}
-					if ($second_alert_trigger =~ /NQ/i) {$drop_statuses .= "NANQUE|";}
+					if ($second_alert_trigger =~ /NQ/i) {$drop_statuses .= "NANQUE|IQNANQ|";}
 					if ($second_alert_trigger =~ /HT/i) {$drop_statuses .= "HOLDTO|";}
 					if ($second_alert_trigger =~ /WT/i) {$drop_statuses .= "WAITTO|";}
 					if (length($drop_statuses) > 1)

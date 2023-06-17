@@ -27,6 +27,7 @@
 # 221206-1458 - Added login_submit_once option
 # 230418-1008 - Added astguiclient_disabled option
 # 230418-1548 - Added dial_override_limit option
+# 230617-0815 - Added dead_logging_version option
 #
 
 $conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
@@ -76,6 +77,7 @@ $allow_sendmail_bypass	= '';	# some setups require bypassing PHP's mail() functi
 $login_submit_once		= '1';	# set to 0 to remove the "disable the login submit button after submitting" feature
 $astguiclient_disabled	= '1';	# set to 0 to allow use of the astguiclient.php script
 $dial_override_limit	= '6';	# number of dial-override calls per minute that will lock user account, set to 0 to disable dial_override limit
+$dead_logging_version	= '0';	# experimental dead logging enabled, can reverse false DEAD call logging
 
 $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
 

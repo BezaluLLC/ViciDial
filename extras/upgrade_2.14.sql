@@ -2383,4 +2383,8 @@ ALTER TABLE vicidial_inbound_groups ADD second_alert_only VARCHAR(40) default 'D
 
 INSERT INTO vicidial_settings_containers(container_id,container_notes,container_type,user_group,container_entry) VALUES ('EXAMPLE_VID_PROMPT_SPECIAL','Example Call Menu VID Special Container settings','CM_VIDPROMPT_SPECIAL','---ALL---','list_ingroup => 102,TEST_IN2\r\nlist_ingroup => 103,TEST_IN3\r\nlist_ingroup => 104,TEST_IN4\r\ndefault_ingroup => TEST_IN5\r\nnot_found_action => new_lead\r\nnew_lead_ingroup => TEST_IN');
 
-UPDATE system_settings SET db_schema_version='1688',db_schema_update_date=NOW() where db_schema_version < 1689;
+UPDATE system_settings SET db_schema_version='1689',db_schema_update_date=NOW() where db_schema_version < 1689;
+
+ALTER TABLE vicidial_campaigns ADD dead_stop_recording ENUM('DISABLED','ALL_CALLS','OUTBOUND_ONLY','INBOUND_ONLY','AUTODIAL_ONLY','MANUAL_ONLY') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1690',db_schema_update_date=NOW() where db_schema_version < 1690;
