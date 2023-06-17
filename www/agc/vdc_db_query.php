@@ -536,10 +536,11 @@
 # 230513-2043 - Fix for manual dial errors
 # 230518-1033 - Added in-group and campaign custom fields 1-5, for script/webform/dispo-call-url use
 # 230523-0827 - Added User inbound_credits feature
+# 230617-1605 - Fix for issue when agent goes ready, one of the fixes from Issue #1473
 #
 
-$version = '2.14-429';
-$build = '230523-0827';
+$version = '2.14-430';
+$build = '230617-1605';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=913;
@@ -16540,11 +16541,15 @@ if ( ($ACTION == 'VDADpause') or ($ACTION == 'VDADready') or ($pause_trigger == 
 			{
 			$vla_autodialSQL='';
 			$vla_pausecodeSQL='';
+			$vla_statusSQL='';
 			if (preg_match('/INBOUND_MAN/',$dial_method))
 				{$vla_autodialSQL = ",outbound_autodial='N'";}
 			if ($ACTION == 'VDADready')
-				{$vla_pausecodeSQL = ",pause_code='',external_pause_code=''";}
-			$stmt="UPDATE vicidial_live_agents set uniqueid=0,callerid='',channel='', random_id='$random',comments='',last_state_change='$NOW_TIME' $vla_autodialSQL $vla_pausecodeSQL where user='$user' and server_ip='$server_ip';";
+				{
+				$vla_pausecodeSQL = ",pause_code='',external_pause_code=''";
+				$vla_statusSQL = "and status != 'QUEUE'";
+				}
+			$stmt="UPDATE vicidial_live_agents set uniqueid=0,callerid='',channel='', random_id='$random',comments='',last_state_change='$NOW_TIME' $vla_autodialSQL $vla_pausecodeSQL where user='$user' and server_ip='$server_ip' $vla_statusSQL;";
 				if ($format=='debug') {echo "\n<!-- $stmt -->";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {$errno = mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00165',$user,$server_ip,$session_name,$one_mysql_log);}
