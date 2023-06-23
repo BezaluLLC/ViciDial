@@ -5,7 +5,7 @@
 # and/or vicidial_closer_log information by status, list_id and date range. 
 # downloads to a flat text file that is tab delimited
 #
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -64,6 +64,7 @@
 # 211119-1500 - Fix for status names 
 # 220301-1603 - Added allow_web_debug system setting
 # 230622-1652 - Added filtering by time (hours), and option for single user exports.
+# 230623-1025 - Added sort_dir sort direction
 #
 
 $startMS = microtime();
@@ -87,6 +88,8 @@ if (isset($_GET["end_hour"]))				{$end_hour=$_GET["end_hour"];}
 	elseif (isset($_POST["end_hour"]))		{$end_hour=$_POST["end_hour"];}
 if (isset($_GET["user"]))				{$user=$_GET["user"];}
 	elseif (isset($_POST["user"]))		{$user=$_POST["user"];}
+if (isset($_GET["sort_dir"]))				{$sort_dir=$_GET["sort_dir"];}
+	elseif (isset($_POST["sort_dir"]))		{$sort_dir=$_POST["sort_dir"];}
 if (isset($_GET["campaign"]))				{$campaign=$_GET["campaign"];}
 	elseif (isset($_POST["campaign"]))		{$campaign=$_POST["campaign"];}
 if (isset($_GET["group"]))					{$group=$_GET["group"];}
@@ -138,6 +141,7 @@ if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 if (!isset($query_hour)) {$query_hour = "00";}
 if (!isset($end_hour)) {$end_hour = "23";}
+if (!isset($sort_dir)) {$sort_dir = "asc";}
 if (strlen($shift)<2) {$shift='ALL';}
 
 $report_name = 'Export Calls Report';
@@ -199,13 +203,26 @@ if ($non_latin < 1)
 	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
 	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 	$user = preg_replace('/[^-_0-9a-zA-Z]/', '', $user);
+	$sort_dir = preg_replace('/[^a-zA-Z]/', '', $sort_dir);
 	}
 else
 	{
 	$PHP_AUTH_USER = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_USER);
 	$PHP_AUTH_PW = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_PW);
-	$user = preg_replace('/[^-_0-9\p{L}]/u', '', $user);
+	$sort_dir = preg_replace('/[^\p{L}]/u', '', $sort_dir);
 	}
+
+switch ($sort_dir) {
+	default:
+	case "asc":
+		$asc="checked";
+		$desc="";
+		break;
+	case "desc":
+		$asc="";
+		$desc="checked";
+		break;
+}
 
 ### ARCHIVED DATA CHECK CONFIGURATION
 $archives_available="N";
@@ -747,11 +764,11 @@ if ($run_export > 0)
 		{
 		if ( ($export_fields == 'EXTENDED') or ($export_fields == 'EXTENDED_2') or ($export_fields == 'EXTENDED_3') or ($export_fields == 'EXTENDED_4') )
 			{
-			$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid,vi.entry_list_id, ifnull(val.dispo_sec+val.dead_sec,0)$export_fields_SQL from vicidial_users vu,vicidial_list vi,".$vicidial_log_table." vl LEFT OUTER JOIN ".$vicidial_agent_log_table." val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where ".$date_field." >= '$query_date $query_time' and ".$date_field." <= '$end_date $end_time' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_SQL $user_group_SQL $status_SQL order by ".$date_field." limit 1000000;";
+			$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid,vi.entry_list_id, ifnull(val.dispo_sec+val.dead_sec,0)$export_fields_SQL from vicidial_users vu,vicidial_list vi,".$vicidial_log_table." vl LEFT OUTER JOIN ".$vicidial_agent_log_table." val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where ".$date_field." >= '$query_date $query_time' and ".$date_field." <= '$end_date $end_time' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_SQL $user_group_SQL $status_SQL order by ".$date_field." $sort_dir limit 1000000;";
 			}
 		else
 			{
-			$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid,vi.entry_list_id$export_fields_SQL from vicidial_users vu,".$vicidial_log_table." vl,vicidial_list vi where ".$date_field." >= '$query_date $query_time' and ".$date_field." <= '$end_date $end_time' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_SQL $user_group_SQL $status_SQL order by ".$date_field." limit 1000000;";
+			$stmt = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.alt_dial,vi.rank,vi.owner,vi.lead_id,vl.uniqueid,vi.entry_list_id$export_fields_SQL from vicidial_users vu,".$vicidial_log_table." vl,vicidial_list vi where ".$date_field." >= '$query_date $query_time' and ".$date_field." <= '$end_date $end_time' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $campaign_SQL $user_SQL $user_group_SQL $status_SQL order by ".$date_field." $sort_dir limit 1000000;";
 			}
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {$DBout .= "$stmt\n";}
@@ -893,11 +910,11 @@ if ($run_export > 0)
 		{
 		if ( ($export_fields == 'EXTENDED') or ($export_fields == 'EXTENDED_2') or ($export_fields == 'EXTENDED_3') or ($export_fields == 'EXTENDED_4') )
 			{
-			$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid,val.campaign_id, ifnull(val.dispo_sec+val.dead_sec,0)$export_fields_SQL from vicidial_users vu,vicidial_list vi,".$vicidial_closer_log_table." vl LEFT OUTER JOIN ".$vicidial_agent_log_table." val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where ".$date_field." >= '$query_date $query_time' and ".$date_field." <= '$end_date $end_time' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_SQL $user_group_SQL $status_SQL order by ".$date_field." limit 1000000;";
+			$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid,val.campaign_id, ifnull(val.dispo_sec+val.dead_sec,0)$export_fields_SQL from vicidial_users vu,vicidial_list vi,".$vicidial_closer_log_table." vl LEFT OUTER JOIN ".$vicidial_agent_log_table." val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where ".$date_field." >= '$query_date $query_time' and ".$date_field." <= '$end_date $end_time' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_SQL $user_group_SQL $status_SQL order by ".$date_field." $sort_dir limit 1000000;";
 			}
 		else
 			{
-			$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid,val.campaign_id$export_fields_SQL from vicidial_users vu,vicidial_list vi,".$vicidial_closer_log_table." vl LEFT OUTER JOIN ".$vicidial_agent_log_table." val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where ".$date_field." >= '$query_date $query_time' and ".$date_field." <= '$end_date $end_time' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_SQL $user_group_SQL $status_SQL order by ".$date_field." limit 1000000;";
+			$stmtA = "SELECT vl.call_date,vl.phone_number,vl.status,vl.user,vu.full_name,vl.campaign_id,vi.vendor_lead_code,vi.source_id,vi.list_id,vi.gmt_offset_now,vi.phone_code,vi.phone_number,vi.title,vi.first_name,vi.middle_initial,vi.last_name,vi.address1,vi.address2,vi.address3,vi.city,vi.state,vi.province,vi.postal_code,vi.country_code,vi.gender,vi.date_of_birth,vi.alt_phone,vi.email,vi.security_phrase,vi.comments,vl.length_in_sec,vl.user_group,vl.queue_seconds,vi.rank,vi.owner,vi.lead_id,vl.closecallid,vi.entry_list_id,vl.uniqueid,val.campaign_id$export_fields_SQL from vicidial_users vu,vicidial_list vi,".$vicidial_closer_log_table." vl LEFT OUTER JOIN ".$vicidial_agent_log_table." val ON vl.uniqueid=val.uniqueid and vl.lead_id=val.lead_id and vl.user=val.user where ".$date_field." >= '$query_date $query_time' and ".$date_field." <= '$end_date $end_time' and vu.user=vl.user and vi.lead_id=vl.lead_id $list_SQL $group_SQL $user_SQL $user_group_SQL $status_SQL order by ".$date_field." $sort_dir limit 1000000;";
 			}
 		$rslt=mysql_to_mysqli($stmtA, $link);
 		if ($DB) {$DBout .= "$stmtA\n";}
@@ -1783,6 +1800,12 @@ else
 	echo "<B>"._QXZ("Date Field").":</B><BR>\n";
 	echo "<select size=1 name=date_field><option selected value=\"call_date\">"._QXZ("Call date")."</option><option value=\"entry_date\">"._QXZ("Entry date")."</option></select> $NWB#call_export_report-date_field$NWE\n";
 
+	echo "<BR><BR>\n";
+
+	echo "<B>"._QXZ("Sort order").":</B> $NWB#call_export_report-sort_dir$NWE\n<BR>\n";
+	echo "<input type=radio value='asc' name='sort_dir' $asc>"._QXZ("Ascending")."<BR>\n";
+	echo "<input type=radio value='desc' name='sort_dir' $desc>"._QXZ("Descending")."<BR>\n";
+	
 	echo "<BR><BR>\n";
 
 	echo "<B>"._QXZ("Header Row").":</B><BR>\n";
