@@ -64,10 +64,11 @@
 # 200424-1839 - Added STC(settings-container) and LTT(lead temp table) message playback options
 # 220411-0833 - Added FHG(file-http-get) message playback option to download file from website
 # 230412-1023 - Added Code to dispo NOAUDIODATA as ADAIR (Dead Air Auto) with Settings Container option, Issue #1459
+# 230726-0932 - Added manual_vm_status_updates campaign option
 #
 
 $script = 'VD_amd.agi';
-$build = '230412-1023';
+$build = '230726-0932';
 
 $A = 1;		# set to 1 for AMD output messages mode
 $AMD_LOG = 3;	# set to 1 for logfile and 2 forDB log, 3 for both
@@ -345,7 +346,8 @@ $amd_agent_route_options='';
 $AMDcontainer_entry='';
 $AMD_agent_send=0;
 $NOAUDIODATA_hangup_enabled=0;
-$stmtA = "SELECT amd_agent_route_options FROM vicidial_campaigns where campaign_id='$VD_campaign_id' limit 1;";
+$VL_status_updates=1;
+$stmtA = "SELECT amd_agent_route_options,manual_vm_status_updates FROM vicidial_campaigns where campaign_id='$VD_campaign_id' limit 1;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -354,8 +356,11 @@ if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
 	$amd_agent_route_options =	$aryA[0];
+	$manual_vm_status_updates =	$aryA[1];
 	$sthA->finish();
 	}
+if ( ($manual_vm_status_updates =~ /DISABLED/i) && ($calleridname =~ /^M|^Y|^DC/) ) 
+	{$VL_status_updates=0;}
 
 if ($amd_agent_route_options =~ /ENABLED/i) 
 	{
@@ -445,8 +450,15 @@ else
 		########## UPDATE vicidial_list ##########
 		$stmtA = "UPDATE vicidial_list set status='AA' where lead_id = '$VD_lead_id';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		if ($VL_status_updates > 0) 
+			{
 			$affected_rows = $dbhA->do($stmtA);
-		if ($AGILOG) {$agi_string = "--    VDAD vicidial_list update: |$affected_rows|$VD_lead_id";   &agi_output;}
+			if ($AGILOG) {$agi_string = "--    VDAD vicidial_list update: |$affected_rows|$VD_lead_id";   &agi_output;}
+			}
+		else
+			{
+			if ($AGILOG) {$agi_string = "--    VDAD vicidial_list update DISABLED: |$calleridname|$VD_lead_id|$VL_status_updates|$manual_vm_status_updates|";   &agi_output;}
+			}
 		}
 
 	### find list_id for this lead
@@ -515,7 +527,7 @@ else
 
 	$selected_campaign='';
 	### Grab vmail forward message values from the database
-	$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu,cpd_unknown_action,campaign_id,am_message_wildcards,call_quota_lead_ranking,vmm_daily_limit FROM vicidial_campaigns where campaign_id = '$VD_campaign_id' limit 1;";
+	$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu,cpd_unknown_action,campaign_id,am_message_wildcards,call_quota_lead_ranking,vmm_daily_limit,manual_vm_status_updates FROM vicidial_campaigns where campaign_id = '$VD_campaign_id' limit 1;";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -536,6 +548,7 @@ else
 		$am_message_wildcards =			$aryA[10];
 		$VD_call_quota_lead_ranking =	$aryA[11];
 		$vmm_daily_limit =				$aryA[12];
+		$manual_vm_status_updates =		$aryA[13];
 		$sthA->finish();
 		}
 	else
@@ -543,7 +556,7 @@ else
 		$sthA->finish();
 		### Grab vmail forward message values from the database
 		$SQL_group_id=$VD_campaign_id;   $SQL_group_id =~ s/_/\\_/gi;
-		$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu,cpd_unknown_action,campaign_id,am_message_wildcards,vmm_daily_limit FROM vicidial_campaigns where closer_campaigns LIKE \"% $SQL_group_id %\" order by active,campaign_id limit 1;";
+		$stmtA = "SELECT am_message_exten,amd_send_to_vmx,waitforsilence_options,survey_recording,campaign_rec_filename,cpd_amd_action,amd_inbound_group,amd_callmenu,cpd_unknown_action,campaign_id,am_message_wildcards,vmm_daily_limit,manual_vm_status_updates FROM vicidial_campaigns where closer_campaigns LIKE \"% $SQL_group_id %\" order by active,campaign_id limit 1;";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -564,12 +577,16 @@ else
 			$am_message_wildcards =			$aryA[10];
 			$VD_call_quota_lead_ranking =	'DISABLED';
 			$vmm_daily_limit =				$aryA[12];
+			$manual_vm_status_updates =		$aryA[13];
 			$sthA->finish();
 			if ($AGILOG) {$agi_string = "--    Inbound call, settings gathered from: |$selected_campaign|$DB_am_message_exten|$DB_amd_send_to_vmx|$waitforsilence_options";   &agi_output;}
 			}
 		else
 			{$sthA->finish();}
 		}
+
+	if ( ($manual_vm_status_updates =~ /DISABLED/i) && ($calleridname =~ /^M|^Y|^DC/) ) 
+		{$VL_status_updates=0;}
 
 	if ( ($SScall_quota_lead_ranking > 0) && ($VD_call_quota_lead_ranking !~ /^DISABLED$/i) )
 		{
@@ -758,9 +775,16 @@ else
 		
 		$stmtA = "UPDATE vicidial_list set status='ADAIR' where lead_id='$VD_lead_id';";
 		    if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-		$affected_rows = $dbhA->do($stmtA);
-		if ($AGILOG) {$agi_string = "--    VDAD vicidial_list ADAIR update: |$affected_rows|$uniqueid|";   &agi_output;}
-		
+		if ($VL_status_updates > 0) 
+			{
+			$affected_rows = $dbhA->do($stmtA);
+			if ($AGILOG) {$agi_string = "--    VDAD vicidial_list ADAIR update: |$affected_rows|$uniqueid";   &agi_output;}
+			}
+		else
+			{
+			if ($AGILOG) {$agi_string = "--    VDAD vicidial_list ADAIR update DISABLED: |$calleridname|$uniqueid|$VL_status_updates|$manual_vm_status_updates|";   &agi_output;}
+			}
+
 		$dbhA->disconnect();
 		
 		$AGI->hangup($channel);
@@ -781,8 +805,15 @@ else
 
 		$stmtA = "UPDATE vicidial_list set status='$msg_status' where lead_id='$VD_lead_id';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-		$affected_rows = $dbhA->do($stmtA);
-		if ($AGILOG) {$agi_string = "--    VDAD vicidial_list AM update: |$affected_rows|$uniqueid|";   &agi_output;}
+		if ($VL_status_updates > 0) 
+			{
+			$affected_rows = $dbhA->do($stmtA);
+			if ($AGILOG) {$agi_string = "--    VDAD vicidial_list AM update: |$affected_rows|$uniqueid";   &agi_output;}
+			}
+		else
+			{
+			if ($AGILOG) {$agi_string = "--    VDAD vicidial_list AM update DISABLED: |$calleridname|$uniqueid|$VL_status_updates|$manual_vm_status_updates|";   &agi_output;}
+			}
 
 		$stmtA = "INSERT IGNORE INTO vicidial_vmm_counts set vmm_count='1', lead_id='$VD_lead_id', call_date='$SQL_day' ON DUPLICATE KEY UPDATE vmm_count=(vmm_count + 1);";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
@@ -1506,8 +1537,15 @@ else
 
 				$stmtA = "UPDATE vicidial_list set status='UNKXFR' where lead_id='$VD_lead_id';";
 					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-				$affected_rows = $dbhA->do($stmtA);
-				if ($AGILOG) {$agi_string = "--    VDAD vicidial_list UNKXFR update: |$affected_rows|$uniqueid|";   &agi_output;}
+				if ($VL_status_updates > 0) 
+					{
+					$affected_rows = $dbhA->do($stmtA);
+					if ($AGILOG) {$agi_string = "--    VDAD vicidial_list UNKXFR update: |$affected_rows|$uniqueid";   &agi_output;}
+					}
+				else
+					{
+					if ($AGILOG) {$agi_string = "--    VDAD vicidial_list UNKXFR update DISABLED: |$calleridname|$uniqueid|$VL_status_updates|$manual_vm_status_updates|";   &agi_output;}
+					}
 
 				if ( ($SScall_quota_lead_ranking > 0) && ($VD_call_quota_lead_ranking !~ /^DISABLED$/i) )
 					{
@@ -1560,8 +1598,15 @@ else
 
 				$stmtA = "UPDATE vicidial_list set status='AMDXFR' where lead_id='$VD_lead_id';";
 					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-				$affected_rows = $dbhA->do($stmtA);
-				if ($AGILOG) {$agi_string = "--    VDAD vicidial_list AMDXFR update: |$affected_rows|$uniqueid|";   &agi_output;}
+				if ($VL_status_updates > 0) 
+					{
+					$affected_rows = $dbhA->do($stmtA);
+					if ($AGILOG) {$agi_string = "--    VDAD vicidial_list AMDXFR update: |$affected_rows|$uniqueid";   &agi_output;}
+					}
+				else
+					{
+					if ($AGILOG) {$agi_string = "--    VDAD vicidial_list AMDXFR update DISABLED: |$calleridname|$uniqueid|$VL_status_updates|$manual_vm_status_updates|";   &agi_output;}
+					}
 
 				if ( ($SScall_quota_lead_ranking > 0) && ($VD_call_quota_lead_ranking !~ /^DISABLED$/i) )
 					{
@@ -1619,8 +1664,15 @@ else
 
 		$stmtA = "UPDATE vicidial_list set status='$last_status' where lead_id='$VD_lead_id';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-		$affected_rows = $dbhA->do($stmtA);
-		if ($AGILOG) {$agi_string = "--    VDAD vicidial_list AL update: |$affected_rows|$uniqueid|";   &agi_output;}
+		if ($VL_status_updates > 0) 
+			{
+			$affected_rows = $dbhA->do($stmtA);
+			if ($AGILOG) {$agi_string = "--    VDAD vicidial_list AL update: |$affected_rows|$uniqueid";   &agi_output;}
+			}
+		else
+			{
+			if ($AGILOG) {$agi_string = "--    VDAD vicidial_list AL update DISABLED: |$calleridname|$uniqueid|$VL_status_updates|$manual_vm_status_updates|";   &agi_output;}
+			}
 
 		$stmtA = "UPDATE vicidial_vmm_counts set vmm_played=(vmm_played + 1) where lead_id='$VD_lead_id' and call_date='$SQL_day';";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}

@@ -2388,3 +2388,7 @@ UPDATE system_settings SET db_schema_version='1689',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD dead_stop_recording ENUM('DISABLED','ALL_CALLS','OUTBOUND_ONLY','INBOUND_ONLY','AUTODIAL_ONLY','MANUAL_ONLY') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1690',db_schema_update_date=NOW() where db_schema_version < 1690;
+
+ALTER TABLE vicidial_campaigns ADD manual_vm_status_updates ENUM('ENABLED','DISABLED') default 'ENABLED';
+
+UPDATE system_settings SET db_schema_version='1691',db_schema_update_date=NOW() where db_schema_version < 1691;
