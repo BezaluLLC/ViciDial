@@ -537,10 +537,11 @@
 # 230518-1033 - Added in-group and campaign custom fields 1-5, for script/webform/dispo-call-url use
 # 230523-0827 - Added User inbound_credits feature
 # 230617-1605 - Fix for issue when agent goes ready, one of the fixes from Issue #1473
+# 230801-0810 - More useful error output for manDiaLskip
 #
 
-$version = '2.14-430';
-$build = '230617-1605';
+$version = '2.14-431';
+$build = '230801-0810';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=913;
@@ -6107,7 +6108,8 @@ if ($ACTION == 'manDiaLskip')
 		{
 		$channel_live=0;
 		echo "LEAD NOT REVERTED\n";
-		echo _QXZ("Conf Exten %1s or campaign %2s or ext_context %3s is not valid",0,'',$conf_exten,$campaign,$ext_context)."\n";
+		echo _QXZ("Previous Dispo %1s or Called Count %2s or Lead ID %3s is not valid",0,'',$stage,$called_count,$lead_id)."\n";
+		$stage = "|Dispo $stage|CC $called_count|Lead $lead_id";
 		if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 		exit;
 		}
