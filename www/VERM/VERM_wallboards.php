@@ -6,6 +6,7 @@
 # CHANGELOG:
 # 220825-1600 - First build
 #
+$report_name="VERM reports";
 
 $startMS = microtime();
 
@@ -50,6 +51,16 @@ if ($qm_conf_ct > 0)
 if ($SSallow_web_debug < 1) {$DB=0;}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysqli_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect_mysqli.php");
+	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	}
+
 
 # $report_name = 'Vicidial Enhanced Reporting Module';
 require("../$SSadmin_web_directory/screen_colors.php");

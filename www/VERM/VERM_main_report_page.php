@@ -149,6 +149,15 @@ if ($SSallow_web_debug < 1) {$DB=0;}
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
+if ( (strlen($slave_db_server)>5) and (preg_match("/$report_name/",$reports_use_slave_db)) )
+	{
+	mysqli_close($link);
+	$use_slave_server=1;
+	$db_source = 'S';
+	require("dbconnect_mysqli.php");
+	echo "<!-- Using slave server $slave_db_server $db_source -->\n";
+	}
+
 $start_date=preg_replace('/[^-0-9]/', '', $start_date);
 $start_time_hour=preg_replace('/[^0-9]/', '', $start_time_hour);
 $start_time_min=preg_replace('/[^0-9]/', '', $start_time_min);
