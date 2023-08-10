@@ -2392,3 +2392,7 @@ UPDATE system_settings SET db_schema_version='1690',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD manual_vm_status_updates ENUM('ENABLED','DISABLED') default 'ENABLED';
 
 UPDATE system_settings SET db_schema_version='1691',db_schema_update_date=NOW() where db_schema_version < 1691;
+
+ALTER TABLE vicidial_campaigns ADD force_per_call_notes ENUM('DISABLED','ENABLED','5_CHARACTERS','15_CHARACTERS','30_CHARACTERS','100_CHARACTERS') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1691',db_schema_update_date=NOW() where db_schema_version < 1692;

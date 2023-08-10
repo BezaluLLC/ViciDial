@@ -811,6 +811,12 @@ OTHER CHANGES:
 	a Settings Container. Also allows for separate routing of not-found
 	leads.
 
+228. Added Dead Call Stop Recording campaign feature.
+
+229. Manual VM Message Status Updates campaign option.
+
+230. Added Per Call Notes Required campaign option.
+
 
 
 

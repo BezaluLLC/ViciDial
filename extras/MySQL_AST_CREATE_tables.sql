@@ -1118,7 +1118,8 @@ custom_three TEXT,
 custom_four TEXT,
 custom_five TEXT,
 dead_stop_recording ENUM('DISABLED','ALL_CALLS','OUTBOUND_ONLY','INBOUND_ONLY','AUTODIAL_ONLY','MANUAL_ONLY') default 'DISABLED',
-manual_vm_status_updates ENUM('ENABLED','DISABLED') default 'ENABLED'
+manual_vm_status_updates ENUM('ENABLED','DISABLED') default 'ENABLED',
+force_per_call_notes ENUM('DISABLED','ENABLED','5_CHARACTERS','15_CHARACTERS','30_CHARACTERS','100_CHARACTERS') default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -5428,4 +5429,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1691',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1692',db_schema_update_date=NOW(),reload_timestamp=NOW();
