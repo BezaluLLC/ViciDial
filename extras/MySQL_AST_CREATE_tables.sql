@@ -1443,7 +1443,7 @@ third_alert_trigger_seconds INT(6) default '600',
 third_alert_filename VARCHAR(100) default '',
 third_alert_delay INT(6) default '1000',
 third_alert_container VARCHAR(40) default 'DISABLED',
-third_alert_only VARCHAR(40) default 'DISABLED';
+third_alert_only VARCHAR(40) default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
