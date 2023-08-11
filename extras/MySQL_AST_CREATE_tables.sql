@@ -1437,7 +1437,13 @@ second_alert_trigger_seconds INT(6) default '600',
 second_alert_filename VARCHAR(100) default '',
 second_alert_delay INT(6) default '1000',
 second_alert_container VARCHAR(40) default 'DISABLED',
-second_alert_only VARCHAR(40) default 'DISABLED'
+second_alert_only VARCHAR(40) default 'DISABLED',
+third_alert_trigger VARCHAR(20) default 'DISABLED',
+third_alert_trigger_seconds INT(6) default '600',
+third_alert_filename VARCHAR(100) default '',
+third_alert_delay INT(6) default '1000',
+third_alert_container VARCHAR(40) default 'DISABLED',
+third_alert_only VARCHAR(40) default 'DISABLED';
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -5429,4 +5435,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1692',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1693',db_schema_update_date=NOW(),reload_timestamp=NOW();

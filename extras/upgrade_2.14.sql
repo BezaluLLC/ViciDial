@@ -2396,3 +2396,12 @@ UPDATE system_settings SET db_schema_version='1691',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD force_per_call_notes ENUM('DISABLED','ENABLED','5_CHARACTERS','15_CHARACTERS','30_CHARACTERS','100_CHARACTERS') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1692',db_schema_update_date=NOW() where db_schema_version < 1692;
+
+ALTER TABLE vicidial_inbound_groups ADD third_alert_trigger VARCHAR(20) default 'DISABLED';
+ALTER TABLE vicidial_inbound_groups ADD third_alert_trigger_seconds INT(6) default '600';
+ALTER TABLE vicidial_inbound_groups ADD third_alert_filename VARCHAR(100) default '';
+ALTER TABLE vicidial_inbound_groups ADD third_alert_delay INT(6) default '1000';
+ALTER TABLE vicidial_inbound_groups ADD third_alert_container VARCHAR(40) default 'DISABLED';
+ALTER TABLE vicidial_inbound_groups ADD third_alert_only VARCHAR(40) default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1693',db_schema_update_date=NOW() where db_schema_version < 1693;
