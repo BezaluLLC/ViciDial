@@ -4053,6 +4053,9 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					usleep(1 * $second_alert_delay * 1000);
 					}
 
+				# If both 2nd and 3rd alerts trigger and set to ONLY, only play the 3rd alert
+				if ( ($disable_second_alert > 0) && ($disable_third_alert > 0) )
+					{$disable_third_alert=0;}
 
 				# if third alert is to be played, play it now
 				if ( ($play_third_alert > 0) && ($disable_third_alert < 1) )
