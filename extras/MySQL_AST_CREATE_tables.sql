@@ -5337,6 +5337,8 @@ CREATE UNIQUE INDEX vdalsla on vicidial_agent_latency_summary_log_archive (user,
 CREATE TABLE vicidial_latency_gaps_archive LIKE vicidial_latency_gaps;
 CREATE UNIQUE INDEX vdlga on vicidial_latency_gaps_archive (user,gap_date);
 
+CREATE TABLE vicidial_daily_rt_monitoring_log LIKE vicidial_rt_monitor_log;
+
 GRANT RELOAD ON *.* TO cron@'%';
 GRANT RELOAD ON *.* TO cron@localhost;
 
@@ -5435,4 +5437,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1693',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1694',db_schema_update_date=NOW(),reload_timestamp=NOW();

@@ -17,7 +17,6 @@ $PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
 
 require("dbconnect_mysqli.php");
 require("functions.php");
-require("VERM_global_vars.inc");
 
 if (isset($_GET["detail_id"]))			{$detail_id=$_GET["detail_id"];}
 	elseif (isset($_POST["detail_id"]))	{$detail_id=$_POST["detail_id"];}
@@ -52,6 +51,24 @@ if ($qm_conf_ct > 0)
 if ($SSallow_web_debug < 1) {$DB=0;}
 ##### END SETTINGS LOOKUP #####
 ###########################################
+
+$detail_id = preg_replace('/[^0-9\.\|]/','',$detail_id);
+$detail_span_height = preg_replace('/[^0-9]/','',$detail_span_height);
+
+if ($non_latin < 1)
+	{
+	$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	$call_type = preg_replace('/[^a-zA-Z]/','',$call_type);
+	}
+else
+	{
+	$DB=preg_replace("/[^0-9\p{L}]/u","",$DB);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_PW);
+	$call_type = preg_replace('/[^\p{L}]/u','',$call_type);
+	}
 
 $stmt="SELECT selected_language from vicidial_users where user='$PHP_AUTH_USER';";
 if ($DB) {echo "|$stmt|\n";}
@@ -128,6 +145,8 @@ else
 	exit;
 	}
 
+require("VERM_global_vars.inc");  # Must be after user_authorization for sanitization/security
+
 ##### BEGIN log visit to the vicidial_report_log table #####
 $LOGip = getenv("REMOTE_ADDR");
 $LOGbrowser = getenv("HTTP_USER_AGENT");
@@ -188,18 +207,6 @@ if ( (strlen($slave_db_server)>5) and (preg_match("/$subreport_name/",$reports_u
 if (!$detail_id) {echo "Beat it."; die;}
 if (!$detail_span_height) {$detail_span_height="70";}
 $detail_span_height-=15; # account for headers;
-
-$detail_id = preg_replace('/[^0-9\.\|]/','',$detail_id);
-$detail_span_height = preg_replace('/[^0-9]/','',$detail_span_height);
-
-if ($non_latin < 1)
-	{
-	$call_type = preg_replace('/[^a-zA-Z]/','',$call_type);
-	}
-else
-	{
-	$call_type = preg_replace('/[^\p{L}]/u','',$call_type);
-	}
 
 # $report_name="Vox Enhanced Reporting Module - Call detail display";
 

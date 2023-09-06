@@ -39,6 +39,9 @@ $did = preg_replace('/[^0-9]/','',$did);
 
 if ($non_latin < 1)
 	{
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
+
 	$campaigns = preg_replace('/[^-_0-9a-zA-Z]/','',$campaigns);
 	$ingroups = preg_replace('/[^-_0-9a-zA-Z]/','',$ingroups);
 	$users = preg_replace('/[^-_0-9a-zA-Z]/','',$users);
@@ -47,6 +50,9 @@ if ($non_latin < 1)
 	}
 else
 	{
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
+
 	$campaigns = preg_replace('/[^-_0-9\p{L}]/u','',$campaigns);
 	$ingroups = preg_replace('/[^-_0-9\p{L}]/u','',$ingroups);
 	$users = preg_replace('/[^-_0-9\p{L}]/u','',$users);

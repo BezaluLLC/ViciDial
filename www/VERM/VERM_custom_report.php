@@ -16,7 +16,6 @@ header ("Content-type: text/html; charset=utf-8");
 
 require("dbconnect_mysqli.php");
 require("functions.php");
-require("VERM_global_vars.inc");
 
 if (isset($_GET["start_date"]))			{$start_date=$_GET["start_date"];}
 	elseif (isset($_POST["start_date"]))	{$start_date=$_POST["start_date"];}
@@ -139,35 +138,6 @@ else
 	$custom_report_name = preg_replace('/[^-_0-9\p{L}/u','',$custom_report_name);
 	}
 
-##### Look up custom report parameters from prior use #####
-$custom_rpt_stmt="select * from verm_custom_report_holder where user='$PHP_AUTH_USER' and ((report_name!='' and report_name='$custom_report_name') or modify_date>=now()-INTERVAL 8 HOUR) limit 1";
-$custom_rpt_rslt=mysql_to_mysqli($custom_rpt_stmt, $link);
-$dow=array();
-while ($custom_rpt_row=mysqli_fetch_array($custom_rpt_rslt))
-	{
-	$custom_rpt_parameters=$custom_rpt_row["report_parameters"];
-	$custom_rpt_array=explode("|", $custom_rpt_parameters);
-	for ($i=0; $i<count($custom_rpt_array); $i++)
-		{
-		$var_info=explode("=", $custom_rpt_array[$i]);
-		$var_name=$var_info[0];
-		$var_value=$var_info[1];
-		if (strlen($var_name)>0)
-			{
-			$var_value=preg_replace('/^undefined$/i', '', $var_value); 
-			if (preg_match('/^dow/', $var_name))
-				{
-				array_push($dow, $var_value);
-				}
-			else
-				{
-				$$var_name=$var_value;
-				}
-			}
-		}
-	}	
-###########################################################
-
 if (file_exists('options.php'))
 	{
 	require('options.php');
@@ -286,6 +256,38 @@ else
 	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
 	exit;
 	}
+
+require("VERM_global_vars.inc");
+
+##### Look up custom report parameters from prior use #####
+$custom_rpt_stmt="select * from verm_custom_report_holder where user='$PHP_AUTH_USER' and ((report_name!='' and report_name='$custom_report_name') or modify_date>=now()-INTERVAL 8 HOUR) limit 1";
+$custom_rpt_rslt=mysql_to_mysqli($custom_rpt_stmt, $link);
+$dow=array();
+while ($custom_rpt_row=mysqli_fetch_array($custom_rpt_rslt))
+	{
+	$custom_rpt_parameters=$custom_rpt_row["report_parameters"];
+	$custom_rpt_array=explode("|", $custom_rpt_parameters);
+	for ($i=0; $i<count($custom_rpt_array); $i++)
+		{
+		$var_info=explode("=", $custom_rpt_array[$i]);
+		$var_name=$var_info[0];
+		$var_value=$var_info[1];
+		if (strlen($var_name)>0)
+			{
+			$var_value=preg_replace('/^undefined$/i', '', $var_value); 
+			if (preg_match('/^dow/', $var_name))
+				{
+				array_push($dow, $var_value);
+				}
+			else
+				{
+				$$var_name=$var_value;
+				}
+			}
+		}
+	}	
+###########################################################
+
 
 ##### BEGIN log visit to the vicidial_report_log table #####
 $LOGip = getenv("REMOTE_ADDR");

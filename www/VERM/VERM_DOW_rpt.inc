@@ -11,10 +11,10 @@
 # TIMEOT, unanswered even though it was dropped into a call that was picked up
 # Warm transfers count as two calls
 
-$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
-$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
-$PHP_SELF=$_SERVER['PHP_SELF'];
-$PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
+# $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
+# $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
+# $PHP_SELF=$_SERVER['PHP_SELF'];
+# $PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
 
 $vicidial_user_log_table="vicidial_user_log";
 

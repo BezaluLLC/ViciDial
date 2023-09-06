@@ -6093,12 +6093,13 @@ if ($SSscript_remove_js > 0)
 # 230726-0922 - Added manual_vm_status_updates campaign setting
 # 230810-1617 - Added force_per_call_notes campaign setting
 # 230810-2005 - Added third_alert_trigger features
+# 230830-1059 - Changed settings-outbound_calls_per_second max to allow up to 1000 CPS
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-894a';
-$build = '230810-2005';
+$admin_version = '2.14-895a';
+$build = '230830-1059';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -43821,7 +43822,7 @@ if ($ADD==311111111111111)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Disable Auto-Dial").": </td><td align=left>$disable_auto_dial &nbsp; $NWB#settings-disable_auto_dial$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Max FILL Calls per Second").": </td><td align=left><input type=text name=outbound_calls_per_second size=4 maxlength=3 value=\"$outbound_calls_per_second\">$NWB#settings-outbound_calls_per_second$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Max FILL Calls per Second").": </td><td align=left><input type=text name=outbound_calls_per_second size=5 maxlength=4 value=\"$outbound_calls_per_second\">$NWB#settings-outbound_calls_per_second$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Web Lead Loader Phone Length").": </td><td align=left><select size=1 name=web_loader_phone_length><option>"._QXZ("DISABLED")."</option><option>"._QXZ("CHOOSE")."</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option><option>11</option><option>12</option><option>13</option><option>14</option><option>15</option><option>16</option><option>17</option><option>18</option><option value=\"$web_loader_phone_length\" SELECTED>"._QXZ("$web_loader_phone_length")."</option></select>$NWB#settings-web_loader_phone_length$NWE</td></tr>\n";
 

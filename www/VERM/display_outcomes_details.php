@@ -16,7 +16,6 @@ $PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
 
 require("dbconnect_mysqli.php");
 require("functions.php");
-require("VERM_global_vars.inc");
 
 if (isset($_GET["download_rpt"]))			{$download_rpt=$_GET["download_rpt"];}
 	elseif (isset($_POST["download_rpt"]))	{$download_rpt=$_POST["download_rpt"];}
@@ -186,6 +185,8 @@ else
 	echo "$VDdisplayMESSAGE: |$PHP_AUTH_USER|$PHP_AUTH_PW|$auth_message|\n";
 	exit;
 	}
+
+require("VERM_global_vars.inc"); # Must be after user_auth for sanitization purposes
 
 ##### BEGIN log visit to the vicidial_report_log table #####
 $LOGip = getenv("REMOTE_ADDR");

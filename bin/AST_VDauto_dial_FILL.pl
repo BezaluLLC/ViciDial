@@ -12,7 +12,7 @@
 #
 # Should only be run on one server in a multi-server Asterisk/VICIDIAL cluster
 #
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 61115-1246 - First build, framework setup, non-functional
@@ -52,6 +52,7 @@
 # 210731-0951 - Added cid_group_id_two campaign option
 # 220311-1922 - Added List CID Group Override option
 # 220623-1622 - Added List dial_prefix override
+# 230830-1056 - Changed outbound_calls_per_second max to allow up to 1000 CPS
 #
 
 ### begin parsing run-time options ###
@@ -340,7 +341,7 @@ while($one_day_interval > 0)
 			}
 		$sthA->finish();
 
-		if ( ($outbound_calls_per_second > 0) && ($outbound_calls_per_second < 201) )
+		if ( ($outbound_calls_per_second > 0) && ($outbound_calls_per_second < 1001) )
 			{$per_call_delay = (1000 / $outbound_calls_per_second);}
 		else
 			{$per_call_delay = '25';}

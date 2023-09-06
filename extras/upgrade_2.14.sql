@@ -2405,3 +2405,7 @@ ALTER TABLE vicidial_inbound_groups ADD third_alert_container VARCHAR(40) defaul
 ALTER TABLE vicidial_inbound_groups ADD third_alert_only VARCHAR(40) default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1693',db_schema_update_date=NOW() where db_schema_version < 1693;
+
+CREATE TABLE vicidial_daily_rt_monitoring_log LIKE vicidial_rt_monitor_log;
+
+UPDATE system_settings SET db_schema_version='1694',db_schema_update_date=NOW() where db_schema_version < 1694;
