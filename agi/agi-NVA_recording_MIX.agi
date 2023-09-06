@@ -51,6 +51,7 @@
 #
 # CHANGELOG
 # 230814-2110 - First build based on agi-NVA_recording.agi
+# 230906-1708 - Fixes for recording file issues
 #
 
 &get_time_now;
@@ -394,17 +395,18 @@ if ($record_call =~ /Y/)
 	%ast_ver_str = parse_asterisk_version($asterisk_version);
 	if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
 		{
-		$retval = $AGI->exec("MixMonitor wav|/var/spool/asterisk/monitor/MIX/$filename");
+		$retval = $AGI->exec("Monitor wav|/var/spool/asterisk/monitor/MIX/$filename");
 		}
 	else
 		{
-		$retval = $AGI->exec("MixMonitor","/var/spool/asterisk/monitor/MIX/$filename.wav"); 
+		$retval = $AGI->exec("MixMonitor",",r(/var/spool/asterisk/monitor/MIX/$filename-in.wav)t(/var/spool/asterisk/monitor/MIX/$filename-out.wav)"); 
 		}
 
 	# sleep for a tenth of a second, then get the file size to print in output
 	usleep(1*100*1000);
-	$tempFILEsize = (-s "/var/spool/asterisk/monitor/MIX/$filename.wav");
-	if ($AGILOG) {$agi_string = "MixMonitor started, returned: $retval   size: $tempFILEsize";   &agi_output;}
+	$tempFILEsizeIN = (-s "/var/spool/asterisk/monitor/MIX/$filename-in.wav");
+	$tempFILEsizeOUT = (-s "/var/spool/asterisk/monitor/MIX/$filename-out.wav");
+	if ($AGILOG) {$agi_string = "MixMonitor started, returned: $retval   in_size: $tempFILEsizeIN  out_size: $tempFILEsizeOUT";   &agi_output;}
 	}
 
 if ( ($phone_url =~ /Y/) && (length($nva_call_url) > 8) )
