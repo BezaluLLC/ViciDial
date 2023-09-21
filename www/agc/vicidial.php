@@ -6066,6 +6066,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var camp_custom_five='<?php echo $camp_custom_five ?>';
 	var dead_stop_recording='<?php echo $dead_stop_recording ?>';
 	var dead_count=0;
+	var APIskip=0;
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -7810,6 +7811,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{
 							if ( (in_lead_preview_state==1) && (APIDiaL == 'SKIP') )
 								{
+								APIskip=1;
 								ManualDialSkip();
 								}
 							if (APIDiaL == 'DIALONLY')
@@ -11970,7 +11972,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		{
 		if (MDSclick=='YES')
 			{button_click_log = button_click_log + "" + SQLdate + "-----ManualDialSkip---|";}
-		if (manual_dial_in_progress==1)
+		if ( (manual_dial_in_progress==1) && (APIskip < 1) )
 			{
 			alert_box("<?php echo _QXZ("YOU CANNOT SKIP A CALLBACK OR MANUAL DIAL, YOU MUST DIAL THE LEAD"); ?>");
 			button_click_log = button_click_log + "" + SQLdate + "-----DialSkipFailed---" + manual_dial_in_progress + " " + "|";
@@ -12157,6 +12159,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				transfer_no_dispoTEMP=0;
 				leave_3way_start_recording_filename='';
 				three_way_call_cid = orig_three_way_call_cid;
+				APIskip=0;
 				if (manual_dial_preview < 1)
 					{
 					document.vicidial_form.LeadPreview.checked=false;
@@ -16166,6 +16169,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		customer_3way_hangup_counter_trigger=0;
 		waiting_on_dispo=1;
 		recording_active=0;
+		APIskip=0;
 		var VDDCU_recording_id=document.getElementById("RecorDID").innerHTML;
 		var VDDCU_recording_filename=last_recording_filename;
 		var dispo_urls='';
@@ -16532,6 +16536,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					transfer_no_dispoTEMP=0;
 					leave_3way_start_recording_filename='';
 					three_way_call_cid = orig_three_way_call_cid;
+					APIskip=0;
 					if (manual_auto_next > 0)
 						{manual_auto_next_trigger=1;   manual_auto_next_count=manual_auto_next;}
 					if (agent_display_fields.match(adfREGentry_date))

@@ -1,4 +1,4 @@
-2FA - TWO FACTOR AUTHENTICATION				Updated: 2023-06-10
+2FA - TWO FACTOR AUTHENTICATION				Updated: 2023-09-14
 
 This document covers the 2FA(Two-Factor-Authentication) features in VICIdial as
 of admin.php build 210312-1239(svn/trunk revision 3373).
@@ -66,7 +66,7 @@ Notes:
 Upon activating 2FA in the System Settings, if you get the following message, it means that your user account does not have an Email address and Mobile Phone number filled in:
 "Your User account is not configured for Two-Factor-Authentication. Please contact your system administrator"
 
-
+If you are using email as an option, the "email_from" email address should use a domain name that is registered to your webserver, or you may have issues with email filtering
 
 
 

@@ -754,7 +754,7 @@ agent_xfer_blind_transfer ENUM('Y','N') default 'Y',
 agent_xfer_dial_with_customer ENUM('Y','N') default 'Y',
 agent_xfer_park_customer_dial ENUM('Y','N') default 'Y',
 agent_fullscreen ENUM('Y','N') default 'N',
-allowed_reports VARCHAR(2000) default 'ALL REPORTS',
+allowed_reports VARCHAR(4000) default 'ALL REPORTS',
 webphone_url_override VARCHAR(255) default '',
 webphone_systemkey_override VARCHAR(100) default '',
 webphone_dialpad_override ENUM('DISABLED','Y','N','TOGGLE','TOGGLE_OFF') default 'DISABLED',
@@ -1855,7 +1855,7 @@ label_security_phrase VARCHAR(60) default '',
 label_email VARCHAR(60) default '',
 label_comments VARCHAR(60) default '',
 slave_db_server VARCHAR(50) default '',
-reports_use_slave_db VARCHAR(2000) default '',
+reports_use_slave_db VARCHAR(4000) default '',
 webphone_systemkey VARCHAR(100) default '',
 first_login_trigger ENUM('Y','N') default 'N',
 hosted_settings VARCHAR(100) default '',
@@ -5437,4 +5437,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1694',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1695',db_schema_update_date=NOW(),reload_timestamp=NOW();

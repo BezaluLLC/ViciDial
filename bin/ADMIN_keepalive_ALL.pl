@@ -166,9 +166,10 @@
 # 230511-0825 - Added log_latency_gaps trigger, demographic_quotas trigger
 # 230524-2144 - Added weekday_resets
 # 230609-1137 - Added VIDPROMPTSPECIAL call menu In-Group dialplan entries
+# 230909-0846 - Added purging of vicidial_khomp_log records older than 7 days
 #
 
-$build = '230609-1137';
+$build = '230909-0846';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -2109,6 +2110,24 @@ if ($timeclock_end_of_day_NOW > 0)
 		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
 		$sthA->finish();
 		##### END vicidial_tiltx_shaken_log end of day process removing records older than 7 days #####
+
+
+		##### BEGIN vicidial_khomp_log end of day process removing records older than 7 days #####
+		$stmtA = "DELETE from vicidial_khomp_log where start_date < \"$SDSQLdate\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_khomp_log records older than 7 days purged|\n";}
+		if ($teodDB) {$event_string = "vicidial_khomp_log records older than 7 days purged: |$stmtA|$affected_rows|";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_khomp_log;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+		##### END vicidial_khomp_log end of day process removing records older than 7 days #####
 
 
 		##### BEGIN vicidial_two_factor_auth end of day process removing expired and older records #####

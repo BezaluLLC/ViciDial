@@ -2409,3 +2409,9 @@ UPDATE system_settings SET db_schema_version='1693',db_schema_update_date=NOW() 
 CREATE TABLE vicidial_daily_rt_monitoring_log LIKE vicidial_rt_monitor_log;
 
 UPDATE system_settings SET db_schema_version='1694',db_schema_update_date=NOW() where db_schema_version < 1694;
+
+ALTER TABLE vicidial_user_groups MODIFY allowed_reports VARCHAR(4000) default 'ALL REPORTS';
+
+ALTER TABLE system_settings MODIFY reports_use_slave_db VARCHAR(4000) default '';
+
+UPDATE system_settings SET db_schema_version='1695',db_schema_update_date=NOW() where db_schema_version < 1695;
