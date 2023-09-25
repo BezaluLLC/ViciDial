@@ -167,9 +167,10 @@
 # 230524-2144 - Added weekday_resets
 # 230609-1137 - Added VIDPROMPTSPECIAL call menu In-Group dialplan entries
 # 230909-0846 - Added purging of vicidial_khomp_log records older than 7 days
+# 230925-1454 - Added -recmon settings
 #
 
-$build = '230909-0846';
+$build = '230925-1454';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -182,6 +183,7 @@ $cu3way_delay='';
 $autodial_delay='';
 $adfill_delay='';
 $fill_staggered='';
+$recmon=0;
 
 # time variable definitions
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -294,6 +296,8 @@ if (length($ARGV[0])>1)
 		print "  [-debugX] = Extra-verbose debug messages\n";
 		print "  [-debugXXX] = Triple-Extra-verbose debug messages, debug flag on processes and screen logging\n";
 		print "  [--teod] = log Timeclock End of Day processes to log file\n";
+		print "  [-recmon] = log when recordings are created and deleted to log file\n";
+		print "  [-recmon-sleepms=XXX] = how many ms to sleep between checking for files on recording monitoring\n";
 		print "\n";
 		exit;
 		}
@@ -382,6 +386,26 @@ if (length($ARGV[0])>1)
 				if ( ($CLIdelay > 0) && (length($CLIdelay)> 0) )	
 					{$cu3way_delay = "--delay=$CLIdelay";}
 				if ($DB > 0) {print "CU3 Delay set to $CLIdelay $cu3way_delay\n";}
+				}
+			@CLIvarARY=@MT;   @CLIvarARY=@MT;
+			}
+		if ($args =~ /-recmon/i)
+			{
+			$recmon=1;
+			if ($DB > 0) {print "\n----- Recording Monitoring ENABLED -----\n\n";}
+			}
+		if ($args =~ /-recmon-sleepms=/i) # CLI defined delay
+			{
+			@CLIvarARY = split(/-recmon-sleepms=/,$args);
+			@CLIvarARX = split(/ /,$CLIvarARY[1]);
+			if (length($CLIvarARX[0])>0)
+				{
+				$CLIsleepms = $CLIvarARX[0];
+				$CLIsleepms =~ s/\/$| |\r|\n|\t//gi;
+				$CLIsleepms =~ s/\D//gi;
+				if ( ($CLIsleepms > 0) && (length($CLIsleepms)> 0) )
+					{$recmon_sleepms = "--sleepms=$CLIsleepms";}
+				if ($DB > 0) {print "Recording Monitor Sleep ms set to $CLIsleepms $recmon_sleepms\n";}
 				}
 			@CLIvarARY=@MT;   @CLIvarARY=@MT;
 			}
@@ -551,10 +575,12 @@ else
 	$runningAST_VDauto_dial_FILL=0;
 	$runningip_relay=0;
 	$runningAST_conf_3way=0;
+	$runningAST_rec_monitor=0;
 	$runningemail_inbound=0;
 	$runningASTERISK=0;
 	$runningsip_logger=0;
 	$AST_conf_3way=0;
+	$AST_rec_monitor=0;
 
 	if ($VARactive_keepalives =~ /1/) 
 		{
@@ -615,6 +641,11 @@ else
 		{
 		$AST_conf_3way=1;
 		if ($DB) {print "AST_conf_3way set to keepalive\n";}
+		}
+	if ($recmon > 0)
+		{
+		$AST_rec_monitor=1;
+		if ($DB) {print "AST_rec_monitor set to keepalive\n";}
 		}
 
 
@@ -709,6 +740,11 @@ else
 			$runningAST_conf_3way++;
 			if ($DB) {print "AST_conf_3way RUNNING:           |$psline[1]|\n";}
 			}
+		if ($psline[1] =~ /$REGhome\/AST_rec_monitor\.pl/)
+			{
+			$runningAST_rec_monitor++;
+			if ($DB) {print "AST_rec_monitor RUNNING:           |$psline[1]|\n";}
+			}
 
 		$i++;
 		}
@@ -781,6 +817,7 @@ else
 		( ($AST_VDauto_dial_FILL > 0) && ($runningAST_VDauto_dial_FILL < 1) ) ||
 		( ($ip_relay > 0) && ($runningip_relay < 1) ) ||
 		( ($AST_conf_3way > 0) && ($runningAST_conf_3way < 1) ) || 
+		( ($AST_rec_monitor > 0) && ($runningAST_monitor < 1) ) ||
 		( ($email_inbound > 0) && ($runningemail_inbound < 1) ) ||
 		( ($sip_logger > 0) && ($runningsip_logger < 1) )
 	   )
@@ -869,6 +906,11 @@ else
 				{
 				$runningAST_conf_3way++;
 				if ($DB) {print "AST_conf_3way RUNNING:           |$psline[1]|\n";}
+				}
+			if ($psline[1] =~ /$REGhome\/AST_rec_monitor\.pl/)
+				{
+				$runningAST_rec_monitor++;
+				if ($DB) {print "AST_rec_monitor RUNNING:           |$psline[1]|\n";}
 				}
 			$i++;
 			}
@@ -1013,6 +1055,17 @@ else
 				{
 				`/usr/bin/screen -S ASTconf3way -X logfile $PATHlogs/ASTconf3way-screenlog.0`;
 				`/usr/bin/screen -S ASTconf3way -X log`;
+				}
+			}
+		if ( ($AST_rec_monitor > 0) && ($runningAST_rec_monitor < 1) )
+			{
+			if ($DB) {print "starting AST_rec_monitor...\n";}
+			# add a '-L' to the command below to activate logging
+			`/usr/bin/screen -d -m -S ASTrecmon $PATHhome/AST_rec_monitor.pl $recmon_sleepms $debug_string`;
+			if ($megaDB)
+				{
+				`/usr/bin/screen -S ASTrecmon -X logfile $PATHlogs/ASTrecmon-screenlog.0`;
+				`/usr/bin/screen -S ASTrecmon -X log`;
 				}
 			}
 		}
