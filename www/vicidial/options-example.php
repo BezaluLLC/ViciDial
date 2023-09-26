@@ -37,6 +37,7 @@
 # 230407-1040 - Added include_sales_in_TPD_report option
 # 230421-0220 - Added RS_AGENTlatency option
 # 230421-1645 - Added RS_UGlatencyRESTRICT option
+# 230926-0849 - Added camp_lead_order_random option
 #
 
 # used by the realtime_report.php script
@@ -146,6 +147,9 @@ $audio_store_GSM_allowed=0;
 
 # Include sale statuses in Team Performance Detail report
 $include_sales_in_TPD_report=0;
+
+# Allow for RANDOM list orders to be used in the Modify Campaign screens
+$camp_lead_order_random=1;
 
 # CORS settings: (to enable, customize the variables below, and uncomment the "require_once('adminCORS.php');" line at the bottom)
 # (NOTE: The first 3 variables must be set for these features to be active)
