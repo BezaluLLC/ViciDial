@@ -818,6 +818,9 @@ OTHER CHANGES:
 
 230. Added Per Call Notes Required campaign option.
 
+231. Added Agent Search In-Group List Restrict options, allowing for Lead 
+	Search restrictions on inbound group calls to a single list ID.
+
 
 
 

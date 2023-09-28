@@ -538,10 +538,11 @@
 # 230523-0827 - Added User inbound_credits feature
 # 230617-1605 - Fix for issue when agent goes ready, one of the fixes from Issue #1473
 # 230801-0810 - More useful error output for manDiaLskip
+# 230927-2037 - Added agent_search_ingroup_list campaign and agent_search_list ingroup options
 #
 
-$version = '2.14-431';
-$build = '230801-0810';
+$version = '2.14-432';
+$build = '230927-2037';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=913;
@@ -858,6 +859,8 @@ if (isset($_GET["calls_waiting_vl_twoLABEL"]))			{$calls_waiting_vl_twoLABEL=$_G
 	elseif (isset($_POST["calls_waiting_vl_twoLABEL"]))	{$calls_waiting_vl_twoLABEL=$_POST["calls_waiting_vl_twoLABEL"];}
 if (isset($_GET["pause_max_url_trigger"]))			{$pause_max_url_trigger=$_GET["pause_max_url_trigger"];}
 	elseif (isset($_POST["pause_max_url_trigger"]))	{$pause_max_url_trigger=$_POST["pause_max_url_trigger"];}
+if (isset($_GET["inbound_ingroup"]))			{$inbound_ingroup=$_GET["inbound_ingroup"];}
+	elseif (isset($_POST["inbound_ingroup"]))	{$inbound_ingroup=$_POST["inbound_ingroup"];}
 
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 $user=preg_replace("/\'|\"|\\\\|;| /","",$user);
@@ -1253,6 +1256,7 @@ if ($non_latin < 1)
 	$search = preg_replace('/[^-_0-9a-zA-Z]/','',$search);
 	$sub_status = preg_replace('/[^-_0-9a-zA-Z]/','',$sub_status);
 	$user_group = preg_replace('/[^-_0-9a-zA-Z]/','',$user_group);
+	$inbound_ingroup = preg_replace('/[^-_0-9a-zA-Z]/','',$inbound_ingroup);
 	$calls_waiting_vl_oneLABEL = preg_replace('/[^-, _0-9a-zA-Z]/','',$calls_waiting_vl_oneLABEL);
 	$calls_waiting_vl_twoLABEL = preg_replace('/[^-, _0-9a-zA-Z]/','',$calls_waiting_vl_twoLABEL);
 	}
@@ -1282,6 +1286,7 @@ else
 	$search = preg_replace('/[^-_0-9\p{L}]/u','',$search);
 	$sub_status = preg_replace('/[^-_0-9\p{L}]/u','',$sub_status);
 	$user_group = preg_replace('/[^-_0-9\p{L}]/u','',$user_group);
+	$inbound_ingroup = preg_replace('/[^-_0-9\p{L}]/u','',$inbound_ingroup);
 	$calls_waiting_vl_oneLABEL = preg_replace('/[^-, _0-9\p{L}]/u','',$calls_waiting_vl_oneLABEL);
 	$calls_waiting_vl_twoLABEL = preg_replace('/[^-, _0-9\p{L}]/u','',$calls_waiting_vl_twoLABEL);
 	}
@@ -18551,7 +18556,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 	$ALLpostal_code = array();
 	$ALLvendor_lead_code = array();
 
-	$stmt="SELECT agent_lead_search_method,manual_dial_list_id from vicidial_campaigns where campaign_id='$campaign';";
+	$stmt="SELECT agent_lead_search_method,manual_dial_list_id,agent_search_ingroup_list from vicidial_campaigns where campaign_id='$campaign';";
 	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00374',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -18561,6 +18566,7 @@ if ($ACTION == 'SEARCHRESULTSview')
 		$row=mysqli_fetch_row($rslt);
 		$agent_lead_search_method =		$row[0];
 		$manual_dial_list_id =			$row[1];
+		$agent_search_ingroup_list =	$row[2];
 
 		$searchSQL='';
 		$searchmethodSQL='';
@@ -18753,6 +18759,27 @@ if ($ACTION == 'SEARCHRESULTSview')
 			$searchmethodSQL=" and list_id IN($camp_lists)";
 			}
 
+		if ( ($inbound_lead_search > 0) and ( ($agent_search_ingroup_list == 'ENABLED') or ($agent_search_ingroup_list == 'ENABLED_OVERRIDE') ) )
+			{
+			if (strlen($inbound_ingroup) > 0)
+				{
+				$stmt="SELECT agent_search_list from vicidial_inbound_groups where group_id='$inbound_ingroup' and agent_search_list != '';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				$igs_to_parse = mysqli_num_rows($rslt);
+				if ($igs_to_parse > 0) 
+					{
+					$rowx=mysqli_fetch_row($rslt);
+					if (strlen($rowx[0]) > 1)
+						{
+						if ($agent_search_ingroup_list == 'ENABLED')
+							{$searchmethodSQL .= " and list_id='$rowx[0]'";}
+						if ($agent_search_ingroup_list == 'ENABLED_OVERRIDE')
+							{$searchmethodSQL = " and list_id='$rowx[0]'";}
+						}
+					}
+				}
+			}
 
 		##### BEGIN search queries and output #####
 		$stmt="SELECT count(*) from vicidial_list where $searchSQL $searchownerSQL $searchmethodSQL;";
@@ -18921,7 +18948,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 	if (strlen($stage) < 3)
 		{$stage = '670';}
 
-	$stmt="SELECT agent_lead_search_method,manual_dial_list_id from vicidial_campaigns where campaign_id='$campaign';";
+	$stmt="SELECT agent_lead_search_method,manual_dial_list_id,agent_search_ingroup_list from vicidial_campaigns where campaign_id='$campaign';";
 	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);
 		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00431',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -18931,6 +18958,7 @@ if ($ACTION == 'SEARCHCONTACTSRESULTSview')
 		$row=mysqli_fetch_row($rslt);
 		$agent_lead_search_method =		$row[0];
 		$manual_dial_list_id =			$row[1];
+		$agent_search_ingroup_list =	$row[2];
 
 		$searchSQL='';
 		$searchmethodSQL='';

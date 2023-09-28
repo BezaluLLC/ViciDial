@@ -724,10 +724,11 @@
 # 230523-0826 - Added User inbound_credits feature
 # 230615-0842 - Added dead_stop_recording feature
 # 230810-1652 - Added force_per_call_notes campaign setting
+# 230927-2036 - Added agent_search_ingroup_list campaign and agent_search_list ingroup options
 #
 
-$version = '2.14-691c';
-$build = '230810-1652';
+$version = '2.14-692c';
+$build = '230927-2036';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
@@ -5900,6 +5901,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var owner_populate='<?php echo $owner_populate ?>';
 	var qc_enabled='<?php echo $qc_enabled ?>';
 	var inbound_lead_search=0;
+	var inbound_ingroup='';
 	var VU_agent_choose_ingroups_skip_count=0;
 	var mrglock_ig_select_ct='<?php echo $mrglock_ig_select_ct ?>';
 	var agent_select_territories_skip_count=0;
@@ -15770,6 +15772,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					// set phone number in search box to number of live inbound call
 					document.vicidial_form.search_phone_number.value=document.vicidial_form.phone_number.value;
 					inbound_lead_search=1;
+					inbound_ingroup = group;
 					}
 				else
 					{
@@ -16508,6 +16511,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					document.vicidial_form.MDType.value = '';
 					document.vicidial_form.MDPhonENumbeRHiddeN.value = '';
 					inbound_lead_search=0;
+					inbound_ingroup='';
 					cid_lock=0;
 					timer_alt_trigger=0;
 					last_mdtype='';
@@ -19614,7 +19618,7 @@ function phone_number_format(formatphone) {
 				}
 			if (xmlhttp)
 				{ 
-				LSview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=SEARCHRESULTSview&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&phone_number=" + document.vicidial_form.search_phone_number.value + "&lead_id=" + document.vicidial_form.search_lead_id.value + "&vendor_lead_code=" + document.vicidial_form.search_vendor_lead_code.value + "&first_name=" + document.vicidial_form.search_first_name.value + "&last_name=" + document.vicidial_form.search_last_name.value + "&city=" + document.vicidial_form.search_city.value + "&state=" + document.vicidial_form.search_state.value + "&postal_code=" + document.vicidial_form.search_postal_code.value + "&search=" + phone_search_fields + "&campaign=" + campaign + "&inbound_lead_search=" + inbound_lead_search + "&manual_dial_filter=" + agentcall_manual + "&stage=<?php echo $HCwidth ?>";
+				LSview_query = "server_ip=" + server_ip + "&session_name=" + session_name + "&ACTION=SEARCHRESULTSview&format=text&user=" + user + "&pass=" + pass + "&conf_exten=" + session_id + "&extension=" + extension + "&protocol=" + protocol + "&phone_number=" + document.vicidial_form.search_phone_number.value + "&lead_id=" + document.vicidial_form.search_lead_id.value + "&vendor_lead_code=" + document.vicidial_form.search_vendor_lead_code.value + "&first_name=" + document.vicidial_form.search_first_name.value + "&last_name=" + document.vicidial_form.search_last_name.value + "&city=" + document.vicidial_form.search_city.value + "&state=" + document.vicidial_form.search_state.value + "&postal_code=" + document.vicidial_form.search_postal_code.value + "&search=" + phone_search_fields + "&campaign=" + campaign + "&inbound_lead_search=" + inbound_lead_search + "&inbound_ingroup=" + inbound_ingroup + "&manual_dial_filter=" + agentcall_manual + "&stage=<?php echo $HCwidth ?>";
 				xmlhttp.open('POST', 'vdc_db_query.php'); 
 				xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 				xmlhttp.send(LSview_query); 

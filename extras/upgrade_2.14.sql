@@ -2415,3 +2415,9 @@ ALTER TABLE vicidial_user_groups MODIFY allowed_reports VARCHAR(4000) default 'A
 ALTER TABLE system_settings MODIFY reports_use_slave_db VARCHAR(4000) default '';
 
 UPDATE system_settings SET db_schema_version='1695',db_schema_update_date=NOW() where db_schema_version < 1695;
+
+ALTER TABLE vicidial_campaigns ADD agent_search_ingroup_list ENUM('DISABLED','ENABLED','ENABLED_OVERRIDE') default 'DISABLED';
+
+ALTER TABLE vicidial_inbound_groups ADD agent_search_list VARCHAR(20) default '';
+
+UPDATE system_settings SET db_schema_version='1696',db_schema_update_date=NOW() where db_schema_version < 1696;
