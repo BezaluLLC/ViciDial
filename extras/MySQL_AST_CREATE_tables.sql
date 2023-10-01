@@ -71,7 +71,7 @@ template_id VARCHAR(15) NOT NULL,
 conf_override TEXT,
 phone_context VARCHAR(20) default 'default',
 phone_ring_timeout SMALLINT(3) default '60',
-conf_secret VARCHAR(20) default 'test',
+conf_secret VARCHAR(100) default 'test',
 delete_vm_after_email ENUM('N','Y') default 'N',
 is_webphone ENUM('Y','N','Y_API_LAUNCH') default 'N',
 use_external_server_ip ENUM('Y','N') default 'N',
@@ -151,7 +151,7 @@ carrier_logging_active ENUM('Y','N') default 'Y',
 vicidial_balance_rank TINYINT(3) UNSIGNED default '0',
 rebuild_music_on_hold ENUM('Y','N') default 'Y',
 active_agent_login_server ENUM('Y','N') default 'Y',
-conf_secret VARCHAR(20) default 'test',
+conf_secret VARCHAR(100) default 'test',
 external_server_ip VARCHAR(100) default '',
 custom_dialplan_entry TEXT,
 active_twin_server_ip VARCHAR(15) default '',
@@ -5441,4 +5441,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1696',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1697',db_schema_update_date=NOW(),reload_timestamp=NOW();

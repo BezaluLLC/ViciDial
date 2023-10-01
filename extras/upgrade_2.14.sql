@@ -2421,3 +2421,9 @@ ALTER TABLE vicidial_campaigns ADD agent_search_ingroup_list ENUM('DISABLED','EN
 ALTER TABLE vicidial_inbound_groups ADD agent_search_list VARCHAR(20) default '';
 
 UPDATE system_settings SET db_schema_version='1696',db_schema_update_date=NOW() where db_schema_version < 1696;
+
+ALTER TABLE phones MODIFY conf_secret VARCHAR(100) default 'test';
+
+ALTER TABLE servers MODIFY conf_secret VARCHAR(100) default 'test';
+
+UPDATE system_settings SET db_schema_version='1697',db_schema_update_date=NOW() where db_schema_version < 1697;
