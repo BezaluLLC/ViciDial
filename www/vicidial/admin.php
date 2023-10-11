@@ -44339,9 +44339,9 @@ if ($ADD==311111111111111)
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Report Default Format").": </td><td align=left><select size=1 name=report_default_format><option value=
 		'TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option><option selected value='$report_default_format'>"._QXZ("$report_default_format")."</option></select>$NWB#settings-report_default_format$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Slave Database Server").": </td><td align=left><input type=text name=slave_db_server size=30 maxlength=50 value=\"$slave_db_server\">$NWB#settings-slave_db_server$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Secondary Database Server").": </td><td align=left><input type=text name=slave_db_server size=30 maxlength=50 value=\"$slave_db_server\">$NWB#settings-slave_db_server$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Reports to use Slave DB").": </td><td align=left><select MULTIPLE size=5 name=reports_use_slave_db[]>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Reports to use Secondary DB").": </td><td align=left><select MULTIPLE size=5 name=reports_use_slave_db[]>\n";
 
 		$Vreports_ARY = explode(',',$Vreports);
 		$Vreports_ct = count($Vreports_ARY);
@@ -44361,7 +44361,7 @@ if ($ADD==311111111111111)
 		$custom_rslt=mysql_to_mysqli($custom_stmt, $link);
 		if (mysqli_num_rows($custom_rslt)>0) 
 			{
-			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Custom Reports to use Slave DB").": </td><td align=left><select MULTIPLE size=5 name=custom_reports_use_slave_db[]>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Custom Reports to use Secondary DB").": </td><td align=left><select MULTIPLE size=5 name=custom_reports_use_slave_db[]>\n";
 			echo "<option value='--NONE--'>"._QXZ("NONE")."</option>\n";
 			$allowed_rpt_stmt="SELECT allowed_custom_reports from vicidial_user_groups where user_group='$LOGuser_group'";
 			$allowed_rpt_rslt=mysql_to_mysqli($allowed_rpt_stmt, $link);
