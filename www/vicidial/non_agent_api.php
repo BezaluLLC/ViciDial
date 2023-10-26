@@ -202,10 +202,11 @@
 # 230122-1821 - Added reset_password option to update_user function
 # 230308-1758 - Fix for update_lead list-restrict phone number update issue
 # 230614-0828 - Added container_list function
+# 230721-1753 - Added insert for daily RT monitoring
 #
 
-$version = '2.14-179';
-$build = '230614-0828';
+$version = '2.14-180';
+$build = '230721-1753';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -3405,6 +3406,9 @@ if ($function == 'blind_monitor')
 						$rslt=mysql_to_mysqli($stmt, $link);
 
 						$stmt = "INSERT INTO vicidial_rt_monitor_log SET manager_user='$user',manager_server_ip='$monitor_server_ip',manager_phone='$phone_login',manager_ip='$ip',agent_user='$AGENTuser',agent_server_ip='$server_ip',agent_status='$AGENTstatus',agent_session='$session_id',lead_id='$AGENTlead_id',campaign_id='$AGENTcampaign',caller_code='$BMquery',monitor_start_time=NOW(),monitor_type='$monitor_type';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+
+						$stmt = "INSERT INTO vicidial_daily_rt_monitor_log SET manager_user='$user',manager_server_ip='$monitor_server_ip',manager_phone='$phone_login',manager_ip='$ip',agent_user='$AGENTuser',agent_server_ip='$server_ip',agent_status='$AGENTstatus',agent_session='$session_id',lead_id='$AGENTlead_id',campaign_id='$AGENTcampaign',caller_code='$BMquery',monitor_start_time=NOW(),monitor_type='$monitor_type';";
 						$rslt=mysql_to_mysqli($stmt, $link);
 
 						##### BEGIN log visit to the vicidial_report_log table #####
