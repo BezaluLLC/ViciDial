@@ -68,6 +68,7 @@
 # 230418-1341 - Added vicidial_user_dial_log archiving, same as vicidial_dial_log
 # 230421-0057 - Added vicidial_agent_latency_summary_log archiving
 # 230507-0804 - Added vicidial_latency_gaps archiving
+# 231028-0810 - Added --url-log-only and --url-log-days=x options for purging of vicidial_url_log table only
 #
 
 $CALC_TEST=0;
@@ -79,6 +80,8 @@ $park_log_archive=0;
 $wipe_closer_log=0;
 $api_log_only=0;
 $api_archive_only=0;
+$url_log_only=0;
+$url_log_archive=0;
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -113,6 +116,8 @@ if (length($ARGV[0])>1)
 		print "       [--api-log-days=XX] = REQUIRED FOR --api-only, number of days to archive vicidial_api_log table only past\n";
 		print "  [--api-archive-only] = OPTIONAL, only purge vicidial_api_log_archive table then exit\n";
 		print "       [--api-archive-days=XX] = REQUIRED FOR --api-archive-only, number of days to purge vicidial_api_log_archive table only past\n";
+		print "  [--url-log-only] = OPTIONAL, only purge vicidial_url_log table then exit\n";
+		print "       [--url-log-days=XX] = REQUIRED FOR --url-log-only, number of days to purge vicidial_url_log table only past\n";
 		print "  [--cpd-log-purge-days=XX] = OPTIONAL, number of days to purge vicidial_cpd_log table only past\n";
 		print "  [--wipe-closer-log] = OPTIONAL, deletes all records from vicidial_closer_log after archiving\n";
 		print "  [--wipe-all-being-archived] = OPTIONAL, deletes all records from most tables after archiving\n";
@@ -293,6 +298,26 @@ if (length($ARGV[0])>1)
 				{print "\n----- API ARCHIVE PURGE, DAYS: $apiarchivedays -----\n\n";}
 			}
 
+		if ($args =~ /--url-log-only/i)
+			{
+			$url_log_only++;
+			if ($Q < 1) 
+				{print "\n----- URL LOG PURGE ONLY -----\n\n";}
+			}
+
+		if ($args =~ /--url-log-days=/i)
+			{
+			$url_log_only++;
+			@data_in = split(/--url-log-days=/,$args);
+			$urldays = $data_in[1];
+			$urldays =~ s/ .*$//gi;
+			$urldays =~ s/\D//gi;
+			if ($urldays > 999999)
+				{$urldays=1825;}
+			if ($Q < 1) 
+				{print "\n----- URL LOG PURGE ACTIVE, DAYS: $urldays -----\n\n";}
+			}
+
 		if ($args =~ /--cpd-log-purge-days=/i)
 			{
 			$cpd_log_purge++;
@@ -416,6 +441,19 @@ if ($api_log_archive_purge > 0)
 	if ($APIPURGEmin < 10) {$APIPURGEmin = "0$APIPURGEmin";}
 	if ($APIPURGEsec < 10) {$APIPURGEsec = "0$APIPURGEsec";}
 	$APIPURGEdel_time = "$APIPURGEyear-$APIPURGEmon-$APIPURGEmday $APIPURGEhour:$APIPURGEmin:$APIPURGEsec";
+	}
+if ($url_log_only > 0) 
+	{
+	$URLdel_epoch = ($secX - (86400 * $urldays));   # X days ago
+	($URLsec,$URLmin,$URLhour,$URLmday,$URLmon,$URLyear,$URLwday,$URLyday,$URLisdst) = localtime($URLdel_epoch);
+	$URLyear = ($URLyear + 1900);
+	$URLmon++;
+	if ($URLmon < 10) {$URLmon = "0$URLmon";}
+	if ($URLmday < 10) {$URLmday = "0$URLmday";}
+	if ($URLhour < 10) {$URLhour = "0$URLhour";}
+	if ($URLmin < 10) {$URLmin = "0$URLmin";}
+	if ($URLsec < 10) {$URLsec = "0$URLsec";}
+	$URLdel_time = "$URLyear-$URLmon-$URLmday $URLhour:$URLmin:$URLsec";
 	}
 
 if ($cpd_log_purge > 0) 
@@ -1818,6 +1856,53 @@ if (!$T)
 		exit;
 		}
 	########## END --api-archive-only flag processing ##########
+
+
+	########## BEGIN --url-log-only flag processing ##########
+	if ($url_log_only > 0)
+		{
+		##### vicidial_url_log
+		$stmtA = "SELECT count(*) from vicidial_url_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vicidial_url_log_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if (!$Q) {print "\nProcessing vicidial_url_log table...  ($vicidial_url_log_count)\n";}
+
+		$stmtA = "DELETE FROM vicidial_url_log WHERE url_date < '$URLdel_time';";
+		if ($DB > 0) {print "     DEBUG: |$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows = $sthA->rows;
+		if (!$Q) {print "$sthArows rows deleted from vicidial_url_log table \n";}
+
+		$stmtA = "optimize table vicidial_url_log;";
+		if ($DB > 0) {print "     DEBUG: |$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+
+		$stmtA = "SELECT count(*) from vicidial_url_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$vicidial_url_log_count_now =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if (!$Q) {print "\nProcessing vicidial_url_log table finished:  ($vicidial_url_log_count -> $vicidial_url_log_count_now)\n";}
+		
+		exit;
+		}
+	########## END --url-log-only flag processing ##########
 
 
 	if ($queue_log > 0)
