@@ -28,6 +28,7 @@
 # 230418-1008 - Added astguiclient_disabled option
 # 230418-1548 - Added dial_override_limit option
 # 230617-0815 - Added dead_logging_version option
+# 231109-0830 - Changed link_to_grey_version to disabled by default
 #
 
 $conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
@@ -63,7 +64,7 @@ $conf_check_attempts	= '3';	# number of attempts to try before loosing webserver
 $focus_blur_enabled		= '0';	# set to 1 to enable the focus/blur enter key blocking(some IE instances have issues)
 $consult_custom_delay	= '2';	# number of seconds to delay consultative transfers when custom fields are active
 $mrglock_ig_select_ct	= '4';	# number of seconds to leave in-group select screen open if agent select is disabled
-$link_to_grey_version	= '1';	# show link to old grey version of agent screen at login screen, next to timeclock link
+$link_to_grey_version	= '0';	# show link to old grey version of agent screen at login screen, next to timeclock link
 $use_agent_colors		= '1';	# agent chat colors
 $no_empty_session_warnings=0;	# set to 1 to disable empty session warnings on agent screen
 $logged_in_refresh_link = '0';	# set to 1 to allow clickable "Logged in as..." link at top to force Javascript refresh

@@ -539,10 +539,11 @@
 # 230617-1605 - Fix for issue when agent goes ready, one of the fixes from Issue #1473
 # 230801-0810 - More useful error output for manDiaLskip
 # 230927-2037 - Added agent_search_ingroup_list campaign and agent_search_list ingroup options
+# 231108-0819 - Added several fields to update_settings related to manual dial calls
 #
 
-$version = '2.14-432';
-$build = '230927-2037';
+$version = '2.14-433';
+$build = '231108-0819';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=913;
@@ -2182,7 +2183,7 @@ if ($ACTION == 'update_settings')
 
 
 			##### grab the data from vicidial_campaigns for the campaign
-			$stmt="SELECT wrapup_seconds,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,dial_timeout,wrapup_bypass,wrapup_message,wrapup_after_hotkey,manual_dial_timeout,in_man_dial_next_ready_seconds,in_man_dial_next_ready_seconds_override FROM vicidial_campaigns where campaign_id='$campaign' LIMIT 1;";
+			$stmt="SELECT wrapup_seconds,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,dial_timeout,wrapup_bypass,wrapup_message,wrapup_after_hotkey,manual_dial_timeout,in_man_dial_next_ready_seconds,in_man_dial_next_ready_seconds_override,campaign_cid,omit_phone_code,use_internal_dnc,use_campaign_dnc,dial_prefix,manual_dial_prefix,three_way_dial_prefix FROM vicidial_campaigns where campaign_id='$campaign' LIMIT 1;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00594',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -2203,6 +2204,18 @@ if ($ACTION == 'update_settings')
 				$manual_dial_timeout =	trim("$row[10]");
 				$in_man_dial_next_ready_seconds =	trim("$row[11]");
 				$in_man_dial_next_ready_seconds_override =	trim("$row[12]");
+				$campaign_cid =			trim("$row[13]");
+				$omit_phone_code =		trim("$row[14]");
+				$use_internal_dnc =		trim("$row[15]");
+				$use_campaign_dnc =		trim("$row[16]");
+				$dial_prefix =			trim("$row[17]");
+				$manual_dial_prefix =	trim("$row[18]");
+				$three_way_dial_prefix =	trim("$row[19]");
+
+				if (strlen($manual_dial_prefix) < 1)
+					{$manual_dial_prefix = $dial_prefix;}
+				if (strlen($three_way_dial_prefix) < 1)
+					{$three_way_dial_prefix = $dial_prefix;}
 				}
 
 			if ( ($manual_dial_timeout < 1) or (strlen($manual_dial_timeout) < 1) )
@@ -2262,6 +2275,13 @@ if ($ACTION == 'update_settings')
 			$SettingS_InfO .=	"wrapup_after_hotkey: " . $wrapup_after_hotkey . "\n";
 			$SettingS_InfO .=	"manual_dial_timeout: " . $manual_dial_timeout . "\n";
 			$SettingS_InfO .=	"in_man_dial_next_ready_seconds: " . $in_man_dial_next_ready_seconds . "\n";
+			$SettingS_InfO .=	"campaign_cid: " . $campaign_cid . "\n";
+			$SettingS_InfO .=	"omit_phone_code: " . $omit_phone_code . "\n";
+			$SettingS_InfO .=	"use_internal_dnc: " . $use_internal_dnc . "\n";
+			$SettingS_InfO .=	"use_campaign_dnc: " . $use_campaign_dnc . "\n";
+			$SettingS_InfO .=	"dial_prefix: " . $dial_prefix . "\n";
+			$SettingS_InfO .=	"dial_manual_prefix: " . $manual_dial_prefix . "\n";
+			$SettingS_InfO .=	"dial_three_way_prefix: " . $three_way_dial_prefix . "\n";
 			$SettingS_InfO .=	"\n";
 			}
 		echo $SettingS_InfO;

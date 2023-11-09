@@ -2427,3 +2427,7 @@ ALTER TABLE phones MODIFY conf_secret VARCHAR(100) default 'test';
 ALTER TABLE servers MODIFY conf_secret VARCHAR(100) default 'test';
 
 UPDATE system_settings SET db_schema_version='1697',db_schema_update_date=NOW() where db_schema_version < 1697;
+
+ALTER TABLE system_settings ADD two_factor_auth_agent_hours SMALLINT(5) default '0';
+
+UPDATE system_settings SET db_schema_version='1698',db_schema_update_date=NOW() where db_schema_version < 1698;

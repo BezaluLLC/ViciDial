@@ -725,10 +725,12 @@
 # 230615-0842 - Added dead_stop_recording feature
 # 230810-1652 - Added force_per_call_notes campaign setting
 # 230927-2036 - Added agent_search_ingroup_list campaign and agent_search_list ingroup options
+# 231108-0820 - Added several fields to update_settings related to manual dial calls
+# 231109-0827 - Added 2FA for agent screen logins
 #
 
-$version = '2.14-692c';
-$build = '230927-2036';
+$version = '2.14-693c';
+$build = '231109-0827';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
@@ -780,6 +782,12 @@ if (isset($_GET["new_pass1"]))					{$new_pass1=$_GET["new_pass1"];}
         elseif (isset($_POST["new_pass1"]))		{$new_pass1=$_POST["new_pass1"];}
 if (isset($_GET["new_pass2"]))					{$new_pass2=$_GET["new_pass2"];}
         elseif (isset($_POST["new_pass2"]))		{$new_pass2=$_POST["new_pass2"];}
+if (isset($_GET["stage"]))					{$stage=$_GET["stage"];}
+        elseif (isset($_POST["stage"]))		{$stage=$_POST["stage"];}
+if (isset($_GET["rank"]))					{$rank=$_GET["rank"];}
+        elseif (isset($_POST["rank"]))		{$rank=$_POST["rank"];}
+if (isset($_GET["auth_entry"]))					{$auth_entry=$_GET["auth_entry"];}
+        elseif (isset($_POST["auth_entry"]))	{$auth_entry=$_POST["auth_entry"];}
 
 if (!isset($phone_login)) 
 	{
@@ -804,6 +812,9 @@ if (!isset($flag_channels))
 
 $DB=preg_replace("/[^0-9a-z]/","",$DB);
 $VD_login = preg_replace('/[^-_0-9\p{L}]/u','',$VD_login);
+$stage = preg_replace('/[^-_0-9\p{L}]/u','',$stage);
+$rank = preg_replace('/[^-_0-9\p{L}]/u','',$rank);
+$auth_entry = preg_replace('/[^-_0-9\p{L}]/u','',$auth_entry);
 
 $forever_stop=0;
 
@@ -828,7 +839,7 @@ $random = (rand(1000000, 9999999) + 10000000);
 
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script,agent_push_events,agent_push_url,agent_logout_link,agentonly_callback_campaign_lock,manual_dial_validation,mute_recordings,enable_second_script,enable_first_webform,recording_buttons,outbound_cid_any,browser_call_alerts,manual_dial_phone_strip,require_password_length,pass_hash_enabled,agent_hidden_sound_seconds,agent_hidden_sound,agent_hidden_sound_volume,agent_screen_timer,agent_hide_hangup,allow_web_debug,max_logged_in_agents,login_kickall,agent_notifications,inbound_credits FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script,agent_push_events,agent_push_url,agent_logout_link,agentonly_callback_campaign_lock,manual_dial_validation,mute_recordings,enable_second_script,enable_first_webform,recording_buttons,outbound_cid_any,browser_call_alerts,manual_dial_phone_strip,require_password_length,pass_hash_enabled,agent_hidden_sound_seconds,agent_hidden_sound,agent_hidden_sound_volume,agent_screen_timer,agent_hide_hangup,allow_web_debug,max_logged_in_agents,login_kickall,agent_notifications,inbound_credits,two_factor_auth_agent_hours,two_factor_container FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 #if ($DB) {echo "$stmt\n";}
@@ -892,6 +903,8 @@ if ($qm_conf_ct > 0)
 	$SSlogin_kickall =					$row[53];
 	$SSagent_notifications =			$row[54];
 	$SSinbound_credits =				$row[55];
+	$SStwo_factor_auth_hours =			$row[56];
+	$SStwo_factor_container =			$row[57];
 	if ( ($SSagent_hidden_sound == '---NONE---') or ($SSagent_hidden_sound == '') ) {$SSagent_hidden_sound_seconds=0;}
 	}
 else
@@ -1006,7 +1019,7 @@ $conf_check_attempts	= '3';	# number of attempts to try before loosing webserver
 $focus_blur_enabled		= '0';	# set to 1 to enable the focus/blur enter key blocking(some IE instances have issues)
 $consult_custom_delay	= '2';	# number of seconds to delay consultative transfers when customfields are active
 $mrglock_ig_select_ct	= '4';	# number of seconds to leave in-group select screen open if agent select is disabled
-$link_to_grey_version	= '1';	# show link to old grey version of agent screen at login screen, next to timeclock link
+$link_to_grey_version	= '0';	# show link to old grey version of agent screen at login screen, next to timeclock link
 $no_empty_session_warnings=0;	# set to 1 to disable empty session warnings on agent screen
 $logged_in_refresh_link = '0';	# set to 1 to allow clickable "Logged in as..." link at top to force Javascript refresh
 $webphone_call_seconds	= '0';	# set to 1 or higher to have the agent phone(if set to webphone) called X seconds after login
@@ -1750,6 +1763,587 @@ else
 
 		if($auth>0)
 			{
+			# check for 2FA being active, and if so, see if there is a non-expired 2FA auth
+			$VALID_2FA=1;
+
+			if ( ($SStwo_factor_auth_hours > 0) and ($SStwo_factor_container != '') and ($SStwo_factor_container != '---DISABLED---') )
+				{
+				$stmt="SELECT count(*) from vicidial_two_factor_auth where user='$VD_login' and auth_stage='1' and auth_exp_date > NOW();";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$auth_check_to_print = mysqli_num_rows($rslt);
+				if ($auth_check_to_print < 1)
+					{$VALID_2FA=0;}
+				else
+					{
+					$row=mysqli_fetch_row($rslt);
+					$VALID_2FA = $row[0];
+					}
+				}
+			if ($VALID_2FA < 1)
+				{
+				$subhead_font = "style=\"font-family:HELVETICA;font-size:14;color:BLACK;font-weight:bold;\"";
+
+				echo "<img src=\"images/2FA_icon.png\" alt=\"Two-Factor-Authentication\" width=42 height=42> <FONT FACE=\"ARIAL,HELVETICA\" SIZE=4><B> "._QXZ("Two-Factor-Authentication"),"</B></FONT><BR><CENTER>\n";
+
+				if ( ($SStwo_factor_auth_hours < 1) or ($SStwo_factor_container == '') or ($SStwo_factor_container == '---DISABLED---') )
+					{
+					echo _QXZ("Two-Factor-Authentication is disabled on your system. Please contact your system administrator")." $SStwo_factor_auth_hours|$SStwo_factor_container\n";
+					exit;
+					}
+
+				$stmt="SELECT full_name,email,mobile_number,user_group from vicidial_users where user='$VD_login' and active='Y' and api_only_user != '1';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				$row=mysqli_fetch_row($rslt);
+				$LOGfullname =							$row[0];
+				$LOGemail =								$row[1];
+				$LOGmobile_number =						$row[2];
+				$LOGuser_group =						$row[3];
+				$OBSCUREemail = $LOGemail;
+				$OBSCUREmobile_number = $LOGmobile_number;
+
+				# first character and last 6 characters
+				$temp_emailARY = explode('@',$OBSCUREemail);
+				$field_temp_val = $temp_emailARY[0];
+				$OBSCUREemail = substr($field_temp_val,0,2) . str_repeat(".", (strlen($field_temp_val) - 2)) . '@' . $temp_emailARY[1];
+				# first 3 digits and last 2 digits
+				$field_temp_val = $OBSCUREmobile_number;
+				$OBSCUREmobile_number = substr($field_temp_val,0,3) . str_repeat("x", (strlen($field_temp_val) - 5)) . substr($field_temp_val,-2,2);
+
+				### BEGIN Gather 2FA settings container details ###
+				$valid_2FA_config=0;
+				$active_2FA_methods=0;
+				$auth_code_expire_minutes='30';
+				$auth_code_attempts='10';
+				$auth_code_length='6';
+				$email_auth='';
+				$email_from='';
+				$email_subject='';
+				$email_message='';
+				$phone_auth='';
+				$phone_prefix='';
+				$phone_server_ip='';
+				$phone_cid_number='';
+				$phone_message_override='';
+				$sms_auth='';
+				$sms_cid_number='';
+				$sms_url='';
+				$stmt = "SELECT container_entry FROM vicidial_settings_containers where container_id='$SStwo_factor_container';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$SCinfo_ct = mysqli_num_rows($rslt);
+				if ($DB) {echo "$SCinfo_ct|$stmt\n";}
+				if ($SCinfo_ct > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$TFAcontainer_entry =	$row[0];
+					$TFAcontainer_entry = preg_replace("/\r|\t|\'|\"/",'',$TFAcontainer_entry);
+					$TFAcontainer_entry = preg_replace("/ => | =>|=> /",'=>',$TFAcontainer_entry);
+					$two_factor_settings = explode("\n",$TFAcontainer_entry);
+					$two_factor_settings_ct = count($two_factor_settings);
+					$tfal=0;
+					while ($two_factor_settings_ct >= $tfal)
+						{
+						if (preg_match("/^auth_code_expire_minutes=>/",$two_factor_settings[$tfal]))
+							{
+							$two_factor_settings[$tfal] = preg_replace("/auth_code_expire_minutes=>/",'',$two_factor_settings[$tfal]);
+							$auth_code_expire_minutes = $two_factor_settings[$tfal];
+							}
+						if (preg_match("/^auth_code_attempts=>/",$two_factor_settings[$tfal]))
+							{
+							$two_factor_settings[$tfal] = preg_replace("/auth_code_attempts=>/",'',$two_factor_settings[$tfal]);
+							$auth_code_attempts = $two_factor_settings[$tfal];
+							}
+						if (preg_match("/^auth_code_length=>/",$two_factor_settings[$tfal]))
+							{
+							$two_factor_settings[$tfal] = preg_replace("/auth_code_length=>/",'',$two_factor_settings[$tfal]);
+							$auth_code_length = $two_factor_settings[$tfal];
+							}
+						if (preg_match("/^email_auth=>/",$two_factor_settings[$tfal]))
+							{
+							$two_factor_settings[$tfal] = preg_replace("/email_auth=>/",'',$two_factor_settings[$tfal]);
+							$email_auth = $two_factor_settings[$tfal];
+							$active_2FA_methods++;
+							}
+						if (preg_match("/^email_from=>/",$two_factor_settings[$tfal]))
+							{
+							$two_factor_settings[$tfal] = preg_replace("/email_from=>/",'',$two_factor_settings[$tfal]);
+							$email_from = $two_factor_settings[$tfal];
+							$valid_2FA_config++;
+							}
+						if (preg_match("/^email_subject=>/",$two_factor_settings[$tfal]))
+							{
+							$two_factor_settings[$tfal] = preg_replace("/email_subject=>/",'',$two_factor_settings[$tfal]);
+							$email_subject = $two_factor_settings[$tfal];
+							}
+						if (preg_match("/^email_message=>/",$two_factor_settings[$tfal]))
+							{
+							$two_factor_settings[$tfal] = preg_replace("/email_message=>/",'',$two_factor_settings[$tfal]);
+							$email_message = $two_factor_settings[$tfal];
+							}
+						if (preg_match("/^phone_auth=>/",$two_factor_settings[$tfal]))
+							{
+							$two_factor_settings[$tfal] = preg_replace("/phone_auth=>/",'',$two_factor_settings[$tfal]);
+							$phone_auth = $two_factor_settings[$tfal];
+							$active_2FA_methods++;
+							}
+						if (preg_match("/^phone_prefix=>/",$two_factor_settings[$tfal]))
+							{
+							$two_factor_settings[$tfal] = preg_replace("/phone_prefix=>/",'',$two_factor_settings[$tfal]);
+							$phone_prefix = $two_factor_settings[$tfal];
+							}
+						if (preg_match("/^phone_server_ip=>/",$two_factor_settings[$tfal]))
+							{
+							$two_factor_settings[$tfal] = preg_replace("/phone_server_ip=>/",'',$two_factor_settings[$tfal]);
+							$phone_server_ip = $two_factor_settings[$tfal];
+							$valid_2FA_config++;
+							}
+						if (preg_match("/^phone_cid_number=>/",$two_factor_settings[$tfal]))
+							{
+							$two_factor_settings[$tfal] = preg_replace("/phone_cid_number=>/",'',$two_factor_settings[$tfal]);
+							$phone_cid_number = $two_factor_settings[$tfal];
+							}
+						if (preg_match("/^phone_message_override=>/",$two_factor_settings[$tfal]))
+							{
+							$two_factor_settings[$tfal] = preg_replace("/phone_message_override=>/",'',$two_factor_settings[$tfal]);
+							$phone_message_override = $two_factor_settings[$tfal];
+							}
+						if (preg_match("/^sms_auth=>/",$two_factor_settings[$tfal]))
+							{
+							$two_factor_settings[$tfal] = preg_replace("/sms_auth=>/",'',$two_factor_settings[$tfal]);
+							$sms_auth = $two_factor_settings[$tfal];
+							$active_2FA_methods++;
+							}
+						if (preg_match("/^sms_cid_number=>/",$two_factor_settings[$tfal]))
+							{
+							$two_factor_settings[$tfal] = preg_replace("/sms_cid_number=>/",'',$two_factor_settings[$tfal]);
+							$sms_cid_number = $two_factor_settings[$tfal];
+							}
+						if (preg_match("/^sms_url=>/",$two_factor_settings[$tfal]))
+							{
+							$two_factor_settings[$tfal] = preg_replace("/sms_url=>/",'',$two_factor_settings[$tfal]);
+							$sms_url = $two_factor_settings[$tfal];
+							$valid_2FA_config++;
+							}
+
+						$tfal++;
+						}
+					}
+				### END Gather 2FA settings container details ###
+				if ( ($valid_2FA_config < 1) or ($active_2FA_methods < 1) )
+					{
+					echo "<BR><b>"._QXZ("Two-Factor-Authentication is not properly configured on your system. Please contact your system administrator")." <BR><BR>$valid_2FA_config|$SStwo_factor_auth_hours|$SStwo_factor_container</b><BR>\n";
+					exit;
+					}
+				if ( (strlen($LOGemail) < 4) and (strlen($LOGmobile_number) < 2) )
+					{
+					echo _QXZ("Your User account is not configured for Two-Factor-Authentication. Please contact your system administrator. (no email or mobile number)").".\n";
+					exit;
+					}
+
+				$show_form=1;
+				if ( ($stage=='SUBMIT') or ($stage==_QXZ("SUBMIT")) )
+					{
+					$auth_fail=0;
+					echo "<br><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3>";
+					if (strlen($rank) < 2)
+						{
+						echo _QXZ("Please go back and enter a valid authorization code")." |1|" . strlen($rank) . "|";   $auth_fail++;
+						}
+					else
+						{
+						$stmt="SELECT count(*) from vicidial_two_factor_auth where user='$VD_login' and auth_code='$rank' and auth_stage='0' and auth_code_exp_date > NOW() and (auth_attempts < $auth_code_attempts);";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($DB) {echo "$stmt\n";}
+						$auth_check_to_print = mysqli_num_rows($rslt);
+						if ($auth_check_to_print < 1)
+							{echo _QXZ("Please go back and enter a valid authorization code")." |2|$auth_check_to_print";   $auth_fail++;}
+						else
+							{
+							$row=mysqli_fetch_row($rslt);
+							if ($row[0] < 1)
+								{echo _QXZ("Please go back and enter a valid authorization code")." |3|$row[0]";   $auth_fail++;}
+							else
+								{
+								$stmt="UPDATE vicidial_two_factor_auth SET auth_stage='1', auth_attempts=(auth_attempts + 1) where user='$VD_login' and auth_stage='0' and auth_code='$rank';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+
+								$stmt = "INSERT INTO vicidial_agent_function_log set agent_log_id='0',user='$VD_login',function='2FA_good',event_time=NOW(),campaign_id='-ADMIN-',user_group='$LOGuser_group',lead_id='0',uniqueid='SUCCESS',caller_code='$ip',stage='',comments='';";
+								if ($DB) {echo "|$stmt|\n";}
+								$rslt=mysql_to_mysqli($stmt, $link);
+
+								echo _QXZ("Authorization code accepted, you may now continue")."<br><br>\n";
+
+								echo "<title>"._QXZ("Agent web client: 2FA Auth")."</title>\n";
+								echo "</head>\n";
+								echo "<body onresize=\"browser_dimensions();\" onload=\"browser_dimensions();\">\n";
+								echo "<table width=\"100%\"><tr><td></td>\n";
+								echo "<!-- INTERNATIONALIZATION-LINKS-PLACEHOLDER-VICIDIAL -->\n";
+								echo "<!-- USER 2FA AUTH -->\n";
+								echo "$DBoutput";
+								echo "</tr></table>\n";
+								echo "<form name=\"vicidial_form\" id=\"vicidial_form\" action=\"$PHP_SELF\" method=\"post\" $LOGINformSUBtrigger>\n";
+								echo "<input type=\"hidden\" name=\"DB\" value=\"$DB\" />\n";
+								echo "<input type=\"hidden\" name=\"JS_browser_height\" id=\"JS_browser_height\" value=\"\" />\n";
+								echo "<input type=\"hidden\" name=\"JS_browser_width\" id=\"JS_browser_width\" value=\"\" />\n";
+								echo "<input type=\"hidden\" name=\"relogin\" value=\"YES\" />\n";
+								echo "<input type=\"hidden\" name=\"phone_login\" value=\"$phone_login\" />\n";
+								echo "<input type=\"hidden\" name=\"phone_pass\" value=\"$phone_pass\" />\n";
+								echo "<input type=\"hidden\" name=\"VD_login\" value=\"$VD_login\" />\n";
+								echo "<input type=\"hidden\" name=\"VD_pass\" value=\"$VD_pass\" />\n";
+								echo "<input type=\"hidden\" name=\"VD_campaign\" value=\"$VD_campaign\" />\n";
+								echo "<input type=\"hidden\" name=\"LOGINvarONE\" id=\"LOGINvarONE\" value=\"$LOGINvarONE\" />\n";
+								echo "<input type=\"hidden\" name=\"LOGINvarTWO\" id=\"LOGINvarTWO\" value=\"$LOGINvarTWO\" />\n";
+								echo "<input type=\"hidden\" name=\"LOGINvarTHREE\" id=\"LOGINvarTHREE\" value=\"$LOGINvarTHREE\" />\n";
+								echo "<input type=\"hidden\" name=\"LOGINvarFOUR\" id=\"LOGINvarFOUR\" value=\"$LOGINvarFOUR\" />\n";
+								echo "<input type=\"hidden\" name=\"LOGINvarFIVE\" id=\"LOGINvarFIVE\" value=\"$LOGINvarFIVE\" />\n";
+								# echo "<input type=\"hidden\" name=\"hide_relogin_fields\" id=\"hide_relogin_fields\" value=\"$hide_relogin_fields\" />\n";
+								echo "<input type=\"hidden\" name=\"hide_relogin_fields\" id=\"hide_relogin_fields\" value=\"READONLY_PHONE\" />\n";
+								echo "<br /><br /><br /><center><table width=\"660px\" cellpadding=\"3\" cellspacing=\"0\" bgcolor=\"#$SSframe_background\"><tr bgcolor=\"white\">";
+								echo "<td align=\"left\" valign=\"bottom\" bgcolor=\"#$SSmenu_background\" width=\"170\"><img src=\"$selected_logo\" border=\"0\" height=\"45\" width=\"170\" alt=\"Agent Screen\" /></td>";
+								echo "</tr>\n";
+								echo "<tr><td align=\"center\" colspan=\"2\"><input type=\"submit\" name=\"SUBMIT\" value=\""._QXZ("CLICK HERE TO LOG IN")."\" /> &nbsp; \n";
+								echo "<span id=\"LogiNReseT\"></span></td></tr>\n";
+								echo "<tr><td align=\"left\" colspan=\"2\"><font class=\"body_tiny\"><br />"._QXZ("VERSION:")." $version &nbsp; &nbsp; &nbsp; "._QXZ("BUILD:")." $build</font></td></tr>\n";
+								echo "</table>\n";
+								echo "</form>\n\n";
+								echo "\n\n";
+								echo "$LoginLoadingBox";
+								echo "</center>\n";
+								echo "$INSERT_before_body_close";
+								echo "</body>\n\n";
+								echo "</html>\n\n";
+								exit;
+								}
+							}
+						}
+					if ($auth_fail > 0)
+						{
+						$stmt="UPDATE vicidial_two_factor_auth SET auth_attempts=(auth_attempts + 1) where user='$VD_login' and auth_stage='0';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+
+						$auth_failed_attempts=1;
+						$stmt="SELECT auth_attempts from vicidial_two_factor_auth where user='$VD_login' and auth_stage='0' order by auth_code_exp_date desc limit 1;";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($DB) {echo "$stmt\n";}
+						$auth_attempt_to_print = mysqli_num_rows($rslt);
+						if ($auth_attempt_to_print > 0)
+							{
+							$row=mysqli_fetch_row($rslt);
+							$auth_failed_attempts = $row[0];
+							}
+						if ($auth_failed_attempts >= $auth_code_attempts)
+							{
+							$stmt="UPDATE vicidial_users set failed_login_count='$auth_failed_attempts',last_ip='$ip' where user='$VD_login';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							}
+						}
+					echo "<br></FONT>\n";
+					exit;
+					}
+
+				##### BEGIN send out AUTH CODE and show auth-code entry page #####
+				if ($auth_entry > 0)
+					{
+					$ACbegin =  '1';
+					$ACend =	'9';
+					$i=1;
+					while($i < $auth_code_length)
+						{
+						$ACbegin .= '0';
+						$ACend .=	'9';
+						$i++;
+						}
+					$NEWauth_code = rand($ACbegin, $ACend);
+					$auth_exp_date = date("Y-m-d H:i:s", mktime(date("H")+$SStwo_factor_auth_hours,date("i"),date("s"),date("m"),date("d"),date("Y")));
+					$auth_code_exp_date = date("Y-m-d H:i:s", mktime(date("H"),date("i")+$auth_code_expire_minutes,date("s"),date("m"),date("d"),date("Y")));
+
+					### insert auth_code into vicidial_two_factor_auth table
+					$stmt="INSERT INTO vicidial_two_factor_auth SET auth_date=NOW(),auth_exp_date='$auth_exp_date',user='$VD_login',auth_stage='0',auth_code='$NEWauth_code',auth_code_exp_date='$auth_code_exp_date',auth_method='$stage',auth_attempts='0';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$affected_rows = mysqli_affected_rows($link);
+					if ($DB) {echo "$affected_rows|$stmt\n";}
+
+					# invalidate all older auth_code entries
+					if ($affected_rows > 0)
+						{
+						$stmt="UPDATE vicidial_two_factor_auth SET auth_stage='6' where user='$VD_login' and auth_stage!='6' and auth_code!='$NEWauth_code';";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$affected_rows = mysqli_affected_rows($link);
+						if ($DB) {echo "$affected_rows|$stmt\n";}
+						}
+
+					### Send auth code by EMAIL
+					if ($stage == 'EMAIL')
+						{
+						$email_message = preg_replace('/--A--auth_code--B--/i',"$NEWauth_code",$email_message);
+					
+						// To send HTML mail, the Content-type header must be set
+						$headers  = 'MIME-Version: 1.0' . "\r\n";
+						$headers .= 'Content-type: text/html; charset=iso-8859-1' . "\r\n";
+				 
+						// Create email headers
+						$headers .= 'From: ' . $email_from . "\r\n" . 'Reply-To: ' . $email_from . "\r\n" . 'X-Mailer: PHP/' . phpversion();
+
+						$body = "<html><body>" . $email_message . "</body></html>";
+					
+						$success = mail($LOGemail, $email_subject, $body, $headers );
+						if ($success)
+							{
+							$stmt = "INSERT INTO vicidial_agent_function_log set agent_log_id='0',user='$VD_login',function='2FA_send',event_time=NOW(),campaign_id='-ADMIN-',user_group='$LOGuser_group',lead_id='0',uniqueid='SUCCESS',caller_code='$ip',stage='$stage',comments='EMAIL: $LOGemail';";
+
+							echo "<br><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3>"._QXZ("Your authorization code has been sent by %1s to",0,'',$stage).": $OBSCUREemail<br></FONT>\n";
+							}
+						else
+							{
+							$stmt = "INSERT INTO vicidial_agent_function_log set agent_log_id='0',user='$VD_login',function='2FA_send',event_time=NOW(),campaign_id='-ADMIN-',user_group='$LOGuser_group',lead_id='0',uniqueid='ERROR',caller_code='$ip',stage='$stage',comments='EMAIL: $LOGemail';";
+
+							$error_msg = error_get_last()['message'];
+							echo "$error_msg";
+							}
+
+						### LOG INSERTION Admin Log Table ###
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+						}
+
+					### Send auth code by PHONE
+					if ($stage == 'PHONE')
+						{
+						$context_2FA = '2FA_say_auth_code';
+						if (strlen($phone_message_override) > 0) {$context_2FA = $phone_message_override;}
+						if (strlen($ext_context) < 1) {$ext_context='default';}
+						$local_DEF = 'Local/';
+						$local_AMP = '@';
+						$Local_dial_timeout = '60000';
+						$Ndialstring = "$phone_prefix$LOGmobile_number";
+						$VMvariable = "Variable: access_code=$NEWauth_code";
+						### insert a NEW record to the vicidial_manager table to be processed
+						$stmtB = "INSERT INTO vicidial_manager(uniqueid,entry_date,status,response,server_ip,channel,action,callerid,cmd_line_b,cmd_line_c,cmd_line_d,cmd_line_e,cmd_line_f,cmd_line_g,cmd_line_h,cmd_line_i,cmd_line_j,cmd_line_k) values('',NOW(),'NEW','N','$phone_server_ip','','Originate','$VqueryCID','Exten: s','Context: $context_2FA','Channel: $local_DEF$Ndialstring$local_AMP$ext_context','Priority: 1','Callerid: $phone_cid_number','Timeout: $Local_dial_timeout','$VMvariable','','','')";
+						$rslt=mysql_to_mysqli($stmtB, $link);
+
+						$stmt = "INSERT INTO vicidial_agent_function_log set agent_log_id='0',user='$VD_login',function='2FA_send',event_time=NOW(),campaign_id='-ADMIN-',user_group='$LOGuser_group',lead_id='0',uniqueid='SUCCESS',caller_code='$ip',stage='$stage',comments='PHONE: $LOGmobile_number';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+
+						echo "<br><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3>"._QXZ("Your authorization code has been sent by %1s to",0,'',$stage).": $OBSCUREmobile_number<br></FONT>\n";
+						}
+
+					### Send auth code by SMS
+					if ($stage == 'SMS')
+						{
+						$sms_url = preg_replace('/--A--auth_code--B--/i',"$NEWauth_code",$sms_url);
+						$sms_url = preg_replace('/--A--mobile_number--B--/i',"$LOGmobile_number",$sms_url);
+
+						### insert a new url log entry
+						$SQL_log = "$sms_url";
+						$SQL_log = preg_replace('/;/','',$SQL_log);
+						$SQL_log = addslashes($SQL_log);
+						$stmt = "INSERT INTO vicidial_url_log SET uniqueid='2FA',url_date=NOW(),url_type='2FA_SMS',url='$SQL_log',url_response='';";
+					#	if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$affected_rows = mysqli_affected_rows($link);
+						$url_id = mysqli_insert_id($link);
+
+						$URLstart_sec = date("U");
+
+						### grab the call_start_url ###
+					#	if ($DB > 0) {echo "$sms_url<BR>\n";}
+						$SCUfile = file("$sms_url");
+						if ( !($SCUfile) )
+							{
+							$error_array = error_get_last();
+							$error_type = $error_array["type"];
+							$error_message = $error_array["message"];
+							$error_line = $error_array["line"];
+							$error_file = $error_array["file"];
+							}
+
+						if ($DB > 0) {echo "$SCUfile[0]<BR>\n";}
+
+						### update url log entry
+						$URLend_sec = date("U");
+						$URLdiff_sec = ($URLend_sec - $URLstart_sec);
+						if ($SCUfile)
+							{
+							$SCUfile_contents = implode("", $SCUfile);
+							$SCUfile_contents = preg_replace('/;/','',$SCUfile_contents);
+							$SCUfile_contents = addslashes($SCUfile_contents);
+							}
+						else
+							{
+							$SCUfile_contents = "PHP ERROR: Type=$error_type - Message=$error_message - Line=$error_line - File=$error_file";
+							}
+						$stmt = "UPDATE vicidial_url_log SET response_sec='$URLdiff_sec',url_response='$SCUfile_contents' where url_log_id='$url_id';";
+						if ($DB) {echo "$stmt\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$affected_rows = mysqli_affected_rows($link);
+
+						$stmt = "INSERT INTO vicidial_agent_function_log set agent_log_id='0',user='$VD_login',function='2FA_send',event_time=NOW(),campaign_id='-ADMIN-',user_group='$LOGuser_group',lead_id='0',uniqueid='SUCCESS',caller_code='$ip',stage='$stage',comments='SMS: $LOGmobile_number';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+
+						echo "<br><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3>"._QXZ("Your authorization code has been sent by %1s to",0,'',$stage).": $OBSCUREmobile_number<br></FONT>\n";
+						}
+
+					echo "<title>"._QXZ("Agent web client: 2FA Auth")."</title>\n";
+					echo "</head>\n";
+					echo "<script language=\"JavaScript\">\n";
+					echo "var method_selected=0;\n";
+					echo "\n";
+					echo "function code_2FA(temp_method)\n";
+					echo "	{\n";
+					echo "	if (method_selected < 1)\n";
+					echo "		{\n";
+					echo "	    document.userform.stage.value = 'SUBMIT';\n";
+					echo "	    document.userform.rank.value = document.userform.authorization_code.value;\n";
+					echo "	    document.userform.submit();\n";
+					echo "		method_selected++;\n";
+					echo "		}\n";
+					echo "	}\n";
+					echo "function back_2FA()\n";
+					echo "	{\n";
+					echo "	if (method_selected < 1)\n";
+					echo "		{\n";
+					echo "	    document.userform.stage.value = '';\n";
+					echo "	    document.userform.auth_entry.value = '0';\n";
+					echo "	    document.userform.submit();\n";
+					echo "		method_selected++;\n";
+					echo "		}\n";
+					echo "	}\n";
+					echo "</script>\n";
+
+					echo "<center>\n";
+					echo "<TABLE WIDTH=800><TR><TD>\n";
+					echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+					echo "<br><form action=$PHP_SELF method=POST name=userform id=userform>\n";
+					echo "<input type=hidden name=ADD value=99999701>\n";
+					echo "<input type=hidden name=DB value=\"$DB\">\n";
+					echo "<input type=hidden name=stage value=SUBMIT>\n";
+					echo "<input type=hidden name=auth_entry value='2'>\n";
+					echo "<input type=hidden name=rank value=''>\n";
+					echo "<input type=\"hidden\" name=\"JS_browser_height\" id=\"JS_browser_height\" value=\"\" />\n";
+					echo "<input type=\"hidden\" name=\"JS_browser_width\" id=\"JS_browser_width\" value=\"\" />\n";
+				#	echo "<input type=\"hidden\" name=\"relogin\" value=\"YES\" />\n";
+					echo "<input type=\"hidden\" name=\"phone_login\" value=\"$phone_login\" />\n";
+					echo "<input type=\"hidden\" name=\"phone_pass\" value=\"$phone_pass\" />\n";
+					echo "<input type=\"hidden\" name=\"VD_login\" value=\"$VD_login\" />\n";
+					echo "<input type=\"hidden\" name=\"VD_pass\" value=\"$VD_pass\" />\n";
+					echo "<input type=\"hidden\" name=\"VD_campaign\" value=\"$VD_campaign\" />\n";
+					echo "<input type=\"hidden\" name=\"LOGINvarONE\" id=\"LOGINvarONE\" value=\"$LOGINvarONE\" />\n";
+					echo "<input type=\"hidden\" name=\"LOGINvarTWO\" id=\"LOGINvarTWO\" value=\"$LOGINvarTWO\" />\n";
+					echo "<input type=\"hidden\" name=\"LOGINvarTHREE\" id=\"LOGINvarTHREE\" value=\"$LOGINvarTHREE\" />\n";
+					echo "<input type=\"hidden\" name=\"LOGINvarFOUR\" id=\"LOGINvarFOUR\" value=\"$LOGINvarFOUR\" />\n";
+					echo "<input type=\"hidden\" name=\"LOGINvarFIVE\" id=\"LOGINvarFIVE\" value=\"$LOGINvarFIVE\" />\n";
+				#	echo "<input type=\"hidden\" name=\"hide_relogin_fields\" id=\"hide_relogin_fields\" value=\"READONLY_PHONE\" />\n";
+					echo "<center><TABLE width=$section_width cellspacing=3>\n";
+
+					echo "<tr bgcolor=#$SSstd_row4_background><td align=left colspan=2>"._QXZ("Please enter the Auth Code that you have received by %1s into the field below, and click the SUBMIT button",0,'',$stage).". <a href=\"#\" onclick=\"back_2FA();\"><font color='black'>"._QXZ("To resend your auth code, click here to go back")."</font></a>.<br> &nbsp; </td></tr>\n";
+
+					echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Authorization Code").": </td><td align=left style=\"display:table-cell; vertical-align:middle;\" NOWRAP><input type=text id=authorization_code name=authorization_code size=11 maxlength=10></td></tr>\n";
+
+
+					echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><button style='background-color:#$SSbutton_color' onclick=\"code_2FA();\">"._QXZ("SUBMIT")."</button></td></tr>\n";
+					echo "</TABLE></center></form>\n";
+					exit;
+					}
+				##### END send out AUTH CODE and show auth-code entry page #####
+
+				##### BEGIN choose how to send out AUTH CODE page #####
+				else
+					{
+					if ($show_form > 0)
+						{
+						echo "<title>"._QXZ("Agent web client: 2FA Auth")."</title>\n";
+						echo "</head>\n";
+						echo "<script language=\"JavaScript\">\n";
+						echo "var method_selected=0;\n";
+						echo "\n";
+						echo "function send_2FA(temp_method)\n";
+						echo "	{\n";
+						echo "	if (method_selected < 1)\n";
+						echo "		{\n";
+						echo "	    document.userform.stage.value = temp_method;\n";
+						echo "	    document.userform.submit();\n";
+						echo "		method_selected++;\n";
+						echo "		}\n";
+						echo "	}\n";
+						echo "</script>\n";
+
+						echo "<center>\n";
+						echo "<TABLE WIDTH=800><TR><TD>\n";
+						echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
+
+						echo "<br><form action=$PHP_SELF method=POST name=userform id=userform>\n";
+						echo "<input type=hidden name=ADD value=99999701>\n";
+						echo "<input type=hidden name=DB value=\"$DB\">\n";
+						echo "<input type=hidden name=stage value=\"\">\n";
+						echo "<input type=hidden name=auth_entry value='1'>\n";
+						echo "<input type=\"hidden\" name=\"JS_browser_height\" id=\"JS_browser_height\" value=\"\" />\n";
+						echo "<input type=\"hidden\" name=\"JS_browser_width\" id=\"JS_browser_width\" value=\"\" />\n";
+					#	echo "<input type=\"hidden\" name=\"relogin\" value=\"YES\" />\n";
+						echo "<input type=\"hidden\" name=\"phone_login\" value=\"$phone_login\" />\n";
+						echo "<input type=\"hidden\" name=\"phone_pass\" value=\"$phone_pass\" />\n";
+						echo "<input type=\"hidden\" name=\"VD_login\" value=\"$VD_login\" />\n";
+						echo "<input type=\"hidden\" name=\"VD_pass\" value=\"$VD_pass\" />\n";
+						echo "<input type=\"hidden\" name=\"VD_campaign\" value=\"$VD_campaign\" />\n";
+						echo "<input type=\"hidden\" name=\"LOGINvarONE\" id=\"LOGINvarONE\" value=\"$LOGINvarONE\" />\n";
+						echo "<input type=\"hidden\" name=\"LOGINvarTWO\" id=\"LOGINvarTWO\" value=\"$LOGINvarTWO\" />\n";
+						echo "<input type=\"hidden\" name=\"LOGINvarTHREE\" id=\"LOGINvarTHREE\" value=\"$LOGINvarTHREE\" />\n";
+						echo "<input type=\"hidden\" name=\"LOGINvarFOUR\" id=\"LOGINvarFOUR\" value=\"$LOGINvarFOUR\" />\n";
+						echo "<input type=\"hidden\" name=\"LOGINvarFIVE\" id=\"LOGINvarFIVE\" value=\"$LOGINvarFIVE\" />\n";
+					#	echo "<input type=\"hidden\" name=\"hide_relogin_fields\" id=\"hide_relogin_fields\" value=\"READONLY_PHONE\" />\n";
+						echo "<center><TABLE width=$section_width cellspacing=3>\n";
+
+						echo "<tr bgcolor=#$SSstd_row4_background><td align=left colspan=2>"._QXZ("Your account has Two-Factor-Authorization enabled on it. In order to log in, you will need to verify your identity by submitting a temporary authorization code. Click on the icon below for the delivery method you would like to use to receive your authorization code").":</td></tr>\n";
+
+						echo "<tr bgcolor=#$SSstd_row4_background><td align=center><br>\n";
+
+						echo "<TABLE BORDER=0 CELLPADDING=5 CELLSPACING=5 WIDTH=400>\n";
+						$displayed_2FA=0;
+						if ( (preg_match("/YES/i",$email_auth)) and (strlen($LOGemail) > 3) )
+							{
+							echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"send_2FA('EMAIL');\"";} echo ">\n";
+							echo "<TD WIDTH=50 ALIGN=CENTER><a href=\"#\" onclick=\"send_2FA('EMAIL');\"><img src=\"images/icon_email.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+							echo "<TD WIDTH=350><a href=\"#\" STYLE=\"text-decoration:none;\" onclick=\"send_2FA('EMAIL');\"><SPAN $subhead_font> "._QXZ("Email you an auth code")." </SPAN></a><font face=\"Arial,Helvetica\" size=2><br> "._QXZ("Send an email to").": </font><font face=\"Courier\" size=2>$OBSCUREemail</font></TD>\n";
+							echo "</TR>\n";
+							$displayed_2FA++;
+							}
+						if ( (preg_match("/YES/i",$phone_auth)) and (strlen($LOGmobile_number) > 1) )
+							{
+							echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"send_2FA('PHONE');\"";} echo ">\n";
+							echo "<TD WIDTH=50 ALIGN=CENTER><a href=\"#\" onclick=\"send_2FA('PHONE');\"><img src=\"images/icon_black_inbound.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+							echo "<TD WIDTH=350><a href=\"#\" STYLE=\"text-decoration:none;\" onclick=\"send_2FA('PHONE');\"><SPAN $subhead_font> "._QXZ("Call you and play an auth code")." </SPAN></a><font face=\"Arial,Helvetica\" size=2><br> "._QXZ("Place a phone call to").": </font><font face=\"Courier\" size=2>$OBSCUREmobile_number</font></TD>\n";
+							echo "</TR>\n";
+							$displayed_2FA++;
+							}
+						if ( (preg_match("/YES/i",$sms_auth)) and (strlen($LOGmobile_number) > 1) )
+							{
+							echo "<TR CLASS=\"adminmenu_style_selected\""; if ($SSadmin_row_click > 0) {echo " onclick=\"send_2FA('SMS');\"";} echo ">\n";
+							echo "<TD WIDTH=50 ALIGN=CENTER><a href=\"#\" onclick=\"send_2FA('SMS');\"><img src=\"images/icon_chat.png\" border=0 width=42 height=42 valign=middle> </a></TD>\n";
+							echo "<TD WIDTH=350><a href=\"#\" STYLE=\"text-decoration:none;\" onclick=\"send_2FA('SMS');\"><SPAN $subhead_font> "._QXZ("Text-Message you an auth code")." </SPAN></a><font face=\"Arial,Helvetica\" size=2><br> "._QXZ("Send a message to").": </font><font face=\"Courier\" size=2>$OBSCUREmobile_number</font></TD>\n";
+							echo "</TR>\n";
+							$displayed_2FA++;
+							}
+						if ($displayed_2FA < 1)
+							{
+							echo _QXZ("Your User account is not configured for Two-Factor-Authentication. Please contact your system administrator").".\n";
+							exit;
+							}
+						echo "</TABLE><br> &nbsp;\n";
+
+						echo "</td></tr>\n";
+
+						#echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2><input style='background-color:#$SSbutton_color' type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
+						echo "</TABLE></center></form>\n";
+						exit;
+						}
+					}
+				##### END choose how to send out AUTH CODE page #####
+				}
+
 			if ($VUforce_change_password == 'Y')
 				{
 				echo "<script  type=\"text/javascript\">\n";
@@ -1924,7 +2518,7 @@ else
 				}
 
 			##### grab the full name and other settings of the agent
-			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override,preset_contact_search,max_inbound_calls,wrapup_seconds_override,email,user_choose_language,ready_max_logout,mute_recordings,max_inbound_filter_enabled,status_group_id,manual_dial_filter,inbound_credits from vicidial_users where user='$VD_login' and active='Y' and api_only_user != '1';";
+			$stmt="SELECT full_name,user_level,hotkeys_active,agent_choose_ingroups,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,closer_default_blended,user_group,vicidial_recording_override,alter_custphone_override,alert_enabled,agent_shift_enforcement_override,shift_override_flag,allow_alerts,closer_campaigns,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,agent_call_log_view_override,agent_choose_blended,agent_lead_search_override,preset_contact_search,max_inbound_calls,wrapup_seconds_override,email,user_choose_language,ready_max_logout,mute_recordings,max_inbound_filter_enabled,status_group_id,manual_dial_filter,inbound_credits,mobile_number from vicidial_users where user='$VD_login' and active='Y' and api_only_user != '1';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01007',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			$row=mysqli_fetch_row($rslt);
@@ -1966,6 +2560,7 @@ else
 			$VU_status_group_id =					$row[35];
 			$VU_manual_dial_filter =				$row[36];
 			$VU_inbound_credits =					$row[37];
+			$LOGmobile_number =						$row[38];
 
 			if ( ($VU_alert_enabled > 0) and ($VU_allow_alerts > 0) ) {$VU_alert_enabled = 'ON';}
 			else {$VU_alert_enabled = 'OFF';}
@@ -17065,6 +17660,20 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								manual_dial_timeout=manual_dial_timeout_array[1];
 							var in_man_dial_next_ready_seconds_array=settings_array[13].split("in_man_dial_next_ready_seconds: ");
 								in_man_dial_next_ready_seconds=in_man_dial_next_ready_seconds_array[1];
+							var campaign_cid_array=settings_array[14].split("campaign_cid: ");
+								campaign_cid=campaign_cid_array[1];
+							var omit_phone_code_array=settings_array[15].split("omit_phone_code: ");
+								omit_phone_code=omit_phone_code_array[1];
+							var use_internal_dnc_array=settings_array[16].split("use_internal_dnc: ");
+								use_internal_dnc=use_internal_dnc_array[1];
+							var use_campaign_dnc_array=settings_array[17].split("use_campaign_dnc: ");
+								use_campaign_dnc=use_campaign_dnc_array[1];
+							var dial_prefix_array=settings_array[18].split("dial_prefix: ");
+								dial_prefix=dial_prefix_array[1];
+							var $manual_dial_prefix_array=settings_array[19].split("dial_manual_prefix: ");
+								$manual_dial_prefix=$manual_dial_prefix_array[1];
+							var $three_way_dial_prefix_array=settings_array[20].split("dial_three_way_prefix: ");
+								$three_way_dial_prefix=$three_way_dial_prefix_array[1];
 
 							if (wrapup_seconds > 0)
 								{

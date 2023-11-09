@@ -451,7 +451,7 @@ LEAD DATA (must populate at least one)
 	vendor_lead_code
 	rank
 	owner
-OPTIONAL NON-LEAD TRIGGERS - 
+OPTIONAL NON-LEAD TRIGGERS (these still require a lead to be on the agent screen) - 
 	formreload
 	scriptreload
 	script2reload

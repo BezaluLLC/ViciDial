@@ -151,6 +151,9 @@ $include_sales_in_TPD_report=0;
 # Allow for RANDOM list orders to be used in the Modify Campaign screens
 $camp_lead_order_random=1;
 
+# set to 1 to hide the timeclock link on the welcome.php page
+$hide_timeclock_link	= '0';
+
 # CORS settings: (to enable, customize the variables below, and uncomment the "require_once('adminCORS.php');" line at the bottom)
 # (NOTE: The first 3 variables must be set for these features to be active)
 $CORS_allowed_origin		= '';	# if multiple origins allowed, separate them by a pipe (also allows PHP preg syntax)
