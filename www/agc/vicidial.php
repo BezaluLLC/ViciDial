@@ -16768,6 +16768,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		waiting_on_dispo=1;
 		recording_active=0;
 		APIskip=0;
+		UpdatESettingSChecK=1;
 		var VDDCU_recording_id=document.getElementById("RecorDID").innerHTML;
 		var VDDCU_recording_filename=last_recording_filename;
 		var dispo_urls='';
@@ -17670,10 +17671,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								use_campaign_dnc=use_campaign_dnc_array[1];
 							var dial_prefix_array=settings_array[18].split("dial_prefix: ");
 								dial_prefix=dial_prefix_array[1];
-							var $manual_dial_prefix_array=settings_array[19].split("dial_manual_prefix: ");
-								$manual_dial_prefix=$manual_dial_prefix_array[1];
-							var $three_way_dial_prefix_array=settings_array[20].split("dial_three_way_prefix: ");
-								$three_way_dial_prefix=$three_way_dial_prefix_array[1];
+							var manual_dial_prefix_array=settings_array[19].split("dial_manual_prefix: ");
+								manual_dial_prefix=manual_dial_prefix_array[1];
+							var three_way_dial_prefix_array=settings_array[20].split("dial_three_way_prefix: ");
+								three_way_dial_prefix=three_way_dial_prefix_array[1];
 
 							if (wrapup_seconds > 0)
 								{
