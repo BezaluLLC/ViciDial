@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2023-03-08
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2023-11-09
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -206,6 +206,10 @@ Changes:
 220920-0814 - Added more "XDAY" options to add_lead duplicate checks
 221108-1849 - Added include_ip option for agent_status function
 230122-1821 - Added reset_password option to update_user function
+230308-1758 - Fix for update_lead list-restrict phone number update issue
+230614-0828 - Added container_list function
+230721-1753 - Added insert for daily RT monitoring
+231109-0933 - Added archived_lead option to multiple functions
 
 
 API Functions use the 'function' variable
@@ -542,6 +546,7 @@ stage -			the format of the exported data: csv, tab, pipe(default)
 header -		include a header(YES) or not(NO). This is optional, default is not to include a header
 detail -		(ALL) calls or only (LAST) call. default is (ALL)
 type -			(IN)inbound, (OUT)outbound or (ALL) calls. defauls is (OUT) calls
+archived_lead -		Y or N, Setting this to Y will query only the vicidial_list_archive leads for the leads details, default is N.
 
 NOTES- 
 There is a hard limit of 100000 results
@@ -747,6 +752,7 @@ field_name -		name of lead field to pull
 OPTIONAL FIELDS-
 custom_fields -		Y or N, default is N. If the field you want to pull is a custom field or not
 list_id -		override for the entry_list_id of a custom field
+archived_lead -		Y or N, Setting this to Y will query only the vicidial_list_archive leads for the leads details, default is N.
 
 Example URL strings for API calls:
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=lead_field_info&field_name=cc_value&lead_id=1139739&custom_fields=Y&list_id=999888999777
@@ -778,6 +784,7 @@ OPTIONAL FIELDS-
 phone_number -		6-19 digits, can be used in place of a lead_id(may return multiple records, up to 1000, most recently added lead first)
 custom_fields -		Y or N, default is N. If the field you want to pull is a custom field or not
 force_entry_list_id -	3-12 digits, will override the lead's assigned entry_list_id to look for custom fields data for this lead from a different list
+archived_lead -		Y or N, Setting this to Y will query only the vicidial_list_archive leads for the leads details, default is N.
 
 SETTINGS FIELDS-
 stage -			the format of the exported data: csv, tab, newline, pipe(default)
@@ -817,6 +824,7 @@ OPTIONAL FIELDS-
 lead_id -		1-10 digits, only used if status and date are empty 
 custom_fields -		Y or N, default is N. Display custom fields values or not
 list_id -		override for the entry_list_id of a custom field
+archived_lead -		Y or N, Setting this to Y will query only the vicidial_list_archive leads for the leads search and details, default is N.
 
 Example URL strings for API calls:
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=lead_status_search&status=NP&date=2017-12-29&custom_fields=Y
@@ -856,6 +864,7 @@ source -		description of what originated the API call (maximum 20 characters)
 
 SETTINGS FIELDS-
 records -		number of records to display in results if more than 1 found (defaults to '1000'[most recently inserted leads displayed first])
+archived_lead -		Y or N, Setting this to Y will query only the vicidial_list_archive leads for the leads search and details, default is N.
 
 SETTINGS FIELDS-
 header -		include a header(YES) or not(NO). This is optional, default is not to include a header
@@ -1178,6 +1187,7 @@ remove_from_hopper -	Y or N, default is N
 hopper_priority -	99 to -99, the higher number the higher priority, default is 0
 hopper_local_call_time_check - Y or N, default is N. Validate the local call time and/or state call time before inserting lead in the hopper
 list_exists_check -	Y or N, default is N. If the list_id_field is not a defined list in the system, it will ERROR and not update the lead.
+archived_lead -		Y or N, Setting this to Y will query only the vicidial_list_archive leads for the leads search, updates and details, default is N.
 
 EDITABLE FIELDS- 
 user_field -		1-20 characters, this updates the 'user' field in the vicidial_list table
@@ -1301,6 +1311,7 @@ SETTINGS FIELDS-
 list_exists_check -	Y or N, default is N. If the list_id_field is not a defined list in the system, it will ERROR and not update the leads.
 reset_lead -		Y or N, Setting this to Y will reset the called-since-last-reset flag of the lead, default is N.
 records -		maximum number of records to update (defaults to '100'[most recently created leads])
+archived_lead -		Y or N, Setting this to Y will query only the vicidial_list_archive leads for the leads search, updates and details, default is N.
 
 EDITABLE FIELDS- 
 user_field -		1-20 characters, this updates the 'user' field in the vicidial_list table
@@ -1854,6 +1865,7 @@ insert_if_not_found -	Y or N, will attempt to insert as a new list if no match i
 reset_list -		Y or N, Setting this to Y will reset the Called-Since-Last-Reset flag for all of the leads in this list, default is N.
 delete_list -		Y or N, Setting this to Y will delete the list from the vicidial_lists table, default is N.
 delete_leads -		Y or N, Setting this to Y will delete all of the leads with this list_id from the vicidial_list table, default is N.
+archived_lead -		Y or N, Setting this to Y will affect only the vicidial_list_archive leads, default is N.
 
 EDITABLE FIELDS- 
 list_name -		6-30 characters
@@ -1992,7 +2004,7 @@ leads_counts -		Y or N, will include the counts of all leads and NEW status lead
 dialable_count -	Y or N, will use the list's campaign settings to provide a count of how many are dialable right now, default is 'N'
 stage -			the format of the exported data: csv, tab, pipe(default)
 header -		include a header(YES) or not(NO). This is optional, default is not to include a header
-
+archived_lead -		Y or N, Setting this to Y will query only the vicidial_list_archive leads for the leads count, default is N.
 
 Example URL strings for API calls:
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=list_info&list_id=1101&leads_counts=Y&header=YES

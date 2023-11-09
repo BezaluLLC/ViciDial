@@ -203,10 +203,11 @@
 # 230308-1758 - Fix for update_lead list-restrict phone number update issue
 # 230614-0828 - Added container_list function
 # 230721-1753 - Added insert for daily RT monitoring
+# 231109-0933 - Added archived_lead option to multiple functions
 #
 
-$version = '2.14-180';
-$build = '230721-1753';
+$version = '2.14-181';
+$build = '231109-0933';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -716,6 +717,8 @@ if (isset($_GET["include_ip"]))				{$include_ip=$_GET["include_ip"];}
 	elseif (isset($_POST["include_ip"]))	{$include_ip=$_POST["include_ip"];}
 if (isset($_GET["reset_password"]))				{$reset_password=$_GET["reset_password"];}
 	elseif (isset($_POST["reset_password"]))	{$reset_password=$_POST["reset_password"];}
+if (isset($_GET["archived_lead"]))			{$archived_lead=$_GET["archived_lead"];}
+	elseif (isset($_POST["archived_lead"]))	{$archived_lead=$_POST["archived_lead"];}
 
 $DB=preg_replace('/[^0-9]/','',$DB);
 
@@ -871,6 +874,7 @@ $preset_dtmf = preg_replace('/[^- \,\*\#0-9a-zA-Z]/','',$preset_dtmf);
 $action = preg_replace('/[^0-9a-zA-Z]/','',$action);
 $include_ip = preg_replace('/[^0-9a-zA-Z]/','',$include_ip);
 $reset_password = preg_replace('/[^0-9]/','',$reset_password);
+$archived_lead = preg_replace('/[^0-9a-zA-Z]/','',$archived_lead);
 
 if ($non_latin < 1)
 	{
@@ -1257,6 +1261,9 @@ else
 
 $LOCAL_GMT_OFF = $SERVER_GMT;
 $LOCAL_GMT_OFF_STD = $SERVER_GMT;
+
+if ($archived_lead=="Y") {$vicidial_list_table="vicidial_list_archive";} 
+else {$vicidial_list_table="vicidial_list"; $archived_lead="N";}
 
 
 
@@ -6905,7 +6912,7 @@ if ($function == 'update_list')
 
 							$resets_today = ($resets_today + 1);
 
-							$stmtB="UPDATE vicidial_list SET called_since_last_reset='N' WHERE list_id='$list_id';";
+							$stmtB="UPDATE $vicidial_list_table SET called_since_last_reset='N' WHERE list_id='$list_id';";
 							$rslt=mysql_to_mysqli($stmtB, $link);
 							$affected_rowsB = mysqli_affected_rows($link);
 							if ($DB) {echo "|$stmtB|\n";}
@@ -6993,7 +7000,7 @@ if ($function == 'update_list')
 							}
 						else
 							{
-							$stmt="DELETE FROM vicidial_list WHERE list_id='$list_id';";
+							$stmt="DELETE FROM $vicidial_list_table WHERE list_id='$list_id';";
 							$rslt=mysql_to_mysqli($stmt, $link);
 							$affected_rows = mysqli_affected_rows($link);
 							if ($DB) {echo "|$stmt|\n";}
@@ -7247,12 +7254,12 @@ if ($function == 'list_info')
 						if ($header == 'YES')
 							{$output .= $DL . 'all_leads_count' . $DL . 'new_leads_count';}
 
-						$stmt="SELECT count(*) from vicidial_list where list_id='$list_id';";
+						$stmt="SELECT count(*) from $vicidial_list_table where list_id='$list_id';";
 						$rslt=mysql_to_mysqli($stmt, $link);
 						$row=mysqli_fetch_row($rslt);
 						$all_leads_count =			$row[0];
 
-						$stmt="SELECT count(*) from vicidial_list where list_id='$list_id' and status='NEW';";
+						$stmt="SELECT count(*) from $vicidial_list_table where list_id='$list_id' and status='NEW';";
 						$rslt=mysql_to_mysqli($stmt, $link);
 						$row=mysqli_fetch_row($rslt);
 						$new_leads_count =			$row[0];
@@ -11006,7 +11013,7 @@ if ($function == 'phone_number_log')
 					{
 					$DLlength_in_sec[$k]=0;
 					$DLcloser_epoch[$k]=$DLepoch[$k];
-					$stmt="SELECT status,source_id from vicidial_list where lead_id='$DLlead_id[$p]';";
+					$stmt="SELECT status,source_id from $vicidial_list_table where lead_id='$DLlead_id[$p]';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$vcl_recs = mysqli_num_rows($rslt);
 					if ($DB>0) {echo "DEBUG: phone_number_log list query - $vcl_recs|$stmt\n";}
@@ -12875,7 +12882,7 @@ if ($function == 'lead_field_info')
 					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
 					}
 
-				$stmt="SELECT list_id,entry_list_id from vicidial_list $lead_search_SQL;";
+				$stmt="SELECT list_id,entry_list_id from $vicidial_list_table $lead_search_SQL;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($DB) {echo "$stmt\n";}
 				$lead_exists = mysqli_num_rows($rslt);
@@ -12968,7 +12975,7 @@ if ($function == 'lead_field_info')
 							}
 						else
 							{
-							$stmt="SELECT $field_name from vicidial_list $lead_search_SQL;";
+							$stmt="SELECT $field_name from $vicidial_list_table $lead_search_SQL;";
 							}
 						$rslt=mysql_to_mysqli($stmt, $link);
 						if ($DB) {echo "$stmt\n";}
@@ -13026,7 +13033,7 @@ if ($function == 'lead_field_info')
 						{
 						$result = 'ERROR';
 						$result_reason = "lead_field_info LIST NOT FOUND";
-						$data = "$user|$lead_id";
+						$data = "$user|$lead_id|$lead_list_id";
 						echo "$result: $result_reason: $data\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						exit;
@@ -13144,7 +13151,7 @@ if ($function == 'lead_all_info')
 				if ($DLset < 1)
 					{$DL='|';   $stage='pipe';}
 
-				$stmt="SELECT list_id,entry_list_id,lead_id from vicidial_list where $searchSQL order by lead_id desc limit 1000;";
+				$stmt="SELECT list_id,entry_list_id,lead_id from $vicidial_list_table where $searchSQL order by lead_id desc limit 1000;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$lead_exists = mysqli_num_rows($rslt);
 				if ($DB) {echo "$lead_exists|$stmt\n";}
@@ -13312,7 +13319,7 @@ if ($function == 'lead_all_info')
 							$output .= 'status' . $DL . 'user' . $DL . 'vendor_lead_code' . $DL . 'source_id' . $DL . 'list_id' . $DL . 'gmt_offset_now' . $DL . 'phone_code' . $DL . 'phone_number' . $DL . 'title' . $DL . 'first_name' . $DL . 'middle_initial' . $DL . 'last_name' . $DL . 'address1' . $DL . 'address2' . $DL . 'address3' . $DL . 'city' . $DL . 'state' . $DL . 'province' . $DL . 'postal_code' . $DL . 'country_code' . $DL . 'gender' . $DL . 'date_of_birth' . $DL . 'alt_phone' . $DL . 'email' . $DL . 'security_phrase' . $DL . 'comments' . $DL . 'called_count' . $DL . 'last_local_call_time' . $DL . 'rank' . $DL . 'owner' . $DL . 'entry_list_id' . $DL . 'lead_id' . $CF_header_output . "\n";
 							}
 
-						$stmt="SELECT status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from vicidial_list where lead_id='$lead_lead_id';";
+						$stmt="SELECT status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from $vicidial_list_table where lead_id='$lead_lead_id';";
 						$rslt=mysql_to_mysqli($stmt, $link);
 						if ($DB) {echo "$stmt\n";}
 						$standard_field_exists = mysqli_num_rows($rslt);
@@ -13556,7 +13563,7 @@ if ($function == 'lead_status_search')
 				$output='';
 				while ($leads_exist > $i)
 					{
-					$stmt="SELECT status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from vicidial_list where lead_id='$export_lead_id[$i]';";
+					$stmt="SELECT status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from $vicidial_list_table where lead_id='$export_lead_id[$i]';";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					if ($DB) {echo "$stmt\n";}
 					$lead_to_list = mysqli_num_rows($rslt);
@@ -13997,7 +14004,7 @@ if ($function == 'lead_search')
 				$search_phone_code=array();
 				if ($find_lead_id > 0) # search for the lead_id
 					{
-					$stmt="SELECT lead_id,list_id,entry_list_id,phone_number,phone_code from vicidial_list where $lead_id_SQL $search_SQL order by lead_id desc limit $records;";
+					$stmt="SELECT lead_id,list_id,entry_list_id,phone_number,phone_code from $vicidial_list_table where $lead_id_SQL $search_SQL order by lead_id desc limit $records;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($DB>0) {echo "DEBUG: Checking for lead_id - $lead_id|$pc_recs|$stmt|\n";}
@@ -14019,7 +14026,7 @@ if ($function == 'lead_search')
 					}
 				if ( ($find_vendor_lead_code > 0) and ($search_found < 1) ) # search for the vendor_lead_code
 					{
-					$stmt="SELECT lead_id,list_id,entry_list_id,phone_number,phone_code,vendor_lead_code from vicidial_list where $vendor_lead_code_SQL $search_SQL order by lead_id desc limit $records;";
+					$stmt="SELECT lead_id,list_id,entry_list_id,phone_number,phone_code,vendor_lead_code from $vicidial_list_table where $vendor_lead_code_SQL $search_SQL order by lead_id desc limit $records;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($DB>0) {echo "DEBUG: Checking for vendor_lead_code - $vendor_lead_code|$pc_recs|$stmt|\n";}
@@ -14041,7 +14048,7 @@ if ($function == 'lead_search')
 					}
 				if ( ($find_phone_number > 0) and ($search_found < 1) ) # search for the phone_number
 					{
-					$stmt="SELECT lead_id,list_id,entry_list_id,phone_number,phone_code from vicidial_list where $phone_number_SQL $search_SQL order by lead_id desc limit $records;";
+					$stmt="SELECT lead_id,list_id,entry_list_id,phone_number,phone_code from $vicidial_list_table where $phone_number_SQL $search_SQL order by lead_id desc limit $records;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					if ($DB>0) {echo "DEBUG: Checking for phone_number - $phone_number|$pc_recs|$stmt|\n";}
@@ -15297,7 +15304,7 @@ if ($function == 'update_lead')
 				if ($find_lead_id > 0) # search for the lead_id
 					{
 					if ($DB>0) {echo "DEBUG: Checking for lead_id - $lead_id\n";}
-					$stmt="SELECT lead_id,list_id,entry_list_id from vicidial_list where $lead_id_SQL $search_SQL order by entry_date desc limit $records;";
+					$stmt="SELECT lead_id,list_id,entry_list_id from $vicidial_list_table where $lead_id_SQL $search_SQL order by entry_date desc limit $records;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					$n=0;
@@ -15319,7 +15326,7 @@ if ($function == 'update_lead')
 				if ( ($find_vendor_lead_code > 0) and ($search_found < 1) ) # search for the vendor_lead_code
 					{
 					if ($DB>0) {echo "DEBUG: Checking for vendor_lead_code - $vendor_lead_code\n";}
-					$stmt="SELECT lead_id,list_id,entry_list_id from vicidial_list where $vendor_lead_code_SQL $search_SQL order by entry_date desc limit $records;";
+					$stmt="SELECT lead_id,list_id,entry_list_id from $vicidial_list_table where $vendor_lead_code_SQL $search_SQL order by entry_date desc limit $records;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					$n=0;
@@ -15338,7 +15345,7 @@ if ($function == 'update_lead')
 				if ( ($find_phone_number > 0) and ($search_found < 1) ) # search for the phone_number
 					{
 					if ($DB>0) {echo "DEBUG: Checking for phone_number - $phone_number\n";}
-					$stmt="SELECT lead_id,list_id,entry_list_id from vicidial_list where $phone_number_SQL $search_SQL order by entry_date desc limit $records;";
+					$stmt="SELECT lead_id,list_id,entry_list_id from $vicidial_list_table where $phone_number_SQL $search_SQL order by entry_date desc limit $records;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 					$pc_recs = mysqli_num_rows($rslt);
 					$n=0;
@@ -15462,7 +15469,7 @@ if ($function == 'update_lead')
 									$VCFaffected_rows = mysqli_affected_rows($link);
 									}
 
-								$stmt = "UPDATE vicidial_list SET entry_list_id=0 where lead_id='$search_lead_id[$n]';";
+								$stmt = "UPDATE $vicidial_list_table SET entry_list_id=0 where lead_id='$search_lead_id[$n]';";
 								$result_reason = "update_lead CUSTOM FIELDS DATA HAS BEEN DELETED";
 								if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
 								$rslt=mysql_to_mysqli($stmt, $link);
@@ -15478,7 +15485,7 @@ if ($function == 'update_lead')
 								{
 								if (strlen($VL_update_SQL)>6)
 									{
-									$stmt = "UPDATE vicidial_list SET $VL_update_SQL where lead_id='$search_lead_id[$n]';";
+									$stmt = "UPDATE $vicidial_list_table SET $VL_update_SQL where lead_id='$search_lead_id[$n]';";
 									$result_reason = "update_lead LEAD HAS BEEN UPDATED";
 									}
 								if ($delete_lead=='Y')
@@ -15493,7 +15500,7 @@ if ($function == 'update_lead')
 									$rslt=mysql_to_mysqli($stmt, $link);
 									$VCBaffected_rows = mysqli_affected_rows($link);
 
-									$stmt = "DELETE from vicidial_list where lead_id='$search_lead_id[$n]';";
+									$stmt = "DELETE from $vicidial_list_table where lead_id='$search_lead_id[$n]';";
 									$result_reason = "update_lead LEAD HAS BEEN DELETED $VCBaffected_rows|$VCBAaffected_rows";
 									}
 								if ($DB>0) {echo "DEBUG: update_lead query - $stmt\n";}
@@ -15800,7 +15807,7 @@ if ($function == 'update_lead')
 
 										if ($custom_update_count > 0)
 											{
-											$list_table_update_SQL = "UPDATE vicidial_list SET entry_list_id='$lead_custom_list' where lead_id='$search_lead_id[$n]';";
+											$list_table_update_SQL = "UPDATE $vicidial_list_table SET entry_list_id='$lead_custom_list' where lead_id='$search_lead_id[$n]';";
 											$rslt=mysql_to_mysqli($list_table_update_SQL, $link);
 											$list_update_count = mysqli_affected_rows($link);
 											if ($DB) {echo "$list_update_count|$list_table_update_SQL\n";}
@@ -16012,7 +16019,7 @@ if ($function == 'update_lead')
 													if ($custom_insert_count > 0) 
 														{
 														# Update vicidial_list entry to put list_id as entry_list_id 
-														$vl_table_entry_update_SQL = "UPDATE vicidial_list SET entry_list_id='$temp_entry_list_id' where lead_id='$lead_id';";
+														$vl_table_entry_update_SQL = "UPDATE $vicidial_list_table SET entry_list_id='$temp_entry_list_id' where lead_id='$lead_id';";
 														$rslt=mysql_to_mysqli($vl_table_entry_update_SQL, $link);
 														$vl_table_entry_update_count = mysqli_affected_rows($link);
 
@@ -16089,7 +16096,7 @@ if ($function == 'update_lead')
 						if ( ($list_local_call_time!='') and (!preg_match("/^campaign$/i",$list_local_call_time)) )
 							{$local_call_time = $list_local_call_time;}
 
-						$stmt="SELECT state,vendor_lead_code,gmt_offset_now from vicidial_list where lead_id='$lead_id';";
+						$stmt="SELECT state,vendor_lead_code,gmt_offset_now from $vicidial_list_table where lead_id='$lead_id';";
 						$rslt=mysql_to_mysqli($stmt, $link);
 						$ulhi_recs = mysqli_num_rows($rslt);
 						if ($ulhi_recs > 0)
@@ -16313,7 +16320,7 @@ if ($function == 'batch_update_lead')
 				{
 				if (strlen($allowed_listsSQL) > 3)
 					{$allowed_listsSQL = "and list_id IN($allowed_listsSQL)";}
-				$stmt="SELECT lead_id from vicidial_list where $lead_ids_SQL $allowed_listsSQL order by lead_id desc limit $records;";
+				$stmt="SELECT lead_id from $vicidial_list_table where $lead_ids_SQL $allowed_listsSQL order by lead_id desc limit $records;";
 				if ($DB>0) {echo "DEBUG: Checking for lead_ids - $lead_ids |$stmt|\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$pc_recs = mysqli_num_rows($rslt);
@@ -16371,7 +16378,7 @@ if ($function == 'batch_update_lead')
 
 				if (strlen($VL_update_SQL)>6)
 					{
-					$stmt = "UPDATE vicidial_list SET $VL_update_SQL where lead_id IN($found_lead_ids);";
+					$stmt = "UPDATE $vicidial_list_table SET $VL_update_SQL where lead_id IN($found_lead_ids);";
 					$result_reason = "batch_update_lead LEADS HAVE BEEN UPDATED";
 
 					if ($DB>0) {echo "DEBUG: batch_update_lead query - $stmt\n";}
