@@ -204,10 +204,11 @@
 # 230614-0828 - Added container_list function
 # 230721-1753 - Added insert for daily RT monitoring
 # 231109-0933 - Added archived_lead option to multiple functions
+# 231109-2022 - Added lead_dearchive function
 #
 
-$version = '2.14-181';
-$build = '231109-0933';
+$version = '2.14-182';
+$build = '231109-2022';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -12801,6 +12802,179 @@ if ($function == 'lead_callback_info')
 	}
 ################################################################################
 ### lead_callback_info - outputs scheduled callback data for a specific lead
+################################################################################
+
+
+
+
+
+################################################################################
+### lead_dearchive - moves a lead from the archive to active leads table
+################################################################################
+if ($function == 'lead_dearchive')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_leads='1' and user_level > 7 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "lead_dearchive USER DOES NOT HAVE PERMISSION TO MODIFY LEAD INFO";
+			echo "$result: $result_reason: |$user|$allowed_user|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$lead_search_SQL='';
+			$search_ready=0;
+
+			if ( (strlen($lead_id)>0) and (strlen($lead_id)<12) )
+				{
+				$lead_search_SQL .= "where lead_id='$lead_id'";
+				$search_ready++;
+				}
+			if ($search_ready < 1)
+				{
+				$result = 'ERROR';
+				$result_reason = "lead_dearchive INVALID SEARCH PARAMETERS";
+				$data = "$user|$lead_id";
+				echo "$result: $result_reason: $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB) {$MAIN.="|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+
+				$LOGallowed_campaignsSQL='';
+				$whereLOGallowed_campaignsSQL='';
+				$allowed_listsSQL='';
+				if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
+					{
+					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+					$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+
+					$stmt="SELECT list_id from vicidial_lists $whereLOGallowed_campaignsSQL order by list_id;";
+					if ($DB>0) {echo "|$stmt|\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$lists_to_print = mysqli_num_rows($rslt);
+					$i=0;
+					$allowed_lists=' ';
+					$allowed_listsSQL='';
+					while ($i < $lists_to_print)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$allowed_lists .=		"$row[0] ";
+						$allowed_listsSQL .=	"'$row[0]',";
+						$i++;
+						}
+					$allowed_listsSQL = preg_replace("/,$/",'',$allowed_listsSQL);
+					if ($DB>0) {echo "Allowed lists:|$allowed_lists|$allowed_listsSQL|\n";}
+					if (strlen($allowed_listsSQL) > 3)
+						{$allowed_listsSQL = "and list_id IN($allowed_listsSQL)";}
+					}
+
+				$stmt="SELECT list_id,entry_list_id from vicidial_list_archive $lead_search_SQL $allowed_listsSQL limit 1;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				$lead_archive_exists = mysqli_num_rows($rslt);
+
+				if ($lead_archive_exists > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$lead_list_id =			$row[0];
+					$lead_entry_list_id =	$row[1];
+	
+					$stmt="SELECT list_id,entry_list_id from vicidial_list $lead_search_SQL limit 1";
+					if ($DB) {$MAIN.="|$stmt|\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$lead_exists = mysqli_num_rows($rslt);
+
+					if ($lead_exists < 1)
+						{
+						# Insert archived lead back into vicidial_list
+						$vl_table_insert_SQL = "INSERT INTO vicidial_list SELECT * from vicidial_list_archive where lead_id='$lead_id';";
+						$rslt=mysql_to_mysqli($vl_table_insert_SQL, $link);
+						$vl_table_insert_count = mysqli_affected_rows($link);
+
+						if ($vl_table_insert_count > 0)
+							{
+							# Delete archived lead from vicidial_list_archive
+							$vla_table_delete_SQL = "DELETE FROM vicidial_list_archive where lead_id='$lead_id';";
+							$rslt=mysql_to_mysqli($vla_table_delete_SQL, $link);
+							$vla_table_delete_count = mysqli_affected_rows($link);
+
+							$result = 'SUCCESS';
+							$data = "$user|$lead_id|$vl_table_insert_count|$vla_table_delete_count";
+							$result_reason = "lead_dearchive LEAD DE-ARCHIVED";
+							echo "$result: $result_reason: $data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						else
+							{
+							$result = 'ERROR';
+							$result_reason = "lead_dearchive LEAD INSERT FAILED";
+							$data = "$user|$lead_id|$lead_list_id";
+							echo "$result: $result_reason: $data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						}
+					else
+						{
+						$result = 'ERROR';
+						$result_reason = "lead_dearchive NON-ARCHIVED LEAD FOUND";
+						$data = "$user|$lead_id|$lead_list_id";
+						echo "$result: $result_reason: $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				else
+					{
+					$result = 'ERROR';
+					$result_reason = "lead_dearchive ARCHIVED LEAD NOT FOUND";
+					$data = "$user|$lead_id|$stage|$search_location";
+					echo "$result: $result_reason: $data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### lead_dearchive - moves a lead from the archive to active leads table
 ################################################################################
 
 

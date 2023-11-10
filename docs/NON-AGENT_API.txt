@@ -64,6 +64,7 @@ campaigns_list - displays information about all campaigns in the system
 hopper_list - displays information about leads in the hopper for a campaign
 update_alt_url - updates/adds/displays alternate dispo call url entries for a campaign
 update_presets - updates/adds/displays/deletes campaign preset entries
+lead_dearchive - moves a lead from the archive to active leads table
 
 
 New scripts:
@@ -210,6 +211,7 @@ Changes:
 230614-0828 - Added container_list function
 230721-1753 - Added insert for daily RT monitoring
 231109-0933 - Added archived_lead option to multiple functions
+231109-2022 - Added lead_dearchive function
 
 
 API Functions use the 'function' variable
@@ -957,6 +959,30 @@ lead_id|callback_type|recipient|callback_status|lead_status|callback_date|entry_
 846446|ARCHIVE|USERONLY|INACTIVE|CBTEST|2018-12-14 14:00:00|2018-12-14 16:42:32|6666|107|TESTCAMP|ADMIN||2018-12-14 14:00:00|Call back after lunch
 846446|CURRENT|USERONLY|INACTIVE|CBTEST|2018-12-14 19:00:00|2018-12-14 16:44:08|6666|107|TESTCAMP|ADMIN||2018-12-14 19:00:00|Call back after dinner
 846446|CURRENT|USERONLY|ACTIVE|CBLEAD|2018-12-17 10:00:00|2018-12-14 16:50:56|6666|107|TESTCAMP|ADMIN|USA-EST-Y-Eastern US Time Zone|2018-12-17 10:00:00|try back Monday morning
+
+
+
+
+
+--------------------------------------------------------------------------------
+lead_dearchive - moves a lead from the archive to active leads table
+
+NOTE: api user for this function must have user_level set to 8 or higher and "modify leads" enabled
+
+REQUIRED FIELDS-
+source -		description of what originated the API call (maximum 20 characters)
+lead_id -		16-40 characters
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=lead_dearchive&lead_id=274071
+
+Example responses:
+ERROR: lead_dearchive USER DOES NOT HAVE PERMISSION TO MODIFY LEAD INFO - 6666|0
+ERROR: lead_dearchive INVALID SEARCH PARAMETERS - 6666||
+ERROR: lead_dearchive LEAD INSERT FAILED - 6666||
+ERROR: lead_dearchive NON-ARCHIVED LEAD FOUND - 6666||
+ERROR: lead_dearchive ARCHIVED LEAD NOT FOUND - 6666||
+SUCCESS: lead_dearchive LEAD DE-ARCHIVED - 6666|274071|1|1
 
 
 
