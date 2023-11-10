@@ -821,6 +821,11 @@ OTHER CHANGES:
 231. Added Agent Search In-Group List Restrict options, allowing for Lead 
 	Search restrictions on inbound group calls to a single list ID.
 
+232. Added option to use Two-Factor Authentication with Agent Screen logins
+
+233. Added the "lead_dearchive" Non-Agent API function, to move archived leads 
+	back to the active list table.
+
 
 
 
