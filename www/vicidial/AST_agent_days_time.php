@@ -13,6 +13,7 @@
 # 191013-0812 - Fixes for PHP7
 # 220303-1510 - Added allow_web_debug system setting
 # 230526-1740 - Patch for user_group bug, related to Issue #1346
+# 231114-1703 - Fix for issue #1490
 #
 
 $startMS = microtime();
@@ -665,7 +666,7 @@ else
 
 	if ($i==0)
 		{
-		$MAIN.="<tr><td colspan='8' align='center'><font size=2>".($urow[0]==0 ? "*** "._QXZ("USER ID NOT FOUND")." ***" : ($urow[1]==0 ? "*** ._QXZ("YOU DO NOT HAVE PRIVILEGES TO VIEW THIS USER")." ***" : "*** ._QXZ("NO RECORDS FOUND")." ***"))."</font></td></tr>";
+		$MAIN.="<tr><td colspan='8' align='center'><font size=2>".($urow[0]==0 ? "*** "._QXZ("USER ID NOT FOUND")." ***" : ($urow[1]==0 ? "***" ._QXZ("YOU DO NOT HAVE PRIVILEGES TO VIEW THIS USER")." ***" : "***" ._QXZ("NO RECORDS FOUND")." ***"))."</font></td></tr>";
 		}
 
 	$MAIN.="</TABLE></center><BR><BR>\n";
