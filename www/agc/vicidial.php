@@ -727,10 +727,11 @@
 # 230927-2036 - Added agent_search_ingroup_list campaign and agent_search_list ingroup options
 # 231108-0820 - Added several fields to update_settings related to manual dial calls
 # 231109-0827 - Added 2FA for agent screen logins
+# 231115-1618 - Added default_consultative options.php setting
 #
 
-$version = '2.14-693c';
-$build = '231109-0827';
+$version = '2.14-694c';
+$build = '231115-1618';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
@@ -1026,6 +1027,7 @@ $webphone_call_seconds	= '0';	# set to 1 or higher to have the agent phone(if se
 $user_pass_webform		= '0';	# set to 1 or 2 to return to default of including the 'user'(1) and 'pass'(2) by default in webform URLs
 $phone_login_webform	= '0';	# set to 1 or 2 to return to default of including the 'phone_login'(1) and 'phone_pass'(2) by default in webform URLs
 $login_submit_once		= '1';	# set to 0 to remove the "disable the login submit button after submitting" feature
+$default_consultative	= '0';	# set the CONSULTATIVE checkbox on the transfer panel be checked by default
 
 $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen, FOR DEBUG ONLY
 
@@ -12853,6 +12855,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			}
 		else
 			{
+			// JCJ - 11/16/23 Reset dead call timer if it's active
+			if (dead_max > 0 && CheckDEADcallON > 0)
+				{
+				CheckDEADcallON=0;
+				CheckDEADcallCOUNT=0;
+				}
 			UpdatESettingS();
 			in_lead_preview_state=0;
 			inOUT = 'OUT';
@@ -23719,7 +23727,7 @@ if ($agent_display_dialable_leads > 0)
     <img src="./images/<?php echo _QXZ("vdc_XB_channel.gif"); ?>" border="0" alt="channel" style="vertical-align:middle" /><input type="text" size="12" name="xferchannel" id="xferchannel" maxlength="200" class="cust_form" readonly="readonly" />
  </td>
     <td align="left">
-    <span id="consultative_checkbox"><input type="checkbox" name="consultativexfer" id="consultativexfer" size="1" value="0"><font class="body_tiny"> <?php echo _QXZ("CONSULTATIVE"); ?> &nbsp;</font></span>
+    <span id="consultative_checkbox"><input type="checkbox" name="consultativexfer" id="consultativexfer" size="1" value="0"<?php if ($default_consultative > 0) {echo " checked";} ?>><font class="body_tiny"> <?php echo _QXZ("CONSULTATIVE"); ?> &nbsp;</font></span>
  </td>
     <td align="left">
     <span style="background-color: <?php echo $MAIN_COLOR ?><?php echo $agent_hide_hangup_ACTIVE_style ?>" id="HangupBothLines"><a href="#" onclick="bothcall_send_hangup('YES');return false;"><img src="./images/<?php echo _QXZ("vdc_XB_hangupbothlines.gif"); ?>" border="0" alt="Hangup Both Lines" style="vertical-align:middle" /></a></span>

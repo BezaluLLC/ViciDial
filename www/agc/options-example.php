@@ -29,6 +29,7 @@
 # 230418-1548 - Added dial_override_limit option
 # 230617-0815 - Added dead_logging_version option
 # 231109-0830 - Changed link_to_grey_version to disabled by default
+# 231115-1610 - Added allow_vlc_lookup, default_consultative
 #
 
 $conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
@@ -79,6 +80,8 @@ $login_submit_once		= '1';	# set to 0 to remove the "disable the login submit bu
 $astguiclient_disabled	= '1';	# set to 0 to allow use of the astguiclient.php script
 $dial_override_limit	= '6';	# number of dial-override calls per minute that will lock user account, set to 0 to disable dial_override limit
 $dead_logging_version	= '0';	# experimental dead logging enabled, can reverse false DEAD call logging
+$allow_vlc_lookup		= '1';	# allow lead lookup by vendor_lead_code
+$default_consultative	= '0';	# set the CONSULTATIVE checkbox on the transfer panel be checked by default
 
 $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen
 

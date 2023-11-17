@@ -379,7 +379,7 @@ CREATE TABLE vicidial_hopper (
 hopper_id INT(9) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
 lead_id INT(9) UNSIGNED NOT NULL,
 campaign_id VARCHAR(8),
-status ENUM('READY','QUEUE','INCALL','DONE','HOLD','DNC') default 'READY',
+status ENUM('READY','QUEUE','INCALL','DONE','HOLD','DNC','RHOLD','RQUEUE') default 'READY',
 user VARCHAR(20),
 list_id BIGINT(14) UNSIGNED NOT NULL,
 gmt_offset_now DECIMAL(4,2) DEFAULT '0.00',
@@ -1120,7 +1120,8 @@ custom_five TEXT,
 dead_stop_recording ENUM('DISABLED','ALL_CALLS','OUTBOUND_ONLY','INBOUND_ONLY','AUTODIAL_ONLY','MANUAL_ONLY') default 'DISABLED',
 manual_vm_status_updates ENUM('ENABLED','DISABLED') default 'ENABLED',
 force_per_call_notes ENUM('DISABLED','ENABLED','5_CHARACTERS','15_CHARACTERS','30_CHARACTERS','100_CHARACTERS') default 'DISABLED',
-agent_search_ingroup_list ENUM('DISABLED','ENABLED','ENABLED_OVERRIDE') default 'DISABLED'
+agent_search_ingroup_list ENUM('DISABLED','ENABLED','ENABLED_OVERRIDE') default 'DISABLED',
+hopper_hold_inserts ENUM('ENABLED','DISABLED') default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -2021,7 +2022,9 @@ demographic_quotas ENUM('0','1','2','3','4','5','6','7') default '0',
 log_latency_gaps ENUM('0','1','2','3','4','5','6','7') default '1',
 inbound_credits ENUM('0','1','2','3','4','5','6','7') default '0',
 weekday_resets ENUM('0','1','2','3','4','5','6','7') default '0',
-two_factor_auth_agent_hours SMALLINT(5) default '0'
+two_factor_auth_agent_hours SMALLINT(5) default '0',
+highest_lead_id VARCHAR(20) default '0',
+hopper_hold_inserts ENUM('0','1','2','3','4','5','6','7') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -5442,4 +5445,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1698',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1699',db_schema_update_date=NOW(),reload_timestamp=NOW();

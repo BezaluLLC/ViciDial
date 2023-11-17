@@ -53,6 +53,7 @@
 # 220311-1922 - Added List CID Group Override option
 # 220623-1622 - Added List dial_prefix override
 # 230830-1056 - Changed outbound_calls_per_second max to allow up to 1000 CPS
+# 231116-0916 - Added hopper_hold_inserts option
 #
 
 ### begin parsing run-time options ###
@@ -218,7 +219,7 @@ $event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
 &event_logger;
 
 ### Grab system_settings values from the database
-$stmtA = "SELECT use_non_latin,call_limit_24hour FROM system_settings;";
+$stmtA = "SELECT use_non_latin,call_limit_24hour,hopper_hold_inserts FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -227,6 +228,7 @@ if ($sthArows > 0)
 	@aryA = $sthA->fetchrow_array;
 	$non_latin = 						$aryA[0];
 	$SScall_limit_24hour =				$aryA[1];
+	$SShopper_hold_inserts =			$aryA[2];
 	}
 $sthA->finish();
 
@@ -396,7 +398,9 @@ while($one_day_interval > 0)
 						$DBIPcid_group_id[$camp_CIPct] =	$aryA[9];
 						$DBIPscheduled_callbacks_auto_reschedule[$camp_CIPct] =	$aryA[10];
 						$DBIPdial_timeout_lead_container[$camp_CIPct] =	$aryA[11];
-						$DBIPcid_group_id_two[$camp_CIPct] =$aryA[12];
+						$DBIPcid_group_id_two[$camp_CIPct] =	$aryA[12];
+						$DBIPhopper_hold_inserts[$camp_CIPct] =	$aryA[13];
+						if ($SShopper_hold_inserts < 1) {$DBIPhopper_hold_inserts[$camp_CIPct] = 'DISABLED';}
 
 						if ($omit_phone_code =~ /Y/) {$DBIPomitcode[$camp_CIPct] = 1;}
 						else {$DBIPomitcode[$camp_CIPct] = 0;}

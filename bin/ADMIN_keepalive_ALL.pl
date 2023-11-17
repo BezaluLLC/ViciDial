@@ -488,7 +488,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 
 ##### Get the settings from system_settings #####
-$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats,enable_auto_reports,enable_drop_lists,expired_lists_inactive,sip_event_logging,call_quota_lead_ranking,inbound_answer_config,log_latency_gaps,demographic_quotas,weekday_resets FROM system_settings;";
+$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats,enable_auto_reports,enable_drop_lists,expired_lists_inactive,sip_event_logging,call_quota_lead_ranking,inbound_answer_config,log_latency_gaps,demographic_quotas,weekday_resets,highest_lead_id FROM system_settings;";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -518,6 +518,7 @@ if ($sthArows > 0)
 	$SSlog_latency_gaps =				$aryA[19];
 	$SSdemographic_quotas =				$aryA[20];
 	$SSweekday_resets =					$aryA[21];
+	$SShighest_lead_id =				$aryA[22];
 	}
 $sthA->finish();
 if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
@@ -5252,6 +5253,27 @@ if ($active_asterisk_server =~ /Y/)
 
 			system($launch . ' &');
 			}
+		}
+
+	$highest_lead_id=999999999;
+	$stmtA = "SELECT lead_id from vicidial_list order by lead_id desc limit 1;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$highest_lead_id = $aryA[0];
+		}
+	$sthA->finish();
+
+	if ($highest_lead_id > $SShighest_lead_id) 
+		{
+		$stmtA = "UPDATE system_settings SET highest_lead_id='$highest_lead_id';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+
+		if ($DBX) {print "Highest Lead ID updated: $highest_lead_id > $SShighest_lead_id \n";}
 		}
 	}
 ################################################################################

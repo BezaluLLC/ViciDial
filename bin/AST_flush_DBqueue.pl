@@ -524,6 +524,20 @@ if (!$T)
 if (!$Q) {print " - OPTIMIZE vicidial_users          \n";}
 
 
+$stmtA = "OPTIMIZE table system_settings;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) 
+	{
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+	}
+if (!$Q) {print " - OPTIMIZE system_settings          \n";}
+
+
 ### Gather active servers from the database
 $stmtA = "SELECT server_ip,server_id FROM servers where active='Y' and active_asterisk_server='Y';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;

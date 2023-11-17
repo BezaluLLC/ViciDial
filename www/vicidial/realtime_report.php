@@ -61,12 +61,13 @@
 # 230421-0106 - Added AGENTlatency display
 # 230421-1625 - Added RS_UGlatencyRESTRICT options.php setting
 # 230811-1530 - Added monitoring display information
+# 231115-1646 - Added RS_no_DEAD_status and RS_hide_CUST_info options.php settings
 #
 
 $startMS = microtime();
 
-$version = '2.14-47';
-$build = '230811-1530';
+$version = '2.14-48';
+$build = '231115-1646';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -194,8 +195,9 @@ $webphone_bufh =	'1';
 $webphone_pad =		'10';
 $webphone_clpos =	"<BR>  &nbsp; <a href=\"#\" onclick=\"hideDiv('webphone_content');\">"._QXZ("webphone")." -</a>";
 
-$RS_ListenBarge =		'MONITOR|BARGE|WHISPER';
-
+$RS_ListenBarge = 'MONITOR|BARGE|WHISPER';
+$RS_no_DEAD_status=0;
+$RS_hide_CUST_info=0;
 
 if (file_exists('options.php'))
 	{
@@ -1820,6 +1822,10 @@ function update_variables(task_option,task_choice,force_reload)
 		if (MONITORdisplay == '1') {MONITORdisplay='0';   document.getElementById("MONITORdisplayTXT").innerHTML = "<?php echo _QXZ("SHOW MONITORS"); ?>";}
 		else {MONITORdisplay='1';   document.getElementById("MONITORdisplayTXT").innerHTML = "<?php echo _QXZ("HIDE MONITORS"); ?>";}
 		}
+<?php
+if ($RS_hide_CUST_info < 1)
+	{
+?>
 	if (task_option == 'CUSTPHONEdisplay')
 		{
 		if (CUSTPHONEdisplay == '1') 
@@ -1850,6 +1856,10 @@ function update_variables(task_option,task_choice,force_reload)
 			document.getElementById("CUSTPHONEdisplayTXT").innerHTML = "<?php echo _QXZ("SHOW CUSTPHONES"); ?>";
 			}
 		}
+<?php
+	}
+?>
+
 	if (task_option == 'ALLINGROUPstats')
 		{
 		if (ALLINGROUPstats == '1') {ALLINGROUPstats='0';   document.getElementById("ALLINGROUPstatsTXT").innerHTML = "<?php echo _QXZ("SHOW IN-GROUP STATS"); ?>";}
@@ -2226,16 +2236,22 @@ if (!preg_match("/WALL|LIMITED/",$report_display_type))
 		{echo " &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"update_variables('MONITORdisplay','');\"><font class=\"top_settings_val\"><span id=MONITORdisplayTXT>"._QXZ("HIDE MONITORS")."</span></font></a>";}
 	else
 		{echo " &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"update_variables('MONITORdisplay','');\"><font class=\"top_settings_val\"><span id=MONITORdisplayTXT>"._QXZ("SHOW MONITORS")."</span></font></a>";}
-	if ($CUSTPHONEdisplay>0)
-		{echo " &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"update_variables('CUSTPHONEdisplay','');\"><font class=\"top_settings_val\"><span id=CUSTPHONEdisplayTXT>"._QXZ("HIDE CUSTPHONES")."</span></font></a>";}
-	else
-		{echo " &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"update_variables('CUSTPHONEdisplay','');\"><font class=\"top_settings_val\"><span id=CUSTPHONEdisplayTXT>"._QXZ("SHOW CUSTPHONES")."</span></font></a>";}
+	if ($RS_hide_CUST_info < 1)
+		{
+		if ($CUSTPHONEdisplay>0)
+			{echo " &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"update_variables('CUSTPHONEdisplay','');\"><font class=\"top_settings_val\"><span id=CUSTPHONEdisplayTXT>"._QXZ("HIDE CUSTPHONES")."</span></font></a>";}
+		else
+			{echo " &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"update_variables('CUSTPHONEdisplay','');\"><font class=\"top_settings_val\"><span id=CUSTPHONEdisplayTXT>"._QXZ("SHOW CUSTPHONES")."</span></font></a>";}
+		}
 	if ($LOGuser_level >= $CUSTINFOminUL) 
 		{
-		if ($CUSTINFOdisplay>0)
-			{echo " &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"update_variables('CUSTINFOdisplay','');\"><font class=\"top_settings_val\"><span id=CUSTINFOdisplayTXT>"._QXZ("HIDE CUST INFO")."</span></font></a>";}
-		else
-			{echo " &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"update_variables('CUSTINFOdisplay','');\"><font class=\"top_settings_val\"><span id=CUSTINFOdisplayTXT>"._QXZ("SHOW CUST INFO")."</span></font></a>";}
+		if ($RS_hide_CUST_info < 1)
+			{
+			if ($CUSTINFOdisplay>0)
+				{echo " &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"update_variables('CUSTINFOdisplay','');\"><font class=\"top_settings_val\"><span id=CUSTINFOdisplayTXT>"._QXZ("HIDE CUST INFO")."</span></font></a>";}
+			else
+				{echo " &nbsp; &nbsp; &nbsp; <a href=\"#\" onclick=\"update_variables('CUSTINFOdisplay','');\"><font class=\"top_settings_val\"><span id=CUSTINFOdisplayTXT>"._QXZ("SHOW CUST INFO")."</span></font></a>";}
+			}
 		}
 	}
 

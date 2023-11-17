@@ -131,10 +131,11 @@
 # 230421-0107 - Added AGENTlatency display
 # 230421-1636 - Added RS_UGlatencyRESTRICT options.php setting
 # 230811-1530 - Added realtime monitoring display information
+# 231115-1656 - Added RS_no_DEAD_status and RS_hide_CUST_info options.php settings
 #
 
-$version = '2.14-116';
-$build = '230811-1530';
+$version = '2.14-117';
+$build = '231115-1656';
 $php_script='AST_timeonVDADall.php';
 
 require("dbconnect_mysqli.php");
@@ -268,6 +269,8 @@ $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 # defaults
 $RS_BargeSwap=0;
+$RS_no_DEAD_status=0;
+$RS_hide_CUST_info=0;
 
 if (file_exists('options.php'))
 	{
@@ -3790,7 +3793,7 @@ if ($talking_to_print > 0)
 		$cust_source='';
 		while ($n < $calls_to_list)
 			{
-			if ( (preg_match("/$VAClead_ids[$n]/", $Alead_id[$j])) and (strlen($VAClead_ids[$n]) == strlen($Alead_id[$j])) and (strlen($VAClead_ids[$n] > 1)) )
+			if ( ( (preg_match("/$VAClead_ids[$n]/", $Alead_id[$j])) and (strlen($VAClead_ids[$n]) == strlen($Alead_id[$j])) and (strlen($VAClead_ids[$n] > 1)) ) and ($RS_hide_CUST_info < 1) )
 				{$custphone = $VACphones[$n];}
 			$n++;
 			}
@@ -3828,7 +3831,7 @@ if ($talking_to_print > 0)
 				}
 			}
 
-		if (($CUSTINFOdisplay>0 || ($CUSTPHONEdisplay>0 && $ShowCustPhoneCode)) && $Alead_id[$j]>0)
+		if ( (($CUSTINFOdisplay>0 || ($CUSTPHONEdisplay>0 && $ShowCustPhoneCode)) && $Alead_id[$j]>0) and ($RS_hide_CUST_info < 1) )
 			{
 			$custinfo_stmt="select * from vicidial_list where lead_id='".$Alead_id[$j]."' and phone_number='".$custphone."'";
 			$custinfo_rslt=mysql_to_mysqli($custinfo_stmt, $link);
@@ -3884,11 +3887,20 @@ if ($talking_to_print > 0)
 				{
 				if (!preg_match("/$Acallerid[$i]\|/",$callerids) && !preg_match("/EMAIL/i",$comments) && !preg_match("/CHAT/i",$comments))
 					{
-					$Acall_time[$i]=$Astate_change[$i];
+					if ($RS_no_DEAD_status > 0)
+						{
+						$Astatus[$i] =	'INCALL';
+						$Lstatus =		'INCALL';
+						$status =		'INCALL';
+						}
+					else
+						{
+						$Acall_time[$i]=$Astate_change[$i];
 
-					$Astatus[$i] =	'DEAD';
-					$Lstatus =		'DEAD';
-					$status =		' DEAD ';
+						$Astatus[$i] =	'DEAD';
+						$Lstatus =		'DEAD';
+						$status =		' DEAD ';
+						}
 					}
 				else
 					{
@@ -3929,11 +3941,20 @@ if ($talking_to_print > 0)
 
 						if ($left_chat > 0)
 							{
-							$Acall_time[$i]=$Astate_change[$i];
+							if ($RS_no_DEAD_status > 0)
+								{
+								$Astatus[$i] =	'CHAT';
+								$Lstatus =		'CHAT';
+								$status =		'CHAT';
+								}
+							else
+								{
+								$Acall_time[$i]=$Astate_change[$i];
 
-							$Astatus[$i] =	'DEAD';
-							$Lstatus =		'DEAD';
-							$status =		'DEAD C';
+								$Astatus[$i] =	'DEAD';
+								$Lstatus =		'DEAD';
+								$status =		'DEAD C';
+								}
 							}
 						}
 					}

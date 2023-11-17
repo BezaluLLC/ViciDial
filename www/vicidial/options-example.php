@@ -38,6 +38,7 @@
 # 230421-0220 - Added RS_AGENTlatency option
 # 230421-1645 - Added RS_UGlatencyRESTRICT option
 # 230926-0849 - Added camp_lead_order_random option
+# 231115-1642 - Added vm_view_messages_link, RS_no_DEAD_status and RS_hide_CUST_info options
 #
 
 # used by the realtime_report.php script
@@ -89,6 +90,8 @@ $RS_agentWAIT =			3;	# 3 or 4
 $RS_INcolumnsHIDE =		0;	# 0=no, 1=yes  # whether to hide the 'HOLD' & 'IN-GROUP' columns in the agent detail section
 $RS_DIDdesc =			0;	# 0=no, 1=yes  # whether to show a 'DID DESCRIPTION' column in the agent detail section
 $RS_report_default_format = '';	# 'TEXT', 'HTML' or '': If set, this will override the System Setting for this report only
+$RS_no_DEAD_status =	0;	# set to 1 to disable DEAD satus in the Real-Time Report
+$RS_hide_CUST_info =	0;	# set to 1 to hide the show CUSTPHONE and CUSTINFO options in the Real-Time Report
 $RS_AGENTlatency =		0;	# 0=no, 1=yes, 2=all, 3=day, 4=now
 $RS_UGlatencyRESTRICT =	'';	# this can restrict the "LATENCY" features to only be accessible to users in set User Groups: "ADMIN|ADMIN2"
 $RS_AGENTstatusTALLY =	'';	# <any valid status>: If set, will look at the number of calls statused by the agent in this status for today
@@ -153,6 +156,9 @@ $camp_lead_order_random=1;
 
 # set to 1 to hide the timeclock link on the welcome.php page
 $hide_timeclock_link	= '0';
+
+# View Message link for Voicemail modify admin page, "voicemail_id" in URL will be replaced with current voicemail ID
+$vm_view_messages_link = '';
 
 # CORS settings: (to enable, customize the variables below, and uncomment the "require_once('adminCORS.php');" line at the bottom)
 # (NOTE: The first 3 variables must be set for these features to be active)

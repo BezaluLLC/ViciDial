@@ -155,9 +155,10 @@
 # 230204-2144 - Added ability to use ALT na_call_url entries
 # 230215-1534 - Fix for AGENTDIRECT No-Agent Call URL calls, Issue #1396
 # 230223-0826 - Fix for enhanced_disconnect_logging=3 issue
+# 231116-0911 - Added hopper_hold_inserts option
 #
 
-$build='230223-0826';
+$build='231116-0911';
 $script='AST_VDauto_dial';
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -336,7 +337,7 @@ $event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
 
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,outbound_autodial_active,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pause_type,enable_drop_lists,call_quota_lead_ranking,timeclock_end_of_day,allow_shared_dial,call_limit_24hour FROM system_settings;";
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,outbound_autodial_active,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pause_type,enable_drop_lists,call_quota_lead_ranking,timeclock_end_of_day,allow_shared_dial,call_limit_24hour,hopper_hold_inserts FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -358,6 +359,7 @@ if ($sthArows > 0)
 	$timeclock_end_of_day =				$aryA[12];
 	$allow_shared_dial =				$aryA[13];
 	$SScall_limit_24hour =				$aryA[14];
+	$SShopper_hold_inserts =			$aryA[15];
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -953,7 +955,7 @@ while($one_day_interval > 0)
 
 			### grab the dial_level and multiply by active agents to get your goalcalls
 			$DBIPadlevel[$user_CIPct]=0;
-			$stmtA = "SELECT auto_dial_level,local_call_time,dial_timeout,dial_prefix,campaign_cid,active,campaign_vdad_exten,closer_campaigns,omit_phone_code,available_only_ratio_tally,auto_alt_dial,campaign_allow_inbound,queue_priority,dial_method,use_custom_cid,inbound_queue_no_dial,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,adaptive_dl_diff_target,dl_diff_target_method,inbound_no_agents_no_dial_container,inbound_no_agents_no_dial_threshold,cid_group_id,scheduled_callbacks_auto_reschedule,call_quota_lead_ranking,dial_timeout_lead_container,drop_call_seconds,drop_action,drop_inbound_group,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override,cid_group_id_two,incall_tally_threshold_seconds,auto_alt_threshold FROM vicidial_campaigns where campaign_id='$DBIPcampaign[$user_CIPct]'";
+			$stmtA = "SELECT auto_dial_level,local_call_time,dial_timeout,dial_prefix,campaign_cid,active,campaign_vdad_exten,closer_campaigns,omit_phone_code,available_only_ratio_tally,auto_alt_dial,campaign_allow_inbound,queue_priority,dial_method,use_custom_cid,inbound_queue_no_dial,available_only_tally_threshold,available_only_tally_threshold_agents,dial_level_threshold,dial_level_threshold_agents,adaptive_dl_diff_target,dl_diff_target_method,inbound_no_agents_no_dial_container,inbound_no_agents_no_dial_threshold,cid_group_id,scheduled_callbacks_auto_reschedule,call_quota_lead_ranking,dial_timeout_lead_container,drop_call_seconds,drop_action,drop_inbound_group,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override,cid_group_id_two,incall_tally_threshold_seconds,auto_alt_threshold,hopper_hold_inserts FROM vicidial_campaigns where campaign_id='$DBIPcampaign[$user_CIPct]'";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -1003,6 +1005,8 @@ while($one_day_interval > 0)
 				$DBIPcid_group_id_two[$user_CIPct] =	$aryA[35];
 				$DBIPincall_tally_threshold_seconds[$user_CIPct] =	$aryA[36];
 				$DBIPauto_alt_threshold[$user_CIPct] =			$aryA[37];
+				$DBIPhopper_hold_inserts[$user_CIPct] =			$aryA[38];
+				if ($SShopper_hold_inserts < 1) {$DBIPhopper_hold_inserts[$user_CIPct] = 'DISABLED';}
 
 				# check for Dial Timeout Lead override
 				if ( (length($DBIPdial_timeout_lead_container[$user_CIPct]) > 1) && ($DBIPdial_timeout_lead_container[$user_CIPct] !~ /^DISABLED$/i) )
@@ -2853,7 +2857,7 @@ while($one_day_interval > 0)
 							$VD_auto_alt_dial = 'NONE';
 							$VD_auto_alt_dial_statuses='';
 							$VD_call_quota_lead_ranking='DISABLED';
-							$stmtA="SELECT auto_alt_dial,auto_alt_dial_statuses,use_internal_dnc,use_campaign_dnc,use_other_campaign_dnc,call_quota_lead_ranking,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override,auto_alt_threshold FROM vicidial_campaigns where campaign_id='$CLcampaign_id';";
+							$stmtA="SELECT auto_alt_dial,auto_alt_dial_statuses,use_internal_dnc,use_campaign_dnc,use_other_campaign_dnc,call_quota_lead_ranking,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override,auto_alt_threshold,hopper_hold_inserts FROM vicidial_campaigns where campaign_id='$CLcampaign_id';";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArows=$sthA->rows;
@@ -2871,6 +2875,8 @@ while($one_day_interval > 0)
 								$VD_call_limit_24hour =				$aryA[8];
 								$VD_call_limit_24hour_override =	$aryA[9];
 								$VD_auto_alt_threshold =			$aryA[10];
+								$VD_hopper_hold_inserts =			$aryA[11];
+								if ($SShopper_hold_inserts < 1) {$VD_hopper_hold_inserts = 'DISABLED';}
 								}
 							$sthA->finish();
 
@@ -3282,7 +3288,9 @@ while($one_day_interval > 0)
 												}
 											if ($passed_24hour_call_count > 0) 
 												{
-												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ALT',user='',priority='25',source='A';";
+												$hopper_status='READY';
+												if ($VD_hopper_hold_inserts =~ /ENABLED/) {$hopper_status='RHOLD';}
+												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='$hopper_status',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ALT',user='',priority='25',source='A';";
 												$affected_rows = $dbhA->do($stmtA);
 												$event_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|";   &event_logger;
 												$aad_string = "$CLlead_id|$VD_alt_phone|$CLcampaign_id|ALT|25|hopper insert|";   &aad_output;
@@ -3386,7 +3394,9 @@ while($one_day_interval > 0)
 												}
 											if ($passed_24hour_call_count > 0) 
 												{
-												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ADDR3',user='',priority='20',source='A';";
+												$hopper_status='READY';
+												if ($VD_hopper_hold_inserts =~ /ENABLED/) {$hopper_status='RHOLD';}
+												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='$hopper_status',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ADDR3',user='',priority='20',source='A';";
 												$affected_rows = $dbhA->do($stmtA);
 												$event_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|";   &event_logger;
 												$aad_string = "$CLlead_id|$VD_address3|$CLcampaign_id|ADDR3|20|hopper insert|";   &aad_output;
@@ -3536,7 +3546,9 @@ while($one_day_interval > 0)
 													}
 												if ($passed_24hour_call_count > 0) 
 													{
-													$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15',source='A';";
+													$hopper_status='READY';
+													if ($VD_hopper_hold_inserts =~ /ENABLED/) {$hopper_status='RHOLD';}
+													$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='$hopper_status',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15',source='A';";
 													$affected_rows = $dbhA->do($stmtA);
 													$event_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;
 													$aad_string = "$CLlead_id|$VD_altdial_phone|$CLcampaign_id|X$Xlast|15|hopper insert|";   &aad_output;

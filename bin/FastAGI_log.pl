@@ -97,6 +97,7 @@
 # 220118-2207 - Added auto_alt_threshold campaign & list settings
 # 221221-2134 - Added enhanced_disconnect_logging=3 support , issue #1367
 # 230120-1557 - Added CAMPDTO dialplan variable for ^DC 3-way agent screen calls
+# 231116-0846 - Added hopper_hold_inserts option
 #
 
 # defaults for PreFork
@@ -883,6 +884,21 @@ sub process_request
 			
 			if ($park_abandon < 1)
 				{
+				$highest_lead_id=999999999;
+				$highest_lead_id_test=999999999;
+				### Grab highest lead_id value from vicidial_list
+				$stmtA = "SELECT highest_lead_id from system_settings;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$highest_lead_id = $aryA[0];
+					$highest_lead_id_test = ($highest_lead_id + 10000);
+					}
+				$sthA->finish();
+
 				if ($request =~ /--HVcauses--/i)
 					{
 					$HVcauses=1;
@@ -1396,11 +1412,17 @@ sub process_request
 
 						if (length($VDL_status) > 0) 
 							{
-							$stmtA = "UPDATE vicidial_list set status='$VDL_status' where lead_id = '$CIDlead_id';";
-								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-							$VDADaffected_rows = $dbhA->do($stmtA);
-							if ($AGILOG) {$agi_string = "--    VDAD vicidial_list update: |$VDADaffected_rows|$CIDlead_id";   &agi_output;}
-
+							if ($CIDlead_id < $highest_lead_id_test)
+								{
+								$stmtA = "UPDATE vicidial_list set status='$VDL_status' where lead_id = '$CIDlead_id';";
+									if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+								$VDADaffected_rows = $dbhA->do($stmtA);
+								if ($AGILOG) {$agi_string = "--    VDAD vicidial_list update 1: |$VDADaffected_rows|$CIDlead_id";   &agi_output;}
+								}
+							else
+								{
+								if ($AGILOG) {$agi_string = "--    VDAD highest_lead_id test failed: |$highest_lead_id|$highest_lead_id_test|$CIDlead_id";   &agi_output;}
+								}
 							$stmtA = "UPDATE vicidial_auto_calls set status='$VDAC_status' where callerid = '$callerid';";
 								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 							$VDACaffected_rows = $dbhA->do($stmtA);
@@ -1962,7 +1984,7 @@ sub process_request
 									$stmtA = "UPDATE vicidial_list set status='DROP' where lead_id = '$VD_lead_id';";
 										if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 									$affected_rows = $dbhA->do($stmtA);
-									if ($AGILOG) {$agi_string = "--    VDAD vicidial_list update: |$affected_rows|$VD_lead_id";   &agi_output;}
+									if ($AGILOG) {$agi_string = "--    VDAD vicidial_list update 2: |$affected_rows|$VD_lead_id";   &agi_output;}
 									}
 								else 
 									{
@@ -2063,11 +2085,24 @@ sub process_request
 									}
 								}
 
+							### Grab system_settings values from the database
+							$anyone_callback_inactive_lists='default';
+							$stmtA = "SELECT hopper_hold_inserts FROM system_settings;";
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$SShopper_hold_inserts =			$aryA[0];
+								}
+							$sthA->finish();
+
 							### check to see if campaign has alt_dial or call quotas enabled
 							$VD_auto_alt_dial = 'NONE';
 							$VD_auto_alt_dial_statuses='';
 							$VD_call_quota_lead_ranking='DISABLED';
-							$stmtA="SELECT auto_alt_dial,auto_alt_dial_statuses,use_internal_dnc,use_campaign_dnc,use_other_campaign_dnc,call_quota_lead_ranking,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override,auto_alt_threshold FROM vicidial_campaigns where campaign_id='$VD_campaign_id';";
+							$stmtA="SELECT auto_alt_dial,auto_alt_dial_statuses,use_internal_dnc,use_campaign_dnc,use_other_campaign_dnc,call_quota_lead_ranking,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override,auto_alt_threshold,hopper_hold_inserts FROM vicidial_campaigns where campaign_id='$VD_campaign_id';";
 								if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2087,6 +2122,8 @@ sub process_request
 								$VD_call_limit_24hour =				$aryA[8];
 								$VD_call_limit_24hour_override =	$aryA[9];
 								$CLauto_alt_threshold =				$aryA[10];
+								$VD_hopper_hold_inserts =			$aryA[11];
+								if ($SShopper_hold_inserts < 1) {$VD_hopper_hold_inserts = 'DISABLED';}
 								$epc_countCAMPDATA++;
 								}
 
@@ -2217,7 +2254,9 @@ sub process_request
 												}
 											if ($passed_24hour_call_count > 0) 
 												{
-												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ALT',user='',priority='25',source='A';";
+												$hopper_status='READY';
+												if ($VD_hopper_hold_inserts =~ /ENABLED/) {$hopper_status='RHOLD';}
+												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='$hopper_status',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ALT',user='',priority='25',source='A';";
 												$affected_rows = $dbhA->do($stmtA);
 												if ($AGILOG) {$agi_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|";   &agi_output;}
 												if ($AGILOG) {$aad_string = "$VD_lead_id|$VD_alt_phone|$VD_campaign_id|ALT|25|hopper insert|";   &aad_output;}
@@ -2323,7 +2362,9 @@ sub process_request
 												}
 											if ($passed_24hour_call_count > 0) 
 												{
-												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ADDR3',user='',priority='20',source='A';";
+												$hopper_status='READY';
+												if ($VD_hopper_hold_inserts =~ /ENABLED/) {$hopper_status='RHOLD';}
+												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='$hopper_status',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ADDR3',user='',priority='20',source='A';";
 												$affected_rows = $dbhA->do($stmtA);
 												if ($AGILOG) {$agi_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|";   &agi_output;}
 												if ($AGILOG) {$aad_string = "$VD_lead_id|$VD_address3|$VD_campaign_id|ADDR3|20|hopper insert|";   &aad_output;}
@@ -2471,7 +2512,9 @@ sub process_request
 													}
 												if ($passed_24hour_call_count > 0) 
 													{
-													$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='READY',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15',source='A';";
+													$hopper_status='READY';
+													if ($VD_hopper_hold_inserts =~ /ENABLED/) {$hopper_status='RHOLD';}
+													$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='$hopper_status',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15',source='A';";
 													$affected_rows = $dbhA->do($stmtA);
 													if ($AGILOG) {$agi_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &agi_output;}
 													if ($AGILOG) {$aad_string = "$VD_lead_id|$VD_altdial_phone|$VD_campaign_id|X$Xlast|15|hopper insert|";   &aad_output;}

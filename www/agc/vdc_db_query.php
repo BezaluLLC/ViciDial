@@ -540,10 +540,11 @@
 # 230801-0810 - More useful error output for manDiaLskip
 # 230927-2037 - Added agent_search_ingroup_list campaign and agent_search_list ingroup options
 # 231108-0819 - Added several fields to update_settings related to manual dial calls
+# 231115-1851 - Added allow_vlc_lookup options.php setting
 #
 
-$version = '2.14-433';
-$build = '231108-0819';
+$version = '2.14-434';
+$build = '231115-1851';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=913;
@@ -866,6 +867,8 @@ if (isset($_GET["inbound_ingroup"]))			{$inbound_ingroup=$_GET["inbound_ingroup"
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 $user=preg_replace("/\'|\"|\\\\|;| /","",$user);
 $pass=preg_replace("/\'|\"|\\\\|;| /","",$pass);
+
+$allow_vlc_lookup		= '1';	# allow lead lookup by vendor_lead_code
 
 # if options file exists, use the override values for the above variables
 #   see the options-example.php file for more information
@@ -2491,7 +2494,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 						if (strlen($Scamp_lists)<2) {$Scamp_lists="''";}
 						$manual_dial_search_filterSQL = "and list_id IN($Scamp_lists)";
 						}
-					if (strlen($vendor_lead_code)>0)
+					if ( (strlen($vendor_lead_code)>0) and ($allow_vlc_lookup > 0) )
 						{
 						$stmt="SELECT lead_id FROM vicidial_list where vendor_lead_code=\"$vendor_lead_code\" $manual_dial_search_filterSQL order by modify_date desc LIMIT 1;";
 						$rslt=mysql_to_mysqli($stmt, $link);

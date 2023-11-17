@@ -2431,3 +2431,13 @@ UPDATE system_settings SET db_schema_version='1697',db_schema_update_date=NOW() 
 ALTER TABLE system_settings ADD two_factor_auth_agent_hours SMALLINT(5) default '0';
 
 UPDATE system_settings SET db_schema_version='1698',db_schema_update_date=NOW() where db_schema_version < 1698;
+
+ALTER TABLE system_settings ADD highest_lead_id VARCHAR(20) default '0';
+
+ALTER TABLE system_settings ADD hopper_hold_inserts ENUM('0','1','2','3','4','5','6','7') default '0';
+
+ALTER TABLE vicidial_campaigns ADD hopper_hold_inserts ENUM('ENABLED','DISABLED') default 'DISABLED';
+
+ALTER TABLE vicidial_hopper MODIFY status ENUM('READY','QUEUE','INCALL','DONE','HOLD','DNC','RHOLD','RQUEUE') default 'READY';
+
+UPDATE system_settings SET db_schema_version='1699',db_schema_update_date=NOW() where db_schema_version < 1699;
