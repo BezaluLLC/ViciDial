@@ -11,7 +11,7 @@
 #      script's crontab entry that does some of these functions:
 #      AST_conf_update.pl --no-vc-3way-check
 #
-# Copyright (C) 2020  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # 100811-2119 - First build, based upon AST_conf_update.pl script
 # 100928-1506 - Changed from hard-coded 60 minute limit to servers.vicidial_recording_limit
@@ -21,6 +21,7 @@
 # 170921-1814 - Added support for AMI2
 # 180420-2301 - Fix for high-volume systems, added varibles to hangup queryCID
 # 200413-1356 - Fix for \n\n at the end of PING commands causing errors in AMI
+# 231117-2255 - Added AMI version 5 compatibility
 #
 
 # constants
@@ -348,6 +349,25 @@ while ($loops > $loop_counter)
 				$event_string = "|$PT_conf_extens[$i]|$COMMAND|";
 				&event_logger;
 				@list_channels = $t->cmd(String => "$COMMAND", Prompt => '/--END COMMAND--\n\n/');
+				}
+			elsif ($ami_version =~ /^5\./i)
+				{
+				# get the current time
+				( $now_sec, $now_micro_sec ) = gettimeofday();
+
+				# figure out how many micro seconds since epoch
+				$now_micro_epoch = $now_sec * 1000000;
+				$now_micro_epoch = $now_micro_epoch + $now_micro_sec;
+
+				$begin_micro_epoch = $now_micro_epoch;
+
+				# create a new action id
+				$action_id = "$now_sec.$now_micro_sec";
+
+				$COMMAND = "Action: Command\nActionID:$action_id\nCommand: Meetme list $PT_conf_extens[$i]";
+				$event_string = "|$PT_conf_extens[$i]|$COMMAND|";
+				&event_logger;
+				@list_channels = $t->cmd(String => "$COMMAND", Prompt => '/\n\n/');
 				}
 
 

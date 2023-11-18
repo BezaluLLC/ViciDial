@@ -69,6 +69,7 @@
 # 230421-0057 - Added vicidial_agent_latency_summary_log archiving
 # 230507-0804 - Added vicidial_latency_gaps archiving
 # 231028-0810 - Added --url-log-only and --url-log-days=x options for purging of vicidial_url_log table only
+# 231117-1914 - Added vicidial_3way_press_log archiving
 #
 
 $CALC_TEST=0;
@@ -3443,6 +3444,58 @@ if (!$T)
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		}
 
+
+	##### vicidial_3way_press_log
+	$stmtA = "SELECT count(*) from vicidial_3way_press_log;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$vicidial_3way_press_log_count =	$aryA[0];
+		}
+	$sthA->finish();
+
+	$stmtA = "SELECT count(*) from vicidial_3way_press_log_archive;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$vicidial_3way_press_log_archive_count =	$aryA[0];
+		}
+	$sthA->finish();
+
+	if (!$Q) {print "\nProcessing vicidial_3way_press_log table...  ($vicidial_3way_press_log_count|$vicidial_3way_press_log_archive_count)\n";}
+	$stmtA = "INSERT IGNORE INTO vicidial_3way_press_log_archive SELECT * from vicidial_3way_press_log;";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	
+	$sthArows = $sthA->rows;
+	if (!$Q) {print "$sthArows rows inserted into vicidial_3way_press_log_archive table \n";}
+	
+	$rv = $sthA->err();
+	if (!$rv) 
+		{	
+		if ($wipe_all > 0)
+			{$stmtA = "DELETE FROM vicidial_3way_press_log;";}
+		else
+			{$stmtA = "DELETE FROM vicidial_3way_press_log WHERE call_date < '$del_time';";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows = $sthA->rows;
+		if (!$Q) {print "$sthArows rows deleted from vicidial_3way_press_log table \n";}
+
+		$stmtA = "optimize table vicidial_3way_press_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+
+		$stmtA = "optimize table vicidial_3way_press_log_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		}
 
 
 	##### vicidial_call_notes

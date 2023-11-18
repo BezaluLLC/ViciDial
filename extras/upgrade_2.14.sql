@@ -2441,3 +2441,46 @@ ALTER TABLE vicidial_campaigns ADD hopper_hold_inserts ENUM('ENABLED','DISABLED'
 ALTER TABLE vicidial_hopper MODIFY status ENUM('READY','QUEUE','INCALL','DONE','HOLD','DNC','RHOLD','RQUEUE') default 'READY';
 
 UPDATE system_settings SET db_schema_version='1699',db_schema_update_date=NOW() where db_schema_version < 1699;
+
+CREATE TABLE vicidial_3way_press_live (
+call_date DATETIME(6),
+caller_code VARCHAR(30) NOT NULL,
+call_3way_id VARCHAR(30) NOT NULL,
+lead_id INT(9) UNSIGNED,
+phone_number VARCHAR(18),
+dialstring VARCHAR(28),
+outbound_cid VARCHAR(20),
+user VARCHAR(20),
+session_id VARCHAR(20),
+server_ip VARCHAR(15),
+session_id_3way VARCHAR(20) default '',
+status VARCHAR(40),
+index(call_date),
+index(caller_code),
+index(call_3way_id),
+index(lead_id)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_3way_press_log (
+call_date DATETIME(6),
+caller_code VARCHAR(30) NOT NULL,
+call_3way_id VARCHAR(30) NOT NULL,
+lead_id INT(9) UNSIGNED,
+phone_number VARCHAR(18),
+dialstring VARCHAR(28),
+outbound_cid VARCHAR(20),
+user VARCHAR(20),
+session_id VARCHAR(20),
+server_ip VARCHAR(15),
+session_id_3way VARCHAR(20) default '',
+result TEXT,
+index(call_date),
+index(caller_code),
+index(call_3way_id),
+index(lead_id)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_3way_press_log_archive LIKE vicidial_3way_press_log;
+CREATE UNIQUE INDEX vdpla on vicidial_3way_press_log_archive (call_date,caller_code,user);
+
+UPDATE system_settings SET db_schema_version='1700',db_schema_update_date=NOW() where db_schema_version < 1700;

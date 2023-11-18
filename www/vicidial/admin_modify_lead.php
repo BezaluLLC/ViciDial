@@ -115,6 +115,7 @@
 # 230205-2135 - Small fix for ignore_group_on_search issue
 # 230307-1326 - Small fix for closer calls DID display, Issue #1447
 # 230309-1444 - Added Inbound Call Menu Log display as part of IVR Log section
+# 231117-1920 - Added vicidial_3way_press_log display
 #
 
 require("dbconnect_mysqli.php");
@@ -3376,6 +3377,66 @@ else
 					}
 				}
 
+			echo "</TABLE><BR><BR>\n";
+			}
+
+
+		if ($CIDdisplay=="Yes")
+			{
+			echo "<B>"._QXZ("3-WAY PRESS LOGS FOR THIS LEAD").":</B>\n";
+			echo "<TABLE width=1400 cellspacing=1 cellpadding=1>\n";
+			echo "<tr><td><font size=1># </td><td align=left><font size=2> "._QXZ("PHONE")."</td><td><font size=2>"._QXZ("DATE/TIME")." </td><td><font size=2>"._QXZ("USER")." </td><td align=left><font size=2>"._QXZ("RESULT")." </td></tr>\n";
+
+			$stmt="SELECT phone_number,call_date,user,result from vicidial_3way_press_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by call_date desc limit 500;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$logs_to_print = mysqli_num_rows($rslt);
+			if ($DB) {echo "$logs_to_print|$stmt|\n";}
+
+			$u=0;
+			while ($logs_to_print > $u) 
+				{
+				$row=mysqli_fetch_row($rslt);
+				if (preg_match("/1$|3$|5$|7$|9$/i", $u))
+					{$bgcolor="bgcolor=\"#$SSstd_row2_background\"";} 
+				else
+					{$bgcolor="bgcolor=\"#$SSstd_row1_background\"";}
+
+				$u++;
+				echo "<tr $bgcolor>";
+				echo "<td><font size=1>$u</td>";
+				echo "<td align=left><font size=2> $row[0] </td>";
+				echo "<td align=left><font size=1> $row[1] </td>\n";
+				echo "<td align=left><font size=2> $row[2] </td>\n";
+				echo "<td align=left><font size=2> $row[3] &nbsp;</td>\n";
+				echo "</tr>\n";
+				}
+
+			if ($archive_log=="Yes") 
+				{
+				$stmt="SELECT phone_number,call_date,user,result from vicidial_3way_press_log_archive where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by call_date desc limit 500;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$logs_to_print = mysqli_num_rows($rslt);
+				if ($DB) {echo "$logs_to_print|$stmt|\n";}
+
+				$u=0;
+				while ($logs_to_print > $u) 
+					{
+					$row=mysqli_fetch_row($rslt);
+					if (preg_match("/1$|3$|5$|7$|9$/i", $u))
+						{$bgcolor="bgcolor=\"#$SSstd_row2_background\"";} 
+					else
+						{$bgcolor="bgcolor=\"#$SSstd_row1_background\"";}
+
+					$u++;
+					echo "<tr $bgcolor>";
+					echo "<td><font size=1>$u</td>";
+					echo "<td align=left><font size=2 color='#FF0000'> $row[0] </td>";
+					echo "<td align=left><font size=1> $row[1] </td>\n";
+					echo "<td align=left><font size=2> $row[2] </td>\n";
+					echo "<td align=left><font size=2> $row[3] &nbsp;</td>\n";
+					echo "</tr>\n";
+					}
+				}
 			echo "</TABLE><BR><BR>\n";
 			}
 

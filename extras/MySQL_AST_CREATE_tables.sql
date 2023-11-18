@@ -5049,6 +5049,44 @@ index(check_date),
 unique index vlgi (user,gap_date)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_3way_press_live (
+call_date DATETIME(6),
+caller_code VARCHAR(30) NOT NULL,
+call_3way_id VARCHAR(30) NOT NULL,
+lead_id INT(9) UNSIGNED,
+phone_number VARCHAR(18),
+dialstring VARCHAR(28),
+outbound_cid VARCHAR(20),
+user VARCHAR(20),
+session_id VARCHAR(20),
+server_ip VARCHAR(15),
+session_id_3way VARCHAR(20) default '',
+status VARCHAR(40),
+index(call_date),
+index(caller_code),
+index(call_3way_id),
+index(lead_id)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_3way_press_log (
+call_date DATETIME(6),
+caller_code VARCHAR(30) NOT NULL,
+call_3way_id VARCHAR(30) NOT NULL,
+lead_id INT(9) UNSIGNED,
+phone_number VARCHAR(18),
+dialstring VARCHAR(28),
+outbound_cid VARCHAR(20),
+user VARCHAR(20),
+session_id VARCHAR(20),
+server_ip VARCHAR(15),
+session_id_3way VARCHAR(20) default '',
+result TEXT,
+index(call_date),
+index(caller_code),
+index(call_3way_id),
+index(lead_id)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -5345,6 +5383,9 @@ CREATE UNIQUE INDEX vdalsla on vicidial_agent_latency_summary_log_archive (user,
 CREATE TABLE vicidial_latency_gaps_archive LIKE vicidial_latency_gaps;
 CREATE UNIQUE INDEX vdlga on vicidial_latency_gaps_archive (user,gap_date);
 
+CREATE TABLE vicidial_3way_press_log_archive LIKE vicidial_3way_press_log;
+CREATE UNIQUE INDEX vdpla on vicidial_3way_press_log_archive (call_date,caller_code,user);
+
 CREATE TABLE vicidial_daily_rt_monitoring_log LIKE vicidial_rt_monitor_log;
 
 GRANT RELOAD ON *.* TO cron@'%';
@@ -5445,4 +5486,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1699',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1700',db_schema_update_date=NOW(),reload_timestamp=NOW();
