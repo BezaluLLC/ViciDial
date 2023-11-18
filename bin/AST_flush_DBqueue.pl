@@ -32,6 +32,7 @@
 # 191029-1555 - Added flushing of vicidial_agent_vmm_overrides table
 # 220921-1148 - Added optimize of vicidial_users table
 # 230414-1622 - Added --reset-stuck-leads option
+# 231118-1256 - Added clearing of old vicidial_3way_press_live records
 #
 
 $session_flush=0;
@@ -589,6 +590,25 @@ while ($sthArowsSERVERS > $aas)
 	$aas++;
 	}
 $sthA->finish();
+
+
+$stmtA = "DELETE from vicidial_3way_press_live where call_date < '$SQLdate_NEG_sixhour';";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) {      $affected_rows = $dbhA->do($stmtA);}
+if (!$Q) {print " - vicidial_3way_press_live flush: $affected_rows rows\n";}
+
+$stmtA = "OPTIMIZE table vicidial_3way_press_live;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) 
+	{
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+	}
+if (!$Q) {print " - OPTIMIZE vicidial_3way_press_live          \n";}
 
 
 if ($session_flush > 0) 

@@ -22,6 +22,7 @@
 # 180420-2302 - Fix for high-volume systems, added varibles to hangup queryCID
 # 200413-1356 - Fix for \n\n at the end of PING commands causing errors in AMI
 # 231117-2254 - Added AMI version 5 compatibility
+# 231118-1111 - Added override option of up to Xtimeout9 for 3WAY_... leave-3way sessions
 #
 
 # constants
@@ -400,6 +401,12 @@ if ($no_vc_3way_check < 1)
 				{
 				$NEWexten[$i] = $PTextensions[$i];
 				$leave_3waySQL='1';
+				if ($PTextensions[$i] =~ /Xtimeout9$/i) {$NEWexten[$i] =~ s/Xtimeout9$/Xtimeout8/gi;}
+				if ($PTextensions[$i] =~ /Xtimeout8$/i) {$NEWexten[$i] =~ s/Xtimeout8$/Xtimeout7/gi;}
+				if ($PTextensions[$i] =~ /Xtimeout7$/i) {$NEWexten[$i] =~ s/Xtimeout7$/Xtimeout6/gi;}
+				if ($PTextensions[$i] =~ /Xtimeout6$/i) {$NEWexten[$i] =~ s/Xtimeout6$/Xtimeout5/gi;}
+				if ($PTextensions[$i] =~ /Xtimeout5$/i) {$NEWexten[$i] =~ s/Xtimeout5$/Xtimeout4/gi;}
+				if ($PTextensions[$i] =~ /Xtimeout4$/i) {$NEWexten[$i] =~ s/Xtimeout4$/Xtimeout3/gi;}
 				if ($PTextensions[$i] =~ /Xtimeout3$/i) {$NEWexten[$i] =~ s/Xtimeout3$/Xtimeout2/gi;}
 				if ($PTextensions[$i] =~ /Xtimeout2$/i) {$NEWexten[$i] =~ s/Xtimeout2$/Xtimeout1/gi;}
 				if ($PTextensions[$i] =~ /Xtimeout1$/i) {$NEWexten[$i] = ''; $leave_3waySQL='0';}
@@ -612,6 +619,12 @@ if ( !( ( @PTextensions == 1 ) && ( $PTextensions[0] eq '') ) )
 			else
 				{
 				$NEWexten[$i] = $PTextensions[$i];
+				if ($PTextensions[$i] =~ /Xtimeout9$/i) {$NEWexten[$i] =~ s/Xtimeout9$/Xtimeout8/gi;}
+				if ($PTextensions[$i] =~ /Xtimeout8$/i) {$NEWexten[$i] =~ s/Xtimeout8$/Xtimeout7/gi;}
+				if ($PTextensions[$i] =~ /Xtimeout7$/i) {$NEWexten[$i] =~ s/Xtimeout7$/Xtimeout6/gi;}
+				if ($PTextensions[$i] =~ /Xtimeout6$/i) {$NEWexten[$i] =~ s/Xtimeout6$/Xtimeout5/gi;}
+				if ($PTextensions[$i] =~ /Xtimeout5$/i) {$NEWexten[$i] =~ s/Xtimeout5$/Xtimeout4/gi;}
+				if ($PTextensions[$i] =~ /Xtimeout4$/i) {$NEWexten[$i] =~ s/Xtimeout4$/Xtimeout3/gi;}
 				if ($PTextensions[$i] =~ /Xtimeout3$/i) {$NEWexten[$i] =~ s/Xtimeout3$/Xtimeout2/gi;}
 				if ($PTextensions[$i] =~ /Xtimeout2$/i) {$NEWexten[$i] =~ s/Xtimeout2$/Xtimeout1/gi;}
 				if ($PTextensions[$i] =~ /Xtimeout1$/i) {$NEWexten[$i] = '';}

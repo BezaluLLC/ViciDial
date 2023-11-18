@@ -27,6 +27,7 @@
 #
 # changes:
 # 231113-2016 - First Build
+# 231118-1600 - Added endings for HUNGUP and TIMEOUT
 #
 
 $script = 'agi-3way_press_agent.agi';
@@ -454,7 +455,8 @@ while ($wait_loop < 100)
 				if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log reserved UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
 
 				### Update vicidial_conferences to leave_3way
-			#	$stmtA="UPDATE vicidial_conferences set leave_3way='1', leave_3way_datetime=NOW(), extension='3WAY_$CALLuser' where server_ip='$CALLserver_ip' and conf_exten='$CALLconf_exten';";
+			#	$Ttimeout='Xtimeout9';
+			#	$stmtA="UPDATE vicidial_conferences set leave_3way='1', leave_3way_datetime=NOW(), extension='3WAY_$CALLuser$Ttimeout' where server_ip='$CALLserver_ip' and conf_exten='$CALLconf_exten';";
 			#		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 			#	$affected_rowsD = $dbhA->do($stmtA);
 			#	if ($AGILOG) {$agi_string = "--    vicidial_conferences UPDATE: |$affected_rowsD|$stmtA|";   &agi_output;}
@@ -492,11 +494,44 @@ while ($wait_loop < 100)
 		exit;
 		}
 
+	if ($CALLstatus =~ /HUNGUP/) 
+		{
+		### Delete the call in vicidial_3way_press_live
+		$stmtA="DELETE from vicidial_3way_press_live where call_3way_id='$VIDqueryCID';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rowsE = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live hungup DELETE: |$affected_rowsE|$stmtA|";   &agi_output;}
+
+		if ($AGILOG) {$agi_string = "3-WAY AGENT TRANSFER HUNGUP: |$CALLuser|$CALLserver_ip|$CALLconf_exten|$calleridname|$VIDqueryCID|";   &agi_output;}
+		$AGI->stream_file('buzz');
+		usleep(1*490*1000);
+
+		exit;
+		}
+
 	$wait_loop++;
 	}
 
+if ($wait_loop >= 100) 
+	{
+	### Update the call in vicidial_3way_press_log
+	$stmtA="UPDATE vicidial_3way_press_log SET session_id_3way='$CALLconf_exten', result=CONCAT(result,'|Timeout: ',NOW()) where call_3way_id='$VIDqueryCID';";
+		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+	$affected_rowsA = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log timeout UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
 
+	### Delete the call in vicidial_3way_press_live
+	$stmtA="DELETE from vicidial_3way_press_live where call_3way_id='$VIDqueryCID';";
+		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+	$affected_rowsE = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live timeout DELETE: |$affected_rowsE|$stmtA|";   &agi_output;}
 
+	if ($AGILOG) {$agi_string = "3-WAY AGENT TRANSFER TIMEOUT: |$CALLuser|$CALLserver_ip|$CALLconf_exten|$calleridname|$VIDqueryCID|";   &agi_output;}
+	$AGI->stream_file('buzz');
+	usleep(1*490*1000);
+
+	exit;
+	}
 
 
 # send call to special extension with lead_id defined and handle_method set to CLOSER

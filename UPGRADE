@@ -826,6 +826,11 @@ OTHER CHANGES:
 233. Added the "lead_dearchive" Non-Agent API function, to move archived leads 
 	back to the active list table.
 
+234. Added the ability for agents to place 3way calls and require that the 
+	called-party press 1 before the call is bridged to the agent and 
+	customer. For more information, see the AGENT_3WAY_PRESS-1_CALLS.txt 
+	document.
+
 
 
 

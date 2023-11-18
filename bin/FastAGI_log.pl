@@ -98,7 +98,8 @@
 # 221221-2134 - Added enhanced_disconnect_logging=3 support , issue #1367
 # 230120-1557 - Added CAMPDTO dialplan variable for ^DC 3-way agent screen calls
 # 231116-0846 - Added hopper_hold_inserts option
-#
+# 231118-1054 - Added hangup processing of 3-way press outside-agent calls
+# 
 
 # defaults for PreFork
 $VARfastagi_log_min_servers =	'3';
@@ -1041,6 +1042,40 @@ sub process_request
 						}
 					}
 				### END log end of real-time blind monitor calls ###
+
+
+				### BEGIN log end of 3-way press outside-agent calls ###
+				if ($callerid =~ /^T\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d\d/)
+					{
+					$stmtA = "SELECT status from vicidial_3way_press_live where call_3way_id='$callerid';";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					$sthArows=$sthA->rows;
+					if ($sthArows > 0)
+						{
+						@aryA = $sthA->fetchrow_array;
+						$sthA->finish();
+						$TW_status =		$aryA[0];
+	
+						if ($TW_status !~ /HUNGUP/) 
+							{
+							$stmtA = "UPDATE vicidial_3way_press_live SET status='HUNGUP' where call_3way_id='$callerid';";
+							$affected_rowsTWV = $dbhA->do($stmtA);
+
+							$stmtB = "UPDATE vicidial_3way_press_log SET result=CONCAT(result,'|Hungup: ',NOW()) where call_3way_id='$callerid';";
+							$affected_rowsTWL = $dbhA->do($stmtB);
+
+							if ($AGILOG) {$agi_string = "3WAY press outside-agent call updated: |$affected_rowsTWV|$affected_rowsTWL|$stmtA|$stmtB|";   &agi_output;}
+							}
+						else
+							{
+							if ($AGILOG) {$agi_string = "3WAY press outside-agent call NOT updated: |$TW_status|$stmtA|";   &agi_output;}
+							}
+						}
+					if ($AGILOG) {$agi_string = "|$affected_rowsBM|$stmtA|$monitor_start_time|$EPOCHmonitor_start_time|";   &agi_output;}
+					}
+				### END log end of real-time blind monitor calls ###
+
 
 				### get uniqueid and start_epoch from the call_log table
 				$CALLunique_id = $unique_id;

@@ -444,6 +444,8 @@ if ($stage =~ /accepted/i)
 			if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log transfer UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
 
 			### Update vicidial_conferences to leave_3way=1
+		#	$Ttimeout='Xtimeout9';
+		#	$stmtA="UPDATE vicidial_conferences set leave_3way='1', leave_3way_datetime=NOW(), extension='3WAY_$CALLuser$Ttimeout' where server_ip='$CALLserver_ip' and conf_exten='$CALLconf_exten';";
 			$stmtA="UPDATE vicidial_conferences set leave_3way='1', leave_3way_datetime=NOW(), extension='3WAY_$CALLuser' where server_ip='$CALLserver_ip' and conf_exten='$CALLconf_exten';";
 				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 			$affected_rowsD = $dbhA->do($stmtA);
