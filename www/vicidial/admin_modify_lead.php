@@ -116,6 +116,7 @@
 # 230307-1326 - Small fix for closer calls DID display, Issue #1447
 # 230309-1444 - Added Inbound Call Menu Log display as part of IVR Log section
 # 231117-1920 - Added vicidial_3way_press_log display
+# 231126-2218 - Added vicidial_hci_log display
 #
 
 require("dbconnect_mysqli.php");
@@ -277,7 +278,7 @@ if ($nonselectable_statuses > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable,allow_emails,enable_languages,language_method,active_modules,log_recording_access,admin_screen_colors,enable_gdpr_download_deletion,source_id_display,mute_recordings,sip_event_logging,allow_web_debug FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable,allow_emails,enable_languages,language_method,active_modules,log_recording_access,admin_screen_colors,enable_gdpr_download_deletion,source_id_display,mute_recordings,sip_event_logging,allow_web_debug,hopper_hold_inserts FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 #if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -298,6 +299,7 @@ if ($qm_conf_ct > 0)
 	$SSmute_recordings =		$row[11];
 	$SSsip_event_logging =		$row[12];
 	$SSallow_web_debug =		$row[13];
+	$SShopper_hold_inserts =	$row[14];
 	}
 if ($SSallow_web_debug < 1) {$DB=0;}
 ##### END SETTINGS LOOKUP #####
@@ -3438,6 +3440,69 @@ else
 					}
 				}
 			echo "</TABLE><BR><BR>\n";
+
+
+
+			if ($SShopper_hold_inserts > 0)
+				{
+				echo "<B>"._QXZ("HCI AGENT LOGS FOR THIS LEAD").":</B>\n";
+				echo "<TABLE width=800 cellspacing=1 cellpadding=1>\n";
+				echo "<tr><td><font size=1># </td><td align=left><font size=2> "._QXZ("PHONE")."</td><td><font size=2>"._QXZ("DATE/TIME")." </td><td><font size=2>"._QXZ("USER")." </td><td><font size=2>"._QXZ("IP")." </td><td align=left><font size=2>"._QXZ("CAMPAIGN")." </td></tr>\n";
+
+				$stmt="SELECT phone_number,call_date,user,user_ip,campaign_id from vicidial_hci_log where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by call_date desc limit 500;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$logs_to_print = mysqli_num_rows($rslt);
+				if ($DB) {echo "$logs_to_print|$stmt|\n";}
+
+				$u=0;
+				while ($logs_to_print > $u) 
+					{
+					$row=mysqli_fetch_row($rslt);
+					if (preg_match("/1$|3$|5$|7$|9$/i", $u))
+						{$bgcolor="bgcolor=\"#$SSstd_row2_background\"";} 
+					else
+						{$bgcolor="bgcolor=\"#$SSstd_row1_background\"";}
+
+					$u++;
+					echo "<tr $bgcolor>";
+					echo "<td><font size=1>$u</td>";
+					echo "<td align=left><font size=2> $row[0] </td>";
+					echo "<td align=left><font size=1> $row[1] </td>\n";
+					echo "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[2]\" target=\"_blank\">$row[2]</A> </td>\n";
+					echo "<td align=left><font size=2> $row[3] </td>\n";
+					echo "<td align=left><font size=2> $row[4] &nbsp;</td>\n";
+					echo "</tr>\n";
+					}
+
+				if ($archive_log=="Yes") 
+					{
+					$stmt="SELECT phone_number,call_date,user,user_ip,campaign_id from vicidial_hci_log_archive where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' order by call_date desc limit 500;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$logs_to_print = mysqli_num_rows($rslt);
+					if ($DB) {echo "$logs_to_print|$stmt|\n";}
+
+					$u=0;
+					while ($logs_to_print > $u) 
+						{
+						$row=mysqli_fetch_row($rslt);
+						if (preg_match("/1$|3$|5$|7$|9$/i", $u))
+							{$bgcolor="bgcolor=\"#$SSstd_row2_background\"";} 
+						else
+							{$bgcolor="bgcolor=\"#$SSstd_row1_background\"";}
+
+						$u++;
+						echo "<tr $bgcolor>";
+						echo "<td><font size=1>$u</td>";
+						echo "<td align=left><font size=2> $row[0] </td>";
+						echo "<td align=left><font size=1> $row[1] </td>\n";
+						echo "<td align=left><font size=2> $row[2] </td>\n";
+						echo "<td align=left><font size=2> $row[3] </td>\n";
+						echo "<td align=left><font size=2> $row[4] &nbsp;</td>\n";
+						echo "</tr>\n";
+						}
+					}
+				echo "</TABLE><BR><BR>\n";
+				}
 			}
 
 
@@ -3584,7 +3649,7 @@ else
 				echo "<tr $bgcolor>";
 				echo "<td><font size=1>$u</td>";
 				echo "<td><font size=1>$row[3]</td>";
-				echo "<td align=right><font size=2> <A HREF=\"user_stats.php?lead_id=$row[4]\" target=\"_blank\">$row[4]</A> </td>\n";
+				echo "<td align=right><font size=2> <A HREF=\"user_stats.php?user=$row[4]\" target=\"_blank\">$row[4]</A> </td>\n";
 				echo "<td align=left><font size=2> $row[7]</td>\n";
 				echo "<td align=left><font size=1> $row[5]</td>\n";
 				echo "<td align=left><font size=1> $row[6] </td>\n";

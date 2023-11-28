@@ -561,7 +561,7 @@ while ($master_loop < $CLIloops)
 		$hopper_ready_count=0;
 		$agents_loggedin_count=0;
 		### Find out how many leads are in the hopper from a specific campaign
-		$stmtA = "SELECT count(*) from vicidial_hopper where campaign_id='$campaign_id[$i]' and status IN('READY','RHOLD');";
+		$stmtA = "SELECT count(*) from vicidial_hopper where campaign_id='$campaign_id[$i]' and status IN('READY','RHOLD','RQUEUE');";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;

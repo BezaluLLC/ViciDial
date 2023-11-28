@@ -168,9 +168,10 @@
 # 230609-1137 - Added VIDPROMPTSPECIAL call menu In-Group dialplan entries
 # 230909-0846 - Added purging of vicidial_khomp_log records older than 7 days
 # 230925-1454 - Added -recmon settings
+# 231136-2158 - Added hopper_hold_inserts HCI lead reservations clearing for old reservations
 #
 
-$build = '230925-1454';
+$build = '231136-2158';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -488,7 +489,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 
 ##### Get the settings from system_settings #####
-$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats,enable_auto_reports,enable_drop_lists,expired_lists_inactive,sip_event_logging,call_quota_lead_ranking,inbound_answer_config,log_latency_gaps,demographic_quotas,weekday_resets,highest_lead_id FROM system_settings;";
+$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats,enable_auto_reports,enable_drop_lists,expired_lists_inactive,sip_event_logging,call_quota_lead_ranking,inbound_answer_config,log_latency_gaps,demographic_quotas,weekday_resets,highest_lead_id,hopper_hold_inserts FROM system_settings;";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -519,6 +520,7 @@ if ($sthArows > 0)
 	$SSdemographic_quotas =				$aryA[20];
 	$SSweekday_resets =					$aryA[21];
 	$SShighest_lead_id =				$aryA[22];
+	$SShopper_hold_inserts =			$aryA[23];
 	}
 $sthA->finish();
 if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
@@ -5686,6 +5688,53 @@ if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_se
 	}
 ################################################################################
 #####  END latency log live agent details updates
+################################################################################
+
+
+
+
+################################################################################
+#####  START HCI lead reserve RQUEUE clearing for reservations longer than 5 minutes
+################################################################################
+# only run this on active voicemail server
+if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_server)) eq (length($server_ip))) && ($SShopper_hold_inserts > 0) )
+	{
+	##### gather vicidial_live_agents_details #####
+	$stmtA = "SELECT lead_id,user FROM vicidial_hci_reserve where reserve_date < \"$FMSQLdate\";";
+	if ($DBX) {print "$stmtA\n";}
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	$i=0;
+	while ($sthArows > $i)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$VLADlead_id[$i] =	$aryA[0];
+		$VLADuser[$i] =		$aryA[1];
+		$i++;
+		}
+	$sthA->finish();
+
+	if ($DB) {print "   old vicidial_hci_reserve entries to clear: $i\n";}
+
+	$i=0;
+	while ($sthArows > $i)
+		{
+		$VALLmin_count_latency=0;   $VALLmin_max_latency=0;   $VALLmin_avg_latency=0;   
+		$stmtA = "UPDATE vicidial_hopper SET status='RHOLD',user='' where lead_id='$VLADlead_id[$i]' and status='RQUEUE';";
+		if ($DBX) {print "$stmtA\n";}
+		$affected_rows = $dbhA->do($stmtA) or die  "Couldn't execute query: |$stmtA|\n";
+		if ($DBX) {print "vicidial_live_agents_details update query: |$affected_rows|$stmtA|\n";}
+
+		$i++;
+		}
+
+	$stmtA = "DELETE FROM vicidial_hci_reserve where reserve_date < \"$FMSQLdate\"";
+	$affected_rows = $dbhA->do($stmtA) or die  "Couldn't execute query: |$stmtA|\n";
+	if ($DBX) {print "vicidial_hci_reserve delete query: |$affected_rows|$stmtA|\n";}
+	}
+################################################################################
+#####  END HCI lead reserve RQUEUE clearing for reservations longer than 5 minutes
 ################################################################################
 
 

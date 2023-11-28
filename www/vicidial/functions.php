@@ -4,7 +4,7 @@
 #
 # functions for administrative scripts and reports
 #
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 #
 # CHANGES:
@@ -40,6 +40,7 @@
 # 210406-1740 - Moved 'dialable_leads' function to this script
 # 210615-0952 - Default security fix, CVE-2021-28854
 # 220921-1209 - Added more failed login logging in user_authorization function
+# 231119-1445 - Added user_authorization for HCI page users
 #
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
@@ -100,6 +101,8 @@ function user_authorization($user,$pass,$user_option,$user_update,$api_call)
 		{$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and user_level > 3 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
 	if ($user_option == 'QC')
 		{$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and user_level > 1 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
+	if ($user_option == 'HCI')
+		{$stmt="SELECT count(*) from vicidial_users where user='$user' and $passSQL and user_level >= 1 and active='Y' and ( (failed_login_count < $LOCK_trigger_attempts) or (UNIX_TIMESTAMP(last_login_date) < $LOCK_over) );";}
 	if ($DB) {echo "|$stmt|\n";}
 	if ($non_latin > 0) {$rslt=mysql_to_mysqli("SET NAMES 'UTF8'", $link);}
 	$rslt=mysql_to_mysqli($stmt, $link);

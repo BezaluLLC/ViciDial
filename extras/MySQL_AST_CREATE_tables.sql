@@ -704,7 +704,8 @@ failed_login_count_today SMALLINT(6) UNSIGNED default '0',
 failed_last_ip_today VARCHAR(50) default '',
 failed_last_type_today VARCHAR(20) default '',
 modify_dial_prefix ENUM('0','1','2','3','4','5','6') default '0',
-inbound_credits MEDIUMINT(7) default '-1'
+inbound_credits MEDIUMINT(7) default '-1',
+hci_enabled ENUM('0','1','2','3','4','5','6') default '0'
 ) ENGINE=MyISAM;
 
 CREATE UNIQUE INDEX user ON vicidial_users (user);
@@ -5087,6 +5088,71 @@ index(call_3way_id),
 index(lead_id)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_hci_live_agents (
+user VARCHAR(20),
+campaign_id VARCHAR(8),
+user_ip VARCHAR(45) default '',
+login_time DATETIME,
+last_call_time DATETIME,
+last_update_time TIMESTAMP,
+status VARCHAR(40),
+lead_id INT(9) UNSIGNED default '0',
+phone_number VARCHAR(18),
+random_id INT(8) UNSIGNED,
+index(user),
+index(campaign_id),
+index(last_update_time)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_hci_agent_log (
+user VARCHAR(20),
+campaign_id VARCHAR(8),
+user_ip VARCHAR(45) default '',
+login_time DATETIME,
+last_call_time DATETIME,
+status VARCHAR(40),
+index(user),
+index(login_time)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_hci_reserve (
+user VARCHAR(20),
+lead_id INT(9) UNSIGNED,
+phone_number VARCHAR(18),
+reserve_date DATETIME,
+campaign_id VARCHAR(8),
+status VARCHAR(40),
+index(user),
+index(reserve_date),
+index(lead_id)
+) ENGINE=MyISAM;
+
+CREATE UNIQUE INDEX vhcir on vicidial_hci_reserve (lead_id,user,campaign_id);
+
+CREATE TABLE vicidial_hci_log (
+user VARCHAR(20),
+lead_id INT(9) UNSIGNED,
+phone_number VARCHAR(18),
+call_date DATETIME,
+campaign_id VARCHAR(8),
+status VARCHAR(40),
+user_ip VARCHAR(45) default '',
+index(user),
+index(call_date),
+index(lead_id)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_hci_log_archive LIKE vicidial_hci_log;
+CREATE UNIQUE INDEX vhlclu on vicidial_hci_log_archive (call_date,lead_id,user);
+
+CREATE TABLE hci_logs (
+date DATETIME,
+user VARCHAR(20) default '',
+lead_id INT(9) UNSIGNED NOT NULL,
+campaign_id VARCHAR(8),
+index(date)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -5486,4 +5552,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1700',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1701',db_schema_update_date=NOW(),reload_timestamp=NOW();

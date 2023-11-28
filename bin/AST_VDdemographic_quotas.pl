@@ -1087,7 +1087,7 @@ foreach(@campaign_id)
 		if ($DBX) {print "DQ List AUTO Resets enabled, checking hopper count:  $demographic_quotas_list_resets[$i] \n";}
 		$hopper_begin_output .= "DQ List AUTO Resets enabled, checking hopper count:  $demographic_quotas_list_resets[$i] \n";
 		$hopper_leads=0;
-		$stmtA="SELECT count(*) FROM vicidial_hopper where campaign_id='$campaign_id[$i]' and status IN('READY','RHOLD');";
+		$stmtA="SELECT count(*) FROM vicidial_hopper where campaign_id='$campaign_id[$i]' and status IN('READY','RHOLD','RQUEUE');";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;
@@ -1524,7 +1524,7 @@ foreach(@campaign_id)
 	if ($ranked_leads > 0) 
 		{
 		$hopper_leads=0;
-		$stmtA="SELECT count(*) FROM vicidial_hopper where campaign_id='$campaign_id[$i]' and status IN('READY','RHOLD');";
+		$stmtA="SELECT count(*) FROM vicidial_hopper where campaign_id='$campaign_id[$i]' and status IN('READY','RHOLD','RQUEUE');";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;

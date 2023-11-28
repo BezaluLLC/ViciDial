@@ -108,6 +108,7 @@
 # 220822-0938 - Change DNC check queries to put phone_number in double-quotes instead of single-quotes
 # 230428-2017 - Added demographic_quotas code
 # 231116-0821 - Added hopper_hold_inserts system and campaign settings options
+# 231126-1748 - Added RQUEUE hopper status
 #
 
 # constants
@@ -1414,7 +1415,7 @@ while ($sthArows > $rec_count)
 		{
 		if ($DB) { print "---------------Auto Trim Hopper Enabled For $campaign_id[$rec_count]---------------------\n"; }
 	
-		$stmtB = "SELECT COUNT(*) FROM $vicidial_hopper WHERE campaign_id='$campaign_id[$rec_count]' and status IN ('READY','RHOLD') and source IN('S','N');";
+		$stmtB = "SELECT COUNT(*) FROM $vicidial_hopper WHERE campaign_id='$campaign_id[$rec_count]' and status IN ('READY','RHOLD','RQUEUE') and source IN('S','N');";
 		$sthB = $dbhA->prepare($stmtB) or die "preparing: ",$dbhA->errstr;
 		$sthB->execute or die "executing: $stmtB ", $dbhA->errstr;
 		@aryLead = $sthB->fetchrow_array;
@@ -1430,7 +1431,7 @@ while ($sthArows > $rec_count)
 		if ( $camp_leads > ( 2 * $hopper_level[$rec_count] ) ) 
 			{
 			$num_to_delete = $camp_leads - 2 * $hopper_level[$rec_count];
-			$stmtB = "DELETE FROM $vicidial_hopper WHERE campaign_id='$campaign_id[$rec_count]' AND source='S' AND status IN ('READY','RHOLD') LIMIT $num_to_delete";
+			$stmtB = "DELETE FROM $vicidial_hopper WHERE campaign_id='$campaign_id[$rec_count]' AND source='S' AND status IN ('READY','RHOLD','RQUEUE') LIMIT $num_to_delete";
 			$affected_rows = $dbhA->do($stmtB);
 			
 			if ($DB) 
@@ -2212,7 +2213,7 @@ foreach(@campaign_id)
 
 		### Find out how many leads are READY in the hopper from a specific campaign
 		$hopper_ready_count=0;
-		$stmtA = "SELECT count(*) from $vicidial_hopper where campaign_id='$campaign_id[$i]' and status IN('READY','RHOLD');";
+		$stmtA = "SELECT count(*) from $vicidial_hopper where campaign_id='$campaign_id[$i]' and status IN('READY','RHOLD','RQUEUE');";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		$sthArows=$sthA->rows;

@@ -32,6 +32,7 @@
 # 220301-1627 - Added allow_web_debug system setting
 # 220812-0929 - Added User Group report permissions checking
 # 231116-0928 - Added option to display RHOLD status hopper entries
+# 231127-2001 - Added display of RQUEUE status hopper entries and hold details when displaying HOLD entries
 #
 
 $startMS = microtime();
@@ -322,8 +323,8 @@ echo "<TITLE>"._QXZ("Hopper List Report")."</TITLE></HEAD><BODY BGCOLOR=WHITE ma
 
 if (strlen($status) < 1) {$status='READY';}
 $statusSQL = "and vicidial_hopper.status IN('READY')";
-if ($status == 'READY_and_HOLD') {$statusSQL = "and vicidial_hopper.status IN('READY','RHOLD')";}
-if ($status == 'HOLD') {$statusSQL = "and vicidial_hopper.status IN('RHOLD')";}
+if ($status == 'READY_and_HOLD') {$statusSQL = "and vicidial_hopper.status IN('READY','RHOLD','RQUEUE')";}
+if ($status == 'HOLD') {$statusSQL = "and vicidial_hopper.status IN('RHOLD','RQUEUE')";}
 
 echo "<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET>\n";
@@ -383,7 +384,7 @@ else
 		$row=mysqli_fetch_row($rslt);
 		$hopperREADY =	sprintf("%10s", $row[0]);
 
-		$stmt="select count(*) from vicidial_hopper where campaign_id='" . mysqli_real_escape_string($link, $group) . "' and status='RHOLD' $LOGallowed_campaignsSQL;";
+		$stmt="select count(*) from vicidial_hopper where campaign_id='" . mysqli_real_escape_string($link, $group) . "' and status IN('RHOLD','RQUEUE') $LOGallowed_campaignsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		if ($DB) {echo "$stmt\n";}
 		$row=mysqli_fetch_row($rslt);
@@ -416,7 +417,7 @@ else
 		}
 	echo "+------+--------+-----------+------------+-------------+---------+-------+--------+-------+--------+--------+-------+-------+----------------------$SIDhead+----------+-----------+\n";
 
-	$stmt="select vicidial_hopper.lead_id,phone_number,vicidial_hopper.state,vicidial_list.status,called_count,vicidial_hopper.gmt_offset_now,hopper_id,alt_dial,vicidial_hopper.list_id,vicidial_hopper.priority,vicidial_hopper.source,vicidial_hopper.vendor_lead_code, phone_code,UNIX_TIMESTAMP(entry_date),UNIX_TIMESTAMP(last_local_call_time),source_id,vicidial_list.rank,vicidial_list.owner from vicidial_hopper,vicidial_list where vicidial_hopper.campaign_id='" . mysqli_real_escape_string($link, $group) . "' $statusSQL and vicidial_hopper.lead_id=vicidial_list.lead_id $LOGallowed_campaignsSQL order by priority desc,hopper_id limit 5000;";
+	$stmt="select vicidial_hopper.lead_id,phone_number,vicidial_hopper.state,vicidial_list.status,called_count,vicidial_hopper.gmt_offset_now,hopper_id,alt_dial,vicidial_hopper.list_id,vicidial_hopper.priority,vicidial_hopper.source,vicidial_hopper.vendor_lead_code, phone_code,UNIX_TIMESTAMP(entry_date),UNIX_TIMESTAMP(last_local_call_time),source_id,vicidial_list.rank,vicidial_list.owner,vicidial_hopper.status,vicidial_hopper.user from vicidial_hopper,vicidial_list where vicidial_hopper.campaign_id='" . mysqli_real_escape_string($link, $group) . "' $statusSQL and vicidial_hopper.lead_id=vicidial_list.lead_id $LOGallowed_campaignsSQL order by priority desc,hopper_id limit 5000;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$users_to_print = mysqli_num_rows($rslt);
@@ -472,6 +473,8 @@ else
 		$source_id_TEXT =	"| ".sprintf("%-20s", $row[15])." ";
 		$rank =			sprintf("%-6s", $row[16]);
 		$owner =		sprintf("%-10s", $row[17]);
+		$Hstatus =		sprintf("%-6s", $row[18]);
+		$Huser =		sprintf("%-20s", $row[19]);
 
 		$lead_age = intval(($STARTtime - $entry_epoch) / 86400);
 		$lead_age =		sprintf("%-8s", $lead_age);
@@ -514,8 +517,10 @@ else
 		if ($SSsource_id_display < 1)
 			{$source_id_TEXT='';}
 
-		if ($DB) {echo "| $FMT_i | $priority | <a href='./admin_modify_lead.php?lead_id=$lead_id_ns&archive_search=No&archive_log=0'>$lead_id</a> | <a href='./admin.php?ADD=311&list_id=$list_id_ns'>$list_id</a> | $phone_number  $phone_code || $state | $status | $count | $gmt | $rank | $alt_dial | $source | $vendor_lead_code | $lead_age | $last_call_age_TEXT | $hopper_id | $owner | $DBdata\n";}
-		else {echo "| $FMT_i | $priority | <a href='./admin_modify_lead.php?lead_id=$lead_id_ns&archive_search=No&archive_log=0'>$lead_id</a> | <a href='./admin.php?ADD=311&list_id=$list_id_ns'>$list_id</a> | $phone_number | $phone_code | $state | $status | $count | $gmt | $rank | $alt_dial | $source | $vendor_lead_code $source_id_TEXT| $lead_age | $last_call_age_TEXT |\n";}
+		$statusX = '';
+		if (preg_match("/RHOLD|RQUEUE/",$Hstatus)) {$statusX = " $Hstatus $Huser";}
+		if ($DB) {echo "| $FMT_i | $priority | <a href='./admin_modify_lead.php?lead_id=$lead_id_ns&archive_search=No&archive_log=0'>$lead_id</a> | <a href='./admin.php?ADD=311&list_id=$list_id_ns'>$list_id</a> | $phone_number  $phone_code || $state | $status | $count | $gmt | $rank | $alt_dial | $source | $vendor_lead_code | $lead_age | $last_call_age_TEXT | $hopper_id | $owner | $DBdata$statusX\n";}
+		else {echo "| $FMT_i | $priority | <a href='./admin_modify_lead.php?lead_id=$lead_id_ns&archive_search=No&archive_log=0'>$lead_id</a> | <a href='./admin.php?ADD=311&list_id=$list_id_ns'>$list_id</a> | $phone_number | $phone_code | $state | $status | $count | $gmt | $rank | $alt_dial | $source | $vendor_lead_code $source_id_TEXT| $lead_age | $last_call_age_TEXT |$statusX\n";}
 
 		$i++;
 		}
