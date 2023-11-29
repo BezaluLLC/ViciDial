@@ -11,6 +11,7 @@
 # 180508-0115 - Added new help display
 # 191013-0853 - Fixes for PHP7
 # 220224-1656 - Added allow_web_debug system setting
+# 231129-1404 - 'SQL/x' variable bug fix
 #
 
 require("dbconnect_mysqli.php");
@@ -585,7 +586,7 @@ if ($SUBMIT && $new_list_id && ($new_status || $revert_status))
 				{
 				$cb_users[$i] = preg_replace('/[^-_0-9\p{L}]/u', '', $cb_users[$i]);
 				$usersQS.="&cb_users[]=".$cb_users[$i];
-				if ($i > 0) {$usersSQL.="','";}
+				if ($i > 0) {$usersSQLx.="','";}
 				$usersSQLx.="$cb_users[$i]";
 				}
 			$usersSQL=" and vc.user in ('".$usersSQLx."') ";
@@ -616,7 +617,7 @@ if ($SUBMIT && $new_list_id && ($new_status || $revert_status))
 				{
 				$cb_user_groups[$i] = preg_replace('/[^-_0-9\p{L}]/u', '', $cb_user_groups[$i]);
 				$user_groupsQS.="&cb_user_groups[]=".$cb_user_groups[$i];
-				if ($i > 0) {$user_groupsSQL.="','";}
+				if ($i > 0) {$user_groupsSQLx.="','";}
 				$user_groupsSQLx.="$cb_user_groups[$i]";
 				}
 			$user_groupsSQL=" and vc.user_group in ('".$user_groupsSQLx."') ";
@@ -656,7 +657,7 @@ if ($SUBMIT && $new_list_id && ($new_status || $revert_status))
 				{
 				$cb_lists[$i] = preg_replace('/[^-_0-9\p{L}]/u', '', $cb_lists[$i]);
 				$listsQS.="&cb_lists[]=".$cb_lists[$i];
-				if ($i > 0) {$listsSQL.="','";}
+				if ($i > 0) {$listsSQLx.="','";}
 				$listsSQLx.="$cb_lists[$i]";
 				}
 			$listsSQL=" and vc.list_id in ('".$listsSQLx."') ";
@@ -687,7 +688,7 @@ if ($SUBMIT && $new_list_id && ($new_status || $revert_status))
 				{
 				$cb_groups[$i] = preg_replace('/[^-_0-9\p{L}]/u', '', $cb_groups[$i]);
 				$groupsQS.="&cb_groups[]=".$cb_groups[$i];
-				if ($i > 0) {$groupsSQL.="','";}
+				if ($i > 0) {$groupsSQLx.="','";}
 				$groupsSQLx.="$cb_groups[$i]";
 				}
 			$groupsSQL=" and vc.campaign_id in ('".$groupsSQLx."') ";
