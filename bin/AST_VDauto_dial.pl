@@ -156,9 +156,10 @@
 # 230215-1534 - Fix for AGENTDIRECT No-Agent Call URL calls, Issue #1396
 # 230223-0826 - Fix for enhanced_disconnect_logging=3 issue
 # 231116-0911 - Added hopper_hold_inserts option
+# 231129-0901 - Added vicidial_phone_number_call_daily_counts updates/inserts
 #
 
-$build='231116-0911';
+$build='231129-0901';
 $script='AST_VDauto_dial';
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -1934,8 +1935,14 @@ while($one_day_interval > 0)
 											# update daily called counts for this lead
 											$stmtDC = "INSERT IGNORE INTO vicidial_lead_call_daily_counts SET lead_id='$lead_id',modify_date=NOW(),list_id='$list_id',called_count_total='1',called_count_auto='1' ON DUPLICATE KEY UPDATE modify_date=NOW(),list_id='$list_id',called_count_total=(called_count_total + 1),called_count_auto=(called_count_auto + 1);";
 											$affected_rowsDC = $dbhA->do($stmtDC);
+
+											# update daily called counts for this phone_number
+											$stmtPDC = "INSERT IGNORE INTO vicidial_phone_number_call_daily_counts SET phone_number='$phone_number',modify_date=NOW(),called_count='1' ON DUPLICATE KEY UPDATE modify_date=NOW(),called_count=(called_count + 1);";
+											$affected_rowsPDC = $dbhA->do($stmtPDC);
+
 											if ($DB) {print "LEAD UPDATE: $affected_rows|$stmtA|\n";}
 											if ($DB) {print "LEAD CALL COUNT UPDATE: $affected_rowsDC|$stmtDC|\n";}
+											if ($DB) {print "PHONE CALL COUNT UPDATE: $affected_rowsPDC|$stmtPDC|\n";}
 
 											$PADlead_id = sprintf("%010s", $lead_id);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
 											# VmddhhmmssLLLLLLLLLL Set the callerIDname to a unique call_id string

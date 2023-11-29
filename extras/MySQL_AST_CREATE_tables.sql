@@ -1122,7 +1122,8 @@ dead_stop_recording ENUM('DISABLED','ALL_CALLS','OUTBOUND_ONLY','INBOUND_ONLY','
 manual_vm_status_updates ENUM('ENABLED','DISABLED') default 'ENABLED',
 force_per_call_notes ENUM('DISABLED','ENABLED','5_CHARACTERS','15_CHARACTERS','30_CHARACTERS','100_CHARACTERS') default 'DISABLED',
 agent_search_ingroup_list ENUM('DISABLED','ENABLED','ENABLED_OVERRIDE') default 'DISABLED',
-hopper_hold_inserts ENUM('ENABLED','DISABLED') default 'DISABLED'
+hopper_hold_inserts ENUM('ENABLED','DISABLED') default 'DISABLED',
+daily_phone_number_call_limit TINYINT(3) UNSIGNED default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -5153,6 +5154,13 @@ campaign_id VARCHAR(8),
 index(date)
 ) ENGINE=MyISAM;
 
+CREATE TABLE vicidial_phone_number_call_daily_counts (
+phone_number VARCHAR(18) NOT NULL,
+called_count TINYINT(3) UNSIGNED default '0',
+modify_date DATETIME,
+unique index vpncdc_phone_number (phone_number)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -5552,4 +5560,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1701',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1702',db_schema_update_date=NOW(),reload_timestamp=NOW();

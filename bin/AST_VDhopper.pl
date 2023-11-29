@@ -109,10 +109,11 @@
 # 230428-2017 - Added demographic_quotas code
 # 231116-0821 - Added hopper_hold_inserts system and campaign settings options
 # 231126-1748 - Added RQUEUE hopper status
+# 231129-1051 - Added daily_phone_number_call_limit campaign setting
 #
 
 # constants
-$build = '231116-0821';
+$build = '231129-1051';
 $script='AST_VDhopper';
 $DB=0;  # Debug flag, set to 0 for no debug messages. Can be overriden with CLI --debug flag
 $US='__';
@@ -1292,11 +1293,11 @@ $ANY_hopper_vlc_dup_check='N';
 
 if (length($CLIcampaign)>1)
 	{
-	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize,lead_order_secondary,call_count_limit,hopper_vlc_dup_check,use_other_campaign_dnc,callback_dnc,hopper_drop_run_trigger,daily_call_count_limit,daily_limit_manual,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override,demographic_quotas,demographic_quotas_container,hopper_hold_inserts from vicidial_campaigns where campaign_id IN('$CLIcampaign');";
+	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize,lead_order_secondary,call_count_limit,hopper_vlc_dup_check,use_other_campaign_dnc,callback_dnc,hopper_drop_run_trigger,daily_call_count_limit,daily_limit_manual,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override,demographic_quotas,demographic_quotas_container,hopper_hold_inserts,daily_phone_number_call_limit from vicidial_campaigns where campaign_id IN('$CLIcampaign');";
 	}
 else
 	{
-	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize,lead_order_secondary,call_count_limit,hopper_vlc_dup_check,use_other_campaign_dnc,callback_dnc,hopper_drop_run_trigger,daily_call_count_limit,daily_limit_manual,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override,demographic_quotas,demographic_quotas_container,hopper_hold_inserts from vicidial_campaigns where active='Y';";
+	$stmtA = "SELECT campaign_id,lead_order,hopper_level,auto_dial_level,local_call_time,lead_filter_id,use_internal_dnc,dial_method,available_only_ratio_tally,adaptive_dropped_percentage,adaptive_maximum_level,dial_statuses,list_order_mix,use_campaign_dnc,drop_lockout_time,no_hopper_dialing,auto_alt_dial_statuses,dial_timeout,auto_hopper_multi,use_auto_hopper,auto_trim_hopper,lead_order_randomize,lead_order_secondary,call_count_limit,hopper_vlc_dup_check,use_other_campaign_dnc,callback_dnc,hopper_drop_run_trigger,daily_call_count_limit,daily_limit_manual,call_limit_24hour_method,call_limit_24hour_scope,call_limit_24hour,call_limit_24hour_override,demographic_quotas,demographic_quotas_container,hopper_hold_inserts,daily_phone_number_call_limit from vicidial_campaigns where active='Y';";
 	}
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1347,6 +1348,7 @@ while ($sthArows > $rec_count)
 	$demographic_quotasSQL[$rec_count] =		'';
 	$hopper_hold_inserts[$rec_count] =			$aryA[36];
 	if ($SShopper_hold_inserts < 1) {$hopper_hold_inserts[$rec_count] = 'DISABLED';}
+	$daily_phone_number_call_limit[$rec_count] =$aryA[37];
 
 	if ( ($demographic_quotas[$rec_count] =~ /ENABLED|COMPLETE/) && ( (length($demographic_quotas_container[$rec_count]) > 0) && ($demographic_quotas_container[$rec_count] !~ /DISABLED/) ) ) 
 		{$demographic_quotasSQL[$rec_count] = "and rank!='-9999'";}
@@ -3552,6 +3554,29 @@ foreach(@campaign_id)
 								$stmtA = "UPDATE vicidial_list SET called_since_last_reset='Y' where lead_id='$leads_to_hopper[$h]';";
 								$affected_rows = $dbhA->do($stmtA);
 								if ($DBX) {print "Flagging DCCL lead:     $affected_rows  $leads_to_hopper[$h]\n";}
+								}
+							}
+
+						## Check for system-wide daily call count limit for this phone number
+						if ( ($SSdaily_call_count_limit > 0) && ($daily_phone_number_call_limit[$i] > 0) )
+							{
+							$stmtA="SELECT count(*) FROM vicidial_phone_number_call_daily_counts where phone_number='$phone_to_hopper[$h]' and called_count >= '$daily_phone_number_call_limit[$i]';";
+							if ($DB) {print "     Doing Daily Phone Call Count Check: $phone_to_hopper[$h] - $daily_phone_number_call_limit[$i]\n";}
+							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+							$sthArows=$sthA->rows;
+							if ($sthArows > 0)
+								{
+								@aryA = $sthA->fetchrow_array;
+								$DCCLlead =		 $aryA[0];
+								}
+							$sthA->finish();
+							if ($DCCLlead != '0')
+								{
+								$DCCL++;
+								$stmtA = "UPDATE vicidial_list SET called_since_last_reset='Y' where lead_id='$leads_to_hopper[$h]';";
+								$affected_rows = $dbhA->do($stmtA);
+								if ($DBX) {print "Flagging DCCLP lead:     $affected_rows  $leads_to_hopper[$h] ($phone_to_hopper[$h]) \n";}
 								}
 							}
 

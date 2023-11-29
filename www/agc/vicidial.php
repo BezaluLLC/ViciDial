@@ -728,10 +728,11 @@
 # 231108-0820 - Added several fields to update_settings related to manual dial calls
 # 231109-0827 - Added 2FA for agent screen logins
 # 231115-1618 - Added default_consultative options.php setting
+# 231129-0952 - Added phone number daily call limits
 #
 
-$version = '2.14-694c';
-$build = '231115-1618';
+$version = '2.14-695c';
+$build = '231129-0952';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
@@ -11908,15 +11909,17 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						var regMNCvar = new RegExp("HOPPER EMPTY","ig");
 						var regMDFvarDNC = new RegExp("DNC","ig");
 						var regMDFvarDCCL = new RegExp("DAILY CALL LIMIT","ig");
+						var regMDFvarDCCLP = new RegExp("DAILY PHONE NUMBER CALL LIMIT","ig");
 						var regMNHDNCvar = new RegExp("NO-HOPPER DNC","ig");
 						var regMNHDCCLvar = new RegExp("NO-HOPPER DAILY CALL LIMIT","ig");
+						var regMNHDCCLPvar = new RegExp("NO-HOPPER DAILY PHONE NUMBER CALL LIMIT","ig");
 						var regMDFvarCAMP = new RegExp("CAMPLISTS","ig");
 						var regMDFvarSYS = new RegExp("SYSTEM","ig");
 						var regMDFvarCB = new RegExp("CALLBACK","ig");
 						var regMDFvarTIME = new RegExp("OUTSIDE","ig");
 						var regMDFvarTFH = new RegExp("24-HOUR CALL LIMIT","ig");
 						var regMDFvarERR = new RegExp("ERROR","ig");
-						if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarDCCL)) || (MDnextCID.match(regMDFvarCAMP)) || (MDnextCID.match(regMDFvarSYS)) ||(MDnextCID.match(regMDFvarCB)) || (MDnextCID.match(regMDFvarTIME)) || (MDnextCID.match(regMDFvarTFH)) || (MDnextCID.match(regMDFvarERR)) )
+						if ( (MDnextCID.match(regMNCvar)) || (MDnextCID.match(regMDFvarDNC)) || (MDnextCID.match(regMDFvarDCCL)) || (MDnextCID.match(regMDFvarCAMP)) || (MDnextCID.match(regMDFvarSYS)) ||(MDnextCID.match(regMDFvarCB)) || (MDnextCID.match(regMDFvarTIME)) || (MDnextCID.match(regMDFvarTFH)) || (MDnextCID.match(regMDFvarERR)) || (MDnextCID.match(regMDFvarDCCLP)) || (MDnextCID.match(regMNHDCCLPvar)) )
 							{
 							button_click_log = button_click_log + "" + SQLdate + "-----DialNextFailed---" + MDnextCID + " " + "|";
 
@@ -11944,6 +11947,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							if (MDnextCID.match(regMDFvarDCCL))
 								{
 								alert_box("<?php echo _QXZ("This lead has exceeded its daily call count limit:"); ?>\n" + mdnPhonENumbeR);
+								alert_displayed=1;
+								in_lead_preview_state=0;
+								}
+							if (MDnextCID.match(regMDFvarDCCLP))
+								{
+								alert_box("<?php echo _QXZ("This phone number has exceeded its daily call count limit:"); ?>\n" + mdnPhonENumbeR);
 								alert_displayed=1;
 								in_lead_preview_state=0;
 								}
@@ -11993,6 +12002,12 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							if (MDnextCID.match(regMNHDCCLvar))
 								{
 								alert_box("<?php echo _QXZ("The next lead has exceeded its daily call count limit, please try again:"); ?>\n" + mdnPhonENumbeR);
+								alert_displayed=1;
+								in_lead_preview_state=0;
+								}
+							if (MDnextCID.match(regMNHDCCLPvar))
+								{
+								alert_box("<?php echo _QXZ("The next lead phone number has exceeded its daily call count limit, please try again:"); ?>\n" + mdnPhonENumbeR);
 								alert_displayed=1;
 								in_lead_preview_state=0;
 								}

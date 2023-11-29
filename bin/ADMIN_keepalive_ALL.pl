@@ -169,9 +169,10 @@
 # 230909-0846 - Added purging of vicidial_khomp_log records older than 7 days
 # 230925-1454 - Added -recmon settings
 # 231136-2158 - Added hopper_hold_inserts HCI lead reservations clearing for old reservations
+# 231129-0849 - Added reset of vicidial_phone_number_call_daily_counts table
 #
 
-$build = '231136-2158';
+$build = '231129-0849';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -1389,6 +1390,21 @@ if ($timeclock_end_of_day_NOW > 0)
 		if ($teodDB) {$event_string = "vicidial_lead_call_daily_counts records reset: $affected_rows";   &teod_logger;}
 
 		$stmtA = "optimize table vicidial_lead_call_daily_counts;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "delete from vicidial_phone_number_call_daily_counts;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_phone_number_call_daily_counts records deleted|\n";}
+		if ($teodDB) {$event_string = "vicidial_phone_number_call_daily_counts records reset: $affected_rows";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_phone_number_call_daily_counts;";
 		if($DBX){print STDERR "\n|$stmtA|\n";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;

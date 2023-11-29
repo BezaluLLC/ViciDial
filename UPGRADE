@@ -831,6 +831,12 @@ OTHER CHANGES:
 	customer. For more information, see the AGENT_3WAY_PRESS-1_CALLS.txt 
 	document.
 
+235. Added HCI Screen and Hopper Hold Inserts to allow for required Human 
+	Intervention on phone calls placed out of a campaign. See the 
+	HCI_Human_Call_Indicator_screen.txt document for more info.
+
+237. Added the Daily Phone Number Call Limit System-wide campaign option
+
 
 
 

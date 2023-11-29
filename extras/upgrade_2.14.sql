@@ -2553,3 +2553,14 @@ index(date)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1701',db_schema_update_date=NOW() where db_schema_version < 1701;
+
+ALTER TABLE vicidial_campaigns ADD daily_phone_number_call_limit TINYINT(3) UNSIGNED default '0';
+
+CREATE TABLE vicidial_phone_number_call_daily_counts (
+phone_number VARCHAR(18) NOT NULL,
+called_count TINYINT(3) UNSIGNED default '0',
+modify_date DATETIME,
+unique index vpncdc_phone_number (phone_number)
+) ENGINE=MyISAM;
+
+UPDATE system_settings SET db_schema_version='1702',db_schema_update_date=NOW() where db_schema_version < 1702;
