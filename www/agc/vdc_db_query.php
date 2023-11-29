@@ -542,10 +542,11 @@
 # 231108-0819 - Added several fields to update_settings related to manual dial calls
 # 231115-1851 - Added allow_vlc_lookup options.php setting
 # 231129-1048 - Added daily_phone_number_call_limit campaign setting
+# 231129-1403 - Fix for ConfBridge blind monitoring issue #1494
 #
 
-$version = '2.14-435';
-$build = '231129-1048';
+$version = '2.14-436';
+$build = '231129-1403';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=913;
@@ -9373,7 +9374,7 @@ if ($stage == "end")
 			}
 
 		$loop_count=0;
-		$stmt="SELECT channel FROM live_channels where server_ip = '$server_ip' and extension = '$conf_exten' order by channel desc;";
+		$stmt="SELECT channel FROM live_channels where server_ip = '$server_ip' and extension = '$conf_exten' AND channel_data NOT LIKE \"%vici_monitor_user\" order by channel desc;";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00548',$user,$server_ip,$session_name,$one_mysql_log);}
