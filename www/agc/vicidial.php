@@ -729,10 +729,11 @@
 # 231109-0827 - Added 2FA for agent screen logins
 # 231115-1618 - Added default_consultative options.php setting
 # 231129-0952 - Added phone number daily call limits
+# 231129-1359 - Fix for Dial-In-Group user-group issue #1493
 #
 
-$version = '2.14-695c';
-$build = '231129-0952';
+$version = '2.14-696c';
+$build = '231129-1359';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
@@ -3959,7 +3960,7 @@ else
 					if ($in_group_dial_select == 'ALL_USER_GROUP')
 						{
 						$VARdialingroups='';
-						$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and user_group IN('---ALL---','$user_group') order by group_id limit 800;";
+						$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and user_group IN('---ALL---','$VU_user_group') order by group_id limit 800;";
 						$rslt=mysql_to_mysqli($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01077',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 						if ($DB) {echo "$stmt\n";}
