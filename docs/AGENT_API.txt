@@ -483,7 +483,7 @@ SUCCESS: update_fields lead updated - 6666|1234|87498|vendor_lead_code='1234567'
 refresh_panel - 
 
 DESCRIPTION:
-Refresh/Reload/Reset one or more of the panels on the agent script: script, script 2, callbacks, etc...
+Refresh/Reload/Reset one or more of the panels on the agent screen: script, script 2, callbacks, etc...
 
 VALUES:
 agent_user -
