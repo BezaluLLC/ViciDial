@@ -489,7 +489,7 @@ VALUES:
 agent_user -
  REQUIRED alphanumeric string for agent user
 
-OPTIONAL PANEL REFRESH TRIGGERS (these still require a lead to be on the agent screen) - 
+OPTIONAL PANEL REFRESH TRIGGERS (these do not require a lead to be on the agent screen) - 
 	formreload
 	scriptreload
 	script2reload
