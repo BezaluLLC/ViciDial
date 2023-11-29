@@ -730,10 +730,11 @@
 # 231115-1618 - Added default_consultative options.php setting
 # 231129-0952 - Added phone number daily call limits
 # 231129-1359 - Fix for Dial-In-Group user-group issue #1493
+# 231129-1540 - Added refresh_panel agent API function
 #
 
-$version = '2.14-696c';
-$build = '231129-1359';
+$version = '2.14-697c';
+$build = '231129-1540';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
@@ -11647,7 +11648,6 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							RefresHScript2('','YES');
 							event_data = event_data + '--- script2reload ';
 							}
-
 						// JOEJ 082812 - new for email feature
 						var regUDemailreload = new RegExp("emailreload,","ig");
 						if (fields_list.match(regUDemailreload))
@@ -11655,7 +11655,6 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							EmailContentsLoad();
 							event_data = event_data + '--- emailreload ';
 							}
-
 						// JOEJ 060514 - new for chat feature
 						var regUDchatreload = new RegExp("chatreload,","ig");
 						if (fields_list.match(regUDchatreload))
@@ -11712,8 +11711,50 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						}
 					else
 						{
-						alert_box("Update Fields Error!: " + xmlhttp.responseText);
-						button_click_log = button_click_log + "" + SQLdate + "-----UpdateFieldsError---" + xmlhttp.responseText + " " + "|";
+						if (UDresponse_status == 'NO LEAD')
+							{
+							var regUDformreload = new RegExp("formreload,","ig");
+							if (fields_list.match(regUDformreload))
+								{
+								FormContentsLoad();
+								event_data = event_data + '--- formreload ';
+								}
+							var regUDscriptreload = new RegExp("scriptreload,","ig");
+							if (fields_list.match(regUDscriptreload))
+								{
+								RefresHScript('','YES');
+								event_data = event_data + '--- scriptreload ';
+								}
+							var regUDscript2reload = new RegExp("script2reload,","ig");
+							if (fields_list.match(regUDscript2reload))
+								{
+								RefresHScript2('','YES');
+								event_data = event_data + '--- script2reload ';
+								}
+							var regUDemailreload = new RegExp("emailreload,","ig");
+							if (fields_list.match(regUDemailreload))
+								{
+								EmailContentsLoad();
+								event_data = event_data + '--- emailreload ';
+								}
+							var regUDchatreload = new RegExp("chatreload,","ig");
+							if (fields_list.match(regUDchatreload))
+								{
+								CustomerChatContentsLoad();
+								event_data = event_data + '--- chatreload ';
+								}
+							var regUDcallbacksreload = new RegExp("callbacksreload,","ig");
+							if (fields_list.match(regUDcallbacksreload))
+								{
+								CalLBacKsLisTCheck();
+								event_data = event_data + '--- callbacksreload ';
+								}
+							}
+						else
+							{
+							alert_box("Update Fields Error!: " + xmlhttp.responseText);
+							button_click_log = button_click_log + "" + SQLdate + "-----UpdateFieldsError---" + xmlhttp.responseText + " " + "|";
+							}
 						}
 					}
 				}

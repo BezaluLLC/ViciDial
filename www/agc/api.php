@@ -110,10 +110,11 @@
 # 230412-0945 - Added send_notification function
 # 230413-1957 - Fix for send_notification user group permissions
 # 230519-0731 - Fix for input variable filtering
+# 231129-1457 - Added refresh_panel function
 #
 
-$version = '2.14-75';
-$build = '230519-0731';
+$version = '2.14-76';
+$build = '231129-1457';
 $php_script = 'api.php';
 
 $startMS = microtime();
@@ -2762,7 +2763,7 @@ if ($function == 'update_fields')
 	if (strlen($agent_user)<1)
 		{
 		$result = _QXZ("ERROR");
-		$result_reason = _QXZ("st_login_log not valid");
+		$result_reason = _QXZ("agent_user not valid");
 		$data = "$agent_user";
 		echo "$result: $result_reason - $data\n";
 		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
@@ -3091,6 +3092,115 @@ if ($function == 'update_fields')
 	}
 ################################################################################
 ### END - update_fields
+################################################################################
+
+
+
+
+
+################################################################################
+### BEGIN - refresh_panel
+################################################################################
+if ($function == 'refresh_panel')
+	{
+	if (strlen($agent_user)<1)
+		{
+		$result = _QXZ("ERROR");
+		$result_reason = _QXZ("agent_user not valid");
+		$data = "$agent_user";
+		echo "$result: $result_reason - $data\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$VUapi_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$VUapi_allowed_functions)) )
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION");
+			echo "$result: $result_reason - $value|$user|$function|$VUuser_group\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt = "select count(*) from vicidial_live_agents where user='$agent_user';";
+		if ($DB) {echo "$stmt\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		if ($row[0] > 0)
+			{
+			$fieldsLISTS='';
+			$agent_update=0;
+
+			if (preg_match('/formreload/i',$query_string))
+				{
+				if ($DB) {echo _QXZ("form reload triggered")."\n";}
+				$fieldsLIST .= "formreload,";
+				$agent_update++;
+				}
+			if (preg_match('/scriptreload/i',$query_string))
+				{
+				if ($DB) {echo _QXZ("script reload triggered")."\n";}
+				$fieldsLIST .= "scriptreload,";
+				$agent_update++;
+				}
+			if (preg_match('/script2reload/i',$query_string))
+				{
+				if ($DB) {echo _QXZ("script 2 reload triggered")."\n";}
+				$fieldsLIST .= "script2reload,";
+				$agent_update++;
+				}
+			if (preg_match('/emailreload/i',$query_string))
+				{
+				if ($DB) {echo _QXZ("email reload triggered")."\n";}
+				$fieldsLIST .= "emailreload,";
+				$agent_update++;
+				}
+			if (preg_match('/chatreload/i',$query_string))
+				{
+				if ($DB) {echo _QXZ("chat reload triggered")."\n";}
+				$fieldsLIST .= "chatreload,";
+				$agent_update++;
+				}
+			if (preg_match('/callbacksreload/i',$query_string))
+				{
+				if ($DB) {echo _QXZ("callbacks reload triggered")."\n";}
+				$fieldsLIST .= "callbacksreload,";
+				$agent_update++;
+				}
+			if ( ($field_set > 0) or ($agent_update > 0) )
+				{
+				$fieldsLIST = preg_replace("/,$/","",$fieldsLIST);
+
+				$affected_rowsVLA=0;
+				$stmt="UPDATE vicidial_live_agents set external_update_fields='1',external_update_fields_data='$fieldsLIST' where user='$agent_user';";
+					if ($format=='debug') {echo "\n<!-- $stmt -->";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$affected_rowsVLA = mysqli_affected_rows($link);
+
+				$result = _QXZ("SUCCESS");
+				$result_reason = _QXZ("refresh_panel request sent");
+				$data = "$user|$agent_user|$affected_rowsVLA|$fieldsLIST|";
+				echo "$result: $result_reason - $data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			else
+				{
+				$result = _QXZ("ERROR");
+				$result_reason = _QXZ("no panels have been defined");
+				echo "$result: $result_reason - $agent_user\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		else
+			{
+			$result = _QXZ("ERROR");
+			$result_reason = _QXZ("agent_user is not logged in");
+			echo "$result: $result_reason - $agent_user\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			}
+		}
+	}
+################################################################################
+### END - refresh_panel
 ################################################################################
 
 

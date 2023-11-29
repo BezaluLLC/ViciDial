@@ -543,10 +543,11 @@
 # 231115-1851 - Added allow_vlc_lookup options.php setting
 # 231129-1048 - Added daily_phone_number_call_limit campaign setting
 # 231129-1403 - Fix for ConfBridge blind monitoring issue #1494
+# 231129-1541 - Added refresh_panel agent API function
 #
 
-$version = '2.14-436';
-$build = '231129-1403';
+$version = '2.14-437';
+$build = '231129-1541';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=913;
@@ -2149,6 +2150,7 @@ if ($ACTION == 'UpdateFields')
 			}
 		else
 			{
+			echo "NO LEAD\n";
 			echo "ERROR: "._QXZ("no lead info in system:")." $lead_id\n";
 			}
 		}

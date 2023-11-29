@@ -835,7 +835,9 @@ OTHER CHANGES:
 	Intervention on phone calls placed out of a campaign. See the 
 	HCI_Human_Call_Indicator_screen.txt document for more info.
 
-237. Added the Daily Phone Number Call Limit System-wide campaign option
+236. Added the Daily Phone Number Call Limit System-wide campaign option
+
+237. Added "refresh_panel" Agent API function
 
 
 

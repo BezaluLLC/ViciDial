@@ -41,6 +41,7 @@ force_fronter_leave_3way - will send a command to fronter agent to leave-3way ca
 force_fronter_audio_stop - will send a command to fronter agent session to stop any audio_playback playing on it
 send_notification - will send text alerts and/or confetti effects to agent interface
 vm_message - set a custom voicemail message to be played when agent clicks the VM button on the agent screen
+refresh_panel - refresh one of the panels on the agent script: script, script2, callbacks, etc...
 
 
 New scripts:
@@ -473,6 +474,38 @@ ERROR: user is not allowed to modify lead information - 6666|1234
 ERROR: agent_user does not have a lead on their screen - 6666|1234
 ERROR: no fields have been defined - 6666
 SUCCESS: update_fields lead updated - 6666|1234|87498|vendor_lead_code='1234567',address1=''
+
+
+
+
+
+--------------------------------------------------------------------------------
+refresh_panel - 
+
+DESCRIPTION:
+Refresh/Reload/Reset one or more of the panels on the agent script: script, script 2, callbacks, etc...
+
+VALUES:
+agent_user -
+ REQUIRED alphanumeric string for agent user
+
+OPTIONAL PANEL REFRESH TRIGGERS (these still require a lead to be on the agent screen) - 
+	formreload
+	scriptreload
+	script2reload
+	emailreload
+	chatreload
+	callbacksreload
+
+EXAMPLE URLS:
+http://server/agc/api.php?source=test&user=6666&pass=1234&function=refresh_panel&agent_user=6666&scriptreload=1&script2reload=1&callbacksreload=1
+http://server/agc/api.php?source=test&user=6666&pass=1234&function=refresh_panel&agent_user=6666&formreload=1
+
+RESPONSES:
+ERROR: agent_user not valid - 6666
+ERROR: agent_user is not logged in - 6666
+ERROR: no panels have been defined - 6666
+SUCCESS: refresh_panel request sent - 6666|1234|1|scriptreload,script2reload
 
 
 
