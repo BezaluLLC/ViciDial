@@ -839,6 +839,8 @@ OTHER CHANGES:
 
 237. Added "refresh_panel" Agent API function
 
+238. Added "LAGGED Agent Log Summary Report".
+
 
 
 
