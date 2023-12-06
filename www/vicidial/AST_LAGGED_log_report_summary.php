@@ -6,6 +6,7 @@
 # CHANGES
 # 231201-1216 - First build, Forked from AST_LAGGED_log_report.php, added summary graph listing
 # 231201-2236 - Added onClick event to run selected date in AST_LAGGED_log_report.php
+# 231206-0959 - Added agent computer IP breakdown
 #
 
 $startMS = microtime();
@@ -409,6 +410,40 @@ if ($SUBMIT && $query_date && $query_date_end)
 			
 			</script>
 			";
+		
+		// Agent IP breakdown
+		$start_date = date('Y-m-d', strtotime($query_date));
+		$end_date = date('Y-m-d', strtotime($query_date_end));
+		$total_count = 0;
+		while ($start_date <= $end_date) 
+			{
+			$rpt_stmt="SELECT user, event_time FROM vicidial_agent_log WHERE sub_status = 'LAGGED' AND event_time>='$start_date 00:00:00' AND event_time<='$start_date 23:59:59'";
+			if ($DB) {$ASCII_text.=$rpt_stmt."\n";}
+			$lagged_rslt=mysql_to_mysqli($rpt_stmt, $link);
+			while ( $lagged_row = mysqli_fetch_array($lagged_rslt) )
+				{
+				$current_event_date = $lagged_row[event_time];
+				$current_user = $lagged_row[user];
+				$rpt_stmt="SELECT user, event_date, computer_ip FROM vicidial_user_log WHERE event = 'LOGIN' AND event_date>='$start_date 00:00:00' AND event_date<='$current_event_date' AND user = '$current_user' ORDER BY event_date DESC";
+				if ($DB) {$ASCII_text.=$rpt_stmt."\n";}
+				$login_rslt=mysql_to_mysqli($rpt_stmt, $link);			
+				$login_row = mysqli_fetch_row($login_rslt);
+				$comp_ip = $login_row[2];
+				if ($login_row[2] = "") { $comp_ip = "UNKOWN"; }
+				$computer_ip_list[$comp_ip]++;
+				$total_count++;
+				}
+			$start_date = date('Y-m-d', strtotime($start_date . '+ 1 days'));
+			}
+		if ($DB) {$ASCII_text.=$rpt_stmt."\n";}		
+		$HTML_text.="<table border='0' cellpadding='0' cellspacing='2' width='350'>";
+		$HTML_text.="<TR><TH colspan='2' class='small_standard_bold grey_graph_cell'>"._QXZ("AGENT IP BREAKDOWN FOR LAGGED RECORDS <br>")." $query_date "._QXZ("TO")." $query_date_end</TH></TR>";
+		$HTML_text.="<TR><TH class='small_standard_bold grey_graph_cell'>"._QXZ("AGENT IP")."</th><TH class='small_standard_bold grey_graph_cell'>"._QXZ("COUNT")."</th></tr>";	
+		foreach ($computer_ip_list as $computer_ip => $count)
+			{
+			$HTML_text.="<TR><TD class='small_standard'>$computer_ip</td><TD class='small_standard'>$count</td></tr>";
+			}
+		$HTML_text.="<TR><TH class='small_standard_bold grey_graph_cell'>"._QXZ("TOTAL")."</th><TH class='small_standard_bold grey_graph_cell'>$total_count</th></tr></table>";
 		}
 	else
 		{
