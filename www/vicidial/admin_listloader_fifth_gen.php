@@ -81,10 +81,11 @@
 # 210210-1602 - Added duplicate check with more X-day options
 # 220222-1002 - Added allow_web_debug system setting
 # 230210-1844 - Added invalid_phone_override option <admin_listloader_fifth_gen.php started>
+# 231207-1446 - Fix for web_loader_phone_strip duplicate check, issue #1498, also changed format to "Custom layout" default
 #
 
-$version = '2.14-79';
-$build = '230210-1844';
+$version = '2.14-80';
+$build = '231207-1446';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -765,7 +766,7 @@ if ( (!$OK_to_process) or ( ($leadfile) and ($file_layout!="standard" && $file_l
 		  </tr>
 		  <tr>
 			<td align=right><B><font face="arial, helvetica" size=2><?php echo _QXZ("File layout to use"); ?>:</font></B></td>
-			<td align=left><font face="arial, helvetica" size=2><input type=radio name="file_layout" value="standard" checked><?php echo _QXZ("Standard Format"); ?>&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="custom"><?php echo _QXZ("Custom layout"); ?>&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="template"><?php echo _QXZ("Custom Template"); ?> <?php echo "$NWB#list_loader-file_layout$NWE"; ?></td>
+			<td align=left><font face="arial, helvetica" size=2><input type=radio name="file_layout" value="custom" checked><?php echo _QXZ("Custom layout"); ?>&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="standard"><?php echo _QXZ("Standard Format"); ?>&nbsp;&nbsp;&nbsp;&nbsp;<input type=radio name="file_layout" value="template"><?php echo _QXZ("Custom Template"); ?> <?php echo "$NWB#list_loader-file_layout$NWE"; ?></td>
 		  </tr>
 		  <tr>
 			<td align=right width="20%"><font face="arial, helvetica" size=2><?php echo _QXZ("Custom Layout to Use"); ?>: </font></td>
@@ -957,7 +958,7 @@ if ($SSenable_international_dncs)
 		<tr>
 			<td align=center colspan=2><input style='background-color:#<?php echo "$SSbutton_color"; ?>' type=submit value="<?php echo _QXZ("SUBMIT"); ?>" name='submit_file'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input style='background-color:#<?php echo "$SSbutton_color"; ?>' type=button onClick="javascript:document.location='admin_listloader_fifth_gen.php'" value="<?php echo _QXZ("START OVER"); ?>" name='reload_page'></td>
 		  </tr>
-		  <tr><td align=left><font size=1> &nbsp; &nbsp; &nbsp; &nbsp; <a href="admin.php?ADD=100" target="_parent"><?php echo _QXZ("BACK TO ADMIN"); ?></a> &nbsp; &nbsp; </font></td><td align=right><font size=1><?php echo _QXZ("LIST LOADER 5th Gen"); ?>- &nbsp; &nbsp; <?php echo _QXZ("VERSION"); ?>: <?php echo $version ?> &nbsp; &nbsp; <?php echo _QXZ("BUILD"); ?>: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
+		  <tr><td align=left><font size=1> &nbsp; &nbsp; &nbsp; &nbsp; <a href="admin.php?ADD=100" target="_parent"><?php echo _QXZ("BACK TO ADMIN"); ?></a> &nbsp; &nbsp; </font></td><td align=right><font size=1><?php echo _QXZ("LIST LOADER 5th Gen"); ?> | <a href="admin_listloader_fourth_gen.php"><?php echo _QXZ("4th Gen"); ?></a> &nbsp; &nbsp; <?php echo _QXZ("VERSION"); ?>: <?php echo $version ?> &nbsp; &nbsp; <?php echo _QXZ("BUILD"); ?>: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
 		</table>
 		<?php 
 
@@ -2762,6 +2763,11 @@ function check_lead($DB,$link,$list_id,$phone_number,$alt_phone,$address3,$title
 	{
 	global $US, $statuses_clause, $status_mismatch_action, $mismatch_limit, $mismatch_clause, $multidaySQL, $SSweb_loader_phone_strip, $web_loader_phone_length, $usacan_check, $dupcheck, $international_dnc_scrub, $valid_number, $dnc_matches, $dup_lead, $moved_lead, $invalid_reason, $total, $good, $bad, $dup, $post, $moved, $phone_list, $dup_lead_list;
 
+	if ( (strlen($SSweb_loader_phone_strip)>0) and ($SSweb_loader_phone_strip != 'DISABLED') )
+		{
+		$phone_number = preg_replace("/^$SSweb_loader_phone_strip/",'',$phone_number);
+		}
+
 	##### Check for duplicate phone numbers in vicidial_list table for all lists in a campaign #####
 	if (preg_match("/DUPCAMP/i",$dupcheck))
 		{
@@ -3048,10 +3054,6 @@ function check_lead($DB,$link,$list_id,$phone_number,$alt_phone,$address3,$title
 			}
 		}
 
-	if ( (strlen($SSweb_loader_phone_strip)>0) and ($SSweb_loader_phone_strip != 'DISABLED') )
-		{
-		$phone_number = preg_replace("/^$SSweb_loader_phone_strip/",'',$phone_number);
-		}
 	if ( (strlen($phone_number)<5) || (strlen($phone_number)>18) )
 		{
 		$valid_number=0;

@@ -2,7 +2,7 @@
 # admin_listloader_fourth_gen.php - version 2.14
 #  (based upon - new_listloader_superL.php script)
 # 
-# Copyright (C) 2022  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2023  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # ViciDial web-based lead loader from formatted file
 # 
@@ -80,10 +80,11 @@
 # 200922-1013 - Added web_loader_phone_strip system setting feature
 # 210210-1602 - Added duplicate check with more X-day options
 # 220222-1002 - Added allow_web_debug system setting
+# 231207-1445 - Fix for web_loader_phone_strip duplicate check, issue #1498
 #
 
-$version = '2.14-78';
-$build = '220222-1002';
+$version = '2.14-79';
+$build = '231207-1445';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -911,7 +912,7 @@ if ($SSenable_international_dncs)
 		<tr>
 			<td align=center colspan=2><input style='background-color:#<?php echo "$SSbutton_color"; ?>' type=submit value="<?php echo _QXZ("SUBMIT"); ?>" name='submit_file'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<input style='background-color:#<?php echo "$SSbutton_color"; ?>' type=button onClick="javascript:document.location='admin_listloader_fourth_gen.php'" value="<?php echo _QXZ("START OVER"); ?>" name='reload_page'></td>
 		  </tr>
-		  <tr><td align=left><font size=1> &nbsp; &nbsp; &nbsp; &nbsp; <a href="admin.php?ADD=100" target="_parent"><?php echo _QXZ("BACK TO ADMIN"); ?></a> &nbsp; &nbsp; </font></td><td align=right><font size=1><?php echo _QXZ("LIST LOADER 4th Gen"); ?>- &nbsp; &nbsp; <?php echo _QXZ("VERSION"); ?>: <?php echo $version ?> &nbsp; &nbsp; <?php echo _QXZ("BUILD"); ?>: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
+		  <tr><td align=left><font size=1> &nbsp; &nbsp; &nbsp; &nbsp; <a href="admin.php?ADD=100" target="_parent"><?php echo _QXZ("BACK TO ADMIN"); ?></a> &nbsp; &nbsp; </font></td><td align=right><font size=1><?php echo _QXZ("LIST LOADER 4th Gen"); ?> | <a href="admin_listloader_fifth_gen.php"><?php echo _QXZ("5th Gen"); ?></a> &nbsp; &nbsp; <?php echo _QXZ("VERSION"); ?>: <?php echo $version ?> &nbsp; &nbsp; <?php echo _QXZ("BUILD"); ?>: <?php echo $build ?> &nbsp; &nbsp; </td></tr>
 		</table>
 		<?php 
 
@@ -1298,6 +1299,10 @@ if ($OK_to_process)
 
 				$custom_SQL = preg_replace("/,$/","",$custom_SQL);
 
+				if ( (strlen($SSweb_loader_phone_strip)>0) and ($SSweb_loader_phone_strip != 'DISABLED') )
+					{
+					$phone_number = preg_replace("/^$SSweb_loader_phone_strip/",'',$phone_number);
+					}
 
 				##### Check for duplicate phone numbers in vicidial_list table for all lists in a campaign #####
 				if (preg_match("/DUPCAMP/i",$dupcheck))
@@ -1572,10 +1577,6 @@ if ($OK_to_process)
 
 				$valid_number=1;
 				$invalid_reason='';
-				if ( (strlen($SSweb_loader_phone_strip)>0) and ($SSweb_loader_phone_strip != 'DISABLED') )
-					{
-					$phone_number = preg_replace("/^$SSweb_loader_phone_strip/",'',$phone_number);
-					}
 				if ( (strlen($phone_number)<5) || (strlen($phone_number)>18) )
 					{
 					$valid_number=0;
@@ -2044,6 +2045,10 @@ if (($leadfile) && ($LF_path))
 							}
 						}
 
+					if ( (strlen($SSweb_loader_phone_strip)>0) and ($SSweb_loader_phone_strip != 'DISABLED') )
+						{
+						$phone_number = preg_replace("/^$SSweb_loader_phone_strip/",'',$phone_number);
+						}
 
 					##### Check for duplicate phone numbers in vicidial_list table for all lists in a campaign #####
 					if (preg_match("/DUPCAMP/i",$dupcheck))
@@ -2315,10 +2320,6 @@ if (($leadfile) && ($LF_path))
 
 					$valid_number=1;
 					$invalid_reason='';
-					if ( (strlen($SSweb_loader_phone_strip)>0) and ($SSweb_loader_phone_strip != 'DISABLED') )
-						{
-						$phone_number = preg_replace("/^$SSweb_loader_phone_strip/",'',$phone_number);
-						}
 					if ( (strlen($phone_number)<5) || (strlen($phone_number)>18) )
 						{
 						$valid_number=0;
@@ -2807,6 +2808,11 @@ if (($leadfile) && ($LF_path))
 							}
 						}
 
+					if ( (strlen($SSweb_loader_phone_strip)>0) and ($SSweb_loader_phone_strip != 'DISABLED') )
+						{
+						$phone_number = preg_replace("/^$SSweb_loader_phone_strip/",'',$phone_number);
+						}
+
 					##### Check for duplicate phone numbers in vicidial_list table for all lists in a campaign #####
 					if (preg_match("/DUPCAMP/i",$dupcheck))
 						{
@@ -3078,10 +3084,6 @@ if (($leadfile) && ($LF_path))
 					$valid_number=1;
 					$dnc_matches=0;
 					$invalid_reason='';
-					if ( (strlen($SSweb_loader_phone_strip)>0) and ($SSweb_loader_phone_strip != 'DISABLED') )
-						{
-						$phone_number = preg_replace("/^$SSweb_loader_phone_strip/",'',$phone_number);
-						}
 					if ( (strlen($phone_number)<5) || (strlen($phone_number)>18) )
 						{
 						$valid_number=0;
