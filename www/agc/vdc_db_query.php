@@ -544,10 +544,11 @@
 # 231129-1048 - Added daily_phone_number_call_limit campaign setting
 # 231129-1403 - Fix for ConfBridge blind monitoring issue #1494
 # 231129-1541 - Added refresh_panel agent API function
+# 231207-1520 - Fix for ConfBridge blind monitoring issue #1497
 #
 
-$version = '2.14-437';
-$build = '231129-1541';
+$version = '2.14-438';
+$build = '231207-1520';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=913;
@@ -9345,7 +9346,7 @@ if ($stage == "end")
 		$row = array();
 		$rec_channels = array();
 		$hangup_channels = array();
-		$stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and extension = '$conf_exten' order by channel desc;";
+		$stmt="SELECT channel FROM live_sip_channels where server_ip = '$server_ip' and extension = '$conf_exten' AND channel_data NOT LIKE \"%vici_monitor_user\" order by channel desc;";
 			if ($format=='debug') {echo "\n<!-- $stmt -->";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00095',$user,$server_ip,$session_name,$one_mysql_log);}
