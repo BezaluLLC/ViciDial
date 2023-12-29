@@ -51,9 +51,11 @@
 #
 # changes:
 # 231113-2041 - First Build
+# 231227-1427 - Added multi-phone ability
 #
 
 $script = 'agi-3way_press_outside.agi';
+$build = '231227-1427';
 
 $at='@';
 $S='*';
@@ -265,7 +267,7 @@ foreach $i (sort keys %AGI)
 	if ($AGILOG) {$agi_string = " -- $i = $AGI{$i}";   &agi_output;}
 	}
 
-if ($AGILOG) {$agi_string = "AGI Variables: |$unique_id|$channel|$extension|$type|$callerid|$stage|";   &agi_output;}
+if ($AGILOG) {$agi_string = "AGI Variables: |$unique_id|$channel|$extension|$type|$callerid|$stage|$build|";   &agi_output;}
 
 
 $CALLvendor_lead_code = $AGI->get_variable('vendor_lead_code');
@@ -377,7 +379,7 @@ if ($AGILOG) {$agi_string = "3-WAY DEBUG: user/server/session found: |$CALLuser|
 if ($stage =~ /answered/i) 
 	{
 	### Update the call in vicidial_3way_press_live
-	$stmtA="UPDATE vicidial_3way_press_live SET status='ANSWERED' where call_3way_id='$calleridname';";
+	$stmtA="UPDATE vicidial_3way_press_live SET status='ANSWERED' where call_3way_id='$calleridname' and status!='DEFEATED';";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$affected_rowsA = $dbhA->do($stmtA);
 	if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live answered UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
@@ -391,97 +393,147 @@ if ($stage =~ /answered/i)
 
 if ($stage =~ /accepted/i) 
 	{
-	### Update the call in vicidial_3way_press_live
-	$stmtA="UPDATE vicidial_3way_press_live SET status='ACCEPTED' where call_3way_id='$calleridname';";
-		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-	$affected_rowsA = $dbhA->do($stmtA);
-	if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live accepted UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
+	$accepted_ct=0;
 
-	### Update the call in vicidial_3way_press_log
-	$stmtA="UPDATE vicidial_3way_press_log SET result=CONCAT(result,'|Accepted: $SQLdate') where call_3way_id='$calleridname';";
-		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-	$affected_rowsA = $dbhA->do($stmtA);
-	if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log accepted UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
+	$stmtA = "LOCK TABLES vicidial_3way_press_live WRITE;";
+	my $LOCKaffected_rows = $dbhA->do($stmtA);
+		$dbhP=$dbhA;   $mysql_count='02057';   $MEL_aff_rows=$LOCKaffected_rows;   &mysql_error_logging;
 
-
-	# loop until session_id_3way is populated
-	$CALLstatus='';
-	$CALLconf_exten='';
-	$wait_loop=0;
-	while ($wait_loop < 100) 
+	if (length($qp_groupWAIT_aco)<2)
+		{$qp_groupWAIT_aco="''";}
+	### Get list of users that should take higher priority inbound calls first
+	$stmtA = "SELECT count(*) from vicidial_3way_press_live where lead_id='$CALLlead_id' and status IN('ACCEPTED','RESERVED','TRANSFER') and call_3way_id!='$calleridname';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+		$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+	if ($sthArows > 0)
 		{
-		usleep(1*990*1000);
-		if ($wait_loop =~ /0$|5$/) 
-			{
-			$AGI->stream_file('hold_tone');
-			}
-
-		$stmtA = "SELECT status,session_id_3way FROM vicidial_3way_press_live where call_3way_id='$calleridname' order by call_date desc limit 1;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-			$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-		if ($sthArows > 0)
-			{
-			@aryA = $sthA->fetchrow_array;	
-			$CALLstatus =		$aryA[0];
-			$CALLconf_exten =	$aryA[1];
-			}
-		$sthA->finish();
-
-		if ( ($CALLstatus =~ /RESERVED/) && (length($CALLconf_exten) > 0) )
-			{
-			### Update the call in vicidial_3way_press_live
-			$stmtA="UPDATE vicidial_3way_press_live SET status='TRANSFER' where call_3way_id='$calleridname';";
-				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-			$affected_rowsA = $dbhA->do($stmtA);
-			if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live transfer UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
-
-			### Update the call in vicidial_3way_press_log
-			$stmtA="UPDATE vicidial_3way_press_log SET result=CONCAT(result,'|Transfer: ',NOW()) where call_3way_id='$calleridname';";
-				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-			$affected_rowsA = $dbhA->do($stmtA);
-			if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log transfer UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
-
-			### Update vicidial_conferences to leave_3way=1
-		#	$Ttimeout='Xtimeout9';
-		#	$stmtA="UPDATE vicidial_conferences set leave_3way='1', leave_3way_datetime=NOW(), extension='3WAY_$CALLuser$Ttimeout' where server_ip='$CALLserver_ip' and conf_exten='$CALLconf_exten';";
-			$stmtA="UPDATE vicidial_conferences set leave_3way='1', leave_3way_datetime=NOW(), extension='3WAY_$CALLuser' where server_ip='$CALLserver_ip' and conf_exten='$CALLconf_exten';";
-				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-			$affected_rowsD = $dbhA->do($stmtA);
-			if ($AGILOG) {$agi_string = "--    vicidial_conferences UPDATE: |$affected_rowsD|$stmtA|";   &agi_output;}
-
-			### Delete the call in vicidial_3way_press_live
-			$stmtA="DELETE from vicidial_3way_press_live where call_3way_id='$calleridname';";
-				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-			$affected_rowsE = $dbhA->do($stmtA);
-			if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live transfer DELETE: |$affected_rowsE|$stmtA|";   &agi_output;}
-
-			if ($AGILOG) {$agi_string = "3-WAY AGENT TRANSFER: |$CALLuser|$CALLserver_ip|$CALLconf_exten|$calleridname|";   &agi_output;}
-			print "SET CONTEXT $ext_context\n";
-				$result = <STDIN>;
-				checkresult($result);
-			print "SET EXTENSION 7$CALLconf_exten\n";
-				$result = <STDIN>;
-				checkresult($result);
-			print "SET PRIORITY 1\n";
-				$result = <STDIN>;
-				checkresult($result);
-
-			$wait_loop=1000;
-			exit;
-			}
-
-		$wait_loop++;
+		@aryA = $sthA->fetchrow_array;
+		$accepted_ct = $aryA[0];
 		}
 
+	if ($accepted_ct < 1) 
+		{
+		### Update the call in vicidial_3way_press_live
+		$stmtA = "UPDATE vicidial_3way_press_live SET status='ACCEPTED' where call_3way_id='$calleridname';";
+		my $UPDATEaffected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$UPDATEaffected_rows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live accepted UPDATE: |$UPDATEaffected_rows|$stmtA|";   &agi_output;}
+
+		### Update all other calls for this lead in vicidial_3way_press_live to DEFEATED status
+		$stmtA = "UPDATE vicidial_3way_press_live SET status='DEFEATED' where lead_id='$CALLlead_id' and call_3way_id!='$calleridname';";
+		my $UPDATEaffected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$UPDATEaffected_rows;   &mysql_error_logging;
+		if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live defeated UPDATE: |$UPDATEaffected_rows|$stmtA|";   &agi_output;}
+
+		$stmtA = "UNLOCK TABLES;";
+		my $UNLOCKaffected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$UNLOCKaffected_rows;   &mysql_error_logging;
+
+		### Update the call in vicidial_3way_press_log
+		$stmtA="UPDATE vicidial_3way_press_log SET result=CONCAT(result,'|Accepted: $SQLdate') where call_3way_id='$calleridname';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rowsA = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log accepted UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
+
+
+		# loop until session_id_3way is populated
+		$CALLstatus='';
+		$CALLconf_exten='';
+		$wait_loop=0;
+		while ($wait_loop < 100) 
+			{
+			usleep(1*990*1000);
+			if ($wait_loop =~ /0$|5$/) 
+				{
+				$AGI->stream_file('hold_tone');
+				}
+
+			$stmtA = "SELECT status,session_id_3way FROM vicidial_3way_press_live where call_3way_id='$calleridname' order by call_date desc limit 1;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+				$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;	
+				$CALLstatus =		$aryA[0];
+				$CALLconf_exten =	$aryA[1];
+				}
+			$sthA->finish();
+
+			if ( ($CALLstatus =~ /RESERVED/) && (length($CALLconf_exten) > 0) )
+				{
+				### Update the call in vicidial_3way_press_live
+				$stmtA="UPDATE vicidial_3way_press_live SET status='TRANSFER' where call_3way_id='$calleridname';";
+					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				$affected_rowsA = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live transfer UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
+
+				### Update the call in vicidial_3way_press_log
+				$stmtA="UPDATE vicidial_3way_press_log SET result=CONCAT(result,'|Transfer: ',NOW()) where call_3way_id='$calleridname';";
+					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				$affected_rowsA = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log transfer UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
+
+				### Update vicidial_conferences to leave_3way=1
+			#	$Ttimeout='Xtimeout9';
+			#	$stmtA="UPDATE vicidial_conferences set leave_3way='1', leave_3way_datetime=NOW(), extension='3WAY_$CALLuser$Ttimeout' where server_ip='$CALLserver_ip' and conf_exten='$CALLconf_exten';";
+				$stmtA="UPDATE vicidial_conferences set leave_3way='1', leave_3way_datetime=NOW(), extension='3WAY_$CALLuser' where server_ip='$CALLserver_ip' and conf_exten='$CALLconf_exten';";
+					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				$affected_rowsD = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "--    vicidial_conferences UPDATE: |$affected_rowsD|$stmtA|";   &agi_output;}
+
+				### Delete the call in vicidial_3way_press_live
+				$stmtA="DELETE from vicidial_3way_press_live where call_3way_id='$calleridname';";
+					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				$affected_rowsE = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live transfer DELETE: |$affected_rowsE|$stmtA|";   &agi_output;}
+
+				if ($AGILOG) {$agi_string = "3-WAY AGENT TRANSFER: |$CALLuser|$CALLserver_ip|$CALLconf_exten|$calleridname|";   &agi_output;}
+				print "SET CONTEXT $ext_context\n";
+					$result = <STDIN>;
+					checkresult($result);
+				print "SET EXTENSION 7$CALLconf_exten\n";
+					$result = <STDIN>;
+					checkresult($result);
+				print "SET PRIORITY 1\n";
+					$result = <STDIN>;
+					checkresult($result);
+
+				$wait_loop=1000;
+				exit;
+				}
+			$wait_loop++;
+			}
+		}
+	else
+		{
+		# already accepted
+		$stmtA = "UNLOCK TABLES;";
+		my $UNLOCKaffected_rows = $dbhA->do($stmtA);
+			$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$UNLOCKaffected_rows;   &mysql_error_logging;
+
+		### Update the call in vicidial_3way_press_live
+		$stmtA="UPDATE vicidial_3way_press_live SET status='TOOSLOW' where call_3way_id='$calleridname';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rowsA = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live too slow UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
+
+		### Update the call in vicidial_3way_press_log
+		$stmtA="UPDATE vicidial_3way_press_log SET result=CONCAT(result,'|Too Slow: $SQLdate') where call_3way_id='$calleridname';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rowsA = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log too slow UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
+		}
 	}
 
 
 if ($stage =~ /declined/i) 
 	{
 	### Update the call in vicidial_3way_press_live
-	$stmtA="UPDATE vicidial_3way_press_live SET status='DECLINED' where call_3way_id='$calleridname';";
+	$stmtA="UPDATE vicidial_3way_press_live SET status='DECLINED' where call_3way_id='$calleridname' and status!='DEFEATED';";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$affected_rowsA = $dbhA->do($stmtA);
 	if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live declined UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}

@@ -33,6 +33,7 @@
 # 220921-1148 - Added optimize of vicidial_users table
 # 230414-1622 - Added --reset-stuck-leads option
 # 231118-1256 - Added clearing of old vicidial_3way_press_live records
+# 231228-1901 - Added optimizing of vicidial_3way_press_multi records
 #
 
 $session_flush=0;
@@ -609,6 +610,20 @@ if (!$T)
 	$sthA->finish();
 	}
 if (!$Q) {print " - OPTIMIZE vicidial_3way_press_live          \n";}
+
+
+$stmtA = "OPTIMIZE table vicidial_3way_press_multi;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) 
+	{
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+	}
+if (!$Q) {print " - OPTIMIZE vicidial_3way_press_multi          \n";}
 
 
 if ($session_flush > 0) 

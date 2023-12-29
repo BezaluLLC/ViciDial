@@ -1,4 +1,4 @@
-Agent 3-way Press-1 Calls DOC	Started: 2023-11-13	Updated: 2023-11-18
+Agent 3-way Press-1 Calls DOC	Started: 2023-11-13	Updated: 2023-12-28
 
 
 This document will go over how to set up Agent Screen 3-way calls with outside
@@ -6,6 +6,7 @@ users that have to press-1 on their phone to be bridged with the agent and
 customer.
 
 NOTE: This requires svn/trunk revision 3778 or higher!!!
+
 
 
 What is an Agent Screen 3-way calls with an outside user that has to press-1?
@@ -17,10 +18,34 @@ On the agent side, after placing the 3-way call while waiting for the called-par
 All activity for these calls are logged, with the logs being visible in the Admin Modify Lead page, in the "3-WAY PRESS LOGS FOR THIS LEAD" section.
 
 
+Outside User Multi-Call:
+
+A newer option(included in svn/trunk rev 3792) added to this feature allows the agent to place multiple(up to 10) concurrent phone calls to outside users at the same time and the outside user that presses 1 first will get sent to the user and customer session. This feature only works with the Agent API "transfer_conference" function initiating the 3-way call, and the multiple phone numbers are to be sent through the "multi_dial_phones" variable as a list of comma-separated phone numbers. Here is an example URL for this:
+
+https://server/agc/api.php?source=outsidexfer&user=6666&pass=XXXXXXXXXXXXXXX&function=transfer_conference&value=DIAL_WITH_CUSTOMER&cid_choice=CUSTOMER&agent_user=7777&phone_number=49907819991991999&dial_override=YES&multi_dial_phones=7275551212,7275551213,7275551214
+
+
 
 How do I configure this on my system?
 
 All that is required is the lines below be added to the System Settings "Custom Dialplan Entry", and the "Reload Dialplan On Servers" option set to '1' before submitting the changes.
+
+
+
+Is there any reporting available for this feature?
+
+Yes, the "3-Way Press Log Report" is available on the "Reports -> Admin Utilities" page. This report will display the logs of the 3-way phone calls that are placed to outside-users from the agent screen as detailed in this document. You can search by date range and filter by agent user and/or outside-user-phone_number. The outside-user call records shown in black are successful transfer calls, while the records shown in red are unsuccessful outside-agent calls. These records include both single 3-way phone calls and multi-3-way phone calls. As for the events shown in the Results column, here is what they mean:
+
+Started = All calls will have this event, it simply means the outside-user call was launched.
+Answered = The outside-user call was answered.
+Accepted = The outside-user pressed '1' to accept the call.
+Reserved = The agent screen approves of the outside-user call and prepares for the transfer.
+Transfer = The outside-user call is transferred to the agent and customer.
+Declined = The outside-user call did not press '1' to accept the call.
+Too Slow = Multi-Call Only, The outside-user did press '1' to accept the call, but another outside-user pressed '1' before them.
+Defeated = Multi-Call Only, another outside-user pressed '1' before them, so this call was hung up.
+Hungup = Either the call timed out or another outside-user pressed '1' before them, so this call was hung up.
+
 
 
 
@@ -110,8 +135,18 @@ result TEXT,
 index(call_date),
 index(caller_code),
 index(call_3way_id),
-index(lead_id)
+index(lead_id),
+index(phone_number)
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_3way_press_log_archive LIKE vicidial_3way_press_log;
 CREATE UNIQUE INDEX vdpla on vicidial_3way_press_log_archive (call_date,caller_code,user);
+
+CREATE TABLE vicidial_3way_press_multi (
+user VARCHAR(20) PRIMARY KEY,
+call_date DATETIME,
+phone_numbers VARCHAR(255) default '',
+phone_numbers_ct TINYINT(3) default '0',
+status VARCHAR(40) default '',
+index(call_date)
+) ENGINE=MyISAM;

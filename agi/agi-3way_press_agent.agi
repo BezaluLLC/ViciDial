@@ -28,9 +28,11 @@
 # changes:
 # 231113-2016 - First Build
 # 231118-1600 - Added endings for HUNGUP and TIMEOUT
+# 231227-1428 - Added multi-phone ability
 #
 
 $script = 'agi-3way_press_agent.agi';
+$build = '231227-1428';
 
 $at='@';
 $S='*';
@@ -50,6 +52,7 @@ if ($hour < 10) {$hour = "0$hour";}
 if ($min < 10) {$min = "0$min";}
 if ($sec < 10) {$sec = "0$sec";}
 $CIDdate = "$mon$mday$hour$min$sec";
+$CIDdateD = "$mon$mday$hour$min$sec";
 $tsSQLdate = "$year$mon$mday$hour$min$sec";
 $SQLdate = "$year-$mon-$mday $hour:$min:$sec";
 $SQLdateBEGIN = $SQLdate;
@@ -242,7 +245,7 @@ foreach $i (sort keys %AGI)
 	if ($AGILOG) {$agi_string = " -- $i = $AGI{$i}";   &agi_output;}
 	}
 
-if ($AGILOG) {$agi_string = "AGI Variables: |$unique_id|$channel|$extension|$type|$callerid|$stage|";   &agi_output;}
+if ($AGILOG) {$agi_string = "AGI Variables: |$unique_id|$channel|$extension|$type|$callerid|$stage|$build|";   &agi_output;}
 
 $CALLvendor_lead_code = $AGI->get_variable('vendor_lead_code');
 $CALLlead_id = $AGI->get_variable('lead_id');
@@ -311,6 +314,8 @@ $AGI->stream_file('sip-silence');
 $CALLserver_ip='';
 $CALLsession_id='';
 $CALLuser='';
+$CALLphone_numbers='';
+$CALLphone_numbers_ct=0;
 $stmtA = "SELECT server_ip,cmd_line_d FROM vicidial_manager where callerid='$calleridname' order by entry_date desc limit 1;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -345,34 +350,118 @@ if ( (length($CALLuser) < 1) || (length($CALLserver_ip) < 5) || (length($CALLses
 
 if ($AGILOG) {$agi_string = "3-WAY DEBUG: user/server/session found: |$CALLuser|$CALLserver_ip|$CALLsession_id|$calleridname|";   &agi_output;}
 
+# Check to see if multiple calls should be sent out to outside users
+$stmtA = "SELECT phone_numbers,phone_numbers_ct FROM vicidial_3way_press_multi where user='$CALLuser' and status='NEW' limit 1;";
+$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+$sthArows=$sthA->rows;
+	$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+if ($sthArows > 0)
+	{
+	@aryA = $sthA->fetchrow_array;	
+	$CALLphone_numbers = 		$aryA[0];
+	$CALLphone_numbers_ct =		$aryA[1];
+	}
+$sthA->finish();
 
 $PADlead_id = sprintf("%010s", $lead_id);	while (length($PADlead_id) > 10) {chop($PADlead_id);}
-$VIDqueryCID = "T$CIDdate$PADlead_id";
-$newcallerid = "\"$VIDqueryCID <$original_cid>\"";
-$CALLcontext = '@default';
+$allCIDs='';
 
+if ( ($CALLphone_numbers_ct > 0) && (length($CALLphone_numbers) > 4) ) 
+	{
+	##### Get maximum calls per second that this process can send out
+	$stmtA = "SELECT outbound_calls_per_second,vicidial_recording_limit FROM servers where server_ip='$server_ip';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	if ($sthArows > 0)
+		{
+		@aryA = $sthA->fetchrow_array;
+		$outbound_calls_per_second =	$aryA[0];
+		$DBvicidial_recording_limit =	$aryA[1];
+		}
+	$sthA->finish();
 
-### Insert the call to vicidial_3way_press_live
-$stmtA="INSERT INTO vicidial_3way_press_live SET call_date=NOW(),caller_code='$calleridname',call_3way_id='$VIDqueryCID',lead_id='$lead_id',phone_number='$phone_number',dialstring='$dialstring',outbound_cid='$original_cid',user='$CALLuser',session_id='$CALLsession_id',server_ip='$CALLserver_ip',session_id_3way='',status='NEW';";
-	if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-$affected_rowsA = $dbhA->do($stmtA);
-if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live INSERT: |$affected_rowsA|$stmtA|";   &agi_output;}
+	### Update status of the vicidial_3way_press_multi record for this user
+	$stmtA="UPDATE vicidial_3way_press_multi SET status='PROCESSING' where user='$CALLuser';";
+		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+	$affected_rowsA = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "--    vicidial_3way_press_multi UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
 
-### Log the call to vicidial_3way_press_log
-$stmtA="INSERT INTO vicidial_3way_press_log SET call_date=NOW(),caller_code='$calleridname',call_3way_id='$VIDqueryCID',lead_id='$lead_id',phone_number='$phone_number',dialstring='$dialstring',outbound_cid='$original_cid',user='$CALLuser',session_id='$CALLsession_id',server_ip='$CALLserver_ip',session_id_3way='',result='Started: $SQLdate';";
-	if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-$affected_rowsB = $dbhA->do($stmtA);
-if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log LOG INSERT: |$affected_rowsB|$stmtA|";   &agi_output;}
+	if ( ($outbound_calls_per_second > 0) && ($outbound_calls_per_second < 201) )
+		{$per_call_delay = (1000 / $outbound_calls_per_second);}
+	else
+		{$per_call_delay = '25';}
 
-### Insert the outside-agent call into vicidial_manager
-$stmtA="INSERT INTO vicidial_manager values('','',NOW(),'NEW','N','$CALLserver_ip','','Originate','$VIDqueryCID','Channel: Local/$dialstring$CALLcontext','Context: xfer_press_dialplan','Exten: s','Priority: 1','Callerid: $newcallerid','Variable: __lead_id=$lead_id','','','','');";
-	if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-$affected_rowsG = $dbhA->do($stmtA);
-if ($AGILOG) {$agi_string = "--    vicidial_manager INSERT: |$affected_rowsG|$stmtA|";   &agi_output;}
+	# Loop through every phone number sent to place a call to an outside user, up to 10
+	@CALLphone_numbers_ARY = split(/,/,$CALLphone_numbers);
+	$vp=0;
+	$temp_phone_length = (length($CALLphone_numbers_ARY[$vp]) * -1);
+	$temp_prefix_code = substr($dialstring,0,$temp_phone_length);
+	while ($vp < $CALLphone_numbers_ct) 
+		{
+		$VIDqueryCID = "T$CIDdateD$vp$PADlead_id";
+		$newcallerid = "\"$VIDqueryCID <$original_cid>\"";
+		$CALLcontext = '@default';
+		$allCIDs .= "$VIDqueryCID|";
 
+		### Insert the call to vicidial_3way_press_live
+		$stmtA="INSERT INTO vicidial_3way_press_live SET call_date=\"$SQLdate\",caller_code='$calleridname',call_3way_id='$VIDqueryCID',lead_id='$lead_id',phone_number='$CALLphone_numbers_ARY[$vp]',dialstring='$temp_prefix_code$CALLphone_numbers_ARY[$vp]',outbound_cid='$original_cid',user='$CALLuser',session_id='$CALLsession_id',server_ip='$CALLserver_ip',session_id_3way='',status='NEW';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rowsA = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live INSERT: |$affected_rowsA|$stmtA|";   &agi_output;}
+
+		### Log the call to vicidial_3way_press_log
+		$stmtA="INSERT INTO vicidial_3way_press_log SET call_date=\"$SQLdate\",caller_code='$calleridname',call_3way_id='$VIDqueryCID',lead_id='$lead_id',phone_number='$CALLphone_numbers_ARY[$vp]',dialstring='$temp_prefix_code$CALLphone_numbers_ARY[$vp]',outbound_cid='$original_cid',user='$CALLuser',session_id='$CALLsession_id',server_ip='$CALLserver_ip',session_id_3way='',result='Started: $SQLdate';";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rowsB = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log LOG INSERT: |$affected_rowsB|$stmtA|";   &agi_output;}
+
+		### Insert the outside-agent call into vicidial_manager
+		$stmtA="INSERT INTO vicidial_manager values('','',NOW(),'NEW','N','$CALLserver_ip','','Originate','$VIDqueryCID','Channel: Local/$temp_prefix_code$CALLphone_numbers_ARY[$vp]$CALLcontext','Context: xfer_press_dialplan','Exten: s','Priority: 1','Callerid: $newcallerid','Variable: __lead_id=$lead_id','','','','');";
+			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+		$affected_rowsG = $dbhA->do($stmtA);
+		if ($AGILOG) {$agi_string = "--    vicidial_manager INSERT: |$affected_rowsG|$stmtA|";   &agi_output;}
+
+		usleep(1*$per_call_delay*1000);
+		$vp++;
+		}
+	}
+else
+	{
+	# Place call to only phone number sent to outside user
+	$VIDqueryCID = "T$CIDdate$PADlead_id";
+	$newcallerid = "\"$VIDqueryCID <$original_cid>\"";
+	$CALLcontext = '@default';
+	$allCIDs .= "$VIDqueryCID|";
+
+	### Insert the call to vicidial_3way_press_live
+	$stmtA="INSERT INTO vicidial_3way_press_live SET call_date=\"$SQLdate\",caller_code='$calleridname',call_3way_id='$VIDqueryCID',lead_id='$lead_id',phone_number='$phone_number',dialstring='$dialstring',outbound_cid='$original_cid',user='$CALLuser',session_id='$CALLsession_id',server_ip='$CALLserver_ip',session_id_3way='',status='NEW';";
+		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+	$affected_rowsA = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live INSERT: |$affected_rowsA|$stmtA|";   &agi_output;}
+
+	### Log the call to vicidial_3way_press_log
+	$stmtA="INSERT INTO vicidial_3way_press_log SET call_date=\"$SQLdate\",caller_code='$calleridname',call_3way_id='$VIDqueryCID',lead_id='$lead_id',phone_number='$phone_number',dialstring='$dialstring',outbound_cid='$original_cid',user='$CALLuser',session_id='$CALLsession_id',server_ip='$CALLserver_ip',session_id_3way='',result='Started: $SQLdate';";
+		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+	$affected_rowsB = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log LOG INSERT: |$affected_rowsB|$stmtA|";   &agi_output;}
+
+	### Insert the outside-agent call into vicidial_manager
+	$stmtA="INSERT INTO vicidial_manager values('','',NOW(),'NEW','N','$CALLserver_ip','','Originate','$VIDqueryCID','Channel: Local/$dialstring$CALLcontext','Context: xfer_press_dialplan','Exten: s','Priority: 1','Callerid: $newcallerid','Variable: __lead_id=$lead_id','','','','');";
+		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+	$affected_rowsG = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "--    vicidial_manager INSERT: |$affected_rowsG|$stmtA|";   &agi_output;}
+	}
 
 # loop every second until vicidial_3way_press_live record changes to status='ACCEPTED', then grab an unused session, update record and go into it
 $CALLstatus='';
+$CALLcall_3way_id='';
+$CALLstatusARY[0]='';
+$CALLcall_3way_idARY[0]='';
+$allCIDs =~ s/\|$//gi;
+$allCIDs =~ s/\|/','/gi;
+
 $wait_loop=0;
 while ($wait_loop < 100) 
 	{
@@ -382,49 +471,35 @@ while ($wait_loop < 100)
 		$AGI->stream_file('hold_tone');
 		}
 
-	$stmtA = "SELECT status FROM vicidial_3way_press_live where call_3way_id='$VIDqueryCID' order by call_date desc limit 1;";
+	$stmtA = "SELECT status,call_3way_id FROM vicidial_3way_press_live where call_3way_id IN('$allCIDs') order by status desc limit 11;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-		$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-	if ($sthArows > 0)
+	$sthArowsMP=$sthA->rows;
+		$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArowsMP;   &mysql_error_logging;
+	$mp=0;
+	while ($mp < $sthArowsMP)
 		{
 		@aryA = $sthA->fetchrow_array;	
-		$CALLstatus =		$aryA[0];
+		$CALLstatusARY[$mp] =			$aryA[0];
+		$CALLcall_3way_idARY[$mp] =		$aryA[1];
+		$mp++;
 		}
 	$sthA->finish();
 
-	if ($CALLstatus =~ /ACCEPTED/) 
+
+	### loop through each outside user call and check for acceptance or declined or hungup
+	$mp=0;
+	while ($mp < $sthArowsMP)
 		{
-		#grab open session
-		$free_session_count=0;
-		$stmtA="SELECT count(*) FROM vicidial_conferences where server_ip='$CALLserver_ip' and ((extension='') or (extension is null)) and conf_exten != '$CALLsession_id';";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-			$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
-		if ($sthArows > 0)
-			{
-			@aryA = $sthA->fetchrow_array;	
-			$free_session_count =		$aryA[0];
-			}
-		$sthA->finish();
+		$CALLstatus = $CALLstatusARY[$mp];
+		$VIDqueryCID = $CALLcall_3way_idARY[$mp];
+		if ($AGILOG) {$agi_string = "--    DEBUG CALL CHECK: |$mp|$CALLstatus|$VIDqueryCID|$lead_id|";   &agi_output;}
 
-		if ($free_session_count < 1)
+		if ($CALLstatus =~ /ACCEPTED/)
 			{
-			if ($AGILOG) {$agi_string = "--    ERROR: no sessions available! |$CALLserver_ip|$stmtA|";   &agi_output;}
-			}
-		else
-			{
-			### Update vicidial_conferences to grab available session
-			$stmtA="UPDATE vicidial_conferences set extension='Local/8300$CALLuser$tsSQLdate', leave_3way='0' where server_ip='$CALLserver_ip' and ((extension='') or (extension is null)) and conf_exten != '$CALLsession_id' limit 1;";
-				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-			$affected_rowsC = $dbhA->do($stmtA);
-			if ($AGILOG) {$agi_string = "--    vicidial_conferences UPDATE: |$affected_rowsC|$stmtA|";   &agi_output;}
-
-			# Grab the session_id that was reserved
-			$CALLconf_exten='';
-			$stmtA="SELECT conf_exten from vicidial_conferences where server_ip='$CALLserver_ip' and extension='Local/8300$CALLuser$tsSQLdate' and conf_exten != '$CALLsession_id';";
+			#grab open session
+			$free_session_count=0;
+			$stmtA="SELECT count(*) FROM vicidial_conferences where server_ip='$CALLserver_ip' and ((extension='') or (extension is null)) and conf_exten != '$CALLsession_id';";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -432,101 +507,176 @@ while ($wait_loop < 100)
 			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;	
-				$CALLconf_exten =		$aryA[0];
+				$free_session_count =		$aryA[0];
 				}
 			$sthA->finish();
 
-			if (length($CALLconf_exten) < 1) 
+			if ($free_session_count < 1)
 				{
-				if ($AGILOG) {$agi_string = "--    ERROR: no valid session available! |$CALLserver_ip|$stmtA|";   &agi_output;}
+				if ($AGILOG) {$agi_string = "--    ERROR: no sessions available! |$CALLserver_ip|$stmtA|";   &agi_output;}
 				}
 			else
 				{
-				### Update the call in vicidial_3way_press_live
-				$stmtA="UPDATE vicidial_3way_press_live SET status='RESERVED',session_id_3way='$CALLconf_exten' where call_3way_id='$VIDqueryCID';";
+				### Update vicidial_conferences to grab available session
+				$stmtA="UPDATE vicidial_conferences set extension='Local/8300$CALLuser$tsSQLdate', leave_3way='0' where server_ip='$CALLserver_ip' and ((extension='') or (extension is null)) and conf_exten != '$CALLsession_id' limit 1;";
 					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-				$affected_rowsA = $dbhA->do($stmtA);
-				if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live reserved UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
+				$affected_rowsC = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "--    vicidial_conferences UPDATE: |$affected_rowsC|$stmtA|";   &agi_output;}
 
-				### Update the call in vicidial_3way_press_log
-				$stmtA="UPDATE vicidial_3way_press_log SET session_id_3way='$CALLconf_exten', result=CONCAT(result,'|Reserved: ',NOW()) where call_3way_id='$VIDqueryCID';";
-					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-				$affected_rowsA = $dbhA->do($stmtA);
-				if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log reserved UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
+				# Grab the session_id that was reserved
+				$CALLconf_exten='';
+				$stmtA="SELECT conf_exten from vicidial_conferences where server_ip='$CALLserver_ip' and extension='Local/8300$CALLuser$tsSQLdate' and conf_exten != '$CALLsession_id';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+					$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;	
+					$CALLconf_exten =		$aryA[0];
+					}
+				$sthA->finish();
 
-				### Update vicidial_conferences to leave_3way
-			#	$Ttimeout='Xtimeout9';
-			#	$stmtA="UPDATE vicidial_conferences set leave_3way='1', leave_3way_datetime=NOW(), extension='3WAY_$CALLuser$Ttimeout' where server_ip='$CALLserver_ip' and conf_exten='$CALLconf_exten';";
-			#		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-			#	$affected_rowsD = $dbhA->do($stmtA);
-			#	if ($AGILOG) {$agi_string = "--    vicidial_conferences UPDATE: |$affected_rowsD|$stmtA|";   &agi_output;}
+				if (length($CALLconf_exten) < 1) 
+					{
+					if ($AGILOG) {$agi_string = "--    ERROR: no valid session available! |$CALLserver_ip|$stmtA|";   &agi_output;}
+					}
+				else
+					{
+					### Update the call in vicidial_3way_press_live
+					$stmtA="UPDATE vicidial_3way_press_live SET status='RESERVED',session_id_3way='$CALLconf_exten' where call_3way_id='$VIDqueryCID';";
+						if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+					$affected_rowsA = $dbhA->do($stmtA);
+					if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live reserved UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
 
-				if ($AGILOG) {$agi_string = "3-WAY AGENT TRANSFER: |$CALLuser|$CALLserver_ip|$CALLconf_exten|$calleridname|$VIDqueryCID|";   &agi_output;}
-				print "SET CONTEXT $ext_context\n";
-					$result = <STDIN>;
-					checkresult($result);
-				print "SET EXTENSION 7$CALLconf_exten\n";
-					$result = <STDIN>;
-					checkresult($result);
-				print "SET PRIORITY 1\n";
-					$result = <STDIN>;
-					checkresult($result);
+					### Update the call in vicidial_3way_press_log
+					$stmtA="UPDATE vicidial_3way_press_log SET session_id_3way='$CALLconf_exten', result=CONCAT(result,'|Reserved: ',NOW()) where call_3way_id='$VIDqueryCID';";
+						if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+					$affected_rowsA = $dbhA->do($stmtA);
+					if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log reserved UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
 
-				$wait_loop=1000;
-				exit;
+					### Update vicidial_conferences to leave_3way
+				#	$Ttimeout='Xtimeout9';
+				#	$stmtA="UPDATE vicidial_conferences set leave_3way='1', leave_3way_datetime=NOW(), extension='3WAY_$CALLuser$Ttimeout' where server_ip='$CALLserver_ip' and conf_exten='$CALLconf_exten';";
+				#		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				#	$affected_rowsD = $dbhA->do($stmtA);
+				#	if ($AGILOG) {$agi_string = "--    vicidial_conferences UPDATE: |$affected_rowsD|$stmtA|";   &agi_output;}
+
+					if ($AGILOG) {$agi_string = "3-WAY AGENT TRANSFER: |$CALLuser|$CALLserver_ip|$CALLconf_exten|$calleridname|$VIDqueryCID|";   &agi_output;}
+					print "SET CONTEXT $ext_context\n";
+						$result = <STDIN>;
+						checkresult($result);
+					print "SET EXTENSION 7$CALLconf_exten\n";
+						$result = <STDIN>;
+						checkresult($result);
+					print "SET PRIORITY 1\n";
+						$result = <STDIN>;
+						checkresult($result);
+
+					$wait_loop=1000;
+					exit;
+					}
 				}
 			}
+
+		if ($CALLstatus =~ /DEFEATED/) 
+			{
+			### Update the call in vicidial_3way_press_log
+			$stmtA="UPDATE vicidial_3way_press_log SET result=CONCAT(result,'|Defeated: ',NOW()) where call_3way_id='$VIDqueryCID';";
+				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+			$affected_rowsA = $dbhA->do($stmtA);
+			if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log defeated UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
+
+			### Find the channel this call is on and send it to extension 8300@default for Hangup
+			$CALLchannel='';
+			$CHANNELserver_ip='';
+			$stmtA="SELECT channel,server_ip from live_channels where channel_group='$VIDqueryCID' limit 1;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows=$sthA->rows;
+				$dbhP=$dbhA;   $mysql_count='02XXX';   $MEL_aff_rows=$sthArows;   &mysql_error_logging;
+			if ($sthArows > 0)
+				{
+				@aryA = $sthA->fetchrow_array;	
+				$CALLchannel =		$aryA[0];
+				$CHANNELserver_ip =	$aryA[1];
+				}
+			$sthA->finish();
+
+			if ( (length($CALLchannel) > 0) && (length($CHANNELserver_ip) > 0) )
+				{
+				$HIDqueryCID = $VIDqueryCID;
+				$HIDqueryCID =~ s/^T/H/gi;
+				$stmtA = "INSERT INTO vicidial_manager values('','',NOW(),'NEW','N','$CHANNELserver_ip','','Redirect','$HIDqueryCID','Channel: $CALLchannel','Context: default','Exten: 8300','Priority: 1','','','','','','')";
+					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				$affected_rowsA = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log defeated HANGUP: |$affected_rowsA|$stmtA|";   &agi_output;}
+				}
+			else
+				{
+				if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log defeated HANGUP: no channel found |$VIDqueryCID|";   &agi_output;}
+				}
+
+			### Delete the call in vicidial_3way_press_live
+			$stmtA="DELETE from vicidial_3way_press_live where call_3way_id='$VIDqueryCID';";
+				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+			$affected_rowsE = $dbhA->do($stmtA);
+			if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live defeated DELETE: |$affected_rowsE|$stmtA|";   &agi_output;}
+
+			if ($AGILOG) {$agi_string = "3-WAY AGENT TRANSFER DEFEATED: |$CALLuser|$CALLserver_ip|$CALLchannel|$calleridname|$VIDqueryCID|";   &agi_output;}
+			}
+
+		if ($CALLstatus =~ /DECLINED/) 
+			{
+			### Delete the call in vicidial_3way_press_live
+			$stmtA="DELETE from vicidial_3way_press_live where call_3way_id='$VIDqueryCID';";
+				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+			$affected_rowsE = $dbhA->do($stmtA);
+			if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live declined DELETE: |$affected_rowsE|$stmtA|";   &agi_output;}
+
+			if ($AGILOG) {$agi_string = "3-WAY AGENT TRANSFER DECLINED: |$CALLuser|$CALLserver_ip|$CALLconf_exten|$calleridname|$VIDqueryCID|";   &agi_output;}
+			}
+
+		if ($CALLstatus =~ /HUNGUP/) 
+			{
+			### Delete the call in vicidial_3way_press_live
+			$stmtA="DELETE from vicidial_3way_press_live where call_3way_id='$VIDqueryCID';";
+				if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+			$affected_rowsE = $dbhA->do($stmtA);
+			if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live hungup DELETE: |$affected_rowsE|$stmtA|";   &agi_output;}
+
+			if ($AGILOG) {$agi_string = "3-WAY AGENT TRANSFER HUNGUP: |$CALLuser|$CALLserver_ip|$CALLconf_exten|$calleridname|$VIDqueryCID|";   &agi_output;}
+			}
+
+		$mp++;
 		}
 
-
-	if ($CALLstatus =~ /DECLINED/) 
+	if ($sthArowsMP < 1) 
 		{
-		### Delete the call in vicidial_3way_press_live
-		$stmtA="DELETE from vicidial_3way_press_live where call_3way_id='$VIDqueryCID';";
-			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-		$affected_rowsE = $dbhA->do($stmtA);
-		if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live declined DELETE: |$affected_rowsE|$stmtA|";   &agi_output;}
-
-		if ($AGILOG) {$agi_string = "3-WAY AGENT TRANSFER DECLINED: |$CALLuser|$CALLserver_ip|$CALLconf_exten|$calleridname|$VIDqueryCID|";   &agi_output;}
+		if ($AGILOG) {$agi_string = "3-WAY AGENT TRANSFER NO OUTSIDE AGENTS FOUND, HANGING UP...";   &agi_output;}
 		$AGI->stream_file('buzz');
-		usleep(1*490*1000);
-
 		exit;
 		}
 
-	if ($CALLstatus =~ /HUNGUP/) 
-		{
-		### Delete the call in vicidial_3way_press_live
-		$stmtA="DELETE from vicidial_3way_press_live where call_3way_id='$VIDqueryCID';";
-			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
-		$affected_rowsE = $dbhA->do($stmtA);
-		if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live hungup DELETE: |$affected_rowsE|$stmtA|";   &agi_output;}
-
-		if ($AGILOG) {$agi_string = "3-WAY AGENT TRANSFER HUNGUP: |$CALLuser|$CALLserver_ip|$CALLconf_exten|$calleridname|$VIDqueryCID|";   &agi_output;}
-		$AGI->stream_file('buzz');
-		usleep(1*490*1000);
-
-		exit;
-		}
-
+	usleep(1*490*1000);
 	$wait_loop++;
 	}
 
 if ($wait_loop >= 100) 
 	{
 	### Update the call in vicidial_3way_press_log
-	$stmtA="UPDATE vicidial_3way_press_log SET session_id_3way='$CALLconf_exten', result=CONCAT(result,'|Timeout: ',NOW()) where call_3way_id='$VIDqueryCID';";
+	$stmtA="UPDATE vicidial_3way_press_log SET session_id_3way='$CALLconf_exten', result=CONCAT(result,'|Timeout: ',NOW()) where call_3way_id IN('$allCIDs');";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$affected_rowsA = $dbhA->do($stmtA);
 	if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log timeout UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
 
 	### Delete the call in vicidial_3way_press_live
-	$stmtA="DELETE from vicidial_3way_press_live where call_3way_id='$VIDqueryCID';";
+	$stmtA="DELETE from vicidial_3way_press_live where call_3way_id IN('$allCIDs');";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$affected_rowsE = $dbhA->do($stmtA);
 	if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live timeout DELETE: |$affected_rowsE|$stmtA|";   &agi_output;}
 
-	if ($AGILOG) {$agi_string = "3-WAY AGENT TRANSFER TIMEOUT: |$CALLuser|$CALLserver_ip|$CALLconf_exten|$calleridname|$VIDqueryCID|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "3-WAY AGENT TRANSFER TIMEOUT: |$CALLuser|$CALLserver_ip|$CALLconf_exten|$calleridname|'$allCIDs'|";   &agi_output;}
 	$AGI->stream_file('buzz');
 	usleep(1*490*1000);
 

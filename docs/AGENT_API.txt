@@ -1,4 +1,4 @@
-AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2023-04-13
+AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2023-12-22
 
 This document describes the functions of an API(Application Programming Interface)
 for the VICIDIAL Agent screen. This functionality will be rather limited at first
@@ -715,6 +715,8 @@ VALUES:
   OPTIONAL, defines what caller ID number to use when doing DIAL_WITH_CUSTOMER or PARK_CUSTOMER_DIAL
  cid_choice - 
   OPTIONAL, alternate method for caller ID number to use when doing DIAL_WITH_CUSTOMER or PARK_CUSTOMER_DIAL: 'CAMPAIGN','AGENT_PHONE','CUSTOMER','CUSTOM_CID'
+ multi_dial_phones - 
+  OPTIONAL, for use only with "Agent 3-way Press-1 Calls", contains up to 10 phone numbers separated by commas: "2125551212,4075551212,3125551212" (duplicates will be removed)
 
 EXAMPLE URLS:
 http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=transfer_conference&value=HANGUP_XFER

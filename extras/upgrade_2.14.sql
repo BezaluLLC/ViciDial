@@ -2178,7 +2178,7 @@ CREATE TABLE vicidial_agent_notifications (
 notification_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 entry_date DATETIME DEFAULT current_timestamp(),
 recipient VARCHAR(20) DEFAULT NULL,
-recipient_type ENUM('USER','USER_GROUP','CAMPAIGN') DEFAULT NULL,
+recipient_type ENUM('USER','USER_GROUP','CAMPAIGN','ALT_DISPLAY') DEFAULT NULL,
 notification_date DATETIME DEFAULT current_timestamp(),
 notification_retry ENUM('Y','N') DEFAULT 'N',
 notification_text TEXT DEFAULT NULL,
@@ -2564,3 +2564,18 @@ unique index vpncdc_phone_number (phone_number)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1702',db_schema_update_date=NOW() where db_schema_version < 1702;
+
+ALTER TABLE vicidial_agent_notifications MODIFY recipient_type ENUM('USER','USER_GROUP','CAMPAIGN','ALT_DISPLAY') DEFAULT NULL;
+
+CREATE TABLE vicidial_3way_press_multi (
+user VARCHAR(20) PRIMARY KEY,
+call_date DATETIME,
+phone_numbers VARCHAR(255) default '',
+phone_numbers_ct TINYINT(3) default '0',
+status VARCHAR(40) default '',
+index(call_date)
+) ENGINE=MyISAM;
+
+CREATE INDEX vdplpn on vicidial_3way_press_log (phone_number);
+
+UPDATE system_settings SET db_schema_version='1703',db_schema_update_date=NOW() where db_schema_version < 1703;

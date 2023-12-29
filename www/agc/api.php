@@ -111,10 +111,11 @@
 # 230413-1957 - Fix for send_notification user group permissions
 # 230519-0731 - Fix for input variable filtering
 # 231129-1457 - Added refresh_panel function
+# 231222-2105 - Added multi_dial_phones option to the transfer_conference function
 #
 
-$version = '2.14-76';
-$build = '231129-1457';
+$version = '2.14-77';
+$build = '231222-2105';
 $php_script = 'api.php';
 
 $startMS = microtime();
@@ -288,6 +289,8 @@ if (isset($_GET["text_weight"]))			{$text_weight=$_GET["text_weight"];}
 	elseif (isset($_POST["text_weight"]))	{$text_weight=$_POST["text_weight"];}
 if (isset($_GET["text_color"]))				{$text_color=$_GET["text_color"];}
 	elseif (isset($_POST["text_color"]))	{$text_color=$_POST["text_color"];}
+if (isset($_GET["multi_dial_phones"]))			{$multi_dial_phones=$_GET["multi_dial_phones"];}
+	elseif (isset($_POST["multi_dial_phones"]))	{$multi_dial_phones=$_POST["multi_dial_phones"];}
 
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
@@ -349,6 +352,7 @@ $close_window_link=preg_replace("/[^-_0-9a-zA-Z]/","",$close_window_link);
 $dnc_check=preg_replace("/[^-_0-9a-zA-Z]/","",$dnc_check);
 $campaign_dnc_check=preg_replace("/[^-_0-9a-zA-Z]/","",$campaign_dnc_check);
 $notification_date = preg_replace('/[^- \:0-9]/','',$notification_date);
+$multi_dial_phones = preg_replace('/[^\,0-9]/','',$multi_dial_phones);
 
 if ($non_latin < 1)
 	{
@@ -4208,13 +4212,53 @@ if ($function == 'transfer_conference')
 					{
 					if ($SUCCESS > 0)
 						{
+						$stmtVP='';
+						$multi_dial_phones_OUTPUT='';
+						$multi_dial_phones_STRING='';
+						if (strlen($multi_dial_phones) > 4)
+							{
+							$multi_dial_phonesARY=array();
+							$multi_dial_phones_ct=0;
+							if (preg_match("/,/",$multi_dial_phones))
+								{
+								$multi_dial_phonesARY = explode(',',$multi_dial_phones);
+								$multi_dial_phones_ct = count($multi_dial_phonesARY);
+								}
+							else
+								{
+								$multi_dial_phonesARY[0] = $multi_dial_phones;
+								$multi_dial_phones_ct = 1;
+								}
+							$mp=0;
+							$vp=0;
+							while ($mp < $multi_dial_phones_ct)
+								{
+								$temp_phone = $multi_dial_phonesARY[$mp];
+								if ( (strlen($temp_phone) > 4) and (strlen($temp_phone) < 19) and (!preg_match("/$temp_phone/",$multi_dial_phones_STRING)) )
+									{
+									if ($vp > 0) {$multi_dial_phones_STRING .= ",";}
+									$multi_dial_phones_STRING .= "$temp_phone";
+									$vp++;
+									}
+								$mp++;
+								}
+							$affected_rowsVP=0;
+							if ($vp > 0)
+								{
+								$stmtVP = "INSERT IGNORE INTO vicidial_3way_press_multi SET user='$agent_user',call_date=NOW(),phone_numbers='$multi_dial_phones_STRING',phone_numbers_ct='$vp',status='NEW' ON DUPLICATE KEY UPDATE call_date=NOW(),phone_numbers='$multi_dial_phones_STRING',phone_numbers_ct='$vp',status='NEW';";
+								$rslt=mysql_to_mysqli($stmtVP, $link);
+								$affected_rowsVP = mysqli_affected_rows($link);
+								}
+							$multi_dial_phones_OUTPUT = "|Multi-phones: $vp $mp $affected_rowsVP";
+							}
+
 						$stmt="UPDATE vicidial_live_agents set external_transferconf='$external_transferconf' where user='$agent_user';";
 							if ($format=='debug') {echo "\n<!-- $stmt -->";}
 						if ($DB) {echo "$stmt\n";}
 						$rslt=mysql_to_mysqli($stmt, $link);
 						$result = _QXZ("SUCCESS");
 						$result_reason = _QXZ("transfer_conference function set");
-						$data = "$callerid";
+						$data = "$callerid$multi_dial_phones_OUTPUT";
 						echo "$result: $result_reason - $value|$ingroup_choices|$phone_number|$consultative|$agent_user|$data|\n";
 						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
 						}

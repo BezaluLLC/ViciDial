@@ -4944,7 +4944,7 @@ CREATE TABLE vicidial_agent_notifications (
 notification_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 entry_date DATETIME DEFAULT current_timestamp(),
 recipient VARCHAR(20) DEFAULT NULL,
-recipient_type ENUM('USER','USER_GROUP','CAMPAIGN') DEFAULT NULL,
+recipient_type ENUM('USER','USER_GROUP','CAMPAIGN','ALT_DISPLAY') DEFAULT NULL,
 notification_date DATETIME DEFAULT current_timestamp(),
 notification_retry ENUM('Y','N') DEFAULT 'N',
 notification_text TEXT DEFAULT NULL,
@@ -5086,7 +5086,8 @@ result TEXT,
 index(call_date),
 index(caller_code),
 index(call_3way_id),
-index(lead_id)
+index(lead_id),
+index(phone_number)
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_hci_live_agents (
@@ -5159,6 +5160,15 @@ phone_number VARCHAR(18) NOT NULL,
 called_count TINYINT(3) UNSIGNED default '0',
 modify_date DATETIME,
 unique index vpncdc_phone_number (phone_number)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_3way_press_multi (
+user VARCHAR(20) PRIMARY KEY,
+call_date DATETIME,
+phone_numbers VARCHAR(255) default '',
+phone_numbers_ct TINYINT(3) default '0',
+status VARCHAR(40) default '',
+index(call_date)
 ) ENGINE=MyISAM;
 
 
@@ -5560,4 +5570,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1702',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1703',db_schema_update_date=NOW(),reload_timestamp=NOW();
