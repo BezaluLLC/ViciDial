@@ -205,10 +205,11 @@
 # 230721-1753 - Added insert for daily RT monitoring
 # 231109-0933 - Added archived_lead option to multiple functions
 # 231109-2022 - Added lead_dearchive function
+# 240101-0920 - Added DUPPHONEALT... options for duplicate_check within add_lead function 
 #
 
-$version = '2.14-182';
-$build = '231109-2022';
+$version = '2.14-183';
+$build = '240101-0920';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -14722,6 +14723,7 @@ if ($function == 'add_lead')
 					if ($DB > 0) {echo "DEBUG: $day_val day SQL: |$multidaySQL|";}
 					}
 
+				### find list of list_ids in this campaign for the CAMP duplicate check options
 				if (preg_match("/CAMP/i",$duplicate_check)) # find lists within campaign
 					{
 					$stmt="SELECT campaign_id from vicidial_lists where list_id='$list_id';";
@@ -14748,7 +14750,7 @@ if ($function == 'add_lead')
 							}
 						}
 					}
-				### find list of list_ids in this campaign
+
 				if (preg_match("/DUPLIST/i",$duplicate_check)) # duplicate check within list
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPLIST\n";}
@@ -14824,6 +14826,98 @@ if ($function == 'add_lead')
 						exit;
 						}
 					}
+
+				if (preg_match("/DUPPHONEALTLIST/i",$duplicate_check)) # duplicate check for phone against phone_number and alt_phone within list
+					{
+					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPPHONEALTLIST\n";}
+					$duplicate_found=0;
+					$stmt="SELECT lead_id,list_id,phone_number,alt_phone from vicidial_list where ( (phone_number='$phone_number') or (alt_phone='$phone_number') ) and list_id='$list_id' $multidaySQL limit 1;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$pc_recs = mysqli_num_rows($rslt);
+					if ($DB>0) {echo "DEBUG 2: |$pc_recs|$stmt|\n";}
+					if ($pc_recs > 0)
+						{
+						$duplicate_found=1;
+						$row=mysqli_fetch_row($rslt);
+						$duplicate_lead_id =		$row[0];
+						$duplicate_lead_list =		$row[1];
+						$duplicate_phone_number =	$row[2];
+						$duplicate_alt_phone =		$row[3];
+						if ($phone_number == $duplicate_phone_number) {$duplicate_type='PHONE';}
+						else {$duplicate_type='ALT';}
+						}
+
+					if ($duplicate_found > 0) 
+						{
+						$result = 'ERROR';
+						$result_reason = "add_lead DUPLICATE PHONE NUMBER IN LIST";
+						$data = "$phone_number|$list_id|$duplicate_lead_id|$duplicate_type";
+						echo "$result: $result_reason - $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				if (preg_match("/DUPPHONEALTCAMP/i",$duplicate_check)) # duplicate check for phone against phone_number and alt_phone within campaign lists
+					{
+					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPPHONEALTCAMP - $duplicate_lists\n";}
+					$duplicate_found=0;
+					$stmt="SELECT lead_id,list_id,phone_number,alt_phone from vicidial_list where ( (phone_number='$phone_number') or (alt_phone='$phone_number') ) and list_id IN($duplicate_lists) $multidaySQL limit 1;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$pc_recs = mysqli_num_rows($rslt);
+					if ($DB>0) {echo "DEBUG 2: |$pc_recs|$stmt|\n";}
+					if ($pc_recs > 0)
+						{
+						$duplicate_found=1;
+						$row=mysqli_fetch_row($rslt);
+						$duplicate_lead_id =		$row[0];
+						$duplicate_lead_list =		$row[1];
+						$duplicate_phone_number =	$row[2];
+						$duplicate_alt_phone =		$row[3];
+						if ($phone_number == $duplicate_phone_number) {$duplicate_type='PHONE';}
+						else {$duplicate_type='ALT';}
+						}
+
+					if ($duplicate_found > 0) 
+						{
+						$result = 'ERROR';
+						$result_reason = "add_lead DUPLICATE PHONE NUMBER IN CAMPAIGN LISTS";
+						$data = "$phone_number|$list_id|$duplicate_lead_id|$duplicate_lead_list|$duplicate_type";
+						echo "$result: $result_reason - $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+				if (preg_match("/DUPPHONEALTSYS/i",$duplicate_check)) # duplicate check for phone against phone_number and alt_phone within entire system
+					{
+					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPPHONEALTSYS\n";}
+					$duplicate_found=0;
+					$stmt="SELECT lead_id,list_id,phone_number,alt_phone from vicidial_list where ( (phone_number='$phone_number') or (alt_phone='$phone_number') ) $multidaySQL limit 1;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$pc_recs = mysqli_num_rows($rslt);
+					if ($DB>0) {echo "DEBUG 2: |$pc_recs|$stmt|\n";}
+					if ($pc_recs > 0)
+						{
+						$duplicate_found=1;
+						$row=mysqli_fetch_row($rslt);
+						$duplicate_lead_id =		$row[0];
+						$duplicate_lead_list =		$row[1];
+						$duplicate_phone_number =	$row[2];
+						$duplicate_alt_phone =		$row[3];
+						if ($phone_number == $duplicate_phone_number) {$duplicate_type='PHONE';}
+						else {$duplicate_type='ALT';}
+						}
+
+					if ($duplicate_found > 0) 
+						{
+						$result = 'ERROR';
+						$result_reason = "add_lead DUPLICATE PHONE NUMBER IN SYSTEM";
+						$data = "$phone_number|$list_id|$duplicate_lead_id|$duplicate_lead_list|$duplicate_type";
+						echo "$result: $result_reason - $data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					}
+
 				if (preg_match("/DUPTITLEALTPHONELIST/i",$duplicate_check)) # duplicate title/alt_phone check within list
 					{
 					if ($DB>0) {echo "DEBUG: Checking for duplicates - DUPTITLEALTPHONELIST\n";}

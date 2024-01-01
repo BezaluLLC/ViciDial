@@ -843,6 +843,10 @@ OTHER CHANGES:
 
 239. Added a Multi-call option to the agent 3-way press-1 calls feature.
 
+240. Added DUPPHONEALT... duplicate_check options within the add_lead 
+	Non-Agent API function. Checks for duplicate phone against both the 
+	phone_number and alt_phone fields.
+
 
 
 
