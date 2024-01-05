@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-01-01
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-01-05
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -60,6 +60,7 @@ agent_campaigns - looks up allowed campaigns/in-groups for a specific user
 update_cid_group_entry - updates CID Group entries
 add_dnc_phone - adds a phone number to one of the DNC lists
 add_fpg_phone - adds a phone number to a Filter Phone Group
+delete_fpg_phone - removes a phone number from a Filter Phone Group
 campaigns_list - displays information about all campaigns in the system
 hopper_list - displays information about leads in the hopper for a campaign
 update_alt_url - updates/adds/displays alternate dispo call url entries for a campaign
@@ -213,6 +214,7 @@ Changes:
 231109-0933 - Added archived_lead option to multiple functions
 231109-2022 - Added lead_dearchive function
 240101-0920 - Added DUPPHONEALT... options for duplicate_check within add_lead function 
+240105-1009 - Added delete_fpg_phone function
 
 
 API Functions use the 'function' variable
@@ -1620,6 +1622,29 @@ ERROR: add_fpg_phone YOU MUST USE ALL REQUIRED FIELDS - 6666|||1000
 ERROR: add_fpg_phone FILTER PHONE GROUP DOES NOT EXIST - 6666|TEST_IN_FILTER2
 ERROR: add_fpg_phone FILTER PHONE GROUP NUMBER ALREADY EXISTS - 6666|7275551212|TEST_IN_FILTER
 SUCCESS: add_fpg_phone FILTER PHONE GROUP NUMBER HAS BEEN ADDED - 6666|7275551212|TEST_IN_FILTER
+
+
+
+
+--------------------------------------------------------------------------------
+delete_fpg_phone - removes phone number from a Filter Phone Group in the system
+
+NOTE: api user for this function must have user_level set to 8 or higher and "modify lists" enabled
+
+REQUIRED FIELDS-
+phone_number -	6-20 characters
+group -		2-30 characters, should be a valid Filter Phone Group ID in the system
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&function=delete_fpg_phone&user=6666&pass=1234&phone_number=7275551212&group=TEST_IN_FILTER
+
+Example responses:
+ERROR: delete_fpg_phone USER DOES NOT HAVE PERMISSION TO DELETE FILTER PHONE GROUP NUMBERS - 6666|0
+ERROR: delete_fpg_phone YOU MUST USE ALL REQUIRED FIELDS - 6666|||1000
+ERROR: delete_fpg_phone FILTER PHONE GROUP DOES NOT EXIST - 6666|TEST_IN_FILTER2
+ERROR: delete_fpg_phone FILTER PHONE GROUP NUMBER DOES NOT EXIST - 6666|7275551212|TEST_IN_FILTER
+SUCCESS: delete_fpg_phone FILTER PHONE GROUP NUMBER HAS BEEN DELETED - 6666|7275551212|TEST_IN_FILTER
+
 
 
 

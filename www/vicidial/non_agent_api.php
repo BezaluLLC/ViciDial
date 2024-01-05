@@ -206,10 +206,11 @@
 # 231109-0933 - Added archived_lead option to multiple functions
 # 231109-2022 - Added lead_dearchive function
 # 240101-0920 - Added DUPPHONEALT... options for duplicate_check within add_lead function 
+# 240105-1009 - Added delete_fpg_phone function
 #
 
-$version = '2.14-183';
-$build = '240101-0920';
+$version = '2.14-184';
+$build = '240105-1009';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 
@@ -4902,7 +4903,7 @@ if ($function == 'add_fpg_phone')
 						$affected_rowsA = mysqli_affected_rows($link);
 
 						### LOG INSERTION Admin Log Table ###
-						$SQL_log = "$stmt|";
+						$SQL_log = "$stmtA|";
 						$SQL_log = preg_replace('/;/', '', $SQL_log);
 						$SQL_log = addslashes($SQL_log);
 						$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='FILTERPHONEGROUPS', event_type='ADD', record_id='$phone_number', event_code='ADMIN API ADD NUMBER TO FILTER PHONE GROUP $group', event_sql=\"$SQL_log\", event_notes='$phone_number|$group|$affected_rowsA';";
@@ -4923,6 +4924,116 @@ if ($function == 'add_fpg_phone')
 	}
 ################################################################################
 ### END add_fpg_phone
+################################################################################
+
+
+################################################################################
+### delete_fpg_phone - removes a phone number from a Filter Phone Group in the system
+################################################################################
+if ($function == 'delete_fpg_phone')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and modify_lists='1' and user_level >= 8 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "delete_fpg_phone USER DOES NOT HAVE PERMISSION TO DELETE FILTER PHONE GROUP NUMBERS";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($phone_number) < 6) or (strlen($group) < 1) )
+				{
+				$result = 'ERROR';
+				$result_reason = "delete_fpg_phone YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$phone_number|$group";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT count(*) from vicidial_filter_phone_groups where filter_phone_group_id='$group';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$fpg_exists=$row[0];
+				if ($fpg_exists < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "delete_fpg_phone FILTER PHONE GROUP DOES NOT EXIST";
+					$data = "$group";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$stmt="SELECT count(*) from vicidial_filter_phone_numbers where phone_number='$phone_number' and filter_phone_group_id='$group';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					$fpg_entry_exists=$row[0];
+					if ($fpg_entry_exists < 1)
+						{
+						$result = 'ERROR';
+						$result_reason = "delete_fpg_phone FILTER PHONE GROUP NUMBER DOES NOT EXIST";
+						$data = "$phone_number|$group";
+						echo "$result: $result_reason: |$user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					else
+						{
+						$stmtA="DELETE FROM vicidial_filter_phone_numbers WHERE phone_number='$phone_number' and filter_phone_group_id='$group';";
+						$rslt=mysql_to_mysqli($stmtA, $link);
+						$affected_rowsA = mysqli_affected_rows($link);
+
+						### LOG INSERTION Admin Log Table ###
+						$SQL_log = "$stmtA|";
+						$SQL_log = preg_replace('/;/', '', $SQL_log);
+						$SQL_log = addslashes($SQL_log);
+						$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='FILTERPHONEGROUPS', event_type='DELETE', record_id='$phone_number', event_code='ADMIN API DELETE NUMBER FROM FILTER PHONE GROUP $group', event_sql=\"$SQL_log\", event_notes='$phone_number|$group|$affected_rowsA';";
+						if ($DB) {echo "|$stmt|\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+
+						$result = 'SUCCESS';
+						$result_reason = "delete_fpg_phone FILTER PHONE GROUP NUMBER HAS BEEN DELETED";
+						$data = "$phone_number|$group";
+						echo "$result: $result_reason - $user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END delete_fpg_phone
 ################################################################################
 
 
