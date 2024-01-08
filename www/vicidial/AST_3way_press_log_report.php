@@ -1,11 +1,12 @@
 <?php 
 # AST_3way_press_log_report.php
 # 
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
 # 231228-2204 - First build
+# 240108-1556 - Added channel/server display
 #
 
 $startMS = microtime();
@@ -430,6 +431,8 @@ else
 	$Rlead_id=array();
 	$Rphone_number=array();
 	$Routbound_cid=array();
+	$Rchannel=array();
+	$Rserver_ip=array();
 	$Rresult=array();
 	$Rtransfer=array();
 
@@ -441,7 +444,7 @@ else
 	$TOTdefeated=0;
 	$TOTtransfer=0;
 
-	$stmt = "SELECT date_format(call_date, '%Y-%m-%d %H:%i:%s') as date,user,lead_id,phone_number,outbound_cid,result from ".$vicidial_3way_press_log_table." where call_date <= '$query_date_END' and call_date >= '$query_date_BEGIN' $user_SQL $phone_number_SQL order by call_date desc limit 100000";
+	$stmt = "SELECT date_format(call_date, '%Y-%m-%d %H:%i:%s') as date,user,lead_id,phone_number,outbound_cid,result,call_channel,server_ip from ".$vicidial_3way_press_log_table." where call_date <= '$query_date_END' and call_date >= '$query_date_BEGIN' $user_SQL $phone_number_SQL order by call_date desc limit 100000";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	if ($DB) {echo "$stmt\n";}
 	$rows_to_print = mysqli_num_rows($rslt);
@@ -456,6 +459,8 @@ else
 		$Rphone_number[$i] =	$row[3];
 		$Routbound_cid[$i] =	$row[4];
 		$Rresult[$i] =			$row[5];
+		$Rchannel[$i] =			$row[6];
+		$Rserver_ip[$i] =		$row[7];
 		$Rtransfer[$i] =		0;
 		$i++;
 		}
@@ -485,7 +490,7 @@ else
 			if (preg_match("/Transfer/",$Rresult[$i])) {$TOTtransfer++;   $Rtransfer[$i]++;}
 			else
 				{$BD='<font color=red>';   $ED='</font>';}
-			$file_output_data .= "\"".trim($Rcall_date[$i])."\",\"".trim($Rfull_name[$i])."\",\"".trim($Rlead_id[$i])."\",\"".trim($Rphone_number[$i])."\",\"".trim($Routbound_cid[$i])."\",\"".trim($Rtransfer[$i])."\",\"".trim($Rresult[$i])."\"\n";
+			$file_output_data .= "\"".trim($Rcall_date[$i])."\",\"".trim($Rfull_name[$i])."\",\"".trim($Rlead_id[$i])."\",\"".trim($Rphone_number[$i])."\",\"".trim($Routbound_cid[$i])."\",\"".trim($Rchannel[$i])."\",\"".trim($Rserver_ip[$i])."\",\"".trim($Rtransfer[$i])."\",\"".trim($Rresult[$i])."\"\n";
 			$Rcall_date[$i] =		$BD.sprintf("%19s", $Rcall_date[$i]).$ED;
 			$Rfull_name[$i] =		"$Ruser[$i] - $Rfull_name[$i]";
 			if (mb_strlen($Rfull_name[$i],'utf-8')>40)
@@ -494,8 +499,14 @@ else
 			$Rlead_id[$i] =			$BD.sprintf("%-9s", $Rlead_id[$i]).$ED;
 			$Rphone_number[$i] =	$BD.sprintf("%-10s", $Rphone_number[$i]).$ED;
 			$Routbound_cid[$i] =	$BD.sprintf("%-10s", $Routbound_cid[$i]).$ED;
+			if (mb_strlen($Rchannel[$i],'utf-8')>30)
+							{$Rchannel[$i] = mb_substr($Rchannel[$i],0,27,'utf-8') . '...';}
+			$Rchannel[$i] =	$BD.sprintf("%-30s", $Rchannel[$i]).$ED;
+			if (mb_strlen($Rserver_ip[$i],'utf-8')>15)
+							{$Rserver_ip[$i] = mb_substr($Rserver_ip[$i],0,12,'utf-8') . '...';}
+			$Rserver_ip[$i] =	$BD.sprintf("%-15s", $Rserver_ip[$i]).$ED;
 			$Rresult[$i] =			$BD.sprintf("%-200s", $Rresult[$i]).$ED;
-			$ASCII_text_data.="| $Rcall_date[$i] | $Rfull_name[$i] | $Rlead_id[$i] | $Rphone_number[$i] | $Routbound_cid[$i] | $Rresult[$i]\n";
+			$ASCII_text_data.="| $Rcall_date[$i] | $Rfull_name[$i] | $Rlead_id[$i] | $Rphone_number[$i] | $Routbound_cid[$i] | $Rchannel[$i] | $Rserver_ip[$i] | $Rresult[$i]\n";
 			}
 		$i++;
 		}
@@ -522,11 +533,11 @@ else
 		$ASCII_text.="+------------+------------+\n";
 
 		$ASCII_text.="\n"._QXZ("Results Detail").":\n";
-		$ASCII_text.="+---------------------+---------------------------------------------+-----------+------------+------------+------------\n";
-		$ASCII_text.="| "._QXZ("Date Time",19)." | "._QXZ("User Agent",43)." | "._QXZ("Lead",9)." | "._QXZ("Phone",10)." | "._QXZ("CID",10)." | "._QXZ("Results",20)."\n";
-		$ASCII_text.="+---------------------+---------------------------------------------+-----------+------------+------------+------------\n";
+		$ASCII_text.="+---------------------+---------------------------------------------+-----------+------------+------------+--------------------------------+-----------------+------------\n";
+		$ASCII_text.="| "._QXZ("Date Time",19)." | "._QXZ("User Agent",43)." | "._QXZ("Lead",9)." | "._QXZ("Phone",10)." | "._QXZ("CID",10)." | "._QXZ("Channel",30)." | "._QXZ("Server",15)." | "._QXZ("Results",20)."\n";
+		$ASCII_text.="+---------------------+---------------------------------------------+-----------+------------+------------+--------------------------------+-----------------+------------\n";
 		$ASCII_text.=$ASCII_text_data;
-		$ASCII_text.="+---------------------+---------------------------------------------+-----------+------------+------------+------------\n";
+		$ASCII_text.="+---------------------+---------------------------------------------+-----------+------------+------------+--------------------------------+-----------------+------------\n";
 
 		$file_output .= "\""._QXZ("Results Summary").":\"\n";
 		$file_output .= "\""._QXZ("TOTAL")."\",\"".trim($TOTtotal)."\"\n";
@@ -538,7 +549,7 @@ else
 		$file_output .= "\""._QXZ("Transfer")."\",\"".trim($TOTtransfer)."\"\n";
 		$file_output .= "\n";
 		$file_output .= "\""._QXZ("Results Detail").":\"\n";
-		$file_output .= "\""._QXZ("Date Time")."\",\""._QXZ("User Agent")."\",\""._QXZ("Lead")."\",\""._QXZ("Phone")."\",\""._QXZ("CID")."\",\""._QXZ("Transfer")."\",\""._QXZ("Results")."\"\n";
+		$file_output .= "\""._QXZ("Date Time")."\",\""._QXZ("User Agent")."\",\""._QXZ("Lead")."\",\""._QXZ("Phone")."\",\""._QXZ("CID")."\",\""._QXZ("Channel")."\",\""._QXZ("Server")."\",\""._QXZ("Transfer")."\",\""._QXZ("Results")."\"\n";
 		$file_output .= $file_output_data;
 		}
 	else

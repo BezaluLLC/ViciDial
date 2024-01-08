@@ -2579,3 +2579,13 @@ index(call_date)
 CREATE INDEX vdplpn on vicidial_3way_press_log (phone_number);
 
 UPDATE system_settings SET db_schema_version='1703',db_schema_update_date=NOW() where db_schema_version < 1703;
+
+ALTER TABLE vicidial_3way_press_live ADD call_channel VARCHAR(100) default '';
+
+ALTER TABLE vicidial_3way_press_log ADD call_channel VARCHAR(100) default '';
+ALTER TABLE vicidial_3way_press_log ADD call_transfer ENUM('N','Y') default 'N';
+
+ALTER TABLE vicidial_3way_press_log_archive ADD call_channel VARCHAR(100) default '';
+ALTER TABLE vicidial_3way_press_log_archive ADD call_transfer ENUM('N','Y') default 'N';
+
+UPDATE system_settings SET db_schema_version='1704',db_schema_update_date=NOW() where db_schema_version < 1704;
