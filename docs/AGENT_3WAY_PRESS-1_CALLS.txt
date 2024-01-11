@@ -1,4 +1,4 @@
-Agent 3-way Press-1 Calls DOC	Started: 2023-11-13	Updated: 2024-01-08
+Agent 3-way Press-1 Calls DOC	Started: 2023-11-13	Updated: 2024-01-10
 
 
 This document will go over how to set up Agent Screen 3-way calls with outside
@@ -51,6 +51,18 @@ Hungup = Either the call timed out or another outside-user pressed '1' before th
 Is there any way to tell if the outside-user is still on the phone call with the customer/agent?
 
 Yes, the 'vicidial_3way_press_log' database table has a "call_channel" field that will store the Asterisk channel name in it after the call is answered, and that value together with the "server_ip" field will allow you to look up that channel in the 'live_sip_channels' database table to see if it is still active on the system. As for multi-call, you can look at the "call_transfer" field in the 'vicidial_3way_press_log' database table to see which outside-user call was transferred to the customer/agent session. If "call_transfer" is set to 'Y' then that call was the successfully transferred one.
+
+
+
+Are there any timeouts on these outside-user phone calls?
+
+Yes, there is a built-in timeout at 100 seconds from initiation of the 3way call by the VICIdial agent if none of the external-users have connected by then. After 100 seconds, the initial 3way from the customer/agent session will be hung up and any remaining outside-user calls will be marked as "Timeout". This 100 seconds allows for up to 80 seconds of ring-time and 20 seconds of waiting after Answer to allow pressing 1. 
+
+
+
+How do you change the audio prompt that the outside-users hear asking them to press-1?
+
+You can actually change the prompts to the outside-users to anything in the Audio Store that you want since it's just dialplan configuration. If you go to the "Admin -> System Settings" screen, look at the "Custom Dialplan Entry" field. There are several segments of dialplan here, but the one you will want to edit looks like the dialplan enries below. The three "Background(..." entries in the segment below are the prompts that the outside-user will hear when they pick up the phone, you can change these to a single "Background(..." entry with only one audio file, or you can use multiple entries if you want. Once you are done making changes, be sure to set the "Reload Dialplan On Servers" option on the same page to '1', and then submit your changes. The changes should go into effect within 1 minute.
 
 
 
