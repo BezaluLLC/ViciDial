@@ -7,6 +7,7 @@
 #
 # 231228-2204 - First build
 # 240108-1556 - Added channel/server display
+# 240114-1018 - Added Agent Gone summary stat
 #
 
 $startMS = microtime();
@@ -443,6 +444,7 @@ else
 	$TOTtooslow=0;
 	$TOTdefeated=0;
 	$TOTtransfer=0;
+	$TOTagentgone=0;
 
 	$stmt = "SELECT date_format(call_date, '%Y-%m-%d %H:%i:%s') as date,user,lead_id,phone_number,outbound_cid,result,call_channel,server_ip from ".$vicidial_3way_press_log_table." where call_date <= '$query_date_END' and call_date >= '$query_date_BEGIN' $user_SQL $phone_number_SQL order by call_date desc limit 100000";
 	$rslt=mysql_to_mysqli($stmt, $link);
@@ -487,6 +489,7 @@ else
 			if (preg_match("/Declined/",$Rresult[$i])) {$TOTdeclined++;}
 			if (preg_match("/Too Slow/",$Rresult[$i])) {$TOTtooslow++;}
 			if (preg_match("/Defeated/",$Rresult[$i])) {$TOTdefeated++;}
+			if (preg_match("/Agent Gone/",$Rresult[$i])) {$TOTagentgone++;}
 			if (preg_match("/Transfer/",$Rresult[$i])) {$TOTtransfer++;   $Rtransfer[$i]++;}
 			else
 				{$BD='<font color=red>';   $ED='</font>';}
@@ -520,6 +523,7 @@ else
 		$TOTtooslow = sprintf("%10s", $TOTtooslow);
 		$TOTdefeated = sprintf("%10s", $TOTdefeated);
 		$TOTtransfer = sprintf("%10s", $TOTtransfer);
+		$TOTagentgone = sprintf("%10s", $TOTagentgone);
 
 		$ASCII_text.=""._QXZ("Results Summary").":\n";
 		$ASCII_text.="+------------+------------+\n";
@@ -529,6 +533,7 @@ else
 		$ASCII_text.="| "._QXZ("Declined",10)." | $TOTdeclined |\n";
 		$ASCII_text.="| "._QXZ("Too Slow",10)." | $TOTtooslow |\n";
 		$ASCII_text.="| "._QXZ("Defeated",10)." | $TOTdefeated |\n";
+		$ASCII_text.="| "._QXZ("Agent Gone",10)." | $TOTagentgone |\n";
 		$ASCII_text.="| "._QXZ("Transfer",10)." | $TOTtransfer |\n";
 		$ASCII_text.="+------------+------------+\n";
 
@@ -546,6 +551,7 @@ else
 		$file_output .= "\""._QXZ("Declined")."\",\"".trim($TOTdeclined)."\"\n";
 		$file_output .= "\""._QXZ("Too Slow")."\",\"".trim($TOTtooslow)."\"\n";
 		$file_output .= "\""._QXZ("Defeated")."\",\"".trim($TOTdefeated)."\"\n";
+		$file_output .= "\""._QXZ("Agent Gone")."\",\"".trim($TOTagentgone)."\"\n";
 		$file_output .= "\""._QXZ("Transfer")."\",\"".trim($TOTtransfer)."\"\n";
 		$file_output .= "\n";
 		$file_output .= "\""._QXZ("Results Detail").":\"\n";

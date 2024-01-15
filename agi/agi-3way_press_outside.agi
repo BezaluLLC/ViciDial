@@ -53,10 +53,11 @@
 # 231113-2041 - First Build
 # 231227-1427 - Added multi-phone ability
 # 240108-1503 - Added call_channel and call_transfer logging
+# 240114-0946 - Added check of agent_heartbeat
 #
 
 $script = 'agi-3way_press_outside.agi';
-$build = '231227-1427';
+$build = '240114-0946';
 
 $at='@';
 $S='*';
@@ -332,7 +333,8 @@ $CALLsession_id='';
 $CALLuser='';
 $CALLlead_id='';
 $CALLsession_id_3way='';
-$stmtA = "SELECT server_ip,session_id,user,lead_id,session_id_3way FROM vicidial_3way_press_live where call_3way_id='$calleridname' order by call_date desc limit 1;";
+$CALLagent_heartbeat=0;
+$stmtA = "SELECT server_ip,session_id,user,lead_id,session_id_3way,UNIX_TIMESTAMP(agent_heartbeat) FROM vicidial_3way_press_live where call_3way_id='$calleridname' order by call_date desc limit 1;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -345,8 +347,38 @@ if ($sthArows > 0)
 	$CALLuser =				$aryA[2];
 	$CALLlead_id =			$aryA[3];
 	$CALLsession_id_3way =	$aryA[4];
+	$CALLagent_heartbeat =	$aryA[5];
 	}
 $sthA->finish();
+
+$heartbeat_test = ( (time()) - 9);
+if ( ($sthArows > 0) && ($CALLagent_heartbeat <= $heartbeat_test) )
+	{
+	if ($AGILOG) {$agi_string = "3-WAY AGENT ERROR: heartbeat gone, exiting...  |($CALLagent_heartbeat < $heartbeat_test)|$calleridname|";   &agi_output;}
+
+	### Update the call in vicidial_3way_press_live
+	$stmtA="DELETE FROM vicidial_3way_press_live where call_3way_id='$calleridname';";
+		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+	$affected_rowsA = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live agent gone DELETE: |$affected_rowsA|$stmtA|";   &agi_output;}
+
+	### Update the call in vicidial_3way_press_log
+	$stmtA="UPDATE vicidial_3way_press_log SET result=CONCAT(result,'|Agent Gone: $SQLdate') where call_3way_id='$calleridname';";
+		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+	$affected_rowsA = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log agent gone UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
+
+	print "SET CONTEXT $context\n";
+		$result = <STDIN>;
+		checkresult($result);
+	print "SET EXTENSION i\n";
+		$result = <STDIN>;
+		checkresult($result);
+	print "SET PRIORITY 1\n";
+		$result = <STDIN>;
+		checkresult($result);
+	exit;
+	}
 
 $stmtA = "SELECT user FROM vicidial_live_agents where lead_id='$lead_id' and server_ip='$CALLserver_ip' order by live_agent_id desc limit 1;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -451,7 +483,7 @@ if ($stage =~ /accepted/i)
 				$AGI->stream_file('hold_tone');
 				}
 
-			$stmtA = "SELECT status,session_id_3way FROM vicidial_3way_press_live where call_3way_id='$calleridname' order by call_date desc limit 1;";
+			$stmtA = "SELECT status,session_id_3way,UNIX_TIMESTAMP(agent_heartbeat) FROM vicidial_3way_press_live where call_3way_id='$calleridname' order by call_date desc limit 1;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -459,10 +491,40 @@ if ($stage =~ /accepted/i)
 			if ($sthArows > 0)
 				{
 				@aryA = $sthA->fetchrow_array;	
-				$CALLstatus =		$aryA[0];
-				$CALLconf_exten =	$aryA[1];
+				$CALLstatus =			$aryA[0];
+				$CALLconf_exten =		$aryA[1];
+				$CALLagent_heartbeat =	$aryA[2];
 				}
 			$sthA->finish();
+
+			$heartbeat_test = ( (time()) - 9);
+			if ($CALLagent_heartbeat <= $heartbeat_test)
+				{
+				if ($AGILOG) {$agi_string = "3-WAY AGENT ERROR: heartbeat gone 2, exiting...  |($CALLagent_heartbeat < $heartbeat_test)|$calleridname|";   &agi_output;}
+
+				### Update the call in vicidial_3way_press_live
+				$stmtA="DELETE FROM vicidial_3way_press_live where call_3way_id='$calleridname';";
+					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				$affected_rowsA = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live agent gone 2 DELETE: |$affected_rowsA|$stmtA|";   &agi_output;}
+
+				### Update the call in vicidial_3way_press_log
+				$stmtA="UPDATE vicidial_3way_press_log SET result=CONCAT(result,'|Agent Gone: $SQLdate') where call_3way_id='$calleridname';";
+					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+				$affected_rowsA = $dbhA->do($stmtA);
+				if ($AGILOG) {$agi_string = "--    vicidial_3way_press_log agent gone 2 UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
+
+				print "SET CONTEXT $context\n";
+					$result = <STDIN>;
+					checkresult($result);
+				print "SET EXTENSION i\n";
+					$result = <STDIN>;
+					checkresult($result);
+				print "SET PRIORITY 1\n";
+					$result = <STDIN>;
+					checkresult($result);
+				exit;
+				}
 
 			if ( ($CALLstatus =~ /RESERVED/) && (length($CALLconf_exten) > 0) )
 				{

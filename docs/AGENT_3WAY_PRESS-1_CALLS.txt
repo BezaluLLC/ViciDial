@@ -1,4 +1,4 @@
-Agent 3-way Press-1 Calls DOC	Started: 2023-11-13	Updated: 2024-01-10
+Agent 3-way Press-1 Calls DOC	Started: 2023-11-13	Updated: 2024-01-14
 
 
 This document will go over how to set up Agent Screen 3-way calls with outside
@@ -44,6 +44,7 @@ Transfer = The outside-user call is transferred to the agent and customer.
 Declined = The outside-user call did not press '1' to accept the call.
 Too Slow = Multi-Call Only, The outside-user did press '1' to accept the call, but another outside-user pressed '1' before them.
 Defeated = Multi-Call Only, another outside-user pressed '1' before them, so this call was hung up.
+Agent Gone = The agent 3way call is gone, no ability to accept outside-agent transfer
 Hungup = Either the call timed out or another outside-user pressed '1' before them, so this call was hung up.
 
 
@@ -133,6 +134,7 @@ server_ip VARCHAR(15),
 session_id_3way VARCHAR(20) default '',
 status VARCHAR(40),
 call_channel VARCHAR(100) default '',
+agent_heartbeat DATETIME,
 index(call_date),
 index(caller_code),
 index(call_3way_id),

@@ -2589,3 +2589,7 @@ ALTER TABLE vicidial_3way_press_log_archive ADD call_channel VARCHAR(100) defaul
 ALTER TABLE vicidial_3way_press_log_archive ADD call_transfer ENUM('N','Y') default 'N';
 
 UPDATE system_settings SET db_schema_version='1704',db_schema_update_date=NOW() where db_schema_version < 1704;
+
+ALTER TABLE vicidial_3way_press_live ADD agent_heartbeat DATETIME;
+
+UPDATE system_settings SET db_schema_version='1705',db_schema_update_date=NOW() where db_schema_version < 1705;

@@ -5065,6 +5065,7 @@ server_ip VARCHAR(15),
 session_id_3way VARCHAR(20) default '',
 status VARCHAR(40),
 call_channel VARCHAR(100) default '',
+agent_heartbeat DATETIME,
 index(call_date),
 index(caller_code),
 index(call_3way_id),
@@ -5573,4 +5574,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1704',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1705',db_schema_update_date=NOW(),reload_timestamp=NOW();

@@ -23,16 +23,17 @@
 #exten => _49907.,n,Hangup
 #
 #
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 231113-2016 - First Build
 # 231118-1600 - Added endings for HUNGUP and TIMEOUT
 # 231227-1428 - Added multi-phone ability
+# 240114-0942 - Added agent_heartbeat
 #
 
 $script = 'agi-3way_press_agent.agi';
-$build = '231227-1428';
+$build = '240114-0942';
 
 $at='@';
 $S='*';
@@ -406,7 +407,7 @@ if ( ($CALLphone_numbers_ct > 0) && (length($CALLphone_numbers) > 4) )
 		$allCIDs .= "$VIDqueryCID|";
 
 		### Insert the call to vicidial_3way_press_live
-		$stmtA="INSERT INTO vicidial_3way_press_live SET call_date=\"$SQLdate\",caller_code='$calleridname',call_3way_id='$VIDqueryCID',lead_id='$lead_id',phone_number='$CALLphone_numbers_ARY[$vp]',dialstring='$temp_prefix_code$CALLphone_numbers_ARY[$vp]',outbound_cid='$original_cid',user='$CALLuser',session_id='$CALLsession_id',server_ip='$CALLserver_ip',session_id_3way='',status='NEW';";
+		$stmtA="INSERT INTO vicidial_3way_press_live SET call_date=\"$SQLdate\",caller_code='$calleridname',call_3way_id='$VIDqueryCID',lead_id='$lead_id',phone_number='$CALLphone_numbers_ARY[$vp]',dialstring='$temp_prefix_code$CALLphone_numbers_ARY[$vp]',outbound_cid='$original_cid',user='$CALLuser',session_id='$CALLsession_id',server_ip='$CALLserver_ip',session_id_3way='',status='NEW',agent_heartbeat=NOW();";
 			if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 		$affected_rowsA = $dbhA->do($stmtA);
 		if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live INSERT: |$affected_rowsA|$stmtA|";   &agi_output;}
@@ -436,7 +437,7 @@ else
 	$allCIDs .= "$VIDqueryCID|";
 
 	### Insert the call to vicidial_3way_press_live
-	$stmtA="INSERT INTO vicidial_3way_press_live SET call_date=\"$SQLdate\",caller_code='$calleridname',call_3way_id='$VIDqueryCID',lead_id='$lead_id',phone_number='$phone_number',dialstring='$dialstring',outbound_cid='$original_cid',user='$CALLuser',session_id='$CALLsession_id',server_ip='$CALLserver_ip',session_id_3way='',status='NEW';";
+	$stmtA="INSERT INTO vicidial_3way_press_live SET call_date=\"$SQLdate\",caller_code='$calleridname',call_3way_id='$VIDqueryCID',lead_id='$lead_id',phone_number='$phone_number',dialstring='$dialstring',outbound_cid='$original_cid',user='$CALLuser',session_id='$CALLsession_id',server_ip='$CALLserver_ip',session_id_3way='',status='NEW',agent_heartbeat=NOW();";
 		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 	$affected_rowsA = $dbhA->do($stmtA);
 	if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live INSERT: |$affected_rowsA|$stmtA|";   &agi_output;}
@@ -471,6 +472,13 @@ while ($wait_loop < 100)
 		$AGI->stream_file('hold_tone');
 		}
 
+	### Update agent_heartbeat on all outside-agent calls
+	$stmtA="UPDATE vicidial_3way_press_live SET agent_heartbeat=NOW() where call_3way_id IN('$allCIDs');";
+		if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
+	$affected_rowsA = $dbhA->do($stmtA);
+	if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live agent_heartbeat UPDATE: |$affected_rowsA|$stmtA|";   &agi_output;}
+
+	### Find all associated outside-agent calls
 	$stmtA = "SELECT status,call_3way_id FROM vicidial_3way_press_live where call_3way_id IN('$allCIDs') order by status desc limit 11;";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
