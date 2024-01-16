@@ -3315,6 +3315,7 @@ old_status VARCHAR(6) COLLATE utf8_unicode_ci DEFAULT NULL,
 new_status VARCHAR(6) COLLATE utf8_unicode_ci DEFAULT NULL,
 details TEXT COLLATE utf8_unicode_ci,
 processed ENUM('Y','N') COLLATE utf8_unicode_ci NOT NULL,
+qc_log_id INT(10) UNSIGNED,
 PRIMARY KEY (qc_agent_log_id),
 KEY view_epoch (view_epoch)
 ) ENGINE=MyISAM;
@@ -5574,4 +5575,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1705',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1706',db_schema_update_date=NOW(),reload_timestamp=NOW();

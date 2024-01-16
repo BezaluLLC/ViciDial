@@ -2593,3 +2593,7 @@ UPDATE system_settings SET db_schema_version='1704',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_3way_press_live ADD agent_heartbeat DATETIME;
 
 UPDATE system_settings SET db_schema_version='1705',db_schema_update_date=NOW() where db_schema_version < 1705;
+
+ALTER TABLE vicidial_qc_agent_log ADD qc_log_id INT(10) UNSIGNED;
+
+UPDATE system_settings SET db_schema_version='1706',db_schema_update_date=NOW() where db_schema_version < 1706;
