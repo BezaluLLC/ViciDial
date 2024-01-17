@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-01-05
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-01-16
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -1846,7 +1846,7 @@ NOTE: api user for this function must have user_level set to 8 or higher and "mo
 
 REQUIRED FIELDS-
 list_id -		2-14 digits
-list_name -		6-30 characters
+list_name -		2-30 characters
 campaign_id -		2-8 characters, must be a valid campaign_id
 
 OPTIONAL FIELDS-

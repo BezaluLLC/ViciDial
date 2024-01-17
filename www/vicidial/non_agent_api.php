@@ -7711,7 +7711,7 @@ if ($function == 'add_list')
 			}
 		else
 			{
-			if ( (strlen($list_id)<2) or (strlen($list_id)>14) or (strlen($campaign_id)<1) or (strlen($campaign_id)>8) or (strlen($list_name)<6) or (strlen($list_name)>30) )
+			if ( (strlen($list_id)<2) or (strlen($list_id)>14) or (strlen($campaign_id)<1) or (strlen($campaign_id)>8) or (strlen($list_name)<2) or (strlen($list_name)>30) )
 				{
 				$result = 'ERROR';
 				$result_reason = "add_list YOU MUST USE ALL REQUIRED FIELDS";
