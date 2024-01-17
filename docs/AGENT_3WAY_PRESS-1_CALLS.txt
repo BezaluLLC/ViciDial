@@ -1,4 +1,4 @@
-Agent 3-way Press-1 Calls DOC	Started: 2023-11-13	Updated: 2024-01-14
+Agent 3-way Press-1 Calls DOC	Started: 2023-11-13	Updated: 2024-01-17
 
 
 This document will go over how to set up Agent Screen 3-way calls with outside
@@ -67,6 +67,19 @@ You can actually change the prompts to the outside-users to anything in the Audi
 
 
 
+Are there any definable timeouts for these processes?
+
+There are actually 4 separate timeouts for this process that you can define in the custom dialplan entry in System Settings:
+
+1. The VICIdial agent timeout: This is the total time from the initiation of the 3way call process, this includes the outside-agent dial time, and the prompting of the outside-agent and waiting for their response. If you want 30 seconds of dial time and 20 seconds waiting for a response, then you would want to set this to '50'.
+
+2. The 3way call dial timeout: This is the outside-agent call Dial() timeout, how long the system will wait without receiving an Answer signal before hanging up the call. Default is '80', but I've set this to '30' in the example below.
+
+3. The outside-agent prompt timeout: This is the amount of time waiting for the outside-agent to press '1' after the prompt finishes, default for this is '20'
+
+4. The outside-agent acceptance timeout: This is only the time after the outside-agent presses '1' and is waiting for transfer to the customer/agent session in most cases, this doesn't need to be any higher than '10'.
+
+
 
 
 SYSTEM SETTINGS DIALPLAN ENTRIES, PUT AT THE BOTTOM OF THE ENTRY!!! :
@@ -95,7 +108,7 @@ exten => s,n,Hangup
 
 exten => 1,1,NoOp(${call_3way_id})
 exten => 1,n,NoOp(${CALLERID(name)})
-exten => 1,n,AGI(agi-3way_press_outside.agi,accepted)
+exten => 1,n,AGI(agi-3way_press_outside.agi,accepted---10)
 exten => 1,n,Hangup()
 
 exten => t,1,Playback(buzz)
@@ -108,7 +121,7 @@ exten => i,n,Hangup()
 exten => _49907.,1,Answer
 exten => _49907.,n,NoOp(${CALLERID(name)})
 exten => _49907.,n,Playback(sip-silence)
-exten => _49907.,n,AGI(agi-3way_press_agent.agi,start)
+exten => _49907.,n,AGI(agi-3way_press_agent.agi,start---50---30)
 exten => _49907.,n,Hangup
 
 

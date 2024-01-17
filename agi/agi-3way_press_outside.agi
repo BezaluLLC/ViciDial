@@ -25,7 +25,7 @@
 #exten => s,1,Answer
 #exten => s,n,NoOp(${call_3way_id})
 #exten => s,n,NoOp(${CALLERID(name)})
-#exten => s,n,AGI(agi-3way_press_outside.agi,answered)
+#exten => s,n,AGI(agi-3way_press_outside.agi,answered---20)
 #exten => s,n,Playback(sip-silence)
 #exten => s,n,Wait(1)
 #exten => s,n,Background(outside-sales)
@@ -54,10 +54,11 @@
 # 231227-1427 - Added multi-phone ability
 # 240108-1503 - Added call_channel and call_transfer logging
 # 240114-0946 - Added check of agent_heartbeat
+# 240116-2109 - Added CLI flag for timeout
 #
 
 $script = 'agi-3way_press_outside.agi';
-$build = '240114-0946';
+$build = '240116-2109';
 
 $at='@';
 $S='*';
@@ -65,6 +66,7 @@ $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=272;
 $one_mysql_log=0;
 $MT[0]='';
+$timeout=100;
 
 
 $now_date_epoch = time();
@@ -207,6 +209,13 @@ if (length($ARGV[0])>1)
 	@ARGV_vars = split(/---/, $ARGV[0]);
 
 	$stage = 		$ARGV_vars[0];
+	$CLI_timeout = 	$ARGV_vars[1];
+	$CLI_timeout =~ s/\D//gi;
+	if (length($CLI_timeout) > 0)
+		{
+		if ($AGILOG) {$agi_string = "     Timeout CLI override: $timeout -> $CLI_timeout";   &agi_output;}
+		$timeout = $CLI_timeout;
+		}
 	}
 
 $|=1;
@@ -475,7 +484,7 @@ if ($stage =~ /accepted/i)
 		$CALLstatus='';
 		$CALLconf_exten='';
 		$wait_loop=0;
-		while ($wait_loop < 100) 
+		while ($wait_loop < $timeout) 
 			{
 			usleep(1*990*1000);
 			if ($wait_loop =~ /0$|5$/) 
