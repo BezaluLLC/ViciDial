@@ -1,7 +1,7 @@
 <?php
 # non_agent_api.php
 # 
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with all non-agent-screen VICIDIAL functions
@@ -207,12 +207,14 @@
 # 231109-2022 - Added lead_dearchive function
 # 240101-0920 - Added DUPPHONEALT... options for duplicate_check within add_lead function 
 # 240105-1009 - Added delete_fpg_phone function
+# 240120-0840 - Added list_order,list_order_randomize,list_order_secondary optional fields to update_campaign function
 #
 
-$version = '2.14-184';
-$build = '240105-1009';
+$version = '2.14-185';
+$build = '240120-0840';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
+$camp_lead_order_random=1;
 
 $startMS = microtime();
 
@@ -722,6 +724,12 @@ if (isset($_GET["reset_password"]))				{$reset_password=$_GET["reset_password"];
 	elseif (isset($_POST["reset_password"]))	{$reset_password=$_POST["reset_password"];}
 if (isset($_GET["archived_lead"]))			{$archived_lead=$_GET["archived_lead"];}
 	elseif (isset($_POST["archived_lead"]))	{$archived_lead=$_POST["archived_lead"];}
+if (isset($_GET["list_order"]))			{$list_order=$_GET["list_order"];}
+	elseif (isset($_POST["list_order"]))	{$list_order=$_POST["list_order"];}
+if (isset($_GET["list_order_randomize"]))			{$list_order_randomize=$_GET["list_order_randomize"];}
+	elseif (isset($_POST["list_order_randomize"]))	{$list_order_randomize=$_POST["list_order_randomize"];}
+if (isset($_GET["list_order_secondary"]))			{$list_order_secondary=$_GET["list_order_secondary"];}
+	elseif (isset($_POST["list_order_secondary"]))	{$list_order_secondary=$_POST["list_order_secondary"];}
 
 $DB=preg_replace('/[^0-9]/','',$DB);
 
@@ -878,6 +886,9 @@ $action = preg_replace('/[^0-9a-zA-Z]/','',$action);
 $include_ip = preg_replace('/[^0-9a-zA-Z]/','',$include_ip);
 $reset_password = preg_replace('/[^0-9]/','',$reset_password);
 $archived_lead = preg_replace('/[^0-9a-zA-Z]/','',$archived_lead);
+$list_order = preg_replace('/[^ 0-9a-zA-Z]/','',$list_order);
+$list_order_randomize = preg_replace('/[^-_0-9a-zA-Z]/','',$list_order_randomize);
+$list_order_secondary = preg_replace('/[^-_0-9a-zA-Z]/','',$list_order_secondary);
 
 if ($non_latin < 1)
 	{
@@ -8209,6 +8220,9 @@ if ($function == 'update_campaign')
 					$xferconf_fourSQL='';
 					$xferconf_fiveSQL='';
 					$dispo_call_urlSQL='';
+					$list_orderSQL='';
+					$list_order_randomizeSQL='';
+					$list_order_secondarySQL='';
 					$dial_statusesSQL='';
 
 					if (strlen($auto_dial_level) > 0)
@@ -8474,6 +8488,94 @@ if ($function == 'update_campaign')
 								{$dispo_call_urlSQL = " ,dispo_call_url='" . mysqli_real_escape_string($link, $dispo_call_url) . "'";}
 							}
 						}
+					if (strlen($list_order) > 0)
+						{
+						if ( ($camp_lead_order_random > 0) and (preg_match("/RANDOM/i",$list_order)) )
+							{
+							$result = 'ERROR';
+							$result_reason = "update_campaign LIST ORDER INCLUDING RANDOM ARE NOT ALLOWED, THIS IS AN OPTIONAL FIELD";
+							$data = "$list_order";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						if (!preg_match("/^DOWN$|^UP$|^DOWN PHONE$|^UP PHONE$|^DOWN LAST NAME$|^UP LAST NAME$|^DOWN COUNT$|^UP COUNT$|^RANDOM$|^DOWN LAST CALL TIME$|^UP LAST CALL TIME$|^DOWN RANK$|^UP RANK$|^DOWN OWNER$|^UP OWNER$|^DOWN TIMEZONE$|^UP TIMEZONE$|^DOWN 2nd NEW$|^DOWN 3rd NEW$|^DOWN 4th NEW$|^DOWN 5th NEW$|^DOWN 6th NEW$|^UP 2nd NEW$|^UP 3rd NEW$|^UP 4th NEW$|^UP 5th NEW$|^UP 6th NEW$|^DOWN PHONE 2nd NEW$|^DOWN PHONE 3rd NEW$|^DOWN PHONE 4th NEW$|^DOWN PHONE 5th NEW$|^DOWN PHONE 6th NEW$|^UP PHONE 2nd NEW$|^UP PHONE 3rd NEW$|^UP PHONE 4th NEW$|^UP PHONE 5th NEW$|^UP PHONE 6th NEW$|^DOWN LAST NAME 2nd NEW$|^DOWN LAST NAME 3rd NEW$|^DOWN LAST NAME 4th NEW$|^DOWN LAST NAME 5th NEW$|^DOWN LAST NAME 6th NEW$|^UP LAST NAME 2nd NEW$|^UP LAST NAME 3rd NEW$|^UP LAST NAME 4th NEW$|^UP LAST NAME 5th NEW$|^UP LAST NAME 6th NEW$|^DOWN COUNT 2nd NEW$|^DOWN COUNT 3rd NEW$|^DOWN COUNT 4th NEW$|^DOWN COUNT 5th NEW$|^DOWN COUNT 6th NEW$|^UP COUNT 2nd NEW$|^UP COUNT 3rd NEW$|^UP COUNT 4th NEW$|^UP COUNT 5th NEW$|^UP COUNT 6th NEW$|^RANDOM 2nd NEW$|^RANDOM 3rd NEW$|^RANDOM 4th NEW$|^RANDOM 5th NEW$|^RANDOM 6th NEW$|^DOWN LAST CALL TIME 2nd NEW$|^DOWN LAST CALL TIME 3rd NEW$|^DOWN LAST CALL TIME 4th NEW$|^DOWN LAST CALL TIME 5th NEW$|^DOWN LAST CALL TIME 6th NEW$|^UP LAST CALL TIME 2nd NEW$|^UP LAST CALL TIME 3rd NEW$|^UP LAST CALL TIME 4th NEW$|^UP LAST CALL TIME 5th NEW$|^UP LAST CALL TIME 6th NEW$|^DOWN RANK 2nd NEW$|^DOWN RANK 3rd NEW$|^DOWN RANK 4th NEW$|^DOWN RANK 5th NEW$|^DOWN RANK 6th NEW$|^UP RANK 2nd NEW$|^UP RANK 3rd NEW$|^UP RANK 4th NEW$|^UP RANK 5th NEW$|^UP RANK 6th NEW$|^DOWN OWNER 2nd NEW$|^DOWN OWNER 3rd NEW$|^DOWN OWNER 4th NEW$|^DOWN OWNER 5th NEW$|^DOWN OWNER 6th NEW$|^UP OWNER 2nd NEW$|^UP OWNER 3rd NEW$|^UP OWNER 4th NEW$|^UP OWNER 5th NEW$|^UP OWNER 6th NEW$|^DOWN TIMEZONE 2nd NEW$|^DOWN TIMEZONE 3rd NEW$|^DOWN TIMEZONE 4th NEW$|^DOWN TIMEZONE 5th NEW$|^DOWN TIMEZONE 6th NEW$|^UP TIMEZONE 2nd NEW$|^UP TIMEZONE 3rd NEW$|^UP TIMEZONE 4th NEW$|^UP TIMEZONE 5th NEW$|^UP TIMEZONE 6th NEW$/",$list_order))
+							{
+							$result = 'ERROR';
+							$result_reason = "update_campaign LIST ORDER IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+							$data = "$list_order";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{
+							if ( (strlen($list_order) < 2) or (strlen($list_order) > 30) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_campaign LIST ORDER IS NOT A VALID LENGTH, THIS IS AN OPTIONAL FIELD";
+								$data = "$list_order";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$list_orderSQL = " ,lead_order='$list_order'";}
+							}
+						}
+					if (strlen($list_order_randomize) > 0)
+						{
+						if (!preg_match("/^Y$|^N$/",$list_order_randomize))
+							{
+							$result = 'ERROR';
+							$result_reason = "update_campaign LIST ORDER RANDOMIZE IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+							$data = "$list_order_randomize";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{
+							if ( (strlen($list_order_randomize) < 1) or (strlen($list_order_randomize) > 1) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_campaign LIST ORDER RANDOMIZE IS NOT A VALID LENGTH, THIS IS AN OPTIONAL FIELD";
+								$data = "$list_order";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$list_order_randomizeSQL = " ,lead_order_randomize='$list_order_randomize'";}
+							}
+						}
+					if (strlen($list_order_secondary) > 0)
+						{
+						if (!preg_match("/^LEAD_ASCEND$|^LEAD_DESCEND$|^CALLTIME_ASCEND$|^CALLTIME_DESCEND$|^VENDOR_ASCEND$|^VENDOR_DESCEND$/",$list_order_secondary))
+							{
+							$result = 'ERROR';
+							$result_reason = "update_campaign LIST ORDER SECONDARY IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+							$data = "$list_order_secondary";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{
+							if ( (strlen($list_order_secondary) < 10) or (strlen($list_order_secondary) > 20) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_campaign LIST ORDER SECONDARY IS NOT A VALID LENGTH, THIS IS AN OPTIONAL FIELD";
+								$data = "$list_order";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$list_order_secondarySQL = " ,lead_order_secondary='$list_order_secondary'";}
+							}
+						}
+
 					if (strlen($dial_status_add) > 0)
 						{
 						if (strlen($dial_status_add) > 6)
@@ -8552,7 +8654,7 @@ if ($function == 'update_campaign')
 						{$dial_statusesSQL = ",dial_statuses='$dial_statusesSQL'";}
 
 
-					$updateSQL = "$campaignnameSQL$activeSQL$dialtimeoutSQL$hopperlevelSQL$campaignvdadextenSQL$adaptivemaximumlevelSQL$dialmethodSQL$autodiallevelSQL$campaigncidSQL$campaignfilterSQL$xferconf_oneSQL$xferconf_twoSQL$xferconf_threeSQL$xferconf_fourSQL$xferconf_fiveSQL$dial_statusesSQL$dispo_call_urlSQL";
+					$updateSQL = "$campaignnameSQL$activeSQL$dialtimeoutSQL$hopperlevelSQL$campaignvdadextenSQL$adaptivemaximumlevelSQL$dialmethodSQL$autodiallevelSQL$campaigncidSQL$campaignfilterSQL$xferconf_oneSQL$xferconf_twoSQL$xferconf_threeSQL$xferconf_fourSQL$xferconf_fiveSQL$list_orderSQL$list_order_randomizeSQL$list_order_secondarySQL$dial_statusesSQL$dispo_call_urlSQL";
 
 					if (strlen($updateSQL)< 3)
 						{

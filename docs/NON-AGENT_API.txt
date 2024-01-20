@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-01-16
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-01-20
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -215,6 +215,7 @@ Changes:
 231109-2022 - Added lead_dearchive function
 240101-0920 - Added DUPPHONEALT... options for duplicate_check within add_lead function 
 240105-1009 - Added delete_fpg_phone function
+240120-0840 - Added list_order,list_order_randomize,list_order_secondary optional fields to update_campaign function
 
 
 API Functions use the 'function' variable
@@ -2325,6 +2326,9 @@ hopper_level -		Must be from 1 to 2000
 reset_hopper -		Must be one of these: 'Y','N', will default to 'N'
 dial_method -		Must be one of these: 'MANUAL','RATIO','INBOUND_MAN','ADAPT_AVERAGE','ADAPT_HARD_LIMIT','ADAPT_TAPERED'
 dial_timeout -		Must be from 1 to 120
+list_order -		Order in which the leads are dialed, MUST USE PROPER CASE! Some examples include 'UP','DOWN','RANDOM 2nd NEW','DOWN COUNT',etc...
+list_order_randomize -	Randomize hopper lead loading within the list order, Must be one of these: 'Y','N'
+list_order_secondary -	Can be set to one of these: MUST USE PROPER CASE! Examples include 'LEAD_ASCEND','CALLTIME_DESCEND','VENDOR_ASCEND',etc...
 outbound_cid -		1-20 digits
 dial_status_add -	1-6 characters
 dial_status_remove -	1-6 characters
@@ -2345,7 +2349,7 @@ http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&functio
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_campaign&campaign_id=TESTOUT&reset_hopper=Y
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_campaign&campaign_id=TESTOUT&dispo_call_url=http%3A%2F%2Fvicidial.org%2Fquery.php%3Fvar1%3DX%26var2%3Dy
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_campaign&campaign_id=TESTOUT&dispo_call_url=ALT
-http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_campaign&campaign_id=TESTOUT&dial_status_add=A2&dial_status_remove=A3
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_campaign&campaign_id=TESTOUT&dial_status_add=A2&dial_status_remove=A3&list_order=DOWN+COUNT
 
 Example responses:
 ERROR: update_campaign USER DOES NOT HAVE PERMISSION TO UPDATE CAMPAIGNS - 6666
@@ -2367,6 +2371,13 @@ ERROR: update_campaign TRANSFER CONF NUMBER THREE IS NOT VALID, THIS IS AN OPTIO
 ERROR: update_campaign TRANSFER CONF NUMBER FOUR IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
 ERROR: update_campaign TRANSFER CONF NUMBER FIVE IS NOT VALID, THIS IS AN OPTIONAL FIELD - 6666|123456789012345678901234567890123456789012345678901
 ERROR: update_campaign ACTIVE MUST BE Y OR N, THIS IS AN OPTIONAL FIELD - 6666|U
+ERROR: update_campaign LIST ORDER INCLUDING RANDOM ARE NOT ALLOWED, THIS IS AN OPTIONAL FIELD - |6666|RANDOM 2nd NEW|
+ERROR: update_campaign LIST ORDER IS NOT VALID, THIS IS AN OPTIONAL FIELD - |6666|Y|
+ERROR: update_campaign LIST ORDER IS NOT A VALID LENGTH, THIS IS AN OPTIONAL FIELD - |6666|Y|
+ERROR: update_campaign LIST ORDER RANDOMIZE IS NOT VALID, THIS IS AN OPTIONAL FIELD - |6666|X|
+ERROR: update_campaign LIST ORDER RANDOMIZE IS NOT A VALID LENGTH, THIS IS AN OPTIONAL FIELD - |6666|YES|
+ERROR: update_campaign LIST ORDER SECONDARY IS NOT VALID, THIS IS AN OPTIONAL FIELD - |6666|Y|
+ERROR: update_campaign LIST ORDER SECONDARY IS NOT A VALID LENGTH, THIS IS AN OPTIONAL FIELD - |6666|LEAD|
 ERROR: update_campaign DIAL STATUS ADD IS NOT VALID, THIS IS AN OPTIONAL FIELD - |6666|A1234567|
 ERROR: update_campaign DIAL STATUS ADD FAILURE, TOO MANY EXISTING DIAL STATUSES, THIS IS AN OPTIONAL FIELD - |6666|A12345|
 ERROR: update_campaign DIAL STATUS REMOVE IS NOT VALID, THIS IS AN OPTIONAL FIELD - |6666|A1234567|
