@@ -1,4 +1,4 @@
-VICI RECORDING GATEWAY SERVER	Started: 2023-01-14	Updated: 2023-02-01
+VICI RECORDING GATEWAY SERVER	Started: 2023-01-14	Updated: 2024-02-13
 
 
 
@@ -26,6 +26,7 @@ Scripts to add to the crontab on the Gateway Recording server, staggered every 3
 /usr/share/astguiclient/AST_CRON_audio_1_gateway_stereo.pl --STEREO --debugX
 
 (if required:)
+/usr/share/astguiclient/AST_CRON_audio_2_compress --MP3 --GATEWAY
 /usr/share/astguiclient/AST_CRON_audio_3_ftp.pl --WAV --debugX --run-check --ftp-persistent --ftp-validate
 
 
