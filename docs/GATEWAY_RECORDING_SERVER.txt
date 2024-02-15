@@ -1,4 +1,4 @@
-VICI RECORDING GATEWAY SERVER	Started: 2023-01-14	Updated: 2024-02-13
+VICI RECORDING GATEWAY SERVER	Started: 2023-01-14	Updated: 2024-02-14
 
 
 
@@ -9,6 +9,8 @@ The recording files can be archived on the normal archive server, although keep 
 For outbound calls, the gateway recordings can be tied to the original Lead ID and the call_id of the call, providing that the CallerIDname is not modified before it reaches the recording gateway server.
 
 For inbound calls, the gateway recordings can be tied to the original DID Log entry and UniqueID of the call on the VICIdial system. Depending on how complex the inbound call routing is, the gateway recording may also be able to be tied to a Lead ID.
+
+To view the Inbound and Outbound Gateway recordings in your VICIdial web admin screens, add a user with the ID of "GATEWAY" and the recordings will show up under that user.
 
 
 

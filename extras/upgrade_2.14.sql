@@ -2597,3 +2597,9 @@ UPDATE system_settings SET db_schema_version='1705',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_qc_agent_log ADD qc_log_id INT(10) UNSIGNED;
 
 UPDATE system_settings SET db_schema_version='1706',db_schema_update_date=NOW() where db_schema_version < 1706;
+
+ALTER TABLE vicidial_campaigns ADD state_descriptions VARCHAR(40) default '---DISABLED---';
+
+ALTER TABLE vicidial_inbound_groups ADD state_descriptions VARCHAR(40) default '---DISABLED---';
+
+UPDATE system_settings SET db_schema_version='1707',db_schema_update_date=NOW() where db_schema_version < 1707;

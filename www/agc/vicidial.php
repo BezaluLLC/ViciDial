@@ -1,7 +1,7 @@
 <?php
 # vicidial.php - the web-based version of the astVICIDIAL client application
 # 
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Other scripts that this application depends on:
 # - vdc_db_query.php: Updates information in the database
@@ -731,10 +731,11 @@
 # 231129-0952 - Added phone number daily call limits
 # 231129-1359 - Fix for Dial-In-Group user-group issue #1493
 # 231129-1540 - Added refresh_panel agent API function
+# 240214-0400 - Added state_descriptions banners
 #
 
-$version = '2.14-697c';
-$build = '231129-1540';
+$version = '2.14-698c';
+$build = '240214-0400';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
@@ -1041,6 +1042,7 @@ $webphone_width			= 460;	# set the webphone frame width
 $webphone_height		= 500;	# set the webphone frame height
 $webphone_pad			= 0;	# set the table cellpadding for the webphone
 $webphone_location		= 'right';	# set the location on the agent screen 'right' or 'bar'
+$banner_height			= 15;	# state description banner
 $MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
 $SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
 $FORM_COLOR				= '#EFEFEF';
@@ -3109,7 +3111,7 @@ else
 				$HKstatusnames = substr("$HKstatusnames", 0, -1); 
 
 				##### grab the campaign settings
-				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history,show_previous_callback,clear_script,manual_dial_search_filter,web_form_address_three,manual_dial_override_field,status_display_ingroup,customer_gone_seconds,agent_display_fields,manual_dial_timeout,manual_auto_next,manual_auto_show,allow_required_fields,dead_to_dispo,agent_xfer_validation,ready_max_logout,callback_display_days,three_way_record_stop,hangup_xfer_record_start,max_inbound_calls_outcome,manual_auto_next_options,agent_screen_time_display,pause_max_dispo,script_top_dispo,routing_initiated_recordings,dead_trigger_seconds,dead_trigger_action,dead_trigger_repeat,dead_trigger_filename,scheduled_callbacks_force_dial,callback_hours_block,callback_display_days,scheduled_callbacks_timezones_container,three_way_volume_buttons,manual_dial_validation,mute_recordings,leave_vm_no_dispo,leave_vm_message_group_id,campaign_script_two,browser_alert_sound,browser_alert_volume,three_way_record_stop_exception,pause_max_exceptions,transfer_button_launch,leave_3way_start_recording,leave_3way_start_recording_exception,calls_waiting_vl_one,calls_waiting_vl_two,in_man_dial_next_ready_seconds,in_man_dial_next_ready_seconds_override,transfer_no_dispo,local_call_time,pause_max_url,agent_hide_hangup,ig_xfer_list_sort,script_tab_frame_size,user_group_script,agent_hangup_route,agent_hangup_value,agent_hangup_ig_override,show_confetti,custom_one,custom_two,custom_three,custom_four,custom_five,allow_chats,dead_stop_recording,force_per_call_notes FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
+				$stmt="SELECT park_ext,park_file_name,web_form_address,allow_closers,auto_dial_level,dial_timeout,dial_prefix,campaign_cid,campaign_vdad_exten,campaign_rec_exten,campaign_recording,campaign_rec_filename,campaign_script,get_call_launch,am_message_exten,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,alt_number_dialing,scheduled_callbacks,wrapup_seconds,wrapup_message,closer_campaigns,use_internal_dnc,allcalls_delay,omit_phone_code,agent_pause_codes_active,no_hopper_leads_logins,campaign_allow_inbound,manual_dial_list_id,default_xfer_group,xfer_groups,disable_alter_custphone,display_queue_count,manual_dial_filter,agent_clipboard_copy,use_campaign_dnc,three_way_call_cid,dial_method,three_way_dial_prefix,web_form_target,vtiger_screen_login,agent_allow_group_alias,default_group_alias,quick_transfer_button,prepopulate_transfer_preset,view_calls_in_queue,view_calls_in_queue_launch,call_requeue_button,pause_after_each_call,no_hopper_dialing,agent_dial_owner_only,agent_display_dialable_leads,web_form_address_two,agent_select_territories,crm_popup_login,crm_login_address,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,use_custom_cid,scheduled_callbacks_alert,scheduled_callbacks_count,manual_dial_override,blind_monitor_warning,blind_monitor_message,blind_monitor_filename,timer_action_destination,enable_xfer_presets,hide_xfer_number_to_dial,manual_dial_prefix,customer_3way_hangup_logging,customer_3way_hangup_seconds,customer_3way_hangup_action,ivr_park_call,manual_preview_dial,api_manual_dial,manual_dial_call_time_check,my_callback_option,per_call_notes,agent_lead_search,agent_lead_search_method,queuemetrics_phone_environment,auto_pause_precall,auto_pause_precall_code,auto_resume_precall,manual_dial_cid,custom_3way_button_transfer,callback_days_limit,disable_dispo_screen,disable_dispo_status,screen_labels,status_display_fields,pllb_grouping,pllb_grouping_limit,in_group_dial,in_group_dial_select,pause_after_next_call,owner_populate,manual_dial_lead_id,dead_max,dispo_max,pause_max,dead_max_dispo,dispo_max_dispo,max_inbound_calls,manual_dial_search_checkbox,hide_call_log_info,timer_alt_seconds,wrapup_bypass,wrapup_after_hotkey,callback_active_limit,callback_active_limit_override,comments_all_tabs,comments_dispo_screen,comments_callback_screen,qc_comment_history,show_previous_callback,clear_script,manual_dial_search_filter,web_form_address_three,manual_dial_override_field,status_display_ingroup,customer_gone_seconds,agent_display_fields,manual_dial_timeout,manual_auto_next,manual_auto_show,allow_required_fields,dead_to_dispo,agent_xfer_validation,ready_max_logout,callback_display_days,three_way_record_stop,hangup_xfer_record_start,max_inbound_calls_outcome,manual_auto_next_options,agent_screen_time_display,pause_max_dispo,script_top_dispo,routing_initiated_recordings,dead_trigger_seconds,dead_trigger_action,dead_trigger_repeat,dead_trigger_filename,scheduled_callbacks_force_dial,callback_hours_block,callback_display_days,scheduled_callbacks_timezones_container,three_way_volume_buttons,manual_dial_validation,mute_recordings,leave_vm_no_dispo,leave_vm_message_group_id,campaign_script_two,browser_alert_sound,browser_alert_volume,three_way_record_stop_exception,pause_max_exceptions,transfer_button_launch,leave_3way_start_recording,leave_3way_start_recording_exception,calls_waiting_vl_one,calls_waiting_vl_two,in_man_dial_next_ready_seconds,in_man_dial_next_ready_seconds_override,transfer_no_dispo,local_call_time,pause_max_url,agent_hide_hangup,ig_xfer_list_sort,script_tab_frame_size,user_group_script,agent_hangup_route,agent_hangup_value,agent_hangup_ig_override,show_confetti,custom_one,custom_two,custom_three,custom_four,custom_five,allow_chats,dead_stop_recording,force_per_call_notes,state_descriptions FROM vicidial_campaigns where campaign_id = '$VD_campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01013',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -3305,6 +3307,23 @@ else
 				$campaign_chat_enabled =	$row[188];
 				$dead_stop_recording =		$row[189];
 				$force_per_call_notes = 	$row[190];
+				$state_descriptions =		$row[191];
+
+				$state_descriptions_banner=0;
+				if ( ($state_descriptions != '---DISABLED---') and (strlen($state_descriptions) > 0) )
+					{
+					$stmt="SELECT container_entry FROM vicidial_settings_containers WHERE container_id='$state_descriptions';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+					if ($DB) {echo "$stmt\n";}
+					$stde_ct = mysqli_num_rows($rslt);
+					if ($stde_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$$state_descriptions_settings =		$row[0];
+						$state_descriptions_banner++;
+						}
+					}
 
 				$force_per_call_notes_minimum=0;
 				if ($force_per_call_notes != 'DISABLED')
@@ -5530,6 +5549,13 @@ if ($webphone_location == 'bar')
 #	$SFheight = ($SFheight + $webphone_height);
 	$SRheight = ($SRheight + $webphone_height);
 	}
+if ($state_descriptions_banner > 0) 
+	{
+#	$SCheight = ($SCheight + $banner_height);
+#	$SFheight = ($SFheight + $banner_height);
+	$SRheight = ($SRheight + $banner_height);
+	}
+
 $AVTheight = '0';
 if ($is_webphone) {$AVTheight = '20';}
 
@@ -6429,6 +6455,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var ig_custom_three='';
 	var ig_custom_four='';
 	var ig_custom_five='';
+	var state_color='';
+	var state_name='';
 	var closecallid='';
 	var xfercallid='';
 	var custom_field_names='';
@@ -6669,6 +6697,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var dead_stop_recording='<?php echo $dead_stop_recording ?>';
 	var dead_count=0;
 	var APIskip=0;
+	var state_descriptions_banner='<?php echo $state_descriptions_banner ?>';
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -10438,12 +10467,13 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								did_custom_five									= change_array[64];
 								status_group_statuses_data						= change_array[65];
 								last_call_date									= change_array[66];
-
 								ig_custom_one									= change_array[71];
 								ig_custom_two									= change_array[72];
 								ig_custom_three									= change_array[73];
 								ig_custom_four									= change_array[74];
 								ig_custom_five									= change_array[75];
+								state_color										= change_array[76];
+								state_name										= change_array[77];
 
 								// build statuses list for disposition screen
 								VARstatuses = [];
@@ -10816,6 +10846,15 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									webform_click_log('Awebform3');
 									}
 								api_switch_lead_triggered=0;
+
+								if (state_descriptions_banner > 0)
+									{
+									if (state_color.length > 1)
+										{
+										document.getElementById("BannerPanel").style.background = state_color;
+										document.getElementById("BannerPanel").innerHTML = "<font class=\"body_text\">&nbsp;<?php echo _QXZ("State"); ?>: " + document.vicidial_form.state.value + " - " + state_name + " &nbsp; </font>";
+										}
+									}
 
 								if (useIE > 0)
 									{
@@ -12190,6 +12229,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								CalL_ScripT_color_two							= MDnextResponse_array[62];
 								browser_alert_sound								= MDnextResponse_array[63];
 								browser_alert_volume							= MDnextResponse_array[64];
+								state_color										= MDnextResponse_array[65];
+								state_name										= MDnextResponse_array[66];
 
 								// build statuses list for disposition screen
 								VARstatuses = [];
@@ -12432,6 +12473,15 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 								if ( (CalL_ScripT_color_two.length > 1) && (SSenable_second_script > 0) )
 									{document.getElementById("Script2Contents").style.backgroundColor = CalL_ScripT_color_two;}
+
+								if (state_descriptions_banner > 0)
+									{
+									if (state_color.length > 1)
+										{
+										document.getElementById("BannerPanel").style.background = state_color;
+										document.getElementById("BannerPanel").innerHTML = "<font class=\"body_text\">&nbsp;<?php echo _QXZ("State"); ?>: " + document.vicidial_form.state.value + " - " + state_name + " &nbsp; </font>";
+										}
+									}
 
 								if ( (document.vicidial_form.LeadPreview.checked==false) && ( (manual_dial_validation != 'Y') || (manual_entry_dial > 0) ) )
 									{
@@ -12816,6 +12866,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				leave_3way_start_recording_filename='';
 				three_way_call_cid = orig_three_way_call_cid;
 				APIskip=0;
+				document.getElementById("BannerPanel").style.background = panel_bgcolor;
+				document.getElementById("BannerPanel").innerHTML = '';
 				if (manual_dial_preview < 1)
 					{
 					document.vicidial_form.LeadPreview.checked=false;
@@ -13774,12 +13826,14 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							last_call_date									= check_VDIC_array[66];
 						//	CalL_ScripT_id_two								= check_VDIC_array[67];
 						//	CalL_ScripT_color_two							= check_VDIC_array[68];
-
 							ig_custom_one									= check_VDIC_array[71];
 							ig_custom_two									= check_VDIC_array[72];
 							ig_custom_three									= check_VDIC_array[73];
 							ig_custom_four									= check_VDIC_array[74];
 							ig_custom_five									= check_VDIC_array[75];
+							state_color										= check_VDIC_array[76];
+							state_name										= check_VDIC_array[77];
+						//	alert("state debug: |" + document.vicidial_form.state.value + '|'  + state_color + '|'  + state_name + '|');
 
 							// build statuses list for disposition screen
 							VARstatuses = [];
@@ -14314,6 +14368,14 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								var callnum = dialed_number;
 								var dial_display_number = phone_number_format(callnum);
 								alert(" <?php echo _QXZ("Incoming:"); ?> " + dial_display_number + "\n <?php echo _QXZ("Group"); ?>- " + VDIC_data_VDIG[1] + " &nbsp; " + VDIC_fronter);
+								}
+							if (state_descriptions_banner > 0)
+								{
+								if (state_color.length > 1)
+									{
+									document.getElementById("BannerPanel").style.background = state_color;
+									document.getElementById("BannerPanel").innerHTML = "<font class=\"body_text\">&nbsp;<?php echo _QXZ("State"); ?>: " + document.vicidial_form.state.value + " - " + state_name + " &nbsp; </font>";
+									}
 								}
 							}
 						else if ( ((email_enabled>0 && EMAILgroupCOUNT>0) || (chat_enabled>0 && CHATgroupCOUNT>0 && campaign_chat_enabled=='Y')) && AutoDialWaiting==1)
@@ -17202,6 +17264,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					leave_3way_start_recording_filename='';
 					three_way_call_cid = orig_three_way_call_cid;
 					APIskip=0;
+					document.getElementById("BannerPanel").style.background = panel_bgcolor;
+					document.getElementById("BannerPanel").innerHTML = '';
 					if (manual_auto_next > 0)
 						{manual_auto_next_trigger=1;   manual_auto_next_count=manual_auto_next;}
 					if (agent_display_fields.match(adfREGentry_date))
@@ -23007,14 +23071,19 @@ $zi=2;
 	<?php
 	if ($webphone_location == 'bar')
 		{
-        echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";
+        echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$webphone_height."px\" alt=\"webphone-bar spacer\" /><br />\n";
 		}
+	?>	
+	<span id="post_phone_time_diff_span"><b><font color="red"><span id="post_phone_time_diff_span_contents"></span></font></b></span>
+    <font class="body_text"> <?php echo _QXZ("STATUS:"); ?> <span id="MainStatuSSpan"></span><span id=timer_alt_display></span><span id=manual_auto_next_display></span></font>
+	<?php
+	if ($state_descriptions_banner > 0)
+        {echo "<br /><img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$banner_height."px\"  alt=\"banner spacer\" /><br />\n";}
 	$alt_phone_selected='';
 	if ( ($alt_number_dialing=='SELECTED') or ($alt_number_dialing=='SELECTED_TIMER_ALT') or ($alt_number_dialing=='SELECTED_TIMER_ADDR3') )
 		{$alt_phone_selected='CHECKED';}
-	?>	
-	<span id="post_phone_time_diff_span"><b><font color="red"><span id="post_phone_time_diff_span_contents"></span></font></b></span>
-    <font class="body_text"> <?php echo _QXZ("STATUS:"); ?> <span id="MainStatuSSpan"></span><span id=timer_alt_display></span><span id=manual_auto_next_display></span></font></td></tr>
+	?>
+	</td></tr>
     <tr><td colspan="3"><span id="busycallsdebug"></span></td></tr>
     <tr><td width="150px" align="left" valign="top">
 	<font class="body_text"><center>
@@ -23507,6 +23576,8 @@ $zi=2;
 </span>
 <!-- END *********   Here is the main VICIDIAL display panel -->
 
+<span style="position:absolute;left:0px;top:67px;z-index:<?php $zi++; echo $zi ?>;" id="BannerPanel"><font class="body_text">&nbsp;</font> </span>
+
 <!-- ZZZZZZZZZZZZ  action links -->
 
 <span style="position:absolute;left:0px;top:<?php echo $DBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="debugbottomspan"></span>
@@ -23662,6 +23733,8 @@ if ($agent_display_dialable_leads > 0)
 	<?php
 	if ($webphone_location == 'bar')
         {echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+	if ($state_descriptions_banner > 0)
+        {echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$banner_height."px\" /><br />\n";}
 	?>
     <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SPwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="ScriptContents"><?php echo _QXZ("AGENT SCRIPT"); ?></div></font></td></tr></table>
 </span>
@@ -23674,6 +23747,8 @@ if ($agent_display_dialable_leads > 0)
 	<?php
 	if ($webphone_location == 'bar')
         {echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+	if ($state_descriptions_banner > 0)
+        {echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$banner_height."px\" /><br />\n";}
 	?>
     <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SPwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_script" id="Script2Contents"><?php echo _QXZ("AGENT SCRIPT 2"); ?></div></font></td></tr></table>
 </span>
@@ -23686,6 +23761,8 @@ if ($agent_display_dialable_leads > 0)
 	<?php
 	if ($webphone_location == 'bar')
         {echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+	if ($state_descriptions_banner > 0)
+        {echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$banner_height."px\" /><br />\n";}
 	?>
     <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_form" id="FormContents"><iframe src="./vdc_form_display.php?lead_id=&list_id=&stage=WELCOME" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="vcFormIFrame" name="vcFormIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:<?php $zi++; echo $zi ?>"> </iframe></div></font></td></tr></table>
 </span>
@@ -23694,6 +23771,8 @@ if ($agent_display_dialable_leads > 0)
 	<?php
 	if ($webphone_location == 'bar')
         {echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+	if ($state_descriptions_banner > 0)
+        {echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$banner_height."px\" /><br />\n";}
 	?>
     <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_form" id="EmailContents"><iframe src="./vdc_email_display.php?lead_id=&list_id=&stage=WELCOME" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="vcEmailIFrame" name="vcEmailIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:<?php $zi++; echo $zi ?>"> </iframe></div></font></td></tr></table>
 </span>
@@ -23702,6 +23781,8 @@ if ($agent_display_dialable_leads > 0)
 	<?php
 	if ($webphone_location == 'bar')
         {echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+	if ($state_descriptions_banner > 0)
+        {echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$banner_height."px\" /><br />\n";}
 	?>
     <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_form" id="ChatContents"><iframe src="./vdc_chat_display.php?lead_id=&list_id=&dial_method=<?php echo $dial_method; ?>&stage=WELCOME&server_ip=<?php echo $server_ip; ?>&user=<?php echo $VD_login.$VARchatgroupsURL ?>" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="CustomerChatIFrame" name="CustomerChatIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:<?php $zi++; echo $zi ?>"> </iframe></div></font></td></tr></table>
 </span>
@@ -23710,6 +23791,8 @@ if ($agent_display_dialable_leads > 0)
 	<?php
 	if ($webphone_location == 'bar')
         {echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$webphone_height."px\" /><br />\n";}
+	if ($state_descriptions_banner > 0)
+        {echo "<img src=\"./images/"._QXZ("pixel.gif")."\" width=\"1px\" height=\"".$banner_height."px\" /><br />\n";}
 	?>
     <table border="0" bgcolor="<?php echo $SCRIPT_COLOR ?>" width="<?php echo $SSwidth ?>px" height="<?php echo $SSheight ?>px"><tr><td align="left" valign="top"><font class="sb_text"><div class="noscroll_form" id="InternalChatContents"><iframe src="./agc_agent_manager_chat_interface.php?action=BLANK" style="background-color:transparent;" scrolling="auto" frameborder="0" allowtransparency="true" id="InternalChatIFrame" name="InternalChatIFrame" width="<?php echo $SDwidth ?>px" height="<?php echo $SSheight ?>px" STYLE="z-index:<?php $zi++; echo $zi ?>"> </iframe></div></font></td></tr></table>
 </span>

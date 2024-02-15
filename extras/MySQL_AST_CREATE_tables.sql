@@ -1123,7 +1123,8 @@ manual_vm_status_updates ENUM('ENABLED','DISABLED') default 'ENABLED',
 force_per_call_notes ENUM('DISABLED','ENABLED','5_CHARACTERS','15_CHARACTERS','30_CHARACTERS','100_CHARACTERS') default 'DISABLED',
 agent_search_ingroup_list ENUM('DISABLED','ENABLED','ENABLED_OVERRIDE') default 'DISABLED',
 hopper_hold_inserts ENUM('ENABLED','DISABLED') default 'DISABLED',
-daily_phone_number_call_limit TINYINT(3) UNSIGNED default '0'
+daily_phone_number_call_limit TINYINT(3) UNSIGNED default '0',
+state_descriptions VARCHAR(40) default '---DISABLED---'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -1448,7 +1449,8 @@ third_alert_filename VARCHAR(100) default '',
 third_alert_delay INT(6) default '1000',
 third_alert_container VARCHAR(40) default 'DISABLED',
 third_alert_only VARCHAR(40) default 'DISABLED',
- agent_search_list VARCHAR(20) default ''
+agent_search_list VARCHAR(20) default '',
+state_descriptions VARCHAR(40) default '---DISABLED---'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -5575,4 +5577,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1706',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1707',db_schema_update_date=NOW(),reload_timestamp=NOW();
