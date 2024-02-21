@@ -733,10 +733,11 @@
 # 231129-1540 - Added refresh_panel agent API function
 # 240214-0400 - Added state_descriptions banners
 # 240220-0245 - Added daily_limit for user/in-group parameter
+# 240221-0317 - Small changes for state_descriptions Banner
 #
 
-$version = '2.14-699c';
-$build = '240220-0245';
+$version = '2.14-700c';
+$build = '240221-0317';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
@@ -10869,7 +10870,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									if (state_color.length > 1)
 										{
 										document.getElementById("BannerPanel").style.background = state_color;
-										document.getElementById("BannerPanel").innerHTML = "<font class=\"body_text\">&nbsp;<?php echo _QXZ("State"); ?>: " + document.vicidial_form.state.value + " - " + state_name + " &nbsp; </font>";
+										document.getElementById("BannerPanel").innerHTML = "<table border=0 cellpadding=0 cellspacing=0 width=<?php echo $XFwidth ?>><tr><td><center><font class=\"skb_text\">&nbsp;<?php echo _QXZ("State"); ?>: " + document.vicidial_form.state.value + " - " + state_name + " &nbsp; </font></center></td></tr></table>";
 										}
 									}
 
@@ -12496,7 +12497,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 									if (state_color.length > 1)
 										{
 										document.getElementById("BannerPanel").style.background = state_color;
-										document.getElementById("BannerPanel").innerHTML = "<font class=\"body_text\">&nbsp;<?php echo _QXZ("State"); ?>: " + document.vicidial_form.state.value + " - " + state_name + " &nbsp; </font>";
+										document.getElementById("BannerPanel").innerHTML = "<table border=0 cellpadding=0 cellspacing=0 width=<?php echo $XFwidth ?>><tr><td><center><font class=\"skb_text\">&nbsp;<?php echo _QXZ("State"); ?>: " + document.vicidial_form.state.value + " - " + state_name + " &nbsp; </font></center></td></tr></table>";
 										}
 									}
 
@@ -14391,8 +14392,9 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								if (state_color.length > 1)
 									{
 									document.getElementById("BannerPanel").style.background = state_color;
-									document.getElementById("BannerPanel").innerHTML = "<font class=\"body_text\">&nbsp;<?php echo _QXZ("State"); ?>: " + document.vicidial_form.state.value + " - " + state_name + " &nbsp; </font>";
+									document.getElementById("BannerPanel").innerHTML = "<table border=0 cellpadding=0 cellspacing=0 width=<?php echo $XFwidth ?>><tr><td><center><font class=\"skb_text\">&nbsp;<?php echo _QXZ("State"); ?>: " + document.vicidial_form.state.value + " - " + state_name + " &nbsp; </font></center></td></tr></table>";
 									}
+							//	alert("State Description:" + state_descriptions_banner + " - " + state_color + " - " + state_name);
 								}
 							}
 						else if ( ((email_enabled>0 && EMAILgroupCOUNT>0) || (chat_enabled>0 && CHATgroupCOUNT>0 && campaign_chat_enabled=='Y')) && AutoDialWaiting==1)
@@ -14698,6 +14700,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							ig_custom_three									= check_VDIC_array[69];
 							ig_custom_four									= check_VDIC_array[70];
 							ig_custom_five									= check_VDIC_array[71];
+							state_color										= check_VDIC_array[72];
+							state_name										= check_VDIC_array[73];
 
 							// build statuses list for disposition screen
 							VARstatuses = [];
@@ -23593,7 +23597,7 @@ $zi=2;
 </span>
 <!-- END *********   Here is the main VICIDIAL display panel -->
 
-<span style="position:absolute;left:0px;top:67px;z-index:<?php $zi++; echo $zi ?>;" id="BannerPanel"><font class="body_text">&nbsp;</font> </span>
+<span style="position:absolute;left:0px;top:66px;z-index:<?php $zi++; echo $zi ?>;" id="BannerPanel"><font class="skb_text">&nbsp;</font> </span>
 
 <!-- ZZZZZZZZZZZZ  action links -->
 

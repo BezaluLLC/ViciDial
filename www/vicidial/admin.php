@@ -6129,13 +6129,13 @@ if ($SSscript_remove_js > 0)
 # 231204-0858 - Added Agent LAGGED Summary Report
 # 231227-2217 - Added 3-Way Press Log Report
 # 240214-2120 - Added STATE_DESCRIPTIONS container type and state_descriptions campaign and in-group settings, change year to 2024
+# 240221-0331 - Changes for in-group daily limits, small changes for stats_descriptions
 #
-
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-906a';
-$build = '240214-2120';
+$admin_version = '2.14-907a';
+$build = '240221-0331';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -42532,12 +42532,12 @@ if ($ADD==392111111111)
 
 		echo "</TABLE><BR><BR>\n";
 
-		if (preg_match("/WEEKDAY_TIMERANGE_SECONDS|CALL_QUOTA|CALL_LIMITS_OVERRIDE|SIP_EVENT_ACTIONS|CALLS_IN_QUEUE_COUNT|TIMEZONE_LIST|PHONE_NUMBERS|DIAL_TIMEOUTS|INGROUP_LIST|PAUSE_CODES_LIST|DEMOGRAPHIC_QUOTAS/",$container_type))
+		if (preg_match("/WEEKDAY_TIMERANGE_SECONDS|CALL_QUOTA|CALL_LIMITS_OVERRIDE|SIP_EVENT_ACTIONS|CALLS_IN_QUEUE_COUNT|TIMEZONE_LIST|PHONE_NUMBERS|DIAL_TIMEOUTS|INGROUP_LIST|PAUSE_CODES_LIST|DEMOGRAPHIC_QUOTAS|STATE_DESCRIPTIONS/",$container_type))
 			{
 			echo "<B>"._QXZ("CAMPAIGNS USING THIS SETTINGS CONTAINER").":</B><BR>\n";
 			echo "<TABLE>\n";
 
-			$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where ( (in_man_dial_next_ready_seconds_override='$container_id') or (pause_max_exceptions='$container_id') or (call_quota_lead_ranking='$container_id') or (call_limit_24hour_override='$container_id') or (inbound_no_agents_no_dial_container='$container_id') or (dial_timeout_lead_container='$container_id') or (three_way_record_stop_exception='$container_id') or (leave_3way_start_recording_exception='$container_id') or (scheduled_callbacks_timezones_container='$container_id') or (in_man_dial_next_ready_seconds_override='$container_id') or (sip_event_logging='$container_id') or (calls_inqueue_count_one='$container_id') or (calls_inqueue_count_two='$container_id') or (demographic_quotas_container='$container_id') ) $LOGallowed_campaignsSQL;";
+			$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where ( (in_man_dial_next_ready_seconds_override='$container_id') or (pause_max_exceptions='$container_id') or (call_quota_lead_ranking='$container_id') or (call_limit_24hour_override='$container_id') or (inbound_no_agents_no_dial_container='$container_id') or (dial_timeout_lead_container='$container_id') or (three_way_record_stop_exception='$container_id') or (leave_3way_start_recording_exception='$container_id') or (scheduled_callbacks_timezones_container='$container_id') or (in_man_dial_next_ready_seconds_override='$container_id') or (sip_event_logging='$container_id') or (calls_inqueue_count_one='$container_id') or (calls_inqueue_count_two='$container_id') or (demographic_quotas_container='$container_id') or (state_descriptions='$container_id') ) $LOGallowed_campaignsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			$ig_to_print = mysqli_num_rows($rslt);
 			if ($DB > 0) {echo "$ig_to_print|$stmt<br>\n";}
@@ -42554,7 +42554,7 @@ if ($ADD==392111111111)
 			echo "<B>"._QXZ("IN-GROUPS USING THIS SETTINGS CONTAINER").":</B><BR>\n";
 			echo "<TABLE>\n";
 
-			$stmt="SELECT group_id,group_name from vicidial_inbound_groups where ( (drop_call_seconds_override='$container_id') or (in_queue_nanque_exceptions='$container_id') or (second_alert_container='$container_id') or (third_alert_container='$container_id') ) $LOGadmin_viewable_groupsSQL;";
+			$stmt="SELECT group_id,group_name from vicidial_inbound_groups where ( (drop_call_seconds_override='$container_id') or (in_queue_nanque_exceptions='$container_id') or (second_alert_container='$container_id') or (third_alert_container='$container_id') or (state_descriptions='$container_id') ) $LOGadmin_viewable_groupsSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			$ig_to_print = mysqli_num_rows($rslt);
 			if ($DB > 0) {echo "$ig_to_print|$stmt<br>\n";}

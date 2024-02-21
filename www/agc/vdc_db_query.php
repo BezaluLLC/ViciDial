@@ -546,10 +546,11 @@
 # 231129-1541 - Added refresh_panel agent API function
 # 231207-1520 - Fix for ConfBridge blind monitoring issue #1497
 # 240219-2130 - Added daily_limit for user/in-group parameter
+# 240221-0330 - Small changes for state_descriptions Banner
 #
 
-$version = '2.14-439';
-$build = '240219-2130';
+$version = '2.14-440';
+$build = '240221-0330';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=913;
@@ -9984,7 +9985,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 					$CBcomments =		trim("$row[3]");
 					}
 				}
-			$stmt="SELECT owner_populate,user_group_script,custom_one,custom_two,custom_three,custom_four,custom_five FROM vicidial_campaigns where campaign_id='$campaign';";
+			$stmt="SELECT owner_populate,user_group_script,custom_one,custom_two,custom_three,custom_four,custom_five,state_descriptions FROM vicidial_campaigns where campaign_id='$campaign';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00444',$user,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -9999,6 +10000,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 				$camp_custom_three =		$row[4];
 				$camp_custom_four =			$row[5];
 				$camp_custom_five =			$row[6];
+				$state_descriptions =		$row[7];
 				}
 			$ownerSQL='';
 			if ( ($owner_populate=='ENABLED') and ( (strlen($owner) < 1) or ($owner=='NULL') ) )
@@ -10169,7 +10171,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 					$script_recording_delay = $row[0];
 					}
 
-				$stmt = "SELECT campaign_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_xfer_group,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,timer_action,timer_action_message,timer_action_seconds,timer_action_destination,campaign_script_two,state_descriptions from vicidial_campaigns where campaign_id='$campaign';";
+				$stmt = "SELECT campaign_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_xfer_group,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,timer_action,timer_action_message,timer_action_seconds,timer_action_destination,campaign_script_two from vicidial_campaigns where campaign_id='$campaign';";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00114',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -10195,7 +10197,6 @@ if ($ACTION == 'VDADcheckINCOMING')
 					$VDCL_timer_action_seconds =	$row[14];
 					$VDCL_timer_action_destination =	$row[15];
 					$VDCL_campaign_script_two =		$row[16];
-					$state_descriptions =			$row[17];
 					}
 
 				$VDCL_group_web='';
@@ -10434,7 +10435,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 
 					$status_group_gather_data = status_group_gather($row[27],'INGROUP');
 
-					$stmt = "SELECT campaign_script,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_group_alias,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,timer_action_destination,default_xfer_group,campaign_script_two,browser_alert_sound,browser_alert_volume,custom_one,custom_two,custom_three,custom_four,custom_five,state_descriptions from vicidial_campaigns where campaign_id='$campaign';";
+					$stmt = "SELECT campaign_script,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_group_alias,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,timer_action_destination,default_xfer_group,campaign_script_two,browser_alert_sound,browser_alert_volume,custom_one,custom_two,custom_three,custom_four,custom_five from vicidial_campaigns where campaign_id='$campaign';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00181',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -10482,10 +10483,6 @@ if ($ACTION == 'VDADcheckINCOMING')
 						$camp_custom_three =				$row[21];
 						$camp_custom_four =					$row[22];
 						$camp_custom_five =					$row[23];
-						if ( (strlen($ig_state_descriptions) > 0) and (!preg_match("/---DISABLED---/",$ig_state_descriptions)) )
-							{$state_descriptions =		$ig_state_descriptions;}
-						else
-							{$state_descriptions =			$row[24];}
 
 						if ( ( (preg_match('/NONE/',$VDCL_ingroup_script)) and (strlen($VDCL_ingroup_script) < 5) ) or (strlen($VDCL_ingroup_script) < 1) )
 							{
@@ -10591,7 +10588,7 @@ if ($ACTION == 'VDADcheckINCOMING')
 					}
 				else
 					{
-					$stmt = "SELECT campaign_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_group_alias,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,timer_action_destination,campaign_script_two,browser_alert_sound,browser_alert_volume,state_descriptions from vicidial_campaigns where campaign_id='$VDADchannel_group';";
+					$stmt = "SELECT campaign_script,get_call_launch,xferconf_a_dtmf,xferconf_a_number,xferconf_b_dtmf,xferconf_b_number,default_group_alias,timer_action,timer_action_message,timer_action_seconds,start_call_url,dispo_call_url,xferconf_c_number,xferconf_d_number,xferconf_e_number,timer_action_destination,campaign_script_two,browser_alert_sound,browser_alert_volume from vicidial_campaigns where campaign_id='$VDADchannel_group';";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00121',$user,$server_ip,$session_name,$one_mysql_log);}
@@ -10618,7 +10615,6 @@ if ($ACTION == 'VDADcheckINCOMING')
 						$VDCL_ingroup_script_two = 		$row[16];
 						$VDCL_browser_alert_sound =		$row[17];
 						$VDCL_browser_alert_volume =	$row[18];
-						$state_descriptions =			$row[19];
 						}
 
 					$script_recording_delay=0;
@@ -10779,58 +10775,6 @@ if ($ACTION == 'VDADcheckINCOMING')
 						}
 					}
 
-				$state_color='';
-				$state_name='';
-				$state_debug='';
-				if ( (strlen($state_descriptions) > 0) and ($state_descriptions != '---DISABLED---') )
-					{
-					if ( (strlen($ig_state_descriptions) > 0) and ($ig_state_descriptions != '---DISABLED---') )
-						{$state_descriptions = $ig_state_descriptions;}
-					$stmt="SELECT container_entry FROM vicidial_settings_containers WHERE container_id='$state_descriptions';";
-					if ($DB) {echo "$stmt\n";}
-					$rslt=mysql_to_mysqli($stmt, $link);
-						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
-					$SDE_ct = mysqli_num_rows($rslt);
-					$state_debug .= "$SDE_ct|$stmt|\n";
-					if ($SDE_ct > 0)
-						{
-						$row=mysqli_fetch_row($rslt);
-						$state_descriptions_container =		$row[0];
-						$SDcontainer_entry = preg_replace("/\r|\t|\'|\"/",'',$state_descriptions_container);
-						$state_settings = explode("\n",$SDcontainer_entry);
-						$state_settings_ct = count($state_settings);
-						$sdl=0;
-						while ($state_settings_ct >= $sdl)
-							{
-							$state_line_ARY = explode(",",$state_settings[$sdl]);
-							$state_match =			$state_line_ARY[0];
-							$state_setting_color =	$state_line_ARY[1];
-							$state_setting_name =	$state_line_ARY[2];
-							if ( (strlen($state_setting_color) > 0) and (strlen($state_setting_name) > 0) )
-								{
-								if ( (strlen($state_match) < 1) and (strlen($state) < 1) )
-									{
-									$state_color = $state_setting_color;
-									$state_name = $state_setting_name;
-									}
-								else
-									{
-									if ( (preg_match("/^$state$/i",$state_match)) and (strlen($state) > 0) )
-										{
-										$state_color = $state_setting_color;
-										$state_name = $state_setting_name;
-										}
-									}
-								}
-							$state_debug .= "$sdl     |$state_settings[$sdl]|   |$state_match|$state_setting_color|$state_setting_name|\n";
-							$sdl++;
-							}
-						}
-				#	$fp = fopen ("./vicidial_state_debug.txt", "w");
-				#	fwrite ($fp, "$state_debug\n");
-				#	fclose($fp);
-					}
-
 				### if web form is set then send on to vicidial.php for override of WEB_FORM address
 				if ( (strlen($VDCL_group_web)>5) or (strlen($VDCL_group_name)>0) ) {echo "$VDCL_group_web|$VDCL_group_name|$VDCL_group_color|$VDCL_fronter_display|$VDADchannel_group|$VDCL_ingroup_script|$VDCL_get_call_launch|$VDCL_xferconf_a_dtmf|$VDCL_xferconf_a_number|$VDCL_xferconf_b_dtmf|$VDCL_xferconf_b_number|$VDCL_default_xfer_group|$VDCL_ingroup_recording_override|$VDCL_ingroup_rec_filename|$VDCL_default_group_alias|$VDCL_caller_id_number|$VDCL_group_web_vars|$VDCL_group_web_two|$VDCL_timer_action|$VDCL_timer_action_message|$VDCL_timer_action_seconds|$VDCL_xferconf_c_number|$VDCL_xferconf_d_number|$VDCL_xferconf_e_number|$VDCL_uniqueid_status_display|$custom_call_id|$VDCL_uniqueid_status_prefix|$VDCL_timer_action_destination|$DID_id|$DID_extension|$DID_pattern|$DID_description|$INclosecallid|$INxfercallid|$VDCL_group_web_three|$VDCL_ingroup_script_color|$VDCL_inbound_survey|$VDCL_survey_participate|$VDCL_ingroup_script_two|$VDCL_ingroup_script_color_two|$VDCL_browser_alert_sound|$VDCL_browser_alert_volume|\n";}
 				else {echo "X|$VDCL_group_name|$VDCL_group_color|$VDCL_fronter_display|$VDADchannel_group|$VDCL_ingroup_script|$VDCL_get_call_launch|$VDCL_xferconf_a_dtmf|$VDCL_xferconf_a_number|$VDCL_xferconf_b_dtmf|$VDCL_xferconf_b_number|$VDCL_default_xfer_group|$VDCL_ingroup_recording_override|$VDCL_ingroup_rec_filename|$VDCL_default_group_alias|$VDCL_caller_id_number|$VDCL_group_web_vars|$VDCL_group_web_two|$VDCL_timer_action|$VDCL_timer_action_message|$VDCL_timer_action_seconds|$VDCL_xferconf_c_number|$VDCL_xferconf_d_number|$VDCL_xferconf_e_number|$VDCL_uniqueid_status_display|$custom_call_id|$VDCL_uniqueid_status_prefix|$VDCL_timer_action_destination|$DID_id|$DID_extension|$DID_pattern|$DID_description|$INclosecallid|$INxfercallid|$VDCL_group_web_three|$VDCL_ingroup_script_color|$VDCL_inbound_survey|$VDCL_survey_participate|$VDCL_ingroup_script_two|$VDCL_ingroup_script_color_two|$VDCL_browser_alert_sound|$VDCL_browser_alert_volume|\n";}
@@ -10873,6 +10817,58 @@ if ($ACTION == 'VDADcheckINCOMING')
 						$script_recording_delay = $row[0];
 						}
 					}
+				}
+
+			$state_color='';
+			$state_name='';
+			$state_debug='';
+			if ( (strlen($state_descriptions) > 0) and ($state_descriptions != '---DISABLED---') )
+				{
+				if ( (strlen($ig_state_descriptions) > 0) and ($ig_state_descriptions != '---DISABLED---') )
+					{$state_descriptions = $ig_state_descriptions;}
+				$stmt="SELECT container_entry FROM vicidial_settings_containers WHERE container_id='$state_descriptions';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				$SDE_ct = mysqli_num_rows($rslt);
+				$state_debug .= "$NOW_TIME|$SDE_ct|$stmt|\n";
+				if ($SDE_ct > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$state_descriptions_container =		$row[0];
+					$SDcontainer_entry = preg_replace("/\r|\t|\'|\"/",'',$state_descriptions_container);
+					$state_settings = explode("\n",$SDcontainer_entry);
+					$state_settings_ct = count($state_settings);
+					$sdl=0;
+					while ($state_settings_ct >= $sdl)
+						{
+						$state_line_ARY = explode(",",$state_settings[$sdl]);
+						$state_match =			$state_line_ARY[0];
+						$state_setting_color =	$state_line_ARY[1];
+						$state_setting_name =	$state_line_ARY[2];
+						if ( (strlen($state_setting_color) > 0) and (strlen($state_setting_name) > 0) )
+							{
+							if ( (strlen($state_match) < 1) and (strlen($state) < 1) )
+								{
+								$state_color = $state_setting_color;
+								$state_name = $state_setting_name;
+								}
+							else
+								{
+								if ( (preg_match("/^$state$/i",$state_match)) and (strlen($state) > 0) )
+									{
+									$state_color = $state_setting_color;
+									$state_name = $state_setting_name;
+									}
+								}
+							}
+						$state_debug .= "$sdl     |$state_settings[$sdl]|   |$state_match|$state_setting_color|$state_setting_name|\n";
+						$sdl++;
+						}
+					}
+			#	$fp = fopen ("./vicidial_state_debug.txt", 'a');
+			#	fwrite ($fp, "$state_debug\n");
+			#	fclose($fp);
 				}
 
 			$custom_field_names='|';
@@ -12313,6 +12309,58 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 					}
 				}
 
+			$state_color='';
+			$state_name='';
+			$state_debug='';
+			if ( (strlen($state_descriptions) > 0) and ($state_descriptions != '---DISABLED---') )
+				{
+				if ( (strlen($ig_state_descriptions) > 0) and ($ig_state_descriptions != '---DISABLED---') )
+					{$state_descriptions = $ig_state_descriptions;}
+				$stmt="SELECT container_entry FROM vicidial_settings_containers WHERE container_id='$state_descriptions';";
+				if ($DB) {echo "$stmt\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+				$SDE_ct = mysqli_num_rows($rslt);
+				$state_debug .= "$SDE_ct|$stmt|\n";
+				if ($SDE_ct > 0)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$state_descriptions_container =		$row[0];
+					$SDcontainer_entry = preg_replace("/\r|\t|\'|\"/",'',$state_descriptions_container);
+					$state_settings = explode("\n",$SDcontainer_entry);
+					$state_settings_ct = count($state_settings);
+					$sdl=0;
+					while ($state_settings_ct >= $sdl)
+						{
+						$state_line_ARY = explode(",",$state_settings[$sdl]);
+						$state_match =			$state_line_ARY[0];
+						$state_setting_color =	$state_line_ARY[1];
+						$state_setting_name =	$state_line_ARY[2];
+						if ( (strlen($state_setting_color) > 0) and (strlen($state_setting_name) > 0) )
+							{
+							if ( (strlen($state_match) < 1) and (strlen($state) < 1) )
+								{
+								$state_color = $state_setting_color;
+								$state_name = $state_setting_name;
+								}
+							else
+								{
+								if ( (preg_match("/^$state$/i",$state_match)) and (strlen($state) > 0) )
+									{
+									$state_color = $state_setting_color;
+									$state_name = $state_setting_name;
+									}
+								}
+							}
+						$state_debug .= "$sdl     |$state_settings[$sdl]|   |$state_match|$state_setting_color|$state_setting_name|\n";
+						$sdl++;
+						}
+					}
+			#	$fp = fopen ("./vicidial_state_debug.txt", "w");
+			#	fwrite ($fp, "$state_debug\n");
+			#	fclose($fp);
+				}
+
 			$DID_id='';
 			$DID_extension='';
 			$DID_pattern='';
@@ -12480,6 +12528,8 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 			$LeaD_InfO .=	$ig_custom_three . "\n";
 			$LeaD_InfO .=	$ig_custom_four . "\n";
 			$LeaD_InfO .=	$ig_custom_five . "\n";
+			$LeaD_InfO .=	$state_color . "\n";
+			$LeaD_InfO .=	$state_name . "\n";
 
 			echo $LeaD_InfO;
 
