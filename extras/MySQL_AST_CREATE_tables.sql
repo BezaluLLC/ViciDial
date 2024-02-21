@@ -2119,6 +2119,7 @@ group_web_vars VARCHAR(255) default '',
 group_grade TINYINT(2) UNSIGNED default '1',
 group_type VARCHAR(1) default 'C',
 calls_today_filtered SMALLINT(5) UNSIGNED default '0',
+daily_limit SMALLINT(5) default '-1',
 index (group_id),
 index (user),
 unique index viga_user_group_id (user, group_id)
@@ -2135,6 +2136,7 @@ group_grade TINYINT(2) UNSIGNED default '1',
 calls_today_filtered SMALLINT(5) UNSIGNED default '0',
 last_call_time_filtered DATETIME,
 last_call_finish_filtered DATETIME,
+daily_limit SMALLINT(5) default '-1',
 index (group_id),
 index (group_weight),
 unique index vlia_user_group_id (user, group_id)
@@ -5178,6 +5180,58 @@ status VARCHAR(40) default '',
 index(call_date)
 ) ENGINE=MyISAM;
 
+CREATE TABLE server_live_stats (
+update_time DATETIME NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+server_name VARCHAR(100) NOT NULL,
+cpu_count SMALLINT(5) UNSIGNED default '0',
+loadavg_1 DECIMAL(8,2) default '0.00',
+loadavg_5 DECIMAL(8,2) default '0.00',
+loadavg_15 DECIMAL(8,2) default '0.00',
+freeram INT(9) default '0',
+usedram INT(9) default '0',
+processes SMALLINT(4) default '0',
+system_uptime VARCHAR(255) default '',
+cpu_user_percent DECIMAL(6,2) default '0.00',
+cpu_sys_percent DECIMAL(6,2) default '0.00',
+cpu_idle_percent DECIMAL(6,2) default '0.00',
+cpu_iowait_percent DECIMAL(6,2) default '0.00',
+cpu_vm_percent DECIMAL(6,2) default '0.00',
+disk_reads INT(9) UNSIGNED default '0',
+disk_writes INT(9) UNSIGNED default '0',
+asterisk_channels_total SMALLINT(4) UNSIGNED default '0',
+asterisk_agents_total SMALLINT(4) UNSIGNED default '0',
+mysql_uptime VARCHAR(20) default '0',
+mysql_queries_per_second INT(9) UNSIGNED default '0',
+mysql_connections MEDIUMINT(7) UNSIGNED default '0',
+unique index liveservers (server_ip)
+) ENGINE=MyISAM;
+
+CREATE TABLE server_live_drives (
+update_time DATETIME NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+drive_order TINYINT UNSIGNED default '0',
+drive_device VARCHAR(100) default '',
+read_sec DECIMAL(8,2) default '0.0',
+write_sec DECIMAL(8,2) default '0.0',
+kb_read_sec DECIMAL(12,2) default '0.0',
+kb_write_sec DECIMAL(12,2) default '0.0',
+util_pct DECIMAL(7,2) default '0.0',
+unique index livedrives (server_ip, drive_device)
+) ENGINE=MyISAM;
+
+CREATE TABLE server_live_partitions (
+update_time DATETIME NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+partition_order TINYINT UNSIGNED default '0',
+partition_path VARCHAR(100) default '',
+partition_filesystem VARCHAR(100) default '',
+use_pct TINYINT UNSIGNED default '0',
+mb_used BIGINT(14) default '0',
+mb_available BIGINT(14) default '0',
+unique index livepartitions (server_ip, partition_path)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -5577,4 +5631,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1707',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1708',db_schema_update_date=NOW(),reload_timestamp=NOW();

@@ -732,10 +732,11 @@
 # 231129-1359 - Fix for Dial-In-Group user-group issue #1493
 # 231129-1540 - Added refresh_panel agent API function
 # 240214-0400 - Added state_descriptions banners
+# 240220-0245 - Added daily_limit for user/in-group parameter
 #
 
-$version = '2.14-698c';
-$build = '240214-0400';
+$version = '2.14-699c';
+$build = '240220-0245';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
@@ -3800,6 +3801,22 @@ else
 				if ( ($dial_method == 'INBOUND_MAN') or ($outbound_autodial_active < 1) )
 					{$VU_closer_default_blended=0;}
 
+				# Gather list of In-Groups for this user that have hit the daily limit, so we can exclude them
+				$stmt="SELECT group_id FROM vicidial_inbound_group_agents WHERE user='$VD_login' and ( (daily_limit > -1) and (daily_limit <= calls_today) ) limit 1000;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01XXX',$VD_login,$server_ip,$session_name,$one_mysql_log);}
+				if ($DB) {echo "$stmt\n";}
+				$VD_hit_limit_ingroups_ct = mysqli_num_rows($rslt);
+				$VD_hit_limit_ingroups="'',";
+				$jx=0;
+				while ($jx < $VD_hit_limit_ingroups_ct)
+					{
+					$row=mysqli_fetch_row($rslt);
+					$VD_hit_limit_ingroups .= "'$row[0]',";
+					$jx++;
+					}
+				$VD_hit_limit_ingroups = substr("$VD_hit_limit_ingroups", 0, -1);
+
 				$closer_campaigns = preg_replace("/^ | -$/","",$closer_campaigns);
 				$closer_campaigns = preg_replace("/ /","','",$closer_campaigns);
 				$ADcloser_campaigns = preg_replace("/'/",'',$closer_campaigns);
@@ -3909,7 +3926,7 @@ else
 					$VARphonegroups='';
 					$VARemailgroups='';
 					$VARchatgroups='';
-					$stmt="SELECT group_id,group_handling from vicidial_inbound_groups where active = 'Y' and group_id IN($closer_campaigns) order by group_id limit 800;";
+					$stmt="SELECT group_id,group_handling from vicidial_inbound_groups where active = 'Y' and group_id IN($closer_campaigns) and group_id NOT IN($VD_hit_limit_ingroups) order by group_id limit 800;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01015',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
@@ -3962,7 +3979,7 @@ else
 					if ($in_group_dial_select == 'CAMPAIGN_SELECTED')
 						{
 						$VARdialingroups='';
-						$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and group_id IN($closer_campaigns) order by group_id limit 800;";
+						$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and group_id IN($closer_campaigns) and group_id NOT IN($VD_hit_limit_ingroups) order by group_id limit 800;";
 						$rslt=mysql_to_mysqli($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01076',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 						if ($DB) {echo "$stmt\n";}
@@ -3980,7 +3997,7 @@ else
 					if ($in_group_dial_select == 'ALL_USER_GROUP')
 						{
 						$VARdialingroups='';
-						$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and user_group IN('---ALL---','$VU_user_group') order by group_id limit 800;";
+						$stmt="select group_id from vicidial_inbound_groups where active = 'Y' and user_group IN('---ALL---','$VU_user_group') and group_id NOT IN($VD_hit_limit_ingroups) order by group_id limit 800;";
 						$rslt=mysql_to_mysqli($stmt, $link);
 							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01077',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 						if ($DB) {echo "$stmt\n";}

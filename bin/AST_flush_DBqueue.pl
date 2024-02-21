@@ -9,7 +9,7 @@
 # !!!!!!!! IMPORTANT !!!!!!!!!!!!!!!!!!
 # THIS SCRIPT SHOULD ONLY BE RUN ON ONE SERVER ON YOUR CLUSTER
 #
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60717-1214 - changed to DBI by Marin Blu
@@ -34,6 +34,7 @@
 # 230414-1622 - Added --reset-stuck-leads option
 # 231118-1256 - Added clearing of old vicidial_3way_press_live records
 # 231228-1901 - Added optimizing of vicidial_3way_press_multi records
+# 240219-0811 - Added optimizing of server_live_... tables
 #
 
 $session_flush=0;
@@ -206,6 +207,17 @@ if ($Shour < 10) {$Shour = "0$Shour";}
 if ($Smin < 10) {$Smin = "0$Smin";}
 if ($Ssec < 10) {$Ssec = "0$Ssec";}
 $SQLdate_NEG_sixhour="$Syear-$Smon-$Smday $Shour:$Smin:$Ssec";
+
+($Dsec,$Dmin,$Dhour,$Dmday,$Dmon,$Dyear,$Dwday,$Dyday,$Disdst) = localtime(time() - 43200);
+$Dyear = ($Dyear + 1900);
+$Dyy = $Dyear; $Dyy =~ s/^..//gi;
+$Dmon++;
+if ($Dmon < 10) {$Dmon = "0$Dmon";}
+if ($Dmday < 10) {$Dmday = "0$Dmday";}
+if ($Dhour < 10) {$Dhour = "0$Dhour";}
+if ($Dmin < 10) {$Dmin = "0$Dmin";}
+if ($Dsec < 10) {$Dsec = "0$Dsec";}
+$DQLdate_NEG_twelvehour="$Dyear-$Dmon-$Dmday $Dhour:$Dmin:$Dsec";
 
 ($Tsec,$Tmin,$Thour,$Tmday,$Tmon,$Tyear,$Twday,$Tyday,$Tisdst) = localtime(time() - 600);
 $Tyear = ($Tyear + 1900);
@@ -624,6 +636,61 @@ if (!$T)
 	$sthA->finish();
 	}
 if (!$Q) {print " - OPTIMIZE vicidial_3way_press_multi          \n";}
+
+
+$stmtA = "DELETE from server_live_stats where update_time < '$DQLdate_NEG_twelvehour';";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) {      $affected_rows = $dbhA->do($stmtA);}
+if (!$Q) {print " - server_live_stats flush: $affected_rows rows\n";}
+
+$stmtA = "DELETE from server_live_drives where update_time < '$DQLdate_NEG_twelvehour';";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) {      $affected_rows = $dbhA->do($stmtA);}
+if (!$Q) {print " - server_live_drives flush: $affected_rows rows\n";}
+
+$stmtA = "DELETE from server_live_partitions where update_time < '$DQLdate_NEG_twelvehour';";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) {      $affected_rows = $dbhA->do($stmtA);}
+if (!$Q) {print " - server_live_partitions flush: $affected_rows rows\n";}
+
+$stmtA = "OPTIMIZE table server_live_stats;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) 
+	{
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+	}
+if (!$Q) {print " - OPTIMIZE server_live_stats          \n";}
+
+$stmtA = "OPTIMIZE table server_live_drives;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) 
+	{
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+	}
+if (!$Q) {print " - OPTIMIZE server_live_drives          \n";}
+
+$stmtA = "OPTIMIZE table server_live_partitions;";
+if($DB){print STDERR "\n|$stmtA|\n";}
+if (!$T) 
+	{
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+	@aryA = $sthA->fetchrow_array;
+	if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+	$sthA->finish();
+	}
+if (!$Q) {print " - OPTIMIZE server_live_partitions          \n";}
 
 
 if ($session_flush > 0) 

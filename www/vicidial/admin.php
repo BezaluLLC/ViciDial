@@ -7585,7 +7585,9 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 	$RANKgroups_list.="<tr bgcolor=#$SSmenu_background><td><font color=white> &nbsp; "._QXZ("INBOUND GROUP")."</td>\n";
 	$RANKgroups_list.="<td nowrap><font color=white> &nbsp; "._QXZ("RANK")." &nbsp; <br><select name=\"ingroup_js_rank_select\" id=\"ingroup_js_rank_select\" size=1 style=\"font-family: sans-serif; font-size: 10px; overflow: hidden;\"><option value=\"\">-></option>$headRANKgroups_list</select><a href=\"#\" onclick=\"ingroup_rank_val_change();return false;\"><font size=1 color=white>"._QXZ("change")."</font></a></td>\n";
 	$RANKgroups_list.="<td nowrap><font color=white> &nbsp; "._QXZ("GRADE")." &nbsp; <br><select name=\"ingroup_js_grade_select\" id=\"ingroup_js_grade_select\" size=1 style=\"font-family: sans-serif; font-size: 10px; overflow: hidden;\"><option value=\"\">-></option>$headGRADEgroups_list</select><a href=\"#\" onclick=\"ingroup_grade_val_change();return false;\"><font size=1 color=white>"._QXZ("change")."</font></a></td>\n";
-	$RANKgroups_list.="<td nowrap><font color=white> &nbsp; "._QXZ("CALLS")." &nbsp; </td><td ALIGN=CENTER><font color=white>"._QXZ("WEB VARS")."</td></tr>\n";
+	$RANKgroups_list.="<td nowrap><font color=white> &nbsp; "._QXZ("CALLS")." &nbsp; </td>\n";
+	$RANKgroups_list.="<td nowrap><font color=white> &nbsp; "._QXZ("LIMIT")." &nbsp; </td>\n";
+	$RANKgroups_list.="<td ALIGN=CENTER><font color=white>"._QXZ("WEB VARS")."</td></tr>\n";
 
 	$o=0;
 	while ($groups_to_print > $o)
@@ -7608,7 +7610,7 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 		{
 		$group_web_vars='';
 		$group_web='';
-		$stmt="SELECT group_rank,calls_today,group_web_vars,group_grade,calls_today_filtered from vicidial_inbound_group_agents where user='$user' and group_id='$group_id_values[$o]';";
+		$stmt="SELECT group_rank,calls_today,group_web_vars,group_grade,calls_today_filtered,daily_limit from vicidial_inbound_group_agents where user='$user' and group_id='$group_id_values[$o]';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$ranks_to_print = mysqli_num_rows($rslt);
 		if ($ranks_to_print > 0)
@@ -7619,9 +7621,10 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 			$group_web_vars =		$row[2];
 			$SELECT_group_grade =	$row[3];
 			$calls_today_filtered =	$row[4];
+			$group_limit =			$row[5];
 			}
 		else
-			{$calls_today=0;   $SELECT_group_rank=0;   $SELECT_group_grade=1;   $calls_today_filtered=0;}
+			{$calls_today=0;   $SELECT_group_rank=0;   $SELECT_group_grade=1;   $calls_today_filtered=0;   $daily_limit=-1;}
 		if ( ($ADD=="4A") or ($ADD=="4B") )
 			{
 			if (isset($_GET["RANK_$group_id_values[$o]"]))			{$group_rank=$_GET["RANK_$group_id_values[$o]"];}
@@ -7630,20 +7633,23 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 				elseif (isset($_POST["WEB_$group_id_values[$o]"]))	{$group_web=$_POST["WEB_$group_id_values[$o]"];}
 			if (isset($_GET["GRADE_$group_id_values[$o]"]))				{$group_grade=$_GET["GRADE_$group_id_values[$o]"];}
 				elseif (isset($_POST["GRADE_$group_id_values[$o]"]))	{$group_grade=$_POST["GRADE_$group_id_values[$o]"];}
+			if (isset($_GET["LIMIT_$group_id_values[$o]"]))				{$group_limit=$_GET["LIMIT_$group_id_values[$o]"];}
+				elseif (isset($_POST["LIMIT_$group_id_values[$o]"]))	{$group_limit=$_POST["LIMIT_$group_id_values[$o]"];}
 
 			$group_rank = preg_replace('/[^-\_0-9]/','',$group_rank);
 			$group_web = preg_replace("/;|\"|\'/","",$group_web);
 			$group_grade = preg_replace('/[^-\_0-9]/','',$group_grade);
+			$group_limit = preg_replace('/[^-\_0-9]/','',$group_limit);
 
 			if ($ranks_to_print > 0)
 				{
-				$stmt="UPDATE vicidial_inbound_group_agents set group_rank='$group_rank', group_weight='$group_rank', group_web_vars='$group_web', group_grade='$group_grade' where group_id='$group_id_values[$o]' and user='$user';";
+				$stmt="UPDATE vicidial_inbound_group_agents set group_rank='$group_rank', group_weight='$group_rank', group_web_vars='$group_web', group_grade='$group_grade', daily_limit='$group_limit' where group_id='$group_id_values[$o]' and user='$user';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$stmt_grp_values .= "$stmt|";
 				}
 			else
 				{
-				$stmt="INSERT INTO vicidial_inbound_group_agents set group_rank='$group_rank', group_weight='$group_rank', group_id='$group_id_values[$o]', user='$user', group_web_vars='$group_web', group_grade='$group_grade';";
+				$stmt="INSERT INTO vicidial_inbound_group_agents set group_rank='$group_rank', group_weight='$group_rank', group_id='$group_id_values[$o]', user='$user', group_web_vars='$group_web', group_grade='$group_grade', daily_limit='$group_limit';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$stmt_grp_values .= "$stmt|";
 				}
@@ -7733,8 +7739,9 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 		if ( (strlen($group_web) < 1) and (strlen($group_web_vars) > 0) )
 			{$group_web=$group_web_vars;}
 		$RANKgroups_list .= "</select></td>\n";
-		$RANKgroups_list .= "<td align=right> &nbsp; &nbsp; $calls_today</td>\n";
-		$RANKgroups_list .= "<td> &nbsp; &nbsp; <input type=text size=25 maxlength=255 name=WEB_$group_id_values[$o] value=\"$group_web\"></td></tr>\n";
+		$RANKgroups_list .= "<td align=right nowrap> &nbsp; &nbsp; $calls_today</td>\n";
+		$RANKgroups_list .= "<td nowrap> &nbsp; <input type=text size=5 maxlength=4 name=LIMIT_$group_id_values[$o] value=\"$group_limit\"></td>\n";
+		$RANKgroups_list .= "<td nowrap> &nbsp; <input type=text size=25 maxlength=255 name=WEB_$group_id_values[$o] value=\"$group_web\"></td></tr>\n";
 		$o++;
 		$USER_inbound_calls_today = ($USER_inbound_calls_today + $calls_today);
 		$USER_inbound_calls_today_filtered = ($USER_inbound_calls_today_filtered + $calls_today_filtered);
@@ -12160,7 +12167,7 @@ if ($ADD=="2A")
 				$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,agentcall_chat,modify_email_accounts,pass_hash,alter_admin_interface_options,max_inbound_calls,modify_custom_dialplans,wrapup_seconds_override,modify_languages,selected_language,user_choose_language,ignore_group_on_search,api_list_restrict,api_allowed_functions,lead_filter_id,admin_cf_show_hidden,user_hide_realtime,modify_colors,user_nickname,user_new_lead_limit,api_only_user,modify_auto_reports,modify_ip_lists,ignore_ip_list,ready_max_logout,export_gdpr_leads,access_recordings,pause_code_approval,max_hopper_calls,max_hopper_calls_hour,mute_recordings,hide_call_log_info,next_dial_my_callbacks,user_admin_redirect_url,max_inbound_filter_enabled,max_inbound_filter_statuses,max_inbound_filter_ingroups,max_inbound_filter_min_sec,status_group_id,mobile_number,two_factor_override,manual_dial_filter,user_location,download_invalid_files,user_group_two,modify_dial_prefix,inbound_credits,hci_enabled) SELECT \"$user\",\"$pass\",\"$full_name\",user_level,user_group,phone_login,phone_pass,delete_users,delete_user_groups,delete_lists,delete_campaigns,delete_ingroups,delete_remote_agents,load_leads,campaign_detail,ast_admin_access,ast_delete_phones,delete_scripts,modify_leads,hotkeys_active,change_agent_campaign,agent_choose_ingroups,closer_campaigns,scheduled_callbacks,agentonly_callbacks,agentcall_manual,vicidial_recording,vicidial_transfers,delete_filters,alter_agent_interface_options,closer_default_blended,delete_call_times,modify_call_times,modify_users,modify_campaigns,modify_lists,modify_scripts,modify_filters,modify_ingroups,modify_usergroups,modify_remoteagents,modify_servers,view_reports,vicidial_recording_override,alter_custdata_override,qc_enabled,qc_user_level,qc_pass,qc_finish,qc_commit,add_timeclock_log,modify_timeclock_log,delete_timeclock_log,alter_custphone_override,vdc_agent_api_access,modify_inbound_dids,delete_inbound_dids,active,alert_enabled,download_lists,agent_shift_enforcement_override,manager_shift_enforcement_override,export_reports,delete_from_dnc,email,user_code,territory,allow_alerts,agent_choose_territories,custom_one,custom_two,custom_three,custom_four,custom_five,voicemail_id,agent_call_log_view_override,callcard_admin,agent_choose_blended,realtime_block_user_info,custom_fields_modify,force_change_password,agent_lead_search_override,modify_shifts,modify_phones,modify_carriers,modify_labels,modify_statuses,modify_voicemail,modify_audiostore,modify_moh,modify_tts,preset_contact_search,modify_contacts,modify_same_user_level,admin_hide_lead_data,admin_hide_phone_data,agentcall_email,agentcall_chat,modify_email_accounts,\"$pass_hash\",alter_admin_interface_options,max_inbound_calls,modify_custom_dialplans,wrapup_seconds_override,modify_languages,selected_language,user_choose_language,ignore_group_on_search,api_list_restrict,api_allowed_functions,lead_filter_id,admin_cf_show_hidden,user_hide_realtime,modify_colors,user_nickname,user_new_lead_limit,api_only_user,modify_auto_reports,modify_ip_lists,ignore_ip_list,ready_max_logout,export_gdpr_leads,access_recordings,pause_code_approval,max_hopper_calls,max_hopper_calls_hour,mute_recordings,hide_call_log_info,next_dial_my_callbacks,user_admin_redirect_url,max_inbound_filter_enabled,max_inbound_filter_statuses,max_inbound_filter_ingroups,max_inbound_filter_min_sec,status_group_id,mobile_number,two_factor_override,manual_dial_filter,user_location,download_invalid_files,user_group_two,modify_dial_prefix,inbound_credits,hci_enabled from vicidial_users where user=\"$source_user_id\";";
 				$rslt=mysql_to_mysqli($stmt, $link);
 
-				$stmtA="INSERT INTO vicidial_inbound_group_agents (user,group_id,group_rank,group_weight,calls_today,group_type) SELECT \"$user\",group_id,group_rank,group_weight,\"0\",group_type from vicidial_inbound_group_agents where user=\"$source_user_id\";";
+				$stmtA="INSERT INTO vicidial_inbound_group_agents (user,group_id,group_rank,group_weight,calls_today,group_type,daily_limit) SELECT \"$user\",group_id,group_rank,group_weight,\"0\",group_type,daily_limit from vicidial_inbound_group_agents where user=\"$source_user_id\";";
 				$rslt=mysql_to_mysqli($stmtA, $link);
 
 				$stmtB="INSERT INTO vicidial_campaign_agents (user,campaign_id,campaign_rank,campaign_weight,calls_today) SELECT \"$user\",campaign_id,campaign_rank,campaign_weight,\"0\" from vicidial_campaign_agents where user=\"$source_user_id\";";
@@ -13572,7 +13579,7 @@ if ($ADD==2011)
 					$affected_rowsB = mysqli_affected_rows($link);
 
 					# copy agent ranks and grades from source in-group
-					$stmtC="INSERT INTO vicidial_inbound_group_agents (user,group_id,group_rank,group_weight,group_grade,group_web_vars) SELECT user,'$group_id',group_rank,group_weight,group_grade,group_web_vars from vicidial_inbound_group_agents where group_id=\"$source_group_id\";";
+					$stmtC="INSERT INTO vicidial_inbound_group_agents (user,group_id,group_rank,group_weight,group_grade,group_web_vars,daily_limit) SELECT user,'$group_id',group_rank,group_weight,group_grade,group_web_vars,daily_limit from vicidial_inbound_group_agents where group_id=\"$source_group_id\";";
 					$rslt=mysql_to_mysqli($stmtC, $link);
 					$affected_rowsC = mysqli_affected_rows($link);
 
@@ -13672,7 +13679,7 @@ if ( ($ADD==2911) and ($SSallow_emails>0) )
 					$affected_rowsB = mysqli_affected_rows($link);
 
 					# copy agent ranks and grades from source in-group
-					$stmtC="INSERT INTO vicidial_inbound_group_agents (user,group_id,group_rank,group_weight,group_grade,group_web_vars) SELECT user,'$group_id',group_rank,group_weight,group_grade,group_web_vars from vicidial_inbound_group_agents where group_id=\"$source_group_id\";";
+					$stmtC="INSERT INTO vicidial_inbound_group_agents (user,group_id,group_rank,group_weight,group_grade,group_web_vars,daily_limit) SELECT user,'$group_id',group_rank,group_weight,group_grade,group_web_vars,daily_limit from vicidial_inbound_group_agents where group_id=\"$source_group_id\";";
 					$rslt=mysql_to_mysqli($stmtC, $link);
 					$affected_rowsC = mysqli_affected_rows($link);
 
@@ -13772,7 +13779,7 @@ if ( ($ADD==29111) and ($SSallow_chats>0) )
 					$affected_rowsC = mysqli_affected_rows($link);
 
 					# copy agent ranks and grades from source in-group
-					$stmtC="INSERT INTO vicidial_inbound_group_agents (user,group_id,group_rank,group_weight,group_grade,group_web_vars) SELECT user,'$group_id',group_rank,group_weight,group_grade,group_web_vars from vicidial_inbound_group_agents where group_id=\"$source_group_id\";";
+					$stmtC="INSERT INTO vicidial_inbound_group_agents (user,group_id,group_rank,group_weight,group_grade,group_web_vars,daily_limit) SELECT user,'$group_id',group_rank,group_weight,group_grade,group_web_vars,daily_limit from vicidial_inbound_group_agents where group_id=\"$source_group_id\";";
 					$rslt=mysql_to_mysqli($stmtC, $link);
 
 					# add new in-group to user's agent-selected in-groups
@@ -25704,7 +25711,7 @@ if ($ADD==3)
 				echo "</table>\n";
 				echo "</td></tr>\n";
 				echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=2>"._QXZ("Inbound Groups").": $NWB#users-closer_campaigns$NWE<BR>\n";
-				echo "<table border=0 width=850>\n";
+				echo "<table border=0 width=950>\n";
 				echo "$RANKgroups_list";
 				echo "</table>\n";
 				echo "</td></tr>\n";
@@ -34958,8 +34965,8 @@ if ($ADD==3111)
 		### list of agent rank or skill-level for this inbound group
 		echo "<center><a name=\"agent_ranks\">\n";
 		echo "<br><b>"._QXZ("AGENT RANKS FOR THIS INBOUND GROUP").":</b><br>\n";
-		echo "<TABLE width=700 cellspacing=3>\n";
-		echo "<tr><td>"._QXZ("USER")."</td><td>"._QXZ("GROUP")."</td><td>"._QXZ("SELECTED")."</td><td> &nbsp; &nbsp; "._QXZ("RANK")."</td><td> &nbsp; &nbsp; "._QXZ("GRADE")."</td><td> &nbsp; &nbsp; "._QXZ("CALLS TODAY")."</td></tr>\n";
+		echo "<TABLE width=800 cellspacing=3>\n";
+		echo "<tr><td>"._QXZ("USER")."</td><td>"._QXZ("GROUP")."</td><td>"._QXZ("SELECTED")."</td><td> &nbsp; "._QXZ("RANK")." &nbsp; </td><td> &nbsp; "._QXZ("GRADE")." &nbsp; </td><td> "._QXZ("DAILY LIMIT")." </td><td> "._QXZ("CALLS TODAY")." </td></tr>\n";
 
 		$stmt="SELECT user,full_name,closer_campaigns,user_group from vicidial_users where active='Y' $LOGadmin_viewable_groupsSQL order by user;";
 		$rsltx=mysql_to_mysqli($stmt, $link);
@@ -34986,7 +34993,7 @@ if ($ADD==3111)
 		while ($users_to_print > $o) 
 			{
 			$o++;
-			$stmt="SELECT group_rank,calls_today,group_grade from vicidial_inbound_group_agents where group_id='$group_id' and user='$ARIG_user[$o]';";
+			$stmt="SELECT group_rank,calls_today,group_grade,daily_limit from vicidial_inbound_group_agents where group_id='$group_id' and user='$ARIG_user[$o]';";
 			$rsltx=mysql_to_mysqli($stmt, $link);
 			$viga_to_print = mysqli_num_rows($rsltx);
 			if ($viga_to_print > 0) 
@@ -34995,10 +35002,11 @@ if ($ADD==3111)
 				$ARIG_rank[$o] =	$rowx[0];
 				$ARIG_calls[$o] =	$rowx[1];
 				$ARIG_grade[$o] =	$rowx[2];
+				$ARIG_limit[$o] =	$rowx[3];
 				}
 			else
 				{
-				$stmtD="INSERT INTO vicidial_inbound_group_agents set calls_today='0',group_rank='0',group_weight='0',user='$ARIG_user[$o]',group_id='$group_id',group_grade='1';";
+				$stmtD="INSERT INTO vicidial_inbound_group_agents set calls_today='0',group_rank='0',group_weight='0',user='$ARIG_user[$o]',group_id='$group_id',group_grade='1',daily_limit='-1';";
 				$rslt=mysql_to_mysqli($stmtD, $link);
 				if ($DB > 0) {echo "|$stmtD|";}
 				$stmtDlog .= "$stmtD|";
@@ -35006,6 +35014,7 @@ if ($ADD==3111)
 				$ARIG_rank[$o] =	'0';
 				$ARIG_calls[$o] =	'0';
 				$ARIG_grade[$o] =	'1';
+				$ARIG_limit[$o] =	'-1';
 				}
 			}
 		if (strlen($ARIG_changenotes) > 10)
@@ -35030,10 +35039,12 @@ if ($ADD==3111)
 				$ARIG_checked='';
 				$ARIG_ranked='';
 				$ARIG_graded='';
+				$ARIG_limited='';
 
 				$checkbox_field="CHECK_$ARIG_user[$o]$US$group_id";
 				$rank_field="RANK_$ARIG_user[$o]$US$group_id";
 				$grade_field="GRADE_$ARIG_user[$o]$US$group_id";
+				$limit_field="LIMIT_$ARIG_user[$o]$US$group_id";
 
 				if (isset($_GET["$checkbox_field"]))			{$ARIG_checked=$_GET["$checkbox_field"];}
 					elseif (isset($_POST["$checkbox_field"]))	{$ARIG_checked=$_POST["$checkbox_field"];}
@@ -35041,13 +35052,18 @@ if ($ADD==3111)
 					elseif (isset($_POST["$rank_field"]))	{$ARIG_ranked=$_POST["$rank_field"];}
 				if (isset($_GET["$grade_field"]))			{$ARIG_graded=$_GET["$grade_field"];}
 					elseif (isset($_POST["$grade_field"]))	{$ARIG_graded=$_POST["$grade_field"];}
+				if (isset($_GET["$limit_field"]))			{$ARIG_limited=$_GET["$limit_field"];}
+					elseif (isset($_POST["$limit_field"]))	{$ARIG_limited=$_POST["$limit_field"];}
 				$ARIG_checked = preg_replace('/[^A-Z]/','',$ARIG_checked);
 				$ARIG_ranked = preg_replace('/[^-0-9]/','',$ARIG_ranked);
 				$ARIG_graded = preg_replace('/[^-0-9]/','',$ARIG_graded);
+				$ARIG_limited = preg_replace('/[^-0-9]/','',$ARIG_limited);
 
 				$stmtA='';
 				$stmtB='';
 				$stmtC='';
+				$stmtD='';
+				$stmtE='';
 				$ARIG_updated=0;
 				$ARIG_changenotes='';
 				if ( ($ARIG_check[$o]=='') and ($ARIG_checked=='YES') )
@@ -35084,10 +35100,18 @@ if ($ADD==3111)
 					$ARIG_updated++;
 					$ARIG_changenotes .= "changed grade from $ARIG_grade[$o] to $ARIG_graded|";
 					}
+				if ( ($ARIG_limited < $ARIG_limit[$o]) or ($ARIG_limited > $ARIG_limit[$o]) )
+					{
+					$stmtE="UPDATE vicidial_inbound_group_agents set daily_limit='$ARIG_limited' where user='$ARIG_user[$o]' and group_id='$group_id';";
+					$rslt=mysql_to_mysqli($stmtE, $link);
+					if ($DB > 0) {echo "|$stmtE|";}
+					$ARIG_updated++;
+					$ARIG_changenotes .= "changed limit from $ARIG_limit[$o] to $ARIG_limited|";
+					}
 				if ($ARIG_updated > 0)
 					{
 					### LOG INSERTION Admin Log Table ###
-					$SQL_log = "$stmtA|$stmtB|$stmtC|$stmtD|";
+					$SQL_log = "$stmtA|$stmtB|$stmtC|$stmtD|$stmtE|";
 					$SQL_log = preg_replace('/;/', '', $SQL_log);
 					$SQL_log = addslashes($SQL_log);
 					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$ARIG_user[$o]', event_code='USER INGROUP SETTINGS', event_sql=\"$SQL_log\", event_notes='$ARIG_changenotes';";
@@ -35096,7 +35120,7 @@ if ($ADD==3111)
 					}
 				}
 
-			$stmt="SELECT vu.user,viga.group_rank,calls_today,full_name,closer_campaigns,viga.group_grade from vicidial_inbound_group_agents viga, vicidial_users vu where group_id='$group_id' and active='Y' and vu.user=viga.user $LOGadmin_viewable_groupsSQL order by vu.user;";
+			$stmt="SELECT vu.user,viga.group_rank,calls_today,full_name,closer_campaigns,viga.group_grade,viga.daily_limit from vicidial_inbound_group_agents viga, vicidial_users vu where group_id='$group_id' and active='Y' and vu.user=viga.user $LOGadmin_viewable_groupsSQL order by vu.user;";
 			$rsltx=mysql_to_mysqli($stmt, $link);
 			$users_to_print = mysqli_num_rows($rsltx);
 
@@ -35112,6 +35136,7 @@ if ($ADD==3111)
 				$ARIG_name[$o] =	$rowx[3];
 				$ARIG_close[$o] =	$rowx[4];
 				$ARIG_grade[$o] =	$rowx[5];
+				$ARIG_limit[$o] =	$rowx[6];
 				$ARIG_check[$o] =	'';
 				if (preg_match("/ $group_id /",$ARIG_close[$o]))
 					{$ARIG_check[$o] = ' CHECKED';}
@@ -35132,6 +35157,7 @@ if ($ADD==3111)
 			$checkbox_field="CHECK_$ARIG_user[$o]$US$group_id";
 			$rank_field="RANK_$ARIG_user[$o]$US$group_id";
 			$grade_field="GRADE_$ARIG_user[$o]$US$group_id";
+			$limit_field="LIMIT_$ARIG_user[$o]$US$group_id";
 			$checkbox_list .= "|$checkbox_field";
 			$checkbox_count++;
 
@@ -35160,6 +35186,7 @@ if ($ADD==3111)
 				$h--;
 				}
 			$users_output .= "</select></td>\n";
+			$users_output .= "<td><input type=text name=$limit_field size=5 maxlength=4 value=\"$ARIG_limit[$o]\"></td>\n";
 			$users_output .= "<td><font size=1>$ARIG_calls[$o]</td></tr>\n";
 			}
 		echo "<tr><td><font size=1> &nbsp; </font></td><td><font size=1> &nbsp; </font></td><td align=left><span id=IGU_selectlink><a href=\"#\" onclick=\"FORM_selectall('$checkbox_count','$checkbox_list','on','IGU_selectlink');return false;\"><font size=1>"._QXZ("select all")."</font></a></span></td><td colspan=2><font size=1> &nbsp; </font></td></tr>\n";
@@ -35840,8 +35867,8 @@ if ($ADD==3811)
 		### list of agent rank or skill-level for this inbound group
 		echo "<center><a name=\"agent_ranks\">\n";
 		echo "<br><b>"._QXZ("AGENT RANKS FOR THIS INBOUND GROUP").":</b><br>\n";
-		echo "<TABLE width=700 cellspacing=3>\n";
-		echo "<tr><td>"._QXZ("USER")."</td><td>"._QXZ("GROUP")."</td><td>"._QXZ("SELECTED")."</td><td> &nbsp; &nbsp; "._QXZ("RANK")."</td><td> &nbsp; &nbsp; "._QXZ("GRADE")."</td><td> &nbsp; &nbsp; "._QXZ("CALLS TODAY")."</td></tr>\n";
+		echo "<TABLE width=800 cellspacing=3>\n";
+		echo "<tr><td>"._QXZ("USER")."</td><td>"._QXZ("GROUP")."</td><td>"._QXZ("SELECTED")."</td><td> &nbsp; "._QXZ("RANK")." &nbsp; </td><td> &nbsp; "._QXZ("GRADE")." &nbsp; </td><td> "._QXZ("DAILY LIMIT")." </td><td> "._QXZ("CALLS TODAY")." </td></tr>\n";
 
 		$stmt="SELECT user,full_name,closer_campaigns,user_group from vicidial_users where active='Y' $LOGadmin_viewable_groupsSQL order by user;";
 		$rsltx=mysql_to_mysqli($stmt, $link);
@@ -35868,7 +35895,7 @@ if ($ADD==3811)
 		while ($users_to_print > $o) 
 			{
 			$o++;
-			$stmt="SELECT group_rank,calls_today,group_grade from vicidial_inbound_group_agents where group_id='$group_id' and user='$ARIG_user[$o]';";
+			$stmt="SELECT group_rank,calls_today,group_grade,daily_limit from vicidial_inbound_group_agents where group_id='$group_id' and user='$ARIG_user[$o]';";
 			$rsltx=mysql_to_mysqli($stmt, $link);
 			$viga_to_print = mysqli_num_rows($rsltx);
 			if ($viga_to_print > 0) 
@@ -35877,6 +35904,7 @@ if ($ADD==3811)
 				$ARIG_rank[$o] =	$rowx[0];
 				$ARIG_calls[$o] =	$rowx[1];
 				$ARIG_grade[$o] =	$rowx[2];
+				$ARIG_limit[$o] =	$rowx[3];
 				}
 			else
 				{
@@ -35888,6 +35916,7 @@ if ($ADD==3811)
 				$ARIG_rank[$o] =	'0';
 				$ARIG_calls[$o] =	'0';
 				$ARIG_grade[$o] =	'1';
+				$ARIG_limit[$o] =	'-1';
 				}
 			}
 		if (strlen($ARIG_changenotes) > 10)
@@ -35912,10 +35941,12 @@ if ($ADD==3811)
 				$ARIG_checked='';
 				$ARIG_ranked='';
 				$ARIG_graded='';
+				$ARIG_limited='';
 
 				$checkbox_field="CHECK_$ARIG_user[$o]$US$group_id";
 				$rank_field="RANK_$ARIG_user[$o]$US$group_id";
 				$grade_field="GRADE_$ARIG_user[$o]$US$group_id";
+				$limit_field="LIMIT_$ARIG_user[$o]$US$group_id";
 
 				if (isset($_GET["$checkbox_field"]))			{$ARIG_checked=$_GET["$checkbox_field"];}
 					elseif (isset($_POST["$checkbox_field"]))	{$ARIG_checked=$_POST["$checkbox_field"];}
@@ -35923,13 +35954,18 @@ if ($ADD==3811)
 					elseif (isset($_POST["$rank_field"]))	{$ARIG_ranked=$_POST["$rank_field"];}
 				if (isset($_GET["$grade_field"]))			{$ARIG_graded=$_GET["$grade_field"];}
 					elseif (isset($_POST["$grade_field"]))	{$ARIG_graded=$_POST["$grade_field"];}
+				if (isset($_GET["$limit_field"]))			{$ARIG_limited=$_GET["$limit_field"];}
+					elseif (isset($_POST["$limit_field"]))	{$ARIG_limited=$_POST["$limit_field"];}
 				$ARIG_checked = preg_replace('/[^A-Z]/','',$ARIG_checked);
 				$ARIG_ranked = preg_replace('/[^-0-9]/','',$ARIG_ranked);
 				$ARIG_graded = preg_replace('/[^-0-9]/','',$ARIG_graded);
+				$ARIG_limited = preg_replace('/[^-0-9]/','',$ARIG_limited);
 
 				$stmtA='';
 				$stmtB='';
 				$stmtC='';
+				$stmtD='';
+				$stmtE='';
 				$ARIG_updated=0;
 				$ARIG_changenotes='';
 				if ( ($ARIG_check[$o]=='') and ($ARIG_checked=='YES') )
@@ -35966,10 +36002,18 @@ if ($ADD==3811)
 					$ARIG_updated++;
 					$ARIG_changenotes .= "changed grade from $ARIG_grade[$o] to $ARIG_graded|";
 					}
+				if ( ($ARIG_limited < $ARIG_limit[$o]) or ($ARIG_limited > $ARIG_limit[$o]) )
+					{
+					$stmtE="UPDATE vicidial_inbound_group_agents set daily_limit='$ARIG_limited' where user='$ARIG_user[$o]' and group_id='$group_id';";
+					$rslt=mysql_to_mysqli($stmtE, $link);
+					if ($DB > 0) {echo "|$stmtE|";}
+					$ARIG_updated++;
+					$ARIG_changenotes .= "changed limit from $ARIG_limit[$o] to $ARIG_limited|";
+					}
 				if ($ARIG_updated > 0)
 					{
 					### LOG INSERTION Admin Log Table ###
-					$SQL_log = "$stmtA|$stmtB|$stmtC|$stmtD|";
+					$SQL_log = "$stmtA|$stmtB|$stmtC|$stmtD|$stmtE|";
 					$SQL_log = preg_replace('/;/', '', $SQL_log);
 					$SQL_log = addslashes($SQL_log);
 					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$ARIG_user[$o]', event_code='USER INGROUP SETTINGS', event_sql=\"$SQL_log\", event_notes='$ARIG_changenotes';";
@@ -35978,7 +36022,7 @@ if ($ADD==3811)
 					}
 				}
 
-			$stmt="SELECT vu.user,viga.group_rank,calls_today,full_name,closer_campaigns,viga.group_grade from vicidial_inbound_group_agents viga, vicidial_users vu where group_id='$group_id' and active='Y' and vu.user=viga.user $LOGadmin_viewable_groupsSQL order by vu.user;";
+			$stmt="SELECT vu.user,viga.group_rank,calls_today,full_name,closer_campaigns,viga.group_grade,viga.daily_limit from vicidial_inbound_group_agents viga, vicidial_users vu where group_id='$group_id' and active='Y' and vu.user=viga.user $LOGadmin_viewable_groupsSQL order by vu.user;";
 			$rsltx=mysql_to_mysqli($stmt, $link);
 			$users_to_print = mysqli_num_rows($rsltx);
 
@@ -35994,6 +36038,7 @@ if ($ADD==3811)
 				$ARIG_name[$o] =	$rowx[3];
 				$ARIG_close[$o] =	$rowx[4];
 				$ARIG_grade[$o] =	$rowx[5];
+				$ARIG_limit[$o] =	$rowx[6];
 				$ARIG_check[$o] =	'';
 				if (preg_match("/ $group_id /",$ARIG_close[$o]))
 					{$ARIG_check[$o] = ' CHECKED';}
@@ -36014,6 +36059,7 @@ if ($ADD==3811)
 			$checkbox_field="CHECK_$ARIG_user[$o]$US$group_id";
 			$rank_field="RANK_$ARIG_user[$o]$US$group_id";
 			$grade_field="GRADE_$ARIG_user[$o]$US$group_id";
+			$limit_field="LIMIT_$ARIG_user[$o]$US$group_id";
 			$checkbox_list .= "|$checkbox_field";
 			$checkbox_count++;
 
@@ -36042,6 +36088,7 @@ if ($ADD==3811)
 				$h--;
 				}
 			$users_output .= "</select></td>\n";
+			$users_output .= "<td><input type=text name=$limit_field size=5 maxlength=4 value=\"$ARIG_limit[$o]\"></td>\n";
 			$users_output .= "<td><font size=1>$ARIG_calls[$o]</td></tr>\n";
 			}
 		echo "<tr><td><font size=1> &nbsp; </font></td><td><font size=1> &nbsp; </font></td><td align=left><span id=IGU_selectlink><a href=\"#\" onclick=\"FORM_selectall('$checkbox_count','$checkbox_list','on','IGU_selectlink');return false;\"><font size=1>"._QXZ("select all")."</font></a></span></td><td colspan=2><font size=1> &nbsp; </font></td></tr>\n";
@@ -36686,8 +36733,8 @@ if ($ADD==3911)
 		### list of agent rank or skill-level for this inbound group
 		echo "<center><a name=\"agent_ranks\">\n";
 		echo "<br><b>"._QXZ("AGENT RANKS FOR THIS INBOUND GROUP").":</b><br>\n";
-		echo "<TABLE width=700 cellspacing=3>\n";
-		echo "<tr><td>"._QXZ("USER")."</td><td>"._QXZ("GROUP")."</td><td>"._QXZ("SELECTED")."</td><td> &nbsp; &nbsp; "._QXZ("RANK")."</td><td> &nbsp; &nbsp; "._QXZ("GRADE")."</td><td> &nbsp; &nbsp; "._QXZ("CALLS TODAY")."</td></tr>\n";
+		echo "<TABLE width=800 cellspacing=3>\n";
+		echo "<tr><td>"._QXZ("USER")."</td><td>"._QXZ("GROUP")."</td><td>"._QXZ("SELECTED")."</td><td> &nbsp; "._QXZ("RANK")." &nbsp; </td><td> &nbsp; "._QXZ("GRADE")." &nbsp; </td><td> "._QXZ("DAILY LIMIT")." </td><td> "._QXZ("CALLS TODAY")." </td></tr>\n";
 
 		$stmt="SELECT user,full_name,closer_campaigns,user_group from vicidial_users where active='Y' $LOGadmin_viewable_groupsSQL order by user;";
 		$rsltx=mysql_to_mysqli($stmt, $link);
@@ -36714,7 +36761,7 @@ if ($ADD==3911)
 		while ($users_to_print > $o) 
 			{
 			$o++;
-			$stmt="SELECT group_rank,calls_today,group_grade from vicidial_inbound_group_agents where group_id='$group_id' and user='$ARIG_user[$o]';";
+			$stmt="SELECT group_rank,calls_today,group_grade,daily_limit from vicidial_inbound_group_agents where group_id='$group_id' and user='$ARIG_user[$o]';";
 			$rsltx=mysql_to_mysqli($stmt, $link);
 			$viga_to_print = mysqli_num_rows($rsltx);
 			if ($viga_to_print > 0) 
@@ -36723,6 +36770,7 @@ if ($ADD==3911)
 				$ARIG_rank[$o] =	$rowx[0];
 				$ARIG_calls[$o] =	$rowx[1];
 				$ARIG_grade[$o] =	$rowx[2];
+				$ARIG_limit[$o] =	$rowx[3];
 				}
 			else
 				{
@@ -36734,6 +36782,7 @@ if ($ADD==3911)
 				$ARIG_rank[$o] =	'0';
 				$ARIG_calls[$o] =	'0';
 				$ARIG_grade[$o] =	'1';
+				$ARIG_limit[$o] =	'-1';
 				}
 			}
 		if (strlen($ARIG_changenotes) > 10)
@@ -36758,10 +36807,12 @@ if ($ADD==3911)
 				$ARIG_checked='';
 				$ARIG_ranked='';
 				$ARIG_graded='';
+				$ARIG_limited='';
 
 				$checkbox_field="CHECK_$ARIG_user[$o]$US$group_id";
 				$rank_field="RANK_$ARIG_user[$o]$US$group_id";
 				$grade_field="GRADE_$ARIG_user[$o]$US$group_id";
+				$limit_field="LIMIT_$ARIG_user[$o]$US$group_id";
 
 				if (isset($_GET["$checkbox_field"]))			{$ARIG_checked=$_GET["$checkbox_field"];}
 					elseif (isset($_POST["$checkbox_field"]))	{$ARIG_checked=$_POST["$checkbox_field"];}
@@ -36769,13 +36820,18 @@ if ($ADD==3911)
 					elseif (isset($_POST["$rank_field"]))	{$ARIG_ranked=$_POST["$rank_field"];}
 				if (isset($_GET["$grade_field"]))			{$ARIG_graded=$_GET["$grade_field"];}
 					elseif (isset($_POST["$grade_field"]))	{$ARIG_graded=$_POST["$grade_field"];}
+				if (isset($_GET["$limit_field"]))			{$ARIG_limited=$_GET["$limit_field"];}
+					elseif (isset($_POST["$limit_field"]))	{$ARIG_limited=$_POST["$limit_field"];}
 				$ARIG_checked = preg_replace('/[^A-Z]/','',$ARIG_checked);
 				$ARIG_ranked = preg_replace('/[^-0-9]/','',$ARIG_ranked);
 				$ARIG_graded = preg_replace('/[^-0-9]/','',$ARIG_graded);
+				$ARIG_limited = preg_replace('/[^-0-9]/','',$ARIG_limited);
 
 				$stmtA='';
 				$stmtB='';
 				$stmtC='';
+				$stmtD='';
+				$stmtE='';
 				$ARIG_updated=0;
 				$ARIG_changenotes='';
 				if ( ($ARIG_check[$o]=='') and ($ARIG_checked=='YES') )
@@ -36812,10 +36868,18 @@ if ($ADD==3911)
 					$ARIG_updated++;
 					$ARIG_changenotes .= "changed grade from $ARIG_grade[$o] to $ARIG_graded|";
 					}
+				if ( ($ARIG_limited < $ARIG_limit[$o]) or ($ARIG_limited > $ARIG_limit[$o]) )
+					{
+					$stmtE="UPDATE vicidial_inbound_group_agents set daily_limit='$ARIG_limited' where user='$ARIG_user[$o]' and group_id='$group_id';";
+					$rslt=mysql_to_mysqli($stmtE, $link);
+					if ($DB > 0) {echo "|$stmtE|";}
+					$ARIG_updated++;
+					$ARIG_changenotes .= "changed limit from $ARIG_limit[$o] to $ARIG_limited|";
+					}
 				if ($ARIG_updated > 0)
 					{
 					### LOG INSERTION Admin Log Table ###
-					$SQL_log = "$stmtA|$stmtB|$stmtC|$stmtD|";
+					$SQL_log = "$stmtA|$stmtB|$stmtC|$stmtD|$stmtE|";
 					$SQL_log = preg_replace('/;/', '', $SQL_log);
 					$SQL_log = addslashes($SQL_log);
 					$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='MODIFY', record_id='$ARIG_user[$o]', event_code='USER INGROUP SETTINGS', event_sql=\"$SQL_log\", event_notes='$ARIG_changenotes';";
@@ -36824,7 +36888,7 @@ if ($ADD==3911)
 					}
 				}
 
-			$stmt="SELECT vu.user,viga.group_rank,calls_today,full_name,closer_campaigns,viga.group_grade from vicidial_inbound_group_agents viga, vicidial_users vu where group_id='$group_id' and active='Y' and vu.user=viga.user $LOGadmin_viewable_groupsSQL order by vu.user;";
+			$stmt="SELECT vu.user,viga.group_rank,calls_today,full_name,closer_campaigns,viga.group_grade,viga.daily_limit from vicidial_inbound_group_agents viga, vicidial_users vu where group_id='$group_id' and active='Y' and vu.user=viga.user $LOGadmin_viewable_groupsSQL order by vu.user;";
 			$rsltx=mysql_to_mysqli($stmt, $link);
 			$users_to_print = mysqli_num_rows($rsltx);
 
@@ -36840,6 +36904,7 @@ if ($ADD==3911)
 				$ARIG_name[$o] =	$rowx[3];
 				$ARIG_close[$o] =	$rowx[4];
 				$ARIG_grade[$o] =	$rowx[5];
+				$ARIG_limit[$o] =	$rowx[6];
 				$ARIG_check[$o] =	'';
 				if (preg_match("/ $group_id /",$ARIG_close[$o]))
 					{$ARIG_check[$o] = ' CHECKED';}
@@ -36860,6 +36925,7 @@ if ($ADD==3911)
 			$checkbox_field="CHECK_$ARIG_user[$o]$US$group_id";
 			$rank_field="RANK_$ARIG_user[$o]$US$group_id";
 			$grade_field="GRADE_$ARIG_user[$o]$US$group_id";
+			$limit_field="LIMIT_$ARIG_user[$o]$US$group_id";
 			$checkbox_list .= "|$checkbox_field";
 			$checkbox_count++;
 
@@ -36888,6 +36954,7 @@ if ($ADD==3911)
 				$h--;
 				}
 			$users_output .= "</select></td>\n";
+			$users_output .= "<td><input type=text name=$limit_field size=5 maxlength=4 value=\"$ARIG_limit[$o]\"></td>\n";
 			$users_output .= "<td><font size=1>$ARIG_calls[$o]</td></tr>\n";
 			}
 		echo "<tr><td><font size=1> &nbsp; </font></td><td><font size=1> &nbsp; </font></td><td align=left><span id=IGU_selectlink><a href=\"#\" onclick=\"FORM_selectall('$checkbox_count','$checkbox_list','on','IGU_selectlink');return false;\"><font size=1>"._QXZ("select all")."</font></a></span></td><td colspan=2><font size=1> &nbsp; </font></td></tr>\n";

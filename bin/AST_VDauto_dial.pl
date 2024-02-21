@@ -25,7 +25,7 @@
 # It is good practice to keep this program running by placing the associated 
 # KEEPALIVE script running every minute to ensure this program is always running
 #
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50125-1201 - Changed dial timeout to 120 seconds from 180 seconds
@@ -157,9 +157,10 @@
 # 230223-0826 - Fix for enhanced_disconnect_logging=3 issue
 # 231116-0911 - Added hopper_hold_inserts option
 # 231129-0901 - Added vicidial_phone_number_call_daily_counts updates/inserts
+# 240219-1524 - Added daily_limit in-group parameter
 #
 
-$build='231129-0901';
+$build='240219-1524';
 $script='AST_VDauto_dial';
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -1334,7 +1335,7 @@ while($one_day_interval > 0)
 					{
 					$DBIPinbound_no_agents_no_dial_trigger[$user_CIPct]=1;
 					$DBIPinand_users[$user_CIPct]='';
-					$stmtA = "SELECT distinct(user) FROM vicidial_live_inbound_agents where group_id IN('$DBIPinand_container_entry[$user_CIPct]');";
+					$stmtA = "SELECT distinct(user) FROM vicidial_live_inbound_agents where group_id IN('$DBIPinand_container_entry[$user_CIPct]') and ( (daily_limit = '-1') or (daily_limit > calls_today) );";
 					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 					$sthArows=$sthA->rows;

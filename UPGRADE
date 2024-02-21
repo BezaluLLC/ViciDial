@@ -847,6 +847,12 @@ OTHER CHANGES:
 	Non-Agent API function. Checks for duplicate phone against both the 
 	phone_number and alt_phone fields.
 
+241. Added State Descriptions Banner campaign and in-group settings, allowing
+	for a custom description and color banner to appear on the agent screen
+	on a per-campaign and per-in-group basis.
+
+242. Added Per-User Per-In-Group daily call limits.
+
 
 
 

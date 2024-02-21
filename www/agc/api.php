@@ -1,7 +1,7 @@
 <?php
 # api.php
 # 
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed as an API(Application Programming Interface) to allow
 # other programs to interact with the VICIDIAL Agent screen
@@ -112,10 +112,11 @@
 # 230519-0731 - Fix for input variable filtering
 # 231129-1457 - Added refresh_panel function
 # 231222-2105 - Added multi_dial_phones option to the transfer_conference function
+# 240219-1500 - Added daily_limit setting to change_ingroups function
 #
 
-$version = '2.14-77';
-$build = '231222-2105';
+$version = '2.14-78';
+$build = '240219-1500';
 $php_script = 'api.php';
 
 $startMS = microtime();
@@ -2656,7 +2657,7 @@ if ($function == 'change_ingroups')
 						{
 						if (strlen($in_groups[$k])>1)
 							{
-							$stmtB="SELECT group_weight,calls_today,group_grade,calls_today_filtered FROM vicidial_inbound_group_agents where user='$agent_user' and group_id='$in_groups[$k]';";
+							$stmtB="SELECT group_weight,calls_today,group_grade,calls_today_filtered,daily_limit FROM vicidial_inbound_group_agents where user='$agent_user' and group_id='$in_groups[$k]';";
 							$rslt=mysql_to_mysqli($stmtB, $link);
 							if ($DB) {echo "$stmtB\n";}
 							$viga_ct = mysqli_num_rows($rslt);
@@ -2667,6 +2668,7 @@ if ($function == 'change_ingroups')
 								$calls_today =	$row[1];
 								$group_grade =	$row[2];
 								$calls_today_filtered =	$row[3];
+								$daily_limit =	$row[4];
 								}
 							else
 								{
@@ -2674,8 +2676,9 @@ if ($function == 'change_ingroups')
 								$calls_today =	0;
 								$group_grade =	0;
 								$calls_today_filtered =	0;
+								$daily_limit =	-1;
 								}
-							$stmtB="INSERT IGNORE INTO vicidial_live_inbound_agents set user='$agent_user',group_id='$in_groups[$k]',group_weight='$group_weight',group_grade='$group_grade',calls_today='$calls_today',calls_today_filtered='$calls_today_filtered',last_call_time='$NOW_TIME',last_call_finish='$NOW_TIME',last_call_time_filtered='$NOW_TIME',last_call_finish_filtered='$NOW_TIME' ON DUPLICATE KEY UPDATE group_weight='$group_weight',group_grade='$group_grade',calls_today='$calls_today',calls_today_filtered='$calls_today_filtered';";
+							$stmtB="INSERT IGNORE INTO vicidial_live_inbound_agents set user='$agent_user',group_id='$in_groups[$k]',group_weight='$group_weight',group_grade='$group_grade',calls_today='$calls_today',calls_today_filtered='$calls_today_filtered',last_call_time='$NOW_TIME',last_call_finish='$NOW_TIME',last_call_time_filtered='$NOW_TIME',last_call_finish_filtered='$NOW_TIME',daily_limit='$daily_limit' ON DUPLICATE KEY UPDATE group_weight='$group_weight',group_grade='$group_grade',calls_today='$calls_today',calls_today_filtered='$calls_today_filtered',daily_limit='$daily_limit';";
 							$stmtBlog .= "$stmtB|";
 								if ($format=='debug') {echo "\n<!-- $stmtB -->";}
 							$rslt=mysql_to_mysqli($stmtB, $link);

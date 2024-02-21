@@ -11,7 +11,7 @@
 # agents that should appear to be logged in so that the calls can be transferred 
 # out to them properly.
 #
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 50215-0954 - First version of script
@@ -55,6 +55,7 @@
 # 190716-1628 - Added code for Call Quotas
 # 191017-1909 - Added code for filtered maximum inbound calls
 # 230523-0825 - Added User inbound_credits feature
+# 240219-1518 - Added daily_limit inbound option
 #
 
 ### begin parsing run-time options ###
@@ -922,9 +923,10 @@ while($one_day_interval > 0)
 							$TEMPagentWEIGHT=0;
 							$TEMPagentCALLS=0;
 							$TEMPexistsVLIA=0;
+							$TEMPagentLIMIT=-1;
 							# grab the group weight and calls today of the agent in each in-group
 							$DBuser_level[$h]='1';
-							$stmtA = "SELECT group_weight,calls_today,group_grade,calls_today_filtered FROM vicidial_inbound_group_agents where user='$DBuser_start[$h]' and group_id='$TEMPingroups[$s]';";
+							$stmtA = "SELECT group_weight,calls_today,group_grade,calls_today_filtered,daily_limit FROM vicidial_inbound_group_agents where user='$DBuser_start[$h]' and group_id='$TEMPingroups[$s]';";
 							$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 							$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 							$sthArowsVIGA=$sthA->rows;
@@ -935,6 +937,7 @@ while($one_day_interval > 0)
 								$TEMPagentCALLS =		$aryA[1];
 								$TEMPagentGRADE =		$aryA[2];
 								$TEMPagentCALLSftl =	$aryA[3];
+								$TEMPagentLIMIT =		$aryA[4];
 								}
 							$sthA->finish();
 
@@ -955,7 +958,7 @@ while($one_day_interval > 0)
 
 							if ($TEMPexistsVLIA < 1)
 								{
-								$stmtA = "INSERT IGNORE INTO vicidial_live_inbound_agents SET user='$DBremote_user[$h]', group_id='$TEMPingroups[$s]', group_weight='$TEMPagentWEIGHT', calls_today='$TEMPagentCALLS', calls_today_filtered='$TEMPagentCALLSftl', last_call_time='$SQLdate', last_call_time_filtered='$SQLdate', last_call_finish='$SQLdate', group_grade='$TEMPagentGRADE' ON DUPLICATE KEY UPDATE group_weight='$TEMPagentWEIGHT',group_grade='$TEMPagentGRADE';";
+								$stmtA = "INSERT IGNORE INTO vicidial_live_inbound_agents SET user='$DBremote_user[$h]', group_id='$TEMPingroups[$s]', group_weight='$TEMPagentWEIGHT', calls_today='$TEMPagentCALLS', calls_today_filtered='$TEMPagentCALLSftl', last_call_time='$SQLdate', last_call_time_filtered='$SQLdate', last_call_finish='$SQLdate', group_grade='$TEMPagentGRADE', daily_limit='$TEMPagentLIMIT' ON DUPLICATE KEY UPDATE group_weight='$TEMPagentWEIGHT',group_grade='$TEMPagentGRADE';";
 								$affected_rows = $dbhA->do($stmtA);
 								if ( ($DBX) && ($affected_rows > 0) ) {print STDERR "$DBremote_user[$h] VLIA UPDATE: $affected_rows|$TEMPingroups[$s]|$TEMPagentWEIGHT\n";}
 

@@ -2603,3 +2603,61 @@ ALTER TABLE vicidial_campaigns ADD state_descriptions VARCHAR(40) default '---DI
 ALTER TABLE vicidial_inbound_groups ADD state_descriptions VARCHAR(40) default '---DISABLED---';
 
 UPDATE system_settings SET db_schema_version='1707',db_schema_update_date=NOW() where db_schema_version < 1707;
+
+ALTER TABLE vicidial_inbound_group_agents ADD daily_limit SMALLINT(5) default '-1';
+
+ALTER TABLE vicidial_live_inbound_agents ADD daily_limit SMALLINT(5) default '-1';
+
+CREATE TABLE server_live_stats (
+update_time DATETIME NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+server_name VARCHAR(100) NOT NULL,
+cpu_count SMALLINT(5) UNSIGNED default '0',
+loadavg_1 DECIMAL(8,2) default '0.00',
+loadavg_5 DECIMAL(8,2) default '0.00',
+loadavg_15 DECIMAL(8,2) default '0.00',
+freeram INT(9) default '0',
+usedram INT(9) default '0',
+processes SMALLINT(4) default '0',
+system_uptime VARCHAR(255) default '',
+cpu_user_percent DECIMAL(6,2) default '0.00',
+cpu_sys_percent DECIMAL(6,2) default '0.00',
+cpu_idle_percent DECIMAL(6,2) default '0.00',
+cpu_iowait_percent DECIMAL(6,2) default '0.00',
+cpu_vm_percent DECIMAL(6,2) default '0.00',
+disk_reads INT(9) UNSIGNED default '0',
+disk_writes INT(9) UNSIGNED default '0',
+asterisk_channels_total SMALLINT(4) UNSIGNED default '0',
+asterisk_agents_total SMALLINT(4) UNSIGNED default '0',
+mysql_uptime VARCHAR(20) default '0',
+mysql_queries_per_second INT(9) UNSIGNED default '0',
+mysql_connections MEDIUMINT(7) UNSIGNED default '0',
+unique index liveservers (server_ip)
+) ENGINE=MyISAM;
+
+CREATE TABLE server_live_drives (
+update_time DATETIME NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+drive_order TINYINT UNSIGNED default '0',
+drive_device VARCHAR(100) default '',
+read_sec DECIMAL(8,2) default '0.0',
+write_sec DECIMAL(8,2) default '0.0',
+kb_read_sec DECIMAL(12,2) default '0.0',
+kb_write_sec DECIMAL(12,2) default '0.0',
+util_pct DECIMAL(7,2) default '0.0',
+unique index livedrives (server_ip, drive_device)
+) ENGINE=MyISAM;
+
+CREATE TABLE server_live_partitions (
+update_time DATETIME NOT NULL,
+server_ip VARCHAR(15) NOT NULL,
+partition_order TINYINT UNSIGNED default '0',
+partition_path VARCHAR(100) default '',
+partition_filesystem VARCHAR(100) default '',
+use_pct TINYINT UNSIGNED default '0',
+mb_used BIGINT(14) default '0',
+mb_available BIGINT(14) default '0',
+unique index livepartitions (server_ip, partition_path)
+) ENGINE=MyISAM;
+
+UPDATE system_settings SET db_schema_version='1708',db_schema_update_date=NOW() where db_schema_version < 1708;
