@@ -6131,12 +6131,13 @@ if ($SSscript_remove_js > 0)
 # 240214-2120 - Added STATE_DESCRIPTIONS container type and state_descriptions campaign and in-group settings, change year to 2024
 # 240221-0331 - Changes for in-group daily limits, small changes for stats_descriptions
 # 240223-0854 - Added INBOUND_DID In-Group populate option
+# 240225-0933 - Added the AUTONEXT hopper_hold_inserts campaign option
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-908a';
-$build = '240223-0854';
+$admin_version = '2.14-909a';
+$build = '240225-0933';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -25744,7 +25745,13 @@ if ($ADD==3)
 
 				if ($SShopper_hold_inserts > 0)
 					{
-					echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("HCI Enabled").": </td><td align=left><select size=1 name=hci_enabled><option>0</option><option>1</option><option SELECTED>$hci_enabled</option></select>$NWB#users-hci_enabled$NWE</td></tr>\n";
+					echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("HCI Enabled").": </td><td align=left><select size=1 name=hci_enabled><option>0</option><option>1</option>";
+					if ($SShopper_hold_inserts > 1)
+						{
+						echo "<option>2</option>";
+						}
+					echo "<option SELECTED>$hci_enabled</option></select>$NWB#users-hci_enabled$NWE</td></tr>\n";
+
 					}
 				else
 					{
@@ -27305,7 +27312,12 @@ if ($ADD==31)
 
 			if ($SShopper_hold_inserts > 0)
 				{
-				echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Hopper Hold Inserts").": </td><td align=left><select size=1 name=hopper_hold_inserts><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='ENABLED'>"._QXZ("ENABLED")."</option><option value='$hopper_hold_inserts' SELECTED>"._QXZ("$hopper_hold_inserts")."</option></select>$NWB#campaigns-hopper_hold_inserts$NWE</td></tr>\n";
+				echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Hopper Hold Inserts").": </td><td align=left><select size=1 name=hopper_hold_inserts><option value='DISABLED'>"._QXZ("DISABLED")."</option><option value='ENABLED'>"._QXZ("ENABLED")."</option>";
+				if ($SShopper_hold_inserts > 1)
+					{
+					echo "<option value='AUTONEXT'>"._QXZ("AUTONEXT")."</option>";
+					}
+				echo "<option value='$hopper_hold_inserts' SELECTED>"._QXZ("$hopper_hold_inserts")."</option></select>$NWB#campaigns-hopper_hold_inserts$NWE</td></tr>\n";
 				}
 			else
 				{
@@ -44238,7 +44250,7 @@ if ($ADD==311111111111111)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Outbound Auto-Dial Active").": </td><td align=left><select size=1 name=outbound_autodial_active><option>1</option><option>0</option><option selected>$outbound_autodial_active</option></select>$NWB#settings-outbound_autodial_active$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Lead Hopper Hold Inserts Allowed").": </td><td align=left><select size=1 name=hopper_hold_inserts><option>1</option><option>0</option><option selected>$hopper_hold_inserts</option></select>$NWB#settings-hopper_hold_inserts$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Lead Hopper Hold Inserts Allowed").": </td><td align=left><select size=1 name=hopper_hold_inserts><option>1</option><option>2</option><option>0</option><option selected>$hopper_hold_inserts</option></select>$NWB#settings-hopper_hold_inserts$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Shared Agent Campaign Dialing").": </td><td align=left><select size=1 name=allow_shared_dial><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option><option>0</option><option selected>$allow_shared_dial</option></select>$NWB#settings-allow_shared_dial$NWE</td></tr>\n";
 

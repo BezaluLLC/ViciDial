@@ -25,7 +25,7 @@
 # exten => h,1,DeadAGI(agi://127.0.0.1:4577/call_log--HVcauses--PRI-----NODEBUG-----${HANGUPCAUSE}-----${DIALSTATUS}-----${DIALEDTIME}-----${ANSWEREDTIME})
 # 
 #
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG:
 # 61010-1007 - First test build
@@ -99,6 +99,7 @@
 # 230120-1557 - Added CAMPDTO dialplan variable for ^DC 3-way agent screen calls
 # 231116-0846 - Added hopper_hold_inserts option
 # 231118-1054 - Added hangup processing of 3-way press outside-agent calls
+# 240225-0957 - Added AUTONEXT hopper_hold_inserts campaign option
 # 
 
 # defaults for PreFork
@@ -2290,7 +2291,7 @@ sub process_request
 											if ($passed_24hour_call_count > 0) 
 												{
 												$hopper_status='READY';
-												if ($VD_hopper_hold_inserts =~ /ENABLED/) {$hopper_status='RHOLD';}
+												if ($VD_hopper_hold_inserts =~ /ENABLED|AUTONEXT/) {$hopper_status='RHOLD';}
 												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='$hopper_status',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ALT',user='',priority='25',source='A';";
 												$affected_rows = $dbhA->do($stmtA);
 												if ($AGILOG) {$agi_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|";   &agi_output;}
@@ -2398,7 +2399,7 @@ sub process_request
 											if ($passed_24hour_call_count > 0) 
 												{
 												$hopper_status='READY';
-												if ($VD_hopper_hold_inserts =~ /ENABLED/) {$hopper_status='RHOLD';}
+												if ($VD_hopper_hold_inserts =~ /ENABLED|AUTONEXT/) {$hopper_status='RHOLD';}
 												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='$hopper_status',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ADDR3',user='',priority='20',source='A';";
 												$affected_rows = $dbhA->do($stmtA);
 												if ($AGILOG) {$agi_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|";   &agi_output;}
@@ -2548,7 +2549,7 @@ sub process_request
 												if ($passed_24hour_call_count > 0) 
 													{
 													$hopper_status='READY';
-													if ($VD_hopper_hold_inserts =~ /ENABLED/) {$hopper_status='RHOLD';}
+													if ($VD_hopper_hold_inserts =~ /ENABLED|AUTONEXT/) {$hopper_status='RHOLD';}
 													$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$VD_lead_id',campaign_id='$VD_campaign_id',status='$hopper_status',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15',source='A';";
 													$affected_rows = $dbhA->do($stmtA);
 													if ($AGILOG) {$agi_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &agi_output;}

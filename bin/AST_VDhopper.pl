@@ -22,7 +22,7 @@
 #  - S = Standard hopper load
 #  - D = Campaign Drop-Run
 #
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 50810-1613 - Added database server variable definitions lookup
@@ -110,10 +110,11 @@
 # 231116-0821 - Added hopper_hold_inserts system and campaign settings options
 # 231126-1748 - Added RQUEUE hopper status
 # 231129-1051 - Added daily_phone_number_call_limit campaign setting
+# 240225-0954 - Added AUTONEXT hopper_hold_inserts campaign option
 #
 
 # constants
-$build = '231129-1051';
+$build = '240225-0954';
 $script='AST_VDhopper';
 $DB=0;  # Debug flag, set to 0 for no debug messages. Can be overriden with CLI --debug flag
 $US='__';
@@ -761,7 +762,7 @@ if ($CBHOLD_count > 0)
 					&event_logger;
 
 					$hopper_statusSQL='';
-					if ($VD_hopper_hold_inserts =~ /ENABLED/) {$hopper_statusSQL = ",status='RHOLD'";}
+					if ($VD_hopper_hold_inserts =~ /ENABLED|AUTONEXT/) {$hopper_statusSQL = ",status='RHOLD'";}
 					$stmtA = "INSERT INTO $vicidial_hopper SET lead_id='$CA_lead_id[$CAu]',campaign_id='$CA_campaign_id[$CAu]',list_id='$CA_list_id[$CAu]',gmt_offset_now='$CA_gmt_offset_now[$CAu]',user='',state=\"$CA_state[$CAu]\",priority='50',source='C',vendor_lead_code=\"$CA_vendor_lead_code[$CAu]\"$hopper_statusSQL;";
 					$affected_rows = $dbhA->do($stmtA);
 					if ($DB) {print "ANYONE Scheduled Callback Inserted into hopper:  $affected_rows|$CA_lead_id[$CAu]\n";}
@@ -958,7 +959,7 @@ if ($hopper_dnc_count > 0)
 					if ($passed_24hour_call_count > 0) 
 						{
 						$hopper_status='READY';
-						if ($VD_hopper_hold_inserts =~ /ENABLED/) {$hopper_status='RHOLD';}
+						if ($VD_hopper_hold_inserts =~ /ENABLED|AUTONEXT/) {$hopper_status='RHOLD';}
 						$stmtA = "UPDATE $vicidial_hopper SET status='$hopper_status',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ALT',user='',priority='25' where hopper_id='$AAD_hopper_id[$aad]';";
 						$affected_rows = $dbhA->do($stmtA);
 						if ($DB) {$event_string = "--    VDH record updated: |$affected_rows|   |$stmtA|";   &event_logger;}
@@ -1068,7 +1069,7 @@ if ($hopper_dnc_count > 0)
 					if ($passed_24hour_call_count > 0) 
 						{
 						$hopper_status='READY';
-						if ($VD_hopper_hold_inserts =~ /ENABLED/) {$hopper_status='RHOLD';}
+						if ($VD_hopper_hold_inserts =~ /ENABLED|AUTONEXT/) {$hopper_status='RHOLD';}
 						$stmtA = "UPDATE $vicidial_hopper SET status='$hopper_status',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ADDR3',user='',priority='20' where hopper_id='$AAD_hopper_id[$aad]';";
 						$affected_rows = $dbhA->do($stmtA);
 						if ($DB) {$event_string = "--    VDH record updated: |$affected_rows|   |$stmtA|";   &event_logger;}
@@ -1222,7 +1223,7 @@ if ($hopper_dnc_count > 0)
 						if ($passed_24hour_call_count > 0) 
 							{
 							$hopper_status='READY';
-							if ($VD_hopper_hold_inserts =~ /ENABLED/) {$hopper_status='RHOLD';}
+							if ($VD_hopper_hold_inserts =~ /ENABLED|AUTONEXT/) {$hopper_status='RHOLD';}
 							$stmtA = "UPDATE $vicidial_hopper SET status='$hopper_status',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15' where hopper_id='$AAD_hopper_id[$aad]';";
 							$affected_rows = $dbhA->do($stmtA);
 							if ($DB) {$event_string = "--    VDH record updated: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;}
@@ -3659,7 +3660,7 @@ foreach(@campaign_id)
 									if ( ($DCCLlead == '0') && ($TFHCCLlead == '0') )
 										{
 										$hopper_status='READY';
-										if ($hopper_hold_inserts[$i] =~ /ENABLED/) {$hopper_status='RHOLD';}
+										if ($hopper_hold_inserts[$i] =~ /ENABLED|AUTONEXT/) {$hopper_status='RHOLD';}
 										$stmtA = "INSERT INTO $vicidial_hopper (lead_id,campaign_id,status,user,list_id,gmt_offset_now,state,priority,source,vendor_lead_code) values('$leads_to_hopper[$h]','$campaign_id[$i]','$hopper_status','','$lists_to_hopper[$h]','$gmt_to_hopper[$h]',\"$state_to_hopper[$h]\",'$hopperPRIORITY','$source_to_hopper[$h]',\"$vlc_to_hopper[$h]\");";
 										$affected_rows = $dbhA->do($stmtA);
 										$DBinserted = ($DBinserted + $affected_rows);

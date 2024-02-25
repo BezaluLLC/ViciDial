@@ -158,9 +158,10 @@
 # 231116-0911 - Added hopper_hold_inserts option
 # 231129-0901 - Added vicidial_phone_number_call_daily_counts updates/inserts
 # 240219-1524 - Added daily_limit in-group parameter
+# 240225-0951 - Added AUTONEXT hopper_hold_inserts option
 #
 
-$build='240219-1524';
+$build='240225-0951';
 $script='AST_VDauto_dial';
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -3297,7 +3298,7 @@ while($one_day_interval > 0)
 											if ($passed_24hour_call_count > 0) 
 												{
 												$hopper_status='READY';
-												if ($VD_hopper_hold_inserts =~ /ENABLED/) {$hopper_status='RHOLD';}
+												if ($VD_hopper_hold_inserts =~ /ENABLED|AUTONEXT/) {$hopper_status='RHOLD';}
 												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='$hopper_status',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ALT',user='',priority='25',source='A';";
 												$affected_rows = $dbhA->do($stmtA);
 												$event_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|";   &event_logger;
@@ -3403,7 +3404,7 @@ while($one_day_interval > 0)
 											if ($passed_24hour_call_count > 0) 
 												{
 												$hopper_status='READY';
-												if ($VD_hopper_hold_inserts =~ /ENABLED/) {$hopper_status='RHOLD';}
+												if ($VD_hopper_hold_inserts =~ /ENABLED|AUTONEXT/) {$hopper_status='RHOLD';}
 												$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='$hopper_status',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='ADDR3',user='',priority='20',source='A';";
 												$affected_rows = $dbhA->do($stmtA);
 												$event_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|";   &event_logger;
@@ -3555,7 +3556,7 @@ while($one_day_interval > 0)
 												if ($passed_24hour_call_count > 0) 
 													{
 													$hopper_status='READY';
-													if ($VD_hopper_hold_inserts =~ /ENABLED/) {$hopper_status='RHOLD';}
+													if ($VD_hopper_hold_inserts =~ /ENABLED|AUTONEXT/) {$hopper_status='RHOLD';}
 													$stmtA = "INSERT INTO vicidial_hopper SET lead_id='$CLlead_id',campaign_id='$CLcampaign_id',status='$hopper_status',list_id='$VD_list_id',gmt_offset_now='$VD_gmt_offset_now',state='$VD_state',alt_dial='X$Xlast',user='',priority='15',source='A';";
 													$affected_rows = $dbhA->do($stmtA);
 													$event_string = "--    VDH record inserted: |$affected_rows|   |$stmtA|X$Xlast|$VD_altdial_id|";   &event_logger;

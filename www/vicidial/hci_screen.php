@@ -1,20 +1,23 @@
 <?php
 # hci_screen.php
 # 
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to allow agents to work with the hopper_hold_inserts features and allow leads in the hopper to be changed from RHOLD to READY status so they can be called.
 #
 # changes:
 # 231119-1508 - First build
+# 240225-1000 - Added AUTONEXT hopper_hold_inserts campaign option
 #
 
 $startMS = microtime();
 
-$hci_version = '2.14-1h';
-$build = '231119-1508';
+$hci_version = '2.14-2h';
+$build = '240225-1000';
 $php_script='hci_screen.php';
 $zi=0;
+$default_batch_size=40;
+$refresh_sec=4000;
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -29,6 +32,8 @@ if (isset($_GET["phone_number"]))			{$phone_number=$_GET["phone_number"];}
 	elseif (isset($_POST["phone_number"]))	{$phone_number=$_POST["phone_number"];}
 if (isset($_GET["campaign_id"]))			{$campaign_id=$_GET["campaign_id"];}
 	elseif (isset($_POST["campaign_id"]))	{$campaign_id=$_POST["campaign_id"];}
+if (isset($_GET["batch_size"]))				{$batch_size=$_GET["batch_size"];}
+	elseif (isset($_POST["batch_size"]))	{$batch_size=$_POST["batch_size"];}
 if (isset($_GET["stage"]))			{$stage=$_GET["stage"];}
 	elseif (isset($_POST["stage"]))	{$stage=$_POST["stage"];}
 if (isset($_GET["DB"]))				{$DB=$_GET["DB"];}
@@ -66,6 +71,7 @@ if ($SSallow_web_debug < 1) {$DB=0;}
 ###########################################
 
 $phone_number = preg_replace('/[^0-9]/','',$phone_number);
+$batch_size = preg_replace('/[^0-9]/','',$batch_size);
 $stage = preg_replace('/[^-_0-9a-zA-Z]/','',$stage);
 
 if ($non_latin < 1)
@@ -87,6 +93,8 @@ else
 	$SUBMIT = preg_replace('/[^- 0-9\p{L}]/u','',$SUBMIT);
 	}
 
+if ( ($batch_size < 10) or (strlen($batch_size) < 2) )
+	{$batch_size = $default_batch_size;}
 
 $STARTtime = date("U");
 $defaultappointment = date("Y-m-d");
@@ -300,7 +308,7 @@ if ( ($stage == 'LOGOUT') and (strlen($campaign_id) > 0) )
 if ( ($stage == 'chosen_campaign') and (strlen($campaign_id) > 0) )
 	{
 	$valid_campaign=0;
-	$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' and active='Y' and hopper_hold_inserts='ENABLED' $LOGallowed_campaignsSQL;";
+	$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' and active='Y' and hopper_hold_inserts IN('ENABLED','AUTONEXT') $LOGallowed_campaignsSQL;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$camps_to_parse = mysqli_num_rows($rslt);
 	if ($camps_to_parse > 0) 
@@ -310,6 +318,15 @@ if ( ($stage == 'chosen_campaign') and (strlen($campaign_id) > 0) )
 		}
 	if ($valid_campaign > 0)
 		{
+		$autonext_campaign=0;
+		$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' and hopper_hold_inserts='AUTONEXT';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$campANs_to_parse = mysqli_num_rows($rslt);
+		if ($campANs_to_parse > 0) 
+			{
+			$rowx=mysqli_fetch_row($rslt);
+			$autonext_campaign =		$rowx[0];
+			}
 		$stmt="INSERT INTO vicidial_hci_live_agents SET user='$PHP_AUTH_USER',campaign_id='$campaign_id',user_ip='$ip',login_time=NOW(),last_call_time=NOW(),last_update_time=NOW(),status='LOGIN',lead_id=0,phone_number='',random_id=0;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -327,7 +344,7 @@ if ( ($stage == 'chosen_campaign') and (strlen($campaign_id) > 0) )
 			}
 		if ($hopper_hold_count > 0)
 			{
-			$stmt="UPDATE vicidial_hopper SET user='$PHP_AUTH_USER',status='RQUEUE' WHERE campaign_id='$campaign_id' and status='RHOLD' and user='' order by priority desc,hopper_id limit 40;";
+			$stmt="UPDATE vicidial_hopper SET user='$PHP_AUTH_USER',status='RQUEUE' WHERE campaign_id='$campaign_id' and status='RHOLD' and user='' order by priority desc,hopper_id limit $batch_size;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			$vh_affected_rows = mysqli_affected_rows($link);
 
@@ -364,7 +381,7 @@ if ( ($stage == 'chosen_campaign') and (strlen($campaign_id) > 0) )
 				}
 			}
 
-		$notes = "$campaign_id $ip $vh_affected_rows $vhr_to_parse $vhr_ct $vhr_insert";
+		$notes = "$campaign_id $ip $vh_affected_rows $vhr_to_parse $vhr_ct $vhr_insert $autonext_campaign";
 		vicidial_ajax_log($NOW_TIME,$startMS,$link,$stage,$php_script,$PHP_AUTH_USER,$notes,$lead_id,$session_name,$stmt);
 		}
 	}
@@ -379,7 +396,7 @@ if ( ($stage == 'chosen_campaign') and (strlen($campaign_id) > 0) )
 if ( ($stage == 'switch_campaign') and (strlen($campaign_id) > 0) )
 	{
 	$valid_campaign=0;
-	$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' and active='Y' and hopper_hold_inserts='ENABLED' $LOGallowed_campaignsSQL;";
+	$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' and active='Y' and hopper_hold_inserts IN('ENABLED','AUTONEXT') $LOGallowed_campaignsSQL;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$camps_to_parse = mysqli_num_rows($rslt);
 	if ($camps_to_parse > 0) 
@@ -389,6 +406,15 @@ if ( ($stage == 'switch_campaign') and (strlen($campaign_id) > 0) )
 		}
 	if ($valid_campaign > 0)
 		{
+		$autonext_campaign=0;
+		$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' and hopper_hold_inserts='AUTONEXT';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$campANs_to_parse = mysqli_num_rows($rslt);
+		if ($campANs_to_parse > 0) 
+			{
+			$rowx=mysqli_fetch_row($rslt);
+			$autonext_campaign =		$rowx[0];
+			}
 		$stmt="SELECT campaign_id,status from vicidial_hci_live_agents where user='$PHP_AUTH_USER';";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$users_to_parse = mysqli_num_rows($rslt);
@@ -443,7 +469,7 @@ if ( ($stage == 'switch_campaign') and (strlen($campaign_id) > 0) )
 				}
 			if ($hopper_hold_count > 0)
 				{
-				$stmt="UPDATE vicidial_hopper SET user='$PHP_AUTH_USER',status='RQUEUE' WHERE campaign_id='$campaign_id' and status='RHOLD' and user='' order by priority desc,hopper_id limit 40;";
+				$stmt="UPDATE vicidial_hopper SET user='$PHP_AUTH_USER',status='RQUEUE' WHERE campaign_id='$campaign_id' and status='RHOLD' and user='' order by priority desc,hopper_id limit $batch_size;";
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$vh_affected_rows = mysqli_affected_rows($link);
 
@@ -480,7 +506,7 @@ if ( ($stage == 'switch_campaign') and (strlen($campaign_id) > 0) )
 					}
 				}
 
-			$notes = "$campaign_id $old_campaign_id $VHLAstatus $vh_clear $vhr_clear $vh_affected_rows $vhr_insert";
+			$notes = "$campaign_id $old_campaign_id $VHLAstatus $vh_clear $vhr_clear $vh_affected_rows $vhr_insert $autonext_campaign";
 			vicidial_ajax_log($NOW_TIME,$startMS,$link,$stage,$php_script,$PHP_AUTH_USER,$notes,$lead_id,$session_name,$stmt);
 			}
 		else
@@ -689,9 +715,9 @@ if ($stage == 'lead_display')
 		$rowx=mysqli_fetch_row($rslt);
 		$reserved_ct =		$rowx[0];
 		}
-	if ($reserved_ct < 40)
+	if ($reserved_ct < $batch_size)
 		{
-		$reserve_more_hopper_leads = (40 - $reserved_ct);
+		$reserve_more_hopper_leads = ($batch_size - $reserved_ct);
 
 		if ($reserve_more_hopper_leads > 0)
 			{
@@ -780,6 +806,7 @@ if ($stage == 'lead_display')
 		}
 	else
 		{
+		$lead_phone_list='';
 		$stmt="SELECT lead_id,phone_number from vicidial_hci_reserve WHERE campaign_id='$campaign_id' and user='$PHP_AUTH_USER' order by reserve_date,lead_id;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$vhr_to_parse = mysqli_num_rows($rslt);
@@ -791,9 +818,11 @@ if ($stage == 'lead_display')
 			$rowx=mysqli_fetch_row($rslt);
 			$Elead_id[$vhr_ct] =	$rowx[0];
 			$Ephone[$vhr_ct] =		$rowx[1];
+			$lead_phone_list .= $vhr_ct."_".$rowx[0]."_".$rowx[1]."|";
 			$vhr_ct++;
 			}
 
+		echo "<!-- LEADPHONELIST: $lead_phone_list -->\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=3>"._QXZ("Call Confirmation").": </FONT><BR><table width=530><tr><td>";
 
 		$row_ct=0;
@@ -898,7 +927,7 @@ $camp_panel_code='<table cellspacing=2 cellpadding=2>';
 $camp_form_code  = "<select size=\"1\" name=\"campaign_id\" id=\"campaign_id\">\n";
 $camp_form_code .= "<option value=\"\">-- "._QXZ("Select a Campaign")." --</option>\n";
 	
-$stmt="SELECT campaign_id,campaign_name from vicidial_campaigns where active='Y' and hopper_hold_inserts='ENABLED' $LOGallowed_campaignsSQL order by campaign_id;";
+$stmt="SELECT campaign_id,campaign_name,hopper_hold_inserts from vicidial_campaigns where active='Y' and hopper_hold_inserts IN('ENABLED','AUTONEXT') $LOGallowed_campaignsSQL order by campaign_id;";
 $rslt=mysql_to_mysqli($stmt, $link);
 $camps_to_print = mysqli_num_rows($rslt);
 
@@ -968,6 +997,28 @@ if ($users_to_parse < 1)
 
 	exit;
 	}
+else
+	{
+	# See if campaign is set to AUTONEXT, and confirm system settings and user setting allow for that
+	$autonext_campaign=0;
+	$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' and hopper_hold_inserts='AUTONEXT';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+	$campANs_to_parse = mysqli_num_rows($rslt);
+	if ($campANs_to_parse > 0) 
+		{
+		$rowx=mysqli_fetch_row($rslt);
+		$autonext_campaign =		$rowx[0];
+		}
+	if ( ($SShopper_hold_inserts < 2) and ($autonext_campaign > 0) )
+		{$autonext_campaign=0;}
+	if ( ($hci_enabled < 2) and ($autonext_campaign > 0) )
+		{$autonext_campaign=0;}
+	if ($autonext_campaign > 0)
+		{
+		$batch_size = ($batch_size * 3);
+		$refresh_sec = ($refresh_sec / 2);
+		}
+	}
 
 
 ?>
@@ -984,6 +1035,14 @@ var confirming_call=0;
 var confirming_call_lead_id=0;
 var confirming_call_phone='';
 var confirmed_ct_since_refresh=0;
+var autonext_campaign=<?php echo $autonext_campaign ?>;
+var autonext_launch=<?php echo $autonext_campaign ?>;
+var batch_size=<?php echo $batch_size ?>;
+var refresh_sec=<?php echo $refresh_sec ?>;
+var lead_phone_list='';
+var next_lead='';
+var next_phone='';
+var next_lead_string='';
 
 function StartRefresh()
 	{
@@ -1010,7 +1069,7 @@ function RefreshScreen()
 	// trigger refresh of hopper RHOLD leads available
 	LeadsRefresh();
 
-	setTimeout("RefreshScreen()",4000);
+	setTimeout("RefreshScreen()", refresh_sec);
 	}
 
 // function to gather dashboard content
@@ -1081,7 +1140,7 @@ function LeadsRefresh()
 			}
 		if (xmlhttp) 
 			{
-			RTupdate_query = "stage=lead_display";
+			RTupdate_query = "stage=lead_display&batch_size=" + batch_size;
 			xmlhttp.open('POST', 'hci_screen.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(RTupdate_query); 
@@ -1089,9 +1148,36 @@ function LeadsRefresh()
 				{ 
 				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) 
 					{
+					// parse first LEADPHONELIST line to get a list of all leads received: "0_1234_9998887766|1_1235_9998887767|..."
+					LPLresponse = xmlhttp.responseText;
+					var LPLresponse_array=LPLresponse.split("\n");
+					var LEADPHONELIST = LPLresponse_array[0];
+					var LPLmatch = new RegExp("LEADPHONELIST","g");
+					if (LEADPHONELIST.match(LPLmatch))
+						{
+						var LPLresponse_array=LEADPHONELIST.split("LEADPHONELIST: ");
+						lead_phone_list = LPLresponse_array[1];
+					//	alert(lead_phone_list);
+
+						var LPLnext_array=lead_phone_list.split("|");
+						current_lead_string = LPLnext_array[0];
+						var next_lead_array=current_lead_string.split("_");
+						next_lead = next_lead_array[1];
+						next_phone = next_lead_array[2];
+					//	alert(next_lead_array[0] + " " + next_lead + " " + next_phone);
+						}
 					document.getElementById("LeadsContent").innerHTML = xmlhttp.responseText;
 					confirmed_ct_since_refresh=0;
 			//		alert(xmlhttp.responseText);
+					if (autonext_launch > 0)
+						{
+						autonext_launch=0;
+						var temp_next_phone = next_phone;
+						let match = next_phone.match(/^(\d{3})(\d{3})(\d{4})$/);
+						if (match) 
+							{temp_next_phone = '(' + match[1] + ') ' + match[2] + '-' + match[3];}
+						call_confirmation_button(next_lead,temp_next_phone);
+						}
 					}
 				}
 			delete xmlhttp;
@@ -1139,6 +1225,35 @@ function LeadConfirmed()
 					confirming_call=0;
 					confirming_call_lead_id=0;
 					confirming_call_phone='';
+
+					var temp_LPL_current = "" + current_lead_string + "\\\|";
+					var LPLcurrent = new RegExp(temp_LPL_current,"g");
+				//	alert(temp_LPL_current + " " + LPLcurrent);
+					lead_phone_list = lead_phone_list.replace(LPLcurrent, '');
+					var LPLnext_array=lead_phone_list.split("|");
+					current_lead_string = LPLnext_array[0];
+					var next_lead_array=current_lead_string.split("_");
+					next_lead = next_lead_array[1];
+					next_phone = next_lead_array[2];
+
+					if (autonext_campaign > 0)
+						{
+						var temp_next_phone = next_phone;
+						let match = next_phone.match(/^(\d{3})(\d{3})(\d{4})$/);
+						if (match) 
+							{temp_next_phone = '(' + match[1] + ') ' + match[2] + '-' + match[3];}
+					//	alert(next_lead + " " + temp_next_phone + " " + next_phone);
+
+						if (document.getElementById('button_' + next_lead))
+							{
+							call_confirmation_button(next_lead,temp_next_phone);
+							}
+						else
+							{
+							autonext_launch=1;
+							LeadsRefresh();
+							}
+						}
 					}
 				}
 			delete xmlhttp;
@@ -1147,58 +1262,81 @@ function LeadConfirmed()
 	}
 
 
-	// switch campaign for logged-in agent
-	function SwitchCampaign(temp_campaign)
-		{
-		window.location= hciPAGE + "?stage=switch_campaign&campaign_id=" + temp_campaign;
-		}
+// switch campaign for logged-in agent
+function SwitchCampaign(temp_campaign)
+	{
+	window.location= hciPAGE + "?stage=switch_campaign&campaign_id=" + temp_campaign;
+	}
 
-	function call_confirmation_button(temp_button_lead,temp_id)
-		{
-		confirming_call=1;
-		confirming_call_lead_id = temp_button_lead;
-		confirming_call_phone = temp_id;
-		document.getElementById('button_' + temp_button_lead).style.backgroundColor = '#FFCC99';
-		document.getElementById('VerifyBoxContent').innerHTML="<?php echo _QXZ("confirm call to") ?>: " + temp_id;
-		showDiv('VerifyBox');
-		document.getElementById('verify_button').focus();
-		}
+function call_confirmation_button(temp_button_lead,temp_id)
+	{
+	autonext_launch=0;
+	confirming_call=1;
+	confirming_call_lead_id = temp_button_lead;
+	confirming_call_phone = temp_id;
+	document.getElementById('button_' + temp_button_lead).style.backgroundColor = '#FFCC99';
+	var temp_counter_debug='';
+//	var temp_counter_debug = "<br>" + confirmed_ct_since_refresh + " " + loaded_sec;
+	document.getElementById('VerifyBoxContent').innerHTML="<?php echo _QXZ("confirm call to") ?>: " + temp_id + temp_counter_debug;
+	showDiv('VerifyBox');
+	document.getElementById('verify_button').focus();
+	}
 
-	function call_confirmation_verify()
-		{
-		// erase button span
-		document.getElementById('button_span_' + confirming_call_lead_id).innerHTML="";
-		document.getElementById('VerifyBox').style.visibility = 'hidden';
-		confirmed_ct_since_refresh++;
-		LeadConfirmed();
-		}
+function call_confirmation_verify()
+	{
+	// erase button span
+	document.getElementById('button_span_' + confirming_call_lead_id).innerHTML="";
+	document.getElementById('VerifyBox').style.visibility = 'hidden';
+	confirmed_ct_since_refresh++;
+	LeadConfirmed();
+	}
 
-	function call_confirmation_cancel()
-		{
-		document.getElementById('button_' + confirming_call_lead_id).style.backgroundColor = '#CCCCCC';
-		confirming_call=0;
-		confirming_call_lead_id=0;
-		confirming_call_phone='';
-		document.getElementById('VerifyBox').style.visibility = 'hidden';
-		}
+function call_confirmation_cancel()
+	{
+	document.getElementById('button_' + confirming_call_lead_id).style.backgroundColor = '#CCCCCC';
+	confirming_call=0;
+	confirming_call_lead_id=0;
+	confirming_call_phone='';
+	document.getElementById('VerifyBox').style.visibility = 'hidden';
 
-	// functions to hide and show different DIVs
-	function showDiv(divvar) 
+	var temp_LPL_current = "" + current_lead_string + "\\\|";
+	var LPLcurrent = new RegExp(temp_LPL_current,"g");
+//	alert(temp_LPL_current + " " + LPLcurrent);
+	lead_phone_list = lead_phone_list.replace(LPLcurrent, '');
+	var LPLnext_array=lead_phone_list.split("|");
+	current_lead_string = LPLnext_array[0];
+	var next_lead_array=current_lead_string.split("_");
+	next_lead = next_lead_array[1];
+	next_phone = next_lead_array[2];
+
+	if (autonext_campaign > 0)
 		{
-		if (document.getElementById(divvar))
-			{
-			divref = document.getElementById(divvar).style;
-			divref.visibility = 'visible';
-			}
+		var temp_next_phone = next_phone;
+		let match = next_phone.match(/^(\d{3})(\d{3})(\d{4})$/);
+		if (match) 
+			{temp_next_phone = '(' + match[1] + ') ' + match[2] + '-' + match[3];}
+	//	alert(next_lead + " " + temp_next_phone + " " + next_phone);
+		call_confirmation_button(next_lead,temp_next_phone);
 		}
-	function hideDiv(divvar)
+	}
+
+// functions to hide and show different DIVs
+function showDiv(divvar) 
+	{
+	if (document.getElementById(divvar))
 		{
-		if (document.getElementById(divvar))
-			{
-			divref = document.getElementById(divvar).style;
-			divref.visibility = 'hidden';
-			}
+		divref = document.getElementById(divvar).style;
+		divref.visibility = 'visible';
 		}
+	}
+function hideDiv(divvar)
+	{
+	if (document.getElementById(divvar))
+		{
+		divref = document.getElementById(divvar).style;
+		divref.visibility = 'hidden';
+		}
+	}
 
 
 </script>

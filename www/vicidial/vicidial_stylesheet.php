@@ -85,6 +85,22 @@ redalert {font-size: 18px; font-weight:bold; font-family: Arial, Sans-Serif; col
 .alt_row3 {background-color: <?php echo $SSalt_row3_background; ?>}
 .std_btn  {background-color: <?php echo $SSbutton_background; ?>;}
 
+/* Special effects */
+.blink {
+	animation: blinker 1.2s linear infinite;
+	color: #900;
+	font-family: Arial,Helvetica, sans-serif;
+	font-size: 14px;
+	font-weight: bold;
+	margin-bottom: 14px;
+	}
+
+@keyframes blinker {
+	50% {
+		opacity: 0;
+	}
+}
+
 
 .border2px {border:solid 2px #<?php echo $SSmenu_background; ?>}
 

@@ -2436,7 +2436,7 @@ ALTER TABLE system_settings ADD highest_lead_id VARCHAR(20) default '0';
 
 ALTER TABLE system_settings ADD hopper_hold_inserts ENUM('0','1','2','3','4','5','6','7') default '0';
 
-ALTER TABLE vicidial_campaigns ADD hopper_hold_inserts ENUM('ENABLED','DISABLED') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD hopper_hold_inserts ENUM('ENABLED','DISABLED','AUTONEXT') default 'DISABLED';
 
 ALTER TABLE vicidial_hopper MODIFY status ENUM('READY','QUEUE','INCALL','DONE','HOLD','DNC','RHOLD','RQUEUE') default 'READY';
 
@@ -2661,3 +2661,7 @@ unique index livepartitions (server_ip, partition_path)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1708',db_schema_update_date=NOW() where db_schema_version < 1708;
+
+ALTER TABLE vicidial_campaigns MODIFY hopper_hold_inserts ENUM('ENABLED','DISABLED','AUTONEXT') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1709',db_schema_update_date=NOW() where db_schema_version < 1709;
