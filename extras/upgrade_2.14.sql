@@ -2665,3 +2665,7 @@ UPDATE system_settings SET db_schema_version='1708',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns MODIFY hopper_hold_inserts ENUM('ENABLED','DISABLED','AUTONEXT') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1709',db_schema_update_date=NOW() where db_schema_version < 1709;
+
+ALTER TABLE vicidial_call_time_holidays ADD holiday_method VARCHAR(40) default 'REPLACE';
+
+UPDATE system_settings SET db_schema_version='1710',db_schema_update_date=NOW() where db_schema_version < 1710;

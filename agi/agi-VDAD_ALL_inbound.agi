@@ -259,6 +259,7 @@
 # 231026-0917 - Fix for rare fronter/closer logging issue
 # 240219-1527 - Added daily_limit in-group  user parameter
 # 240223-0847 - Added INBOUND_DID populate option
+# 240227-1154 - Added holiday_method option
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -1252,6 +1253,7 @@ if ( ($ct_day_start > 0) || ($ct_day_stop > 0) )
 	$ct_default_stop	=	$ct_day_stop;
 	}
 
+$holiday_ADDITION_REVERSE_trigger=0;
 if (length($ct_holidays) > 2)
 	{
 	$stmtA = "SELECT count(*) from vicidial_call_time_holidays where holiday_date='$YMD' and holiday_status='ACTIVE';";
@@ -1272,7 +1274,7 @@ if (length($ct_holidays) > 2)
 			{
 			if (length($holiday_rules[$b])>1)
 				{
-				$stmtA = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop,default_afterhours_filename_override from vicidial_call_time_holidays where holiday_id='$holiday_rules[$b]' and holiday_status='ACTIVE' and holiday_date='$YMD';";
+				$stmtA = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop,default_afterhours_filename_override,holiday_method from vicidial_call_time_holidays where holiday_id='$holiday_rules[$b]' and holiday_status='ACTIVE' and holiday_date='$YMD' order by ct_default_start desc;";
 				if ($DBX) {print "   |$stmtA|\n";}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -1283,12 +1285,32 @@ if (length($ct_holidays) > 2)
 					$holiday_id =								$aryA[0];
 					$holiday_date =								$aryA[1];
 					$holiday_name =								$aryA[2];
-					$ct_default_start =							$aryA[3];
-					$ct_default_stop =							$aryA[4];
-					$default_afterhours_filename_override =		$aryA[5];
-					$holiday_afterhours_filename_override =		$aryA[5];
+					$holiday_method =							$aryA[6];
 
-					if ($AGILOG) {$agi_string = "Active Holiday found!    |$holiday_id|$holiday_date|$holiday_name|$ct_default_start|$ct_default_stop|$default_afterhours_filename_override|";   &agi_output;}
+					if ($AGILOG) {$agi_string = "Active Holiday found!    |$holiday_id|$holiday_date|$holiday_name|$hm|$aryA[3]|$aryA[4]|$aryA[5]|$holiday_method|";   &agi_output;}
+
+					if ($holiday_method =~ /ADDITION_REVERSE/)
+						{
+						$temp_begin =	($ct_default_start + 0);	# ex: 1100
+						$temp_end =		($ct_default_stop + 0);		# ex: 2300
+						if ($AGILOG) {$agi_string = "Holiday ADDITION_REVERSE check:    |$holiday_id|$holiday_date|$holiday_name|($temp_begin <= $hm)|$temp_end >= $hm)|$aryA[5]|$holiday_method|";   &agi_output;}
+						if ( ($temp_begin <= $hm) && ($temp_end >= $hm) )
+							{
+							$default_afterhours_filename_override =		$aryA[5];
+							$holiday_afterhours_filename_override =		$aryA[5];
+
+							$holiday_ADDITION_REVERSE_trigger++;
+
+							if ($AGILOG) {$agi_string = "Holiday ADDITION_REVERSE match!    |$holiday_id|$holiday_ADDITION_REVERSE_trigger|";   &agi_output;}
+							}
+						}
+					else
+						{
+						$ct_default_start =							$aryA[3];
+						$ct_default_stop =							$aryA[4];
+						$default_afterhours_filename_override =		$aryA[5];
+						$holiday_afterhours_filename_override =		$aryA[5];
+						}
 					}
 				$sthA->finish();
 				}
@@ -1920,7 +1942,9 @@ if ( ($max_calls_method !~ /DISABLED/) && ($max_calls_count > 0) )
 $ct_stop_overflow=0;   # allow for overflow time, past midnight
 if ($ct_yest_stop > 2400)
 	{$ct_stop_overflow = ($ct_yest_stop - 2400);}
-if ( ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) ) && ($hm >= $ct_stop_overflow) ) || ($MCafterhours_override > 0) ) && ($dial_ingroup_flag < 1) )
+if ($AGILOG) {$agi_string = "--  Checking for After Hours: |($hm < $ct_default_start)|($hm > $ct_default_stop)|$holiday_ADDITION_REVERSE_trigger|($hm >= $ct_stop_overflow) )|($MCafterhours_override > 0)|$dial_ingroup_flag|";   &agi_output;}
+
+if ( ( ( ( ($hm < $ct_default_start) || ($hm > $ct_default_stop) || ($holiday_ADDITION_REVERSE_trigger > 0) ) && ($hm >= $ct_stop_overflow) ) || ($MCafterhours_override > 0) ) && ($dial_ingroup_flag < 1) )
 	{
 	# set the log-user to the agentdirect destination user, if set
 	if ( ($channel_group =~ /AGENTDIRECT/i) && (length($agent_only) > 1) )

@@ -3364,7 +3364,8 @@ holiday_status ENUM('ACTIVE','INACTIVE','EXPIRED') default 'INACTIVE',
 ct_default_start SMALLINT(4) unsigned NOT NULL default '900',
 ct_default_stop SMALLINT(4) unsigned NOT NULL default '2100',
 default_afterhours_filename_override VARCHAR(255) default '',
-user_group VARCHAR(20) default '---ALL---'
+user_group VARCHAR(20) default '---ALL---',
+holiday_method VARCHAR(40) default 'REPLACE'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_email_list (
@@ -5631,4 +5632,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1709',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1710',db_schema_update_date=NOW(),reload_timestamp=NOW();

@@ -2812,6 +2812,8 @@ if (isset($_GET["daily_phone_number_call_limit"]))			{$daily_phone_number_call_l
 	elseif (isset($_POST["daily_phone_number_call_limit"]))	{$daily_phone_number_call_limit=$_POST["daily_phone_number_call_limit"];}
 if (isset($_GET["state_descriptions"]))				{$state_descriptions=$_GET["state_descriptions"];}
 	elseif (isset($_POST["state_descriptions"]))	{$state_descriptions=$_POST["state_descriptions"];}
+if (isset($_GET["holiday_method"]))				{$holiday_method=$_GET["holiday_method"];}
+	elseif (isset($_POST["holiday_method"]))	{$holiday_method=$_POST["holiday_method"];}
 
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
@@ -3561,6 +3563,7 @@ $force_per_call_notes = preg_replace('/[^-_0-9a-zA-Z]/','',$force_per_call_notes
 $third_alert_trigger = preg_replace('/[^-_0-9a-zA-Z]/','',$third_alert_trigger);
 $agent_search_ingroup_list = preg_replace('/[^-_0-9a-zA-Z]/','',$agent_search_ingroup_list);
 $hopper_hold_inserts = preg_replace('/[^-_0-9a-zA-Z]/','',$hopper_hold_inserts);
+$holiday_method = preg_replace('/[^-_0-9a-zA-Z]/','',$holiday_method);
 
 if ($non_latin < 1)
 	{
@@ -6133,12 +6136,13 @@ if ($SSscript_remove_js > 0)
 # 240223-0854 - Added INBOUND_DID In-Group populate option
 # 240225-0933 - Added the AUTONEXT hopper_hold_inserts campaign option
 # 240226-2128 - Fix for READ_ONLY settings container type
+# 240227-1127 - Added holiday_method option
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-910a';
-$build = '240226-2128';
+$admin_version = '2.14-911a';
+$build = '240227-1127';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -19383,7 +19387,7 @@ if ($ADD==4211111111)
 			{
 			$ct_default_start = preg_replace('/\D/', '', $ct_default_start);
 			$ct_default_stop = preg_replace('/\D/', '', $ct_default_stop);
-			$stmt="UPDATE vicidial_call_time_holidays set holiday_name='$holiday_name', holiday_comments='$holiday_comments', holiday_date='$holiday_date', holiday_status='$holiday_status', ct_default_start='$ct_default_start', ct_default_stop='$ct_default_stop',user_group='$user_group', default_afterhours_filename_override='$default_afterhours_filename_override' where holiday_id='$holiday_id';";
+			$stmt="UPDATE vicidial_call_time_holidays set holiday_name='$holiday_name', holiday_comments='$holiday_comments', holiday_date='$holiday_date', holiday_status='$holiday_status', ct_default_start='$ct_default_start', ct_default_stop='$ct_default_stop',user_group='$user_group', default_afterhours_filename_override='$default_afterhours_filename_override',holiday_method='$holiday_method' where holiday_id='$holiday_id';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 
 			echo "<br><B>"._QXZ("HOLIDAY MODIFIED")."</B>\n";
@@ -40101,13 +40105,15 @@ if ($ADD==311111111)
 			{
 			$hrs_SQL = "$hrs_SQL''";
 			$hrs_holiday_SQL = "$hrs_holiday_SQL''";
-			$hrs_SQL = "where holiday_id NOT IN($hrs_SQL) and holiday_date NOT IN($hrs_holiday_SQL) $LOGadmin_viewable_groupsSQL";
+		#	$hrs_SQL = "where holiday_id NOT IN($hrs_SQL) and holiday_date NOT IN($hrs_holiday_SQL) $LOGadmin_viewable_groupsSQL";
+			$hrs_SQL = "where holiday_id NOT IN($hrs_SQL) $LOGadmin_viewable_groupsSQL";
 			}
 		else
 			{$hrs_SQL="$whereLOGadmin_viewable_groupsSQL";}
 		$stmt="SELECT holiday_id,holiday_date from vicidial_call_time_holidays $hrs_SQL order by holiday_date;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$hct_to_print = mysqli_num_rows($rslt);
+		if ($DB > 0) {echo "|$hct_to_print|$stmt|";}
 		$hct_list='';
 
 		$o=0;
@@ -40379,7 +40385,7 @@ if ($ADD==3211111111)
 		echo "<TABLE><TR><TD>\n";
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
-		$stmt="SELECT holiday_id,holiday_date,holiday_name,holiday_comments,holiday_status,ct_default_start,ct_default_stop,user_group,default_afterhours_filename_override from vicidial_call_time_holidays where holiday_id='$holiday_id' $LOGadmin_viewable_groupsSQL;";
+		$stmt="SELECT holiday_id,holiday_date,holiday_name,holiday_comments,holiday_status,ct_default_start,ct_default_stop,user_group,default_afterhours_filename_override,holiday_method from vicidial_call_time_holidays where holiday_id='$holiday_id' $LOGadmin_viewable_groupsSQL;";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		$holiday_date =							$row[1];
@@ -40390,6 +40396,7 @@ if ($ADD==3211111111)
 		$ct_default_stop =						$row[6];
 		$user_group =							$row[7];
 		$default_afterhours_filename_override =	$row[8];
+		$holiday_method =						$row[9];
 
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
@@ -40421,7 +40428,9 @@ if ($ADD==3211111111)
 		echo "// o_cal.a_tpl.weekstart = 1; // Monday week start\n";
 		echo "</script> $NWB#call_times-holiday_date$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Holiday Status").": </td><td align=left colspan=3><select size=1 name=holiday_status><option value='ACTIVE' SELECTED>"._QXZ("ACTIVE")."</option><option value='INACTIVE'>"._QXZ("INACTIVE")."</option><option value='EXPIRED'>"._QXZ("EXPIRED")."</option><option value='$holiday_status' SELECTED>"._QXZ("$holiday_status")."</option></select>$NWB#call_times-holiday_status$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Holiday Status").": </td><td align=left colspan=3><select size=1 name=holiday_status><option value='ACTIVE'>"._QXZ("ACTIVE")."</option><option value='INACTIVE'>"._QXZ("INACTIVE")."</option><option value='EXPIRED'>"._QXZ("EXPIRED")."</option><option value='$holiday_status' SELECTED>"._QXZ("$holiday_status")."</option></select>$NWB#call_times-holiday_status$NWE</td></tr>\n";
+
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Holiday Inbound Method").": </td><td align=left colspan=3><select size=1 name=holiday_method><option value='REPLACE'>"._QXZ("REPLACE")."</option><option value='ADDITION_REVERSE'>"._QXZ("ADDITION_REVERSE")."</option><option value='$holiday_method' SELECTED>"._QXZ("$holiday_method")."</option></select>$NWB#call_times-holiday_method$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=center colspan=4><input style='background-color:#$SSbutton_color' type=submit name=SUBMIT value='"._QXZ("SUBMIT")."'></td></tr>\n";
 		echo "</TABLE><BR><BR>\n";
