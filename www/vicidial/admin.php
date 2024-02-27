@@ -6132,12 +6132,13 @@ if ($SSscript_remove_js > 0)
 # 240221-0331 - Changes for in-group daily limits, small changes for stats_descriptions
 # 240223-0854 - Added INBOUND_DID In-Group populate option
 # 240225-0933 - Added the AUTONEXT hopper_hold_inserts campaign option
+# 240226-2128 - Fix for READ_ONLY settings container type
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-909a';
-$build = '240225-0933';
+$admin_version = '2.14-910a';
+$build = '240226-2128';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -20385,7 +20386,7 @@ if ($ADD==492111111111)
 		else
 			{
 			$container_entrySQL = ",container_entry='" . mysqli_real_escape_string($link, $container_entry) ."'";
-			if ($container_type == 'READ_ONLY')
+			if ( ($container_type == 'READ_ONLY') or ($stage == 'READ_ONLY') )
 				{$container_entrySQL = '';}
 			$stmt="UPDATE vicidial_settings_containers set container_notes='$container_notes',container_type='$container_type',user_group='$user_group' $container_entrySQL where container_id='$container_id';";
 			$rslt=mysql_to_mysqli($stmt, $link);
@@ -42487,6 +42488,7 @@ if ($ADD==392111111111)
 		echo "<br>"._QXZ("MODIFY SETTINGS CONTAINER").": $container_id<form action=$PHP_SELF method=POST>\n";
 		echo "<input type=hidden name=ADD value=492111111111>\n";
 		echo "<input type=hidden name=container_id value=\"$container_id\">\n";
+		echo "<input type=hidden name=stage value=\"$container_type\">\n";
 
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Container ID").": </td><td align=left><B>$container_id</B></td></tr>\n";
