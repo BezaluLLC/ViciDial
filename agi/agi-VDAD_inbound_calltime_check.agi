@@ -502,7 +502,7 @@ if (length($ct_holidays) > 2)
 			{
 			if (length($holiday_rules[$b])>1)
 				{
-				$stmtA = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop,default_afterhours_filename_override,holiday_method from vicidial_call_time_holidays where holiday_id='$holiday_rules[$b]' and holiday_status='ACTIVE' and holiday_date='$YMD' order by ct_default_start desc;";
+				$stmtA = "SELECT holiday_id,holiday_date,holiday_name,ct_default_start,ct_default_stop,default_afterhours_filename_override,holiday_method from vicidial_call_time_holidays where holiday_id='$holiday_rules[$b]' and holiday_status='ACTIVE' and holiday_date='$YMD' order by ct_default_start asc;";
 				if ($DBX) {print "   |$stmtA|\n";}
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -518,8 +518,8 @@ if (length($ct_holidays) > 2)
 
 					if ($holiday_method =~ /ADDITION_REVERSE/)
 						{
-						$temp_begin =	($ct_default_start + 0);	# ex: 1100
-						$temp_end =		($ct_default_stop + 0);		# ex: 2300
+						$temp_begin =	($aryA[3] + 0);		# ex: 1100
+						$temp_end =		($aryA[4] + 0);		# ex: 2300
 						if ($AGILOG) {$agi_string = "Holiday ADDITION_REVERSE check:    |$holiday_id|$holiday_date|$holiday_name|($temp_begin <= $hm)|$temp_end >= $hm)|$aryA[5]|$holiday_method|";   &agi_output;}
 						if ( ($temp_begin <= $hm) && ($temp_end >= $hm) )
 							{
