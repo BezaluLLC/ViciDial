@@ -853,6 +853,8 @@ OTHER CHANGES:
 
 242. Added Per-User Per-In-Group daily call limits.
 
+243. Added 'delete_dnc_phone' Non-Agent API function.
+
 
 
 

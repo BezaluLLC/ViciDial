@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-01-20
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-03-02
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -216,6 +216,8 @@ Changes:
 240101-0920 - Added DUPPHONEALT... options for duplicate_check within add_lead function 
 240105-1009 - Added delete_fpg_phone function
 240120-0840 - Added list_order,list_order_randomize,list_order_secondary optional fields to update_campaign function
+240217-0907 - Added more missing vicidial_users fields from copy function
+240302-0804 - Added delete_dnc_phone function
 
 
 API Functions use the 'function' variable
@@ -1600,6 +1602,29 @@ ERROR: add_dnc_phone USER DOES NOT HAVE PERMISSION TO ADD DNC NUMBERS - 6666|0
 ERROR: add_dnc_phone YOU MUST USE ALL REQUIRED FIELDS - 6666|||1000
 ERROR: add_dnc_phone DNC NUMBER ALREADY EXISTS - 6666|7275551212
 SUCCESS: add_dnc_phone DNC NUMBER HAS BEEN ADDED - 6666|7275551212|TESTCAMP
+
+
+
+
+
+--------------------------------------------------------------------------------
+delete_dnc_phone - removes phone number from a DNC list in the system
+
+NOTE: api user for this function must have user_level set to 8 or higher and "modify lists" enabled and "Delete From DNC Lists" enabled
+
+REQUIRED FIELDS-
+phone_number -	6-20 characters
+campaign_id -	2-30 characters, should be a valid campaign ID or "SYSTEM_INTERNAL" for the internal DNC list
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&function=delete_dnc_phone&user=6666&pass=1234&phone_number=7275551212&campaign_id=TESTCAMP
+http://server/vicidial/non_agent_api.php?source=test&function=delete_dnc_phone&user=6666&pass=1234&phone_number=7275551212&campaign_id=SYSTEM_INTERNAL
+
+Example responses:
+ERROR: delete_dnc_phone USER DOES NOT HAVE PERMISSION TO DELETE DNC NUMBERS - 6666|0
+ERROR: delete_dnc_phone YOU MUST USE ALL REQUIRED FIELDS - 6666|||1000
+ERROR: delete_dnc_phone DNC NUMBER DOES NOT EXIST - 6666|7275551212
+SUCCESS: delete_dnc_phone DNC NUMBER HAS BEEN DELETED - 6666|7275551212|TESTCAMP
 
 
 

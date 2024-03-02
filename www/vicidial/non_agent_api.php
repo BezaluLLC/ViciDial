@@ -209,10 +209,11 @@
 # 240105-1009 - Added delete_fpg_phone function
 # 240120-0840 - Added list_order,list_order_randomize,list_order_secondary optional fields to update_campaign function
 # 240217-0907 - Added more missing vicidial_users fields from copy function
+# 240302-0804 - Added delete_dnc_phone function
 #
 
-$version = '2.14-186';
-$build = '240217-0907';
+$version = '2.14-187';
+$build = '240302-0804';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 $camp_lead_order_random=1;
@@ -4806,7 +4807,7 @@ if ($function == 'add_dnc_phone')
 					$affected_rowsB = mysqli_affected_rows($link);
 
 					### LOG INSERTION Admin Log Table ###
-					$SQL_log = "$stmt|";
+					$SQL_log = "$stmtA|$stmtB|";
 					$SQL_log = preg_replace('/;/', '', $SQL_log);
 					$SQL_log = addslashes($SQL_log);
 					$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LISTS', event_type='ADD', record_id='$phone_number', event_code='ADMIN API ADD DNC NUMBER', event_sql=\"$SQL_log\", event_notes='$phone_number|$campaign_id|$affected_rowsA|$affected_rowsB';";
@@ -4826,6 +4827,110 @@ if ($function == 'add_dnc_phone')
 	}
 ################################################################################
 ### END add_dnc_phone
+################################################################################
+
+
+################################################################################
+### delete_dnc_phone - removes a phone number from a DNC list in the system
+################################################################################
+if ($function == 'delete_dnc_phone')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and modify_lists='1' and delete_from_dnc='1' and user_level >= 8 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "delete_dnc_phone USER DOES NOT HAVE PERMISSION TO DELETE DNC NUMBERS";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($phone_number) < 6) or (strlen($campaign_id) < 1) )
+				{
+				$result = 'ERROR';
+				$result_reason = "delete_dnc_phone YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$phone_number|$campaign_id";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT count(*) from vicidial_campaign_dnc where phone_number='$phone_number' and campaign_id='$campaign_id';";
+				if ($campaign_id == 'SYSTEM_INTERNAL')
+					{$stmt="SELECT count(*) from vicidial_dnc where phone_number='$phone_number';";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$dnc_exists=$row[0];
+				if ($dnc_exists < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "delete_dnc_phone DNC NUMBER DOES NOT EXIST";
+					$data = "$phone_number|$campaign_id";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$stmtA="DELETE FROM vicidial_campaign_dnc WHERE phone_number='$phone_number' and campaign_id='$campaign_id';";
+					if ($campaign_id == 'SYSTEM_INTERNAL')
+						{$stmtA="DELETE FROM vicidial_dnc where phone_number='$phone_number';";}
+					$rslt=mysql_to_mysqli($stmtA, $link);
+					$affected_rowsA = mysqli_affected_rows($link);
+
+					$stmtB="INSERT INTO vicidial_dnc_log SET phone_number='$phone_number', campaign_id='$campaign_id', action='delete', action_date=NOW(), user='$user';";
+					if ($campaign_id == 'SYSTEM_INTERNAL')
+						{$stmtB="INSERT INTO vicidial_dnc_log SET phone_number='$phone_number', campaign_id='-SYSINT-', action='delete', action_date=NOW(), user='$user';";}
+					$rslt=mysql_to_mysqli($stmtB, $link);
+					$affected_rowsB = mysqli_affected_rows($link);
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmtA|$stmtB|";
+					$SQL_log = preg_replace('/;/', '', $SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='LISTS', event_type='DELETE', record_id='$phone_number', event_code='ADMIN API DELETE DNC NUMBER', event_sql=\"$SQL_log\", event_notes='$phone_number|$campaign_id|$affected_rowsA|$affected_rowsB';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+
+					$result = 'SUCCESS';
+					$result_reason = "delete_dnc_phone DNC NUMBER HAS BEEN DELETED";
+					$data = "$phone_number|$campaign_id";
+					echo "$result: $result_reason - $user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END delete_dnc_phone
 ################################################################################
 
 
