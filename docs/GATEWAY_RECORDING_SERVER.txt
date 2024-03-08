@@ -83,7 +83,7 @@ exten => _X.,n,MixMonitor(,t(${CARRIER_FILENAME})r(${DIALER_FILENAME})S)
 exten => _X.,n,Set(KHOMPID=${SIP_HEADER(X-KHOMP-Vicidial-ID,1)})
 exten => _X.,n,Noop(${KHOMPID})
 exten => _X.,n,SIPAddHeader(X-KHOMP-Vicidial-ID: ${KHOMPID})
-exten => _X.,n,Dial(SIP/khompgw/85461${EXTEN:6},,To)
+exten => _X.,n,Dial(SIP/khompgw/${EXTEN},,To)
 exten => _X.,n,Hangup
 
 
