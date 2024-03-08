@@ -59,6 +59,7 @@ call_dispo_report - call disposition breakdown report
 agent_campaigns - looks up allowed campaigns/in-groups for a specific user
 update_cid_group_entry - updates CID Group entries
 add_dnc_phone - adds a phone number to one of the DNC lists
+delete_dnc_phone - removes a phone number from one of the DNC lists
 add_fpg_phone - adds a phone number to a Filter Phone Group
 delete_fpg_phone - removes a phone number from a Filter Phone Group
 campaigns_list - displays information about all campaigns in the system

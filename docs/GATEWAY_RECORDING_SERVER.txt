@@ -1,4 +1,4 @@
-VICI RECORDING GATEWAY SERVER	Started: 2023-01-14	Updated: 2024-02-14
+VICI RECORDING GATEWAY SERVER	Started: 2023-01-14	Updated: 2024-03-08
 
 
 
@@ -71,6 +71,20 @@ exten => _X.,n,Noop(${DIALER_FILENAME})
 exten => _X.,n,MixMonitor(,t(${CARRIER_FILENAME})r(${DIALER_FILENAME})S)
 exten => _X.,n,Dial(PJSIP/${EXTEN}@pjsgw1,,To)
 
+
+EXAMPLE OUTBOUND DIALPLAN WITH KHOMP GATEWAY SIP-VARIABLES PASSTHRU:
+
+exten => _X.,1,Progress()
+exten => _X.,n,Noop(${CALLERID(num)})
+exten => _X.,n,AGI(agi-VICIrecGateway.agi)
+exten => _X.,n,Noop(${CARRIER_FILENAME})
+exten => _X.,n,Noop(${DIALER_FILENAME})
+exten => _X.,n,MixMonitor(,t(${CARRIER_FILENAME})r(${DIALER_FILENAME})S)
+exten => _X.,n,Set(KHOMPID=${SIP_HEADER(X-KHOMP-Vicidial-ID,1)})
+exten => _X.,n,Noop(${KHOMPID})
+exten => _X.,n,SIPAddHeader(X-KHOMP-Vicidial-ID: ${KHOMPID})
+exten => _X.,n,Dial(SIP/khompgw/85461${EXTEN:6},,To)
+exten => _X.,n,Hangup
 
 
 
