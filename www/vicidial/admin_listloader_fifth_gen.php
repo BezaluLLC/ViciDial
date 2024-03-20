@@ -2,7 +2,7 @@
 # admin_listloader_fifth_gen.php - version 2.14
 #  (based upon - new_listloader_superL.php script)
 # 
-# Copyright (C) 2023  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # ViciDial web-based lead loader from formatted file
 # 
@@ -82,10 +82,11 @@
 # 220222-1002 - Added allow_web_debug system setting
 # 230210-1844 - Added invalid_phone_override option <admin_listloader_fifth_gen.php started>
 # 231207-1446 - Fix for web_loader_phone_strip duplicate check, issue #1498, also changed format to "Custom layout" default
+# 240320-1034 - Added misssing input variable filtering
 #
 
-$version = '2.14-80';
-$build = '231207-1446';
+$version = '2.14-81';
+$build = '240320-1034';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -289,6 +290,17 @@ $invalid_phone_override = preg_replace('/[^-_0-9a-zA-Z]/', '', $invalid_phone_ov
 
 # Variables filter further down in the code
 # $dedupe_statuses
+
+if (is_array($dedupe_statuses)) 
+	{
+	if (count($dedupe_statuses)>0) 
+		{
+		for($ds=0; $ds<count($dedupe_statuses); $ds++) 
+			{
+			$dedupe_statuses[$ds] = preg_replace('/[^-_0-9\p{L}]/u', '', $dedupe_statuses[$ds]);
+			}
+		}
+	}
 
 if (strlen($dedupe_statuses_override)>0) 
 	{

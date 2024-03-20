@@ -2,7 +2,7 @@
 # admin_listloader_fourth_gen.php - version 2.14
 #  (based upon - new_listloader_superL.php script)
 # 
-# Copyright (C) 2023  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell,Joe Johnson <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # ViciDial web-based lead loader from formatted file
 # 
@@ -81,10 +81,11 @@
 # 210210-1602 - Added duplicate check with more X-day options
 # 220222-1002 - Added allow_web_debug system setting
 # 231207-1445 - Fix for web_loader_phone_strip duplicate check, issue #1498
+# 240320-1033 - Added misssing input variable filtering
 #
 
-$version = '2.14-79';
-$build = '231207-1445';
+$version = '2.14-80';
+$build = '240320-1033';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -285,6 +286,17 @@ $OK_to_process = preg_replace('/[^- \_0-9a-zA-Z]/', '', $OK_to_process);
 
 # Variables filter further down in the code
 # $dedupe_statuses
+
+if (is_array($dedupe_statuses)) 
+	{
+	if (count($dedupe_statuses)>0) 
+		{
+		for($ds=0; $ds<count($dedupe_statuses); $ds++) 
+			{
+			$dedupe_statuses[$ds] = preg_replace('/[^-_0-9\p{L}]/u', '', $dedupe_statuses[$ds]);
+			}
+		}
+	}
 
 if (strlen($dedupe_statuses_override)>0) 
 	{

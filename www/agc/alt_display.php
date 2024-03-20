@@ -1,7 +1,7 @@
 <?php
 # alt_display.php
 # 
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This script is designed to display agent screen information outside of the agent screen
 # To use this script, you must set the options.php setting $alt_display_enabled	= '1';
@@ -13,6 +13,7 @@
 # - top_panel = static agent dashboard
 # - top_panel_realtime = agent dashboard reloading every second
 # - agent_status = data-only compressed details for logged-in agent status
+# - notification_data = data-only, designed to check for and send notification data for this agent for outside display
 #
 # CHANGELOG:
 # 200827-1157 - First build
@@ -22,10 +23,12 @@
 # 210428-2156 - Added calls_in_queue_display setting
 # 210616-1907 - Added optional CORS support, see options.php for details
 # 220220-0940 - Added allow_web_debug system setting
+# 231214-0912 - Added notification_data action
+# 240320-1047 - Added input filtering for error output
 #
 
-$version = '2.14-7';
-$build = '220220-0940';
+$version = '2.14-9';
+$build = '240320-1047';
 $php_script = 'alt_display.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=11;
@@ -82,11 +85,13 @@ header ("Pragma: no-cache");                          // HTTP/1.0
 
 if ($alt_display_enabled < 1)
 	{
+	$user = preg_replace('/[^-_0-9\p{L}]/u','',$user);
 	echo "ERROR: Alt Display script disabled: |$user|$alt_display_enabled|\n";
 	exit;
 	}
 if (strlen($user) < 1)
 	{
+	$user = preg_replace('/[^-_0-9\p{L}]/u','',$user);
 	echo "ERROR: user not defined: |$user|\n";
 	exit;
 	}
@@ -762,6 +767,9 @@ if ($ACTION == 'top_panel')
 	if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 	exit;
 	}
+################################################################################
+### END top_panel - shows a static display of the top panel dashboard for the agent
+################################################################################
 
 
 
@@ -843,6 +851,9 @@ if ($ACTION == 'top_panel_realtime')
 	if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 	exit;
 	}
+################################################################################
+### END top_panel_realtime - constant refresh of the top_panel dashboard every second
+################################################################################
 
 
 
@@ -979,6 +990,189 @@ if ($ACTION == 'agent_status')
 	if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
 	exit;
 	}
+################################################################################
+### END agent_status - data-only compressed details for logged-in agent status
+################################################################################
+
+
+
+
+
+################################################################################
+### notification_data - data-only, designed to check for and send notification data for this agent for outside display
+###                will output these fields:	"rows|notification_text|text_size|text_font|text_color|text_weight|show_confetti|duration,maxParticleCount,particleSpeed";
+###                   example:     1|message-here|14|Arial|red|bold|Y|3,2450,60
+################################################################################
+if ($ACTION == 'notification_data')
+	{
+	# gather all READY notifications to be triggered, limit with $user, $VU_user_group, $campaign
+	$alert_stmt="select * from vicidial_agent_notifications where notification_status='READY' and (recipient_type='ALT_DISPLAY' and recipient='$user') order by notification_date asc limit 1;";
+	$alert_rslt=mysql_to_mysqli($alert_stmt, $link);
+	while ($alert_row=mysqli_fetch_array($alert_rslt))
+		{
+		$notification_id=$alert_row["notification_id"];
+		$recipient=$alert_row["recipient"];
+		$recipient_type=$alert_row["recipient_type"];
+
+		$upd_stmt="update vicidial_agent_notifications set notification_status='SENT' where notification_id='$notification_id'";
+		$upd_rslt=mysql_to_mysqli($upd_stmt, $link);
+		if (mysqli_affected_rows($link)>0)
+			{
+			$column="user"; $recipient_str="$recipient";
+			$agent_stmt="select user from vicidial_live_agents where $column in ('$recipient_str')";
+			$agent_rslt=mysql_to_mysqli($agent_stmt, $link);
+			while($agent_row=mysqli_fetch_row($agent_rslt))
+				{
+				$ins_stmt="INSERT INTO vicidial_agent_notifications_queue(notification_id, user) VALUES('$notification_id', '$agent_row[0]')";
+				$ins_rslt=mysql_to_mysqli($ins_stmt, $link);
+				}
+			}
+		}
+
+	$alert_check_stmt="select * from vicidial_agent_notifications_queue where user='$user' order by queue_date asc limit 1";
+	$alert_check_rslt=mysql_to_mysqli($alert_check_stmt, $link);
+	if (mysqli_num_rows($alert_check_rslt)>0)
+		{
+		$acr_rows=mysqli_num_rows($alert_check_rslt);
+		$acr_row=mysqli_fetch_array($alert_check_rslt);
+		$notification_id=$acr_row["notification_id"];
+		$queue_id=$acr_row["queue_id"];
+
+		$notification_stmt="select * from vicidial_agent_notifications where notification_id='$notification_id' limit 1";
+		$notification_rslt=mysql_to_mysqli($notification_stmt, $link);
+		while($notif_row=mysqli_fetch_array($notification_rslt))
+			{
+			echo "$acr_rows|$notif_row[notification_text]|$notif_row[text_size]|$notif_row[text_font]|$notif_row[text_color]|$notif_row[text_weight]|$notif_row[show_confetti]|$notif_row[confetti_options]";
+			}
+
+		$del_stmt="delete from vicidial_agent_notifications_queue where queue_id='$queue_id'";
+		$del_rslt=mysql_to_mysqli($del_stmt, $link);
+		}
+
+
+	$stmt="SELECT server_ip,status,lead_id,campaign_id,callerid,last_update_time,closer_campaigns,calls_today,pause_code,UNIX_TIMESTAMP(last_call_time),UNIX_TIMESTAMP(last_state_change),preview_lead_id,pause_code,UNIX_TIMESTAMP(last_update_time) from vicidial_live_agents where user='$user';";
+	$rslt=mysql_to_mysqli($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09008',$user,$server_ip,$session_name,$one_mysql_log);}
+	$cl_user_ct = mysqli_num_rows($rslt);
+	if ($cl_user_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$VLAserver_ip =						$row[0];
+		$VLAstatus =						$row[1];
+		$VLAlead_id =						$row[2];
+		$VLAcampaign_id =					$row[3];
+		$VLAcallerid =						$row[4];
+		$VLAlast_update_time =				$row[5];
+		$VLAcloser_campaigns =				$row[6];
+		$VLAcalls_today =					$row[7];
+		$VLApause_code =					$row[8];
+		$VLAlast_call_time_epoch =			$row[9];
+		$VLAlast_state_change_epoch =		$row[10];
+		$VLApreview_lead_id =				($row[11] + 0);
+		$VLApause_code =					$row[12];
+		$VLAlast_update_time_epoch =		$row[13];
+		if ( ($VLAstatus == 'INCALL') or ($VLAstatus == 'QUEUE') or ($VLAstatus == 'MQUEUE') ) {$notification_data = 'DEAD';}
+		if ( ($VLAstatus == 'PAUSED') and ($VLAlead_id > 0) ) {$notification_data = 'DISPO';}
+		if ( ($VLAstatus == 'PAUSED') and ($VLApreview_lead_id > 0) ) {$notification_data = 'PREVIEW';}
+		if ( ($VLAstatus == 'PAUSED') and ($VLApause_code == 'LAGGED') ) {$notification_data = 'LAGGED';}
+		if ( ($VLAstatus == 'PAUSED') and ($notification_data == 'NONE') ) {$notification_data = 'PAUSED';}
+		if ($VLAstatus == 'READY') {$notification_data = 'READY';}
+		if ($VLAstatus == 'CLOSER') {$notification_data = 'CLOSER';}
+		}
+	else
+		{
+		echo _QXZ("ERROR: user is not logged in").": $user\n";
+		$stage = "user is not logged in";
+		exit;
+		}
+
+	if (strlen($VLAcallerid) > 15)
+		{
+		### BEGIN Live Call Display section ###
+		$stmt="SELECT server_ip,status,lead_id,campaign_id,callerid,call_time,call_type,UNIX_TIMESTAMP(call_time) from vicidial_auto_calls where callerid='$VLAcallerid';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09009',$user,$server_ip,$session_name,$one_mysql_log);}
+		$cl_calls_ct = mysqli_num_rows($rslt);
+		if ($cl_calls_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$VACserver_ip =						$row[0];
+			$VACstatus =						$row[1];
+			$VAClead_id =						$row[2];
+			$VACcampaign_id =					$row[3];
+			$VACcallerid =						$row[4];
+			$VACcall_time =						$row[5];
+			$VACcall_type =						$row[6];
+			$VACcalls_today =					$row[7];
+			$VACcall_time_epoch =				$row[8];
+			$notification_data = 'LIVE';
+			}
+
+		if ( ($notification_data != 'NONE') and ($notification_data != 'PREVIEW') )
+			{
+			if ($notification_data == 'LIVE')
+				{
+				$call_length = ($StarTtime - $VLAlast_state_change_epoch);
+				}
+			if ($notification_data == 'DEAD')
+				{
+				$call_length = ($VLAlast_state_change_epoch - $VLAlast_call_time_epoch);
+				$hangup_length = ($StarTtime - $VLAlast_state_change_epoch);
+				}
+			}
+		### END Live Call Display section ###
+		}
+
+	### BEGIN Calls in Queue section ###
+	$AccampSQL = preg_replace('/\s\-/','', $VLAcloser_campaigns);
+	$AccampSQL = preg_replace('/\s/',"','", $AccampSQL);
+	if (preg_match('/AGENTDIRECT/i', $AccampSQL))
+		{
+		$AccampSQL = preg_replace('/AGENTDIRECT/i','', $AccampSQL);
+		$ADsql = "or ( (campaign_id LIKE \"%AGENTDIRECT%\") and (agent_only='$user') )";
+		}
+
+	### grab the number of calls waiting in queue for this agent's campaign and selected in-groups
+	$stmt="SELECT count(*) from vicidial_auto_calls where status IN('LIVE') and ( (campaign_id='$VLAcampaign_id') or (campaign_id IN('$AccampSQL')) $ADsql);";
+	$rslt=mysql_to_mysqli($stmt, $link);
+		if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09010',$user,$server_ip,$session_name,$one_mysql_log);}
+	$cl_calls_ct = mysqli_num_rows($rslt);
+	if ($cl_calls_ct > 0)
+		{
+		$row=mysqli_fetch_row($rslt);
+		$CIQcount =						$row[0];
+		}
+
+	if ($CIQcount > 0)
+		{
+		### grab the number of calls waiting in queue for this agent's campaign and selected in-groups
+		$stmt="SELECT UNIX_TIMESTAMP(call_time) from vicidial_auto_calls where status IN('LIVE') and ( (campaign_id='$VLAcampaign_id') or (campaign_id IN('$AccampSQL')) $ADsql) order by call_time limit 1;";
+		$rslt=mysql_to_mysqli($stmt, $link);
+			if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'09011',$user,$server_ip,$session_name,$one_mysql_log);}
+		$cl_calls_ct = mysqli_num_rows($rslt);
+		if ($cl_calls_ct > 0)
+			{
+			$row=mysqli_fetch_row($rslt);
+			$CIQcall_time_epoch =		$row[0];
+			$wait_length = ($StarTtime - $CIQcall_time_epoch);
+			}
+		}
+	if ($VLAlast_update_time_epoch > 10)
+			{
+			$lagged_length = ($StarTtime - $VLAlast_update_time_epoch);
+			}
+
+	### END Calls in Queue section ###
+	$stage="$notification_data|$call_length|$hangup_length|$VLApause_code|$VLAcalls_today|$CIQcount|$wait_length|$lagged_length";
+	echo "$stage\n";
+
+	if ($SSagent_debug_logging > 0) {vicidial_ajax_log($NOW_TIME,$startMS,$link,$ACTION,$php_script,$user,$stage,$lead_id,$session_name,$stmt);}
+	exit;
+	}
+################################################################################
+### END notification_data - data-only, designed to check for and send notification data for this agent for outside display
+################################################################################
+
 
 
 
