@@ -734,10 +734,11 @@
 # 240214-0400 - Added state_descriptions banners
 # 240220-0245 - Added daily_limit for user/in-group parameter
 # 240221-0317 - Small changes for state_descriptions Banner
+# 240322-0034 - Added input filtering
 #
 
-$version = '2.14-700c';
-$build = '240221-0317';
+$version = '2.14-701c';
+$build = '240322-0034';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
@@ -1136,7 +1137,7 @@ $DS='-';
 $date = date("r");
 $ip = getenv("REMOTE_ADDR");
 $browser = getenv("HTTP_USER_AGENT");
-$browser=preg_replace("/\'|\"|\\\\/","",$browser);
+$browser=preg_replace("/\'|\"|\\\\|<|>/","",$browser);
 $script_name = getenv("SCRIPT_NAME");
 $server_name = getenv("SERVER_NAME");
 $server_port = getenv("SERVER_PORT");
@@ -2393,7 +2394,7 @@ else
 							{
 							if (strlen($new_pass1) > 1)
 								{
-								$pass = preg_replace("/\'|\"|\\\\|;| /","",$new_pass1);
+								$pass = preg_replace("/\'|\"|\\\\|;|<|>| /","",$new_pass1);
 								$pass_hash = exec("../agc/bp.pl --pass=$pass");
 								$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
 								$pass_hashSQL = ",pass_hash='$pass_hash'";
@@ -4860,8 +4861,8 @@ else
 
 			if ( ($enable_sipsak_messages > 0) and ($allow_sipsak_messages > 0) and (preg_match("/SIP/i",$protocol)) )
 				{
-				$extension = preg_replace("/\'|\"|\\\\|;/","",$extension);
-				$phone_ip = preg_replace("/\'|\"|\\\\|;/","",$phone_ip);
+				$extension = preg_replace("/\'|\"|\\\\|<|>|;/","",$extension);
+				$phone_ip = preg_replace("/\'|\"|\\\\|<|>|;/","",$phone_ip);
 				$SIPSAK_prefix = 'LIN-';
 				echo "<!-- sending login sipsak message: $SIPSAK_prefix$VD_campaign -->\n";
 				passthru("/usr/local/bin/sipsak -M -O desktop -B \"$SIPSAK_prefix$VD_campaign\" -r 5060 -s sip:$extension@$phone_ip > /dev/null");

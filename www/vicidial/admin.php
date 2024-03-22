@@ -6137,12 +6137,13 @@ if ($SSscript_remove_js > 0)
 # 240225-0933 - Added the AUTONEXT hopper_hold_inserts campaign option
 # 240226-2128 - Fix for READ_ONLY settings container type
 # 240227-1127 - Added holiday_method option
+# 240322-0942 - Added input filtering
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-911a';
-$build = '240227-1127';
+$admin_version = '2.14-912a';
+$build = '240322-0942';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -7234,9 +7235,9 @@ if ( ($ADD==999993) or ($ADD==999992) or ($ADD==730000000000000) or ($ADD==83000
 	$LOGserver_port = getenv("SERVER_PORT");
 	$LOGrequest_uri = getenv("REQUEST_URI");
 	$LOGhttp_referer = getenv("HTTP_REFERER");
-	$LOGbrowser=preg_replace("/\'|\"|\\\\/","",$LOGbrowser);
-	$LOGrequest_uri=preg_replace("/\'|\"|\\\\/","",$LOGrequest_uri);
-	$LOGhttp_referer=preg_replace("/\'|\"|\\\\/","",$LOGhttp_referer);
+	$LOGbrowser=preg_replace("/\'|\"|\\\\|<|>/","",$LOGbrowser);
+	$LOGrequest_uri=preg_replace("/\'|\"|\\\\|<|>/","",$LOGrequest_uri);
+	$LOGhttp_referer=preg_replace("/\'|\"|\\\\|<|>/","",$LOGhttp_referer);
 	if (preg_match("/443/i",$LOGserver_port)) {$HTTPprotocol = 'https://';}
 	else {$HTTPprotocol = 'http://';}
 	if (($LOGserver_port == '80') or ($LOGserver_port == '443') ) {$LOGserver_port='';}
@@ -11848,7 +11849,7 @@ if ($ADD=="2")
 				$pass_hash='';
 				if ($SSpass_hash_enabled > 0)
 					{
-					$pass = preg_replace("/\'|\"|\\\\|;| /","",$pass);
+					$pass = preg_replace("/\'|\"|\\\\|;|<|>| /","",$pass);
 					$pass_hash = exec("../agc/bp.pl --pass=$pass");
 					$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
 					$pass='';
@@ -12165,7 +12166,7 @@ if ($ADD=="2A")
 				$pass_hash='';
 				if ($SSpass_hash_enabled > 0)
 					{
-					$pass = preg_replace("/\'|\"|\\\\|;| /","",$pass);
+					$pass = preg_replace("/\'|\"|\\\\|;|<|>| /","",$pass);
 					$pass_hash = exec("../agc/bp.pl --pass=$pass");
 					$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
 					$pass='';
@@ -16113,7 +16114,7 @@ if ($ADD=="4A")
 				{
 				if (strlen($pass) > 1)
 					{
-					$pass = preg_replace("/\'|\"|\\\\|;| /","",$pass);
+					$pass = preg_replace("/\'|\"|\\\\|;|<|>| /","",$pass);
 					$pass_hash = exec("../agc/bp.pl --pass=$pass");
 					$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
 					$pass_hashSQL = ",pass_hash='$pass_hash'";
@@ -16421,7 +16422,7 @@ if ($ADD=="4B")
 				{
 				if (strlen($pass) > 1)
 					{
-					$pass = preg_replace("/\'|\"|\\\\|;| /","",$pass);
+					$pass = preg_replace("/\'|\"|\\\\|;|<|>| /","",$pass);
 					$pass_hash = exec("../agc/bp.pl --pass=$pass");
 					$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
 					$pass_hashSQL = ",pass_hash='$pass_hash'";
@@ -16712,7 +16713,7 @@ if ($ADD==4)
 				{
 				if (strlen($pass) > 1)
 					{
-					$pass = preg_replace("/\'|\"|\\\\|;| /","",$pass);
+					$pass = preg_replace("/\'|\"|\\\\|;|<|>| /","",$pass);
 					$pass_hash = exec("../agc/bp.pl --pass=$pass");
 					$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
 					$pass_hashSQL = ",pass_hash='$pass_hash'";
@@ -49163,7 +49164,10 @@ if ($ADD==830000000000000)
 			$run_color='color=blue';
 			if ($row[11] > 5) {$run_color='color=black';} 
 			if ($row[11] > 10) {$run_color='color=purple';} 
-			if ($row[11] > 30) {$run_color='color=red';} 
+			if ($row[11] > 30) {$run_color='color=red';}
+			$row[5] = preg_replace("/\'|\"|\\\\|<|>/","",$row[5]);
+			$row[6] = preg_replace("/\'|\"|\\\\|<|>/","",$row[6]);
+			$row[8] = preg_replace("/\'|\"|\\\\|<|>/","",$row[8]);
 
 			echo "<br>"._QXZ("ADMIN REPORT LOG: Record Detail")." - $stage<BR><BR>\n";
 			echo "<center><TABLE width=$section_width cellspacing=5 cellpadding=0>\n";
@@ -49872,7 +49876,7 @@ if ($ADD==999997)
 			$pass_checkSQL="pass='$pass'";
 			if ( ($SSpass_hash_enabled > 0) and (strlen($pass) > 1) )
 				{
-				$pass = preg_replace("/\'|\"|\\\\|;| /","",$pass);
+				$pass = preg_replace("/\'|\"|\\\\|;|<|>| /","",$pass);
 				$pass_hash = exec("../agc/bp.pl --pass=$pass");
 				$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
 				$pass_checkSQL="pass_hash='$pass_hash'";
@@ -50466,7 +50470,7 @@ if ($ADD==999996)
 				$pass_checkSQL="pass='$pass'";
 				if ( ($SSpass_hash_enabled > 0) and (strlen($pass) > 1) )
 					{
-					$pass = preg_replace("/\'|\"|\\\\|;| /","",$pass);
+					$pass = preg_replace("/\'|\"|\\\\|;|<|>| /","",$pass);
 					$pass_hash = exec("../agc/bp.pl --pass=$pass");
 					$pass_hash = preg_replace("/PHASH: |\n|\r|\t| /",'',$pass_hash);
 					$pass_checkSQL="pass_hash='$pass_hash'";

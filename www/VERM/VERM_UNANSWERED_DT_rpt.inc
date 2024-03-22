@@ -198,6 +198,12 @@ while ($row=mysqli_fetch_array($rslt))
 		$row["ivr_duration"]=$ivr_info_array[1];
 		$row["ivr_path"]=$ivr_info_array[2];
 		$row["call_date"]=$ivr_info_array[3];
+
+		if($caller_id_override=="ALWAYS" || ($caller_id_override=="IF_BLANK" && $row["phone_number"]==""))
+			{
+			$row["phone_number"]=$ivr_info_array[4];
+			}
+
 		$row["did"]=GetDID($row["uniqueid"]);
 		}
 
@@ -373,12 +379,13 @@ function GetIVRInfo($uniqueid, $actual_start_time)
 		$ivr_duration=$ivr_row[5]-$ivr_start_time;
 		$ivr_length+=$ivr_duration;
 		$prev_time=$ivr_row[5];
+		$phone_ext=$ivr_row[6];
 		}
 
 	$ivr_duration_fmt=($ivr_duration>=3600 ? floor($ivr_duration/3600).":" : "").gmdate("i:s", $ivr_duration);
 	$ivr_length_fmt=($ivr_length>=3600 ? floor($ivr_length/3600).":" : "").gmdate("i:s", $ivr_length);
 
-	return array("$ivr_length_fmt", "$ivr_duration_fmt", "$ivr_path", "$actual_start_time");
+	return array("$ivr_length_fmt", "$ivr_duration_fmt", "$ivr_path", "$actual_start_time", "$phone_ext");
 	}
 
 function GetDID($uniqueid)
