@@ -6138,12 +6138,13 @@ if ($SSscript_remove_js > 0)
 # 240226-2128 - Fix for READ_ONLY settings container type
 # 240227-1127 - Added holiday_method option
 # 240322-0942 - Added input filtering
+# 240325-2313 - Fix for new user daily limits
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-912a';
-$build = '240322-0942';
+$admin_version = '2.14-913a';
+$build = '240325-2313';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -7632,7 +7633,7 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 			$group_limit =			$row[5];
 			}
 		else
-			{$calls_today=0;   $SELECT_group_rank=0;   $SELECT_group_grade=1;   $calls_today_filtered=0;   $daily_limit=-1;}
+			{$calls_today=0;   $SELECT_group_rank=0;   $SELECT_group_grade=1;   $calls_today_filtered=0;   $group_limit=-1;}
 		if ( ($ADD=="4A") or ($ADD=="4B") )
 			{
 			if (isset($_GET["RANK_$group_id_values[$o]"]))			{$group_rank=$_GET["RANK_$group_id_values[$o]"];}
@@ -7648,17 +7649,22 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 			$group_web = preg_replace("/;|\"|\'/","",$group_web);
 			$group_grade = preg_replace('/[^-\_0-9]/','',$group_grade);
 			$group_limit = preg_replace('/[^-\_0-9]/','',$group_limit);
+			if ( (strlen($group_limit) < 1) or ($group_limit == 'NULL') )	{$group_limit=-1;}
 
 			if ($ranks_to_print > 0)
 				{
 				$stmt="UPDATE vicidial_inbound_group_agents set group_rank='$group_rank', group_weight='$group_rank', group_web_vars='$group_web', group_grade='$group_grade', daily_limit='$group_limit' where group_id='$group_id_values[$o]' and user='$user';";
 				$rslt=mysql_to_mysqli($stmt, $link);
+				$affected_rows_grp = mysqli_affected_rows($link);
+				if ($DB) {echo "$affected_rows_grp|$stmt|<br>\n";}
 				$stmt_grp_values .= "$stmt|";
 				}
 			else
 				{
 				$stmt="INSERT INTO vicidial_inbound_group_agents set group_rank='$group_rank', group_weight='$group_rank', group_id='$group_id_values[$o]', user='$user', group_web_vars='$group_web', group_grade='$group_grade', daily_limit='$group_limit';";
 				$rslt=mysql_to_mysqli($stmt, $link);
+				$affected_rows_grp = mysqli_affected_rows($link);
+				if ($DB) {echo "$affected_rows_grp|$stmt|<br>\n";}
 				$stmt_grp_values .= "$stmt|";
 				}
 
@@ -8423,6 +8429,7 @@ if ($ADD=="1")
 
 		echo "<br>"._QXZ("ADD A NEW USER")."<form action=$PHP_SELF method=POST name=userform id=userform>\n";
 		echo "<input type=hidden name=ADD value=2>\n";
+		echo "<input type=hidden name=DB value=$DB>\n";
 		echo "<input type=hidden name=user_toggle id=user_toggle value=0>\n";
 		echo "<center><TABLE width=$section_width cellspacing=3>\n";
 		if ($voi_count > 0)
@@ -11859,12 +11866,14 @@ if ($ADD=="2")
 
 				$stmt="INSERT INTO vicidial_users (user,pass,full_name,user_level,user_group,phone_login,phone_pass,pass_hash) values('$user','$pass','$full_name','$user_level','$user_group','$phone_login','$phone_pass','$pass_hash');";
 				$rslt=mysql_to_mysqli($stmt, $link);
+				$affected_rows_user = mysqli_affected_rows($link);
+				if ($DB) {echo "$affected_rows_user|$stmt|\n";}
 
 				### LOG INSERTION Admin Log Table ###
 				$SQL_log = "$stmt|";
 				$SQL_log = preg_replace('/;/', '', $SQL_log);
 				$SQL_log = addslashes($SQL_log);
-				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='ADD', record_id='$user', event_code='ADMIN ADD USER', event_sql=\"$SQL_log\", event_notes='user: $user';";
+				$stmt="INSERT INTO vicidial_admin_log set event_date='$SQLdate', user='$PHP_AUTH_USER', ip_address='$ip', event_section='USERS', event_type='ADD', record_id='$user', event_code='ADMIN ADD USER', event_sql=\"$SQL_log\", event_notes='user: $user inserts: $affected_rows_user';";
 				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 
@@ -25093,6 +25102,7 @@ if ($ADD==3)
 				}
 
 			echo "<input type=hidden name=user value=\"$user\">\n";
+			echo "<input type=hidden name=DB value=\"$DB\">\n";
 			echo "<center><TABLE width=980 cellspacing=3>\n";
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("User Number").": </td><td align=left><b>$user</b>$NWB#users-user$NWE</td></tr>\n";
 
@@ -35027,7 +35037,8 @@ if ($ADD==3111)
 				{
 				$stmtD="INSERT INTO vicidial_inbound_group_agents set calls_today='0',group_rank='0',group_weight='0',user='$ARIG_user[$o]',group_id='$group_id',group_grade='1',daily_limit='-1';";
 				$rslt=mysql_to_mysqli($stmtD, $link);
-				if ($DB > 0) {echo "|$stmtD|";}
+				$affected_rows_grp = mysqli_affected_rows($link);
+				if ($DB > 0) {echo "$affected_rows_grp|$stmtD|";}
 				$stmtDlog .= "$stmtD|";
 				$ARIG_changenotes .= "added missing user to viga table $ARIG_user[$o]|";
 				$ARIG_rank[$o] =	'0';
@@ -35929,7 +35940,8 @@ if ($ADD==3811)
 				{
 				$stmtD="INSERT INTO vicidial_inbound_group_agents set calls_today='0',group_rank='0',group_weight='0',user='$ARIG_user[$o]',group_id='$group_id',group_grade='1',group_type='E';";
 				$rslt=mysql_to_mysqli($stmtD, $link);
-				if ($DB > 0) {echo "|$stmtD|";}
+				$affected_rows_grp = mysqli_affected_rows($link);
+				if ($DB > 0) {echo "$affected_rows_grp|$stmtD|";}
 				$stmtDlog .= "$stmtD|";
 				$ARIG_changenotes .= "added missing user to viga table $ARIG_user[$o]|";
 				$ARIG_rank[$o] =	'0';
@@ -36795,7 +36807,8 @@ if ($ADD==3911)
 				{
 				$stmtD="INSERT INTO vicidial_inbound_group_agents set calls_today='0',group_rank='0',group_weight='0',user='$ARIG_user[$o]',group_id='$group_id',group_grade='1',group_type='E';";
 				$rslt=mysql_to_mysqli($stmtD, $link);
-				if ($DB > 0) {echo "|$stmtD|";}
+				$affected_rows_grp = mysqli_affected_rows($link);
+				if ($DB > 0) {echo "$affected_rows_grp|$stmtD|";}
 				$stmtDlog .= "$stmtD|";
 				$ARIG_changenotes .= "added missing user to viga table $ARIG_user[$o]|";
 				$ARIG_rank[$o] =	'0';
