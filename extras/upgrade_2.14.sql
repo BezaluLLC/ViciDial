@@ -2669,3 +2669,31 @@ UPDATE system_settings SET db_schema_version='1709',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_call_time_holidays ADD holiday_method VARCHAR(40) default 'REPLACE';
 
 UPDATE system_settings SET db_schema_version='1710',db_schema_update_date=NOW() where db_schema_version < 1710;
+
+CREATE TABLE inbound_disabled_entries (
+interval_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+start_datetime DATETIME,
+end_datetime datetime,
+location VARCHAR(50),
+message VARCHAR(100),
+message_type ENUM('MEETING','CLOSED','WEATHER','CUSTOM'),
+status ENUM('ACTIVE','LIVE','COMPLETED','CANCELLED') DEFAULT 'ACTIVE',
+user VARCHAR(20),
+modify_date TIMESTAMP NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+modified_by VARCHAR(20),
+holiday_id VARCHAR(30),
+KEY inbound_disabled_entries_key (start_datetime,end_datetime,location)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_pending_ar (
+ar_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+report_id VARCHAR(30) default '',
+start_datetime DATETIME,
+php_script VARCHAR(50) default '',
+user VARCHAR(20),
+status ENUM('TRIGGERED','AUTHORIZED','COMPLETED','ERROR') DEFAULT 'TRIGGERED',
+notes TEXT,
+KEY pending_ar_key (user,start_datetime)
+) ENGINE=MyISAM;
+
+UPDATE system_settings SET db_schema_version='1711',db_schema_update_date=NOW() where db_schema_version < 1711;

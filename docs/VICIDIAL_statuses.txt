@@ -83,3 +83,5 @@ SRDROP - SHARED outbound campaign drop to in-group, not included in most DROP st
 HUCXXX - Enhanced Disconnect Logging level 3 failed calls, where 'XXX' is the disconnect code. For example: "HUC18" for Cause 18 (SIP 408 Request timeout)
 ADAIR - Dead Air Auto, for AMD NOAUDIODATA calls
 ACFLTR - Inbound call areacode filter check
+LTMGAD - Campaign HotKey option, will transfer customer to voicemail message and disposition the call
+XAMMAD - Campaign HotKey option, will transfer customer to voicemail message and disposition the call

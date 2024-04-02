@@ -15,7 +15,7 @@
 #  - Auto reset lists at defined times
 #  - Auto restarts Asterisk process if enabled in servers settings
 #
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61011-1348 - First build
@@ -170,9 +170,10 @@
 # 230925-1454 - Added -recmon settings
 # 231136-2158 - Added hopper_hold_inserts HCI lead reservations clearing for old reservations
 # 231129-0849 - Added reset of vicidial_phone_number_call_daily_counts table
+# 240401-1810 - Added purging of vicidial_pending_ar records older than 7 days
 #
 
-$build = '231129-0849';
+$build = '240401-1810';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -2202,6 +2203,24 @@ if ($timeclock_end_of_day_NOW > 0)
 		##### END vicidial_khomp_log end of day process removing records older than 7 days #####
 
 
+		##### BEGIN vicidial_pending_ar end of day process removing records older than 7 days #####
+		$stmtA = "DELETE from vicidial_pending_ar where start_datetime < \"$SDSQLdate\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_pending_ar records older than 7 days purged|\n";}
+		if ($teodDB) {$event_string = "vicidial_pending_ar records older than 7 days purged: |$stmtA|$affected_rows|";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_pending_ar;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+		##### END vicidial_pending_ar end of day process removing records older than 7 days #####
+
+		
 		##### BEGIN vicidial_two_factor_auth end of day process removing expired and older records #####
 		$stmtA = "DELETE from vicidial_two_factor_auth where (auth_exp_date < NOW()) or ( (auth_code_exp_date < NOW()) and (auth_stage != '1') );";
 		if($DBX){print STDERR "\n|$stmtA|\n";}
@@ -5962,8 +5981,9 @@ if ($SSenable_auto_reports > 0)
 
 			$r++;
 			}
-		if ($DB) {print "Automated Reports DONE: $r\n";}
+		if ($DB) {print "Automated Reports launched: $r\n";}
 		}
+	if ($DB) {print "Automated Reports DONE\n";}
 	}
 ################################################################################
 #####  END  automated reports

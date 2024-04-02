@@ -5233,6 +5233,32 @@ mb_available BIGINT(14) default '0',
 unique index livepartitions (server_ip, partition_path)
 ) ENGINE=MyISAM;
 
+CREATE TABLE inbound_disabled_entries (
+interval_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+start_datetime DATETIME,
+end_datetime datetime,
+location VARCHAR(50),
+message VARCHAR(100),
+message_type ENUM('MEETING','CLOSED','WEATHER','CUSTOM'),
+status ENUM('ACTIVE','LIVE','COMPLETED','CANCELLED') DEFAULT 'ACTIVE',
+user VARCHAR(20),
+modify_date TIMESTAMP NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+modified_by VARCHAR(20),
+holiday_id VARCHAR(30),
+KEY inbound_disabled_entries_key (start_datetime,end_datetime,location)
+) ENGINE=MyISAM;
+
+CREATE TABLE vicidial_pending_ar (
+ar_id INT(10) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+report_id VARCHAR(30) default '',
+start_datetime DATETIME,
+php_script VARCHAR(50) default '',
+user VARCHAR(20),
+status ENUM('TRIGGERED','AUTHORIZED','COMPLETED','ERROR') DEFAULT 'TRIGGERED',
+notes TEXT,
+KEY pending_ar_key (user,start_datetime)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -5632,4 +5658,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1710',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1711',db_schema_update_date=NOW(),reload_timestamp=NOW();

@@ -298,14 +298,15 @@ if ($sthArows > 0)
 $sthA->finish();
 
 ### Grab system_settings values from the database
-$stmtA = "SELECT sip_event_logging FROM system_settings limit 1;";
+$stmtA = "SELECT sip_event_logging,enable_auto_reports FROM system_settings limit 1;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
 if ($sthArows > 0)
 	{
 	@aryA = $sthA->fetchrow_array;
-	$SSsip_event_logging =			$aryA[0];
+	$SSsip_event_logging =		$aryA[0];
+	$SSenable_auto_reports =	$aryA[1];
 	}
 $sthA->finish();
 
@@ -637,6 +638,26 @@ if (!$T)
 	}
 if (!$Q) {print " - OPTIMIZE vicidial_3way_press_multi          \n";}
 
+if ($SSenable_auto_reports > 0)
+	{
+	$stmtA = "UPDATE vicidial_pending_ar SET status='ERROR' where status='TRIGGERED' and start_datetime < '$SQLdate_NEG_tenminute';";
+	if($DB){print STDERR "\n|$stmtA|\n";}
+	if (!$T) {      $affected_rows = $dbhA->do($stmtA);}
+	if (!$Q) {print " - vicidial_pending_ar flush: $affected_rows rows\n";}
+
+	$stmtA = "OPTIMIZE table vicidial_pending_ar;";
+	if($DB){print STDERR "\n|$stmtA|\n";}
+	if (!$T) 
+		{
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if (!$Q) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+		}
+	if (!$Q) {print " - OPTIMIZE vicidial_pending_ar          \n";}
+	}
 
 $stmtA = "DELETE from server_live_stats where update_time < '$DQLdate_NEG_twelvehour';";
 if($DB){print STDERR "\n|$stmtA|\n";}
