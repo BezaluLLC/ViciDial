@@ -735,10 +735,11 @@
 # 240220-0245 - Added daily_limit for user/in-group parameter
 # 240221-0317 - Small changes for state_descriptions Banner
 # 240322-0034 - Added input filtering
+# 240409-2053 - Fix for Dead Trigger issue
 #
 
-$version = '2.14-701c';
-$build = '240322-0034';
+$version = '2.14-702c';
+$build = '240409-2053';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
@@ -12984,7 +12985,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		else
 			{
 			// JCJ - 11/16/23 Reset dead call timer if it's active
-			if (dead_max > 0 && CheckDEADcallON > 0)
+			if ( ( ( dead_max > 0) || (dead_stop_recording != 'DISABLED') || (dead_trigger_action != 'DISABLED') ) && (CheckDEADcallON > 0) )
 				{
 				CheckDEADcallON=0;
 				CheckDEADcallCOUNT=0;
