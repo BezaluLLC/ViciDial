@@ -2697,3 +2697,7 @@ KEY pending_ar_key (user,start_datetime)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1711',db_schema_update_date=NOW() where db_schema_version < 1711;
+
+ALTER TABLE vicidial_campaigns ADD script_tab_height SMALLINT(5) default '0';
+
+UPDATE system_settings SET db_schema_version='1712',db_schema_update_date=NOW() where db_schema_version < 1712;

@@ -855,6 +855,9 @@ OTHER CHANGES:
 
 243. Added 'delete_dnc_phone' Non-Agent API function.
 
+244. Added "Script Tab Height Override" campaign setting, to allow for longer
+	Script tab contents.
+
 
 
 
