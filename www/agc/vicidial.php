@@ -737,10 +737,11 @@
 # 240322-0034 - Added input filtering
 # 240409-2053 - Fix for Dead Trigger issue
 # 240415-1852 - Added script_tab_height campaign option
+# 240416-1750 - Fix for HotKey issue #1518
 #
 
-$version = '2.14-703c';
-$build = '240415-1852';
+$version = '2.14-704c';
+$build = '240416-1750';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
@@ -22717,10 +22718,12 @@ function phone_number_format(formatphone) {
 		showDiv('MainPanel');
 		showDiv('MainCommit');
 		ShoWGenDerPulldown();
-	//	document.getElementById("HotKeyEntriesBox").style.left = tempX + "px";
-		document.getElementById("HotKeyEntriesBox").style.top = HTheight + "px";
-	//	document.getElementById("hotkeysdisplay").style.left = tempX + "px";
-		document.getElementById("hotkeysdisplay").style.top = HKheight + "px";
+	<?php if ( ($HK_statuses_camp > 0) && ($user_level>=$HKuser_level) && ($VU_hotkeys_active > 0) ) 
+		{
+		echo "	document.getElementById(\"HotKeyEntriesBox\").style.top = HTheight + \"px\";\n";
+		echo "		document.getElementById(\"hotkeysdisplay\").style.top = HKheight + \"px\";\n";
+		}
+	?>
 
 		if (resumevar != 'NO')
 			{
@@ -22814,9 +22817,12 @@ function phone_number_format(formatphone) {
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $SCRIPT_COLOR ?>";
 		panel_bgcolor='<?php echo $SCRIPT_COLOR ?>';
 	//	document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
-		document.getElementById("HotKeyEntriesBox").style.top = HTheightS + "px";
-		document.getElementById("hotkeysdisplay").style.top = HKheightS + "px";
-
+	<?php if ( ($HK_statuses_camp > 0) && ($user_level>=$HKuser_level) && ($VU_hotkeys_active > 0) ) 
+		{
+		echo "	document.getElementById(\"HotKeyEntriesBox\").style.top = HTheightS + \"px\";\n";
+		echo "		document.getElementById(\"hotkeysdisplay\").style.top = HKheightS + \"px\";\n";
+		}
+	?>
 		HidEGenDerPulldown();
 		}
 
@@ -22851,8 +22857,12 @@ function phone_number_format(formatphone) {
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $SCRIPT_COLOR ?>";
 		panel_bgcolor='<?php echo $SCRIPT_COLOR ?>';
 	//	document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
-		document.getElementById("HotKeyEntriesBox").style.top = HTheightS + "px";
-		document.getElementById("hotkeysdisplay").style.top = HKheightS + "px";
+	<?php if ( ($HK_statuses_camp > 0) && ($user_level>=$HKuser_level) && ($VU_hotkeys_active > 0) ) 
+		{
+		echo "	document.getElementById(\"HotKeyEntriesBox\").style.top = HTheightS + \"px\";\n";
+		echo "		document.getElementById(\"hotkeysdisplay\").style.top = HKheightS + \"px\";\n";
+		}
+	?>
 
 		HidEGenDerPulldown();
 		}
@@ -22887,8 +22897,12 @@ function phone_number_format(formatphone) {
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $FORM_COLOR ?>";
 		panel_bgcolor='<?php echo $FORM_COLOR ?>';
 	//	document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
-		document.getElementById("HotKeyEntriesBox").style.top = HTheightS + "px";
-		document.getElementById("hotkeysdisplay").style.top = HKheightS + "px";
+	<?php if ( ($HK_statuses_camp > 0) && ($user_level>=$HKuser_level) && ($VU_hotkeys_active > 0) ) 
+		{
+		echo "	document.getElementById(\"HotKeyEntriesBox\").style.top = HTheightS + \"px\";\n";
+		echo "		document.getElementById(\"hotkeysdisplay\").style.top = HKheightS + \"px\";\n";
+		}
+	?>
 
 		HidEGenDerPulldown();
 		}
@@ -22922,8 +22936,12 @@ function phone_number_format(formatphone) {
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $FORM_COLOR ?>";
 		panel_bgcolor='<?php echo $FORM_COLOR ?>';
 	//	document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
-		document.getElementById("HotKeyEntriesBox").style.top = HTheightS + "px";
-		document.getElementById("hotkeysdisplay").style.top = HKheightS + "px";
+	<?php if ( ($HK_statuses_camp > 0) && ($user_level>=$HKuser_level) && ($VU_hotkeys_active > 0) ) 
+		{
+		echo "	document.getElementById(\"HotKeyEntriesBox\").style.top = HTheightS + \"px\";\n";
+		echo "		document.getElementById(\"hotkeysdisplay\").style.top = HKheightS + \"px\";\n";
+		}
+	?>
 
 		HidEGenDerPulldown();
 		}
@@ -22949,8 +22967,12 @@ function phone_number_format(formatphone) {
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $FORM_COLOR ?>";
 		panel_bgcolor='<?php echo $FORM_COLOR ?>';
 	//	document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
-		document.getElementById("HotKeyEntriesBox").style.top = HTheightS + "px";
-		document.getElementById("hotkeysdisplay").style.top = HKheightS + "px";
+	<?php if ( ($HK_statuses_camp > 0) && ($user_level>=$HKuser_level) && ($VU_hotkeys_active > 0) ) 
+		{
+		echo "	document.getElementById(\"HotKeyEntriesBox\").style.top = HTheightS + \"px\";\n";
+		echo "		document.getElementById(\"hotkeysdisplay\").style.top = HKheightS + \"px\";\n";
+		}
+	?>
 
 		HidEGenDerPulldown();
 		}
@@ -22977,8 +22999,12 @@ function phone_number_format(formatphone) {
 		document.getElementById("MaiNfooter").style.backgroundColor="<?php echo $FORM_COLOR ?>";
 		panel_bgcolor='<?php echo $FORM_COLOR ?>';
 	//	document.getElementById("MainStatuSSpan").style.background = panel_bgcolor;
-		document.getElementById("HotKeyEntriesBox").style.top = HTheightS + "px";
-		document.getElementById("hotkeysdisplay").style.top = HKheightS + "px";
+	<?php if ( ($HK_statuses_camp > 0) && ($user_level>=$HKuser_level) && ($VU_hotkeys_active > 0) ) 
+		{
+		echo "	document.getElementById(\"HotKeyEntriesBox\").style.top = HTheightS + \"px\";\n";
+		echo "		document.getElementById(\"hotkeysdisplay\").style.top = HKheightS + \"px\";\n";
+		}
+	?>
 
 		HidEGenDerPulldown();
 		}
