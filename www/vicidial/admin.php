@@ -6143,12 +6143,13 @@ if ($SSscript_remove_js > 0)
 # 240322-0942 - Added input filtering
 # 240325-2313 - Fix for new user daily limits
 # 240415-1858 - Added script_tab_height campaign option
+# 240418-0836 - Added link to Agent Time-Off Interface in Admin Utilities page
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-914a';
-$build = '240415-1858';
+$admin_version = '2.14-915a';
+$build = '240418-0836';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -50747,6 +50748,7 @@ if ($ADD==999994)
 		echo "<LI><a href=\"AST_rt_monitor_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Real-Time Monitoring Log Report")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_parkstats.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Agent Parked Call Report")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_chat_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Agent-Manager Chat Log")."</a></FONT>\n";
+		echo "<LI><a href=\"agent_timeoff_interface.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Agent Time-Off Interface")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_API_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("API Log Report")."</a></FONT>\n";
 		echo "<LI><a href=\"AST_recording_log_report.php\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Recording Access Log")."</a></FONT>\n";
 		echo "<LI><a href=\"admin.php?ADD=800000000000000\"><FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>"._QXZ("Admin Report Log Viewer")."</a></FONT>\n";
