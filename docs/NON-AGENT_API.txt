@@ -601,7 +601,7 @@ There is a hard limit of 10000000 records analyzed
 
 Example URL strings for API calls:
 http://server/vicidial/non_agent_api.php?source=test&function=agent_stats_export&time_format=M&stage=pipe&user=6666&pass=1234&agent_user=6666&datetime_start=2012-08-09+00:00:00&datetime_end=2012-08-10+23:59:59
-http://server/vicidial/non_agent_apiX.php?DB=0&stage=pipe&user=6666&pass=1234&source=test&function=agent_stats_export&datetime_start=2012-03-26+00:00:00&datetime_end=2012-03-26+23:59:59&header=YES
+http://server/vicidial/non_agent_api.php?DB=0&stage=pipe&user=6666&pass=1234&source=test&function=agent_stats_export&datetime_start=2012-03-26+00:00:00&datetime_end=2012-03-26+23:59:59&header=YES
 
 Example responses:
 ERROR: agent_stats_export USER DOES NOT HAVE PERMISSION TO GET AGENT INFO - 6666|0
