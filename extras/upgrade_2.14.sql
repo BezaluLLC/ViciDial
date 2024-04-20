@@ -2720,3 +2720,7 @@ UNIQUE KEY vicidial_timeoff_log_agent_month_key (user,timeoff_month,timeoff_type
 INSERT INTO vicidial_settings_containers VALUES ('VICIDIAL_TIMEOFF_SETTINGS','Settings for time-off admin utility','OTHER','---ALL---','; Comma-delimited time-off codes - MANDATORY, must have at least one defined. \r\n; Default is \'VAC\' for vacation\r\ntimeoff_types => VAC\r\n\r\n; optional, if set to \'1\' will show all viewable agents, even ones with no \r\n; time off for month.  Default is 0\r\ndisplay_all_agents => 0\r\n\r\n; optional, used to filter users displayed, in addition to user_group \r\n; permissions\r\nuser_filter_SQL =>  \r\n\r\n; optional, uses columns from vicidial_users table.   Defaults to \r\n; full_name asc, user asc if commented out or non-existent\r\n; sort_SQL => full_name asc, user asc\r\n\r\n; include custom coding for misc download coding where \"custom_download\" \r\n; marked in agent_timeoff_script.php - DO NOT USE WITHOUT CODING KNOWLEDGE\r\n; set to \'1\' to activate\r\ncustom_download => 0');
 
 UPDATE system_settings SET db_schema_version='1713',db_schema_update_date=NOW() where db_schema_version < 1713;
+
+ALTER TABLE vicidial_campaigns ADD call_log_days SMALLINT(5) default '0';
+
+UPDATE system_settings SET db_schema_version='1714',db_schema_update_date=NOW() where db_schema_version < 1714;

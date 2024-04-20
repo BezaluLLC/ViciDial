@@ -858,6 +858,9 @@ OTHER CHANGES:
 244. Added "Script Tab Height Override" campaign setting, to allow for longer
 	Script tab contents.
 
+245. Added "Call Log View Days" campaign setting, to allow restrictions to the
+	number of days an agent can go back to look at their call logs.
+
 
 
 
