@@ -6,7 +6,7 @@
 # astguiclient.conf file to reflect a change in IP address. The script will 
 # automatically default to the first eth address in the ifconfig output.
 #
-# Copyright (C) 2019  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 71205-2144 - Added display of extensions.conf example for call routing
@@ -17,6 +17,7 @@
 # 150312-1000 - Added ExpectedDBSchema
 # 180928-1958 - Added update of report_server, active_twin_server_ip and active_voicemail_server, issue #1109
 # 190530-1517 - Added mising commented-out keepalives in conf file
+# 240420-2247 - Added ConfBridge code
 #
 
 # default path to astguiclient configuration file:
@@ -442,6 +443,11 @@ if ($DB) {print "     |$affected_rows|$stmtA|\n";}
 
 print "  Updating vicidial_conferences table...\n";
 $stmtA = "UPDATE vicidial_conferences SET server_ip='$VARserver_ip' where server_ip='$VARold_server_ip';";
+$affected_rows = $dbhA->do($stmtA);
+if ($DB) {print "     |$affected_rows|$stmtA|\n";}
+
+print "  Updating vicidial_confbridges table...\n";
+$stmtA = "UPDATE vicidial_confbridges SET server_ip='$VARserver_ip' where server_ip='$VARold_server_ip';";
 $affected_rows = $dbhA->do($stmtA);
 if ($DB) {print "     |$affected_rows|$stmtA|\n";}
 

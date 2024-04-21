@@ -738,15 +738,17 @@
 # 240409-2053 - Fix for Dead Trigger issue
 # 240415-1852 - Added script_tab_height campaign option
 # 240416-1750 - Fix for HotKey issue #1518
+# 240420-2228 - ConfBridge code added
 #
 
-$version = '2.14-704c';
-$build = '240416-1750';
+$version = '2.14-705c';
+$build = '240420-2228';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
 $one_mysql_log=0;
 $DB=0;
+$conf_table = "vicidial_conferences";
 
 require_once("dbconnect_mysqli.php");
 require_once("functions.php");
@@ -4340,6 +4342,14 @@ else
 					}
 				else
 					{$rowx[0]='0.0.0.0';}
+
+				##### figure out which table to look for conferences in
+				$stmt="SELECT conf_engine from servers where server_ip = '$rowx[0]';";
+				if ($DB) {echo "|$stmt|\n";}
+                		$rslt=mysql_to_mysqli($stmt, $link);
+		                $row=mysqli_fetch_row($rslt);
+                		$conf_engine = $row[0];
+	                        if ( $conf_engine == "CONFBRIDGE" ) { $conf_table = "vicidial_confbridges"; }
 				
 				### get number of agents logged in to each server
 				$stmt="SELECT count(*) from vicidial_live_agents where server_ip = '$rowx[0]' and extension NOT LIKE \"R%\";";
@@ -4355,7 +4365,7 @@ else
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01023',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$rowy=mysqli_fetch_row($rslt);
 
-				$stmt="SELECT count(*) FROM vicidial_conferences where server_ip='$rowx[0]' and ((extension='') or (extension is null));";
+				$stmt="SELECT count(*) FROM $conf_table where server_ip='$rowx[0]' and ((extension='') or (extension is null));";
 				if ($DB) {echo "|$stmt|\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01085',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -4569,7 +4579,7 @@ else
 			$local_gmt = ($local_gmt + $isdst);
 			}
 
-		$stmt="SELECT asterisk_version,web_socket_url,external_web_socket_url from servers where server_ip='$server_ip';";
+		$stmt="SELECT asterisk_version,web_socket_url,external_web_socket_url,conf_engine from servers where server_ip='$server_ip';";
 		if ($DB) {echo "|$stmt|\n";}
 		$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01028',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -4577,6 +4587,7 @@ else
 		$asterisk_version =			$row[0];
 		$web_socket_url =			$row[1];
 		$external_web_socket_url =	$row[2];
+		$conf_engine = 				$row[3];
 		if ( ($use_external_server_ip=='Y') and (strlen($external_web_socket_url) > 5) )
 			{$web_socket_url = $external_web_socket_url;}
 		$major_version = explode('.',$asterisk_version);
@@ -4588,6 +4599,12 @@ else
 				$volumecontrol_active=0;
 				}
 			}
+		$login_context = $ext_context;
+		if (strlen($meetme_enter_login_filename) > 0)
+                        {
+                        $login_context = 'meetme-enter-login';
+                        if ( $conf_engine == "CONFBRIDGE" ) { $login_context = 'confbridge-enter-login'; }
+                        }
 
 		if ($protocol == 'EXTERNAL')
 			{
@@ -4699,8 +4716,12 @@ else
 
 		if ( ( ($campaign_allow_inbound == 'Y') and ($dial_method != 'MANUAL') ) || ($campaign_leads_to_call > 0) || (preg_match('/Y/',$no_hopper_leads_logins)) )
 			{
+			##### figure out which table to look for conferences in
+			$conf_table = "vicidial_conferences";
+			if ( $conf_engine == "CONFBRIDGE" ) { $conf_table = "vicidial_confbridges"; }
+
 			##### check to see if the user has a conf extension already, this happens if they previously exited uncleanly
-			$stmt="SELECT conf_exten FROM vicidial_conferences where extension='$SIP_user' and server_ip = '$server_ip' LIMIT 1;";
+			$stmt="SELECT conf_exten FROM $conf_table where extension='$SIP_user' and server_ip = '$server_ip' LIMIT 1;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01032',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 			if ($DB) {echo "$stmt\n";}
@@ -4713,30 +4734,30 @@ else
 				$i++;
 				}
 			if ($prev_login_ct > 0)
-				{echo "<!-- USING PREVIOUS MEETME ROOM - $session_id - $NOW_TIME - $SIP_user -->\n";}
+				{echo "<!-- USING PREVIOUS $conf_engine ROOM - $session_id - $NOW_TIME - $SIP_user -->\n";}
 			else
 				{
-				##### grab the next available vicidial_conference room and reserve it
-				$stmt="SELECT count(*) FROM vicidial_conferences where server_ip='$server_ip' and ((extension='') or (extension is null));";
+				##### grab the next available conference room and reserve it
+				$stmt="SELECT count(*) FROM $conf_table where server_ip='$server_ip' and ((extension='') or (extension is null));";
 				if ($DB) {echo "$stmt\n";}
 				$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01033',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 				$row=mysqli_fetch_row($rslt);
 				if ($row[0] > 0)
 					{
-					$stmt="UPDATE vicidial_conferences set extension='$SIP_user', leave_3way='0' where server_ip='$server_ip' and ((extension='') or (extension is null)) limit 1;";
+					$stmt="UPDATE $conf_table set extension='$SIP_user', leave_3way='0' where server_ip='$server_ip' and ((extension='') or (extension is null)) limit 1;";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01034',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 
-					$stmt="SELECT conf_exten from vicidial_conferences where server_ip='$server_ip' and ( (extension='$SIP_user') or (extension='$VD_login') );";
+					$stmt="SELECT conf_exten from $conf_table where server_ip='$server_ip' and ( (extension='$SIP_user') or (extension='$VD_login') );";
 						if ($format=='debug') {echo "\n<!-- $stmt -->";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01035',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 					$row=mysqli_fetch_row($rslt);
 					$session_id = $row[0];
 					}
-				echo "<!-- USING NEW MEETME ROOM - $session_id - $NOW_TIME - $SIP_user -->\n";
+				echo "<!-- USING NEW $conf_engine ROOM - $session_id - $NOW_TIME - $SIP_user -->\n";
 				}
 
 			### mark leads that were not dispositioned during previous calls as ERI
@@ -4896,8 +4917,10 @@ else
 			if ($on_hook_agent == 'Y')
 				{$TEMP_SIP_user_DiaL = 'Local/8300@default';}
 			### insert a NEW record to the vicidial_manager table to be processed
-			$agent_login_data="||$NOW_TIME|NEW|N|$server_ip||Originate|$SIqueryCID|Channel: $SIP_user_DiaL|Context: $login_context|Exten: $session_id|Priority: 1|Callerid: \"$SIqueryCID\" <$campaign_cid>|||||";
-			$agent_login_stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$SIqueryCID','Channel: $TEMP_SIP_user_DiaL','Context: $login_context','Exten: $session_id','Priority: 1','Callerid: \"$SIqueryCID\" <$campaign_cid>','','','','','');";
+			$session_prepend = '';
+			if ( $conf_engine == 'CONFBRIDGE' ) { $session_prepend = 2; }
+			$agent_login_data="||$NOW_TIME|NEW|N|$server_ip||Originate|$SIqueryCID|Channel: $SIP_user_DiaL|Context: $login_context|Exten: $session_prepend$session_id|Priority: 1|Callerid: \"$SIqueryCID\" <$campaign_cid>|||||";
+			$agent_login_stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','Originate','$SIqueryCID','Channel: $TEMP_SIP_user_DiaL','Context: $login_context','Exten: $session_prepend$session_id','Priority: 1','Callerid: \"$SIqueryCID\" <$campaign_cid>','','','','','');";
 
 			### log outbound call in the vicidial_user_dial_log
 			$stmt = "INSERT INTO vicidial_user_dial_log SET caller_code='$SIqueryCID',user='$VD_login',call_date='$NOW_TIME',call_type='APL',notes='$session_id $login_context $TEMP_SIP_user_DiaL';";

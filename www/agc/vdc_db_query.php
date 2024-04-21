@@ -548,10 +548,11 @@
 # 240219-2130 - Added daily_limit for user/in-group parameter
 # 240221-0330 - Small changes for state_descriptions Banner
 # 240420-0836 - Added call_log_days campaign option
+# 240420-2227 - ConfBridge code added
 #
 
-$version = '2.14-441';
-$build = '240420-0836';
+$version = '2.14-442';
+$build = '240420-2227';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=913;
@@ -17189,8 +17190,15 @@ if ($ACTION == 'userLOGout')
 
 		if ($no_delete_sessions < 1)
 			{
-			##### Remove the reservation on the vicidial_conferences meetme room
-			$stmt="UPDATE vicidial_conferences set extension='' where server_ip='$server_ip' and conf_exten='$conf_exten';";
+			##### Figure out which conference table to use
+			$conf_table = 'vicidial_conferences';
+			$stmt="SELECT conf_engine FROM servers where server_ip='$server_ip';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			if ( $row[0] == 'CONFBRIDGE' ) { $conf_table = 'vicidial_confbridges'; }
+
+			##### Remove the reservation on the vicidial_conferences or vicidial_confbridges room
+			$stmt="UPDATE $conf_table set extension='' where server_ip='$server_ip' and conf_exten='$conf_exten';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00129',$user,$server_ip,$session_name,$one_mysql_log);}

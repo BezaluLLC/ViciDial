@@ -210,10 +210,11 @@
 # 240120-0840 - Added list_order,list_order_randomize,list_order_secondary optional fields to update_campaign function
 # 240217-0907 - Added more missing vicidial_users fields from copy function
 # 240302-0804 - Added delete_dnc_phone function
+# 240420-2236 - Added ConfBridge code
 #
 
-$version = '2.14-187';
-$build = '240302-0804';
+$version = '2.14-188';
+$build = '240420-2236';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 $camp_lead_order_random=1;
@@ -3307,7 +3308,25 @@ if ($function == 'blind_monitor')
 			}
 		else
 			{
-			$stmt="SELECT count(*) from vicidial_conferences where conf_exten='$session_id' and server_ip='$server_ip';";
+			$stmt ="SELECT conf_engine from servers where server_ip='$server_ip';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			$conf_engine=$row[0];
+			
+			if($conf_engine == "CONFBRIDGE")
+				{
+				$conf_table = "vicidial_confbridges";
+				$monitor_prefix = '4';
+				$barge_prefix = '6';
+				}
+			else
+				{
+				$conf_table = "vicidial_conferences";
+				$monitor_prefix = '0';
+				$barge_prefix = '';
+				}
+				
+			$stmt="SELECT count(*) from $conf_table where conf_exten='$session_id' and server_ip='$server_ip';";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			$row=mysqli_fetch_row($rslt);
 			$session_exists=$row[0];
@@ -3373,7 +3392,7 @@ if ($function == 'blind_monitor')
 					$monitor_dialstring = "$D_s_ip[0]$S$D_s_ip[1]$S$D_s_ip[2]$S$D_s_ip[3]$S";
 
 					$monitor_type='LISTEN'; $cid_prefix='BM'; $swap_chan=0;
-					if ( (preg_match('/MONITOR/',$stage)) or (strlen($stage)<1) ) {$stage = '0';}
+					if ( (preg_match('/MONITOR/',$stage)) or (strlen($stage)<1) ) {$stage = $monitor_prefix;}
 					if (preg_match('/BARGE/',$stage)) 
 						{
 						if (preg_match('/SWAP/',$stage)) {$swap_chan=1;}

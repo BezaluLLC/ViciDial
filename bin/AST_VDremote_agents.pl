@@ -56,6 +56,7 @@
 # 191017-1909 - Added code for filtered maximum inbound calls
 # 230523-0825 - Added User inbound_credits feature
 # 240219-1518 - Added daily_limit inbound option
+# 240420-2246 - Added ConfBridge code
 #
 
 ### begin parsing run-time options ###
@@ -197,7 +198,7 @@ $sthA->finish();
 ###########################################
 
 ### Grab Server values from the database
-$stmtA = "SELECT vd_server_logs,local_gmt,ext_context FROM servers where server_ip = '$VARserver_ip';";
+$stmtA = "SELECT vd_server_logs,local_gmt,ext_context,conf_engine FROM servers where server_ip = '$VARserver_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -207,6 +208,7 @@ if ($sthArows > 0)
 	$DBvd_server_logs =		$aryA[0];
 	$DBSERVER_GMT =			$aryA[1];
 	$ext_context =			$aryA[2];
+	$conf_engine =			$aryA[3];
 	if ($DBvd_server_logs =~ /Y/)	{$SYSLOG = '1';}
 	else {$SYSLOG = '0';}
 	if (length($DBSERVER_GMT)>0)	{$SERVER_GMT = $DBSERVER_GMT;}
@@ -689,6 +691,7 @@ while($one_day_interval > 0)
 					{
 					$TESTrun++;
 					$DBremote_conf_exten[$user_counter] = ($user_counter + 8600051);
+					if ($conf_engine eq 'CONFBRIDGE') { $DBremote_conf_exten[$user_counter] = ($user_counter + 9600051); }
 					}
 				$DBremote_closer[$user_counter] =		$closer_campaigns;
 				$DBremote_random[$user_counter] =		$random;
