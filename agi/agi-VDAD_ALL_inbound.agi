@@ -261,6 +261,7 @@
 # 240223-0847 - Added INBOUND_DID populate option
 # 240227-1154 - Added holiday_method option
 # 240420-2242 - Added ConfBridge code
+# 240415-1701 - Fix for ConfBridge code
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -3915,7 +3916,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 					$RAredDIALstr = "$a$S$b$S$c$S$d$S";
 					}
 				$alertVDADremDIALstr = "$VDADremDIALstr";
-				if ($conf_engine == "CONFBRIDGE")
+				if ($conf_engine eq "CONFBRIDGE")
 					{
 					$alertVDADremDIALstr .= "8$VDADconf_exten";
 					}
