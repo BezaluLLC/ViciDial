@@ -113,10 +113,11 @@
 # 231129-1457 - Added refresh_panel function
 # 231222-2105 - Added multi_dial_phones option to the transfer_conference function
 # 240219-1500 - Added daily_limit setting to change_ingroups function
+# 240425-1901 - Added md_check option for transfer_conference function
 #
 
-$version = '2.14-78';
-$build = '240219-1500';
+$version = '2.14-79';
+$build = '240425-1901';
 $php_script = 'api.php';
 
 $startMS = microtime();
@@ -292,6 +293,8 @@ if (isset($_GET["text_color"]))				{$text_color=$_GET["text_color"];}
 	elseif (isset($_POST["text_color"]))	{$text_color=$_POST["text_color"];}
 if (isset($_GET["multi_dial_phones"]))			{$multi_dial_phones=$_GET["multi_dial_phones"];}
 	elseif (isset($_POST["multi_dial_phones"]))	{$multi_dial_phones=$_POST["multi_dial_phones"];}
+if (isset($_GET["md_check"]))			{$md_check=$_GET["md_check"];}
+	elseif (isset($_POST["md_check"]))	{$md_check=$_POST["md_check"];}
 
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
@@ -354,6 +357,7 @@ $dnc_check=preg_replace("/[^-_0-9a-zA-Z]/","",$dnc_check);
 $campaign_dnc_check=preg_replace("/[^-_0-9a-zA-Z]/","",$campaign_dnc_check);
 $notification_date = preg_replace('/[^- \:0-9]/','',$notification_date);
 $multi_dial_phones = preg_replace('/[^\,0-9]/','',$multi_dial_phones);
+$md_check = preg_replace("/[^0-9a-zA-Z]/","",$md_check);
 
 if ($non_latin < 1)
 	{
@@ -4248,9 +4252,37 @@ if ($function == 'transfer_conference')
 							$affected_rowsVP=0;
 							if ($vp > 0)
 								{
-								$stmtVP = "INSERT IGNORE INTO vicidial_3way_press_multi SET user='$agent_user',call_date=NOW(),phone_numbers='$multi_dial_phones_STRING',phone_numbers_ct='$vp',status='NEW' ON DUPLICATE KEY UPDATE call_date=NOW(),phone_numbers='$multi_dial_phones_STRING',phone_numbers_ct='$vp',status='NEW';";
-								$rslt=mysql_to_mysqli($stmtVP, $link);
-								$affected_rowsVP = mysqli_affected_rows($link);
+								$md_check_ok=1;
+								$md_check_ct=0;
+								if (preg_match("/YES/i",$md_check))
+									{
+									# check for still-active previous 3-way calls from this agent and send error if any are found
+									$stmt = "select count(*) from vicidial_3way_press_live where user='$agent_user' and status!='HUNGUP';";
+									if ($DB) {echo "$stmt\n";}
+									$rslt=mysql_to_mysqli($stmt, $link);
+									$VDTW_live_ct = mysqli_num_rows($rslt);
+									if ($VDTW_live_ct > 0)
+										{
+										$row=mysqli_fetch_row($rslt);
+										$md_check_ct	= $row[0];
+										}
+									if ($md_check_ct > 0) {$md_check_ok = 0;}
+									}
+								if ($md_check_ok > 0)
+									{
+									$stmtVP = "INSERT IGNORE INTO vicidial_3way_press_multi SET user='$agent_user',call_date=NOW(),phone_numbers='$multi_dial_phones_STRING',phone_numbers_ct='$vp',status='NEW' ON DUPLICATE KEY UPDATE call_date=NOW(),phone_numbers='$multi_dial_phones_STRING',phone_numbers_ct='$vp',status='NEW';";
+									$rslt=mysql_to_mysqli($stmtVP, $link);
+									$affected_rowsVP = mysqli_affected_rows($link);
+									}
+								else 
+									{
+									$result = _QXZ("ERROR");
+									$result_reason = _QXZ("agent_user has previous active 3-way calls");
+									$data = "$md_check_ct|$md_check_ok|$md_check";
+									echo "$result: $result_reason - $agent_user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
 								}
 							$multi_dial_phones_OUTPUT = "|Multi-phones: $vp $mp $affected_rowsVP";
 							}

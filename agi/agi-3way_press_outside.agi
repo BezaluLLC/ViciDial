@@ -55,6 +55,7 @@
 # 240108-1503 - Added call_channel and call_transfer logging
 # 240114-0946 - Added check of agent_heartbeat
 # 240116-2109 - Added CLI flag for timeout
+# 240425-2208 - Added ConfBridge support
 #
 
 $script = 'agi-3way_press_outside.agi';
@@ -67,6 +68,7 @@ $mysql_log_count=272;
 $one_mysql_log=0;
 $MT[0]='';
 $timeout=100;
+$conf_engine='';
 
 
 $now_date_epoch = time();
@@ -135,7 +137,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
     or die "Couldn't connect to database: " . DBI->errstr;
 
 ### Grab Server values from the database
-$stmtA = "SELECT agi_output,local_gmt FROM servers where server_ip = '$VARserver_ip';";
+$stmtA = "SELECT agi_output,local_gmt,conf_engine FROM servers where server_ip = '$VARserver_ip';";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -147,6 +149,7 @@ while ($sthArows > $rec_count)
 	@aryA = $sthA->fetchrow_array;
 	$DBagi_output =		$aryA[0];
 	$local_gmt =		$aryA[1];
+	$conf_engine =		$aryA[2];
 	if ($isdst) {$local_gmt++;}
 	if ($DBagi_output =~ /STDERR/)	{$AGILOG = '1';}
 	if ($DBagi_output =~ /FILE/)	{$AGILOG = '2';}
@@ -563,11 +566,16 @@ if ($stage =~ /accepted/i)
 				$affected_rowsE = $dbhA->do($stmtA);
 				if ($AGILOG) {$agi_string = "--    vicidial_3way_press_live transfer DELETE: |$affected_rowsE|$stmtA|";   &agi_output;}
 
+				if ($conf_engine eq "CONFBRIDGE")
+					{$XFERstr = "8$CALLconf_exten";}
+				else
+					{$XFERstr = "7$CALLconf_exten";}
+
 				if ($AGILOG) {$agi_string = "3-WAY AGENT TRANSFER: |$CALLuser|$CALLserver_ip|$CALLconf_exten|$calleridname|";   &agi_output;}
 				print "SET CONTEXT $ext_context\n";
 					$result = <STDIN>;
 					checkresult($result);
-				print "SET EXTENSION 7$CALLconf_exten\n";
+				print "SET EXTENSION $XFERstr\n";
 					$result = <STDIN>;
 					checkresult($result);
 				print "SET PRIORITY 1\n";
