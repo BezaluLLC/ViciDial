@@ -69,6 +69,7 @@ $one_mysql_log=0;
 $MT[0]='';
 $timeout=100;
 $conf_engine='';
+$conf_table = 'vicidial_conferences';
 
 
 $now_date_epoch = time();
@@ -157,6 +158,7 @@ while ($sthArows > $rec_count)
 	$rec_count++;
 	}
 $sthA->finish();
+if ($conf_engine eq "CONFBRIDGE") {$conf_table = 'vicidial_confbridges';}
 
 #############################################
 ##### START SYSTEM SETTINGS LOOKUP      #####
@@ -555,10 +557,10 @@ if ($stage =~ /accepted/i)
 				### Update vicidial_conferences to leave_3way=1
 			#	$Ttimeout='Xtimeout9';
 			#	$stmtA="UPDATE vicidial_conferences set leave_3way='1', leave_3way_datetime=NOW(), extension='3WAY_$CALLuser$Ttimeout' where server_ip='$CALLserver_ip' and conf_exten='$CALLconf_exten';";
-				$stmtA="UPDATE vicidial_conferences set leave_3way='1', leave_3way_datetime=NOW(), extension='3WAY_$CALLuser' where server_ip='$CALLserver_ip' and conf_exten='$CALLconf_exten';";
+				$stmtA="UPDATE $conf_table set leave_3way='1', leave_3way_datetime=NOW(), extension='3WAY_$CALLuser' where server_ip='$CALLserver_ip' and conf_exten='$CALLconf_exten';";
 					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 				$affected_rowsD = $dbhA->do($stmtA);
-				if ($AGILOG) {$agi_string = "--    vicidial_conferences UPDATE: |$affected_rowsD|$stmtA|";   &agi_output;}
+				if ($AGILOG) {$agi_string = "--    $conf_table UPDATE: |$affected_rowsD|$stmtA|";   &agi_output;}
 
 				### Delete the call in vicidial_3way_press_live
 				$stmtA="DELETE from vicidial_3way_press_live where call_3way_id='$calleridname';";

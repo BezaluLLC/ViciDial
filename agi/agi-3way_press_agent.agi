@@ -50,6 +50,7 @@ $MT[0]='';
 $timeout=100;
 $Local_dial_timeout=80;
 $conf_engine='';
+$conf_table = 'vicidial_conferences';
 
 
 $now_date_epoch = time();
@@ -139,6 +140,7 @@ while ($sthArows > $rec_count)
 	$rec_count++;
 	}
 $sthA->finish();
+if ($conf_engine eq "CONFBRIDGE") {$conf_table = 'vicidial_confbridges';}
 
 #############################################
 ##### START SYSTEM SETTINGS LOOKUP      #####
@@ -533,7 +535,7 @@ while ($wait_loop < $timeout)
 			{
 			#grab open session
 			$free_session_count=0;
-			$stmtA="SELECT count(*) FROM vicidial_conferences where server_ip='$CALLserver_ip' and ((extension='') or (extension is null)) and conf_exten != '$CALLsession_id';";
+			$stmtA="SELECT count(*) FROM $conf_table where server_ip='$CALLserver_ip' and ((extension='') or (extension is null)) and conf_exten != '$CALLsession_id';";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -552,14 +554,14 @@ while ($wait_loop < $timeout)
 			else
 				{
 				### Update vicidial_conferences to grab available session
-				$stmtA="UPDATE vicidial_conferences set extension='Local/8300$CALLuser$tsSQLdate', leave_3way='0' where server_ip='$CALLserver_ip' and ((extension='') or (extension is null)) and conf_exten != '$CALLsession_id' limit 1;";
+				$stmtA="UPDATE $conf_table set extension='Local/8300$CALLuser$tsSQLdate', leave_3way='0' where server_ip='$CALLserver_ip' and ((extension='') or (extension is null)) and conf_exten != '$CALLsession_id' limit 1;";
 					if ($AGILOG) {$agi_string = "|$stmtA|";   &agi_output;}
 				$affected_rowsC = $dbhA->do($stmtA);
-				if ($AGILOG) {$agi_string = "--    vicidial_conferences UPDATE: |$affected_rowsC|$stmtA|";   &agi_output;}
+				if ($AGILOG) {$agi_string = "--    $conf_table UPDATE: |$affected_rowsC|$stmtA|";   &agi_output;}
 
 				# Grab the session_id that was reserved
 				$CALLconf_exten='';
-				$stmtA="SELECT conf_exten from vicidial_conferences where server_ip='$CALLserver_ip' and extension='Local/8300$CALLuser$tsSQLdate' and conf_exten != '$CALLsession_id';";
+				$stmtA="SELECT conf_exten from $conf_table where server_ip='$CALLserver_ip' and extension='Local/8300$CALLuser$tsSQLdate' and conf_exten != '$CALLsession_id';";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
