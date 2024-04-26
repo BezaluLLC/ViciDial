@@ -4257,7 +4257,7 @@ if ($function == 'transfer_conference')
 								if (preg_match("/YES/i",$md_check))
 									{
 									# check for still-active previous 3-way calls from this agent and send error if any are found
-									$stmt = "select count(*) from vicidial_3way_press_live where user='$agent_user' and status!='HUNGUP';";
+									$stmt = "select count(*) from vicidial_3way_press_live where user='$agent_user' and status NOT IN('HUNGUP','DEFEATED','TRANSFER','TOOSLOW','DECLINED');";
 									if ($DB) {echo "$stmt\n";}
 									$rslt=mysql_to_mysqli($stmt, $link);
 									$VDTW_live_ct = mysqli_num_rows($rslt);
