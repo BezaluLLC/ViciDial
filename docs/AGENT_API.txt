@@ -1,4 +1,4 @@
-AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2024-04-25
+AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2024-04-27
 
 This document describes the functions of an API(Application Programming Interface)
 for the VICIDIAL Agent screen. This functionality will be rather limited at first
@@ -718,7 +718,9 @@ VALUES:
  multi_dial_phones - 
   OPTIONAL, for use only with "Agent 3-way Press-1 Calls", contains up to 10 phone numbers separated by commas: "2125551212,4075551212,3125551212" (duplicates will be removed)
  md_check - 
-  OPTIONAL, for use only with 'multi_dial_phones' option above, if this is set to 'YES' it will check for still-active previous 3-way calls and show an error if any are found
+  OPTIONAL, for use only with 'multi_dial_phones' option above, if this is set to 'YES' it will check for still-active previous 3-way press-1 calls and show an error if any are found
+ tw_check - 
+  OPTIONAL, for use only with the dialing 3-way call options above, if this is set to 'YES' it will check for still-active previous 3-way calls and show an error if any are found
 
 EXAMPLE URLS:
 http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=transfer_conference&value=HANGUP_XFER
@@ -746,6 +748,7 @@ ERROR: caller_id_number from group_alias is not valid - 6666|TESTING|123
 ERROR: group_alias is not valid - 6666|TESTING
 ERROR: cid_choice is not valid - 6666|TESTING
 ERROR: agent_user has previous active 3-way calls - 6666|1|0|YES
+ERROR: agent_user has current active 3-way call - 6666|1|0|YES
 SUCCESS: transfer_conference function set - LOCAL_CLOSER|SALESLINE||YES|6666|M2141842580000000044|
 
 

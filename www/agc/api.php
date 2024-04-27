@@ -114,10 +114,11 @@
 # 231222-2105 - Added multi_dial_phones option to the transfer_conference function
 # 240219-1500 - Added daily_limit setting to change_ingroups function
 # 240425-1901 - Added md_check option for transfer_conference function
+# 240427-0809 - Added tw_check option for transfer_conference function
 #
 
-$version = '2.14-79';
-$build = '240425-1901';
+$version = '2.14-80';
+$build = '240427-0809';
 $php_script = 'api.php';
 
 $startMS = microtime();
@@ -295,6 +296,8 @@ if (isset($_GET["multi_dial_phones"]))			{$multi_dial_phones=$_GET["multi_dial_p
 	elseif (isset($_POST["multi_dial_phones"]))	{$multi_dial_phones=$_POST["multi_dial_phones"];}
 if (isset($_GET["md_check"]))			{$md_check=$_GET["md_check"];}
 	elseif (isset($_POST["md_check"]))	{$md_check=$_POST["md_check"];}
+if (isset($_GET["tw_check"]))			{$tw_check=$_GET["tw_check"];}
+	elseif (isset($_POST["tw_check"]))	{$tw_check=$_POST["tw_check"];}
 
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
@@ -358,6 +361,7 @@ $campaign_dnc_check=preg_replace("/[^-_0-9a-zA-Z]/","",$campaign_dnc_check);
 $notification_date = preg_replace('/[^- \:0-9]/','',$notification_date);
 $multi_dial_phones = preg_replace('/[^\,0-9]/','',$multi_dial_phones);
 $md_check = preg_replace("/[^0-9a-zA-Z]/","",$md_check);
+$tw_check = preg_replace("/[^0-9a-zA-Z]/","",$tw_check);
 
 if ($non_latin < 1)
 	{
@@ -4030,12 +4034,15 @@ if ($function == 'transfer_conference')
 		$row=mysqli_fetch_row($rslt);
 		if ($row[0] > 0)
 			{
-			$stmt = "select lead_id,callerid from vicidial_live_agents where user='$agent_user';";
+			$stmt = "select lead_id,callerid,server_ip,conf_exten,status from vicidial_live_agents where user='$agent_user';";
 			if ($DB) {echo "$stmt\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 			$row=mysqli_fetch_row($rslt);
-			$lead_id =	$row[0];
-			$callerid = $row[1];
+			$lead_id =			$row[0];
+			$callerid =			$row[1];
+			$AGENTserver_ip =	$row[2];
+			$AGENTconf_exten =	$row[3];
+			$AGENTstatus =		$row[4];
 			if ( ($lead_id > 0) and (strlen($callerid)>15) )
 				{
 				### START In-group transfer or bridge ###
@@ -4224,6 +4231,7 @@ if ($function == 'transfer_conference')
 						$multi_dial_phones_STRING='';
 						if (strlen($multi_dial_phones) > 4)
 							{
+							### START 3-way press-1 multi-dial calls processing ###
 							$multi_dial_phonesARY=array();
 							$multi_dial_phones_ct=0;
 							if (preg_match("/,/",$multi_dial_phones))
@@ -4256,8 +4264,9 @@ if ($function == 'transfer_conference')
 								$md_check_ct=0;
 								if (preg_match("/YES/i",$md_check))
 									{
+									$half_hour_ago = date("Y-m-d H:i:s", mktime(date("H"),date("i")-30,date("s"),date("m"),date("d"),date("Y")));
 									# check for still-active previous 3-way calls from this agent and send error if any are found
-									$stmt = "select count(*) from vicidial_3way_press_live where user='$agent_user' and status NOT IN('HUNGUP','DEFEATED','TRANSFER','TOOSLOW','DECLINED');";
+									$stmt = "select count(*) from vicidial_3way_press_live where user='$agent_user' and status NOT IN('HUNGUP','DEFEATED','TRANSFER','TOOSLOW','DECLINED') and call_date > \"$half_hour_ago\";";
 									if ($DB) {echo "$stmt\n";}
 									$rslt=mysql_to_mysqli($stmt, $link);
 									$VDTW_live_ct = mysqli_num_rows($rslt);
@@ -4285,7 +4294,44 @@ if ($function == 'transfer_conference')
 									}
 								}
 							$multi_dial_phones_OUTPUT = "|Multi-phones: $vp $mp $affected_rowsVP";
+							### END 3-way press-1 multi-dial calls processing ###
 							}
+
+						### START Check for already active 3-way calls in agent session, if enabled ###
+						if (preg_match("/YES/i",$tw_check))
+							{
+							$conf_engine='';
+							$conf_table = 'vicidial_conferences';
+							$tw_check_ct=0;
+
+							$stmt = "SELECT conf_engine from servers where server_ip='$AGENTserver_ip';";
+							if ($DB) {echo "$stmt\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$row=mysqli_fetch_row($rslt);
+							$conf_engine =	$row[0];
+							if (preg_match("/CONFBRIDGE/i",$conf_engine)) {$conf_table = 'vicidial_confbridges';}
+
+							# check for active 3-way call from this agent and send error if any are found
+							$stmt = "SELECT count(*) from live_sip_channels where server_ip='$AGENTserver_ip' and channel_group LIKE \"DC%W\" and extension='$AGENTconf_exten';";
+							if ($DB) {echo "$stmt\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$TW_live_ct = mysqli_num_rows($rslt);
+							if ($TW_live_ct > 0)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$tw_check_ct	= $row[0];
+								}
+							if ($tw_check_ct > 0)
+								{
+								$result = _QXZ("ERROR");
+								$result_reason = _QXZ("agent_user has current active 3-way call");
+								$data = "$tw_check_ct|0|$tw_check";
+								echo "$result: $result_reason - $agent_user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							}
+						### END Check for already active 3-way calls in agent session, if enabled ###
 
 						$stmt="UPDATE vicidial_live_agents set external_transferconf='$external_transferconf' where user='$agent_user';";
 							if ($format=='debug') {echo "\n<!-- $stmt -->";}
