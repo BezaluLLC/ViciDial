@@ -115,10 +115,11 @@
 # 240219-1500 - Added daily_limit setting to change_ingroups function
 # 240425-1901 - Added md_check option for transfer_conference function
 # 240427-0809 - Added tw_check option for transfer_conference function
+# 240429-2220 - Added PARK_XFER|GRAB_XFER options for park_call function
 #
 
-$version = '2.14-80';
-$build = '240427-0809';
+$version = '2.14-81';
+$build = '240429-2220';
 $php_script = 'api.php';
 
 $startMS = microtime();
@@ -3897,7 +3898,7 @@ if ($function == 'send_dtmf')
 ################################################################################
 if ($function == 'park_call')
 	{
-	if ( (strlen($value)<10) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
+	if ( (!preg_match("/PARK_CUSTOMER|GRAB_CUSTOMER|PARK_IVR_CUSTOMER|GRAB_IVR_CUSTOMER|PARK_XFER|GRAB_XFER/",$value)) or ( (strlen($agent_user)<1) and (strlen($alt_user)<2) ) )
 		{
 		$result = _QXZ("ERROR");
 		$result_reason = _QXZ("park_call not valid");

@@ -739,10 +739,11 @@
 # 240415-1852 - Added script_tab_height campaign option
 # 240416-1750 - Fix for HotKey issue #1518
 # 240420-2228 - ConfBridge code added
+# 240429-2237 - Added PARK_XFER|GRAB_XFER options for park_call API function
 #
 
-$version = '2.14-705c';
-$build = '240420-2228';
+$version = '2.14-706c';
+$build = '240429-2237';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
@@ -8273,6 +8274,10 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{mainxfer_send_redirect('ParKivr',lastcustchannel,lastcustserverip);}
 						if (api_parkcustomer == 'GRAB_IVR_CUSTOMER')
 							{mainxfer_send_redirect('FROMParKivr',lastcustchannel,lastcustserverip);}
+						if (api_parkcustomer == 'PARK_XFER')
+							{mainxfer_send_redirect('ParKXfeR',lastxferchannel,server_ip,'','','','YES');}
+						if (api_parkcustomer == 'GRAB_XFER')
+							{mainxfer_send_redirect('FROMParKXfeR',lastxferchannel,server_ip,'','','','YES');}
 						if (api_dtmf.length > 0)
 							{
 							var REGdtmfPOUND = new RegExp("P","g");

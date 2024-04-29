@@ -155,10 +155,11 @@
 # 230418-1022 - Added dial_override_limit options.php setting
 # 230726-0857 - Fix for rare vicidial_closer_log issue on Voicemail transfers
 # 240420-2233 - ConfBridge code added
+# 240430-1046 - Allow for park/grab of xfer line through API
 #
 
-$version = '2.14-102';
-$build = '240420-2233';
+$version = '2.14-103';
+$build = '240430-1046';
 $php_script = 'manager_send.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=161;
@@ -1775,6 +1776,11 @@ if ($ACTION=="RedirectToParkXfer")
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02141',$user,$server_ip,$session_name,$one_mysql_log);}
 			$ACTION="Redirect";
 
+			$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02091',$user,$server_ip,$session_name,$one_mysql_log);}
+
 		#	$fp = fopen ("./vicidial_debug.txt", "a");
 		#	fwrite ($fp, "$NOW_TIME|MS_LOG_0|$queryCID|$stmt|\n");
 		#	fclose($fp);
@@ -1811,6 +1817,11 @@ if ($ACTION=="RedirectFromParkXfer")
 			$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02142',$user,$server_ip,$session_name,$one_mysql_log);}
 			$ACTION="Redirect";
+
+			$stmt="UPDATE vicidial_live_agents SET external_park='' where user='$user';";
+				if ($format=='debug') {echo "\n<!-- $stmt -->";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'02091',$user,$server_ip,$session_name,$one_mysql_log);}
 			}
 		}
 	}
