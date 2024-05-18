@@ -6148,12 +6148,13 @@ if ($SSscript_remove_js > 0)
 # 240415-1858 - Added script_tab_height campaign option
 # 240418-0836 - Added link to Agent Time-Off Interface in Admin Utilities page
 # 240419-1817 - Added call_log_days campaign option
+# 240516-1720 - Added ALT option for start_call_url fields
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-916a';
-$build = '240419-1817';
+$admin_version = '2.14-917a';
+$build = '240516-1720';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -26746,7 +26747,7 @@ if ($ADD==31)
 		else		{$camp_accid_color=$campaigns_color;}
 	echo "<font size=2 color=$subcamp_font face=\"ARIAL,HELVETICA\"> <B>$campaign_id</B>: </font><BR>";
 	echo "<TABLE WIDTH=930 CELLPADDING=2 CELLSPACING=0><TR BGCOLOR=\"$campaigns_color\">\n";
-	echo "<TD ALIGN=CENTER> &nbsp; <a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Basic")."</font></a></TD>";
+	echo "<TD ALIGN=CENTER><font size=0> &nbsp; <a href=\"$PHP_SELF?ADD=34&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Basic")."</font></a></TD>";
 	echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_detail_color\"> <a href=\"$PHP_SELF?ADD=31&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Detail")." </font></a> </TD>";
 	echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_statuses_color\"><a href=\"$PHP_SELF?ADD=31&SUB=22&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("Statuses")."</font></a></TD>";
 	echo "<TD ALIGN=CENTER BGCOLOR=\"$camp_hotkeys_color\"><a href=\"$PHP_SELF?ADD=31&SUB=23&campaign_id=$campaign_id\" STYLE=\"text-decoration:none;\"><font class=\"sub_sub_head_links\">"._QXZ("HotKeys")."</font></a></TD>";
@@ -28828,7 +28829,23 @@ if ($ADD==31)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("CRM Popup Address").": </td><td align=left><input type=text name=crm_login_address size=70 maxlength=5000 value=\"$crm_login_address\">$NWB#campaigns-crm_login_address$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Start Call URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=5000 value=\"$start_call_url\">$NWB#campaigns-start_call_url$NWE</td></tr>\n";
+		if ($start_call_url == 'ALT')
+			{
+			$stmt="SELECT count(*) from vicidial_url_multi where campaign_id='$campaign_id' and entry_type='campaign' and url_type='start';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vum_to_print = mysqli_num_rows($rslt);
+			if ($vum_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$vum_count = $rowx[0]; 
+				}
+
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"admin_url_multi.php?DB=$DB&campaign_id=$campaign_id&entry_type=campaign&url_type=start\">"._QXZ("Start Call URL")."</a>: </td><td align=left><input type=text name=start_call_url size=10 maxlength=5000 value=\"$start_call_url\">$NWB#campaigns-start_call_url$NWE <a href=\"admin_url_multi.php?DB=$DB&campaign_id=$campaign_id&entry_type=campaign&url_type=start\"> "._QXZ("Alternate Start URLs Defined").": $vum_count</a></td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Start Call URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=5000 value=\"$start_call_url\">$NWB#campaigns-start_call_url$NWE</td></tr>\n";
+			}
 
 		if ($dispo_call_url == 'ALT')
 			{
@@ -34724,7 +34741,23 @@ if ($ADD==3111)
 
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Enter In-Group URL").": </td><td align=left><input type=text name=enter_ingroup_url size=70 maxlength=5000 value=\"$enter_ingroup_url\">$NWB#inbound_groups-enter_ingroup_url$NWE</td></tr>\n";
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Start Call URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=5000 value=\"$start_call_url\">$NWB#inbound_groups-start_call_url$NWE</td></tr>\n";
+		if ($start_call_url == 'ALT')
+			{
+			$stmt="SELECT count(*) from vicidial_url_multi where campaign_id='$group_id' and entry_type='ingroup' and url_type='start';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vum_to_print = mysqli_num_rows($rslt);
+			if ($vum_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$vum_count = $rowx[0]; 
+				}
+
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"admin_url_multi.php?DB=$DB&campaign_id=$group_id&entry_type=ingroup&url_type=start\">"._QXZ("Start Call URL")."</a>: </td><td align=left><input type=text name=start_call_url size=10 maxlength=2000 value=\"$start_call_url\">$NWB#inbound_groups-start_call_url$NWE <a href=\"admin_url_multi.php?DB=$DB&campaign_id=$group_id&entry_type=ingroup&url_type=start\"> "._QXZ("Alternate Start URLs Defined").": $vum_count</a></td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Start Call URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=5000 value=\"$start_call_url\">$NWB#inbound_groups-start_call_url$NWE</td></tr>\n";
+			}
 
 		if ($dispo_call_url == 'ALT')
 			{
@@ -35745,7 +35778,23 @@ if ($ADD==3811)
 */
 
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Start Email URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=5000 value=\"$start_call_url\">$NWB#inbound_groups-start_email_url$NWE</td></tr>\n";
+		if ($start_call_url == 'ALT')
+			{
+			$stmt="SELECT count(*) from vicidial_url_multi where campaign_id='$group_id' and entry_type='ingroup' and url_type='start';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vum_to_print = mysqli_num_rows($rslt);
+			if ($vum_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$vum_count = $rowx[0]; 
+				}
+
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"admin_url_multi.php?DB=$DB&campaign_id=$group_id&entry_type=ingroup&url_type=start\">"._QXZ("Start Email URL")."</a>: </td><td align=left><input type=text name=start_call_url size=10 maxlength=2000 value=\"$start_call_url\">$NWB#inbound_groups-start_call_url$NWE <a href=\"admin_url_multi.php?DB=$DB&campaign_id=$group_id&entry_type=ingroup&url_type=start\"> "._QXZ("Alternate Start URLs Defined").": $vum_count</a></td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Start Email URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=5000 value=\"$start_call_url\">$NWB#inbound_groups-start_email_url$NWE</td></tr>\n";
+			}
 
 		if ($dispo_call_url == 'ALT')
 			{
@@ -36590,7 +36639,23 @@ if ($ADD==3911)
 */
 
 
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Start Chat URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=5000 value=\"$start_call_url\">$NWB#inbound_groups-start_chat_url$NWE</td></tr>\n";
+		if ($start_call_url == 'ALT')
+			{
+			$stmt="SELECT count(*) from vicidial_url_multi where campaign_id='$group_id' and entry_type='ingroup' and url_type='start';";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$vum_to_print = mysqli_num_rows($rslt);
+			if ($vum_to_print > 0) 
+				{
+				$rowx=mysqli_fetch_row($rslt);
+				$vum_count = $rowx[0]; 
+				}
+
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right><a href=\"admin_url_multi.php?DB=$DB&campaign_id=$group_id&entry_type=ingroup&url_type=start\">"._QXZ("Start Chat URL")."</a>: </td><td align=left><input type=text name=start_call_url size=10 maxlength=2000 value=\"$start_call_url\">$NWB#inbound_groups-start_call_url$NWE <a href=\"admin_url_multi.php?DB=$DB&campaign_id=$group_id&entry_type=ingroup&url_type=start\"> "._QXZ("Alternate Start URLs Defined").": $vum_count</a></td></tr>\n";
+			}
+		else
+			{
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Start Chat URL").": </td><td align=left><input type=text name=start_call_url size=70 maxlength=5000 value=\"$start_call_url\">$NWB#inbound_groups-start_chat_url$NWE</td></tr>\n";
+			}
 
 		if ($dispo_call_url == 'ALT')
 			{

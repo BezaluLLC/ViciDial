@@ -861,6 +861,9 @@ OTHER CHANGES:
 245. Added "Call Log View Days" campaign setting, to allow restrictions to the
 	number of days an agent can go back to look at their call logs.
 
+246. Added ALT option for "Start Call URL" to allow for multiple URLs to be
+	requested at the agent-start of a call.
+
 
 
 

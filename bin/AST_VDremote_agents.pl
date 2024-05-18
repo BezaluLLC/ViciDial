@@ -57,7 +57,10 @@
 # 230523-0825 - Added User inbound_credits feature
 # 240219-1518 - Added daily_limit inbound option
 # 240420-2246 - Added ConfBridge code
+# 240516-2149 - Allow for ALT start_call_url, added --version flag
 #
+
+$build = '240516-2149';
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -72,11 +75,17 @@ if (length($ARGV[0])>1)
 		{
 		print "allowed run time options:\n";
 		print "  [--help] = this screen\n";
+		print "  [--version] = show script build version\n";
 		print "  [--test] = test\n";
 		print "  [--debug] = verbose debug messages\n";
 		print "  [--debugX] = extra verbose debug messages\n";
 		print "  [--delay=XXX] = delay of XXX seconds per loop, default 2 seconds\n";
 		print "\n";
+		exit;
+		}
+	if ($args =~ /--version/i)
+		{
+		print "script build: $build \n";
 		exit;
 		}
 	else
@@ -580,7 +589,7 @@ while($one_day_interval > 0)
 
 				### This is where the call to the start_call_url launch goes
 
-				if (length($start_call_url) > 5) 
+				if ( (length($start_call_url) > 5) || ($start_call_url =~ /^ALT$/) )
 					{
 					$launch = $PATHhome . "/AST_send_URL.pl";
 					$launch .= " --SYSLOG" if ($SYSLOG);
