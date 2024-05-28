@@ -6149,12 +6149,13 @@ if ($SSscript_remove_js > 0)
 # 240418-0836 - Added link to Agent Time-Off Interface in Admin Utilities page
 # 240419-1817 - Added call_log_days campaign option
 # 240516-1720 - Added ALT option for start_call_url fields
+# 240528-1722 - Added display of Dial Prefixes column on the CAMPAIGH LISTINGS page
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-917a';
-$build = '240516-1720';
+$admin_version = '2.14-918a';
+$build = '240528-1722';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -45678,11 +45679,11 @@ if ($ADD==10)
 	$camp_group_SQL = $LOGadmin_viewable_groupsSQL;
 	if (strlen($whereLOGallowed_campaignsSQL) < 6)
 		{$camp_group_SQL = $whereLOGadmin_viewable_groupsSQL;}
-	$stmt="SELECT campaign_id,campaign_name,active,dial_method,auto_dial_level,lead_order,dial_statuses,user_group from vicidial_campaigns $whereLOGallowed_campaignsSQL $camp_group_SQL order by campaign_id;";
+	$stmt="SELECT campaign_id,campaign_name,active,dial_method,auto_dial_level,lead_order,dial_statuses,user_group,dial_prefix,three_way_dial_prefix,manual_dial_prefix from vicidial_campaigns $whereLOGallowed_campaignsSQL $camp_group_SQL order by campaign_id;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$campaigns_to_print = mysqli_num_rows($rslt);
 
-	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<center><TABLE width=900 cellspacing=0 cellpadding=1>\n";
 	echo "<tr bgcolor=black>";
 	echo "<td NOWRAP><font size=1 color=white align=left><B>"._QXZ("CAMPAIGN ID")."</B></td>";
 	echo "<td NOWRAP><font size=1 color=white><CENTER><B>"._QXZ("NAME")."</B></CENTER></td>";
@@ -45694,6 +45695,7 @@ if ($ADD==10)
 		echo "<td NOWRAP><font size=1 color=white><B> "._QXZ("LEVEL")." &nbsp; </B></td>";
 		echo "<td NOWRAP><font size=1 color=white><B>"._QXZ("LEAD ORDER")." &nbsp; </B></td>";
 		echo "<td NOWRAP><font size=1 color=white><B>"._QXZ("DIAL STATUSES")." &nbsp; </B></td>";
+		echo "<td NOWRAP><font size=1 color=white><B>"._QXZ("DP")." &nbsp; </B></td>";
 		}
 	echo "<td align=center NOWRAP><font size=1 color=white><B>"._QXZ("MODIFY")."</B></td></tr>\n";
 
@@ -45715,10 +45717,23 @@ if ($ADD==10)
 			echo "<td><font size=1>".(preg_match('/\-\-ALL\-\-/', $row[7]) ? _QXZ("$row[7]") : $row[7])." &nbsp; </td>";
 			if ($SSoutbound_autodial_active > 0)
 				{
+				$dial_prefix =				$row[8];
+				$three_way_dial_prefix =	$row[9];
+				$manual_dial_prefix =		$row[10];
+				$adtl_prefix=0;
+				$dial_prefix_display = "$dial_prefix";
+				if ( (strlen($manual_dial_prefix) > 0) and (!preg_match("/^$dial_prefix$/",$manual_dial_prefix)) )
+					{$dial_prefix_display .= " - $manual_dial_prefix";   $adtl_prefix++;}
+				if ( (strlen($three_way_dial_prefix) > 0) and (!preg_match("/^$dial_prefix$/",$three_way_dial_prefix)) )
+					{$dial_prefix_display .= " - $three_way_dial_prefix";   $adtl_prefix++;}
+				if ($adtl_prefix > 0)
+					{$dial_prefix_display .= " &nbsp;";}
+				
 				echo "<td><font size=1>"._QXZ("$row[3]")." &nbsp; </td>";
 				echo "<td><font size=1>$row[4] &nbsp; </td>";
 				echo "<td><font size=1>"._QXZ("$row[5]")." &nbsp; </td>";
 				echo "<td><font size=1>$row[6]</td>";
+				echo "<td NOWRAP><font size=1> $dial_prefix_display </td>";
 				}
 			echo "<td><font size=1><a href=\"$PHP_SELF?ADD=31&campaign_id=$row[0]\">"._QXZ("MODIFY")."</a></td></tr>\n";
 			$p++;
