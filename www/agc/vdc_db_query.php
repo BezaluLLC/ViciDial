@@ -550,10 +550,11 @@
 # 240420-0836 - Added call_log_days campaign option
 # 240420-2227 - ConfBridge code added
 # 240517-0901 - Added ALT option for start_call_url fields
+# 240612-0206 - Fix for extension_appended_cidname newer options
 #
 
-$version = '2.14-443';
-$build = '240517-0901';
+$version = '2.14-444';
+$build = '240612-0206';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=913;
@@ -5020,7 +5021,7 @@ if ($ACTION == 'manDiaLnextCaLL')
 
 				### check for extension append in campaign
 				$use_eac=0;
-				$stmt = "SELECT count(*) FROM vicidial_campaigns where extension_appended_cidname='Y' and campaign_id='$campaign';";
+				$stmt = "SELECT extension_appended_cidname FROM vicidial_campaigns where campaign_id='$campaign';";
 				$rslt=mysql_to_mysqli($stmt, $link);
 					if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00322',$user,$server_ip,$session_name,$one_mysql_log);}
 				if ($DB) {echo "$stmt\n";}
@@ -5034,9 +5035,14 @@ if ($ACTION == 'manDiaLnextCaLL')
 				# Create unique calleridname to track the call: MmddhhmmssLLLLLLLLLL
 				$MqueryCID = "M$CIDdate$PADlead_id";
 				$EAC='';
-				if ($use_eac > 0)
+				if (preg_match("/^Y/",$use_eac))
 					{
-					$eac_extension = preg_replace("/PJSIP\/|SIP\/|IAX2\/|Zap\/|DAHDI\/|Local\//",'',$eac_phone);
+					if (preg_match("/USER/",$use_eac))
+						{$eac_extension = $user;}
+					else
+						{$eac_extension = preg_replace("/PJSIP\/|SIP\/|IAX2\/|Zap\/|DAHDI\/|Local\//",'',$eac_phone);}
+					if (preg_match("/WITH_CAMPAIGN/",$use_eac))
+						{$eac_extension .= " $campaign";}
 					$EAC=" $eac_extension";
 					}
 
@@ -6398,7 +6404,7 @@ if ($ACTION == 'manDiaLonly')
 			$use_internal_dnc =						$row[1];
 			$use_campaign_dnc =						$row[2];
 			$use_other_campaign_dnc =				$row[3];
-			$extension_appended_cidname =			$row[4];
+			$use_eac =								$row[4];
 			$start_call_url =						$row[5];
 			$scheduled_callbacks_auto_reschedule =	$row[6];
 			$dial_timeout_lead_container =			$row[7];
@@ -6415,8 +6421,6 @@ if ($ACTION == 'manDiaLonly')
 			$camp_custom_five =						$row[18];
 			$daily_phone_number_call_limit =		$row[19];
 			$state_descriptions =					$row[20];
-			if ($extension_appended_cidname == 'Y')
-				{$use_eac++;}
 			}
 
 		# check for user overrides
@@ -7102,9 +7106,14 @@ if ($ACTION == 'manDiaLonly')
 		# Create unique calleridname to track the call: MmddhhmmssLLLLLLLLLL
 			$MqueryCID = "M$CIDdate$PADlead_id";
 		$EAC='';
-		if ($use_eac > 0)
+		if (preg_match("/^Y/",$use_eac))
 			{
-			$eac_extension = preg_replace("/PJSIP\/|SIP\/|IAX2\/|Zap\/|DAHDI\/|Local\//",'',$eac_phone);
+			if (preg_match("/USER/",$use_eac))
+				{$eac_extension = $user;}
+			else
+				{$eac_extension = preg_replace("/PJSIP\/|SIP\/|IAX2\/|Zap\/|DAHDI\/|Local\//",'',$eac_phone);}
+			if (preg_match("/WITH_CAMPAIGN/",$use_eac))
+				{$eac_extension .= " $campaign";}
 			$EAC=" $eac_extension";
 			}
 		if ($CCID_on) {$CIDstring = "\"$MqueryCID$EAC\" <$CCID>";}
