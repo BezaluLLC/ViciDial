@@ -853,7 +853,7 @@ if ($length_in_sec_min || $length_in_sec_max)
 		$and_length_in_sec_sql.=" and length_in_sec>='$length_in_sec_min' ";
 
 		# Closer log
-		$and_closer_length_in_sec_sql.=" and (length_in_sec-queue_seconds)>='$length_in_sec_min' ";
+		$and_closer_length_in_sec_sql.=" and if(comments='EMAIL', length_in_sec, (length_in_sec-queue_seconds))>='$length_in_sec_min' ";
 
 		# Agent log
 		$and_agent_length_in_sec_sql.=" and talk_sec>='$length_in_sec_min' ";
@@ -865,7 +865,7 @@ if ($length_in_sec_min || $length_in_sec_max)
 		$and_length_in_sec_sql.=" and length_in_sec<='$length_in_sec_max' ";
 
 		# Closer log
-		$and_closer_length_in_sec_sql.=" and (length_in_sec-queue_seconds)<='$length_in_sec_max' ";
+		$and_closer_length_in_sec_sql.=" and if(comments='EMAIL', length_in_sec, (length_in_sec-queue_seconds))<='$length_in_sec_max' ";
 
 		# Agent log
 		$and_agent_length_in_sec_sql.=" and talk_sec<='$length_in_sec_max' ";

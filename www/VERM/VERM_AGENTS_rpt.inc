@@ -369,7 +369,7 @@ foreach ($agent_sessions_array as $user => $sessions)
 			$call_stmt_inb="";
 			if ($atomic_queue_ingroups_str!="")
 				{
-				$vcl_uniqueid_stmt="select uniqueid, status, length_in_sec-queue_seconds  from vicidial_closer_log $vicidial_closer_log_SQL and call_date+INTERVAL ceil(queue_seconds) SECOND>=from_unixtime(".$agent_sessions_array["$user"]["$start_event_date"]["start_hour"].") and call_date+INTERVAL ceil(queue_seconds) SECOND<=from_unixtime(".$agent_sessions_array["$user"]["$start_event_date"]["end_hour"].") and user='$user' and status!='AFTHRS'";
+				$vcl_uniqueid_stmt="select uniqueid, status, if(comments='EMAIL', length_in_sec, length_in_sec-queue_seconds)  from vicidial_closer_log $vicidial_closer_log_SQL and call_date+INTERVAL ceil(if(comments='EMAIL', 0, queue_seconds)) SECOND>=from_unixtime(".$agent_sessions_array["$user"]["$start_event_date"]["start_hour"].") and call_date+INTERVAL ceil(if(comments='EMAIL', 0, queue_seconds)) SECOND<=from_unixtime(".$agent_sessions_array["$user"]["$start_event_date"]["end_hour"].") and user='$user' and status!='AFTHRS'";
 			
 				$vcl_uniqueid_stmt.=" and call_date>=from_unixtime(".$agent_sessions_array["$user"]["$start_event_date"]["start_hour"].")-INTERVAL 24 HOUR and call_date<=from_unixtime(".$agent_sessions_array["$user"]["$start_event_date"]["end_hour"].")+INTERVAL 24 HOUR";
 				# $DB=1;

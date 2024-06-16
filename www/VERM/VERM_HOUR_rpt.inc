@@ -132,7 +132,7 @@ for ($q=0; $q<1440; $q+=$hourly_slot)
 	$user_array["$key"]=array();
 	}
 
-$stmt="select substr(call_date-INTERVAL (unix_timestamp(call_date)%".($hourly_slot*60).") SECOND, 12, 5) as cdate, campaign_id, status, user, length_in_sec as call_length, uniqueid, '0' as wait_sec, 'O' as direction, '1' as queue_position, lead_id from vicidial_log $vicidial_log_SQL $and_NANQUE_clause $exc_addtl_statuses UNION ALL select substr(call_date-INTERVAL (unix_timestamp(call_date)%".($hourly_slot*60).") SECOND, 12, 5) as cdate, campaign_id, status, user, length_in_sec-queue_seconds as call_length, uniqueid, queue_seconds as wait_sec, 'I' as direction, queue_position, lead_id from vicidial_closer_log $vicidial_closer_log_SQL $and_NANQUE_clause $exc_addtl_statuses order by cdate";
+$stmt="select substr(call_date-INTERVAL (unix_timestamp(call_date)%".($hourly_slot*60).") SECOND, 12, 5) as cdate, campaign_id, status, user, length_in_sec as call_length, uniqueid, '0' as wait_sec, 'O' as direction, '1' as queue_position, lead_id from vicidial_log $vicidial_log_SQL $and_NANQUE_clause $exc_addtl_statuses UNION ALL select substr(call_date-INTERVAL (unix_timestamp(call_date)%".($hourly_slot*60).") SECOND, 12, 5) as cdate, campaign_id, status, user, if(comments='EMAIL', length_in_sec, length_in_sec-queue_seconds) as call_length, uniqueid, queue_seconds as wait_sec, 'I' as direction, queue_position, lead_id from vicidial_closer_log $vicidial_closer_log_SQL $and_NANQUE_clause $exc_addtl_statuses order by cdate";
 # print $stmt."\n"; die;
 $rslt=mysql_to_mysqli($stmt, $link);
 while ($row=mysqli_fetch_array($rslt))

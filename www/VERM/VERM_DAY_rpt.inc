@@ -74,7 +74,7 @@ $coverage_wi="100%";
 #################
 
 
-$stmt="select substr(call_date, 1, 10) as cdate, campaign_id, status, user, length_in_sec as call_length, uniqueid, '0' as wait_sec, 'O' as direction, '1' as queue_position, lead_id from vicidial_log $vicidial_log_SQL $and_NANQUE_clause $exc_addtl_statuses UNION ALL select substr(call_date, 1, 10) as cdate, campaign_id, status, user, length_in_sec-queue_seconds as call_length, uniqueid, queue_seconds as wait_sec, 'I' as direction, queue_position, lead_id from vicidial_closer_log $vicidial_closer_log_SQL $and_NANQUE_clause $exc_addtl_statuses";
+$stmt="select substr(call_date, 1, 10) as cdate, campaign_id, status, user, length_in_sec as call_length, uniqueid, '0' as wait_sec, 'O' as direction, '1' as queue_position, lead_id from vicidial_log $vicidial_log_SQL $and_NANQUE_clause $exc_addtl_statuses UNION ALL select substr(call_date, 1, 10) as cdate, campaign_id, status, user, if(comments='EMAIL', length_in_sec, length_in_sec-queue_seconds) as call_length, uniqueid, queue_seconds as wait_sec, 'I' as direction, queue_position, lead_id from vicidial_closer_log $vicidial_closer_log_SQL $and_NANQUE_clause $exc_addtl_statuses";
 if ($DB) {$HTML_output.="<B>$stmt</B>";}
 # print $stmt."\n";
 $rslt=mysql_to_mysqli($stmt, $link);

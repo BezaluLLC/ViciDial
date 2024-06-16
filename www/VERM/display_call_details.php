@@ -226,7 +226,7 @@ if (!$closecallid)
 	}
 else
 	{
-	$stmt="select date_format(call_date, '%m/%d - %H:%i:%s') as call_date, phone_number, campaign_id, 0 as ivr, queue_seconds as wait, length_in_sec-queue_seconds as duration, queue_position, CAST(term_reason AS CHAR) as term_reason, user, '1' as attempts, status, uniqueid, 0 as moh_events, '00:00:00' as moh_duration, '' as ivr_duration, '' as ivr_path, '' as dnis, '' as url, '' as tag, '0' as feat, '0' as vars, '' as feature_codes, '' as variables, xfercallid, 'I' as direction, lead_id from vicidial_closer_log where uniqueid='$uniqueid' and closecallid='$closecallid'";
+	$stmt="select date_format(call_date, '%m/%d - %H:%i:%s') as call_date, phone_number, campaign_id, 0 as ivr, queue_seconds as wait, if(comments='EMAIL', length_in_sec, length_in_sec-queue_seconds) as duration, queue_position, CAST(term_reason AS CHAR) as term_reason, user, '1' as attempts, status, uniqueid, 0 as moh_events, '00:00:00' as moh_duration, '' as ivr_duration, '' as ivr_path, '' as dnis, '' as url, '' as tag, '0' as feat, '0' as vars, '' as feature_codes, '' as variables, xfercallid, 'I' as direction, lead_id from vicidial_closer_log where uniqueid='$uniqueid' and closecallid='$closecallid'";
 	$vicidial_id=$closecallid;
 	}
 

@@ -100,7 +100,7 @@ while ($outb_row=mysqli_fetch_array($outb_rslt))
 		}
 	}
 
-$inb_stmt="select substr(phone_number, $CLI_position, $CLI_digits) as snippet, user, uniqueid, length_in_sec-queue_seconds as talk_time, queue_seconds, queue_position, lead_id from vicidial_closer_log $vicidial_closer_log_SQL $and_NANQUE_clause $exc_addtl_statuses";
+$inb_stmt="select substr(phone_number, $CLI_position, $CLI_digits) as snippet, user, uniqueid, if(comments='EMAIL', length_in_sec, length_in_sec-queue_seconds) as talk_time, if(comments='EMAIL', 0, queue_seconds) as queue_seconds, queue_position, lead_id from vicidial_closer_log $vicidial_closer_log_SQL $and_NANQUE_clause $exc_addtl_statuses";
 if ($DB) {$HTML_output.="<B>$inb_stmt</B>";}
 # print $inb_stmt."\n";
 $inb_rslt=mysql_to_mysqli($inb_stmt, $link);
