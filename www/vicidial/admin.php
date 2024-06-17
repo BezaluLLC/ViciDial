@@ -6150,12 +6150,13 @@ if ($SSscript_remove_js > 0)
 # 240419-1817 - Added call_log_days campaign option
 # 240516-1720 - Added ALT option for start_call_url fields
 # 240528-1722 - Added display of Dial Prefixes column on the CAMPAIGH LISTINGS page
+# 240617-0833 - Fix for 2FA user override
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-918a';
-$build = '240528-1722';
+$admin_version = '2.14-919a';
+$build = '240617-0833';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6602,8 +6603,9 @@ if ( (!preg_match('/\-ALL/i', $LOGqc_allowed_inbound_groups)) )
 $first_login_link=0;
 $VALID_2FA=1;
 
+
 # check for 2FA being active, and if so, see if there is a non-expired 2FA auth
-if ( ($SStwo_factor_auth_hours > 0) and ($SStwo_factor_container != '') and ($SStwo_factor_container != '---DISABLED---') )
+if ( ($SStwo_factor_auth_hours > 0) and ($SStwo_factor_container != '') and ($SStwo_factor_container != '---DISABLED---') and ($LOGtwo_factor_override != 'DISABLED') )
 	{
 	$stmt="SELECT count(*) from vicidial_two_factor_auth where user='$PHP_AUTH_USER' and auth_stage='1' and auth_exp_date > NOW();";
 	if ($DB) {echo "$stmt\n";}
