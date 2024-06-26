@@ -1,4 +1,4 @@
-AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2024-04-29
+AGENT API DOCUMENT		Started: 2008-07-03	Updated: 2024-06-24
 
 This document describes the functions of an API(Application Programming Interface)
 for the VICIDIAL Agent screen. This functionality will be rather limited at first
@@ -670,6 +670,9 @@ VALUES:
    GRAB_IVR_CUSTOMER - grab customer from the park ivr and send them to the agent session
    PARK_XFER - send third party call to the park extension as defined in the campaign the agent is logged into
    GRAB_XFER - grab third party call from the park extension and send them to the agent session
+   SWAP_PARK_CUSTOMER - send customer to the park extension and grab third party call from the park extension and send them to the agent session
+   SWAP_PARK_XFER - send third party call to the park extension and grab customer from the park extension and send them to the agent session
+   HANGUP_XFER_GRAB_CUSTOMER - hangup the third party line and grab customer from park extension
 
 EXAMPLE URLS:
 http://server/agc/api.php?source=test&user=6666&pass=1234&agent_user=1000&function=park_call&value=PARK_CUSTOMER

@@ -8408,7 +8408,7 @@ if ($function == 'update_campaign')
 						}
 					if (strlen($hopper_level) > 0)
 						{
-						if ( ($hopper_level > 2000) or ($hopper_level < 1) )
+						if ( ($hopper_level > 5000) or ($hopper_level < 1) )
 							{
 							$result = 'ERROR';
 							$result_reason = "update_campaign HOPPER LEVEL MUST BE FROM 1 TO 2000, THIS IS AN OPTIONAL FIELD";

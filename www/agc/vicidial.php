@@ -740,10 +740,11 @@
 # 240416-1750 - Fix for HotKey issue #1518
 # 240420-2228 - ConfBridge code added
 # 240429-2237 - Added PARK_XFER|GRAB_XFER options for park_call API function
+# 240624-1357 - Added SWAP_PARK_CUSTOMER|SWAP_PARK_XFER|HANGUP_XFER_GRAB_CUSTOMER options for park_call API function
 #
 
-$version = '2.14-706c';
-$build = '240429-2237';
+$version = '2.14-707c';
+$build = '240624-1357';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
@@ -8278,6 +8279,21 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							{mainxfer_send_redirect('ParKXfeR',lastxferchannel,server_ip,'','','','YES');}
 						if (api_parkcustomer == 'GRAB_XFER')
 							{mainxfer_send_redirect('FROMParKXfeR',lastxferchannel,server_ip,'','','','YES');}
+						if (api_parkcustomer == 'SWAP_PARK_XFER')
+							{
+							mainxfer_send_redirect('ParKXfeR',lastxferchannel,server_ip,'','','','YES');
+							mainxfer_send_redirect('FROMParK',lastcustchannel,lastcustserverip);
+							}
+						if (api_parkcustomer == 'SWAP_PARK_CUSTOMER')
+							{
+							mainxfer_send_redirect('ParK',lastcustchannel,lastcustserverip);
+							mainxfer_send_redirect('FROMParKXfeR',lastxferchannel,server_ip,'','','','YES');
+							}
+						if (api_parkcustomer == 'HANGUP_XFER_GRAB_CUSTOMER')
+							{
+							xfercall_send_hangup();
+							mainxfer_send_redirect('FROMParK',lastcustchannel,lastcustserverip);
+							}
 						if (api_dtmf.length > 0)
 							{
 							var REGdtmfPOUND = new RegExp("P","g");
