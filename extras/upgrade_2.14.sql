@@ -2724,3 +2724,7 @@ UPDATE system_settings SET db_schema_version='1713',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD call_log_days SMALLINT(5) default '0';
 
 UPDATE system_settings SET db_schema_version='1714',db_schema_update_date=NOW() where db_schema_version < 1714;
+
+ALTER TABLE vicidial_campaigns ADD leave_3way_stop_recording ENUM('DISABLED','ALL_CALLS') default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1715',db_schema_update_date=NOW() where db_schema_version < 1715;

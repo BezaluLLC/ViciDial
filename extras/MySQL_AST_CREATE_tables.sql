@@ -1126,7 +1126,8 @@ hopper_hold_inserts ENUM('ENABLED','DISABLED','AUTONEXT') default 'DISABLED',
 daily_phone_number_call_limit TINYINT(3) UNSIGNED default '0',
 state_descriptions VARCHAR(40) default '---DISABLED---',
 script_tab_height SMALLINT(5) default '0',
-call_log_days SMALLINT(5) default '0'
+call_log_days SMALLINT(5) default '0',
+leave_3way_stop_recording ENUM('DISABLED','ALL_CALLS') default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -5676,4 +5677,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1714',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1715',db_schema_update_date=NOW(),reload_timestamp=NOW();
