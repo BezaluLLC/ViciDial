@@ -742,10 +742,11 @@
 # 240429-2237 - Added PARK_XFER|GRAB_XFER options for park_call API function
 # 240624-1357 - Added SWAP_PARK_CUSTOMER|SWAP_PARK_XFER|HANGUP_XFER_GRAB_CUSTOMER options for park_call API function
 # 240627-1937 - Added leave_3way_stop_recording campaign option
+# 240630-0920 - Fix for Group Alias issue #1515
 #
 
-$version = '2.14-708c';
-$build = '240627-1937';
+$version = '2.14-709c';
+$build = '240630-0920';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=103;
@@ -3765,7 +3766,7 @@ else
 				$default_group_alias_cid='';
 				if (strlen($default_group_alias)>1)
 					{
-					$stmt = "select caller_id_number from groups_alias where group_alias_id='$default_group_alias';";
+					$stmt = "select caller_id_number from groups_alias where group_alias_id='$default_group_alias' $LOGadmin_viewable_groupsSQL;";
 					if ($DB) {echo "$stmt\n";}
 					$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01055',$VD_login,$server_ip,$session_name,$one_mysql_log);}
@@ -4084,7 +4085,7 @@ else
 				if (preg_match('/Y/',$agent_allow_group_alias))
 					{
 					##### grab the active group aliases
-					$stmt="SELECT group_alias_id,group_alias_name,caller_id_number FROM groups_alias WHERE active='Y' order by group_alias_id limit 1000;";
+					$stmt="SELECT group_alias_id,group_alias_name,caller_id_number FROM groups_alias WHERE active='Y' $LOGadmin_viewable_groupsSQL order by group_alias_id limit 1000;";
 					$rslt=mysql_to_mysqli($stmt, $link);
 				if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01054',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 					if ($DB) {echo "$stmt\n";}
