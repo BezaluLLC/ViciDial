@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-03-02
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-07-03
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -67,6 +67,7 @@ hopper_list - displays information about leads in the hopper for a campaign
 update_alt_url - updates/adds/displays alternate dispo call url entries for a campaign
 update_presets - updates/adds/displays/deletes campaign preset entries
 lead_dearchive - moves a lead from the archive to active leads table
+update_remote_agent - updates some remote agent settings in the system
 
 
 New scripts:
@@ -219,6 +220,7 @@ Changes:
 240120-0840 - Added list_order,list_order_randomize,list_order_secondary optional fields to update_campaign function
 240217-0907 - Added more missing vicidial_users fields from copy function
 240302-0804 - Added delete_dnc_phone function
+240703-1657 - Added update_remote_agent function
 
 
 API Functions use the 'function' variable
@@ -1551,6 +1553,40 @@ NOTICE: update_user USER PASSWORD RESET FAILED: EMAIL FAILURE - 6666|info@vicidi
 NOTICE: update_user update_user USER PASSWORD HAS BEEN RESET - 6666|info@vicidial.com
 SUCCESS: update_user USER HAS BEEN UPDATED - 6666|7878
 SUCCESS: update_user USER HAS BEEN DELETED - 6666|7878
+
+
+
+
+
+--------------------------------------------------------------------------------
+update_remote_agent - updates remote agent entry in the system
+
+NOTE: api user for this function must have user_level set to 8 or higher and "modify remote agents" enabled
+
+REQUIRED FIELDS-
+agent_user -		2-20 characters
+
+OPTIONAL FIELDS-
+status -		'ACTIVE' or 'INACTIVE' only
+campaign_id -		1-8 characters, must be a valid Campaign ID
+number_of_lines -	1-20 digits
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&function=update_remote_agent&user=6666&pass=1234&agent_user=2424&number_of_lines=1&campaign_id=TESTCAMP
+http://server/vicidial/non_agent_api.php?source=test&function=update_remote_agent&user=6666&pass=1234&agent_user=2424&status=INACTIVE
+
+Example responses:
+ERROR: update_remote_agent USER DOES NOT HAVE PERMISSION TO UPDATE REMOTE AGENTS - 6666|0
+ERROR: update_remote_agent YOU MUST USE ALL REQUIRED FIELDS - 6666||
+ERROR: update_remote_agent REMOTE AGENT DOES NOT EXIST - 6666|78789
+ERROR: update_remote_agent USER DOES NOT HAVE PERMISSION TO UPDATE THIS REMOTE AGENT - 6666
+ERROR: update_remote_agent YOU MUST USE A VALID NUMBER OF LINES, THIS IS AN OPTIONAL FIELD - 6666|0
+ERROR: update_remote_agent YOU MUST USE A VALID CAMPAIGN ID, THIS IS AN OPTIONAL FIELD - 6666|TEST|0
+ERROR: update_remote_agent STATUS MUST BE ACTIVE OR INACTIVE, THIS IS AN OPTIONAL FIELD - 6666|Y
+ERROR: update_remote_agent NO UPDATES DEFINED - 6666|0
+NOTICE: update_remote_agent REMOTE AGENT IS ALREADY ACTIVE - 6666|7878
+NOTICE: update_remote_agent REMOTE AGENT IS ALREADY INACTIVE - 6666|7878
+SUCCESS: update_remote_agent USER HAS BEEN UPDATED - 6666|7878
 
 
 

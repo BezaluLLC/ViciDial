@@ -211,10 +211,11 @@
 # 240217-0907 - Added more missing vicidial_users fields from copy function
 # 240302-0804 - Added delete_dnc_phone function
 # 240420-2236 - Added ConfBridge code
+# 240703-1657 - Added update_remote_agent function
 #
 
-$version = '2.14-188';
-$build = '240420-2236';
+$version = '2.14-189';
+$build = '240703-1657';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 $camp_lead_order_random=1;
@@ -733,6 +734,8 @@ if (isset($_GET["list_order_randomize"]))			{$list_order_randomize=$_GET["list_o
 	elseif (isset($_POST["list_order_randomize"]))	{$list_order_randomize=$_POST["list_order_randomize"];}
 if (isset($_GET["list_order_secondary"]))			{$list_order_secondary=$_GET["list_order_secondary"];}
 	elseif (isset($_POST["list_order_secondary"]))	{$list_order_secondary=$_POST["list_order_secondary"];}
+if (isset($_GET["number_of_lines"]))			{$number_of_lines=$_GET["number_of_lines"];}
+	elseif (isset($_POST["number_of_lines"]))	{$number_of_lines=$_POST["number_of_lines"];}
 
 $DB=preg_replace('/[^0-9]/','',$DB);
 
@@ -892,6 +895,7 @@ $archived_lead = preg_replace('/[^0-9a-zA-Z]/','',$archived_lead);
 $list_order = preg_replace('/[^ 0-9a-zA-Z]/','',$list_order);
 $list_order_randomize = preg_replace('/[^-_0-9a-zA-Z]/','',$list_order_randomize);
 $list_order_secondary = preg_replace('/[^-_0-9a-zA-Z]/','',$list_order_secondary);
+$number_of_lines = preg_replace('/[^0-9]/','',$number_of_lines);
 
 if ($non_latin < 1)
 	{
@@ -3916,6 +3920,7 @@ if ($function == 'copy_user')
 
 
 
+
 ################################################################################
 ### update_user - updates user entry already in the system
 ################################################################################
@@ -4640,6 +4645,240 @@ if ($function == 'update_user')
 ################################################################################
 ### END update_user
 ################################################################################
+
+
+
+
+
+################################################################################
+### update_remote_agent - updates remote agent entry already in the system
+################################################################################
+if ($function == 'update_remote_agent')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_remoteagents='1' and user_level >= 8 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "update_remote_agent USER DOES NOT HAVE PERMISSION TO UPDATE REMOTE AGENTS";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($agent_user)<2) or (strlen($agent_user)>20) )
+				{
+				$result = 'ERROR';
+				$result_reason = "update_remote_agent YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$agent_user|";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+				$LOGadmin_viewable_groups =		$row[1];
+
+				$LOGadmin_viewable_groupsSQL='';
+				$whereLOGadmin_viewable_groupsSQL='';
+				if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+					{
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+					$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					}
+
+				$LOGallowed_campaignsSQL='';
+				$whereLOGallowed_campaignsSQL='';
+				if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) )
+					{
+					$rawLOGallowed_campaignsSQL = preg_replace("/ -/",'',$LOGallowed_campaigns);
+					$rawLOGallowed_campaignsSQL = preg_replace("/ /","','",$rawLOGallowed_campaignsSQL);
+					$LOGallowed_campaignsSQL = "and campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					$whereLOGallowed_campaignsSQL = "where campaign_id IN('$rawLOGallowed_campaignsSQL')";
+					}
+
+				$stmt="SELECT count(*) from vicidial_remote_agents where user_start='$agent_user';";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$user_exists=$row[0];
+				if ($user_exists < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "update_remote_agent REMOTE AGENT DOES NOT EXIST";
+					$data = "$server_ip";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$user_level_modify_gt='<=';
+					$stmt="SELECT user_level,modify_same_user_level from vicidial_users where user='$user';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					$api_user_level =				$row[0];
+					$api_modify_same_user_level =	$row[1];
+					if ($api_modify_same_user_level < 1)
+						{$user_level_modify_gt='<';}
+
+					$stmt="SELECT count(*) from vicidial_users where user='$agent_user' and user_level $user_level_modify_gt '$api_user_level' $LOGadmin_viewable_groupsSQL;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					$agent_allowed=$row[0];
+					if ($agent_allowed < 1)
+						{
+						$result = 'ERROR';
+						$result_reason = "update_remote_agent USER DOES NOT HAVE PERMISSION TO UPDATE THIS REMOTE AGENT";
+						$data = "$agent_user|$user_level_modify_gt|$api_user_level\n";
+						echo "$result: $result_reason: |$user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						exit;
+						}
+					else
+						{
+						$statusSQL='';
+						$campaign_idSQL='';
+						$number_of_linesSQL='';
+
+						if (strlen($number_of_lines) > 0)
+							{
+							if ( ($number_of_lines > 999) or ($number_of_lines < 1) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_remote_agent YOU MUST USE A VALID NUMBER OF LINES, THIS IS AN OPTIONAL FIELD";
+								$data = "$number_of_lines";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$number_of_linesSQL = " ,number_of_lines='$number_of_lines'";}
+							}
+						if (strlen($campaign_id) > 0)
+							{
+							$stmt="SELECT count(*) from vicidial_campaigns where campaign_id='$campaign_id' $LOGallowed_campaignsSQL;";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$row=mysqli_fetch_row($rslt);
+							$valid_campaign =			$row[0];
+							
+							if ( (strlen($campaign_id) > 8) or (strlen($campaign_id) < 1) or ($valid_campaign < 1) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_remote_agent YOU MUST USE A VALID CAMPAIGN ID, THIS IS AN OPTIONAL FIELD";
+								$data = "$campaign_id|$valid_campaign";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$campaign_idSQL = " ,campaign_id='$campaign_id'";}
+							}
+							
+						if (strlen($status) > 0)
+							{
+							if (!preg_match("/ACTIVE|INACTIVE/",$status))
+								{
+								$result = 'ERROR';
+								$result_reason = "update_remote_agent STATUS MUST BE ACTIVE OR INACTIVE, THIS IS AN OPTIONAL FIELD";
+								$data = "$status";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{
+								$stmt="SELECT count(*) from vicidial_remote_agents where user_start='$agent_user' and status='$status';";
+								$rslt=mysql_to_mysqli($stmt, $link);
+								$row=mysqli_fetch_row($rslt);
+								$agent_status=$row[0];
+
+								if ($agent_status > 0)
+									{
+									$result = 'NOTICE';
+									$result_reason = "update_remote_agent REMOTE AGENT IS ALREADY $status";
+									$data = "$agent_user";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									}
+								else
+									{$statusSQL = " ,status='$status'";}
+								}
+							}
+						
+						$updateSQL = "$number_of_linesSQL$campaign_idSQL$statusSQL";
+						$updateSQL = preg_replace("/^ ,/",'',$updateSQL);
+
+						if (strlen($updateSQL)< 3)
+							{
+							$result = 'ERROR';
+							$result_reason = "update_remote_agent NO UPDATES DEFINED";
+							$data = "$updateSQL";
+							echo "$result: $result_reason: |$user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							exit;
+							}
+						else
+							{
+							$stmt="UPDATE vicidial_remote_agents SET $updateSQL WHERE user_start='$agent_user';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							if ($DB) {echo "|$stmt|\n";}
+
+							### LOG INSERTION Admin Log Table ###
+							$SQL_log = "$stmt|";
+							$SQL_log = preg_replace('/;/', '', $SQL_log);
+							$SQL_log = addslashes($SQL_log);
+							$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='REMOTEAGENTS', event_type='MODIFY', record_id='$agent_user', event_code='ADMIN API UPDATE REMOTEAGENTS', event_sql=\"$SQL_log\", event_notes='user start: $agent_user';";
+							if ($DB) {echo "|$stmt|\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+
+							$result = 'SUCCESS';
+							$result_reason = "update_remote_agent REMOTE AGENT HAS BEEN UPDATED";
+							$data = "$agent_user|";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						}
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END update_remote_agent
+################################################################################
+
 
 
 
@@ -11394,11 +11633,6 @@ if ($function == 'phone_number_log')
 ################################################################################
 ### END phone_number_log
 ################################################################################
-
-
-
-
-
 
 
 
