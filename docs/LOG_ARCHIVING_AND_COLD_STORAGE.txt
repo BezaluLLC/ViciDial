@@ -1,4 +1,4 @@
-LOG ARCHIVING AND COLD STORAGE DOC	Started: 2024-07-04	Updated: 2024-07-04
+LOG ARCHIVING AND COLD STORAGE DOC	Started: 2024-07-04	Updated: 2024-07-05
 
 
 This document covers the options for archiving of specific log tables and the new "Cold Storage" features
@@ -51,6 +51,8 @@ allowed run time options:
 Here are some example crorntab entries for this script to perform certain log archiving and purging:
 (these should only be active on a single server on your VICIdial cluster)
 
+WARNING! Do not schedule any ADMIN_archive_log_tables.pl processes to be running at the same time as any ADMIN_cold_storage_log_tables.pl processes!
+
 
 ### archive logs weekly on Saturday morning at 1am, keep only 2 years of logs in the active log tables, archive older log records
 20 1 * * 6 /usr/share/astguiclient/ADMIN_archive_log_tables.pl --months=24
@@ -83,7 +85,6 @@ In July 2024, we added some basic options to allow for the moving of already arc
 Admin access to cold-storage logs is currently available through the following pages:
 - Admin Lead Search Page
 - Admin Modify Lead Page
-
 
 
 
@@ -124,9 +125,15 @@ allowed run time options:
   [--days=XX] = number of days to archive past, default is 1461(4 years)
   [--quiet] = quiet
   [--calc-test] = date calculation test only
+  [--query-count-test] = run archive counts test only
   [--test] = test
   [--debug] = debug output for some options
   [--debugX] = extra debug output for some options
+
+
+WARNING! Do not schedule any ADMIN_cold_storage_log_tables.pl processes to be running at the same time as any ADMIN_archive_log_tables.pl processes!
+
+NOTE: If you have never run the "ADMIN_cold_storage_log_tables.pl" script before, we strongly recommend running it manually and with the "--query-count-test" flag first so you can see how many archive records will be affected, and if the server you are running the script on has enough memory to allow it to run. If there are too many records to be sent to cold-storage in any single table, then the script will die with only the message "Killed" on the screen when it happens. For example, if you are running the script on a server with only 8GB of RAM, then moving more than 25,000,000 records to cold-storage in any single table will most likely be too many, so you'll have to adjust the "--days=X" flag to lower the number so it can run to completion. After getting to the level you want to maintain in the archive tables, you can schedule this script to run in your crontab perhaps once a week or once a month during low system utilization periods.
 
 
 Here is a list of the archive tables that are currently moved by the "ADMIN_cold_storage_log_tables.pl" script:
@@ -143,3 +150,72 @@ vicidial_dial_log_archive
 vicidial_log_archive
 vicidial_log_extended_archive
 vicidial_log_extended_sip_archive
+
+
+
+
+
+Here is example output of this script being run on one of our test development systems:
+
+
+# /usr/share/astguiclient/ADMIN_cold_storage_log_tables.pl --debug --days=1600 --query-count-test
+
+-----DEBUG-----
+
+
+-----ARCHIVE TABLES QUERY COUNT TESTING ONLY: 1-----
+
+
+----- DAYS OVERRIDE: 1600 -----
+
+
+
+-- ADMIN_cold_storage_log_tables.pl --
+
+This script is designed take records of a specific age from call_log_archive,
+vicidial_log_archive, vicidial_log_extended_archive and
+other _archive tables and move them to the cold-storage log database, then
+delete the records in original tables older than X days
+1600 days ( 2020-02-17 07:26:25 [2020-02-17]|1581942385 ) from current date
+
+Cold-Storage Database test: 1
+
+Starting cold-storage process...
+
+Analyzing call_log_archive table...  (2|7544031)
+call_log_archive has no records to send to cold-storage, skipping this table...
+
+Analyzing vicidial_log_archive table...  (21762085|27201201)
+vicidial_log_archive has no records to send to cold-storage, skipping this table...
+
+Analyzing vicidial_log_extended_archive table...  (11188151|0)
+vicidial_log_extended_archive has no records to send to cold-storage, skipping this table...
+
+Analyzing vicidial_dial_log_archive table...  (11370308|0)
+vicidial_dial_log_archive has no records to send to cold-storage, skipping this table...
+
+Analyzing vicidial_carrier_log_archive table...  (11148895|0)
+vicidial_carrier_log_archive has no records to send to cold-storage, skipping this table...
+
+Analyzing vicidial_dial_cid_log_archive table...  (0|0)
+vicidial_dial_cid_log_archive has no records to send to cold-storage, skipping this table...
+
+Analyzing vicidial_amd_log_archive table...  (13|0)
+vicidial_amd_log_archive has no records to send to cold-storage, skipping this table...
+
+Analyzing vicidial_agent_log_archive table...  (92743|270581)
+vicidial_agent_log_archive has no records to send to cold-storage, skipping this table...
+
+Analyzing vicidial_api_log_archive table...  (74|0)
+vicidial_api_log_archive has no records to send to cold-storage, skipping this table...
+
+Analyzing vicidial_api_urls_archive table...  (74|0)
+vicidial_api_urls_archive has no records to send to cold-storage, skipping this table...
+
+Analyzing vicidial_agent_visibility_log_archive table...  (0|0)
+vicidial_agent_visibility_log_archive has no records to send to cold-storage, skipping this table...
+
+Analyzing vicidial_log_extended_sip_archive table...  (524953|0)
+vicidial_log_extended_sip_archive has no records to send to cold-storage, skipping this table...
+
+script execution time in seconds: 19     minutes: 0.316666666666667

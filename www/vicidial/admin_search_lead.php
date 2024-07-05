@@ -56,6 +56,7 @@
 # 220303-0124 - Fix for Issue #1353
 # 220331-0926 - Small fix for $phone variable filtering
 # 240704-2358 - Added cold-storage archive logs search option
+# 240705-0849 - Added archive_type option
 #
 
 require("dbconnect_mysqli.php");
@@ -105,6 +106,8 @@ if (isset($_GET["archive_search"]))			{$archive_search=$_GET["archive_search"];}
 	elseif (isset($_POST["archive_search"]))	{$archive_search=$_POST["archive_search"];}
 if (isset($_GET["called_count"]))			{$called_count=$_GET["called_count"];}
 	elseif (isset($_POST["called_count"]))	{$called_count=$_POST["called_count"];}
+if (isset($_GET["archive_type"]))			{$archive_type=$_GET["archive_type"];}
+	elseif (isset($_POST["archive_type"]))	{$archive_type=$_POST["archive_type"];}
 
 $report_name = 'Search Leads Logs';
 
@@ -172,6 +175,7 @@ $owner = preg_replace("/\<|\>|\'|\"|\\\\|;/","",$owner);
 $alt_phone_search = preg_replace('/[^-_0-9a-zA-Z]/', '', $alt_phone_search);
 $archive_search = preg_replace('/[^-_0-9a-zA-Z]/', '', $archive_search);
 $called_count = preg_replace('/[^0-9]/','',$called_count);
+$archive_type = preg_replace('/[^-_0-9a-zA-Z]/', '', $archive_type);
 
 if ($non_latin < 1)
 	{
@@ -464,8 +468,22 @@ if ( (!$vendor_id) and (!$phone)  and (!$lead_id) and (!$log_phone)  and (!$log_
 	echo "</TR>";
 	echo "<TR bgcolor=#$SSmenu_background>";
 	echo "<TD colspan=3 align=center><font color=#FFFFFF><b>"._QXZ("Archived Log Search Options").":</b></font></TD>";
-	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 
+	if ( (strlen($SScoldstorage_server_ip) > 1) and (strlen($SScoldstorage_login) > 0) and (strlen($SScoldstorage_pass) > 0) )
+		{
+		if (strlen($archive_type) < 1) {$archive_type = 'ARCHIVE';}
+		echo "</TR><TR bgcolor=#$SSstd_row2_background>";
+		echo "<TD ALIGN=right>"._QXZ("Archive Type").": &nbsp; </TD><TD ALIGN=left><select size=1 name=archive_type><option value='ARCHIVE'>"._QXZ("Archive Only")."</option><option value='COLDSTORAGE'>"._QXZ("Cold-Storage Only")."</option><option value='ARCHIVE_AND_COLDSTORAGE'>"._QXZ("Archive and Cold-Storage")."</option><option	SELECTED value='$archive_type'>"._QXZ("$archive_type")."</option></select></TD>";
+		echo "</TR><TR bgcolor=#$SSmenu_background>";
+		echo "<TD colspan=3 align=center height=1></TD>";
+		}
+	else
+		{
+		echo "</TR><TR>";
+		echo "<TD ALIGN=right></TD><TD ALIGN=left><input type=hidden name=archive_type value='ARCHIVE'></TD>";
+		}
+
+	echo "</TR><TR bgcolor=#$SSstd_row2_background>";
 	echo "<TD ALIGN=right>"._QXZ("Lead ID").": &nbsp; </TD><TD ALIGN=left><input type=text name=log_lead_id_archive size=10 maxlength=10></TD>";
 	echo "<TD><INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'></TD>\n";
 	echo "</TR><TR bgcolor=#$SSmenu_background>";
@@ -736,7 +754,7 @@ else
 	##### BEGIN Log archive search #####
 	if ( (strlen($log_lead_id_archive)>0) or (strlen($log_phone_archive)>0) )
 		{
-		if ( (strlen($SScoldstorage_server_ip) > 1) and (strlen($SScoldstorage_login) > 0) and (strlen($SScoldstorage_pass) > 0) )
+		if ( (strlen($SScoldstorage_server_ip) > 1) and (strlen($SScoldstorage_login) > 0) and (strlen($SScoldstorage_pass) > 0) and (preg_match("/COLDSTORAGE/",$archive_type)) )
 			{
 			$linkCS = mysqli_connect("$SScoldstorage_server_ip", "$SScoldstorage_login", "$SScoldstorage_pass", "$SScoldstorage_dbname", $SScoldstorage_port);
 			if (!$linkCS) {echo "MySQL Cold-Storage connect ERROR:  " . mysqli_connect_error();}
@@ -764,156 +782,31 @@ else
 			echo "<!-- Using slave server $slave_db_server $db_source -->\n";
 			}
 
-		$rslt=mysql_to_mysqli("$stmtA", $link);
-		$results_to_print = mysqli_num_rows($rslt);
-		if ( ($results_to_print < 1) and ($results_to_printX < 1) )
+		if (preg_match("/ARCHIVE/",$archive_type))
 			{
-			echo "\n<br><br><center>\n";
-			echo "<b>"._QXZ("There are no archived outbound calls matching your search criteria")."</b><br><br>\n";
-			echo "</center>\n";
-			}
-		else
-			{
-			echo "<BR><b>"._QXZ("OUTBOUND ARCHIVED LOG RESULTS").": $results_to_print</b><BR>\n";
-			echo "<TABLE BGCOLOR=WHITE CELLPADDING=1 CELLSPACING=0 WIDTH=770>\n";
-			echo "<TR BGCOLOR=BLACK>\n";
-			echo "<TD ALIGN=LEFT VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>#</B></FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LEAD ID")."</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("PHONE")."</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("CAMPAIGN")."</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("CALL DATE")."</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("STATUS")."</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("USER")."</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LIST ID")."</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LENGTH")."</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("DIAL")."</B></FONT></TD>\n";
-			echo "</TR>\n";
-			$o=0;
-			while ($results_to_print > $o)
-				{
-				$row=mysqli_fetch_row($rslt);
-				if ($LOGadmin_hide_phone_data != '0')
-					{
-					if ($DB > 0) {echo "HIDEPHONEDATA|$row[1]|$LOGadmin_hide_phone_data|\n";}
-					$phone_temp = $row[1];
-					if (strlen($phone_temp) > 0)
-						{
-						if ($LOGadmin_hide_phone_data == '4_DIGITS')
-							{$row[1] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
-						elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
-							{$row[1] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
-						elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
-							{$row[1] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
-						else
-							{$row[1] = preg_replace("/./",'X',$phone_temp);}
-						}
-					}
-				$o++;
-				$search_lead = $row[0];
-				if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-					{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';}
-				else
-					{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
-				echo "<TR $bgcolor>\n";
-				echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><A HREF=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search&archive_log=$log_archive_link\" onclick=\"javascript:window.open('admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search&archive_log=$log_archive_link', '_blank');return false;\">$row[0]</A></FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[1]</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[2]</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[3]</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[4]</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[5]</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[6]</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[7]</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[8]</FONT></TD>\n";
-				echo "</TR>\n";
-				}
-			echo "</TABLE>\n";
-			}
-
-		$rslt=mysql_to_mysqli("$stmtB", $link);
-		$results_to_print = mysqli_num_rows($rslt);
-		if ( ($results_to_print < 1) and ($results_to_printX < 1) )
-			{
-			echo "\n<br><br><center>\n";
-			echo "<b>"._QXZ("There are no archived inbound calls matching your search criteria")."</b><br><br>\n";
-			echo "</center>\n";
-			}
-		else
-			{
-			echo "<BR><b>"._QXZ("INBOUND ARCHIVED LOG RESULTS").": $results_to_print</b><BR>\n";
-			echo "<TABLE BGCOLOR=WHITE CELLPADDING=1 CELLSPACING=0 WIDTH=770>\n";
-			echo "<TR BGCOLOR=BLACK>\n";
-			echo "<TD ALIGN=LEFT VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>#</B></FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LEAD ID")."</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("PHONE")."</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("INGROUP")."</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("CALL DATE")."</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("STATUS")."</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("USER")."</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LIST ID")."</B> &nbsp;</FONT></TD>\n";
-			echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LENGTH")."</B> &nbsp;</FONT></TD>\n";
-			echo "</TR>\n";
-			$o=0;
-			while ($results_to_print > $o)
-				{
-				$row=mysqli_fetch_row($rslt);
-				if ($LOGadmin_hide_phone_data != '0')
-					{
-					if ($DB > 0) {echo "HIDEPHONEDATA|$row[1]|$LOGadmin_hide_phone_data|\n";}
-					$phone_temp = $row[1];
-					if (strlen($phone_temp) > 0)
-						{
-						if ($LOGadmin_hide_phone_data == '4_DIGITS')
-							{$row[1] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
-						elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
-							{$row[1] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
-						elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
-							{$row[1] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
-						else
-							{$row[1] = preg_replace("/./",'X',$phone_temp);}
-						}
-					}
-				$o++;
-				$search_lead = $row[0];
-				if (preg_match('/1$|3$|5$|7$|9$/i', $o))
-					{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';}
-				else
-					{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
-				echo "<TR $bgcolor>\n";
-				echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><A HREF=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search&archive_log=$log_archive_link\" onclick=\"javascript:window.open('admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search&archive_log=$log_archive_link', '_blank');return false;\">$row[0]</A></FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[1]</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[2]</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[3]</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[4]</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[5]</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[6]</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[7]</FONT></TD>\n";
-				echo "</TR>\n";
-				}
-			echo "</TABLE>\n";
-			}
-
-		if (strlen($stmtC) > 10)
-			{
-			$rslt=mysql_to_mysqli("$stmtC", $link);
+			$rslt=mysql_to_mysqli("$stmtA", $link);
 			$results_to_print = mysqli_num_rows($rslt);
 			if ( ($results_to_print < 1) and ($results_to_printX < 1) )
 				{
 				echo "\n<br><br><center>\n";
-				echo "<b>"._QXZ("There are no archived inbound did calls matching your search criteria")."</b><br><br>\n";
+				echo "<b>"._QXZ("There are no archived outbound calls matching your search criteria")."</b><br><br>\n";
 				echo "</center>\n";
 				}
 			else
 				{
-				echo "<BR><b>"._QXZ("INBOUND DID ARCHIVED LOG RESULTS").": $results_to_print</b><BR>\n";
+				echo "<BR><b>"._QXZ("OUTBOUND ARCHIVED LOG RESULTS").": $results_to_print</b><BR>\n";
 				echo "<TABLE BGCOLOR=WHITE CELLPADDING=1 CELLSPACING=0 WIDTH=770>\n";
 				echo "<TR BGCOLOR=BLACK>\n";
 				echo "<TD ALIGN=LEFT VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>#</B></FONT></TD>\n";
-				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("DID")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LEAD ID")."</B> &nbsp;</FONT></TD>\n";
 				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("PHONE")."</B> &nbsp;</FONT></TD>\n";
-				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("DID ID")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("CAMPAIGN")."</B> &nbsp;</FONT></TD>\n";
 				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("CALL DATE")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("STATUS")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("USER")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LIST ID")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LENGTH")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("DIAL")."</B></FONT></TD>\n";
 				echo "</TR>\n";
 				$o=0;
 				while ($results_to_print > $o)
@@ -943,18 +836,146 @@ else
 						{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
 					echo "<TR $bgcolor>\n";
 					echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
-					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[0]</FONT></TD>\n";
+					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><A HREF=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search&archive_log=$log_archive_link\" onclick=\"javascript:window.open('admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search&archive_log=$log_archive_link', '_blank');return false;\">$row[0]</A></FONT></TD>\n";
 					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[1]</FONT></TD>\n";
 					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[2]</FONT></TD>\n";
 					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[3]</FONT></TD>\n";
+					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[4]</FONT></TD>\n";
+					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[5]</FONT></TD>\n";
+					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[6]</FONT></TD>\n";
+					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[7]</FONT></TD>\n";
+					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[8]</FONT></TD>\n";
 					echo "</TR>\n";
 					}
 				echo "</TABLE>\n";
 				}
+
+			$rslt=mysql_to_mysqli("$stmtB", $link);
+			$results_to_print = mysqli_num_rows($rslt);
+			if ( ($results_to_print < 1) and ($results_to_printX < 1) )
+				{
+				echo "\n<br><br><center>\n";
+				echo "<b>"._QXZ("There are no archived inbound calls matching your search criteria")."</b><br><br>\n";
+				echo "</center>\n";
+				}
+			else
+				{
+				echo "<BR><b>"._QXZ("INBOUND ARCHIVED LOG RESULTS").": $results_to_print</b><BR>\n";
+				echo "<TABLE BGCOLOR=WHITE CELLPADDING=1 CELLSPACING=0 WIDTH=770>\n";
+				echo "<TR BGCOLOR=BLACK>\n";
+				echo "<TD ALIGN=LEFT VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>#</B></FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LEAD ID")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("PHONE")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("INGROUP")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("CALL DATE")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("STATUS")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("USER")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LIST ID")."</B> &nbsp;</FONT></TD>\n";
+				echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("LENGTH")."</B> &nbsp;</FONT></TD>\n";
+				echo "</TR>\n";
+				$o=0;
+				while ($results_to_print > $o)
+					{
+					$row=mysqli_fetch_row($rslt);
+					if ($LOGadmin_hide_phone_data != '0')
+						{
+						if ($DB > 0) {echo "HIDEPHONEDATA|$row[1]|$LOGadmin_hide_phone_data|\n";}
+						$phone_temp = $row[1];
+						if (strlen($phone_temp) > 0)
+							{
+							if ($LOGadmin_hide_phone_data == '4_DIGITS')
+								{$row[1] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+							elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+								{$row[1] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+							elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+								{$row[1] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+							else
+								{$row[1] = preg_replace("/./",'X',$phone_temp);}
+							}
+						}
+					$o++;
+					$search_lead = $row[0];
+					if (preg_match('/1$|3$|5$|7$|9$/i', $o))
+						{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';}
+					else
+						{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
+					echo "<TR $bgcolor>\n";
+					echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
+					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1><A HREF=\"admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search&archive_log=$log_archive_link\" onclick=\"javascript:window.open('admin_modify_lead.php?lead_id=$row[0]&archive_search=$archive_search&archive_log=$log_archive_link', '_blank');return false;\">$row[0]</A></FONT></TD>\n";
+					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[1]</FONT></TD>\n";
+					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[2]</FONT></TD>\n";
+					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[3]</FONT></TD>\n";
+					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[4]</FONT></TD>\n";
+					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[5]</FONT></TD>\n";
+					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[6]</FONT></TD>\n";
+					echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[7]</FONT></TD>\n";
+					echo "</TR>\n";
+					}
+				echo "</TABLE>\n";
+				}
+
+			if (strlen($stmtC) > 10)
+				{
+				$rslt=mysql_to_mysqli("$stmtC", $link);
+				$results_to_print = mysqli_num_rows($rslt);
+				if ( ($results_to_print < 1) and ($results_to_printX < 1) )
+					{
+					echo "\n<br><br><center>\n";
+					echo "<b>"._QXZ("There are no archived inbound did calls matching your search criteria")."</b><br><br>\n";
+					echo "</center>\n";
+					}
+				else
+					{
+					echo "<BR><b>"._QXZ("INBOUND DID ARCHIVED LOG RESULTS").": $results_to_print</b><BR>\n";
+					echo "<TABLE BGCOLOR=WHITE CELLPADDING=1 CELLSPACING=0 WIDTH=770>\n";
+					echo "<TR BGCOLOR=BLACK>\n";
+					echo "<TD ALIGN=LEFT VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>#</B></FONT></TD>\n";
+					echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("DID")."</B> &nbsp;</FONT></TD>\n";
+					echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("PHONE")."</B> &nbsp;</FONT></TD>\n";
+					echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("DID ID")."</B> &nbsp;</FONT></TD>\n";
+					echo "<TD ALIGN=CENTER VALIGN=TOP><FONT FACE=\"ARIAL,HELVETICA\" COLOR=WHITE><B>"._QXZ("CALL DATE")."</B> &nbsp;</FONT></TD>\n";
+					echo "</TR>\n";
+					$o=0;
+					while ($results_to_print > $o)
+						{
+						$row=mysqli_fetch_row($rslt);
+						if ($LOGadmin_hide_phone_data != '0')
+							{
+							if ($DB > 0) {echo "HIDEPHONEDATA|$row[1]|$LOGadmin_hide_phone_data|\n";}
+							$phone_temp = $row[1];
+							if (strlen($phone_temp) > 0)
+								{
+								if ($LOGadmin_hide_phone_data == '4_DIGITS')
+									{$row[1] = str_repeat("X", (strlen($phone_temp) - 4)) . substr($phone_temp,-4,4);}
+								elseif ($LOGadmin_hide_phone_data == '3_DIGITS')
+									{$row[1] = str_repeat("X", (strlen($phone_temp) - 3)) . substr($phone_temp,-3,3);}
+								elseif ($LOGadmin_hide_phone_data == '2_DIGITS')
+									{$row[1] = str_repeat("X", (strlen($phone_temp) - 2)) . substr($phone_temp,-2,2);}
+								else
+									{$row[1] = preg_replace("/./",'X',$phone_temp);}
+								}
+							}
+						$o++;
+						$search_lead = $row[0];
+						if (preg_match('/1$|3$|5$|7$|9$/i', $o))
+							{$bgcolor='bgcolor="#'. $SSstd_row2_background .'"';}
+						else
+							{$bgcolor='bgcolor="#'. $SSstd_row1_background .'"';}
+						echo "<TR $bgcolor>\n";
+						echo "<TD ALIGN=LEFT><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$o</FONT></TD>\n";
+						echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[0]</FONT></TD>\n";
+						echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[1]</FONT></TD>\n";
+						echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[2]</FONT></TD>\n";
+						echo "<TD ALIGN=CENTER><FONT FACE=\"ARIAL,HELVETICA\" SIZE=1>$row[3]</FONT></TD>\n";
+						echo "</TR>\n";
+						}
+					echo "</TABLE>\n";
+					}
+				}
 			}
 
 		// Search through cold-storage archive logs
-		if ($linkCS)
+		if ( ($linkCS) and (preg_match("/COLDSTORAGE/",$archive_type)) )
 			{
 			$rslt=mysql_to_mysqli("$stmtA", $linkCS);
 			$results_to_print = mysqli_num_rows($rslt);

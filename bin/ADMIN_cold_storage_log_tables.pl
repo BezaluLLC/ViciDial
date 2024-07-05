@@ -20,11 +20,13 @@
 #
 # CHANGES
 # 240704-1815 - First version
+# 250705-0954 - Added --query-count-test flag option
 #
 
 $DB=0;
 $DBX=0;
 $CALC_TEST=0;
+$QUERY_COUNT_TEST=0;
 $T=0;   $TEST=0;
 $only_trim_archive=0;
 $recording_log_archive=0;
@@ -52,6 +54,7 @@ if (length($ARGV[0])>1)
 		print "  [--days=XX] = number of days to archive past, default is 1461(4 years)\n";
 		print "  [--quiet] = quiet\n";
 		print "  [--calc-test] = date calculation test only\n";
+		print "  [--query-count-test] = run archive counts test only\n";
 		print "  [--test] = test\n";
 		print "  [--debug] = debug output for some options\n";
 		print "  [--debugX] = extra debug output for some options\n";
@@ -82,7 +85,12 @@ if (length($ARGV[0])>1)
 		if ($args =~ /--calc-test/i)
 			{
 			$CALC_TEST=1;
-			print "\n-----DATE CALCULATION TESTING ONLY-----\n\n";
+			print "\n-----DATE CALCULATION TESTING ONLY: $CALC_TEST-----\n\n";
+			}
+		if ($args =~ /--query-count-test/i)
+			{
+			$QUERY_COUNT_TEST=1;
+			print "\n-----ARCHIVE TABLES QUERY COUNT TESTING ONLY: $QUERY_COUNT_TEST-----\n\n";
 			}
 		if ($args =~ /--days=/i)
 			{
@@ -265,7 +273,7 @@ if (!$T)
 
 	if (!$Q) {print "\nAnalyzing call_log_archive table...  ($call_log_archive_count|$call_log_CS_count)\n";}
 
-	if ($call_log_archive_count < 1) 
+	if ( ($call_log_archive_count < 1) || ($QUERY_COUNT_TEST > 0) )
 		{
 		if (!$Q) {print "call_log_archive has no records to send to cold-storage, skipping this table...\n";}
 		}
@@ -420,7 +428,7 @@ if (!$T)
 
 	if (!$Q) {print "\nAnalyzing vicidial_log_archive table...  ($vicidial_log_archive_count|$call_log_CS_count)\n";}
 
-	if ($vicidial_log_archive_count < 1) 
+	if ( ($vicidial_log_archive_count < 1) || ($QUERY_COUNT_TEST > 0) )
 		{
 		if (!$Q) {print "vicidial_log_archive has no records to send to cold-storage, skipping this table...\n";}
 		}
@@ -575,7 +583,7 @@ if (!$T)
 
 	if (!$Q) {print "\nAnalyzing vicidial_log_extended_archive table...  ($vicidial_log_extended_archive_count|$call_log_CS_count)\n";}
 
-	if ($vicidial_log_extended_archive_count < 1) 
+	if ( ($vicidial_log_extended_archive_count < 1) || ($QUERY_COUNT_TEST > 0) )
 		{
 		if (!$Q) {print "vicidial_log_extended_archive has no records to send to cold-storage, skipping this table...\n";}
 		}
@@ -730,7 +738,7 @@ if (!$T)
 
 	if (!$Q) {print "\nAnalyzing vicidial_dial_log_archive table...  ($vicidial_dial_log_archive_count|$call_log_CS_count)\n";}
 
-	if ($vicidial_dial_log_archive_count < 1) 
+	if ( ($vicidial_dial_log_archive_count < 1) || ($QUERY_COUNT_TEST > 0) )
 		{
 		if (!$Q) {print "vicidial_dial_log_archive has no records to send to cold-storage, skipping this table...\n";}
 		}
@@ -885,7 +893,7 @@ if (!$T)
 
 	if (!$Q) {print "\nAnalyzing vicidial_carrier_log_archive table...  ($vicidial_carrier_log_archive_count|$call_log_CS_count)\n";}
 
-	if ($vicidial_carrier_log_archive_count < 1) 
+	if ( ($vicidial_carrier_log_archive_count < 1) || ($QUERY_COUNT_TEST > 0) )
 		{
 		if (!$Q) {print "vicidial_carrier_log_archive has no records to send to cold-storage, skipping this table...\n";}
 		}
@@ -1040,7 +1048,7 @@ if (!$T)
 
 	if (!$Q) {print "\nAnalyzing vicidial_dial_cid_log_archive table...  ($vicidial_dial_cid_log_archive_count|$call_log_CS_count)\n";}
 
-	if ($vicidial_dial_cid_log_archive_count < 1) 
+	if ( ($vicidial_dial_cid_log_archive_count < 1) || ($QUERY_COUNT_TEST > 0) )
 		{
 		if (!$Q) {print "vicidial_dial_cid_log_archive has no records to send to cold-storage, skipping this table...\n";}
 		}
@@ -1195,7 +1203,7 @@ if (!$T)
 
 	if (!$Q) {print "\nAnalyzing vicidial_amd_log_archive table...  ($vicidial_amd_log_archive_count|$call_log_CS_count)\n";}
 
-	if ($vicidial_amd_log_archive_count < 1) 
+	if ( ($vicidial_amd_log_archive_count < 1) || ($QUERY_COUNT_TEST > 0) )
 		{
 		if (!$Q) {print "vicidial_amd_log_archive has no records to send to cold-storage, skipping this table...\n";}
 		}
@@ -1350,7 +1358,7 @@ if (!$T)
 
 	if (!$Q) {print "\nAnalyzing vicidial_agent_log_archive table...  ($vicidial_agent_log_archive_count|$call_log_CS_count)\n";}
 
-	if ($vicidial_agent_log_archive_count < 1) 
+	if ( ($vicidial_agent_log_archive_count < 1) || ($QUERY_COUNT_TEST > 0) )
 		{
 		if (!$Q) {print "vicidial_agent_log_archive has no records to send to cold-storage, skipping this table...\n";}
 		}
@@ -1505,7 +1513,7 @@ if (!$T)
 
 	if (!$Q) {print "\nAnalyzing vicidial_api_log_archive table...  ($vicidial_api_log_archive_count|$call_log_CS_count)\n";}
 
-	if ($vicidial_api_log_archive_count < 1) 
+	if ( ($vicidial_api_log_archive_count < 1) || ($QUERY_COUNT_TEST > 0) )
 		{
 		if (!$Q) {print "vicidial_api_log_archive has no records to send to cold-storage, skipping this table...\n";}
 		}
@@ -1660,7 +1668,7 @@ if (!$T)
 
 	if (!$Q) {print "\nAnalyzing vicidial_api_urls_archive table...  ($vicidial_api_urls_archive_count|$call_log_CS_count)\n";}
 
-	if ($vicidial_api_urls_archive_count < 1) 
+	if ( ($vicidial_api_urls_archive_count < 1) || ($QUERY_COUNT_TEST > 0) )
 		{
 		if (!$Q) {print "vicidial_api_urls_archive has no records to send to cold-storage, skipping this table...\n";}
 		}
@@ -1815,7 +1823,7 @@ if (!$T)
 
 	if (!$Q) {print "\nAnalyzing vicidial_agent_visibility_log_archive table...  ($vicidial_agent_visibility_log_archive_count|$call_log_CS_count)\n";}
 
-	if ($vicidial_agent_visibility_log_archive_count < 1) 
+	if ( ($vicidial_agent_visibility_log_archive_count < 1) || ($QUERY_COUNT_TEST > 0) )
 		{
 		if (!$Q) {print "vicidial_agent_visibility_log_archive has no records to send to cold-storage, skipping this table...\n";}
 		}
@@ -1945,12 +1953,6 @@ if (!$T)
 
 
 
-
-
-
-
-
-
 	if ($SSsip_event_logging > 0)
 		{
 		##### BEGIN vicidial_log_extended_sip_archive cold-storage processing #####
@@ -1980,7 +1982,7 @@ if (!$T)
 
 		if (!$Q) {print "\nAnalyzing vicidial_log_extended_sip_archive table...  ($vicidial_log_extended_sip_archive_count|$call_log_CS_count)\n";}
 
-		if ($vicidial_log_extended_sip_archive_count < 1) 
+		if ( ($vicidial_log_extended_sip_archive_count < 1) || ($QUERY_COUNT_TEST > 0) )
 			{
 			if (!$Q) {print "vicidial_log_extended_sip_archive has no records to send to cold-storage, skipping this table...\n";}
 			}
@@ -2108,547 +2110,6 @@ if (!$T)
 		##### END vicidial_log_extended_sip_archive cold-storage processing #####
 		}
 
-
-
-
-
-
-	### calculate time to run script ###
-	$secY = time();
-	$secZ = ($secY - $secX);
-	$secZm = ($secZ /60);
-	if (!$Q) {print "\nscript execution time in seconds: $secZ     minutes: $secZm\n";}
-
-exit;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	if ($SSsip_event_logging > 0)
-		{
-		##### BEGIN vicidial_log_extended_sip DAILY processing #####
-		$stmtA = "SELECT count(*) from vicidial_log_extended_sip;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		if ($sthArows > 0)
-			{
-			@aryA = $sthA->fetchrow_array;
-			$vicidial_log_extended_sip_count =	$aryA[0];
-			}
-		$sthA->finish();
-
-		$stmtA = "SELECT count(*) from vicidial_log_extended_sip_archive;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		if ($sthArows > 0)
-			{
-			@aryA = $sthA->fetchrow_array;
-			$vicidial_log_extended_sip_archive_count =	$aryA[0];
-			}
-		$sthA->finish();
-
-		if (!$Q) {print "\nProcessing vicidial_log_extended_sip table...  ($vicidial_log_extended_sip_count|$vicidial_log_extended_sip_archive_count)\n";}
-		$stmtA = "INSERT IGNORE INTO vicidial_log_extended_sip_archive SELECT * from vicidial_log_extended_sip;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		
-		$sthArows = $sthA->rows;
-		if (!$Q) {print "$sthArows rows inserted into vicidial_log_extended_sip_archive table \n";}
-		
-		$rv = $sthA->err();
-		if (!$rv) 
-			{
-			$stmtA = "DELETE FROM vicidial_log_extended_sip WHERE call_date < '$del_time';";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			$sthArows = $sthA->rows;
-			if (!$Q) {print "$sthArows rows deleted from vicidial_log_extended_sip table \n";}
-
-			$stmtA = "optimize table vicidial_log_extended_sip;";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			}
-		##### END vicidial_log_extended_sip DAILY processing #####
-		}
-
-
-	##### BEGIN vicidial_drop_log DAILY processing #####
-	$stmtA = "SELECT count(*) from vicidial_drop_log;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$vicidial_drop_log_count =	$aryA[0];
-		}
-	$sthA->finish();
-
-	$stmtA = "SELECT count(*) from vicidial_drop_log_archive;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$vicidial_drop_log_archive_count =	$aryA[0];
-		}
-	$sthA->finish();
-
-	if (!$Q) {print "\nProcessing vicidial_drop_log table...  ($vicidial_drop_log_count|$vicidial_drop_log_archive_count)\n";}
-	$stmtA = "INSERT IGNORE INTO vicidial_drop_log_archive SELECT * from vicidial_drop_log;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	
-	$sthArows = $sthA->rows;
-	if (!$Q) {print "$sthArows rows inserted into vicidial_drop_log_archive table \n";}
-	
-	$rv = $sthA->err();
-	if (!$rv) 
-		{
-		$stmtA = "DELETE FROM vicidial_drop_log WHERE drop_date < '$del_time';";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows = $sthA->rows;
-		if (!$Q) {print "$sthArows rows deleted from vicidial_drop_log table \n";}
-
-		$stmtA = "optimize table vicidial_drop_log;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		}
-	##### END vicidial_drop_log DAILY processing #####
-
-
-	##### BEGIN vicidial_dial_log DAILY processing #####
-	$stmtA = "SELECT count(*) from vicidial_dial_log;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$vicidial_dial_log_count =	$aryA[0];
-		}
-	$sthA->finish();
-
-	$stmtA = "SELECT count(*) from vicidial_dial_log_archive;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$vicidial_dial_log_archive_count =	$aryA[0];
-		}
-	$sthA->finish();
-
-	if (!$Q) {print "\nProcessing vicidial_dial_log table...  ($vicidial_dial_log_count|$vicidial_dial_log_archive_count)\n";}
-	$stmtA = "INSERT IGNORE INTO vicidial_dial_log_archive SELECT * from vicidial_dial_log;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	
-	$sthArows = $sthA->rows;
-	if (!$Q) {print "$sthArows rows inserted into vicidial_dial_log_archive table \n";}
-	
-	$rv = $sthA->err();
-	if (!$rv) 
-		{
-		$stmtA = "DELETE FROM vicidial_dial_log WHERE call_date < '$del_time';";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows = $sthA->rows;
-		if (!$Q) {print "$sthArows rows deleted from vicidial_dial_log table \n";}
-
-		$stmtA = "optimize table vicidial_dial_log;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		}
-	##### END vicidial_dial_log DAILY processing #####
-
-
-	##### BEGIN vicidial_user_dial_log DAILY processing #####
-	$stmtA = "SELECT count(*) from vicidial_user_dial_log;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$vicidial_user_dial_log_count =	$aryA[0];
-		}
-	$sthA->finish();
-
-	$stmtA = "SELECT count(*) from vicidial_user_dial_log_archive;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$vicidial_user_dial_log_archive_count =	$aryA[0];
-		}
-	$sthA->finish();
-
-	if (!$Q) {print "\nProcessing vicidial_user_dial_log table...  ($vicidial_user_dial_log_count|$vicidial_user_dial_log_archive_count)\n";}
-	$stmtA = "INSERT IGNORE INTO vicidial_user_dial_log_archive SELECT * from vicidial_user_dial_log;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	
-	$sthArows = $sthA->rows;
-	if (!$Q) {print "$sthArows rows inserted into vicidial_user_dial_log_archive table \n";}
-	
-	$rv = $sthA->err();
-	if (!$rv) 
-		{
-		$stmtA = "DELETE FROM vicidial_user_dial_log WHERE call_date < '$del_time';";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows = $sthA->rows;
-		if (!$Q) {print "$sthArows rows deleted from vicidial_user_dial_log table \n";}
-
-		$stmtA = "optimize table vicidial_user_dial_log;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		}
-	##### END vicidial_user_dial_log DAILY processing #####
-
-
-	##### BEGIN vicidial_dial_cid_log DAILY processing #####
-	$stmtA = "SELECT count(*) from vicidial_dial_cid_log;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$vicidial_dial_cid_log_count =	$aryA[0];
-		}
-	$sthA->finish();
-
-	$stmtA = "SELECT count(*) from vicidial_dial_cid_log_archive;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$vicidial_dial_cid_log_archive_count =	$aryA[0];
-		}
-	$sthA->finish();
-
-	if (!$Q) {print "\nProcessing vicidial_dial_cid_log table...  ($vicidial_dial_cid_log_count|$vicidial_dial_cid_log_archive_count)\n";}
-	$stmtA = "INSERT IGNORE INTO vicidial_dial_cid_log_archive SELECT * from vicidial_dial_cid_log;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	
-	$sthArows = $sthA->rows;
-	if (!$Q) {print "$sthArows rows inserted into vicidial_dial_cid_log_archive table \n";}
-	
-	$rv = $sthA->err();
-	if (!$rv) 
-		{
-		$stmtA = "DELETE FROM vicidial_dial_cid_log WHERE call_date < '$del_time';";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows = $sthA->rows;
-		if (!$Q) {print "$sthArows rows deleted from vicidial_dial_cid_log table \n";}
-
-		$stmtA = "optimize table vicidial_dial_cid_log;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		}
-	##### END vicidial_dial_cid_log DAILY processing #####
-
-
-	##### BEGIN vicidial_api_log DAILY processing #####
-	$stmtA = "SELECT count(*) from vicidial_api_log;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$vicidial_api_log_count =	$aryA[0];
-		}
-	$sthA->finish();
-
-	$stmtA = "SELECT count(*) from vicidial_api_log_archive;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$vicidial_api_log_archive_count =	$aryA[0];
-		}
-	$sthA->finish();
-
-	if (!$Q) {print "\nProcessing vicidial_api_log table...  ($vicidial_api_log_count|$vicidial_api_log_archive_count)\n";}
-	$stmtA = "INSERT IGNORE INTO vicidial_api_log_archive SELECT * from vicidial_api_log;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	
-	$sthArows = $sthA->rows;
-	if (!$Q) {print "$sthArows rows inserted into vicidial_api_log_archive table \n";}
-	
-	$rv = $sthA->err();
-	if (!$rv) 
-		{
-		$stmtA = "DELETE FROM vicidial_api_log WHERE api_date < '$del_time';";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows = $sthA->rows;
-		if (!$Q) {print "$sthArows rows deleted from vicidial_api_log table \n";}
-
-		$stmtA = "optimize table vicidial_api_log;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-
-		$stmtA = "optimize table vicidial_api_log_archive;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		}
-	##### END vicidial_api_log DAILY processing #####
-
-
-	##### BEGIN vicidial_api_urls DAILY processing #####
-	$stmtA = "SELECT count(*) from vicidial_api_urls;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$vicidial_api_urls_count =	$aryA[0];
-		}
-	$sthA->finish();
-
-	$stmtA = "SELECT count(*) from vicidial_api_urls_archive;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	$sthArows=$sthA->rows;
-	if ($sthArows > 0)
-		{
-		@aryA = $sthA->fetchrow_array;
-		$vicidial_api_urls_archive_count =	$aryA[0];
-		}
-	$sthA->finish();
-
-	if (!$Q) {print "\nProcessing vicidial_api_urls table...  ($vicidial_api_urls_count|$vicidial_api_urls_archive_count)\n";}
-	$stmtA = "INSERT IGNORE INTO vicidial_api_urls_archive SELECT * from vicidial_api_urls;";
-	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-	
-	$sthArows = $sthA->rows;
-	if (!$Q) {print "$sthArows rows inserted into vicidial_api_urls_archive table \n";}
-	
-	$rv = $sthA->err();
-	if (!$rv) 
-		{
-		$stmtA = "DELETE FROM vicidial_api_urls WHERE api_date < '$del_time';";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows = $sthA->rows;
-		if (!$Q) {print "$sthArows rows deleted from vicidial_api_urls table \n";}
-
-		$stmtA = "optimize table vicidial_api_urls;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-
-		$stmtA = "optimize table vicidial_api_urls_archive;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		}
-	##### END vicidial_api_urls DAILY processing #####
-
-
-	if ($carrier_daily)
-		{
-		##### BEGIN vicidial_carrier_log DAILY processing #####
-		$stmtA = "SELECT count(*) from vicidial_carrier_log;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		if ($sthArows > 0)
-			{
-			@aryA = $sthA->fetchrow_array;
-			$vicidial_carrier_log_count =	$aryA[0];
-			}
-		$sthA->finish();
-
-		$stmtA = "SELECT count(*) from vicidial_carrier_log_archive;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		if ($sthArows > 0)
-			{
-			@aryA = $sthA->fetchrow_array;
-			$vicidial_carrier_log_archive_count =	$aryA[0];
-			}
-		$sthA->finish();
-
-		if (!$Q) {print "\nProcessing vicidial_carrier_log table...  ($vicidial_carrier_log_count|$vicidial_carrier_log_archive_count)\n";}
-		$stmtA = "INSERT IGNORE INTO vicidial_carrier_log_archive SELECT * from vicidial_carrier_log;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		
-		$sthArows = $sthA->rows;
-		if (!$Q) {print "$sthArows rows inserted into vicidial_carrier_log_archive table \n";}
-		
-		$rv = $sthA->err();
-		if (!$rv) 
-			{
-			$stmtA = "DELETE FROM vicidial_carrier_log WHERE call_date < '$del_time';";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			$sthArows = $sthA->rows;
-			if (!$Q) {print "$sthArows rows deleted from vicidial_carrier_log table \n";}
-
-			$stmtA = "optimize table vicidial_carrier_log;";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-
-			$stmtA = "optimize table vicidial_carrier_log_archive;";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			}
-		##### END vicidial_carrier_log DAILY processing #####
-		}
-
-
-	if ($vlog_daily)
-		{
-		##### BEGIN vicidial_log DAILY processing #####
-		$stmtA = "SELECT count(*) from vicidial_log;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		if ($sthArows > 0)
-			{
-			@aryA = $sthA->fetchrow_array;
-			$vicidial_log_count =	$aryA[0];
-			}
-		$sthA->finish();
-
-		$stmtA = "SELECT count(*) from vicidial_log_archive;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		if ($sthArows > 0)
-			{
-			@aryA = $sthA->fetchrow_array;
-			$vicidial_log_archive_count =	$aryA[0];
-			}
-		$sthA->finish();
-
-		if (!$Q) {print "\nProcessing vicidial_log table...  ($vicidial_log_count|$vicidial_log_archive_count)\n";}
-		$stmtA = "INSERT IGNORE INTO vicidial_log_archive SELECT * from vicidial_log;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		
-		$sthArows = $sthA->rows;
-		if (!$Q) {print "$sthArows rows inserted into vicidial_log_archive table \n";}
-		
-		$rv = $sthA->err();
-		if (!$rv) 
-			{
-			$stmtA = "DELETE FROM vicidial_log WHERE call_date < '$del_time';";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			$sthArows = $sthA->rows;
-			if (!$Q) {print "$sthArows rows deleted from vicidial_log table \n";}
-
-			$stmtA = "optimize table vicidial_log;";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-
-			$stmtA = "optimize table vicidial_log_archive;";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			}
-		##### END vicidial_log DAILY processing #####
-
-		##### BEGIN vicidial_amd_log DAILY processing #####
-		$stmtA = "SELECT count(*) from vicidial_amd_log;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		if ($sthArows > 0)
-			{
-			@aryA = $sthA->fetchrow_array;
-			$vicidial_amd_log_count =	$aryA[0];
-			}
-		$sthA->finish();
-
-		$stmtA = "SELECT count(*) from vicidial_amd_log_archive;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		if ($sthArows > 0)
-			{
-			@aryA = $sthA->fetchrow_array;
-			$vicidial_amd_log_archive_count =	$aryA[0];
-			}
-		$sthA->finish();
-
-		if (!$Q) {print "\nProcessing vicidial_amd_log table...  ($vicidial_amd_log_count|$vicidial_amd_log_archive_count)\n";}
-		$stmtA = "INSERT IGNORE INTO vicidial_amd_log_archive SELECT * from vicidial_amd_log;";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		
-		$sthArows = $sthA->rows;
-		if (!$Q) {print "$sthArows rows inserted into vicidial_amd_log_archive table \n";}
-		
-		$rv = $sthA->err();
-		if (!$rv) 
-			{
-			$stmtA = "DELETE FROM vicidial_amd_log WHERE call_date < '$del_time';";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			$sthArows = $sthA->rows;
-			if (!$Q) {print "$sthArows rows deleted from vicidial_amd_log table \n";}
-
-			$stmtA = "optimize table vicidial_amd_log;";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-
-			$stmtA = "optimize table vicidial_amd_log_archive;";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			}
-		##### END vicidial_amd_log DAILY processing #####
-		}
-
-
-	### calculate time to run script ###
-	$secY = time();
-	$secZ = ($secY - $secX);
-	$secZm = ($secZ /60);
-	if (!$Q) {print "\nscript execution time in seconds: $secZ     minutes: $secZm\n";}
-
-	exit;
 	}
 
 
