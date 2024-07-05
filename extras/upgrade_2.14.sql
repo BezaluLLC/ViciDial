@@ -2728,3 +2728,11 @@ UPDATE system_settings SET db_schema_version='1714',db_schema_update_date=NOW() 
 ALTER TABLE vicidial_campaigns ADD leave_3way_stop_recording ENUM('DISABLED','ALL_CALLS') default 'DISABLED';
 
 UPDATE system_settings SET db_schema_version='1715',db_schema_update_date=NOW() where db_schema_version < 1715;
+
+ALTER TABLE system_settings ADD coldstorage_server_ip VARCHAR(50) default '';
+ALTER TABLE system_settings ADD coldstorage_dbname VARCHAR(50) default '';
+ALTER TABLE system_settings ADD coldstorage_login VARCHAR(50) default '';
+ALTER TABLE system_settings ADD coldstorage_pass VARCHAR(50) default '';
+ALTER TABLE system_settings ADD coldstorage_port VARCHAR(10) default '';
+
+UPDATE system_settings SET db_schema_version='1716',db_schema_update_date=NOW() where db_schema_version < 1716;

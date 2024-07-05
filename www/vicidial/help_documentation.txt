@@ -1,4 +1,4 @@
-# version: 20240627195501
+# version: 20240704093501
 users-user	User ID	<QXZ>This field is where you put the users ID number, can be up to 20 digits in length, Must be at least 2 characters in length. We strongly recommend not reusing user accounts for different users, for reporting accuracy. To disable a user account, set the Active option to -N-.</QXZ>
 users-pass	Password	<QXZ>This field is where you put the users password. Must be at least 2 characters in length, unless the User Password Minimum Length system setting is enabled, which will require a longer password. Only letters and numbers are allowed in user passwords. A medium strength user password will be at least 10 characters in length, and a strong user password will be at least 20 characters in length and have letters as well as at least one number. It is recommended that you use a longer password if possible, stringing together several unrelated words with no spaces, and a number somewhere in the string. The maximum size of a password is 100 characters.</QXZ>
 users-force_change_password	Force Change Password	<QXZ>If this option is set to Y then the user will be prompted to change their password the next time they log in to the administration webpage or the agent screen. Default is N.</QXZ>
@@ -1258,6 +1258,11 @@ settings-alt_log_dbname	Alt-Log DB Name	<QXZ>The database name for the Alt-Log d
 settings-alt_log_login	Alt-Log DB Login	<QXZ>The login user for the Alt-Log database. Default is empty.</QXZ>
 settings-alt_log_pass	Alt-Log DB Password	<QXZ>The password for the Alt-Log database. Default is empty.</QXZ>
 settings-tables_use_alt_log_db	Alt-Log Tables	<QXZ>These are the tables that are available for logging on the alternate log database server. Default is blank.</QXZ>
+settings-coldstorage_server_ip	Cold-Storage DB Server	<QXZ>This is the Cold-Storage log database server. This is optional, and if enabled by your systems administrator, allows some old log archives to be accessed from a separate database server. For more information on this process, read the LOG_ARCHIVING_AND_COLD_STORAGE.txt document. Default is empty.</QXZ>
+settings-coldstorage_dbname	Cold-Storage DB Name	<QXZ>The database name for the Cold-Storage Log database. Default is empty.</QXZ>
+settings-coldstorage_login	Cold-Storage DB Login	<QXZ>The read-only login user for the Cold-Storage Log database. Default is empty.</QXZ>
+settings-coldstorage_pass	Cold-Storage DB Password	<QXZ>The password for the read-only login user for the Cold-Storage Log database. Default is empty.</QXZ>
+settings-coldstorage_port	Cold-Storage DB Password	<QXZ>The connection port for the Cold-Storage Log database. Default is empty.</QXZ>
 settings-enable_queuemetrics_logging	Enable QueueMetrics Logging	<QXZ>This setting allows you to define whether the system will insert log entries into the queue_log database table as Asterisk Queues activity does. QueueMetrics is a standalone, closed-source statistical analysis program. You must have QueueMetrics already installed and configured before enabling this feature. Default is 0.</QXZ>
 settings-queuemetrics_server_ip	QueueMetrics Server IP	<QXZ>This is the IP address of the database for your QueueMetrics installation.</QXZ>
 settings-queuemetrics_dbname	QueueMetrics Database Name	<QXZ>This is the database name for your QueueMetrics database.</QXZ>

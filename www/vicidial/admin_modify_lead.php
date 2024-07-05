@@ -8,7 +8,7 @@
 # just needs to enter the leadID and then they can view and modify the 
 # information in the record for that lead
 #
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -117,6 +117,7 @@
 # 230309-1444 - Added Inbound Call Menu Log display as part of IVR Log section
 # 231117-1920 - Added vicidial_3way_press_log display
 # 231126-2218 - Added vicidial_hci_log display
+# 240704-2329 - Added coldstorage log view option
 #
 
 require("dbconnect_mysqli.php");
@@ -278,7 +279,7 @@ if ($nonselectable_statuses > 0)
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable,allow_emails,enable_languages,language_method,active_modules,log_recording_access,admin_screen_colors,enable_gdpr_download_deletion,source_id_display,mute_recordings,sip_event_logging,allow_web_debug,hopper_hold_inserts FROM system_settings;";
+$stmt = "SELECT use_non_latin,custom_fields_enabled,webroot_writable,allow_emails,enable_languages,language_method,active_modules,log_recording_access,admin_screen_colors,enable_gdpr_download_deletion,source_id_display,mute_recordings,sip_event_logging,allow_web_debug,hopper_hold_inserts,coldstorage_server_ip,coldstorage_dbname,coldstorage_login,coldstorage_pass,coldstorage_port FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 #if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -300,6 +301,11 @@ if ($qm_conf_ct > 0)
 	$SSsip_event_logging =		$row[12];
 	$SSallow_web_debug =		$row[13];
 	$SShopper_hold_inserts =	$row[14];
+	$SScoldstorage_server_ip =	$row[15];
+	$SScoldstorage_dbname =		$row[16];
+	$SScoldstorage_login =		$row[17];
+	$SScoldstorage_pass =		$row[18];
+	$SScoldstorage_port =		$row[19];
 	}
 if ($SSallow_web_debug < 1) {$DB=0;}
 ##### END SETTINGS LOOKUP #####
@@ -2345,6 +2351,241 @@ else
 			$campaign_id = $row[3];
 			$uniqueidLIST .= ",'$row[18]'";
 			}
+
+		// BEGIN cold-storage log queries
+		if ( (strlen($SScoldstorage_server_ip) > 1) and (strlen($SScoldstorage_login) > 0) and (strlen($SScoldstorage_pass) > 0) )
+			{
+			$linkCS = mysqli_connect("$SScoldstorage_server_ip", "$SScoldstorage_login", "$SScoldstorage_pass", "$SScoldstorage_dbname", $SScoldstorage_port);
+			if (!$linkCS) {echo "MySQL Cold-Storage connect ERROR:  " . mysqli_connect_error();}
+
+			##### grab vicidial_log_archive records #####
+			$stmt="SELECT uniqueid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,user_group,term_reason,alt_dial from vicidial_log_archive where lead_id='" . mysqli_real_escape_string($linkCS, $lead_id) . "' order by uniqueid desc limit 500;";
+			$rslt=mysql_to_mysqli($stmt, $linkCS);
+			$logs_to_print = mysqli_num_rows($rslt);
+			if ($DB) {echo "$logs_to_print|$stmt\n";}
+
+			$u=0;
+		#	$call_log = '';
+		#	$log_campaign = '';
+			while ($logs_to_print > $u) 
+				{
+				$row=mysqli_fetch_row($rslt);
+				if (strlen($log_campaign)<1) {$log_campaign = $row[3];}
+				if (preg_match("/1$|3$|5$|7$|9$/i", $u))
+					{$bgcolor="bgcolor=\"#$SSstd_row2_background\"";} 
+				else
+					{$bgcolor="bgcolor=\"#$SSstd_row1_background\"";}
+
+				$u++;
+				$call_log .= "<tr $bgcolor>";
+				$call_log .= "<td><font size=1>$u</td>";
+				$call_log .= "<td><font size=2><font color='#FF0000'>$row[4]</font></td>";
+				$call_log .= "<td align=left><font size=2> $row[7]</td>\n";
+				if ( ($LOGmodify_leads == '3') or ($LOGmodify_leads == '4') )
+					{
+					$call_log .= "<td align=left><font size=2><font color=blue><u><span id=\"vicidial_log_archive_status_$u\" onClick=\"ModifyLogDisplayShow(event, $u,'vicidial_log_archive','$row[0]','$row[1]','$row[4]','$row[8]','$row[11]')\">$row[8]</span></u></font></td>\n";
+					$HTML_inline_script .= "vicidial_log_archive_mod[$u] = \"Call Date: $row[4]<br>$label_lead_id: $row[1]<br>Current Status: $row[8]<br>\";\n";
+					}
+				else
+					{$call_log .= "<td align=left><font size=2> $row[8]</td>\n";}
+				$call_log .= "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[11]\" target=\"_blank\">$row[11]</A> </td>\n";
+				$call_log .= "<td align=right><font size=2> $row[3] </td>\n";
+				$call_log .= "<td align=right><font size=2> $row[2] </td>\n";
+				$call_log .= "<td align=right><font size=2> $row[1] </td>\n";
+				$call_log .= "<td align=center><font size=2> $row[15] </td>\n";
+				$call_log .= "<td align=right><font size=2>&nbsp; $row[10] </font><font size=1>$row[16] </td>\n";
+
+				if ($CIDdisplay=="Yes")
+					{
+					$caller_code='';
+					$stmtA="SELECT caller_code,server_ip FROM vicidial_log_extended_archive WHERE lead_id='" . mysqli_real_escape_string($linkCS, $lead_id) . "' and uniqueid='$row[0]';";
+					$rsltA=mysql_to_mysqli($stmtA, $linkCS);
+					$cc_to_print = mysqli_num_rows($rsltA);
+					if ($cc_to_print > 0)
+						{
+						$rowA=mysqli_fetch_row($rsltA);
+						$caller_code = $rowA[0];
+						$VLEserver_ip = $rowA[1];
+						}
+					$outbound_cid='';   $VDLcall_date='0';
+					$stmtA="SELECT outbound_cid,server_ip,call_date FROM vicidial_dial_log_archive WHERE lead_id='" . mysqli_real_escape_string($linkCS, $lead_id) . "' and caller_code='$caller_code' limit 1;";
+					$rsltA=mysql_to_mysqli($stmtA, $linkCS);
+					$cid_to_print = mysqli_num_rows($rsltA);
+					if ($cid_to_print > 0)
+						{
+						$rowA=mysqli_fetch_row($rsltA);
+						$outbound_cid = $rowA[0];
+						$outbound_cid = preg_replace("/\".*\" /",'',$outbound_cid);
+						$VDLserver_ip = $rowA[1];
+						$VDLcall_date = $rowA[2];
+						}
+					$outbound_cid_num='';   $outbound_cid_type='';
+					$stmtA="SELECT outbound_cid,outbound_cid_type FROM vicidial_dial_cid_log_archive WHERE call_date='$VDLcall_date' and caller_code='$caller_code' limit 1;";
+					$rsltA=mysql_to_mysqli($stmtA, $linkCS);
+					$vdl_to_print = mysqli_num_rows($rsltA);
+					if ($vdl_to_print > 0)
+						{
+						$rowA=mysqli_fetch_row($rsltA);
+						$outbound_cid_num = $rowA[0];
+						$outbound_cid_num = preg_replace("/\".*\" /",'',$outbound_cid_num);
+						$outbound_cid_type = $rowA[1];
+						}
+
+					if ($SSsip_event_logging > 0)
+						{
+						$call_log .= "<td align=right nowrap><font size=2>&nbsp; $outbound_cid  <span onClick=\"ShowCallDetail(event,'$caller_code','$SSframe_background')\"><font color=blue><u>$caller_code</u></font></span> <font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $row[0]</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
+						}
+					else
+						{
+						$call_log .= "<td align=right nowrap><font size=2>&nbsp; $outbound_cid $caller_code </font><font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $row[0]</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
+						}
+					}
+				$call_log .= "</tr>\n";
+
+				$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='" . mysqli_real_escape_string($linkCS, $lead_id) . "' and vicidial_id='$row[0]';";
+				$rsltA=mysql_to_mysqli($stmtA, $link);
+				$out_notes_to_print = mysqli_num_rows($rslt);
+				if ($out_notes_to_print > 0)
+					{
+					$rowA=mysqli_fetch_row($rsltA);
+					if (strlen($rowA[0]) > 0)
+						{
+						$call_log .= "<TR>";
+						$call_log .= "<td></td>";
+						$call_log .= "<TD $bgcolor COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"> "._QXZ("NOTES").": &nbsp; $rowA[0] </font></TD>";
+						$call_log .= "</TR>";
+						}
+					}
+
+				$campaign_id = $row[3];
+				$uniqueidLIST .= ",'$row[0]'";
+				}
+
+			##### grab vicidial_agent_log_archive records #####
+			$stmt="SELECT agent_log_id,user,server_ip,event_time,lead_id,campaign_id,pause_epoch,pause_sec,wait_epoch,wait_sec,talk_epoch,talk_sec,dispo_epoch,dispo_sec,status,user_group,comments,sub_status from vicidial_agent_log_archive where lead_id='" . mysqli_real_escape_string($linkCS, $lead_id) . "' order by agent_log_id desc limit 500;";
+			$rslt=mysql_to_mysqli($stmt, $linkCS);
+			$Alogs_to_print = mysqli_num_rows($rslt);
+			if ($DB) {echo "$Alogs_to_print|$stmt\n";}
+
+			$y=0;
+		#	$agent_log = '';
+		#	$Alog_campaign = '';
+			while ($Alogs_to_print > $y) 
+				{
+				$row=mysqli_fetch_row($rslt);
+				if (strlen($Alog_campaign)<1) {$Alog_campaign = $row[5];}
+				if (preg_match("/1$|3$|5$|7$|9$/i", $y))
+					{$bgcolor="bgcolor=\"#$SSstd_row2_background\"";} 
+				else
+					{$bgcolor="bgcolor=\"#$SSstd_row1_background\"";}
+
+				$y++;
+				$agent_log .= "<tr $bgcolor>";
+				$agent_log .= "<td><font size=1>$y</td>";
+				$agent_log .= "<td><font size=2><font color='#FF0000'>$row[3]</font></td>";
+				$agent_log .= "<td align=left><font size=2> $row[5]</td>\n";
+				$agent_log .= "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[1]\" target=\"_blank\">$row[1]</A> </td>\n";
+				$agent_log .= "<td align=right><font size=2> $row[7]</td>\n";
+				$agent_log .= "<td align=right><font size=2> $row[9] </td>\n";
+				$agent_log .= "<td align=right><font size=2> $row[11] </td>\n";
+				$agent_log .= "<td align=right><font size=2> $row[13] </td>\n";
+				if ( ($LOGmodify_leads == '3') or ($LOGmodify_leads == '4') )
+					{
+					$agent_log .= "<td align=left><font size=2> &nbsp; <font color=blue><u><span id=\"vicidial_agent_log_archive_status_$y\" onClick=\"ModifyLogDisplayShow(event, $y,'vicidial_agent_log_archive','$row[0]','$row[4]','$row[3]','$row[14]','$row[1]')\">$row[14]</span></u></font></td>\n";
+					$HTML_inline_script .= "vicidial_agent_log_archive_mod[$y] = \"Event Date: $row[3]<br>$label_lead_id: $row[4]<br>Current Status: $row[14]<br>\";\n";
+					}
+				else
+					{$agent_log .= "<td align=left><font size=2> $row[14]</td>\n";}
+				$agent_log .= "<td align=right><font size=2> &nbsp; $row[15] </td>\n";
+				$agent_log .= "<td align=right><font size=2> &nbsp; $row[17] </td></tr>\n";
+
+				$campaign_id = $row[5];
+				}
+
+			##### grab vicidial_closer_log_archive records #####
+			$stmt="SELECT closecallid,lead_id,list_id,campaign_id,call_date,start_epoch,end_epoch,length_in_sec,status,phone_code,phone_number,user,comments,processed,queue_seconds,user_group,xfercallid,term_reason,uniqueid,agent_only from vicidial_closer_log_archive where lead_id='" . mysqli_real_escape_string($linkCS, $lead_id) . "' order by closecallid desc limit 500;";
+			$rslt=mysql_to_mysqli($stmt, $linkCS);
+			$Clogs_to_print = mysqli_num_rows($rslt);
+			if ($DB) {echo "$Clogs_to_print|$stmt\n";}
+
+			$y=0;
+		#	$closer_log = '';
+		#	$Clog_campaign = '';
+			while ($Clogs_to_print > $y) 
+				{
+				$row=mysqli_fetch_row($rslt);
+				if (strlen($Clog_campaign)<1) {$Clog_campaign = $row[3];}
+				if (preg_match("/1$|3$|5$|7$|9$/i", $y))
+					{$bgcolor="bgcolor=\"#$SSstd_row2_background\"";} 
+				else
+					{$bgcolor="bgcolor=\"#$SSstd_row1_background\"";}
+
+				$y++;
+				$closer_log .= "<tr $bgcolor>";
+				$closer_log .= "<td><font size=1>$y</td>";
+				$closer_log .= "<td><font size=2><font color='#FF0000'>$row[4]</font></td>";
+				$closer_log .= "<td align=left><font size=2> $row[7]</td>\n";
+				if ( ($LOGmodify_leads == '3') or ($LOGmodify_leads == '4') )
+					{
+					$closer_log .= "<td align=left><font size=2><font color=blue><u><span id=\"vicidial_closer_log_archive_status_$y\" onClick=\"ModifyLogDisplayShow(event, $y,'vicidial_closer_log_archive','$row[0]','$row[1]','$row[4]','$row[8]','$row[11]')\">$row[8]</span></u></font></td>\n";
+					$HTML_inline_script .= "vicidial_closer_log_archive_mod[$y] = \"Call Date: $row[4]<br>$label_lead_id: $row[1]<br>Current Status: $row[8]<br>\";\n";
+					}
+				else
+					{$closer_log .= "<td align=left><font size=2> $row[8]</td>\n";}
+				$closer_log .= "<td align=left><font size=2> <A HREF=\"user_stats.php?user=$row[11]\" target=\"_blank\">$row[11]</A> </td>\n";
+				$closer_log .= "<td align=right><font size=2> $row[3] </td>\n";
+				$closer_log .= "<td align=right><font size=2> $row[2] </td>\n";
+				$closer_log .= "<td align=right><font size=2> $row[1] </td>\n";
+				$closer_log .= "<td align=right><font size=2> &nbsp; $row[14] </td>\n";
+				$closer_log .= "<td align=right><font size=2> &nbsp; $row[17] </td>\n";
+
+				if ($CIDdisplay=="Yes")
+					{
+					$extension='';
+					$stmtA="SELECT extension,server_ip FROM vicidial_did_log_archive WHERE uniqueid='$row[18]' and call_date <= \"$row[4]\" order by call_date desc;";
+					$rsltA=mysql_to_mysqli($stmtA, $linkCS);
+					$cid_to_print = mysqli_num_rows($rsltA);
+					if ($cid_to_print > 0)
+						{
+						$rowA=mysqli_fetch_row($rsltA);
+						$extension = $rowA[0];
+						$VDLserver_ip = $rowA[1];
+						}
+					$caller_code='';
+					$stmtA="SELECT caller_code,server_ip FROM vicidial_inbound_caller_codes_archive WHERE lead_id='" . mysqli_real_escape_string($linkCS, $lead_id) . "' and uniqueid='$row[18]' and group_id='$row[3]';";
+					$rsltA=mysql_to_mysqli($stmtA, $linkCS);
+					$cc_to_print = mysqli_num_rows($rsltA);
+					if ($cc_to_print > 0)
+						{
+						$rowA=mysqli_fetch_row($rsltA);
+						$caller_code =	$rowA[0];
+						$VLEserver_ip = $rowA[1];
+						}
+					$closer_log .= "<td align=right nowrap><font size=2>&nbsp; $caller_code</td><td align=right nowrap><font size=2>&nbsp; <a href=\"admin.php?ADD=3311&did_pattern=$extension\">$extension</a></td><td align=right><font size=2>&nbsp; $row[18]</td><td align=right><font size=2>&nbsp; $rowA[1]</td>\n";
+					}
+				$closer_log .= "</tr>\n";
+
+				$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and vicidial_id IN('$row[0]','$row[18]');";
+				$rsltA=mysql_to_mysqli($stmtA, $link);
+				$in_notes_to_print = mysqli_num_rows($rslt);
+				if ($in_notes_to_print > 0)
+					{
+					$rowA=mysqli_fetch_row($rsltA);
+					if (strlen($rowA[0]) > 0)
+						{
+						$closer_log .= "<TR>";
+						$closer_log .= "<td></td>";
+						$closer_log .= "<TD $bgcolor COLSPAN=9><font style=\"font-size:11px;font-family:sans-serif;\"> "._QXZ("NOTES").": &nbsp; $rowA[0] </font></TD>";
+						$closer_log .= "</TR>";
+						}
+					}
+
+				$campaign_id = $row[3];
+				$uniqueidLIST .= ",'$row[18]'";
+				}
+			}
+		// END cold-storage log queries
+
 		}
 	########## END ARCHIVE LOG SEARCH ##########
 

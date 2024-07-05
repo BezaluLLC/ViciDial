@@ -864,6 +864,9 @@ OTHER CHANGES:
 246. Added ALT option for "Start Call URL" to allow for multiple URLs to be
 	requested at the agent-start of a call.
 
+247. Added archived-log cold-storage options and scripts.
+	See LOG_ARCHIVING_AND_COLD_STORAGE.txt document for more infomation.
+
 
 
 
