@@ -41,7 +41,7 @@ if (!isset($server_ip)) {$server_ip = '10.10.10.15';}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
-$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,enable_languages,language_method,allow_shared_dial,qc_features_active,allow_web_debug,slave_db_server,coldstorage_server_ip,coldstorage_dbname,coldstorage_login,coldstorage_pass,coldstorage_port FROM system_settings;";
+$stmt = "SELECT use_non_latin,webroot_writable,outbound_autodial_active,user_territories_active,enable_languages,language_method,allow_shared_dial,qc_features_active,allow_web_debug,slave_db_server,coldstorage_server_ip,coldstorage_dbname,coldstorage_login,coldstorage_pass,coldstorage_port,alt_log_server_ip,alt_log_dbname,alt_log_login,alt_log_pass FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 #if ($DB) {echo "$stmt\n";}
 $qm_conf_ct = mysqli_num_rows($rslt);
@@ -63,6 +63,10 @@ if ($qm_conf_ct > 0)
 	$SScoldstorage_login =			$row[12];
 	$SScoldstorage_pass =			$row[13];
 	$SScoldstorage_port =			$row[14];
+	$SSalt_log_server_ip =			$row[15];
+	$SSalt_log_dbname =				$row[16];
+	$SSalt_log_login =				$row[17];
+	$SSalt_log_pass =				$row[18];
 	}
 if ($SSallow_web_debug < 1) {$DB=0;}
 ##### END SETTINGS LOOKUP #####
@@ -340,6 +344,8 @@ if ( ($stage == 'empty') or (strlen($stage) < 1) )
 	echo "<select size=1 name=stage>";
 	echo "<option value='SECONDARY'>"._QXZ("SECONDARY")."</option>";
 	echo "<option value='COLDSTORAGE'>"._QXZ("COLDSTORAGE")."</option>";
+	echo "<option value='ALT_LOG_SECONDARY'>"._QXZ("ALT_LOG_SECONDARY")."</option>";
+	echo "<option value='ALT_LOG'>"._QXZ("ALT_LOG")."</option>";
 	echo "</select>";
 	echo " &nbsp; <INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
 	echo "</FORM>\n\n";
@@ -387,11 +393,54 @@ else
 			{
 			$CSserver_string = $SScoldstorage_server_ip;
 			$linkCS = mysqli_connect("$SScoldstorage_server_ip", "$SScoldstorage_login", "$SScoldstorage_pass", "$SScoldstorage_dbname", $SScoldstorage_port);
-			if (!$linkCS) {echo "MySQL Cold-Storage connect ERROR:  " . mysqli_connect_error();}
 			}
 		else
 			{
 			echo "Error: no secondary server: $SSslave_db_server\n";
+			exit;
+			}
+		}
+	if ($stage == 'ALT_LOG_SECONDARY')
+		{
+		if (strlen($SSalt_log_server_ip)>4)
+			{
+			if (preg_match("/\:/", $SSalt_log_server_ip)) 
+				{
+				$temp_slave_db = explode(':',$SSalt_log_server_ip);
+				$CSserver_string =	$temp_slave_db[0];
+				$VARDB_port =		$temp_slave_db[1];
+				}
+			else
+				{
+				$CSserver_string = $SSalt_log_server_ip;
+				}
+			$linkCS=mysqli_connect($CSserver_string, "$VARDB_user", "$VARDB_pass", "$VARDB_database", $VARDB_port);
+			}
+		else
+			{
+			echo "Error: no alt-log secondary server: $SSalt_log_server_ip \n";
+			exit;
+			}
+		}
+	if ($stage == 'ALT_LOG')
+		{
+		if (strlen($SSalt_log_server_ip)>4)
+			{
+			if (preg_match("/\:/", $SSalt_log_server_ip)) 
+				{
+				$temp_slave_db = explode(':',$SSalt_log_server_ip);
+				$CSserver_string =	$temp_slave_db[0];
+				$VARDB_port =		$temp_slave_db[1];
+				}
+			else
+				{
+				$CSserver_string = $SSalt_log_server_ip;
+				}
+			$linkCS=mysqli_connect($CSserver_string, "$SSalt_log_login", "$SSalt_log_pass", "$SSalt_log_dbname", $VARDB_port);
+			}
+		else
+			{
+			echo "Error: no alt-log server: $SSalt_log_server_ip \n";
 			exit;
 			}
 		}
@@ -578,516 +627,4 @@ else
 	echo "</TABLE>\n";
 	echo "</BODY></HTML>";
 	}
-exit;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-	if (strlen($stmt) > 10)
-		{
-		$rslt=mysql_to_mysqli($stmt, $link);
-		if ($DB) {echo "$stmt\n";}
-		$ids_to_print = mysqli_num_rows($rslt);
-		$first_found=0;
-		$first_text='';
-		$second_found=0;
-		$second_text='';
-		$i=0;
-		while ($ids_to_print > $i)
-			{
-			$row=mysqli_fetch_row($rslt);
-			$first_id_menu .= "<option";
-			if ($stage == 'PHONES')
-				{
-				if ($first_id == "$row[0]-----$row[1]") {$first_id_menu .= " SELECTED";   $first_found++;}
-				$first_id_menu .= " value=\"$row[0]-----$row[1]\">$row[0] - $row[1]</option>";
-				}
-			else
-				{
-				if ($first_id == $row[0]) {$first_id_menu .= " SELECTED";   $first_found++;}
-				$first_id_menu .= " value=\"$row[0]\">$row[0] - $row[1]</option>";
-				}
-
-			$second_id_menu .= "<option";
-			if ($stage == 'PHONES')
-				{
-				if ($second_id == "$row[0]-----$row[1]") {$second_id_menu .= " SELECTED";   $second_found++;}
-				$second_id_menu .= " value=\"$row[0]-----$row[1]\">$row[0] - $row[1]</option>";
-				}
-			else
-				{
-				if ($second_id == $row[0]) {$second_id_menu .= " SELECTED";   $second_found++;}
-				$second_id_menu .= " value=\"$row[0]\">$row[0] - $row[1]</option>";
-				}
-
-
-			$i++;
-			}
-		if ($first_found < 1) {$first_id_menu .= "<option SELECTED value=''>"._QXZ("Select first")." "._QXZ("$stage")." "._QXZ("entry")."</option>";}
-		if ($second_found < 1) {$second_id_menu .= "<option SELECTED value=''>"._QXZ("Select second")." "._QXZ("$stage")." "._QXZ("entry")."</option>";}
-
-		echo "<TABLE CELLPADDING=4 CELLSPACING=4 WIDTH=100%><TR><TD COLSPAN=2 border=0>";
-		echo "<FORM ACTION=\"$PHP_SELF\" METHOD=GET ID='vicidial_report' NAME='vicidial_report'>\n";
-		echo "<input type=hidden name=DB value=\"$DB\">\n";
-		echo "<input type=hidden name=stage value=\"$stage\">\n";
-		echo "<FONT SIZE=2>"._QXZ("$stage")." 1: </FONT>";
-		echo "<select size=1 name=first_id>";
-		echo "$first_id_menu";
-		echo "</select>";
-		echo "<br>\n";
-		echo "<FONT SIZE=2>"._QXZ("$stage")." 2: </FONT>";
-		echo "<select size=1 name=second_id>";
-		echo "$second_id_menu";
-		echo "</select> &nbsp; ";
-		echo "<INPUT TYPE=SUBMIT NAME=SUBMIT VALUE='"._QXZ("SUBMIT")."'>\n";
-		echo "</FORM>\n\n";
-		echo "</TD></TR>\n\n";
-		echo "</TABLE>\n";
-
-		if ( (strlen($first_id) > 0) and (strlen($second_id) > 0) )
-			{
-			$stmtA='';   $stmtAA='';   $countAA='';   $stmtAAA='';   $countAAA='';   $stmtAAAA='';   $countAAAA='';   $stmtAAAAA='';   $countAAAAA='';
-			if ($stage == 'CAMPAIGNS')		
-				{
-				$stmtA="SELECT * from vicidial_campaigns where campaign_id='$first_id' $LOGallowed_campaignsSQL;";
-				$stmtAA="SELECT * from vicidial_campaign_statuses where campaign_id='$first_id' $LOGallowed_campaignsSQL order by status;";
-				$countAA='campaign statuses';
-				$stmtAAA="SELECT * from vicidial_campaign_hotkeys where campaign_id='$first_id' $LOGallowed_campaignsSQL order by hotkey;";
-				$countAAA='campaign hotkeys';
-				$stmtAAAA="SELECT * from vicidial_lead_recycle where campaign_id='$first_id' $LOGallowed_campaignsSQL order by status;";
-				$countAAAA='campaign lead recycle';
-				$stmtAAAAA="SELECT * from vicidial_pause_codes where campaign_id='$first_id' $LOGallowed_campaignsSQL order by pause_code;";
-				$countAAAAA='campaign pause codes';
-				}
-			if ($stage == 'LISTS')			
-				{
-				$stmtA="SELECT * from vicidial_lists where list_id='$first_id' $LOGallowed_campaignsSQL;";
-				$stmtAA="SELECT * from vicidial_lists_fields where list_id='$first_id' order by field_label;";
-				$countAA='custom list fields';
-				}
-			if ($stage == 'IN-GROUPS')		{$stmtA="SELECT * from vicidial_inbound_groups where group_id='$first_id' $LOGadmin_viewable_groupsSQL;";}
-			if ($stage == 'DIDS')			{$stmtA="SELECT * from vicidial_inbound_dids where did_pattern='$first_id' $LOGadmin_viewable_groupsSQL;";}
-			if ($stage == 'CALLMENUS')		
-				{
-				$stmtA="SELECT * from vicidial_call_menu where menu_id='$first_id' $LOGadmin_viewable_groupsSQL;";
-				$stmtAA="SELECT * from vicidial_call_menu_options where menu_id='$first_id' order by option_value limit 20;";
-				$countAA='options';
-				}
-			if ($stage == 'USERS')			
-				{
-				$stmtA="SELECT * from vicidial_users where user='$first_id' $LOGadmin_viewable_groupsSQL;";
-				$stmtAA="SELECT * from vicidial_campaign_agents where user='$first_id' order by campaign_id limit 1000;";
-				$countAA='user campaign settings';
-				$stmtAAA="SELECT * from vicidial_inbound_group_agents where user='$first_id' order by group_id limit 1000;";
-				$countAAA='user in-group settings';
-				}
-			if ($stage == 'USER-GROUPS')	{$stmtA="SELECT * from vicidial_user_groups where user_group='$first_id' $LOGadmin_viewable_groupsSQL;";}
-			if ($stage == 'PHONES')			
-				{
-				$first_id_ARY = explode('-----',$first_id);
-				$stmtA="SELECT * from phones where extension='$first_id_ARY[0]'and server_ip='$first_id_ARY[1]' $LOGadmin_viewable_groupsSQL;";
-				}
-			if ($stage == 'SERVERS')		{$stmtA="SELECT * from servers where server_ip='$first_id' $LOGadmin_viewable_groupsSQL;";}
-			if ($stage == 'SHIFTS')			{$stmtA="SELECT * from vicidial_shifts where shift_id='$first_id' $LOGadmin_viewable_groupsSQL;";}
-
-
-			$stmtB='';   $stmtBB='';   $countBB='';   $stmtBBB='';   $countBBB='';   $stmtBBBB='';   $countBBBB='';
-			if ($stage == 'CAMPAIGNS')		
-				{
-				$stmtB="SELECT * from vicidial_campaigns where campaign_id='$second_id' $LOGallowed_campaignsSQL;";
-				$stmtBB="SELECT * from vicidial_campaign_statuses where campaign_id='$second_id' $LOGallowed_campaignsSQL order by status;";
-				$countBB='campaign statuses';
-				$stmtBBB="SELECT * from vicidial_campaign_hotkeys where campaign_id='$second_id' $LOGallowed_campaignsSQL order by hotkey;";
-				$countBBB='campaign hotkeys';
-				$stmtBBBB="SELECT * from vicidial_lead_recycle where campaign_id='$second_id' $LOGallowed_campaignsSQL order by status;";
-				$countBBBB='campaign lead recycle';
-				$stmtBBBBB="SELECT * from vicidial_pause_codes where campaign_id='$second_id' $LOGallowed_campaignsSQL order by pause_code;";
-				$countBBBBB='campaign pause codes';
-				}
-			if ($stage == 'LISTS')			
-				{
-				$stmtB="SELECT * from vicidial_lists where list_id='$second_id' $LOGallowed_campaignsSQL;";
-				$stmtBB="SELECT * from vicidial_lists_fields where list_id='$second_id' order by field_label;";
-				$countBB='custom list fields';
-				}
-			if ($stage == 'IN-GROUPS')		{$stmtB="SELECT * from vicidial_inbound_groups where group_id='$second_id' $LOGadmin_viewable_groupsSQL;";}
-			if ($stage == 'DIDS')			{$stmtB="SELECT * from vicidial_inbound_dids where did_pattern='$second_id' $LOGadmin_viewable_groupsSQL;";}
-			if ($stage == 'CALLMENUS')		
-				{
-				$stmtB="SELECT * from vicidial_call_menu where menu_id='$second_id' $LOGadmin_viewable_groupsSQL;";
-				$stmtBB="SELECT * from vicidial_call_menu_options where menu_id='$second_id' order by option_value limit 20;";
-				$countBB='options';
-				}
-			if ($stage == 'USERS')			
-				{
-				$stmtB="SELECT * from vicidial_users where user='$second_id' $LOGadmin_viewable_groupsSQL;";
-				$stmtBB="SELECT * from vicidial_campaign_agents where user='$second_id' order by campaign_id limit 1000;";
-				$countBB='user campaign settings';
-				$stmtBBB="SELECT * from vicidial_inbound_group_agents where user='$second_id' order by group_id limit 1000;";
-				$countBBB='user in-group settings';
-				}
-			if ($stage == 'USER-GROUPS')	{$stmtB="SELECT * from vicidial_user_groups where user_group='$second_id' $LOGadmin_viewable_groupsSQL;";}
-			if ($stage == 'PHONES')			
-				{
-				$second_id_ARY = explode('-----',$second_id);
-				$stmtB="SELECT * from phones where extension='$second_id_ARY[0]'and server_ip='$second_id_ARY[1]' $LOGadmin_viewable_groupsSQL;";
-				}
-			if ($stage == 'SERVERS')		{$stmtB="SELECT * from servers where server_ip='$second_id' $LOGadmin_viewable_groupsSQL;";}
-			if ($stage == 'SHIFTS')			{$stmtB="SELECT * from vicidial_shifts where shift_id='$second_id' $LOGadmin_viewable_groupsSQL;";}
-
-			if ( (strlen($stmtA) > 10) and (strlen($stmtB) > 10) )
-				{
-				$rslt=mysql_to_mysqli($stmtA, $link);
-				if ($DB) {echo "$stmtA\n";}
-				$ids_to_print = mysqli_num_rows($rslt);
-				$i=0;
-				while ($ids_to_print > $i)
-					{
-					$row = mysqli_fetch_array($rslt);
-					for($j = 0; $j < mysqli_num_fields($rslt); $j++) 
-						{
-						$field_info = mysqli_fetch_field($rslt);
-						$col = "{$field_info->name}";
-						if ($col != 'pass_hash')
-							{$first_text .= $col . "='" . $row[$col] . "' \n";}
-						}
-					$i++;
-					}
-
-				$rslt=mysql_to_mysqli($stmtB, $link);
-				if ($DB) {echo "$stmtB\n";}
-				$ids_to_print = mysqli_num_rows($rslt);
-				$i=0;
-				while ($ids_to_print > $i)
-					{
-					$row = mysqli_fetch_array($rslt);
-					for($j = 0; $j < mysqli_num_fields($rslt); $j++) 
-						{
-						$field_info = mysqli_fetch_field($rslt);
-						$col = "{$field_info->name}";
-						if ($col != 'pass_hash')
-							{$second_text .= $col . "='" . $row[$col] . "' \n";}
-						}
-					$i++;
-					}
-
-				### list first sub-entries, if defined
-				if (strlen($stmtAA) > 10)
-					{
-					$rslt=mysql_to_mysqli($stmtAA, $link);
-					if ($DB) {echo "$stmtAA\n";}
-					$ids_to_print = mysqli_num_rows($rslt);
-					$first_text .= $countAA . " section start \n";
-					$first_text .= $countAA . "='" . $ids_to_print . "' \n";
-					$i=0;
-					$field_name_ARY=array();
-					while ( ($ids_to_print > $i) and ($i < 1000) )
-						{
-						$row = mysqli_fetch_array($rslt);
-						$fields = mysqli_num_fields($rslt);
-						if ($i==0)
-							{
-							for($j = 0; $j < mysqli_num_fields($rslt); $j++) 
-								{
-								$field_info = mysqli_fetch_field($rslt);
-								$field_name_ARY[$j] = "{$field_info->name}";
-								}
-							}
-						$j=0;
-						while($fields > $j)
-							{
-							$col=$field_name_ARY[$j];
-							$value=$row[$j];
-							if ($col != 'pass_hash')
-								{$first_text .= $col . "='" . $value . "' \n";}
-							if ($DB) {echo "$i   Fields: $fields|J: $j|col: $col|value: $value\n";}
-							$j++;
-							}
-						$i++;
-						}
-					}
-				if (strlen($stmtBB) > 10)
-					{
-					$rslt=mysql_to_mysqli($stmtBB, $link);
-					if ($DB) {echo "$stmtBB\n";}
-					$ids_to_print = mysqli_num_rows($rslt);
-					$second_text .= $countBB . " section start \n";
-					$second_text .= $countBB . "='" . $ids_to_print . "' \n";
-					$i=0;
-					$field_name_ARY=array();
-					while ( ($ids_to_print > $i) and ($i < 1000) )
-						{
-						$row = mysqli_fetch_array($rslt);
-						$fields = mysqli_num_fields($rslt);
-						if ($i==0)
-							{
-							for($j = 0; $j < mysqli_num_fields($rslt); $j++) 
-								{
-								$field_info = mysqli_fetch_field($rslt);
-								$field_name_ARY[$j] = "{$field_info->name}";
-								}
-							}
-						$j=0;
-						while($fields > $j)
-							{
-							$col=$field_name_ARY[$j];
-							$value=$row[$j];
-							if ($col != 'pass_hash')
-								{$second_text .= $col . "='" . $value . "' \n";}
-							if ($DB) {echo "$i   Fields: $fields|J: $j|col: $col|value: $value\n";}
-							$j++;
-							}
-						$i++;
-						}
-					}
-
-				### list second sub-entries, if defined
-				if (strlen($stmtAAA) > 10)
-					{
-					$rslt=mysql_to_mysqli($stmtAAA, $link);
-					if ($DB) {echo "$stmtAAA\n";}
-					$ids_to_print = mysqli_num_rows($rslt);
-					$first_text .= $countAAA . " section start \n";
-					$first_text .= $countAAA . "='" . $ids_to_print . "' \n";
-					$i=0;
-					$field_name_ARY=array();
-					while ( ($ids_to_print > $i) and ($i < 1000) )
-						{
-						$row = mysqli_fetch_array($rslt);
-						$fields = mysqli_num_fields($rslt);
-						if ($i==0)
-							{
-							for($j = 0; $j < mysqli_num_fields($rslt); $j++) 
-								{
-								$field_info = mysqli_fetch_field($rslt);
-								$field_name_ARY[$j] = "{$field_info->name}";
-								}
-							}
-						$j=0;
-						while($fields > $j)
-							{
-							$col=$field_name_ARY[$j];
-							$value=$row[$j];
-							if ($col != 'pass_hash')
-								{$first_text .= $col . "='" . $value . "' \n";}
-							if ($DB) {echo "$i   Fields: $fields|J: $j|col: $col|value: $value\n";}
-							$j++;
-							}
-						$i++;
-						}
-					}
-				if (strlen($stmtBBB) > 10)
-					{
-					$rslt=mysql_to_mysqli($stmtBBB, $link);
-					if ($DB) {echo "$stmtBBB\n";}
-					$ids_to_print = mysqli_num_rows($rslt);
-					$second_text .= $countBBB . " section start \n";
-					$second_text .= $countBBB . "='" . $ids_to_print . "' \n";
-					$i=0;
-					$field_name_ARY=array();
-					while ( ($ids_to_print > $i) and ($i < 1000) )
-						{
-						$row = mysqli_fetch_array($rslt);
-						$fields = mysqli_num_fields($rslt);
-						if ($i==0)
-							{
-							for($j = 0; $j < mysqli_num_fields($rslt); $j++) 
-								{
-								$field_info = mysqli_fetch_field($rslt);
-								$field_name_ARY[$j] = "{$field_info->name}";
-								}
-							}
-						$j=0;
-						while($fields > $j)
-							{
-							$col=$field_name_ARY[$j];
-							$value=$row[$j];
-							if ($col != 'pass_hash')
-								{$second_text .= $col . "='" . $value . "' \n";}
-							if ($DB) {echo "$i   Fields: $fields|J: $j|col: $col|value: $value\n";}
-							$j++;
-							}
-						$i++;
-						}
-					}
-
-				### list third sub-entries, if defined
-				if (strlen($stmtAAAA) > 10)
-					{
-					$rslt=mysql_to_mysqli($stmtAAAA, $link);
-					if ($DB) {echo "$stmtAAAA\n";}
-					$ids_to_print = mysqli_num_rows($rslt);
-					$first_text .= $countAAAA . " section start \n";
-					$first_text .= $countAAAA . "='" . $ids_to_print . "' \n";
-					$i=0;
-					$field_name_ARY=array();
-					while ( ($ids_to_print > $i) and ($i < 1000) )
-						{
-						$row = mysqli_fetch_array($rslt);
-						$fields = mysqli_num_fields($rslt);
-						if ($i==0)
-							{
-							for($j = 0; $j < mysqli_num_fields($rslt); $j++) 
-								{
-								$field_info = mysqli_fetch_field($rslt);
-								$field_name_ARY[$j] = "{$field_info->name}";
-								}
-							}
-						$j=0;
-						while($fields > $j)
-							{
-							$col=$field_name_ARY[$j];
-							$value=$row[$j];
-							if ($col != 'pass_hash')
-								{$first_text .= $col . "='" . $value . "' \n";}
-							if ($DB) {echo "$i   Fields: $fields|J: $j|col: $col|value: $value\n";}
-							$j++;
-							}
-						$i++;
-						}
-					}
-				if (strlen($stmtBBBB) > 10)
-					{
-					$rslt=mysql_to_mysqli($stmtBBBB, $link);
-					if ($DB) {echo "$stmtBBBB\n";}
-					$ids_to_print = mysqli_num_rows($rslt);
-					$second_text .= $countBBBB . " section start \n";
-					$second_text .= $countBBBB . "='" . $ids_to_print . "' \n";
-					$i=0;
-					$field_name_ARY=array();
-					while ( ($ids_to_print > $i) and ($i < 1000) )
-						{
-						$row = mysqli_fetch_array($rslt);
-						$fields = mysqli_num_fields($rslt);
-						if ($i==0)
-							{
-							for($j = 0; $j < mysqli_num_fields($rslt); $j++) 
-								{
-								$field_info = mysqli_fetch_field($rslt);
-								$field_name_ARY[$j] = "{$field_info->name}";
-								}
-							}
-						$j=0;
-						while($fields > $j)
-							{
-							$col=$field_name_ARY[$j];
-							$value=$row[$j];
-							if ($col != 'pass_hash')
-								{$second_text .= $col . "='" . $value . "' \n";}
-							if ($DB) {echo "$i   Fields: $fields|J: $j|col: $col|value: $value\n";}
-							$j++;
-							}
-						$i++;
-						}
-					}
-
-				### list fourth sub-entries, if defined
-				if (strlen($stmtAAAAA) > 10)
-					{
-					$rslt=mysql_to_mysqli($stmtAAAAA, $link);
-					if ($DB) {echo "$stmtAAAAA\n";}
-					$ids_to_print = mysqli_num_rows($rslt);
-					$first_text .= $countAAAAA . " section start \n";
-					$first_text .= $countAAAAA . "='" . $ids_to_print . "' \n";
-					$i=0;
-					$field_name_ARY=array();
-					while ( ($ids_to_print > $i) and ($i < 1000) )
-						{
-						$row = mysqli_fetch_array($rslt);
-						$fields = mysqli_num_fields($rslt);
-						if ($i==0)
-							{
-							for($j = 0; $j < mysqli_num_fields($rslt); $j++) 
-								{
-								$field_info = mysqli_fetch_field($rslt);
-								$field_name_ARY[$j] = "{$field_info->name}";
-								}
-							}
-						$j=0;
-						while($fields > $j)
-							{
-							$col=$field_name_ARY[$j];
-							$value=$row[$j];
-							if ($col != 'pass_hash')
-								{$first_text .= $col . "='" . $value . "' \n";}
-							if ($DB) {echo "$i   Fields: $fields|J: $j|col: $col|value: $value\n";}
-							$j++;
-							}
-						$i++;
-						}
-					}
-				if (strlen($stmtBBBBB) > 10)
-					{
-					$rslt=mysql_to_mysqli($stmtBBBBB, $link);
-					if ($DB) {echo "$stmtBBBBB\n";}
-					$ids_to_print = mysqli_num_rows($rslt);
-					$second_text .= $countBBBBB . " section start \n";
-					$second_text .= $countBBBBB . "='" . $ids_to_print . "' \n";
-					$i=0;
-					$field_name_ARY=array();
-					while ( ($ids_to_print > $i) and ($i < 1000) )
-						{
-						$row = mysqli_fetch_array($rslt);
-						$fields = mysqli_num_fields($rslt);
-						if ($i==0)
-							{
-							for($j = 0; $j < mysqli_num_fields($rslt); $j++) 
-								{
-								$field_info = mysqli_fetch_field($rslt);
-								$field_name_ARY[$j] = "{$field_info->name}";
-								}
-							}
-						$j=0;
-						while($fields > $j)
-							{
-							$col=$field_name_ARY[$j];
-							$value=$row[$j];
-							if ($col != 'pass_hash')
-								{$second_text .= $col . "='" . $value . "' \n";}
-							if ($DB) {echo "$i   Fields: $fields|J: $j|col: $col|value: $value\n";}
-							$j++;
-							}
-						$i++;
-						}
-					}
-
-				// include the Diff class
-				require_once './class.Diff.php';
-
-				echo Diff::toTable(Diff::compare($first_text, $second_text));
-				}
-			}
-		}
-	else
-		{
-		echo _QXZ("Please click RESET to start over").":  <a href=\"$PHP_SELF\">"._QXZ("RESET")."</a><br><br>\n";
-		exit;
-		}
-	echo "</TD></TR>\n\n";
-	echo "</TABLE>\n";
-	echo "</BODY></HTML>";
-
-
 exit;
