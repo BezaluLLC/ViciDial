@@ -1,10 +1,11 @@
 <?php
 # VERM_AJAX_functions.php - Vicidial Enhanced Reporting AJAX functions page
 #
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>, Joe Johnson <joej@vicidial.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>, Joe Johnson <joej@vicidial.com>    LICENSE: AGPLv2
 # 
 # CHANGELOG:
 # 220825-1608 - First build
+# 240709-2151 - Added input variable filtering
 #
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -56,12 +57,16 @@ if ($non_latin < 1)
 	$function = preg_replace('/[^\-_0-9a-zA-Z]/','',$function);
 	$custom_report_vars = preg_replace('/[^-\/\|\_\#\*\,\.\_\[\]0-9a-zA-Z]/','',$custom_report_vars);
 	$custom_report_name = preg_replace('/[^\-_0-9a-zA-Z]/','',$custom_report_name);
+        $PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+        $PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 	}
 else
 	{
 	$function = preg_replace('/[^-_0-9\p{L}/u','',$function);
 	$custom_report_vars = preg_replace('/[^-\/\|\_\#\*\,\.\_\[\]0-9\p{L}]/u','',$custom_report_vars);
 	$custom_report_name = preg_replace('/[^-_0-9\p{L}/u','',$custom_report_name);
+        $PHP_AUTH_USER = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_USER);
+        $PHP_AUTH_PW = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_PW);	
 	}
 
 

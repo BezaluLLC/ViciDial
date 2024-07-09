@@ -156,10 +156,11 @@
 # 230726-0857 - Fix for rare vicidial_closer_log issue on Voicemail transfers
 # 240420-2233 - ConfBridge code added
 # 240430-1046 - Allow for park/grab of xfer line through API
+# 240709-2010 - Changes to input variable filtering
 #
 
-$version = '2.14-103';
-$build = '240430-1046';
+$version = '2.14-104';
+$build = '240709-2010';
 $php_script = 'manager_send.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=161;
@@ -332,7 +333,6 @@ $ext_priority = preg_replace('/[^-_0-9a-zA-Z]/','',$ext_priority);
 $exten = preg_replace("/\'|\"|\\\\|;/","",$exten);
 $extenName = preg_replace("/\'|\"|\\\\|;/","",$extenName);
 $extrachannel = preg_replace("/\'|\"|\\\\/","",$extrachannel);
-$filename = preg_replace("/\'|\"|\\\\|;/","",$filename);
 $format = preg_replace('/[^-_0-9a-zA-Z]/','',$format);
 $log_campaign = preg_replace("/\'|\"|\\\\|;/","",$log_campaign);
 $nodeletevdac = preg_replace('/[^0-9]/','',$nodeletevdac);
@@ -341,7 +341,6 @@ $parkedby = preg_replace("/\'|\"|\\\\|;/","",$parkedby);
 $phone_code = preg_replace("/\s/","",$phone_code);
 $preset_name = preg_replace("/\'|\"|\\\\|;/","",$preset_name);
 $qm_extension = preg_replace("/\'|\"|\\\\|;/","",$qm_extension);
-$queryCID = preg_replace("/\'|\"|\\\\|;/","",$queryCID);
 $secondS = preg_replace('/[^0-9]/','',$secondS);
 $stage = preg_replace("/\'|\"|\\\\|;/","",$stage);
 $usegroupalias = preg_replace('/[^0-9]/','',$usegroupalias);
@@ -361,6 +360,8 @@ if ($non_latin < 1)
 	$agent_dialed_type = preg_replace('/[^-_0-9a-zA-Z]/','',$agent_dialed_type);
 	$account = preg_replace('/[^-_0-9a-zA-Z]/','',$account);
 	$group_id = preg_replace('/[^-_0-9a-zA-Z]/','',$group_id);
+	$filename = preg_replace('/[^-\._0-9a-zA-Z]/','',$filename);
+	$queryCID = preg_replace('/[^-\._0-9a-zA-Z]/','',$queryCID);
 	}
 else
 	{
@@ -374,6 +375,8 @@ else
 	$agent_dialed_type = preg_replace('/[^-_0-9\p{L}]/u','',$agent_dialed_type);
 	$account = preg_replace('/[^-_0-9\p{L}]/u','',$account);
 	$group_id = preg_replace('/[^-_0-9\p{L}]/u','',$group_id);
+	$filename = preg_replace('/[^-\._0-9\p{L}]/u','',$filename);
+	$queryCID = preg_replace('/[^-\._0-9\p{L}]/u','',$queryCID);
 	}
 
 # default optional vars if not set
