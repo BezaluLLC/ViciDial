@@ -27,6 +27,7 @@
 # 170313-1610 - Fixed issue with DNC not logging if no campaign defined
 # 171010-1228 - Added ability to recognize existing Vicidial calls
 # 240430-0821 - Added option to not update vicidial_list
+# 240712-0848 - Cleanup of callerid validation/failover, Issue #1521
 #
 
 $script = 'cm_dnc.agi';
@@ -179,15 +180,16 @@ while(<STDIN>)
 
 	$callerid =~ s/\D//gi;
 	$calleridname =~ s/unknown//gi;
-	if ( (!$callerid) or ($callerid =~ /unknown/) )
+	$calleridname_digits = $calleridname;
+	$calleridname_digits =~ s/\D//gi;
+	if ( (!$callerid) or ($callerid =~ /unknown|anonymous/) )
 		{$callerid = $calleridname;}
+	if ( (length($callerid)<6) && (length($calleridname_digits)>5) ) {$callerid = $calleridname_digits;}
 
 	if (length($callerid)>0) {$phone_number = $callerid;}
 	   else {$phone_number = '';}
 	if (length($calleridname)>0) {$VLcomments = $calleridname;}
 	   else {$VLcomments = '';}
-	if (length($callerid)<10) {$callerid = $parked_by;}
-	if (length($pin)>0) {$callerid = $pin;}
 	}
 
 $call_type='';
