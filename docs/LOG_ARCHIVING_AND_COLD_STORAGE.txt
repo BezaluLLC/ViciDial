@@ -1,4 +1,4 @@
-LOG ARCHIVING AND COLD STORAGE DOC	Started: 2024-07-04	Updated: 2024-07-05
+LOG ARCHIVING AND COLD STORAGE DOC	Started: 2024-07-04	Updated: 2024-07-11
 
 
 This document covers the options for archiving of specific log tables and the new "Cold Storage" features
@@ -126,6 +126,7 @@ allowed run time options:
   [--quiet] = quiet
   [--calc-test] = date calculation test only
   [--query-count-test] = run archive counts test only
+  [--no-optimize-tables] = do not optimize the archive tables after deletion of rows
   [--test] = test
   [--debug] = debug output for some options
   [--debugX] = extra debug output for some options

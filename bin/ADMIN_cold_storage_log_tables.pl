@@ -20,13 +20,15 @@
 #
 # CHANGES
 # 240704-1815 - First version
-# 250705-0954 - Added --query-count-test flag option
+# 240705-0954 - Added --query-count-test flag option
+# 240711-1938 - Added --no-optimize-tables flag option
 #
 
 $DB=0;
 $DBX=0;
 $CALC_TEST=0;
 $QUERY_COUNT_TEST=0;
+$NO_OPTIMIZE_TABLES=0;
 $T=0;   $TEST=0;
 $only_trim_archive=0;
 $recording_log_archive=0;
@@ -55,6 +57,7 @@ if (length($ARGV[0])>1)
 		print "  [--quiet] = quiet\n";
 		print "  [--calc-test] = date calculation test only\n";
 		print "  [--query-count-test] = run archive counts test only\n";
+		print "  [--no-optimize-tables] = do not optimize the archive tables after deletion of rows \n";
 		print "  [--test] = test\n";
 		print "  [--debug] = debug output for some options\n";
 		print "  [--debugX] = extra debug output for some options\n";
@@ -91,6 +94,11 @@ if (length($ARGV[0])>1)
 			{
 			$QUERY_COUNT_TEST=1;
 			print "\n-----ARCHIVE TABLES QUERY COUNT TESTING ONLY: $QUERY_COUNT_TEST-----\n\n";
+			}
+		if ($args =~ /--no-optimize-tables/i)
+			{
+			$NO_OPTIMIZE_TABLES=1;
+			print "\n-----DO NOT OPTIMIZE ARCHIVE TABLES AFTER ROWS DELETION: $NO_OPTIMIZE_TABLES-----\n\n";
 			}
 		if ($args =~ /--days=/i)
 			{
@@ -391,10 +399,17 @@ if (!$T)
 				$affected_rowsA = $dbhA->do($stmtA);
 				if (!$Q) {print STDERR "records deleted from call_log_archive: $affected_rowsA|$stmtA|\n";}
 
-				$stmtA = "OPTIMIZE TABLE call_log_archive;";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				if (!$Q) {print STDERR "call_log_archive table optimized, cold-storage process is complete for this table!\n";}
+				if ($NO_OPTIMIZE_TABLES < 1) 
+					{
+					$stmtA = "OPTIMIZE TABLE call_log_archive;";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					if (!$Q) {print STDERR "call_log_archive table optimized, cold-storage process is complete for this table!\n";}
+					}
+				else
+					{
+					if (!$Q) {print STDERR "call_log_archive table skip optimize\n";}
+					}
 				}
 			}
 		}
@@ -546,10 +561,17 @@ if (!$T)
 				$affected_rowsA = $dbhA->do($stmtA);
 				if (!$Q) {print STDERR "records deleted from vicidial_log_archive: $affected_rowsA|$stmtA|\n";}
 
-				$stmtA = "OPTIMIZE TABLE vicidial_log_archive;";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				if (!$Q) {print STDERR "vicidial_log_archive table optimized, cold-storage process is complete for this table!\n";}
+				if ($NO_OPTIMIZE_TABLES < 1) 
+					{
+					$stmtA = "OPTIMIZE TABLE vicidial_log_archive;";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					if (!$Q) {print STDERR "vicidial_log_archive table optimized, cold-storage process is complete for this table!\n";}
+					}
+				else
+					{
+					if (!$Q) {print STDERR "vicidial_log_archive table skip optimize\n";}
+					}
 				}
 			}
 		}
@@ -701,10 +723,17 @@ if (!$T)
 				$affected_rowsA = $dbhA->do($stmtA);
 				if (!$Q) {print STDERR "records deleted from vicidial_log_extended_archive: $affected_rowsA|$stmtA|\n";}
 
-				$stmtA = "OPTIMIZE TABLE vicidial_log_extended_archive;";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				if (!$Q) {print STDERR "vicidial_log_extended_archive table optimized, cold-storage process is complete for this table!\n";}
+				if ($NO_OPTIMIZE_TABLES < 1) 
+					{
+					$stmtA = "OPTIMIZE TABLE vicidial_log_extended_archive;";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					if (!$Q) {print STDERR "vicidial_log_extended_archive table optimized, cold-storage process is complete for this table!\n";}
+					}
+				else
+					{
+					if (!$Q) {print STDERR "vicidial_log_extended_archive table skip optimize\n";}
+					}
 				}
 			}
 		}
@@ -856,10 +885,17 @@ if (!$T)
 				$affected_rowsA = $dbhA->do($stmtA);
 				if (!$Q) {print STDERR "records deleted from vicidial_dial_log_archive: $affected_rowsA|$stmtA|\n";}
 
-				$stmtA = "OPTIMIZE TABLE vicidial_dial_log_archive;";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				if (!$Q) {print STDERR "vicidial_dial_log_archive table optimized, cold-storage process is complete for this table!\n";}
+				if ($NO_OPTIMIZE_TABLES < 1) 
+					{
+					$stmtA = "OPTIMIZE TABLE vicidial_dial_log_archive;";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					if (!$Q) {print STDERR "vicidial_dial_log_archive table optimized, cold-storage process is complete for this table!\n";}
+					}
+				else
+					{
+					if (!$Q) {print STDERR "vicidial_dial_log_archive table skip optimize\n";}
+					}
 				}
 			}
 		}
@@ -1011,10 +1047,17 @@ if (!$T)
 				$affected_rowsA = $dbhA->do($stmtA);
 				if (!$Q) {print STDERR "records deleted from vicidial_carrier_log_archive: $affected_rowsA|$stmtA|\n";}
 
-				$stmtA = "OPTIMIZE TABLE vicidial_carrier_log_archive;";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				if (!$Q) {print STDERR "vicidial_carrier_log_archive table optimized, cold-storage process is complete for this table!\n";}
+				if ($NO_OPTIMIZE_TABLES < 1) 
+					{
+					$stmtA = "OPTIMIZE TABLE vicidial_carrier_log_archive;";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					if (!$Q) {print STDERR "vicidial_carrier_log_archive table optimized, cold-storage process is complete for this table!\n";}
+					}
+				else
+					{
+					if (!$Q) {print STDERR "vicidial_carrier_log_archive table skip optimize\n";}
+					}
 				}
 			}
 		}
@@ -1166,10 +1209,17 @@ if (!$T)
 				$affected_rowsA = $dbhA->do($stmtA);
 				if (!$Q) {print STDERR "records deleted from vicidial_dial_cid_log_archive: $affected_rowsA|$stmtA|\n";}
 
-				$stmtA = "OPTIMIZE TABLE vicidial_dial_cid_log_archive;";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				if (!$Q) {print STDERR "vicidial_dial_cid_log_archive table optimized, cold-storage process is complete for this table!\n";}
+				if ($NO_OPTIMIZE_TABLES < 1) 
+					{
+					$stmtA = "OPTIMIZE TABLE vicidial_dial_cid_log_archive;";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					if (!$Q) {print STDERR "vicidial_dial_cid_log_archive table optimized, cold-storage process is complete for this table!\n";}
+					}
+				else
+					{
+					if (!$Q) {print STDERR "vicidial_dial_cid_log_archive table skip optimize\n";}
+					}
 				}
 			}
 		}
@@ -1321,10 +1371,17 @@ if (!$T)
 				$affected_rowsA = $dbhA->do($stmtA);
 				if (!$Q) {print STDERR "records deleted from vicidial_amd_log_archive: $affected_rowsA|$stmtA|\n";}
 
-				$stmtA = "OPTIMIZE TABLE vicidial_amd_log_archive;";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				if (!$Q) {print STDERR "vicidial_amd_log_archive table optimized, cold-storage process is complete for this table!\n";}
+				if ($NO_OPTIMIZE_TABLES < 1) 
+					{
+					$stmtA = "OPTIMIZE TABLE vicidial_amd_log_archive;";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					if (!$Q) {print STDERR "vicidial_amd_log_archive table optimized, cold-storage process is complete for this table!\n";}
+					}
+				else
+					{
+					if (!$Q) {print STDERR "vicidial_amd_log_archive table skip optimize\n";}
+					}
 				}
 			}
 		}
@@ -1476,10 +1533,17 @@ if (!$T)
 				$affected_rowsA = $dbhA->do($stmtA);
 				if (!$Q) {print STDERR "records deleted from vicidial_agent_log_archive: $affected_rowsA|$stmtA|\n";}
 
-				$stmtA = "OPTIMIZE TABLE vicidial_agent_log_archive;";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				if (!$Q) {print STDERR "vicidial_agent_log_archive table optimized, cold-storage process is complete for this table!\n";}
+				if ($NO_OPTIMIZE_TABLES < 1) 
+					{
+					$stmtA = "OPTIMIZE TABLE vicidial_agent_log_archive;";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					if (!$Q) {print STDERR "vicidial_agent_log_archive table optimized, cold-storage process is complete for this table!\n";}
+					}
+				else
+					{
+					if (!$Q) {print STDERR "vicidial_agent_log_archive table skip optimize\n";}
+					}
 				}
 			}
 		}
@@ -1631,10 +1695,17 @@ if (!$T)
 				$affected_rowsA = $dbhA->do($stmtA);
 				if (!$Q) {print STDERR "records deleted from vicidial_api_log_archive: $affected_rowsA|$stmtA|\n";}
 
-				$stmtA = "OPTIMIZE TABLE vicidial_api_log_archive;";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				if (!$Q) {print STDERR "vicidial_api_log_archive table optimized, cold-storage process is complete for this table!\n";}
+				if ($NO_OPTIMIZE_TABLES < 1) 
+					{
+					$stmtA = "OPTIMIZE TABLE vicidial_api_log_archive;";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					if (!$Q) {print STDERR "vicidial_api_log_archive table optimized, cold-storage process is complete for this table!\n";}
+					}
+				else
+					{
+					if (!$Q) {print STDERR "vicidial_api_log_archive table skip optimize\n";}
+					}
 				}
 			}
 		}
@@ -1786,10 +1857,17 @@ if (!$T)
 				$affected_rowsA = $dbhA->do($stmtA);
 				if (!$Q) {print STDERR "records deleted from vicidial_api_urls_archive: $affected_rowsA|$stmtA|\n";}
 
-				$stmtA = "OPTIMIZE TABLE vicidial_api_urls_archive;";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				if (!$Q) {print STDERR "vicidial_api_urls_archive table optimized, cold-storage process is complete for this table!\n";}
+				if ($NO_OPTIMIZE_TABLES < 1) 
+					{
+					$stmtA = "OPTIMIZE TABLE vicidial_api_urls_archive;";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					if (!$Q) {print STDERR "vicidial_api_urls_archive table optimized, cold-storage process is complete for this table!\n";}
+					}
+				else
+					{
+					if (!$Q) {print STDERR "vicidial_api_urls_archive table skip optimize\n";}
+					}
 				}
 			}
 		}
@@ -1941,10 +2019,17 @@ if (!$T)
 				$affected_rowsA = $dbhA->do($stmtA);
 				if (!$Q) {print STDERR "records deleted from vicidial_agent_visibility_log_archive: $affected_rowsA|$stmtA|\n";}
 
-				$stmtA = "OPTIMIZE TABLE vicidial_agent_visibility_log_archive;";
-				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-				if (!$Q) {print STDERR "vicidial_agent_visibility_log_archive table optimized, cold-storage process is complete for this table!\n";}
+				if ($NO_OPTIMIZE_TABLES < 1) 
+					{
+					$stmtA = "OPTIMIZE TABLE vicidial_agent_visibility_log_archive;";
+					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+					if (!$Q) {print STDERR "vicidial_agent_visibility_log_archive table optimized, cold-storage process is complete for this table!\n";}
+					}
+				else
+					{
+					if (!$Q) {print STDERR "vicidial_agent_visibility_log_archive table skip optimize\n";}
+					}
 				}
 			}
 		}
@@ -2100,10 +2185,17 @@ if (!$T)
 					$affected_rowsA = $dbhA->do($stmtA);
 					if (!$Q) {print STDERR "records deleted from vicidial_log_extended_sip_archive: $affected_rowsA|$stmtA|\n";}
 
-					$stmtA = "OPTIMIZE TABLE vicidial_log_extended_sip_archive;";
-					$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-					$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-					if (!$Q) {print STDERR "vicidial_log_extended_sip_archive table optimized, cold-storage process is complete for this table!\n";}
+					if ($NO_OPTIMIZE_TABLES < 1) 
+						{
+						$stmtA = "OPTIMIZE TABLE vicidial_log_extended_sip_archive;";
+						$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+						$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+						if (!$Q) {print STDERR "vicidial_log_extended_sip_archive table optimized, cold-storage process is complete for this table!\n";}
+						}
+					else
+						{
+						if (!$Q) {print STDERR "vicidial_log_extended_sip_archive table skip optimize\n";}
+						}
 					}
 				}
 			}
