@@ -2736,3 +2736,11 @@ ALTER TABLE system_settings ADD coldstorage_pass VARCHAR(50) default '';
 ALTER TABLE system_settings ADD coldstorage_port VARCHAR(10) default '';
 
 UPDATE system_settings SET db_schema_version='1716',db_schema_update_date=NOW() where db_schema_version < 1716;
+
+INSERT INTO vicidial_state_call_times SET state_call_time_id='florida',state_call_time_state='FL',state_call_time_name='Florida 8am 8pm',sct_default_start='800',sct_default_stop='2000';
+INSERT INTO vicidial_state_call_times SET state_call_time_id='maine',state_call_time_state='ME',state_call_time_name='Maine 9am-5pm',sct_default_start='900',sct_default_stop='1700';
+INSERT INTO vicidial_state_call_times SET state_call_time_id='maryland',state_call_time_state='MD',state_call_time_name='Maryland 8am 8pm',sct_default_start='800',sct_default_stop='2000';
+INSERT INTO vicidial_state_call_times SET state_call_time_id='oklahoma',state_call_time_state='OK',state_call_time_name='Oklahoma 8am 8pm',sct_default_start='800',sct_default_stop='2000';
+INSERT INTO vicidial_state_call_times SET state_call_time_id='washington',state_call_time_state='WA',state_call_time_name='Washington 8am-8pm',sct_default_start='800',sct_default_stop='2000';
+
+UPDATE system_settings SET db_schema_version='1717',db_schema_update_date=NOW() where db_schema_version < 1717;

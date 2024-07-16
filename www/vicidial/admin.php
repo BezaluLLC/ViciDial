@@ -6183,12 +6183,13 @@ if ($SSscript_remove_js > 0)
 # 240703-1758 - Added update_remote_agent Non-Agent API function
 # 240704-0944 - Added coldstorage database connection fields to system_settings
 # 240706-2332 - Added DB Schema Compare Utility
+# 240716-1453 - Small header fixes
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-923a';
-$build = '240706-2332';
+$admin_version = '2.14-924a';
+$build = '240716-1453';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -6262,7 +6263,7 @@ if ($force_logout)
 		echo "<head>\n";
 		echo "<!-- Logout screen $PHP_SELF -->\n";
 		echo "<META NAME=\"ROBOTS\" CONTENT=\"NONE\">\n";
-		echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2023 ViciDial Group\">\n";
+		echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2024 ViciDial Group\">\n";
 		echo "<META NAME=\"AUTHOR\" CONTENT=\"ViciDial Group\">\n";
 		?>
 		<script type="text/javascript">
@@ -6803,7 +6804,7 @@ echo "<html>\n";
 echo "<head>\n";
 echo "<!-- VERSION: $admin_version   BUILD: $build   ADD: $ADD   PHP_SELF: $PHP_SELF-->\n";
 echo "<META NAME=\"ROBOTS\" CONTENT=\"NONE\">\n";
-echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2023 ViciDial Group\">\n";
+echo "<META NAME=\"COPYRIGHT\" CONTENT=\"&copy; 2024 ViciDial Group\">\n";
 echo "<META NAME=\"AUTHOR\" CONTENT=\"ViciDial Group\">\n";
 echo "<script language=\"JavaScript\" src=\"calendar_db.js\"></script>\n";
 echo "<script language=\"JavaScript\" src=\"help.js\"></script>\n";
