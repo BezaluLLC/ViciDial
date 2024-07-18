@@ -222,6 +222,7 @@ Changes:
 240302-0804 - Added delete_dnc_phone function
 240703-1657 - Added update_remote_agent function
 240718-0942 - Fixes for inconsistencies in documentation and permissions for some functions
+240718-1716 - Added fields to campaigns_list function output
 
 
 API Functions use the 'function' variable
@@ -434,8 +435,8 @@ ERROR: campaigns_list USER DOES NOT HAVE PERMISSION TO GET CAMPAIGN INFO - 6666|
 ERROR: campaigns_list THIS USER HAS NO VIEWABLE CAMPAIGNS - 6666
 
 A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
-campaign_id|campaign_name|active|user_group|dial_method|dial_level|lead_order|dial_statuses
-TESTCAMP|Test Campaign|Y|---ALL---|INBOUND_MAN|1|DOWN|PDROP DROP B NEW
+campaign_id|campaign_name|active|user_group|dial_method|dial_level|lead_order|dial_statuses|dial_timeout|dial_prefix|manual_dial_prefix|three_way_dial_prefix
+TESTCAMP|Test Campaign|Y|---ALL---|INBOUND_MAN|1|DOWN|PDROP DROP B NEW|65|9|9|9
 
 
 

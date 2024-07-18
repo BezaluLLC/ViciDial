@@ -213,10 +213,11 @@
 # 240420-2236 - Added ConfBridge code
 # 240703-1657 - Added update_remote_agent function
 # 240718-0942 - Fixes for inconsistencies in documentation and permissions for some functions
+# 240718-1716 - Added fields to campaigns_list function output
 #
 
-$version = '2.14-190';
-$build = '240718-0942';
+$version = '2.14-191';
+$build = '240718-1716';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 $camp_lead_order_random=1;
@@ -2965,9 +2966,9 @@ if ($function == 'campaigns_list')
 			if ($DLset < 1)
 				{$DL='|';}
 			if ($header == 'YES')
-				{$CLoutput .= 'campaign_id' . $DL . 'campaign_name' . $DL . 'active' . $DL . 'user_group' . $DL . 'dial_method' . $DL . 'dial_level' . $DL . 'lead_order' . $DL . 'dial_statuses'."\n";}
+				{$CLoutput .= 'campaign_id' . $DL . 'campaign_name' . $DL . 'active' . $DL . 'user_group' . $DL . 'dial_method' . $DL . 'dial_level' . $DL . 'lead_order' . $DL . 'dial_statuses' . $DL . 'dial_timeout' . $DL . 'dial_prefix' . $DL . 'manual_dial_prefix' . $DL . 'three_way_dial_prefix'."\n";}
 
-			$stmt="SELECT campaign_id,campaign_name,active,user_group,dial_method,auto_dial_level,lead_order,dial_statuses from vicidial_campaigns where active IN('Y','N') $LOGallowed_campaignsSQL $campaignSQL;";
+			$stmt="SELECT campaign_id,campaign_name,active,user_group,dial_method,auto_dial_level,lead_order,dial_statuses,dial_timeout,dial_prefix,manual_dial_prefix,three_way_dial_prefix from vicidial_campaigns where active IN('Y','N') $LOGallowed_campaignsSQL $campaignSQL;";
 			$rslt=mysql_to_mysqli($stmt, $link);
 			$li_recs = mysqli_num_rows($rslt);
 			$L=0;
@@ -2976,7 +2977,7 @@ if ($function == 'campaigns_list')
 				$row=mysqli_fetch_row($rslt);
 				$campaigns_list .=	"'$row[0]',";
 				$row[7] = preg_replace('/^ | -$/i', '',$row[7]);
-				$CLoutput .=	"$row[0]$DL$row[1]$DL$row[2]$DL$row[3]$DL$row[4]$DL$row[5]$DL$row[6]$DL$row[7]\n";
+				$CLoutput .=	"$row[0]$DL$row[1]$DL$row[2]$DL$row[3]$DL$row[4]$DL$row[5]$DL$row[6]$DL$row[7]$DL$row[8]$DL$row[9]$DL$row[10]$DL$row[11]\n";
 				$L++;
 				}
 			$campaigns_list = preg_replace('/,$/i', '',$campaigns_list);
