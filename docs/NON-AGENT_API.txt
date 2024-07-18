@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-07-03
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-07-18
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -221,6 +221,7 @@ Changes:
 240217-0907 - Added more missing vicidial_users fields from copy function
 240302-0804 - Added delete_dnc_phone function
 240703-1657 - Added update_remote_agent function
+240718-0942 - Fixes for inconsistencies in documentation and permissions for some functions
 
 
 API Functions use the 'function' variable
@@ -377,7 +378,7 @@ ERROR: agent_ingroup_info INVALID USER ID - 1255|6666
 --------------------------------------------------------------------------------
 agent_campaigns - looks up allowed campaigns/in-groups for a specific user
 
-NOTE: api user for this function must have user_level set to 7 or higher
+NOTE: api user for this function must have user_level set to 8 or higher and "view reports" and "modify users" enabled
 
 REQUIRED FIELDS-
 agent_user -		2-20 characters
@@ -412,7 +413,7 @@ user|allowed_campaigns_list|allowed_ingroups_list
 --------------------------------------------------------------------------------
 campaigns_list - displays information about all campaigns in the system
 
-NOTE: api user for this function must have user_level set to 7 or higher
+NOTE: api user for this function must have user_level set to 8 or higher and "view reports" enabled
 
 REQUIRED FIELDS-
 source -		description of what originated the API call (maximum 20 characters)
@@ -443,7 +444,7 @@ TESTCAMP|Test Campaign|Y|---ALL---|INBOUND_MAN|1|DOWN|PDROP DROP B NEW
 --------------------------------------------------------------------------------
 hopper_list - displays information about leads in the hopper for a campaign
 
-NOTE: api user for this function must have user_level set to 7 or higher
+NOTE: api user for this function must have user_level set to 8 or higher and "view reports" enabled
 
 REQUIRED FIELDS-
 source -		description of what originated the API call (maximum 20 characters)
