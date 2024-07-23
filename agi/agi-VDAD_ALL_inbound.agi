@@ -262,6 +262,7 @@
 # 240227-1154 - Added holiday_method option
 # 240420-2242 - Added ConfBridge code
 # 240415-1701 - Fix for ConfBridge code
+# 240723-1632 - Small fix for ConfBridge
 #
 
 $script = 'agi-VDAD_ALL_inbound.agi';
@@ -3891,7 +3892,7 @@ while ( ($drop_timer <= $DROP_TIME) && ($wait_in_queue > 0) && ($MCdrop_override
 				if ($AGILOG) {$agi_string = "--    closer log : |$affected_rows|update of vcl table: $insert_lead_id\n|$stmtA|";   &agi_output;}
 
 				### Grab Server values from the database for the server the agent is on
-				$stmtA = "SELECT conf_engine FROM servers where server_ip = '$VARserver_ip';";
+				$stmtA = "SELECT conf_engine FROM servers where server_ip = '$VDADserver_ip';";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 				$sthArows=$sthA->rows;
