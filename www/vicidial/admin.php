@@ -131,7 +131,7 @@ $UGreports = 'ALL REPORTS, NONE, Real-Time Main Report, Real-Time Campaign Summa
 
 $Vtables = 'NONE,log_noanswer,did_agent_log,contact_information';
 
-$APIfunctions = 'ALL_FUNCTIONS add_group_alias add_lead add_list add_phone add_phone_alias add_user agent_ingroup_info agent_stats_export agent_status audio_playback blind_monitor call_agent callid_info change_ingroups check_phone_number copy_user did_log_export external_add_lead external_dial external_hangup external_pause external_status in_group_status logout moh_list ingroup_list campaigns_list callmenu_list hopper_list call_dispo_report agent_campaigns park_call pause_code preview_dial_action ra_call_control recording recording_lookup send_dtmf server_refresh set_timer_action sounds_list st_get_agent_active_lead st_login_log transfer_conference update_fields update_lead batch_update_lead update_list list_info list_custom_fields update_log_entry update_phone update_phone_alias update_user user_group_status vm_list vm_message webphone_url webserver logged_in_agents update_campaign update_alt_url update_presets add_did update_did lead_field_info lead_all_info lead_callback_info phone_number_log switch_lead ccc_lead_info lead_status_search lead_search lead_dearchive call_status_stats calls_in_queue_count force_fronter_leave_3way force_fronter_audio_stop update_cid_group_entry add_dnc_phone delete_dnc_phone add_fpg_phone send_notification refresh_panel update_remote_agent';
+$APIfunctions = 'ALL_FUNCTIONS add_group_alias add_lead add_list add_phone add_phone_alias add_user agent_ingroup_info agent_stats_export agent_status audio_playback blind_monitor call_agent callid_info change_ingroups check_phone_number copy_user did_log_export external_add_lead external_dial external_hangup external_pause external_status in_group_status logout moh_list ingroup_list campaigns_list callmenu_list hopper_list call_dispo_report agent_campaigns park_call pause_code preview_dial_action ra_call_control recording recording_lookup send_dtmf server_refresh set_timer_action sounds_list st_get_agent_active_lead st_login_log transfer_conference update_fields update_lead batch_update_lead update_list list_info list_custom_fields update_log_entry update_phone update_phone_alias update_user user_group_status vm_list vm_message webphone_url webserver logged_in_agents update_campaign update_alt_url update_presets add_did copy_did update_did lead_field_info lead_all_info lead_callback_info phone_number_log switch_lead ccc_lead_info lead_status_search lead_search lead_dearchive call_status_stats calls_in_queue_count force_fronter_leave_3way force_fronter_audio_stop update_cid_group_entry add_dnc_phone delete_dnc_phone add_fpg_phone send_notification refresh_panel update_remote_agent';
 
 $browser_alert_sounds_list = 'bark_dog,beep_double,beep_five,beep_up,bell_double,bell_school,bird,blaster1,blaster2,buzz1,buzz2,cash_register,chat_alert,click_single,click_double,click_quiet,close_encounter,confirmation,ding,droplet,droplet_double,elephant,email_alert,hold_tone,horn_bike,horn_car,horn_car_triple,horn_clown,horn_double,horn_train,meow_cat,scream_wilhelm,silence_quick,siren,slide_down,slide_up,swish,teleport1,teleport2,ticking_two,ticking_four,ticking_six,whip,whistle_up,whistle_two,whistle_three,whoosh,xylophone1,xylophone2,xylophone3,xylophone4,20Hz_tone';
 
@@ -6184,12 +6184,13 @@ if ($SSscript_remove_js > 0)
 # 240704-0944 - Added coldstorage database connection fields to system_settings
 # 240706-2332 - Added DB Schema Compare Utility
 # 240716-1453 - Small header fixes
+# 240730-1829 - Changes for PHP8 compatibility, added copy_did Non-Agent API function
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-924a';
-$build = '240716-1453';
+$admin_version = '2.14-925a';
+$build = '240730-1829';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -7580,7 +7581,7 @@ if ( ( (strlen($ADD)>4) and ($ADD < 99998) ) or ($ADD==3) or (($ADD>20) and ($AD
 	if ($ADD==41)
 		{
 		$p=0;
-		if (is_null($XFERgroups)) $XFERgroups = array();
+		if (!is_array($XFERgroups)) $XFERgroups = array();
 		$XFERgroup_ct = count($XFERgroups);
 		while ($p < $XFERgroup_ct)
 			{
@@ -14748,6 +14749,8 @@ if ($ADD==231111111)
 		$row=mysqli_fetch_row($rslt);
 		if ($row[0] > 0)
 			{echo "<br>"._QXZ("SHIFT DEFINITION NOT ADDED - there is already a shift entry with this ID")."\n";}
+		else if (!is_array($shift_weekdays))
+			{echo "<br>"._QXZ("SHIFT DEFINITION NOT ADDED - you have to select at least one weekday")."\n";}
 		else
 			{
 			$shift_length_test = preg_replace('/:/i', '',$shift_length);
@@ -15852,6 +15855,7 @@ if ($ADD==298111111111)
 	if ( ($LOGmodify_statuses!=1) or ($add_copy_disabled > 0) )
 		{
 		echo "<br>"._QXZ("You do not have permission to add records on this system")." -system_settings-\n";
+		$ADD=198111111111;
 		}
 	else
 		{
@@ -15860,11 +15864,17 @@ if ($ADD==298111111111)
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		if ($row[0] > 0)
-			{echo "<br>"._QXZ("VM MESSAGE GROUP NOT ADDED - there is already a VM MESSAGE GROUP in the system with this ID")."\n";}
+			{
+			echo "<br>"._QXZ("VM MESSAGE GROUP NOT ADDED - there is already a VM MESSAGE GROUP in the system with this ID")."\n";
+			$ADD=198111111111;
+			}
 		else
 			{
-			if ( (strlen($queue_group) < 2) or (strlen($queue_group_name) < 2) or (strlen($active) < 1) )
-				{echo "<br>"._QXZ("VM MESSAGE GROUP NOT ADDED - Please go back and look at the data you entered")."\n";}
+			if ( (strlen($queue_group) < 2) or (strlen($queue_group_name) < 5) or (strlen($active) < 1) )
+				{
+				echo "<br>"._QXZ("VM MESSAGE GROUP NOT ADDED - Please go back and look at the data you entered")."\n";
+				$ADD=198111111111;
+				}
 			else
 				{
 				echo "<br>"._QXZ("VM MESSAGE GROUP ADDED")."\n";
@@ -16178,7 +16188,7 @@ if ($ADD=="4A")
 				}
 
 			$k=0;   $new_field_value='';
-			$multi_count = count($api_allowed_functions);
+			if (is_array($api_allowed_functions)) {$multi_count = count($api_allowed_functions);} else {$multi_count=0;}
 			$multi_array = $api_allowed_functions;
 			while ($k < $multi_count)
 				{
@@ -17207,6 +17217,7 @@ if ($ADD==41)
 				{
 				$p=0;
 				echo "<BR>"._QXZ("ACTIVE LISTS CHANGED");
+				if(!is_array($list_active_change)) {$list_active_change=array();}
 				$list_active_change_ct = count($list_active_change);
 				while ($p < $list_active_change_ct)
 					{
@@ -17592,6 +17603,7 @@ if ($ADD==44)
 			{
 			$p=0;
 			echo "<BR>"._QXZ("ACTIVE LISTS CHANGED");
+			if (!is_array($list_active_change)) {$list_active_change=array();}
 			$list_active_change_ct = count($list_active_change);
 			while ($p < $list_active_change_ct)
 				{
@@ -17794,7 +17806,7 @@ if ($ADD==48)
 		else
 			{
 			$p=0;
-			if (is_null($qc_statuses)) $qc_statuses = array();
+			if (!is_array($qc_statuses)) $qc_statuses = array();
 			$qc_statuses_ct = count($qc_statuses);
 			while ($p < $qc_statuses_ct)
 				{
@@ -17802,7 +17814,7 @@ if ($ADD==48)
 				$p++;
 				}
 			$p=0;
-			if (is_null($qc_lists)) $qc_lists = array();
+			if (!is_array($qc_lists)) $qc_lists = array();
 			$qc_lists_ct = count($qc_lists);
 			while ($p < $qc_lists_ct)
 				{
@@ -18206,6 +18218,7 @@ if ($ADD==411)
 			{
 			$p=0;
 			echo "<BR>"._QXZ("TERRITORIES RESET");
+			if (!is_array($territory_reset)) $territory_reset = array();
 			$territory_reset_ct = count($territory_reset);
 			while ($p < $territory_reset_ct)
 				{
@@ -18410,7 +18423,7 @@ if ($ADD==4111 || $ADD==4811 || $ADD==4911)
 				else
 					{
 					$p=0;
-					if (is_null($qc_statuses)) $qc_statuses = array();
+					if (!is_array($qc_statuses)) $qc_statuses = array();
 					$qc_statuses_ct = count($qc_statuses);
 					while ($p < $qc_statuses_ct)
 						{
@@ -18418,7 +18431,7 @@ if ($ADD==4111 || $ADD==4811 || $ADD==4911)
 						$p++;
 						}
 					$p=0;
-					if (is_null($qc_lists)) $qc_lists = array();
+					if (!is_array($qc_lists)) $qc_lists = array();
 					$qc_lists_ct = count($qc_lists);
 					while ($p < $qc_lists_ct)
 						{
@@ -18967,7 +18980,7 @@ if ($ADD==411111)
 				{
 				$p=0;
 				$GROUP_shifts=' ';
-				$group_shifts_ct = count($group_shifts);
+				$group_shifts_ct = (is_array($group_shifts) ? count($group_shifts) : -1);
 				while ($p <= $group_shifts_ct)
 					{
 					if ($non_latin < 1)
@@ -18983,7 +18996,7 @@ if ($ADD==411111)
 					}
 				$p=0;
 				$VGROUP_vgroups=' ';
-				$vgroup_vgroups_ct = count($agent_status_viewable_groups);
+				$vgroup_vgroups_ct = (is_array($agent_status_viewable_groups) ? count($agent_status_viewable_groups) : -1);
 				while ($p <= $vgroup_vgroups_ct)
 					{
 					if ($non_latin < 1)
@@ -18999,7 +19012,7 @@ if ($ADD==411111)
 					}
 				$p=0;
 				$VGROUP_chatgroups=' ';
-				$vgroup_chatgroups_ct = count($agent_allowed_chat_groups);
+				$vgroup_chatgroups_ct = (is_array($agent_allowed_chat_groups) ? count($agent_allowed_chat_groups) : -1);
 				while ($p <= $vgroup_chatgroups_ct)
 					{
 					if ($non_latin < 1)
@@ -19015,7 +19028,7 @@ if ($ADD==411111)
 					}
 				$p=0;
 				$Vadmin_viewable_groups=' ';
-				$admin_viewable_groups_ct = count($admin_viewable_groups);
+				$admin_viewable_groups_ct = (is_array($admin_viewable_groups) ? count($admin_viewable_groups) : -1);
 				while ($p <= $admin_viewable_groups_ct)
 					{
 					if ($non_latin < 1)
@@ -19031,7 +19044,7 @@ if ($ADD==411111)
 					}
 				$p=0;
 				$Vadmin_viewable_call_times=' ';
-				$admin_viewable_call_times_ct = count($admin_viewable_call_times);
+				$admin_viewable_call_times_ct = (is_array($admin_viewable_call_times) ? count($admin_viewable_call_times) : -1);
 				while ($p <= $admin_viewable_call_times_ct)
 					{
 					if ($non_latin < 1)
@@ -19046,7 +19059,7 @@ if ($ADD==411111)
 					$p++;
 					}
 				$k=0;
-				$multi_count = count($allowed_reports);
+				$multi_count = (is_array($allowed_reports) ? count($allowed_reports) : -1);
 				$multi_array = $allowed_reports;
 				while ($k < $multi_count)
 					{
@@ -19096,7 +19109,7 @@ if ($ADD==411111)
 					{
 		
 					$custom_report_str="";
-					if (count($allowed_custom_reports)>0) 
+					if (is_array($allowed_custom_reports) && count($allowed_custom_reports)>0) 
 						{
 						for ($q=0; $q<count($allowed_custom_reports); $q++) 
 							{
@@ -19476,12 +19489,13 @@ if ($ADD==431111111)
 		echo "<FONT FACE=\"ARIAL,HELVETICA\" COLOR=BLACK SIZE=2>";
 
 		$shift_length_test = preg_replace('/:/i', '',$shift_length);
-		if ( (strlen($shift_id) < 2) or (strlen($shift_name) < 2) or (strlen($shift_start_time) < 4) or (strlen($shift_start_time) > 4) or (strlen($shift_length) < 5) or (strlen($shift_length) > 5) or ($shift_start_time > 2359) or ($shift_length_test > 2400) )
+		if ( (strlen($shift_id) < 2) or (strlen($shift_name) < 2) or (strlen($shift_start_time) < 4) or (strlen($shift_start_time) > 4) or (strlen($shift_length) < 5) or (strlen($shift_length) > 5) or ($shift_start_time > 2359) or ($shift_length_test > 2400) or (!is_array($shift_weekdays)) )
 			{
 			echo "<br>"._QXZ("SHIFT DEFINITION NOT MODIFIED - Please go back and look at the data you entered")."\n";
 			echo "<br>"._QXZ("Shift ID and name must be at least 2 characters in length")."\n";
 			echo "<br>"._QXZ("Shift Start Time must be 4 digits in length and be a valid time")."\n";
 			echo "<br>"._QXZ("Shift Length must be 5 characters in length and be 24 hours or less")."\n";
+			echo "<br>"._QXZ("At least one weekday must be selected")."\n";
 			}
 		else
 			{
@@ -20609,6 +20623,7 @@ if ($ADD==494111111111)
 			{
 			$p=0;
 			$REPORT_weekdays='';
+			if(!is_array($report_weekdays)) {$report_weekdays=array();}
 			$report_weekdays_ct = count($report_weekdays);
 			while ($p <= $report_weekdays_ct)
 				{
@@ -23870,7 +23885,7 @@ if ($ADD==6211111111)
 				$stmtB="UPDATE vicidial_call_times set ct_holidays='$hct_holidays[$o]' where call_time_id='$hct_ids[$o]';";
 				$rslt=mysql_to_mysqli($stmtB, $link);
 				if ($DB) {echo "|$stmtB|\n";}
-				echo "Holiday Rule Removed: $hct_ids[$o]<BR>\n";
+				echo "<font class='arial,helvetica' size='2'>Holiday Rule Removed: $hct_ids[$o]</font><BR>\n";
 				$o++;
 				}
 
@@ -23882,7 +23897,7 @@ if ($ADD==6211111111)
 			if ($DB) {echo "|$stmt|\n";}
 			$rslt=mysql_to_mysqli($stmt, $link);
 
-			echo "<br><B>"._QXZ("HOLIDAY DELETION COMPLETED").": $holiday_id</B>\n";
+			echo "<br><B><font class='arial,helvetica' size='2'>"._QXZ("HOLIDAY DELETION COMPLETED").": $holiday_id</font></B>\n";
 			echo "<br><br>\n";
 			}
 		}
@@ -33184,6 +33199,7 @@ if ($ADD==431)
 
 				$p=0;
 				$DL_weekdays='';
+				if (!is_array($dl_weekdays)) {$dl_weekdays=array();}
 				$dl_weekdays_ct = count($dl_weekdays);
 				while ($p <= $dl_weekdays_ct)
 					{
@@ -33192,7 +33208,7 @@ if ($ADD==431)
 					}
 
 				$groups_value='';
-				$group_ct = count($groups);
+				if (is_array($groups)) {$group_ct = count($groups);} else {$group_ct=0;}
 				$p=0;
 				while ($p < $group_ct)
 					{
@@ -46030,7 +46046,7 @@ if ($ADD==130)
 		echo "<td><font size=1> $list_id_ary[$o]</td>";
 		echo "<td><font size=1> $ingroups_ct</td>";
 		echo "<td><font size=1>".(preg_match('/\-\-ALL\-\-/', $group_group_ary[$o]) ? _QXZ("$group_group_ary[$o]") : $group_group_ary[$o])."</td>";
-		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=331&group_id=$dl_id_ary[$o]\">"._QXZ("MODIFY")."</a></td></tr>\n";
+		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=331&dl_id=$dl_id_ary[$o]\">"._QXZ("MODIFY")."</a></td></tr>\n";
 		$o++;
 		}
 
@@ -51785,7 +51801,7 @@ if ($ADD==999988)
 	while ($zones_to_print > $o) 
 		{
 		$rowx=mysqli_fetch_row($rslt);
-		date_default_timezone_set($rowx[7]);
+		date_default_timezone_set("$rowx[7]");
 		$tz_time = date("Y-m-d H:i:s");
 
 		if ($rowx[3] != "$last_country") {$row_color++;   $last_country = $rowx[3];}
@@ -51804,8 +51820,9 @@ if ($ADD==999988)
 		$o++;
 		}
 	echo "</TABLE></center></form>\n";
+	date_default_timezone_set($orig_zone);
 	}
-date_default_timezone_set($orig_zone);
+# JCJ - date_default_timezone_set($orig_zone);
 ##### END available timezones display page #####
 
 
@@ -51876,8 +51893,9 @@ if ($ADD==999987)
 		$o++;
 		}
 	echo "</TABLE></center></form>\n";
+	date_default_timezone_set($orig_zone);
 	}
-date_default_timezone_set($orig_zone);
+#JCJ - date_default_timezone_set($orig_zone);
 ##### END available phone_codes display page #####
 
 

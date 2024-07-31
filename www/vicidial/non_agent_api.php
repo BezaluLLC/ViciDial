@@ -214,10 +214,11 @@
 # 240703-1657 - Added update_remote_agent function
 # 240718-0942 - Fixes for inconsistencies in documentation and permissions for some functions
 # 240718-1716 - Added fields to campaigns_list function output
+# 240730-1832 - Changes for PHP8 compatibility, Added copy_did function
 #
 
-$version = '2.14-191';
-$build = '240718-1716';
+$version = '2.14-192';
+$build = '240730-1832';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 $camp_lead_order_random=1;
@@ -738,6 +739,10 @@ if (isset($_GET["list_order_secondary"]))			{$list_order_secondary=$_GET["list_o
 	elseif (isset($_POST["list_order_secondary"]))	{$list_order_secondary=$_POST["list_order_secondary"];}
 if (isset($_GET["number_of_lines"]))			{$number_of_lines=$_GET["number_of_lines"];}
 	elseif (isset($_POST["number_of_lines"]))	{$number_of_lines=$_POST["number_of_lines"];}
+if (isset($_GET["source_did_pattern"]))				{$source_did_pattern=$_GET["source_did_pattern"];}
+	elseif (isset($_POST["source_did_pattern"]))	{$source_did_pattern=$_POST["source_did_pattern"];}
+if (isset($_GET["new_dids"]))			{$new_dids=$_GET["new_dids"];}
+	elseif (isset($_POST["new_dids"]))	{$new_dids=$_POST["new_dids"];}
 
 $DB=preg_replace('/[^0-9]/','',$DB);
 
@@ -1001,6 +1006,8 @@ if ($non_latin < 1)
 	$lead_filter_id = preg_replace('/[^-_0-9a-zA-Z]/','',$lead_filter_id);
 	$outbound_alt_cid = preg_replace('/[^0-9a-zA-Z]/','',$outbound_alt_cid);
 	$did_pattern = preg_replace('/[^:\+\*\#\.\_0-9a-zA-Z]/','',$did_pattern);
+	$source_did_pattern = preg_replace('/[^:\+\*\#\.\_0-9a-zA-Z]/','',$source_did_pattern);
+	$new_dids = preg_replace('/[^:\+\,\*\#\.\_0-9a-zA-Z]/','',$new_dids);
 	$did_description = preg_replace('/[^- \.\,\_0-9a-zA-Z]/','',$did_description);
 	$did_route = preg_replace('/[^-_0-9a-zA-Z]/','',$did_route);
 	$record_call = preg_replace('/[^-_0-9a-zA-Z]/','',$record_call);
@@ -1155,6 +1162,8 @@ else
 	$lead_filter_id = preg_replace('/[^-_0-9\p{L}]/u','',$lead_filter_id);
 	$outbound_alt_cid = preg_replace('/[^0-9\p{L}]/u','',$outbound_alt_cid);
 	$did_pattern = preg_replace('/[^:\+\*\#\.\_0-9\p{L}]/u','',$did_pattern);
+	$source_did_pattern = preg_replace('/[^:\+\*\#\.\_0-9\p{L}]/u','',$source_did_pattern);
+	$new_dids = preg_replace('/[^:\+\,\*\#\.\_0-9\p{L}]/u','',$new_dids);
 	$did_description = preg_replace('/[^- \.\,\_0-9\p{L}]/u','',$did_description);
 	$did_route = preg_replace('/[^-_0-9\p{L}]/u','',$did_route);
 	$record_call = preg_replace('/[^-_0-9\p{L}]/u','',$record_call);
@@ -10228,6 +10237,202 @@ if ($function == 'add_did')
 
 
 ################################################################################
+### copy_did - adds new Inbound DID entries to the system, copied from an existing DID entry
+################################################################################
+if ($function == 'copy_did')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		echo "$result: $result_reason - $source\n";
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		echo "ERROR: Invalid Source: |$source|\n";
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			echo "$result: $result_reason: |$user|$function|\n";
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and modify_inbound_dids='1' and user_level >= 8 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "copy_did USER DOES NOT HAVE PERMISSION TO ADD DIDS";
+			$data = "$allowed_user";
+			echo "$result: $result_reason: |$user|$data\n";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($source_did_pattern)<2) or (strlen($source_did_pattern)>50) or (strlen($new_dids)<2) or (strlen($new_dids)>2000) )
+				{
+				$result = 'ERROR';
+				$result_reason = "copy_did YOU MUST USE ALL REQUIRED FIELDS";
+				$data = "$source_did_pattern|$new_dids";
+				echo "$result: $result_reason: |$user|$data\n";
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$stmt="SELECT allowed_campaigns,admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$LOGallowed_campaigns =			$row[0];
+				$LOGadmin_viewable_groups =		$row[1];
+
+				$admin_viewable_groupsSQL='';
+				$WHEREadmin_viewable_groupsSQL='';
+				if  (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups))
+					{
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+					$admin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					$WHEREadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					}
+
+				$stmt="SELECT count(*) from vicidial_inbound_dids where did_pattern='$source_did_pattern' $admin_viewable_groupsSQL;";
+				if ($DB>0) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$did_exists=$row[0];
+				if ($did_exists < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "copy_did SOURCE DID DOES NOT EXIST";
+					$data = "$source_did_pattern";
+					echo "$result: $result_reason: |$user|$data\n";
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					# loop through all new_dids and insert them
+					$new_dids_ct=0;
+					$new_dids_ARY=array();
+					if (preg_match("/,/",$new_dids))
+						{
+						$new_dids_ARY = explode(',',$new_dids);
+						$new_dids_ct = count($new_dids_ARY);
+						}
+					else 
+						{
+						$new_dids_ARY[0] = $new_dids;
+						$new_dids_ct=1;
+						}
+
+					$did_inserts=0;
+					$did_insert_errors=0;
+					$did_insert_log='';
+					$i=0;
+					while ($i < $new_dids_ct)
+						{
+						$stmt="SELECT count(*) from vicidial_inbound_dids where did_pattern='$new_dids_ARY[$i]';";
+						if ($DB>0) {echo "|$stmt|\n";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+						$row=mysqli_fetch_row($rslt);
+						$did_exists=$row[0];
+						if ($did_exists > 0)
+							{
+							$result = 'NOTICE';
+							$result_reason = "copy_did DID ALREADY EXISTS";
+							$data = "$new_dids_ARY[$i]";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							$did_insert_errors++;
+							$did_insert_log .= "$new_dids_ARY[$i] ALREADY EXISTS\n";
+							}
+						else
+							{
+							$did_patternSQL = "did_pattern='$did_pattern'";
+							$did_descriptionSQL='';
+
+							if (strlen($did_description) > 0)
+								{
+								if ( (strlen($did_description) > 50) or (strlen($did_description) < 6) )
+									{
+									$result = 'ERROR';
+									$result_reason = "copy_did DID DESCRIPTION MUST BE EITHER BLANK OR FROM 6 TO 50 CHARACTERS, THIS IS AN OPTIONAL FIELD";
+									$data = "$did_description";
+									echo "$result: $result_reason: |$user|$data\n";
+									api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+									exit;
+									}
+								else
+									{$did_descriptionSQL = "'$did_description'";}
+								}
+							else
+								{$did_descriptionSQL = "did_description";}
+
+							$stmt = "INSERT IGNORE INTO vicidial_inbound_dids (did_pattern,did_description,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension,did_carrier_description) SELECT '$new_dids_ARY[$i]',$did_descriptionSQL,did_active,did_route,extension,exten_context,voicemail_ext,phone,server_ip,user,user_unavailable_action,user_route_settings_ingroup,group_id,call_handle_method,agent_search_method,list_id,campaign_id,phone_code,menu_id,record_call,filter_inbound_number,filter_phone_group_id,filter_url,filter_action,filter_extension,filter_exten_context,filter_voicemail_ext,filter_phone,filter_server_ip,filter_user,filter_user_unavailable_action,filter_user_route_settings_ingroup,filter_group_id,filter_call_handle_method,filter_agent_search_method,filter_list_id,filter_campaign_id,filter_phone_code,filter_menu_id,filter_clean_cid_number,custom_one,custom_two,custom_three,custom_four,custom_five,user_group,filter_dnc_campaign,filter_url_did_redirect,no_agent_ingroup_redirect,no_agent_ingroup_id,no_agent_ingroup_extension,pre_filter_phone_group_id,pre_filter_extension,entry_list_id,filter_entry_list_id,max_queue_ingroup_calls,max_queue_ingroup_id,max_queue_ingroup_extension,did_carrier_description from vicidial_inbound_dids where did_pattern='$source_did_pattern';";
+							$rslt=mysql_to_mysqli($stmt, $link);
+							$add_count = mysqli_affected_rows($link);
+							$did_id = mysqli_insert_id($link);
+							if ($DB) {echo "$add_count|$did_id|$stmt|\n";}
+							$did_insert_log .= "$new_dids_ARY[$i] ADDED, did_id: $did_id\n";
+							$did_inserts = ($did_inserts + $add_count);
+
+							$result = 'NOTICE';
+							$result_reason = "copy_did DID HAS BEEN ADDED";
+							$data = "$new_dids_ARY[$i]|$source_did_pattern|$did_id|$add_count";
+							echo "$result: $result_reason - $user|$data\n";
+							api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+							}
+						$i++;
+						}
+
+					### LOG INSERTION Admin Log Table ###
+					$SQL_log = "$stmt|";
+					$SQL_log = preg_replace('/;/', '', $SQL_log);
+					$SQL_log = addslashes($SQL_log);
+					$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$user', ip_address='$ip', event_section='DIDS', event_type='COPY', record_id='$did_id', event_code='ADMIN API COPY DIDS', event_sql=\"$SQL_log\", event_notes='DID Source: $source_did_pattern Inserts: $did_inserts Insert Errors: $did_insert_errors Copy Log:\n$did_insert_log';";
+					if ($DB) {echo "|$stmt|\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+
+					if ($did_inserts > 0)
+						{
+						$result = 'SUCCESS';
+						$result_reason = "copy_did DIDS HAVE BEEN ADDED";
+						$data = "$source_did_pattern|$did_inserts|$did_insert_errors";
+						echo "$result: $result_reason - $user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					else
+						{
+						$result = 'ERROR';
+						$result_reason = "copy_did NO DIDS ADDED";
+						$data = "$source_did_pattern|$did_inserts|$did_insert_errors";
+						echo "$result: $result_reason - $user|$data\n";
+						api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+						}
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END copy_did
+################################################################################
+
+
+
+
+
+################################################################################
 ### update_did - updates Inbound DID information in the vicidial_inbound_dids table
 ################################################################################
 if ($function == 'update_did')
@@ -17996,7 +18201,7 @@ if ($function == 'call_status_stats')
 					}
 				$hour_str=substr($hour_str, 0, -1);
 
-				if (is_null($temp_stat_array["$key"])) $temp_stat_array["$key"] = array();
+				if (!is_array($temp_stat_array["$key"])) $temp_stat_array["$key"] = array();
 				$temp_ary_ct = count($temp_stat_array["$key"]);
 				if ($temp_ary_ct > 0)
 					{
@@ -18024,7 +18229,7 @@ if ($function == 'call_status_stats')
 					}
 				$hour_str=substr($hour_str, 0, -1);
 
-				if (is_null($temp_stat_array["$key"])) $temp_stat_array["$key"] = array();
+				if (!is_array($temp_stat_array["$key"])) $temp_stat_array["$key"] = array();
 				$temp_ary_ct = count($temp_stat_array["$key"]);
 				if ($temp_ary_ct > 0)
 					{
@@ -18153,7 +18358,7 @@ if ($function == 'call_dispo_report')
 					}
 				}
 
-			if (is_null($did_id_array)) $did_id_array = array();
+			if (!is_array($did_id_array)) $did_id_array = array();
 			if (count($did_id_array)>0 && $skip_inbound) # DON'T DO A REPORT FOR INGROUPS AND DIDS YET.
 				{
 				$did_SQL="and did_id in ('".implode("', '", $did_id_array)."')";
@@ -18185,7 +18390,7 @@ if ($function == 'call_dispo_report')
 					}
 				}
 
-			if (is_null($status_array)) $status_array = array();
+			if (!is_array($status_array)) $status_array = array();
 			if ($status_array && count($status_array)>0) 
 				{
 				$status_SQL=" and status in ('".implode("', '", $status_array)."') ";
@@ -18212,7 +18417,7 @@ if ($function == 'call_dispo_report')
 						}
 					}
 				}
-			if (is_null($user_array)) $user_array = array();
+			if (!is_array($user_array)) $user_array = array();
 			if ($user_array && count($user_array)>0) 
 				{
 				$user_SQL=" and user in ('".implode("', '", $user_array)."') ";
@@ -18290,7 +18495,7 @@ if ($function == 'call_dispo_report')
 					}
 				}
 
-			if (is_null($status_ct_array)) $status_ct_array = array();
+			if (!is_array($status_ct_array)) $status_ct_array = array();
 			$rpt_str.="CAMPAIGN,TOTAL CALLS";
 			if ($status_breakdown) 
 				{
