@@ -159,9 +159,10 @@
 # 231129-0901 - Added vicidial_phone_number_call_daily_counts updates/inserts
 # 240219-1524 - Added daily_limit in-group parameter
 # 240225-0951 - Added AUTONEXT hopper_hold_inserts option
+# 240731-0814 - Fix for 2nd DB connection timing out while running
 #
 
-$build='240225-0951';
+$build='240731-0814';
 $script='AST_VDauto_dial';
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -518,17 +519,17 @@ while($one_day_interval > 0)
 		$shared_dial_camp_override=0;
 
 		##### Get maximum calls per second that this process can send out
-		$stmtA = "SELECT outbound_calls_per_second,vicidial_recording_limit FROM servers where server_ip='$server_ip';";
-		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-		$sthArows=$sthA->rows;
-		if ($sthArows > 0)
+		$stmtC = "SELECT outbound_calls_per_second,vicidial_recording_limit FROM servers where server_ip='$server_ip';";
+		$sthC = $dbhC->prepare($stmtC) or die "preparing: ",$dbhC->errstr;
+		$sthC->execute or die "executing: $stmtC ", $dbhC->errstr;
+		$sthCrows=$sthC->rows;
+		if ($sthCrows > 0)
 			{
-			@aryA = $sthA->fetchrow_array;
-			$outbound_calls_per_second =	$aryA[0];
-			$DBvicidial_recording_limit =	$aryA[1];
+			@aryC = $sthC->fetchrow_array;
+			$outbound_calls_per_second =	$aryC[0];
+			$DBvicidial_recording_limit =	$aryC[1];
 			}
-		$sthA->finish();
+		$sthC->finish();
 
 		if ( ($outbound_calls_per_second > 0) && ($outbound_calls_per_second < 201) )
 			{$per_call_delay = (1000 / $outbound_calls_per_second);}
