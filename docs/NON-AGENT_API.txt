@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-07-18
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-07-30
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -52,6 +52,7 @@ check_phone_number - allows you to check if a phone number is valid and dialable
 logged_in_agents - list of agents that are logged in to the system
 update_campaign - updates campaign settings in the system
 add_did - adds new Inbound DID entries to the system
+copy_did - adds new Inbound DID entries to the system, copied from an existing DID entry
 update_did - updates Inbound DID information in the system
 phone_number_log - exports list of calls placed to one of more phone numbers
 call_status_stats - report on number of calls made by campaign and ingroup, with hourly and status breakdowns
@@ -223,6 +224,7 @@ Changes:
 240703-1657 - Added update_remote_agent function
 240718-0942 - Fixes for inconsistencies in documentation and permissions for some functions
 240718-1716 - Added fields to campaigns_list function output
+240730-1832 - Changes for PHP8 compatibility, Added copy_did function
 
 
 API Functions use the 'function' variable
@@ -2580,7 +2582,7 @@ add_did - adds new Inbound DID entries to the system in the vicidial_inbound_did
 NOTE: api user for this function must have user_level set to 8 or higher and "Modify DIDs" enabled
 
 REQUIRED FIELDS-
-did_pattern -		2-50 characters, must be a valid DID in the system
+did_pattern -		2-50 characters
 			   NOTE: special characters in the did_pattern need to be URL encoded, for example the plus sign '+' must be sent as '%2B'
 source -		description of what originated the API call (maximum 20 characters)
 
@@ -2632,6 +2634,41 @@ ERROR: add_did ENTRY LIST ID MUST BE FROM 1 TO 14 DIGITS, THIS IS AN OPTIONAL FI
 ERROR: add_did CAMPAIGN MUST BE FROM 1 TO 8 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|TESTCAMPS
 ERROR: add_did PHONE CODE MUST BE FROM 1 TO 10 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|99999999999
 SUCCESS: add_did DID HAS BEEN ADDED - 6666|1101
+
+
+
+
+
+--------------------------------------------------------------------------------
+copy_did - adds new Inbound DID entries to the system, copied from an existing DID entry
+
+NOTE: api user for this function must have user_level set to 8 or higher and "Modify DIDs" enabled
+
+REQUIRED FIELDS-
+source_did_pattern -	2-50 characters, must be a valid DID in the system
+			   NOTE: special characters in the source_did_pattern need to be URL encoded, for example the plus sign '+' must be sent as '%2B'
+new_dids -		2-2000 characters, for multiple DIDs separate with a comma
+			   NOTE: special characters in the new_dids need to be URL encoded, for example the plus sign '+' must be sent as '%2B'
+source -		description of what originated the API call (maximum 20 characters)
+
+OPTIONAL FIELDS- 
+did_description -	6-50 characters, if left blank, the source DID description will be used
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=copy_did&source_did_pattern=%2B1727555112&did_description=Updated+test+API+DID&new_dids=%2B1727555119
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=copy_did&source_did_pattern=7275551114&new_dids=7275553338,7275553337,7275553336
+
+Example responses:
+ERROR: copy_did USER DOES NOT HAVE PERMISSION TO ADD DIDS - 6666
+ERROR: copy_did YOU MUST USE ALL REQUIRED FIELDS - 6666|1|1
+ERROR: copy_did NOT AN ALLOWED DID - 98762
+ERROR: copy_did DID DESCRIPTION MUST BE EITHER BLANK OR FROM 6 TO 50 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|012
+NOTICE: copy_did DID ALREADY EXISTS - 6666|1000
+NOTICE: copy_did DID HAS BEEN ADDED - 6666|1000|1001|12|1
+ERROR: copy_did NO DIDS ADDED - 6666|1000|0|12|1
+SUCCESS: copy_did DIDS HAVE BEEN ADDED - 6666|1000|1|0
+
+NOTE: If DIDs are attempted to be copied, there will be output for each attempted DID as well as a SUCCESS message if any were successfully copied or an ERROR if none were
 
 
 
