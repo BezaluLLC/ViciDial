@@ -45,7 +45,7 @@
 #exten => 8366,4,AGI(agi-VDAD_ALL_outbound.agi,SURVEY-----LB-----US_pol_survey_hello-----1238-----8-----US_pol_survey_transfer-----US_thanks_no_contact-----OPTOUT-----DNC)
 #exten => 8366,5,Hangup
 #
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 80218-2027 - First Build
@@ -128,6 +128,7 @@
 # 210907-1254 - Added KHOMP code (install JSON::PP Perl module and remove '#UC#' in the code to enable)
 # 220524-1746 - Changed SHARED_ campaign in-group transfers to use 'SRDROP' log status instead of 'DROP'
 # 230309-0952 - Added abandon_check_queue feature
+# 240804-1218 - Remove ding and sleep for dropped calls going to an extension(message)
 #
 
 $script = 'agi-VDAD_ALL_outbound.agi';
@@ -4456,9 +4457,10 @@ if ($drop_timer > $DROP_TIME)
 		{	
 		### if DROP extension is defined then send the dropped call there instead of hangup
 
-		$AGI->stream_file('ding'); # stop music-on-hold process
+		$AGI->stream_file('sip-silence');
 
-		sleep(1);
+		# $AGI->stream_file('ding'); # stop music-on-hold process
+		# sleep(1);
 
 		if ($AGILOG) {$agi_string = "exiting the VDAD app, transferring call to $DROPexten $ext_context";   &agi_output;}
 		print "SET CONTEXT $ext_context\n";
