@@ -952,6 +952,8 @@ if (isset($_GET["did_active"]))				{$did_active=$_GET["did_active"];}
 	elseif (isset($_POST["did_active"]))	{$did_active=$_POST["did_active"];}
 if (isset($_GET["did_route"]))				{$did_route=$_GET["did_route"];}	
 	elseif (isset($_POST["did_route"]))		{$did_route=$_POST["did_route"];}
+if (isset($_GET["did_pattern_filter"]))				{$did_pattern_filter=$_GET["did_pattern_filter"];}	
+	elseif (isset($_POST["did_pattern_filter"]))		{$did_pattern_filter=$_POST["did_pattern_filter"];}
 if (isset($_GET["exten_context"]))			{$exten_context=$_GET["exten_context"];}	
 	elseif (isset($_POST["exten_context"]))	{$exten_context=$_POST["exten_context"];}
 if (isset($_GET["phone"]))					{$phone=$_GET["phone"];}	
@@ -3680,6 +3682,7 @@ if ($non_latin < 1)
 	$mute_recordings = preg_replace('/[^0-9a-zA-Z]/','',$mute_recordings);
 	$leave_vm_no_dispo = preg_replace('/[^0-9a-zA-Z]/','',$leave_vm_no_dispo);
 	$amd_agent_route_options = preg_replace('/[^0-9a-zA-Z]/','',$amd_agent_route_options);
+	$did_pattern_filter = preg_replace('/[^0-9a-zA-Z]/','',$did_pattern_filter);
 
 	### ALPHA-NUMERIC and spaces and hash and star and comma
 	$xferconf_a_dtmf = preg_replace('/[^ \,\*\#0-9a-zA-Z]/','',trim($xferconf_a_dtmf));
@@ -4421,6 +4424,7 @@ else
 	$mute_recordings = preg_replace('/[^0-9\p{L}]/u','',$mute_recordings);
 	$leave_vm_no_dispo = preg_replace('/[^0-9\p{L}]/u','',$leave_vm_no_dispo);
 	$amd_agent_route_options = preg_replace('/[^0-9\p{L}]/u','',$amd_agent_route_options);
+	$did_pattern_filter = preg_replace('/[^0-9a-zA-Z]/','',$did_pattern_filter);
 
 	### ALPHA-NUMERIC and spaces and hash and star and comma
 	$xferconf_a_dtmf = preg_replace('/[^ \,\*\#0-9\p{L}]/u','',trim($xferconf_a_dtmf));
@@ -6185,12 +6189,13 @@ if ($SSscript_remove_js > 0)
 # 240706-2332 - Added DB Schema Compare Utility
 # 240716-1453 - Small header fixes
 # 240730-1829 - Changes for PHP8 compatibility, added copy_did Non-Agent API function
+# 240805-1738 - Added DID listing display filter
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-925a';
-$build = '240730-1829';
+$admin_version = '2.14-926a';
+$build = '240805-1738';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -46399,6 +46404,17 @@ if ($ADD==1300)
 	$REClink="stage=RECDOWN&status=$status";
 	$SQLorder='order by did_pattern';
 
+	if ($did_pattern_filter)
+		{
+		$dpf_clause="and did_pattern like '%".$did_pattern_filter."%'";
+		$DPFlink="&did_pattern_filter=".$did_pattern_filter;
+		}
+	else
+		{
+		$dpf_clause="";
+		$DPFlink="";
+		}
+
 	if (preg_match("/DIDUP/i",$stage)) {$SQLorder='order by did_pattern asc';   $DIDlink="stage=DIDDOWN&status=$status";}
 	if (preg_match("/DIDDOWN/i",$stage)) {$SQLorder='order by did_pattern desc';   $DIDlink="stage=DIDUP&status=$status";}
 	if (preg_match("/DESCUP/i",$stage)) {$SQLorder='order by did_description asc';   $DESClink="stage=DESCDOWN&status=$status";}
@@ -46418,7 +46434,7 @@ if ($ADD==1300)
 	$next_prev_HTML='';
 	if ($SSentries_per_page > 0)
 		{
-		$stmt="SELECT count(*) from vicidial_inbound_dids where did_pattern!='did_system_filter' $LOGadmin_viewable_groupsSQL";
+		$stmt="SELECT count(*) from vicidial_inbound_dids where did_pattern!='did_system_filter' $dpf_clause $LOGadmin_viewable_groupsSQL";
 		$rslt=mysql_to_mysqli($stmt, $link);
 		$row=mysqli_fetch_row($rslt);
 		$dids_count = $row[0];
@@ -46435,11 +46451,11 @@ if ($ADD==1300)
 				if ($nextnext_count > $dids_count) 
 					{
 					$next_temp = ($dids_count - $next_count);
-					$nextHTML = "<a href=\"$PHP_SELF?ADD=1300&start_count=$next_count&stage=$stage\">"._QXZ("NEXT")." $next_temp</a> &nbsp; ";
+					$nextHTML = "<a href=\"$PHP_SELF?ADD=1300&start_count=$next_count&stage=$stage$DPFlink\">"._QXZ("NEXT")." $next_temp</a> &nbsp; ";
 					}
 				else
 					{
-					$nextHTML = "<a href=\"$PHP_SELF?ADD=1300&start_count=$next_count&stage=$stage\">"._QXZ("NEXT")." $SSentries_per_page</a> &nbsp; ";
+					$nextHTML = "<a href=\"$PHP_SELF?ADD=1300&start_count=$next_count&stage=$stage$DPFlink\">"._QXZ("NEXT")." $SSentries_per_page</a> &nbsp; ";
 					}
 				}
 			$next_prev_HTML .= _QXZ("RECORDS")." $start_count - $next_count &nbsp; ";
@@ -46448,30 +46464,60 @@ if ($ADD==1300)
 				{
 				$prev_count = ($start_count - $SSentries_per_page);
 				$limitSQL="limit $start_count,$SSentries_per_page";
-				$next_prev_HTML .= "<a href=\"$PHP_SELF?ADD=1300&start_count=$prev_count&stage=$stage\">"._QXZ("PREVIOUS")." $SSentries_per_page</a> &nbsp; ";
+				$next_prev_HTML .= "<a href=\"$PHP_SELF?ADD=1300&start_count=$prev_count&stage=$stage$DPFlink\">"._QXZ("PREVIOUS")." $SSentries_per_page</a> &nbsp; ";
 				}
 			$next_prev_HTML .= $nextHTML;
-			$next_prev_HTML .= " &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp; </b><a href=\"$PHP_SELF?ADD=1300&status=display_all&stage=$stage\"><font size=1 color=black>"._QXZ("show all DIDs")."</font></a><b> &nbsp; ";
+			$next_prev_HTML .= " &nbsp;  &nbsp;  &nbsp;  &nbsp;  &nbsp; </b><a href=\"$PHP_SELF?ADD=1300&status=display_all&stage=$stage$DPFlink\"><font size=1 color=black>"._QXZ("show all DIDs")."</font></a><b> &nbsp; ";
+			}
+		else if ($status == 'display_all')
+			{
+			$next_prev_HTML .= "</b><a href=\"$PHP_SELF?ADD=1300&status=&stage=$stage$DPFlink\"><font size=1 color=black>"._QXZ("Show paginated DIDs")."</font></a><b> &nbsp; ";
 			}
 		}
 
-	$stmt="SELECT did_id,did_pattern,did_description,did_carrier_description,did_active,did_route,record_call,user_group from vicidial_inbound_dids where did_pattern!='did_system_filter' $LOGadmin_viewable_groupsSQL $SQLorder $limitSQL;";
+	$stmt="SELECT did_id,did_pattern,did_description,did_carrier_description,did_active,did_route,record_call,user_group from vicidial_inbound_dids where did_pattern!='did_system_filter' $dpf_clause $LOGadmin_viewable_groupsSQL $SQLorder $limitSQL;";
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$dids_to_print = mysqli_num_rows($rslt);
 
 	echo "<img src=\"images/icon_cidgroups.png\" alt=\"Inbound DIDs\" width=42 height=42> "._QXZ("INBOUND DID LISTINGS").":\n";
 	if (strlen($next_prev_HTML) > 10)
 		{echo "<br><b> &nbsp; $next_prev_HTML</b><br>";}
-	echo "<center><TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<center>\n";
+	echo "<span name='adminDIDdisplay' id='adminDIDdisplay'>\n";
+	echo "<form action='$PHP_SELF'>\n";
+	echo "<input type='hidden' name='ADD' id='ADD' value='1300'>\n";
+	echo "<input type='hidden' name='status' id='status' value='$status'>\n";
+	echo "<input type='hidden' name='stage' id='stage' value='$stage'>\n";
+	echo "<input type='hidden' name='start_count' id='start_count' value='$start_count'>\n";
+	echo "<TABLE width=$section_width cellspacing=0 cellpadding=1>\n";
+	echo "<TR bgcolor='#e6e6e6'>";
+	echo "<TD colspan='2' align='right'><font size=1 color=black>Filter/search DIDs:</TD>";
+	echo "<TD align='left'><input type='text' class='form_field' name='did_pattern_filter' id='did_pattern_filter' value='$did_pattern_filter' size='10' maxlength='20'>$NWB#inbound_dids-filter_search$NWE</TD>";
+	echo "<TD colspan='6' align='left'><input type='submit' class='blue_btn' value='FILTER DIDS'>";
+	if ($did_pattern_filter)
+		{
+#		echo "&nbsp; &nbsp; <input type='button' class='green_btn' value='SHOW ALL FILTERED DIDS' onclick=\"window.document.location='$PHP_SELF?ADD=1300&status=display_all&stage=$stage$DPFlink'\">";
+#		echo "&nbsp; &nbsp; <input type='button' class='red_btn' value='SHOW ALL DIDS' onclick=\"window.document.location='$PHP_SELF?ADD=1300&stage=$stage&status=$status'\">";
+		if ($dids_count > $SSentries_per_page)
+			{
+			#if ($status == 'display_all')
+			#	{echo "&nbsp; &nbsp; &nbsp; <a href='$PHP_SELF?ADD=1300&stage=$stage$DPFlink'><font size='1' color='white'>Show paginated filtered DIDs</a>";}
+			#else
+			#	{echo "&nbsp; &nbsp; &nbsp; <a href='$PHP_SELF?ADD=1300&stage=$stage&status=display_all$DPFlink'><font size='1' color='white'>Show all filtered DIDs</a>";}
+			}
+		echo "&nbsp; &nbsp; &nbsp; <a href='$PHP_SELF?ADD=1300&stage=$stage&status=$status'><font size='1' color='black'>Clear filter</a>";
+		}
+	echo "</TD>";
+	echo "</TR>\n";
 	echo "<TR BGCOLOR=BLACK>";
 	echo "<TD><font size=1 color=white>#</TD>";
-	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$DIDlink\"><font size=1 color=white><B>"._QXZ("DID")."</B></a></TD>";
-	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$DESClink\"><font size=1 color=white><B>"._QXZ("DESCRIPTION")."</B></a></TD>\n";
-	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$CARRIERlink\"><font size=1 color=white><B>"._QXZ("CARRIER")."</B></a></TD>\n";
-	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$ACTIVElink\"><font size=1 color=white><B>"._QXZ("ACTIVE")."</B></a></TD>";
-	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$GROUPlink\"><font size=1 color=white><B>"._QXZ("ADMIN GROUP")."</B></a></TD>";
-	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$ROUTElink\"><font size=1 color=white><B>"._QXZ("ROUTE")."</B></a></TD>";
-	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$REClink\"><font size=1 color=white><B>"._QXZ("REC")."</B></a></TD>";
+	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$DIDlink$DPFlink\"><font size=1 color=white><B>"._QXZ("DID")."</B></a></TD>";
+	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$DESClink$DPFlink\"><font size=1 color=white><B>"._QXZ("DESCRIPTION")."</B></a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$CARRIERlink$DPFlink\"><font size=1 color=white><B>"._QXZ("CARRIER")."</B></a></TD>\n";
+	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$ACTIVElink$DPFlink\"><font size=1 color=white><B>"._QXZ("ACTIVE")."</B></a></TD>";
+	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$GROUPlink$DPFlink\"><font size=1 color=white><B>"._QXZ("ADMIN GROUP")."</B></a></TD>";
+	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$ROUTElink$DPFlink\"><font size=1 color=white><B>"._QXZ("ROUTE")."</B></a></TD>";
+	echo "<TD><a href=\"$PHP_SELF?ADD=1300&$REClink$DPFlink\"><font size=1 color=white><B>"._QXZ("REC")."</B></a></TD>";
 	echo "<TD><font size=1 color=white><B>"._QXZ("MODIFY")."</B></TD>\n";
 	echo "</TR>\n";
 
@@ -46507,8 +46553,10 @@ if ($ADD==1300)
 		echo "<td><font size=1><a href=\"$PHP_SELF?ADD=3311&did_id=$row[0]\">"._QXZ("MODIFY")."</a></td></tr>\n";
 		$o++;
 		}
-
-	echo "</TABLE></center>\n";
+	echo "</TABLE>\n";
+	echo "</form>\n";
+	echo "</span>\n";
+	echo "</center>\n";
 	}
 
 
