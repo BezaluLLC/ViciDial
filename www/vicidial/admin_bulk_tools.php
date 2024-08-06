@@ -34,6 +34,7 @@
 # 220222-0821 - Added allow_web_debug system setting
 # 230522-1726 - Added missing vicidial_users fields from copy function
 # 240217-0908 - Added more missing vicidial_users fields from copy function
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 require("dbconnect_mysqli.php");
@@ -146,6 +147,7 @@ else
 	$ACCIDto_insert_raw_ArFilter = array_filter($ACCIDto_insert_raw);
 	}
 $DIDto_insert_raw = preg_replace('/[^0-9\n]/','',$DIDto_insert_raw);
+$DIDto_insert_raw = preg_replace('/\n+$/','',$DIDto_insert_raw);
 $DIDto_insert_raw = explode("\n", $DIDto_insert_raw);
 if ( $form_to_run == "BULKDIDSDELETETB" ) 
 	{
@@ -485,6 +487,7 @@ if ($form_to_run == "ACCID")
 	$ACCIDduplicate = array();
 	$ACCIDinserted = array();
 	$ACCIDareacode = array();
+	$ACCIDbadlen = array();
 	$i=0; #loop counter
 	$j=0; #duplicate counter
 	$k=0; #insert counter
@@ -1018,7 +1021,7 @@ elseif ($form_to_run == "BULKDIDS")
 		$l=0; #bad length counter
 		while ($i < count($DIDto_insert_raw))
 			{
-			$SQL= "SELECT did_pattern FROM vicidial_inbound_dids WHERE did_pattern=$DIDto_insert_raw[$i];";
+			$SQL= "SELECT did_pattern FROM vicidial_inbound_dids WHERE did_pattern='$DIDto_insert_raw[$i]';";
 			if ($DB) {echo "$SQL|";}
 			$SQL_rslt=mysql_to_mysqli($SQL, $link);
 			$row = mysqli_fetch_row($SQL_rslt);

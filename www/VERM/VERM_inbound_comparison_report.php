@@ -2,14 +2,17 @@
 
 # VERM_inbound_comparison_report.php
 
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>, Joe Johnson <joej@vicidial.com>    LICENSE: AGPLv2
+
 # changes
 # 230225-1531 - First build of script
+# 240801-1139 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
 
-$version = '2.14-41';
-$build = '230225-1531';
+$version = '2.14-42';
+$build = '240801-1139';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -85,6 +88,9 @@ if ($SSallow_web_debug < 1) {$DB=0;}
 # $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
 # $PHP_SELF=$_SERVER['PHP_SELF'];
 # $PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
+
+if(!is_array($comparison_years)) {$comparison_years=array();}
+if(!is_array($comparison_months)) {$comparison_months=array();}
 
 $start_date=preg_replace('/[^-0-9]/', '', $start_date);
 $end_date=preg_replace('/[^-0-9]/', '', $end_date);
@@ -392,6 +398,11 @@ if ($vicidial_queue_groups && $submit_report)
 				$included_inbound_groups_ct=count($included_inbound_groups_array);
 				$included_inbound_groups_clause="and group_id in ('".preg_replace('/\s/', "', '", $included_inbound_groups)."')";
 				$where_included_inbound_groups_clause="where group_id in ('".preg_replace('/\s/', "', '", $included_inbound_groups)."')";
+				}
+			else
+				{
+				$included_campaigns_array=array();
+				$included_inbound_groups_array=array();	
 				}
 
 			$atomic_queue_str="";
@@ -1186,8 +1197,10 @@ $HTML_output.="//-->\n";
 
 if ($DB) {$HTML_output.="<B>$calls_stmt</B>";}
 
-$calls_rslt=mysqli_query($link, $calls_stmt);
-
+if($calls_stmt)
+	{
+	$calls_rslt=mysqli_query($link, $calls_stmt);
+	}
 
 
 if (file_exists('options.php'))

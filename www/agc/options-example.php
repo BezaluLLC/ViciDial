@@ -1,7 +1,7 @@
 <?php
 # options.php - manually defined options for vicidial.php
 # 
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # rename this file to options.php for the settings here to go into effect
 #
@@ -30,6 +30,7 @@
 # 230617-0815 - Added dead_logging_version option
 # 231109-0830 - Changed link_to_grey_version to disabled by default
 # 231115-1610 - Added allow_vlc_lookup, default_consultative
+# 240802-1250 - Added options to customize PHP error reporting
 #
 
 $conf_silent_prefix		= '5';	# vicidial_conferences prefix to enter silently and muted for recording
@@ -113,6 +114,15 @@ $INSERT_first_onload	= '';	# inserted at the beginning of the first section of t
 $INSERT_window_onload	= '';	# inserted at the end of the onload function
 $INSERT_agent_events	= '';	# inserted within the agent_events function
 $INSERT_before_body_close = '';	# inserted before each BODY close tag
+
+# If this option is set to 1, then the error_reporting in php.ini will be ignored and settings below will be used for this directory
+$PHP_error_reporting_OVERRIDE =	0;
+	# PHP error reporting options, set to 1 to keep the type of error from being displayed, either on-screen or to the error logs.
+$PHP_error_reporting_HIDE_ERRORS =		0;	# STRONGLY advise leaving this value alone, but you do you.
+$PHP_error_reporting_HIDE_WARNINGS =	0;
+$PHP_error_reporting_HIDE_PARSES =		0;
+$PHP_error_reporting_HIDE_NOTICES =		0;
+$PHP_error_reporting_HIDE_DEPRECATIONS=	0;
 
 # CORS settings: (to enable, customize the variables below, and uncomment the "require_once('agentCORS.php');" line at the bottom)
 # (NOTE: The first 3 variables must be set for these features to be active)

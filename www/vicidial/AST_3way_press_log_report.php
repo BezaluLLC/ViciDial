@@ -8,6 +8,7 @@
 # 231228-2204 - First build
 # 240108-1556 - Added channel/server display
 # 240114-1018 - Added Agent Gone summary stat
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
@@ -48,7 +49,7 @@ $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
 $start_screen=0;
-if (!isset($group)) {$group = array();}
+if (!is_array($group)) {$group = array();}
 if (!isset($query_date)) {$query_date = $NOW_DATE;   $start_screen=1;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 

@@ -1,7 +1,7 @@
 <?php 
 # AST_carrier_log_report.php
 # 
-# Copyright (C) 2022  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 120331-2301 - First build
@@ -21,6 +21,7 @@
 # 201218-1700 - Modified to include caller ID in results
 # 220302-1813 - Added allow_web_debug system setting
 # 220812-0940 - Added User Group report permissions checking
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
@@ -69,10 +70,10 @@ $START_TIME=date("U");
 $NOW_DATE = date("Y-m-d");
 if (strlen($query_date_D) < 6) {$query_date_D = "00:00:00";}
 if (strlen($query_date_T) < 6) {$query_date_T = "23:59:59";}
-if (!isset($server_ip)) {$server_ip = array();}
-if (!isset($hangup_cause)) {$hangup_cause = array();}
-if (!isset($dial_status)) {$dial_status = array();}
-if (!isset($sip_hangup_cause)) {$sip_hangup_cause = array();}
+if (!is_array($server_ip)) {$server_ip = array();}
+if (!is_array($hangup_cause)) {$hangup_cause = array();}
+if (!is_array($dial_status)) {$dial_status = array();}
+if (!is_array($sip_hangup_cause)) {$sip_hangup_cause = array();}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 
 #############################################

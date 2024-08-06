@@ -1,7 +1,7 @@
 <?php
 # options.php - manually defined options for vicidial admin scripts
 # 
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # rename this file to options.php for the settings here to go into effect
 #
@@ -39,6 +39,7 @@
 # 230421-1645 - Added RS_UGlatencyRESTRICT option
 # 230926-0849 - Added camp_lead_order_random option
 # 231115-1642 - Added vm_view_messages_link, RS_no_DEAD_status and RS_hide_CUST_info options
+# 240802-1250 - Added options to customize PHP error reporting
 #
 
 # used by the realtime_report.php script
@@ -96,6 +97,15 @@ $RS_AGENTlatency =		0;	# 0=no, 1=yes, 2=all, 3=day, 4=now
 $RS_UGlatencyRESTRICT =	'';	# this can restrict the "LATENCY" features to only be accessible to users in set User Groups: "ADMIN|ADMIN2"
 $RS_AGENTstatusTALLY =	'';	# <any valid status>: If set, will look at the number of calls statused by the agent in this status for today
 							# WARNING!!! Using the above option may cause system lag issues, USE WITH CAUTION!
+
+# If this option is set to 1, then the error_reporting in php.ini will be ignored and settings below will be used for this directory
+$PHP_error_reporting_OVERRIDE =	0;
+	# PHP error reporting options, set to 1 to keep the type of error from being displayed, either on-screen or to the error logs.
+$PHP_error_reporting_HIDE_ERRORS =		0;	# STRONGLY advise leaving this value alone, but you do you.
+$PHP_error_reporting_HIDE_WARNINGS =	0;
+$PHP_error_reporting_HIDE_PARSES =		0;
+$PHP_error_reporting_HIDE_NOTICES =		0;
+$PHP_error_reporting_HIDE_DEPRECATIONS=	0;
 
 # used by agent reports
 $user_case =			0;		# 1=upper-case, 2-lower-case, 0-no-case-change

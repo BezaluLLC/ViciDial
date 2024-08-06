@@ -42,7 +42,25 @@
 # 220921-1209 - Added more failed login logging in user_authorization function
 # 231119-1445 - Added user_authorization for HCI page users
 # 240401-1459 - Added check for vicidial_pending_ar entries in user_authorization
+# 240801-1130 - Code updates for PHP8 compatibility
+# 240805-2103 - Added PHP_error_reporting_OVERRIDE options
 #
+
+$PHP_error_reporting_OVERRIDE=0;
+if (file_exists('options.php'))
+        {
+        require('options.php');
+        }
+if ($PHP_error_reporting_OVERRIDE > 0)
+	{
+	$php_err_suppression_value=32767; # E_ALL
+	$php_err_suppression_value-=($PHP_error_reporting_HIDE_ERRORS ? 1 : 0);
+	$php_err_suppression_value-=($PHP_error_reporting_HIDE_WARNINGS ? 2 : 0);
+	$php_err_suppression_value-=($PHP_error_reporting_HIDE_PARSES ? 4 : 0);
+	$php_err_suppression_value-=($PHP_error_reporting_HIDE_NOTICES ? 8 : 0);
+	$php_err_suppression_value-=($PHP_error_reporting_HIDE_DEPRECATIONS ? 8192 : 0);
+	error_reporting($php_err_suppression_value);
+	}
 
 ##### BEGIN validate user login credentials, check for failed lock out #####
 function user_authorization($user,$pass,$user_option,$user_update,$api_call)

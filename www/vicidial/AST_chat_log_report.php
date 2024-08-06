@@ -1,7 +1,7 @@
 <?php
 # AST_chat_log_report.php
 # 
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
 #
 # This is the report page where you can view report information of any of the dialer's chats.  The web page will 
 # display the information about the chat, including the start time and participants, and will also provide links 
@@ -15,6 +15,7 @@
 # 170409-1550 - Added IP List validation code
 # 191013-0857 - Fixes for PHP7
 # 220303-0909 - Added allow_web_debug system setting
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
@@ -71,10 +72,10 @@ $MT[0]='';
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
-if (!isset($group)) {$group = array();}
-if (!isset($inbound_group)) {$inbound_group = array();}
-if (!isset($user_group)) {$user_group = array();}
-if (!isset($users)) {$users = array();}
+if (!is_array($group)) {$group = array();}
+if (!is_array($inbound_group)) {$inbound_group = array();}
+if (!is_array($user_group)) {$user_group = array();}
+if (!is_array($users)) {$users = array();}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 if (strlen($shift)<2) {$shift='ALL';}

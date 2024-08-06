@@ -82,10 +82,11 @@
 # 220222-1002 - Added allow_web_debug system setting
 # 231207-1445 - Fix for web_loader_phone_strip duplicate check, issue #1498
 # 240320-1033 - Added misssing input variable filtering
+# 240801-1131 - Code updates for PHP8 compatibility
 #
 
-$version = '2.14-80';
-$build = '240320-1033';
+$version = '2.14-81';
+$build = '240801-1131';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -297,6 +298,11 @@ if (is_array($dedupe_statuses))
 			}
 		}
 	}
+else
+	{
+	$dedupe_statuses=array();
+	}
+
 
 if (strlen($dedupe_statuses_override)>0) 
 	{
@@ -997,9 +1003,9 @@ if ($SSenable_international_dncs)
 ##### BEGIN custom fields submission #####
 if ($OK_to_process) 
 	{
-	print "<script language='JavaScript1.2'>document.forms[0].leadfile.disabled=true;document.forms[0].list_id_override.disabled=true;document.forms[0].phone_code_override.disabled=true; document.forms[0].submit_file.disabled=true; document.forms[0].reload_page.disabled=true;</script>";
+	print "<script language='JavaScript1.2'>\nif(document.forms[0].leadfile) {document.forms[0].leadfile.disabled=true;}\ndocument.forms[0].list_id_override.disabled=true;\ndocument.forms[0].phone_code_override.disabled=true;\nif(document.forms[0].submit_file) {document.forms[0].submit_file.disabled=true;}\nif(document.forms[0].reload_page) {document.forms[0].reload_page.disabled=true;}\n</script>";
 	flush();
-	$total=0; $good=0; $bad=0; $dup=0; $post=0; $moved=0; $phone_list='';
+	$total=0; $good=0; $bad=0; $dup=0; $inv=0; $post=0; $moved=0; $phone_list='';
 
 	$file=fopen("$lead_file", "r");
 	if ($webroot_writable > 0)
@@ -1019,7 +1025,7 @@ if ($OK_to_process)
 		$file=fopen("$lead_file", "r");
 		print "<center><font face='arial, helvetica' size=3 color='#009900'><B>"._QXZ("Processing file")."...\n";
 
-		if (count($dedupe_statuses)>0) 
+		if (is_array($dedupe_statuses) && count($dedupe_statuses)>0) 
 			{
 			$statuses_clause=" and status in (";
 			$status_dedupe_str="";
@@ -1757,7 +1763,7 @@ if ($OK_to_process)
 
 if (($leadfile) && ($LF_path))
 	{
-	$total=0; $good=0; $bad=0; $dup=0; $post=0; $moved=0; $phone_list='';
+	$total=0; $good=0; $bad=0; $dup=0; $inv=0; $post=0; $moved=0; $phone_list='';
 
 	### LOG INSERTION Admin Log Table ###
 	$stmt="INSERT INTO vicidial_admin_log set event_date='$NOW_TIME', user='$PHP_AUTH_USER', ip_address='$ip', event_section='LISTS', event_type='LOAD', record_id='$list_id_override', event_code='ADMIN LOAD LIST', event_sql='', event_notes='File Name: $leadfile_name, DEBUG: dedupe_statuses:$dedupe_statuses[0]| dedupe_statuses_override:$dedupe_statuses_override| dupcheck:$dupcheck | status mismatch action: $status_mismatch_action| lead_file:$lead_file| list_id_override:$list_id_override| phone_code_override:$phone_code_override| postalgmt:$postalgmt| template_id:$template_id| usacan_check:$usacan_check| dnc_country_scrub:$international_dnc_scrub| state_conversion:$state_conversion| web_loader_phone_length:$web_loader_phone_length| web_loader_phone_strip:$SSweb_loader_phone_strip|';";
@@ -1834,7 +1840,7 @@ if (($leadfile) && ($LF_path))
 				}
 			}
 
-		print "<script language='JavaScript1.2'>document.forms[0].leadfile.disabled=true; document.forms[0].submit_file.disabled=true; document.forms[0].reload_page.disabled=false;</script>";
+		print "<script language='JavaScript1.2'>\nif(document.forms[0].leadfile) {document.forms[0].leadfile.disabled=true;}\nif(document.forms[0].submit_file) {document.forms[0].submit_file.disabled=true;}\nif(document.forms[0].reload_page) {document.forms[0].reload_page.disabled=false;}\n</script>";
 		flush();
 
 		$delim_set=0;
@@ -1887,7 +1893,7 @@ if (($leadfile) && ($LF_path))
 			{
 			flush();
 			$file=fopen("$lead_file", "r");
-			$total=0; $good=0; $bad=0; $dup=0; $post=0; $moved=0; $phone_list='';
+			$total=0; $good=0; $bad=0; $dup=0; $inv=0; $post=0; $moved=0; $phone_list='';
 			print "<center><font face='arial, helvetica' size=3 color='#009900'><B>"._QXZ("Processing")." $delim_name "._QXZ("file using template")." $template_id... ($tab_count|$pipe_count)\n";
 			if (strlen($list_id_override)>0) 
 				{
@@ -2424,57 +2430,62 @@ if (($leadfile) && ($LF_path))
 							#$rslt=mysql_to_mysqli($custom_SQL_query, $link);
 							#$affected_rows = mysqli_affected_rows($link);
 
-							$custom_ins_stmt="INSERT INTO $custom_table(lead_id";
-							$custom_SQL_values="";
-							for ($q=0; $q<count($custom_fields_ary); $q++) 
+							$custom_tbl_stmt="SHOW TABLES LIKE '$custom_table'";
+							$custom_tbl_rslt=mysql_to_mysqli($custom_tbl_stmt, $link);
+							if(mysqli_num_rows($custom_tbl_rslt)>0)
 								{
-								if (strlen($custom_fields_ary[$q])>0) 
+								$custom_ins_stmt="INSERT INTO $custom_table(lead_id";
+								$custom_SQL_values="";
+								for ($q=0; $q<count($custom_fields_ary); $q++) 
 									{
-									$fieldno_ary=explode(",", $custom_fields_ary[$q]);
-									$varname=$fieldno_ary[0]."_field";
-									$$varname=$fieldno_ary[1];
-									$custom_ins_stmt.=",$fieldno_ary[0]";
-
-									if ( (preg_match("/cf_encrypt/",$SSactive_modules)) and (strlen($custom_fields_row[$$varname]) > 0) )
+									if (strlen($custom_fields_ary[$q])>0) 
 										{
-										$field_encrypt='N';
-										$stmt = "SELECT field_encrypt from vicidial_lists_fields where list_id='$list_id' and field_label='$fieldno_ary[0]' limit 1;";
-										if ($DB>0) {echo "DEBUG: cf_encrypt query - $stmt\n";}
-										$rslt=mysql_to_mysqli($stmt, $link);
-										$sc_recs = mysqli_num_rows($rslt);
-										if ($sc_recs > 0)
-											{
-											$row=mysqli_fetch_row($rslt);
-											$field_encrypt = $row[0];
-											}
-										if ($field_encrypt == 'Y')
-											{
-											$field_enc=$MT;
-											$field_value = $custom_fields_row[$$varname];
-											$field_value = base64_encode($field_value);
-											exec("../agc/aes.pl --encrypt --text=$field_value", $field_enc);
-											$field_enc_ct = count($field_enc);
-											$k=0;
-											$field_enc_all='';
-											while ($field_enc_ct > $k)
-												{
-												$field_enc_all .= $field_enc[$k];
-												$k++;
-												}
-											$custom_fields_row[$$varname] = preg_replace("/CRYPT: |\n|\r|\t/",'',$field_enc_all);
-											}
-										}
+										$fieldno_ary=explode(",", $custom_fields_ary[$q]);
+										$varname=$fieldno_ary[0]."_field";
+										$$varname=$fieldno_ary[1];
+										$custom_ins_stmt.=",$fieldno_ary[0]";
 
-									$custom_SQL_values.=",\"".$custom_fields_row[$$varname]."\"";
-									} 
+										if ( (preg_match("/cf_encrypt/",$SSactive_modules)) and (strlen($custom_fields_row[$$varname]) > 0) )
+											{
+											$field_encrypt='N';
+											$stmt = "SELECT field_encrypt from vicidial_lists_fields where list_id='$list_id' and field_label='$fieldno_ary[0]' limit 1;";
+											if ($DB>0) {echo "DEBUG: cf_encrypt query - $stmt\n";}
+											$rslt=mysql_to_mysqli($stmt, $link);
+											$sc_recs = mysqli_num_rows($rslt);
+											if ($sc_recs > 0)
+												{
+												$row=mysqli_fetch_row($rslt);
+												$field_encrypt = $row[0];
+												}
+											if ($field_encrypt == 'Y')
+												{
+												$field_enc=$MT;
+												$field_value = $custom_fields_row[$$varname];
+												$field_value = base64_encode($field_value);
+												exec("../agc/aes.pl --encrypt --text=$field_value", $field_enc);
+												$field_enc_ct = count($field_enc);
+												$k=0;
+												$field_enc_all='';
+												while ($field_enc_ct > $k)
+													{
+													$field_enc_all .= $field_enc[$k];
+													$k++;
+													}
+												$custom_fields_row[$$varname] = preg_replace("/CRYPT: |\n|\r|\t/",'',$field_enc_all);
+												}
+											}
+
+										$custom_SQL_values.=",\"".$custom_fields_row[$$varname]."\"";
+										} 
+									}
+								$custom_ins_stmt.=") VALUES('$lead_id'$custom_SQL_values)";
+								$custom_rslt=mysql_to_mysqli($custom_ins_stmt, $link);
+								$affected_rows = mysqli_affected_rows($link);
+								echo "<!-- $custom_ins_stmt //-->\n";
+								if ( ($webroot_writable > 0) and ($DB>0) )
+									{fwrite($stmt_file, $custom_ins_stmt."\r\n");}
 								}
-							$custom_ins_stmt.=") VALUES('$lead_id'$custom_SQL_values)";
-							$custom_rslt=mysql_to_mysqli($custom_ins_stmt, $link);
-							$affected_rows = mysqli_affected_rows($link);
-							echo "<!-- $custom_ins_stmt //-->\n";
-							if ( ($webroot_writable > 0) and ($DB>0) )
-								{fwrite($stmt_file, $custom_ins_stmt."\r\n");}
-/*
+/*								
 							} 
 						else 
 							{
@@ -2574,7 +2585,7 @@ if (($leadfile) && ($LF_path))
 	##### BEGIN process standard file layout #####
 	if ($file_layout=="standard") 
 		{
-		print "<script language='JavaScript1.2'>document.forms[0].leadfile.disabled=true; document.forms[0].submit_file.disabled=true; document.forms[0].reload_page.disabled=false;</script>";
+		print "<script language='JavaScript1.2'>\nif(document.forms[0].leadfile) {document.forms[0].leadfile.disabled=true;}\nif(document.forms[0].submit_file) {document.forms[0].submit_file.disabled=true;}\nif(document.forms[0].reload_page) {document.forms[0].reload_page.disabled=false;}\n</script>";
 		flush();
 
 
@@ -2628,7 +2639,7 @@ if (($leadfile) && ($LF_path))
 			{
 			flush();
 			$file=fopen("$lead_file", "r");
-			$total=0; $good=0; $bad=0; $dup=0; $post=0; $moved=0; $phone_list='';
+			$total=0; $good=0; $bad=0; $dup=0; $inv=0; $post=0; $moved=0; $phone_list='';
 			print "<center><font face='arial, helvetica' size=3 color='#009900'><B>"._QXZ("Processing")." $delim_name "._QXZ("file")."... ($tab_count|$pipe_count)\n";
 
 			if (count($dedupe_statuses)>0) {
@@ -3246,7 +3257,7 @@ if (($leadfile) && ($LF_path))
 	##### BEGIN field chooser #####
 	else if ($file_layout=="custom")
 		{
-		print "<script language='JavaScript1.2'>document.forms[0].leadfile.disabled=true; document.forms[0].submit_file.disabled=true; document.forms[0].reload_page.disabled=true;</script><HR>";
+		print "<script language='JavaScript1.2'>\nif(document.forms[0].leadfile) {document.forms[0].leadfile.disabled=true;}\nif(document.forms[0].submit_file) {document.forms[0].submit_file.disabled=true;}\nif(document.forms[0].reload_page) {document.forms[0].reload_page.disabled=true;}\n</script><HR>";
 		flush();
 		print "<table border=0 cellpadding=3 cellspacing=0 width=700 align=center>\r\n";
 		print "  <tr bgcolor='#$SSmenu_background'>\r\n";
@@ -3462,7 +3473,7 @@ if (($leadfile) && ($LF_path))
 		print "  </tr>\r\n";
 		print "</table>\r\n";
 
-		print "<script language='JavaScript1.2'>document.forms[0].leadfile.disabled=false; document.forms[0].submit_file.disabled=false; document.forms[0].reload_page.disabled=false;</script>";
+		print "<script language='JavaScript1.2'>\nif(document.forms[0].leadfile) {document.forms[0].leadfile.disabled=false;}\nif(document.forms[0].submit_file) {document.forms[0].submit_file.disabled=true;}\nif(document.forms[0].reload_page) {document.forms[0].reload_page.disabled=false;}\n</script>";
 		}
 	##### END field chooser #####
 

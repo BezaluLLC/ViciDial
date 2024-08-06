@@ -1,13 +1,15 @@
 <?php
 # display_agent_details.php - Vicidial Enhanced Reporting agent details page
 #
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>, Joe Johnson <joej@vicidial.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>, Joe Johnson <joej@vicidial.com>    LICENSE: AGPLv2
 # 
 # CHANGELOG:
 # 220825-1612 - First build
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 $subreport_name="VERM Reports";
 $report_display_type="display_agent_details.php";
+$startMS = microtime();
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
 $PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];

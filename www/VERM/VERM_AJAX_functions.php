@@ -6,6 +6,7 @@
 # CHANGELOG:
 # 220825-1608 - First build
 # 240709-2151 - Added input variable filtering
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
@@ -57,16 +58,16 @@ if ($non_latin < 1)
 	$function = preg_replace('/[^\-_0-9a-zA-Z]/','',$function);
 	$custom_report_vars = preg_replace('/[^-\/\|\_\#\*\,\.\_\[\]0-9a-zA-Z]/','',$custom_report_vars);
 	$custom_report_name = preg_replace('/[^\-_0-9a-zA-Z]/','',$custom_report_name);
-        $PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
-        $PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/', '', $PHP_AUTH_PW);
 	}
 else
 	{
 	$function = preg_replace('/[^-_0-9\p{L}/u','',$function);
 	$custom_report_vars = preg_replace('/[^-\/\|\_\#\*\,\.\_\[\]0-9\p{L}]/u','',$custom_report_vars);
 	$custom_report_name = preg_replace('/[^-_0-9\p{L}/u','',$custom_report_name);
-        $PHP_AUTH_USER = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_USER);
-        $PHP_AUTH_PW = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_PW);	
+	$PHP_AUTH_USER = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_USER);
+	$PHP_AUTH_PW = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_PW);	
 	}
 
 
@@ -96,7 +97,7 @@ if ($function=="log_custom_report")
 	{
 	$rpt_log_stmt="insert ignore into verm_custom_report_holder(user, report_name, report_parameters) values('$PHP_AUTH_USER', '$custom_report_name', '$LOGhttp_referer') ON DUPLICATE KEY UPDATE report_name='$custom_report_name', report_parameters='$custom_report_vars'";
 	$rpt_log_rslt=mysql_to_mysqli($rpt_log_stmt, $link);
-	return mysqli_affected_rows($rpt_log_rslt);
+	return mysqli_affected_rows($link);
 	}
 
 

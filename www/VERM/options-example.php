@@ -6,9 +6,7 @@
 # rename this file to options.php for the settings here to go into effect
 #
 # CHANGELOG
-# 160818-0200 - First build
-# 240802-1250 - Added options to customize PHP error output
-#
+# 240802-1250 - First Build
 
 # If this option is set to 1, then the error_reporting in php.ini will be ignored and settings below will be used for this directory
 $PHP_error_reporting_OVERRIDE =	0;
@@ -18,6 +16,4 @@ $PHP_error_reporting_HIDE_WARNINGS =	0;
 $PHP_error_reporting_HIDE_PARSES =		0;
 $PHP_error_reporting_HIDE_NOTICES =		0;
 $PHP_error_reporting_HIDE_DEPRECATIONS=	0;
-
-$use_agent_colors = '1'; 				# set to 1 to use the agent_screen_colors setting in the system settings 
 ?>

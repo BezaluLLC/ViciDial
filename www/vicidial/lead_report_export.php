@@ -5,7 +5,7 @@
 # vicidial_log and/or vicidial_closer_log information by status, list_id and 
 # date range. downloads to a flat text file that is tab delimited
 #
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -37,6 +37,7 @@
 # 210302-0839 - Added exclude_call_log_data option
 # 210911-1906 - Fix for --ALL-- selection user-group permission issue
 # 220228-1917 - Added allow_web_debug system setting
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
@@ -110,8 +111,13 @@ $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $FILE_TIME = date("Ymd-His");
 $STARTtime = date("U");
-if (!isset($group)) {$group = array();}
-if (!isset($dids)) {$dids = array();}
+if (!is_array($group)) {$group = array();}
+if (!is_array($dids)) {$dids = array();}
+if (!is_array($campaign)) {$campaign = array();}
+if (!is_array($user_group)) {$user_group = array();}
+if (!is_array($list_id)) {$list_id = array();}
+if (!is_array($status)) {$status = array();}
+if (!is_array($vlcs)) {$vlcs = array();}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 if (strlen($shift)<2) {$shift='ALL';}

@@ -1,7 +1,7 @@
 <?php 
 # AST_DIDstats.php
 # 
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -38,6 +38,7 @@
 # 191013-0850 - Fixes for PHP7
 # 210525-1715 - Fixed help display, modification for more call details
 # 220303-0759 - Added allow_web_debug system setting
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
@@ -79,7 +80,7 @@ $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
-if (!isset($group)) {$group = array();}
+if (!is_array($group)) {$group = array();}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 if (!isset($time_BEGIN)) {$time_BEGIN = "00:00:00";}

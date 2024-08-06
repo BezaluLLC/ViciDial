@@ -1,7 +1,7 @@
 <?php
 # manager_chat_actions.php
 # 
-# Copyright (C) 2022  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Contains PHP actions for manager_chat_interface.php - works with vicidial_chat.js
 #
@@ -14,6 +14,7 @@
 # 161217-0821 - Added chat-type to allow for multi-user internal chat sessions
 # 170409-1550 - Added IP List validation code
 # 220223-0934 - Added allow_web_debug system setting
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $admin_version = '2.14-8';
@@ -71,6 +72,7 @@ $VUselected_language = $SSdefault_language;
 $action = preg_replace("/[^-_0-9a-zA-Z]/", "",$action);
 $manager_chat_id = preg_replace("/[^-_0-9a-zA-Z]/", "",$manager_chat_id);
 $chat_sub_id = preg_replace("/[^-_0-9a-zA-Z]/", "",$chat_sub_id);
+if (!is_array($chat_sub_ids)) {$chat_sub_ids=array();}
 $reload_chat_span = preg_replace("/[^-_0-9a-zA-Z]/", "",$reload_chat_span);
 
 ### Variables filtered further down in the code

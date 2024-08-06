@@ -1,7 +1,7 @@
 <?php
 # AST_rt_monitor_log_report.php
 # 
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>, Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -11,6 +11,7 @@
 # 180712-1508 - Fix for rare allowed reports issue
 # 191013-0906 - Fixes for PHP7
 # 220302-0849 - Added allow_web_debug system setting
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
@@ -60,9 +61,9 @@ $MT[0]='';
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
-if (!isset($campaign)) {$campaign = array();}
-if (!isset($managers)) {$managers = array();}
-if (!isset($users)) {$users = array();}
+if (!is_array($campaign)) {$campaign = array();}
+if (!is_array($managers)) {$managers = array();}
+if (!is_array($users)) {$users = array();}
 if (!isset($report_display_type)) {$report_display_type = "HTML";}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}

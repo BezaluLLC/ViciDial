@@ -1,7 +1,7 @@
 <?php 
 # AST_agent_performance_detail.php
 # 
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -67,6 +67,7 @@
 # 191030-1530 - Query fixes
 # 200421-1411 - user_group bug fix
 # 220303-1458 - Added allow_web_debug system setting
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
@@ -125,9 +126,9 @@ $MT[0]='';
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
-if (!isset($group)) {$group = array();}
-if (!isset($user_group)) {$user_group = array();}
-if (!isset($users)) {$users = array();}
+if (!is_array($group)) {$group = array();}
+if (!is_array($user_group)) {$user_group = array();}
+if (!is_array($users)) {$users = array();}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 if (!isset($query_time)) {$query_time = "00:00:00";}

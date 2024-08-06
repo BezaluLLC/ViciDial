@@ -1,7 +1,7 @@
 <?php 
 # AST_timeonVDADall.php
 # 
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -132,6 +132,7 @@
 # 230421-1636 - Added RS_UGlatencyRESTRICT options.php setting
 # 230811-1530 - Added realtime monitoring display information
 # 231115-1656 - Added RS_no_DEAD_status and RS_hide_CUST_info options.php settings
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $version = '2.14-117';
@@ -329,9 +330,9 @@ if (strlen($report_display_type)<2) {$report_display_type = $SSreport_default_fo
 if (!isset($DB))			{$DB=0;}
 if (!isset($RR))			{$RR=40;}
 if (!isset($group))			{$group='ALL-ACTIVE';}
-if (!isset($groups))		{$groups=array();}
-if (!isset($user_group_filter))		{$user_group_filter=array();}
-if (!isset($ingroup_filter))		{$ingroup_filter=array();}
+if (!is_array($groups))		{$groups=array();}
+if (!is_array($user_group_filter))		{$user_group_filter=array();}
+if (!is_array($ingroup_filter))		{$ingroup_filter=array();}
 if (!isset($usergroup))		{$usergroup='';}
 if (!isset($UGdisplay))		{$UGdisplay=0;}	# 0=no, 1=yes
 if (!isset($UidORname))		{$UidORname=1;}	# 0=id, 1=name

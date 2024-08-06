@@ -1,11 +1,12 @@
 <?php
 # display_call_details.php - Vicidial Enhanced Reporting call details page
 #
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>, Joe Johnson <joej@vicidial.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>, Joe Johnson <joej@vicidial.com>    LICENSE: AGPLv2
 # 
 # CHANGELOG:
 # 220825-1611 - First build
 # 230126-1158 - Added recording log access, QXZ translation
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 $subreport_name="VERM Reports";
 $report_display_type="display_call_details.php";
@@ -318,8 +319,8 @@ $ENDtime=date("U");
 $endMS = microtime();
 $startMSary = explode(" ",$startMS);
 $endMSary = explode(" ",$endMS);
-$runS = ($endMSary[0] - $startMSary[0]);
-$runM = ($endMSary[1] - $startMSary[1]);
+$runS = ((int)$endMSary[0] - (int)$startMSary[0]);
+$runM = ((int)$endMSary[1] - (int)$startMSary[1]);
 $TOTALrun = ($runS + $runM);
 
 $stmt="UPDATE vicidial_report_log set run_time='$TOTALrun' where report_log_id='$report_log_id';";

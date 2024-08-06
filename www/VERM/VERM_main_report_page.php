@@ -1,12 +1,13 @@
 <?php
 # VERM_main_report_page.php - Vicidial Enhanced Reporting main report display page
 #
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>, Joe Johnson <joej@vicidial.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>, Joe Johnson <joej@vicidial.com>    LICENSE: AGPLv2
 # 
 # CHANGELOG:
 # 220828-1402 - First build
 # 230106-1332 - Added auto download variables, permissions, report logging
 # 230116-1640 - Ingroup-related clauses no longer allow blank campaign_id values (double-dipping issue)
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 # NANQUE, not an unanswered call?
@@ -566,6 +567,9 @@ if ($vicidial_queue_groups)
 		$included_campaigns_clause="and campaign_id in ('')";
 		$included_inbound_groups_clause="and group_id in ('')";
 		$where_included_inbound_groups_clause="where group_id in ('')";
+
+		$included_campaigns_array=array();
+		$included_inbound_groups_array=array();
 		}
 	}
 else
@@ -573,6 +577,9 @@ else
 	$included_campaigns_clause="and campaign_id in ('')";
 	$included_inbound_groups_clause="and group_id in ('')";
 	$where_included_inbound_groups_clause="where group_id in ('')";
+
+	$included_campaigns_array=array();
+	$included_inbound_groups_array=array();
 	}
 
 

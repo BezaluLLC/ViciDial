@@ -1,7 +1,7 @@
 <?php 
 # AST_VDADstats.php
 # 
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 60619-1718 - Added variable filtering to eliminate SQL injection attack threat
@@ -58,6 +58,7 @@
 # 190823-1620 - Fixed download archive bug
 # 191013-0852 - Fixes for PHP7
 # 220301-1641 - Added allow_web_debug system setting
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
@@ -113,8 +114,8 @@ $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
-if (!isset($group)) {$group = array();}
-if (!isset($list_ids)) {$list_ids = array();}
+if (!is_array($group)) {$group = array();}
+if (!is_array($list_ids)) {$list_ids = array();}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 if (strlen($shift)<2) {$shift='ALL';}
@@ -1395,7 +1396,7 @@ else
 	if ($Ctally_to_print > 0) 
 		{
 		$rowx=mysqli_fetch_row($rslt);
-		$AGENTsec = "$rowx[0]";
+		$AGENTsec = $rowx[0];
 		}
 	if ($DB) {$ASCII_text .= "$AGENTsec|$Ctally_to_print|$stmt\n";}
 

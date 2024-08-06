@@ -1,10 +1,11 @@
 <?php
 # VERM_custom_report.php - Vicidial Enhanced Reporting custom report form page
 #
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>, Joe Johnson <joej@vicidial.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>, Joe Johnson <joej@vicidial.com>    LICENSE: AGPLv2
 # 
 # CHANGELOG:
 # 220825-1606 - First build
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
@@ -150,8 +151,8 @@ if (file_exists('options.php'))
 
 if ( (strlen($group)>1) and (strlen($groups[0])<1) ) {$groups[0] = $group;}
 else {$group = $groups[0];}
-if (!isset($user_group_filter) || $user_group_filter=='') {$user_group_filter=array();}
-if (!isset($ingroup_filter) || $ingroup_filter=='') {$ingroup_filter=array();}
+if (!is_array($user_group_filter) || $user_group_filter=='') {$user_group_filter=array();}
+if (!is_array($ingroup_filter) || $ingroup_filter=='') {$ingroup_filter=array();}
 
 $NOW_TIME = date("Y-m-d H:i:s");
 $NOW_DAY = date("Y-m-d");
@@ -476,7 +477,7 @@ $allactivecampaigns .= "''";
 
 $i=0;
 $group_string='|';
-if (!$groups) {$groups=array();}
+if (!is_array($groups)) {$groups=array();}
 $group_ct = count($groups);
 while($i < $group_ct)
 	{

@@ -1,10 +1,11 @@
 <?php
 # VERM_admin.php - Vicidial Enhanced Reporting administration page
 #
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>, Joe Johnson <joej@vicidial.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>, Joe Johnson <joej@vicidial.com>    LICENSE: AGPLv2
 # 
 # CHANGELOG:
 # 220825-1609 - First build
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 
@@ -75,8 +76,9 @@ if (isset($_GET["end_date"]))			{$end_date=$_GET["end_date"];}
 
 if ( (strlen($group)>1) and (strlen($groups[0])<1) ) {$groups[0] = $group;}
 else {$group = $groups[0];}
-if (!isset($user_group_filter)) {$user_group_filter=array();}
-if (!isset($ingroup_filter)) {$ingroup_filter=array();}
+if (!is_array($groups)) {$groups=array();}
+if (!is_array($user_group_filter)) {$user_group_filter=array();}
+if (!is_array($ingroup_filter)) {$ingroup_filter=array();}
 
 $NOW_TIME = date("Y-m-d H:i:s");
 $NOW_DAY = date("Y-m-d");
@@ -394,7 +396,6 @@ $allactivecampaigns .= "''";
 
 $i=0;
 $group_string='|';
-if (!$groups) {$groups=array();}
 $group_ct = count($groups);
 while($i < $group_ct)
 	{

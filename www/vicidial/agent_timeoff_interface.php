@@ -6,6 +6,7 @@
 # Admin utility for applying hours off for agents, to be used in reports
 #
 # 240415-1730 - First build
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
@@ -97,6 +98,7 @@ $download_month=preg_replace("/[^-0-9]/",'',$download_month);
 $update_month=preg_replace("/[^-0-9]/",'',$update_month);
 $new_month=preg_replace("/[^-0-9]/",'',$new_month);
 $rpt_month=preg_replace("/[^-0-9]/",'',$rpt_month);
+if(!is_array($to_types)) {$to_types=array();}
 
 if ($non_latin < 1)
 	{
@@ -1029,7 +1031,7 @@ if (!$display_all_agents || $display_all_agents==0)
 	echo "<TR>\n";
 	echo "<td colspan='".(6+(count($timeoff_types)<1 ? 1 : count($timeoff_types)))."'>\n";
 	echo "<form action='$PHP_SELF' method='post'>\n";
-	echo "<input type='text' name='new_month' id='new_month' value='$download_month'>\n";
+	echo "<input type='hidden' name='new_month' id='new_month' value='$download_month'>\n";
 	echo "\t<table width='100%'>\n";
 	echo "\t\t<tr>\n";
 	echo "<td align='right'><font class='standard_bold'>ADD TIMEOFF DATA:</font></td>\n";

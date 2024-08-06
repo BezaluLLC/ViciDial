@@ -1,7 +1,7 @@
 <?php 
 # realtime_report.php
 # 
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # live real-time stats for the VICIDIAL Auto-Dialer all servers
 #
@@ -62,6 +62,7 @@
 # 230421-1625 - Added RS_UGlatencyRESTRICT options.php setting
 # 230811-1530 - Added monitoring display information
 # 231115-1646 - Added RS_no_DEAD_status and RS_hide_CUST_info options.php settings
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
@@ -340,10 +341,11 @@ $ingroup_detail='';
 # $report_display_type='LIMITED';
 # $ingroup_filter=array('_STAY','TEST_IN2','TEST_IN3');
 
+if (!is_array($groups)) {$groups=array();}
 if ( (strlen($group)>1) and (strlen($groups[0])<1) ) {$groups[0] = $group;}
 else {$group = $groups[0];}
-if (!isset($user_group_filter)) {$user_group_filter=array();}
-if (!isset($ingroup_filter)) {$ingroup_filter=array();}
+if (!is_array($user_group_filter)) {$user_group_filter=array();}
+if (!is_array($ingroup_filter)) {$ingroup_filter=array();}
 
 $NOW_TIME = date("Y-m-d H:i:s");
 $NOW_DAY = date("Y-m-d");

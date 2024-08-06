@@ -551,10 +551,11 @@
 # 240420-2227 - ConfBridge code added
 # 240517-0901 - Added ALT option for start_call_url fields
 # 240612-0206 - Fix for extension_appended_cidname newer options
+# 240801-1140 - Code updates for PHP8 compatibility
 #
 
-$version = '2.14-444';
-$build = '240612-0206';
+$version = '2.14-445';
+$build = '240801-1140';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=913;
@@ -11659,8 +11660,8 @@ if ($ACTION == 'VDADcheckINCOMINGother')
 	$chat_group_str="";
 	$VLA_inOUT='NONE';
 	$queue_seconds=0;
-	if (!isset($inbound_email_groups)) {$inbound_email_groups=array();}
-	if (!isset($inbound_chat_groups)) {$inbound_chat_groups=array();}
+	if (!is_array($inbound_email_groups)) {$inbound_email_groups=array();}
+	if (!is_array($inbound_chat_groups)) {$inbound_chat_groups=array();}
 
 	$email_group_ct=count($inbound_email_groups); # This should always be greater than zero for the script to reach this point, but just in case...
 	for ($i=0; $i<$email_group_ct; $i++) 

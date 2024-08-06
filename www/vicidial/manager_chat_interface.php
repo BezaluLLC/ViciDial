@@ -1,7 +1,7 @@
 <?php
 # manager_chat_interface.php
 # 
-# Copyright (C) 2022  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # This page is for managers (level 8 or higher) to chat with live agents
 #
@@ -17,6 +17,7 @@
 # 180508-2215 - Added new help display
 # 210114-1338 - Fixed user group permission bug, Issue #1240
 # 220223-0933 - Added allow_web_debug system setting
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $admin_version = '2.14-11';
@@ -119,6 +120,9 @@ $manager_chat_id = preg_replace("/[^-_0-9a-zA-Z]/", "",$manager_chat_id);
 $allow_replies = preg_replace("/[^-_0-9a-zA-Z]/", "",$allow_replies);
 $end_all_chats = preg_replace("/[^-_0-9a-zA-Z]/", "",$end_all_chats);
 $submit_chat = preg_replace("/[^- \.\_0-9a-zA-Z]/", "",$submit_chat);
+if (!is_array($available_chat_agents)) {$available_chat_agents=array();}
+if (!is_array($available_chat_groups)) {$available_chat_groups=array();}
+if (!is_array($available_chat_campaigns)) {$available_chat_campaigns=array();}
 
 ### Variables filtered further down in the code
 # $available_chat_agents

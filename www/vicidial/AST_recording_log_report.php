@@ -3,7 +3,7 @@
 #
 # This report is for viewing the a report of which users accessed which recordings
 #
-# Copyright (C) 2022  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -14,6 +14,7 @@
 # 191013-0830 - Fixes for PHP7
 # 220302-0912 - Added allow_web_debug system setting
 # 220307-2323 - Fix for display issue
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
@@ -57,8 +58,8 @@ if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $NOW_DATE = date("Y-m-d");
-if (!isset($users)) {$users=array();}
-if (!isset($user_group)) {$user_group=array();}
+if (!is_array($users)) {$users=array();}
+if (!is_array($user_group)) {$user_group=array();}
 if (!isset($access_date_D)) {$access_date_D=$NOW_DATE;}
 if (!isset($access_date_end_D)) {$access_date_end_D=$NOW_DATE;}
 if (!isset($access_date_T)) {$access_date_T="00:00:00";}

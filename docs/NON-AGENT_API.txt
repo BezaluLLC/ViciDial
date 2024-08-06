@@ -2665,7 +2665,7 @@ ERROR: copy_did NOT AN ALLOWED DID - 98762
 ERROR: copy_did DID DESCRIPTION MUST BE EITHER BLANK OR FROM 6 TO 50 CHARACTERS, THIS IS AN OPTIONAL FIELD - 6666|012
 NOTICE: copy_did DID ALREADY EXISTS - 6666|1000
 NOTICE: copy_did DID HAS BEEN ADDED - 6666|1000|1001|12|1
-ERROR: copy_did NO DIDS ADDED - 6666|1000|0|12|1
+ERROR: copy_did NO DIDS ADDED - 6666|1000|0|1
 SUCCESS: copy_did DIDS HAVE BEEN ADDED - 6666|1000|1|0
 
 NOTE: If DIDs are attempted to be copied, there will be output for each attempted DID as well as a SUCCESS message if any were successfully copied or an ERROR if none were

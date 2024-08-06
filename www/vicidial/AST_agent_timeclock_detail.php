@@ -3,7 +3,7 @@
 # 
 # Pulls all timeclock records for an agent
 #
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 90602-2244 - First build
@@ -30,6 +30,7 @@
 # 171012-2015 - Fixed javascript/apache errors with graphs
 # 191013-0833 - Fixes for PHP7
 # 220227-0927 - Added allow_web_debug system setting
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
@@ -68,8 +69,8 @@ $MT[0]='';
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
-if (!isset($group)) {$group = array();}
-if (!isset($user_group)) {$user_group = array();}
+if (!is_array($group)) {$group = array();}
+if (!is_array($user_group)) {$user_group = array();}
 if (!isset($query_date)) {$query_date = "$NOW_DATE 00:00:00";}
 if (!isset($end_date)) {$end_date = "$NOW_DATE 23:59:59";}
 if (strlen($shift)<2) {$shift='ALL';}

@@ -1,7 +1,7 @@
 <?php 
 # AST_agent_days_time.php
 # 
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -14,6 +14,7 @@
 # 220303-1510 - Added allow_web_debug system setting
 # 230526-1740 - Patch for user_group bug, related to Issue #1346
 # 231114-1703 - Fix for issue #1490
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
@@ -56,7 +57,7 @@ $MT[0]='';
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
-if (!isset($group)) {$group = array();}
+if (!is_array($group)) {$group = array();}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 if (strlen($shift)<2) {$shift='ALL';}

@@ -1,7 +1,7 @@
 <?php 
 # AST_dialer_inventory_report.php
 # 
-# Copyright (C) 2022  Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Joe Johnson <freewermadmin@gmail.com>    LICENSE: AGPLv2
 #                     Matt Florell <vicidial@gmail.com>
 #
 # NOTES:
@@ -27,6 +27,7 @@
 # 170829-0040 - Added screen color settings
 # 191013-0845 - Fixes for PHP7
 # 220303-0803 - Added allow_web_debug system setting
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
@@ -71,7 +72,7 @@ $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $time_start = microtime(true);
 $STARTtime = date("U");
-if (!isset($group)) {$group = array();}
+if (!is_array($group)) {$group = array();}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 

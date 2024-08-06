@@ -1,7 +1,7 @@
 <?php 
 # AST_url_log_report.php
 # 
-# Copyright (C) 2023  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 130620-0806 - First build
@@ -15,6 +15,7 @@
 # 220301-1951 - Added allow_web_debug system setting
 # 220812-0931 - Added User Group report permissions checking
 # 230310-1051 - Added more missing url types
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
@@ -59,7 +60,7 @@ $NOW_DATE = date("Y-m-d");
 if (strlen($query_date_D) < 6) {$query_date_D = "00:00:00";}
 if (strlen($query_date_T) < 6) {$query_date_T = "23:59:59";}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
-if (!isset($url_type)) {$url_type = array();}
+if (!is_array($url_type)) {$url_type = array();}
 
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####

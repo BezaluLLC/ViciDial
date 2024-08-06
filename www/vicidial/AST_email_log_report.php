@@ -1,7 +1,7 @@
 <?php 
 # AST_email_log_report.php
 # 
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # report of emails handled by the system
 # 
@@ -22,12 +22,13 @@
 # 170829-0040 - Added screen color settings
 # 191013-0823 - Fixes for PHP7
 # 220303-0223 - Added allow_web_debug system setting
+# 240801-1130 - Code updates for PHP8 compatibility
 #
 
 $startMS = microtime();
 
-$version = '2.14-14';
-$build = '220303-0223';
+$version = '2.14-15';
+$build = '240801-1130';
 
 header ("Content-type: text/html; charset=utf-8");
 
@@ -64,7 +65,7 @@ $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 $NOW_DATE = date("Y-m-d");
 $NOW_TIME = date("Y-m-d H:i:s");
 $STARTtime = date("U");
-if (!isset($group)) {$group = array();}
+if (!is_array($group)) {$group = array();}
 if (!isset($query_date)) {$query_date = $NOW_DATE;}
 if (!isset($end_date)) {$end_date = $NOW_DATE;}
 
