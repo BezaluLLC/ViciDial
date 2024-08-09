@@ -273,7 +273,7 @@ $CSV_output["answered_call_distribution"]="\""._QXZ("Day")."\",\""._QXZ("Num")."
 $max_avg_call_length=0;
 foreach ($calls_array as $call_date_key => $call_date_data) # Use calls array here to iterate through all dates that have calls
 	{
-	$avg_call_length=round($answered_calls_array["$call_date_key"]["total_length"]/($answered_calls_array["$call_date_key"]["inbound"]+$answered_calls_array["$call_date_key"]["outbound"]));
+	$avg_call_length=round(MathZDC($answered_calls_array["$call_date_key"]["total_length"], ($answered_calls_array["$call_date_key"]["inbound"]+$answered_calls_array["$call_date_key"]["outbound"])));
 	$answered_calls_array["$call_date_key"]["avg_call_length"]=$avg_call_length+0;
 	if ($max_avg_call_length<$avg_call_length) {$max_avg_call_length=$avg_call_length;}
 	}
@@ -336,7 +336,7 @@ $CSV_output["answered_call_wait_time"]="\""._QXZ("Day")."\",\""._QXZ("Num")."\",
 $max_avg_wait_time=0;
 foreach ($calls_array as $call_date_key => $call_date_data)
 	{
-	$avg_wait_time=round($answered_calls_array["$call_date_key"]["total_wait"]/($answered_calls_array["$call_date_key"]["inbound"]+$answered_calls_array["$call_date_key"]["outbound"]));
+	$avg_wait_time=round(MathZDC($answered_calls_array["$call_date_key"]["total_wait"], ($answered_calls_array["$call_date_key"]["inbound"]+$answered_calls_array["$call_date_key"]["outbound"])));
 	$answered_calls_array["$call_date_key"]["avg_wait_time"]=$avg_wait_time+0;
 	if ($max_avg_wait_time<$avg_wait_time) {$max_avg_wait_time=$avg_wait_time;}
 	}

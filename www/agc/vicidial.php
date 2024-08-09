@@ -1073,7 +1073,7 @@ $INSERT_agent_events	= '';	# inserted within the agent_events function
 #   see the options-example.php file for more information
 if (file_exists('options.php'))
 	{
-	require_once('options.php');
+	require('options.php');
 	}
 
 ##### BEGIN Define colors and logo #####

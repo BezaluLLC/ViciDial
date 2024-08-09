@@ -92,7 +92,7 @@ else
 #   see the options-example.php file for more information
 if (file_exists('options.php'))
 	{
-	require_once('options.php');
+	require('options.php');
 	}
 
 $manager_chat_refresh_milliseconds = ($manager_chat_refresh_seconds ? $manager_chat_refresh_seconds*1000 : 1000);
