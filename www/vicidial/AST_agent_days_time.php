@@ -15,6 +15,7 @@
 # 230526-1740 - Patch for user_group bug, related to Issue #1346
 # 231114-1703 - Fix for issue #1490
 # 240801-1130 - Code updates for PHP8 compatibility
+# 240822-1645 - Fix for issue #1524
 #
 
 $startMS = microtime();
@@ -304,6 +305,11 @@ if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGa
 	$whereLOGadmin_viewable_groupsSQL = "where user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
 	$vuLOGadmin_viewable_groupsSQL = "and vicidial_users.user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
 	}
+else if (preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups))
+	{
+	$rawLOGadmin_viewable_groupsSQL = "---ALL---";
+	}
+
 
 $LOGadmin_viewable_call_timesSQL='';
 $whereLOGadmin_viewable_call_timesSQL='';
@@ -496,8 +502,9 @@ else
 	$date_namesARY[0]='';
 	$k=0;
 
-	$ustmt="select count(*), if(user_group in ('$rawLOGadmin_viewable_groupsSQL'), 1, 0) as accessible_user From vicidial_users where user='$user'";
+	$ustmt="select count(*), ".($rawLOGadmin_viewable_groupsSQL=="---ALL---" ? "1" : "if(user_group in ('$rawLOGadmin_viewable_groupsSQL'), 1, 0)")." as accessible_user From vicidial_users where user='$user'";
 	$urslt=mysql_to_mysqli($ustmt, $link);
+	if ($DB) {echo "$ustmt\n";}
 	$urow=mysqli_fetch_row($urslt);
 	$rows_to_print=0;
 
