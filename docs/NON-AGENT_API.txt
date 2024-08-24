@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-07-30
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-08-24
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -69,6 +69,7 @@ update_alt_url - updates/adds/displays alternate dispo call url entries for a ca
 update_presets - updates/adds/displays/deletes campaign preset entries
 lead_dearchive - moves a lead from the archive to active leads table
 update_remote_agent - updates some remote agent settings in the system
+user_details - display information about one user
 
 
 New scripts:
@@ -225,6 +226,7 @@ Changes:
 240718-0942 - Fixes for inconsistencies in documentation and permissions for some functions
 240718-1716 - Added fields to campaigns_list function output
 240730-1832 - Changes for PHP8 compatibility, Added copy_did function
+240824-1626 - Added user_details function
 
 
 API Functions use the 'function' variable
@@ -716,6 +718,34 @@ INCALL|M4181606420000000104|104|TESTBLND|1|Admin|ADMIN|9|BRK2|DEAD|3125551212|12
 PAUSED||105|TESTBLND|1|Admin|ADMIN|9||PREVIEW|9545551212|123458|8600052,192.168.1.202
 
 NOTE: real_time_sub_status field can consist of: DEAD, DISPO, 3-WAY, PARK, RING, PREVIEW, DIAL or it can be empty
+
+
+
+
+--------------------------------------------------------------------------------
+user_details - display information about one user
+
+NOTE: api user for this function must have user_level set to 7 or higher and "view reports" enabled
+
+REQUIRED FIELDS-
+source -		description of what originated the API call (maximum 20 characters)
+agent_user -		2-20 characters, use only for one user
+
+SETTINGS FIELDS-
+stage -			the format of the exported data: csv, tab, pipe(default)
+header -		include a header(YES) or not(NO). This is optional, default is not to include a header
+
+Example URL strings for API calls:
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=user_details&agent_user=1234&stage=csv&header=YES&include_ip=YES
+
+Example responses:
+ERROR: user_details USER DOES NOT HAVE PERMISSION TO GET USER DETAILS - 6666|0
+ERROR: user_details INVALID SEARCH PARAMETERS - 6666||
+ERROR: user_details USER NOT FOUND - 6666||
+
+A SUCCESS response will not show "SUCCESS", but instead will just print the results in the following format:
+user,full_name,user_group,user_level,active
+11111,test user,ADMIN,6,Y
 
 
 
