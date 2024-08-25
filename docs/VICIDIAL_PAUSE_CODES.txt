@@ -1,4 +1,4 @@
-VICIdial Agent Pause Statuses		Started: 2024-08-25	Updated: 2024-08-25
+VICIdial Agent Pause Codes		Started: 2024-08-25	Updated: 2024-08-25
 
 Below is a list of the default system pause statuses that are used for standard VICIdial agents using the agent screen.
 
