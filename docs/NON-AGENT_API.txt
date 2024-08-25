@@ -736,7 +736,7 @@ stage -			the format of the exported data: csv, tab, pipe(default)
 header -		include a header(YES) or not(NO). This is optional, default is not to include a header
 
 Example URL strings for API calls:
-http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=user_details&agent_user=1234&stage=csv&header=YES&include_ip=YES
+http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=user_details&agent_user=1234&stage=csv&header=YES
 
 Example responses:
 ERROR: user_details USER DOES NOT HAVE PERMISSION TO GET USER DETAILS - 6666|0
