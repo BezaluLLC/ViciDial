@@ -2744,3 +2744,9 @@ INSERT INTO vicidial_state_call_times SET state_call_time_id='oklahoma',state_ca
 INSERT INTO vicidial_state_call_times SET state_call_time_id='washington',state_call_time_state='WA',state_call_time_name='Washington 8am-8pm',sct_default_start='800',sct_default_stop='2000';
 
 UPDATE system_settings SET db_schema_version='1717',db_schema_update_date=NOW() where db_schema_version < 1717;
+
+ALTER TABLE vicidial_campaigns ADD manual_minimum_ring_seconds SMALLINT(5) default '0';
+ALTER TABLE vicidial_campaigns ADD manual_minimum_attempt_seconds SMALLINT(5) default '0';
+ALTER TABLE vicidial_campaigns ADD manual_minimum_answer_seconds SMALLINT(5) default '0';
+
+UPDATE system_settings SET db_schema_version='1718',db_schema_update_date=NOW() where db_schema_version < 1718;

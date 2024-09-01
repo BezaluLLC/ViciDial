@@ -552,10 +552,11 @@
 # 240517-0901 - Added ALT option for start_call_url fields
 # 240612-0206 - Fix for extension_appended_cidname newer options
 # 240801-1140 - Code updates for PHP8 compatibility
+# 240830-1618 - Added manual_minimum_ring_seconds SIP action lookup code
 #
 
-$version = '2.14-445';
-$build = '240801-1140';
+$version = '2.14-446';
+$build = '240830-1618';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=913;
@@ -874,6 +875,10 @@ if (isset($_GET["pause_max_url_trigger"]))			{$pause_max_url_trigger=$_GET["paus
 	elseif (isset($_POST["pause_max_url_trigger"]))	{$pause_max_url_trigger=$_POST["pause_max_url_trigger"];}
 if (isset($_GET["inbound_ingroup"]))			{$inbound_ingroup=$_GET["inbound_ingroup"];}
 	elseif (isset($_POST["inbound_ingroup"]))	{$inbound_ingroup=$_POST["inbound_ingroup"];}
+if (isset($_GET["manual_minimum_ring_seconds"]))			{$manual_minimum_ring_seconds=$_GET["manual_minimum_ring_seconds"];}
+	elseif (isset($_POST["manual_minimum_ring_seconds"]))	{$manual_minimum_ring_seconds=$_POST["manual_minimum_ring_seconds"];}
+if (isset($_GET["manual_minimum_ringing"]))				{$manual_minimum_ringing=$_GET["manual_minimum_ringing"];}
+	elseif (isset($_POST["manual_minimum_ringing"]))	{$manual_minimum_ringing=$_POST["manual_minimum_ringing"];}
 
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 $user=preg_replace("/\'|\"|\\\\|;| /","",$user);
@@ -1212,6 +1217,8 @@ $leave_3way_start_recording_filename = preg_replace('/[^-_0-9a-zA-Z]/','',$leave
 $channelrec = preg_replace("/\'|\"|\\\\|;/","",$channelrec);
 $pause_max_url_trigger = preg_replace('/[^0-9]/','',$pause_max_url_trigger);
 $ACTION = preg_replace('/[^-_0-9a-zA-Z]/','',$ACTION);
+$manual_minimum_ring_seconds = preg_replace('/[^0-9]/','',$manual_minimum_ring_seconds);
+$manual_minimum_ringing = preg_replace('/[^0-9]/','',$manual_minimum_ringing);
 $vendor_lead_code = preg_replace("/\"|\\\\|;/",'-',$vendor_lead_code);
 $title = preg_replace("/\"|\\\\|;/",'-',$title);
 $first_name = preg_replace("/\"|\\\\|;/",'-',$first_name);
@@ -8276,7 +8283,26 @@ if ($ACTION == 'manDiaLlookCaLL')
 			}
 		else
 			{
-			echo "NO\n$DiaL_SecondS\n";
+			$manual_minimum_ringing_trigger=0;
+
+			# check for manual_minimum_ring_seconds if enabled
+			if ( ($manual_minimum_ring_seconds > 0) && ($SSsip_event_logging > 0) )
+				{
+				if ($manual_minimum_ringing < 1)
+					{
+					$stmt = "SELECT count(*) from vicidial_sip_event_recent where ( (caller_code='$MDnextCID') and ( (first_180_date IS NOT NULL) or (first_183_date IS NOT NULL) ) );";
+					if ($DB) {echo "$stmt\n";}
+					$rslt=mysql_to_mysqli($stmt, $link);
+						if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+					$MMRS_ct = mysqli_num_rows($rslt);
+					if ($MMRS_ct > 0)
+						{
+						$row=mysqli_fetch_row($rslt);
+						$manual_minimum_ringing_trigger = 		$row[0];
+						}
+					}
+				}
+			echo "NO\n$DiaL_SecondS\n$manual_minimum_ringing_trigger\n";
 
 			$stage .= " $DiaL_SecondS";
 			}
