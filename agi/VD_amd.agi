@@ -65,6 +65,7 @@
 # 220411-0833 - Added FHG(file-http-get) message playback option to download file from website
 # 230412-1023 - Added Code to dispo NOAUDIODATA as ADAIR (Dead Air Auto) with Settings Container option, Issue #1459
 # 230726-0932 - Added manual_vm_status_updates campaign option
+# 250906-2228 - Added AMD minimum length handling to increase short call durations
 #
 
 $script = 'VD_amd.agi';
@@ -284,6 +285,7 @@ if ( ($channel =~ /Local/i) && ($AST_ver !~ /^1\.0\.8|^1\.0\.9/) )
 $AMDSTATUS = $AGI->get_variable(AMDSTATUS);
 $AMDCAUSE =	$AGI->get_variable(AMDCAUSE);
 $AMDSTATS =	$AGI->get_variable(AMDSTATS);
+$AMDMINLEN =	$AGI->get_variable(AMDMINLEN);
 $AMDRESPONSE = $AMDCAUSE;
 $AMDRESPONSE =~ s/-.*//gi;
 $run_time = $AMDSTATS;
@@ -760,6 +762,8 @@ else
 		if ($AGILOG) {$agi_string = "--    AMD VMM Limit Reached, exiting: ($vmm_daily_count >= $vmm_daily_limit)   $callerid ($vmm_daily_played)";   &agi_output;}
 		$dbhA->disconnect();
 
+		if ( defined $AMDMINLEN) { amd_end_sleep($AMDMINLEN, $now_date_epoch);  }
+
 		$AGI->hangup($channel);
 
 		exit;
@@ -786,7 +790,9 @@ else
 			}
 
 		$dbhA->disconnect();
-		
+
+		if ( defined $AMDMINLEN) { amd_end_sleep($AMDMINLEN, $now_date_epoch);	}
+	
 		$AGI->hangup($channel);
 		
 		exit;		
@@ -979,6 +985,8 @@ else
 					if ($AGILOG) {$agi_string = "ERROR: VLM no vicidial_lead_messages record found: |$useLTT|$TTS_filename|$VD_lead_id|$callerid|";   &agi_output;}
 
 					$dbhA->disconnect();
+
+					if ( defined $AMDMINLEN) { amd_end_sleep($AMDMINLEN, $now_date_epoch);  }
 
 					$AGI->hangup($channel);
 
@@ -1705,6 +1713,8 @@ else
 
 	$dbhA->disconnect();
 
+	if ( defined $AMDMINLEN) { amd_end_sleep($AMDMINLEN, $now_date_epoch);  }
+
 	$AGI->hangup($channel);
 
 	exit;
@@ -2119,4 +2129,23 @@ sub parse_asterisk_version
 		}
 
 	return ( %ast_ver_hash );
+	}
+
+# subroutine to figure out how long to sleep at the end of AMD
+sub amd_end_sleep
+	{
+	my $amd_min_len = $_[0];
+	my $start_time = $_[1];
+	my $now =  time();
+
+	my $elapsed_time = $now - $start_time;
+
+	if ($AGILOG) {$agi_string = "AMD Elapsed Time = $elapsed_time| AMD Min Len = $amd_min_len ";   &agi_output;}
+
+	if ( $elapsed_time < $amd_min_len )
+		{
+		$amd_min_sleep = $amd_min_len - $elapsed_time;
+		if ($AGILOG) {$agi_string = "AMD Ending before $amd_min_len seconds reached. Sleeping $amd_min_sleep seconds";   &agi_output;}
+		sleep ($amd_min_sleep);
+		}
 	}
