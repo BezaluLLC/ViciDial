@@ -160,9 +160,10 @@
 # 240219-1524 - Added daily_limit in-group parameter
 # 240225-0951 - Added AUTONEXT hopper_hold_inserts option
 # 240731-0814 - Fix for 2nd DB connection timing out while running
+# 240917-1719 - Change multiple after-call processing to only run for active_voicemail_server
 #
 
-$build='240731-0814';
+$build='240917-1719';
 $script='AST_VDauto_dial';
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -341,7 +342,7 @@ $event_string='LOGGED INTO MYSQL SERVER ON 1 CONNECTION|';
 
 #############################################
 ##### START QUEUEMETRICS LOGGING LOOKUP #####
-$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,outbound_autodial_active,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pause_type,enable_drop_lists,call_quota_lead_ranking,timeclock_end_of_day,allow_shared_dial,call_limit_24hour,hopper_hold_inserts FROM system_settings;";
+$stmtA = "SELECT enable_queuemetrics_logging,queuemetrics_server_ip,queuemetrics_dbname,queuemetrics_login,queuemetrics_pass,queuemetrics_log_id,outbound_autodial_active,queuemetrics_loginout,queuemetrics_addmember_enabled,queuemetrics_pause_type,enable_drop_lists,call_quota_lead_ranking,timeclock_end_of_day,allow_shared_dial,call_limit_24hour,hopper_hold_inserts,active_voicemail_server FROM system_settings;";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 $sthArows=$sthA->rows;
@@ -364,6 +365,7 @@ if ($sthArows > 0)
 	$allow_shared_dial =				$aryA[13];
 	$SScall_limit_24hour =				$aryA[14];
 	$SShopper_hold_inserts =			$aryA[15];
+	$active_voicemail_server =			$aryA[16];
 	}
 $sthA->finish();
 ##### END QUEUEMETRICS LOGGING LOOKUP #####
@@ -4073,11 +4075,15 @@ while($one_day_interval > 0)
 
 	&get_time_now;
 
+	if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_server)) eq (length($server_ip))) )
+		{
+		if ($DB) {print "Active voicemail server match! Starting MULTI_LEAD,no-agent-url,no_answer,recent_ascb_calls processing for all servers...\n";}
+
 	###############################################################################
 	###### fourth we will check to see if any campaign is running MULTI_LEAD
 	######    auto-alt-dial. if yes, then go through the unprocessed extended 
-	######    log entries for this server_ip and process them.
-	###############################################################################
+	######    log entries for all server_ips and process them.
+	############################################################################### server_ip='$server_ip' and 
 		
 		$MLincall='|INCALL|QUEUE|DISPO|';
 		$multi_alt_count=0;
@@ -4147,7 +4153,7 @@ while($one_day_interval > 0)
 			@MLcampaign = @MT;
 			@MLstatus = @MT;
 
-			$stmtA = "SELECT uniqueid,lead_id,call_date,caller_code FROM vicidial_log_extended where server_ip='$server_ip' and call_date > \"$MCDSQLdate\" and multi_alt_processed='N' order by call_date,lead_id limit 100000;";
+			$stmtA = "SELECT uniqueid,lead_id,call_date,caller_code FROM vicidial_log_extended where call_date > \"$MCDSQLdate\" and multi_alt_processed='N' order by call_date,lead_id limit 100000;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -4342,8 +4348,8 @@ while($one_day_interval > 0)
 	###############################################################################
 	###### fifth we will check to see if any campaign or in-group has na_call_url
 	######    populated. if yes, then go through the unprocessed extended log
-	######    entries for this server_ip and process them.
-	###############################################################################
+	######    entries for all server_ips and process them.
+	############################################################################### server_ip='$server_ip' and 
 		$NCUincall='|INCALL|QUEUE|DISPO|';
 		$ncu_count=0;
 		$ncu_in_count=0;
@@ -4455,7 +4461,7 @@ while($one_day_interval > 0)
 			@NCUaltdial = @MT;
 			@NCUcalltype = @MT;
 
-			$stmtA = "SELECT uniqueid,lead_id,call_date,caller_code FROM vicidial_log_extended where server_ip='$server_ip' and call_date > \"$RMSQLdate\" and dispo_url_processed='N' order by call_date,lead_id limit 100000;";
+			$stmtA = "SELECT uniqueid,lead_id,call_date,caller_code FROM vicidial_log_extended where call_date > \"$RMSQLdate\" and dispo_url_processed='N' order by call_date,lead_id limit 100000;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -4631,8 +4637,8 @@ while($one_day_interval > 0)
 
 	###############################################################################
 	###### sixth, if noanswer_log is enabled in the system settings then look for
-	######    unprocessed entries for this server_ip and process them.
-	###############################################################################
+	######    unprocessed entries for all server_ips and process them.
+	############################################################################### server_ip='$server_ip' and 
 		$MLincall='|INCALL|QUEUE|DISPO|';
 		$MLnoanswer='|NA|B|AB|DC|ADC|CPDATB|CPDB|CPDNA|CPDREJ|CPDINV|CPDSUA|CPDSI|CPDSNC|CPDSR|CPDSUK|CPDSV|CPDUK|CPDERR|';
 
@@ -4649,7 +4655,7 @@ while($one_day_interval > 0)
 			@MLcampaign = @MT;
 			@MLstatus = @MT;
 
-			$stmtA = "SELECT uniqueid,lead_id,call_date,caller_code FROM vicidial_log_extended where server_ip='$server_ip' and call_date > \"$RMSQLdate\" and noanswer_processed='N' order by call_date,lead_id limit 100000;";
+			$stmtA = "SELECT uniqueid,lead_id,call_date,caller_code FROM vicidial_log_extended where call_date > \"$RMSQLdate\" and noanswer_processed='N' order by call_date,lead_id limit 100000;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -4791,8 +4797,8 @@ while($one_day_interval > 0)
 	###############################################################################
 	###### seventh we will check to see if any campaign has scheduled callbacks 
 	######    auto reschedule enabled. if yes, then go through the unprocessed  
-	######    vicidial_recent_ascb_calls entries for this server_ip and process them.
-	###############################################################################
+	######    vicidial_recent_ascb_calls entries for all server_ips and process them.
+	############################################################################### server_ip='$server_ip' and 
 		
 		$SCARincall='|INCALL|QUEUE|DISPO|';
 		$scheduled_callbacks_auto_reschedule_count=0;
@@ -4906,7 +4912,7 @@ while($one_day_interval > 0)
 			@SCARcampaign = @MT;
 			@SCARstatus = @MT;
 
-			$stmtA = "SELECT lead_id,call_date,caller_code,orig_status,reschedule,list_id,callback_id,(call_date + INTERVAL 5 MINUTE),callback_date FROM vicidial_recent_ascb_calls where server_ip='$server_ip' and call_date > \"$MCDSQLdate\" and rescheduled='U' order by call_date,lead_id limit 100000;";
+			$stmtA = "SELECT lead_id,call_date,caller_code,orig_status,reschedule,list_id,callback_id,(call_date + INTERVAL 5 MINUTE),callback_date FROM vicidial_recent_ascb_calls where call_date > \"$MCDSQLdate\" and rescheduled='U' order by call_date,lead_id limit 100000;";
 			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 			$sthArows=$sthA->rows;
@@ -5126,7 +5132,11 @@ while($one_day_interval > 0)
 				$vle_count++;
 				}
 			}
-
+		}
+	else
+		{
+		if ($DB) {print "not the active voicemail server skipped MULTI_LEAD,no-agent-url,no_answer,recent_ascb_calls processing \n";}
+		}
 
 	###############################################################################
 	###### last, wait for a little bit and repeat the loop
