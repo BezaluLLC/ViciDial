@@ -100,7 +100,8 @@
 # 231116-0846 - Added hopper_hold_inserts option
 # 231118-1054 - Added hangup processing of 3-way press outside-agent calls
 # 240225-0957 - Added AUTONEXT hopper_hold_inserts campaign option
-# 
+# 241001-2224 - Fixes for Khomp call processing
+#
 
 # defaults for PreFork
 $VARfastagi_log_min_servers =	'3';
@@ -327,6 +328,8 @@ sub process_request
 	$khomp_header =			'';
 	$khomp_id_format =		'';
 	$khomp_sub_account_header =	'';
+	$khomp_api_token =		'';
+	$khomp_api_token_expire =	'';
 
 	$stmtA = "SELECT container_entry FROM vicidial_settings_containers WHERE container_id = 'KHOMPSETTINGS';";
 	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1297,6 +1300,9 @@ sub process_request
 							$khomp_api_pass, 
 							$khomp_header, 
 							$khomp_id_format, 
+							$khomp_sub_account_header,
+							$khomp_api_token,
+							$khomp_api_token_expire,
 							$external_server_ip, 
 							$campaign, 
 							$callerid, 
@@ -3216,6 +3222,9 @@ sub process_khomp_analytics
 		$khomp_api_pass, 
 		$khomp_header, 
 		$khomp_id_format, 
+		$khomp_sub_account_header,
+		$khomp_api_token,
+		$khomp_api_token_expire,
 		$external_server_ip, 
 		$campaign_id, 
 		$callerid, 
@@ -3236,6 +3245,7 @@ sub process_khomp_analytics
 		{ $khomp_id = $callerid . '_' . $campaign_id . '_' . $external_server_ip; }
 
 	my $api_auth_time = 0;
+	if ( ( !( $khomp_api_token_expire ) ) and ( $khomp_api_token_expire != 0 ) ) { $khomp_api_token_expire = 0; }
 	if ( ($khomp_api_token_expire < time() ) or ( $khomp_api_token eq 'TOKENTOKENTOKEN' ))
 		{
 		if ($AGILOG) {$agi_string = "--    KHOMP API Token $khomp_api_token has expired at $khomp_api_token_expire";   &agi_output;}
