@@ -118,6 +118,7 @@
 # 231117-1920 - Added vicidial_3way_press_log display
 # 231126-2218 - Added vicidial_hci_log display
 # 240704-2329 - Added coldstorage log view option
+# 241002-0936 - Fix for displaying CID info on outbound calls that were blind transferred
 #
 
 require("dbconnect_mysqli.php");
@@ -1870,6 +1871,8 @@ else
 	while ($logs_to_print > $u) 
 		{
 		$row=mysqli_fetch_row($rslt);
+		$uniqueid =		$row[0];
+
 		if (strlen($log_campaign)<1) {$log_campaign = $row[3];}
 		if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 			{$bgcolor="bgcolor=\"#$SSstd_row2_background\"";}
@@ -1883,7 +1886,7 @@ else
 		$call_log .= "<td align=left><font size=2> $row[7]</td>\n";
 		if ( ($LOGmodify_leads == '3') or ($LOGmodify_leads == '4') )
 			{
-			$call_log .= "<td align=left><font size=2><font color=blue><u><span id=\"vicidial_log_status_$u\" onClick=\"ModifyLogDisplayShow(event, $u,'vicidial_log','$row[0]','$row[1]','$row[4]','$row[8]','$row[11]')\">$row[8]</span></u></font></td>\n";
+			$call_log .= "<td align=left><font size=2><font color=blue><u><span id=\"vicidial_log_status_$u\" onClick=\"ModifyLogDisplayShow(event, $u,'vicidial_log','$uniqueid','$row[1]','$row[4]','$row[8]','$row[11]')\">$row[8]</span></u></font></td>\n";
 			$HTML_inline_script .= "vicidial_log_mod[$u] = \"Call Date: $row[4]<br>$label_lead_id: $row[1]<br>Current Status: $row[8]<br>\";\n";
 			}
 		else
@@ -1898,9 +1901,10 @@ else
 		if ($CIDdisplay=="Yes")
 			{
 			$caller_code='';
-			$stmtA="SELECT caller_code,server_ip FROM vicidial_log_extended WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and uniqueid='$row[0]' limit 1;";
+			$stmtA="SELECT caller_code,server_ip FROM vicidial_log_extended WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and uniqueid='$uniqueid' limit 1;";
 			$rsltA=mysql_to_mysqli($stmtA, $link);
 			$cc_to_print = mysqli_num_rows($rsltA);
+			if ($DB) {echo "$cc_to_print|$stmtA|\n";}
 			if ($cc_to_print > 0)
 				{
 				$rowA=mysqli_fetch_row($rsltA);
@@ -1908,9 +1912,20 @@ else
 				$VLEserver_ip = $rowA[1];
 				}
 			$outbound_cid='';   $VDLcall_date='0';
-			$stmtA="SELECT outbound_cid,server_ip,call_date FROM vicidial_dial_log WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and caller_code='$caller_code' limit 1;";
+			$stmtA="SELECT outbound_cid,server_ip,call_date,uniqueid,caller_code FROM vicidial_dial_log WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and caller_code='$caller_code' order by call_date limit 1;";
+			if (!preg_match("/^M|^V/",$caller_code))
+				{
+				$temp_uniqueid = explode('.',$uniqueid);
+				$temp_uniqueid_epoch =	$temp_uniqueid[0];
+				$temp_uniqueid_before =	($temp_uniqueid[1] - 1);
+				$temp_uniqueid_after =	($temp_uniqueid[1] + 1);
+				$temp_uniqueidSQL = "'$temp_uniqueid_epoch.$temp_uniqueid_before','$uniqueid','$temp_uniqueid_epoch.$temp_uniqueid_after'";
+
+				$stmtA="SELECT outbound_cid,server_ip,call_date,uniqueid,caller_code FROM vicidial_dial_log WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and uniqueid IN($temp_uniqueidSQL) order by call_date limit 1;";
+				}
 			$rsltA=mysql_to_mysqli($stmtA, $link);
 			$cid_to_print = mysqli_num_rows($rsltA);
+			if ($DB) {echo "$cid_to_print|$stmtA|\n";}
 			if ($cid_to_print > 0)
 				{
 				$rowA=mysqli_fetch_row($rsltA);
@@ -1918,6 +1933,8 @@ else
 				$outbound_cid = preg_replace("/\".*\" /",'',$outbound_cid);
 				$VDLserver_ip = $rowA[1];
 				$VDLcall_date = $rowA[2];
+				if (strlen($rowA[3]) > 0) {$uniqueid =		$rowA[3];}
+				$caller_code =	$rowA[4];
 				}
 			$outbound_cid_num='';   $outbound_cid_type='';
 			$stmtA="SELECT outbound_cid,outbound_cid_type FROM vicidial_dial_cid_log WHERE call_date='$VDLcall_date' and caller_code='$caller_code' limit 1;";
@@ -1933,11 +1950,11 @@ else
 
 			if ($SSsip_event_logging > 0)
 				{
-				$call_log .= "<td align=left nowrap><font size=2>&nbsp; $outbound_cid  <span onClick=\"ShowCallDetail(event,'$caller_code','$SSframe_background')\"><font color=blue><u>$caller_code</u></font></span> <font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $row[0]</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
+				$call_log .= "<td align=left nowrap><font size=2>&nbsp; $outbound_cid  <span onClick=\"ShowCallDetail(event,'$caller_code','$SSframe_background')\"><font color=blue><u>$caller_code</u></font></span> <font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $uniqueid</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
 				}
 			else
 				{
-				$call_log .= "<td align=left nowrap><font size=2>&nbsp; $outbound_cid $caller_code </font><font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $row[0]</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
+				$call_log .= "<td align=left nowrap><font size=2>&nbsp; $outbound_cid $caller_code </font><font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $uniqueid</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
 				}
 			$AMDSTATUS='';	$AMDRESPONSE='';
 			$stmtA="SELECT AMDSTATUS,AMDRESPONSE FROM vicidial_amd_log WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and caller_code='$caller_code';";
@@ -2138,6 +2155,7 @@ else
 		while ($logs_to_print > $u) 
 			{
 			$row=mysqli_fetch_row($rslt);
+			$uniqueid =		$row[0];
 			if (strlen($log_campaign)<1) {$log_campaign = $row[3];}
 			if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 				{$bgcolor="bgcolor=\"#$SSstd_row2_background\"";} 
@@ -2151,7 +2169,7 @@ else
 			$call_log .= "<td align=left><font size=2> $row[7]</td>\n";
 			if ( ($LOGmodify_leads == '3') or ($LOGmodify_leads == '4') )
 				{
-				$call_log .= "<td align=left><font size=2><font color=blue><u><span id=\"vicidial_log_archive_status_$u\" onClick=\"ModifyLogDisplayShow(event, $u,'vicidial_log_archive','$row[0]','$row[1]','$row[4]','$row[8]','$row[11]')\">$row[8]</span></u></font></td>\n";
+				$call_log .= "<td align=left><font size=2><font color=blue><u><span id=\"vicidial_log_archive_status_$u\" onClick=\"ModifyLogDisplayShow(event, $u,'vicidial_log_archive','$uniqueid','$row[1]','$row[4]','$row[8]','$row[11]')\">$row[8]</span></u></font></td>\n";
 				$HTML_inline_script .= "vicidial_log_archive_mod[$u] = \"Call Date: $row[4]<br>$label_lead_id: $row[1]<br>Current Status: $row[8]<br>\";\n";
 				}
 			else
@@ -2166,9 +2184,10 @@ else
 			if ($CIDdisplay=="Yes")
 				{
 				$caller_code='';
-				$stmtA="SELECT caller_code,server_ip FROM vicidial_log_extended_archive WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and uniqueid='$row[0]';";
+				$stmtA="SELECT caller_code,server_ip FROM vicidial_log_extended_archive WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and uniqueid='$uniqueid';";
 				$rsltA=mysql_to_mysqli($stmtA, $link);
 				$cc_to_print = mysqli_num_rows($rsltA);
+				if ($DB) {echo "$cc_to_print|$stmtA|\n";}
 				if ($cc_to_print > 0)
 					{
 					$rowA=mysqli_fetch_row($rsltA);
@@ -2176,9 +2195,20 @@ else
 					$VLEserver_ip = $rowA[1];
 					}
 				$outbound_cid='';   $VDLcall_date='0';
-				$stmtA="SELECT outbound_cid,server_ip,call_date FROM vicidial_dial_log_archive WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and caller_code='$caller_code' limit 1;";
+				$stmtA="SELECT outbound_cid,server_ip,call_date,uniqueid,caller_code FROM vicidial_dial_log_archive WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and caller_code='$caller_code' order by call_date limit 1;";
+				if (!preg_match("/^M|^V/",$caller_code))
+					{
+					$temp_uniqueid = explode('.',$uniqueid);
+					$temp_uniqueid_epoch =	$temp_uniqueid[0];
+					$temp_uniqueid_before =	($temp_uniqueid[1] - 1);
+					$temp_uniqueid_after =	($temp_uniqueid[1] + 1);
+					$temp_uniqueidSQL = "'$temp_uniqueid_epoch.$temp_uniqueid_before','$uniqueid','$temp_uniqueid_epoch.$temp_uniqueid_after'";
+
+					$stmtA="SELECT outbound_cid,server_ip,call_date,uniqueid,caller_code FROM vicidial_dial_log WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and uniqueid IN($temp_uniqueidSQL) order by call_date limit 1;";
+					}
 				$rsltA=mysql_to_mysqli($stmtA, $link);
 				$cid_to_print = mysqli_num_rows($rsltA);
+				if ($DB) {echo "$cid_to_print|$stmtA|\n";}
 				if ($cid_to_print > 0)
 					{
 					$rowA=mysqli_fetch_row($rsltA);
@@ -2186,6 +2216,8 @@ else
 					$outbound_cid = preg_replace("/\".*\" /",'',$outbound_cid);
 					$VDLserver_ip = $rowA[1];
 					$VDLcall_date = $rowA[2];
+					if (strlen($rowA[3]) > 0) {$uniqueid =		$rowA[3];}
+					$caller_code =	$rowA[4];
 					}
 				$outbound_cid_num='';   $outbound_cid_type='';
 				$stmtA="SELECT outbound_cid,outbound_cid_type FROM vicidial_dial_cid_log_archive WHERE call_date='$VDLcall_date' and caller_code='$caller_code' limit 1;";
@@ -2201,11 +2233,11 @@ else
 
 				if ($SSsip_event_logging > 0)
 					{
-					$call_log .= "<td align=right nowrap><font size=2>&nbsp; $outbound_cid  <span onClick=\"ShowCallDetail(event,'$caller_code','$SSframe_background')\"><font color=blue><u>$caller_code</u></font></span> <font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $row[0]</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
+					$call_log .= "<td align=right nowrap><font size=2>&nbsp; $outbound_cid  <span onClick=\"ShowCallDetail(event,'$caller_code','$SSframe_background')\"><font color=blue><u>$caller_code</u></font></span> <font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $uniqueid</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
 					}
 				else
 					{
-					$call_log .= "<td align=right nowrap><font size=2>&nbsp; $outbound_cid $caller_code </font><font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $row[0]</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
+					$call_log .= "<td align=right nowrap><font size=2>&nbsp; $outbound_cid $caller_code </font><font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $uniqueid</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
 					}
 				}
 			$call_log .= "</tr>\n";
@@ -2369,7 +2401,7 @@ else
 		#	$log_campaign = '';
 			while ($logs_to_print > $u) 
 				{
-				$row=mysqli_fetch_row($rslt);
+				$row=mysqli_fetch_row($rslt);		$uniqueid =		$row[0];
 				if (strlen($log_campaign)<1) {$log_campaign = $row[3];}
 				if (preg_match("/1$|3$|5$|7$|9$/i", $u))
 					{$bgcolor="bgcolor=\"#$SSstd_row2_background\"";} 
@@ -2383,7 +2415,7 @@ else
 				$call_log .= "<td align=left><font size=2> $row[7]</td>\n";
 				if ( ($LOGmodify_leads == '3') or ($LOGmodify_leads == '4') )
 					{
-					$call_log .= "<td align=left><font size=2><font color=blue><u><span id=\"vicidial_log_archive_status_$u\" onClick=\"ModifyLogDisplayShow(event, $u,'vicidial_log_archive','$row[0]','$row[1]','$row[4]','$row[8]','$row[11]')\">$row[8]</span></u></font></td>\n";
+					$call_log .= "<td align=left><font size=2><font color=blue><u><span id=\"vicidial_log_archive_status_$u\" onClick=\"ModifyLogDisplayShow(event, $u,'vicidial_log_archive','$uniqueid','$row[1]','$row[4]','$row[8]','$row[11]')\">$row[8]</span></u></font></td>\n";
 					$HTML_inline_script .= "vicidial_log_archive_mod[$u] = \"Call Date: $row[4]<br>$label_lead_id: $row[1]<br>Current Status: $row[8]<br>\";\n";
 					}
 				else
@@ -2398,9 +2430,10 @@ else
 				if ($CIDdisplay=="Yes")
 					{
 					$caller_code='';
-					$stmtA="SELECT caller_code,server_ip FROM vicidial_log_extended_archive WHERE lead_id='" . mysqli_real_escape_string($linkCS, $lead_id) . "' and uniqueid='$row[0]';";
+					$stmtA="SELECT caller_code,server_ip FROM vicidial_log_extended_archive WHERE lead_id='" . mysqli_real_escape_string($linkCS, $lead_id) . "' and uniqueid='$uniqueid';";
 					$rsltA=mysql_to_mysqli($stmtA, $linkCS);
 					$cc_to_print = mysqli_num_rows($rsltA);
+					if ($DB) {echo "$cc_to_print|$stmtA|\n";}
 					if ($cc_to_print > 0)
 						{
 						$rowA=mysqli_fetch_row($rsltA);
@@ -2408,9 +2441,20 @@ else
 						$VLEserver_ip = $rowA[1];
 						}
 					$outbound_cid='';   $VDLcall_date='0';
-					$stmtA="SELECT outbound_cid,server_ip,call_date FROM vicidial_dial_log_archive WHERE lead_id='" . mysqli_real_escape_string($linkCS, $lead_id) . "' and caller_code='$caller_code' limit 1;";
+					$stmtA="SELECT outbound_cid,server_ip,call_date,uniqueid,caller_code FROM vicidial_dial_log_archive WHERE lead_id='" . mysqli_real_escape_string($linkCS, $lead_id) . "' and caller_code='$caller_code' order by call_date limit 1;";
+					if (!preg_match("/^M|^V/",$caller_code))
+						{
+						$temp_uniqueid = explode('.',$uniqueid);
+						$temp_uniqueid_epoch =	$temp_uniqueid[0];
+						$temp_uniqueid_before =	($temp_uniqueid[1] - 1);
+						$temp_uniqueid_after =	($temp_uniqueid[1] + 1);
+						$temp_uniqueidSQL = "'$temp_uniqueid_epoch.$temp_uniqueid_before','$uniqueid','$temp_uniqueid_epoch.$temp_uniqueid_after'";
+
+						$stmtA="SELECT outbound_cid,server_ip,call_date,uniqueid,caller_code FROM vicidial_dial_log WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and uniqueid IN($temp_uniqueidSQL) order by call_date limit 1;";
+						}
 					$rsltA=mysql_to_mysqli($stmtA, $linkCS);
 					$cid_to_print = mysqli_num_rows($rsltA);
+					if ($DB) {echo "$cid_to_print|$stmtA|\n";}
 					if ($cid_to_print > 0)
 						{
 						$rowA=mysqli_fetch_row($rsltA);
@@ -2418,6 +2462,8 @@ else
 						$outbound_cid = preg_replace("/\".*\" /",'',$outbound_cid);
 						$VDLserver_ip = $rowA[1];
 						$VDLcall_date = $rowA[2];
+						if (strlen($rowA[3]) > 0) {$uniqueid =		$rowA[3];}
+						$caller_code =	$rowA[4];
 						}
 					$outbound_cid_num='';   $outbound_cid_type='';
 					$stmtA="SELECT outbound_cid,outbound_cid_type FROM vicidial_dial_cid_log_archive WHERE call_date='$VDLcall_date' and caller_code='$caller_code' limit 1;";
@@ -2433,11 +2479,11 @@ else
 
 					if ($SSsip_event_logging > 0)
 						{
-						$call_log .= "<td align=right nowrap><font size=2>&nbsp; $outbound_cid  <span onClick=\"ShowCallDetail(event,'$caller_code','$SSframe_background')\"><font color=blue><u>$caller_code</u></font></span> <font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $row[0]</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
+						$call_log .= "<td align=right nowrap><font size=2>&nbsp; $outbound_cid  <span onClick=\"ShowCallDetail(event,'$caller_code','$SSframe_background')\"><font color=blue><u>$caller_code</u></font></span> <font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $uniqueid</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
 						}
 					else
 						{
-						$call_log .= "<td align=right nowrap><font size=2>&nbsp; $outbound_cid $caller_code </font><font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $row[0]</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
+						$call_log .= "<td align=right nowrap><font size=2>&nbsp; $outbound_cid $caller_code </font><font size=1>$outbound_cid_type</td><td align=right><font size=2>&nbsp; $uniqueid</td><td align=right><font size=2>&nbsp; $VDLserver_ip</td>\n";
 						}
 					}
 				$call_log .= "</tr>\n";

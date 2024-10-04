@@ -1,4 +1,4 @@
-NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-08-24
+NON-AGENT API DOCUMENT           Started: 2008-07-24         Updated: 2024-10-04
 
 This document describes the functions of an API(Application Programming 
 Interface) for all functions NOT directly relating to the VICIDIAL Agent screen. 
@@ -227,6 +227,7 @@ Changes:
 240718-1716 - Added fields to campaigns_list function output
 240730-1832 - Changes for PHP8 compatibility, Added copy_did function
 240824-1626 - Added user_details function
+241004-1518 - Added webform_one-three variables to the update_campaign function
 
 
 API Functions use the 'function' variable
@@ -2436,8 +2437,12 @@ xferconf_four -		Transfer - Conf Number 4: 1-50 characters
 xferconf_five -		Transfer - Conf Number 5: 1-50 characters
 dispo_call_url -	URL for the Dispo URL(If using a full non-local URL must include 'http://' or 'https://') Must be URL-encoded if sending request as a URL
 	EXAMPLE URL-ENCODED URL: "http://vicidial.org/query.php?var1=X&var2=y" = "http%3A%2F%2Fvicidial.org%2Fquery.php%3Fvar1%3DX%26var2%3Dy"
+webform_one -		URL for the Agent Screen Webform button(If using a full non-local URL must include 'http://' or 'https://') Must be URL-encoded if using a full URL
+webform_two -		URL for the Agent Screen Webform 2 button(If using a full non-local URL must include 'http://' or 'https://') Must be URL-encoded if using a full URL
+webform_three -		URL for the Agent Screen Webform 3 button(If using a full non-local URL must include 'http://' or 'https://') Must be URL-encoded if using a full URL
 NOTES: 
  - please use no special characters like apostrophes, quotes or amphersands
+ - for the last 9 fields above, you can set them to blank '' by using '--BLANK--' as the value(without the quotes)
 
 Example URL strings for API calls:
 http://server/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_campaign&campaign_id=TESTOUT&campaign_name=Updated+test+API+campaign&auto_dial_level=3.0
@@ -2479,6 +2484,10 @@ ERROR: update_campaign DIAL STATUS ADD FAILURE, TOO MANY EXISTING DIAL STATUSES,
 ERROR: update_campaign DIAL STATUS REMOVE IS NOT VALID, THIS IS AN OPTIONAL FIELD - |6666|A1234567|
 ERROR: update_campaign DIAL STATUS REMOVE FAILURE, NO EXISTING DIAL STATUSES SET, THIS IS AN OPTIONAL FIELD - |666666|A12345|
 ERROR: update_campaign DIAL STATUS REMOVE FAILURE, NOT AN EXISTING DIAL STATUS, THIS IS AN OPTIONAL FIELD - |666666|A12345|
+ERROR: update_campaign DISPO CALL URL IS NOT VALID, THIS IS AN OPTIONAL FIELD: |6666|XY
+ERROR: update_campaign WENFORM 1 URL IS NOT VALID, THIS IS AN OPTIONAL FIELD: |6666|XY
+ERROR: update_campaign WENFORM 2 URL IS NOT VALID, THIS IS AN OPTIONAL FIELD: |6666|XY
+ERROR: update_campaign WENFORM 3 URL IS NOT VALID, THIS IS AN OPTIONAL FIELD: |6666|XY
 NOTICE: update_campaign NO UPDATES DEFINED - 6666|
 NOTICE: update_campaign HOPPER HAS BEEN RESET - 6666|1101|324
 SUCCESS: update_campaign CAMPAIGN HAS BEEN UPDATED - 6666|1101

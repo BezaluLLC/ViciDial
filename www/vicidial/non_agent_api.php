@@ -216,10 +216,11 @@
 # 240718-1716 - Added fields to campaigns_list function output
 # 240730-1832 - Changes for PHP8 compatibility, Added copy_did function
 # 240824-1626 - Added user_details function
+# 241004-1518 - Added webform_one-three variables to the update_campaign function
 #
 
-$version = '2.14-193';
-$build = '240824-1626';
+$version = '2.14-194';
+$build = '241004-1518';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 $camp_lead_order_random=1;
@@ -744,6 +745,12 @@ if (isset($_GET["source_did_pattern"]))				{$source_did_pattern=$_GET["source_di
 	elseif (isset($_POST["source_did_pattern"]))	{$source_did_pattern=$_POST["source_did_pattern"];}
 if (isset($_GET["new_dids"]))			{$new_dids=$_GET["new_dids"];}
 	elseif (isset($_POST["new_dids"]))	{$new_dids=$_POST["new_dids"];}
+if (isset($_GET["webform_one"]))			{$webform_one=$_GET["webform_one"];}
+	elseif (isset($_POST["webform_one"]))	{$webform_one=$_POST["webform_one"];}
+if (isset($_GET["webform_two"]))			{$webform_two=$_GET["webform_two"];}
+	elseif (isset($_POST["webform_two"]))	{$webform_two=$_POST["webform_two"];}
+if (isset($_GET["webform_three"]))			{$webform_three=$_GET["webform_three"];}
+	elseif (isset($_POST["webform_three"]))	{$webform_three=$_POST["webform_three"];}
 
 $DB=preg_replace('/[^0-9]/','',$DB);
 
@@ -981,6 +988,9 @@ if ($non_latin < 1)
 	$web_form_address_two=preg_replace('/[^- %=\+\.\:\/\@\?\&\_0-9a-zA-Z]/','',$web_form_address_two);
 	$web_form_address_three=preg_replace('/[^- %=\+\.\:\/\@\?\&\_0-9a-zA-Z]/','',$web_form_address_three);
 	$dispo_call_url=preg_replace('/[^- %=\+\.\:\/\@\?\&\_0-9a-zA-Z]/','',$dispo_call_url);
+	$webform_one=preg_replace('/[^- %=\+\.\:\/\@\?\&\_0-9a-zA-Z]/','',$webform_one);
+	$webform_two=preg_replace('/[^- %=\+\.\:\/\@\?\&\_0-9a-zA-Z]/','',$webform_two);
+	$webform_three=preg_replace('/[^- %=\+\.\:\/\@\?\&\_0-9a-zA-Z]/','',$webform_three);
 	$url_address=preg_replace('/[^- %=\+\.\:\/\@\?\&\_0-9a-zA-Z]/','',$url_address);
 	$uniqueid=preg_replace('/[^- \.\_0-9a-zA-Z]/','',$uniqueid);
 	$alias_id = preg_replace('/[^-\_0-9a-zA-Z]/', '',$alias_id);
@@ -1137,6 +1147,9 @@ else
 	$web_form_address_two=preg_replace('/[^- %=\+\.\:\/\@\?\&\_0-9\p{L}]/u','',$web_form_address_two);
 	$web_form_address_three=preg_replace('/[^- %=\+\.\:\/\@\?\&\_0-9\p{L}]/u','',$web_form_address_three);
 	$dispo_call_url=preg_replace('/[^- %=\+\.\:\/\@\?\&\_0-9\p{L}]/u','',$dispo_call_url);
+	$webform_one=preg_replace('/[^- %=\+\.\:\/\@\?\&\_0-9\p{L}]/u','',$webform_one);
+	$webform_two=preg_replace('/[^- %=\+\.\:\/\@\?\&\_0-9\p{L}]/u','',$webform_two);
+	$webform_three=preg_replace('/[^- %=\+\.\:\/\@\?\&\_0-9\p{L}]/u','',$webform_three);
 	$url_address=preg_replace('/[^- %=\+\.\:\/\@\?\&\_0-9\p{L}]/u','',$url_address);
 	$uniqueid=preg_replace('/[^- \.\_0-9\p{L}]/u','',$uniqueid);
 	$alias_id = preg_replace('/[^-\_0-9\p{L}]/u', '',$alias_id);
@@ -8600,6 +8613,9 @@ if ($function == 'update_campaign')
 					$list_order_randomizeSQL='';
 					$list_order_secondarySQL='';
 					$dial_statusesSQL='';
+					$webform_oneSQL='';
+					$webform_twoSQL='';
+					$webform_threeSQL='';
 
 					if (strlen($auto_dial_level) > 0)
 						{
@@ -8864,6 +8880,63 @@ if ($function == 'update_campaign')
 								{$dispo_call_urlSQL = " ,dispo_call_url='" . mysqli_real_escape_string($link, $dispo_call_url) . "'";}
 							}
 						}
+					if (strlen($webform_one) > 0)
+						{
+						if ($webform_one == '--BLANK--')
+							{$webform_oneSQL = " ,web_form_address=''";}
+						else
+							{
+							if ( (strlen($webform_one) < 3) or (strlen($webform_one) > 65000) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_campaign WENFORM 1 URL IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$webform_one";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$webform_oneSQL = " ,web_form_address='" . mysqli_real_escape_string($link, $webform_one) . "'";}
+							}
+						}
+					if (strlen($webform_two) > 0)
+						{
+						if ($webform_two == '--BLANK--')
+							{$webform_twoSQL = " ,web_form_address_two=''";}
+						else
+							{
+							if ( (strlen($webform_two) < 3) or (strlen($webform_two) > 65000) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_campaign WENFORM 2 URL IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$webform_two";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$webform_twoSQL = " ,web_form_address_two='" . mysqli_real_escape_string($link, $webform_two) . "'";}
+							}
+						}
+					if (strlen($webform_three) > 0)
+						{
+						if ($webform_three == '--BLANK--')
+							{$webform_threeSQL = " ,web_form_address_three=''";}
+						else
+							{
+							if ( (strlen($webform_three) < 3) or (strlen($webform_three) > 65000) )
+								{
+								$result = 'ERROR';
+								$result_reason = "update_campaign WENFORM 3 URL IS NOT VALID, THIS IS AN OPTIONAL FIELD";
+								$data = "$webform_three";
+								echo "$result: $result_reason: |$user|$data\n";
+								api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+								exit;
+								}
+							else
+								{$webform_threeSQL = " ,web_form_address_three='" . mysqli_real_escape_string($link, $webform_three) . "'";}
+							}
+						}
 					if (strlen($list_order) > 0)
 						{
 						if ( ($camp_lead_order_random > 0) and (preg_match("/RANDOM/i",$list_order)) )
@@ -9030,7 +9103,7 @@ if ($function == 'update_campaign')
 						{$dial_statusesSQL = ",dial_statuses='$dial_statusesSQL'";}
 
 
-					$updateSQL = "$campaignnameSQL$activeSQL$dialtimeoutSQL$hopperlevelSQL$campaignvdadextenSQL$adaptivemaximumlevelSQL$dialmethodSQL$autodiallevelSQL$campaigncidSQL$campaignfilterSQL$xferconf_oneSQL$xferconf_twoSQL$xferconf_threeSQL$xferconf_fourSQL$xferconf_fiveSQL$list_orderSQL$list_order_randomizeSQL$list_order_secondarySQL$dial_statusesSQL$dispo_call_urlSQL";
+					$updateSQL = "$campaignnameSQL$activeSQL$dialtimeoutSQL$hopperlevelSQL$campaignvdadextenSQL$adaptivemaximumlevelSQL$dialmethodSQL$autodiallevelSQL$campaigncidSQL$campaignfilterSQL$xferconf_oneSQL$xferconf_twoSQL$xferconf_threeSQL$xferconf_fourSQL$xferconf_fiveSQL$list_orderSQL$list_order_randomizeSQL$list_order_secondarySQL$dial_statusesSQL$webform_oneSQL$webform_twoSQL$webform_threeSQL$dispo_call_urlSQL";
 
 					if (strlen($updateSQL)< 3)
 						{
