@@ -21,7 +21,11 @@
 # exten => _8320*.,1,AGI(VD_amd.agi,${EXTEN}-----YES)
 # exten => _8320*.,2,Hangup
 #
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# To use the new "AMDMINLEN" feature, put a similar line like following line in your outbound dialing dialplan IMMEDIATELY BEFORE the "Dial(" line:
+# exten => _91NXXNXXXXXX,n,Set(__AMDMINLEN=7)
+#		NOTE: the above variable setting will ensure that this script has run for a minimum of 7 seconds before ending and hanging up
+#
+# Copyright (C) 2024  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
 # 60206-1434 - first build
