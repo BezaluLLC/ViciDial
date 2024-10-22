@@ -28081,7 +28081,7 @@ if ($ADD==31)
 
 				echo "<tr bgcolor=#$SSstd_row3_background><td align=right>";
 				if ($twrse_selected > 0)
-					{echo "<a href=\"$PHP_SELF?ADD=392111111111&container_id=$khomp_settings\">"._QXZ("KHOMP Settings")."</a>";}
+					{echo "<a href=\"$PHP_SELF?ADD=392111111111&container_id=$khomp_settings_container\">"._QXZ("KHOMP Settings")."</a>";}
 				else
 					{echo _QXZ("KHOMP Settings");}
 				echo ": </td><td align=left><select size=1 name=khomp_settings_container><option value='KHOMPSETTINGS'>"._QXZ("KHOMPSETTINGS")."</option>$khomp_settings_menu</select>$NWB#campaigns-khomp_settings_container$NWE</td></tr>\n";
