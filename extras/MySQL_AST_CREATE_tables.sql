@@ -315,13 +315,13 @@ action VARCHAR(20),
 callerid VARCHAR(20),
 cmd_line_b VARCHAR(100),
 cmd_line_c VARCHAR(100),
-cmd_line_d VARCHAR(100),
+cmd_line_d VARCHAR(200),
 cmd_line_e VARCHAR(100),
 cmd_line_f VARCHAR(100),
 cmd_line_g VARCHAR(100),
 cmd_line_h VARCHAR(100),
-cmd_line_i VARCHAR(100),
-cmd_line_j VARCHAR(100),
+cmd_line_i VARCHAR(50),
+cmd_line_j VARCHAR(50),
 cmd_line_k VARCHAR(100),
 index (callerid),
 index (uniqueid),
@@ -1130,7 +1130,9 @@ call_log_days SMALLINT(5) default '0',
 leave_3way_stop_recording ENUM('DISABLED','ALL_CALLS') default 'DISABLED',
 manual_minimum_ring_seconds SMALLINT(5) default '0',
 manual_minimum_attempt_seconds SMALLINT(5) default '0',
-manual_minimum_answer_seconds SMALLINT(5) default '0'
+manual_minimum_answer_seconds SMALLINT(5) default '0',
+stereo_recording ENUM('DISABLED','CUSTOMER','CUSTOMER_MUTE') default 'DISABLED',
+khomp_settings_container VARCHAR(40) DEFAULT 'KHOMPSETTINGS'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_lists (
@@ -1456,7 +1458,8 @@ third_alert_delay INT(6) default '1000',
 third_alert_container VARCHAR(40) default 'DISABLED',
 third_alert_only VARCHAR(40) default 'DISABLED',
 agent_search_list VARCHAR(20) default '',
-state_descriptions VARCHAR(40) default '---DISABLED---'
+state_descriptions VARCHAR(40) default '---DISABLED---',
+stereo_recording ENUM('DISABLED','CUSTOMER','CUSTOMER_MUTE') default 'DISABLED'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_stations (
@@ -2039,7 +2042,8 @@ coldstorage_server_ip VARCHAR(50) default '',
 coldstorage_dbname VARCHAR(50) default '',
 coldstorage_login VARCHAR(50) default '',
 coldstorage_pass VARCHAR(50) default '',
-coldstorage_port VARCHAR(10) default ''
+coldstorage_port VARCHAR(10) default '',
+stereo_recording ENUM('0','1','2','3','4','5','6') default '0'
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -5285,6 +5289,21 @@ PRIMARY KEY (vtl_id),
 UNIQUE KEY vicidial_timeoff_log_agent_month_key (user,timeoff_month,timeoff_type)
 );
 
+CREATE TABLE recording_log_stereo (
+recording_id INT(10) UNSIGNED PRIMARY KEY NOT NULL,
+server_ip VARCHAR(15),
+start_time DATETIME,
+end_time DATETIME,
+length_in_sec MEDIUMINT(8) UNSIGNED,
+filename VARCHAR(100),
+lead_id INT(9) UNSIGNED,
+options VARCHAR(100),
+processing_log TEXT,
+index(filename),
+index(lead_id),
+index(start_time)
+) ENGINE=MyISAM;
+
 
 ALTER TABLE vicidial_email_list MODIFY message text character set utf8;
 
@@ -5689,4 +5708,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1718',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1719',db_schema_update_date=NOW(),reload_timestamp=NOW();

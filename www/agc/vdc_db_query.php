@@ -553,10 +553,11 @@
 # 240612-0206 - Fix for extension_appended_cidname newer options
 # 240801-1140 - Code updates for PHP8 compatibility
 # 240830-1618 - Added manual_minimum_ring_seconds SIP action lookup code
+# 240906-1646 - Added testing for stereo_recording campaign option for manual dial calls *NOT PRODUCTION READY*
 #
 
-$version = '2.14-446';
-$build = '240830-1618';
+$version = '2.14-447';
+$build = '240906-1646';
 $php_script = 'vdc_db_query.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=913;
@@ -879,6 +880,8 @@ if (isset($_GET["manual_minimum_ring_seconds"]))			{$manual_minimum_ring_seconds
 	elseif (isset($_POST["manual_minimum_ring_seconds"]))	{$manual_minimum_ring_seconds=$_POST["manual_minimum_ring_seconds"];}
 if (isset($_GET["manual_minimum_ringing"]))				{$manual_minimum_ringing=$_GET["manual_minimum_ringing"];}
 	elseif (isset($_POST["manual_minimum_ringing"]))	{$manual_minimum_ringing=$_POST["manual_minimum_ringing"];}
+if (isset($_GET["stereo_recording"]))			{$stereo_recording=$_GET["stereo_recording"];}
+	elseif (isset($_POST["stereo_recording"]))	{$stereo_recording=$_POST["stereo_recording"];}
 
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 $user=preg_replace("/\'|\"|\\\\|;| /","",$user);
@@ -1219,6 +1222,7 @@ $pause_max_url_trigger = preg_replace('/[^0-9]/','',$pause_max_url_trigger);
 $ACTION = preg_replace('/[^-_0-9a-zA-Z]/','',$ACTION);
 $manual_minimum_ring_seconds = preg_replace('/[^0-9]/','',$manual_minimum_ring_seconds);
 $manual_minimum_ringing = preg_replace('/[^0-9]/','',$manual_minimum_ringing);
+$stereo_recording = preg_replace('/[^-_0-9a-zA-Z]/','',$stereo_recording);
 $vendor_lead_code = preg_replace("/\"|\\\\|;/",'-',$vendor_lead_code);
 $title = preg_replace("/\"|\\\\|;/",'-',$title);
 $first_name = preg_replace("/\"|\\\\|;/",'-',$first_name);
@@ -8107,6 +8111,40 @@ if ($ACTION == 'manDiaLlookCaLL')
 
 			if ( ($routing_initiated_recording == 'Y') and (preg_match("/^M/",$MDnextCID)) )
 				{
+				if (preg_match("/CUSTOMER/",$stereo_recording))
+					{
+					$stmt="SELECT conf_engine FROM servers where server_ip='$server_ip';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					$row=mysqli_fetch_row($rslt);
+					if ( $row[0] == 'CONFBRIDGE' ) 
+						{
+						if ( (strlen($recording_filename) < 1) or (strlen($recording_id) < 1) )
+							{
+							$stmt = "SELECT recording_id,filename from recording_log where lead_id='$lead_id' and vicidial_id='$MDnextCID';";
+							if ($DB) {echo "$stmt\n";}
+							$rslt=mysql_to_mysqli($stmt, $link);
+								if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+							$RL_ct = mysqli_num_rows($rslt);
+							if ($RL_ct > 0)
+								{
+								$row=mysqli_fetch_row($rslt);
+								$recording_id =			$row[0];
+								$recording_filename =	$row[1];
+								}
+							}
+						$tempMDnextCID = $MDnextCID;
+						$tempMDnextCID = preg_replace("/^../",'SR',$tempMDnextCID);
+						$stmt="INSERT INTO vicidial_manager values('','','$NOW_TIME','NEW','N','$server_ip','','MixMonitor','$tempMDnextCID','ActionID: $tempMDnextCID','Channel: $channel','options: r(../monitorS/$recording_filename-in.wav)t(../monitorS/$recording_filename-out.wav)','','','','','','','');";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+
+						$stmt="INSERT INTO recording_log_stereo (recording_id,server_ip,start_time,length_in_sec,filename,lead_id,options,processing_log) values('$recording_id','$server_ip','$NOW_TIME','0','$recording_filename','$lead_id','$stereo_recording $campaign','start: $NOW_TIME|vicidial_id: $uniqueid|user: $user|channel: $channel|CID: $MDnextCID|');";
+							if ($format=='debug') {echo "\n<!-- $stmt -->";}
+						$rslt=mysql_to_mysqli($stmt, $link);
+							if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'00XXX',$user,$server_ip,$session_name,$one_mysql_log);}
+						}
+					}
 				$stmt="UPDATE recording_log set vicidial_id='$uniqueid' where lead_id='$lead_id' and vicidial_id='$MDnextCID';";
 					if ($format=='debug') {echo "\n<!-- $stmt -->";}
 				$rslt=mysql_to_mysqli($stmt, $link);
