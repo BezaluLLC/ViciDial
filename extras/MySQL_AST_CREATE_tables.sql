@@ -4787,6 +4787,7 @@ CREATE TABLE `vicidial_khomp_log` (
 `route_query_time` varchar(20) COLLATE utf8_unicode_ci DEFAULT '0',
 `vici_action` varchar(10) COLLATE utf8_unicode_ci DEFAULT NULL,
 `vici_status` varchar(6) COLLATE utf8_unicode_ci DEFAULT NULL,
+`khomp_settings_container` varchar(40),
 PRIMARY KEY (`khomp_log_id`),
 KEY `caller_code` (`caller_code`),
 KEY `start_date` (`start_date`),
@@ -5708,4 +5709,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1719',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1720',db_schema_update_date=NOW(),reload_timestamp=NOW();

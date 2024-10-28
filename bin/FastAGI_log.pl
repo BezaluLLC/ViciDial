@@ -102,6 +102,7 @@
 # 240225-0957 - Added AUTONEXT hopper_hold_inserts campaign option
 # 241001-2224 - Fixes for Khomp call processing
 # 241020-1929 - Added khomp campaign settings options
+# 281028-0958 - Added vicidial_khomp_log logging of container used
 #
 
 # defaults for PreFork
@@ -822,7 +823,7 @@ sub process_request
 					elsif ($khomp_id_format eq 'CALLERCODE_CAMP_EXTERNIP') 
 						{ $khomp_id = $callerid . '_' . $campaign . '_' . $external_server_ip; }
 
-					$stmtA = "INSERT INTO vicidial_khomp_log SET caller_code = '$callerid', lead_id = '$lead_id', server_ip = '$VARserver_ip', khomp_header = '$khomp_header', khomp_id = '$khomp_id', khomp_id_format = '$khomp_id_format', start_date=NOW()";
+					$stmtA = "INSERT INTO vicidial_khomp_log SET caller_code = '$callerid', lead_id = '$lead_id', server_ip = '$VARserver_ip', khomp_header = '$khomp_header', khomp_id = '$khomp_id', khomp_id_format = '$khomp_id_format', start_date=NOW(), khomp_settings_container='$khomp_settings_container'";
 					if ($AGILOG) {$agi_string = "--    KHOMP Log Insert: |$stmtA|";   &agi_output;}
 					$dbhA->do($stmtA);
 

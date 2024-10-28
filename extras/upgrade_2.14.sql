@@ -2778,3 +2778,7 @@ index(start_time)
 ) ENGINE=MyISAM;
 
 UPDATE system_settings SET db_schema_version='1719',db_schema_update_date=NOW() where db_schema_version < 1719;
+
+ALTER TABLE vicidial_khomp_log ADD khomp_settings_container VARCHAR(40); 
+
+UPDATE system_settings SET db_schema_version='1720',db_schema_update_date=NOW() where db_schema_version < 1720;
