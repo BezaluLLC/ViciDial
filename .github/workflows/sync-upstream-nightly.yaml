@@ -1,0 +1,85 @@
+name: Sync upstream SVN nightly trunk to upstream-nightly branch
+
+on:
+  schedule:
+    - cron: "0 3 * * *"   # 03:00 UTC nightly
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to push commits
+
+concurrency:
+  group: svn-upstream-nightly
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180  # adjust if initial import is large
+
+    steps:
+      - name: Install Subversion & git-svn
+        run: |
+            sudo apt-get update
+            sudo apt-get install -y subversion git-svn
+
+      # (Optional) If you want to map SVN usernames to nicer Git authors,
+      # edit this file later via PR and add lines like:
+      #   svnusername = Full Name <email@domain>
+      - name: Author mapping (placeholder)
+        run: |
+          cat > authors.txt <<'EOF'
+          # SVN username to Git author mappings:
+          # example_user = Example Name <example@example.com>
+          EOF
+
+      # We always perform a fresh git-svn clone. This guarantees a clean, reproducible
+      # Git commit history that mirrors SVN revision ordering. If performance later
+      # becomes an issue, you can introduce an actions/cache step to persist
+      # the svn-mirror directory (including .git/svn) between runs.
+      - name: Clone SVN (git-svn)
+        run: |
+          set -euo pipefail
+          # The nightly URL represents the trunk we want.
+          SVN_URL="https://www.vicidial.org/svn_trunk_nightly/"
+
+          # Clone full history. You can add --no-minimize-url if needed, but here we target a single path.
+          git svn clone "$SVN_URL" \
+            --no-metadata \
+            --authors-file=authors.txt \
+            --trunk=. \
+            svn-mirror
+
+      - name: Configure Git user
+        run: |
+          git config --global user.name  "SVN Sync Bot"
+          git config --global user.email "actions@users.noreply.github.com"
+
+      - name: Push to upstream-nightly branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          cd svn-mirror
+
+          # Target branch in this repository
+          TARGET_BRANCH="upstream-nightly"
+
+          # Initialize (or update) remote pointing back to this repo
+          git remote remove origin 2>/dev/null || true
+          git remote add origin "${{ github.server_url }}/${{ github.repository }}"
+
+          # Create (or switch) branch
+          git checkout -B "$TARGET_BRANCH"
+
+          # Push. We expect pushes to be fast-forwards because git-svn generates
+          # deterministic commits for a given SVN history.
+          # If history ever needs to be recreated (e.g., changing author mapping),
+            # you can change to `--force-with-lease`.
+          git push origin "$TARGET_BRANCH"
+
+      - name: Summary
+        run: |
+          cd svn-mirror
+          echo "Latest synced commit:"
+          git --no-pager log -1 --oneline
