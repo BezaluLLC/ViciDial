@@ -1,0 +1,9 @@
+# Optional mapping of SVN usernames to Git author identity.
+# Format: svn_username = Full Name <email@example.com>
+# Fill this out to improve commit attribution. Leave usernames unmapped to let git-svn synthesize an identity.
+
+example_user = Example Name <example_user@example.com>
+root = Root User <root@localhost>
+mattf = Matt Florell <support@vicidial.com>
+jaywhy = Jason Yates <jaywhy@cpan.org>
+mikec  = Michael Cargile <vicimikec@vicidial.com>
