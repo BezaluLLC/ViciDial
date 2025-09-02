@@ -1,0 +1,73 @@
+name: Sync upstream SVN trunk to upstream-nightly
+
+on:
+  schedule:
+    - cron: '15 4 * * *'  # Runs daily at 04:15 UTC
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  actions: read
+  checks: read
+
+concurrency:
+  group: svn-sync-upstream-nightly
+  cancel-in-progress: false
+
+env:
+  SVN_TRUNK_URL: svn://svn.eflo.net:3690/agc_2-X/trunk
+  TARGET_BRANCH: upstream-nightly
+
+jobs:
+  sync:
+    name: Mirror SVN trunk
+    runs-on: ubuntu-latest
+    # Use Ubuntu 22.04 container so packaged git/git-svn versions match
+    container:
+      image: ubuntu:22.04
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Install git, git-svn and dependencies
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            git subversion git-svn ca-certificates openssh-client
+          git --version
+          svn --version --quiet
+          git svn --version || true
+
+      - name: Checkout GitHub repo (sparse)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Ensure authors program executable
+        run: |
+          chmod +x .github/scripts/svn-authors-prog.sh || true
+
+      - name: Show runner versions
+        run: |
+          echo Git version: $(git --version)
+          echo SVN version: $(svn --version --quiet)
+
+      - name: Restore git-svn cache
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: import
+          key: git-svn-${{ env.TARGET_BRANCH }}-v1
+          restore-keys: |
+            git-svn-${{ env.TARGET_BRANCH }}-
+            git-svn-
+
+      - name: Run sync script
+        run: |
+          bash .github/scripts/git-svn-sync.sh
+
+      - name: Summary
+        if: success()
+        run: |
+            echo "Latest commit on ${TARGET_BRANCH}:" >> $GITHUB_STEP_SUMMARY
+            git log -1 --oneline origin/${TARGET_BRANCH} >> $GITHUB_STEP_SUMMARY
+            echo "SVN URL: ${SVN_TRUNK_URL}" >> $GITHUB_STEP_SUMMARY
