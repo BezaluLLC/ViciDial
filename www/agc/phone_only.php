@@ -167,6 +167,7 @@ $webphone_width			= 460;	# set the webphone frame width
 $webphone_height		= 500;	# set the webphone frame height
 $webphone_pad			= 0;	# set the table cellpadding for the webphone
 $webphone_location		= 'right';	# set the location on the agent screen 'right' or 'bar'
+$webphone_interface		= 'zoiper';	# set the webphone interface: 'zoiper' for legacy plugin, 'modern' for WebRTC interface
 $MAIN_COLOR				= '#CCCCCC';	# old default is E0C2D6
 $SCRIPT_COLOR			= '#E6E6E6';	# old default is FFE7D0
 $FORM_COLOR				= '#EFEFEF';
@@ -885,8 +886,13 @@ else
 		if (strlen($webphone_layout) > 0) {$webphone_options .= "--WEBPHONELAYOUT$webphone_layout";}
 		if (strlen($session_id) > 0) { $webphone_options .= "--SESSION$session_id";}
 		if (strlen($webphone_settings_scrubbed) > 0) {$webphone_options .= "--SETTINGS$webphone_settings_scrubbed";}
+		# Choose webphone interface based on configuration
+		if ($webphone_interface == 'modern') {
+			$webphone_url = str_replace('zoiperweb.php', 'modernphone.php', $webphone_url);
+		}
+		
 		$webphone_url = preg_replace("/LOCALFQDN/",$FQDN,$webphone_url);
-		if ($DB > 0) {echo "<!-- debug: SOCKET:$web_socket_url|VERSION:$asterisk_version| -->";}
+		if ($DB > 0) {echo "<!-- debug: SOCKET:$web_socket_url|VERSION:$asterisk_version|INTERFACE:$webphone_interface| -->";}
 
 		### base64 encode variables
 		$b64_phone_login =		base64_encode($extension);
