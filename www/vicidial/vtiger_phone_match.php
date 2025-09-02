@@ -1,0 +1,1 @@
+this file is unsupported and has been moved to the "extras/old_vtiger/" directory

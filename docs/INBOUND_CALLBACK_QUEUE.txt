@@ -1,0 +1,119 @@
+INBOUND CALLBACK QUEUE		Started: 2018-01-15	Updated: 2024-11-01
+
+
+The purpose of this feature is to allow for callers to leave the queue and be called back when their place in line is reached. Included in this new set of features are the new Closed Time features to In-Groups that allow all callers in queue to be presented with a press-1 option when the in-group closing time for the day has been reached. Also, an in-group feature was added to manually force the end of all queueing of calls for an in-group for the rest of the day.
+
+
+REQUIREMENTS:
+- svn/trunk revision 2905 or higher
+- VICIdial servers should be restarted after performing upgrade
+- Campaign must be set to "In-Group Manual Dial" = 'MANUAL_DIAL' or 'BOTH'
+- One of the following In-Group options should be set to "PRESS_CALLBACK_QUEUE": 'Wait Time Option(s)','Estimated Hold Time Option(s)','Closing Time Action'
+- Read about all of the new settings below so you understand how this complex feature works!
+
+
+The AST_VDadapt.pl script already runs on one server in a cluster, and it has had three new processes added to it to facilitate the monitoring of the callback queued entries, as well as initiating the triggering of the outbound calls once the callers' places in line have been reached. This process also will set the inbound callback queue records that are past the Callback Queue Expire Hours old to EXPIRED status, as well as verifying that the inbound callback queue records are within the set Callbacks Queue Call Time and are not within the Internal and/or Campaign DNC lists, as defined in the In-Group settings.
+
+The agi-VDAD_ALL_inbound.agi inbound call routing process has also been modified to allow for the insertion of inbound callback queue entries as well as the preservation of the place in line of the callers that choose to enter the callback queue.
+
+The ADMIN_keepalive_ALL.pl now has an added process to take care of archiving once per day the old inbound callback queue records that are of SENT, EXPIRED and ORPHAN status. This process will also reset the Closing-Time-Now-Trigger if it has been used during the previous day.
+
+The Real-Time report also has a new "Callback Queue Calls" top header in HTML view mode, so you can see how many LIVE entries there are in the inbound callback queue. If you want to see what in-groups those LIVE records are in, you can click on the "SHOW IN-GROUP STATS" link at the top of the Real-Time report.
+
+
+NOTE: ORPHAN status callback-queue records were queued up to a specific available agent for the outbound call to be placed, but an error happened on the agent screen(like the agent closing their web browser) and it never changed from the SENDING status, but it is possible that the dial was initiated, so it is flagged as ORPHAN so at least you can look into it if you need to.
+
+
+
+
+Admin Web page changes:
+
+Added the following Inbound Group "Hold Time" and "Wait Time" options:
+
+The PRESS_CALLBACK_QUEUE option will preserve the caller place in line and will call the customer back when their place is the next one to go to an agent, this inbound callback queue entry will last until the call is placed back to the customer or as long as the Callback Queue Expire Hours setting below.
+
+
+
+Added the following new Inbound Group Settings:
+
+Callback Queue Expire Hours - If a Hold Time or Wait Time Option is set to PRESS_CALLBACK_QUEUE, this is the maximum number of hours that an entry can stay in the inbound callback queue before it is removed without dialing it. Default is 96 hours.
+
+Callback Queue Call Time - For any inbound callback queue outbound calls to be placed, this is the local call time used to determine if the number can be dialed right now or not.
+
+Callback Queue Dial Filter - This option allows you to remove DNC numbers from your Callback Queue. You can use any combination of: Internal DNC List, Campaign DNC List tied to campaign of the list where the lead is, and Areacode DNC wildcard
+
+Closing Time Action - This allows you to specify the routing of the call if the closing time of the in-group is reached while the call is still waiting for an agent, Closing time is the end of the Call Time that is defined for this in-group. Default is DISABLED. If one of the PRESS_ options is selected, it will play the Press Filename defined below and give the customer the option to press 1 on their phone to leave the queue and run the selected option. The PRESS_CALLBACK_QUEUE option will preserve the caller place in line and will call the customer back when their place is the next one to go to an agent, this inbound callback queue entry will last until the call is placed back to the customer or as long as the Callback Queue Expire Hours setting above.
+
+Closing Time Now Trigger - If Closing Time Action is enabled, this flag allows you to send all customers waiting in the queue to the Closing Time Action as defined above, before the actual closing time is reached for the day.
+
+Closing Time Press Filename - If Closing Time Option is set to one of the PRESS_ options, this is the filename prompt that is played if the in-group has reached the closing time for the day. It is very important that this audio file is 10 seconds or less or there will be problems.
+
+Closing Time End Filename - If Closing Time Option is set to one of the PRESS_ options or PRESS_CID_CALLBACK or PRESS_CALLBACK_QUEUE, this is the filename prompt that is played after the customer has pressed 1 or the call has been added to the callback list or queue.
+
+Closing Time Option Lead Reset - This option if set to Y, will set the lead called-since-last-reset field to N when the Closing Time Option is triggered and the call is sent to an action like Message, Voicemail or Hangup. Default is N for disabled.
+
+Closing Time Option Extension - If Closing Time Option is set to EXTENSION, this is the dialplan extension that the call will be sent to if the Closing Time is reached. For AGENTDIRECT in-groups, you can put AGENTEXT in this field and the system will look up the user custom five field and send the call to that dialplan number.
+
+Closing Time Option Callmenu - If Closing Time Option is set to CALL_MENU, this is the Call Menu that the call will be sent to if the Closing Time is reached.
+
+Closing Time Option Voicemail - If Closing Time Option is set to VOICEMAIL, this is the voicemail box that the call will be sent to if the Closing Time is reached. In an AGENTDIRECT in-group, setting this to AGENTVMAIL will select the User voicemail ID to use.
+
+Closing Time Option Transfer In-Group - If Closing Time Option is set to IN_GROUP, this is the inbound group that the call will be sent to if the Closing Time is reached.
+
+Closing Time Option Callback List ID - If Closing Time Option is set to CALLERID_CALLBACK, this is the List ID the call is added to as a new lead if the Closing Time is reached.
+
+
+
+
+
+
+
+---------------------------------------------------------
+Somewhat related feature: vicidial_abandon_check_queue
+
+This separate feature, NOT part of Inbound Callback Queue, was added to svn/trunk revision 3699, and offers the ability to attempt to call back customers(through a vicidial_hopper insert) who called into an in-group but were never handled by an agent. This feature can also be used to send an email or send some other web URL instead of inserting a lead into the hopper if you want.
+
+To use this feature, the System Setting "Abandon Check Queue" must be enabled.
+
+Also, you will need to create a new Settings Container with the ID of "ABANDON_HOPPER_URL" that will contain the hopper insert URL(or other URL), something like this:
+http://192.168.198.3/vicidial/non_agent_api.php?source=test&user=6666&pass=1234&function=update_lead&lead_id=--A--lead_id--B--&add_to_hopper=Y&hopper_priority=99&flag=ACQ
+
+NOTE: The above URL should be local to the VICIdial cluster, and the 'user' defined in it must have permissions to update leads and have API access if you are using the API. For other options on URL variables and uses, see the "Other URL Options" section below.
+
+
+The first step is to set up an In-Group as a first routing destination of inbound calls that come into the system from a DID. The DID settings should use some form of the CIDLOOKUP Call Handle Method so that no duplicate leads are created. This In-Group must be set as an "always closed" Call Time or it should have 0 drop time and forward calls immediately on to a Call Menu or another In-Group. This step allows for the lead_id to be determined so that leads can be checked to see if they were handled by an agent or not before hanging up. In this first In-Group, you will need to set up a "No Agent Call URL" that points to the 'agc/abandon_check_queue.php' script, like this example:
+VARhttp://192.168.1.1/agc/abandon_check_queue.php?lead_id=--A--lead_id--B--&dispo=--A--dispo--B--&user=NOAGENTURL&pass=--A--call_id--B--&log_to_file=1&source=ACQ
+
+The above script will insert a record into the 'vicidial_abandon_check_queue' database table if there is not an active one in there already, and if there is no current record for that lead already in the vicidial_hopper table.
+
+Next, the AST_VDadapt.pl script will repeatedly check on the active records in the vicidial_abandon_check_queue table to see if they are still active calls and if they have been handled by an agent or inserted into the vicidial_hopper or if they have hung up. If the customer hangs up before speaking with an agent, the lead is inserted into the vicidial_hopper table and the vicidial_abandon_check_queue record is marked as 'COMPLETE'. 
+
+This feature also impacts the agi-VDAD_ALL_inbound.agi and outbound scripts, which will disable the vicidial_abandon_check_queue record once a call is routed to an agent.
+
+The ADMIN_keepalive_ALL.pl script will roll the old vicidial_abandon_check_queue records into the vicidial_abandon_check_queue_archive table every night.
+
+
+This feature was specifically created to catch calls tagged with a lead_id that drop while in a Call Menu.
+
+Since this feature is based on the lead_id, when sending a call from a Call Menu to an In-Group after it has been tagged with a lead_id, make sure you set the Call Handle Method to "CLOSER" so that the lead_id is preserved.
+
+If the Call Menu being routed to also can send calls to a Voicemail or an external extension, those calls might be flagged by this process, since they were not handled by an agent.
+
+
+
+Other URL Options - 
+
+Instead of inserting a lead into the hopper, you can set the URL to do other functions, like send an email. 
+
+http://192.168.1.1/agc/dispo_send_email.php?container_id=CM_DROP_EMAIL&lead_id=--A--lead_id--B--&call_id=--A--call_id--B--&dispo=DROP&user=NOAGENTURL--A--user--B--&pass=--A--call_id--B--&sale_status=ALL-STATUSES&log_to_file=1&dialed_number=--A--phone_number--B--
+
+
+Here is a list of the variables that you can use in an Abandon Check URL:
+--A--lead_id--B--
+--A--phone_number--B--
+--A--source--B--
+--A--call_id--B--
+--A--abandon_time--B--
+--A--reject_reason--B--
+--A--check_status--B--
+
