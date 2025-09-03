@@ -68,6 +68,12 @@ jobs:
       - name: Summary
         if: success()
         run: |
-            echo "Latest commit on ${TARGET_BRANCH}:" >> $GITHUB_STEP_SUMMARY
-            git log -1 --oneline origin/${TARGET_BRANCH} >> $GITHUB_STEP_SUMMARY
-            echo "SVN URL: ${SVN_TRUNK_URL}" >> $GITHUB_STEP_SUMMARY
+          echo "SVN URL: ${SVN_TRUNK_URL}" >> $GITHUB_STEP_SUMMARY
+          echo "Imported SVN revision: ${IMPORTED_SVN_REV:-unknown}" >> $GITHUB_STEP_SUMMARY
+          echo "Previous SHA on ${TARGET_BRANCH}: ${SYNC_PREV_SHA:-unknown}" >> $GITHUB_STEP_SUMMARY
+          echo "Current  SHA on ${TARGET_BRANCH}: ${SYNC_TARGET_SHA:-unknown}" >> $GITHUB_STEP_SUMMARY
+          if [ -n "${SYNC_PREV_SHA:-}" ] && [ -n "${SYNC_TARGET_SHA:-}" ] && [ "${SYNC_PREV_SHA}" = "${SYNC_TARGET_SHA}" ]; then
+            echo "No change (already up to date)." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "Updated (new commits imported)." >> $GITHUB_STEP_SUMMARY
+          fi
