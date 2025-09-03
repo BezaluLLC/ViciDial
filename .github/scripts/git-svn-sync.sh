@@ -72,6 +72,13 @@ git fetch --no-tags --quiet origin "+refs/heads/$TARGET_BRANCH:refs/remotes/orig
 OLD_REMOTE_SHA=$(git rev-parse "refs/remotes/origin/$TARGET_BRANCH" 2>/dev/null || echo "")
 NEW_LOCAL_SHA=$(git rev-parse "$GIT_SVN_REF")
 
+# Export metadata for later workflow steps (before possible early exit)
+if [ -n "${GITHUB_ENV:-}" ]; then
+  echo "IMPORTED_SVN_REV=${LATEST_SVN_REV:-}" >> "$GITHUB_ENV" || true
+  echo "SYNC_PREV_SHA=${OLD_REMOTE_SHA}" >> "$GITHUB_ENV" || true
+  echo "SYNC_TARGET_SHA=${NEW_LOCAL_SHA}" >> "$GITHUB_ENV" || true
+fi
+
 if [ -n "$OLD_REMOTE_SHA" ] && [ "$OLD_REMOTE_SHA" = "$NEW_LOCAL_SHA" ]; then
   echo "[info] No new SVN revisions. Remote branch already up to date (SHA $NEW_LOCAL_SHA). Skipping push."
   exit 0
