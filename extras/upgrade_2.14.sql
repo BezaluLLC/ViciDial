@@ -2753,10 +2753,10 @@ UPDATE system_settings SET db_schema_version='1718',db_schema_update_date=NOW() 
 
 ALTER TABLE system_settings ADD stereo_recording ENUM('0','1','2','3','4','5','6') default '0';
 
-ALTER TABLE vicidial_campaigns ADD stereo_recording ENUM('DISABLED','CUSTOMER','CUSTOMER_MUTE') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD stereo_recording ENUM('DISABLED','BOTH_CHANNELS','CUSTOMER_ONLY','CUSTOMER_MUTE') default 'DISABLED';
 ALTER TABLE vicidial_campaigns ADD khomp_settings_container VARCHAR(40) DEFAULT 'KHOMPSETTINGS';
 
-ALTER TABLE vicidial_inbound_groups ADD stereo_recording ENUM('DISABLED','CUSTOMER','CUSTOMER_MUTE') default 'DISABLED';
+ALTER TABLE vicidial_inbound_groups ADD stereo_recording ENUM('DISABLED','BOTH_CHANNELS','CUSTOMER_ONLY','CUSTOMER_MUTE') default 'DISABLED';
 
 ALTER TABLE vicidial_manager MODIFY cmd_line_i VARCHAR(50);
 ALTER TABLE vicidial_manager MODIFY cmd_line_j VARCHAR(50);
@@ -2873,7 +2873,7 @@ ALTER TABLE system_settings ADD agent_hide_dial_fail ENUM('0','1','2','3','4','5
 UPDATE system_settings SET db_schema_version='1725',db_schema_update_date=NOW() where db_schema_version < 1725;
 
 ALTER TABLE vicidial_url_multi MODIFY entry_type ENUM('campaign','ingroup','list','system','') default '';
-ALTER TABLE vicidial_url_multi MODIFY url_type ENUM('dispo','start','addlead','noagent','apinewlead','') default '';
+ALTER TABLE vicidial_url_multi MODIFY url_type ENUM('dispo','start','addlead','noagent','apinewlead','talk','') default '';
 
 UPDATE system_settings SET db_schema_version='1726',db_schema_update_date=NOW() where db_schema_version < 1726;
 
@@ -2887,3 +2887,156 @@ ALTER TABLE system_settings ADD agent_man_dial_filter VARCHAR(20) default '';
 ALTER TABLE system_settings ADD agent_3way_dial_filter VARCHAR(20) default '';
 
 UPDATE system_settings SET db_schema_version='1728',db_schema_update_date=NOW() where db_schema_version < 1728;
+
+ALTER TABLE system_settings ADD recording_dtmf_detection TINYINT(3) UNSIGNED default '0';
+ALTER TABLE system_settings ADD recording_dtmf_muting TINYINT(3) UNSIGNED default '0';
+ALTER TABLE system_settings ADD stereo_parallel_recording ENUM('0','1','2','3','4','5','6') default '0';
+
+ALTER TABLE vicidial_campaigns MODIFY stereo_recording ENUM('DISABLED','BOTH_CHANNELS','CUSTOMER_ONLY','CUSTOMER_MUTE') default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD stereo_recording_agent ENUM('NEVER','ONDEMAND','ALLCALLS','ALLFORCE') default 'ALLFORCE';
+ALTER TABLE vicidial_campaigns ADD stereo_rec_filename VARCHAR(50) default 'S_FULLDATE_CUSTPHONE';
+ALTER TABLE vicidial_campaigns ADD stereo_parallel_recording VARCHAR(50) default 'DISABLED';
+ALTER TABLE vicidial_campaigns ADD parallel_rec_co_filename VARCHAR(50) default '';
+ALTER TABLE vicidial_campaigns ADD parallel_rec_cm_filename VARCHAR(50) default '';
+ALTER TABLE vicidial_campaigns ADD parallel_rec_fr_filename VARCHAR(50) default '';
+ALTER TABLE vicidial_campaigns ADD recording_dtmf_muting SMALLINT(3) UNSIGNED default '0';
+
+ALTER TABLE vicidial_inbound_groups MODIFY stereo_recording ENUM('DISABLED','BOTH_CHANNELS','CUSTOMER_ONLY','CUSTOMER_MUTE') default 'DISABLED';
+ALTER TABLE vicidial_inbound_groups ADD stereo_recording_agent ENUM('NEVER','ONDEMAND','ALLCALLS','ALLFORCE','DISABLED') default 'ALLFORCE';
+ALTER TABLE vicidial_inbound_groups ADD stereo_rec_filename VARCHAR(50) default 'S_FULLDATE_CUSTPHONE';
+ALTER TABLE vicidial_inbound_groups ADD stereo_parallel_recording VARCHAR(50) default 'DISABLED';
+ALTER TABLE vicidial_inbound_groups ADD parallel_rec_co_filename VARCHAR(50) default '';
+ALTER TABLE vicidial_inbound_groups ADD parallel_rec_cm_filename VARCHAR(50) default '';
+ALTER TABLE vicidial_inbound_groups ADD parallel_rec_fr_filename VARCHAR(50) default '';
+ALTER TABLE vicidial_inbound_groups ADD recording_dtmf_muting SMALLINT(3) UNSIGNED default '0';
+
+ALTER TABLE recording_log_stereo ADD dtmf_detected TINYINT(3) UNSIGNED default '0';
+ALTER TABLE recording_log_stereo ADD dtmf_muting TINYINT(3) UNSIGNED default '0';
+ALTER TABLE recording_log_stereo ADD parallel_recording_id INT(10) UNSIGNED default '0';
+ALTER TABLE recording_log_stereo ADD recording_status VARCHAR(20) default '';
+
+CREATE INDEX rls_pr_id on recording_log_stereo(parallel_recording_id);
+
+ALTER TABLE routing_initiated_recordings ADD rir_type VARCHAR(1) default '';
+
+CREATE TABLE recording_log_parallel (
+parallel_recording_id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+channel VARCHAR(100),
+server_ip VARCHAR(15),
+extension VARCHAR(100),
+start_time DATETIME,
+end_time DATETIME,
+length_in_sec MEDIUMINT(8) UNSIGNED,
+filename VARCHAR(100),
+lead_id INT(9) UNSIGNED,
+user VARCHAR(20),
+vicidial_id VARCHAR(20),
+recording_status VARCHAR(20) default '',
+processing_log TEXT,
+index(filename),
+index(lead_id),
+index(start_time),
+index(vicidial_id)
+) ENGINE=MyISAM;
+
+CREATE TABLE recording_live (
+recording_id INT(10) UNSIGNED PRIMARY KEY NOT NULL,
+recording_type VARCHAR(40) default 'MONO_LEGACY',
+server_ip VARCHAR(15),
+start_time DATETIME,
+end_time DATETIME,
+channel VARCHAR(255),
+filename VARCHAR(100),
+lead_id INT(9) UNSIGNED,
+user VARCHAR(20),
+dtmf_detected TINYINT(3) UNSIGNED default '0',
+dtmf_muting TINYINT(3) UNSIGNED default '0',
+dtmf_muting_seconds TINYINT(3) UNSIGNED default '0',
+dtmf_muting_end_time DATETIME,
+mute_state TINYINT(3) UNSIGNED default '0',
+recording_status VARCHAR(20) default '',
+index(filename),
+index(lead_id),
+index(user),
+index(recording_id),
+index(dtmf_muting_end_time)
+) ENGINE=MyISAM;
+
+CREATE TABLE recording_live_log (
+recording_id INT(10) UNSIGNED PRIMARY KEY NOT NULL,
+recording_type VARCHAR(40) default 'MONO_LEGACY',
+server_ip VARCHAR(15),
+start_time DATETIME,
+end_time DATETIME,
+channel VARCHAR(255),
+filename VARCHAR(100),
+lead_id INT(9) UNSIGNED,
+user VARCHAR(20),
+dtmf_detected TINYINT(3) UNSIGNED default '0',
+dtmf_muting TINYINT(3) UNSIGNED default '0',
+dtmf_muting_seconds TINYINT(3) UNSIGNED default '0',
+dtmf_muting_end_time DATETIME,
+mute_state TINYINT(3) UNSIGNED default '0',
+recording_status VARCHAR(20) default '',
+index(filename),
+index(lead_id),
+index(user),
+index(recording_id),
+index(dtmf_muting_end_time)
+) ENGINE=MyISAM;
+
+CREATE TABLE recording_log_parallel_archive LIKE recording_log_parallel;
+CREATE TABLE recording_log_stereo_archive LIKE recording_log_stereo;
+
+UPDATE system_settings SET db_schema_version='1729',db_schema_update_date=NOW() where db_schema_version < 1729;
+
+ALTER TABLE vicidial_url_multi MODIFY url_type ENUM('dispo','start','addlead','noagent','apinewlead','talk','') default '';
+
+UPDATE system_settings SET db_schema_version='1730',db_schema_update_date=NOW() where db_schema_version < 1730;
+
+ALTER TABLE vicidial_campaigns ADD call_count_limit_restrict VARCHAR(30) default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1731',db_schema_update_date=NOW() where db_schema_version < 1731;
+
+CREATE INDEX vdtmflt on vicidial_dtmf_log (dtmf_time);
+
+CREATE TABLE recording_dtmf_muting_log (
+dtmf_mute_id INT(10) UNSIGNED AUTO_INCREMENT PRIMARY KEY NOT NULL,
+recording_id INT(10) UNSIGNED NOT NULL,
+recording_type VARCHAR(40) default 'MONO_LEGACY',
+server_ip VARCHAR(15),
+channel VARCHAR(255),
+channel_to_mute VARCHAR(255),
+filename VARCHAR(100),
+lead_id INT(9) UNSIGNED,
+campaign_id VARCHAR(20) default '',
+trigger_dtmf VARCHAR(100) default '',
+dtmf_muting SMALLINT(3) UNSIGNED default '0',
+dtmf_muting_start_time DATETIME,
+dtmf_muting_end_time DATETIME,
+dtmf_muting_seconds TINYINT(3) UNSIGNED default '0',
+mute_state TINYINT(3) UNSIGNED default '0',
+index(filename),
+index(recording_id),
+index(dtmf_muting_end_time)
+) ENGINE=MyISAM;
+
+CREATE TABLE recording_dtmf_muting_log_archive LIKE recording_dtmf_muting_log;
+ALTER TABLE recording_dtmf_muting_log_archive MODIFY dtmf_mute_id INT(10) UNSIGNED NOT NULL;
+CREATE UNIQUE INDEX rdml_key on recording_dtmf_muting_log_archive(dtmf_mute_id, recording_id);
+
+CREATE INDEX rllst on recording_live_log(start_time);
+
+CREATE TABLE recording_live_log_archive LIKE recording_live_log;
+
+UPDATE system_settings SET db_schema_version='1732',db_schema_update_date=NOW() where db_schema_version < 1732;
+
+CREATE TABLE crashed_tables (
+table_name VARCHAR(100) PRIMARY KEY NOT NULL,
+crashed_datetime DATETIME,
+last_check_datetime DATETIME
+) ENGINE=MyISAM;
+
+ALTER TABLE system_settings ADD db_crashed_tables_check ENUM('0','1','2','3','4','5','6') default '1';
+
+UPDATE system_settings SET db_schema_version='1733',db_schema_update_date=NOW() where db_schema_version < 1733;

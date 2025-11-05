@@ -173,9 +173,14 @@
 # 240401-1810 - Added purging of vicidial_pending_ar records older than 7 days
 # 240420-2209 - Added Conference Updater option
 # 250103-0932 - Added ConfBridge code and enhanced_agent_monitoring system setting code
+# 250914-1601 - Added pruning of recording_live table entries over 7 days old, deletion of parallel recording source files 3+ days
+# 250924-2212 - Added code for deprecation of "Monitor" application after Asterisk 20
+# 251006-0832 - Added truncating of vicidial_dtmf_log older than 24 hours & If recording_dtmf_muting enabled, force use of MixMonitor for recording
+# 251011-1000 - Added archiving of recording_dtmf_muting_log, disabled purging of recording_live_log after 7 days
+# 251024-2222 - Added crashed table detection
 #
 
-$build = '250103-0932';
+$build = '251024-2222';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -444,6 +449,8 @@ foreach(@conf)
 		{$PATHlogs = $line;   $PATHlogs =~ s/.*=//gi;}
 	if ( ($line =~ /^PATHsounds/) && ($CLIsounds < 1) )
 		{$PATHsounds = $line;   $PATHsounds =~ s/.*=//gi;}
+	if ( ($line =~ /^PATHmonitor/) && ($CLImonitor < 1) )
+		{$PATHmonitor = $line;   $PATHmonitor =~ s/.*=//gi;}
 	if ( ($line =~ /^VARactive_keepalives/) && ($CLIactive_keepalives < 1) )
 		{$VARactive_keepalives = $line;   $VARactive_keepalives =~ s/.*=//gi;}
 	if ( ($line =~ /^VARserver_ip/) && ($CLIserver_ip < 1) )
@@ -496,7 +503,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 
 ##### Get the settings from system_settings #####
-$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats,enable_auto_reports,enable_drop_lists,expired_lists_inactive,sip_event_logging,call_quota_lead_ranking,inbound_answer_config,log_latency_gaps,demographic_quotas,weekday_resets,highest_lead_id,hopper_hold_inserts FROM system_settings;";
+$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats,enable_auto_reports,enable_drop_lists,expired_lists_inactive,sip_event_logging,call_quota_lead_ranking,inbound_answer_config,log_latency_gaps,demographic_quotas,weekday_resets,highest_lead_id,hopper_hold_inserts,stereo_recording,stereo_parallel_recording,recording_dtmf_muting,db_crashed_tables_check FROM system_settings;";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -528,6 +535,10 @@ if ($sthArows > 0)
 	$SSweekday_resets =					$aryA[21];
 	$SShighest_lead_id =				$aryA[22];
 	$SShopper_hold_inserts =			$aryA[23];
+	$SSstereo_recording =				$aryA[24];
+	$SSstereo_parallel_recording =		$aryA[25];
+	$SSrecording_dtmf_muting =			$aryA[26];
+	$SSdb_crashed_tables_check =		$aryA[27];
 	}
 $sthA->finish();
 if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
@@ -595,6 +606,7 @@ else
 	$runningASTERISK=0;
 	$runningsip_logger=0;
 	$runningconf_updater=0;
+	$runningcrash_test=0;
 	$AST_conf_3way=0;
 	$AST_rec_monitor=0;
 
@@ -771,6 +783,11 @@ else
 			$runningAST_rec_monitor++;
 			if ($DB) {print "AST_rec_monitor RUNNING:           |$psline[1]|\n";}
 			}
+		if ($psline[1] =~ /$REGhome\/AST_table_status\.pl/)
+			{
+			$runningcrash_test++;
+			if ($DB) {print "AST_table_status RUNNING:           |$psline[1]|\n";}
+			}
 
 		$i++;
 		}
@@ -943,6 +960,11 @@ else
 				{
 				$runningAST_rec_monitor++;
 				if ($DB) {print "AST_rec_monitor RUNNING:           |$psline[1]|\n";}
+				}
+			if ($psline[1] =~ /$REGhome\/AST_table_status\.pl/)
+				{
+				$runningcrash_test++;
+				if ($DB) {print "AST_table_status RUNNING:           |$psline[1]|\n";}
 				}
 			$i++;
 			}
@@ -1216,6 +1238,36 @@ if ($timeclock_end_of_day_NOW > 0)
 		}
 	if ($teodDB) {$event_string = "Empty $vicidial_conf_table entries cleared: $conf_cleared";   &teod_logger;}
 
+	### If stereo parallel recording is enabled on this system, delete parallel source files over 3 days old every night
+	if ( ($SSstereo_recording > 0) && ($SSstereo_parallel_recording > 0) )
+		{
+		### find 'find' to gather the list of files to delete
+		$findbin = '';
+		if ( -e ('/usr/bin/find')) {$findbin = '/usr/bin/find';}
+		else 
+			{
+			if ( -e ('/bin/find')) {$findbin = '/bin/find';}
+			else
+				{
+				if ( -e ('/usr/sbin/find')) {$findbin = '/usr/sbin/find';}
+				else 
+					{
+					if ($DB) {print "Can't find -find- binary! No file deletions will be possible...\n";}
+					}
+				}
+			}
+
+		$PATHmonitorTRASH =	$PATHmonitor.'TRASH';
+		$now_epoch = int(time());
+		# command to trigger old stereo parallel source file deletion:
+		$parallel_delete_command = "$findbin $PATHmonitorTRASH -maxdepth 2 -type f -mtime +3 | xargs rm -f ";
+		if (!$Q) {print "Triggering old Parallel source recording file deletion...   |$parallel_delete_command| \n";}
+		`/usr/bin/screen -d -m -S PD$reset_test $parallel_delete_command `;
+		$end_epoch = int(time());
+		$run_length = ($end_epoch - $now_epoch);
+		if (!$Q) {print "     Parallel source recording file deletion complete ($run_length sec) \n";}
+		if ($teodDB) {$event_string = "Old Parallel source recording file deletion complete ($run_length sec): $parallel_delete_command";   &teod_logger;}
+		}
 
 	### Only run the following on one server in the cluster, the one set as the active voicemail server ###
 	if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_server)) eq (length($server_ip))) )
@@ -1475,6 +1527,15 @@ if ($timeclock_end_of_day_NOW > 0)
 		if ($teodDB) {$event_string = "vicidial_long_extensions records reset: $affected_rows";   &teod_logger;}
 
 		$stmtA = "optimize table vicidial_long_extensions;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		$stmtA = "optimize table crashed_tables;";
 		if($DBX){print STDERR "\n|$stmtA|\n";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -2277,6 +2338,24 @@ if ($timeclock_end_of_day_NOW > 0)
 		$sthA->finish();
 		##### END vicidial_two_factor_auth end of day process removing records older than 7 days #####
 
+
+		##### BEGIN vicidial_dtmf_log end of day process removing records older than 24 hours #####
+		$stmtA = "DELETE from vicidial_dtmf_log where dtmf_time < \"$RMSQLdate\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_dtmf_log records older than 1 day purged|\n";}
+		if ($teodDB) {$event_string = "vicidial_dtmf_log records older than 1 day purged: |$stmtA|$affected_rows|";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_dtmf_log;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+		##### END vicidial_dtmf_log end of day process removing records older than 7 days #####
+
 		
 		##### BEGIN vicidial_lead_messages end of day process removing records older than 1 day #####
 		$stmtA = "DELETE FROM vicidial_lead_messages WHERE call_date < \"$RMSQLdate\";";
@@ -2306,6 +2385,62 @@ if ($timeclock_end_of_day_NOW > 0)
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
 		##### END vicidial_lead_24hour_calls end of day process removing records older than 1 day #####
+
+
+		##### BEGIN recording_live_log end of day process removing records older than 7 days #####
+	#	$stmtA = "DELETE FROM recording_live_log WHERE start_time < \"$SDSQLdate\";";
+	#	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	#	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	#	$sthArows = $sthA->rows;
+	#	$event_string = "$sthArows rows deleted from recording_live_log table";
+	#	if (!$Q) {print "$event_string \n";}
+	#	if ($teodDB) {&teod_logger;}
+
+	#	$stmtA = "optimize table recording_live_log;";
+	#	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	#	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		##### END recording_live_log end of day process removing records older than 7 days #####
+
+
+		# archive recording_dtmf_muting_log table every night
+		if (!$Q) {print "\nProcessing recording_dtmf_muting_log table...\n";}
+		$stmtA = "INSERT IGNORE INTO recording_dtmf_muting_log_archive SELECT * from recording_dtmf_muting_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows = $sthA->rows;
+		$event_string = "$sthArows rows inserted into recording_dtmf_muting_log_archive table";
+		if (!$Q) {print "$event_string \n";}
+		if ($teodDB) {&teod_logger;}
+
+		$rv = $sthA->err();
+		if (!$rv) 
+			{	
+			$stmtA = "DELETE FROM recording_dtmf_muting_log WHERE dtmf_muting_end_time < \"$now_date\";";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows = $sthA->rows;
+			$event_string = "$sthArows rows deleted from in recording_dtmf_muting_log table";
+			if (!$Q) {print "$event_string \n";}
+			if ($teodDB) {&teod_logger;}
+
+			$stmtA = "optimize table recording_dtmf_muting_log;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			}
+		
+		# delete recording_dtmf_muting_log_archive records older than 7 days old
+		$stmtA = "DELETE FROM recording_dtmf_muting_log_archive WHERE dtmf_muting_end_time < \"$SDSQLdate\";";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows = $sthA->rows;
+		$event_string = "$sthArows old rows deleted from in recording_dtmf_muting_log_archive table ($SDSQLdate)";
+		if (!$Q) {print "$event_string \n";}
+		if ($teodDB) {&teod_logger;}
+
+		$stmtA = "optimize table recording_dtmf_muting_log_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+
 
 
 		#####  START latency log summary log inserts
@@ -3352,7 +3487,17 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	if ($asterisk_version =~ /^1.2/)
 		{$Vext .= "exten => 8309,2,Monitor(wav,\${CALLERIDNAME})\n";}
 	else
-		{$Vext .= "exten => 8309,2,Monitor(wav,\${CALLERID(name)})\n";}
+		{
+		if ( ($asterisk_version =~ /^2[1-9]|^3\d|^4\d/) || ($SSrecording_dtmf_muting > 0) )
+			{
+			# Deprecation of "Monitor" application after Asterisk 20
+			$Vext .= "exten => 8309,2,MixMonitor(,r($PATHmonitor/\${CALLERID(name)}-in.wav)t($PATHmonitor/\${CALLERID(name)}-out.wav))\n";
+			}
+		else
+			{
+			$Vext .= "exten => 8309,2,Monitor(wav,\${CALLERID(name)})\n";
+			}
+		}
 	$Vext .= "exten => 8309,3,Wait($vicidial_recording_limit)\n";
 	$Vext .= "exten => 8309,4,Hangup()\n";
 	$Vext .= ";     this is the GSM verison\n";
@@ -3360,7 +3505,17 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	if ($asterisk_version =~ /^1.2/)
 		{$Vext .= "exten => 8310,2,Monitor(gsm,\${CALLERIDNAME})\n";}
 	else
-		{$Vext .= "exten => 8310,2,Monitor(gsm,\${CALLERID(name)})\n";}
+		{
+		if ( ($asterisk_version =~ /^2[1-9]|^3\d|^4\d/) || ($SSrecording_dtmf_muting > 0) )
+			{
+			# Deprecation of "Monitor" application after Asterisk 20
+			$Vext .= "exten => 8309,2,MixMonitor(,r($PATHmonitor/\${CALLERID(name)}-in.wav)t($PATHmonitor/\${CALLERID(name)}-out.wav))\n";
+			}
+		else
+			{
+			$Vext .= "exten => 8310,2,Monitor(gsm,\${CALLERID(name)})\n";
+			}
+		}
 	$Vext .= "exten => 8310,3,Wait($vicidial_recording_limit)\n";
 	$Vext .= "exten => 8310,4,Hangup()\n";
 
@@ -6675,6 +6830,49 @@ if ($AST_VDadapt > 0)
 #####  END  reset lists, and expired lists to inactive check
 ################################################################################
 
+
+
+
+
+################################################################################
+#####  BEGIN check for crashed tables
+################################################################################
+if ( ($THISserver_voicemail > 0) && ($SSdb_crashed_tables_check > 0) )
+	{
+	if ($DB) {print "Begin check for crashed table... |db_crashed_tables_check setting: $SSdb_crashed_tables_check| \n";}
+
+	if ($runningcrash_test > 0) 
+		{
+		if ($DB) {print "Previous crash test already running, do not start another one.\n";}
+		}
+	else
+		{
+		$start_crash_check_now=0;
+		if ($SSdb_crashed_tables_check >= 4) 
+			{$start_crash_check_now++;}
+		if ( ($SSdb_crashed_tables_check >= 3) && ($reset_test =~ /0$/) )
+			{$start_crash_check_now++;}
+		if ( ($SSdb_crashed_tables_check >= 2) && ($reset_test =~ /00$/) )
+			{$start_crash_check_now++;}
+		if ( ($SSdb_crashed_tables_check >= 1) && ($timeclock_end_of_day_NOW > 0) )
+			{$start_crash_check_now++;}
+
+		if ($start_crash_check_now > 0) 
+			{
+			if ($DB) {print "starting AST_table_status... |$start_crash_check_now| \n";}
+			# add a '-L' to the command below to activate logging
+			`/usr/bin/screen -d -m -S ASTcrash $PATHhome/AST_table_status.pl --debugX`;
+			if ($megaDB)
+				{
+				`/usr/bin/screen -S ASTcrash -X logfile $PATHlogs/ASTcrash-screenlog.0`;
+				`/usr/bin/screen -S ASTcrash -X log`;
+				}
+			}
+		}
+	}
+################################################################################
+#####  END check for crashed tables
+################################################################################
 
 
 

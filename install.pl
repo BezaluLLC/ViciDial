@@ -53,6 +53,7 @@
 # 230508-0809 - Added Asterisk 18 compatibility
 # 240704-0830 - Added coldstorage DB entries
 # 250103-1017 - Added ConfBridge conf files updates
+# 250823-1411 - Added stereo recording directories
 #
 
 ############################################
@@ -96,7 +97,7 @@ $VARCS_port =	'3306';
 # default keepalive processes: 
 $VARactive_keepalives =		'1234568';
 # default Asterisk version: 
-$VARasterisk_version =		'16.X';
+$VARasterisk_version =		'18.X';
 # default recording FTP archive variables:
 $VARFTP_host = '10.0.0.4';
 $VARFTP_user = 'cron';
@@ -2098,6 +2099,7 @@ else
 			print " 11.X\n";
 			print " 13.X\n";
 			print " 16.X\n";
+			print " 18.X\n";
 			print "Enter asterisk version or press enter for default: [$VARasterisk_version] ";
 			$PROMPTasterisk_version = <STDIN>;
 			chomp($PROMPTasterisk_version);
@@ -2780,6 +2782,15 @@ if ($WEBONLY < 1)
 		`mkdir -p $PATHmonitor`;
 		`chmod -R 0766 $PATHmonitor`;
 		}
+
+	# generate paths to asterisk stereo recordings directories: 
+	$PATHmonitorS =	$PATHmonitor."S";
+	$PATHmonitorP =	$PATHmonitor."P";
+	$PATHmonitorTRASH =	$PATHmonitor."TRASH";
+
+	if (!-e "$PATHmonitorS")	{`mkdir -p $PATHmonitorS`;   `chmod -R 0766 $PATHmonitorS`;}
+	if (!-e "$PATHmonitorP")	{`mkdir -p $PATHmonitorP`;   `chmod -R 0766 $PATHmonitorP`;}
+	if (!-e "$PATHmonitorTRASH")	{`mkdir -p $PATHmonitorTRASH`;   `chmod -R 0766 $PATHmonitorTRASH`;}
 	if (!-e "$PATHmonitor/MIX")	{`mkdir -p $PATHmonitor/MIX`;}
 
 	if (!-e "$PATHDONEmonitor")					
