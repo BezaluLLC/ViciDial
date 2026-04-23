@@ -1,0 +1,10 @@
+version: "1"
+rules:
+  - base: main
+    upstream: BezaluLLC:main
+    mergeMethod: hardreset
+    mergeUnstable: true
+  - base: dev
+    upstream: BezaluLLC:dev
+    mergeMethod: hardreset
+    mergeUnstable: true
