@@ -181,9 +181,16 @@
 # 260126-1334 - Added check of reserved_extensions against dialplan numbers when building conf files
 # 260327-0846 - Added check of empty phone dialplan extensions when building conf files
 # 260402-1440 - Added reset of vicidial_max_inbound_cache table entries
+# 260515-1610 - Changed multi-listen-process kill section to only run if listen process is supposed to run on this server
+# 260515-2121 - Added truncating of vicidial_internal_log entries after 7 days, updating of some records
+# 260527-0142 - Added dialplan filtering
+# 260605-1002 - Added end-of-day log processing log entry for the vicidial_internal_log
+# 260826-1814 - Added FastAGIServer code
+# 260902-1718 - Fix for PJSIP monitoring
+# 260903-1914 - Added -ra-delay=X flag
 #
 
-$build = '260402-1440';
+$build = '260903-1914';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -196,6 +203,7 @@ $cu3way_delay='';
 $autodial_delay='';
 $adfill_delay='';
 $fill_staggered='';
+$ra_delay='';
 $recmon=0;
 $reserved_exten_skip=0;
 $reserved_exten_message='';
@@ -306,6 +314,7 @@ if (length($ARGV[0])>1)
 		print "  [-autodial-delay=X] = setting delay seconds on local auto-dial process\n";
 		print "  [-adfill-delay=X] = setting delay seconds on auto-dial FILL process\n";
 		print "  [-fill-staggered] = enable experimental staggered auto-dial FILL process\n";
+		print "  [-ra-delay=X] = setting delay seconds on Remote Agent process\n";
 		print "  [-cu3way] = keepalive for the optional 3way conference checker\n";
 		print "  [-lstn-buffer] = use special enhanced telnet buffer listen process(depricated)\n";
 		print "  [-cu3way-delay=X] = setting delay seconds on 3way conference checker\n";
@@ -426,6 +435,21 @@ if (length($ARGV[0])>1)
 				}
 			@CLIvarARY=@MT;   @CLIvarARY=@MT;
 			}
+		if ($args =~ /-ra-delay=/i) # CLI defined delay for Remote Agent script
+			{
+			@CLIvarRADLY = split(/-ra-delay=/,$args);
+			@CLIvarRADLX = split(/ /,$CLIvarRADLY[1]);
+			if (length($CLIvarRADLX[0])>0)
+				{
+				$CLIradelay = $CLIvarRADLX[0];
+				$CLIradelay =~ s/\/$| |\r|\n|\t//gi;
+				$CLIradelay =~ s/\D//gi;
+				if ( ($CLIradelay > 0) && (length($CLIradelay)> 0) )	
+					{$ra_delay = "--delay=$CLIradelay";}
+				if ($DB > 0) {print "Remote Agent Delay set to $CLIradelay $ra_delay \n";}
+				}
+			@CLIvarRADLY=@MT;   @CLIvarRADLY=@MT;
+			}
 		if ($args =~ /-test/i)
 			{
 			$TEST=1;
@@ -520,7 +544,7 @@ if ($sthArows > 0)
 	@aryA = $sthA->fetchrow_array;
 	$sounds_central_control_active =	$aryA[0];
 	$active_voicemail_server =			$aryA[1];
-	$SScustom_dialplan_entry =			$aryA[2];
+	$SScustom_dialplan_entry =			dialplan_filter_b($aryA[2]);
 	$SSdefault_codecs =					$aryA[3];
 	$SSgenerate_cross_server_exten =	$aryA[4];
 	$SSvoicemail_timezones =			$aryA[5];
@@ -566,7 +590,7 @@ if ($sthArows > 0)
 	$asterisk_version =				$aryA[3];
 	$sounds_update =				$aryA[4];
 	$self_conf_secret =				$aryA[5];
-	$SERVERcustom_dialplan_entry =	$aryA[6];
+	$SERVERcustom_dialplan_entry =	dialplan_filter_b($aryA[6]);
 	$auto_restart_asterisk =		$aryA[7];
 	$asterisk_temp_no_restart =		$aryA[8];
 	$gather_asterisk_output =		$aryA[9];
@@ -594,6 +618,7 @@ else
 	$AST_VDremote_agents=0;
 	$AST_VDadapt=0;
 	$FastAGI_log=0;
+	$FastAGIServer=0;
 	$email_inbound=0;
 	$AST_VDauto_dial_FILL=0;
 	$ip_relay=0;
@@ -615,6 +640,7 @@ else
 	$runningsip_logger=0;
 	$runningconf_updater=0;
 	$runningcrash_test=0;
+	$runningFastAGIServer=0;
 	$AST_conf_3way=0;
 	$AST_rec_monitor=0;
 
@@ -677,6 +703,11 @@ else
 		{
 		$conf_updater=1;
 		if ($DB) {print "Check to see if conference updater should run\n";}
+		}
+	if ($VARactive_keepalives =~ /F/)
+		{
+		$FastAGIServer=1;
+		if ($DB) {print "FastAGIServer set to keepalive\n";}
 		}
 	if ($cu3way > 0) 
 		{
@@ -796,58 +827,90 @@ else
 			$runningcrash_test++;
 			if ($DB) {print "AST_table_status RUNNING:           |$psline[1]|\n";}
 			}
+		if ($psoutput[$i] =~ /$REGhome\/FastAGIServer\/FastAGIServer\.pl/)
+			{
+			$runningFastAGIServer++;
+			if ($DB) {print "FastAGIServer Running:           |$psoutput[$i]|\n";}
+			}
 
 		$i++;
 		}
 
+	# if $runningFastAGI_log running, update internal process log
+	if ( ($runningFastAGI_log > 0) && ($reset_test =~ /0$|5$/) )
+		{
+		$stmtA = "UPDATE vicidial_internal_log SET up_time=NOW(), action='running', stage=CONCAT((UNIX_TIMESTAMP(NOW())-UNIX_TIMESTAMP(db_time)),' seconds runtime') WHERE process='FastAGI_log.pl' and server_ip='$server_ip' order by db_time desc limit 1;";
+		if($DB){print STDERR "|$stmtA|";}
+		my $affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "$affected_rows|\n";}
+		}
 
-
+	# if $runningFastAGIServer running, update internal process log
+	if ( ($runningFastAGIServer > 0) && ($reset_test =~ /0$|5$/) )
+		{
+		$stmtA = "UPDATE vicidial_internal_log SET up_time=NOW(), action='running', stage=CONCAT((UNIX_TIMESTAMP(NOW())-UNIX_TIMESTAMP(db_time)),' seconds runtime') WHERE process='FastAGIServer.pl' and server_ip='$server_ip' order by db_time desc limit 1;";
+		if($DB){print STDERR "|$stmtA|";}
+		my $affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "$affected_rows|\n";}
+		}
 
 
 	##### Second, IF MORE THAN ONE LISTEN INSTANCE IS RUNNING, KILL THE SECOND ONE #####
 	@psline=@MT;
 	@psoutput=@MT;
 	@listen_pid=@MT;
-	if ($runningAST_listen > 1)
+	if ($AST_send_listen > 0)
 		{
-		$runningAST_listen=0;
-
-			sleep(1);
-
-		### you may have to use a different ps command if you're not using Slackware Linux
-		#	@psoutput = `ps -f -C AST_update --no-headers`;
-		#	@psoutput = `ps -f -C AST_updat* --no-headers`;
-		#	@psoutput = `/bin/ps -f --no-headers -A`;
-		#	@psoutput = `/bin/ps -o pid,args -A`; ### use this one for FreeBSD
-		@psoutput = `/bin/ps -o "%p %a" --no-headers -A`;
-
-		$i=0;
-		foreach (@psoutput)
-			{
-				chomp($psoutput[$i]);
-			if ($DBX) {print "$i|$psoutput[$i]|     \n";}
-			@psline = split(/\/usr\/bin\/perl /,$psoutput[$i]);
-			$psoutput[$i] =~ s/^ *//gi;
-			$psoutput[$i] =~ s/ .*|\n|\r|\t| //gi;
-
-			if ($psline[1] =~ /AST_manager_li/) 
-				{
-				$listen_pid[$runningAST_listen] = $psoutput[$i];
-				if ($DB) {print "AST_listen RUNNING:              |$psline[1]|$listen_pid[$runningAST_listen]|\n";}
-				$runningAST_listen++;
-				}
-
-			$i++;
-			}
-
 		if ($runningAST_listen > 1)
 			{
-			if ($DB) {print "Killing AST_manager_listen... |$listen_pid[1]|\n";}
-			`/bin/kill -s 9 $listen_pid[1]`;
+			$runningAST_listen=0;
+
+				sleep(1);
+
+			### you may have to use a different ps command if you're not using Slackware Linux
+			#	@psoutput = `ps -f -C AST_update --no-headers`;
+			#	@psoutput = `ps -f -C AST_updat* --no-headers`;
+			#	@psoutput = `/bin/ps -f --no-headers -A`;
+			#	@psoutput = `/bin/ps -o pid,args -A`; ### use this one for FreeBSD
+			@psoutput = `/bin/ps -o "%p %a" --no-headers -A`;
+
+			$i=0;
+			foreach (@psoutput)
+				{
+				chomp($psoutput[$i]);
+				if ($DBX) {print "$i|$psoutput[$i]|     \n";}
+				@psline = split(/\/usr\/bin\/perl /,$psoutput[$i]);
+				$psoutput[$i] =~ s/^ *//gi;
+				$psoutput[$i] =~ s/ .*|\n|\r|\t| //gi;
+
+				if ($psline[1] =~ /AST_manager_li/) 
+					{
+					$listen_pid[$runningAST_listen] = $psoutput[$i];
+					if ($DB) {print "AST_listen RUNNING:              |$psline[1]|$listen_pid[$runningAST_listen]|\n";}
+					$runningAST_listen++;
+					}
+
+				$i++;
+				}
+
+			if ($runningAST_listen > 1)
+				{
+				if ($DB) {print "Killing AST_manager_listen... |$listen_pid[1]|\n";}
+				`/bin/kill -s 9 $listen_pid[1]`;
+
+				if (!$killLOGfile) {$killLOGfile = "$PATHlogs/listen_kill.$year-$mon-$mday";}
+				### open the log file for writing ###
+				open(Kout, ">>$killLOGfile")
+						|| die "Can't open $killLOGfile: $!\n";
+				print Kout "$now_date|Killing AST_manager_listen... |$listen_pid[1]||\n";
+				close(Kout);
+				}
 			}
 		}
-
-
+	else
+		{
+		if ($DB) {print "DEBUG: AST_manager_listen is not set to run on this server, so don't check if it's running\n";}
+		}
 
 
 
@@ -865,6 +928,7 @@ else
 		( ($AST_VDremote_agents > 0) && ($runningAST_VDremote_agents < 1) ) ||
 		( ($AST_VDadapt > 0) && ($runningAST_VDadapt < 1) ) ||
 		( ($FastAGI_log > 0) && ($runningFastAGI_log < 1) ) ||
+		( ($FastAGIServer > 0) && ($runningFastAGIServer < 1) ) ||
 		( ($AST_VDauto_dial_FILL > 0) && ($runningAST_VDauto_dial_FILL < 1) ) ||
 		( ($ip_relay > 0) && ($runningip_relay < 1) ) ||
 		( ($AST_conf_3way > 0) && ($runningAST_conf_3way < 1) ) || 
@@ -974,6 +1038,11 @@ else
 				$runningcrash_test++;
 				if ($DB) {print "AST_table_status RUNNING:           |$psline[1]|\n";}
 				}
+			if ($psoutput2[$i] =~ /$REGhome\/FastAGIServer\/FastAGIServer\.pl/)
+				{
+				$runningFastAGIServer++;
+				if ($DB) {print "FastAGIServer Running:           |$psoutput2[$i]|\n";}
+				}
 			$i++;
 			}
 
@@ -1064,7 +1133,7 @@ else
 			{ 
 			if ($DB) {print "starting AST_VDremote_agents...\n";}
 			# add a '-L' to the command below to activate logging
-			`/usr/bin/screen -d -m -S ASTVDremote $PATHhome/AST_VDremote_agents.pl --debug $debug_string`;
+			`/usr/bin/screen -d -m -S ASTVDremote $PATHhome/AST_VDremote_agents.pl --debug $ra_delay $debug_string`;
 			if ($megaDB)
 				{
 				`/usr/bin/screen -S ASTVDremote -X logfile $PATHlogs/ASTVDremote-screenlog.0`;
@@ -1143,6 +1212,13 @@ else
 				}
 			}
 		}
+		if ( ($FastAGIServer > 0) && ($runningFastAGIServer < 1) )
+			{
+			# FastAGIServer does not run in a Screen session
+			if ($DB) {print "starting FastAGIServer...\n";}
+			`/usr/bin/screen -d -m -S FastAGIServer $PATHhome/FastAGIServer/FastAGIServer.pl --nofork --loglevel 4`;
+		#	`/usr/bin/perl $PATHhome/FastAGIServer/FastAGIServer.pl &`;
+			}
 	}
 
 
@@ -1280,6 +1356,7 @@ if ($timeclock_end_of_day_NOW > 0)
 	### Only run the following on one server in the cluster, the one set as the active voicemail server ###
 	if ( ($active_voicemail_server =~ /$server_ip/) && ((length($active_voicemail_server)) eq (length($server_ip))) )
 		{
+		$secTCEODstart = time();
 		if ($DB) {print "Starting clear out system-wide daily reset tables...\n";}
 
 		$stmtA = "UPDATE vicidial_xfer_stats SET xfer_count='0';";
@@ -2386,7 +2463,25 @@ if ($timeclock_end_of_day_NOW > 0)
 		@aryA = $sthA->fetchrow_array;
 		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
 		$sthA->finish();
-		##### END vicidial_dtmf_log end of day process removing records older than 7 days #####
+		##### END vicidial_dtmf_log end of day process removing records older than 24 hours #####
+
+
+		##### BEGIN vicidial_internal_log end of day process removing records older than 7 days #####
+		$stmtA = "DELETE from vicidial_internal_log where up_time < \"$SDSQLdate\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_internal_log records older than 7 days purged|\n";}
+		if ($teodDB) {$event_string = "vicidial_internal_log records older than 7 days purged: |$stmtA|$affected_rows|";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_internal_log;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+		##### END vicidial_internal_log end of day process removing records older than 7 days #####
 
 		
 		##### BEGIN vicidial_lead_messages end of day process removing records older than 1 day #####
@@ -2793,6 +2888,14 @@ if ($timeclock_end_of_day_NOW > 0)
 			if ($teodDB) {&teod_logger;}
 			}
 		##### END roll Call Quota Lead Ranking logs into the archive table after 7 days
+
+		$secTCEODfinish = time();
+		$TCEODruntime = ($secTCEODfinish - $secTCEODstart);
+
+		$stmtA = "INSERT INTO vicidial_internal_log SET db_time=NOW(), up_time=NOW(), action='finished', stage='Run seconds: $TCEODruntime', process='end-of-day log processing', server_ip='$server_ip';";
+		if($DB){print STDERR "|$stmtA|";}
+		my $affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "$affected_rows|\n";}
 		}
 	}
 
@@ -3220,6 +3323,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Lext .= "exten => 473782138521111,n,Hangup()\n";
 		$Lext .= "; Whisper to agent meetme entry\n";
 		$Lext .= "exten => _473782188600XXX,1,Answer\n";
+		$Lext .= "exten => _473782188600XXX,n,Set(CALLERID(name)=\${MONITORCG})\n";
 		$Lext .= "exten => _473782188600XXX,n,Wait(1)\n";
 		$Lext .= "exten => _473782188600XXX,n,AGI(getAGENTchannel.agi)\n";
 		$Lext .= "exten => _473782188600XXX,n,NoOp(\${agent_zap_channel})\n";
@@ -3256,6 +3360,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Lext .= "exten => 473782138521111,n,Hangup()\n";
 		$Lext .= "; Whisper to agent meetme entry\n";
 		$Lext .= "exten => _473782188600XXX,1,Answer\n";
+		$Lext .= "exten => _473782188600XXX,n,Set(CALLERID(name)=\${MONITORCG})\n";
 		$Lext .= "exten => _473782188600XXX,n,Wait(1)\n";
 		$Lext .= "exten => _473782188600XXX,n,AGI(getAGENTchannel.agi)\n";
 		$Lext .= "exten => _473782188600XXX,n,NoOp(\${agent_zap_channel})\n";
@@ -3264,6 +3369,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Lext .= "exten => _473782188600XXX,n(fin),Hangup()\n";
 		$Lext .= "; Whisper to agent ConfBridge entry\n";
 		$Lext .= "exten => _473782189600XXX,1,Answer\n";
+		$Lext .= "exten => _473782189600XXX,n,Set(CALLERID(name)=\${MONITORCG})\n";
 		$Lext .= "exten => _473782189600XXX,n,Wait(1)\n";
 		$Lext .= "exten => _473782189600XXX,n,AGI(getAGENTchannel.agi)\n";
 		$Lext .= "exten => _473782189600XXX,n,NoOp(\${agent_zap_channel})\n";
@@ -3272,6 +3378,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Lext .= "exten => _473782189600XXX,n(fin),Hangup()\n";
 		$Lext .= "; Enhanced Agent Monitoring ConfBridge entry: MONITOR\n";
 		$Lext .= "exten => _473782199600XXX,1,Answer()\n";
+		$Lext .= "exten => _473782199600XXX,n,Set(CALLERID(name)=\${MONITORCG})\n";
 		$Lext .= "exten => _473782199600XXX,n,Wait(1)\n";
 		$Lext .= "exten => _473782199600XXX,n,AGI(getAGENTchannel.agi)\n";
 		$Lext .= "exten => _473782199600XXX,n,NoOp(\${monitorsession})\n";
@@ -3282,6 +3389,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$Lext .= "exten => _473782199600XXX,n,Hangup()\n";
 		$Lext .= "; Enhanced Agent Monitoring ConfBridge entry: BARGE\n";
 		$Lext .= "exten => _473782209600XXX,1,Answer()\n";
+		$Lext .= "exten => _473782209600XXX,n,Set(CALLERID(name)=\${MONITORCG})\n";
 		$Lext .= "exten => _473782209600XXX,n,Wait(1)\n";
 		$Lext .= "exten => _473782209600XXX,n,AGI(getAGENTchannel.agi)\n";
 		$Lext .= "exten => _473782209600XXX,n,NoOp(\${monitorsession})\n";
@@ -3311,6 +3419,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 
 		$confbridge_enhanced_monitoring .= "; Enhanced Agent Monitoring Whisper to agent channel entry\n";
 		$confbridge_enhanced_monitoring .= "exten => _473782219600XXX,1,Answer\n";
+		$confbridge_enhanced_monitoring .= "exten => _473782219600XXX,n,Set(CALLERID(name)=\${MONITORCG})\n";
 		$confbridge_enhanced_monitoring .= "exten => _473782219600XXX,n,Wait(1)\n";
 		$confbridge_enhanced_monitoring .= "exten => _473782219600XXX,n,AGI(getAGENTchannel.agi)\n";
 		$confbridge_enhanced_monitoring .= "exten => _473782219600XXX,n,NoOp(\${monitorsession})\n";
@@ -3595,14 +3704,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	while ($sthArows > $i)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$carrier_id[$i]	=			$aryA[0];
-		$carrier_name[$i]	=		$aryA[1];
-		$registration_string[$i] =	$aryA[2];
-		$template_id[$i] =			$aryA[3];
-		$account_entry[$i] =		$aryA[4];
-		$globals_string[$i] =		$aryA[5];
-		$dialplan_entry[$i] =		$aryA[6];
-		$carrier_description[$i] =	$aryA[7];
+		$carrier_id[$i]	=			dialplan_filter_a($aryA[0]);
+		$carrier_name[$i]	=		dialplan_filter_a($aryA[1]);
+		$registration_string[$i] =	dialplan_filter_a($aryA[2]);
+		$template_id[$i] =			dialplan_filter_a($aryA[3]);
+		$account_entry[$i] =		dialplan_filter_b($aryA[4]);
+		$globals_string[$i] =		dialplan_filter_a($aryA[5]);
+		$dialplan_entry[$i] =		dialplan_filter_b($aryA[6]);
+		$carrier_description[$i] =	dialplan_filter_a($aryA[7]);
 		$i++;
 		}
 	$sthA->finish();
@@ -3652,14 +3761,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	while ($sthArows > $i)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$carrier_id[$i]	=			$aryA[0];
-		$carrier_name[$i]	=		$aryA[1];
-		$registration_string[$i] =	$aryA[2];
-		$template_id[$i] =			$aryA[3];
-		$account_entry[$i] =		$aryA[4];
-		$globals_string[$i] =		$aryA[5];
-		$dialplan_entry[$i] =		$aryA[6];
-		$carrier_description[$i] =	$aryA[7];
+		$carrier_id[$i]	=			dialplan_filter_a($aryA[0]);
+		$carrier_name[$i]	=		dialplan_filter_a($aryA[1]);
+		$registration_string[$i] =	dialplan_filter_a($aryA[2]);
+		$template_id[$i] =			dialplan_filter_a($aryA[3]);
+		$account_entry[$i] =		dialplan_filter_b($aryA[4]);
+		$globals_string[$i] =		dialplan_filter_a($aryA[5]);
+		$dialplan_entry[$i] =		dialplan_filter_b($aryA[6]);
+		$carrier_description[$i] =	dialplan_filter_a($aryA[7]);
 		$i++;
 		}
 	$sthA->finish();
@@ -3708,14 +3817,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	while ($sthArows > $i)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$carrier_id[$i]	=			$aryA[0];
-		$carrier_name[$i]	=		$aryA[1];
-		$registration_string[$i] =	$aryA[2];
-		$template_id[$i] =			$aryA[3];
-		$account_entry[$i] =		$aryA[4];
-		$globals_string[$i] =		$aryA[5];
-		$dialplan_entry[$i] =		$aryA[6];
-		$carrier_description[$i] =	$aryA[7];
+		$carrier_id[$i]	=			dialplan_filter_a($aryA[0]);
+		$carrier_name[$i]	=		dialplan_filter_a($aryA[1]);
+		$registration_string[$i] =	dialplan_filter_a($aryA[2]);
+		$template_id[$i] =			dialplan_filter_a($aryA[3]);
+		$account_entry[$i] =		dialplan_filter_b($aryA[4]);
+		$globals_string[$i] =		dialplan_filter_a($aryA[5]);
+		$dialplan_entry[$i] =		dialplan_filter_b($aryA[6]);
+		$carrier_description[$i] =	dialplan_filter_a($aryA[7]);
 		$i++;
 		}
 	$sthA->finish();
@@ -3765,14 +3874,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 	while ($sthArows > $i)
 		{
 		@aryA = $sthA->fetchrow_array;
-		$carrier_id[$i]	=			$aryA[0];
-		$carrier_name[$i]	=		$aryA[1];
-		$registration_string[$i] =	$aryA[2];
-		$template_id[$i] =			$aryA[3];
-		$account_entry[$i] =		$aryA[4];
-		$globals_string[$i] =		$aryA[5];
-		$dialplan_entry[$i] =		$aryA[6];
-		$carrier_description[$i] =	$aryA[7];
+		$carrier_id[$i]	=			dialplan_filter_a($aryA[0]);
+		$carrier_name[$i]	=		dialplan_filter_a($aryA[1]);
+		$registration_string[$i] =	dialplan_filter_a($aryA[2]);
+		$template_id[$i] =			dialplan_filter_a($aryA[3]);
+		$account_entry[$i] =		dialplan_filter_b($aryA[4]);
+		$globals_string[$i] =		dialplan_filter_a($aryA[5]);
+		$dialplan_entry[$i] =		dialplan_filter_b($aryA[6]);
+		$carrier_description[$i] =	dialplan_filter_a($aryA[7]);
 		$i++;
 		}
 	$sthA->finish();
@@ -4569,7 +4678,7 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 		$menu_time_check[$i] =		$aryA[7];
 		$call_time_id[$i] =			$aryA[8];
 		$track_in_vdac[$i] =		$aryA[9];
-		$custom_dialplan_entry[$i]= $aryA[10];
+		$custom_dialplan_entry[$i]= dialplan_filter_b($aryA[10]);
 		$tracking_group[$i] =		$aryA[11];
 		$dtmf_log[$i] =				$aryA[12];
 		$dtmf_field[$i] =			$aryA[13];
@@ -5879,6 +5988,11 @@ if ($active_asterisk_server =~ /Y/)
 			if ($DBX) {print "Restart asterisk debug 1: |$Iaffected_rows|$stmtA|\n";}
 
 			`screen -XS asterisk eval 'stuff "/usr/sbin/asterisk -vvvvgcT\015"'`;
+
+			$stmtA = "INSERT INTO vicidial_internal_log SET db_time=NOW(), up_time=NOW(), action='start', stage='restarted', process='asterisk auto-restart', server_ip='$server_ip';";
+			if($DB){print STDERR "|$stmtA|";}
+			my $affected_rows = $dbhA->do($stmtA);
+			if($DB){print STDERR "$affected_rows|\n";}
 			}
 		elsif ($uptime_seconds>300)
  			{
@@ -7046,6 +7160,21 @@ sub leading_zero($)
     s/^(\d\d)$/0$1/;
     return $_;
 	} # End of the leading_zero() routine.
+
+sub dialplan_filter_a($) 
+	{
+    $temp_dp = $_[0];
+	$temp_dp =~ s/TrySystem\(|System\(|Shell\(|FILE\(|\[default\]|\[defaultlog\]|\[general\]|\[globals\]|\[loopback-no-log\]|\[monitor\]|\[monitor_exit\]|\[phones\]|\[SPEECH\]|\[trunkinbound\]|\[vici_monitor_menu_exec\]|\[vici_monitor_whisper\]|\[vicidial-auto-external\]|\[vicidial-auto-internal\]|\[vicidial-auto-phones\]|\[vicidial-auto-server-custom\]|\[vicidial-auto-system-setting-custom\]|\[vicidial-auto\]//gi;
+	$temp_dp =~ s/\r|\n|\t//gi;
+    return $temp_dp;
+	} # End of the dialplan_filter_a() routine.
+
+sub dialplan_filter_b($) 
+	{
+    $temp_dp = $_[0];
+	$temp_dp =~ s/TrySystem\(|System\(|Shell\(|FILE\(|\[default\]|\[defaultlog\]|\[general\]|\[globals\]|\[loopback-no-log\]|\[monitor\]|\[monitor_exit\]|\[phones\]|\[SPEECH\]|\[trunkinbound\]|\[vici_monitor_menu_exec\]|\[vici_monitor_whisper\]|\[vicidial-auto-external\]|\[vicidial-auto-internal\]|\[vicidial-auto-phones\]|\[vicidial-auto-server-custom\]|\[vicidial-auto-system-setting-custom\]|\[vicidial-auto\]//gi;
+    return $temp_dp;
+	} # End of the dialplan_filter_b() routine.
 
 # subroutine to parse the asterisk version
 # and return a hash with the various part

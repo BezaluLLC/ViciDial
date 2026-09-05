@@ -20,7 +20,7 @@
 # Based on perl scripts in ViciDial from Matt Florell and post: 
 # http://www.vicidial.org/VICIDIALforum/viewtopic.php?p=22506&sid=ca5347cffa6f6382f56ce3db9fb3d068#22506
 #
-# Copyright (C) 2025  I. Taushanov, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2026  I. Taushanov, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 90615-1701 - First version
@@ -77,6 +77,8 @@
 # 251011-2048 - Added archiving of recording_live_log table
 # 251024-1518 - Added --vicidial-dial-log-only flag
 # 260111-2138 - Added --agent-log-only flag
+# 260516-2149 - Added internal logging
+# 260826-2206 - Added --call-log-only flag
 #
 
 $CALC_TEST=0;
@@ -91,6 +93,7 @@ $api_archive_only=0;
 $url_log_only=0;
 $url_log_archive=0;
 $agent_log_only=0;
+$script_name = 'ADMIN_archive_log_tables.pl';
 
 
 ### begin parsing run-time options ###
@@ -130,6 +133,8 @@ if (length($ARGV[0])>1)
 		print "       [--vicidial-dial-log-days=XX] = REQUIRED FOR --vicidial-dial-log-only, number of days to archive vicidial_dial_log table only past\n";
 		print "  [--extended-log-only] = OPTIONAL, only archive vicidial_log_extended table then exit\n";
 		print "       [--extended-log-days=XX] = REQUIRED FOR --extended-log-only, number of days to archive vicidial_log_extended table only past\n";
+		print "  [--call-log-only] = OPTIONAL, only archive call_log table then exit\n";
+		print "       [--call-log-days=XX] = REQUIRED FOR --call-log-only, number of days to archive call_log table only past\n";
 		print "  [--agent-log-only] = OPTIONAL, only archive vicidial_agent_log table then exit\n";
 		print "  [--api-archive-only] = OPTIONAL, only purge vicidial_api_log_archive table then exit\n";
 		print "       [--api-archive-days=XX] = REQUIRED FOR --api-archive-only, number of days to purge vicidial_api_log_archive table only past\n";
@@ -352,6 +357,25 @@ if (length($ARGV[0])>1)
 				{print "\n----- EXTENDED LOG ARCHIVE ACTIVE, DAYS: $extendeddays -----\n\n";}
 			}
 
+		if ($args =~ /--call-log-only/i)
+			{
+			$call_log_only++;
+			if ($Q < 1) 
+				{print "\n----- CALL LOG ARCHIVE ONLY $call_log_only -----\n\n";}
+			}
+		if ($args =~ /--call-log-days=/i)
+			{
+			$call_log_only++;
+			@data_in = split(/--call-log-days=/,$args);
+			$extendeddays = $data_in[1];
+			$extendeddays =~ s/ .*$//gi;
+			$extendeddays =~ s/\D//gi;
+			if ($extendeddays > 999999)
+				{$extendeddays=1825;}
+			if ($Q < 1) 
+				{print "\n----- CALL LOG ARCHIVE ACTIVE, DAYS: $extendeddays -----\n\n";}
+			}
+
 		if ($args =~ /--api-archive-only/i)
 			{
 			$api_archive_only++;
@@ -534,7 +558,7 @@ if ($url_log_only > 0)
 	if ($URLsec < 10) {$URLsec = "0$URLsec";}
 	$URLdel_time = "$URLyear-$URLmon-$URLmday $URLhour:$URLmin:$URLsec";
 	}
-if ( ($extended_log_only > 0) || ($vicidial_log_only > 0) || ($vicidial_dial_log_only > 0) )
+if ( ($extended_log_only > 0) || ($call_log_only > 0) || ($vicidial_log_only > 0) || ($vicidial_dial_log_only > 0) )
 	{
 	$EXTENDEDdel_epoch = ($secX - (86400 * $extendeddays));   # X days ago
 	($EXTENDEDsec,$EXTENDEDmin,$EXTENDEDhour,$EXTENDEDmday,$EXTENDEDmon,$EXTENDEDyear,$EXTENDEDwday,$EXTENDEDyday,$EXTENDEDisdst) = localtime($EXTENDEDdel_epoch);
@@ -624,6 +648,8 @@ $server_ip = $VARserver_ip;		# Asterisk server IP
 use DBI;
 $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
  or die "Couldn't connect to database: " . DBI->errstr;
+
+$action='start';   $stage='LOGGED INTO MYSQL SERVER';   &internal_logger;
 
 #############################################
 ##### Gather system_settings #####
@@ -2052,6 +2078,65 @@ if (!$T)
 		exit;
 		}
 	########## END --extended-log-only flag processing ##########
+
+
+
+	########## BEGIN --call-log-only flag processing ##########
+	if ($call_log_only > 0)
+		{
+		##### call_log
+		$stmtA = "SELECT count(*) from call_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$call_log_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		$stmtA = "SELECT count(*) from call_log_archive;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		if ($sthArows > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$call_log_archive_count =	$aryA[0];
+			}
+		$sthA->finish();
+
+		if (!$Q) {print "\nProcessing call_log table...  ($call_log_count|$call_log_archive_count)\n";}
+		$stmtA = "INSERT IGNORE INTO call_log_archive SELECT * from call_log;";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		
+		$sthArows = $sthA->rows;
+		if (!$Q) {print "$sthArows rows inserted into call_log_archive table \n";}
+		
+		$rv = $sthA->err();
+		if (!$rv) 
+			{
+			if ($wipe_all > 0)
+				{$stmtA = "DELETE FROM call_log;";}
+			else
+				{$stmtA = "DELETE FROM call_log WHERE start_time < '$EXTENDEDdel_time';";}
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArows = $sthA->rows;
+			if (!$Q) {print "$sthArows rows deleted from call_log table \n";}
+
+			$stmtA = "optimize table call_log;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			}
+
+		if (!$Q) {print "\nProcessing call_log table finished:  ($sthArows rows deleted) \n";}
+		
+		exit;
+		}
+	########## END --call-log-only flag processing ##########
 
 
 	########## BEGIN --vicidial-log-only flag processing ##########
@@ -4480,4 +4565,17 @@ $secZ = ($secY - $secX);
 $secZm = ($secZ /60);
 if (!$Q) {print "\nscript execution time in seconds: $secZ     minutes: $secZm\n";}
 
+$stmtA = "UPDATE vicidial_internal_log SET up_time=NOW(), action='finished', stage='Run seconds: $secZ' WHERE process='$script_name' and server_ip='$server_ip' order by db_time desc limit 1;";
+if($DB){print STDERR "|$stmtA|";}
+my $affected_rows = $dbhA->do($stmtA);
+if($DB){print STDERR "$affected_rows|\n";}
+
 exit;
+
+sub internal_logger
+	{
+	$stmtA = "INSERT INTO vicidial_internal_log SET db_time=NOW(), up_time=NOW(), process='$script_name', server_ip='$server_ip', action='$action', stage='$stage';";
+	if($DB){print STDERR "|$stmtA|";}
+	my $affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "$affected_rows|\n";}
+	}

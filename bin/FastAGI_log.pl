@@ -105,6 +105,9 @@
 # 241028-0958 - Added vicidial_khomp_log logging of container used
 # 250928-1556 - Added hosted_settings dialplan variable
 # 260327-0824 - Fixes for PJSIP compatibility
+# 260424-1644 - Fix for rare Auto-Alt Dial issue
+# 260515-1936 - Added internal logging
+# 260902-1608 - Fix for systems with overloaded Khomp servers
 #
 
 # defaults for PreFork
@@ -118,6 +121,7 @@ $VARfastagi_log_checkforwait =	'60';
 $DB=0;
 $DBX=0;
 $ADB=0;
+$script_name = 'FastAGI_log.pl';
 
 # default path to astguiclient configuration file:
 $PATHconf =		'/etc/astguiclient.conf';
@@ -178,6 +182,12 @@ $log_level = '0';
 use DBI;
 $dbhB = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
 	or die "Couldn't connect to database: " . DBI->errstr;
+
+$action='start';   $stage='LOGGED INTO MYSQL SERVER';
+$stmtA = "INSERT INTO vicidial_internal_log SET db_time=NOW(), up_time=NOW(), process='$script_name', server_ip='$VARserver_ip', action='$action', stage='$stage';";
+if($DB){print STDERR "|$stmtA|";}
+my $affected_rows = $dbhB->do($stmtA);
+if($DB){print STDERR "$affected_rows|\n";}
 
 ### Grab Server values from the database
 $stmtB = "SELECT vd_server_logs,asterisk_version FROM servers where server_ip = '$VARserver_ip';";
@@ -2378,7 +2388,7 @@ sub process_request
 								$alt_skip_reason='';   $addr3_skip_reason='';
 								if ($AGILOG) {$agi_string = "AUTO-ALT MATCH: |$VD_status|$VDL_status|$VD_auto_alt_dial_statuses|$VD_auto_alt_dial|$VD_alt_dial|$VD_alt_dial_log|";   &agi_output;}
 								if ($ADB > 0) {$aad_string = "ALT-22: $VD_lead_id|Alt-Dial Match|";   &aad_output;}
-								if ( ($VD_auto_alt_dial =~ /(ALT_ONLY|ALT_AND_ADDR3|ALT_AND_EXTENDED)/) && ($VD_alt_dial =~ /NONE|MAIN/) )
+								if ( ($VD_auto_alt_dial =~ /(ALT_ONLY|ALT_AND_ADDR3|ALT_AND_EXTENDED)/) && ($VD_alt_dial =~ /NONE|MAIN/) && ($VD_alt_dial_log =~ /NONE|MAIN/) )
 									{
 									$alt_dial_skip=0;
 									$VD_alt_phone='';
@@ -2485,8 +2495,8 @@ sub process_request
 										if ($AGILOG) {$aad_string = "$VD_lead_id|$VD_alt_phone|$VD_campaign_id|ALT|0|hopper skip|$alt_skip_reason|";   &aad_output;}
 										}
 									}
-									if ($ADB > 0) {$aad_string = "ALT-25: $VD_lead_id|$VD_alt_dial|";   &aad_output;}
-								if ( ( ($VD_auto_alt_dial =~ /(ADDR3_ONLY)/) && ($VD_alt_dial =~ /NONE|MAIN/) ) || ( ($VD_auto_alt_dial =~ /(ALT_AND_ADDR3)/) && ($VD_alt_dial =~ /ALT/) ) )
+									if ($ADB > 0) {$aad_string = "ALT-25: $VD_lead_id|$VD_alt_dial|$VD_alt_dial_log|";   &aad_output;}
+								if ( ( ($VD_auto_alt_dial =~ /(ADDR3_ONLY)/) && ($VD_alt_dial =~ /NONE|MAIN/) && ($VD_alt_dial_log =~ /NONE|MAIN/) ) || ( ($VD_auto_alt_dial =~ /(ALT_AND_ADDR3)/) && ($VD_alt_dial =~ /ALT/) && ($VD_alt_dial_log =~ /ALT/) ) )
 									{
 									$addr3_dial_skip=0;
 									$VD_address3='';
@@ -2594,7 +2604,7 @@ sub process_request
 										}
 									}
 								if ($ADB > 0) {$aad_string = "ALT-28: $VD_lead_id|$VD_alt_dial|";   &aad_output;}
-								if ( ( ($VD_auto_alt_dial =~ /(EXTENDED_ONLY)/) && ($VD_alt_dial =~ /NONE|MAIN/) ) || ( ($VD_auto_alt_dial =~ /(ALT_AND_EXTENDED)/) && ($VD_alt_dial =~ /ALT/) ) || ( ($VD_auto_alt_dial =~ /ADDR3_AND_EXTENDED|ALT_AND_ADDR3_AND_EXTENDED/) && ($VD_alt_dial =~ /ADDR3/) ) || ( ($VD_auto_alt_dial =~ /(EXTENDED)/) && ($VD_alt_dial =~ /X/) && ($VD_alt_dial !~ /XLAST/) ) )
+								if ( ( ($VD_auto_alt_dial =~ /(EXTENDED_ONLY)/) && ($VD_alt_dial =~ /NONE|MAIN/) && ($VD_alt_dial_log =~ /NONE|MAIN/) ) || ( ($VD_auto_alt_dial =~ /(ALT_AND_EXTENDED)/) && ($VD_alt_dial =~ /ALT/) && ($VD_alt_dial_log =~ /ALT/) ) || ( ($VD_auto_alt_dial =~ /ADDR3_AND_EXTENDED|ALT_AND_ADDR3_AND_EXTENDED/) && ($VD_alt_dial =~ /ADDR3/) && ($VD_alt_dial_log =~ /ADDR3/) ) || ( ($VD_auto_alt_dial =~ /(EXTENDED)/) && ($VD_alt_dial =~ /X/) && ($VD_alt_dial !~ /XLAST/) && ($VD_alt_dial_log =~ /X/) && ($VD_alt_dial_log !~ /XLAST/) ) )
 									{
 									if ($VD_alt_dial =~ /ADDR3/) {$Xlast=0;}
 									else
@@ -3837,6 +3847,13 @@ sub khomp_json_api
 		$agi_string = "--    KHOMP URL: |$khomp_api_url|";   &agi_output;
 		$agi_string = "--    KHOMP JSON : |$khomp_json|";   &agi_output;
 		$agi_string = "--    KHOMP RESPONSE JSON: |$message|";   &agi_output;
+		}
+	$test503 = $message;
+	$test503 =~ s/\n|\r|\t//gi;
+	if ($test503 =~ /503 Service Not Available/) 
+		{
+		$agi_string = "--    KHOMP API REJECTED OUR REQUEST!!!  forcing fake timeout response";   &agi_output;
+		$message = '{"id":0,"jsonrpc":"2.0","result":{"calls":[{"disconnected":false,"fields":{"analyzer_action":"Connect","analyzer_conclusion":"Khomp Reject","analyzer_pattern":"","analyzer_stamp":"9999999999","answer_stamp":"9999999999","audio_stamp":"9999999999","end_stamp":"","hangup_cause":"","hangup_cause_sent":"","hangup_origin":"","sip_header:call-id":"","start_stamp":"1788358771462"}}]}}';
 		}
 
 #UC#	$json = JSON::PP->new->ascii->pretty->allow_nonref;

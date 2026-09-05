@@ -1,7 +1,7 @@
 <?php
 # lead_tools_advanced.php - Various tools for lead basic lead management, advanced version.
 #
-# Copyright (C) 2025  Matt Florell,Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2026  Matt Florell,Michael Cargile <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 131016-1948 - Initial Build based upon lead_tools.php
@@ -19,10 +19,12 @@
 # 220228-1012 - Added allow_web_debug system setting
 # 241114-0813 - Raised max_count default to 60
 # 250321-1152 - Changed status selector from dropdown to multi-select on Move, Update, and Delete
+# 260529-0905 - Code updates for PHP8 compatibility
+# 260601-1701 - Added permissions errors warning messages
+#
 
-
-$version = '2.14-15';
-$build = '250321-1152';
+$version = '2.14-17';
+$build = '260601-1701';
 
 # This limit is to prevent data inconsistancies.
 # If there are too many leads in a list this
@@ -35,12 +37,13 @@ $max_count = 60;
 require("dbconnect_mysqli.php");
 require("functions.php");
 
-$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
-$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
+$PHP_AUTH_USER=(array_key_exists('PHP_AUTH_USER', $_SERVER) ? $_SERVER['PHP_AUTH_USER'] : "");
+$PHP_AUTH_PW=(array_key_exists('PHP_AUTH_PW', $_SERVER) ? $_SERVER['PHP_AUTH_PW'] : "");
 $PHP_SELF=$_SERVER['PHP_SELF'];
 $PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
 $ip = getenv("REMOTE_ADDR");
 $SQLdate = date("Y-m-d H:i:s");
+$STARTtime=date("U");
 
 $DB=0;
 $move_submit="";
@@ -53,6 +56,8 @@ $confirm_update="";
 $confirm_delete="";
 $confirm_reset_called_count="";
 $confirm_callback="";
+$delete_status="";
+$reset_called_count_status="";
 
 if (isset($_GET["DB"])) {$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"])) {$DB=$_POST["DB"];}
@@ -78,8 +83,6 @@ if (isset($_GET["confirm_callback"])) {$confirm_callback=$_GET["confirm_callback
 	elseif (isset($_POST["confirm_callback"])) {$confirm_callback=$_POST["confirm_callback"];}
 # Several sets of variable inputs are further down in the code as well
 
-$DB = preg_replace('/[^0-9]/','',$DB);
-
 #############################################
 ##### START SYSTEM_SETTINGS LOOKUP #####
 $sys_settings_stmt = "SELECT use_non_latin,outbound_autodial_active,sounds_central_control_active,enable_languages,language_method,admin_screen_colors,report_default_format,allow_manage_active_lists,allow_web_debug FROM system_settings;";
@@ -104,7 +107,8 @@ else
 	# there is something really weird if there are no system settings
 	exit;
 	}
-if ($SSallow_web_debug < 1) {$DB=0;}
+if ($SSallow_web_debug < 1 || !isset($DB)) {$DB=0;}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 ##### END SETTINGS LOOKUP #####
 ###########################################
 
@@ -222,6 +226,7 @@ $SSstd_row5_background='A3C3D6';
 $SSalt_row1_background='BDFFBD';
 $SSalt_row2_background='99FF99';
 $SSalt_row3_background='CCFFCC';
+if (!isset($SSweb_logo)) {$SSweb_logo='default_new';}
 
 if ($SSadmin_screen_colors != 'default')
 	{
@@ -4305,9 +4310,15 @@ if (
 		$allowed_campaigns_sql = "'$allowed_campaigns_sql'";
 		}
 
+	if (strlen($allowed_campaigns_sql)<3) 
+		{
+		echo "<BR>"._QXZ("ERROR: You can't use this tool as your user group is not allowed to access any campaigns"); 
+		exit;
+		}
+
 	# figure out which lists they are allowed to see
-	$activeSQL = "and active = 'N'";
-	if ($SSallow_manage_active_lists > 0) {$activeSQL = '';}
+	$activeSQL = "and active = 'N'"; $activeSQL_msg = "be inactive, and";
+	if ($SSallow_manage_active_lists > 0) {$activeSQL = ''; $activeSQL_msg = "";}
 	$lists_stmt = "SELECT list_id, list_name FROM vicidial_lists WHERE campaign_id IN ($allowed_campaigns_sql) $activeSQL ORDER BY list_id";
 	if ($DB) { echo "|$lists_stmt|\n"; }
 	$lists_rslt = mysql_to_mysqli($lists_stmt, $link);
@@ -4346,6 +4357,12 @@ if (
 		$i++;
 		}
 
+	if ($allowed_lists_count==0)
+		{
+		echo "<BR>"._QXZ("You can't use this tool as your user group does not have access to any valid lists.  A valid list must $activeSQL_msg have less than $list_lead_limit leads in it.");
+		exit;
+		}
+	
 	# figure out which statuses are in the lists they are allowed to look at
 	$status_stmt = "SELECT DISTINCT status FROM vicidial_list WHERE list_id IN ( $allowed_lists_sql ) ORDER BY status";
 	if ($DB) { echo "|$status_stmt|\n"; }
@@ -4841,6 +4858,7 @@ if (
 	echo "</body></html>\n";
 	}
 
+$ENDtime=date("U"); $RUNtime = ($ENDtime - $STARTtime);
 echo "</td></tr></table>\n";
 echo "<br><center><FONT STYLE=\"font-family:HELVETICA;font-size:9;color:black;\"><br><br><!-- RUNTIME: $RUNtime seconds<BR> -->";
 echo _QXZ("VERSION").": $version &nbsp; &nbsp; ";
