@@ -225,10 +225,12 @@
 # 250516-1047 - Changed ksort to uksort so array sorting by key is alphabetic, case-INsensitive
 # 250620-1007 - Added apinewlead_url requests for add_lead when new leads are inserted
 # 250720-1841 - Added hopper_bulk_insert function
+# 251205-1456 - Added ADAPT_PERCENTMAX dial_method
+# 260123-1020 - pause_sec fix in agent_stats_export
 #
 
 $version = '2.14-202';
-$build = '250720-1841';
+$build = '251205-1456';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 $camp_lead_order_random=1;
@@ -8918,7 +8920,7 @@ if ($function == 'update_campaign')
 						}
 					if (strlen($dial_method) > 0)
 						{
-						if (preg_match("/^MANUAL$|^RATIO$|^INBOUND_MAN$|^ADAPT_AVERAGE$|^ADAPT_HARD_LIMIT$|^ADAPT_TAPERED$/",$dial_method))
+						if (preg_match("/^MANUAL$|^RATIO$|^INBOUND_MAN$|^ADAPT_AVERAGE$|^ADAPT_HARD_LIMIT$|^ADAPT_TAPERED$|^ADAPT_PERCENTMAX$|^SHARED_RATIO$|^SHARED_ADAPT_AVERAGE$|^SHARED_ADAPT_HARD_LIMIT$|^SHARED_ADAPT_TAPERED$|^SHARED_ADAPT_PERCENTMAX$/",$dial_method))
 							{$dialmethodSQL = " ,dial_method='$dial_method'";}
 						else
 							{
@@ -12441,6 +12443,7 @@ if ($function == 'agent_stats_export')
 							$talk_sec = 0;
 							$dead_sec = 0;
 							$dispo_sec = 0;
+							$pause_sec = 0;
 							}
 						else
 							{
@@ -12449,6 +12452,7 @@ if ($function == 'agent_stats_export')
 							$talk_sec = $AStalk_sec[$k];
 							$dead_sec = $ASdead_sec[$k];
 							$dispo_sec = $ASdispo_sec[$k];
+							$pause_sec = $ASpause_sec[$k];
 							}
 						$avg_session_sec = round($avg_session_sec);
 						$avg_pause_sec = round($avg_pause_sec);
@@ -12465,16 +12469,17 @@ if ($function == 'agent_stats_export')
 						$talk_sec =			sec_convert($talk_sec,$time_format);
 						$dead_sec =			sec_convert($dead_sec,$time_format);
 						$dispo_sec =		sec_convert($dispo_sec,$time_format);
+						$pause_sec = 		sec_convert($pause_sec,$time_format);
 						$avg_cust_sec =		sec_convert($avg_cust_sec,$time_format);
 						$avg_wait_sec =		sec_convert($avg_wait_sec,$time_format);
 
 						if ($group_by_campaign == 'YES')
 							{
-							$output .= "$AScampaign[$k]$DL$ASuser[$k]$DL$ASfull_name[$k]$DL$ASuser_group[$k]$DL$AScalls[$k]$DL$login_sec$DL$cust_sec$DL$avg_cust_sec$DL$avg_wait_sec$DL$pct_of_queue%$DL$ASpause_sec[$k]$DL$ASsessions[$k]$DL$avg_session_sec$DL$ASpauses[$k]$DL$avg_pause_sec$DL$pct_pause%$DL$avg_pause_session$DL$wait_sec$DL$talk_sec$DL$dispo_sec$DL$dead_sec\n";
+							$output .= "$AScampaign[$k]$DL$ASuser[$k]$DL$ASfull_name[$k]$DL$ASuser_group[$k]$DL$AScalls[$k]$DL$login_sec$DL$cust_sec$DL$avg_cust_sec$DL$avg_wait_sec$DL$pct_of_queue%$DL$pause_sec$DL$ASsessions[$k]$DL$avg_session_sec$DL$ASpauses[$k]$DL$avg_pause_sec$DL$pct_pause%$DL$avg_pause_session$DL$wait_sec$DL$talk_sec$DL$dispo_sec$DL$dead_sec\n";
 							}
 						else
 							{
-							$output .= "$ASuser[$k]$DL$ASfull_name[$k]$DL$ASuser_group[$k]$DL$AScalls[$k]$DL$login_sec$DL$cust_sec$DL$avg_cust_sec$DL$avg_wait_sec$DL$pct_of_queue%$DL$ASpause_sec[$k]$DL$ASsessions[$k]$DL$avg_session_sec$DL$ASpauses[$k]$DL$avg_pause_sec$DL$pct_pause%$DL$avg_pause_session$DL$wait_sec$DL$talk_sec$DL$dispo_sec$DL$dead_sec\n";
+							$output .= "$ASuser[$k]$DL$ASfull_name[$k]$DL$ASuser_group[$k]$DL$AScalls[$k]$DL$login_sec$DL$cust_sec$DL$avg_cust_sec$DL$avg_wait_sec$DL$pct_of_queue%$DL$pause_sec$DL$ASsessions[$k]$DL$avg_session_sec$DL$ASpauses[$k]$DL$avg_pause_sec$DL$pct_pause%$DL$avg_pause_session$DL$wait_sec$DL$talk_sec$DL$dispo_sec$DL$dead_sec\n";
 							}
 						$k++;
 						}

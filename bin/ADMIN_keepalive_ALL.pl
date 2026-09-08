@@ -15,7 +15,7 @@
 #  - Auto reset lists at defined times
 #  - Auto restarts Asterisk process if enabled in servers settings
 #
-# Copyright (C) 2025  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2026  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 61011-1348 - First build
@@ -178,9 +178,12 @@
 # 251006-0832 - Added truncating of vicidial_dtmf_log older than 24 hours & If recording_dtmf_muting enabled, force use of MixMonitor for recording
 # 251011-1000 - Added archiving of recording_dtmf_muting_log, disabled purging of recording_live_log after 7 days
 # 251024-2222 - Added crashed table detection
+# 260126-1334 - Added check of reserved_extensions against dialplan numbers when building conf files
+# 260327-0846 - Added check of empty phone dialplan extensions when building conf files
+# 260402-1440 - Added reset of vicidial_max_inbound_cache table entries
 #
 
-$build = '251024-2222';
+$build = '260402-1440';
 
 $DB=0; # Debug flag
 $teodDB=0; # flag to log Timeclock End of Day processes to log file
@@ -194,6 +197,10 @@ $autodial_delay='';
 $adfill_delay='';
 $fill_staggered='';
 $recmon=0;
+$reserved_exten_skip=0;
+$reserved_exten_message='';
+$reserved_extensions = '8159,8160,8161,8162,8163,8164,8165,8166,8167,8168,8169,8300,8301,8302,8303,8304,8305,8306,8307,8308,8309,8310,8320,8352,8364,8365,8366,8367,8368,8369,8370,8371,8372,8373,8374,8375,8376,8377,8378,8379,8380,8381,8382,8383,8384,8385,8386,8387,8388,8389,8390,8391,8392,8393,8394,8395,8396,8397,8398,8399,8500,8501,138300,138301,138302,138303,138304,138305,138306,138307,138308,138309,138310,138311,138312,138313,138314,138315,138316,138317,138318,138319,138320,138321,138322,138323,138324,138325,138326,138327,138328,138329,138330,138331,138332,138333,138334,138335,138336,138337,138338,138339,138340,138341,138342,138343,138344,138345,138346,138347,138348,138349,138350,138351,138352,138353,138354,138355,138356,138357,138358,138359,138360,138361,138362,138363,138364,138365,138366,138367,138368,138369,138370,138371,138372,138373,138374,138375,138376,138377,138378,138379,138380,138381,138382,138383,138384,138385,138386,138387,138388,138389,138390,138391,138392,138393,138394,138395,138396,138397,138398,138399';
+$reserved_extensions = ",$reserved_extensions,";
 
 # time variable definitions
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
@@ -503,7 +510,7 @@ $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VA
 
 
 ##### Get the settings from system_settings #####
-$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats,enable_auto_reports,enable_drop_lists,expired_lists_inactive,sip_event_logging,call_quota_lead_ranking,inbound_answer_config,log_latency_gaps,demographic_quotas,weekday_resets,highest_lead_id,hopper_hold_inserts,stereo_recording,stereo_parallel_recording,recording_dtmf_muting,db_crashed_tables_check FROM system_settings;";
+$stmtA = "SELECT sounds_central_control_active,active_voicemail_server,custom_dialplan_entry,default_codecs,generate_cross_server_exten,voicemail_timezones,default_voicemail_timezone,call_menu_qualify_enabled,allow_voicemail_greeting,reload_timestamp,meetme_enter_login_filename,meetme_enter_leave3way_filename,allow_chats,enable_auto_reports,enable_drop_lists,expired_lists_inactive,sip_event_logging,call_quota_lead_ranking,inbound_answer_config,log_latency_gaps,demographic_quotas,weekday_resets,highest_lead_id,hopper_hold_inserts,stereo_recording,stereo_parallel_recording,recording_dtmf_muting,db_crashed_tables_check,max_inbound_auto_reenable FROM system_settings;";
 #	print "$stmtA\n";
 $sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 $sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -539,6 +546,7 @@ if ($sthArows > 0)
 	$SSstereo_parallel_recording =		$aryA[25];
 	$SSrecording_dtmf_muting =			$aryA[26];
 	$SSdb_crashed_tables_check =		$aryA[27];
+	$SSmax_inbound_auto_reenable =		$aryA[28];
 	}
 $sthA->finish();
 if ($DBXXX > 0) {print "SYSTEM SETTINGS:     $sounds_central_control_active|$active_voicemail_server|$SScustom_dialplan_entry|$SSdefault_codecs\n";}
@@ -1527,6 +1535,30 @@ if ($timeclock_end_of_day_NOW > 0)
 		if ($teodDB) {$event_string = "vicidial_long_extensions records reset: $affected_rows";   &teod_logger;}
 
 		$stmtA = "optimize table vicidial_long_extensions;";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		@aryA = $sthA->fetchrow_array;
+		if ($DB) {print "|",$aryA[0],"|",$aryA[1],"|",$aryA[2],"|",$aryA[3],"|","\n";}
+		$sthA->finish();
+
+		if ($SSmax_inbound_auto_reenable >= 2) 
+			{
+			$stmtA = "UPDATE vicidial_max_inbound_cache SET status='OLD',notes=CONCAT(notes,'|TCEOD') WHERE status='NEW' and event_date >= \"$RMSQLdate\" and event_date < \"$FMSQLdate\";";
+			if($DBX){print STDERR "\n|$stmtA|\n";}
+			$affected_rows = $dbhA->do($stmtA);
+			if($DB){print STDERR "\n|$affected_rows vicidial_max_inbound_cache records archived|\n";}
+			if ($teodDB) {$event_string = "vicidial_max_inbound_cache records archived: $affected_rows";   &teod_logger;}
+			}
+
+		$stmtA = "delete from vicidial_max_inbound_cache where event_date < \"$RMSQLdate\";";
+		if($DBX){print STDERR "\n|$stmtA|\n";}
+		$affected_rows = $dbhA->do($stmtA);
+		if($DB){print STDERR "\n|$affected_rows vicidial_max_inbound_cache records deleted|\n";}
+		if ($teodDB) {$event_string = "vicidial_max_inbound_cache records deleted: $affected_rows";   &teod_logger;}
+
+		$stmtA = "optimize table vicidial_max_inbound_cache;";
 		if($DBX){print STDERR "\n|$stmtA|\n";}
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -3916,35 +3948,59 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			if (length($mohsuggest[$i]) > 0)
 				{$Piax .= "mohsuggest=$mohsuggest[$i]\n";}
 			}
-		%ast_ver_str = parse_asterisk_version($asterisk_version);
-		if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+		### check against $reserved_extensions before building dialplan entry for this phone
+		$tempdp = $dialplan[$i];
+		if ( ($reserved_extensions =~ /,$tempdp,/) || (length($tempdp) < 1) )
 			{
-			$Pext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i]|$phone_ring_timeout[$i]|)\n";
-			}
-		else
-			{
-			$Pext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i],$phone_ring_timeout[$i],)\n";
-			}
-		if (length($unavail_dialplan_fwd_exten[$i]) > 0) 
-			{
-			if (length($unavail_dialplan_fwd_context[$i]) < 1) 
-				{$unavail_dialplan_fwd_context[$i] = 'default';}
-			$Pext .= "exten => $dialplan[$i],2,Goto($unavail_dialplan_fwd_context[$i],$unavail_dialplan_fwd_exten[$i],1)\n";
-			}
-		else
-			{
-			if ($voicemail_instructions[$i] =~ /Y/)
+			if (length($tempdp) < 1) 
 				{
-				$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
+				# empty extension found, do not build dialplan, collect data for error to populate in admin log
+				$reserved_exten_skip++;
+				$reserved_exten_message .= "EMPTY EXTEN IAX SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";
+				if ($DBX) {print "EMPTY EXTEN IAX SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";}
+				$Pext .= "; EMPTY EXTEN IAX SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";
 				}
 			else
 				{
-				$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666667$voicemail[$i],1)\n";
+				# reserved_extensions match, do not build dialplan, collect data for error to populate in admin log
+				$reserved_exten_skip++;
+				$reserved_exten_message .= "RESERVED MATCH IAX SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";
+				if ($DBX) {print "RESERVED MATCH IAX SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";}
+				$Pext .= "; RESERVED MATCH IAX SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";
 				}
 			}
-		if (!(( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6)))
+		else
 			{
-			$Pext .= "exten => $dialplan[$i],3,Hangup()\n";
+			%ast_ver_str = parse_asterisk_version($asterisk_version);
+			if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+				{
+				$Pext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i]|$phone_ring_timeout[$i]|)\n";
+				}
+			else
+				{
+				$Pext .= "exten => $dialplan[$i],1,Dial(IAX2/$extension[$i],$phone_ring_timeout[$i],)\n";
+				}
+			if (length($unavail_dialplan_fwd_exten[$i]) > 0) 
+				{
+				if (length($unavail_dialplan_fwd_context[$i]) < 1) 
+					{$unavail_dialplan_fwd_context[$i] = 'default';}
+				$Pext .= "exten => $dialplan[$i],2,Goto($unavail_dialplan_fwd_context[$i],$unavail_dialplan_fwd_exten[$i],1)\n";
+				}
+			else
+				{
+				if ($voicemail_instructions[$i] =~ /Y/)
+					{
+					$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
+					}
+				else
+					{
+					$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666667$voicemail[$i],1)\n";
+					}
+				}
+			if (!(( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6)))
+				{
+				$Pext .= "exten => $dialplan[$i],3,Hangup()\n";
+				}
 			}
 
 		if ($delete_vm_after_email[$i] =~ /Y/)
@@ -4081,35 +4137,59 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			if (length($mohsuggest[$i]) > 0)
 				{$Psip .= "mohsuggest=$mohsuggest[$i]\n";}
 			}
-		%ast_ver_str = parse_asterisk_version($asterisk_version);
-		if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+		### check against $reserved_extensions before building dialplan entry for this phone
+		$tempdp = $dialplan[$i];
+		if ( ($reserved_extensions =~ /,$tempdp,/) || (length($tempdp) < 1) )
 			{
-			$Pext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i]|$phone_ring_timeout[$i]|)\n";
-			}
-		else
-			{
-			$Pext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i],$phone_ring_timeout[$i],)\n";
-			}
-		if (length($unavail_dialplan_fwd_exten[$i]) > 0) 
-			{
-			if (length($unavail_dialplan_fwd_context[$i]) < 1) 
-				{$unavail_dialplan_fwd_context[$i] = 'default';}
-			$Pext .= "exten => $dialplan[$i],2,Goto($unavail_dialplan_fwd_context[$i],$unavail_dialplan_fwd_exten[$i],1)\n";
-			}
-		else
-			{
-			if ($voicemail_instructions[$i] =~ /Y/)
+			if (length($tempdp) < 1) 
 				{
-				$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
+				# empty extension found, do not build dialplan, collect data for error to populate in admin log
+				$reserved_exten_skip++;
+				$reserved_exten_message .= "EMPTY EXTEN SIP SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";
+				if ($DBX) {print "EMPTY EXTEN SIP SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";}
+				$Pext .= "; EMPTY EXTEN SIP SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";
 				}
 			else
 				{
-				$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666667$voicemail[$i],1)\n";
+				# $reserved_extensions match, do not build dialplan, collect data for error to populate in admin log
+				$reserved_exten_skip++;
+				$reserved_exten_message .= "RESERVED MATCH SIP SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";
+				if ($DBX) {print "RESERVED MATCH SIP SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";}
+				$Pext .= "; RESERVED MATCH SIP SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";
 				}
 			}
-		if (!(( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6)))
+		else
 			{
-			$Pext .= "exten => $dialplan[$i],3,Hangup()\n";
+			%ast_ver_str = parse_asterisk_version($asterisk_version);
+			if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+				{
+				$Pext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i]|$phone_ring_timeout[$i]|)\n";
+				}
+			else
+				{
+				$Pext .= "exten => $dialplan[$i],1,Dial(SIP/$extension[$i],$phone_ring_timeout[$i],)\n";
+				}
+			if (length($unavail_dialplan_fwd_exten[$i]) > 0) 
+				{
+				if (length($unavail_dialplan_fwd_context[$i]) < 1) 
+					{$unavail_dialplan_fwd_context[$i] = 'default';}
+				$Pext .= "exten => $dialplan[$i],2,Goto($unavail_dialplan_fwd_context[$i],$unavail_dialplan_fwd_exten[$i],1)\n";
+				}
+			else
+				{
+				if ($voicemail_instructions[$i] =~ /Y/)
+					{
+					$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
+					}
+				else
+					{
+					$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666667$voicemail[$i],1)\n";
+					}
+				}
+			if (!(( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6)))
+				{
+				$Pext .= "exten => $dialplan[$i],3,Hangup()\n";
+				}
 			}
 
 		if ($delete_vm_after_email[$i] =~ /Y/)
@@ -4273,35 +4353,59 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			}
 			
 		### Dialplan generation :
-		%ast_ver_str = parse_asterisk_version($asterisk_version);
-		if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+		### check against $reserved_extensions before building dialplan entry for this phone
+		$tempdp = $dialplan[$i];
+		if ( ($reserved_extensions =~ /,$tempdp,/) || (length($tempdp) < 1) )
 			{
-			$Pext .= "exten => $dialplan[$i],1,Dial(PJSIP/$extension[$i]|$phone_ring_timeout[$i]|)\n";
-			}
-		else
-			{
-			$Pext .= "exten => $dialplan[$i],1,Dial(PJSIP/$extension[$i],$phone_ring_timeout[$i],)\n";
-			}
-		if (length($unavail_dialplan_fwd_exten[$i]) > 0) 
-			{
-			if (length($unavail_dialplan_fwd_context[$i]) < 1) 
-				{$unavail_dialplan_fwd_context[$i] = 'default';}
-			$Pext .= "exten => $dialplan[$i],2,Goto($unavail_dialplan_fwd_context[$i],$unavail_dialplan_fwd_exten[$i],1)\n";
-			}
-		else
-			{
-			if ($voicemail_instructions[$i] =~ /Y/)
+			if (length($tempdp) < 1) 
 				{
-				$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
+				# empty extension found, do not build dialplan, collect data for error to populate in admin log
+				$reserved_exten_skip++;
+				$reserved_exten_message .= "EMPTY EXTEN PJSIP SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";
+				if ($DBX) {print "EMPTY EXTEN PJSIP SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";}
+				$Pext .= "; EMPTY EXTEN PJSIP SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";
 				}
 			else
 				{
-				$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666667$voicemail[$i],1)\n";
+				# $reserved_extensions match, do not build dialplan, collect data for error to populate in admin log
+				$reserved_exten_skip++;
+				$reserved_exten_message .= "RESERVED MATCH PJSIP SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";
+				if ($DBX) {print "RESERVED MATCH PJSIP SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";}
+				$Pext .= "; RESERVED MATCH PJSIP SKIP!   dialplan: $dialplan[$i] phone: $extension[$i] server: $server_ip\n";
 				}
 			}
-		if (!(( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6)))
+		else
 			{
-			$Pext .= "exten => $dialplan[$i],3,Hangup()\n";
+			%ast_ver_str = parse_asterisk_version($asterisk_version);
+			if (( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6))
+				{
+				$Pext .= "exten => $dialplan[$i],1,Dial(PJSIP/$extension[$i]|$phone_ring_timeout[$i]|)\n";
+				}
+			else
+				{
+				$Pext .= "exten => $dialplan[$i],1,Dial(PJSIP/$extension[$i],$phone_ring_timeout[$i],)\n";
+				}
+			if (length($unavail_dialplan_fwd_exten[$i]) > 0) 
+				{
+				if (length($unavail_dialplan_fwd_context[$i]) < 1) 
+					{$unavail_dialplan_fwd_context[$i] = 'default';}
+				$Pext .= "exten => $dialplan[$i],2,Goto($unavail_dialplan_fwd_context[$i],$unavail_dialplan_fwd_exten[$i],1)\n";
+				}
+			else
+				{
+				if ($voicemail_instructions[$i] =~ /Y/)
+					{
+					$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666666$voicemail[$i],1)\n";
+					}
+				else
+					{
+					$Pext .= "exten => $dialplan[$i],2,Goto(default,85026666666667$voicemail[$i],1)\n";
+					}
+				}
+			if (!(( $ast_ver_str{major} = 1 ) && ($ast_ver_str{minor} < 6)))
+				{
+				$Pext .= "exten => $dialplan[$i],3,Hangup()\n";
+				}
 			}
 
 		### VM generation
@@ -4349,9 +4453,32 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 				$d = leading_zero($4);
 				$CXVARremDIALstr = "$a$S$b$S$c$S$d$S";
 				}
-			$Pext .= "; Remote Phone Entry $i: $CXextension[$i] $CXserver_ip[$i] $CXfullname[$i]\n";
-			$Pext .= "exten => $CXdialplan[$i],1,Goto(default,$CXVARremDIALstr$CXdialplan[$i],1)\n";
-
+			### check against $reserved_extensions before building dialplan entry for this phone
+			$tempdp = $CXdialplan[$i];
+			if ( ($reserved_extensions =~ /,$tempdp,/) || (length($tempdp) < 1) )
+				{
+				if (length($tempdp) < 1) 
+					{
+					# empty extension found, do not build dialplan, collect data for error to populate in admin log
+					$reserved_exten_skip++;
+					$reserved_exten_message .= "EMPTY EXTEN CX SKIP!   dialplan: $CXdialplan[$i] phone: $CXextension[$i] server: $CXserver_ip[$i]\n";
+					if ($DBX) {print "EMPTY EXTEN CX SKIP!   dialplan: $CXdialplan[$i] phone: $CXextension[$i] server: $CXserver_ip[$i]\n";}
+					$Pext .= "; EMPTY EXTEN CX SKIP!   dialplan: $CXdialplan[$i] phone: $CXextension[$i] server: $CXserver_ip[$i]\n";
+					}
+				else
+					{
+					# $reserved_extensions match, do not build dialplan, collect data for error to populate in admin log
+					$reserved_exten_skip++;
+					$reserved_exten_message .= "RESERVED MATCH CX SKIP!   dialplan: $CXdialplan[$i] phone: $CXextension[$i] server: $CXserver_ip[$i]\n";
+					if ($DBX) {print "RESERVED MATCH CX SKIP!   dialplan: $CXdialplan[$i] phone: $CXextension[$i] server: $CXserver_ip[$i]\n";}
+					$Pext .= "; RESERVED MATCH CX SKIP!   dialplan: $CXdialplan[$i] phone: $CXextension[$i] server: $CXserver_ip[$i]\n";
+					}
+				}
+			else
+				{
+				$Pext .= "; Remote Phone Entry $i: $CXextension[$i] $CXserver_ip[$i] $CXfullname[$i]\n";
+				$Pext .= "exten => $CXdialplan[$i],1,Goto(default,$CXVARremDIALstr$CXdialplan[$i],1)\n";
+				}
 			$i++;
 			}
 		##### END Generate the CROSS SERVER IAX and SIP phone entries #####
@@ -5500,6 +5627,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			`screen -XS asterisk eval 'stuff "extensions reload\015"'`;
 			if ($DB) {print "extensions reload\n";}
 			sleep(1);
+			if ($reserved_exten_skip > 0) 
+				{
+				# log reserved_extensions skips to the admin log
+				if ($DB) {print "reserved_extensions skips being logged...\n";}
+				$stmtA="INSERT INTO vicidial_admin_log set event_date=NOW(), user='VDAD', ip_address='1.1.1.1', event_section='SERVERS', event_type='OTHER', record_id='$server_ip', event_code='RESTRICTED DIALPLAN SKIPS', event_sql='', event_notes='$reserved_exten_skip skips: $reserved_exten_message';";
+				$Iaffected_rows = $dbhA->do($stmtA);
+				if ($DBX) {print "reserved_extensions skips debug 1: |$reserved_exten_skip skips: $reserved_exten_message|\n";}
+				}
 			}
 		if ($sipCMP > 0)
 			{
@@ -5545,6 +5680,14 @@ if ( ($active_asterisk_server =~ /Y/) && ($generate_vicidial_conf =~ /Y/) && ($r
 			`screen -XS asterisk eval 'stuff "dialplan reload\015"'`;
 			if ($DB) {print "dialplan reload\n";}
 			sleep(1);
+			if ($reserved_exten_skip > 0) 
+				{
+				# log reserved_extensions skips to the admin log
+				if ($DB) {print "reserved_extensions skips being logged...\n";}
+				$stmtA="INSERT INTO vicidial_admin_log set event_date=NOW(), user='VDAD', ip_address='1.1.1.1', event_section='SERVERS', event_type='OTHER', record_id='$server_ip', event_code='RESTRICTED DIALPLAN SKIPS', event_sql='', event_notes='$reserved_exten_skip skips: $reserved_exten_message';";
+				$Iaffected_rows = $dbhA->do($stmtA);
+				if ($DBX) {print "reserved_extensions skips debug 1: |$reserved_exten_skip skips: $reserved_exten_message|\n";}
+				}
 			}
 		if ($sipCMP > 0)
 			{

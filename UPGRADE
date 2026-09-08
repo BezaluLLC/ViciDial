@@ -894,6 +894,14 @@ OTHER CHANGES:
 	for level 9 users if crashed tables are found. Enabled by default, 
 	configurable in the System Settings.
 
+255. Added ADAPT_PERCENTMAX Dial Method campaign option.
+
+256. Added In-Group "Transfer Talk Minimum" features, allowing for restruction
+	on agent screen transfers before talk time threshold.
+
+257. Added Web Lead Loader feature to auto-detect custom column layouts in lead
+	files, as well as new load loading process rejection summaries
+
 
 
 

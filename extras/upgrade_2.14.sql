@@ -1368,7 +1368,7 @@ UPDATE system_settings SET db_schema_version='1613',db_schema_update_date=NOW() 
 ALTER TABLE system_settings ADD allow_shared_dial ENUM('0','1','2','3','4','5','6') default '0';
 
 ALTER TABLE vicidial_campaigns ADD shared_dial_rank TINYINT(3) default '99';
-ALTER TABLE vicidial_campaigns MODIFY dial_method ENUM('MANUAL','RATIO','ADAPT_HARD_LIMIT','ADAPT_TAPERED','ADAPT_AVERAGE','INBOUND_MAN','SHARED_RATIO','SHARED_ADAPT_HARD_LIMIT','SHARED_ADAPT_TAPERED','SHARED_ADAPT_AVERAGE') default 'MANUAL';
+ALTER TABLE vicidial_campaigns MODIFY dial_method ENUM('MANUAL','RATIO','ADAPT_HARD_LIMIT','ADAPT_TAPERED','ADAPT_AVERAGE','ADAPT_PERCENTMAX','INBOUND_MAN','SHARED_RATIO','SHARED_ADAPT_HARD_LIMIT','SHARED_ADAPT_TAPERED','SHARED_ADAPT_AVERAGE','SHARED_ADAPT_PERCENTMAX') default 'MANUAL';
 
 ALTER TABLE vicidial_live_agents ADD dial_campaign_id VARCHAR(8) default '';
 
@@ -3040,3 +3040,55 @@ last_check_datetime DATETIME
 ALTER TABLE system_settings ADD db_crashed_tables_check ENUM('0','1','2','3','4','5','6') default '1';
 
 UPDATE system_settings SET db_schema_version='1733',db_schema_update_date=NOW() where db_schema_version < 1733;
+
+ALTER TABLE vicidial_inbound_dids ADD alter_cid_name VARCHAR(40) default 'DISABLED';
+
+UPDATE system_settings SET db_schema_version='1734',db_schema_update_date=NOW() where db_schema_version < 1734;
+
+ALTER TABLE vicidial_campaigns MODIFY dial_method ENUM('MANUAL','RATIO','ADAPT_HARD_LIMIT','ADAPT_TAPERED','ADAPT_AVERAGE','ADAPT_PERCENTMAX','INBOUND_MAN','SHARED_RATIO','SHARED_ADAPT_HARD_LIMIT','SHARED_ADAPT_TAPERED','SHARED_ADAPT_AVERAGE','SHARED_ADAPT_PERCENTMAX') default 'MANUAL';
+
+ALTER TABLE vicidial_campaigns ADD adaptive_percentmax_percentage TINYINT(2) UNSIGNED default '50';
+
+UPDATE system_settings SET db_schema_version='1735',db_schema_update_date=NOW() where db_schema_version < 1735;
+
+INSERT IGNORE INTO vicidial_status_categories (vsc_id,vsc_name,vsc_description) values('QC','QC-specific status','Quality control specific statuses');
+
+UPDATE system_settings SET db_schema_version='1736',db_schema_update_date=NOW() where db_schema_version < 1736;
+
+ALTER TABLE system_settings ADD xfer_min_container VARCHAR(40) default '';
+
+ALTER TABLE vicidial_inbound_groups ADD xfer_talk_minimum ENUM('DISABLED','ENABLED') default 'DISABLED';
+ALTER TABLE vicidial_inbound_groups ADD xfer_talk_minimum_sec SMALLINT(5) UNSIGNED default '0';
+
+UPDATE system_settings SET db_schema_version='1737',db_schema_update_date=NOW() where db_schema_version < 1737;
+
+ALTER TABLE vicidial_campaigns ADD hangup_again_link ENUM('DISABLED','ENABLED') default 'ENABLED';
+
+UPDATE system_settings SET db_schema_version='1738',db_schema_update_date=NOW() where db_schema_version < 1738;
+
+CREATE TABLE vicidial_max_inbound_cache (
+user VARCHAR(20),
+campaign_id VARCHAR(20),
+event_date DATETIME,
+blended ENUM('1','0') default '0',
+closer_campaigns TEXT,
+max_inbound_count MEDIUMINT(7) default '0',
+call_count_today MEDIUMINT(7) default '0',
+status VARCHAR(20) default '',
+notes VARCHAR(100) default '',
+index (user),
+index (event_date),
+index (status)
+) ENGINE=MyISAM;
+
+ALTER TABLE system_settings ADD max_inbound_auto_reenable ENUM('0','1','2','3','4','5','6') default '1';
+
+UPDATE system_settings SET db_schema_version='1739',db_schema_update_date=NOW() where db_schema_version < 1739;
+
+INSERT INTO vicidial_settings_containers(container_id,container_notes,container_type,user_group,container_entry) VALUES ('LISTLOADER_AUTO_MAPPING', 'Contains aliases for auto-mapping fields in listloader', 'OTHER', '---ALL---', '; Use this to auto-map fields in the listloader when you attempt to load\r\n; a file. This will populate the \'File data\' dropdown menus \r\n; You may define additional aliases by adding them to the below list.\r\n; They must be of the form \"alias => vicidial_field\". One per line.\r\n; The \"vicidial_field\" value must match the name of a column in the\r\n; vicidial_list table\r\n\r\n\'phone\' => \'phonenumber\'\r\n\'phoneno\' => \'phonenumber\'\r\n\'phone1\' => \'phonenumber\'\r\n\'primaryphone\' => \'phonenumber\'\r\n\'mainphone\' => \'phonenumber\'\r\n\'telephone\' => \'phonenumber\'\r\n\'tel\' => \'phonenumber\'\r\n\'cell\' => \'phonenumber\'\r\n\'cellphone\' => \'phonenumber\'\r\n\'mobile\' => \'phonenumber\'\r\n\'mobilephone\' => \'phonenumber\'\r\n\'workphone\' => \'phonenumber\'\r\n\'homephone\' => \'phonenumber\'\r\n\'fname\' => \'firstname\'\r\n\'first\' => \'firstname\'\r\n\'givenname\' => \'firstname\'\r\n\'lname\' => \'lastname\'\r\n\'last\' => \'lastname\'\r\n\'surname\' => \'lastname\'\r\n\'familyname\' => \'lastname\'\r\n\'mi\' => \'middleinitial\'\r\n\'middle\' => \'middleinitial\'\r\n\'middlename\' => \'middleinitial\'\r\n\'minit\' => \'middleinitial\'\r\n\'addr\' => \'address1\'\r\n\'addr1\' => \'address1\'\r\n\'street\' => \'address1\'\r\n\'streetaddress\' => \'address1\'\r\n\'address\' => \'address1\'\r\n\'addr2\' => \'address2\'\r\n\'street2\' => \'address2\'\r\n\'suite\' => \'address2\'\r\n\'apt\' => \'address2\'\r\n\'apartment\' => \'address2\'\r\n\'unit\' => \'address2\'\r\n\'addr3\' => \'address3\'\r\n\'zip\' => \'postalcode\'\r\n\'zipcode\' => \'postalcode\'\r\n\'postcode\' => \'postalcode\'\r\n\'postalzip\' => \'postalcode\'\r\n\'st\' => \'state\'\r\n\'stateprovince\' => \'state\'\r\n\'region\' => \'state\'\r\n\'prov\' => \'province\'\r\n\'country\' => \'countrycode\'\r\n\'countrycd\' => \'countrycode\'\r\n\'cc\' => \'countrycode\'\r\n\'sex\' => \'gender\'\r\n\'dob\' => \'dateofbirth\'\r\n\'birthday\' => \'dateofbirth\'\r\n\'birthdate\' => \'dateofbirth\'\r\n\'birth\' => \'dateofbirth\'\r\n\'altphone\' => \'altphone\'\r\n\'phone2\' => \'altphone\'\r\n\'secondaryphone\' => \'altphone\'\r\n\'otherphone\' => \'altphone\'\r\n\'alternatephone\' => \'altphone\'\r\n\'emailaddress\' => \'email\'\r\n\'emailaddr\' => \'email\'\r\n\'mail\' => \'email\'\r\n\'note\' => \'comments\'\r\n\'notes\' => \'comments\'\r\n\'comment\' => \'comments\'\r\n\'remark\' => \'comments\'\r\n\'remarks\' => \'comments\'\r\n\'description\' => \'comments\'\r\n\'vendorcode\' => \'vendorleadcode\'\r\n\'vendorid\' => \'vendorleadcode\'\r\n\'vendorleadid\' => \'vendorleadcode\'\r\n\'leadcode\' => \'vendorleadcode\'\r\n\'externalid\' => \'vendorleadcode\'\r\n\'sourcecode\' => \'sourceid\'\r\n\'source\' => \'sourceid\'\r\n\'leadsource\' => \'sourceid\'\r\n\'listid\' => \'listid\'\r\n\'list\' => \'listid\'\r\n\'phonecode\' => \'phonecode\'\r\n\'dialcode\' => \'phonecode\'\r\n\'countrydialing\' => \'phonecode\'\r\n\'prefix\' => \'title\'\r\n\'salutation\' => \'title\'\r\n\'mr\' => \'title\'\r\n\'securityphrase\' => \'securityphrase\'\r\n\'security\' => \'securityphrase\'\r\n\'pin\' => \'securityphrase\'\r\n\'password\' => \'securityphrase\'\r\n\'priority\' => \'rank\'\r\n\'score\' => \'rank\'\r\n\'weight\' => \'rank\'\r\n\'agent\' => \'owner\'\r\n\'assignedto\' => \'owner\'\r\n\'rep\' => \'owner\'\r\n\'town\' => \'city\'\r\n\r\n\r\n; This is the minimum required score that the header field must return\r\n; when processed with the Levenshtein distance algorithm. Default is 70.\r\n; If you wish to raise or lower it, uncomment the below line and change the \r\n; score value to whatever you wish\r\n; minimum_required_score => 70\r\n');
+
+UPDATE system_settings SET db_schema_version='1740',db_schema_update_date=NOW() where db_schema_version < 1740;
+
+ALTER TABLE vicidial_users ADD modify_settings_containers ENUM('0','1','2','3','4','5','6') default '0';
+
+UPDATE system_settings SET db_schema_version='1741',db_schema_update_date=NOW() where db_schema_version < 1741;
