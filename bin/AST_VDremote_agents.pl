@@ -59,9 +59,12 @@
 # 240420-2246 - Added ConfBridge code
 # 240516-2149 - Allow for ALT start_call_url, added --version flag
 # 260403-2253 - Added vicidial_max_inbound_cache logging
+# 260515-1935 - Added internal logging
+# 260903-1936 - Changed inactive agent and queue-status agents processing to run more often if short --delay is used, added INCALL/QUEUE status no-call check
 #
 
-$build = '260403-2253';
+$build = '260903-1936';
+$script_name = 'AST_VDremote_agents.pl';
 
 ### begin parsing run-time options ###
 if (length($ARGV[0])>1)
@@ -190,6 +193,7 @@ use DBI;
 $dbhA = DBI->connect("DBI:mysql:$VARDB_database:$VARDB_server:$VARDB_port", "$VARDB_user", "$VARDB_pass")
  or die "Couldn't connect to database: " . DBI->errstr;
 
+$action='start';   $stage='LOGGED INTO MYSQL SERVER '.$build;   &internal_logger;
 
 #############################################
 ##### Gather system_settings #####
@@ -252,6 +256,7 @@ if ($run_check > 0)
 
 #$one_day_interval = 12;	# 1 month loops for one year 
 $one_day_interval = 1;		# 1 day
+$iLog_ct=0;
 while($one_day_interval > 0)
 	{
 	#$endless_loop=5760000;		# 30 days minutes at XXX seconds per loop
@@ -262,7 +267,9 @@ while($one_day_interval > 0)
 
 		$VDRLOGfile = "$PATHlogs/remoteagent.$year-$mon-$mday";
 
-		if ($endless_loop =~ /0$|5$/)
+		### Remove inactive remote agents and process QUEUE agents into INCALL status
+		### By default, every 5 loops(10 seconds), or if delay override to 1 second, run this section every 2 seconds
+		if ( ( ($endless_loop =~ /0$|5$/) && ($loop_delay >= 2000) ) || ( ($endless_loop =~ /0$|2$|4$|6$|8$/) && ($loop_delay < 2000) ) )
 			{
 			### Grab Server values from the database
 			$stmtA = "SELECT vd_server_logs FROM servers where server_ip = '$VARserver_ip';";
@@ -559,7 +566,7 @@ while($one_day_interval > 0)
 				$concurrent_calls=0;
 				$incalls_count=0;
 
-				### Get count of concurrent calls for this in-group
+				### Get count of concurrent calls for this user
 				$stmtA = "SELECT count(*) FROM vicidial_live_agents where ra_user='$QHra_user[$w]' and extension LIKE \"R/%\" and status IN('QUEUE','INCALL','DONE');";
 				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
 				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
@@ -678,6 +685,11 @@ while($one_day_interval > 0)
 		@VD_uniqueid=@MT;
 		@VD_callerid=@MT;
 		@VD_random=@MT;
+		@dVD_user=@MT;
+		@dVD_extension=@MT;
+		@dVD_status=@MT;
+		@dVD_campaign_id=@MT;
+		@dVD_random=@MT;
 		@autocallexists=@MT;
 		@calllogfinished=@MT;
 
@@ -1007,8 +1019,8 @@ while($one_day_interval > 0)
 
 
 		###############################################################################
-		###### fourth, validate that the calls that the vicidial_live_agents are on and not dead
-		###### and if they are wipe out the values and set the agent record back to READY
+		###### fourth, validate that the calls that the vicidial_live_agents are on are not dead
+		###### and if they are, wipe out the values and set the agent record back to READY
 		###############################################################################
 		$stmtA = "SELECT user,extension,status,uniqueid,callerid,lead_id,campaign_id,call_server_ip FROM vicidial_live_agents where extension LIKE \"R/%\" and server_ip='$server_ip' and uniqueid > 10;";
 		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
@@ -1060,16 +1072,19 @@ while($one_day_interval > 0)
 				}
 			$sthA->finish();
 			
-			$stmtA = "SELECT queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id='$VD_campaign_id[$z]';";
-			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-			$sthArows=$sthA->rows;
-			if ($sthArows > 0)
+			if ($enable_queuemetrics_logging > 0)
 				{
-				@aryA = $sthA->fetchrow_array;
-				$USER_queuemetrics_phone_environment[$z] =	$aryA[0];
+				$stmtA = "SELECT queuemetrics_phone_environment FROM vicidial_campaigns where campaign_id='$VD_campaign_id[$z]';";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArows=$sthA->rows;
+				if ($sthArows > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$USER_queuemetrics_phone_environment[$z] =	$aryA[0];
+					}
+				$sthA->finish();
 				}
-			$sthA->finish();
 			
 			if ($autocallexists[$z] < 1)
 				{
@@ -1079,10 +1094,12 @@ while($one_day_interval > 0)
 
 				if ($DELusers =~ /R\/$VD_user[$z]\|/)
 					{
-					$stmtA = "UPDATE vicidial_live_agents set random_id='$VD_random[$z]',status='PAUSED', last_call_finish='$SQLdate',lead_id='',uniqueid='',callerid='',channel='',last_state_change='$SQLdate' where user='$VD_user[$z]' and server_ip='$server_ip';";
-					$affected_rows = $dbhA->do($stmtA);
-					if ($DB) {print STDERR "$VD_user[$z] CALL WIPE DELETE UPDATE: $affected_rows|PAUSED|$VD_uniqueid[$z]|$VD_user[$z]|\n";}
-					if ($affected_rows>0) 
+					$newRAstatus='PAUSED';
+					$stmtA = "UPDATE vicidial_live_agents set random_id='$VD_random[$z]',status='$newRAstatus', last_call_finish='$SQLdate',lead_id=0,uniqueid='',callerid='',channel='',last_state_change='$SQLdate' where user='$VD_user[$z]' and server_ip='$server_ip';";
+					$affected_rowsA = $dbhA->do($stmtA);
+					$affected_rowsB=0;
+					if ($DB) {print STDERR "SQLdate - $VD_user[$z] CALL WIPE DELETE UPDATE: $affected_rowsA|$newRAstatus|$VD_uniqueid[$z]| \n";}
+					if ($affected_rowsA>0) 
 						{
 						if ($enable_queuemetrics_logging > 0)
 							{
@@ -1183,14 +1200,15 @@ while($one_day_interval > 0)
 					}
 				else
 					{
-					$stmtA = "UPDATE vicidial_live_agents set random_id='$VD_random[$z]', last_call_finish='$SQLdate',lead_id='',uniqueid='',callerid='',channel='',last_state_change='$SQLdate' where user='$VD_user[$z]' and server_ip='$server_ip';";
-					$affected_rows = $dbhA->do($stmtA);
-					if ($DB) {print STDERR "$VD_user[$z] CALL WIPE UPDATE: $affected_rows|READY|$VD_uniqueid[$z]|$VD_user[$z]|\n";}
+					$newRAstatus='READY';
+					$stmtA = "UPDATE vicidial_live_agents set random_id='$VD_random[$z]', last_call_finish='$SQLdate',lead_id=0,uniqueid='',callerid='',channel='',last_state_change='$SQLdate' where user='$VD_user[$z]' and server_ip='$server_ip';";
+					$affected_rowsA = $dbhA->do($stmtA);
+					if ($DB) {print STDERR "$SQLdate - $VD_user[$z] CALL WIPE UPDATE: $affected_rowsA|$VD_uniqueid[$z]| \n";}
 
-					$stmtA = "UPDATE vicidial_live_agents set status='READY' where user='$VD_user[$z]' and server_ip='$server_ip';";
-					$affected_rows = $dbhA->do($stmtA);
-					if ($DB) {print STDERR "$VD_user[$z] CALL WIPE UPDATE: $affected_rows|READY|$VD_uniqueid[$z]|$VD_user[$z]|\n";}
-					if ($affected_rows>0) 
+					$stmtA = "UPDATE vicidial_live_agents set status='$newRAstatus' where user='$VD_user[$z]' and server_ip='$server_ip';";
+					$affected_rowsB = $dbhA->do($stmtA);
+					if ($DB) {print STDERR "$SQLdate - $VD_user[$z] CALL WIPE STATUS UPDATE: $affected_rowsB|$newRAstatus|$VD_uniqueid[$z]| \n";}
+					if ($affected_rowsB > 0) 
 						{
 						if ($enable_queuemetrics_logging > 0)
 							{
@@ -1212,6 +1230,11 @@ while($one_day_interval > 0)
 							}
 						}
 					}
+				if ( ($affected_rowsA > 0) || ($affected_rowsB > 0) ) 
+					{
+					$event_string = "|     CALL WIPE AGENT UPDATE:  |$affected_rowsA|$affected_rowsB|     |$VD_user[$z]|$VD_callerid[$z]|$VD_uniqueid[$z]|$newRAstatus|";
+					 &event_logger;
+					}
 				}
 	### possible future active call checker
 	#		else
@@ -1230,7 +1253,7 @@ while($one_day_interval > 0)
 	#			$sthA->finish();
 	#			if ($calllogfinished[$z] > 1)
 	#				{
-	#				$stmtA = "UPDATE vicidial_live_agents set random_id='$VD_random[$z]',status='READY', last_call_finish='$SQLdate',lead_id='',uniqueid='',callerid='',channel=''  where user='$VD_user[$z]' and server_ip='$server_ip';";
+	#				$stmtA = "UPDATE vicidial_live_agents set random_id='$VD_random[$z]',status='READY', last_call_finish='$SQLdate',lead_id=0,uniqueid='',callerid='',channel=''  where user='$VD_user[$z]' and server_ip='$server_ip';";
 	#				$affected_rows = $dbhA->do($stmtA);
 	#				if ($DB) {print STDERR "$VD_user[$z] AGENT READY UPDATE: $affected_rows|READY|$VD_uniqueid[$z]|$VD_callerid[$z]|$VD_user[$z]|\n";}
 
@@ -1246,6 +1269,69 @@ while($one_day_interval > 0)
 
 
 		###############################################################################
+		###### fifth, look for vicidial_live_agents remote agents that are INCALL but with no call
+		###### if found, wipe out the values and set the agent record back to READY
+		###############################################################################
+		$stmtA = "SELECT user,extension,status,campaign_id FROM vicidial_live_agents where extension LIKE \"R/%\" and server_ip='$server_ip' and uniqueid='' and callerid='' and lead_id=0 and status IN('INCALL','QUEUE');";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArows=$sthA->rows;
+		$rec_count=0;
+		$z=0;
+		while ($sthArows > $rec_count)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$VDuser =				$aryA[0];
+			$VDextension =			$aryA[1];
+			$VDstatus =				$aryA[2];
+			$VDcampaign_id =		$aryA[3];
+			$VDrandom = int( rand(9999999)) + 10000000;
+
+			$dVD_user[$z] =			$VDuser;
+			$dVD_extension[$z] =	$VDextension;
+			$dVD_status[$z] =		$VDstatus;
+			$dVD_campaign_id[$z] =	$VDcampaign_id;
+			$dVD_random[$z] =		$VDrandom;
+
+			$z++;				
+			$rec_count++;
+			}
+		$sthA->finish();
+		if ($DB) {print STDERR "$z remote agents INCALL/QUEUE with no call \n";}
+
+		$z=0;
+		foreach(@dVD_user) 
+			{
+			if ($DELusers =~ /R\/$dVD_user[$z]\|/)
+				{
+				$newRAstatus='PAUSED';
+				$stmtA = "UPDATE vicidial_live_agents set random_id='$dVD_random[$z]',status='$newRAstatus', last_call_finish='$SQLdate',lead_id=0,uniqueid='',callerid='',channel='',last_state_change='$SQLdate' where user='$dVD_user[$z]' and server_ip='$server_ip';";
+				$affected_rowsA = $dbhA->do($stmtA);
+				if ($DB) {print STDERR "$SQLdate - $dVD_user[$z] RA user NO-CALL WIPE DELETE UPDATE: $affected_rowsA|$newRAstatus|$dVD_extension[$z]|$dVD_user[$z]|\n";}
+				$affected_rowsB=0;
+				}
+			else
+				{
+				$newRAstatus='READY';
+				$stmtA = "UPDATE vicidial_live_agents set random_id='$dVD_random[$z]', last_call_finish='$SQLdate',lead_id=0,uniqueid='',callerid='',channel='',last_state_change='$SQLdate' where user='$dVD_user[$z]' and server_ip='$server_ip';";
+				$affected_rowsA = $dbhA->do($stmtA);
+				if ($DB) {print STDERR "$SQLdate - $dVD_user[$z] RA user NO-CALL WIPE UPDATE: $affected_rowsA|$SQLdate|$dVD_extension[$z]| \n";}
+
+				$stmtA = "UPDATE vicidial_live_agents set status='$newRAstatus' where user='$dVD_user[$z]' and server_ip='$server_ip';";
+				$affected_rowsB = $dbhA->do($stmtA);
+				if ($DB) {print STDERR "$SQLdate - $dVD_user[$z] RA user NO-CALL WIPE STATUS UPDATE: $affected_rowsB|$newRAstatus|$dVD_extension[$z]| \n";}
+				}
+
+			if ( ($affected_rowsA > 0) || ($affected_rowsB > 0) ) 
+				{
+				$event_string = "|     NO-CALL WIPE AGENT UPDATE:  |$affected_rowsA|$affected_rowsB|     |$VD_user[$z]|$dVD_extension[$z]|$newRAstatus|";
+				 &event_logger;
+				}
+			$z++;
+			}
+
+
+		###############################################################################
 		###### last, wait for a little bit and repeat the loop
 		###############################################################################
 
@@ -1253,7 +1339,7 @@ while($one_day_interval > 0)
 		usleep(1*$loop_delay*1000);
 
 		$endless_loop--;
-		if($DB){print STDERR "\nloop counter: |$endless_loop|$one_day_interval|     |$loop_delay|\n";}
+		if($DB){print STDERR "\nloop counter: |$endless_loop|$one_day_interval|$iLog_ct|     |$loop_delay|\n";}
 
 		### putting a blank file called "VDAD.kill" in the directory will automatically safely kill this program
 		if (-e "$PATHhome/VDAD.kill")
@@ -1265,6 +1351,16 @@ while($one_day_interval > 0)
 			}
 
 		$bad_grabber_counter=0;
+
+		# update internal process log
+		$iLog_ct++;
+		if ($iLog_ct =~ /00$/) 
+			{
+			$stmtA = "UPDATE vicidial_internal_log SET up_time=NOW(), action='running', stage='Loops: $iLog_ct' WHERE process='$script_name' and server_ip='$server_ip' order by db_time desc limit 1;";
+			if($DB){print STDERR "|$stmtA|";}
+			my $affected_rows = $dbhA->do($stmtA);
+			if($DB){print STDERR "$affected_rows|\n";}
+			}
 		}
 
 
@@ -1311,8 +1407,6 @@ sub get_time_now	#get the current date and time and epoch for logging call lengt
 	if ($hour < 10) {$hour = "0$hour";}
 	if ($min < 10) {$min = "0$min";}
 
-	if ($DB) {print "TIME DEBUG: $LOCAL_GMT_OFF_STD|$LOCAL_GMT_OFF|$isdst|   GMT: $hour:$min\n";}
-
 	($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 	$year = ($year + 1900);
 	$mon++;
@@ -1329,6 +1423,8 @@ sub get_time_now	#get the current date and time and epoch for logging call lengt
 	$SQLdate = "$year-$mon-$mday $hour:$min:$sec";
 	$filedate = "$year-$mon-$mday";
 	$YMD = "$year-$mon-$mday";
+
+	if ($DB) {print "TIME DEBUG: $LOCAL_GMT_OFF_STD|$LOCAL_GMT_OFF|$isdst|   GMT: $hour:$min   $SQLdate \n";}
 
 	$FDtarget = ($secX + 10);
 	($Fsec,$Fmin,$Fhour,$Fmday,$Fmon,$Fyear,$Fwday,$Fyday,$Fisdst) = localtime($FDtarget);
@@ -1399,6 +1495,15 @@ sub event_logger
 		close(Lout);
 		}
 	$event_string='';
+	}
+
+
+sub internal_logger
+	{
+	$stmtA = "INSERT INTO vicidial_internal_log SET db_time=NOW(), up_time=NOW(), process='$script_name', server_ip='$server_ip', action='$action', stage='$stage';";
+	if($DB){print STDERR "|$stmtA|";}
+	my $affected_rows = $dbhA->do($stmtA);
+	if($DB){print STDERR "$affected_rows|\n";}
 	}
 
 

@@ -758,10 +758,13 @@
 # 260302-0935 - Code updates for PHP8 compatibility
 # 260324-0857 - Added hangup_again_link campaign option
 # 260408-1850 - Added max_inbound_auto_reenable option
+# 260529-0914 - Added AMDnotesBox
+# 260615-0039 - Fix for transfer issue
+# 260731-0918 - Added xfer_button_commit options.php setting
 #
 
-$version = '2.14-724c';
-$build = '260408-1850';
+$version = '2.14-727c';
+$build = '260731-0918';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=110;
@@ -1106,6 +1109,7 @@ $user_pass_webform		= '0';	# set to 1 or 2 to return to default of including the
 $phone_login_webform	= '0';	# set to 1 or 2 to return to default of including the 'phone_login'(1) and 'phone_pass'(2) by default in webform URLs
 $login_submit_once		= '1';	# set to 0 to remove the "disable the login submit button after submitting" feature
 $default_consultative	= '0';	# set the CONSULTATIVE checkbox on the transfer panel be checked by default
+$xfer_button_commit		= '0';	# set to 1 to have the Customer Info 'commit' action run when the Transfer-Conf panel is opened
 
 $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen, FOR DEBUG ONLY
 
@@ -6880,6 +6884,7 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var previous_agent_log_id='<?php echo $agent_log_id ?>';
 	var alert_box_close_counter=0;
 	var dial_box_close_counter=0;
+	var amd_box_close_counter=0;
 	var api_switch_lead_triggered=0;
 	var agent_xfer_validation='<?php echo $agent_xfer_validation ?>';
 	var agent_xfer_group_selected='';
@@ -7014,6 +7019,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var talk_sec_url_secs='';
 	var redirectserverip='';
 	var hangup_again_link_trigger=<?php echo $hangup_again_link_trigger ?>;
+	var VCAdata='x';
+	var xfer_button_commit='<?php echo $xfer_button_commit ?>';
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -8670,13 +8677,25 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 								{
 								api_transferconf_ID = api_transferconf_values_array[7];
 								if (api_transferconf_function == 'HANGUP_XFER')
-									{xfercall_send_hangup();}
+									{
+									API_selected_xfergroup='';
+									xfercall_send_hangup();
+									}
 								if (api_transferconf_function == 'HANGUP_BOTH')
-									{bothcall_send_hangup();}
+									{
+									API_selected_xfergroup='';
+									bothcall_send_hangup();
+									}
 								if (api_transferconf_function == 'LEAVE_VM')
-									{mainxfer_send_redirect('XfeRVMAIL',lastcustchannel,lastcustserverip);}
+									{
+									API_selected_xfergroup='';
+									mainxfer_send_redirect('XfeRVMAIL',lastcustchannel,lastcustserverip);
+									}
 								if (api_transferconf_function == 'LEAVE_3WAY_CALL')
-									{leave_3way_call('FIRST');}
+									{
+									API_selected_xfergroup='';
+									leave_3way_call('FIRST');
+									}
 								if (api_transferconf_function == 'BLIND_TRANSFER')
 									{
 									if (api_transferconf_override=='YES')
@@ -8755,6 +8774,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							}
 						if (api_parkcustomer == 'HANGUP_XFER_GRAB_CUSTOMER')
 							{
+							API_selected_xfergroup='';
 							xfercall_send_hangup();
 							mainxfer_send_redirect('FROMParK',lastcustchannel,lastcustserverip);
 							}
@@ -13754,6 +13774,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				three_way_call_cid = orig_three_way_call_cid;
 				APIskip=0;
 				temp_XFmin_talk_sec=0;
+				VCAdata='x';
 				document.getElementById("BannerPanel").style.background = panel_bgcolor;
 				document.getElementById("BannerPanel").innerHTML = '';
 				if (manual_dial_preview < 1)
@@ -14608,7 +14629,8 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							VDICstereo_recording_agent = VDIC_data_VDIG[43];
 							talk_sec_url_secs			 = VDIC_data_VDIG[44];
 							recording_dtmf_muting		 = VDIC_data_VDIG[45];
-						//	alert("talk_sec_url_secs: |" + talk_sec_url_secs + "|");
+							VCAdata						 = VDIC_data_VDIG[46];
+						//	alert("VCAdata: |" + VCAdata + "|");
 							var VDIC_data_VDFR=check_VDIC_array[3].split("|");
 							if ( (VDIC_data_VDFR[1].length > 1) && (VDCL_fronter_display == 'Y') )
 								{VDIC_fronter = "  <?php echo _QXZ("Fronter:"); ?> " + VDIC_data_VDFR[0] + " - " + VDIC_data_VDFR[1];}
@@ -14763,6 +14785,17 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							gVD_statuses_ct = 0;
 							gVARSELstatuses_ct = 0;
 
+							if (VCAdata.length > 12)
+								{
+								button_click_log = button_click_log + "" + SQLdate + "-----AMDnotesDisplayed---|";
+								var VCAdata_elements=VCAdata.split("---");
+								document.getElementById("AMDnotesBoxA").innerHTML = "<b><?php echo _QXZ("Analysis Status:"); ?> </b>" + VCAdata_elements[0];
+								document.getElementById("AMDnotesBoxB").innerHTML = "<b><?php echo _QXZ("Analysis Cause:"); ?> </b>" + VCAdata_elements[1];
+								document.getElementById("AMDnotesBoxC").innerHTML = "<b><?php echo _QXZ("Greeting Length:"); ?> </b>" + VCAdata_elements[2];
+                                document.getElementById("AMDnotesBoxD").innerHTML = "<b><?php echo _QXZ("Detected Words:"); ?> </b><br />" + VCAdata_elements[3];
+								showDiv('AMDnotesBox');
+								amd_box_close_counter=15;
+								}
 							if (status_group_statuses_data.length > 7)
 								{
 								var gVARstatusesRAW=status_group_statuses_data.split(',');
@@ -16394,6 +16427,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 // Hangup Customer Button Press
 	function hangup_customer_button_click(dispowindow,hotkeysused,altdispo,nodeletevdac,DSHclick) 
 		{
+		API_selected_xfergroup='';
 		if ( (agent_hangup_value.length > 0) && ( (agent_hangup_route=='MESSAGE') || (agent_hangup_route=='EXTENSION') || (agent_hangup_route=='IN_GROUP') || (agent_hangup_route=='CALLMENU') ) )
 			{
 			button_click_log = button_click_log + "" + SQLdate + "-----AgentHangupCallRoute---" + VD_live_customer_call + " " + agent_hangup_route + " " + agent_hangup_value + " " + document.vicidial_form.xfernumber.value + "|";
@@ -16780,6 +16814,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 				MD_dial_timed_out=0;
 				MDcheck_for_answer=0;
 				VDRP_stage_seconds=0;
+				VCAdata='x';
 
 			//	UPDATE VICIDIAL_LOG ENTRY FOR THIS CALL PROCESS
 				DialLog("end",nodeletevdac);
@@ -16988,6 +17023,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		var xfer_channel = lastxferchannel;
 		var process_post_hangup=0;
 		xfer_in_call=0;
+		API_selected_xfergroup='';
 		if (HANclick=='YES')
 			{button_click_log = button_click_log + "" + SQLdate + "-----xfercall_send_hangup---" + xferchannel + "|";}
 		if ( (hangup_xfer_record_start == 'Y') && (hangup_both < 1) && (leaving_threeway < 1) && (recording_active < 1) )
@@ -18205,6 +18241,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 					APIskip=0;
 					talk_sec_url_secs='';
 					temp_XFmin_talk_sec=0;
+					VCAdata='x';
 					document.getElementById("BannerPanel").style.background = panel_bgcolor;
 					document.getElementById("BannerPanel").innerHTML = '';
 					if (manual_auto_next > 0)
@@ -18262,6 +18299,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 						{
 						document.getElementById("NexTCalLPausE").innerHTML = "<a href=\"#\" onclick=\"next_call_pause_click();return false;\"><?php echo _QXZ("Next Call Pause"); ?></a>";
 						}
+					AMDnotesBoxhide();
 					CBcommentsBoxhide();
 					EAcommentsBoxhide();
 					ContactSearchReset();
@@ -21854,6 +21892,19 @@ function phone_number_format(formatphone) {
 
 
 // ################################################################################
+// Hide the AMDnotesBox span upon click
+	function AMDnotesBoxhide()
+		{
+		button_click_log = button_click_log + "" + SQLdate + "-----AMDnotesBoxhide---|";
+		document.getElementById("AMDnotesBoxA").innerHTML = "";
+		document.getElementById("AMDnotesBoxB").innerHTML = "";
+		document.getElementById("AMDnotesBoxC").innerHTML = "";
+		document.getElementById("AMDnotesBoxD").innerHTML = "";
+		hideDiv('AMDnotesBox');
+		}
+
+
+// ################################################################################
 // Hide the CBcommentsBox span upon click
 	function CBcommentsBoxhide()
 		{
@@ -22198,6 +22249,7 @@ function phone_number_format(formatphone) {
 		//	hideDiv('NothingBox2');
 			hideDiv('ScriptTopBGspan');
 			hideDiv('ManualValidateBox');
+			hideDiv('AMDnotesBox');
 			hideDiv('CBcommentsBox');
 			hideDiv('EAcommentsBox');
 			hideDiv('EAcommentsMinBox');
@@ -23081,6 +23133,12 @@ function phone_number_format(formatphone) {
 				if (dial_box_close_counter < 1)
 					{hideDiv('TimerSpan');}
 				}
+			if (amd_box_close_counter > 0)
+				{
+				amd_box_close_counter = (amd_box_close_counter - 1);
+				if (amd_box_close_counter < 1)
+					{AMDnotesBoxhide();}
+				}
 			if (left_3way_timeout > 0)
 				{left_3way_timeout = (left_3way_timeout - 1);}
 
@@ -23573,6 +23631,8 @@ function phone_number_format(formatphone) {
 
 			if (showxfervar == 'ON')
 				{
+				if (xfer_button_commit == '1')
+					{CustomerData_update('YES');}
 				var xfer_height = <?php echo $HTheight ?>;
 				if (alt_phone_dialing>0) {xfer_height = (xfer_height + 20);}
 				if ( (auto_dial_level == 0) && (manual_dial_preview == 1) ) {xfer_height = (xfer_height + 20);}
@@ -25269,6 +25329,23 @@ if ($agent_display_dialable_leads > 0)
     </TABLE>
 </span>
 <?php //end AUDIT COMMENTS ADDED BY POUNDTEAM // ?>
+<span style="position:absolute;left:160px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="AMDnotesBox">
+    <table border="0" bgcolor="#99FFCC" width="600px" height="70px">
+    <tr bgcolor="#33FF99">
+    <td align="left"><font class="sh_text"> <?php echo _QXZ("Outbound Call Greeting Analysis:"); ?> </font></td>
+    <td align="right"><font class="sk_text"> <a href="#" onclick="AMDnotesBoxhide();return false;"><?php echo _QXZ("close"); ?></a> </font></td>
+	</tr><tr>
+    <td><font class="sh_text">
+    <span id="AMDnotesBoxA"></span><br />
+    <span id="AMDnotesBoxB"></span><br />
+    <span id="AMDnotesBoxC"></span><br />
+    </font></td>
+    <td width="280px"><font class="sh_text">
+	<span id="AMDnotesBoxD"></span>
+    </font></td>
+    </tr></table>
+</span>
+
 <span style="position:absolute;left:5px;top:<?php echo $HTheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="CBcommentsBox">
     <table border="0" bgcolor="#FFFFCC" width="<?php echo $HCwidth ?>px" height="70px">
     <tr bgcolor="#FFFF66">

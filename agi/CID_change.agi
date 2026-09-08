@@ -1,14 +1,27 @@
 #!/usr/bin/perl
 #
-# phone_alt_CID.agi
+# CID_change.agi
 # 
-# Changes the CID number on calls that pass through it to the Alternate defined
-# in the 'phones' record for the phone that placed the call
+# Changes the CID number on calls that pass through it to the cid_group_id 
+# defined in the flag below OR a specific CID number in that place.
+# If a CID Group is used, script will try to find CIDs within phone number 
+# dialed areacode. If none are found, it will grab a random active CID in the
+# CID group to use.
+#
+# Flag Options: (separated by three dashes '---')
+# 1- Fixed CID number, or a valid CID Group ID
+# 2- number of digits to strip before the phone number
+# 3- number of digits in the area-code
+# 4- should always be ${EXTEN}
 #
 # You need to have lines similar to those below in your Custom Dialplan:
 #
-#;use alternate CID, if defined:
-#exten => _91NXXNXXXXXX,1,AGI(phone_alt_CID.agi,${EXTEN})
+#; change CID to a CID within the 'testCIDgroup' CID Group:
+#exten => _91NXXNXXXXXX,1,AGI(CID_change.agi,testCIDgroup---2---3---${EXTEN})
+#exten => _91NXXNXXXXXX,n,Goto(default,${EXTEN},1)
+#
+#; change CID to a fixed CID:
+#exten => _91NXXNXXXXXX,1,AGI(CID_change.agi,9998887112---------${EXTEN})
 #exten => _91NXXNXXXXXX,n,Goto(default,${EXTEN},1)
 #
 # The easiest way to set this up for a phone is to create a new Call Menu and
@@ -18,14 +31,18 @@
 # Copyright (C) 2026  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # changes:
-# 160527-1415 - First build
-# 260902-1624 - Added PJSIP
+# 260509-1847 - First build
+# 260902-1619 - Added PJSIP
 #
 
-$script = 'phone_alt_CID.agi';
+$script = 'CID_change.agi';
 
 $AGILOG=1;
 $FD=0; # force debug for testing
+$new_cid='';
+$temp_new_cid='';
+$cid_group_id='';
+$cid_count=0;
 
 ($sec,$min,$hour,$mday,$mon,$year,$wday,$yday,$isdst) = localtime(time);
 $year = ($year + 1900);
@@ -53,7 +70,19 @@ if (length($ARGV[0])>1)
 		if ($AGILOG) {$agi_string = "$i|$ARGV[$i]";   &agi_output;}
 		$i++;
 		}
+	
+	### list of command-line array arguments:
+	@ARGV_vars = split(/---/, $ARGV[0]);
+
+	$new_cid = 			$ARGV_vars[0];
+	$strip_digits =		$ARGV_vars[1];
+	$ac_digits =		$ARGV_vars[2];
+	$dialed_exten = 	$ARGV_vars[3];
+	$phone_ac = substr("$dialed_exten", $strip_digits, $ac_digits);
+	if ($AGILOG) {$agi_string = "Exten dialed: $dialed_exten   AC: $phone_ac";   &agi_output;}
+	$cid_group_id = $new_cid;
 	}
+
 
 
 # default path to astguiclient configuration file:
@@ -95,7 +124,7 @@ foreach(@conf)
 	}
 
 if (!$VARDB_port) {$VARDB_port='3306';}
-if (!$AGILOGfile) {$AGILOGfile = "$PATHlogs/phonealt.$year-$mon-$mday";}
+if (!$AGILOGfile) {$AGILOGfile = "$PATHlogs/changecid.$year-$mon-$mday";}
 
 
 $|=1;
@@ -174,56 +203,103 @@ while ($sthArows > $rec_count)
 $sthA->finish();
 
 
-
-
 $phone_extension = $channel;
 $phone_extension =~ s/^SIP\/|^PJSIP\/|^IAX\/|^IAX2\///gi;
 $phone_extension =~ s/-.*//gi;
 if ($AGILOG) {$agi_string = "Phone Account: ($phone_extension)";   &agi_output;}
 
 
-
-
-
-### Grab Server values from the database
-$stmtA = "SELECT outbound_cid,outbound_alt_cid,fullname FROM phones where extension = '$phone_extension' and server_ip='$VARserver_ip';";
-$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
-$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
-$sthArows=$sthA->rows;
-if ($sthArows > 0)
+# look for CID Group, if one exists look for CID in group, otherwise use defined CID as new CID
+if (length($new_cid) > 0) 
 	{
-	@aryA = $sthA->fetchrow_array;
-	$sthA->finish();
-	$outbound_cid =		$aryA[0];
-	$outbound_alt_cid = $aryA[1];
-	$fullname =			$aryA[2];
-	
-	if (length($outbound_alt_cid) > 1) 
+	$stmtA= "SELECT cid_group_notes from vicidial_cid_groups where cid_group_id='$cid_group_id';";
+	$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+	$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+	$sthArows=$sthA->rows;
+		if ($AGILOG) {$agi_string = "$sthArows|$stmtA|";   &agi_output;}
+	if ($sthArows > 0)
 		{
-		### set the callerid to the ACQS value(calleridname)
-		$newcallerid = "\"$fullname <$outbound_alt_cid>\"";
-		$AGI->set_callerid($newcallerid);
+		@aryA = $sthA->fetchrow_array;
+		$cid_group_notes = $aryA[0];
+		}
+	$sthA->finish();
 
-		print STDERR "Setting Alternate CID \"$newcallerid\"\n";
-		checkresult($result);
-		if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
+	if ($sthArows > 0)
+		{
+		$stmtA= "SELECT count(*) from vicidial_campaign_cid_areacodes where campaign_id='$cid_group_id' and active='Y';";
+		$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+		$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+		$sthArowsC=$sthA->rows;
+			if ($AGILOG) {$agi_string = "$sthArowsC|$stmtA|";   &agi_output;}
+		if ($sthArowsC > 0)
+			{
+			@aryA = $sthA->fetchrow_array;
+			$cid_count = $aryA[0];
+			}
+		$sthA->finish();
 
-		if ($FD > 0) {print STDERR "callerID changed:     newcallerid\n";}
+		if ($cid_count > 0) 
+			{
+			$stmtA= "SELECT outbound_cid from vicidial_campaign_cid_areacodes where campaign_id='$cid_group_id' and active='Y' and areacode='$phone_ac' order by RAND() limit 1;";
+			$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+			$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+			$sthArowsD=$sthA->rows;
+				if ($AGILOG) {$agi_string = "$sthArowsD|$stmtA|";   &agi_output;}
+			if ($sthArowsD > 0)
+				{
+				@aryA = $sthA->fetchrow_array;
+				$temp_new_cid = $aryA[0];
+				}
+			$sthA->finish();
+
+			if (length($temp_new_cid) < 1) 
+				{
+				if ($AGILOG) {$agi_string = "CID Group ID no AC CIDs found, grabbing random CID in group: $cid_group_id|$calleridname";   &agi_output;}
+
+				$stmtA= "SELECT outbound_cid from vicidial_campaign_cid_areacodes where campaign_id='$cid_group_id' and active='Y' order by RAND() limit 1;";
+				$sthA = $dbhA->prepare($stmtA) or die "preparing: ",$dbhA->errstr;
+				$sthA->execute or die "executing: $stmtA ", $dbhA->errstr;
+				$sthArowsD=$sthA->rows;
+					if ($AGILOG) {$agi_string = "$sthArowsD|$stmtA|";   &agi_output;}
+				if ($sthArowsD > 0)
+					{
+					@aryA = $sthA->fetchrow_array;
+					$temp_new_cid = $aryA[0];
+					}
+				$sthA->finish();
+				}
+			else
+				{
+				if ($AGILOG) {$agi_string = "CID Group ID - AC CID found in AC: $cid_group_id|$calleridname";   &agi_output;}
+				}
+
+			if ($AGILOG) {$agi_string = "New CID Group CID to use: $temp_new_cid|$cid_group_id|$calleridname";   &agi_output;}
+			$new_cid = $temp_new_cid;
+			}
+		else
+			{
+			if ($AGILOG) {$agi_string = "CID Group ID empty: $cid_group_id|$calleridname";   &agi_output;}
+			}
 		}
 	else
 		{
-		if ($AGILOG) {$agi_string = "callerID not changed: Alt CID invalid ($outbound_alt_cid)";   &agi_output;}
+		if ($AGILOG) {$agi_string = "CID Group ID not found: $cid_group_id|$calleridname";   &agi_output;}
 		}
-	if ($AGILOG) {$agi_string = "AGI Variables: |$extension|$accountcode|$channel|$areacode|$callerid|$calleridname|$newcallerid|";   &agi_output;}
+
+	### set the callerid to the new value
+	$newcallerid = "\"$calleridname <$new_cid>\"";
+	$AGI->set_callerid($newcallerid);
+
+	print STDERR "Setting New CID \"$newcallerid\"\n";
+	checkresult($result);
+	if ($AGILOG) {$agi_string = "callerID changed: $newcallerid";   &agi_output;}
 	}
 else
 	{
-	if ($AGILOG) {$agi_string = "ERROR: phone entry not found:   |$phone_extension|$VARserver_ip|$channel|";   &agi_output;}
+	if ($AGILOG) {$agi_string = "No new CID defined: $new_cid|$calleridname";   &agi_output;}
 	}
 
-
 exit;
-
 
 
 
@@ -246,7 +322,6 @@ sub checkresult {
 		$fail++;
 	}
 }
-
 
 
 sub agi_output
