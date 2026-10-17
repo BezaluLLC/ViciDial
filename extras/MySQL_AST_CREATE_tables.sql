@@ -66,7 +66,7 @@ DBY_pass VARCHAR(15) default '1234',
 DBY_port INT(6) default '3306',
 outbound_cid VARCHAR(20),
 enable_sipsak_messages ENUM('0','1') default '0',
-email VARCHAR(100),
+email VARCHAR(255),
 template_id VARCHAR(15) NOT NULL,
 conf_override TEXT,
 phone_context VARCHAR(20) default 'default',
@@ -2849,7 +2849,7 @@ pass VARCHAR(10) NOT NULL,
 fullname VARCHAR(100) NOT NULL,
 messages INT(4) default '0',
 old_messages INT(4) default '0',
-email VARCHAR(100),
+email VARCHAR(255),
 delete_vm_after_email ENUM('N','Y') default 'N',
 voicemail_timezone VARCHAR(30) default 'eastern',
 voicemail_options VARCHAR(255) default '',
@@ -5928,4 +5928,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1745',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1746',db_schema_update_date=NOW(),reload_timestamp=NOW();

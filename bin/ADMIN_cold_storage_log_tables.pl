@@ -405,7 +405,7 @@ if (!$T)
 
 			if ($Btotal_inserted ne $sthArows) 
 				{
-				print "ERROR! records inserted is les than records to be inserted ($Btotal_inserted / $sthArows)\n";
+				print "ERROR! records inserted is less than records to be inserted ($Btotal_inserted / $sthArows)\n";
 				exit;
 				}
 			else
@@ -574,7 +574,7 @@ if (!$T)
 
 				if ($Btotal_inserted ne $sthArows) 
 					{
-					print "ERROR! records inserted is les than records to be inserted ($Btotal_inserted / $sthArows)\n";
+					print "ERROR! records inserted is less than records to be inserted ($Btotal_inserted / $sthArows)\n";
 					exit;
 					}
 				else
@@ -739,7 +739,7 @@ if (!$T)
 
 			if ($Btotal_inserted ne $sthArows) 
 				{
-				print "ERROR! records inserted is les than records to be inserted ($Btotal_inserted / $sthArows)\n";
+				print "ERROR! records inserted is less than records to be inserted ($Btotal_inserted / $sthArows)\n";
 				exit;
 				}
 			else
@@ -901,7 +901,7 @@ if (!$T)
 
 			if ($Btotal_inserted ne $sthArows) 
 				{
-				print "ERROR! records inserted is les than records to be inserted ($Btotal_inserted / $sthArows)\n";
+				print "ERROR! records inserted is less than records to be inserted ($Btotal_inserted / $sthArows)\n";
 				exit;
 				}
 			else
@@ -1063,7 +1063,7 @@ if (!$T)
 
 			if ($Btotal_inserted ne $sthArows) 
 				{
-				print "ERROR! records inserted is les than records to be inserted ($Btotal_inserted / $sthArows)\n";
+				print "ERROR! records inserted is less than records to be inserted ($Btotal_inserted / $sthArows)\n";
 				exit;
 				}
 			else
@@ -1225,7 +1225,7 @@ if (!$T)
 
 			if ($Btotal_inserted ne $sthArows) 
 				{
-				print "ERROR! records inserted is les than records to be inserted ($Btotal_inserted / $sthArows)\n";
+				print "ERROR! records inserted is less than records to be inserted ($Btotal_inserted / $sthArows)\n";
 				exit;
 				}
 			else
@@ -1387,7 +1387,7 @@ if (!$T)
 
 			if ($Btotal_inserted ne $sthArows) 
 				{
-				print "ERROR! records inserted is les than records to be inserted ($Btotal_inserted / $sthArows)\n";
+				print "ERROR! records inserted is less than records to be inserted ($Btotal_inserted / $sthArows)\n";
 				exit;
 				}
 			else
@@ -1549,7 +1549,7 @@ if (!$T)
 
 			if ($Btotal_inserted ne $sthArows) 
 				{
-				print "ERROR! records inserted is les than records to be inserted ($Btotal_inserted / $sthArows)\n";
+				print "ERROR! records inserted is less than records to be inserted ($Btotal_inserted / $sthArows)\n";
 				exit;
 				}
 			else
@@ -1711,7 +1711,7 @@ if (!$T)
 
 			if ($Btotal_inserted ne $sthArows) 
 				{
-				print "ERROR! records inserted is les than records to be inserted ($Btotal_inserted / $sthArows)\n";
+				print "ERROR! records inserted is less than records to be inserted ($Btotal_inserted / $sthArows)\n";
 				exit;
 				}
 			else
@@ -1873,7 +1873,7 @@ if (!$T)
 
 			if ($Btotal_inserted ne $sthArows) 
 				{
-				print "ERROR! records inserted is les than records to be inserted ($Btotal_inserted / $sthArows)\n";
+				print "ERROR! records inserted is less than records to be inserted ($Btotal_inserted / $sthArows)\n";
 				exit;
 				}
 			else
@@ -2035,7 +2035,7 @@ if (!$T)
 
 			if ($Btotal_inserted ne $sthArows) 
 				{
-				print "ERROR! records inserted is les than records to be inserted ($Btotal_inserted / $sthArows)\n";
+				print "ERROR! records inserted is less than records to be inserted ($Btotal_inserted / $sthArows)\n";
 				exit;
 				}
 			else
@@ -2197,7 +2197,7 @@ if (!$T)
 
 			if ($Btotal_inserted ne $sthArows) 
 				{
-				print "ERROR! records inserted is les than records to be inserted ($Btotal_inserted / $sthArows)\n";
+				print "ERROR! records inserted is less than records to be inserted ($Btotal_inserted / $sthArows)\n";
 				exit;
 				}
 			else
@@ -2363,7 +2363,7 @@ if (!$T)
 
 				if ($Btotal_inserted ne $sthArows) 
 					{
-					print "ERROR! records inserted is les than records to be inserted ($Btotal_inserted / $sthArows)\n";
+					print "ERROR! records inserted is less than records to be inserted ($Btotal_inserted / $sthArows)\n";
 					exit;
 					}
 				else

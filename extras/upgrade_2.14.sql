@@ -3125,3 +3125,8 @@ UPDATE system_settings SET db_schema_version='1744',db_schema_update_date=NOW() 
 INSERT INTO vicidial_settings_containers(container_id,container_notes,container_type,user_group,container_entry,modify_stamp) VALUES('FAST_AGI_SERVER_CONFIG','Config for the FastAGI server','OTHER','---ALL---','{\r\n  \"server\": {\r\n    \"host\": \"0.0.0.0\",\r\n    \"port\": 4573,\r\n    \"min_servers\": 50,\r\n    \"max_servers\": 200,\r\n    \"min_spare_servers\": 2,\r\n    \"max_spare_servers\": 10,\r\n    \"check_for_spawn\": 2,\r\n    \"check_for_waiting\": 10,\r\n    \"max_requests\": 1000,\r\n    \"background\": 1,\r\n    \"log_file\": \"/var/log/astguiclient/FastAGI-server.log\"\r\n  },\r\n  \"routes\": {\r\n    \"/VDAD_ALL_outbound\": \"AGIHandlers::VDAD_ALL_outbound\",\r\n    \"/VDAD_ALL_inbound\": \"AGIHandlers::VDAD_ALL_inbound\",\r\n    \"/VD_amd\": \"AGIHandlers::VD_amd\"\r\n  },\r\n  \"module_settings\": {\r\n    \"AGIHandlers::VDAD_ALL_outbound\": {},\r\n    \"AGIHandlers::VDAD_ALL_inbound\": {},\r\n    \"AGIHandlers::VD_amd\": {}\r\n  }\r\n}',NOW());
 
 UPDATE system_settings SET db_schema_version='1745',db_schema_update_date=NOW() where db_schema_version < 1745;
+
+ALTER TABLE phones MODIFY email VARCHAR(255);
+ALTER TABLE vicidial_voicemail MODIFY email VARCHAR(255);
+
+UPDATE system_settings SET db_schema_version='1746',db_schema_update_date=NOW() where db_schema_version < 1746;

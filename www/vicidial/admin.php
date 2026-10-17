@@ -5790,7 +5790,6 @@ if ($non_latin < 1)
 	$queuemetrics_dbname = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$queuemetrics_dbname);
 	$queuemetrics_login = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$queuemetrics_login);
 	$queuemetrics_pass = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$queuemetrics_pass);
-	$email = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$email);
 	$vtiger_dbname = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$vtiger_dbname);
 	$vtiger_login = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$vtiger_login);
 	$vtiger_pass = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$vtiger_pass);
@@ -5800,6 +5799,9 @@ if ($non_latin < 1)
 	$email_to = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$email_to);
 	$ftp_server = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$ftp_server);
 	$ftp_directory = preg_replace('/[^-\.\:\/\@\_0-9a-zA-Z]/','',$ftp_directory);
+
+	### ALPHA-NUMERIC and underscore and dash and slash and at and dot and pipe
+	$email = preg_replace('/[^-\.\:\/\|\@\_0-9a-zA-Z]/','',$email);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot and space
 	$custom_one = preg_replace('/[^- \.\:\/\@\_0-9a-zA-Z]/','',$custom_one);
@@ -6563,7 +6565,6 @@ else
 	$queuemetrics_dbname = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$queuemetrics_dbname);
 	$queuemetrics_login = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$queuemetrics_login);
 	$queuemetrics_pass = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$queuemetrics_pass);
-	$email = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$email);
 	$vtiger_dbname = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$vtiger_dbname);
 	$vtiger_login = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$vtiger_login);
 	$vtiger_pass = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$vtiger_pass);
@@ -6573,6 +6574,9 @@ else
 	$email_to = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$email_to);
 	$ftp_server = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$ftp_server);
 	$ftp_directory = preg_replace('/[^-\.\:\/\@\_0-9\p{L}]/u','',$ftp_directory);
+
+	### ALPHA-NUMERIC and underscore and dash and slash and at and dot and pipe
+	$email = preg_replace('/[^-\.\:\/\|\@\_0-9\p{L}]/u','',$email);
 
 	### ALPHA-NUMERIC and underscore and dash and slash and at and dot and space
 	$custom_one = preg_replace('/[^- \.\:\/\@\_0-9\p{L}]/u','',$custom_one);
@@ -7780,12 +7784,13 @@ if ($SSscript_remove_js > 0)
 # 260910-0111 - Fix for added users without user_group
 # 260910-2040 - Added CID SIP 603 Report
 # 260917-1502 - Small fix for HotKeys admin
+# 261017-1744 - Allow for multiple email addresses in phones and voicemail boxes
 #
 
 # make sure you have added a user to the vicidial_users MySQL table with at least user_level 9 to access this page the first time
 
-$admin_version = '2.14-967a';
-$build = '260917-1502';
+$admin_version = '2.14-968a';
+$build = '261017-1744';
 
 $STARTtime = date("U");
 $SQLdate = date("Y-m-d H:i:s");
@@ -12979,7 +12984,7 @@ if ($ADD==171111111111)
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Pass").": </td><td align=left><input type=text name=pass size=10 maxlength=10>$NWB#voicemail-pass$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Name").": </td><td align=left><input type=text name=fullname size=50 maxlength=100>$NWB#voicemail-fullname$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active><option value='N'>"._QXZ("N")."</option><option value='Y'>"._QXZ("Y")."</option>$NWB#voicemail-active$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Email").": </td><td align=left><input type=text name=email size=50 maxlength=100>$NWB#voicemail-email$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Email").": </td><td align=left><input type=text name=email size=70 maxlength=255>$NWB#voicemail-email$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
 		echo "$UUgroups_list";
 		echo "<option SELECTED value=\"---ALL---\">"._QXZ("All Admin User Groups")."</option>\n";
@@ -43628,7 +43633,7 @@ if ($ADD==31111111111)
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active Account").": </td><td align=left><select size=1 name=active><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$row[9]' selected>"._QXZ("$row[9]")."</option></select>$NWB#phones-active$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Phone Type").": </td><td align=left><input type=text name=phone_type size=20 maxlength=50 value=\"$row[10]\">$NWB#phones-phone_type$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Full Name").": </td><td align=left><input type=text name=fullname size=20 maxlength=50 value=\"$row[11]\">$NWB#phones-fullname$NWE</td></tr>\n";
-		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Email").": </td><td align=left><input type=text name=email size=50 maxlength=100 value=\"$row[67]\"> $NWB#phones-email$NWE</td></tr>\n";
+		echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Email").": </td><td align=left><input type=text name=email size=70 maxlength=255 value=\"$row[67]\"> $NWB#phones-email$NWE</td></tr>\n";
 
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Delete Voicemail After Email").": </td><td align=left><select size=1 name=delete_vm_after_email><option value='Y'>"._QXZ("Y")."</option><option value='N'>"._QXZ("N")."</option><option value='$row[73]' selected>"._QXZ("$row[73]")."</option></select>$NWB#phones-delete_vm_after_email$NWE</td></tr>\n";
 		echo "<tr bgcolor=#$SSstd_row3_background><td align=right>"._QXZ("Voicemail Zone").": </td><td align=left><select size=1 name=voicemail_timezone>";
@@ -44975,7 +44980,7 @@ if ($ADD==371111111111)
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Voicemail ID").": </td><td align=left><B>$voicemail_id</B></td></tr>\n";
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Password").": </td><td align=left><input type=text name=pass size=12 maxlength=10 value=\"$pass\">$NWB#voicemail-pass$NWE</td></tr>\n";
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Name").": </td><td align=left><input type=text name=fullname size=50 maxlength=100 value=\"$fullname\">$NWB#voicemail-fullname$NWE</td></tr>\n";
-			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Email").": </td><td align=left><input type=text name=email size=50 maxlength=100 value=\"$email\">$NWB#voicemail-email$NWE</td></tr>\n";
+			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Email").": </td><td align=left><input type=text name=email size=70 maxlength=255 value=\"$email\">$NWB#voicemail-email$NWE</td></tr>\n";
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Active").": </td><td align=left><select size=1 name=active><option value='N'>"._QXZ("N")."</option><option value='Y'>"._QXZ("Y")."</option><option value='$active' SELECTED>"._QXZ("$active")."</option></select>$NWB#voicemail-active$NWE</td></tr>\n";
 			echo "<tr bgcolor=#$SSstd_row4_background><td align=right>"._QXZ("Admin User Group").": </td><td align=left><select size=1 name=user_group>\n";
 			echo "$UUgroups_list";
