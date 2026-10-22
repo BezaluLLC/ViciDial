@@ -123,6 +123,7 @@
 # 250913-0837 - Added Stereo Call Recording indicator
 # 251010-1140 - Added DTMF count and muting recording log indicator columns
 # 260716-1638 - Added SIP response data to extended outbound call log display
+# 261021-1827 - Fix for recording log enabled with play on-screen, also PHP 8.5 fix
 #
 
 require("dbconnect_mysqli.php");
@@ -904,7 +905,7 @@ if ($enable_gdpr_download_deletion>0)
 				curl_setopt($ch, CURLOPT_FILE, $fp);
 				curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 				curl_exec($ch);
-				curl_close($ch);
+				# Deprecated - curl_close($ch);
 				fclose($fp);
 
 				array_push($files_to_zip, "$destination_filename");
@@ -1173,6 +1174,43 @@ body
 -->
 </STYLE>
 <script language="JavaScript">
+function LogAudioRecordingAccess(log_active, recording_id, lead_id, recording_object_ID)
+	{
+	if (log_active)
+		{
+		var xmlhttp=false;
+		try {
+			xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+		} catch (e) {
+			try {
+				xmlhttp = new ActiveXObject("Microsoft.XMLHTTP");
+			} catch (E) {
+				xmlhttp = false;
+			}
+		}
+		if (!xmlhttp && typeof XMLHttpRequest!='undefined') {
+			xmlhttp = new XMLHttpRequest();
+		}
+		if (xmlhttp) {
+			var log_query = "&no_redirect=1&recording_id="+recording_id+"&lead_id="+lead_id;
+			xmlhttp.open('POST', 'recording_log_redirect.php'); 
+			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
+			xmlhttp.send(log_query); 
+			xmlhttp.onreadystatechange = function() { 
+				if (xmlhttp.readyState == 4 && xmlhttp.status == 200) {
+					var response = xmlhttp.responseText;
+					if (response!="OK")
+						{
+						document.getElementById(recording_object_ID).pause();
+						alert(response);
+						}
+				}
+			}
+			delete xmlhttp;
+		}
+		}
+	}
+
 function UpdateCallback(callback_id) {
 	var apt_date_field="appointment_date_"+callback_id;
 	var apt_hour_field="appointment_hour_"+callback_id;
@@ -4109,7 +4147,8 @@ else
 					}
 				else
 					{
-					$location = "<a href=\"recording_log_redirect.php?recording_id=$row[0]&lead_id=$row[12]&search_archived_data=0\">$locat</a>";
+					#$location = "<a href=\"recording_log_redirect.php?recording_id=$row[0]&lead_id=$row[12]&search_archived_data=0\">$locat</a>";
+					$play_audio = "<td align=left> <audio id='modifylead_recording_id_".$row[0]."' controls preload=\"none\" onplay='LogAudioRecordingAccess($log_recording_access, $row[0], $row[12], this.id)'> <source src ='$location' type='audio/wav' > <source src ='$location' type='audio/mpeg' >"._QXZ("No browser audio playback support")."</audio> </td>\n";
 					}
 				}
 			else

@@ -235,10 +235,11 @@
 # 260907-1702 - Added PJSIP option for add_phone & update_phone
 # 260907-1808 - Added copy_phone function
 # 260925-1400 - Added vdc_agent_api_access requirement to all functions
+# 261021-1827 - PHP 8.5 fix
+#
 
-
-$version = '2.14-210';
-$build = '260925-1400';
+$version = '2.14-211';
+$build = '261021-1827';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 $camp_lead_order_random=1;
@@ -7553,7 +7554,7 @@ if ($function == 'update_list')
 								if (preg_match('/SUCCESS:/',$resp)) {$temp_response = 'SUCCESS: Field added';}
 								
 								# Close request to clear up some resources
-								curl_close($curl);
+								# Deprecated - curl_close($curl);
 								### END copy custom fields ###
 
 								$result = 'NOTICE';
@@ -7707,7 +7708,7 @@ if ($function == 'update_list')
 									if (preg_match('/SUCCESS:/',$resp)) {$temp_response = 'SUCCESS: Field updated';}
 									
 									# Close request to clear up some resources
-									curl_close($curl);
+									# Deprecated - curl_close($curl);
 									### END copy custom fields ###
 
 									$result = 'NOTICE';
@@ -7823,7 +7824,7 @@ if ($function == 'update_list')
 									if (preg_match('/SUCCESS:/',$resp)) {$temp_response = 'SUCCESS: Field deleted';}
 									
 									# Close request to clear up some resources
-									curl_close($curl);
+									# Deprecated - curl_close($curl);
 									### END copy custom fields ###
 
 									$result = 'NOTICE';
@@ -8455,7 +8456,7 @@ if ($function == 'update_list')
 							if (preg_match('/SUCCESS:/',$resp)) {$temp_response = 'SUCCESS: Fields copied';}
 							
 							# Close request to clear up some resources
-							curl_close($curl);
+							# Deprecated - curl_close($curl);
 							### END copy custom fields ###
 
 							$result = 'NOTICE';
@@ -9347,7 +9348,7 @@ if ($function == 'add_list')
 								if (preg_match('/SUCCESS:/',$resp)) {$temp_response = 'SUCCESS: Fields copied';}
 
 								# Close request to clear up some resources
-								curl_close($curl);
+								# Deprecated - curl_close($curl);
 								### END copy custom fields ###
 								}
 
@@ -13362,6 +13363,7 @@ if ($function == 'agent_stats_export')
 						{
 						# user,lead_id,sub_status,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec
 						$row=mysqli_fetch_row($rslt);
+						# print_r($row);
 						if ($group_by_campaign == 'YES')
 							{
 							$temp_camp_user="$row[9] $row[0]";
@@ -13369,10 +13371,11 @@ if ($function == 'agent_stats_export')
 								{
 								$uc++;
 								$ASuser[$uc] =			$row[0];
-#								$ASdispo_sec[$uc] =		$row[6];
-#								$ASdead_sec[$uc] =	$row[7];
+#								# $ASdispo_sec[$uc] =		$row[6];
+#								# $ASdead_sec[$uc] =	$row[7];
 								$AScampaign[$uc] =		$row[9];
-								$ASstart_epoch[$uc] =	$row[8];
+								if (!isset($ASstart_epoch[$uc]))
+									{$ASstart_epoch[$uc] =	$row[8];}
 								$last_user =			$temp_camp_user;
 								$AScalls[$uc] =			0;
 								$ASpauses[$uc] =		0;
@@ -13385,9 +13388,10 @@ if ($function == 'agent_stats_export')
 								{
 								$uc++;
 								$ASuser[$uc] =			$row[0];
-								$ASdispo_sec[$uc] =		$row[6];
-#								$ASdead_sec[$uc] =	$row[7];
-#								$ASstart_epoch[$uc] =	$row[8];
+								# $ASdispo_sec[$uc] =		$row[6];
+#								# $ASdead_sec[$uc] =	$row[7];
+								if (!isset($ASstart_epoch[$uc])) 
+									{$ASstart_epoch[$uc] =	$row[8];}
 								$last_user =			$row[0];
 								$AScalls[$uc] =			0;
 								$ASpauses[$uc] =		0;

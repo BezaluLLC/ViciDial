@@ -14,6 +14,7 @@
 # 190703-0925 - Added use of admin_web_directory system setting
 # 210427-1741 - Added more list count options
 # 220227-2204 - Added allow_web_debug system setting
+# 261021-1827 - PHP CVE patch
 #
 
 $version = '2.14-10';
@@ -463,7 +464,7 @@ if ($confirm == "confirm")
 			$resp = curl_exec($curl);
 			
 			# Close request to clear up some resources
-			curl_close($curl);
+			# Deprecated - curl_close($curl);
 			}
 		
 		if ($DB) { echo "|$resp|\n"; }

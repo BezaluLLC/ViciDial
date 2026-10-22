@@ -22,6 +22,7 @@
 # CHANGES
 # 190618-1417 - First Build
 # 220226-1730 - Added allow_web_debug system setting
+# 261021-1827 - PHP CVE patch
 #
 
 header ("Content-type: text/html; charset=utf-8");
@@ -189,7 +190,7 @@ if ($SC_count > 0)
 				$header_string = implode(">",$header).
 
 				# Close request to clear up some resources
-				curl_close($curl);
+				# Deprecated - curl_close($curl);
 
 				$header_ct = count($header);
 			#	var_dump($header);

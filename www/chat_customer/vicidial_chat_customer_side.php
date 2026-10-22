@@ -20,6 +20,7 @@
 # 160805-2315 - Added coding to show logos in customer display
 # 220220-1915 - Added allow_web_debug system setting
 # 240801-1130 - Code updates for PHP8 compatibility
+# 261021-1645 - PHP CVE patch 
 #
 
 require("dbconnect_mysqli.php");
@@ -380,7 +381,7 @@ if ($stage == 'send_request') { # For people requesting a chat with an agent; co
 				case "default_new":
 					$color_row["web_logo"]=".png";
 					break;
-				case "default_old";
+				case "default_old":
 					$color_row["web_logo"]=".gif";
 					$filepath="vicidial";
 					break;			
