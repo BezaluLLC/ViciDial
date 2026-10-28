@@ -1,7 +1,7 @@
 <?php
 # customer_chat_functions.php
 #
-# Copyright (C) 2024  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2026  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 # 151212-0828 - First Build for customer chat
@@ -17,6 +17,7 @@
 # 161026-2230 - Added translation QXZ to untranslated text
 # 220220-1940 - Added allow_web_debug system setting
 # 240801-1130 - Code updates for PHP8 compatibility
+# 261027-1852 - Added admin chat history access
 #
 
 require("dbconnect_mysqli.php");
@@ -106,10 +107,12 @@ if ($SSallow_web_debug < 1) {$DB=0;}
 if ($non_latin < 1)
 	{
 	$user = preg_replace('/[^- \+\_\.0-9a-zA-Z]/','',$user);
+	$pass = preg_replace('/[^-_0-9a-zA-Z]/','',$pass);
 	}
 else
 	{
 	$user = preg_replace("/\'|\"|\\\\|;/","",$user);
+	$pass = preg_replace('/[^-_0-9\p{L}]/u','',$pass);
 	}
 
 
@@ -207,8 +210,9 @@ if ($action=="leave_chat" && $user && $chat_id) {
 	}
 }
 
-if ($action=="update_chat_window" && $chat_id) {
-	$status_stmt="SELECT status, chat_creator, transferring_agent from vicidial_live_chats where chat_id='$chat_id'";
+if ($action=="update_chat_window" && $chat_id && $chat_member_name) {
+	# $status_stmt="SELECT status, chat_creator, transferring_agent from vicidial_live_chats where chat_id='$chat_id'";
+	$status_stmt="SELECT status, chat_creator, transferring_agent, chat_member_name from vicidial_live_chats vlc, vicidial_chat_participants vcp where vlc.chat_id='$chat_id' and vlc.chat_id=vcp.chat_id and chat_member_name='$chat_member_name'";
 	$status_rslt=mysql_to_mysqli($status_stmt, $link);
 	if (mysqli_num_rows($status_rslt)==0) {
 		# JCJ - comment out to display in Javascript function that calls this in parent page.
@@ -263,7 +267,25 @@ if ($action=="update_chat_window" && $chat_id) {
 #		if (!preg_match("/\.(jpg|gif|png|bmp)$/", $web_logo)) {$web_logo.=".png";}
 
 		$chat_status="<font color='#900'>INACTIVE</font>";
+
+		# INACTIVE CHATS SHOULD NOT BE ACCESSIBLE
+		echo "$chat_status|"; 
+		exit;
+
+		$auth=0;
+		if (isset($user) && isset($pass))
+			{
+			$security_stmt="select count(*) from vicidial_users where user_level>=8 and view_reports>0 and user='$user' and pass='$pass'";
+			$security_rslt=mysql_to_mysqli($security_stmt, $link);
+			$security_row=mysqli_fetch_row($security_rslt);
+			$auth=$security_row[0];
+			}
+
+		if ($auth<1) {$chat_status="<font color='#900'>INACTIVE CHAT - ADMINISTRATIVE PERMISSIONS REQUIRED</font>";}
+
 		echo "$chat_status|";
+
+		if ($auth<1) {exit;}
 
 #		echo "<table border='0' width='100%'>\n";
 #		echo "<tr>\n";

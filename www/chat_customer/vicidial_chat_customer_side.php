@@ -1,7 +1,7 @@
 <?php
 # vicidial_chat_customer_side.php
 #
-# Copyright (C) 2024  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2026  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # The main page of the customer chat interface.  This will display a form for the customer
 # to fill out to attempt to initiate a chat with an available agent in the in-group 
@@ -21,6 +21,7 @@
 # 220220-1915 - Added allow_web_debug system setting
 # 240801-1130 - Code updates for PHP8 compatibility
 # 261021-1645 - PHP CVE patch 
+# 261027-1853 - Added admin chat history access
 #
 
 require("dbconnect_mysqli.php");
@@ -499,6 +500,7 @@ function UpdateChatWindow() {
 //	var chat_creator=document.getElementById('chat_creator').value;
 	var user=document.getElementById('user').value;
 	var current_message_field = document.getElementById('current_message_count');
+	var chat_member_name=encodeURIComponent(document.getElementById('chat_member_name').value.trim());
 	if (current_message_field == null) {var current_message_count=0;} else {var current_message_count=current_message_field.value;}
 
 	if (chat_id)
@@ -510,7 +512,7 @@ function UpdateChatWindow() {
 			}
 		if (xmlhttp) 
 			{ 
-			chat_query = "&chat_id="+chat_id+"&group_id="+group_id+"&user="+user+"&current_message_count="+current_message_count+"&language="+language+"&available_agents="+available_agents+"&show_email="+show_email+"&action=update_chat_window&keepalive=1";
+			chat_query = "&chat_id="+chat_id+"&chat_member_name="+chat_member_name+"&group_id="+group_id+"&user="+user+"&current_message_count="+current_message_count+"&language="+language+"&available_agents="+available_agents+"&show_email="+show_email+"&action=update_chat_window&keepalive=1";
 			xmlhttp.open('POST', 'customer_chat_functions.php'); 
 			xmlhttp.setRequestHeader('Content-Type','application/x-www-form-urlencoded; charset=UTF-8');
 			xmlhttp.send(chat_query); 
@@ -532,6 +534,8 @@ function UpdateChatWindow() {
 
 					document.getElementById('ChatActiveStatus').innerHTML=current_chat_status;
 					// var fullchatlog=chat_log_response.replace(/Error\|/, '');
+					if (current_chat_status.match(/INACTIVE/))
+						{clearInterval(rInt); return false;}
 					document.getElementById('ChatDisplay').innerHTML=fullchatlog;
 					var current_message_field_update = document.getElementById('current_message_count');
 					if (current_message_field_update != null) {var current_message_count_update=current_message_field_update.value;}

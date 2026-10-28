@@ -422,8 +422,8 @@ if ($SUBMIT && $query_date && $query_date_end)
 			$lagged_rslt=mysql_to_mysqli($rpt_stmt, $link);
 			while ( $lagged_row = mysqli_fetch_array($lagged_rslt) )
 				{
-				$current_event_date = $lagged_row[event_time];
-				$current_user = $lagged_row[user];
+				$current_event_date = $lagged_row["event_time"];
+				$current_user = $lagged_row["user"];
 				$rpt_stmt="SELECT user, event_date, computer_ip FROM vicidial_user_log WHERE event = 'LOGIN' AND event_date>='$start_date 00:00:00' AND event_date<='$current_event_date' AND user = '$current_user' ORDER BY event_date DESC";
 				if ($DB) {$ASCII_text.=$rpt_stmt."\n";}
 				$login_rslt=mysql_to_mysqli($rpt_stmt, $link);			

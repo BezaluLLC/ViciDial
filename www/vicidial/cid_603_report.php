@@ -5,6 +5,7 @@
 #
 # CHANGES
 # 260910-1726 - First build
+# 261008-1030 - Added graph, changed SQL for more accurate DID parsing
 #
 
 $startMS = microtime();
@@ -265,47 +266,6 @@ $HEADER.="<TITLE>"._QXZ("$report_name")."</TITLE></HEAD><BODY BGCOLOR=WHITE marg
 
 $short_header=1;
 
-### BEGIN  figure out where the CID is in the vicidial_dial_log
-$CIDbegin=0;
-$CIDend=0;
-$CIDlength=0;
-$stmt = "SELECT outbound_cid FROM vicidial_dial_log where lead_id > 0 and (outbound_cid LIKE '\"M%' or outbound_cid LIKE '\"V%') order by call_date desc limit 1;";
-$rslt=mysql_to_mysqli($stmt, $link);
-#if ($DB) {$MAIN.="$stmt\n";}
-$qm_conf_ct = mysqli_num_rows($rslt);
-if ($qm_conf_ct > 0)
-	{
-	$row=mysqli_fetch_row($rslt);
-	$temp_outbound_cid =			$row[0];
-	$temp_outbound_cid_LENGTH = strlen($temp_outbound_cid);
-	$g=0;
-	while ($g < $temp_outbound_cid_LENGTH)
-		{
-		$temp_char = substr($temp_outbound_cid,$g,1);
-		if ($temp_char == '<')
-			{$CIDbegin = $g;}
-		if ($temp_char == '>')
-			{$CIDend = $g;}
-
-	#	echo "DEBUG: $g|$temp_char| CIDbegin: $CIDbegin   CIDend: $CIDend   CIDlength: $CIDlength   CIDraw: $temp_outbound_cid ($temp_outbound_cid_LENGTH) \n";
-		$g++;
-		}
-	if ( ($CIDbegin > 0) and ($CIDend > 0) )
-		{
-		$CIDlength = (($CIDend - $CIDbegin) - 1);
-		$CIDbegin = ($CIDbegin + 2);
-		}
-	else
-		{
-		echo $HEADER;
-		require("admin_header.php");
-		echo "ERROR: No dial logs to analyze \n";
-		exit;
-		}
-	}
-# echo "DEBUG: CIDbegin: $CIDbegin   CIDlength: $CIDlength   CIDraw: $temp_outbound_cid ($temp_outbound_cid_LENGTH) \n";
-### END  figure out where the CID is in the vicidial_dial_log
-
 $MAIN.="<TABLE CELLPADDING=4 CELLSPACING=0><TR><TD>";
 $MAIN.="<FORM ACTION=\"$PHP_SELF\" METHOD=GET name=vicidial_report id=vicidial_report>\n";
 $MAIN.="<TABLE BORDER=0 cellspacing=5 cellpadding=5><TR><TD VALIGN=TOP align=center>\n";
@@ -339,7 +299,7 @@ if ($SUBMIT && $query_date)
 	{
 	#	SELECT count(*) as calls,SUM(CASE WHEN sip_hangup_cause='603' THEN 1 ELSE 0 END) AS SOT, round((SUM(CASE WHEN sip_hangup_cause='603' THEN 1 ELSE 0 END) / (count(*)) * 100 ),2) as SOTpct, SUBSTRING(vdl.outbound_cid FROM 25 FOR 10) as CID FROM vicidial_dial_log vdl WHERE (vdl.call_date >= '2026-09-10 15:00:00') and (vdl.call_date <= '2026-09-10 16:00:00') group by CID order by SOTpct desc limit 5000;
 
-	$stmt="SELECT SUBSTRING(vdl.outbound_cid FROM $CIDbegin FOR $CIDlength) as CID, count(*) as calls,SUM(CASE WHEN sip_hangup_cause='603' THEN 1 ELSE 0 END) AS SOT, round((SUM(CASE WHEN sip_hangup_cause='603' THEN 1 ELSE 0 END) / (count(*)) * 100 ),2) as SOTpct FROM vicidial_dial_log vdl WHERE (vdl.call_date >= '$query_date $query_date_D') and (vdl.call_date <= '$query_date $query_date_T') group by CID order by SOTpct desc limit 50000;";
+	$stmt="SELECT REGEXP_SUBSTR(outbound_cid, '\\<[0-9]+\\>') as CID, count(*) as calls,SUM(CASE WHEN sip_hangup_cause='603' THEN 1 ELSE 0 END) AS SOT, round((SUM(CASE WHEN sip_hangup_cause='603' THEN 1 ELSE 0 END) / (count(*)) * 100 ),2) as SOTpct FROM vicidial_dial_log vdl WHERE (vdl.call_date >= '$query_date $query_date_D') and (vdl.call_date <= '$query_date $query_date_T') and substr(outbound_cid, 2, 2) not in ('BM') group by CID order by SOTpct desc limit 50000;";
 
 	$rslt=mysql_to_mysqli($stmt, $link);
 	$ASCII_text="<PRE><font size=2>\n";
@@ -353,31 +313,51 @@ if ($SUBMIT && $query_date)
 		$ASCII_text.="+-----------------+---------+---------+----------+\n";
 		$ASCII_text.="| "._QXZ("CID Number",15)." | "._QXZ("CALLS",7)." | "._QXZ("603s",7)." | "._QXZ("603 pct",8)." |\n";
 		$ASCII_text.="+-----------------+---------+---------+----------+\n";
-		$HTML_text.="<table border='0' cellpadding='0' cellspacing='2' width='350'>";
-		$HTML_text.="<TR><TH colspan='2' class='small_standard_bold grey_graph_cell'>"._QXZ("OUTBOUND CALLERID NUMBER SIP 603 REPORT")." $query_date, $query_date_D "._QXZ("TO")." $query_date_T</TH></TR>";
-		$HTML_text.="<TR><TH class='small_standard_bold grey_graph_cell'>"._QXZ("CID Number")."</th><TH class='small_standard_bold grey_graph_cell'>"._QXZ("COUNT")."</th><TH class='small_standard_bold grey_graph_cell'>"._QXZ("603s")."</th><TH class='small_standard_bold grey_graph_cell'>"._QXZ("603 pct")."</th></tr>";
+		$HTML_text.="<table border='0' cellpadding='2' cellspacing='0' width='600'>";
+		$HTML_text.="<TR><TH colspan='5' class='small_standard_bold grey_graph_cell'>"._QXZ("OUTBOUND CALLERID NUMBER SIP 603 REPORT")." $query_date, $query_date_D "._QXZ("TO")." $query_date_T</TH></TR>";
+		$HTML_text.="<TH class='small_standard_bold grey_graph_cell'>"._QXZ("CID Number")."</th><TH class='small_standard_bold grey_graph_cell'>"._QXZ("COUNT")."</th><TH class='small_standard_bold grey_graph_cell'>"._QXZ("603s")."</th><TH class='small_standard_bold grey_graph_cell' colspan='2'>"._QXZ("Percent")."<BR><img src='images/shade-histo.gif' height='10' width='10'> - of this CID&nbsp&nbsp&nbsp<img src='images/shade-histo-blue.gif' height='10' width='10'> - of total 603 calls</th>";
+		echo "</tr>";
 		$CSV_text="\""._QXZ("CID Number")."\",\""._QXZ("CALLS")."\",\""._QXZ("603s")."\",\""._QXZ("603 pct")."\"\n";
 
 		$total_count=0;
 		$total_countSOT=0;
+		$x=0;
+		$CID_results=array();
+		$highest_603_calls=0;
 		while ($row=mysqli_fetch_array($rslt)) 
 			{
-			$ASCII_text.="| ".sprintf("%-16s", $row["CID"]);
-			$ASCII_text.="| ".sprintf("%8s", $row["calls"]);
-			$ASCII_text.="| ".sprintf("%8s", $row["SOT"]);
-			$ASCII_text.="| ".sprintf("%8s", $row["SOTpct"])."%";
+			$CID=preg_replace('/[^0-9]/', '', $row["CID"]);
+			# $CID_results["CID"]=$row["CID"];
+			$CID_results["$CID"]["calls"]=$row["calls"];
+			$CID_results["$CID"]["SOT"]=$row["SOT"];
+			$CID_results["$CID"]["SOTpct"]=$row["SOTpct"];
+			$highest_603_calls=($row["SOTpct"]>$highest_603_calls ? $row["SOTpct"] : $highest_603_calls);
+			$total_603_calls+=$row["SOT"];
+			}
+
+		foreach ($CID_results as $CID => $stats)
+			{
+			$ASCII_text.="| ".sprintf("%-16s", $CID);
+			$ASCII_text.="| ".sprintf("%8s", $stats["calls"]);
+			$ASCII_text.="| ".sprintf("%8s", $stats["SOT"]);
+			$ASCII_text.="| ".sprintf("%8s", $stats["SOTpct"])."%";
 			$ASCII_text.="|\n";
-			$HTML_text.="<TR><TD class='small_standard'>$row[CID]</td><TD class='small_standard'>$row[calls]</td><TD class='small_standard'>$row[SOT]</td><TD class='small_standard'>$row[SOTpct]</td></tr>";
-			$CSV_text.="\"$row[CID]\",\"$row[calls]\",\"$row[SOT]\",\"$row[SOTpct]%\"\n";
-			$total_count+=$row["calls"];
-			$total_countSOT+=$row["SOT"];
+			$HTML_text.="<tr class='small_standard_bold' bgcolor='".($x%2==0 ? "#EEE" : "#FFF")."'>\n";
+			$HTML_text.="\t<TH rowspan=2>$CID</TH><TH rowspan=2>$stats[calls]</TH><TH rowspan=2>$stats[SOT]</TH><td width='200'><img src='images/shade-histo.gif' height='10' width='".((100*$stats["SOTpct"])/$highest_603_calls)."%'></td><TD>$stats[SOTpct] %</td>\n";
+			$HTML_text.="</tr>\n";
+			$HTML_text.="<tr class='small_standard_bold' bgcolor='".($x%2==0 ? "#EEE" : "#FFF")."'><td width='200' align='left'><img src='images/shade-histo-blue.gif' height='10' width='".((100*$stats["SOT"])/$total_603_calls)."%'></td><TD>".sprintf("%.2f", (100*$stats["SOT"])/$total_603_calls)."%</td></tr>\n";
+
+			$CSV_text.="\"$CID\",\"$stats[calls]\",\"$stats[SOT]\",\"$stats[SOTpct]%\"\n";
+			$total_count+=$stats["calls"];
+			$total_countSOT+=$stats["SOT"];
 			$CIDs_count++;
+			$x++;
 			}
 		$ASCII_text.="+-----------------+---------+---------+----------+\n";
 		$ASCII_text.="| "._QXZ("TOTAL",15,"r")." | ".sprintf("%8s", $total_count)."| ".sprintf("%8s", $total_countSOT)."|\n";
 		$ASCII_text.="+-----------------+---------+---------+\n";
 		$ASCII_text.=" "._QXZ("CIDs Count",10,"r").": $CIDs_count \n\n\n";
-		$HTML_text.="<TR><TH class='small_standard_bold grey_graph_cell'>"._QXZ("TOTAL")."</th><TH class='small_standard_bold grey_graph_cell'>$total_count</th><TH class='small_standard_bold grey_graph_cell'>$total_countSOT</th></tr></table>";
+		$HTML_text.="<TR><TH class='small_standard_bold grey_graph_cell'>"._QXZ("TOTAL")."</th><TH class='small_standard_bold grey_graph_cell'>$total_count</th><TH class='small_standard_bold grey_graph_cell'>$total_countSOT</th><th class='small_standard_bold grey_graph_cell' colspan=2>&nbsp;</th></tr></table>";
 		} 
 	else
 		{

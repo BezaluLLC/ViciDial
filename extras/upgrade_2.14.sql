@@ -3130,3 +3130,19 @@ ALTER TABLE phones MODIFY email VARCHAR(255);
 ALTER TABLE vicidial_voicemail MODIFY email VARCHAR(255);
 
 UPDATE system_settings SET db_schema_version='1746',db_schema_update_date=NOW() where db_schema_version < 1746;
+
+INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,answering_machine) values('GVM','Generic Voicemail Message','Y','N','UNDEFINED','N','N','N','N','N','N','N','Y');
+INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,answering_machine) values('PVM','Personalized Voicemail Message','Y','N','UNDEFINED','N','N','N','N','N','N','N','Y');
+INSERT INTO vicidial_statuses (status,status_name) VALUES ('FAXHU', 'Fax Auto Hangup');
+INSERT INTO vicidial_statuses (status,status_name) VALUES ('FASHU', 'False Answer Auto Hangup');
+INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,answering_machine) values('VAMCS','AMD CallScreeen','N','N','UNDEFINED','N','N','N','N','N','N','N','N');
+INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,answering_machine) values('VAMFAS','AMD False Answer Signal','N','N','UNDEFINED','N','N','N','N','N','N','N','N');
+INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,answering_machine) values('VAMFIS','AMD FAS Silence','N','N','UNDEFINED','N','N','N','N','N','N','N','N');
+INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,answering_machine) values('VAMRNG','AMD FAS Ringing','N','N','UNDEFINED','N','N','N','N','N','N','N','N');
+INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,answering_machine) values('VAMFAX','AMD Fax Machine','N','N','UNDEFINED','N','N','N','N','N','N','N','N');
+INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,answering_machine) values('VAMSIT','AMD SIT Tones','N','N','UNDEFINED','N','N','N','N','N','N','N','N');
+INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,answering_machine) values('VAMMAC','AMD Answering Machine','N','N','UNDEFINED','N','N','N','N','N','N','N','Y');
+INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,answering_machine) values('VAMNS','AMD Not Sure','N','N','UNDEFINED','N','N','N','N','N','N','N','N');
+INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,answering_machine) values('RAXFER','Remote Agent Call Transferred','N','Y','UNDEFINED','N','N','Y','N','N','N','N','N');
+
+UPDATE system_settings SET db_schema_version='1747',db_schema_update_date=NOW() where db_schema_version < 1747;
