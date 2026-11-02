@@ -1,4 +1,4 @@
-WEB BROWSER JAVASCRIPT THROTTLING	Started: 2021-03-25	Updated: 2023-03-07
+WEB BROWSER JAVASCRIPT THROTTLING	Started: 2021-03-25	Updated: 2026-11-02
 
 
 
@@ -33,6 +33,7 @@ Below are the ways you can prevent Chrome's Intensive Javascript Throttling from
 4. Enable the VICIdial System Settings for "Agent Hidden Browser Sound"
 5. Switch the VICIdial System Setting for "Agent Screen Timer" to 'EventSource'
 6. Switch the VICIdial System Setting for "Agent Screen Timer" to 'setTimeoutAudioLoop'
+7. Switch the VICIdial System Setting for "Agent Screen Timer" to 'setWTTimeout'
 
 
 More information on each of the above...
@@ -124,6 +125,10 @@ Thanks to 'fperdomo' on the VICIdial Forums for posting a simple method using SS
 Thanks to 'martinch' on the VICIdial Issue Tracker for posting a simple method using an HTML audio tag with the 'loop' option to work-around the Chrome JavasScript Throttling issue by playing of a loop of inaudible 20Hz audio while the agent is logged in. After some fine-tuning and testing in different web browsers, we committed this as another option to the System Setting "Agent Screen Timer" feature in the VICIdial codebase in svn/trunk revision 3694. Since this method will currently disable any other HTML audio sounds playing in the same window, it will break "Agent Browser Call Alerts" if they are enabled on your system.
 
 
+7. SWITCH THE VICIDIAL SYSTEM SETTING FOR "AGENT SCREEN TIMER" TO 'setWTTimeout'
+
+This is a simple timer method using a Web Worker to work-around the Chrome JavasScript Throttling issue by replacing the JavaScript "setTimeout()" with a "Web Worker" that runs once a second. After some fine-tuning and testing in different web browsers, we committed this as an optional System Setting called "Agent Screen Timer" to the VICIdial codebase in svn/trunk revision 4036. Since the Web Worker process runs as a background process independently of the agent screen, it is relatively heavy-weight with a high start-up performance cost, and a high per-instance memory cost, so you may see increased resource usage on agent workstations if using this timing method.
+
 
 
 
@@ -133,15 +138,15 @@ THE FUTURE
 It looks like the maintainers of Chrome have every intention of increasing Javascript Throttling and "inactive" tab resource reduction in the future, even removing the flag they created to disable Javascript Throttling just 4 months after creating it, but hopefully they will leave at least one of the above methods for exemptions tabs from these features in place.
 
 
-Why not switch the VICIdial Agent Screen from AJAX(Polling) to using streaming server connections (SSE, Server-Sent-Events) like EventSource or WebSockets?
+Why not switch the VICIdial Agent Screen from AJAX(Polling) to using streaming server connections (SSE, Server-Sent-Events) like EventSource, WebSockets or Web Workers?
 
 First of all, switching to SSE would take a tremendous amount of development and testing time since none of the code is set to work like that currently.
 
-Second, this would require moving some of the data processing to the server, and it would require presistent connections to web services, which could greatly reduce webserver capacity.
+Second, changing to SSEs would require moving some of the data processing to the server, and it would require presistent connections to web services, which could greatly reduce webserver capacity.
 
 Third, some older networks and proxy servers do not support perpetual connections like SSE uses, which will cause the network to fail to transmit all data to the client workstation, so it is not a one-size-fits-all solution like AJAX has been for the last 16 years.
 
-Fourth, there is no guarantee that the Chrome developers won't just target SSE for optimization next. As they continue to tighten resource optimizations in non-visible browser tabs, they will widen the functions that are affected, as we are now seeing with the reduced time to throttling and the new Memory/Energy Saver features introduced in Chrome build 110.
+Fourth, there is no guarantee that the Chrome developers won't just target SSE, WebSockets or Web Workers for optimization next. As they continue to tighten resource optimizations in non-visible browser tabs, they will widen the functions that are affected, as we are now seeing with the reduced time to throttling and the new Memory/Energy Saver features introduced in Chrome build 110.
 
 
 

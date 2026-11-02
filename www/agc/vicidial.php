@@ -761,10 +761,11 @@
 # 260529-0914 - Added AMDnotesBox
 # 260615-0039 - Fix for transfer issue
 # 260731-0918 - Added xfer_button_commit options.php setting
+# 261101-1945 - Added setWTTimeout timer option, Added webrtc_ping feature
 #
 
-$version = '2.14-727c';
-$build = '260731-0918';
+$version = '2.14-728c';
+$build = '261101-1945';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=110;
@@ -905,7 +906,7 @@ $random = (rand(1000000, 9999999) + 10000000);
 
 #############################################
 ##### START SYSTEM_SETTINGS AND USER LANGUAGE LOOKUP #####
-$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script,agent_push_events,agent_push_url,agent_logout_link,agentonly_callback_campaign_lock,manual_dial_validation,mute_recordings,enable_second_script,enable_first_webform,recording_buttons,outbound_cid_any,browser_call_alerts,manual_dial_phone_strip,require_password_length,pass_hash_enabled,agent_hidden_sound_seconds,agent_hidden_sound,agent_hidden_sound_volume,agent_screen_timer,agent_hide_hangup,allow_web_debug,max_logged_in_agents,login_kickall,agent_notifications,inbound_credits,two_factor_auth_agent_hours,two_factor_container,sip_event_logging,stereo_recording,agent_hide_dial_fail,agent_man_dial_filter,agent_3way_dial_filter,recording_dtmf_detection,recording_dtmf_muting,xfer_min_container,max_inbound_auto_reenable FROM system_settings;";
+$stmt = "SELECT use_non_latin,vdc_header_date_format,vdc_customer_date_format,vdc_header_phone_format,webroot_writable,timeclock_end_of_day,vtiger_url,enable_vtiger_integration,outbound_autodial_active,enable_second_webform,user_territories_active,static_agent_url,custom_fields_enabled,pllb_grouping_limit,qc_features_active,allow_emails,callback_time_24hour,enable_languages,language_method,meetme_enter_login_filename,meetme_enter_leave3way_filename,enable_third_webform,default_language,active_modules,allow_chats,chat_url,default_phone_code,agent_screen_colors,manual_auto_next,agent_xfer_park_3way,admin_web_directory,agent_script,agent_push_events,agent_push_url,agent_logout_link,agentonly_callback_campaign_lock,manual_dial_validation,mute_recordings,enable_second_script,enable_first_webform,recording_buttons,outbound_cid_any,browser_call_alerts,manual_dial_phone_strip,require_password_length,pass_hash_enabled,agent_hidden_sound_seconds,agent_hidden_sound,agent_hidden_sound_volume,agent_screen_timer,agent_hide_hangup,allow_web_debug,max_logged_in_agents,login_kickall,agent_notifications,inbound_credits,two_factor_auth_agent_hours,two_factor_container,sip_event_logging,stereo_recording,agent_hide_dial_fail,agent_man_dial_filter,agent_3way_dial_filter,recording_dtmf_detection,recording_dtmf_muting,xfer_min_container,max_inbound_auto_reenable,webrtc_ping_url,webrtc_ping_auth_token FROM system_settings;";
 $rslt=mysql_to_mysqli($stmt, $link);
 	if ($mel > 0) {mysql_error_logging($NOW_TIME,$link,$mel,$stmt,'01001',$VD_login,$server_ip,$session_name,$one_mysql_log);}
 #if ($DB) {echo "$stmt\n";}
@@ -980,6 +981,8 @@ if ($qm_conf_ct > 0)
 	$SSrecording_dtmf_muting = 			$row[64];
 	$SSxfer_min_container =				$row[65];
 	$SSmax_inbound_auto_reenable =		$row[66];
+	$SSwebrtc_ping_url =				$row[67];
+	$SSwebrtc_ping_auth_token =			$row[68];
 	if ( ($SSagent_hidden_sound == '---NONE---') or ($SSagent_hidden_sound == '') ) {$SSagent_hidden_sound_seconds=0;}
 	}
 else
@@ -1110,6 +1113,8 @@ $phone_login_webform	= '0';	# set to 1 or 2 to return to default of including th
 $login_submit_once		= '1';	# set to 0 to remove the "disable the login submit button after submitting" feature
 $default_consultative	= '0';	# set the CONSULTATIVE checkbox on the transfer panel be checked by default
 $xfer_button_commit		= '0';	# set to 1 to have the Customer Info 'commit' action run when the Transfer-Conf panel is opened
+$disable_ping_widget	= '0';	# set to 1 to have the WebRTC Ping widget disabled even if it is active in the system settings
+$hide_ping_widget		= '0';	# set to 1 to have the WebRTC Ping widget hidden even if it is active
 
 $TEST_all_statuses		= '0';	# TEST variable allows all statuses in dispo screen, FOR DEBUG ONLY
 
@@ -1270,7 +1275,7 @@ if (strlen($VUselected_language) < 1)
 $vdc_form_display = 'vdc_form_display.php';
 if (preg_match("/cf_encrypt/",$active_modules))
 	{$vdc_form_display = 'vdc_form_display_encrypt.php';}
-
+$SSwebrtc_ping_url_length = (strlen($SSwebrtc_ping_url));
 
 header ("Content-type: text/html; charset=utf-8");
 header ("Cache-Control: no-cache, must-revalidate");  // HTTP/1.1
@@ -1283,9 +1288,12 @@ echo '<?xml version="1.0" encoding="UTF-8"?>
 <link rel="stylesheet" type="text/css" href="css/style.css" />
 <link rel="stylesheet" type="text/css" href="css/custom.css" />
 <script language="JavaScript" src="calendar_db.js"></script>
-<script language="JavaScript" src="confetti.php"></script>
-<link rel="stylesheet" href="calendar.css" />
-';
+<script language="JavaScript" src="confetti.php"></script>';
+if ($SSagent_screen_timer == 'setWTTimeout')
+	{
+	echo '<script language="JavaScript" src="wt_main.js"></script>';
+	}
+echo '<link rel="stylesheet" href="calendar.css" />';
 echo "<!-- VERSION: $version     "._QXZ("BUILD:")." $build -->\n";
 echo "<!-- BROWSER: $BROWSER_WIDTH x $BROWSER_HEIGHT     $JS_browser_width x $JS_browser_height -->\n";
 
@@ -7021,6 +7029,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var hangup_again_link_trigger=<?php echo $hangup_again_link_trigger ?>;
 	var VCAdata='x';
 	var xfer_button_commit='<?php echo $xfer_button_commit ?>';
+	var SSwebrtc_ping_url_length='<?php echo $SSwebrtc_ping_url_length ?>';
+	var hide_ping_widget='<?php echo $hide_ping_widget ?>';
 	var DiaLControl_auto_HTML = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADready','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_paused.gif") ?>\" border=\"0\" alt=\"You are paused\" /></a>";
 	var DiaLControl_auto_HTML_ready = "<a href=\"#\" onclick=\"AutoDial_ReSume_PauSe('VDADpause','','','','','','','YES');\"><img src=\"./images/<?php echo _QXZ("vdc_LB_active.gif") ?>\" border=\"0\" alt=\"You are active\" /></a>";
 	var DiaLControl_auto_HTML_OFF = "<img src=\"./images/<?php echo _QXZ("vdc_LB_blank_OFF.gif") ?>\" border=\"0\" alt=\"pause button disabled\" />";
@@ -10456,7 +10466,16 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							particleSpeed=confetti_options_array[2];
 
 							startConfetti();
-							setTimeout(() => {stopConfetti(); confettiDuration=default_confettiDuration; maxParticleCount=default_maxParticleCount; particleSpeed=default_particleSpeed;}, confettiDuration*1000)
+		<?php
+                if ($SSagent_screen_timer == 'setWTTimeout')
+                        {
+                        echo "\n\t\t\t\t\t\t\tsetWTTimeout(() => {stopConfetti(); confettiDuration=default_confettiDuration; maxParticleCount=default_maxParticleCount; particleSpeed=default_particleSpeed;}, confettiDuration*1000);\n";
+                        }
+                else
+                        {
+                        echo "\n\t\t\t\t\t\t\tsetTimeout(() => {stopConfetti(); confettiDuration=default_confettiDuration; maxParticleCount=default_maxParticleCount; particleSpeed=default_particleSpeed;}, confettiDuration*1000);\n";
+                        }
+		?>
 							}
 						}
 
@@ -18054,7 +18073,16 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 							// console.log(confettiDuration+" -- "+maxParticleCount+" -- "+particleSpeed);
 							startConfetti();
 							// setTimeout( function() { FetchData(); }, 1000);
-							setTimeout(() => {stopConfetti();}, confettiDuration*1000)
+		<?php
+		if ($SSagent_screen_timer == 'setWTTimeout')
+			{
+			echo "\n\t\t\t\t\t\tsetWTTimeout(() => {stopConfetti();}, confettiDuration*1000);\n";
+			}
+		else
+			{
+			echo "\n\t\t\t\t\t\tsetTimeout(() => {stopConfetti();}, confettiDuration*1000);\n";
+			}
+		?>
 							}
 
 					// CLEAR ALL FORM VARIABLES
@@ -22309,6 +22337,8 @@ function phone_number_format(formatphone) {
 			hideDiv('InvalidOpenerSpan');
 			hideDiv('OtherTabCommentsSpan');
 			hideDiv('AgentTimeDisplayBox');
+			if ( (hide_ping_widget > 0) && (SSwebrtc_ping_url_length > 0) )
+				{hideDiv('WebRTCPingSpan');}
 			if ( (SSstereo_recording < 1) || (stereo_recording == 'DISABLED') )
 				{hideDiv('StRecorDControl');}
 			if (launch_scb_force_dial < 1)
@@ -23194,12 +23224,16 @@ function phone_number_format(formatphone) {
 			}
 		else if ($SSagent_screen_timer == 'setTimeoutAudioLoop')
 			{
-			echo "\n		set_timeout_audio_loop = true;\n";
-			echo "\n		setTimeout(\"all_refresh()\", refresh_interval);\n";
+			echo "\n\t\tset_timeout_audio_loop = true;\n";
+			echo "\n\t\tsetTimeout(\"all_refresh()\", refresh_interval);\n";
+			}
+		else if ($SSagent_screen_timer == 'setWTTimeout')
+			{
+			echo "\n\t\tsetWTTimeout(\"all_refresh()\", refresh_interval);\n";
 			}
 		else
 			{
-			echo "\n		setTimeout(\"all_refresh()\", refresh_interval);\n";
+			echo "\n\t\tsetTimeout(\"all_refresh()\", refresh_interval);\n";
 			}
 		?>
 
@@ -24730,13 +24764,25 @@ $zi=2;
 <font class="body_text"><a href="#" onclick="AgentTimeReport('open');return false;"><?php echo _QXZ("AGENT TIME"); ?></a></font>
 </span>
 
+<?php
+if ( ($SSwebrtc_ping_url != '') and ($disable_ping_widget < 1) )
+        {
+	$en_webrtc_ping_auth_token = encode_uuidv4($SSwebrtc_ping_auth_token);
+	$zi++;
+	echo "<span style='position:absolute;left:625px;top:" . $SDLheight . "px;z-index:" . $zi . ";' id='WebRTCPingSpan'>";
+	echo "<iframe id='webrtc_ping' src='$SSwebrtc_ping_url?auth_token=$en_webrtc_ping_auth_token&user=$VD_login&phone=$phone_login&campaign=$VD_campaign' style='border: none; display: block;' width='80' height='20' scrolling='no'></iframe>";
+	echo "</span>";
+        }
+?>
+
 <span style="position:absolute;left:550px;top:<?php echo $CBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="PauseCodeButtons"><font class="body_text">
 <span id="PauseCodeLinkSpan"></span> <br />
 </font></span>
 
 <span style="position:absolute;left:0px;top:<?php echo $PBheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="MaiNfooterspan">
 <span id="blind_monitor_notice_span"><b><font color="red"> &nbsp; &nbsp; <span id="blind_monitor_notice_span_contents"></span></font></b></span>
-    <table bgcolor="<?php echo $MAIN_COLOR ?>" id="MaiNfooter" width="<?php echo $MNwidth ?>px"><tr height="32px"><td height="32px"><font face="Arial,Helvetica" size="1"><?php echo _QXZ("VERSION:"); ?> <?php echo $version ?> &nbsp; <?php echo _QXZ("BUILD:"); ?> <?php echo $build ?> &nbsp; &nbsp; <?php echo _QXZ("Server:"); ?> <?php echo $server_ip ?>  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</font><br />
+    <table bgcolor="<?php echo $MAIN_COLOR ?>" id="MaiNfooter" width="<?php echo $MNwidth ?>px"><tr height="32px"><td height="32px"><font face="Arial,Helvetica" size="1"><?php echo _QXZ("VERSION:"); ?> <?php echo $version ?> &nbsp; <?php echo _QXZ("BUILD:"); ?> <?php echo $build ?> &nbsp; &nbsp; <?php echo _QXZ("Server:"); ?> <?php echo $server_ip ?>  &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;</font>
+	<br />
 	<font class="body_small">
 	<span id="busycallsdisplay"><a href="#"  onclick="conf_channels_detail('SHOW');"><?php echo _QXZ("Show conference call channel information"); ?></a>
     <br /><br />&nbsp;</span></font></td><td align="right" height="32px">
@@ -24755,6 +24801,7 @@ $zi=2;
 	</font>
     </td></tr></table>
 </span>
+
 
 <span style="position:absolute;left:<?php echo $SCwidth ?>px;top:<?php echo $SCheight ?>px;z-index:<?php $zi++; echo $zi ?>;" id="SecondSspan"><font class="body_text"> <?php echo _QXZ("seconds:"); ?> 
 <span id="SecondSDISP"> &nbsp; &nbsp; </span></font>

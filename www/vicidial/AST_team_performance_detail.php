@@ -6,7 +6,7 @@
 # QC statuses of QCFAIL, QCCANC and sales are defined by the Sale=Y status
 # flags being set on those statuses.
 #
-# Copyright (C) 2024  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2026  Joe Johnson, Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGES
 #
@@ -38,6 +38,7 @@
 # 220301-2155 - Added allow_web_debug system setting
 # 230407-1039 - Added include_sales_in_TPD_report option
 # 240801-1130 - Code updates for PHP8 compatibility
+# 261101-2002 - Added Current team/user group only option
 #
 
 $startMS = microtime();
@@ -75,6 +76,9 @@ if (isset($_GET["search_archived_data"]))			{$search_archived_data=$_GET["search
 	elseif (isset($_POST["search_archived_data"]))	{$search_archived_data=$_POST["search_archived_data"];}
 if (isset($_GET["show_all_users"]))				{$show_all_users=$_GET["show_all_users"];}
 	elseif (isset($_POST["show_all_users"]))	{$show_all_users=$_POST["show_all_users"];}
+if (isset($_GET["current_user_group_only"]))				{$current_user_group_only=$_GET["current_user_group_only"];}
+	elseif (isset($_POST["current_user_group_only"]))		{$current_user_group_only=$_POST["current_user_group_only"];}
+	else {$current_user_group_only="";}
 
 $DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
@@ -641,7 +645,8 @@ $HTML_text.="<TD VALIGN=TOP>\n";
 $HTML_text.=_QXZ("Display as").":<BR>";
 $HTML_text.="<select name='report_display_type'>";
 if ($report_display_type) {$HTML_text.="<option value='$report_display_type' selected>"._QXZ("$report_display_type")."</option>";}
-$HTML_text.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR><BR>";
+$HTML_text.="<option value='TEXT'>"._QXZ("TEXT")."</option><option value='HTML'>"._QXZ("HTML")."</option></select>\n<BR>";
+$HTML_text.="<input type='checkbox' value='checked' name='current_user_group_only' id ='current_user_group_only' $current_user_group_only>"._QXZ("Current team/user group only")."<BR>\n";
 if ($archives_available=="Y") 
 	{
 	$HTML_text.="<input type='checkbox' name='search_archived_data' value='checked' $search_archived_data>"._QXZ("Search archived data")."<BR>\n";
@@ -784,7 +789,14 @@ if ( ($SUBMIT=="SUBMIT") or ($SUBMIT==_QXZ("SUBMIT")) )
 			}
 		else 
 			{
-			$user_stmt="select distinct vicidial_users.full_name, vicidial_users.user from vicidial_users, ".$vicidial_agent_log_table." where vicidial_users.user_group='$user_group[$i]' and vicidial_users.user=".$vicidial_agent_log_table.".user and ".$vicidial_agent_log_table.".user_group='$user_group[$i]'  and ".$vicidial_agent_log_table.".event_time>='$query_date' and ".$vicidial_agent_log_table.".event_time<='$end_date' and ".$vicidial_agent_log_table.".campaign_id in ($group_SQL_str) order by full_name, user";
+			if ($current_user_group_only=="checked")
+				{	
+				$user_stmt="select distinct vicidial_users.full_name, vicidial_users.user from vicidial_users, ".$vicidial_agent_log_table." where vicidial_users.user_group='$user_group[$i]' and vicidial_users.user=".$vicidial_agent_log_table.".user and ".$vicidial_agent_log_table.".user_group='$user_group[$i]'  and ".$vicidial_agent_log_table.".event_time>='$query_date' and ".$vicidial_agent_log_table.".event_time<='$end_date' and ".$vicidial_agent_log_table.".campaign_id in ($group_SQL_str) order by full_name, user";
+				}
+			else
+				{	
+				$user_stmt="select distinct vicidial_users.full_name, vicidial_users.user from vicidial_users, ".$vicidial_agent_log_table." where vicidial_users.user=".$vicidial_agent_log_table.".user and ".$vicidial_agent_log_table.".user_group='$user_group[$i]' and ".$vicidial_agent_log_table.".event_time>='$query_date' and ".$vicidial_agent_log_table.".event_time<='$end_date' and ".$vicidial_agent_log_table.".campaign_id in ($group_SQL_str) order by full_name, user";
+				}
 			}
 		if ($DB) {$ASCII_text.="$user_stmt\n";}
 		$user_rslt=mysql_to_mysqli($user_stmt, $link);
@@ -1123,7 +1135,8 @@ if ( ($SUBMIT=="SUBMIT") or ($SUBMIT==_QXZ("SUBMIT")) )
 				for ($d=1; $d<=count($graph_stats); $d++) {
 					$labels.="\"".preg_replace('/ +/', ' ', $graph_stats[$d][0])."\",";
 					$data.="\"".$graph_stats[$d][$dataset_index]."\","; 
-					$current_graph_total+=$graph_stats[$d][$dataset_index];
+					$current_graph_total+=(!($graph_stats[$d][$dataset_index]) ? 0 : $graph_stats[$d][$dataset_index]);
+					# $current_graph_total+=$graph_stats[$d][$dataset_index];
 					$bgcolor=$backgroundColor[($d%count($backgroundColor))];
 					$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
 					$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];
@@ -1284,7 +1297,8 @@ if ( ($SUBMIT=="SUBMIT") or ($SUBMIT==_QXZ("SUBMIT")) )
 		for ($d=0; $d<count($total_graph_stats); $d++) {
 			$labels.="\"".preg_replace('/ +/', ' ', $total_graph_stats[$d][0])."\",";
 			$data.="\"".$total_graph_stats[$d][$dataset_index]."\",";
-			$current_graph_total+=$total_graph_stats[$d][$dataset_index];
+			$current_graph_total+=(!($total_graph_stats[$d][$dataset_index]) ? 0 : $total_graph_stats[$d][$dataset_index]);
+			# $current_graph_total+=$total_graph_stats[$d][$dataset_index];
 			$bgcolor=$backgroundColor[($d%count($backgroundColor))];
 			$hbgcolor=$hoverBackgroundColor[($d%count($hoverBackgroundColor))];
 			$hbcolor=$hoverBorderColor[($d%count($hoverBorderColor))];

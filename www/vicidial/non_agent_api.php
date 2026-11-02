@@ -236,10 +236,11 @@
 # 260907-1808 - Added copy_phone function
 # 260925-1400 - Added vdc_agent_api_access requirement to all functions
 # 261021-1827 - PHP 8.5 fix
+# 261101-1200 - Added users_list and agent_digital_stats_export functions, added channel option to agent_stats_export
 #
 
-$version = '2.14-211';
-$build = '261021-1827';
+$version = '2.14-212';
+$build = '261101-1200';
 $php_script='non_agent_api.php';
 $api_url_log = 0;
 $camp_lead_order_random=1;
@@ -819,6 +820,12 @@ if (isset($_GET["delete_did"]))				{$delete_did=$_GET["delete_did"];}
 if (isset($_GET["group_by_campaign"]))			{$group_by_campaign=$_GET["group_by_campaign"];}
 	elseif (isset($_POST["group_by_campaign"]))	{$group_by_campaign=$_POST["group_by_campaign"];}
 	else {$group_by_campaign="";}
+if (isset($_GET["channel"]))			{$channel=$_GET["channel"];}
+	elseif (isset($_POST["channel"]))	{$channel=$_POST["channel"];}
+	else {$channel="";}
+if (isset($_GET["sla_seconds"]))			{$sla_seconds=$_GET["sla_seconds"];}
+	elseif (isset($_POST["sla_seconds"]))	{$sla_seconds=$_POST["sla_seconds"];}
+	else {$sla_seconds="";}
 if (isset($_GET["source_user"]))			{$source_user=$_GET["source_user"];}
 	elseif (isset($_POST["source_user"]))	{$source_user=$_POST["source_user"];}
 	else {$source_user="";}
@@ -1156,6 +1163,8 @@ $callback_type = preg_replace('/[^A-Z]/','',$callback_type);
 $datetime_start = preg_replace('/[^- \+\:\_0-9]/','',$datetime_start);
 $datetime_end = preg_replace('/[^- \+\:\_0-9]/','',$datetime_end);
 $time_format = preg_replace('/[^A-Z]/','',$time_format);
+$channel = preg_replace('/[^a-zA-Z]/','',$channel);
+$sla_seconds = preg_replace('/[^0-9]/','',$sla_seconds);
 $nanpa_ac_prefix_check = preg_replace('/[^A-Z]/','',$nanpa_ac_prefix_check);
 $delete_user = preg_replace('/[^A-Z]/','',$delete_user);
 $campaign_rank = preg_replace('/[^-_0-9]/','',$campaign_rank);
@@ -13272,6 +13281,8 @@ if ($function == 'agent_stats_export')
 				}
 			else
 				{$search_ready=0;}
+			if ( (strlen($channel) > 0) and ($channel != 'VOICE') and ($channel != 'EMAIL') and ($channel != 'CHAT') )
+				{$search_ready=0;}
 			if ($search_ready < 1)
 				{
 				$result = 'ERROR';
@@ -13289,11 +13300,11 @@ if ($function == 'agent_stats_export')
 				{
 				if ($group_by_campaign == 'YES')
 					{
-					$stmt="SELECT user,lead_id,sub_status,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec,pause_epoch,campaign_id from vicidial_agent_log where $search_SQL order by campaign_id,user,agent_log_id limit 10000000;";
+					$stmt="SELECT user,lead_id,sub_status,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec,pause_epoch,campaign_id,comments from vicidial_agent_log where $search_SQL order by campaign_id,user,agent_log_id limit 10000000;";
 					}
 				else
 					{
-					$stmt="SELECT user,lead_id,sub_status,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec,pause_epoch,campaign_id from vicidial_agent_log where $search_SQL order by user,agent_log_id limit 10000000;";
+					$stmt="SELECT user,lead_id,sub_status,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec,pause_epoch,campaign_id,comments from vicidial_agent_log where $search_SQL order by user,agent_log_id limit 10000000;";
 					}
 				$rslt=mysql_to_mysqli($stmt, $link);
 				$rec_recs = mysqli_num_rows($rslt);
@@ -13355,6 +13366,9 @@ if ($function == 'agent_stats_export')
 					$ASend_sec=array();
 					$ASfull_name=array();
 					$ASuser_group=array();
+					$ASall_calls=array();
+					$ASchannel_talk_sec=array();
+					$ASchannel_dispo_sec=array();
 
 					$last_user='998877665544332211328497';
 					$total_calls=0;
@@ -13363,7 +13377,6 @@ if ($function == 'agent_stats_export')
 						{
 						# user,lead_id,sub_status,pause_sec,wait_sec,talk_sec,dispo_sec,dead_sec
 						$row=mysqli_fetch_row($rslt);
-						# print_r($row);
 						if ($group_by_campaign == 'YES')
 							{
 							$temp_camp_user="$row[9] $row[0]";
@@ -13398,10 +13411,24 @@ if ($function == 'agent_stats_export')
 								$ASsessions[$uc] =		0;
 								}
 							}
-						if ($row[1] > 0)		
+						# channel option: calls, talk, dispo and dead time only count rows of that channel,
+						# login, pause and wait time always count all rows. comments EMAIL or CHAT, else VOICE
+						$in_channel=1;
+						if (strlen($channel) > 0)
 							{
-							$AScalls[$uc]++;
-							$total_calls++;
+							$row_channel='VOICE';
+							if ( ($row[10] == 'EMAIL') or ($row[10] == 'CHAT') ) {$row_channel = $row[10];}
+							if ($row_channel != $channel) {$in_channel=0;}
+							}
+						if (!isset($ASall_calls[$uc])) {$ASall_calls[$uc]=0;}
+						if ($row[1] > 0)
+							{
+							$ASall_calls[$uc]++;
+							if ($in_channel > 0)
+								{
+								$AScalls[$uc]++;
+								$total_calls++;
+								}
 							}
 						if ($row[3] > -1)		
 							{
@@ -13414,11 +13441,18 @@ if ($function == 'agent_stats_export')
 						if (!isset($ASdispo_sec[$uc])) {$ASdispo_sec[$uc]=0;}
 						if (!isset($ASdead_sec[$uc])) {$ASdead_sec[$uc]=0;}
 						if (!isset($ASend_sec[$uc])) {$ASend_sec[$uc]=0;}
+						if (!isset($ASchannel_talk_sec[$uc])) {$ASchannel_talk_sec[$uc]=0;}
+						if (!isset($ASchannel_dispo_sec[$uc])) {$ASchannel_dispo_sec[$uc]=0;}
 						$ASpause_sec[$uc] =		($ASpause_sec[$uc] + $row[3]);
 						$ASwait_sec[$uc] =		($ASwait_sec[$uc] + $row[4]);
 						$AStalk_sec[$uc] =		($AStalk_sec[$uc] + $row[5]);
 						$ASdispo_sec[$uc] =		($ASdispo_sec[$uc] + $row[6]);
-						$ASdead_sec[$uc] =		($ASdead_sec[$uc] + $row[7]);
+						if ($in_channel > 0)
+							{
+							$ASchannel_talk_sec[$uc] =	($ASchannel_talk_sec[$uc] + $row[5]);
+							$ASchannel_dispo_sec[$uc] =	($ASchannel_dispo_sec[$uc] + $row[6]);
+							$ASdead_sec[$uc] =		($ASdead_sec[$uc] + $row[7]);
+							}
 						$ASend_epoch[$uc] =		$row[8];
 						$ASend_sec[$uc] =		($row[3] + $row[4] + $row[5] + $row[6]);
 						$k++;
@@ -13472,9 +13506,15 @@ if ($function == 'agent_stats_export')
 							$talk_sec = $AStalk_sec[$k];
 							$dead_sec = $ASdead_sec[$k];
 							$dispo_sec = $ASdispo_sec[$k];
+							if (strlen($channel) > 0)
+								{
+								$cust_sec = ($ASchannel_talk_sec[$k] - $ASdead_sec[$k]);
+								$talk_sec = $ASchannel_talk_sec[$k];
+								$dispo_sec = $ASchannel_dispo_sec[$k];
+								}
 							}
 						$avg_cust_sec = MathZDC($cust_sec, $AScalls[$k]);
-						$avg_wait_sec = MathZDC($ASwait_sec[$k], $AScalls[$k]);
+						$avg_wait_sec = MathZDC($ASwait_sec[$k], $ASall_calls[$k]);
 						$pct_of_queue = ( MathZDC($AScalls[$k], $total_calls) * 100);
 						$avg_session_sec = round($avg_session_sec);
 						$avg_pause_sec = round($avg_pause_sec);
@@ -13523,6 +13563,352 @@ if ($function == 'agent_stats_export')
 	}
 ################################################################################
 ### END agent_stats_export
+################################################################################
+
+
+
+
+
+################################################################################
+### agent_digital_stats_export - exports email and chat statistics per agent for set time period
+###
+### One row per agent per channel(EMAIL, CHAT), raw sums and counts so averages
+### can be calculated by the caller:
+###   contacts_handled   - EMAIL: emails delivered to the agent, CHAT: chats the agent posted in
+###   replies_sent       - EMAIL: replies sent by the agent, CHAT: messages the agent posted
+###   frt_sum_sec        - sum of first response times in seconds
+###                        EMAIL: delivered to agent until first reply, CHAT: chat start until agent's first message,
+###                        only for chats the agent took from the queue(not ones the agent started)
+###   frt_count          - contacts that have a first response time
+###   within_sla_count   - first responses within sla_seconds
+###   resolution_sum_sec - EMAIL: delivered to agent until closed, CHAT: chat start until last message
+###   resolution_count   - contacts that have a resolution time
+###   messages_sum       - EMAIL: the inbound email plus its replies, CHAT: all non-system chat messages
+###   handle_sum_sec     - EMAIL: delivered to agent until closed, CHAT: agent's first post until last message
+###   handle_count       - contacts that have a handle time
+################################################################################
+if ($function == 'agent_digital_stats_export')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		$output="$result: $result_reason: |$source|\n";
+
+		if ($stage=="json") {$output=ConvertToJSON($result,$result_reason,$header,"source\n$source");}
+		echo "$output";
+
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			$output="$result: $result_reason: |$user|$function|\n";
+
+			if ($stage=="json") {$output=ConvertToJSON($result,$result_reason,$header,"user|function\n$user|$function");}
+			echo "$output";
+
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "agent_digital_stats_export USER DOES NOT HAVE PERMISSION TO GET AGENT INFO";
+			$output="$result: $result_reason: |$user|$allowed_user|\n";
+
+			if ($stage=="json") {$output=ConvertToJSON($result,$result_reason,$header,"user|allowed_user\n$user|$allowed_user");}
+			echo "$output";
+
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			if ( (strlen($datetime_start)!=19) or (strlen($datetime_end)!=19) or ( (strlen($channel) > 0) and ($channel != 'EMAIL') and ($channel != 'CHAT') ) )
+				{
+				$result = 'ERROR';
+				$result_reason = "agent_digital_stats_export INVALID SEARCH PARAMETERS";
+				$data = "$user|$agent_user|$datetime_start|$datetime_end|$channel";
+				$output="$result: $result_reason: $data\n";
+
+				if ($stage=="json") {$output=ConvertToJSON($result,$result_reason,$header,"user|agent_user|datetime_start|datetime_end|channel\n$user|$agent_user|$datetime_start|$datetime_end|$channel");}
+				echo "$output";
+
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$datetime_start = preg_replace("/\+/",' ',$datetime_start);
+				$datetime_end = preg_replace("/\+/",' ',$datetime_end);
+				if (strlen($sla_seconds) < 1)
+					{$sla_seconds = 7200;}
+
+				$stmt="SELECT admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+				if ($DB) {echo "|$stmt|\n";}
+				$rslt=mysql_to_mysqli($stmt, $link);
+				$row=mysqli_fetch_row($rslt);
+				$LOGadmin_viewable_groups =		$row[0];
+
+				$LOGadmin_viewable_groupsSQL='';
+				if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+					{
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+					$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+					$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+					}
+				$agent_userSQL='';
+				if (strlen($agent_user) > 0)
+					{$agent_userSQL = "and user='$agent_user'";}
+
+				# agents the api user is allowed to see
+				$ADagents=array();
+				$stmt="SELECT user from vicidial_users where user!='' $LOGadmin_viewable_groupsSQL $agent_userSQL;";
+				$rslt=mysql_to_mysqli($stmt, $link);
+				if ($DB) {echo "$stmt\n";}
+				while ($row=mysqli_fetch_row($rslt))
+					{$ADagents[$row[0]] = 1;}
+
+				$ADblank = array('contacts_handled' => 0, 'replies_sent' => 0, 'frt_sum_sec' => 0, 'frt_count' => 0, 'within_sla_count' => 0, 'resolution_sum_sec' => 0, 'resolution_count' => 0, 'messages_sum' => 0, 'handle_sum_sec' => 0, 'handle_count' => 0);
+				$ADstats=array();
+
+				##### EMAIL #####
+				if ( (strlen($channel) < 1) or ($channel == 'EMAIL') )
+					{
+					# agent replies by lead and agent, read up to one day past datetime_end
+					# because an email delivered in the period can be answered after it
+					$ADreplies=array();
+					$stmt="SELECT lead_id,user,UNIX_TIMESTAMP(email_date) from vicidial_email_log where email_date >= '$datetime_start' and email_date <= DATE_ADD('$datetime_end', INTERVAL 1 DAY) and user!='' $agent_userSQL order by email_date;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					while ($row=mysqli_fetch_row($rslt))
+						{$ADreplies["$row[0]|$row[1]"][] = $row[2];}
+
+					# one row per email delivered to an agent. vicidial_closer_log has no email_row_id,
+					# so the replies of a delivery are the agent's replies to that lead until it was closed
+					$stmt="SELECT user,lead_id,start_epoch,end_epoch from vicidial_closer_log where comments='EMAIL' and call_date >= '$datetime_start' and call_date <= '$datetime_end' and user!='' $agent_userSQL;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					while ($row=mysqli_fetch_row($rslt))
+						{
+						$agent_id = $row[0];
+						if (!isset($ADagents[$agent_id])) {continue;}
+						$key = "$agent_id|EMAIL";
+						if (!isset($ADstats[$key])) {$ADstats[$key] = $ADblank;}
+
+						$delivered = $row[2];
+						$closed = $row[3];
+						$span_end = $closed;
+						if ($span_end < 1) {$span_end = date("U");}
+
+						$first_reply=0;
+						$reply_count=0;
+						if (isset($ADreplies["$row[1]|$agent_id"]))
+							{
+							foreach ($ADreplies["$row[1]|$agent_id"] as $reply_time)
+								{
+								if ( ($reply_time < $delivered) or ($reply_time > $span_end) ) {continue;}
+								if ($first_reply < 1) {$first_reply = $reply_time;}
+								$reply_count++;
+								}
+							}
+
+						$ADstats[$key]['contacts_handled']++;
+						$ADstats[$key]['messages_sum'] += (1 + $reply_count);
+						if ($reply_count > 0)
+							{
+							$frt = ($first_reply - $delivered);
+							$ADstats[$key]['frt_sum_sec'] += $frt;
+							$ADstats[$key]['frt_count']++;
+							if ($frt <= $sla_seconds) {$ADstats[$key]['within_sla_count']++;}
+							}
+						if ($closed >= $delivered)
+							{
+							$ADstats[$key]['resolution_sum_sec'] += ($closed - $delivered);
+							$ADstats[$key]['resolution_count']++;
+							$ADstats[$key]['handle_sum_sec'] += ($closed - $delivered);
+							$ADstats[$key]['handle_count']++;
+							}
+						}
+
+					# replies are credited to the agent who sent them, by reply date
+					$stmt="SELECT user,count(*) from vicidial_email_log where email_date >= '$datetime_start' and email_date <= '$datetime_end' and user!='' $agent_userSQL group by user;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					while ($row=mysqli_fetch_row($rslt))
+						{
+						$agent_id = $row[0];
+						if (!isset($ADagents[$agent_id])) {continue;}
+						$key = "$agent_id|EMAIL";
+						if (!isset($ADstats[$key])) {$ADstats[$key] = $ADblank;}
+						$ADstats[$key]['replies_sent'] = $row[1];
+						}
+					}
+
+				##### CHAT #####
+				if ( (strlen($channel) < 1) or ($channel == 'CHAT') )
+					{
+					# chats started in the period, finished(archive) and still open(live)
+					$ADchats=array();
+					$stmt="SELECT chat_id,UNIX_TIMESTAMP(chat_start_time),lead_id from vicidial_chat_archive where chat_start_time >= '$datetime_start' and chat_start_time <= '$datetime_end' UNION ALL SELECT chat_id,UNIX_TIMESTAMP(chat_start_time),lead_id from vicidial_live_chats where chat_start_time >= '$datetime_start' and chat_start_time <= '$datetime_end';";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					while ($row=mysqli_fetch_row($rslt))
+						{$ADchats[$row[0]] = array('start' => $row[1], 'lead_id' => $row[2], 'agent' => '', 'first_post' => 0, 'first_reply' => 0, 'last_message' => 0, 'messages' => 0, 'agent_messages' => 0);}
+
+					# an agent taking a customer's chat from the queue writes a CHAT row to vicidial_closer_log,
+					# a chat an agent starts does not. chat_creator can't be used, it is set to the agent
+					# when the chat is taken. Read up to one day past datetime_end, like the email replies
+					$ADchat_accepts=array();
+					$stmt="SELECT lead_id,user,start_epoch from vicidial_closer_log where comments='CHAT' and call_date >= '$datetime_start' and call_date <= DATE_ADD('$datetime_end', INTERVAL 1 DAY) and user!='' $agent_userSQL;";
+					$rslt=mysql_to_mysqli($stmt, $link);
+					if ($DB) {echo "$stmt\n";}
+					while ($row=mysqli_fetch_row($rslt))
+						{$ADchat_accepts["$row[0]|$row[1]"][] = $row[2];}
+
+					# chat messages, looked up 1000 chats at a time to keep the queries small
+					$ADchat_id_chunks = array_chunk(array_keys($ADchats), 1000);
+					foreach ($ADchat_id_chunks as $ADchat_id_chunk)
+						{
+						$chat_idsSQL = "'" . implode("','", $ADchat_id_chunk) . "'";
+						$stmt="SELECT chat_id,poster,chat_level,UNIX_TIMESTAMP(message_time) from vicidial_chat_log where chat_id IN($chat_idsSQL) UNION ALL SELECT chat_id,poster,chat_level,UNIX_TIMESTAMP(message_time) from vicidial_chat_log_archive where chat_id IN($chat_idsSQL) order by 4;";
+						$rslt=mysql_to_mysqli($stmt, $link);
+						if ($DB) {echo "$stmt\n";}
+						while ($row=mysqli_fetch_row($rslt))
+							{
+							$chat_id = $row[0];
+							$poster = $row[1];
+							$message_time = $row[3];
+							if (!isset($ADchats[$chat_id])) {continue;}
+
+							$ADchats[$chat_id]['last_message'] = $message_time;
+							if ($row[2] != '1') {$ADchats[$chat_id]['messages']++;}
+
+							# a chat is credited to the first agent who posts in it, customers are not users
+							if (!isset($ADagents[$poster])) {continue;}
+							if (strlen($ADchats[$chat_id]['agent']) < 1)
+								{
+								$ADchats[$chat_id]['agent'] = $poster;
+								$ADchats[$chat_id]['first_post'] = $message_time;
+								}
+							if ( ($poster == $ADchats[$chat_id]['agent']) and ($row[2] != '1') )
+								{
+								if ($ADchats[$chat_id]['first_reply'] < 1) {$ADchats[$chat_id]['first_reply'] = $message_time;}
+								$ADchats[$chat_id]['agent_messages']++;
+								}
+							}
+						}
+
+					foreach ($ADchats as $chat)
+						{
+						$agent_id = $chat['agent'];
+						if (strlen($agent_id) < 1) {continue;}
+						$key = "$agent_id|CHAT";
+						if (!isset($ADstats[$key])) {$ADstats[$key] = $ADblank;}
+
+						$ADstats[$key]['contacts_handled']++;
+						$ADstats[$key]['replies_sent'] += $chat['agent_messages'];
+						$ADstats[$key]['messages_sum'] += $chat['messages'];
+
+						# the customer started the chat if this agent took it from the queue while it was open
+						$customer_started=0;
+						$accept_key = $chat['lead_id'] . '|' . $agent_id;
+						if (isset($ADchat_accepts[$accept_key]))
+							{
+							foreach ($ADchat_accepts[$accept_key] as $accept_time)
+								{
+								if ( ($accept_time >= $chat['start']) and ($accept_time <= $chat['last_message']) ) {$customer_started=1;}
+								}
+							}
+
+						# no first response for chats started by an agent, the agent writes first
+						if ( ($customer_started > 0) and ($chat['first_reply'] >= $chat['start']) )
+							{
+							$frt = ($chat['first_reply'] - $chat['start']);
+							$ADstats[$key]['frt_sum_sec'] += $frt;
+							$ADstats[$key]['frt_count']++;
+							if ($frt <= $sla_seconds) {$ADstats[$key]['within_sla_count']++;}
+							echo "$chat_id|$frt|$sla_seconds\n";
+							}
+						if ($chat['last_message'] >= $chat['start'])
+							{
+							$ADstats[$key]['resolution_sum_sec'] += ($chat['last_message'] - $chat['start']);
+							$ADstats[$key]['resolution_count']++;
+							}
+						if ($chat['last_message'] >= $chat['first_post'])
+							{
+							$ADstats[$key]['handle_sum_sec'] += ($chat['last_message'] - $chat['first_post']);
+							$ADstats[$key]['handle_count']++;
+							}
+						}
+					}
+
+				if (count($ADstats) < 1)
+					{
+					$result = 'ERROR';
+					$result_reason = "agent_digital_stats_export NO RECORDS FOUND";
+					$data = "$user|$agent_user|$datetime_start|$datetime_end|$channel";
+					$output="$result: $result_reason - $data\n";
+
+					if ($stage=="json") {$output=ConvertToJSON($result,$result_reason,$header,"user|agent_user|datetime_start|datetime_end|channel\n$user|$agent_user|$datetime_start|$datetime_end|$channel");}
+					echo "$output";
+
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					exit;
+					}
+				else
+					{
+					$output='';
+					$DLset=0;
+					if ($stage == 'csv')
+						{$DL = ',';   $DLset++;}
+					if ($stage == 'tab')
+						{$DL = "\t";   $DLset++;}
+					if ($stage == 'pipe')
+						{$DL = '|';   $DLset++;}
+					if ($stage == 'json')
+						{$DL = '|';   $DLset++;}
+					if ($DLset < 1)
+						{$DL='|';   $stage='pipe';}
+					if ($header == 'YES')
+						{$output .= 'user' . $DL . 'channel' . $DL . implode($DL, array_keys($ADblank)) . "\n";}
+
+					ksort($ADstats);
+					$k=0;
+					foreach ($ADstats as $key => $stat)
+						{
+						$key_array = explode('|', $key);
+						$output .= "$key_array[0]$DL$key_array[1]$DL" . implode($DL, $stat) . "\n";
+						$k++;
+						}
+
+					$result = 'SUCCESS';
+					$data = "$user|$agent_user|$datetime_start|$datetime_end|$channel|$stage";
+					$result_reason = "agent_digital_stats_export AGENTS FOUND: $k";
+
+					if ($stage=="json") {$output=ConvertToJSON($result,$result_reason,$header,$output);}
+					echo "$output";
+
+					api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+					}
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END agent_digital_stats_export
 ################################################################################
 
 
@@ -14551,6 +14937,137 @@ if ($function == 'user_details')
 	}
 ################################################################################
 ### END user_details
+################################################################################
+
+
+
+
+################################################################################
+### users_list - display information about all users
+################################################################################
+if ($function == 'users_list')
+	{
+	if(strlen($source)<2)
+		{
+		$result = 'ERROR';
+		$result_reason = "Invalid Source";
+		$output="$result: $result_reason: |$source|\n";
+
+		if ($stage=="json") {$output=ConvertToJSON($result,$result_reason,$header,"source\n$source");}
+		echo "$output";
+
+		api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+		exit;
+		}
+	else
+		{
+		if ( (!preg_match("/ $function /",$api_allowed_functions)) and (!preg_match("/ALL_FUNCTIONS/",$api_allowed_functions)) )
+			{
+			$result = 'ERROR';
+			$result_reason = "auth USER DOES NOT HAVE PERMISSION TO USE THIS FUNCTION";
+			$output="$result: $result_reason: |$user|$function|\n";
+
+			if ($stage=="json") {$output=ConvertToJSON($result,$result_reason,$header,"user|function\n$user|$function");}
+			echo "$output";
+
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		$stmt="SELECT count(*) from vicidial_users where user='$user' and vdc_agent_api_access='1' and view_reports='1' and user_level > 6 and active='Y';";
+		$rslt=mysql_to_mysqli($stmt, $link);
+		$row=mysqli_fetch_row($rslt);
+		$allowed_user=$row[0];
+		if ($allowed_user < 1)
+			{
+			$result = 'ERROR';
+			$result_reason = "users_list USER DOES NOT HAVE PERMISSION TO GET USER DETAILS";
+			$output="$result: $result_reason: |$user|$allowed_user|\n";
+
+			if ($stage=="json") {$output=ConvertToJSON($result,$result_reason,$header,"user|allowed_user\n$user|$allowed_user");}
+			echo "$output";
+
+			$data = "$allowed_user";
+			api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+			exit;
+			}
+		else
+			{
+			$stmt="SELECT admin_viewable_groups from vicidial_user_groups where user_group='$LOGuser_group';";
+			if ($DB) {echo "|$stmt|\n";}
+			$rslt=mysql_to_mysqli($stmt, $link);
+			$row=mysqli_fetch_row($rslt);
+			$LOGadmin_viewable_groups =		$row[0];
+
+			$LOGadmin_viewable_groupsSQL='';
+			if ( (!preg_match('/\-\-ALL\-\-/i',$LOGadmin_viewable_groups)) and (strlen($LOGadmin_viewable_groups) > 3) )
+				{
+				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ -/",'',$LOGadmin_viewable_groups);
+				$rawLOGadmin_viewable_groupsSQL = preg_replace("/ /","','",$rawLOGadmin_viewable_groupsSQL);
+				$LOGadmin_viewable_groupsSQL = "and user_group IN('---ALL---','$rawLOGadmin_viewable_groupsSQL')";
+				}
+			$agent_userSQL='';
+			if (strlen($agent_user) > 0)
+				{$agent_userSQL = "and user='$agent_user'";}
+
+			$output='';
+			$DLset=0;
+			if ($stage == 'csv')
+				{$DL = ',';   $DLset++;}
+			if ($stage == 'tab')
+				{$DL = "\t";   $DLset++;}
+			if ($stage == 'pipe')
+				{$DL = '|';   $DLset++;}
+			if ($stage == 'json')
+				{$DL = '|';   $DLset++;}
+			if ($DLset < 1)
+				{$DL='|';   $stage='pipe';}
+			if ($header == 'YES')
+				{$output .= 'user' . $DL . 'full_name' . $DL . 'user_group' . $DL . 'user_level' . $DL . 'active' . $DL . 'email' . "\n";}
+
+			# like the admin screens, only users at or below the api user's level in the viewable user groups
+			$stmt="SELECT user,full_name,user_group,user_level,active,email from vicidial_users where user_level <= '$VUuser_level' $LOGadmin_viewable_groupsSQL $agent_userSQL order by user;";
+			$rslt=mysql_to_mysqli($stmt, $link);
+			if ($DB) {echo "$stmt\n";}
+			$ul_recs = mysqli_num_rows($rslt);
+			$k=0;
+			while ($ul_recs > $k)
+				{
+				$row=mysqli_fetch_row($rslt);
+				$output .= "$row[0]$DL$row[1]$DL$row[2]$DL$row[3]$DL$row[4]$DL$row[5]\n";
+				$k++;
+				}
+
+			if ($k < 1)
+				{
+				$result = 'ERROR';
+				$result_reason = "users_list NO USERS FOUND";
+				$data = "$user|$agent_user";
+				$output="$result: $result_reason: $data\n";
+
+				if ($stage=="json") {$output=ConvertToJSON($result,$result_reason,$header,"user|agent_user\n$user|$agent_user");}
+				echo "$output";
+
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				exit;
+				}
+			else
+				{
+				$result = 'SUCCESS';
+				$data = "$user|$agent_user|$stage";
+				$result_reason = "users_list USERS FOUND: $k";
+
+				if ($stage=="json") {$output=ConvertToJSON($result,$result_reason,$header,$output);}
+				echo "$output";
+
+				api_log($link,$api_logging,$api_script,$user,$agent_user,$function,$value,$result,$result_reason,$source,$data);
+				}
+			}
+		}
+	exit;
+	}
+################################################################################
+### END users_list
 ################################################################################
 
 

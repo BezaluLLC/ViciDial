@@ -60,6 +60,7 @@
 # 230518-1111 - Added in-group and campaign custom fields 1-5, for script/webform/dispo-call-url use
 # 251205-1742 - Fix for undefined variable issue
 # 260203-1600 - Code updates for PHP8 compatibility
+# 261101-1928 - Added encode_uuidv4 function
 #
 # $mysql_queries = 28
 
@@ -2848,6 +2849,34 @@ function _QXZ($English_text, $sprintf=0, $align="l", $v_one='', $v_two='', $v_th
 		$English_text=sprintf($fmt, $English_text);
 		}
 	return $English_text;
+	}
+
+
+# function to encode a uuid auth token for the webrtc_ping tool
+function encode_uuidv4($uuid) 
+	{
+	$uuid = strtolower($uuid);
+	$inv_uuid = '';
+
+	for ($i = 0; $i < strlen($uuid); $i++) 
+		{
+		$char = $uuid[$i];
+
+		if ($char === '-') 
+			{
+			// keep hyphens
+			$inv_uuid .= $char;
+			} 
+		else 
+			{
+			// hex inversion (15 - hex_value)
+			$hex_char = hexdec($char);
+			$inverted_hex = 15 - $hex_char;
+			$inv_uuid .= dechex($inverted_hex);
+			}
+		}
+
+	return base64_encode($inv_uuid);
 	}
 
 ?>
