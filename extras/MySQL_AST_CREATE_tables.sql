@@ -2086,7 +2086,9 @@ db_crashed_tables_check ENUM('0','1','2','3','4','5','6') default '1',
 xfer_min_container VARCHAR(40) default '',
 max_inbound_auto_reenable ENUM('0','1','2','3','4','5','6') default '1',
 viciamd_enabled ENUM('0','1','2','3','4','5','6') default '0',
-amd_status_map VARCHAR(40) default 'DISABLED'
+amd_status_map VARCHAR(40) default 'DISABLED',
+webrtc_ping_url VARCHAR(255) default '',
+webrtc_ping_auth_token VARCHAR(255) default ''
 ) ENGINE=MyISAM;
 
 CREATE TABLE vicidial_campaigns_list_mix (
@@ -5929,4 +5931,4 @@ INSERT INTO `wallboard_reports` VALUES ('AGENTS_AND_QUEUES','Agents and Queues',
 
 UPDATE system_settings set vdc_agent_api_active='1';
 
-UPDATE system_settings SET db_schema_version='1747',db_schema_update_date=NOW(),reload_timestamp=NOW();
+UPDATE system_settings SET db_schema_version='1748',db_schema_update_date=NOW(),reload_timestamp=NOW();

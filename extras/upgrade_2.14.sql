@@ -3146,3 +3146,9 @@ INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,cate
 INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,category,sale,dnc,customer_contact,not_interested,unworkable,scheduled_callback,completed,answering_machine) values('RAXFER','Remote Agent Call Transferred','N','Y','UNDEFINED','N','N','Y','N','N','N','N','N');
 
 UPDATE system_settings SET db_schema_version='1747',db_schema_update_date=NOW() where db_schema_version < 1747;
+
+
+ALTER TABLE system_settings ADD webrtc_ping_url VARCHAR(255) default '';
+ALTER TABLE system_settings ADD webrtc_ping_auth_token VARCHAR(255) default '';
+
+UPDATE system_settings SET db_schema_version='1748',db_schema_update_date=NOW() where db_schema_version < 1748;
