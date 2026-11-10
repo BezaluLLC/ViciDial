@@ -762,10 +762,11 @@
 # 260615-0039 - Fix for transfer issue
 # 260731-0918 - Added xfer_button_commit options.php setting
 # 261101-1945 - Added setWTTimeout timer option, Added webrtc_ping feature
+# 261110-1402 - Added date-time to several alert displays
 #
 
-$version = '2.14-728c';
-$build = '261101-1945';
+$version = '2.14-729c';
+$build = '261110-1402';
 $php_script = 'vicidial.php';
 $mel=1;					# Mysql Error Log enabled = 1
 $mysql_log_count=110;
@@ -7028,6 +7029,8 @@ if ($enable_fast_refresh < 1) {echo "\tvar refresh_interval = 1000;\n";}
 	var redirectserverip='';
 	var hangup_again_link_trigger=<?php echo $hangup_again_link_trigger ?>;
 	var VCAdata='x';
+	var status_date = '';
+	var status_time = '';
 	var xfer_button_commit='<?php echo $xfer_button_commit ?>';
 	var SSwebrtc_ping_url_length='<?php echo $SSwebrtc_ping_url_length ?>';
 	var hide_ping_widget='<?php echo $hide_ping_widget ?>';
@@ -10881,7 +10884,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		button_click_log = button_click_log + "" + SQLdate + "-----new_callback_call---" + taskCBid + " " + taskLEADid + " " + taskCBalt + "|";
 		if (waiting_on_dispo > 0)
 			{
-			alert_box("<?php echo _QXZ("System Delay, Please try again"); ?><BR><font size=1>code:" + agent_log_id + " - " + waiting_on_dispo + "</font>");
+			alert_box("<?php echo _QXZ("System Delay, Please try again"); ?><BR><font size=1>code:" + agent_log_id + " - " + waiting_on_dispo + "<BR>" + status_date + " " + status_time + "</font>");
 			button_click_log = button_click_log + "" + SQLdate + "-----CallbackSystemDelay---" + agent_log_id + " " + waiting_on_dispo + "|";
 			}
 		else
@@ -11654,7 +11657,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		var new_dial_continue=1;
 		if (waiting_on_dispo > 0)
 			{
-			alert_box("<?php echo _QXZ("System Delay, Please try again"); ?><BR><font size=1><?php echo _QXZ("code:"); ?>" + agent_log_id + " - " + waiting_on_dispo + "</font>");
+			alert_box("<?php echo _QXZ("System Delay, Please try again"); ?><BR><font size=1><?php echo _QXZ("code:"); ?>" + agent_log_id + " - " + waiting_on_dispo + "<BR>" + status_date + " " + status_time + "</font>");
 			button_click_log = button_click_log + "" + SQLdate + "-----ManDialSystemDelay---" + agent_log_id + " " + waiting_on_dispo + "|";
 			new_dial_continue=0;
 			}
@@ -11855,7 +11858,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 			{
 			if (waiting_on_dispo > 0)
 				{
-				alert_box("<?php echo _QXZ("System Delay, Please try again"); ?><BR><font size=1><?php echo _QXZ("code:"); ?>" + agent_log_id + " - " + waiting_on_dispo + "</font>");
+				alert_box("<?php echo _QXZ("System Delay, Please try again"); ?><BR><font size=1><?php echo _QXZ("code:"); ?>" + agent_log_id + " - " + waiting_on_dispo + "<BR>" + status_date + " " + status_time + "</font>");
 				button_click_log = button_click_log + "" + SQLdate + "-----FastDialSystemDelay---" + agent_log_id + " " + waiting_on_dispo + "|";
 				}
 			else
@@ -12321,7 +12324,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 
 		if ( (MD_ring_secondS > 29) && (MD_ring_secondS > manual_dial_timeout) )
 			{
-			alert_box("Dial timed out, contact your system administrator\n");
+			alert_box("Dial timed out, contact your system administrator\n" + "<BR>" + status_date + " " + status_time);
 			button_click_log = button_click_log + "" + SQLdate + "-----DialTimedOut---" + MD_ring_secondS + " " + manual_dial_timeout + " " + MD_channel_look + " " + "|";
 			MD_channel_look=0;
 			MD_ring_secondS=0;
@@ -12716,7 +12719,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		UpdatESettingS();
 		if (waiting_on_dispo > 0)
 			{
-			alert_box("<?php echo _QXZ("System Delay, Please try again"); ?><BR><font size=1><?php echo _QXZ("code:"); ?>" + agent_log_id + " - " + waiting_on_dispo + " - " + manual_auto_hotkey_wait + "</font>");
+			alert_box("<?php echo _QXZ("System Delay, Please try again"); ?><BR><font size=1><?php echo _QXZ("code:"); ?>" + agent_log_id + " - " + waiting_on_dispo + " - " + manual_auto_hotkey_wait + "<BR>" + status_date + " " + status_time + "</font>");
 			button_click_log = button_click_log + "" + SQLdate + "-----DialNextSystemDelay---" + agent_log_id + " " + waiting_on_dispo + "|";
 
 			dial_next_failed=1;
@@ -19036,7 +19039,7 @@ function set_length(SLnumber,SLlength_goal,SLdirection)
 		button_click_log = button_click_log + "" + SQLdate + "-----NoneInSessionShow---|";
 		showDiv('NoneInSessionBox');
 		agent_events('none_in_session', '', aec);   aec++;
-		document.getElementById("NoneInSessionID").innerHTML = session_id;
+		document.getElementById("NoneInSessionID").innerHTML = session_id + "<BR><BR>" + status_date + " " + status_time + "<BR><BR>";
 		WaitingForNextStep=1;
 		}
 	function NoneInSessionOK()
@@ -22128,7 +22131,7 @@ function phone_number_format(formatphone) {
 				taskdialalert = agent_hide_dial_fail_MESSAGE;
 				}
 
-            document.getElementById("TimerContentSpan").innerHTML = "<b><?php echo _QXZ("DIAL ALERT:"); ?><br /><br />" + taskdialalert.replace("\n","<br />") + "</b>";
+            document.getElementById("TimerContentSpan").innerHTML = "<b><?php echo _QXZ("DIAL ALERT:"); ?><br /><br />" + taskdialalert.replace("\n","<br />") + "</b><br /><br />" + status_date + " " + status_time;
 
 			showDiv('TimerSpan');
 
@@ -23269,8 +23272,8 @@ function phone_number_format(formatphone) {
 		tinydate = Tyear + "" + month + "" + daym + "" + hours + "" + min + "" + sec;
 		SQLdate = year + "-" + month + "-" + daym + " " + hours + ":" + min + ":" + sec;
 
-		var status_date = '';
-		var status_time = hours + ":" + min + ":" + sec;
+		status_date = '';
+		status_time = hours + ":" + min + ":" + sec;
 		if (vdc_header_date_format.match(regMSdate))
 			{
 			status_date = year + "-" + month + "-" + daym;
