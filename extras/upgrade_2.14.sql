@@ -3147,7 +3147,6 @@ INSERT INTO vicidial_statuses (status,status_name,selectable,human_answered,cate
 
 UPDATE system_settings SET db_schema_version='1747',db_schema_update_date=NOW() where db_schema_version < 1747;
 
-
 ALTER TABLE system_settings ADD webrtc_ping_url VARCHAR(255) default '';
 ALTER TABLE system_settings ADD webrtc_ping_auth_token VARCHAR(255) default '';
 

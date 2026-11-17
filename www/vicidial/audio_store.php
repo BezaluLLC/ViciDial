@@ -1,7 +1,7 @@
 <?php
 # audio_store.php
 # 
-# Copyright (C) 2022  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2026  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # Central Audio Storage script
 # 
@@ -35,10 +35,11 @@
 # 210322-1220 - Added checking of .wav files for asterisk-compatible format
 # 220120-0927 - Added audio_store_GSM_allowed option. Disable GSM file uploads by default
 # 220222-2348 - Added allow_web_debug system setting
+# 261117-1101 - Fixed issue with delete of audio file, added more filters for invalid files
 #
 
-$version = '2.14-27';
-$build = '220222-2348';
+$version = '2.14-28';
+$build = '261117-1101';
 
 $MT[0]='';
 
@@ -151,9 +152,14 @@ if ( ( ( (strlen($sounds_web_server)) != (strlen($server_name)) ) or (!preg_matc
 	exit;
 	}
 
-if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$AF_orig))
+if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*|`|\\\$|\{|\}|\||<|>/",$AF_orig))
 	{
 	echo _QXZ("ERROR").": "._QXZ("Invalid File Name").": $AF_orig\n";
+	exit;
+	}
+if ( (preg_match('/[^-\._0-9\p{L}]/u',$AF_orig)) or (preg_match('/[^-\._0-9\p{L}]/u',$audiofile_name)) )
+	{
+	echo _QXZ("ERROR").": "._QXZ("Invalid Characters in File Name").": $AF_orig\n";
 	exit;
 	}
 
@@ -185,28 +191,29 @@ if (!file_exists("$WeBServeRRooT/$sounds_web_directory"))
 	exit;
 	}
 
-### get list of all servers, if not one of them, then force authentication check
-$stmt = "SELECT server_ip FROM servers;";
+### get list of all server IPs, if not one of them, then force authentication check
+$stmt = "SELECT server_ip,external_server_ip FROM servers;";
 $rslt=mysql_to_mysqli($stmt, $link);
 if ($DB) {echo "$stmt\n";}
 $sv_conf_ct = mysqli_num_rows($rslt);
 $i=0;
-$server_ips ='|';
+$server_ips ='|127.0.0.1|';
 while ($sv_conf_ct > $i)
 	{
 	$row=mysqli_fetch_row($rslt);
 	$server_ips .=	"$row[0]|";
+	if (strlen($row[1]) > 6) {$server_ips .=	"$row[1]|";}
 	$i++;
 	}
 
 $user_set=0;
 $formIPvalid=0;
+$ip = getenv("REMOTE_ADDR");
 if (strlen($audio_server_ip) > 6)
 	{
-	if (preg_match("/\|$audio_server_ip\|/", $server_ips))
+	if ( (preg_match("/\|$audio_server_ip\|/", $server_ips)) and (preg_match("/\|$ip\|/", $server_ips)) )
 		{$formIPvalid=1;}
 	}
-$ip = getenv("REMOTE_ADDR");
 
 if ( (!preg_match("/\|$ip\|/", $server_ips)) and ($formIPvalid < 1) )
 	{
@@ -300,6 +307,10 @@ if ( ($action == "DELETE") and ($auth_delete > 0) )
 		$wav='.wav';
 		unlink("$WeBServeRRooT/$sounds_web_directory/$delete_file$gsm");
 		unlink("$WeBServeRRooT/$sounds_web_directory/$delete_file$wav");
+
+		$stmt="UPDATE servers SET audio_store_purge='' where audio_store_purge IS NULL;";
+		if ($DB) {echo "|$stmt|\n";}
+		$rslt=mysql_to_mysqli($stmt, $link);
 
 		$stmt="UPDATE servers SET sounds_update='Y',audio_store_purge=CONCAT(audio_store_purge,\"$delete_file\\n\");";
 		if ($DB) {echo "|$stmt|\n";}
@@ -547,7 +558,7 @@ if ($action == "COPYFILE")
 
 		$copied=0;
 		$suffix='.wav';
-		if (file_exists("$WeBServeRRooT/$sounds_web_directory/$master_audiofile$suffix"))
+		if ( (file_exists("$WeBServeRRooT/$sounds_web_directory/$master_audiofile$suffix")) and (!preg_match('/[^-\._0-9\p{L}]/u',$master_audiofile)) )
 			{
 			copy("$WeBServeRRooT/$sounds_web_directory/$master_audiofile$suffix", "$WeBServeRRooT/$sounds_web_directory/$new_audiofile$suffix");
 			chmod("$WeBServeRRooT/$sounds_web_directory/$new_audiofile$suffix", 0766);
@@ -558,7 +569,7 @@ if ($action == "COPYFILE")
 			}
 
 		$suffix='.gsm';
-		if (file_exists("$WeBServeRRooT/$sounds_web_directory/$master_audiofile$suffix"))
+		if ( (file_exists("$WeBServeRRooT/$sounds_web_directory/$master_audiofile$suffix")) and (!preg_match('/[^-\._0-9\p{L}]/u',$master_audiofile)) )
 			{
 			copy("$WeBServeRRooT/$sounds_web_directory/$master_audiofile$suffix", "$WeBServeRRooT/$sounds_web_directory/$new_audiofile$suffix");
 			chmod("$WeBServeRRooT/$sounds_web_directory/$new_audiofile$suffix", 0766);

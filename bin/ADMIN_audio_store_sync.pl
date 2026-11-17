@@ -6,7 +6,7 @@
 # syncronizes audio between audio store and this server
 #
 # 
-# Copyright (C) 2023  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
+# Copyright (C) 2026  Matt Florell <vicidial@gmail.com>    LICENSE: AGPLv2
 #
 # CHANGELOG
 # 90513-0458 - First Build
@@ -21,6 +21,7 @@
 # 150712-2210 - Added touch of conf files to Asterisk will notice changes
 # 201002-1537 - Allowed for secure sounds_web_server setting
 # 230914-1528 - Added --no-check-certificate to the wget requests for audio store files
+# 261117-1101 - Added more filters for skipping processing of invalid files and directories
 #
 
 # constants
@@ -234,7 +235,7 @@ if (length($audio_store_purge) > 0)
 	$i=0;
 	foreach(@purge_data)
 		{
-		if (length($purge_data[$i])>0)
+		if ( (length($purge_data[$i])>0) && ($purge_data[$i] =~ /\A[\p{L}\p{N}._-]+\z/) )
 			{
 			if ( -e ("/var/lib/asterisk/sounds/$purge_data[$i]$wav"))
 				{`rm -f /var/lib/asterisk/sounds/$purge_data[$i]$wav`;		$audio_file_deleted++;}
@@ -245,6 +246,10 @@ if (length($audio_store_purge) > 0)
 			if ($audio_file_deleted < 1)
 				{if ($DB) {print "no audio file deleted: $purge_data[$i]|$i\n";}}
 			if ($DBX>0) {print "audio file delete process: $purge_data[$i]|$i|$audio_file_deleted\n";}
+			}
+		else
+			{
+			if ($DB) {print "no audio file deleted: $purge_data[$i]|$i\n";}
 			}
 		$i++;
 		}
@@ -338,7 +343,7 @@ while ($i <= $#list)
 		$k++;
 		}
 
-	if ( ($found_file < 1) || ($force_download > 0) )
+	if ( ( ($found_file < 1) || ($force_download > 0) ) && ($filename =~ /\A[\p{L}\p{N}._-]+\z/) )
 		{
 		`$wgetbin -q --no-check-certificate --output-document=$PATHsounds/$filename $sounds_web_server_URL_prefix/$web_prefix$sounds_web_directory/$filename`;
 		$event_string = "DOWNLOADING: $filename     $filesize";
@@ -384,7 +389,7 @@ if ($upload > 0)
 	while ($k <= $#sounds)
 		{
 		chomp($sounds[$k]);
-		if ($sounds[$k] =~ /\.wav$|\.gsm$/)
+		if ( ($sounds[$k] =~ /\.wav$|\.gsm$/) && ($sounds[$k] =~ /\A[\p{L}\p{N}._-]+\z/) )
 			{
 			$soundname =	$sounds[$k];
 			$sounddate =	(-M "$PATHsounds/$sounds[$k]");
@@ -427,6 +432,10 @@ if ($upload > 0)
 				if ($DB > 0) {print "     FILE FOUND: $soundname\n";}
 				}
 			}
+		else
+			{
+			if ($DB > 0) {print "     SKIPPING INVALID FILE: $soundname\n";}
+			}
 		$k++;
 		}
 	}
@@ -467,7 +476,7 @@ if ($gather_details > 0)
 		$allowed_format=0;
 		if ($filesize > 0)
 			{
-			if ($filename =~ /\.wav$/)
+			if ( ($filename =~ /\.wav$/) && ($filename =~ /\A[\p{L}\p{N}._-]+\z/) )
 				{
 				$allowed_format++;
 				$wav_count++;
@@ -475,7 +484,7 @@ if ($gather_details > 0)
 				$audio_length = ($filesize / 16000);
 				$audio_length = sprintf("%.0f", $audio_length);
 				}
-			if ($filename =~ /\.gsm$/)
+			if ( ($filename =~ /\.gsm$/) && ($filename =~ /\A[\p{L}\p{N}._-]+\z/) )
 				{
 				$allowed_format++;
 				$gsm_count++;
@@ -594,7 +603,7 @@ if ( ($force_moh_rebuild > 0) || ($new_file_moh_rebuild > 0) || ($rebuild_music_
 		$stmtB="DELETE from vicidial_music_on_hold_files where moh_id='$remove_moh_id[$j]' and moh_id NOT IN('astdb','sounds','agi-bin','keys');";
 		$affected_rowsY = $dbhA->do($stmtB);
 
-		if ($affected_rowsX > 0)
+		if ( ($affected_rowsX > 0) && ($remove_moh_id[$j] =~ /\A[\p{L}\p{N}._-]+\z/) )
 			{`rm -fr /var/lib/asterisk/$remove_moh_id[$j]`;}
 
 		if ($DBX)
@@ -626,17 +635,20 @@ if ( ($force_moh_rebuild > 0) || ($new_file_moh_rebuild > 0) || ($rebuild_music_
 	$j=0;
 	while ($sthArowsC > $j)
 		{
-		$filelist_names = '|';
-		$MoH_directory = "/var/lib/asterisk/$moh_id[$j]";
-		### Check if directory exists, if not, create it
-		if ( -e ("$MoH_directory")) {$mohpath = "$MoH_directory";}
-		else
+		if ($moh_id[$j] =~ /\A[\p{L}\p{N}._-]+\z/)
 			{
-			`mkdir $MoH_directory`;
-			$mohpath = "$MoH_directory";
-			if ($DBX)
+			$filelist_names = '|';
+			$MoH_directory = "/var/lib/asterisk/$moh_id[$j]";
+			### Check if directory exists, if not, create it
+			if ( -e ("$MoH_directory")) {$mohpath = "$MoH_directory";}
+			else
 				{
-				print "Creating New MoH: $MoH_directory\n";
+				`mkdir $MoH_directory`;
+				$mohpath = "$MoH_directory";
+				if ($DBX)
+					{
+					print "Creating New MoH: $MoH_directory\n";
+					}
 				}
 			}
 
@@ -702,7 +714,7 @@ if ( ($force_moh_rebuild > 0) || ($new_file_moh_rebuild > 0) || ($rebuild_music_
 				$d=0;
 				foreach(@sounds)
 					{
-					if ($sounds[$d] =~ /^$filename[$m]\./)
+					if ( ($sounds[$d] =~ /^$filename[$m]\./) && ($sounds[$d] =~ /\A[\p{L}\p{N}._-]+\z/) )
 						{
 						`cp $PATHsounds/$sounds[$d] $MoH_directory/$filerank[$m]$sounds[$d]`;
 						$fileexists[$m]++;
@@ -728,7 +740,7 @@ if ( ($force_moh_rebuild > 0) || ($new_file_moh_rebuild > 0) || ($rebuild_music_
 			$MoH_files_check[$d] =~ s/\..*$//gi;
 			if ($DBX)
 				{print "Checking file: $MoH_files[$d] $MoH_files_check[$d] $filelist_names\n";}
-			if ( (length($MoH_files[$d]) > 4) && (-f "$MoH_directory/$MoH_files[$d]") && ($filelist_names !~ /\|$MoH_files_check[$d]\|/) && ($MoH_files_check[$d] !~ /^0000_/) )
+			if ( ( (length($MoH_files[$d]) > 4) && (-f "$MoH_directory/$MoH_files[$d]") && ($filelist_names !~ /\|$MoH_files_check[$d]\|/) && ($MoH_files_check[$d] !~ /^0000_/) ) && ($MoH_files[$d] =~ /\A[\p{L}\p{N}._-]+\z/) )
 				{
 				`rm -f $MoH_directory/$MoH_files[$d]`;
 				if ($DBX)
