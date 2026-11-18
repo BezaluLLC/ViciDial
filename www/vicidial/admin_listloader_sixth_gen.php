@@ -89,10 +89,11 @@
 # 260415-1710 - Added summarized error output, fuzzy field auto-detection for custom layout, Issue #1561 from Acidshock
 # 260514-1553 - Added default_phone_code use for Phone Code field on form
 # 260904-1525 - Sixth gen: AJAX architecture with progress polling
+# 261117-1412 - More input filtering
 # 
 
-$version = '6.0-1';
-$build = '260904-1525';
+$version = '6.0-2';
+$build = '261117-1412';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -880,7 +881,7 @@ if ($action == 'upload')
 	$LF_path = $_FILES['leadfile']['tmp_name'];
 	$leadfile_name = $LF_orig;
 
-	if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/", $LF_orig))
+	if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*|`|\\\$|\{|\}|\||<|>/", $LF_orig))
 		{
 		echo json_encode(array('error' => 'Invalid file name: '.$LF_orig));
 		exit;

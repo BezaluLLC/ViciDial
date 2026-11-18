@@ -124,144 +124,204 @@
 # 251010-1140 - Added DTMF count and muting recording log indicator columns
 # 260716-1638 - Added SIP response data to extended outbound call log display
 # 261021-1827 - Fix for recording log enabled with play on-screen, also PHP 8.5 fix
+# 261117-2155 - PHP8 variable updates
 #
 
 require("dbconnect_mysqli.php");
 require("functions.php");
 
-$PHP_AUTH_USER=$_SERVER['PHP_AUTH_USER'];
-$PHP_AUTH_PW=$_SERVER['PHP_AUTH_PW'];
+$PHP_AUTH_USER=(array_key_exists('PHP_AUTH_USER', $_SERVER) ? $_SERVER['PHP_AUTH_USER'] : "");
+$PHP_AUTH_PW=(array_key_exists('PHP_AUTH_PW', $_SERVER) ? $_SERVER['PHP_AUTH_PW'] : "");
 $PHP_SELF=$_SERVER['PHP_SELF'];
 $PHP_SELF = preg_replace('/\.php.*/i','.php',$PHP_SELF);
 if (isset($_GET["vendor_id"]))				{$vendor_id=$_GET["vendor_id"];}
 	elseif (isset($_POST["vendor_id"]))		{$vendor_id=$_POST["vendor_id"];}
+	else {$vendor_id="";}
 if (isset($_GET["source_id"]))				{$source_id=$_GET["source_id"];}
 	elseif (isset($_POST["source_id"]))		{$source_id=$_POST["source_id"];}
+	else {$source_id="";}
 if (isset($_GET["old_phone"]))				{$old_phone=$_GET["old_phone"];}
 	elseif (isset($_POST["old_phone"]))		{$old_phone=$_POST["old_phone"];}
+	else {$old_phone="";}
 if (isset($_GET["lead_id"]))				{$lead_id=$_GET["lead_id"];}
 	elseif (isset($_POST["lead_id"]))		{$lead_id=$_POST["lead_id"];}
+	else {$lead_id="";}
 if (isset($_GET["title"]))				{$title=$_GET["title"];}
 	elseif (isset($_POST["title"]))		{$title=$_POST["title"];}
+	else {$title="";}
 if (isset($_GET["first_name"]))				{$first_name=$_GET["first_name"];}
 	elseif (isset($_POST["first_name"]))	{$first_name=$_POST["first_name"];}
+	else {$first_name="";}
 if (isset($_GET["middle_initial"]))				{$middle_initial=$_GET["middle_initial"];}
 	elseif (isset($_POST["middle_initial"]))	{$middle_initial=$_POST["middle_initial"];}
+	else {$middle_initial="";}
 if (isset($_GET["last_name"]))				{$last_name=$_GET["last_name"];}
 	elseif (isset($_POST["last_name"]))		{$last_name=$_POST["last_name"];}
+	else {$last_name="";}
 if (isset($_GET["phone_number"]))			{$phone_number=$_GET["phone_number"];}
 	elseif (isset($_POST["phone_number"]))	{$phone_number=$_POST["phone_number"];}
+	else {$phone_number="";}
 if (isset($_GET["end_call"]))				{$end_call=$_GET["end_call"];}
 	elseif (isset($_POST["end_call"]))		{$end_call=$_POST["end_call"];}
+	else {$end_call=0;}
 if (isset($_GET["DB"]))					{$DB=$_GET["DB"];}
 	elseif (isset($_POST["DB"]))		{$DB=$_POST["DB"];}
 if (isset($_GET["dispo"]))				{$dispo=$_GET["dispo"];}
 	elseif (isset($_POST["dispo"]))		{$dispo=$_POST["dispo"];}
+	else {$dispo="";}
 if (isset($_GET["list_id"]))				{$list_id=$_GET["list_id"];}
 	elseif (isset($_POST["list_id"]))		{$list_id=$_POST["list_id"];}
+	else {$list_id="";}
+if (isset($_GET["entry_list_id"]))				{$entry_list_id=$_GET["entry_list_id"];}
+	elseif (isset($_POST["entry_list_id"]))		{$entry_list_id=$_POST["entry_list_id"];}
+	else {$entry_list_id="";}
 if (isset($_GET["campaign_id"]))			{$campaign_id=$_GET["campaign_id"];}
 	elseif (isset($_POST["campaign_id"]))	{$campaign_id=$_POST["campaign_id"];}
+	else {$campaign_id="";}
 if (isset($_GET["phone_code"]))				{$phone_code=$_GET["phone_code"];}
 	elseif (isset($_POST["phone_code"]))	{$phone_code=$_POST["phone_code"];}
+	else {$phone_code="";}
 if (isset($_GET["server_ip"]))				{$server_ip=$_GET["server_ip"];}
 	elseif (isset($_POST["server_ip"]))		{$server_ip=$_POST["server_ip"];}
+	else {$server_ip="";}
 if (isset($_GET["extension"]))				{$extension=$_GET["extension"];}
 	elseif (isset($_POST["extension"]))		{$extension=$_POST["extension"];}
+	else {$extension="";}
 if (isset($_GET["channel"]))				{$channel=$_GET["channel"];}
 	elseif (isset($_POST["channel"]))		{$channel=$_POST["channel"];}
+	else {$channel="";}
 if (isset($_GET["call_began"]))				{$call_began=$_GET["call_began"];}
 	elseif (isset($_POST["call_began"]))	{$call_began=$_POST["call_began"];}
+	else {$call_began="";}
 if (isset($_GET["parked_time"]))			{$parked_time=$_GET["parked_time"];}
 	elseif (isset($_POST["parked_time"]))	{$parked_time=$_POST["parked_time"];}
+	else {$parked_time="";}
 if (isset($_GET["tsr"]))				{$tsr=$_GET["tsr"];}
 	elseif (isset($_POST["tsr"]))		{$tsr=$_POST["tsr"];}
+	else {$tsr="";}
 if (isset($_GET["address1"]))				{$address1=$_GET["address1"];}
 	elseif (isset($_POST["address1"]))		{$address1=$_POST["address1"];}
+	else {$address1="";}
 if (isset($_GET["address2"]))				{$address2=$_GET["address2"];}
 	elseif (isset($_POST["address2"]))		{$address2=$_POST["address2"];}
+	else {$address2="";}
 if (isset($_GET["address3"]))				{$address3=$_GET["address3"];}
 	elseif (isset($_POST["address3"]))		{$address3=$_POST["address3"];}
+	else {$address3="";}
 if (isset($_GET["city"]))				{$city=$_GET["city"];}
 	elseif (isset($_POST["city"]))		{$city=$_POST["city"];}
+	else {$city="";}
 if (isset($_GET["state"]))				{$state=$_GET["state"];}
 	elseif (isset($_POST["state"]))		{$state=$_POST["state"];}
+	else {$state="";}
 if (isset($_GET["postal_code"]))			{$postal_code=$_GET["postal_code"];}
 	elseif (isset($_POST["postal_code"]))	{$postal_code=$_POST["postal_code"];}
+	else {$postal_code="";}
 if (isset($_GET["province"]))				{$province=$_GET["province"];}
 	elseif (isset($_POST["province"]))		{$province=$_POST["province"];}
+	else {$province="";}
 if (isset($_GET["country_code"]))			{$country_code=$_GET["country_code"];}
 	elseif (isset($_POST["country_code"]))	{$country_code=$_POST["country_code"];}
+	else {$country_code="";}
 if (isset($_GET["alt_phone"]))				{$alt_phone=$_GET["alt_phone"];}
 	elseif (isset($_POST["alt_phone"]))		{$alt_phone=$_POST["alt_phone"];}
+	else {$alt_phone="";}
 if (isset($_GET["email"]))				{$email=$_GET["email"];}
 	elseif (isset($_POST["email"]))		{$email=$_POST["email"];}
+	else {$email="";}
 if (isset($_GET["security"]))				{$security=$_GET["security"];}
 	elseif (isset($_POST["security"]))		{$security=$_POST["security"];}
+	else {$security="";}
 if (isset($_GET["comments"]))				{$comments=$_GET["comments"];}
 	elseif (isset($_POST["comments"]))		{$comments=$_POST["comments"];}
+	else {$comments="";}
 if (isset($_GET["status"]))				{$status=$_GET["status"];}
 	elseif (isset($_POST["status"]))	{$status=$_POST["status"];}
+	else {$status="";}
 if (isset($_GET["rank"]))				{$rank=$_GET["rank"];}
 	elseif (isset($_POST["rank"]))		{$rank=$_POST["rank"];}
+	else {$rank="";}
 if (isset($_GET["owner"]))				{$owner=$_GET["owner"];}
 	elseif (isset($_POST["owner"]))		{$owner=$_POST["owner"];}
+	else {$owner="";}
 if (isset($_GET["submit"]))				{$submit=$_GET["submit"];}
 	elseif (isset($_POST["submit"]))	{$submit=$_POST["submit"];}
-if (isset($_GET["SUBMIT"]))				{$SUBMIT=$_GET["SUBMIT"];}
-	elseif (isset($_POST["SUBMIT"]))	{$SUBMIT=$_POST["SUBMIT"];}
+	else {$submit="";}
 if (isset($_GET["CBchangeUSERtoANY"]))				{$CBchangeUSERtoANY=$_GET["CBchangeUSERtoANY"];}
 	elseif (isset($_POST["CBchangeUSERtoANY"]))		{$CBchangeUSERtoANY=$_POST["CBchangeUSERtoANY"];}
+	else {$CBchangeUSERtoANY="";}
 if (isset($_GET["CBchangeANYtoUSER"]))				{$CBchangeANYtoUSER=$_GET["CBchangeANYtoUSER"];}
 	elseif (isset($_POST["CBchangeANYtoUSER"]))		{$CBchangeANYtoUSER=$_POST["CBchangeANYtoUSER"];}
+	else {$CBchangeANYtoUSER="";}
 if (isset($_GET["CBchangeDATE"]))				{$CBchangeDATE=$_GET["CBchangeDATE"];}
 	elseif (isset($_POST["CBchangeDATE"]))		{$CBchangeDATE=$_POST["CBchangeDATE"];}
+	else {$CBchangeDATE="";}
 if (isset($_GET["callback_id"]))				{$callback_id=$_GET["callback_id"];}
 	elseif (isset($_POST["callback_id"]))		{$callback_id=$_POST["callback_id"];}
+	else {$callback_id="";}
 if (isset($_GET["CBuser"]))				{$CBuser=$_GET["CBuser"];}
 	elseif (isset($_POST["CBuser"]))	{$CBuser=$_POST["CBuser"];}
+	else {$CBuser="";}
 if (isset($_GET["modify_logs"]))			{$modify_logs=$_GET["modify_logs"];}
 	elseif (isset($_POST["modify_logs"]))	{$modify_logs=$_POST["modify_logs"];}
+	else {$modify_logs=0;}
 if (isset($_GET["modify_closer_logs"]))				{$modify_closer_logs=$_GET["modify_closer_logs"];}
 	elseif (isset($_POST["modify_closer_logs"]))	{$modify_closer_logs=$_POST["modify_closer_logs"];}
+	else {$modify_closer_logs=0;}
 if (isset($_GET["modify_agent_logs"]))			{$modify_agent_logs=$_GET["modify_agent_logs"];}
 	elseif (isset($_POST["modify_agent_logs"]))	{$modify_agent_logs=$_POST["modify_agent_logs"];}
+	else {$modify_agent_logs=0;}
 if (isset($_GET["add_closer_record"]))			{$add_closer_record=$_GET["add_closer_record"];}
 	elseif (isset($_POST["add_closer_record"]))	{$add_closer_record=$_POST["add_closer_record"];}
+	else {$add_closer_record=0;}
 if (isset($_POST["appointment_date"]))			{$appointment_date=$_POST["appointment_date"];}
 	elseif (isset($_GET["appointment_date"]))	{$appointment_date=$_GET["appointment_date"];}
+	else {$appointment_date="";}
 if (isset($_POST["appointment_time"]))			{$appointment_time=$_POST["appointment_time"];}
 	elseif (isset($_GET["appointment_time"]))	{$appointment_time=$_GET["appointment_time"];}
+	else {$appointment_time="";}
 if (isset($_GET["CBstatus"]))				{$CBstatus=$_GET["CBstatus"];}
 	elseif (isset($_POST["CBstatus"]))		{$CBstatus=$_POST["CBstatus"];}
+	else {$CBstatus="";}
 if (isset($_GET["archive_search"]))				{$archive_search=$_GET["archive_search"];}
 	elseif (isset($_POST["archive_search"]))	{$archive_search=$_POST["archive_search"];}
+	else {$archive_search="";}
 if (isset($_GET["archive_log"]))			{$archive_log=$_GET["archive_log"];}
 	elseif (isset($_POST["archive_log"]))	{$archive_log=$_POST["archive_log"];}
+	else {$archive_log="";}
 if (isset($_GET["date_of_birth"]))			{$date_of_birth=$_GET["date_of_birth"];}
 	elseif (isset($_POST["date_of_birth"]))	{$date_of_birth=$_POST["date_of_birth"];}
+	else {$date_of_birth="";}
 if (isset($_GET["gdpr_action"]))			{$gdpr_action=$_GET["gdpr_action"];}
 	elseif (isset($_POST["gdpr_action"]))	{$gdpr_action=$_POST["gdpr_action"];}
+	else {$gdpr_action="";}
 if (isset($_GET["CIDdisplay"]))				{$CIDdisplay=$_GET["CIDdisplay"];}
 	elseif (isset($_POST["CIDdisplay"]))	{$CIDdisplay=$_POST["CIDdisplay"];}
+	else {$CIDdisplay="";}
 if (isset($_GET["modify_log_submit"]))			{$modify_log_submit=$_GET["modify_log_submit"];}
 	elseif (isset($_POST["modify_log_submit"]))	{$modify_log_submit=$_POST["modify_log_submit"];}
+	else {$modify_log_submit=0;}
 if (isset($_GET["modify_log_table"]))			{$modify_log_table=$_GET["modify_log_table"];}
 	elseif (isset($_POST["modify_log_table"]))	{$modify_log_table=$_POST["modify_log_table"];}
+	else {$modify_log_table="";}
 if (isset($_GET["modify_log_status"]))			{$modify_log_status=$_GET["modify_log_status"];}
 	elseif (isset($_POST["modify_log_status"]))	{$modify_log_status=$_POST["modify_log_status"];}
+	else {$modify_log_status="";}
 if (isset($_GET["modify_old_status"]))			{$modify_old_status=$_GET["modify_old_status"];}
 	elseif (isset($_POST["modify_old_status"]))	{$modify_old_status=$_POST["modify_old_status"];}
+	else {$modify_old_status="";}
 if (isset($_GET["vicidial_id"]))			{$vicidial_id=$_GET["vicidial_id"];}
 	elseif (isset($_POST["vicidial_id"]))	{$vicidial_id=$_POST["vicidial_id"];}
+	else {$vicidial_id="";}
 if (isset($_GET["log_date"]))			{$log_date=$_GET["log_date"];}
 	elseif (isset($_POST["log_date"]))	{$log_date=$_POST["log_date"];}
+	else {$log_date="";}
 
 
 if ($archive_search=="Yes") {$vl_table="vicidial_list_archive";} 
 else {$vl_table="vicidial_list"; $archive_search="No";}
 $altCIDdisplay="Yes";
 if ($CIDdisplay=="Yes") {$altCIDdisplay="No";} 
-$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 
 $STARTtime = date("U");
 $TODAY = date("Y-m-d");
@@ -316,7 +376,8 @@ if ($qm_conf_ct > 0)
 	$SSrecording_dtmf_detection = $row[21];
 	$SSrecording_dtmf_muting =	$row[22];
 	}
-if ($SSallow_web_debug < 1) {$DB=0;}
+if ($SSallow_web_debug < 1 || !isset($DB)) {$DB=0;}
+$DB=preg_replace("/[^0-9a-zA-Z]/","",$DB);
 ##### END SETTINGS LOOKUP #####
 ### See if KHOMP is set up
 $stmt = "SELECT container_id FROM vicidial_settings_containers where container_id IN('KHOMPSETTINGS','KHOMPSTATUSMAP');";
@@ -330,38 +391,41 @@ $list_id = preg_replace('/[^0-9]/','',$list_id);
 $lead_id = preg_replace('/[^0-9a-zA-Z]/','',$lead_id);
 $entry_list_id = preg_replace('/[^0-9]/','',$entry_list_id);
 $phone_code = preg_replace('/[^0-9]/','',$phone_code);
-$update_phone_number=preg_replace('/[^A-Z]/','',$update_phone_number);
+# $update_phone_number=preg_replace('/[^A-Z]/','',$update_phone_number);
 $phone_number = preg_replace('/[^0-9]/','',$phone_number);
 $old_phone = preg_replace('/[^0-9]/','',$old_phone);
-$vendor_lead_code = preg_replace('/;|#/','',$vendor_lead_code);
-	$vendor_lead_code = preg_replace('/\+/',' ',$vendor_lead_code);
+# $vendor_lead_code isn't passed via form, it seems.
+# $vendor_lead_code = preg_replace('/;|#/','',$vendor_lead_code);
+# 	$vendor_lead_code = preg_replace('/\+/',' ',$vendor_lead_code);
 $source_id = preg_replace('/;|#/','',$source_id);
 	$source_id = preg_replace('/\+/',' ',$source_id);
-$gmt_offset_now = preg_replace('/[^-\_\.0-9]/','',$gmt_offset_now);
+$vendor_id = preg_replace('/;|#/','',$vendor_id);
+	$vendor_id = preg_replace('/\+/',' ',$vendor_id);
+# $gmt_offset_now = preg_replace('/[^-\_\.0-9]/','',$gmt_offset_now); Doesn't seem to be used
 $country_code = preg_replace('/[^A-Z]/','',$country_code);
-$gender = preg_replace('/[^A-Z]/','',$gender);
+# $gender = preg_replace('/[^A-Z]/','',$gender); Doesn't seem to be used
 $date_of_birth = preg_replace('/[^-0-9]/','',$date_of_birth);
 $comments = preg_replace('/;|#/','',$comments);
 	$comments = preg_replace('/\+/',' ',$comments);
 $rank = preg_replace('/[^0-9]/','',$rank);
-$no_update = preg_replace('/[^A-Z]/','',$no_update);
-$called_count=preg_replace('/[^0-9]/','',$called_count);
-$local_gmt=preg_replace('/[^-\.0-9]/','',$local_gmt);
-$callback = preg_replace('/[^A-Z]/','',$callback);
-$callback_type = preg_replace('/[^A-Z]/','',$callback_type);
+# $no_update = preg_replace('/[^A-Z]/','',$no_update); Doesn't seem to be used
+# $called_count=preg_replace('/[^0-9]/','',$called_count); Doesn't seem to be used
+# $local_gmt=preg_replace('/[^-\.0-9]/','',$local_gmt); Doesn't seem to be used
+# $callback = preg_replace('/[^A-Z]/','',$callback); Doesn't seem to be used
+# $callback_type = preg_replace('/[^A-Z]/','',$callback_type); Doesn't seem to be used
 $end_call=preg_replace('/[^0-9]/','',$end_call);
 $server_ip = preg_replace('/[^-\.\:\_0-9a-zA-Z]/','',$server_ip);
 $extension = preg_replace("/\<|\>|\'|\"|\\\\|;/",'',$extension);
 $channel = preg_replace("/\<|\>|\'|\"|\\\\|;/",'',$channel);
 $submit = preg_replace('/[^- \.\_0-9a-zA-Z]/','',$submit);
-$SUBMIT = preg_replace('/[^- \.\_0-9a-zA-Z]/','',$SUBMIT);
+# $SUBMIT = preg_replace('/[^- \.\_0-9a-zA-Z]/','',$SUBMIT);
 $modify_logs=preg_replace('/[^0-9]/','',$modify_logs);
 $modify_closer_logs=preg_replace('/[^0-9]/','',$modify_closer_logs);
 $modify_agent_logs=preg_replace('/[^0-9]/','',$modify_agent_logs);
 $add_closer_record=preg_replace('/[^0-9]/','',$add_closer_record);
 $call_began = preg_replace('/[^- \:\_0-9a-zA-Z]/','',$call_began);
 $parked_time = preg_replace('/[^- \:\_0-9a-zA-Z]/','',$parked_time);
-$callback_id = preg_replace('/[^-_0-9a-zA-Z]/','',$callback_id);
+$callback_id = preg_replace('/[^0-9]/','',$callback_id);
 $CBchangeUSERtoANY = preg_replace('/[^-_0-9a-zA-Z]/','',$CBchangeUSERtoANY);
 $CBchangeANYtoUSER = preg_replace('/[^-_0-9a-zA-Z]/','',$CBchangeANYtoUSER);
 $CBchangeDATE = preg_replace('/[^-_0-9a-zA-Z]/','',$CBchangeDATE);
@@ -369,8 +433,8 @@ $archive_search = preg_replace('/[^-_0-9a-zA-Z]/','',$archive_search);
 $archive_log = preg_replace('/[^-_0-9a-zA-Z]/','',$archive_log);
 $gdpr_action = preg_replace('/[^-_0-9a-zA-Z]/','',$gdpr_action);
 $CIDdisplay = preg_replace('/[^-_0-9a-zA-Z]/','',$CIDdisplay);
-$appointment_date = preg_replace('/[^- \:\_0-9a-zA-Z]/','',$appointment_date);
-$appointment_time = preg_replace('/[^- \:\_0-9a-zA-Z]/','',$appointment_time);
+$appointment_date = preg_replace('/[^\-0-9]/','',$appointment_date);
+$appointment_time = preg_replace('/[^\:0-9]/','',$appointment_time);
 
 # Variables filtered further down in the code
 # $vendor_id
@@ -379,10 +443,10 @@ if ($non_latin < 1)
 	{
 	$PHP_AUTH_USER = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_USER);
 	$PHP_AUTH_PW = preg_replace('/[^-_0-9a-zA-Z]/','',$PHP_AUTH_PW);
-	$user=preg_replace('/[^-_0-9a-zA-Z]/','',$user);
-	$pass=preg_replace('/[^-_0-9a-zA-Z]/','',$pass);
-	$function = preg_replace('/[^-\_0-9a-zA-Z]/', '',$function);
-	$format = preg_replace('/[^0-9a-zA-Z]/','',$format);
+	# $user=preg_replace('/[^-_0-9a-zA-Z]/','',$user);
+	# $pass=preg_replace('/[^-_0-9a-zA-Z]/','',$pass);
+	# $function = preg_replace('/[^-\_0-9a-zA-Z]/', '',$function);
+	# $format = preg_replace('/[^0-9a-zA-Z]/','',$format);
 	$title = preg_replace('/[^- \'\_\.0-9a-zA-Z]/','',$title);
 	$first_name = preg_replace('/[^- \'\+\_\.0-9a-zA-Z]/','',$first_name);
 	$middle_initial = preg_replace('/[^0-9a-zA-Z]/','',$middle_initial);
@@ -396,18 +460,18 @@ if ($non_latin < 1)
 	$postal_code = preg_replace('/[^- \'\+0-9a-zA-Z]/','',$postal_code);
 	$alt_phone = preg_replace('/[^- \'\+\_\.0-9a-zA-Z]/','',$alt_phone);
 	$email = preg_replace('/[^- \'\+\.\:\/\@\%\_0-9a-zA-Z]/','',$email);
-	$security_phrase = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$security_phrase);
+	# $security_phrase = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$security_phrase);
 	$security = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$security);
 	$campaign_id = preg_replace('/[^-\_0-9a-zA-Z]/', '',$campaign_id);
-	$multi_alt_phones = preg_replace('/[^- \+\!\:\_0-9a-zA-Z]/','',$multi_alt_phones);
-	$source = preg_replace('/[^0-9a-zA-Z]/','',$source);
-	$stage = preg_replace('/[^a-zA-Z]/','',$stage);
+	# $multi_alt_phones = preg_replace('/[^- \+\!\:\_0-9a-zA-Z]/','',$multi_alt_phones);
+	# $source = preg_replace('/[^0-9a-zA-Z]/','',$source);
+	# $stage = preg_replace('/[^a-zA-Z]/','',$stage);
 	$owner = preg_replace('/[^- \'\+\.\:\/\@\_0-9a-zA-Z]/','',$owner);
-	$custom_fields = preg_replace('/[^0-9a-zA-Z]/','',$custom_fields);
-	$callback_status = preg_replace('/[^-\_0-9a-zA-Z]/', '',$callback_status);
-	$callback_datetime = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$callback_datetime);
-	$callback_user = preg_replace('/[^-\_0-9a-zA-Z]/', '',$callback_user);
-	$callback_comments = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$callback_comments);
+	# $custom_fields = preg_replace('/[^0-9a-zA-Z]/','',$custom_fields);
+	# $callback_status = preg_replace('/[^-\_0-9a-zA-Z]/', '',$callback_status);
+	# $callback_datetime = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$callback_datetime);
+	# $callback_user = preg_replace('/[^-\_0-9a-zA-Z]/', '',$callback_user);
+	# $callback_comments = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$callback_comments);
 	$modify_log_status = preg_replace('/[^-\_0-9a-zA-Z]/', '',$modify_log_status);
 	$modify_old_status = preg_replace('/[^-\_0-9a-zA-Z]/', '',$modify_old_status);
 	$log_date = preg_replace('/[^- \+\.\:\/\@\_0-9a-zA-Z]/','',$log_date);
@@ -424,10 +488,10 @@ else
 	{
 	$PHP_AUTH_USER = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_USER);
 	$PHP_AUTH_PW = preg_replace('/[^-_0-9\p{L}]/u', '', $PHP_AUTH_PW);
-	$user=preg_replace('/[^-_0-9\p{L}]/u','',$user);
-	$pass=preg_replace('/[^-_0-9\p{L}]/u','',$pass);
-	$function = preg_replace('/[^-\_0-9\p{L}]/u', '',$function);
-	$format = preg_replace('/[^0-9\p{L}]/u','',$format);
+	# $user=preg_replace('/[^-_0-9\p{L}]/u','',$user);
+	# $pass=preg_replace('/[^-_0-9\p{L}]/u','',$pass);
+	# $function = preg_replace('/[^-\_0-9\p{L}]/u', '',$function);
+	# $format = preg_replace('/[^0-9\p{L}]/u','',$format);
 	$title = preg_replace('/[^- \'\_\.0-9\p{L}]/u','',$title);
 	$first_name = preg_replace('/[^- \'\+\_\.0-9\p{L}]/u','',$first_name);
 	$middle_initial = preg_replace('/[^0-9\p{L}]/u','',$middle_initial);
@@ -441,18 +505,18 @@ else
 	$postal_code = preg_replace('/[^- \'\+0-9\p{L}]/u','',$postal_code);
 	$alt_phone = preg_replace('/[^- \'\+\_\.0-9\p{L}]/u','',$alt_phone);
 	$email = preg_replace('/[^- \'\+\.\:\/\@\%\_0-9\p{L}]/u','',$email);
-	$security_phrase = preg_replace('/[^- \'\+\.\:\/\@\_0-9\p{L}]/u','',$security_phrase);
+	# $security_phrase = preg_replace('/[^- \'\+\.\:\/\@\_0-9\p{L}]/u','',$security_phrase);
 	$security = preg_replace('/[^- \'\+\.\:\/\@\_0-9\p{L}]/u','',$security);
 	$campaign_id = preg_replace('/[^-\_0-9\p{L}]/u', '',$campaign_id);
-	$multi_alt_phones = preg_replace('/[^- \+\!\:\_0-9\p{L}]/u','',$multi_alt_phones);
-	$source = preg_replace('/[^0-9\p{L}]/u','',$source);
-	$stage = preg_replace('/[^\p{L}]/u','',$stage);
+	# $multi_alt_phones = preg_replace('/[^- \+\!\:\_0-9\p{L}]/u','',$multi_alt_phones);
+	# $source = preg_replace('/[^0-9\p{L}]/u','',$source);
+	# $stage = preg_replace('/[^\p{L}]/u','',$stage);
 	$owner = preg_replace('/[^- \'\+\.\:\/\@\_0-9\p{L}]/u','',$owner);
-	$custom_fields = preg_replace('/[^0-9\p{L}]/u','',$custom_fields);
-	$callback_status = preg_replace('/[^-\_0-9\p{L}]/u', '',$callback_status);
-	$callback_datetime = preg_replace('/[^- \+\.\:\/\@\_0-9\p{L}]/u','',$callback_datetime);
-	$callback_user = preg_replace('/[^-\_0-9\p{L}]/u', '',$callback_user);
-	$callback_comments = preg_replace('/[^- \+\.\:\/\@\_0-9\p{L}]/u','',$callback_comments);
+	# $custom_fields = preg_replace('/[^0-9\p{L}]/u','',$custom_fields);
+	# $callback_status = preg_replace('/[^-\_0-9\p{L}]/u', '',$callback_status);
+	# $callback_datetime = preg_replace('/[^- \+\.\:\/\@\_0-9\p{L}]/u','',$callback_datetime);
+	# $callback_user = preg_replace('/[^-\_0-9\p{L}]/u', '',$callback_user);
+	# $callback_comments = preg_replace('/[^- \+\.\:\/\@\_0-9\p{L}]/u','',$callback_comments);
 	$modify_log_status = preg_replace('/[^-\_0-9\p{L}]/u', '',$modify_log_status);
 	$modify_old_status = preg_replace('/[^-\_0-9\p{L}]/u', '',$modify_old_status);
 	$log_date = preg_replace('/[^- \+\.\:\/\@\_0-9\p{L}]/u','',$log_date);
@@ -476,8 +540,8 @@ $province = preg_replace('/\+/',' ',$province);
 $postal_code = preg_replace('/\+/',' ',$postal_code);
 $alt_phone = preg_replace('/\+/',' ',$alt_phone);
 $email = preg_replace('/\+/',' ',$email);
-$security_phrase = preg_replace('/\+/',' ',$security_phrase);
-$multi_alt_phones = preg_replace('/\+/',' ',$multi_alt_phones);
+# $security_phrase = preg_replace('/\+/',' ',$security_phrase);
+# $multi_alt_phones = preg_replace('/\+/',' ',$multi_alt_phones);
 $owner = preg_replace('/\+/',' ',$owner);
 
 if (strlen($phone_number)<6) {$phone_number=$old_phone;}
@@ -547,11 +611,14 @@ $LOGuser_level =				$row[5];
 $LOGignore_group_on_search =	$row[6];
 
 $LOGallowed_listsSQL='';
+$whereLOGallowed_listsSQL='';
 $stmt="SELECT allowed_campaigns from vicidial_user_groups where user_group='$LOGuser_group';";
 if ($DB) {$HTML_text.="|$stmt|\n";}
 $rslt=mysql_to_mysqli($stmt, $link);
 $row=mysqli_fetch_row($rslt);
 $LOGallowed_campaigns =			$row[0];
+$whereLOGallowed_campaignsSQL = "";
+$LOGallowed_campaignsSQL = "";
 
 if ( (!preg_match('/\-ALL/i', $LOGallowed_campaigns)) and ($LOGignore_group_on_search != '1') )
 	{
@@ -699,6 +766,7 @@ if ($modify_log_submit>0)
 ################################
 ##### BEGIN GDPR functions #####
 ################################
+$gdpr_display=0;
 if ($enable_gdpr_download_deletion>0) 
 	{
 	$stmt="SELECT export_gdpr_leads from vicidial_users where user='$PHP_AUTH_USER' and export_gdpr_leads >= 1;";
@@ -1626,6 +1694,7 @@ if ($end_call > 0)
 	if ( ( ($list_valid > 0) or (preg_match('/\-ALL/i', $LOGallowed_campaigns)) ) and ($LOGmodify_leads != '5') )
 		{
 		$diff_orig=''; $diff_new='';
+		$stmtA=""; $stmtB=""; $stmtC=""; $stmtD=""; $stmtE=""; $stmtF=""; $stmtG=""; $stmtH=""; $stmtI=""; $stmtJ="";
 		# gather existing lead data to store for admin log diff
 		$stmt="SELECT lead_id,entry_date,modify_date,status,user,vendor_lead_code,source_id,list_id,gmt_offset_now,called_since_last_reset,phone_code,phone_number,title,first_name,middle_initial,last_name,address1,address2,address3,city,state,province,postal_code,country_code,gender,date_of_birth,alt_phone,email,security_phrase,comments,called_count,last_local_call_time,rank,owner,entry_list_id from $vl_table where lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' $LOGallowed_listsSQL";
 		$rslt=mysql_to_mysqli($stmt, $link);
@@ -1797,6 +1866,7 @@ if ($end_call > 0)
 	}
 else
 	{
+	$stmtK=""; $stmtL=""; $stmtM=""; $stmtN="";
 	if ( ($LOGmodify_leads == '5') and ( ($CBchangeUSERtoANY == 'YES') or ($CBchangeANYtoUSER == 'YES') or ($CBchangeDATE == 'YES') ) )
 		{
 		echo "ERROR: "._QXZ("You do not have permission to modify leads").": $LOGmodify_leads \n";
@@ -1849,6 +1919,7 @@ else
 	if ($DB) {echo "$stmt\n";}
 	$row=mysqli_fetch_row($rslt);
 	$lead_count = $row[0];
+	$c=0;
 
 	if ($lead_count > 0)
 		{
@@ -1858,7 +1929,6 @@ else
 		if ($DB) {echo "$stmt\n";}
 		$alts_to_print = mysqli_num_rows($rslt);
 
-		$c=0;
 		$alts_output = '';
 		while ($alts_to_print > $c) 
 			{
@@ -2046,7 +2116,7 @@ else
 
 		$stmtA="SELECT call_notes FROM vicidial_call_notes WHERE lead_id='" . mysqli_real_escape_string($link, $lead_id) . "' and vicidial_id='$row[0]';";
 		$rsltA=mysql_to_mysqli($stmtA, $link);
-		$out_notes_to_print = mysqli_num_rows($rslt);
+		$out_notes_to_print = mysqli_num_rows($rsltA);
 		if ($out_notes_to_print > 0)
 			{
 			$rowA=mysqli_fetch_row($rsltA);
@@ -2737,6 +2807,7 @@ else
 		}
 	########## END ARCHIVE LOG SEARCH ##########
 
+	$last_local_call_time=""; $called_count=0; $called_since_last_reset=""; $gmt_offset_now="";
 	if ($lead_count > 0)
 		{
 		##### grab vicidial_list data for lead #####
@@ -2974,7 +3045,7 @@ else
 			echo "<tr><td align=right>$label_security_phrase : </td><td align=left>$security</td></tr>\n";
 			echo "<tr><td align=right>$label_vendor_lead_code : </td><td align=left>$vendor_id></td></tr>\n";
 			if ($SSsource_id_display > 0)
-				{echo "<tr><td align=right>$label_source_id : </td><td align=left>$source_id></td></tr>\n";}
+				{echo "<tr><td align=right>$label_source_id : </td><td align=left>$source_id</td></tr>\n";}
 			echo "<tr><td align=right>$label_rank : </td><td align=left>$rank</td></tr>\n";
 			echo "<tr><td align=right>$label_owner : </td><td align=left>$owner</td></tr>\n";
 			echo "<tr><td align=right>$label_comments : </td><td align=left>$comments</td></tr>\n";

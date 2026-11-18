@@ -84,10 +84,11 @@
 # 240320-1033 - Added misssing input variable filtering
 # 240801-1131 - Code updates for PHP8 compatibility
 # 260415-1707 - Small field chooser fix and more code updates for PHP8 compatibility
+# 261117-1410 - More input filtering
 #
 
-$version = '2.14-82';
-$build = '260415-1707';
+$version = '2.14-83';
+$build = '261117-1410';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -453,7 +454,7 @@ if ($LOGload_leads < 1)
 	exit;
 	}
 
-if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig))
+if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*|`|\\\$|\{|\}|\||<|>/",$LF_orig))
 	{
 	echo _QXZ("ERROR: Invalid File Name").":: $LF_orig\n";
 	exit;

@@ -88,10 +88,11 @@
 # 260415-1710 - Added summarized error output, fuzzy field auto-detection for custom layout, Issue #1561 from Acidshock
 # 260514-1553 - Added default_phone_code use for Phone Code field on form
 # 260912-0956 - Added link to 6th gen lead loader
+# 261117-1411 - More input filtering
 #
 
-$version = '2.14-85';
-$build = '260912-0956';
+$version = '2.14-86';
+$build = '261117-1411';
 
 require("dbconnect_mysqli.php");
 require("functions.php");
@@ -780,7 +781,7 @@ if ($LOGload_leads < 1)
 	exit;
 	}
 
-if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*/",$LF_orig))
+if (preg_match("/;|:|\/|\^|\[|\]|\"|\'|\*|`|\\\$|\{|\}|\||<|>/",$LF_orig))
 	{
 	echo _QXZ("ERROR: Invalid File Name").":: $LF_orig\n";
 	exit;
